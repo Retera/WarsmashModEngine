@@ -32,7 +32,7 @@ public abstract class Timeline implements Chunk {
 	public void readMdx(final LittleEndianDataInputStream stream, final War3ID name) throws IOException {
 		this.name = name;
 
-		final long keyFrameCount = ParseUtils.parseUInt32(stream);
+		final long keyFrameCount = ParseUtils.readUInt32(stream);
 
 		this.interpolationType = InterpolationType.VALUES[stream.readInt()];
 		this.globalSequenceId = stream.readInt();
@@ -47,7 +47,7 @@ public abstract class Timeline implements Chunk {
 	}
 
 	public void writeMdx(final LittleEndianDataOutputStream stream) throws IOException {
-		stream.writeInt(this.name.getValue());
+		stream.writeInt(Integer.reverseBytes(this.name.getValue()));
 		stream.writeInt(this.keyFrames.size());
 		stream.writeInt(this.interpolationType.ordinal());
 		stream.writeInt(this.globalSequenceId);
@@ -86,7 +86,7 @@ public abstract class Timeline implements Chunk {
 
 		this.interpolationType = interpolationType;
 
-		if (stream.peek().equals("GlobalSeqId")) {
+		if (stream.peek().equals(MdlUtils.TOKEN_GLOBAL_SEQ_ID)) {
 			stream.read();
 			this.globalSequenceId = stream.readInt();
 		}
@@ -130,7 +130,7 @@ public abstract class Timeline implements Chunk {
 		stream.writeFlag(token);
 
 		if (this.globalSequenceId != -1) {
-			stream.writeAttrib("GlobalSeqId", this.globalSequenceId);
+			stream.writeAttrib(MdlUtils.TOKEN_GLOBAL_SEQ_ID, this.globalSequenceId);
 		}
 
 		for (final KeyFrame keyFrame : this.keyFrames) {

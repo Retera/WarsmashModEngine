@@ -33,11 +33,11 @@ public class UInt32KeyFrame implements KeyFrame {
 	@Override
 	public void readMdx(final LittleEndianDataInputStream stream, final InterpolationType interpolationType)
 			throws IOException {
-		this.time = ParseUtils.parseUInt32(stream);
-		this.value = ParseUtils.parseUInt32(stream);
+		this.time = ParseUtils.readUInt32(stream);
+		this.value = ParseUtils.readUInt32(stream);
 		if (interpolationType.tangential()) {
-			this.inTan = ParseUtils.parseUInt32(stream);
-			this.outTan = ParseUtils.parseUInt32(stream);
+			this.inTan = ParseUtils.readUInt32(stream);
+			this.outTan = ParseUtils.readUInt32(stream);
 		}
 	}
 

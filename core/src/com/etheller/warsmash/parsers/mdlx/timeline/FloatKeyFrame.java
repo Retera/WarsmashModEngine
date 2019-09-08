@@ -33,7 +33,7 @@ public class FloatKeyFrame implements KeyFrame {
 	@Override
 	public void readMdx(final LittleEndianDataInputStream stream, final InterpolationType interpolationType)
 			throws IOException {
-		this.time = ParseUtils.parseUInt32(stream);
+		this.time = ParseUtils.readUInt32(stream);
 		this.value = stream.readFloat();
 		if (interpolationType.tangential()) {
 			this.inTan = stream.readFloat();

@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
+import com.etheller.warsmash.util.MdlUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.io.LittleEndianDataOutputStream;
@@ -14,8 +15,8 @@ import com.google.common.io.LittleEndianDataOutputStream;
  * Based on the works of Chananya Freiman.
  *
  */
-public class AnimatedObject implements Chunk {
-	private final List<Timeline> timelines;
+public abstract class AnimatedObject implements Chunk, MdlxBlock {
+	protected final List<Timeline> timelines;
 
 	public AnimatedObject() {
 		this.timelines = new ArrayList<>();
@@ -41,20 +42,20 @@ public class AnimatedObject implements Chunk {
 	}
 
 	public Iterator<String> readAnimatedBlock(final MdlTokenInputStream stream) {
-		return new TransformedAnimatedBlockIterator(stream.readBlock());
+		return new TransformedAnimatedBlockIterator(stream.readBlock().iterator());
 	}
 
-	public void readTimeline(final MdlTokenInputStream stream, final War3ID name) throws IOException {
-		final Timeline timeline = AnimationMap.ID_TO_TAG.get(name).getImplementation().createTimeline();
+	public void readTimeline(final MdlTokenInputStream stream, final AnimationMap name) throws IOException {
+		final Timeline timeline = name.getImplementation().createTimeline();
 
-		timeline.readMdl(stream, name);
+		timeline.readMdl(stream, name.getWar3id());
 
 		this.timelines.add(timeline);
 	}
 
-	public boolean writeTimeline(final MdlTokenOutputStream stream, final War3ID name) throws IOException {
+	public boolean writeTimeline(final MdlTokenOutputStream stream, final AnimationMap name) throws IOException {
 		for (final Timeline timeline : this.timelines) {
-			if (timeline.getName().equals(name)) {
+			if (timeline.getName().equals(name.getWar3id())) {
 				timeline.writeMdl(stream);
 				return true;
 			}
@@ -93,8 +94,8 @@ public class AnimatedObject implements Chunk {
 		@Override
 		public String next() {
 			final String token = this.delegate.next();
-			if (token.equals("static") && hasNext()) {
-				return "static " + this.delegate.next();
+			if (token.equals(MdlUtils.TOKEN_STATIC) && hasNext()) {
+				return MdlUtils.TOKEN_STATIC + " " + this.delegate.next();
 			}
 			return token;
 		}

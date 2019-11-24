@@ -1,5 +1,7 @@
 package com.etheller.warsmash.util;
 
+import java.util.List;
+
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
@@ -286,5 +288,47 @@ public enum RenderMathUtils {
 		out.set(heap.x / heap.w, heap.y / heap.w, heap.z / heap.w);
 
 		return out;
+	}
+
+	public static int testCell(final List<Vector4> planes, final int left, final int right, final int bottom,
+			final int top, int first) {
+		if (first == -1) {
+			first = 0;
+		}
+
+		for (int i = 0; i < 6; i++) {
+			final int index = (first + i) % 6;
+			final Vector4 plane = planes.get(index);
+
+			if ((distance2Plane2(plane, left, bottom) < 0) && (distance2Plane2(plane, left, top) < 0)
+					&& (distance2Plane2(plane, right, top) < 0) && (distance2Plane2(plane, right, bottom) < 0)) {
+				return index;
+			}
+		}
+
+		return -1;
+	}
+
+	public static int testCell(final Vector4[] planes, final int left, final int right, final int bottom, final int top,
+			int first) {
+		if (first == -1) {
+			first = 0;
+		}
+
+		for (int i = 0; i < 6; i++) {
+			final int index = (first + i) % 6;
+			final Vector4 plane = planes[index];
+
+			if ((distance2Plane2(plane, left, bottom) < 0) && (distance2Plane2(plane, left, top) < 0)
+					&& (distance2Plane2(plane, right, top) < 0) && (distance2Plane2(plane, right, bottom) < 0)) {
+				return index;
+			}
+		}
+
+		return -1;
+	}
+
+	public static float distance2Plane2(final Vector4 plane, final int px, final int py) {
+		return (plane.x * px) + (plane.y * py) + plane.w;
 	}
 }

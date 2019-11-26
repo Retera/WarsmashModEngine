@@ -331,4 +331,25 @@ public enum RenderMathUtils {
 	public static float distance2Plane2(final Vector4 plane, final int px, final int py) {
 		return (plane.x * px) + (plane.y * py) + plane.w;
 	}
+
+	public static int testSphere(final Vector4[] planes, final float x, final float y, final float z, final int r,
+			int first) {
+		if (first == -1) {
+			first = 0;
+		}
+
+		for (int i = 0; i < 6; i++) {
+			final int index = (first + i) % 6;
+
+			if (distanceToPlane3(planes[index], x, y, z) <= -r) {
+				return index;
+			}
+		}
+
+		return -1;
+	}
+
+	public static float distanceToPlane3(final Vector4 plane, final float px, final float py, final float pz) {
+		return (plane.x * px) + (plane.y * py) + (plane.z * pz) + plane.w;
+	}
 }

@@ -30,8 +30,8 @@ import com.etheller.warsmash.viewer5.handlers.BatchDescriptor;
 public class Scene {
 
 	private final ModelViewer viewer;
-	private final Camera camera;
-	private final Grid grid;
+	public final Camera camera;
+	final Grid grid;
 	public int visibleCells;
 	public int visibleInstances;
 	public int updatedParticles;
@@ -284,7 +284,7 @@ public class Scene {
 	private static final class InstanceDepthComparator implements Comparator<ModelInstance> {
 		@Override
 		public int compare(final ModelInstance o1, final ModelInstance o2) {
-			return o2.depth - o1.depth;
+			return (int) Math.signum(o2.depth - o1.depth);
 		}
 	}
 }

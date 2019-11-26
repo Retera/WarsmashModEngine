@@ -3,20 +3,23 @@ package com.etheller.warsmash.viewer5;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.viewer5.gl.WebGL;
+import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
 
 public class ModelViewer {
 	private final DataSource dataSource;
 	public final CanvasProvider canvas;
-	public List<Resource> resources;
-	public Map<String, Resource> fetchCache;
+	public List<Resource<?>> resources;
+	public Map<String, Resource<?>> fetchCache;
 	public int frameTime;
 	public GL20 gl;
 	public WebGL webGL;
@@ -28,12 +31,14 @@ public class ModelViewer {
 	private final int rectBuffer;
 	private final boolean enableAudio;
 	private final Map<Model, List<TextureMapper>> textureMappers;
+	private final Set<ResourceHandler> handlers;
 
 	public ModelViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		this.dataSource = dataSource;
 		this.canvas = canvas;
 		this.resources = new ArrayList<>();
 		this.fetchCache = new HashMap<>();
+		this.handlers = new HashSet<ResourceHandler>();
 		this.frameTime = 1000 / 60;
 		this.gl = Gdx.gl;
 		this.webGL = new WebGL(this.gl);
@@ -59,6 +64,29 @@ public class ModelViewer {
 		this.textureMappers = new HashMap<Model, List<TextureMapper>>();
 	}
 
+	public boolean addHandler(ResourceHandler handler) {
+		if (handler != null) {
+
+			// Allow to pass also the handler's module for convenience.
+			if (handler.handler != null) {
+				handler = handler.handler;
+			}
+
+			if (!this.handlers.contains(handler)) {
+				// Check if the handler has a loader, and if so load it.
+				if (handler.load && !handler.load(this)) {
+					onResourceLoadError();
+					return false;
+				}
+
+				this.handlers.add(handler);
+
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public Scene addScene() {
 		final Scene scene = new Scene(this);
 
@@ -79,15 +107,27 @@ public class ModelViewer {
 		return this.fetchCache.containsKey(key);
 	}
 
-	public Resource get(final String key) {
+	public Resource<?> get(final String key) {
 		return this.fetchCache.get(key);
 	}
 
 	public void updateAndRender() {
-		update();
+		this.update();
+		this.startFrame();
+		this.render();
 	}
 
 //	public Resource loadGeneric(String path, String dataType, )
+
+	public boolean unload(final Resource<?> resource) {
+		// TODO Auto-generated method stub
+		final String fetchUrl = resource.fetchUrl;
+		if (!"".equals(fetchUrl)) {
+			this.fetchCache.remove(fetchUrl);
+		}
+		return this.resources.remove(resource);
+	}
+
 	public void update() {
 		final float dt = this.frameTime * 0.001f;
 
@@ -165,5 +205,9 @@ public class ModelViewer {
 		mappers.add(mapper);
 
 		return mapper;
+	}
+
+	private void onResourceLoadError() {
+		System.err.println("error, this, InvalidHandler, FailedToLoad");
 	}
 }

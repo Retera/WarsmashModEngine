@@ -1,6 +1,7 @@
 package com.etheller.warsmash.parsers.mdlx.timeline;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.etheller.warsmash.parsers.mdlx.InterpolationType;
 import com.etheller.warsmash.parsers.mdlx.MdlTokenInputStream;
@@ -96,4 +97,28 @@ public class FloatArrayKeyFrame implements KeyFrame {
 		return size;
 	}
 
+	@Override
+	public long getTime() {
+		return time;
+	}
+
+	@Override
+	public boolean matchingValue(final KeyFrame other) {
+		if (other instanceof FloatArrayKeyFrame) {
+			final FloatArrayKeyFrame otherFrame = (FloatArrayKeyFrame) other;
+			return Arrays.equals(value, otherFrame.value);
+		}
+		return false;
+	}
+
+	@Override
+	public KeyFrame clone(final long time) {
+		final FloatArrayKeyFrame newKeyFrame = new FloatArrayKeyFrame(value.length);
+		System.arraycopy(value, 0, newKeyFrame.value, 0, value.length);
+		// if (inTan != null) {
+		System.arraycopy(inTan, 0, newKeyFrame.inTan, 0, inTan.length);
+		System.arraycopy(outTan, 0, newKeyFrame.outTan, 0, outTan.length);
+		// }
+		return newKeyFrame;
+	}
 }

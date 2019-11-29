@@ -101,4 +101,8 @@ public class Sequence implements MdlxBlock {
 		this.extent.writeMdl(stream);
 		stream.endBlock();
 	}
+
+	public long[] getInterval() {
+		return interval;
+	}
 }

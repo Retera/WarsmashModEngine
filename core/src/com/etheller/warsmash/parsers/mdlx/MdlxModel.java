@@ -23,9 +23,12 @@ import com.google.common.io.LittleEndianDataOutputStream;
  * and text MDL file formats.
  */
 public class MdlxModel {
-	// Below, these can't call a function on a string to make their value because
-	// switch/case statements require the value to be compile-time defined in order
-	// to be legal, and it appears to only allow basic binary operators for that.
+	// Below, these can't call a function on a string to make their value
+	// because
+	// switch/case statements require the value to be compile-time defined in
+	// order
+	// to be legal, and it appears to only allow basic binary operators for
+	// that.
 	// I would love a clearer way to just type 'MDLX' in a character constant in
 	// Java for this
 	private static final int MDLX = ('M' << 24) | ('D' << 16) | ('L' << 8) | ('X');// War3ID.fromString("MDLX").getValue();
@@ -52,10 +55,10 @@ public class MdlxModel {
 	private int version = 800;
 	private String name = "";
 	/**
-	 * (Comment copied from Ghostwolf JS) To the best of my knowledge, this should
-	 * always be left empty. This is probably a leftover from the Warcraft 3 beta.
-	 * (WS game note: No, I never saw any animation files in the RoC 2001-2002 Beta.
-	 * So it must be from the Alpha)
+	 * (Comment copied from Ghostwolf JS) To the best of my knowledge, this
+	 * should always be left empty. This is probably a leftover from the
+	 * Warcraft 3 beta. (WS game note: No, I never saw any animation files in
+	 * the RoC 2001-2002 Beta. So it must be from the Alpha)
 	 *
 	 * @member {string}
 	 */
@@ -205,7 +208,7 @@ public class MdlxModel {
 
 	private <E extends MdlxBlock & Chunk> void loadDynamicObjects(final List<E> out,
 			final MdlxBlockDescriptor<E> constructor, final LittleEndianDataInputStream stream, final long size)
-			throws IOException {
+					throws IOException {
 		long totalSize = 0;
 		while (totalSize < size) {
 			final E object = constructor.create();
@@ -456,7 +459,7 @@ public class MdlxModel {
 
 	private <E extends MdlxBlock> void loadNumberedObjectBlock(final List<E> out,
 			final MdlxBlockDescriptor<E> constructor, final String name, final MdlTokenInputStream stream)
-			throws IOException {
+					throws IOException {
 		stream.read(); // Don't care about the number, the array will grow
 
 		for (final String token : stream.readBlock()) {
@@ -638,5 +641,13 @@ public class MdlxModel {
 		}
 
 		return 0;
+	}
+
+	public List<Long> getGlobalSequences() {
+		return globalSequences;
+	}
+
+	public List<Sequence> getSequences() {
+		return sequences;
 	}
 }

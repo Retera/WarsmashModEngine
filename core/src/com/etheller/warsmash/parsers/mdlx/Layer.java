@@ -192,4 +192,29 @@ public class Layer extends AnimatedObject {
 	public long getByteLength() {
 		return 28 + super.getByteLength();
 	}
+
+	public FilterMode getFilterMode() {
+		return filterMode;
+	}
+
+	public int getFlags() {
+		return flags;
+	}
+
+	public int getTextureId() {
+		return textureId;
+	}
+
+	public int getTextureAnimationId() {
+		return textureAnimationId;
+	}
+
+	public long getCoordId() {
+		return coordId;
+	}
+
+	public float getAlpha() {
+		return alpha;
+	}
+
 }

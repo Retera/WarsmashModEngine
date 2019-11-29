@@ -148,4 +148,16 @@ public abstract class Timeline implements Chunk {
 	protected abstract KeyFrame newKeyFrame();
 
 	protected abstract int size();
+
+	public int getGlobalSequenceId() {
+		return globalSequenceId;
+	}
+
+	public List<KeyFrame> getKeyFrames() {
+		return keyFrames;
+	}
+
+	public InterpolationType getInterpolationType() {
+		return interpolationType;
+	}
 }

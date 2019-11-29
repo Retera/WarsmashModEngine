@@ -101,12 +101,14 @@ public enum RenderMathUtils {
 	}
 
 	public static void mul(final Matrix4 dest, final Matrix4 left, final Matrix4 right) {
-		dest.set(left); // TODO better performance here, remove the extra copying
+		dest.set(left); // TODO better performance here, remove the extra
+						// copying
 		dest.mul(right);
 	}
 
 	public static void mul(final Quaternion dest, final Quaternion left, final Quaternion right) {
-		dest.set(left); // TODO better performance here, remove the extra copying
+		dest.set(left); // TODO better performance here, remove the extra
+						// copying
 		dest.mul(right);
 	}
 
@@ -352,4 +354,90 @@ public enum RenderMathUtils {
 	public static float distanceToPlane3(final Vector4 plane, final float px, final float py, final float pz) {
 		return (plane.x * px) + (plane.y * py) + (plane.z * pz) + plane.w;
 	}
+
+	public static float randomInRange(final float a, final float b) {
+		return (float) (a + Math.random() * (b - a));
+	}
+
+	public static float clamp(final float x, final float minVal, final float maxVal) {
+		return Math.min(Math.max(x, minVal), maxVal);
+	}
+
+	public static float lerp(final float a, final float b, final float t) {
+		return a + t * (b - a);
+	}
+
+	public static float hermite(final float a, final float b, final float c, final float d, final float t) {
+		final float factorTimes2 = t * t;
+		final float factor1 = factorTimes2 * (2 * t - 3) + 1;
+		final float factor2 = factorTimes2 * (t - 2) + t;
+		final float factor3 = factorTimes2 * (t - 1);
+		final float factor4 = factorTimes2 * (3 - 2 * t);
+		return (a * factor1) + (b * factor2) + (c * factor3) + (d * factor4);
+	}
+
+	public static float bezier(final float a, final float b, final float c, final float d, final float t) {
+		final float invt = 1 - t;
+		final float factorTimes2 = t * t;
+		final float inverseFactorTimesTwo = invt * invt;
+		final float factor1 = inverseFactorTimesTwo * invt;
+		final float factor2 = 3 * t * inverseFactorTimesTwo;
+		final float factor3 = 3 * factorTimes2 * invt;
+		final float factor4 = factorTimes2 * t;
+
+		return (a * factor1) + (b * factor2) + (c * factor3) + (d * factor4);
+	}
+
+	public static final float EPSILON = 0.000001f;
+
+	public static float[] slerp(final float[] out, final float[] a, final float[] b, final float t) {
+		final float ax = a[0], ay = a[1], az = a[2], aw = a[3];
+		float bx = b[0], by = b[1], bz = b[2], bw = b[3];
+
+		float omega, cosom, sinom, scale0, scale1;
+
+		// calc cosine
+		cosom = ax * bx + ay * by + az * bz + aw * bw;
+		// adjust signs (if necessary)
+		if (cosom < 0.0) {
+			cosom = -cosom;
+			bx = -bx;
+			by = -by;
+			bz = -bz;
+			bw = -bw;
+		}
+		// calculate coefficients
+		if ((1.0 - cosom) > EPSILON) {
+			// standard case (slerp)
+			omega = (float) Math.acos(cosom);
+			sinom = (float) Math.sin(omega);
+			scale0 = (float) (Math.sin((1.0 - t) * omega) / sinom);
+			scale1 = (float) (Math.sin(t * omega) / sinom);
+		}
+		else {
+			// "from" and "to" quaternions are very close
+			// ... so we can do a linear interpolation
+			scale0 = 1.0f - t;
+			scale1 = t;
+		}
+		// calculate final values
+		out[0] = scale0 * ax + scale1 * bx;
+		out[1] = scale0 * ay + scale1 * by;
+		out[2] = scale0 * az + scale1 * bz;
+		out[3] = scale0 * aw + scale1 * bw;
+
+		return out;
+	}
+
+	private static final float[] sqlerpHeap1 = new float[4];
+	private static final float[] sqlerpHeap2 = new float[4];
+
+	public static float[] sqlerp(final float[] out, final float[] a, final float[] b, final float[] c, final float[] d,
+			final float t) {
+		slerp(sqlerpHeap1, a, d, t);
+		slerp(sqlerpHeap2, b, c, t);
+		slerp(out, sqlerpHeap1, sqlerpHeap2, 2 * t * (1 - t));
+		return out;
+	}
+
 }

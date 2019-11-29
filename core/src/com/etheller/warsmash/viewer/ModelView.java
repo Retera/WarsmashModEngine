@@ -33,7 +33,10 @@ public abstract class ModelView {
 	@Override
 	public abstract boolean equals(Object view);
 
-//	public boo
+	@Override
+	public abstract int hashCode();
+
+	// public boo
 	public void addSceneData(final ModelInstance instance, final Scene scene) {
 		if (this.model.ok && (scene != null)) {
 			SceneData data = this.sceneData.get(scene);

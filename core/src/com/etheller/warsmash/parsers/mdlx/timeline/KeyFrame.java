@@ -18,4 +18,10 @@ public interface KeyFrame {
 	void writeMdl(MdlTokenOutputStream stream, InterpolationType interpolationType) throws IOException;
 
 	long getByteLength(InterpolationType interpolationType);
+
+	long getTime();
+
+	boolean matchingValue(KeyFrame other);
+
+	KeyFrame clone(long time);
 }

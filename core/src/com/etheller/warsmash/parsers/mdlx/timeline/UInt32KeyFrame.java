@@ -90,4 +90,26 @@ public class UInt32KeyFrame implements KeyFrame {
 		return size;
 	}
 
+	@Override
+	public long getTime() {
+		return time;
+	}
+
+	@Override
+	public boolean matchingValue(final KeyFrame other) {
+		if (other instanceof UInt32KeyFrame) {
+			final UInt32KeyFrame otherFrame = (UInt32KeyFrame) other;
+			return value == otherFrame.value;
+		}
+		return false;
+	}
+
+	@Override
+	public KeyFrame clone(final long time) {
+		final UInt32KeyFrame newKeyFrame = new UInt32KeyFrame();
+		newKeyFrame.value = value;
+		newKeyFrame.inTan = inTan;
+		newKeyFrame.outTan = outTan;
+		return newKeyFrame;
+	}
 }

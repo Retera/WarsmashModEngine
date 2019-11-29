@@ -6,6 +6,7 @@ import com.etheller.warsmash.parsers.mdlx.InterpolationType;
 import com.etheller.warsmash.parsers.mdlx.MdlTokenInputStream;
 import com.etheller.warsmash.parsers.mdlx.MdlTokenOutputStream;
 import com.etheller.warsmash.util.ParseUtils;
+import com.etheller.warsmash.util.RenderMathUtils;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.io.LittleEndianDataOutputStream;
 
@@ -90,4 +91,26 @@ public class FloatKeyFrame implements KeyFrame {
 		return size;
 	}
 
+	@Override
+	public long getTime() {
+		return time;
+	}
+
+	@Override
+	public boolean matchingValue(final KeyFrame other) {
+		if (other instanceof FloatKeyFrame) {
+			final FloatKeyFrame otherFrame = (FloatKeyFrame) other;
+			return Math.abs(value - otherFrame.value) <= RenderMathUtils.EPSILON;
+		}
+		return false;
+	}
+
+	@Override
+	public KeyFrame clone(final long time) {
+		final FloatKeyFrame newKeyFrame = new FloatKeyFrame();
+		newKeyFrame.value = value;
+		newKeyFrame.inTan = inTan;
+		newKeyFrame.outTan = outTan;
+		return newKeyFrame;
+	}
 }

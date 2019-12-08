@@ -121,7 +121,7 @@ public abstract class Sd<TYPE> {
 
 	public int getValue(final TYPE out, final ModelInstance instance) {
 		if(this.globalSequence != null) {
-			return this.globalSequence
+			return this.globalSequence.getValue(out, instance.cout)
 		}
 	}
 

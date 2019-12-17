@@ -1,9 +1,10 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.etheller.warsmash.parsers.mdlx.Layer.FilterMode;
 
 public class Layer {
-	public Model model;
+	public MdxModel model;
 	public com.etheller.warsmash.parsers.mdlx.Layer layer;
 	public int layerId;
 	public int priorityPlane;
@@ -13,7 +14,9 @@ public class Layer {
 	public int coordId;
 	public float alpha;
 
-	public Layer(final Model model, final com.etheller.warsmash.parsers.mdlx.Layer layer, final int layerId,
+	public int index = -666;
+
+	public Layer(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.Layer layer, final int layerId,
 			final int priorityPlane) {
 		super(model, layer);
 		this.model = model;
@@ -25,6 +28,12 @@ public class Layer {
 		this.filterMode = filterMode2.ordinal();
 		this.textureId = layer.getTextureId();
 		// this.coo
+		this.index
+	}
+
+	public void bind(final ShaderProgram shader) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

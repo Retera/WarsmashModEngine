@@ -9,31 +9,10 @@ import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.util.Descriptor;
 import com.etheller.warsmash.util.RenderMathUtils;
 
-public abstract class Node {
+public abstract class Node extends GenericNode {
 	protected static final Vector3 locationHeap = new Vector3();
 	protected static final Quaternion rotationHeap = new Quaternion();
 	protected static final Vector3 scalingHeap = new Vector3();
-
-	protected final Vector3 pivot;
-	protected final Vector3 localLocation;
-	protected final Quaternion localRotation;
-	protected final Vector3 localScale;
-	protected final Vector3 worldLocation;
-	protected final Quaternion worldRotation;
-	protected final Vector3 worldScale;
-	protected final Vector3 inverseWorldLocation;
-	protected final Quaternion inverseWorldRotation;
-	protected final Vector3 inverseWorldScale;
-	protected final Matrix4 localMatrix;
-	protected final Matrix4 worldMatrix;
-	protected Node parent;
-	protected final List<Node> children;
-	protected final boolean dontInheritTranslation;
-	protected final boolean dontInheritRotation;
-	protected final boolean dontInheritScaling;
-	protected boolean visible;
-	protected boolean wasDirty;
-	protected boolean dirty;
 
 	public Node() {
 		this.pivot = new Vector3();
@@ -165,7 +144,7 @@ public abstract class Node {
 		return this;
 	}
 
-	public Node setParent(final Node parent) {
+	public Node setParent(final GenericNode parent) {
 		if (this.parent != null) {
 			this.parent.children.remove(this);
 		}
@@ -183,7 +162,7 @@ public abstract class Node {
 
 	public void recalculateTransformation() {
 		boolean dirty = this.dirty;
-		final Node parent = this.parent;
+		final GenericNode parent = this.parent;
 
 		this.wasDirty = this.dirty;
 
@@ -281,6 +260,7 @@ public abstract class Node {
 
 	}
 
+	@Override
 	public void update(final float dt, final Scene scene) {
 		if (this.dirty || ((this.parent != null) && this.parent.wasDirty)) {
 			this.dirty = true; // in case this node isn't dirty, but the parent was

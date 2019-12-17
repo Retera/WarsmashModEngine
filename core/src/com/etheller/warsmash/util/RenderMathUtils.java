@@ -14,6 +14,9 @@ public enum RenderMathUtils {
 	public static final Vector3 VEC3_UNIT_X = new Vector3(1, 0, 0);
 	public static final Vector3 VEC3_UNIT_Y = new Vector3(0, 1, 0);
 	public static final Vector3 VEC3_UNIT_Z = new Vector3(0, 0, 1);
+	public static final float[] FLOAT_VEC3_ZERO = new float[] { 0, 0, 0 };
+	public static final float[] FLOAT_QUAT_DEFAULT = new float[] { 0, 0, 0, 1 };
+	public static final float[] FLOAT_VEC3_ONE = new float[] { 1, 1, 1 };
 
 	// copied from ghostwolf and
 	// https://www.blend4web.com/api_doc/libs_gl-matrix2.js.html
@@ -356,7 +359,7 @@ public enum RenderMathUtils {
 	}
 
 	public static float randomInRange(final float a, final float b) {
-		return (float) (a + Math.random() * (b - a));
+		return (float) (a + (Math.random() * (b - a)));
 	}
 
 	public static float clamp(final float x, final float minVal, final float maxVal) {
@@ -364,15 +367,15 @@ public enum RenderMathUtils {
 	}
 
 	public static float lerp(final float a, final float b, final float t) {
-		return a + t * (b - a);
+		return a + (t * (b - a));
 	}
 
 	public static float hermite(final float a, final float b, final float c, final float d, final float t) {
 		final float factorTimes2 = t * t;
-		final float factor1 = factorTimes2 * (2 * t - 3) + 1;
-		final float factor2 = factorTimes2 * (t - 2) + t;
+		final float factor1 = (factorTimes2 * ((2 * t) - 3)) + 1;
+		final float factor2 = (factorTimes2 * (t - 2)) + t;
 		final float factor3 = factorTimes2 * (t - 1);
-		final float factor4 = factorTimes2 * (3 - 2 * t);
+		final float factor4 = factorTimes2 * (3 - (2 * t));
 		return (a * factor1) + (b * factor2) + (c * factor3) + (d * factor4);
 	}
 
@@ -397,7 +400,7 @@ public enum RenderMathUtils {
 		float omega, cosom, sinom, scale0, scale1;
 
 		// calc cosine
-		cosom = ax * bx + ay * by + az * bz + aw * bw;
+		cosom = (ax * bx) + (ay * by) + (az * bz) + (aw * bw);
 		// adjust signs (if necessary)
 		if (cosom < 0.0) {
 			cosom = -cosom;
@@ -421,10 +424,10 @@ public enum RenderMathUtils {
 			scale1 = t;
 		}
 		// calculate final values
-		out[0] = scale0 * ax + scale1 * bx;
-		out[1] = scale0 * ay + scale1 * by;
-		out[2] = scale0 * az + scale1 * bz;
-		out[3] = scale0 * aw + scale1 * bw;
+		out[0] = (scale0 * ax) + (scale1 * bx);
+		out[1] = (scale0 * ay) + (scale1 * by);
+		out[2] = (scale0 * az) + (scale1 * bz);
+		out[3] = (scale0 * aw) + (scale1 * bw);
 
 		return out;
 	}

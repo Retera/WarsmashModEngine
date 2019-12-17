@@ -173,4 +173,49 @@ public class RibbonEmitter extends GenericObject {
 	public long getByteLength() {
 		return 56 + super.getByteLength();
 	}
+
+	public float getHeightAbove() {
+		return this.heightAbove;
+	}
+
+	public float getHeightBelow() {
+		return this.heightBelow;
+	}
+
+	public float getAlpha() {
+		return this.alpha;
+	}
+
+	public float[] getColor() {
+		return this.color;
+	}
+
+	public float getLifeSpan() {
+		return this.lifeSpan;
+	}
+
+	public long getTextureSlot() {
+		return this.textureSlot;
+	}
+
+	public long getEmissionRate() {
+		return this.emissionRate;
+	}
+
+	public long getRows() {
+		return this.rows;
+	}
+
+	public long getColumns() {
+		return this.columns;
+	}
+
+	public int getMaterialId() {
+		return this.materialId;
+	}
+
+	public float getGravity() {
+		return this.gravity;
+	}
+
 }

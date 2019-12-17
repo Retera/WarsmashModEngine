@@ -41,7 +41,7 @@ public class Shaders {
 			"      return enc;\r\n" + //
 			"    }";
 
-	public static final String quadTransform = "\r\n" + //
+	public static final String quatTransform = "\r\n" + //
 			"    // A 2D quaternion*vector.\r\n" + //
 			"    // q is the zw components of the original quaternion.\r\n" + //
 			"    vec2 quat_transform(vec2 q, vec2 v) {\r\n" + //

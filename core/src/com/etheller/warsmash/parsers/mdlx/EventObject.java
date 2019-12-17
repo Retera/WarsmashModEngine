@@ -74,4 +74,21 @@ public class EventObject extends GenericObject {
 	public long getByteLength() {
 		return 12 + (this.keyFrames.length * 4) + super.getByteLength();
 	}
+
+	public int getGlobalSequenceId() {
+		return this.globalSequenceId;
+	}
+
+	public void setGlobalSequenceId(final int globalSequenceId) {
+		this.globalSequenceId = globalSequenceId;
+	}
+
+	public long[] getKeyFrames() {
+		return this.keyFrames;
+	}
+
+	public void setKeyFrames(final long[] keyFrames) {
+		this.keyFrames = keyFrames;
+	}
+
 }

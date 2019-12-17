@@ -11,11 +11,15 @@ public abstract class Resource<HANDLER extends ResourceHandler> {
 	public final String fetchUrl;
 	public boolean ok;
 	public boolean loaded;
+	public final PathSolver pathSolver;
+	public final Object solverParams = null;
 
-	public Resource(final ModelViewer viewer, final HANDLER handler, final String extension, final String fetchUrl) {
+	public Resource(final ModelViewer viewer, final HANDLER handler, final String extension,
+			final PathSolver pathSolver, final String fetchUrl) {
 		this.viewer = viewer;
 		this.handler = handler;
 		this.extension = extension;
+		this.pathSolver = pathSolver;
 		this.fetchUrl = fetchUrl;
 		this.ok = false;
 		this.loaded = false;

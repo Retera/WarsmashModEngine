@@ -85,4 +85,7 @@ public class Bone extends GenericObject {
 		return 8 + super.getByteLength();
 	}
 
+	public int getGeosetAnimationId() {
+		return this.geosetAnimationId;
+	}
 }

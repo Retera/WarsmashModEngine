@@ -1,27 +1,39 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
-import com.etheller.warsmash.parsers.mdlx.timeline.KeyFrame;
+import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
 import com.etheller.warsmash.util.RenderMathUtils;
 
-public abstract class SdSequence<TYPE> {
+public final class SdSequence<TYPE> {
 
 	private final Sd<TYPE> sd;
-	private final long start; // UInt32
-	private final long end; // UInt32
-	private final List<KeyFrame> keyframes;
-	private boolean constant;
+	public final long start; // UInt32
+	public final long end; // UInt32
+	public long[] frames;
+	public TYPE[] values;
+	public TYPE[] inTans;
+	public TYPE[] outTans;
+	public boolean constant;
 
-	public SdSequence(final Sd<TYPE> sd, final long start, final long end, final List<KeyFrame> keyframes,
+	public SdSequence(final Sd<TYPE> sd, final long start, final long end, final Timeline<TYPE> timeline,
 			final boolean isGlobalSequence) {
-		final TYPE defval = convertDefaultValue(sd.defval);
-
 		this.sd = sd;
 		this.start = start;
 		this.end = end;
-		this.keyframes = new ArrayList<>();
+		final ArrayList<Long> framesBuilder = new ArrayList<>();
+		final ArrayList<TYPE> valuesBuilder = new ArrayList<>();
+		final ArrayList<TYPE> inTansBuilder = new ArrayList<>();
+		final ArrayList<TYPE> outTansBuilder = new ArrayList<>();
+		this.constant = false;
+
+		final int interpolationType = sd.interpolationType;
+		final long[] frames = timeline.getFrames();
+		final TYPE[] values = timeline.getValues();
+		final TYPE[] inTans = timeline.getInTans();
+		final TYPE[] outTans = timeline.getOutTans();
+		final TYPE defval = sd.defval;
 
 		// When using a global sequence, where the first key is outside of the
 		// sequence's length, it becomes its constant value.
@@ -34,40 +46,47 @@ public abstract class SdSequence<TYPE> {
 		// Therefore, only handle the case where the first key is outside.
 		// This fixes problems spread over many models, e.g. HeroMountainKing
 		// (compare in WE and in Magos).
-		if (isGlobalSequence && keyframes.size() > 0 && keyframes.get(0).getTime() > end) {
-			this.keyframes.add(keyframes.get(0));
+		if (isGlobalSequence && (frames.length > 0) && (frames[0] > end)) {
+			this.frames[0] = frames[0];
+			this.values[0] = values[0];
 		}
 
 		// Go over the keyframes, and add all of the ones that are in this
 		// sequence (start <= frame <= end).
-		for (int i = 0, l = keyframes.size(); i < l; i++) {
-			final KeyFrame keyFrame = keyframes.get(i);
-			final long frame = keyFrame.getTime();
+		for (int i = 0, l = frames.length; i < l; i++) {
+			final long frame = frames[i];
 
-			if (frame >= start && frame <= end) {
-				this.keyframes.add(keyFrame);
+			if ((frame >= start) && (frame <= end)) {
+				framesBuilder.add(frame);
+				valuesBuilder.add(values[i]);
+
+				if (interpolationType > 1) {
+					inTansBuilder.add(inTans[i]);
+					outTansBuilder.add(outTans[i]);
+				}
 			}
 		}
 
-		final int keyframeCount = this.keyframes.size();
+		final int keyframeCount = framesBuilder.size();
 
 		if (keyframeCount == 0) {
 			// if there are no keys, use the default value directly.
 			this.constant = true;
-			this.keyframes.add(createKeyFrame(start, defval));
+			framesBuilder.add(start);
+			valuesBuilder.add(defval);
 		}
 		else if (keyframeCount == 1) {
 			// If there's only one key, use it directly
 			this.constant = true;
 		}
 		else {
-			final KeyFrame firstFrame = this.keyframes.get(0);
+			final TYPE firstValue = valuesBuilder.get(0);
 
 			// If all of the values in this sequence are the same, might as well
 			// make it constant.
 			boolean allFramesMatch = true;
-			for (final KeyFrame frame : this.keyframes) {
-				if (!frame.matchingValue(firstFrame)) {
+			for (final TYPE value : valuesBuilder) {
+				if (!equals(firstValue, value)) {
 					allFramesMatch = false;
 				}
 			}
@@ -76,75 +95,78 @@ public abstract class SdSequence<TYPE> {
 			if (!this.constant) {
 				// If there is no opening keyframe for this sequence, inject one
 				// with the default value.
-				if (this.keyframes.get(0).getTime() != start) {
-					this.keyframes.add(0, createKeyFrame(start, defval));
+				if (framesBuilder.get(0) != start) {
+					framesBuilder.add(start);
+					valuesBuilder.add(defval);
+
+					if (interpolationType > 1) {
+						inTansBuilder.add(defval);
+						outTansBuilder.add(defval);
+					}
 				}
 
 				// If there is no closing keyframe for this sequence, inject one
 				// with the default value.
-				if (this.keyframes.get(this.keyframes.size() - 1).getTime() != end) {
-					this.keyframes.add(this.keyframes.get(0).clone(end));
-				}
-			}
-		}
-	}
+				if (framesBuilder.get(framesBuilder.size() - 1) != end) {
+					framesBuilder.add(end);
+					valuesBuilder.add(valuesBuilder.get(0));
 
-	public int getValue(final TYPE out, final long frame) {
-		final int index = this.getKeyframe(frame);
-		final int size = keyframes.size();
-
-		if (index == -1) {
-			set(out, keyframes.get(0));
-
-			return 0;
-		}
-		else if (index == size) {
-			set(out, keyframes.get(size - 1));
-
-			return size - 1;
-		}
-		else {
-			final KeyFrame start = keyframes.get(index - 1);
-			final KeyFrame end = keyframes.get(index);
-			final float t = RenderMathUtils.clamp((frame - start.getTime()) / (end.getTime() - start.getTime()), 0, 1);
-
-			interpolate(out, start, end, t);
-
-			return index;
-		}
-	}
-
-	public int getKeyframe(final long frame) {
-		if (this.constant) {
-			return -1;
-		}
-		else {
-			final int l = keyframes.size();
-
-			if (frame < this.start) {
-				return -1;
-			}
-			else if (frame >= this.end) {
-				return 1;
-			}
-			else {
-				for (int i = 1; i < l; i++) {
-					final KeyFrame keyframe = keyframes.get(i);
-
-					if (keyframe.getTime() > frame) {
-						return i;
+					if (interpolationType > 1) {
+						inTansBuilder.add(inTansBuilder.get(0));
+						outTansBuilder.add(outTansBuilder.get(0));
 					}
 				}
 			}
 		}
-		return -1;
+		this.frames = new long[framesBuilder.size()];
+		for (int i = 0; i < framesBuilder.size(); i++) {
+			frames[i] = framesBuilder.get(i);
+		}
+		this.values = valuesBuilder.toArray((TYPE[]) new Object[valuesBuilder.size()]);
+		this.inTans = inTansBuilder.toArray((TYPE[]) new Object[inTansBuilder.size()]);
+		this.outTans = outTansBuilder.toArray((TYPE[]) new Object[outTansBuilder.size()]);
 	}
 
-	protected abstract void set(TYPE out, KeyFrame frameForValue);
+	public int getValue(final TYPE out, final long frame) {
+		final int l = this.frames.length;
 
-	protected abstract TYPE convertDefaultValue(float[] defaultValue);
+		if (this.constant || (frame < this.start)) {
+			this.sd.copy(out, this.values[0]);
 
-	protected abstract KeyFrame createKeyFrame(long time, TYPE value);
+			return -1;
+		}
+		else if (frame >= this.end) {
+			this.sd.copy(out, this.values[l - 1]);
 
-	protected abstract void interpolate(TYPE out, KeyFrame a, KeyFrame b, float t);
+			return l - 1;
+		}
+		else {
+			for (int i = 1; i < l; i++) {
+				if (this.frames[i] > frame) {
+					final long start = this.frames[i = 1];
+					final long end = this.frames[i];
+					final float t = RenderMathUtils.clamp((frame - start) / (end - start), 0, 1);
+
+					this.sd.interpolate(out, this.values, this.inTans, this.outTans, i - 1, i, t);
+
+					return i;
+				}
+			}
+
+			return -1;
+		}
+	}
+
+	protected final boolean equals(final TYPE a, final TYPE b) {
+		if ((a instanceof Float) && (b instanceof Float)) {
+			return a.equals(b);
+		}
+		else if ((a instanceof Long) && (b instanceof Long)) {
+			return a.equals(b);
+		}
+		else if ((a instanceof float[]) && (b instanceof float[])) {
+			return Arrays.equals(((float[]) a), (float[]) b);
+		}
+		return false;
+	}
 }

@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.deprecated.ShaderUnitDeprecated;
 
 /**
@@ -19,7 +19,7 @@ public class WebGL {
 	public Map<Integer, ShaderProgram> shaderPrograms;
 	public ShaderProgram currentShaderProgram;
 	public String floatPrecision;
-	public final Texture emptyTexture;
+	public final com.badlogic.gdx.graphics.Texture emptyTexture;
 
 	public WebGL(final GL20 gl) {
 		gl.glDepthFunc(GL20.GL_LEQUAL);
@@ -42,7 +42,7 @@ public class WebGL {
 				imageData.drawPixel(i, j, 0x000000FF);
 			}
 		}
-		this.emptyTexture = new Texture(imageData);
+		this.emptyTexture = new com.badlogic.gdx.graphics.Texture(imageData);
 	}
 
 	public ShaderUnitDeprecated createShaderUnit(final String src, final int type) {
@@ -115,7 +115,7 @@ public class WebGL {
 		gl.glActiveTexture(GL20.GL_TEXTURE0 + unit);
 
 		if (texture != null /* && texture.ok */) {
-			texture.bind();
+			texture.internalBind();
 		}
 		else {
 			this.emptyTexture.bind();

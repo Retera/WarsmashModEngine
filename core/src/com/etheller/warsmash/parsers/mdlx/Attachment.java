@@ -96,4 +96,12 @@ public class Attachment extends GenericObject {
 	public long getByteLength() {
 		return 268 + super.getByteLength();
 	}
+
+	public String getPath() {
+		return this.path;
+	}
+
+	public int getAttachmentId() {
+		return this.attachmentId;
+	}
 }

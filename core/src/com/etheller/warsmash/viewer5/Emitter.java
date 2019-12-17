@@ -3,31 +3,29 @@ package com.etheller.warsmash.viewer5;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+public abstract class Emitter<MODEL_INSTANCE extends ModelInstance, EMITTED_OBJECT extends EmittedObject<MODEL_INSTANCE, ? extends Emitter<MODEL_INSTANCE, EMITTED_OBJECT>>> {
 
-public abstract class Emitter {
+	public final MODEL_INSTANCE instance;
+	public final List<EMITTED_OBJECT> objects;
+	public int alive;
+	protected float currentEmission;
 
-	private final ModelInstance instance;
-	private final EmitterObject emitterObject;
-	private final List<EmittedObject> objects;
-	private int alive;
-	private int currentEmission;
-
-	public Emitter(final ModelInstance instance, final EmitterObject emitterObject) {
+	public Emitter(final MODEL_INSTANCE instance) {
 		this.instance = instance;
-		this.emitterObject = emitterObject;
 		this.objects = new ArrayList<>();
 		this.alive = 0;
 		this.currentEmission = 0;
 	}
 
-	public final EmittedObject emitObject(final int flags) {
+	public final EMITTED_OBJECT emitObject(final int flags) {
 		if (this.alive == this.objects.size()) {
 			this.objects.add(this.createObject());
 		}
 
-		final EmittedObject object = this.objects.get(this.alive);
+		final EMITTED_OBJECT object = this.objects.get(this.alive);
+
 		object.index = this.alive;
+
 		object.bind(flags);
 
 		this.alive += 1;
@@ -38,10 +36,11 @@ public abstract class Emitter {
 		return object;
 	}
 
-	public final void update(final float dt) {
+	public void update(final float dt) {
 		this.updateEmission(dt);
 
-		final int currentEmission = this.currentEmission;
+		final float currentEmission = this.currentEmission;
+
 		if (currentEmission >= 1) {
 			for (int i = 0; i < currentEmission; i += 1) {
 				this.emit();
@@ -49,10 +48,10 @@ public abstract class Emitter {
 		}
 	}
 
-	public final void kill(final EmittedObject object) {
+	public void kill(final EMITTED_OBJECT object) {
 		this.alive -= 1;
 
-		final EmittedObject otherObject = this.objects.get(this.alive);
+		final EMITTED_OBJECT otherObject = this.objects.get(this.alive);
 		this.objects.set(object.index, otherObject);
 		this.objects.set(this.alive, object);
 
@@ -71,5 +70,5 @@ public abstract class Emitter {
 
 	protected abstract void emit();
 
-	protected abstract EmittedObject createObject();
+	protected abstract EMITTED_OBJECT createObject();
 }

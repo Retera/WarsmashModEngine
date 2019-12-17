@@ -3,8 +3,6 @@ package com.etheller.warsmash.viewer5;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.badlogic.gdx.graphics.Texture;
-
 public class TextureMapper {
 	public final Model model;
 	public final Map<Object, Texture> textures;

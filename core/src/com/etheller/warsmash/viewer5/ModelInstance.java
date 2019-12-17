@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5;
 
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.Vector4;
@@ -15,7 +14,7 @@ public abstract class ModelInstance extends Node {
 	public float depth;
 	public int updateFrame;
 	public int cullFrame;
-	public Model model;
+	public Model<?> model;
 	public TextureMapper textureMapper;
 	public boolean paused;
 	public boolean rendered;

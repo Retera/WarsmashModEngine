@@ -1,8 +1,6 @@
 package com.etheller.warsmash.parsers.mdlx.timeline;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.parsers.mdlx.Chunk;
@@ -15,18 +13,27 @@ import com.etheller.warsmash.util.War3ID;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.io.LittleEndianDataOutputStream;
 
-public abstract class Timeline implements Chunk {
+public abstract class Timeline<TYPE> implements Chunk {
 	private War3ID name;
 	private InterpolationType interpolationType;
 	private int globalSequenceId = -1;
-	private final List<KeyFrame> keyFrames;
+
+	private long[] frames;
+	private TYPE[] values;
+	private TYPE[] inTans;
+	private TYPE[] outTans;
+
+	/**
+	 * Restricts us to only be able to parse models on one thread at a time, in
+	 * return for high performance.
+	 */
+	private static StringBuffer STRING_BUFFER_HEAP = new StringBuffer();
 
 	public War3ID getName() {
 		return this.name;
 	}
 
 	public Timeline() {
-		this.keyFrames = new ArrayList<>();
 	}
 
 	public void readMdx(final LittleEndianDataInputStream stream, final War3ID name) throws IOException {
@@ -37,23 +44,38 @@ public abstract class Timeline implements Chunk {
 		this.interpolationType = InterpolationType.VALUES[stream.readInt()];
 		this.globalSequenceId = stream.readInt();
 
+		this.frames = new long[(int) keyFrameCount];
+		this.values = (TYPE[]) new Object[(int) keyFrameCount];
+		if (this.interpolationType.tangential()) {
+			this.inTans = (TYPE[]) new Object[(int) keyFrameCount];
+			this.outTans = (TYPE[]) new Object[(int) keyFrameCount];
+		}
+
 		for (int i = 0; i < keyFrameCount; i++) {
-			final KeyFrame keyFrame = newKeyFrame();
+			this.frames[i] = (stream.readInt()); // TODO autoboxing is slow
+			this.values[i] = (this.readMdxValue(stream));
 
-			keyFrame.readMdx(stream, this.interpolationType);
-
-			this.keyFrames.add(keyFrame);
+			if (this.interpolationType.tangential()) {
+				this.inTans[i] = (this.readMdxValue(stream));
+				this.outTans[i] = (this.readMdxValue(stream));
+			}
 		}
 	}
 
 	public void writeMdx(final LittleEndianDataOutputStream stream) throws IOException {
 		stream.writeInt(Integer.reverseBytes(this.name.getValue()));
-		stream.writeInt(this.keyFrames.size());
+		final int keyframeCount = this.frames.length;
+		stream.writeInt(keyframeCount);
 		stream.writeInt(this.interpolationType.ordinal());
 		stream.writeInt(this.globalSequenceId);
 
-		for (final KeyFrame keyFrame : this.keyFrames) {
-			keyFrame.writeMdx(stream, this.interpolationType);
+		for (int i = 0; i < keyframeCount; i++) {
+			stream.writeInt((int) this.frames[i]);
+			writeMdxValue(stream, this.values[i]);
+			if (this.interpolationType.tangential()) {
+				writeMdxValue(stream, this.inTans[i]);
+				writeMdxValue(stream, this.outTans[i]);
+			}
 		}
 	}
 
@@ -94,19 +116,29 @@ public abstract class Timeline implements Chunk {
 			this.globalSequenceId = -1;
 		}
 
+		this.frames = new long[keyFrameCount];
+		this.values = (TYPE[]) new Object[keyFrameCount];
+		if (this.interpolationType.tangential()) {
+			this.inTans = (TYPE[]) new Object[keyFrameCount];
+			this.outTans = (TYPE[]) new Object[keyFrameCount];
+		}
 		for (int i = 0; i < keyFrameCount; i++) {
-			final KeyFrame keyFrame = newKeyFrame();
-
-			keyFrame.readMdl(stream, interpolationType);
-
-			this.keyFrames.add(keyFrame);
+			this.frames[i] = (stream.readInt());
+			this.values[i] = (this.readMdlValue(stream));
+			if (interpolationType.tangential()) {
+				stream.read(); // InTan
+				this.inTans[i] = (this.readMdlValue(stream));
+				stream.read(); // OutTan
+				this.outTans[i] = (this.readMdlValue(stream));
+			}
 		}
 
 		stream.read(); // }
 	}
 
 	public void writeMdl(final MdlTokenOutputStream stream) throws IOException {
-		stream.startBlock(AnimationMap.ID_TO_TAG.get(this.name).getMdlToken(), this.keyFrames.size());
+		final int tracksCount = this.frames.length;
+		stream.startBlock(AnimationMap.ID_TO_TAG.get(this.name).getMdlToken(), tracksCount);
 
 		String token;
 		switch (this.interpolationType) {
@@ -133,8 +165,17 @@ public abstract class Timeline implements Chunk {
 			stream.writeAttrib(MdlUtils.TOKEN_GLOBAL_SEQ_ID, this.globalSequenceId);
 		}
 
-		for (final KeyFrame keyFrame : this.keyFrames) {
-			keyFrame.writeMdl(stream, this.interpolationType);
+		for (int i = 0; i < tracksCount; i++) {
+			STRING_BUFFER_HEAP.setLength(0);
+			STRING_BUFFER_HEAP.append(this.frames[i]);
+			STRING_BUFFER_HEAP.append(':');
+			this.writeMdlValue(stream, STRING_BUFFER_HEAP.toString(), this.values[i]);
+			if (this.interpolationType.tangential()) {
+				stream.indent();
+				this.writeMdlValue(stream, "InTan", this.inTans[i]);
+				this.writeMdlValue(stream, "OutTan", this.outTans[i]);
+				stream.unindent();
+			}
 		}
 
 		stream.endBlock();
@@ -142,22 +183,52 @@ public abstract class Timeline implements Chunk {
 
 	@Override
 	public long getByteLength() {
-		return 16 + (this.keyFrames.size() * (4 + (4 * (this.size() * (this.interpolationType.tangential() ? 3 : 1)))));
-	}
+		final int tracksCount = this.frames.length;
+		int size = 16;
 
-	protected abstract KeyFrame newKeyFrame();
+		if (tracksCount > 0) {
+			final int bytesPerValue = size() * 4;
+			int valuesPerTrack = 1;
+			if (this.interpolationType.tangential()) {
+				valuesPerTrack = 3;
+			}
+
+			size += (4 + (valuesPerTrack * bytesPerValue)) * tracksCount;
+		}
+		return size;
+	}
 
 	protected abstract int size();
 
-	public int getGlobalSequenceId() {
-		return globalSequenceId;
-	}
+	protected abstract TYPE readMdxValue(LittleEndianDataInputStream stream) throws IOException;
 
-	public List<KeyFrame> getKeyFrames() {
-		return keyFrames;
+	protected abstract TYPE readMdlValue(MdlTokenInputStream stream);
+
+	protected abstract void writeMdxValue(LittleEndianDataOutputStream stream, TYPE value) throws IOException;
+
+	protected abstract void writeMdlValue(MdlTokenOutputStream stream, String prefix, TYPE value);
+
+	public int getGlobalSequenceId() {
+		return this.globalSequenceId;
 	}
 
 	public InterpolationType getInterpolationType() {
-		return interpolationType;
+		return this.interpolationType;
+	}
+
+	public long[] getFrames() {
+		return this.frames;
+	}
+
+	public TYPE[] getValues() {
+		return this.values;
+	}
+
+	public TYPE[] getInTans() {
+		return this.inTans;
+	}
+
+	public TYPE[] getOutTans() {
+		return this.outTans;
 	}
 }

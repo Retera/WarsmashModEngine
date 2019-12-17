@@ -16,7 +16,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
  *
  */
 public abstract class AnimatedObject implements Chunk, MdlxBlock {
-	protected final List<Timeline> timelines;
+	protected final List<Timeline<?>> timelines;
 
 	public AnimatedObject() {
 		this.timelines = new ArrayList<>();
@@ -25,7 +25,7 @@ public abstract class AnimatedObject implements Chunk, MdlxBlock {
 	public void readTimelines(final LittleEndianDataInputStream stream, long size) throws IOException {
 		while (size > 0) {
 			final War3ID name = new War3ID(Integer.reverseBytes(stream.readInt()));
-			final Timeline timeline = AnimationMap.ID_TO_TAG.get(name).getImplementation().createTimeline();
+			final Timeline<?> timeline = AnimationMap.ID_TO_TAG.get(name).getImplementation().createTimeline();
 
 			timeline.readMdx(stream, name);
 
@@ -36,7 +36,7 @@ public abstract class AnimatedObject implements Chunk, MdlxBlock {
 	}
 
 	public void writeTimelines(final LittleEndianDataOutputStream stream) throws IOException {
-		for (final Timeline timeline : this.timelines) {
+		for (final Timeline<?> timeline : this.timelines) {
 			timeline.writeMdx(stream);
 		}
 	}
@@ -46,7 +46,7 @@ public abstract class AnimatedObject implements Chunk, MdlxBlock {
 	}
 
 	public void readTimeline(final MdlTokenInputStream stream, final AnimationMap name) throws IOException {
-		final Timeline timeline = name.getImplementation().createTimeline();
+		final Timeline<?> timeline = name.getImplementation().createTimeline();
 
 		timeline.readMdl(stream, name.getWar3id());
 
@@ -54,7 +54,7 @@ public abstract class AnimatedObject implements Chunk, MdlxBlock {
 	}
 
 	public boolean writeTimeline(final MdlTokenOutputStream stream, final AnimationMap name) throws IOException {
-		for (final Timeline timeline : this.timelines) {
+		for (final Timeline<?> timeline : this.timelines) {
 			if (timeline.getName().equals(name.getWar3id())) {
 				timeline.writeMdl(stream);
 				return true;
@@ -66,7 +66,7 @@ public abstract class AnimatedObject implements Chunk, MdlxBlock {
 	@Override
 	public long getByteLength() {
 		long size = 0;
-		for (final Timeline timeline : this.timelines) {
+		for (final Timeline<?> timeline : this.timelines) {
 			size += timeline.getByteLength();
 		}
 		return size;
@@ -100,5 +100,9 @@ public abstract class AnimatedObject implements Chunk, MdlxBlock {
 			return token;
 		}
 
+	}
+
+	public List<Timeline<?>> getTimelines() {
+		return this.timelines;
 	}
 }

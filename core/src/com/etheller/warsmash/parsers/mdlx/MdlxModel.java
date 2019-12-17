@@ -55,10 +55,10 @@ public class MdlxModel {
 	private int version = 800;
 	private String name = "";
 	/**
-	 * (Comment copied from Ghostwolf JS) To the best of my knowledge, this
-	 * should always be left empty. This is probably a leftover from the
-	 * Warcraft 3 beta. (WS game note: No, I never saw any animation files in
-	 * the RoC 2001-2002 Beta. So it must be from the Alpha)
+	 * (Comment copied from Ghostwolf JS) To the best of my knowledge, this should
+	 * always be left empty. This is probably a leftover from the Warcraft 3 beta.
+	 * (WS game note: No, I never saw any animation files in the RoC 2001-2002 Beta.
+	 * So it must be from the Alpha)
 	 *
 	 * @member {string}
 	 */
@@ -208,7 +208,7 @@ public class MdlxModel {
 
 	private <E extends MdlxBlock & Chunk> void loadDynamicObjects(final List<E> out,
 			final MdlxBlockDescriptor<E> constructor, final LittleEndianDataInputStream stream, final long size)
-					throws IOException {
+			throws IOException {
 		long totalSize = 0;
 		while (totalSize < size) {
 			final E object = constructor.create();
@@ -459,7 +459,7 @@ public class MdlxModel {
 
 	private <E extends MdlxBlock> void loadNumberedObjectBlock(final List<E> out,
 			final MdlxBlockDescriptor<E> constructor, final String name, final MdlTokenInputStream stream)
-					throws IOException {
+			throws IOException {
 		stream.read(); // Don't care about the number, the array will grow
 
 		for (final String token : stream.readBlock()) {
@@ -644,10 +644,14 @@ public class MdlxModel {
 	}
 
 	public List<Long> getGlobalSequences() {
-		return globalSequences;
+		return this.globalSequences;
 	}
 
 	public List<Sequence> getSequences() {
-		return sequences;
+		return this.sequences;
+	}
+
+	public List<float[]> getPivotPoints() {
+		return this.pivotPoints;
 	}
 }

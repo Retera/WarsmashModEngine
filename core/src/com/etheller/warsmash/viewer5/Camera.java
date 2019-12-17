@@ -36,15 +36,15 @@ public class Camera {
 	public Quaternion inverseRotation;
 	private final Matrix4 worldMatrix;
 	private final Matrix4 projectionMatrix;
-	private final Matrix4 worldProjectionMatrix;
+	public final Matrix4 worldProjectionMatrix;
 	private final Matrix4 inverseWorldMatrix;
 	private final Matrix4 inverseRotationMatrix;
 	private final Matrix4 inverseWorldProjectionMatrix;
 	public final Vector3 directionX;
 	public final Vector3 directionY;
 	public final Vector3 directionZ;
-	private final Vector3[] vectors;
-	private final Vector3[] billboardedVectors;
+	public final Vector3[] vectors;
+	public final Vector3[] billboardedVectors;
 
 	public final Vector4[] planes;
 	private boolean dirty;

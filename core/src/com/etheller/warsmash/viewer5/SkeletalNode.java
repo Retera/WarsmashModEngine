@@ -8,31 +8,31 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.util.RenderMathUtils;
 
-public abstract class SkeletalNode {
+public abstract class SkeletalNode extends GenericNode {
 	protected static final Vector3 locationHeap = new Vector3();
 	protected static final Quaternion rotationHeap = new Quaternion();
 	protected static final Vector3 scalingHeap = new Vector3();
 
-	protected final Vector3 pivot;
-	protected final Vector3 localLocation;
-	protected final Quaternion localRotation;
-	protected final Vector3 localScale;
-	protected final Vector3 worldLocation;
-	protected final Quaternion worldRotation;
-	protected final Vector3 worldScale;
-	protected final Vector3 inverseWorldLocation;
-	protected final Quaternion inverseWorldRotation;
-	protected final Vector3 inverseWorldScale;
-	protected final Matrix4 localMatrix;
-	protected final Matrix4 worldMatrix;
-	protected SkeletalNode parent;
-	protected final List<Node> children;
-	protected final boolean dontInheritTranslation;
-	protected final boolean dontInheritRotation;
-	protected final boolean dontInheritScaling;
-	protected boolean visible;
-	protected boolean wasDirty;
-	protected boolean dirty;
+	public final Vector3 pivot;
+	public final Vector3 localLocation;
+	public final Quaternion localRotation;
+	public final Vector3 localScale;
+	public final Vector3 worldLocation;
+	public final Quaternion worldRotation;
+	public final Vector3 worldScale;
+	public final Vector3 inverseWorldLocation;
+	public final Quaternion inverseWorldRotation;
+	public final Vector3 inverseWorldScale;
+	public final Matrix4 localMatrix;
+	public final Matrix4 worldMatrix;
+	public SkeletalNode parent;
+	public final List<Node> children;
+	public final boolean dontInheritTranslation;
+	public final boolean dontInheritRotation;
+	public final boolean dontInheritScaling;
+	public boolean visible;
+	public boolean wasDirty;
+	public boolean dirty;
 
 	public Object object;
 

@@ -422,4 +422,97 @@ public class ParticleEmitter2 extends GenericObject {
 	public long getByteLength() {
 		return 175 + super.getByteLength();
 	}
+
+	public float getSpeed() {
+		return this.speed;
+	}
+
+	public float getVariation() {
+		return this.variation;
+	}
+
+	public float getLatitude() {
+		return this.latitude;
+	}
+
+	public float getGravity() {
+		return this.gravity;
+	}
+
+	public float getLifeSpan() {
+		return this.lifeSpan;
+	}
+
+	public float getEmissionRate() {
+		return this.emissionRate;
+	}
+
+	public float getLength() {
+		return this.length;
+	}
+
+	public float getWidth() {
+		return this.width;
+	}
+
+	public FilterMode getFilterMode() {
+		return this.filterMode;
+	}
+
+	public long getRows() {
+		return this.rows;
+	}
+
+	public long getColumns() {
+		return this.columns;
+	}
+
+	public long getHeadOrTail() {
+		return this.headOrTail;
+	}
+
+	public float getTailLength() {
+		return this.tailLength;
+	}
+
+	public float getTimeMiddle() {
+		return this.timeMiddle;
+	}
+
+	public float[][] getSegmentColors() {
+		return this.segmentColors;
+	}
+
+	public short[] getSegmentAlphas() {
+		return this.segmentAlphas;
+	}
+
+	public float[] getSegmentScaling() {
+		return this.segmentScaling;
+	}
+
+	public long[][] getHeadIntervals() {
+		return this.headIntervals;
+	}
+
+	public long[][] getTailIntervals() {
+		return this.tailIntervals;
+	}
+
+	public int getTextureId() {
+		return this.textureId;
+	}
+
+	public long getSquirt() {
+		return this.squirt;
+	}
+
+	public int getPriorityPlane() {
+		return this.priorityPlane;
+	}
+
+	public long getReplaceableId() {
+		return this.replaceableId;
+	}
+
 }

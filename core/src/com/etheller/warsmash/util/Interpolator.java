@@ -1,8 +1,8 @@
 package com.etheller.warsmash.util;
 
 public class Interpolator {
-	public void interpolateScalar(final float[] out, final float[] a, final float[] b, final float[] c, final float[] d,
-			final float t, final int type) {
+	public static void interpolateScalar(final float[] out, final float[] a, final float[] b, final float[] c,
+			final float[] d, final float t, final int type) {
 		switch (type) {
 		case 0: {
 			out[0] = a[0];
@@ -23,8 +23,8 @@ public class Interpolator {
 		}
 	}
 
-	public void interpolateVector(final float[] out, final float[] a, final float[] b, final float[] c, final float[] d,
-			final float t, final int type) {
+	public static void interpolateVector(final float[] out, final float[] a, final float[] b, final float[] c,
+			final float[] d, final float t, final int type) {
 		switch (type) {
 		case 0: {
 			System.arraycopy(a, 0, out, 0, a.length);
@@ -51,7 +51,7 @@ public class Interpolator {
 		}
 	}
 
-	public void interpolateQuaternion(final float[] out, final float[] a, final float[] b, final float[] c,
+	public static void interpolateQuaternion(final float[] out, final float[] a, final float[] b, final float[] c,
 			final float[] d, final float t, final int type) {
 		switch (type) {
 		case 0: {

@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,10 +11,10 @@ import java.util.Set;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
+import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
 
 public class ModelViewer {
 	private final DataSource dataSource;
@@ -28,7 +29,7 @@ public class ModelViewer {
 	private int visibleInstances;
 	private int updatedParticles;
 	public int frame;
-	private final int rectBuffer;
+	public final int rectBuffer;
 	private final boolean enableAudio;
 	private final Map<Model, List<TextureMapper>> textureMappers;
 	private final Set<ResourceHandler> handlers;
@@ -101,6 +102,77 @@ public class ModelViewer {
 
 	public void clear() {
 		this.scenes.clear();
+	}
+
+	public Object[] findHandler(final String ext) {
+		for (final ResourceHandler handler : this.handlers) {
+			for (final String[] extension : handler.extensions) {
+				if (extension[0].equals(ext)) {
+					return new Object[] { handler, extension[1] };
+				}
+			}
+		}
+		return null;
+	}
+
+	public Resource<?> load(final String src, final PathSolver pathSolver, final Object solverParams) {
+		String finalSrc = src;
+		String extension = "";
+		boolean isFetch = false;
+		final boolean resolved = false;
+
+		// If a given path solver, resolve.
+		if (pathSolver != null) {
+			final SolvedPath solved = pathSolver.solve(src, solverParams);
+
+			finalSrc = solved.getFinalSrc();
+			extension = solved.getExtension();
+			isFetch = solved.isFetch();
+		}
+
+		// Built-in texture sources
+		// ---- TODO not using JS code here
+
+		if (resolved) {
+			final Object[] handlerAndDataType = this.findHandler(extension.toLowerCase());
+
+			// Is there a handler for this file type?
+			if (handlerAndDataType != null) {
+				if (isFetch) {
+					final Resource<?> resource = this.fetchCache.get(finalSrc);
+
+					if (resource != null) {
+						return resource;
+					}
+				}
+
+				final ResourceHandler handler = (ResourceHandler) handlerAndDataType[0];
+				final Resource<?> resource = handler.construct(new ResourceHandlerConstructionParams(this, handler,
+						extension, pathSolver, isFetch ? finalSrc : ""));
+
+				this.resources.add(resource);
+
+//				if (isFetch) {
+				this.fetchCache.put(finalSrc, resource);
+//				}
+
+				// TODO this is a synchronous hack, skipped some Ghostwolf code
+				try {
+					resource.loadData(this.dataSource.getResourceAsStream(finalSrc), null);
+				}
+				catch (final IOException e) {
+					throw new IllegalStateException("Unable to load data: " + finalSrc);
+				}
+
+				return resource;
+			}
+			else {
+				throw new IllegalStateException("Missing handler for: " + finalSrc);
+			}
+		}
+		else {
+			throw new IllegalStateException("Load unresolved: " + finalSrc);
+		}
 	}
 
 	public boolean has(final String key) {

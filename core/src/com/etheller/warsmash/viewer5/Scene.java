@@ -147,7 +147,7 @@ public class Scene {
 		Batch batch = this.batches.get(textureMapper);
 
 		if (batch == null) {
-			final Model model = instance.model;
+			final Model<?> model = instance.model;
 			final BatchDescriptor batchDescriptor = model.handler.batchDescriptor;
 			batch = batchDescriptor.create(this, model, textureMapper);
 

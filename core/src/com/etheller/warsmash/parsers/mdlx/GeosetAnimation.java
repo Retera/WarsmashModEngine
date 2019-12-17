@@ -99,4 +99,16 @@ public class GeosetAnimation extends AnimatedObject {
 	public long getByteLength() {
 		return 28 + super.getByteLength();
 	}
+
+	public float[] getColor() {
+		return this.color;
+	}
+
+	public float getAlpha() {
+		return this.alpha;
+	}
+
+	public int getGeosetId() {
+		return this.geosetId;
+	}
 }

@@ -125,4 +125,28 @@ public class Camera extends AnimatedObject {
 	public long getByteLength() {
 		return 120 + super.getByteLength();
 	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public float[] getPosition() {
+		return this.position;
+	}
+
+	public float getFieldOfView() {
+		return this.fieldOfView;
+	}
+
+	public float getFarClippingPlane() {
+		return this.farClippingPlane;
+	}
+
+	public float getNearClippingPlane() {
+		return this.nearClippingPlane;
+	}
+
+	public float[] getTargetPosition() {
+		return this.targetPosition;
+	}
 }

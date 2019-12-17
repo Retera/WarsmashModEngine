@@ -61,13 +61,13 @@ public abstract class GenericObject extends AnimatedObject implements Chunk {
 		stream.writeInt(this.parentId);
 		stream.writeInt(this.flags); // UInt32 in ghostwolf JS, shouldn't matter for Java
 
-		for (final Timeline timeline : eachTimeline(true)) {
+		for (final Timeline<?> timeline : eachTimeline(true)) {
 			timeline.writeMdx(stream);
 		}
 	}
 
 	public void writeNonGenericAnimationChunks(final LittleEndianDataOutputStream stream) throws IOException {
-		for (final Timeline timeline : eachTimeline(false)) {
+		for (final Timeline<?> timeline : eachTimeline(false)) {
 			timeline.writeMdx(stream);
 		}
 	}
@@ -129,7 +129,7 @@ public abstract class GenericObject extends AnimatedObject implements Chunk {
 		this.writeTimeline(stream, AnimationMap.KGSC);
 	}
 
-	public Iterable<Timeline> eachTimeline(final boolean generic) {
+	public Iterable<Timeline<?>> eachTimeline(final boolean generic) {
 		return new TimelineMaskingIterable(generic);
 	}
 
@@ -146,7 +146,7 @@ public abstract class GenericObject extends AnimatedObject implements Chunk {
 		return 96 + super.getByteLength();
 	}
 
-	private final class TimelineMaskingIterable implements Iterable<Timeline> {
+	private final class TimelineMaskingIterable implements Iterable<Timeline<?>> {
 		private final boolean generic;
 
 		private TimelineMaskingIterable(final boolean generic) {
@@ -154,24 +154,24 @@ public abstract class GenericObject extends AnimatedObject implements Chunk {
 		}
 
 		@Override
-		public Iterator<Timeline> iterator() {
+		public Iterator<Timeline<?>> iterator() {
 			return new TimelineMaskingIterator(this.generic, GenericObject.this.timelines);
 		}
 	}
 
-	private static final class TimelineMaskingIterator implements Iterator<Timeline> {
+	private static final class TimelineMaskingIterator implements Iterator<Timeline<?>> {
 		private final boolean wantGeneric;
-		private final Iterator<Timeline> delegate;
+		private final Iterator<Timeline<?>> delegate;
 		private boolean hasNext;
-		private Timeline next;
+		private Timeline<?> next;
 
-		public TimelineMaskingIterator(final boolean wantGeneric, final List<Timeline> timelines) {
+		public TimelineMaskingIterator(final boolean wantGeneric, final List<Timeline<?>> timelines) {
 			this.wantGeneric = wantGeneric;
 			this.delegate = timelines.iterator();
 			scanUntilNext();
 		}
 
-		private boolean isGeneric(final Timeline timeline) {
+		private boolean isGeneric(final Timeline<?> timeline) {
 			final War3ID name = timeline.getName();
 			final boolean generic = AnimationMap.KGTR.getWar3id().equals(name)
 					|| AnimationMap.KGRT.getWar3id().equals(name) || AnimationMap.KGSC.getWar3id().equals(name);
@@ -197,8 +197,8 @@ public abstract class GenericObject extends AnimatedObject implements Chunk {
 		}
 
 		@Override
-		public Timeline next() {
-			final Timeline last = this.next;
+		public Timeline<?> next() {
+			final Timeline<?> last = this.next;
 			scanUntilNext();
 			return last;
 		}
@@ -330,5 +330,21 @@ public abstract class GenericObject extends AnimatedObject implements Chunk {
 			return token;
 		}
 
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public int getObjectId() {
+		return this.objectId;
+	}
+
+	public int getParentId() {
+		return this.parentId;
+	}
+
+	public int getFlags() {
+		return this.flags;
 	}
 }

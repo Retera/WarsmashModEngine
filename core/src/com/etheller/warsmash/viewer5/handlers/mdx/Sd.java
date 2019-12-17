@@ -5,18 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
-import com.etheller.warsmash.parsers.mdlx.timeline.KeyFrame;
 import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.viewer5.ModelInstance;
 
 public abstract class Sd<TYPE> {
-	public MdlxModel model;
+	public MdxModel model;
 	public int interpolationType;
 	public War3ID name;
-	public float[] defval;
+	public TYPE defval;
 	public SdSequence<TYPE> globalSequence;
 	public List<SdSequence<TYPE>> sequences;
 
@@ -88,15 +85,14 @@ public abstract class Sd<TYPE> {
 
 	}
 
-	public Sd(final MdlxModel model, final Timeline timeline) {
+	public Sd(final MdxModel model, final Timeline<TYPE> timeline) {
 		final List<Long> globalSequences = model.getGlobalSequences();
 		final int globalSequenceId = timeline.getGlobalSequenceId();
-		final List<KeyFrame> keyFrames = timeline.getKeyFrames();
 		final Integer forcedInterp = forcedInterpMap.get(timeline.getName());
 
 		this.model = model;
 		this.name = timeline.getName();
-		this.defval = defVals.get(timeline.getName());
+		this.defval = convertDefaultValue(defVals.get(timeline.getName()));
 		this.globalSequence = null;
 		this.sequences = new ArrayList<>();
 
@@ -107,24 +103,46 @@ public abstract class Sd<TYPE> {
 		// type.
 		this.interpolationType = forcedInterp != null ? forcedInterp : timeline.getInterpolationType().ordinal();
 
-		if (globalSequenceId != -1 && globalSequences.size() > 0) {
-			this.globalSequence = newSequenceTyped(this, 0, globalSequences.get(globalSequenceId).longValue(),
-					keyFrames, true);
+		if ((globalSequenceId != -1) && (globalSequences.size() > 0)) {
+			this.globalSequence = new SdSequence<TYPE>(this, 0, globalSequences.get(globalSequenceId).longValue(),
+					timeline, true);
 		}
 		else {
 			for (final Sequence sequence : model.getSequences()) {
 				final long[] interval = sequence.getInterval();
-				this.sequences.add(newSequenceTyped(this, interval[0], interval[1], keyFrames, false));
+
+				this.sequences.add(new SdSequence<TYPE>(this, interval[0], interval[1], timeline, false));
 			}
 		}
 	}
 
-	public int getValue(final TYPE out, final ModelInstance instance) {
-		if(this.globalSequence != null) {
-			return this.globalSequence.getValue(out, instance.cout)
+	public int getValue(final TYPE out, final MdxComplexInstance instance) {
+		if (this.globalSequence != null) {
+			return this.globalSequence.getValue(out, instance.counter % this.globalSequence.end);
+		}
+		else if (instance.sequence != -1) {
+			return this.sequences.get(instance.sequence).getValue(out, instance.frame);
+		}
+		else {
+			this.copy(out, this.defval);
+
+			return -1;
 		}
 	}
 
-	protected abstract SdSequence<TYPE> newSequenceTyped(final Sd<TYPE> parent, final long start, final long end,
-			final List<KeyFrame> keyframes, final boolean isGlobalSequence);
+	public boolean isVariant(final int sequence) {
+		if (this.globalSequence != null) {
+			return !this.globalSequence.constant;
+		}
+		else {
+			return !this.sequences.get(sequence).constant;
+		}
+	}
+
+	protected abstract TYPE convertDefaultValue(float[] defaultValue);
+
+	protected abstract void copy(TYPE out, TYPE value);
+
+	protected abstract void interpolate(TYPE out, TYPE[] values, TYPE[] inTans, TYPE[] outTans, int start, int end,
+			float t);
 }

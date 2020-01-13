@@ -19,7 +19,8 @@ public class ParticleEmitter2 extends MdxEmitter<MdxComplexInstance, ParticleEmi
 
 		if (instance.allowParticleSpawn) {
 			final ParticleEmitter2Object emitterObject = this.emitterObject;
-			final int keyframe = emitterObject.getEmissionRate(emissionRateHeap, instance);
+			final int keyframe = emitterObject.getEmissionRate(emissionRateHeap, instance.sequence, instance.frame,
+					instance.counter);
 
 			if (emitterObject.squirt != 0) {
 				if (keyframe != this.lastEmissionKey) {

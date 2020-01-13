@@ -3,6 +3,8 @@ package com.etheller.warsmash.viewer5;
 public class AudioContext {
 	private boolean running = false;
 	public Listener listener = new Listener();
+	public AudioDestination destination = new AudioDestination() {
+	};
 
 	public void suspend() {
 		this.running = false;
@@ -43,5 +45,23 @@ public class AudioContext {
 			this.upZ = upZ;
 
 		}
+	}
+
+	public AudioPanner createPanner() {
+		return new AudioPanner() {
+			@Override
+			public void setPosition(final float x, final float y, final float z) {
+				System.err.println("audio panner set position not implemented");
+			}
+
+			@Override
+			public void connect(final AudioDestination destination) {
+				System.err.println("audio panner connect dest not implemented");
+			}
+		};
+	}
+
+	public AudioBufferSource createBufferSource() {
+		return new AudioBufferSource();
 	}
 }

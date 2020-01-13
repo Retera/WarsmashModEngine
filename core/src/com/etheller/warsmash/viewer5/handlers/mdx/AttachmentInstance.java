@@ -25,7 +25,8 @@ public class AttachmentInstance {
 		final MdxComplexInstance internalInstance = this.internalInstance;
 
 		if (internalInstance.model.ok) {
-			this.attachment.getVisibility(visbilityHeap, this.instance);
+			this.attachment.getVisibility(visbilityHeap, this.instance.sequence, this.instance.frame,
+					this.instance.counter);
 
 			if (visbilityHeap[0] > 0.1) {
 				// The parent instance might not actually be in a scene.

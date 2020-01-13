@@ -11,6 +11,31 @@ import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Texture;
 
 public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
+	public boolean reforged = false;
+	public boolean hd = false;
+	public SolverParams solverParams = new SolverParams();
+	public String name = "";
+	public List<Sequence> sequences = new ArrayList<>();
+	public List<Integer> globalSequences = new ArrayList<>();
+	public List<Material> materials = new ArrayList<>();
+	public List<Layer> layers = new ArrayList<>();
+	public List<Integer> replaceables = new ArrayList<>();
+	public List<Texture> textures = new ArrayList<>();
+	public List<TextureAnimation> textureAnimations = new ArrayList<>();
+	public List<Geoset> geosets = new ArrayList<>();
+	public List<GeosetAnimation> geosetAnimations = new ArrayList<>();
+	public List<Bone> bones = new ArrayList<>();
+	public List<Light> lights = new ArrayList<>();
+	public List<Helper> helpers = new ArrayList<>();
+	public List<Attachment> attachments = new ArrayList<>();
+	public List<float[]> pivotPoints = new ArrayList<>();
+	public List<ParticleEmitterObject> particleEmitters = new ArrayList<>();
+	public List<ParticleEmitter2Object> particleEmitters2 = new ArrayList<>();
+	public List<RibbonEmitterObject> ribbonEmitters = new ArrayList<>();
+	public List<Camera> cameras = new ArrayList<>();
+	public List<EventObjectEmitterObject> eventObjects = new ArrayList<>();
+	public
+
 	private MdlxModel model;
 
 	public int arrayBuffer;
@@ -18,9 +43,8 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 	public List<Batch> batches = new ArrayList<>(); // TODO??
 
-	public List<Integer> replaceables = new ArrayList<>();
-
-	public boolean reforged = false;
+	public List<Object> opaqueGroups;
+	public List<Object> translucentGroups;
 
 	public MdxModel(final MdxHandler handler, final ModelViewer viewer, final String extension,
 			final PathSolver pathSolver, final String fetchUrl) {
@@ -68,6 +92,20 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 	public List<Material> getMaterials() {
 		throw new UnsupportedOperationException("NYI");
+	}
+
+	public List<TextureAnimation> getTextureAnimations() {
+		throw new UnsupportedOperationException("NYI");
+	}
+
+	public List<Geoset> getGeosets() {
+		throw new UnsupportedOperationException("NYI");
+	}
+
+	private static final class SolverParams {
+		public boolean reforged;
+		public boolean hd;
+
 	}
 
 }

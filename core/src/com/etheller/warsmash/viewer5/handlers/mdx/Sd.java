@@ -116,12 +116,12 @@ public abstract class Sd<TYPE> {
 		}
 	}
 
-	public int getValue(final TYPE out, final MdxComplexInstance instance) {
+	public int getValue(final TYPE out, final int sequence, final int frame, final int counter) {
 		if (this.globalSequence != null) {
-			return this.globalSequence.getValue(out, instance.counter % this.globalSequence.end);
+			return this.globalSequence.getValue(out, counter % this.globalSequence.end);
 		}
-		else if (instance.sequence != -1) {
-			return this.sequences.get(instance.sequence).getValue(out, instance.frame);
+		else if (sequence != -1) {
+			return this.sequences.get(sequence).getValue(out, frame);
 		}
 		else {
 			this.copy(out, this.defval);

@@ -18,6 +18,10 @@ public class Ribbon extends EmittedObject<MdxComplexInstance, RibbonEmitter> {
 	public Ribbon prev;
 	public Ribbon next;
 
+	public Ribbon(final RibbonEmitter emitter) {
+		super(emitter);
+	}
+
 	@Override
 	protected void bind(final int flags) {
 		final RibbonEmitter emitter = this.emitter;
@@ -31,9 +35,9 @@ public class Ribbon extends EmittedObject<MdxComplexInstance, RibbonEmitter> {
 
 		this.health = emitter.emitterObject.lifeSpan;
 
-		emitterObject.getHeightBelow(vectorHeap, instance);
+		emitterObject.getHeightBelow(vectorHeap, instance.sequence, instance.frame, instance.counter);
 		belowHeap.set(vectorHeap);
-		emitterObject.getHeightAbove(vectorHeap, instance);
+		emitterObject.getHeightAbove(vectorHeap, instance.sequence, instance.frame, instance.counter);
 		aboveHeap.set(vectorHeap);
 
 		belowHeap.y = y - belowHeap.x;
@@ -55,9 +59,6 @@ public class Ribbon extends EmittedObject<MdxComplexInstance, RibbonEmitter> {
 		vertices[5] = belowHeap.z;
 	}
 
-	public Ribbon(final RibbonEmitter emitter) {
-	}
-
 	@Override
 	public void update(final float dt) {
 		this.health -= dt;
@@ -70,9 +71,9 @@ public class Ribbon extends EmittedObject<MdxComplexInstance, RibbonEmitter> {
 			final float[] vertices = this.vertices;
 			final float gravity = emitterObject.gravity * dt * dt;
 
-			emitterObject.getColor(colorHeap, instance);
-			emitterObject.getAlpha(alphaHeap, instance);
-			emitterObject.getTextureSlot(slotHeap, instance);
+			emitterObject.getColor(colorHeap, instance.sequence, instance.frame, instance.counter);
+			emitterObject.getAlpha(alphaHeap, instance.sequence, instance.frame, instance.counter);
+			emitterObject.getTextureSlot(slotHeap, instance.sequence, instance.frame, instance.counter);
 
 			vertices[1] -= gravity;
 			vertices[4] -= gravity;

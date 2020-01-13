@@ -190,4 +190,33 @@ public class ParticleEmitter extends GenericObject {
 	public long getByteLength() {
 		return 288 + super.getByteLength();
 	}
+
+	public float getEmissionRate() {
+		return this.emissionRate;
+	}
+
+	public float getGravity() {
+		return this.gravity;
+	}
+
+	public float getLongitude() {
+		return this.longitude;
+	}
+
+	public float getLatitude() {
+		return this.latitude;
+	}
+
+	public String getPath() {
+		return this.path;
+	}
+
+	public float getLifeSpan() {
+		return this.lifeSpan;
+	}
+
+	public float getSpeed() {
+		return this.speed;
+	}
+
 }

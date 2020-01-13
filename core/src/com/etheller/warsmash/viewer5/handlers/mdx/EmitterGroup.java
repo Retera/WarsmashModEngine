@@ -1,8 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -10,15 +7,12 @@ import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SkeletalNode;
-import com.etheller.warsmash.viewer5.handlers.EmitterObject;
 
-public class EmitterGroup {
+public class EmitterGroup extends GenericGroup {
 	private final MdxModel model;
-	private final List<Integer> objects;
 
 	public EmitterGroup(final MdxModel model) {
 		this.model = model;
-		this.objects = new ArrayList<>();
 	}
 
 	public void render(final MdxComplexInstance instance) {
@@ -55,10 +49,17 @@ public class EmitterGroup {
 		Gdx.gl30.glVertexAttribDivisor(shader.getAttributeLocation("a_leftRightTop"), 1);
 
 		for (final int index : this.objects) {
-
+			GeometryEmitterFuncs.renderEmitter((MdxEmitter<?, ?, ?>) nodes[index].object, shader);
 		}
 
-	}
+		Gdx.gl30.glVertexAttribDivisor(shader.getAttributeLocation("a_leftRightTop"), 0);
+		Gdx.gl30.glVertexAttribDivisor(shader.getAttributeLocation("a_tail"), 0);
+		Gdx.gl30.glVertexAttribDivisor(shader.getAttributeLocation("a_color"), 0);
+		Gdx.gl30.glVertexAttribDivisor(shader.getAttributeLocation("a_health"), 0);
+		Gdx.gl30.glVertexAttribDivisor(shader.getAttributeLocation("a_p3"), 0);
+		Gdx.gl30.glVertexAttribDivisor(shader.getAttributeLocation("a_p2"), 0);
+		Gdx.gl30.glVertexAttribDivisor(shader.getAttributeLocation("a_p1"), 0);
+		Gdx.gl30.glVertexAttribDivisor(shader.getAttributeLocation("a_p0"), 0);
 
-	protected abstract void renderEmitter(EmitterObject emitter, ShaderProgram shader);
+	}
 }

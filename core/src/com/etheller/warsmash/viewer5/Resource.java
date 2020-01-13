@@ -2,11 +2,8 @@ package com.etheller.warsmash.viewer5;
 
 import java.io.InputStream;
 
-import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
-
-public abstract class Resource<HANDLER extends ResourceHandler> {
+public abstract class Resource {
 	public final ModelViewer viewer;
-	public final HANDLER handler;
 	public final String extension;
 	public final String fetchUrl;
 	public boolean ok;
@@ -14,10 +11,9 @@ public abstract class Resource<HANDLER extends ResourceHandler> {
 	public final PathSolver pathSolver;
 	public final Object solverParams = null;
 
-	public Resource(final ModelViewer viewer, final HANDLER handler, final String extension,
-			final PathSolver pathSolver, final String fetchUrl) {
+	public Resource(final ModelViewer viewer, final String extension, final PathSolver pathSolver,
+			final String fetchUrl) {
 		this.viewer = viewer;
-		this.handler = handler;
 		this.extension = extension;
 		this.pathSolver = pathSolver;
 		this.fetchUrl = fetchUrl;

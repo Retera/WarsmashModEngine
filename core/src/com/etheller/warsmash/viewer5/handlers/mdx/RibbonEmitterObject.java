@@ -40,29 +40,29 @@ public class RibbonEmitterObject extends GenericObject implements EmitterObject 
 		this.rows = emitter.getRows();
 	}
 
-	public int getHeightBelow(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KRHB.getWar3id(), instance, this.heightBelow);
+	public int getHeightBelow(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KRHB.getWar3id(), sequence, frame, counter, this.heightBelow);
 	}
 
-	public int getHeightAbove(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KRHA.getWar3id(), instance, this.heightAbove);
+	public int getHeightAbove(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KRHA.getWar3id(), sequence, frame, counter, this.heightAbove);
 	}
 
-	public int getTextureSlot(final long[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KRTX.getWar3id(), instance, 0);
+	public int getTextureSlot(final long[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KRTX.getWar3id(), sequence, frame, counter, 0);
 	}
 
-	public int getColor(final float[] out, final MdxComplexInstance instance) {
-		return this.getVectorValue(out, AnimationMap.KRCO.getWar3id(), instance, this.color);
+	public int getColor(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getVectorValue(out, AnimationMap.KRCO.getWar3id(), sequence, frame, counter, this.color);
 	}
 
-	public int getAlpha(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KRAL.getWar3id(), instance, this.alpha);
+	public int getAlpha(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KRAL.getWar3id(), sequence, frame, counter, this.alpha);
 	}
 
 	@Override
-	public int getVisibility(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KRVS.getWar3id(), instance, 1f);
+	public int getVisibility(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KRVS.getWar3id(), sequence, frame, counter, 1f);
 	}
 
 	@Override

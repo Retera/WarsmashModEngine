@@ -12,22 +12,26 @@ import com.etheller.warsmash.util.War3ID;
 public class AnimatedObject {
 	public MdxModel model;
 	public Map<War3ID, Sd<?>> timelines;
+	public Map<String, byte[]> variants;
 
 	public AnimatedObject(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.AnimatedObject object) {
 		this.model = model;
 		this.timelines = new HashMap<>();
+		this.variants = new HashMap<>();
 
 		for (final Timeline<?> timeline : object.getTimelines()) {
 			this.timelines.put(timeline.getName(), createTypedSd(model, timeline));
 		}
 	}
 
-	public int getScalarValue(final float[] out, final War3ID name, final MdxComplexInstance instance,
-			final float defaultValue) {
-		final Sd<?> animation = this.timelines.get(name);
+	public int getScalarValue(final float[] out, final War3ID name, final int sequence, final int frame,
+			final int counter, final float defaultValue) {
+		if (sequence != -1) {
+			final Sd<?> animation = this.timelines.get(name);
 
-		if (animation instanceof ScalarSd) {
-			return ((ScalarSd) animation).getValue(out, instance);
+			if (animation instanceof ScalarSd) {
+				return ((ScalarSd) animation).getValue(out, sequence, frame, counter);
+			}
 		}
 
 		out[0] = defaultValue;
@@ -35,12 +39,14 @@ public class AnimatedObject {
 		return -1;
 	}
 
-	public int getScalarValue(final long[] out, final War3ID name, final MdxComplexInstance instance,
-			final long defaultValue) {
-		final Sd<?> animation = this.timelines.get(name);
+	public int getScalarValue(final long[] out, final War3ID name, final int sequence, final int frame,
+			final int counter, final long defaultValue) {
+		if (sequence != -1) {
+			final Sd<?> animation = this.timelines.get(name);
 
-		if (animation instanceof UInt32Sd) {
-			return ((UInt32Sd) animation).getValue(out, instance);
+			if (animation instanceof UInt32Sd) {
+				return ((UInt32Sd) animation).getValue(out, sequence, frame, counter);
+			}
 		}
 
 		out[0] = defaultValue;
@@ -48,12 +54,14 @@ public class AnimatedObject {
 		return -1;
 	}
 
-	public int getVectorValue(final float[] out, final War3ID name, final MdxComplexInstance instance,
-			final float[] defaultValue) {
-		final Sd<?> animation = this.timelines.get(name);
+	public int getVectorValue(final float[] out, final War3ID name, final int sequence, final int frame,
+			final int counter, final float[] defaultValue) {
+		if (sequence != -1) {
+			final Sd<?> animation = this.timelines.get(name);
 
-		if (animation instanceof VectorSd) {
-			return ((VectorSd) animation).getValue(out, instance);
+			if (animation instanceof VectorSd) {
+				return ((VectorSd) animation).getValue(out, sequence, frame, counter);
+			}
 		}
 
 		System.arraycopy(defaultValue, 0, out, 0, 3);
@@ -61,17 +69,51 @@ public class AnimatedObject {
 		return -1;
 	}
 
-	public int getQuadValue(final float[] out, final War3ID name, final MdxComplexInstance instance,
-			final float[] defaultValue) {
-		final Sd<?> animation = this.timelines.get(name);
+	public int getQuadValue(final float[] out, final War3ID name, final int sequence, final int frame,
+			final int counter, final float[] defaultValue) {
+		if (sequence != -1) {
+			final Sd<?> animation = this.timelines.get(name);
 
-		if (animation instanceof QuaternionSd) {
-			return ((QuaternionSd) animation).getValue(out, instance);
+			if (animation instanceof QuaternionSd) {
+				return ((QuaternionSd) animation).getValue(out, sequence, frame, counter);
+			}
 		}
 
 		System.arraycopy(defaultValue, 0, out, 0, 4);
 
 		return -1;
+	}
+
+	public void addVariants(final War3ID name, final String variantName) {
+		final Sd<?> timeline = this.timelines.get(name);
+		final int sequences = this.model.getSequences().size();
+		final byte[] variants = new byte[sequences];
+
+		if (timeline != null) {
+			for (int i = 0; i < sequences; i++) {
+				if (timeline.isVariant(i)) {
+					variants[i] = 1;
+				}
+			}
+		}
+
+		this.variants.put(variantName, variants);
+	}
+
+	public void addVariantIntersection(final String[] names, final String variantName) {
+		final int sequences = this.model.getSequences().size();
+		final byte[] variants = new byte[sequences];
+
+		for (int i = 0; i < sequences; i++) {
+			for (final String name : names) {
+				final byte[] variantsAtName = this.variants.get(name);
+				if ((variantsAtName != null) && (variantsAtName[i] != 0)) {
+					variants[i] = 1;
+				}
+			}
+		}
+
+		this.variants.put(variantName, variants);
 	}
 
 	public boolean isVariant(final War3ID name, final int sequence) {

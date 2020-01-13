@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.etheller.warsmash.viewer5.HandlerResource;
 import com.etheller.warsmash.viewer5.ModelViewer;
-import com.etheller.warsmash.viewer5.Resource;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.handlers.ModelHandler;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
@@ -45,7 +45,7 @@ public class MdxHandler extends ModelHandler {
 	}
 
 	@Override
-	public Resource<?> construct(final ResourceHandlerConstructionParams params) {
+	public HandlerResource<?> construct(final ResourceHandlerConstructionParams params) {
 		return new MdxModel((MdxHandler) params.getHandler(), params.getViewer(), params.getExtension(),
 				params.getPathSolver(), params.getFetchUrl());
 	}

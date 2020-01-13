@@ -11,7 +11,10 @@ import java.util.Set;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.etheller.warsmash.common.FetchDataTypeName;
+import com.etheller.warsmash.common.LoadGenericCallback;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.viewer5.gl.ClientBuffer;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
@@ -19,8 +22,8 @@ import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
 public class ModelViewer {
 	private final DataSource dataSource;
 	public final CanvasProvider canvas;
-	public List<Resource<?>> resources;
-	public Map<String, Resource<?>> fetchCache;
+	public List<Resource> resources;
+	public Map<String, Resource> fetchCache;
 	public int frameTime;
 	public GL20 gl;
 	public WebGL webGL;
@@ -30,7 +33,8 @@ public class ModelViewer {
 	private int updatedParticles;
 	public int frame;
 	public final int rectBuffer;
-	private final boolean enableAudio;
+	public ClientBuffer buffer;
+	public boolean audioEnabled;
 	private final Map<Model, List<TextureMapper>> textureMappers;
 	private final Set<ResourceHandler> handlers;
 
@@ -51,6 +55,7 @@ public class ModelViewer {
 		this.frame = 0;
 
 		this.rectBuffer = this.gl.glGenBuffer();
+		this.buffer = new ClientBuffer(this.gl);
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.rectBuffer);
 		final ByteBuffer temp = ByteBuffer.allocate(6);
 		temp.put((byte) 0);
@@ -61,8 +66,13 @@ public class ModelViewer {
 		temp.put((byte) 3);
 		temp.clear();
 		this.gl.glBufferData(GL20.GL_ARRAY_BUFFER, temp.capacity(), temp, GL20.GL_STATIC_DRAW);
-		this.enableAudio = false;
+		this.audioEnabled = false;
 		this.textureMappers = new HashMap<Model, List<TextureMapper>>();
+	}
+
+	public boolean enableAudio() {
+		this.audioEnabled = true;
+		return this.audioEnabled;
 	}
 
 	public boolean addHandler(ResourceHandler handler) {
@@ -115,7 +125,7 @@ public class ModelViewer {
 		return null;
 	}
 
-	public Resource<?> load(final String src, final PathSolver pathSolver, final Object solverParams) {
+	public Resource load(final String src, final PathSolver pathSolver, final Object solverParams) {
 		String finalSrc = src;
 		String extension = "";
 		boolean isFetch = false;
@@ -139,7 +149,7 @@ public class ModelViewer {
 			// Is there a handler for this file type?
 			if (handlerAndDataType != null) {
 				if (isFetch) {
-					final Resource<?> resource = this.fetchCache.get(finalSrc);
+					final Resource resource = this.fetchCache.get(finalSrc);
 
 					if (resource != null) {
 						return resource;
@@ -147,7 +157,7 @@ public class ModelViewer {
 				}
 
 				final ResourceHandler handler = (ResourceHandler) handlerAndDataType[0];
-				final Resource<?> resource = handler.construct(new ResourceHandlerConstructionParams(this, handler,
+				final Resource resource = handler.construct(new ResourceHandlerConstructionParams(this, handler,
 						extension, pathSolver, isFetch ? finalSrc : ""));
 
 				this.resources.add(resource);
@@ -179,8 +189,53 @@ public class ModelViewer {
 		return this.fetchCache.containsKey(key);
 	}
 
-	public Resource<?> get(final String key) {
+	public Resource get(final String key) {
 		return this.fetchCache.get(key);
+	}
+
+	/**
+	 * Load something generic.
+	 *
+	 * Unlike load(), this does not use handlers or construct any internal objects.
+	 *
+	 * `dataType` can be one of: `"image"`, `"string"`, `"arrayBuffer"`, `"blob"`.
+	 *
+	 * If `callback` isn't given, the resource's `data` is the fetch data, according
+	 * to `dataType`.
+	 *
+	 * If `callback` is given, the resource's `data` is the value returned by it
+	 * when called with the fetch data.
+	 *
+	 * If `callback` returns a promise, the resource's `data` will be whatever the
+	 * promise resolved to.
+	 */
+	public GenericResource loadGeneric(final String path, final FetchDataTypeName dataType,
+			final LoadGenericCallback callback) {
+		final Resource cachedResource = this.fetchCache.get(path);
+
+		if (cachedResource != null) {
+			// Technically also non-generic resources can be returned here, since the fetch
+			// cache is shared.
+			// That being said, this should be used for generic resources, and it makes the
+			// typing a lot easier.
+			return (GenericResource) cachedResource;
+		}
+
+		final GenericResource resource = new GenericResource(this, null, null, path, callback);
+
+		this.resources.add(resource);
+		this.fetchCache.put(path, resource);
+
+		// TODO this is a synchronous hack, skipped some Ghostwolf code
+		try {
+			resource.loadData(this.dataSource.getResourceAsStream(path), null);
+		}
+		catch (final IOException e) {
+			throw new IllegalStateException("Unable to load data: " + path);
+		}
+
+		return resource;
+
 	}
 
 	public void updateAndRender() {
@@ -191,7 +246,7 @@ public class ModelViewer {
 
 //	public Resource loadGeneric(String path, String dataType, )
 
-	public boolean unload(final Resource<?> resource) {
+	public boolean unload(final Resource resource) {
 		// TODO Auto-generated method stub
 		final String fetchUrl = resource.fetchUrl;
 		if (!"".equals(fetchUrl)) {

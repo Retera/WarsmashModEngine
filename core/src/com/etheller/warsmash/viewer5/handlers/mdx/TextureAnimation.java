@@ -10,16 +10,19 @@ public class TextureAnimation extends AnimatedObject {
 		super(model, textureAnimation);
 	}
 
-	public int getTranslation(final float[] out, final MdxComplexInstance instance) {
-		return this.getVectorValue(out, AnimationMap.KTAT.getWar3id(), instance, RenderMathUtils.FLOAT_VEC3_ZERO);
+	public int getTranslation(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getVectorValue(out, AnimationMap.KTAT.getWar3id(), sequence, frame, counter,
+				RenderMathUtils.FLOAT_VEC3_ZERO);
 	}
 
-	public int getRotation(final float[] out, final MdxComplexInstance instance) {
-		return this.getVectorValue(out, AnimationMap.KTAR.getWar3id(), instance, RenderMathUtils.FLOAT_QUAT_DEFAULT);
+	public int getRotation(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getVectorValue(out, AnimationMap.KTAR.getWar3id(), sequence, frame, counter,
+				RenderMathUtils.FLOAT_QUAT_DEFAULT);
 	}
 
-	public int getScale(final float[] out, final MdxComplexInstance instance) {
-		return this.getVectorValue(out, AnimationMap.KTAS.getWar3id(), instance, RenderMathUtils.FLOAT_VEC3_ONE);
+	public int getScale(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getVectorValue(out, AnimationMap.KTAS.getWar3id(), sequence, frame, counter,
+				RenderMathUtils.FLOAT_VEC3_ONE);
 	}
 
 	public boolean isTranslationVariant(final int sequence) {

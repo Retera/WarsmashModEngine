@@ -35,8 +35,8 @@ public class Scene {
 	public int visibleCells;
 	public int visibleInstances;
 	public int updatedParticles;
-	private boolean audioEnabled;
-	private AudioContext audioContext;
+	public boolean audioEnabled;
+	public AudioContext audioContext;
 
 	private final List<ModelInstance> instances;
 	private final int currentInstance;

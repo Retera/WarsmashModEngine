@@ -7,5 +7,9 @@ public abstract class EmittedObject<MODEL_INSTANCE extends ModelInstance, EMITTE
 	public EMITTER emitter;
 	public int index;
 
+	public EmittedObject(final EMITTER emitter) {
+		this.emitter = emitter;
+	}
+
 	protected abstract void bind(int flags);
 }

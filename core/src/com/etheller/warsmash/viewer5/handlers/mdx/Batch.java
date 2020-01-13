@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-public class Batch {
+public class Batch implements GenericIndexed {
 	public int index;
 	public Geoset geoset;
 	public Layer layer;
@@ -11,6 +11,11 @@ public class Batch {
 		this.geoset = geoset;
 		this.layer = layer;
 		this.isExtended = isExtended;
+	}
+
+	@Override
+	public int getIndex() {
+		return this.index;
 	}
 
 }

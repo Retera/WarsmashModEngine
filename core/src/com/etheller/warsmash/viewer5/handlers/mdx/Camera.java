@@ -22,16 +22,16 @@ public class Camera extends AnimatedObject {
 		this.targetPosition = camera.getTargetPosition();
 	}
 
-	public int getPositionTranslation(final float[] out, final MdxComplexInstance instance) {
-		return this.getVectorValue(out, AnimationMap.KCTR.getWar3id(), instance, this.position);
+	public int getPositionTranslation(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getVectorValue(out, AnimationMap.KCTR.getWar3id(), sequence, frame, counter, this.position);
 	}
 
-	public int getTargetTranslation(final float[] out, final MdxComplexInstance instance) {
-		return this.getVectorValue(out, AnimationMap.KTTR.getWar3id(), instance, this.targetPosition);
+	public int getTargetTranslation(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getVectorValue(out, AnimationMap.KTTR.getWar3id(), sequence, frame, counter, this.targetPosition);
 	}
 
-	public int getRotation(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KCRL.getWar3id(), instance, 0);
+	public int getRotation(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KCRL.getWar3id(), sequence, frame, counter, 0);
 	}
 
 }

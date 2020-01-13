@@ -105,37 +105,37 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 		this.priorityPlane = emitter.getPriorityPlane();
 	}
 
-	public int getWidth(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KP2N.getWar3id(), instance, this.width);
+	public int getWidth(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KP2N.getWar3id(), sequence, frame, counter, this.width);
 	}
 
-	public int getLength(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KP2W.getWar3id(), instance, this.length);
+	public int getLength(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KP2W.getWar3id(), sequence, frame, counter, this.length);
 	}
 
-	public int getSpeed(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KP2S.getWar3id(), instance, this.speed);
+	public int getSpeed(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KP2S.getWar3id(), sequence, frame, counter, this.speed);
 	}
 
-	public int getLatitude(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KP2L.getWar3id(), instance, this.latitude);
+	public int getLatitude(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KP2L.getWar3id(), sequence, frame, counter, this.latitude);
 	}
 
-	public int getGravity(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KP2G.getWar3id(), instance, this.gravity);
+	public int getGravity(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KP2G.getWar3id(), sequence, frame, counter, this.gravity);
 	}
 
-	public int getEmissionRate(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KP2E.getWar3id(), instance, this.emissionRate);
+	public int getEmissionRate(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KP2E.getWar3id(), sequence, frame, counter, this.emissionRate);
 	}
 
 	@Override
-	public int getVisibility(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KP2V.getWar3id(), instance, 1);
+	public int getVisibility(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KP2V.getWar3id(), sequence, frame, counter, 1);
 	}
 
-	public int getVariation(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KP2R.getWar3id(), instance, this.variation);
+	public int getVariation(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KP2R.getWar3id(), sequence, frame, counter, this.variation);
 	}
 
 	@Override

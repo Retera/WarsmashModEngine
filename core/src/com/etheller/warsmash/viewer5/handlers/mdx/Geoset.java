@@ -74,18 +74,18 @@ public class Geoset {
 		this.hasObjectAnim = hasAlphaAnim || hasColorAnim;
 	}
 
-	public int getAlpha(final float[] out, final MdxComplexInstance instance) {
+	public int getAlpha(final float[] out, final int sequence, final int frame, final int counter) {
 		if (this.geosetAnimation != null) {
-			return this.geosetAnimation.getAlpha(out, instance);
+			return this.geosetAnimation.getAlpha(out, sequence, frame, counter);
 		}
 
 		out[0] = 1;
 		return -1;
 	}
 
-	public int getColor(final float[] out, final MdxComplexInstance instance) {
+	public int getColor(final float[] out, final int sequence, final int frame, final int counter) {
 		if (this.geosetAnimation != null) {
-			return this.geosetAnimation.getAlpha(out, instance);
+			return this.geosetAnimation.getAlpha(out, sequence, frame, counter);
 		}
 
 		Arrays.fill(out, 1);

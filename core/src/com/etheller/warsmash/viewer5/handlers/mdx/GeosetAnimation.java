@@ -19,12 +19,12 @@ public class GeosetAnimation extends AnimatedObject {
 		this.geosetId = geosetAnimation.getGeosetId();
 	}
 
-	public int getAlpha(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KGAO.getWar3id(), instance, this.alpha);
+	public int getAlpha(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KGAO.getWar3id(), sequence, frame, counter, this.alpha);
 	}
 
-	public int getColor(final float[] out, final MdxComplexInstance instance) {
-		return this.getVectorValue(out, AnimationMap.KGAC.getWar3id(), instance, this.color);
+	public int getColor(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getVectorValue(out, AnimationMap.KGAC.getWar3id(), sequence, frame, counter, this.color);
 	}
 
 	public boolean isAlphaVariant(final int sequence) {

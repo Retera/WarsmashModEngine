@@ -12,7 +12,6 @@ public class Particle2 extends EmittedObject<MdxComplexInstance, ParticleEmitter
 	public final Vector3 location = new Vector3();
 	public final Vector3 velocity = new Vector3();
 	public final Vector3 scale = new Vector3();
-	private final ParticleEmitter2 emitter2;
 
 	private static final Quaternion rotationHeap = new Quaternion();
 	private static final Quaternion rotationHeap2 = new Quaternion();
@@ -24,7 +23,7 @@ public class Particle2 extends EmittedObject<MdxComplexInstance, ParticleEmitter
 	private static final float[] gravityHeap = new float[1];
 
 	public Particle2(final ParticleEmitter2 emitter) {
-		this.emitter2 = emitter;
+		super(emitter);
 	}
 
 	@Override
@@ -32,12 +31,12 @@ public class Particle2 extends EmittedObject<MdxComplexInstance, ParticleEmitter
 		final MdxComplexInstance instance = this.emitter.instance;
 		final ParticleEmitter2Object emitterObject = this.emitter.emitterObject;
 
-		emitterObject.getWidth(widthHeap, instance);
-		emitterObject.getLength(lengthHeap, instance);
-		emitterObject.getLatitude(latitudeHeap, instance);
-		emitterObject.getVariation(variationHeap, instance);
-		emitterObject.getSpeed(speedHeap, instance);
-		emitterObject.getGravity(gravityHeap, instance);
+		emitterObject.getWidth(widthHeap, instance.sequence, instance.frame, instance.counter);
+		emitterObject.getLength(lengthHeap, instance.sequence, instance.frame, instance.counter);
+		emitterObject.getLatitude(latitudeHeap, instance.sequence, instance.frame, instance.counter);
+		emitterObject.getVariation(variationHeap, instance.sequence, instance.frame, instance.counter);
+		emitterObject.getSpeed(speedHeap, instance.sequence, instance.frame, instance.counter);
+		emitterObject.getGravity(gravityHeap, instance.sequence, instance.frame, instance.counter);
 
 		final MdxNode node = this.emitter.node;
 		final Vector3 pivot = node.pivot;

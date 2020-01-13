@@ -1,8 +1,8 @@
 package com.etheller.warsmash;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
 
@@ -13,20 +13,20 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.datasources.FolderDataSource;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.War3ID;
-import com.hiveworkshop.wc3.mpq.Codebase;
-import com.hiveworkshop.wc3.mpq.FileCodebase;
 
 public class WarsmashGdxGame extends ApplicationAdapter {
 	private SpriteBatch batch;
 	private BitmapFont font;
-	private Codebase codebase;
+	private DataSource codebase;
 	private Texture texture;
 
 	@Override
 	public void create() {
-		this.codebase = new FileCodebase(new File("C:/MPQBuild/War3.mpq/war3.mpq"));
+		this.codebase = new FolderDataSource(Paths.get("C:/MPQBuild/War3.mpq/war3.mpq"));
 
 		final War3ID id = War3ID.fromString("ipea");
 		try {

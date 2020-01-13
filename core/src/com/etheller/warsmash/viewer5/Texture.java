@@ -2,12 +2,12 @@ package com.etheller.warsmash.viewer5;
 
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
 
-public abstract class Texture extends Resource<ResourceHandler> {
+public abstract class Texture extends HandlerResource<ResourceHandler> {
 	private com.badlogic.gdx.graphics.Texture gdxTexture;
 
 	public Texture(final ModelViewer viewer, final ResourceHandler handler, final String extension,
 			final PathSolver pathSolver, final String fetchUrl) {
-		super(viewer, handler, extension, pathSolver, fetchUrl);
+		super(viewer, extension, pathSolver, fetchUrl, handler);
 	}
 
 	public void setGdxTexture(final com.badlogic.gdx.graphics.Texture gdxTexture) {

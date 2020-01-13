@@ -316,4 +316,61 @@ public class Geoset implements MdlxBlock, Chunk {
 		}
 		return size;
 	}
+
+	public float[] getVertices() {
+		return this.vertices;
+	}
+
+	public float[] getNormals() {
+		return this.normals;
+	}
+
+	public long[] getFaceTypeGroups() {
+		return this.faceTypeGroups;
+	}
+
+	public long[] getFaceGroups() {
+		return this.faceGroups;
+	}
+
+	public int[] getFaces() {
+		return this.faces;
+	}
+
+	public short[] getVertexGroups() {
+		return this.vertexGroups;
+	}
+
+	public long[] getMatrixGroups() {
+		return this.matrixGroups;
+	}
+
+	public long[] getMatrixIndices() {
+		return this.matrixIndices;
+	}
+
+	public long getMaterialId() {
+		return this.materialId;
+	}
+
+	public long getSelectionGroup() {
+		return this.selectionGroup;
+	}
+
+	public long getSelectionFlags() {
+		return this.selectionFlags;
+	}
+
+	public Extent getExtent() {
+		return this.extent;
+	}
+
+	public Extent[] getSequenceExtents() {
+		return this.sequenceExtents;
+	}
+
+	public float[][] getUvSets() {
+		return this.uvSets;
+	}
+
 }

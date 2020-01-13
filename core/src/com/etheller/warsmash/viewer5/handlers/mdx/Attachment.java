@@ -24,7 +24,7 @@ public class Attachment extends GenericObject {
 	}
 
 	@Override
-	public int getVisibility(final float[] out, final MdxComplexInstance instance) {
-		return this.getScalarValue(out, AnimationMap.KATV.getWar3id(), instance, 1);
+	public int getVisibility(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KATV.getWar3id(), sequence, frame, counter, 1);
 	}
 }

@@ -11,9 +11,9 @@ public class Bone extends GenericObject {
 	}
 
 	@Override
-	public int getVisibility(final float[] out, final MdxComplexInstance instance) {
+	public int getVisibility(final float[] out, final int sequence, final int frame, final int counter) {
 		if (this.geosetAnimation != null) {
-			return this.geosetAnimation.getAlpha(out, instance);
+			return this.geosetAnimation.getAlpha(out, sequence, frame, counter);
 		}
 
 		out[0] = 1;

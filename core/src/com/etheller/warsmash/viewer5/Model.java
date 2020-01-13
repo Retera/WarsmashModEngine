@@ -6,13 +6,13 @@ import java.util.List;
 import com.etheller.warsmash.viewer5.handlers.ModelHandler;
 import com.etheller.warsmash.viewer5.handlers.ModelInstanceDescriptor;
 
-public abstract class Model<HANDLER extends ModelHandler> extends Resource<HANDLER> {
+public abstract class Model<HANDLER extends ModelHandler> extends HandlerResource<HANDLER> {
 	public Bounds bounds;
 	public List<ModelInstance> preloadedInstances;
 
 	public Model(final HANDLER handler, final ModelViewer viewer, final String extension, final PathSolver pathSolver,
 			final String fetchUrl) {
-		super(viewer, handler, extension, pathSolver, fetchUrl);
+		super(viewer, extension, pathSolver, fetchUrl, handler);
 		this.bounds = new Bounds();
 		this.preloadedInstances = new ArrayList<>();
 	}

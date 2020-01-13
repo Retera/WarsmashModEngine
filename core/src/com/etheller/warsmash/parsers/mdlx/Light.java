@@ -163,4 +163,29 @@ public class Light extends GenericObject {
 	public long getByteLength() {
 		return 48 + super.getByteLength();
 	}
+
+	public int getType() {
+		return this.type;
+	}
+
+	public float[] getAttenuation() {
+		return this.attenuation;
+	}
+
+	public float[] getColor() {
+		return this.color;
+	}
+
+	public float getIntensity() {
+		return this.intensity;
+	}
+
+	public float[] getAmbientColor() {
+		return this.ambientColor;
+	}
+
+	public float getAmbientIntensity() {
+		return this.ambientIntensity;
+	}
+
 }

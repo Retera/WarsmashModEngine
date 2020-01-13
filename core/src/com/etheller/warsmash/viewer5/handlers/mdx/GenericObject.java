@@ -3,7 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.util.RenderMathUtils;
 
-public class GenericObject extends AnimatedObject {
+public class GenericObject extends AnimatedObject implements GenericIndexed {
 
 	public final int index;
 	public final String name;
@@ -113,21 +113,24 @@ public class GenericObject extends AnimatedObject {
 	 * Many of the generic objects have animated visibilities. This is a generic
 	 * getter to allow the code to be consistent.
 	 */
-	public int getVisibility(final float[] out, final MdxComplexInstance instance) {
+	public int getVisibility(final float[] out, final int sequence, final int frame, final int counter) {
 		out[0] = 1;
 		return -1;
 	}
 
-	public int getTranslation(final float[] out, final MdxComplexInstance instance) {
-		return this.getVectorValue(out, AnimationMap.KGTR.getWar3id(), instance, RenderMathUtils.FLOAT_VEC3_ZERO);
+	public int getTranslation(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getVectorValue(out, AnimationMap.KGTR.getWar3id(), sequence, frame, counter,
+				RenderMathUtils.FLOAT_VEC3_ZERO);
 	}
 
-	public int getRotation(final float[] out, final MdxComplexInstance instance) {
-		return this.getQuadValue(out, AnimationMap.KGRT.getWar3id(), instance, RenderMathUtils.FLOAT_QUAT_DEFAULT);
+	public int getRotation(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getQuadValue(out, AnimationMap.KGRT.getWar3id(), sequence, frame, counter,
+				RenderMathUtils.FLOAT_QUAT_DEFAULT);
 	}
 
-	public int getScale(final float[] out, final MdxComplexInstance instance) {
-		return this.getVectorValue(out, AnimationMap.KGSC.getWar3id(), instance, RenderMathUtils.FLOAT_VEC3_ONE);
+	public int getScale(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getVectorValue(out, AnimationMap.KGSC.getWar3id(), sequence, frame, counter,
+				RenderMathUtils.FLOAT_VEC3_ONE);
 	}
 
 	public boolean isTranslationVariant(final int sequence) {
@@ -154,6 +157,11 @@ public class GenericObject extends AnimatedObject {
 			this.scale = new boolean[sequencesCount];
 			this.generic = new boolean[sequencesCount];
 		}
+	}
+
+	@Override
+	public int getIndex() {
+		return this.index;
 	}
 
 }

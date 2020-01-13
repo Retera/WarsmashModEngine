@@ -1,39 +1,121 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.etheller.warsmash.parsers.mdlx.Layer.FilterMode;
+import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 
-public class Layer {
-	public MdxModel model;
-	public com.etheller.warsmash.parsers.mdlx.Layer layer;
-	public int layerId;
+/**
+ * An MDX layer.
+ */
+public class Layer extends AnimatedObject {
+	public int index;
 	public int priorityPlane;
-
 	public int filterMode;
 	public int textureId;
 	public int coordId;
 	public float alpha;
-
-	public int index = -666;
+	public int unshaded;
+	public int sphereEnvironmentMap;
+	public int twoSided;
+	public int unfogged;
+	public int noDepthTest;
+	public int noDepthSet;
+	public boolean depthMaskValue;
+	public int blendSrc;
+	public int blendDst;
+	public boolean blended;
+	public TextureAnimation textureAnimation;
 
 	public Layer(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.Layer layer, final int layerId,
 			final int priorityPlane) {
 		super(model, layer);
-		this.model = model;
-		this.layer = layer;
-		this.layerId = layerId;
-		this.priorityPlane = priorityPlane;
 
-		final FilterMode filterMode2 = layer.getFilterMode();
-		this.filterMode = filterMode2.ordinal();
+		final com.etheller.warsmash.parsers.mdlx.Layer.FilterMode filterMode = layer.getFilterMode();
+		final int textureAnimationId = layer.getTextureAnimationId();
+		final GL20 gl = model.viewer.gl;
+
+		this.index = layerId;
+		this.priorityPlane = priorityPlane;
+		this.filterMode = filterMode.ordinal();
 		this.textureId = layer.getTextureId();
-		// this.coo
-		this.index
+		this.coordId = (int) layer.getCoordId();
+		this.alpha = layer.getAlpha();
+
+		final int flags = layer.getFlags();
+
+		this.unshaded = flags & 0x1;
+		this.sphereEnvironmentMap = flags & 0x2;
+		this.twoSided = flags & 0x10;
+		this.unfogged = flags & 0x20;
+		this.noDepthTest = flags & 0x40;
+		this.noDepthSet = flags & 0x80;
+
+		this.depthMaskValue = ((filterMode == com.etheller.warsmash.parsers.mdlx.Layer.FilterMode.NONE)
+				|| (filterMode == com.etheller.warsmash.parsers.mdlx.Layer.FilterMode.TRANSPARENT));
+
+		this.blendSrc = 0;
+		this.blendDst = 0;
+		this.blended = (filterMode.ordinal() > 1);
+
+		if (this.blended) {
+			final int[] result = FilterMode.layerFilterMode(filterMode);
+			this.blendSrc = result[0];
+			this.blendDst = result[1];
+		}
+
+		if (textureAnimationId != -1) {
+			final TextureAnimation textureAnimation = model.getTextureAnimations().get(textureAnimationId);
+
+			if (textureAnimation != null) {
+				this.textureAnimation = textureAnimation;
+			}
+		}
+
+		this.addVariants(AnimationMap.KMTA.getWar3id(), "alpha");
+		this.addVariants(AnimationMap.KMTF.getWar3id(), "textureId");
 	}
 
 	public void bind(final ShaderProgram shader) {
-		// TODO Auto-generated method stub
+		final GL20 gl = this.model.viewer.gl;
 
+		// gl.uniform1f(shader.uniforms.u_unshaded, this.unshaded);
+		shader.setUniformf("u_filterMode", this.filterMode);
+
+		if (this.blended) {
+			gl.glEnable(GL20.GL_BLEND);
+			gl.glBlendFunc(this.blendSrc, this.blendDst);
+		}
+		else {
+			gl.glDisable(GL20.GL_BLEND);
+		}
+
+		if (this.twoSided != 0) {
+			gl.glEnable(GL20.GL_CULL_FACE);
+		}
+		else {
+			gl.glDisable(GL20.GL_CULL_FACE);
+		}
+
+		if (this.noDepthTest != 0) {
+			gl.glDisable(GL20.GL_DEPTH_TEST);
+		}
+		else {
+			gl.glEnable(GL20.GL_DEPTH_TEST);
+		}
+
+		if (this.noDepthSet != 0) {
+			gl.glDepthMask(false);
+		}
+		else {
+			gl.glDepthMask(this.depthMaskValue);
+		}
 	}
 
+	public int getAlpha(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KMTA.getWar3id(), sequence, frame, counter, this.alpha);
+	}
+
+	public int getTextureId(final long[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KMTF.getWar3id(), sequence, frame, counter, this.textureId);
+	}
 }

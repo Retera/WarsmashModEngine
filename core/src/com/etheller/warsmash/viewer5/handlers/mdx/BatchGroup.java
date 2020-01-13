@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.GL20;
@@ -9,16 +8,14 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.Texture;
 
-public class BatchGroup {
+public class BatchGroup extends GenericGroup {
 
 	private final MdxModel model;
-	private final boolean isExtended;
-	private final List<Integer> objects;
+	public final boolean isExtended;
 
 	public BatchGroup(final MdxModel model, final boolean isExtended) {
 		this.model = model;
 		this.isExtended = isExtended;
-		this.objects = new ArrayList<>(); // TODO IntArrayList
 	}
 
 	public void render(final MdxComplexInstance instance) {

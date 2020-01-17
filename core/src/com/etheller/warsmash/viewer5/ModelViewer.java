@@ -57,7 +57,7 @@ public class ModelViewer {
 		this.rectBuffer = this.gl.glGenBuffer();
 		this.buffer = new ClientBuffer(this.gl);
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.rectBuffer);
-		final ByteBuffer temp = ByteBuffer.allocate(6);
+		final ByteBuffer temp = ByteBuffer.allocateDirect(6);
 		temp.put((byte) 0);
 		temp.put((byte) 1);
 		temp.put((byte) 2);
@@ -129,7 +129,6 @@ public class ModelViewer {
 		String finalSrc = src;
 		String extension = "";
 		boolean isFetch = false;
-		final boolean resolved = false;
 
 		// If a given path solver, resolve.
 		if (pathSolver != null) {
@@ -138,12 +137,17 @@ public class ModelViewer {
 			finalSrc = solved.getFinalSrc();
 			extension = solved.getExtension();
 			isFetch = solved.isFetch();
-		}
 
-		// Built-in texture sources
-		// ---- TODO not using JS code here
+			if (!(extension instanceof String)) {
+				throw new IllegalStateException("The path solver did not return an extension!");
+			}
 
-		if (resolved) {
+			if (extension.charAt(0) != '.') {
+				extension = '.' + extension;
+			}
+			// Built-in texture sources
+			// ---- TODO not using JS code here
+
 			final Object[] handlerAndDataType = this.findHandler(extension.toLowerCase());
 
 			// Is there a handler for this file type?
@@ -181,8 +185,10 @@ public class ModelViewer {
 			}
 		}
 		else {
-			throw new IllegalStateException("Load unresolved: " + finalSrc);
+			throw new IllegalStateException(
+					"Could not resolve " + finalSrc + ". Did you forget to pass a path solver?");
 		}
+
 	}
 
 	public boolean has(final String key) {
@@ -276,6 +282,7 @@ public class ModelViewer {
 	public void startFrame() {
 		this.gl.glDepthMask(true);
 		this.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		this.gl.glClearColor(0.5f, 0.5f, 0.5f, 1); // TODO remove white background
 	}
 
 	public void render() {

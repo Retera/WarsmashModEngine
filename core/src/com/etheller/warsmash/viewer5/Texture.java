@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5;
 
+import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
 
 public abstract class Texture extends HandlerResource<ResourceHandler> {
@@ -16,7 +17,7 @@ public abstract class Texture extends HandlerResource<ResourceHandler> {
 
 	@Override
 	protected void error(final Exception e) {
-		throw new RuntimeException(e);
+		e.printStackTrace();
 	}
 
 	public void bind(final int unit) {
@@ -37,6 +38,14 @@ public abstract class Texture extends HandlerResource<ResourceHandler> {
 
 	public int getGlTarget() {
 		return this.gdxTexture.glTarget;
+	}
+
+	public void setWrapS(final boolean wrapS) {
+		this.gdxTexture.setWrap(wrapS ? TextureWrap.Repeat : TextureWrap.ClampToEdge, this.gdxTexture.getVWrap());
+	}
+
+	public void setWrapT(final boolean wrapT) {
+		this.gdxTexture.setWrap(this.gdxTexture.getUWrap(), wrapT ? TextureWrap.Repeat : TextureWrap.ClampToEdge);
 	}
 
 }

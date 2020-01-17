@@ -44,4 +44,12 @@ public class Extent {
 	public float getBoundsRadius() {
 		return this.boundsRadius;
 	}
+
+	public float[] getMin() {
+		return this.min;
+	}
+
+	public float[] getMax() {
+		return this.max;
+	}
 }

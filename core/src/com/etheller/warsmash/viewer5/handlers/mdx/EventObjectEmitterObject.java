@@ -21,7 +21,7 @@ import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
 
-public abstract class EventObjectEmitterObject extends GenericObject implements EmitterObject {
+public class EventObjectEmitterObject extends GenericObject implements EmitterObject {
 	private static final LoadGenericCallback mappedDataCallback = new LoadGenericCallback() {
 
 		@Override
@@ -57,10 +57,10 @@ public abstract class EventObjectEmitterObject extends GenericObject implements 
 	};
 
 	private int geometryEmitterType = -1;
-	private final String type;
+	public final String type;
 	private final String id;
 	private final long[] keyFrames;
-	private long globalSequence;
+	private long globalSequence = -1;
 	private final long[] defval = { 1 };
 	public MdxModel internalModel;
 	public Texture internalTexture;
@@ -130,7 +130,7 @@ public abstract class EventObjectEmitterObject extends GenericObject implements 
 					FetchDataTypeName.SLK, mappedDataCallback));
 		}
 		else if ("SPL".equals(type)) {
-			tables.add(viewer.loadGeneric(pathSolver.solve("Splats\\SpawnData.slk", solverParams).finalSrc,
+			tables.add(viewer.loadGeneric(pathSolver.solve("Splats\\SplatData.slk", solverParams).finalSrc,
 					FetchDataTypeName.SLK, mappedDataCallback));
 		}
 		else if ("UBR".equals(type)) {
@@ -154,6 +154,30 @@ public abstract class EventObjectEmitterObject extends GenericObject implements 
 		// TODO I am scrapping some async stuff with promises here from the JS and
 		// calling load
 		this.load(tables);
+	}
+
+	private float getFloat(final MappedDataRow row, final String name) {
+		final Float x = (Float) row.get(name);
+		if (x == null) {
+			return Float.NaN;
+		}
+		else {
+			return x.floatValue();
+		}
+	}
+
+	private int getInt(final MappedDataRow row, final String name) {
+		return getInt(row, name, Integer.MIN_VALUE);
+	}
+
+	private int getInt(final MappedDataRow row, final String name, final int defaultValue) {
+		final Number x = (Number) row.get(name);
+		if (x == null) {
+			return defaultValue;
+		}
+		else {
+			return x.intValue();
+		}
 	}
 
 	private void load(final List<GenericResource> tables) {
@@ -182,40 +206,36 @@ public abstract class EventObjectEmitterObject extends GenericObject implements 
 						"ReplaceableTextures\\Splats\\" + row.get("file") + texturesExt, pathSolver,
 						model.solverParams);
 
-				this.scale = (Float) row.get("Scale");
+				this.scale = getFloat(row, "Scale");
 				this.colors = new float[][] {
-						{ ((Float) row.get("StartR")).floatValue(), ((Float) row.get("StartG")).floatValue(),
-								((Float) row.get("StartB")).floatValue(), ((Float) row.get("StartA")).floatValue() },
-						{ ((Float) row.get("MiddleR")).floatValue(), ((Float) row.get("MiddleG")).floatValue(),
-								((Float) row.get("MiddleB")).floatValue(), ((Float) row.get("MiddleA")).floatValue() },
-						{ ((Float) row.get("EndR")).floatValue(), ((Float) row.get("EndG")).floatValue(),
-								((Float) row.get("EndB")).floatValue(), ((Float) row.get("EndA")).floatValue() } };
+						{ getFloat(row, "StartR"), getFloat(row, "StartG"), getFloat(row, "StartB"),
+								getFloat(row, "StartA") },
+						{ getFloat(row, "MiddleR"), getFloat(row, "MiddleG"), getFloat(row, "MiddleB"),
+								getFloat(row, "MiddleA") },
+						{ getFloat(row, "EndR"), getFloat(row, "EndG"), getFloat(row, "EndB"),
+								getFloat(row, "EndA") } };
 
 				if ("SPL".equals(this.type)) {
-					this.columns = ((Number) row.get("Columns")).intValue();
-					this.rows = ((Number) row.get("Rows")).intValue();
-					this.lifeSpan = ((Number) row.get("Lifespan")).floatValue()
-							+ ((Number) row.get("Decay")).floatValue();
+					this.columns = getInt(row, "Columns");
+					this.rows = getInt(row, "Rows");
+					this.lifeSpan = getFloat(row, "Lifespan") + getFloat(row, "Decay");
 					this.intervals = new float[][] {
-							{ ((Float) row.get("UVLifespanStart")).floatValue(),
-									((Float) row.get("UVLifespanEnd")).floatValue(),
-									((Float) row.get("LifespanRepeat")).floatValue() },
-							{ ((Float) row.get("UVDecayStart")).floatValue(),
-									((Float) row.get("UVDecayEnd")).floatValue(),
-									((Float) row.get("DecayRepeat")).floatValue() }, };
+							{ getFloat(row, "UVLifespanStart"), getFloat(row, "UVLifespanEnd"),
+									getFloat(row, "LifespanRepeat") },
+							{ getFloat(row, "UVDecayStart"), getFloat(row, "UVDecayEnd"),
+									getFloat(row, "DecayRepeat") }, };
 				}
 				else {
 					this.columns = 1;
 					this.rows = 1;
-					this.lifeSpan = ((Number) row.get("BirthTime")).floatValue()
-							+ ((Number) row.get("PauseTime")).floatValue() + ((Number) row.get("Decay")).floatValue();
-					this.intervalTimes = new float[] { ((Number) row.get("BirthTime")).floatValue(),
-							((Number) row.get("PauseTime")).floatValue(), ((Number) row.get("Decay")).floatValue() };
+					this.lifeSpan = getFloat(row, "BirthTime") + getFloat(row, "PauseTime") + getFloat(row, "Decay");
+					this.intervalTimes = new float[] { getFloat(row, "BirthTime"), getFloat(row, "PauseTime"),
+							getFloat(row, "Decay") };
 				}
 
 				final int[] blendModes = FilterMode
 						.emitterFilterMode(com.etheller.warsmash.parsers.mdlx.ParticleEmitter2.FilterMode
-								.fromId(((Number) row.get("BlendMode")).intValue()));
+								.fromId(getInt(row, "BlendMode")));
 
 				this.blendSrc = blendModes[0];
 				this.blendDst = blendModes[1];
@@ -232,12 +252,12 @@ public abstract class EventObjectEmitterObject extends GenericObject implements 
 					final MappedDataRow animSoundsRow = animSounds.getRow((String) row.get("SoundLabel"));
 
 					if (animSoundsRow != null) {
-						this.distanceCutoff = ((Number) animSoundsRow.get("DistanceCutoff")).floatValue();
-						this.maxDistance = ((Number) animSoundsRow.get("MaxDistance")).floatValue();
-						this.minDistance = ((Number) animSoundsRow.get("MinDistance")).floatValue();
-						this.pitch = ((Number) animSoundsRow.get("Pitch")).floatValue();
-						this.pitchVariance = ((Number) animSoundsRow.get("PitchVariance")).floatValue();
-						this.volume = ((Number) animSoundsRow.get("Volume")).floatValue();
+						this.distanceCutoff = getFloat(animSoundsRow, "DistanceCutoff");
+						this.maxDistance = getFloat(animSoundsRow, "MaxDistance");
+						this.minDistance = getFloat(animSoundsRow, "MinDistance");
+						this.pitch = getFloat(animSoundsRow, "Pitch");
+						this.pitchVariance = getFloat(animSoundsRow, "PitchVariance");
+						this.volume = getFloat(animSoundsRow, "Volume");
 
 						final String[] fileNames = ((String) animSoundsRow.get("FileNames")).split(",");
 						final GenericResource[] resources = new GenericResource[fileNames.length];
@@ -300,4 +320,13 @@ public abstract class EventObjectEmitterObject extends GenericObject implements 
 		return -1;
 	}
 
+	@Override
+	public boolean ok() {
+		return this.ok;
+	}
+
+	@Override
+	public int getGeometryEmitterType() {
+		return this.geometryEmitterType;
+	}
 }

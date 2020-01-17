@@ -2,10 +2,9 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import java.util.Arrays;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
 
 public class Geoset {
 	public MdxModel model;
@@ -123,8 +122,9 @@ public class Geoset {
 	}
 
 	public void renderSimple(final int instances) {
-		Gdx.gl30.glDrawElementsInstanced(GL30.GL_TRIANGLES, this.elements, GL30.GL_UNSIGNED_SHORT, this.faceOffset,
-				instances);
+		final ANGLEInstancedArrays instancedArrays = this.model.viewer.webGL.instancedArrays;
+		instancedArrays.glDrawElementsInstancedANGLE(GL20.GL_TRIANGLES, this.elements, GL20.GL_UNSIGNED_SHORT,
+				this.faceOffset, instances);
 	}
 
 	public void bindHd(final ShaderProgram shader, final int coordId) {

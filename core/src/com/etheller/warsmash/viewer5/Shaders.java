@@ -54,5 +54,5 @@ public class Shaders {
 			"    vec3 quat_transform(vec2 q, vec3 v) {\r\n" + //
 			"      return vec3(quat_transform(q, v.xy), v.z);\r\n" + //
 			"    }\r\n" + //
-			"  `,";
+			"  ";
 }

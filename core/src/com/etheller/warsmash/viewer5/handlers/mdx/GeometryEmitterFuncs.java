@@ -4,9 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.List;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.Camera;
@@ -14,6 +12,7 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.TextureMapper;
+import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
 import com.etheller.warsmash.viewer5.gl.ClientBuffer;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
 
@@ -378,6 +377,9 @@ public class GeometryEmitterFuncs {
 	}
 
 	public static void renderEmitter(final MdxEmitter<?, ?, ?> emitter, final ShaderProgram shader) {
+		if (emitter == null) {
+			System.err.println("NULL EMITTER");
+		}
 		int alive = emitter.alive;
 		final EmitterObject emitterObject = emitter.emitterObject;
 		final int emitterType = emitterObject.getGeometryEmitterType();
@@ -388,6 +390,7 @@ public class GeometryEmitterFuncs {
 
 		if (alive > 0) {
 			final ModelViewer viewer = emitter.instance.model.viewer;
+			final ANGLEInstancedArrays instancedArrays = viewer.webGL.instancedArrays;
 			final ClientBuffer buffer = viewer.buffer;
 			final GL20 gl = viewer.gl;
 			final int size = alive * BYTES_PER_OBJECT;
@@ -425,7 +428,7 @@ public class GeometryEmitterFuncs {
 			shader.setVertexAttribute("a_leftRightTop", 3, GL20.GL_UNSIGNED_BYTE, false, BYTES_PER_OBJECT,
 					BYTE_OFFSET_LEFT_RIGHT_TOP);
 
-			Gdx.gl30.glDrawArraysInstanced(GL30.GL_TRIANGLES, 0, 6, alive);
+			instancedArrays.glDrawArraysInstancedANGLE(GL20.GL_TRIANGLES, 0, 6, alive);
 		}
 	}
 

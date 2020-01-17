@@ -20,6 +20,7 @@ public class WebGL {
 	public ShaderProgram currentShaderProgram;
 	public String floatPrecision;
 	public final com.badlogic.gdx.graphics.Texture emptyTexture;
+	public ANGLEInstancedArrays instancedArrays;
 
 	public WebGL(final GL20 gl) {
 		gl.glDepthFunc(GL20.GL_LEQUAL);
@@ -43,6 +44,7 @@ public class WebGL {
 			}
 		}
 		this.emptyTexture = new com.badlogic.gdx.graphics.Texture(imageData);
+		this.instancedArrays = Extensions.angleInstancedArrays;
 	}
 
 	public ShaderUnitDeprecated createShaderUnit(final String src, final int type) {
@@ -53,10 +55,13 @@ public class WebGL {
 		return this.shaderUnits.get(hash);
 	}
 
-	public ShaderProgram createShaderProgram(final String vertexSrc, final String fragmentSrc) {
+	public ShaderProgram createShaderProgram(String vertexSrc, String fragmentSrc) {
+		vertexSrc = vertexSrc.replace("mediump", "");
+		fragmentSrc = fragmentSrc.replace("mediump", "");
 		final Map<Integer, ShaderProgram> shaderPrograms = this.shaderPrograms;
 
 		final int hash = stringHash(vertexSrc + fragmentSrc);
+		ShaderProgram.pedantic = false;
 		if (!shaderPrograms.containsKey(hash)) {
 			shaderPrograms.put(hash, new ShaderProgram(vertexSrc, fragmentSrc));
 		}
@@ -65,6 +70,12 @@ public class WebGL {
 
 		if (shaderProgram.isCompiled()) {
 			return shaderProgram;
+		}
+		else {
+			System.err.println(shaderProgram.getLog());
+			if (true) {
+				throw new IllegalStateException("Bad shader");
+			}
 		}
 		return null;
 	}

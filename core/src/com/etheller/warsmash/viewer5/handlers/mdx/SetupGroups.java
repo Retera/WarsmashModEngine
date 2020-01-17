@@ -71,8 +71,8 @@ public class SetupGroups {
 			}
 		}
 
-		final List<Object> opaqueGroups = model.opaqueGroups;
-		final List<Object> translucentGroups = model.translucentGroups;
+		final List<GenericGroup> opaqueGroups = model.opaqueGroups;
+		final List<GenericGroup> translucentGroups = model.translucentGroups;
 		GenericGroup currentGroup = null;
 
 		for (final Batch object : opaqueBatches) {
@@ -82,7 +82,8 @@ public class SetupGroups {
 				opaqueGroups.add(currentGroup);
 			}
 
-			currentGroup.objects.add(object.index);
+			final int index = object.index;
+			currentGroup.objects.add(index);
 		}
 
 		// Sort between all of the translucent batches and emitters that have priority
@@ -109,12 +110,13 @@ public class SetupGroups {
 			if ((object instanceof Batch /* || object instanceof ReforgedBatch */)
 					|| (object instanceof EmitterObject)) {
 				if ((currentGroup == null) || !matchingGroup(currentGroup, objects)) {
-					currentGroup = createMatchingGroup(model, objects);
+					currentGroup = createMatchingGroup(model, object);
 
 					translucentGroups.add(currentGroup);
 				}
 
-				currentGroup.objects.add(((GenericIndexed) object).getIndex());
+				final int index = ((GenericIndexed) object).getIndex();
+				currentGroup.objects.add(index);
 			}
 		}
 	}

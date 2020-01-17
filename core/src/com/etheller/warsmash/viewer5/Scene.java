@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.badlogic.gdx.math.Rectangle;
-import com.etheller.warsmash.viewer5.handlers.Batch;
-import com.etheller.warsmash.viewer5.handlers.BatchDescriptor;
 
 /**
  * A scene.
@@ -29,22 +27,22 @@ import com.etheller.warsmash.viewer5.handlers.BatchDescriptor;
  */
 public class Scene {
 
-	private final ModelViewer viewer;
+	public final ModelViewer viewer;
 	public final Camera camera;
-	final Grid grid;
+	public final Grid grid;
 	public int visibleCells;
 	public int visibleInstances;
 	public int updatedParticles;
 	public boolean audioEnabled;
 	public AudioContext audioContext;
 
-	private final List<ModelInstance> instances;
-	private final int currentInstance;
-	private final List<ModelInstance> batchedInstances;
-	private final int currentBatchedInstance;
+	public final List<ModelInstance> instances;
+	public final int currentInstance;
+	public final List<ModelInstance> batchedInstances;
+	public final int currentBatchedInstance;
 	public final EmittedObjectUpdater emitterObjectUpdater;
-	private final Map<TextureMapper, Batch> batches;
-	private final Comparator<ModelInstance> instanceDepthComparator;
+	public final Map<TextureMapper, RenderBatch> batches;
+	public final Comparator<ModelInstance> instanceDepthComparator;
 
 	public Scene(final ModelViewer viewer) {
 		final CanvasProvider canvas = viewer.canvas;
@@ -144,12 +142,10 @@ public class Scene {
 
 	public void addToBatch(final ModelInstance instance) {
 		final TextureMapper textureMapper = instance.textureMapper;
-		Batch batch = this.batches.get(textureMapper);
+		RenderBatch batch = this.batches.get(textureMapper);
 
 		if (batch == null) {
-			final Model<?> model = instance.model;
-			final BatchDescriptor batchDescriptor = model.handler.batchDescriptor;
-			batch = batchDescriptor.create(this, model, textureMapper);
+			batch = instance.getBatch(textureMapper);
 
 			this.batches.put(textureMapper, batch);
 		}
@@ -240,7 +236,7 @@ public class Scene {
 		this.viewer.gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
 
 		// Clear all of the batches.
-		for (final Batch batch : this.batches.values()) {
+		for (final RenderBatch batch : this.batches.values()) {
 			batch.clear();
 		}
 
@@ -250,7 +246,7 @@ public class Scene {
 		}
 
 		// Render all of the batches.
-		for (final Batch batch : this.batches.values()) {
+		for (final RenderBatch batch : this.batches.values()) {
 			batch.render();
 		}
 

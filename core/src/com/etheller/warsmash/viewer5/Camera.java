@@ -34,12 +34,26 @@ public class Camera {
 	public final Quaternion rotation;
 
 	public Quaternion inverseRotation;
-	private final Matrix4 worldMatrix;
+	/**
+	 * World -> View.
+	 */
+	private final Matrix4 viewMatrix;
+	/**
+	 * View -> Clip.
+	 */
 	private final Matrix4 projectionMatrix;
-	public final Matrix4 worldProjectionMatrix;
-	private final Matrix4 inverseWorldMatrix;
-	private final Matrix4 inverseRotationMatrix;
-	private final Matrix4 inverseWorldProjectionMatrix;
+	/**
+	 * World -> Clip.
+	 */
+	public final Matrix4 viewProjectionMatrix;
+	/**
+	 * View -> World.
+	 */
+	private final Matrix4 inverseViewMatrix;
+	/**
+	 * Clip -> World.
+	 */
+	private final Matrix4 inverseViewProjectionMatrix;
 	public final Vector3 directionX;
 	public final Vector3 directionY;
 	public final Vector3 directionZ;
@@ -75,12 +89,11 @@ public class Camera {
 
 		// Derived values.
 		this.inverseRotation = new Quaternion();
-		this.worldMatrix = new Matrix4();
+		this.viewMatrix = new Matrix4();
 		this.projectionMatrix = new Matrix4();
-		this.worldProjectionMatrix = new Matrix4();
-		this.inverseWorldMatrix = new Matrix4();
-		this.inverseRotationMatrix = new Matrix4();
-		this.inverseWorldProjectionMatrix = new Matrix4();
+		this.viewProjectionMatrix = new Matrix4();
+		this.inverseViewMatrix = new Matrix4();
+		this.inverseViewProjectionMatrix = new Matrix4();
 		this.directionX = new Vector3();
 		this.directionY = new Vector3();
 		this.directionZ = new Vector3();
@@ -222,9 +235,9 @@ public class Camera {
 			final Vector3 location = this.location;
 			final Quaternion rotation = this.rotation;
 			final Quaternion inverseRotation = this.inverseRotation;
-			final Matrix4 worldMatrix = this.worldMatrix;
+			final Matrix4 viewMatrix = this.viewMatrix;
 			final Matrix4 projectionMatrix = this.projectionMatrix;
-			final Matrix4 worldProjectionMatrix = this.worldProjectionMatrix;
+			final Matrix4 viewProjectionMatrix = this.viewProjectionMatrix;
 			final Vector3[] vectors = this.vectors;
 			final Vector3[] billboardedVectors = this.billboardedVectors;
 
@@ -238,19 +251,19 @@ public class Camera {
 			}
 
 			rotation.toMatrix(projectionMatrix.val);
-			worldMatrix.translate(vectorHeap.set(location).scl(-1));
+			viewMatrix.translate(vectorHeap.set(location).scl(-1));
 			inverseRotation.set(rotation).conjugate();
 
 			// World projection matrix
 			// World space -> NDC space
-			worldProjectionMatrix.set(projectionMatrix).mul(worldMatrix);
+			viewProjectionMatrix.set(projectionMatrix).mul(viewMatrix);
 
 			// Recalculate the camera's frustum planes
-			RenderMathUtils.unpackPlanes(this.planes, worldProjectionMatrix);
+			RenderMathUtils.unpackPlanes(this.planes, viewProjectionMatrix);
 
 			// Inverse world matrix
 			// Camera space -> world space
-			this.inverseWorldMatrix.set(worldMatrix).inv();
+			this.inverseViewMatrix.set(viewMatrix).inv();
 
 			this.directionX.set(RenderMathUtils.VEC3_UNIT_X);
 			inverseRotation.transform(this.directionX);
@@ -261,8 +274,8 @@ public class Camera {
 
 			// Inverse world projection matrix
 			// NDC space -> World space
-			this.inverseWorldProjectionMatrix.set(worldProjectionMatrix);
-			this.inverseWorldProjectionMatrix.inv();
+			this.inverseViewProjectionMatrix.set(viewProjectionMatrix);
+			this.inverseViewProjectionMatrix.inv();
 
 			for (int i = 0; i < 7; i++) {
 				billboardedVectors[i].set(vectors[i]);
@@ -281,18 +294,18 @@ public class Camera {
 	}
 
 	public Vector3 cameraToWorld(final Vector3 out, final Vector3 v) {
-		return out.set(v).prj(this.inverseWorldMatrix);
+		return out.set(v).prj(this.inverseViewMatrix);
 	}
 
 	public Vector3 worldToCamera(final Vector3 out, final Vector3 v) {
-		return out.set(v).prj(this.worldMatrix);
+		return out.set(v).prj(this.viewMatrix);
 	}
 
 	public Vector2 worldToScreen(final Vector2 out, final Vector3 v) {
 		final Rectangle viewport = this.rect;
 
 		vectorHeap.set(v);
-		vectorHeap.prj(this.inverseWorldMatrix);
+		vectorHeap.prj(this.inverseViewMatrix);
 
 		out.x = Math.round(((vectorHeap.x + 1) / 2) * viewport.width);
 		out.y = Math.round(((vectorHeap.y + 1) / 2) * viewport.height);
@@ -309,10 +322,10 @@ public class Camera {
 		final Rectangle viewport = this.rect;
 
 		// Intersection on the near-plane
-		RenderMathUtils.unproject(a, c.set(x, y, 0), this.inverseWorldProjectionMatrix, viewport);
+		RenderMathUtils.unproject(a, c.set(x, y, 0), this.inverseViewProjectionMatrix, viewport);
 
 		// Intersection on the far-plane
-		RenderMathUtils.unproject(b, c.set(x, y, 1), this.inverseWorldProjectionMatrix, viewport);
+		RenderMathUtils.unproject(b, c.set(x, y, 1), this.inverseViewProjectionMatrix, viewport);
 
 		out[0] = a.x;
 		out[1] = a.y;

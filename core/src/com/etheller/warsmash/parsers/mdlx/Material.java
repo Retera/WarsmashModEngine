@@ -118,4 +118,24 @@ public class Material implements MdlxBlock, Chunk {
 
 		return size;
 	}
+
+	public int getPriorityPlane() {
+		return this.priorityPlane;
+	}
+
+	public void setPriorityPlane(final int priorityPlane) {
+		this.priorityPlane = priorityPlane;
+	}
+
+	public int getFlags() {
+		return this.flags;
+	}
+
+	public void setFlags(final int flags) {
+		this.flags = flags;
+	}
+
+	public List<Layer> getLayers() {
+		return this.layers;
+	}
 }

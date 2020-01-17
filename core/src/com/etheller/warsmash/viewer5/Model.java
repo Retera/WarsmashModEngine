@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.etheller.warsmash.viewer5.handlers.ModelHandler;
-import com.etheller.warsmash.viewer5.handlers.ModelInstanceDescriptor;
 
 public abstract class Model<HANDLER extends ModelHandler> extends HandlerResource<HANDLER> {
 	public Bounds bounds;
@@ -17,13 +16,14 @@ public abstract class Model<HANDLER extends ModelHandler> extends HandlerResourc
 		this.preloadedInstances = new ArrayList<>();
 	}
 
+	protected abstract ModelInstance createInstance(int type);
+
 	public ModelInstance addInstance() {
 		return addInstance(0);
 	}
 
 	public ModelInstance addInstance(final int type) {
-		final ModelInstanceDescriptor instanceDescriptor = this.handler.instanceDescriptor;
-		final ModelInstance instance = instanceDescriptor.create(this);
+		final ModelInstance instance = createInstance(type);
 
 		if (this.ok) {
 			instance.load();

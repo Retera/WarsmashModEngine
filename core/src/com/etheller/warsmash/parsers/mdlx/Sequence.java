@@ -103,6 +103,10 @@ public class Sequence implements MdlxBlock {
 	}
 
 	public long[] getInterval() {
-		return interval;
+		return this.interval;
+	}
+
+	public int getFlags() {
+		return this.flags;
 	}
 }

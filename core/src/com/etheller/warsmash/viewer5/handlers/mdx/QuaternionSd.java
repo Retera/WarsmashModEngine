@@ -6,7 +6,7 @@ import com.etheller.warsmash.util.Interpolator;
 public class QuaternionSd extends Sd<float[]> {
 
 	public QuaternionSd(final MdxModel model, final Timeline<float[]> timeline) {
-		super(model, timeline);
+		super(model, timeline, SdArrayDescriptor.FLOAT_ARRAY);
 	}
 
 	@Override

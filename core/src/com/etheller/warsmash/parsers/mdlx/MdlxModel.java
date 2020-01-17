@@ -654,4 +654,88 @@ public class MdlxModel {
 	public List<float[]> getPivotPoints() {
 		return this.pivotPoints;
 	}
+
+	public int getVersion() {
+		return this.version;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public String getAnimationFile() {
+		return this.animationFile;
+	}
+
+	public Extent getExtent() {
+		return this.extent;
+	}
+
+	public long getBlendTime() {
+		return this.blendTime;
+	}
+
+	public List<Material> getMaterials() {
+		return this.materials;
+	}
+
+	public List<Texture> getTextures() {
+		return this.textures;
+	}
+
+	public List<TextureAnimation> getTextureAnimations() {
+		return this.textureAnimations;
+	}
+
+	public List<Geoset> getGeosets() {
+		return this.geosets;
+	}
+
+	public List<GeosetAnimation> getGeosetAnimations() {
+		return this.geosetAnimations;
+	}
+
+	public List<Bone> getBones() {
+		return this.bones;
+	}
+
+	public List<Light> getLights() {
+		return this.lights;
+	}
+
+	public List<Helper> getHelpers() {
+		return this.helpers;
+	}
+
+	public List<Attachment> getAttachments() {
+		return this.attachments;
+	}
+
+	public List<ParticleEmitter> getParticleEmitters() {
+		return this.particleEmitters;
+	}
+
+	public List<ParticleEmitter2> getParticleEmitters2() {
+		return this.particleEmitters2;
+	}
+
+	public List<RibbonEmitter> getRibbonEmitters() {
+		return this.ribbonEmitters;
+	}
+
+	public List<Camera> getCameras() {
+		return this.cameras;
+	}
+
+	public List<EventObject> getEventObjects() {
+		return this.eventObjects;
+	}
+
+	public List<CollisionShape> getCollisionShapes() {
+		return this.collisionShapes;
+	}
+
+	public List<UnknownChunk> getUnknownChunks() {
+		return this.unknownChunks;
+	}
 }

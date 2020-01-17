@@ -33,7 +33,7 @@ public class ClientBuffer {
 
 			this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.buffer);
 
-			this.arrayBuffer = ByteBuffer.allocate(this.size);
+			this.arrayBuffer = ByteBuffer.allocateDirect(this.size);
 			this.gl.glBufferData(GL20.GL_ARRAY_BUFFER, this.size, this.arrayBuffer, GL20.GL_DYNAMIC_DRAW);
 			this.byteView = this.arrayBuffer;
 			this.floatView = this.arrayBuffer.asFloatBuffer();

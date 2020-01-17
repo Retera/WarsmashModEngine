@@ -6,7 +6,7 @@ import com.etheller.warsmash.util.Interpolator;
 public class VectorSd extends Sd<float[]> {
 
 	public VectorSd(final MdxModel model, final Timeline<float[]> timeline) {
-		super(model, timeline);
+		super(model, timeline, SdArrayDescriptor.FLOAT_ARRAY);
 	}
 
 	@Override

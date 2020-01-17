@@ -85,7 +85,7 @@ public abstract class Sd<TYPE> {
 
 	}
 
-	public Sd(final MdxModel model, final Timeline<TYPE> timeline) {
+	public Sd(final MdxModel model, final Timeline<TYPE> timeline, final SdArrayDescriptor<TYPE> arrayDescriptor) {
 		final List<Long> globalSequences = model.getGlobalSequences();
 		final int globalSequenceId = timeline.getGlobalSequenceId();
 		final Integer forcedInterp = forcedInterpMap.get(timeline.getName());
@@ -105,13 +105,14 @@ public abstract class Sd<TYPE> {
 
 		if ((globalSequenceId != -1) && (globalSequences.size() > 0)) {
 			this.globalSequence = new SdSequence<TYPE>(this, 0, globalSequences.get(globalSequenceId).longValue(),
-					timeline, true);
+					timeline, true, arrayDescriptor);
 		}
 		else {
 			for (final Sequence sequence : model.getSequences()) {
 				final long[] interval = sequence.getInterval();
 
-				this.sequences.add(new SdSequence<TYPE>(this, interval[0], interval[1], timeline, false));
+				this.sequences
+						.add(new SdSequence<TYPE>(this, interval[0], interval[1], timeline, false, arrayDescriptor));
 			}
 		}
 	}

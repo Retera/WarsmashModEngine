@@ -337,7 +337,7 @@ public enum RenderMathUtils {
 		return (plane.x * px) + (plane.y * py) + plane.w;
 	}
 
-	public static int testSphere(final Vector4[] planes, final float x, final float y, final float z, final int r,
+	public static int testSphere(final Vector4[] planes, final float x, final float y, final float z, final float r,
 			int first) {
 		if (first == -1) {
 			first = 0;

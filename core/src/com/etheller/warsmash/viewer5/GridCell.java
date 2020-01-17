@@ -37,6 +37,9 @@ public class GridCell {
 	}
 
 	public boolean isVisible(final Camera camera) {
+		if (true) {
+			return true;
+		}
 		this.plane = RenderMathUtils.testCell(camera.planes, this.left, this.right, this.bottom, this.top, this.plane);
 
 		return this.plane == -1;

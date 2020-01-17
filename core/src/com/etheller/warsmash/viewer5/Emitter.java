@@ -3,7 +3,8 @@ package com.etheller.warsmash.viewer5;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Emitter<MODEL_INSTANCE extends ModelInstance, EMITTED_OBJECT extends EmittedObject<MODEL_INSTANCE, ? extends Emitter<MODEL_INSTANCE, EMITTED_OBJECT>>> {
+public abstract class Emitter<MODEL_INSTANCE extends ModelInstance, EMITTED_OBJECT extends EmittedObject<MODEL_INSTANCE, ? extends Emitter<MODEL_INSTANCE, EMITTED_OBJECT>>>
+		implements UpdatableObject {
 
 	public final MODEL_INSTANCE instance;
 	public final List<EMITTED_OBJECT> objects;
@@ -36,6 +37,7 @@ public abstract class Emitter<MODEL_INSTANCE extends ModelInstance, EMITTED_OBJE
 		return object;
 	}
 
+	@Override
 	public void update(final float dt) {
 		this.updateEmission(dt);
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SlkFile {
-	public List<List<Object>> rows;
+	public List<List<Object>> rows = new ArrayList<>();
 
 	public SlkFile(final String buffer) {
 		if (buffer != null) {
@@ -44,7 +44,7 @@ public class SlkFile {
 							this.rows.set(y, new ArrayList<>());
 						}
 
-						if (valueString.charAt('0') == '"') {
+						if (valueString.charAt(0) == '"') {
 							value = valueString.substring(1, valueString.length() - 1);
 						}
 						else if ("TRUE".equals(valueString)) {

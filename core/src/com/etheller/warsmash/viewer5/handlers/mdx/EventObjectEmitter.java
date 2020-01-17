@@ -32,6 +32,10 @@ public abstract class EventObjectEmitter<EMITTER_OBJECT extends EventObjectEmitt
 
 	}
 
+	public void reset() {
+		this.lastValue = 0;
+	}
+
 	@Override
 	protected void emit() {
 		this.emitObject(0);

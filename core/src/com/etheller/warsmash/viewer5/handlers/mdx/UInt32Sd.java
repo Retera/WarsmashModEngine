@@ -6,7 +6,7 @@ import com.etheller.warsmash.util.RenderMathUtils;
 public class UInt32Sd extends Sd<long[]> {
 
 	public UInt32Sd(final MdxModel model, final Timeline<long[]> timeline) {
-		super(model, timeline);
+		super(model, timeline, SdArrayDescriptor.LONG_ARRAY);
 	}
 
 	@Override

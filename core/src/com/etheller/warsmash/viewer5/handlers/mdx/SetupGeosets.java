@@ -2,7 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,8 +11,8 @@ import com.badlogic.gdx.graphics.GL20;
 
 public class SetupGeosets {
 	private static final int NORMAL_BATCH = 0;
-	private static final int EXTENDED_BATCH = 0;
-	private static final int REFORGED_BATCH = 0;
+	private static final int EXTENDED_BATCH = 1;
+	private static final int REFORGED_BATCH = 2;
 
 	public static void setupGeosets(final MdxModel model,
 			final List<com.etheller.warsmash.parsers.mdlx.Geoset> geosets) {
@@ -157,30 +157,52 @@ public class SetupGeosets {
 					}
 
 					// Positions.
-					gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, positionOffset, positions.length,
-							FloatBuffer.wrap(positions));
+					gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, positionOffset, positions.length, wrap(positions));
 					positionOffset += positions.length * 4;
 
 					// Normals.
-					gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, normalOffset, normals.length, FloatBuffer.wrap(normals));
+					gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, normalOffset, normals.length, wrap(normals));
 					normalOffset += normals.length * 4;
 
 					// Texture coordinates.
 					for (final float[] uvSet : uvSets) {
-						gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, uvOffset, uvSet.length, FloatBuffer.wrap(uvSet));
+						gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, uvOffset, uvSet.length, wrap(uvSet));
 						uvOffset += uvSet.length * 4;
 					}
 
 					// Skin.
-					gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, skinOffset, skin.length, ByteBuffer.wrap(skin));
+					gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, skinOffset, skin.length, wrap(skin));
 					skinOffset += skin.length * 1;
 
 					// Faces.
-					gl.glBufferSubData(GL20.GL_ELEMENT_ARRAY_BUFFER, faceOffset, faces.length, IntBuffer.wrap(faces));
+					gl.glBufferSubData(GL20.GL_ELEMENT_ARRAY_BUFFER, faceOffset, faces.length, wrapFaces(faces));
 					faceOffset += faces.length * 4;
 				}
 
 			}
 		}
+	}
+
+	private static ShortBuffer wrapFaces(final int[] faces) {
+		final ShortBuffer wrapper = ByteBuffer.allocateDirect(faces.length * 2).asShortBuffer();
+		for (final int face : faces) {
+			wrapper.put((short) face);
+		}
+		wrapper.clear();
+		return wrapper;
+	}
+
+	private static ByteBuffer wrap(final byte[] skin) {
+		final ByteBuffer wrapper = ByteBuffer.allocateDirect(skin.length);
+		wrapper.put(skin);
+		wrapper.clear();
+		return wrapper;
+	}
+
+	private static FloatBuffer wrap(final float[] positions) {
+		final FloatBuffer wrapper = ByteBuffer.allocateDirect(positions.length * 4).asFloatBuffer();
+		wrapper.put(positions);
+		wrapper.clear();
+		return wrapper;
 	}
 }

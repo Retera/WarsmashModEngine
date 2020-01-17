@@ -1,65 +1,154 @@
 package com.etheller.warsmash;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.nio.file.Paths;
-
-import javax.imageio.ImageIO;
+import java.util.Arrays;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
+import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.DataSource;
-import com.etheller.warsmash.datasources.FolderDataSource;
-import com.etheller.warsmash.util.ImageUtils;
-import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.datasources.DataSourceDescriptor;
+import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
+import com.etheller.warsmash.viewer5.Camera;
+import com.etheller.warsmash.viewer5.CanvasProvider;
+import com.etheller.warsmash.viewer5.ModelViewer;
+import com.etheller.warsmash.viewer5.PathSolver;
+import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.SolvedPath;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxSimpleInstance;
 
-public class WarsmashGdxGame extends ApplicationAdapter {
-	private SpriteBatch batch;
-	private BitmapFont font;
+public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvider {
 	private DataSource codebase;
-	private Texture texture;
+	private ModelViewer viewer;
+	private MdxModel model;
+	private CameraManager cameraManager;
 
 	@Override
 	public void create() {
-		this.codebase = new FolderDataSource(Paths.get("C:/MPQBuild/War3.mpq/war3.mpq"));
+		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
+		System.err.println("Renderer: " + renderer);
 
-		final War3ID id = War3ID.fromString("ipea");
-		try {
-			final String path = "terrainart\\lordaeronsummer\\lords_dirt.blp";
-			final boolean has = this.codebase.has(path);
-			final BufferedImage img = ImageIO.read(this.codebase.getResourceAsStream(path));
-			this.texture = ImageUtils.getTexture(ImageUtils.forceBufferedImagesRGB(img));
-			this.texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-		this.batch = new SpriteBatch();
-		this.font = new BitmapFont();
+		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor(
+				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3.mpq\\war3.mpq");
+		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor(
+				"D:\\NEEDS_ORGANIZING\\MPQBuild\\Test");
+		this.codebase = new CompoundDataSource(Arrays.<DataSourceDescriptor>asList(war3mpq, testingFolder));
+		this.viewer = new ModelViewer(this.codebase, this);
+
+		this.viewer.addHandler(new MdxHandler());
+
+		final Scene scene = this.viewer.addScene();
+
+		this.cameraManager = new CameraManager();
+		this.cameraManager.setupCamera(scene);
+
+//		this.model = (MdxModel) this.viewer.load("units\\human\\footman\\footman.mdx", new PathSolver() {
+		this.model = (MdxModel) this.viewer.load("Cube.mdx", new PathSolver() {
+			@Override
+			public SolvedPath solve(final String src, final Object solverParams) {
+				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+			}
+		}, null);
+
+		final MdxSimpleInstance instance = (MdxSimpleInstance) this.model.addInstance(1);
+
+		instance.setScene(scene);
+
+//		instance.setSequence(1);
+//
+//		instance.setSequenceLoopMode(2);
+
 	}
 
 	@Override
 	public void render() {
-		Gdx.gl.glClearColor(0, 1, 0, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		final int srcFunc = this.batch.getBlendSrcFunc();
-		final int dstFunc = this.batch.getBlendDstFunc();
+		this.viewer.updateAndRender();
 
-		this.batch.enableBlending();
-		this.batch.begin();
-//		this.font.draw(this.batch, "Hello World", 100, 100);
-		this.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-		this.batch.draw(this.texture, 0, 0);
-		this.batch.end();
-		this.batch.setBlendFunction(srcFunc, dstFunc);
+//		gl.glDrawElements(GL20.GL_TRIANGLES, this.elements, GL20.GL_UNSIGNED_SHORT, this.faceOffset);
 	}
 
 	@Override
 	public void dispose() {
+	}
+
+	@Override
+	public float getWidth() {
+		return Gdx.graphics.getWidth();
+	}
+
+	@Override
+	public float getHeight() {
+		return Gdx.graphics.getHeight();
+	}
+
+	class CameraManager {
+		private CanvasProvider canvas;
+		private Camera camera;
+		private float moveSpeed;
+		private float rotationSpeed;
+		private float zoomFactor;
+		private float horizontalAngle;
+		private float verticalAngle;
+		private float distance;
+		private Vector3 position;
+		private Vector3 target;
+		private Vector3 worldUp;
+		private Vector3 vecHeap;
+		private Quaternion quatHeap;
+		private Quaternion quatHeap2;
+
+		// An orbit camera setup example.
+		// Left mouse button controls the orbit itself.
+		// The right mouse button allows to move the camera and the point it's looking
+		// at on the XY plane.
+		// Scrolling zooms in and out.
+		private void setupCamera(final Scene scene) {
+			this.canvas = scene.viewer.canvas;
+			this.camera = scene.camera;
+			this.moveSpeed = 2;
+			this.rotationSpeed = (float) (Math.PI / 180);
+			this.zoomFactor = 0.1f;
+			this.horizontalAngle = (float) (Math.PI / 2);
+			this.verticalAngle = (float) (Math.PI / 4);
+			this.distance = 500;
+			this.position = new Vector3();
+			this.target = new Vector3();
+			this.worldUp = new Vector3(0, 0, 1);
+			this.vecHeap = new Vector3();
+			this.quatHeap = new Quaternion();
+			this.quatHeap2 = new Quaternion();
+
+			updateCamera();
+
+//		cameraUpdate();
+		}
+
+		private void updateCamera() {
+			// Limit the vertical angle so it doesn't flip.
+			// Since the camera uses a quaternion, flips don't matter to it, but this feels
+			// better.
+			this.verticalAngle = (float) Math.min(Math.max(0.01, this.verticalAngle), Math.PI - 0.01);
+
+			this.quatHeap.idt();
+			this.quatHeap.setFromAxisRad(0, 0, 1, this.horizontalAngle);
+			this.quatHeap2.idt();
+			this.quatHeap2.setFromAxisRad(1, 0, 0, this.verticalAngle);
+			this.quatHeap.mul(this.quatHeap2);
+
+			this.position.set(0, 0, 1);
+			this.quatHeap.transform(this.position);
+			this.position.scl(this.distance);
+			this.position = this.position.add(this.target);
+
+			this.camera.moveToAndFace(this.position, this.target, this.worldUp);
+		}
+
+//	private void cameraUpdate() {
+//
+//	}
 	}
 }

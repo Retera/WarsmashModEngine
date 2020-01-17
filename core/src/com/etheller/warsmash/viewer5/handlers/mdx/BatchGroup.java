@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.Texture;
+import com.etheller.warsmash.viewer5.gl.DataTexture;
 
 public class BatchGroup extends GenericGroup {
 
@@ -18,6 +19,7 @@ public class BatchGroup extends GenericGroup {
 		this.isExtended = isExtended;
 	}
 
+	@Override
 	public void render(final MdxComplexInstance instance) {
 		final Scene scene = instance.scene;
 		final MdxModel model = this.model;
@@ -41,9 +43,9 @@ public class BatchGroup extends GenericGroup {
 
 		shader.begin();
 
-		shader.setUniformMatrix("u_mvp", scene.camera.worldProjectionMatrix);
+		shader.setUniformMatrix("u_mvp", scene.camera.viewProjectionMatrix);
 
-		final Texture boneTexture = instance.boneTexture;
+		final DataTexture boneTexture = instance.boneTexture;
 
 		// Instances of models with no bones don't have a bone texture.
 		if (boneTexture != null) {

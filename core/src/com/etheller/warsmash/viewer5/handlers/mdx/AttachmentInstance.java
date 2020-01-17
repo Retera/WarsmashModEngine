@@ -1,11 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-public class AttachmentInstance {
+import com.etheller.warsmash.viewer5.UpdatableObject;
+
+public class AttachmentInstance implements UpdatableObject {
 	private static final float[] visbilityHeap = new float[1];
 
 	private final MdxComplexInstance instance;
 	private final Attachment attachment;
-	private final MdxComplexInstance internalInstance;
+	public final MdxComplexInstance internalInstance;
 
 	public AttachmentInstance(final MdxComplexInstance instance, final Attachment attachment) {
 		final MdxModel internalModel = attachment.internalModel;
@@ -21,7 +23,8 @@ public class AttachmentInstance {
 		this.internalInstance = internalInstance;
 	}
 
-	public void update() {
+	@Override
+	public void update(final float dt) {
 		final MdxComplexInstance internalInstance = this.internalInstance;
 
 		if (internalInstance.model.ok) {

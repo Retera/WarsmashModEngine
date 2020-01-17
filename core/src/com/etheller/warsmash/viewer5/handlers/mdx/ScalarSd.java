@@ -6,7 +6,7 @@ import com.etheller.warsmash.util.RenderMathUtils;
 public class ScalarSd extends Sd<float[]> {
 
 	public ScalarSd(final MdxModel model, final Timeline<float[]> timeline) {
-		super(model, timeline);
+		super(model, timeline, SdArrayDescriptor.FLOAT_ARRAY);
 	}
 
 	@Override

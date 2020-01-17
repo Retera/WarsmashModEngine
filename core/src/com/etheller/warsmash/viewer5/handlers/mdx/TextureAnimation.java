@@ -8,6 +8,10 @@ public class TextureAnimation extends AnimatedObject {
 	public TextureAnimation(final MdxModel model,
 			final com.etheller.warsmash.parsers.mdlx.TextureAnimation textureAnimation) {
 		super(model, textureAnimation);
+
+		this.addVariants(AnimationMap.KTAT.getWar3id(), "translation");
+		this.addVariants(AnimationMap.KTAR.getWar3id(), "rotation");
+		this.addVariants(AnimationMap.KTAS.getWar3id(), "scale");
 	}
 
 	public int getTranslation(final float[] out, final int sequence, final int frame, final int counter) {

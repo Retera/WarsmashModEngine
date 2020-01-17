@@ -145,7 +145,7 @@ public class GenericObject extends AnimatedObject implements GenericIndexed {
 		return this.isVariant(AnimationMap.KGSC.getWar3id(), sequence);
 	}
 
-	private static final class Variants {
+	public static final class Variants {
 		boolean[] translation;
 		boolean[] rotation;
 		boolean[] scale;

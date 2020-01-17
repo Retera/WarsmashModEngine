@@ -25,6 +25,7 @@ public class MdxHandler extends ModelHandler {
 		this.extensions = new ArrayList<>();
 		this.extensions.add(new String[] { ".mdx", "arrayBuffer" });
 		this.extensions.add(new String[] { ".mdl", "text" });
+		this.load = true;
 	}
 
 	@Override
@@ -36,12 +37,13 @@ public class MdxHandler extends ModelHandler {
 				MdxShaders.fsComplex);
 		Shaders.particles = viewer.webGL.createShaderProgram(MdxShaders.vsParticles, MdxShaders.fsParticles);
 		Shaders.simple = viewer.webGL.createShaderProgram(MdxShaders.vsSimple, MdxShaders.fsSimple);
-		Shaders.hd = viewer.webGL.createShaderProgram(MdxShaders.vsHd, MdxShaders.fsHd);
+//		Shaders.hd = viewer.webGL.createShaderProgram(MdxShaders.vsHd, MdxShaders.fsHd);
+		// TODO HD reforged
 
 		// If a shader failed to compile, don't allow the handler to be registered, and
 		// send an error instead.
 		return Shaders.complex.isCompiled() && Shaders.extended.isCompiled() && Shaders.particles.isCompiled()
-				&& Shaders.simple.isCompiled() && Shaders.hd.isCompiled();
+				&& Shaders.simple.isCompiled() /* && Shaders.hd.isCompiled() */;
 	}
 
 	@Override

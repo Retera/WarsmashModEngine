@@ -56,7 +56,7 @@ public class MdxShaders {
 			"    }";
 
 	public static final String vsSimple = "\r\n" + //
-			"    uniform mat4 u_mvp;\r\n" + //
+			"    uniform mat4 u_VP;\r\n" + //
 			"    attribute vec3 a_m0;\r\n" + //
 			"    attribute vec3 a_m1;\r\n" + //
 			"    attribute vec3 a_m2;\r\n" + //
@@ -66,22 +66,22 @@ public class MdxShaders {
 			"    varying vec2 v_uv;\r\n" + //
 			"    void main() {\r\n" + //
 			"      v_uv = a_uv;\r\n" + //
-			"      gl_Position = u_mvp * mat4(a_m0, 0.0, a_m1, 0.0, a_m2, 0.0, a_m3, 1.0) * vec4(a_position, 1.0);\r\n"
-			+ //
-			"    }";
+			"      gl_Position = u_VP * mat4(a_m0, 0.0, a_m1, 0.0, a_m2, 0.0, a_m3, 1.0) * vec4(a_position, 1.0);\r\n" + //
+			"    }\r\n";
 
 	public static final String fsSimple = "\r\n" + //
+			"    precision mediump float;\r\n" + //
 			"    uniform sampler2D u_texture;\r\n" + //
 			"    uniform float u_filterMode;\r\n" + //
 			"    varying vec2 v_uv;\r\n" + //
 			"    void main() {\r\n" + //
 			"      vec4 color = texture2D(u_texture, v_uv);\r\n" + //
 			"      // 1bit Alpha\r\n" + //
-			"      if (u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
-			"        discard;\r\n" + //
-			"      }\r\n" + //
+			"      //if (u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
+			"        //discard;\r\n" + //
+			"      //}\r\n" + //
 			"      gl_FragColor = color;\r\n" + //
-			"    }";
+			"    }\r\n";
 
 	public static final String vsComplex = Shaders.boneTexture + "\r\n" + //
 			"    uniform mat4 u_mvp;\r\n" + //

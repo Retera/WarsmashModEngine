@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5;
 
-import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.Vector4;
 
@@ -19,8 +18,6 @@ public abstract class ModelInstance extends Node {
 	public boolean paused;
 	public boolean rendered;
 
-	public Vector3 worldLocation;
-	public Vector3 worldScale;
 	public Scene scene;
 
 	public ModelInstance(final Model model) {
@@ -96,6 +93,9 @@ public abstract class ModelInstance extends Node {
 	}
 
 	public boolean isVisible(final Camera camera) {
+		if (true) {
+			return true;
+		}
 		final float x = this.worldLocation.x;
 		final float y = this.worldLocation.y;
 		final float z = this.worldLocation.z;
@@ -122,4 +122,6 @@ public abstract class ModelInstance extends Node {
 	public abstract void renderTranslucent();
 
 	public abstract void load();
+
+	protected abstract RenderBatch getBatch(TextureMapper textureMapper2);
 }

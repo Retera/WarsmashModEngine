@@ -78,4 +78,16 @@ public class Texture implements MdlxBlock {
 		stream.endBlock();
 	}
 
+	public int getReplaceableId() {
+		return this.replaceableId;
+	}
+
+	public String getPath() {
+		return this.path;
+	}
+
+	public int getFlags() {
+		return this.flags;
+	}
+
 }

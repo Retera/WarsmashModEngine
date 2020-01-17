@@ -61,7 +61,7 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 		}
 		else {
 			this.internalTexture = (Texture) model.viewer.load(
-					"ReplaceableTextures\\" + ReplaceableIds.get(replaceableId) + ".blp", model.pathSolver,
+					"ReplaceableTextures\\" + ReplaceableIds.getPathString(replaceableId) + ".blp", model.pathSolver,
 					model.solverParams);
 		}
 

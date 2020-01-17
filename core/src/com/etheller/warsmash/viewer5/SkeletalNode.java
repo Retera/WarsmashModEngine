@@ -1,7 +1,6 @@
 package com.etheller.warsmash.viewer5;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
@@ -13,30 +12,9 @@ public abstract class SkeletalNode extends GenericNode {
 	protected static final Quaternion rotationHeap = new Quaternion();
 	protected static final Vector3 scalingHeap = new Vector3();
 
-	public final Vector3 pivot;
-	public final Vector3 localLocation;
-	public final Quaternion localRotation;
-	public final Vector3 localScale;
-	public final Vector3 worldLocation;
-	public final Quaternion worldRotation;
-	public final Vector3 worldScale;
-	public final Vector3 inverseWorldLocation;
-	public final Quaternion inverseWorldRotation;
-	public final Vector3 inverseWorldScale;
-	public final Matrix4 localMatrix;
-	public final Matrix4 worldMatrix;
-	public SkeletalNode parent;
-	public final List<Node> children;
-	public final boolean dontInheritTranslation;
-	public final boolean dontInheritRotation;
-	public final boolean dontInheritScaling;
-	public boolean visible;
-	public boolean wasDirty;
-	public boolean dirty;
+	public UpdatableObject object;
 
-	public Object object;
-
-	public final boolean billboarded;
+	public boolean billboarded;
 	public final boolean billboardedX;
 	public final boolean billboardedY;
 	public final boolean billboardedZ;
@@ -158,7 +136,7 @@ public abstract class SkeletalNode extends GenericNode {
 		this.inverseWorldLocation.z = -this.worldLocation.z;
 	}
 
-	protected void updateChildren(final float dt, final Scene scene) {
+	public void updateChildren(final float dt, final Scene scene) {
 		for (int i = 0, l = this.children.size(); i < l; i++) {
 			this.children.get(i).update(dt, scene);
 		}

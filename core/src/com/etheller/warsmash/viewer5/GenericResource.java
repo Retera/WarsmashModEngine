@@ -29,7 +29,7 @@ public final class GenericResource extends Resource {
 
 	@Override
 	protected void error(final Exception e) {
-
+		e.printStackTrace();
 	}
 
 }

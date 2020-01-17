@@ -18,7 +18,7 @@ public final class SdSequence<TYPE> {
 	public boolean constant;
 
 	public SdSequence(final Sd<TYPE> sd, final long start, final long end, final Timeline<TYPE> timeline,
-			final boolean isGlobalSequence) {
+			final boolean isGlobalSequence, final SdArrayDescriptor<TYPE> arrayDescriptor) {
 		this.sd = sd;
 		this.start = start;
 		this.end = end;
@@ -120,12 +120,16 @@ public final class SdSequence<TYPE> {
 		}
 		this.frames = new long[framesBuilder.size()];
 		for (int i = 0; i < framesBuilder.size(); i++) {
-			frames[i] = framesBuilder.get(i);
+			this.frames[i] = framesBuilder.get(i);
 		}
-		this.values = valuesBuilder.toArray((TYPE[]) new Object[valuesBuilder.size()]);
-		this.inTans = inTansBuilder.toArray((TYPE[]) new Object[inTansBuilder.size()]);
-		this.outTans = outTansBuilder.toArray((TYPE[]) new Object[outTansBuilder.size()]);
+		this.values = valuesBuilder.toArray(arrayDescriptor.create(valuesBuilder.size()));
+		this.inTans = inTansBuilder.toArray(arrayDescriptor.create(inTansBuilder.size()));
+		this.outTans = outTansBuilder.toArray(arrayDescriptor.create(outTansBuilder.size()));
 	}
+
+//	private TYPE[] makeArray(final int size) {
+//		return (TYPE[]) new Object[size];
+//	}
 
 	public int getValue(final TYPE out, final long frame) {
 		final int l = this.frames.length;
@@ -145,7 +149,8 @@ public final class SdSequence<TYPE> {
 				if (this.frames[i] > frame) {
 					final long start = this.frames[i = 1];
 					final long end = this.frames[i];
-					final float t = RenderMathUtils.clamp((frame - start) / (end - start), 0, 1);
+					final float t = RenderMathUtils.clamp(((end - start) == 0 ? 0 : ((frame - start) / (end - start))),
+							0, 1);
 
 					this.sd.interpolate(out, this.values, this.inTans, this.outTans, i - 1, i, t);
 

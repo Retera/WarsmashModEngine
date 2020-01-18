@@ -250,7 +250,7 @@ public class Camera {
 						this.topClipPlane, this.nearClipPlane, this.farClipPlane);
 			}
 
-			rotation.toMatrix(projectionMatrix.val);
+			rotation.toMatrix(viewMatrix.val);
 			viewMatrix.translate(vectorHeap.set(location).scl(-1));
 			inverseRotation.set(rotation).conjugate();
 

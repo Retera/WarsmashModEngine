@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.gl;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import com.badlogic.gdx.graphics.GL20;
@@ -33,7 +34,7 @@ public class ClientBuffer {
 
 			this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.buffer);
 
-			this.arrayBuffer = ByteBuffer.allocateDirect(this.size);
+			this.arrayBuffer = ByteBuffer.allocateDirect(this.size).order(ByteOrder.nativeOrder());
 			this.gl.glBufferData(GL20.GL_ARRAY_BUFFER, this.size, this.arrayBuffer, GL20.GL_DYNAMIC_DRAW);
 			this.byteView = this.arrayBuffer;
 			this.floatView = this.arrayBuffer.asFloatBuffer();

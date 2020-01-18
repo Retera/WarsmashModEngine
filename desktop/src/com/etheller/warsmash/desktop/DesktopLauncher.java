@@ -31,6 +31,7 @@ public class DesktopLauncher {
 		};
 		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.useGL30 = true;
+		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
 		new LwjglApplication(new WarsmashGdxGame(), config);
 	}

@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.gl.ClientBuffer;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 
 public class MdxRenderBatch extends RenderBatch {
+	private static final Matrix4 transposeHeap = new Matrix4();
 
 	public MdxRenderBatch(final Scene scene, final Model<?> model, final TextureMapper textureMapper) {
 		super(scene, model, textureMapper);
@@ -85,8 +86,9 @@ public class MdxRenderBatch extends RenderBatch {
 			shader.setVertexAttribute(m2, 3, GL20.GL_FLOAT, false, 48, 24);
 			shader.setVertexAttribute(m3, 3, GL20.GL_FLOAT, false, 48, 36);
 
-			shader.setUniformMatrix4fv("u_VP", this.scene.camera.viewProjectionMatrix.val, 0,
-					this.scene.camera.viewProjectionMatrix.val.length);
+			transposeHeap.set(this.scene.camera.viewProjectionMatrix);
+			transposeHeap.tra();
+			shader.setUniformMatrix4fv("u_VP", transposeHeap.val, 0, transposeHeap.val.length);
 
 			gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, model.arrayBuffer);
 			gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, model.elementBuffer);

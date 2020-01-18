@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
@@ -184,7 +185,8 @@ public class SetupGeosets {
 	}
 
 	private static ShortBuffer wrapFaces(final int[] faces) {
-		final ShortBuffer wrapper = ByteBuffer.allocateDirect(faces.length * 2).asShortBuffer();
+		final ShortBuffer wrapper = ByteBuffer.allocateDirect(faces.length * 2).order(ByteOrder.nativeOrder())
+				.asShortBuffer();
 		for (final int face : faces) {
 			wrapper.put((short) face);
 		}
@@ -193,14 +195,15 @@ public class SetupGeosets {
 	}
 
 	private static ByteBuffer wrap(final byte[] skin) {
-		final ByteBuffer wrapper = ByteBuffer.allocateDirect(skin.length);
+		final ByteBuffer wrapper = ByteBuffer.allocateDirect(skin.length).order(ByteOrder.nativeOrder());
 		wrapper.put(skin);
 		wrapper.clear();
 		return wrapper;
 	}
 
 	private static FloatBuffer wrap(final float[] positions) {
-		final FloatBuffer wrapper = ByteBuffer.allocateDirect(positions.length * 4).asFloatBuffer();
+		final FloatBuffer wrapper = ByteBuffer.allocateDirect(positions.length * 4).order(ByteOrder.nativeOrder())
+				.asFloatBuffer();
 		wrapper.put(positions);
 		wrapper.clear();
 		return wrapper;

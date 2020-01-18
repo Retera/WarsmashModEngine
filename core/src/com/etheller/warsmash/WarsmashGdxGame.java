@@ -1,5 +1,8 @@
 package com.etheller.warsmash;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -26,9 +29,20 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 	private ModelViewer viewer;
 	private MdxModel model;
 	private CameraManager cameraManager;
+	private static int VAO;
 
 	@Override
 	public void create() {
+
+		final ByteBuffer tempByteBuffer = ByteBuffer.allocateDirect(4);
+		tempByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+		final IntBuffer temp = tempByteBuffer.asIntBuffer();
+//
+		Gdx.gl30.glGenVertexArrays(1, temp);
+		VAO = temp.get(0);
+
+		Gdx.gl30.glBindVertexArray(VAO);
+
 		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
 		System.err.println("Renderer: " + renderer);
 
@@ -46,8 +60,8 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(scene);
 
-//		this.model = (MdxModel) this.viewer.load("units\\human\\footman\\footman.mdx", new PathSolver() {
-		this.model = (MdxModel) this.viewer.load("Cube.mdx", new PathSolver() {
+		this.model = (MdxModel) this.viewer.load("units\\human\\footman\\footman.mdx", new PathSolver() {
+//		this.model = (MdxModel) this.viewer.load("Cube.mdx", new PathSolver() {
 			@Override
 			public SolvedPath solve(final String src, final Object solverParams) {
 				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
@@ -62,10 +76,25 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 //
 //		instance.setSequenceLoopMode(2);
 
+		System.out.println("Loaded");
+//		Gdx.gl30.glClearColor(0.5f, 0.5f, 0.5f, 1); // TODO remove white background
+	}
+
+	public static void bindDefaultVertexArray() {
+		Gdx.gl30.glBindVertexArray(VAO);
 	}
 
 	@Override
 	public void render() {
+//		this.cameraManager.verticalAngle += 0.01;
+//		if (this.cameraManager.verticalAngle >= (Math.PI)) {
+//			this.cameraManager.verticalAngle = 0;
+//		}
+		this.cameraManager.horizontalAngle += 0.01;
+		if (this.cameraManager.horizontalAngle > (2 * Math.PI)) {
+			this.cameraManager.horizontalAngle = 0;
+		}
+		this.cameraManager.updateCamera();
 		this.viewer.updateAndRender();
 
 //		gl.glDrawElements(GL20.GL_TRIANGLES, this.elements, GL20.GL_UNSIGNED_SHORT, this.faceOffset);
@@ -114,7 +143,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			this.zoomFactor = 0.1f;
 			this.horizontalAngle = (float) (Math.PI / 2);
 			this.verticalAngle = (float) (Math.PI / 4);
-			this.distance = 500;
+			this.distance = 5;
 			this.position = new Vector3();
 			this.target = new Vector3();
 			this.worldUp = new Vector3(0, 0, 1);

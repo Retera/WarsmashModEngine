@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,7 +58,7 @@ public class ModelViewer {
 		this.rectBuffer = this.gl.glGenBuffer();
 		this.buffer = new ClientBuffer(this.gl);
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.rectBuffer);
-		final ByteBuffer temp = ByteBuffer.allocateDirect(6);
+		final ByteBuffer temp = ByteBuffer.allocateDirect(6).order(ByteOrder.nativeOrder());
 		temp.put((byte) 0);
 		temp.put((byte) 1);
 		temp.put((byte) 2);
@@ -282,7 +283,7 @@ public class ModelViewer {
 	public void startFrame() {
 		this.gl.glDepthMask(true);
 		this.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-		this.gl.glClearColor(0.5f, 0.5f, 0.5f, 1); // TODO remove white background
+//		WarsmashGdxGame.bindDefaultVertexArray();
 	}
 
 	public void render() {

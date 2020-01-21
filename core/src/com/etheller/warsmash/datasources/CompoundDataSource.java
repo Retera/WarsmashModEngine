@@ -15,10 +15,10 @@ import java.util.Set;
 public class CompoundDataSource implements DataSource {
 	private final List<DataSource> mpqList = new ArrayList<>();
 
-	public CompoundDataSource(final List<DataSourceDescriptor> dataSourceDescriptors) {
-		if (dataSourceDescriptors != null) {
-			for (final DataSourceDescriptor descriptor : dataSourceDescriptors) {
-				this.mpqList.add(descriptor.createDataSource());
+	public CompoundDataSource(final List<DataSource> dataSources) {
+		if (dataSources != null) {
+			for (final DataSource dataSource : dataSources) {
+				this.mpqList.add(dataSource);
 			}
 		}
 	}

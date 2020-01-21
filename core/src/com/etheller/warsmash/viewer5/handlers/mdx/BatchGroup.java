@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
+import com.etheller.warsmash.viewer5.gl.WebGL;
 
 public class BatchGroup extends GenericGroup {
 
@@ -31,6 +32,7 @@ public class BatchGroup extends GenericGroup {
 		final List<Integer> replaceables = model.replaceables;
 		final ModelViewer viewer = model.viewer;
 		final GL20 gl = viewer.gl;
+		final WebGL webGL = viewer.webGL;
 		final boolean isExtended = this.isExtended;
 		final ShaderProgram shader;
 
@@ -41,7 +43,7 @@ public class BatchGroup extends GenericGroup {
 			shader = MdxHandler.Shaders.complex;
 		}
 
-		shader.begin();
+		webGL.useShaderProgram(shader);
 
 		shader.setUniformMatrix("u_mvp", scene.camera.viewProjectionMatrix);
 
@@ -52,7 +54,7 @@ public class BatchGroup extends GenericGroup {
 			boneTexture.bind(15);
 
 			shader.setUniformf("u_hasBones", 1);
-			shader.setUniformf("u_boneMap", 15);
+			shader.setUniformi("u_boneMap", 15);
 			shader.setUniformf("u_vectorSize", 1f / boneTexture.getWidth());
 			shader.setUniformf("u_rowSize", 1);
 		}
@@ -86,7 +88,7 @@ public class BatchGroup extends GenericGroup {
 
 				shader.setUniform2fv("u_uvTrans", uvAnim, 0, 2);
 				shader.setUniform2fv("u_uvRot", uvAnim, 2, 2);
-				shader.setUniform1fv("u_uvRot", uvAnim, 4, 1);
+				shader.setUniform1fv("u_uvScale", uvAnim, 4, 1);
 
 				layer.bind(shader);
 
@@ -101,13 +103,15 @@ public class BatchGroup extends GenericGroup {
 				}
 				else {
 					texture = textures.get(layerTexture);
+
+					Texture textureLookup = instance.textureMapper.get(texture);
+					if (textureLookup == null) {
+						textureLookup = texture;
+					}
+					texture = textureLookup;
 				}
 
-				Texture textureLookup = instance.textureMapper.get(texture);
-				if (textureLookup == null) {
-					textureLookup = texture;
-				}
-				viewer.webGL.bindTexture(textureLookup, 0);
+				viewer.webGL.bindTexture(texture, 0);
 
 				if (isExtended) {
 					geoset.bindExtended(shader, layer.coordId);

@@ -34,6 +34,9 @@ public class EmittedObjectUpdater {
 					this.objects.set(i, this.objects.remove(this.alive));
 					i -= 1;
 				}
+				else {
+					this.objects.remove(this.alive);
+				}
 			}
 		}
 	}

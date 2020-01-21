@@ -109,4 +109,24 @@ public class Sequence implements MdlxBlock {
 	public int getFlags() {
 		return this.flags;
 	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public float getRarity() {
+		return this.rarity;
+	}
+
+	public float getMoveSpeed() {
+		return this.moveSpeed;
+	}
+
+	public long getSyncPoint() {
+		return this.syncPoint;
+	}
+
+	public Extent getExtent() {
+		return this.extent;
+	}
 }

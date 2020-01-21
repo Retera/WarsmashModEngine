@@ -10,8 +10,8 @@ public class MdxNode extends SkeletalNode {
 
 	@Override
 	protected void convertBasis(final Quaternion computedRotation) {
-		computedRotation.mulLeft(HALF_PI_Y);
-		computedRotation.mulLeft(HALF_PI_X);
+		computedRotation.mul(HALF_PI_Y);
+		computedRotation.mul(HALF_PI_X);
 	}
 
 	@Override

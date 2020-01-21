@@ -66,8 +66,7 @@ public class MdxShaders {
 			"    varying vec2 v_uv;\r\n" + //
 			"    void main() {\r\n" + //
 			"      v_uv = a_uv;\r\n" + //
-//			"      gl_Position = u_VP * mat4(a_m0, 0.0, a_m1, 0.0, a_m2, 0.0, a_m3, 1.0) * vec4(a_position, 1.0);\r\n" + //
-			"      gl_Position = u_VP * vec4(a_position, 1.0);\r\n" + //
+			"      gl_Position = u_VP * mat4(a_m0, 0.0, a_m1, 0.0, a_m2, 0.0, a_m3, 1.0) * vec4(a_position, 1.0);\r\n" + //
 			"    }\r\n";
 
 	public static final String fsSimple = "\r\n" + //
@@ -84,8 +83,7 @@ public class MdxShaders {
 			"      gl_FragColor = color;\r\n" + //
 			"    }\r\n";
 
-	public static final String vsComplex = Shaders.boneTexture + "\r\n" + //
-			"    uniform mat4 u_mvp;\r\n" + //
+	public static final String vsComplex = "    uniform mat4 u_mvp;\r\n" + //
 			"    uniform vec4 u_vertexColor;\r\n" + //
 			"    uniform vec4 u_geosetColor;\r\n" + //
 			"    uniform float u_layerAlpha;\r\n" + //
@@ -105,6 +103,7 @@ public class MdxShaders {
 			"    varying vec4 v_color;\r\n" + //
 			"    varying vec4 v_uvTransRot;\r\n" + //
 			"    varying float v_uvScale;\r\n" + //
+			Shaders.boneTexture + "\r\n" + //
 			"    void transform(inout vec3 position, inout vec3 normal) {\r\n" + //
 			"      // For the broken models out there, since the game supports this.\r\n" + //
 			"      if (a_boneNumber > 0.0) {\r\n" + //
@@ -132,12 +131,72 @@ public class MdxShaders {
 			"        position = p.xyz / a_boneNumber;\r\n" + //
 			"        normal = normalize(n.xyz);\r\n" + //
 			"      }\r\n" + //
+			"\r\n" + //
 			"    }\r\n" + //
 			"    void main() {\r\n" + //
 			"      vec3 position = a_position;\r\n" + //
 			"      vec3 normal = a_normal;\r\n" + //
 			"      if (u_hasBones) {\r\n" + //
 			"        transform(position, normal);\r\n" + //
+			"      }\r\n" + //
+			"      v_uv = a_uv;\r\n" + //
+			"      v_color = u_vertexColor * u_geosetColor.bgra * vec4(1.0, 1.0, 1.0, u_layerAlpha);\r\n" + //
+			"      v_uvTransRot = vec4(u_uvTrans, u_uvRot);\r\n" + //
+			"      v_uvScale = u_uvScale;\r\n" + //
+			"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
+			"    }";
+
+	public static final String vsComplexUnshaded = "    uniform mat4 u_mvp;\r\n" + //
+			"    uniform vec4 u_vertexColor;\r\n" + //
+			"    uniform vec4 u_geosetColor;\r\n" + //
+			"    uniform float u_layerAlpha;\r\n" + //
+			"    uniform vec2 u_uvTrans;\r\n" + //
+			"    uniform vec2 u_uvRot;\r\n" + //
+			"    uniform float u_uvScale;\r\n" + //
+			"    uniform bool u_hasBones;\r\n" + //
+			"    attribute vec3 a_position;\r\n" + //
+			"    attribute vec2 a_uv;\r\n" + //
+			"    attribute vec4 a_bones;\r\n" + //
+			"    #ifdef EXTENDED_BONES\r\n" + //
+			"    attribute vec4 a_extendedBones;\r\n" + //
+			"    #endif\r\n" + //
+			"    attribute float a_boneNumber;\r\n" + //
+			"    varying vec2 v_uv;\r\n" + //
+			"    varying vec4 v_color;\r\n" + //
+			"    varying vec4 v_uvTransRot;\r\n" + //
+			"    varying float v_uvScale;\r\n" + //
+			Shaders.boneTexture + "\r\n" + //
+			"    void transform(inout vec3 position) {\r\n" + //
+			"      // For the broken models out there, since the game supports this.\r\n" + //
+			"      if (a_boneNumber > 0.0) {\r\n" + //
+			"        vec4 position4 = vec4(position, 1.0);\r\n" + //
+			"        mat4 bone;\r\n" + //
+			"        vec4 p = vec4(0.0,0.0,0.0,0.0);\r\n" + //
+			"        for (int i = 0; i < 4; i++) {\r\n" + //
+			"          if (a_bones[i] > 0.0) {\r\n" + //
+			"            bone = fetchMatrix(a_bones[i] - 1.0, 0.0);\r\n" + //
+			"            p += bone * position4;\r\n" + //
+			"          }\r\n" + //
+			"        }\r\n" + //
+			"        #ifdef EXTENDED_BONES\r\n" + //
+			"          for (int i = 0; i < 4; i++) {\r\n" + //
+			"            if (a_extendedBones[i] > 0.0) {\r\n" + //
+			"              bone = fetchMatrix(a_extendedBones[i] - 1.0, 0.0);\r\n" + //
+			"              p += bone * position4;\r\n" + //
+			"            }\r\n" + //
+			"          }\r\n" + //
+			"        #endif\r\n" + //
+			"        position = p.xyz / a_boneNumber;\r\n" + //
+//			"        position.x *= fetchMatrix(0.0, 0.0)[0][0];\r\n" + //
+			"      } else {\r\n" + //
+			"        position.x += 100.0;\r\n" + //
+			"      }\r\n" + //
+			"\r\n" + //
+			"    }\r\n" + //
+			"    void main() {\r\n" + //
+			"      vec3 position = a_position;\r\n" + //
+			"      if (u_hasBones) {\r\n" + //
+			"        transform(position);\r\n" + //
 			"      }\r\n" + //
 			"      v_uv = a_uv;\r\n" + //
 			"      v_color = u_vertexColor * u_geosetColor.bgra * vec4(1.0, 1.0, 1.0, u_layerAlpha);\r\n" + //

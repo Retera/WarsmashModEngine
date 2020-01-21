@@ -21,7 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
 
 public class ModelViewer {
-	private final DataSource dataSource;
+	private DataSource dataSource;
 	public final CanvasProvider canvas;
 	public List<Resource> resources;
 	public Map<String, Resource> fetchCache;
@@ -45,7 +45,7 @@ public class ModelViewer {
 		this.resources = new ArrayList<>();
 		this.fetchCache = new HashMap<>();
 		this.handlers = new HashSet<ResourceHandler>();
-		this.frameTime = 1000 / 60;
+		this.frameTime = 1000 / 6;
 		this.gl = Gdx.gl;
 		this.webGL = new WebGL(this.gl);
 		this.scenes = new ArrayList<>();
@@ -69,6 +69,10 @@ public class ModelViewer {
 		this.gl.glBufferData(GL20.GL_ARRAY_BUFFER, temp.capacity(), temp, GL20.GL_STATIC_DRAW);
 		this.audioEnabled = false;
 		this.textureMappers = new HashMap<Model, List<TextureMapper>>();
+	}
+
+	public void setDataSource(final DataSource dataSource) {
+		this.dataSource = dataSource;
 	}
 
 	public boolean enableAudio() {
@@ -200,6 +204,11 @@ public class ModelViewer {
 		return this.fetchCache.get(key);
 	}
 
+	public GenericResource loadGeneric(final String path, final FetchDataTypeName dataType,
+			final LoadGenericCallback callback) {
+		return loadGeneric(path, dataType, callback, this.dataSource);
+	}
+
 	/**
 	 * Load something generic.
 	 *
@@ -217,7 +226,7 @@ public class ModelViewer {
 	 * promise resolved to.
 	 */
 	public GenericResource loadGeneric(final String path, final FetchDataTypeName dataType,
-			final LoadGenericCallback callback) {
+			final LoadGenericCallback callback, final DataSource dataSource) {
 		final Resource cachedResource = this.fetchCache.get(path);
 
 		if (cachedResource != null) {
@@ -235,7 +244,7 @@ public class ModelViewer {
 
 		// TODO this is a synchronous hack, skipped some Ghostwolf code
 		try {
-			resource.loadData(this.dataSource.getResourceAsStream(path), null);
+			resource.loadData(dataSource.getResourceAsStream(path), null);
 		}
 		catch (final IOException e) {
 			throw new IllegalStateException("Unable to load data: " + path);

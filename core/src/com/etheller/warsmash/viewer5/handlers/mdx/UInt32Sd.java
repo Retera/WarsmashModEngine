@@ -36,10 +36,12 @@ public class UInt32Sd extends Sd<long[]> {
 			out[0] = (long) RenderMathUtils.lerp(startValue, values[end][0], t);
 			break;
 		case 2:
-			out[0] = (long) RenderMathUtils.hermite(startValue, outTans[start][0], inTans[end][0], values[end][0], t);
+			out[0] = (long) RenderMathUtils.hermite(startValue, (start < outTans.length) ? outTans[start][0] : 0,
+					(start < inTans.length) ? inTans[end][0] : 0, values[end][0], t);
 			break;
 		case 3:
-			out[0] = (long) RenderMathUtils.bezier(startValue, outTans[start][0], inTans[end][0], values[end][0], t);
+			out[0] = (long) RenderMathUtils.bezier(startValue, (start < outTans.length) ? outTans[start][0] : 0,
+					(start < inTans.length) ? inTans[end][0] : 0, values[end][0], t);
 			break;
 		}
 

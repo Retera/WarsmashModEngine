@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
 import com.etheller.warsmash.util.Interpolator;
+import com.etheller.warsmash.util.RenderMathUtils;
 
 public class QuaternionSd extends Sd<float[]> {
 
@@ -22,7 +23,9 @@ public class QuaternionSd extends Sd<float[]> {
 	@Override
 	protected void interpolate(final float[] out, final float[][] values, final float[][] inTans,
 			final float[][] outTans, final int start, final int end, final float t) {
-		Interpolator.interpolateQuaternion(out, values[start], outTans[start], inTans[end], values[end], t,
+		Interpolator.interpolateQuaternion(out, values[start],
+				(start < outTans.length) ? outTans[start] : RenderMathUtils.EMPTY_FLOAT_ARRAY,
+				(start < inTans.length) ? inTans[end] : RenderMathUtils.EMPTY_FLOAT_ARRAY, values[end], t,
 				this.interpolationType);
 	}
 

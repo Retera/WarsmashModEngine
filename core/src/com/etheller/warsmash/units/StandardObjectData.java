@@ -339,6 +339,10 @@ public class StandardObjectData {
 		return unitMetaData;
 	}
 
+	public WorldEditStrings getWorldEditStrings() {
+		return this.worldEditStrings;
+	}
+
 	public static class WarcraftData implements ObjectData {
 		WorldEditStrings worldEditStrings;
 		List<DataTable> tables = new ArrayList<>();

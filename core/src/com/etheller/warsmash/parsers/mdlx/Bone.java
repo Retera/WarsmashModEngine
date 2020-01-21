@@ -88,4 +88,8 @@ public class Bone extends GenericObject {
 	public int getGeosetAnimationId() {
 		return this.geosetAnimationId;
 	}
+
+	public int getGeosetId() {
+		return this.geosetId;
+	}
 }

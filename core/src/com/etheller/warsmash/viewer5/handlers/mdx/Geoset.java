@@ -94,7 +94,7 @@ public class Geoset {
 	public void bind(final ShaderProgram shader, final int coordId) {
 		// TODO use indices instead of strings for attributes
 		shader.setVertexAttribute("a_position", 3, GL20.GL_FLOAT, false, 0, this.positionOffset);
-		shader.setVertexAttribute("a_normal", 3, GL20.GL_FLOAT, false, 0, this.normalOffset);
+//		shader.setVertexAttribute("a_normal", 3, GL20.GL_FLOAT, false, 0, this.normalOffset);
 		shader.setVertexAttribute("a_uv", 2, GL20.GL_FLOAT, false, 0, this.uvOffset + (coordId * this.vertices * 8));
 		shader.setVertexAttribute("a_bones", 4, GL20.GL_UNSIGNED_BYTE, false, 5, this.skinOffset);
 		shader.setVertexAttribute("a_boneNumber", 1, GL20.GL_UNSIGNED_BYTE, false, 5, this.skinOffset + 4);

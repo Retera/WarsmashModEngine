@@ -32,8 +32,8 @@ public class MdxHandler extends ModelHandler {
 	public boolean load(final ModelViewer viewer) {
 		viewer.addHandler(new BlpHandler());
 
-		Shaders.complex = viewer.webGL.createShaderProgram(MdxShaders.vsComplex, MdxShaders.fsComplex);
-		Shaders.extended = viewer.webGL.createShaderProgram("#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex,
+		Shaders.complex = viewer.webGL.createShaderProgram(MdxShaders.vsComplexUnshaded, MdxShaders.fsComplex);
+		Shaders.extended = viewer.webGL.createShaderProgram("#define EXTENDED_BONES\r\n" + MdxShaders.vsComplexUnshaded,
 				MdxShaders.fsComplex);
 		Shaders.particles = viewer.webGL.createShaderProgram(MdxShaders.vsParticles, MdxShaders.fsParticles);
 		Shaders.simple = viewer.webGL.createShaderProgram(MdxShaders.vsSimple, MdxShaders.fsSimple);

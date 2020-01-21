@@ -11,7 +11,7 @@ public class Particle2 extends EmittedObject<MdxComplexInstance, ParticleEmitter
 	private float gravity = 0;
 	public final Vector3 location = new Vector3();
 	public final Vector3 velocity = new Vector3();
-	public final Vector3 scale = new Vector3();
+	public final Vector3 scale = new Vector3(1, 1, 1);
 
 	private static final Quaternion rotationHeap = new Quaternion();
 	private static final Quaternion rotationHeap2 = new Quaternion();

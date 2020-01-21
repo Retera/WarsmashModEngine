@@ -93,9 +93,6 @@ public abstract class ModelInstance extends Node {
 	}
 
 	public boolean isVisible(final Camera camera) {
-		if (true) {
-			return true;
-		}
 		final float x = this.worldLocation.x;
 		final float y = this.worldLocation.y;
 		final float z = this.worldLocation.z;

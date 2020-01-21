@@ -6,18 +6,16 @@ import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
-import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
-import com.etheller.warsmash.viewer5.Texture;
+import com.etheller.warsmash.viewer5.RawOpenGLTextureResource;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
 
-public class BlpTexture extends Texture {
+public class BlpTexture extends RawOpenGLTextureResource {
 
 	public BlpTexture(final ModelViewer viewer, final ResourceHandler handler, final String extension,
 			final PathSolver pathSolver, final String fetchUrl) {
-		super(viewer, handler, extension, pathSolver, fetchUrl);
+		super(viewer, extension, pathSolver, fetchUrl, handler);
 	}
 
 	@Override
@@ -30,10 +28,7 @@ public class BlpTexture extends Texture {
 		BufferedImage img;
 		try {
 			img = ImageIO.read(src);
-			final com.badlogic.gdx.graphics.Texture texture = ImageUtils
-					.getTexture(ImageUtils.forceBufferedImagesRGB(img));
-			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-			setGdxTexture(texture);
+			update(img);
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);

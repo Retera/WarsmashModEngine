@@ -47,8 +47,8 @@ public final class SdSequence<TYPE> {
 		// This fixes problems spread over many models, e.g. HeroMountainKing
 		// (compare in WE and in Magos).
 		if (isGlobalSequence && (frames.length > 0) && (frames[0] > end)) {
-			this.frames[0] = frames[0];
-			this.values[0] = values[0];
+			framesBuilder.add(frames[0]);
+			valuesBuilder.add(values[0]);
 		}
 
 		// Go over the keyframes, and add all of the ones that are in this
@@ -147,10 +147,10 @@ public final class SdSequence<TYPE> {
 		else {
 			for (int i = 1; i < l; i++) {
 				if (this.frames[i] > frame) {
-					final long start = this.frames[i = 1];
+					final long start = this.frames[i - 1];
 					final long end = this.frames[i];
-					final float t = RenderMathUtils.clamp(((end - start) == 0 ? 0 : ((frame - start) / (end - start))),
-							0, 1);
+					final float t = RenderMathUtils
+							.clamp(((end - start) == 0 ? 0 : ((frame - start) / (float) (end - start))), 0, 1);
 
 					this.sd.interpolate(out, this.values, this.inTans, this.outTans, i - 1, i, t);
 
@@ -171,6 +171,9 @@ public final class SdSequence<TYPE> {
 		}
 		else if ((a instanceof float[]) && (b instanceof float[])) {
 			return Arrays.equals(((float[]) a), (float[]) b);
+		}
+		else if ((a instanceof long[]) && (b instanceof long[])) {
+			return Arrays.equals(((long[]) a), (long[]) b);
 		}
 		return false;
 	}

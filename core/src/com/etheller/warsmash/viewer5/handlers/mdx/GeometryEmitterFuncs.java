@@ -62,6 +62,7 @@ public class GeometryEmitterFuncs {
 	public static final int EMITTER_RIBBON = 1;
 	public static final int EMITTER_SPLAT = 2;
 	public static final int EMITTER_UBERSPLAT = 3;
+	public static final int EMITTER_SPN = 4; // added by Retera because reasons
 
 	private static final Vector3 locationHeap = new Vector3();
 	private static final Vector3 startHeap = new Vector3();
@@ -79,7 +80,8 @@ public class GeometryEmitterFuncs {
 		final int teamColor = instance.teamColor;
 		int offset = 0;
 
-		for (final Particle2 object : objects) {
+		for (int objectIndex = 0; objectIndex < emitter.alive; objectIndex++) {
+			final Particle2 object = objects.get(objectIndex);
 			final int byteOffset = offset * BYTES_PER_OBJECT;
 			final int floatOffset = offset * FLOATS_PER_OBJECT;
 			final int p0Offset = floatOffset + FLOAT_OFFSET_P0;
@@ -127,6 +129,7 @@ public class GeometryEmitterFuncs {
 			floatView.put(p0Offset + 8, scale.z);
 
 			floatView.put(floatOffset + FLOAT_OFFSET_HEALTH, object.health);
+
 			byteView.put(byteOffset + BYTE_OFFSET_TAIL, (byte) tail);
 			byteView.put(byteOffset + BYTE_OFFSET_TEAM_COLOR, (byte) teamColor);
 
@@ -188,9 +191,9 @@ public class GeometryEmitterFuncs {
 		shader.setUniform3fv("u_intervals[2]", intervals[2], 0, 3);
 		shader.setUniform3fv("u_intervals[3]", intervals[3], 0, 3);
 
-		shader.setUniform4fv("u_colors[0]", colors[0], 0, 3);
-		shader.setUniform4fv("u_colors[1]", colors[1], 0, 3);
-		shader.setUniform4fv("u_colors[2]", colors[2], 0, 3);
+		shader.setUniform4fv("u_colors[0]", colors[0], 0, 4);
+		shader.setUniform4fv("u_colors[1]", colors[1], 0, 4);
+		shader.setUniform4fv("u_colors[2]", colors[2], 0, 4);
 
 		shader.setUniform3fv("u_scaling", emitterObject.scaling, 0, 3);
 
@@ -377,15 +380,15 @@ public class GeometryEmitterFuncs {
 	}
 
 	public static void renderEmitter(final MdxEmitter<?, ?, ?> emitter, final ShaderProgram shader) {
-		if (emitter == null) {
-			System.err.println("NULL EMITTER");
-		}
 		int alive = emitter.alive;
 		final EmitterObject emitterObject = emitter.emitterObject;
 		final int emitterType = emitterObject.getGeometryEmitterType();
 
 		if (emitterType == EMITTER_RIBBON) {
 			alive -= 1;
+		}
+		else if (emitterType == EMITTER_SPN) {
+			return;
 		}
 
 		if (alive > 0) {
@@ -394,6 +397,8 @@ public class GeometryEmitterFuncs {
 			final ClientBuffer buffer = viewer.buffer;
 			final GL20 gl = viewer.gl;
 			final int size = alive * BYTES_PER_OBJECT;
+
+			buffer.reserve(size);
 
 			switch (emitterType) {
 			case EMITTER_PARTICLE2:

@@ -32,10 +32,12 @@ public class ScalarSd extends Sd<float[]> {
 			out[0] = RenderMathUtils.lerp(startValue, values[end][0], t);
 			break;
 		case 2:
-			out[0] = RenderMathUtils.hermite(startValue, outTans[start][0], inTans[end][0], values[end][0], t);
+			out[0] = RenderMathUtils.hermite(startValue, (start < outTans.length) ? outTans[start][0] : 0f,
+					(start < inTans.length) ? inTans[end][0] : 0f, values[end][0], t);
 			break;
 		case 3:
-			out[0] = RenderMathUtils.bezier(startValue, outTans[start][0], inTans[end][0], values[end][0], t);
+			out[0] = RenderMathUtils.bezier(startValue, (start < outTans.length) ? outTans[start][0] : 0f,
+					(start < inTans.length) ? inTans[end][0] : 0f, values[end][0], t);
 			break;
 		}
 

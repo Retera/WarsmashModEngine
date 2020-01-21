@@ -119,7 +119,8 @@ public abstract class Sd<TYPE> {
 
 	public int getValue(final TYPE out, final int sequence, final int frame, final int counter) {
 		if (this.globalSequence != null) {
-			return this.globalSequence.getValue(out, counter % this.globalSequence.end);
+			return this.globalSequence.getValue(out,
+					this.globalSequence.end == 0 ? 0 : counter % this.globalSequence.end);
 		}
 		else if (sequence != -1) {
 			return this.sequences.get(sequence).getValue(out, frame);

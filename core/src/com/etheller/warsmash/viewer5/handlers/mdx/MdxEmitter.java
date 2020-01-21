@@ -17,9 +17,12 @@ public abstract class MdxEmitter<MODEL_INSTANCE extends ModelInstance, EMITTER_O
 	}
 
 	@Override
-	public void update(final float dt) {
+	public void update(final float dt, final boolean objectVisible) {
+		if (!objectVisible) {
+			return;
+		}
 		if (this.emitterObject.ok()) {
-			super.update(dt);
+			super.update(dt, objectVisible);
 		}
 	}
 }

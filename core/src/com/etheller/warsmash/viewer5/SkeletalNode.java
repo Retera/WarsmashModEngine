@@ -10,6 +10,7 @@ import com.etheller.warsmash.util.RenderMathUtils;
 public abstract class SkeletalNode extends GenericNode {
 	protected static final Vector3 locationHeap = new Vector3();
 	protected static final Quaternion rotationHeap = new Quaternion();
+	protected static final Quaternion rotationHeap2 = new Quaternion();
 	protected static final Vector3 scalingHeap = new Vector3();
 
 	public UpdatableObject object;
@@ -26,7 +27,7 @@ public abstract class SkeletalNode extends GenericNode {
 		this.localScale = new Vector3(1, 1, 1);
 		this.worldLocation = new Vector3();
 		this.worldRotation = new Quaternion();
-		this.worldScale = new Vector3();
+		this.worldScale = new Vector3(1, 1, 1);
 		this.inverseWorldLocation = new Vector3();
 		this.inverseWorldRotation = new Quaternion();
 		this.inverseWorldScale = new Vector3();
@@ -123,12 +124,12 @@ public abstract class SkeletalNode extends GenericNode {
 		final float x = this.pivot.x;
 		final float y = this.pivot.y;
 		final float z = this.pivot.z;
-		this.worldLocation.x = (this.worldMatrix.val[Matrix4.M00] * x) + (this.worldMatrix.val[Matrix4.M10] * y)
-				+ (this.worldMatrix.val[Matrix4.M20] * z) + this.worldMatrix.val[Matrix4.M30];
-		this.worldLocation.y = (this.worldMatrix.val[Matrix4.M01] * x) + (this.worldMatrix.val[Matrix4.M11] * y)
-				+ (this.worldMatrix.val[Matrix4.M21] * z) + this.worldMatrix.val[Matrix4.M31];
-		this.worldLocation.z = (this.worldMatrix.val[Matrix4.M02] * x) + (this.worldMatrix.val[Matrix4.M12] * y)
-				+ (this.worldMatrix.val[Matrix4.M22] * z) + this.worldMatrix.val[Matrix4.M32];
+		this.worldLocation.x = (this.worldMatrix.val[Matrix4.M00] * x) + (this.worldMatrix.val[Matrix4.M01] * y)
+				+ (this.worldMatrix.val[Matrix4.M02] * z) + this.worldMatrix.val[Matrix4.M03];
+		this.worldLocation.y = (this.worldMatrix.val[Matrix4.M10] * x) + (this.worldMatrix.val[Matrix4.M11] * y)
+				+ (this.worldMatrix.val[Matrix4.M12] * z) + this.worldMatrix.val[Matrix4.M13];
+		this.worldLocation.z = (this.worldMatrix.val[Matrix4.M20] * x) + (this.worldMatrix.val[Matrix4.M21] * y)
+				+ (this.worldMatrix.val[Matrix4.M22] * z) + this.worldMatrix.val[Matrix4.M23];
 
 		// Inverse world location
 		this.inverseWorldLocation.x = -this.worldLocation.x;

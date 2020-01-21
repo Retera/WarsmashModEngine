@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.etheller.warsmash.parsers.mdlx.Extent;
 import com.etheller.warsmash.parsers.mdlx.MdlxModel;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
@@ -56,6 +57,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		super(handler, viewer, extension, pathSolver, fetchUrl);
 	}
 
+	@Override
 	public ModelInstance createInstance(final int type) {
 		if (type == 1) {
 			return new MdxSimpleInstance(this);
@@ -173,7 +175,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 			final List<Texture> teamGlows = reforged ? MdxHandler.reforgedTeamGlows : MdxHandler.teamGlows;
 
 			if (teamColors.isEmpty()) {
-				for (int i = 0; i < 28; i++) {
+				for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 					final String id = ReplaceableIds.getIdString(i);
 
 					teamColors.add((Texture) viewer.load("ReplaceableTextures\\TeamColor\\TeamColor" + id + texturesExt,

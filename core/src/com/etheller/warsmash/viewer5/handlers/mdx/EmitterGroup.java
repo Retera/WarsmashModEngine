@@ -30,7 +30,7 @@ public class EmitterGroup extends GenericGroup {
 		gl.glDisable(GL20.GL_CULL_FACE);
 		gl.glEnable(GL20.GL_DEPTH_TEST);
 
-		shader.begin();
+		viewer.webGL.useShaderProgram(shader);
 
 		shader.setUniformMatrix("u_mvp", scene.camera.viewProjectionMatrix);
 		shader.setUniformf("u_texture", 0);

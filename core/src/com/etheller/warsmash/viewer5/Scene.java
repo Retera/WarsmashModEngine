@@ -29,7 +29,7 @@ public class Scene {
 
 	public final ModelViewer viewer;
 	public final Camera camera;
-	public final Grid grid;
+	public Grid grid;
 	public int visibleCells;
 	public int visibleInstances;
 	public int updatedParticles;
@@ -185,7 +185,8 @@ public class Scene {
 			if (cell.isVisible(this.camera)) {
 				this.visibleCells += 1;
 
-				for (final ModelInstance instance : cell.instances) {
+				for (int i = 0, l = cell.instances.size(); i < l; i++) {
+					final ModelInstance instance = cell.instances.get(i);
 					if (instance.rendered && (instance.cullFrame < frame) && instance.isVisible(this.camera)) {
 						instance.cullFrame = frame;
 

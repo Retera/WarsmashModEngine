@@ -79,7 +79,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 	private float pitch;
 	private float pitchVariance;
 	private float volume;
-	public List<Sound> decodedBuffers;
+	public List<Sound> decodedBuffers = new ArrayList<>();
 	/**
 	 * If this is an SPL/UBR emitter object, ok will be set to true if the tables
 	 * are loaded.
@@ -110,6 +110,9 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 		}
 		else if ("UBR".equals(type)) {
 			this.geometryEmitterType = GeometryEmitterFuncs.EMITTER_UBERSPLAT;
+		}
+		else if ("SPN".equals(type)) {
+			this.geometryEmitterType = GeometryEmitterFuncs.EMITTER_SPN;
 		}
 
 		this.type = type;
@@ -219,6 +222,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 					this.columns = getInt(row, "Columns");
 					this.rows = getInt(row, "Rows");
 					this.lifeSpan = getFloat(row, "Lifespan") + getFloat(row, "Decay");
+					this.intervalTimes = new float[] { getFloat(row, "Lifespan"), getFloat(row, "Decay") };
 					this.intervals = new float[][] {
 							{ getFloat(row, "UVLifespanStart"), getFloat(row, "UVLifespanEnd"),
 									getFloat(row, "LifespanRepeat") },
@@ -262,10 +266,14 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 						final String[] fileNames = ((String) animSoundsRow.get("FileNames")).split(",");
 						final GenericResource[] resources = new GenericResource[fileNames.length];
 						for (int i = 0; i < fileNames.length; i++) {
-							resources[i] = viewer.loadGeneric(
+							final GenericResource genericResource = viewer.loadGeneric(
 									pathSolver.solve(((String) animSoundsRow.get("DirectoryBase")) + fileNames[i],
 											model.solverParams).finalSrc,
 									FetchDataTypeName.ARRAY_BUFFER, decodedDataCallback);
+							if (genericResource == null) {
+								throw new IllegalStateException("Null sound: " + fileNames[i]);
+							}
+							resources[i] = genericResource;
 						}
 
 						// TODO JS async removed

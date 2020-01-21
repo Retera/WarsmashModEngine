@@ -38,7 +38,10 @@ public abstract class Emitter<MODEL_INSTANCE extends ModelInstance, EMITTED_OBJE
 	}
 
 	@Override
-	public void update(final float dt) {
+	public void update(final float dt, final boolean objectVisible) {
+		if (!objectVisible) {
+			return;
+		}
 		this.updateEmission(dt);
 
 		final float currentEmission = this.currentEmission;
@@ -54,6 +57,9 @@ public abstract class Emitter<MODEL_INSTANCE extends ModelInstance, EMITTED_OBJE
 		this.alive -= 1;
 
 		final EMITTED_OBJECT otherObject = this.objects.get(this.alive);
+		if (object.index == -1) {
+			System.err.println("bad");
+		}
 		this.objects.set(object.index, otherObject);
 		this.objects.set(this.alive, object);
 

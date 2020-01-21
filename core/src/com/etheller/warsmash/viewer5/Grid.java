@@ -3,8 +3,8 @@ package com.etheller.warsmash.viewer5;
 import com.badlogic.gdx.math.Vector3;
 
 public class Grid {
-	private final int x;
-	private final int y;
+	private final float x;
+	private final float y;
 	private final int width;
 	private final int depth;
 	private final int cellWidth;
@@ -13,7 +13,7 @@ public class Grid {
 	private final int rows;
 	final GridCell[] cells;
 
-	public Grid(final int x, int y, final int width, final int depth, final int cellWidth, final int cellDepth) {
+	public Grid(final float x, float y, final int width, final int depth, final int cellWidth, final int cellDepth) {
 		final int columns = width / cellWidth;
 		final int rows = depth / cellDepth;
 

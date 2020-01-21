@@ -40,16 +40,16 @@ public class MdxRenderBatch extends RenderBatch {
 			final int offset = i * 12;
 
 			floatView.put(offset + 0, worldMatrix.val[Matrix4.M00]);
-			floatView.put(offset + 1, worldMatrix.val[Matrix4.M01]);
-			floatView.put(offset + 2, worldMatrix.val[Matrix4.M02]);
-			floatView.put(offset + 3, worldMatrix.val[Matrix4.M03]);
-			floatView.put(offset + 4, worldMatrix.val[Matrix4.M10]);
-			floatView.put(offset + 5, worldMatrix.val[Matrix4.M11]);
-			floatView.put(offset + 6, worldMatrix.val[Matrix4.M12]);
-			floatView.put(offset + 7, worldMatrix.val[Matrix4.M13]);
-			floatView.put(offset + 8, worldMatrix.val[Matrix4.M20]);
-			floatView.put(offset + 9, worldMatrix.val[Matrix4.M21]);
-			floatView.put(offset + 10, worldMatrix.val[Matrix4.M22]);
+			floatView.put(offset + 1, worldMatrix.val[Matrix4.M10]);
+			floatView.put(offset + 2, worldMatrix.val[Matrix4.M20]);
+			floatView.put(offset + 3, worldMatrix.val[Matrix4.M01]);
+			floatView.put(offset + 4, worldMatrix.val[Matrix4.M11]);
+			floatView.put(offset + 5, worldMatrix.val[Matrix4.M21]);
+			floatView.put(offset + 6, worldMatrix.val[Matrix4.M02]);
+			floatView.put(offset + 7, worldMatrix.val[Matrix4.M12]);
+			floatView.put(offset + 8, worldMatrix.val[Matrix4.M22]);
+			floatView.put(offset + 9, worldMatrix.val[Matrix4.M03]);
+			floatView.put(offset + 10, worldMatrix.val[Matrix4.M13]);
 			floatView.put(offset + 11, worldMatrix.val[Matrix4.M23]);
 		}
 
@@ -88,7 +88,8 @@ public class MdxRenderBatch extends RenderBatch {
 
 			transposeHeap.set(this.scene.camera.viewProjectionMatrix);
 			transposeHeap.tra();
-			shader.setUniformMatrix4fv("u_VP", transposeHeap.val, 0, transposeHeap.val.length);
+			shader.setUniformMatrix4fv("u_VP", this.scene.camera.viewProjectionMatrix.val, 0,
+					this.scene.camera.viewProjectionMatrix.val.length);
 
 			gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, model.arrayBuffer);
 			gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, model.elementBuffer);

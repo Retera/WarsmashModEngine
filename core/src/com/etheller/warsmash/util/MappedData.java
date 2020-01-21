@@ -13,6 +13,10 @@ import java.util.Map;
 public class MappedData {
 	private final Map<String, MappedDataRow> map = new HashMap<>();
 
+	public MappedData() {
+		this(null);
+	}
+
 	public MappedData(final String buffer) {
 		if (buffer != null) {
 			this.load(buffer);

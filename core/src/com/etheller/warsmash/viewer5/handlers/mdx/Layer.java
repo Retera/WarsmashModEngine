@@ -90,10 +90,10 @@ public class Layer extends AnimatedObject {
 		}
 
 		if (this.twoSided != 0) {
-			gl.glEnable(GL20.GL_CULL_FACE);
+			gl.glDisable(GL20.GL_CULL_FACE);
 		}
 		else {
-			gl.glDisable(GL20.GL_CULL_FACE);
+			gl.glEnable(GL20.GL_CULL_FACE);
 		}
 
 		if (this.noDepthTest != 0) {

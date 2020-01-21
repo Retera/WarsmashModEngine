@@ -3,12 +3,14 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.etheller.warsmash.util.WarsmashConstants;
+
 public class ReplaceableIds {
 	private static final Map<Long, String> ID_TO_STR = new HashMap<>();
 	private static final Map<Long, String> REPLACEABLE_ID_TO_STR = new HashMap<>();
 
 	static {
-		for (int i = 0; i < 28; i++) {
+		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			ID_TO_STR.put(Long.valueOf(i), String.format("%2d", i).replace(' ', '0'));
 		}
 		REPLACEABLE_ID_TO_STR.put(Long.valueOf(1), "TeamColor\\TeamColor00");

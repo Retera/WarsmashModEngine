@@ -33,6 +33,10 @@ public class DesktopLauncher {
 		config.useGL30 = true;
 		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
+//		config.fullscreen = true;
+//		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
+//		config.width = desktopDisplayMode.width;
+//		config.height = desktopDisplayMode.height;
 		new LwjglApplication(new WarsmashGdxGame(), config);
 	}
 }

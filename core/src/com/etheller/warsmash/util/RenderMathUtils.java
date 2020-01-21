@@ -1,5 +1,10 @@
 package com.etheller.warsmash.util;
 
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 import java.util.List;
 
 import com.badlogic.gdx.math.Matrix4;
@@ -9,6 +14,8 @@ import com.badlogic.gdx.math.Vector3;
 
 public enum RenderMathUtils {
 	;
+	public static final float[] EMPTY_FLOAT_ARRAY = new float[0];
+	public static final long[] EMPTY_LONG_ARRAY = new long[0];
 	public static final Quaternion QUAT_DEFAULT = new Quaternion(0, 0, 0, 1);
 	public static final Vector3 VEC3_ONE = new Vector3(1, 1, 1);
 	public static final Vector3 VEC3_UNIT_X = new Vector3(1, 0, 0);
@@ -42,22 +49,22 @@ public enum RenderMathUtils {
 		final float sy = s.y;
 		final float sz = s.z;
 		out.val[Matrix4.M00] = (1 - (yy + zz)) * sx;
-		out.val[Matrix4.M01] = (xy + wz) * sx;
-		out.val[Matrix4.M02] = (xz - wy) * sx;
-		out.val[Matrix4.M03] = 0;
-		out.val[Matrix4.M10] = (xy - wz) * sy;
+		out.val[Matrix4.M10] = (xy + wz) * sx;
+		out.val[Matrix4.M20] = (xz - wy) * sx;
+		out.val[Matrix4.M30] = 0;
+		out.val[Matrix4.M01] = (xy - wz) * sy;
 		out.val[Matrix4.M11] = (1 - (xx + zz)) * sy;
-		out.val[Matrix4.M12] = (yz + wx) * sy;
-		out.val[Matrix4.M13] = 0;
-		out.val[Matrix4.M20] = (xz + wy) * sz;
-		out.val[Matrix4.M21] = (yz - wx) * sz;
+		out.val[Matrix4.M21] = (yz + wx) * sy;
+		out.val[Matrix4.M31] = 0;
+		out.val[Matrix4.M02] = (xz + wy) * sz;
+		out.val[Matrix4.M12] = (yz - wx) * sz;
 		out.val[Matrix4.M22] = (1 - (xx + yy)) * sz;
-		out.val[Matrix4.M23] = 0;
-		out.val[Matrix4.M30] = (v.x + pivot.x) - ((out.val[Matrix4.M00] * pivot.x) + (out.val[Matrix4.M10] * pivot.y)
-				+ (out.val[Matrix4.M20] * pivot.z));
-		out.val[Matrix4.M31] = (v.y + pivot.y) - ((out.val[Matrix4.M01] * pivot.x) + (out.val[Matrix4.M11] * pivot.y)
-				+ (out.val[Matrix4.M21] * pivot.z));
-		out.val[Matrix4.M32] = (v.z + pivot.z) - ((out.val[Matrix4.M02] * pivot.x) + (out.val[Matrix4.M12] * pivot.y)
+		out.val[Matrix4.M32] = 0;
+		out.val[Matrix4.M03] = (v.x + pivot.x) - ((out.val[Matrix4.M00] * pivot.x) + (out.val[Matrix4.M01] * pivot.y)
+				+ (out.val[Matrix4.M02] * pivot.z));
+		out.val[Matrix4.M13] = (v.y + pivot.y) - ((out.val[Matrix4.M10] * pivot.x) + (out.val[Matrix4.M11] * pivot.y)
+				+ (out.val[Matrix4.M12] * pivot.z));
+		out.val[Matrix4.M23] = (v.z + pivot.z) - ((out.val[Matrix4.M20] * pivot.x) + (out.val[Matrix4.M21] * pivot.y)
 				+ (out.val[Matrix4.M22] * pivot.z));
 		out.val[Matrix4.M33] = 1;
 	}
@@ -86,20 +93,20 @@ public enum RenderMathUtils {
 		final float sy = s.y;
 		final float sz = s.z;
 		out.val[Matrix4.M00] = (1 - (yy + zz)) * sx;
-		out.val[Matrix4.M01] = (xy + wz) * sx;
-		out.val[Matrix4.M02] = (xz - wy) * sx;
-		out.val[Matrix4.M03] = 0;
-		out.val[Matrix4.M10] = (xy - wz) * sy;
+		out.val[Matrix4.M10] = (xy + wz) * sx;
+		out.val[Matrix4.M20] = (xz - wy) * sx;
+		out.val[Matrix4.M30] = 0;
+		out.val[Matrix4.M01] = (xy - wz) * sy;
 		out.val[Matrix4.M11] = (1 - (xx + zz)) * sy;
-		out.val[Matrix4.M12] = (yz + wx) * sy;
-		out.val[Matrix4.M13] = 0;
-		out.val[Matrix4.M20] = (xz + wy) * sz;
-		out.val[Matrix4.M21] = (yz - wx) * sz;
+		out.val[Matrix4.M21] = (yz + wx) * sy;
+		out.val[Matrix4.M31] = 0;
+		out.val[Matrix4.M02] = (xz + wy) * sz;
+		out.val[Matrix4.M12] = (yz - wx) * sz;
 		out.val[Matrix4.M22] = (1 - (xx + yy)) * sz;
-		out.val[Matrix4.M23] = 0;
-		out.val[Matrix4.M30] = v.x;
-		out.val[Matrix4.M31] = v.y;
-		out.val[Matrix4.M32] = v.z;
+		out.val[Matrix4.M32] = 0;
+		out.val[Matrix4.M03] = v.x;
+		out.val[Matrix4.M13] = v.y;
+		out.val[Matrix4.M23] = v.z;
 		out.val[Matrix4.M33] = 1;
 	}
 
@@ -158,27 +165,27 @@ public enum RenderMathUtils {
 			final float far) {
 		final float f = 1.0f / (float) Math.tan(fovy / 2), nf;
 		out.val[Matrix4.M00] = f / aspect;
-		out.val[Matrix4.M01] = 0;
-		out.val[Matrix4.M02] = 0;
-		out.val[Matrix4.M03] = 0;
 		out.val[Matrix4.M10] = 0;
-		out.val[Matrix4.M11] = f;
-		out.val[Matrix4.M12] = 0;
-		out.val[Matrix4.M13] = 0;
 		out.val[Matrix4.M20] = 0;
-		out.val[Matrix4.M21] = 0;
-		out.val[Matrix4.M23] = -1;
 		out.val[Matrix4.M30] = 0;
+		out.val[Matrix4.M01] = 0;
+		out.val[Matrix4.M11] = f;
+		out.val[Matrix4.M21] = 0;
 		out.val[Matrix4.M31] = 0;
+		out.val[Matrix4.M02] = 0;
+		out.val[Matrix4.M12] = 0;
+		out.val[Matrix4.M32] = -1;
+		out.val[Matrix4.M03] = 0;
+		out.val[Matrix4.M13] = 0;
 		out.val[Matrix4.M33] = 0;
 		if (!Double.isNaN(far) && !Double.isInfinite(far)) {
 			nf = 1 / (near - far);
 			out.val[Matrix4.M22] = (far + near) * nf;
-			out.val[Matrix4.M32] = (2 * far * near) * nf;
+			out.val[Matrix4.M23] = (2 * far * near) * nf;
 		}
 		else {
 			out.val[Matrix4.M22] = -1;
-			out.val[Matrix4.M32] = -2 * near;
+			out.val[Matrix4.M23] = -2 * near;
 		}
 		return out;
 	}
@@ -189,32 +196,32 @@ public enum RenderMathUtils {
 		final float bt = 1 / (bottom - top);
 		final float nf = 1 / (near - far);
 		out.val[Matrix4.M00] = -2 * lr;
-		out.val[Matrix4.M01] = 0;
-		out.val[Matrix4.M02] = 0;
-		out.val[Matrix4.M03] = 0;
-
 		out.val[Matrix4.M10] = 0;
-		out.val[Matrix4.M11] = -2 * bt;
-		out.val[Matrix4.M12] = 0;
-		out.val[Matrix4.M13] = 0;
-
 		out.val[Matrix4.M20] = 0;
-		out.val[Matrix4.M21] = 0;
-		out.val[Matrix4.M22] = 2 * nf;
-		out.val[Matrix4.M23] = 0;
+		out.val[Matrix4.M30] = 0;
 
-		out.val[Matrix4.M30] = (left + right) * lr;
-		out.val[Matrix4.M31] = (top + bottom) * bt;
-		out.val[Matrix4.M32] = (far + near) * nf;
+		out.val[Matrix4.M01] = 0;
+		out.val[Matrix4.M11] = -2 * bt;
+		out.val[Matrix4.M21] = 0;
+		out.val[Matrix4.M31] = 0;
+
+		out.val[Matrix4.M02] = 0;
+		out.val[Matrix4.M12] = 0;
+		out.val[Matrix4.M22] = 2 * nf;
+		out.val[Matrix4.M32] = 0;
+
+		out.val[Matrix4.M03] = (left + right) * lr;
+		out.val[Matrix4.M13] = (top + bottom) * bt;
+		out.val[Matrix4.M23] = (far + near) * nf;
 		out.val[Matrix4.M33] = 1;
 		return out;
 	}
 
 	public static void unpackPlanes(final Vector4[] planes, final Matrix4 m) {
-		final float a00 = m.val[Matrix4.M00], a01 = m.val[Matrix4.M01], a02 = m.val[Matrix4.M02],
-				a03 = m.val[Matrix4.M03], a10 = m.val[Matrix4.M10], a11 = m.val[Matrix4.M11], a12 = m.val[Matrix4.M12],
-				a13 = m.val[Matrix4.M13], a20 = m.val[Matrix4.M20], a21 = m.val[Matrix4.M21], a22 = m.val[Matrix4.M22],
-				a23 = m.val[Matrix4.M23], a30 = m.val[Matrix4.M30], a31 = m.val[Matrix4.M31], a32 = m.val[Matrix4.M32],
+		final float a00 = m.val[Matrix4.M00], a01 = m.val[Matrix4.M10], a02 = m.val[Matrix4.M20],
+				a03 = m.val[Matrix4.M30], a10 = m.val[Matrix4.M01], a11 = m.val[Matrix4.M11], a12 = m.val[Matrix4.M21],
+				a13 = m.val[Matrix4.M31], a20 = m.val[Matrix4.M02], a21 = m.val[Matrix4.M12], a22 = m.val[Matrix4.M22],
+				a23 = m.val[Matrix4.M32], a30 = m.val[Matrix4.M03], a31 = m.val[Matrix4.M13], a32 = m.val[Matrix4.M23],
 				a33 = m.val[Matrix4.M33];
 
 		// Left clipping plane
@@ -443,4 +450,37 @@ public enum RenderMathUtils {
 		return out;
 	}
 
+	public static ShortBuffer wrapFaces(final int[] faces) {
+		final ShortBuffer wrapper = ByteBuffer.allocateDirect(faces.length * 2).order(ByteOrder.nativeOrder())
+				.asShortBuffer();
+		for (final int face : faces) {
+			wrapper.put((short) face);
+		}
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static ByteBuffer wrap(final byte[] skin) {
+		final ByteBuffer wrapper = ByteBuffer.allocateDirect(skin.length).order(ByteOrder.nativeOrder());
+		wrapper.put(skin);
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static FloatBuffer wrap(final float[] positions) {
+		final FloatBuffer wrapper = ByteBuffer.allocateDirect(positions.length * 4).order(ByteOrder.nativeOrder())
+				.asFloatBuffer();
+		wrapper.put(positions);
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static Buffer wrap(final short[] cornerTextures) {
+		final ByteBuffer wrapper = ByteBuffer.allocateDirect(cornerTextures.length).order(ByteOrder.nativeOrder());
+		for (final short face : cornerTextures) {
+			wrapper.put((byte) face);
+		}
+		wrapper.clear();
+		return wrapper;
+	}
 }

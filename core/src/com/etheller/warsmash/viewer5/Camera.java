@@ -230,8 +230,6 @@ public class Camera {
 
 	public void update() {
 		if (this.dirty) {
-			this.dirty = true;
-
 			final Vector3 location = this.location;
 			final Quaternion rotation = this.rotation;
 			final Quaternion inverseRotation = this.inverseRotation;
@@ -281,6 +279,7 @@ public class Camera {
 				billboardedVectors[i].set(vectors[i]);
 				inverseRotation.transform(billboardedVectors[i]);
 			}
+			this.dirty = false;
 		}
 	}
 

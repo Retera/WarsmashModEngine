@@ -345,8 +345,8 @@ public class MdxComplexInstance extends ModelInstance {
 				// This includes attachments and emitters.
 				final UpdatableObject object = node.object;
 
-				if ((object != null) && objectVisible) {
-					object.update(dt);
+				if (object != null) {
+					object.update(dt, objectVisible);
 				}
 
 				// Update all of the node's non-skeletal children, which will update their
@@ -462,20 +462,20 @@ public class MdxComplexInstance extends ModelInstance {
 			for (int i = 0, l = this.worldMatrices.length; i < l; i++) {
 				final Matrix4 worldMatrix = this.worldMatrices[i];
 				this.worldMatricesCopyHeap.put((i * 16) + 0, worldMatrix.val[Matrix4.M00]);
-				this.worldMatricesCopyHeap.put((i * 16) + 1, worldMatrix.val[Matrix4.M01]);
-				this.worldMatricesCopyHeap.put((i * 16) + 2, worldMatrix.val[Matrix4.M02]);
-				this.worldMatricesCopyHeap.put((i * 16) + 3, worldMatrix.val[Matrix4.M03]);
-				this.worldMatricesCopyHeap.put((i * 16) + 4, worldMatrix.val[Matrix4.M10]);
+				this.worldMatricesCopyHeap.put((i * 16) + 1, worldMatrix.val[Matrix4.M10]);
+				this.worldMatricesCopyHeap.put((i * 16) + 2, worldMatrix.val[Matrix4.M20]);
+				this.worldMatricesCopyHeap.put((i * 16) + 3, worldMatrix.val[Matrix4.M30]);
+				this.worldMatricesCopyHeap.put((i * 16) + 4, worldMatrix.val[Matrix4.M01]);
 				this.worldMatricesCopyHeap.put((i * 16) + 5, worldMatrix.val[Matrix4.M11]);
-				this.worldMatricesCopyHeap.put((i * 16) + 6, worldMatrix.val[Matrix4.M12]);
-				this.worldMatricesCopyHeap.put((i * 16) + 7, worldMatrix.val[Matrix4.M13]);
-				this.worldMatricesCopyHeap.put((i * 16) + 8, worldMatrix.val[Matrix4.M20]);
-				this.worldMatricesCopyHeap.put((i * 16) + 9, worldMatrix.val[Matrix4.M21]);
+				this.worldMatricesCopyHeap.put((i * 16) + 6, worldMatrix.val[Matrix4.M21]);
+				this.worldMatricesCopyHeap.put((i * 16) + 7, worldMatrix.val[Matrix4.M31]);
+				this.worldMatricesCopyHeap.put((i * 16) + 8, worldMatrix.val[Matrix4.M02]);
+				this.worldMatricesCopyHeap.put((i * 16) + 9, worldMatrix.val[Matrix4.M12]);
 				this.worldMatricesCopyHeap.put((i * 16) + 10, worldMatrix.val[Matrix4.M22]);
-				this.worldMatricesCopyHeap.put((i * 16) + 11, worldMatrix.val[Matrix4.M23]);
-				this.worldMatricesCopyHeap.put((i * 16) + 12, worldMatrix.val[Matrix4.M30]);
-				this.worldMatricesCopyHeap.put((i * 16) + 13, worldMatrix.val[Matrix4.M31]);
-				this.worldMatricesCopyHeap.put((i * 16) + 14, worldMatrix.val[Matrix4.M32]);
+				this.worldMatricesCopyHeap.put((i * 16) + 11, worldMatrix.val[Matrix4.M32]);
+				this.worldMatricesCopyHeap.put((i * 16) + 12, worldMatrix.val[Matrix4.M03]);
+				this.worldMatricesCopyHeap.put((i * 16) + 13, worldMatrix.val[Matrix4.M13]);
+				this.worldMatricesCopyHeap.put((i * 16) + 14, worldMatrix.val[Matrix4.M23]);
 				this.worldMatricesCopyHeap.put((i * 16) + 15, worldMatrix.val[Matrix4.M33]);
 			}
 			this.boneTexture.bindAndUpdate(this.worldMatricesCopyHeap);
@@ -515,7 +515,7 @@ public class MdxComplexInstance extends ModelInstance {
 			this.allowParticleSpawn = true;
 
 			if (this.frame >= interval[1]) {
-				if ((this.sequenceLoopMode == 2) || ((this.sequenceLoopMode == 0) && (sequence.getFlags() == 0))) {
+				if ((this.sequenceLoopMode == 2) || ((this.sequenceLoopMode == 1) && (sequence.getFlags() == 0))) {
 					this.frame = (int) interval[0]; // TODO not cast
 
 					this.resetEventEmitters();

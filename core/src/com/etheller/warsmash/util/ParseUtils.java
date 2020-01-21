@@ -1,5 +1,6 @@
 package com.etheller.warsmash.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
@@ -46,6 +47,18 @@ public class ParseUtils {
 			throws IOException {
 		final long[] array = new long[length];
 		readUInt32Array(stream, array);
+		return array;
+	}
+
+	public static void readInt32Array(final LittleEndianDataInputStream stream, final int[] array) throws IOException {
+		for (int i = 0; i < array.length; i++) {
+			array[i] = stream.readInt();
+		}
+	}
+
+	public static int[] readInt32Array(final LittleEndianDataInputStream stream, final int length) throws IOException {
+		final int[] array = new int[length];
+		readInt32Array(stream, array);
 		return array;
 	}
 
@@ -115,6 +128,13 @@ public class ParseUtils {
 		}
 	}
 
+	public static void writeInt32Array(final LittleEndianDataOutputStream stream, final int[] array)
+			throws IOException {
+		for (int i = 0; i < array.length; i++) {
+			stream.writeInt(array[i]);
+		}
+	}
+
 	public static void writeUInt16Array(final LittleEndianDataOutputStream stream, final int[] array)
 			throws IOException {
 		for (int i = 0; i < array.length; i++) {
@@ -137,5 +157,22 @@ public class ParseUtils {
 		}
 		final String name = new String(recycleByteArray, 0, i, ParseUtils.UTF8);
 		return name;
+	}
+
+	public static String readUntilNull(final LittleEndianDataInputStream stream) throws IOException {
+
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		int c;
+		while (((c = stream.read()) != 0) && (c != -1)) {
+			baos.write(c);
+		}
+		return new String(baos.toByteArray(), ParseUtils.UTF8);
+	}
+
+	public static void writeWithNullTerminator(final LittleEndianDataOutputStream stream, final String name)
+			throws IOException {
+		final byte[] nameBytes = name.getBytes(ParseUtils.UTF8);
+		stream.write(nameBytes);
+		stream.write(0);
 	}
 }

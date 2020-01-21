@@ -21,7 +21,7 @@ public abstract class Node extends GenericNode {
 		this.localScale = new Vector3(1, 1, 1);
 		this.worldLocation = new Vector3();
 		this.worldRotation = new Quaternion();
-		this.worldScale = new Vector3();
+		this.worldScale = new Vector3(1, 1, 1);
 		this.inverseWorldLocation = new Vector3();
 		this.inverseWorldRotation = new Quaternion();
 		this.inverseWorldScale = new Vector3();
@@ -249,9 +249,9 @@ public abstract class Node extends GenericNode {
 		this.inverseWorldScale.z = 1 / this.worldScale.z;
 
 		// World location
-		this.worldLocation.x = this.worldMatrix.val[Matrix4.M30];
-		this.worldLocation.y = this.worldMatrix.val[Matrix4.M31];
-		this.worldLocation.z = this.worldMatrix.val[Matrix4.M32];
+		this.worldLocation.x = this.worldMatrix.val[Matrix4.M03];
+		this.worldLocation.y = this.worldMatrix.val[Matrix4.M13];
+		this.worldLocation.z = this.worldMatrix.val[Matrix4.M23];
 
 		// Inverse world location
 		this.inverseWorldLocation.x = -this.worldLocation.x;

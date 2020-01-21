@@ -564,10 +564,10 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	public static Vector4 transformMat4(final Vector4 out, final Vector4 a, final Matrix4 matrix) {
 		final float x = a.x, y = a.y, z = a.z, w = a.w;
 		final float[] m = matrix.val;
-		out.x = (m[Matrix4.M00] * x) + (m[Matrix4.M10] * y) + (m[Matrix4.M20] * z) + (m[Matrix4.M30] * w);
-		out.y = (m[Matrix4.M01] * x) + (m[Matrix4.M11] * y) + (m[Matrix4.M21] * z) + (m[Matrix4.M31] * w);
-		out.z = (m[Matrix4.M02] * x) + (m[Matrix4.M12] * y) + (m[Matrix4.M22] * z) + (m[Matrix4.M32] * w);
-		out.w = (m[Matrix4.M03] * x) + (m[Matrix4.M13] * y) + (m[Matrix4.M23] * z) + (m[Matrix4.M33] * w);
+		out.x = (m[Matrix4.M00] * x) + (m[Matrix4.M01] * y) + (m[Matrix4.M02] * z) + (m[Matrix4.M03] * w);
+		out.y = (m[Matrix4.M10] * x) + (m[Matrix4.M11] * y) + (m[Matrix4.M12] * z) + (m[Matrix4.M13] * w);
+		out.z = (m[Matrix4.M20] * x) + (m[Matrix4.M21] * y) + (m[Matrix4.M22] * z) + (m[Matrix4.M23] * w);
+		out.w = (m[Matrix4.M30] * x) + (m[Matrix4.M31] * y) + (m[Matrix4.M32] * z) + (m[Matrix4.M33] * w);
 		return out;
 	}
 }

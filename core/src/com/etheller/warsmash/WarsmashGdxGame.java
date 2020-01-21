@@ -8,28 +8,38 @@ import java.util.Arrays;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
-import com.etheller.warsmash.datasources.CompoundDataSource;
+import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
+import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SolvedPath;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
-import com.etheller.warsmash.viewer5.handlers.mdx.MdxSimpleInstance;
 
 public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvider {
+	private static final boolean SPIN = false;
+	private static final boolean ADVANCE_ANIMS = true;
 	private DataSource codebase;
 	private ModelViewer viewer;
 	private MdxModel model;
 	private CameraManager cameraManager;
 	private static int VAO;
+	private final Rectangle tempRect = new Rectangle();
+
+	private BitmapFont font;
+	private SpriteBatch batch;
 
 	@Override
 	public void create() {
@@ -46,58 +56,320 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
 		System.err.println("Renderer: " + renderer);
 
-		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor(
-				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3.mpq\\war3.mpq");
+		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor("E:\\Backups\\Warcraft\\Data\\127");
 		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor(
 				"D:\\NEEDS_ORGANIZING\\MPQBuild\\Test");
-		this.codebase = new CompoundDataSource(Arrays.<DataSourceDescriptor>asList(war3mpq, testingFolder));
+		final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
+		this.codebase = new CompoundDataSourceDescriptor(
+				Arrays.<DataSourceDescriptor>asList(war3mpq, testingFolder, currentFolder)).createDataSource();
 		this.viewer = new ModelViewer(this.codebase, this);
 
 		this.viewer.addHandler(new MdxHandler());
+		this.viewer.enableAudio();
 
 		final Scene scene = this.viewer.addScene();
+		scene.enableAudio();
 
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(scene);
 
-		this.model = (MdxModel) this.viewer.load("units\\human\\footman\\footman.mdx", new PathSolver() {
-//		this.model = (MdxModel) this.viewer.load("Cube.mdx", new PathSolver() {
+		this.mainModel = (MdxModel) this.viewer.load("Buildings\\Undead\\Necropolis\\Necropolis.mdx", new PathSolver() {
 			@Override
 			public SolvedPath solve(final String src, final Object solverParams) {
 				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
 			}
 		}, null);
 
-		final MdxSimpleInstance instance = (MdxSimpleInstance) this.model.addInstance(1);
+		this.mainInstance = (MdxComplexInstance) this.mainModel.addInstance(0);
 
-		instance.setScene(scene);
+		this.mainInstance.setScene(scene);
 
-//		instance.setSequence(1);
-//
-//		instance.setSequenceLoopMode(2);
+		int animIndex = 0;
+		for (final Sequence s : this.mainModel.getSequences()) {
+			if (s.getName().toLowerCase().startsWith("walk")) {
+				animIndex = this.mainModel.getSequences().indexOf(s);
+			}
+		}
+		this.mainInstance.setSequence(animIndex);
+
+		this.mainInstance.setSequenceLoopMode(0);
+
+//		acolytesHarvestingSceneJoke2(scene);
 
 		System.out.println("Loaded");
-//		Gdx.gl30.glClearColor(0.5f, 0.5f, 0.5f, 1); // TODO remove white background
+		Gdx.gl30.glClearColor(0.5f, 0.5f, 0.5f, 1); // TODO remove white background
+
+		this.font = new BitmapFont();
+		this.batch = new SpriteBatch();
+	}
+
+	private void makeDruidSquare(final Scene scene) {
+		final MdxModel model2 = (MdxModel) this.viewer.load("units\\nightelf\\druidoftheclaw\\druidoftheclaw.mdx",
+				new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+		makePerfectSquare(scene, model2, 15);
+	}
+
+	private void singleAcolyteScene(final Scene scene) {
+		final MdxModel model2 = (MdxModel) this.viewer.load("units\\undead\\acolyte\\acolyte.mdx", new PathSolver() {
+			@Override
+			public SolvedPath solve(final String src, final Object solverParams) {
+				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+			}
+		}, null);
+
+		final MdxComplexInstance instance3 = (MdxComplexInstance) model2.addInstance(0);
+
+		instance3.setScene(scene);
+
+		int animIndex = 0;
+		for (final Sequence s : model2.getSequences()) {
+			if (s.getName().toLowerCase().startsWith("stand work")) {
+				animIndex = model2.getSequences().indexOf(s);
+			}
+		}
+		instance3.setSequence(animIndex);
+
+		instance3.setSequenceLoopMode(2);
+	}
+
+	private void singleModelScene(final Scene scene, final String path, final String animName) {
+		final MdxModel model2 = (MdxModel) this.viewer.load(path, new PathSolver() {
+			@Override
+			public SolvedPath solve(final String src, final Object solverParams) {
+				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+			}
+		}, null);
+
+		final MdxComplexInstance instance3 = (MdxComplexInstance) model2.addInstance(0);
+
+		instance3.setScene(scene);
+
+		int animIndex = 0;
+		for (final Sequence s : model2.getSequences()) {
+			if (s.getName().toLowerCase().startsWith(animName)) {
+				animIndex = model2.getSequences().indexOf(s);
+			}
+		}
+		instance3.setSequence(animIndex);
+
+		instance3.setSequenceLoopMode(2);
+	}
+
+	private void acolytesHarvestingScene(final Scene scene) {
+
+		final MdxModel acolyteModel = (MdxModel) this.viewer.load("units\\undead\\acolyte\\acolyte.mdx",
+				new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+		final MdxModel mineEffectModel = (MdxModel) this.viewer
+				.load("abilities\\spells\\undead\\undeadmine\\undeadminecircle.mdx", new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+		for (int i = 0; i < 5; i++) {
+			final MdxComplexInstance acolyteInstance = (MdxComplexInstance) acolyteModel.addInstance(0);
+
+			acolyteInstance.setScene(scene);
+
+			int animIndex = i % acolyteModel.getSequences().size();
+			for (final Sequence s : acolyteModel.getSequences()) {
+				if (s.getName().toLowerCase().startsWith("stand work")) {
+					animIndex = acolyteModel.getSequences().indexOf(s);
+				}
+			}
+			acolyteInstance.setSequence(animIndex);
+
+			acolyteInstance.setSequenceLoopMode(2);
+
+			final double angle = ((Math.PI * 2) / 5) * i;
+			acolyteInstance.localLocation.x = (float) Math.cos(angle) * 256;
+			acolyteInstance.localLocation.y = (float) Math.sin(angle) * 256;
+			acolyteInstance.localRotation.setFromAxisRad(0, 0, 1, (float) (angle + Math.PI));
+
+			final MdxComplexInstance effectInstance = (MdxComplexInstance) mineEffectModel.addInstance(0);
+
+			effectInstance.setScene(scene);
+
+			effectInstance.setSequence(1);
+
+			effectInstance.setSequenceLoopMode(2);
+			effectInstance.localLocation.x = (float) Math.cos(angle) * 256;
+			effectInstance.localLocation.y = (float) Math.sin(angle) * 256;
+			effectInstance.localRotation.setFromAxisRad(0, 0, 1, (float) (angle));
+
+		}
+		final MdxModel mineModel = (MdxModel) this.viewer.load("buildings\\undead\\hauntedmine\\hauntedmine.mdx",
+				new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+		final MdxComplexInstance mineInstance = (MdxComplexInstance) mineModel.addInstance(0);
+
+		mineInstance.setScene(scene);
+
+		mineInstance.setSequence(2);
+
+		mineInstance.setSequenceLoopMode(2);
+	}
+
+	private void acolytesHarvestingSceneJoke2(final Scene scene) {
+
+		final MdxModel acolyteModel = (MdxModel) this.viewer.load("units\\undead\\acolyte\\acolyte.mdx",
+				new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+		final MdxModel mineEffectModel = (MdxModel) this.viewer
+				.load("abilities\\spells\\undead\\undeadmine\\undeadminecircle.mdx", new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+		for (int i = 0; i < 5; i++) {
+			final MdxComplexInstance acolyteInstance = (MdxComplexInstance) acolyteModel.addInstance(0);
+
+			acolyteInstance.setScene(scene);
+
+			int animIndex = i % acolyteModel.getSequences().size();
+			for (final Sequence s : acolyteModel.getSequences()) {
+				if (s.getName().toLowerCase().startsWith("stand work")) {
+					animIndex = acolyteModel.getSequences().indexOf(s);
+				}
+			}
+			acolyteInstance.setSequence(animIndex);
+
+			acolyteInstance.setSequenceLoopMode(2);
+
+			final double angle = ((Math.PI * 2) / 5) * i;
+			acolyteInstance.localLocation.x = (float) Math.cos(angle) * 256;
+			acolyteInstance.localLocation.y = (float) Math.sin(angle) * 256;
+			acolyteInstance.localRotation.setFromAxisRad(0, 0, 1, (float) (angle + Math.PI));
+
+			final MdxComplexInstance effectInstance = (MdxComplexInstance) mineEffectModel.addInstance(0);
+
+			effectInstance.setScene(scene);
+
+			effectInstance.setSequence(1);
+
+			effectInstance.setSequenceLoopMode(2);
+			effectInstance.localLocation.x = (float) Math.cos(angle) * 256;
+			effectInstance.localLocation.y = (float) Math.sin(angle) * 256;
+			effectInstance.localRotation.setFromAxisRad(0, 0, 1, (float) (angle));
+
+		}
+		final MdxModel mineModel = (MdxModel) this.viewer.load("units\\orc\\spiritwolf\\spiritwolf.mdx",
+				new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+		final MdxComplexInstance mineInstance = (MdxComplexInstance) mineModel.addInstance(0);
+
+		mineInstance.setScene(scene);
+
+		mineInstance.setSequence(0);
+		mineInstance.localScale.x = 2;
+		mineInstance.localScale.y = 2;
+		mineInstance.localScale.z = 2;
+
+		mineInstance.setSequenceLoopMode(2);
+		final MdxModel mineModel2 = (MdxModel) this.viewer
+				.load("abilities\\spells\\undead\\unsummon\\unsummontarget.mdx", new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+		final MdxComplexInstance mineInstance2 = (MdxComplexInstance) mineModel2.addInstance(0);
+
+		mineInstance2.setScene(scene);
+
+		mineInstance2.setSequence(0);
+
+		mineInstance2.setSequenceLoopMode(2);
+	}
+
+	private void makeFourHundred(final Scene scene, final MdxModel model2) {
+		for (int i = 0; i < 400; i++) {
+			final MdxComplexInstance instance3 = (MdxComplexInstance) model2.addInstance(0);
+			instance3.localLocation.x = (((i % 20) - 10) * 128);
+			instance3.localLocation.y = (((i / 20) - 10) * 128);
+
+			instance3.setScene(scene);
+
+			final int animIndex = i % model2.getSequences().size();
+			instance3.setSequence(animIndex);
+
+			instance3.setSequenceLoopMode(2);
+		}
+	}
+
+	private void makePerfectSquare(final Scene scene, final MdxModel model2, final int n) {
+		final int n2 = n * n;
+		for (int i = 0; i < n2; i++) {
+			final MdxComplexInstance instance3 = (MdxComplexInstance) model2.addInstance(0);
+			instance3.localLocation.x = (((i % n) - (n / 2)) * 128);
+			instance3.localLocation.y = (((i / n) - (n / 2)) * 128);
+
+			instance3.setScene(scene);
+
+			final int animIndex = i % model2.getSequences().size();
+			instance3.setSequence(animIndex);
+
+			instance3.setSequenceLoopMode(2);
+		}
 	}
 
 	public static void bindDefaultVertexArray() {
 		Gdx.gl30.glBindVertexArray(VAO);
 	}
 
+	private int frame = 0;
+	private MdxComplexInstance mainInstance;
+	private MdxModel mainModel;
+
 	@Override
 	public void render() {
-//		this.cameraManager.verticalAngle += 0.01;
-//		if (this.cameraManager.verticalAngle >= (Math.PI)) {
-//			this.cameraManager.verticalAngle = 0;
-//		}
-		this.cameraManager.horizontalAngle += 0.01;
-		if (this.cameraManager.horizontalAngle > (2 * Math.PI)) {
-			this.cameraManager.horizontalAngle = 0;
+		Gdx.gl30.glBindVertexArray(VAO);
+		if (SPIN) {
+			this.cameraManager.horizontalAngle += 0.01;
+			if (this.cameraManager.horizontalAngle > (2 * Math.PI)) {
+				this.cameraManager.horizontalAngle = 0;
+			}
 		}
 		this.cameraManager.updateCamera();
 		this.viewer.updateAndRender();
 
 //		gl.glDrawElements(GL20.GL_TRIANGLES, this.elements, GL20.GL_UNSIGNED_SHORT, this.faceOffset);
+
+//		this.batch.begin();
+//		this.font.draw(this.batch, Integer.toString(Gdx.graphics.getFramesPerSecond()), 0, 0);
+//		this.batch.end();
+
+		this.frame++;
+		if ((this.frame % 1000) == 0) {
+			System.out.println(Integer.toString(Gdx.graphics.getFramesPerSecond()));
+		}
+
+		if (ADVANCE_ANIMS && this.mainInstance.sequenceEnded) {
+			this.mainInstance.setSequence((this.mainInstance.sequence + 1) % this.mainModel.getSequences().size());
+		}
 	}
 
 	@Override
@@ -112,6 +384,13 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 	@Override
 	public float getHeight() {
 		return Gdx.graphics.getHeight();
+	}
+
+	@Override
+	public void resize(final int width, final int height) {
+		this.tempRect.width = width;
+		this.tempRect.height = height;
+		this.cameraManager.camera.viewport(this.tempRect);
 	}
 
 	class CameraManager {
@@ -143,9 +422,9 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			this.zoomFactor = 0.1f;
 			this.horizontalAngle = (float) (Math.PI / 2);
 			this.verticalAngle = (float) (Math.PI / 4);
-			this.distance = 5;
+			this.distance = 1000;
 			this.position = new Vector3();
-			this.target = new Vector3();
+			this.target = new Vector3(0, 0, 50);
 			this.worldUp = new Vector3(0, 0, 1);
 			this.vecHeap = new Vector3();
 			this.quatHeap = new Quaternion();

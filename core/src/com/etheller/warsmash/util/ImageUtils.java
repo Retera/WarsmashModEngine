@@ -1,6 +1,5 @@
 package com.etheller.warsmash.util;
 
-import java.awt.Graphics2D;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
@@ -8,6 +7,7 @@ import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
 
+import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
@@ -30,14 +30,20 @@ public final class ImageUtils {
 		// for
 		// RGB
 
-		final Pixmap pixmap = new Pixmap(image.getWidth(), image.getHeight(), Format.RGBA8888);
+		final Pixmap pixmap = new Pixmap(image.getWidth(), image.getHeight(), Format.RGBA8888) {
+			@Override
+			public int getGLInternalFormat() {
+				return GL30.GL_SRGB8_ALPHA8;
+			}
+		};
 		for (int y = 0; y < image.getHeight(); y++) {
 			for (int x = 0; x < image.getWidth(); x++) {
 				final int pixel = pixels[(y * image.getWidth()) + x];
 				pixmap.drawPixel(x, y, (pixel << 8) | (pixel >>> 24));
 			}
 		}
-		return new Texture(pixmap);
+		final Texture texture = new Texture(pixmap);
+		return texture;
 	}
 
 	/**
@@ -66,12 +72,10 @@ public final class ImageUtils {
 				DataBuffer.TYPE_BYTE);
 		final BufferedImage lRGB = new BufferedImage(lRGBModel,
 				lRGBModel.createCompatibleWritableRaster(in.getWidth(), in.getHeight()), false, null);
-		final Graphics2D graphic = lRGB.createGraphics();
-		try {
-			graphic.drawImage(in, 0, 0, null);
-		}
-		finally {
-			graphic.dispose();
+		for (int i = 0; i < in.getWidth(); i++) {
+			for (int j = 0; j < in.getHeight(); j++) {
+				lRGB.setRGB(i, j, in.getRGB(i, j));
+			}
 		}
 
 		// Convert to sRGB.

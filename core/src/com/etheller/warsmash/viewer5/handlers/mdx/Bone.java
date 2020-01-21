@@ -7,13 +7,21 @@ public class Bone extends GenericObject {
 	public Bone(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.Bone bone, final int index) {
 		super(model, bone, index);
 
-		final int geosetAnimationId = bone.getGeosetAnimationId();
-		if (geosetAnimationId != -1) {
-			this.geosetAnimation = model.getGeosetAnimations().get(geosetAnimationId);
+		GeosetAnimation geosetAnimation = null;
+		final int geosetId = bone.getGeosetId();
+		if (geosetId != -1) {
+			final Geoset geoset = model.getGeosets().get(geosetId);
+			if (geoset.geosetAnimation != null) {
+				geosetAnimation = geoset.geosetAnimation;
+			}
+			else {
+				final int geosetAnimationId = bone.getGeosetAnimationId();
+				if (geosetAnimationId != -1) {
+					geosetAnimation = model.getGeosetAnimations().get(geosetAnimationId);
+				}
+			}
 		}
-		else {
-			this.geosetAnimation = null;
-		}
+		this.geosetAnimation = geosetAnimation;
 	}
 
 	@Override

@@ -19,6 +19,8 @@ public abstract class Texture extends HandlerResource<ResourceHandler> {
 
 	public abstract int getGlTarget();
 
+	public abstract int getGlHandle();
+
 	public abstract void setWrapS(final boolean wrapS);
 
 	public abstract void setWrapT(final boolean wrapT);

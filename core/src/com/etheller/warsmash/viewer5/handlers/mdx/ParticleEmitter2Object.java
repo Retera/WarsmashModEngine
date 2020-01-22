@@ -53,7 +53,7 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 		this.columns = emitter.getColumns();
 		this.rows = emitter.getRows();
 
-		if (this.replaceableId == 0) {
+		if (replaceableId == 0) {
 			this.internalTexture = model.getTextures().get(emitter.getTextureId());
 		}
 		else if ((replaceableId == 1) || (replaceableId == 2)) {

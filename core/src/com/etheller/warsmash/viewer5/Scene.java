@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Rectangle;
 
 /**
@@ -43,6 +44,15 @@ public class Scene {
 	public final EmittedObjectUpdater emitterObjectUpdater;
 	public final Map<TextureMapper, RenderBatch> batches;
 	public final Comparator<ModelInstance> instanceDepthComparator;
+	/**
+	 * Similar to WebGL's own `alpha` parameter.
+	 *
+	 * If false, the scene will be cleared before rendering, meaning that scenes
+	 * behind it won't be visible through it.
+	 *
+	 * If true, alpha works as usual.
+	 */
+	public boolean alpha = false;
 
 	public Scene(final ModelViewer viewer) {
 		final CanvasProvider canvas = viewer.canvas;
@@ -185,8 +195,8 @@ public class Scene {
 			if (cell.isVisible(this.camera)) {
 				this.visibleCells += 1;
 
-				for (int i = 0, l = cell.instances.size(); i < l; i++) {
-					final ModelInstance instance = cell.instances.get(i);
+				for (final ModelInstance instance : new ArrayList<>(cell.instances)) {
+//					final ModelInstance instance = cell.instances.get(i);
 					if (instance.rendered && (instance.cullFrame < frame) && instance.isVisible(this.camera)) {
 						instance.cullFrame = frame;
 
@@ -230,6 +240,23 @@ public class Scene {
 
 		this.emitterObjectUpdater.update(dt);
 		this.updatedParticles = this.emitterObjectUpdater.objects.size();
+	}
+
+	public void startFrame() {
+		final GL20 gl = this.viewer.gl;
+		final Rectangle viewport = this.camera.rect;
+
+		// Set the viewport
+		gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
+
+		// Allow to render only in the viewport
+		gl.glScissor((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
+
+		// If this scene doesn't want alpha, clear it.
+		if (!this.alpha) {
+			gl.glDepthMask(true);
+			gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		}
 	}
 
 	public void renderOpaque() {

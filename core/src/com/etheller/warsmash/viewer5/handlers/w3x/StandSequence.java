@@ -47,6 +47,9 @@ public class StandSequence {
 
 		final int sequencesLeft = filtered.size() - i;
 		final int random = (int) (i + Math.floor(Math.random() * sequencesLeft));
+		if (sequencesLeft <= 0) {
+			return new IndexedSequence(null, 0);
+		}
 		final IndexedSequence sequence = filtered.get(random);
 
 		return sequence;

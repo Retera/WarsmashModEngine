@@ -11,7 +11,11 @@ public interface PathSolver {
 	public static final PathSolver DEFAULT = new PathSolver() {
 		@Override
 		public SolvedPath solve(final String src, final Object solverParams) {
-			return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+			final int dotIndex = src.lastIndexOf('.');
+			if (dotIndex == -1) {
+				throw new IllegalStateException("unable to resolve: " + src);
+			}
+			return new SolvedPath(src, src.substring(dotIndex), true);
 		}
 	};
 }

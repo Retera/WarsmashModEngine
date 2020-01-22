@@ -624,6 +624,25 @@ public final class MutableObjectData {
 			return this.parentWC3Object.getFieldValue(key) == 1;
 		}
 
+		public int readSLKTagInt(final String key) {
+			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
+				return getFieldAsInteger(MutableObjectData.this.metaNameToMetaId.get(key), 0);
+			}
+			return this.parentWC3Object.getFieldValue(key);
+		}
+
+		public float readSLKTagFloat(final String key) {
+			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
+				return getFieldAsFloat(MutableObjectData.this.metaNameToMetaId.get(key), 0);
+			}
+			try {
+				return Float.parseFloat(this.parentWC3Object.getField(key));
+			}
+			catch (final NumberFormatException exc) {
+				return Float.NaN;
+			}
+		}
+
 		public String getName() {
 			String name = getFieldAsString(MutableObjectData.this.editorData.getNameField(),
 					MutableObjectData.this.worldEditorDataType == WorldEditorDataType.UPGRADES ? 1 : 0);

@@ -56,7 +56,7 @@ public class MappedData {
 								key = "column" + j;
 							}
 
-							mapped.put(key, row.get(j));
+							mapped.put(key, j < row.size() ? row.get(j) : null);
 						}
 					}
 				}

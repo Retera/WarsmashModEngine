@@ -17,7 +17,7 @@ public abstract class Node extends GenericNode {
 	public Node() {
 		this.pivot = new Vector3();
 		this.localLocation = new Vector3();
-		this.localRotation = new Quaternion(0, 0, 0, 1);
+		this.localRotation = new Quaternion();
 		this.localScale = new Vector3(1, 1, 1);
 		this.worldLocation = new Vector3();
 		this.worldRotation = new Quaternion();

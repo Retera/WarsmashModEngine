@@ -85,9 +85,9 @@ public abstract class SkeletalNode extends GenericNode {
 			computedScaling = this.localScale;
 
 			final Vector3 parentScale = this.parent.worldScale;
-			this.worldScale.x = parentScale.x * this.worldScale.x;
-			this.worldScale.y = parentScale.y * this.worldScale.y;
-			this.worldScale.z = parentScale.z * this.worldScale.z;
+			this.worldScale.x = parentScale.x * this.localScale.x;
+			this.worldScale.y = parentScale.y * this.localScale.y;
+			this.worldScale.z = parentScale.z * this.localScale.z;
 		}
 
 		if (this.billboarded) {

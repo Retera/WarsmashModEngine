@@ -13,7 +13,8 @@ public class Grid {
 	private final int rows;
 	final GridCell[] cells;
 
-	public Grid(final float x, float y, final int width, final int depth, final int cellWidth, final int cellDepth) {
+	public Grid(final float x, final float y, final int width, final int depth, final int cellWidth,
+			final int cellDepth) {
 		final int columns = width / cellWidth;
 		final int rows = depth / cellDepth;
 
@@ -29,10 +30,10 @@ public class Grid {
 
 		for (int row = 0; row < rows; row++) {
 			for (int column = 0; column < columns; column++) {
-				final int left = x + (columns * cellWidth);
-				final int right = left + cellWidth;
-				final int bottom = y = row * cellDepth;
-				final int top = bottom + cellDepth;
+				final float left = x + (columns * cellWidth);
+				final float right = left + cellWidth;
+				final float bottom = y + (row * cellDepth);
+				final float top = bottom + cellDepth;
 
 				this.cells[(row * columns) + column] = new GridCell(left, right, bottom, top);
 			}

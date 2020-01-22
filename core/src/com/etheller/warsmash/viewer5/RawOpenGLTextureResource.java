@@ -72,6 +72,11 @@ public abstract class RawOpenGLTextureResource extends Texture {
 	}
 
 	@Override
+	public int getGlHandle() {
+		return this.handle;
+	}
+
+	@Override
 	public void setWrapS(final boolean wrapS) {
 		this.wrapS = wrapS ? GL20.GL_REPEAT : GL20.GL_CLAMP_TO_EDGE;
 		final GL20 gl = this.viewer.gl;

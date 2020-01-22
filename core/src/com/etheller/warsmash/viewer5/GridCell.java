@@ -6,15 +6,15 @@ import java.util.List;
 import com.etheller.warsmash.util.RenderMathUtils;
 
 public class GridCell {
-	public final int left;
-	public final int right;
-	public final int bottom;
-	public final int top;
+	public final float left;
+	public final float right;
+	public final float bottom;
+	public final float top;
 	public int plane;
 	final List<ModelInstance> instances;
 	public final boolean visible;
 
-	public GridCell(final int left, final int right, final int bottom, final int top) {
+	public GridCell(final float left, final float right, final float bottom, final float top) {
 		this.left = left;
 		this.right = right;
 		this.bottom = bottom;

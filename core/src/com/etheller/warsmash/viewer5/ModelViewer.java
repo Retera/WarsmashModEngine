@@ -45,7 +45,7 @@ public class ModelViewer {
 		this.resources = new ArrayList<>();
 		this.fetchCache = new HashMap<>();
 		this.handlers = new HashSet<ResourceHandler>();
-		this.frameTime = 1000 / 6;
+		this.frameTime = 1000 / 60;
 		this.gl = Gdx.gl;
 		this.webGL = new WebGL(this.gl);
 		this.scenes = new ArrayList<>();

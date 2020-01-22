@@ -35,7 +35,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 	private ModelViewer viewer;
 	private MdxModel model;
 	private CameraManager cameraManager;
-	private static int VAO;
+	public static int VAO;
 	private final Rectangle tempRect = new Rectangle();
 
 	private BitmapFont font;

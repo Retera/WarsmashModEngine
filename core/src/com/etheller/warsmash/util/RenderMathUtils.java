@@ -321,8 +321,8 @@ public enum RenderMathUtils {
 		return -1;
 	}
 
-	public static int testCell(final Vector4[] planes, final int left, final int right, final int bottom, final int top,
-			int first) {
+	public static int testCell(final Vector4[] planes, final float left, final float right, final float bottom,
+			final float top, int first) {
 		if (first == -1) {
 			first = 0;
 		}
@@ -340,7 +340,7 @@ public enum RenderMathUtils {
 		return -1;
 	}
 
-	public static float distance2Plane2(final Vector4 plane, final int px, final int py) {
+	public static float distance2Plane2(final Vector4 plane, final float px, final float py) {
 		return (plane.x * px) + (plane.y * py) + plane.w;
 	}
 

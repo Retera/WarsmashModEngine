@@ -19,6 +19,37 @@ import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 
+/*
+ *
+ *
+PuffTheMagicDragonIsNoMoreToday at 9:06 PM
+that being said I think we call the tiles corners or whatever, since we store the points rather than the quads
+but at the same time there's also per-quad data xDS
+
+ReteraToday at 9:06 PM
+yeah, I've seen the corner class go by several times while transcribing this latest bit to java
+hmmm
+
+PuffTheMagicDragonIsNoMoreToday at 9:07 PM
+some things are per-corner, some per-tile
+note that the existing code only somewhat takes care of cliff/terrain doodads, and it's not tested much
+
+ReteraToday at 9:10 PM
+well, I'll probably rip some stuff off of HiveWE too
+that was what I was thinking I'd probably do if it was necessary
+
+PuffTheMagicDragonIsNoMoreToday at 9:11 PM
+last time I checked it wasn't implemented there, but that was a long time ago
+basically you want to not have ground tiles where the doodads exist, and to know where that is you need the pathing texture used by the doodads
+
+ReteraToday at 9:12 PM
+oh yea
+makes sense
+
+PuffTheMagicDragonIsNoMoreToday at 9:13 PM
+they also can't be supported by my hacky TerrainModel or whatever it was called, since at least some of them require blending
+ *
+ */
 public class TerrainModel {
 	private static final IntBuffer GL_TEMP_BUFFER = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder())
 			.asIntBuffer();

@@ -45,10 +45,17 @@ public abstract class GdxTextureResource extends Texture {
 		return this.gdxTexture.glTarget;
 	}
 
+	@Override
+	public int getGlHandle() {
+		return this.gdxTexture.getTextureObjectHandle();
+	}
+
+	@Override
 	public void setWrapS(final boolean wrapS) {
 		this.gdxTexture.setWrap(wrapS ? TextureWrap.Repeat : TextureWrap.ClampToEdge, this.gdxTexture.getVWrap());
 	}
 
+	@Override
 	public void setWrapT(final boolean wrapT) {
 		this.gdxTexture.setWrap(this.gdxTexture.getUWrap(), wrapT ? TextureWrap.Repeat : TextureWrap.ClampToEdge);
 	}

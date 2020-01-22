@@ -10,8 +10,8 @@ import com.google.common.io.LittleEndianDataOutputStream;
  * A tile corner.
  */
 public class Corner {
-	private int groundHeight;
-	private int waterHeight;
+	private float groundHeight;
+	private float waterHeight;
 	private int mapEdge;
 	private int ramp;
 	private int blight;
@@ -24,10 +24,10 @@ public class Corner {
 	private int layerHeight;
 
 	public void load(final LittleEndianDataInputStream stream) throws IOException {
-		this.groundHeight = (stream.readShort() - 8192) / 512;
+		this.groundHeight = (stream.readShort() - 8192) / (float) 512;
 
 		final short waterAndEdge = stream.readShort();
-		this.waterHeight = ((waterAndEdge & 0x3FFF) - 8192) / 512;
+		this.waterHeight = ((waterAndEdge & 0x3FFF) - 8192) / (float) 512;
 		this.mapEdge = waterAndEdge & 0x4000;
 
 		final short textureAndFlags = ParseUtils.readUInt8(stream);
@@ -52,19 +52,19 @@ public class Corner {
 	}
 
 	public void save(final LittleEndianDataOutputStream stream) throws IOException {
-		stream.writeShort((this.groundHeight * 512) + 8192);
-		stream.writeShort((this.waterHeight + 8192 + this.mapEdge) << 14);
+		stream.writeShort((short) ((this.groundHeight * 512f) + 8192f));
+		stream.writeShort((short) ((this.waterHeight * 512f) + 8192f + (this.mapEdge << 14)));
 		ParseUtils.writeUInt8(stream, (short) ((this.ramp << 4) | (this.blight << 5) | (this.water << 6)
 				| (this.boundary << 7) | this.groundTexture));
 		ParseUtils.writeUInt8(stream, (short) ((this.cliffVariation << 5) | this.groundVariation));
 		ParseUtils.writeUInt8(stream, (short) ((this.cliffTexture << 4) + this.layerHeight));
 	}
 
-	public int getGroundHeight() {
+	public float getGroundHeight() {
 		return this.groundHeight;
 	}
 
-	public int getWaterHeight() {
+	public float getWaterHeight() {
 		return this.waterHeight;
 	}
 
@@ -106,5 +106,13 @@ public class Corner {
 
 	public int getLayerHeight() {
 		return this.layerHeight;
+	}
+
+	public float computeFinalGroundHeight() {
+		return (this.groundHeight + this.layerHeight) - 2.0f;
+	}
+
+	public float computeFinalWaterHeight(final float waterOffset) {
+		return this.waterHeight + waterOffset;
 	}
 }

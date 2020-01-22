@@ -13,7 +13,7 @@ public class TerrainDoodad {
 
 	public TerrainDoodad(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final com.etheller.warsmash.parsers.w3x.doo.TerrainDoodad doodad) {
-		final float[] centerOffset = map.centerOffset;
+		final float[] centerOffset = map.terrain.centerOffset;
 		final MdxSimpleInstance instance = (MdxSimpleInstance) model.addInstance(1);
 
 		locationHeap[0] = (doodad.getLocation()[0] * 128) + centerOffset[0] + 128;

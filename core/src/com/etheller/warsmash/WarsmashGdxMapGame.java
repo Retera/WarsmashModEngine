@@ -184,7 +184,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //	}
 	}
 
-	private final float cameraSpeed = 100.0f;
+	private final float cameraSpeed = 10.0f;
 	private final Vector2 cameraVelocity = new Vector2();
 
 	@Override

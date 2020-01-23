@@ -4,6 +4,7 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.List;
 
@@ -479,6 +480,39 @@ public enum RenderMathUtils {
 		final ByteBuffer wrapper = ByteBuffer.allocateDirect(cornerTextures.length).order(ByteOrder.nativeOrder());
 		for (final short face : cornerTextures) {
 			wrapper.put((byte) face);
+		}
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static Buffer wrapShort(final short[] cornerTextures) {
+		final ByteBuffer wrapper = ByteBuffer.allocateDirect(cornerTextures.length * 2).order(ByteOrder.nativeOrder());
+		for (final short face : cornerTextures) {
+			wrapper.putShort(face);
+		}
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static Buffer wrapPairs(final float[][] quadVertices) {
+		final FloatBuffer wrapper = ByteBuffer.allocateDirect(quadVertices.length * 8).order(ByteOrder.nativeOrder())
+				.asFloatBuffer();
+		for (int i = 0; i < quadVertices.length; i++) {
+			for (int j = 0; j < 2; j++) {
+				wrapper.put(quadVertices[i][j]);
+			}
+		}
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static Buffer wrap(final int[][] quadIndices) {
+		final IntBuffer wrapper = ByteBuffer.allocateDirect(quadIndices.length * 3 * 4).order(ByteOrder.nativeOrder())
+				.asIntBuffer();
+		for (int i = 0; i < quadIndices.length; i++) {
+			for (int j = 0; j < 3; j++) {
+				wrapper.put(quadIndices[i][j]);
+			}
 		}
 		wrapper.clear();
 		return wrapper;

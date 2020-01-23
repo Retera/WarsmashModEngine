@@ -68,6 +68,18 @@ public abstract class HashedGameObject implements GameObject {
 	}
 
 	@Override
+	public float getFieldFloatValue(final String field) {
+		float i = 0;
+		try {
+			i = Float.parseFloat(getField(field));
+		}
+		catch (final NumberFormatException e) {
+
+		}
+		return i;
+	}
+
+	@Override
 	public void setField(final String field, final String value, final int index) {
 		final StringKey key = new StringKey(field);
 		List<String> list = this.fields.get(key);

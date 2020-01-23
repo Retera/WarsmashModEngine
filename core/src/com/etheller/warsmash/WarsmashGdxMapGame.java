@@ -74,7 +74,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.cameraManager.setupCamera(this.viewer.worldScene);
 
 		System.out.println("Loaded");
-		Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1); // TODO remove white background
+		Gdx.gl30.glClearColor(0.5f, 0.5f, 0.5f, 1); // TODO remove white background
 
 		this.font = new BitmapFont();
 		this.batch = new SpriteBatch();
@@ -248,6 +248,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean scrolled(final int amount) {
-		return false;
+		this.cameraManager.distance += amount * 10.0;
+		return true;
 	}
 }

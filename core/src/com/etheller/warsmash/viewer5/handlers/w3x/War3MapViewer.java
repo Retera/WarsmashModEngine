@@ -5,12 +5,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 
 import com.etheller.warsmash.common.FetchDataTypeName;
 import com.etheller.warsmash.common.LoadGenericCallback;
+import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.datasources.MpqDataSource;
 import com.etheller.warsmash.parsers.w3x.War3Map;
 import com.etheller.warsmash.parsers.w3x.doo.War3MapDoo;
 import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
@@ -22,6 +29,7 @@ import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
 import com.etheller.warsmash.util.MappedData;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WorldEditStrings;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.GenericResource;
 import com.etheller.warsmash.viewer5.Grid;
@@ -34,6 +42,9 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
+
+import mpq.MPQArchive;
+import mpq.MPQException;
 
 public class War3MapViewer extends ModelViewer {
 	private static final War3ID sloc = War3ID.fromString("sloc");
@@ -67,6 +78,10 @@ public class War3MapViewer extends ModelViewer {
 
 	private final DataSource gameDataSource;
 
+	public Terrain terrain;
+	public int renderPathing = 0;
+	public int renderLighting = 0;
+
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
 		this.gameDataSource = dataSource;
@@ -76,8 +91,6 @@ public class War3MapViewer extends ModelViewer {
 		this.addHandler(new MdxHandler());
 
 		this.wc3PathSolver = PathSolver.DEFAULT;
-
-		this.terrain = new Terrain(webGL);
 
 		this.worldScene = this.addScene();
 
@@ -141,7 +154,7 @@ public class War3MapViewer extends ModelViewer {
 			return loadGeneric(path, dataType, callback);
 		}
 		else {
-			return loadGeneric(path, dataType, callback, this.mapMpq.getCompoundDataSource());
+			return loadGeneric(path, dataType, callback, this.dataSource);
 		}
 	}
 
@@ -149,7 +162,6 @@ public class War3MapViewer extends ModelViewer {
 		final War3Map war3Map = new War3Map(this.gameDataSource, mapFilePath);
 
 		this.mapMpq = war3Map;
-		setDataSource(war3Map.getCompoundDataSource());
 
 //		loadSLKs();
 
@@ -161,13 +173,39 @@ public class War3MapViewer extends ModelViewer {
 
 		tileset = w3iFile.getTileset();
 
+		final DataSource tilesetSource;
+		try {
+			// Slightly complex. Here's the theory:
+			// 1.) Copy map into RAM
+			// 2.) Setup a Data Source that will read assets
+			// from either the map or the game, giving the map priority.
+			SeekableByteChannel sbc;
+			try (InputStream mapStream = war3Map.getCompoundDataSource().getResourceAsStream(tileset + ".mpq")) {
+				final byte[] mapData = IOUtils.toByteArray(mapStream);
+				sbc = new SeekableInMemoryByteChannel(mapData);
+				final DataSource internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
+				tilesetSource = new CompoundDataSource(
+						Arrays.asList(war3Map.getCompoundDataSource(), internalMpqContentsDataSource));
+			}
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+		catch (final MPQException e) {
+			throw new RuntimeException(e);
+		}
+		setDataSource(tilesetSource);
+
 		this.solverParams.tileset = Character.toLowerCase(tileset);
 
 		final War3MapW3e terrainData = this.mapMpq.readEnvironment();
+
+		this.terrain = new Terrain(terrainData, this.webGL, this.dataSource, new WorldEditStrings(this.dataSource),
+				this);
+
 		final float[] centerOffset = terrainData.getCenterOffset();
 		final int[] mapSize = terrainData.getMapSize();
 
-		this.terrain.load(terrainData, centerOffset, mapSize, this);
 		this.terrainReady = true;
 		this.anyReady = true;
 		this.cliffsReady = true;
@@ -359,10 +397,10 @@ public class War3MapViewer extends ModelViewer {
 			final Scene worldScene = this.worldScene;
 
 			worldScene.startFrame();
-			this.terrain.renderGround(this.gl, this.webGL, worldScene);
-			this.terrain.renderCliffs(this.gl, this.webGL, worldScene);
+			this.terrain.renderGround();
+//			this.terrain.renderCliffs();
 			worldScene.renderOpaque();
-			this.terrain.renderWater(this.gl, this.webGL, worldScene);
+			this.terrain.renderWater();
 			worldScene.renderTranslucent();
 		}
 	}
@@ -431,7 +469,6 @@ public class War3MapViewer extends ModelViewer {
 	}
 
 	private static final int MAXIMUM_ACCEPTED = 1 << 30;
-	public final Terrain terrain;
 
 	/**
 	 * Returns a power of two size for the given target capacity.

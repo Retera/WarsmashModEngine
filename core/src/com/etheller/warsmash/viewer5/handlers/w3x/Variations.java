@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Variations {
-	private static final Map<String, Integer> CLIFF_VARS;
-	private static final Map<String, Integer> CITY_CLIFF_VARS;
+	public static final Map<String, Integer> CLIFF_VARS;
+	public static final Map<String, Integer> CITY_CLIFF_VARS;
 
 	static {
 		final Map<String, Integer> cliffVariations = new HashMap<>();

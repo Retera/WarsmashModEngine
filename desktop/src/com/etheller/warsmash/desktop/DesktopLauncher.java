@@ -1,5 +1,6 @@
 package com.etheller.warsmash.desktop;
 
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL33;
 
@@ -29,6 +30,7 @@ public class DesktopLauncher {
 				GL31.glDrawArraysInstanced(mode, first, count, instanceCount);
 			}
 		};
+		Extensions.GL_BGRA = GL12.GL_BGRA;
 		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.useGL30 = true;
 		config.gles30ContextMajorVersion = 3;

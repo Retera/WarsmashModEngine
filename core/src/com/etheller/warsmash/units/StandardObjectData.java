@@ -493,6 +493,17 @@ public class StandardObjectData {
 			return 0;
 		}
 
+		@Override
+		public float getFieldFloatValue(final String field) {
+			for (final DataTable table : this.dataSource.getTables()) {
+				final Element element = table.get(this.id);
+				if ((element != null) && element.hasField(field)) {
+					return element.getFieldFloatValue(field);
+				}
+			}
+			return 0f;
+		}
+
 		/*
 		 * (non-Javadoc) I'm not entirely sure this is still safe to use
 		 *

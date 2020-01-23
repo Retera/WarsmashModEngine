@@ -23,6 +23,25 @@ public class Corner {
 	private int cliffTexture;
 	private int layerHeight;
 
+	public Corner() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public Corner(final Corner other) {
+		this.groundHeight = other.groundHeight;
+		this.waterHeight = other.waterHeight;
+		this.mapEdge = other.mapEdge;
+		this.ramp = other.ramp;
+		this.blight = other.blight;
+		this.water = other.water;
+		this.boundary = other.boundary;
+		this.groundTexture = other.groundTexture;
+		this.cliffVariation = other.cliffVariation;
+		this.groundVariation = other.groundVariation;
+		this.cliffTexture = other.cliffTexture;
+		this.layerHeight = other.layerHeight;
+	}
+
 	public void load(final LittleEndianDataInputStream stream) throws IOException {
 		this.groundHeight = (stream.readShort() - 8192) / (float) 512;
 

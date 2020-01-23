@@ -17,6 +17,8 @@ public interface GameObject {
 
 	public int getFieldValue(String field, int index);
 
+	public float getFieldFloatValue(String field);
+
 	public List<? extends GameObject> getFieldAsList(String field, ObjectData objectData);
 
 	public String getId();

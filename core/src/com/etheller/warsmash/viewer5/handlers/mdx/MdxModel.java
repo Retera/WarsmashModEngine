@@ -347,4 +347,8 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 	}
 
+	public List<Camera> getCameras() {
+		return this.cameras;
+	}
+
 }

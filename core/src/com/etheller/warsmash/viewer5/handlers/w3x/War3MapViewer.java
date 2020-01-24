@@ -47,6 +47,8 @@ import mpq.MPQArchive;
 import mpq.MPQException;
 
 public class War3MapViewer extends ModelViewer {
+	private static final War3ID UNIT_FILE = War3ID.fromString("umdl");
+	private static final War3ID ITEM_FILE = War3ID.fromString("ifil");
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
 	public static final StreamDataCallbackImplementation streamDataCallback = new StreamDataCallbackImplementation();
@@ -253,10 +255,11 @@ public class War3MapViewer extends ModelViewer {
 		final War3MapDoo doo = this.mapMpq.readDoodads();
 
 		for (final com.etheller.warsmash.parsers.w3x.doo.Doodad doodad : doo.getDoodads()) {
-
+			WorldEditorDataType type = WorldEditorDataType.DOODADS;
 			MutableGameObject row = modifications.getDoodads().get(doodad.getId());
 			if (row == null) {
 				row = modifications.getDestructibles().get(doodad.getId());
+				type = WorldEditorDataType.DESTRUCTIBLES;
 			}
 			String file = row.readSLKTag("file");
 			final int numVar = row.readSLKTagInt("numVar");
@@ -294,7 +297,7 @@ public class War3MapViewer extends ModelViewer {
 				model = (MdxModel) this.load(fileVar, this.mapPathSolver, this.solverParams);
 			}
 
-			this.doodads.add(new Doodad(this, model, row, doodad));
+			this.doodads.add(new Doodad(this, model, row, doodad, type));
 		}
 
 		// Cliff/Terrain doodads.
@@ -341,10 +344,19 @@ public class War3MapViewer extends ModelViewer {
 				row = modifications.getUnits().get(unit.getId());
 				if (row == null) {
 					row = modifications.getItems().get(unit.getId());
-				}
+					path = row.getFieldAsString(ITEM_FILE, 0);
 
-				if (row != null) {
-					path = row.readSLKTag("file");
+					if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
+						path = path.substring(0, path.length() - 4);
+					}
+					if (row.readSLKTagInt("fileVerFlags") == 2) {
+						path += "_V1";
+					}
+
+					path += ".mdx";
+				}
+				else {
+					path = row.getFieldAsString(UNIT_FILE, 0);
 
 					if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
 						path = path.substring(0, path.length() - 4);
@@ -402,6 +414,15 @@ public class War3MapViewer extends ModelViewer {
 			worldScene.renderOpaque();
 			this.terrain.renderWater();
 			worldScene.renderTranslucent();
+
+			final List<Scene> scenes = this.scenes;
+			for (final Scene scene : scenes) {
+				if (scene != worldScene) {
+					scene.startFrame();
+					scene.renderOpaque();
+					scene.renderTranslucent();
+				}
+			}
 		}
 	}
 

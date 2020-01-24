@@ -73,12 +73,16 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(scene);
 
-		this.mainModel = (MdxModel) this.viewer.load("Buildings\\Undead\\Necropolis\\Necropolis.mdx", new PathSolver() {
-			@Override
-			public SolvedPath solve(final String src, final Object solverParams) {
-				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
-			}
-		}, null);
+//		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
+		this.mainModel = (MdxModel) this.viewer.load("Units\\NightElf\\DruidOfTheClaw\\DruidOfTheClaw_Portrait.mdx",
+				new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+
+		this.modelCamera = this.mainModel.cameras.get(0);
 
 		this.mainInstance = (MdxComplexInstance) this.mainModel.addInstance(0);
 
@@ -343,6 +347,9 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 	private int frame = 0;
 	private MdxComplexInstance mainInstance;
 	private MdxModel mainModel;
+	private com.etheller.warsmash.viewer5.handlers.mdx.Camera modelCamera;
+	private final float[] cameraPositionTemp = new float[3];
+	private final float[] cameraTargetTemp = new float[3];
 
 	@Override
 	public void render() {
@@ -406,6 +413,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		private Vector3 target;
 		private Vector3 worldUp;
 		private Vector3 vecHeap;
+		private Vector3 vecHeap2;
 		private Quaternion quatHeap;
 		private Quaternion quatHeap2;
 
@@ -427,6 +435,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			this.target = new Vector3(0, 0, 50);
 			this.worldUp = new Vector3(0, 0, 1);
 			this.vecHeap = new Vector3();
+			this.vecHeap2 = new Vector3();
 			this.quatHeap = new Quaternion();
 			this.quatHeap2 = new Quaternion();
 
@@ -451,6 +460,34 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			this.quatHeap.transform(this.position);
 			this.position.scl(this.distance);
 			this.position = this.position.add(this.target);
+			if (WarsmashGdxGame.this.modelCamera != null) {
+				WarsmashGdxGame.this.modelCamera.getPositionTranslation(WarsmashGdxGame.this.cameraPositionTemp,
+						WarsmashGdxGame.this.mainInstance.sequence, WarsmashGdxGame.this.mainInstance.frame,
+						WarsmashGdxGame.this.mainInstance.counter);
+				WarsmashGdxGame.this.modelCamera.getTargetTranslation(WarsmashGdxGame.this.cameraTargetTemp,
+						WarsmashGdxGame.this.mainInstance.sequence, WarsmashGdxGame.this.mainInstance.frame,
+						WarsmashGdxGame.this.mainInstance.counter);
+
+				this.position.set(WarsmashGdxGame.this.modelCamera.position);
+				this.target.set(WarsmashGdxGame.this.modelCamera.targetPosition);
+//				this.vecHeap2.set(this.target);
+//				this.vecHeap2.sub(this.position);
+//				this.vecHeap.set(this.vecHeap2);
+//				this.vecHeap.crs(this.worldUp);
+//				this.vecHeap.crs(this.vecHeap2);
+//				this.vecHeap.nor();
+//				this.vecHeap.scl(this.camera.rect.height / 2f);
+//				this.position.add(this.vecHeap);
+
+				this.position.add(WarsmashGdxGame.this.cameraPositionTemp[0],
+						WarsmashGdxGame.this.cameraPositionTemp[1], WarsmashGdxGame.this.cameraPositionTemp[2]);
+				this.target.add(WarsmashGdxGame.this.cameraTargetTemp[0], WarsmashGdxGame.this.cameraTargetTemp[1],
+						WarsmashGdxGame.this.cameraTargetTemp[2]);
+				this.camera.perspective(WarsmashGdxGame.this.modelCamera.fieldOfView,
+						Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight(),
+						WarsmashGdxGame.this.modelCamera.nearClippingPlane,
+						WarsmashGdxGame.this.modelCamera.farClippingPlane);
+			}
 
 			this.camera.moveToAndFace(this.position, this.target, this.worldUp);
 		}

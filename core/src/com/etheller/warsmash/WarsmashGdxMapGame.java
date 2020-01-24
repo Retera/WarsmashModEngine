@@ -11,6 +11,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Quaternion;
@@ -23,7 +24,11 @@ import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
+import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.SolvedPath;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
@@ -34,6 +39,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	private BitmapFont font;
 	private SpriteBatch batch;
+	private CameraManager portraitCameraManager;
+	private MdxModel portraitModel;
+	private MdxComplexInstance portraitInstance;
+	private final float[] cameraPositionTemp = new float[3];
+	private final float[] cameraTargetTemp = new float[3];
 
 	@Override
 	public void create() {
@@ -74,7 +84,35 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.cameraManager.setupCamera(this.viewer.worldScene);
 
 		System.out.println("Loaded");
-		Gdx.gl30.glClearColor(0.5f, 0.5f, 0.5f, 1); // TODO remove white background
+		Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1); // TODO remove white background
+		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
+
+		this.portraitScene = this.viewer.addScene();
+		this.portraitCameraManager = new CameraManager();
+		this.portraitCameraManager.setupCamera(this.portraitScene);
+
+//		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
+		this.portraitModel = (MdxModel) this.viewer.load("Units\\NightElf\\Runner\\Runner_Portrait.mdx",
+				new PathSolver() {
+					@Override
+					public SolvedPath solve(final String src, final Object solverParams) {
+						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+					}
+				}, null);
+
+		this.portraitCameraManager.modelCamera = this.portraitModel.cameras.get(0);
+		this.portraitScene.camera.viewport(new Rectangle(100, 0, 100, 100));
+
+		this.portraitInstance = (MdxComplexInstance) this.portraitModel.addInstance(0);
+
+		this.portraitInstance.setTeamColor(1);
+
+		this.portraitInstance.setScene(this.portraitScene);
+
+		final int animIndex = 0;
+		this.portraitInstance.setSequence(animIndex);
+
+		this.portraitInstance.setSequenceLoopMode(0);
 
 		this.font = new BitmapFont();
 		this.batch = new SpriteBatch();
@@ -87,6 +125,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
 		this.cameraManager.target.add(this.cameraVelocity.x, this.cameraVelocity.y, 0);
 		this.cameraManager.updateCamera();
+		this.portraitCameraManager.updateCamera();
 		this.viewer.updateAndRender();
 
 //		gl.glDrawElements(GL20.GL_TRIANGLES, this.elements, GL20.GL_UNSIGNED_SHORT, this.faceOffset);
@@ -94,6 +133,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //		this.batch.begin();
 //		this.font.draw(this.batch, Integer.toString(Gdx.graphics.getFramesPerSecond()), 0, 0);
 //		this.batch.end();
+
+		if (this.portraitInstance.sequenceEnded) {
+			this.portraitInstance
+					.setSequence((this.portraitInstance.sequence + 1) % this.portraitModel.getSequences().size());
+		}
 	}
 
 	@Override
@@ -112,12 +156,22 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public void resize(final int width, final int height) {
+		this.tempRect.x = 0;
+		this.tempRect.y = 0;
 		this.tempRect.width = width;
 		this.tempRect.height = height;
 		this.cameraManager.camera.viewport(this.tempRect);
+		final float portraitTestWidth = (100 / 640f) * width;
+		final float portraitTestHeight = (100 / 480f) * height;
+		this.tempRect.x = portraitTestWidth;
+		this.tempRect.y = 0;
+		this.tempRect.width = portraitTestWidth;
+		this.tempRect.height = portraitTestHeight;
+		this.portraitScene.camera.viewport(this.tempRect);
 	}
 
 	class CameraManager {
+		public com.etheller.warsmash.viewer5.handlers.mdx.Camera modelCamera;
 		private CanvasProvider canvas;
 		private Camera camera;
 		private float moveSpeed;
@@ -175,6 +229,27 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			this.quatHeap.transform(this.position);
 			this.position.scl(this.distance);
 			this.position = this.position.add(this.target);
+			if (this.modelCamera != null) {
+				this.modelCamera.getPositionTranslation(WarsmashGdxMapGame.this.cameraPositionTemp,
+						WarsmashGdxMapGame.this.portraitInstance.sequence,
+						WarsmashGdxMapGame.this.portraitInstance.frame,
+						WarsmashGdxMapGame.this.portraitInstance.counter);
+				this.modelCamera.getTargetTranslation(WarsmashGdxMapGame.this.cameraTargetTemp,
+						WarsmashGdxMapGame.this.portraitInstance.sequence,
+						WarsmashGdxMapGame.this.portraitInstance.frame,
+						WarsmashGdxMapGame.this.portraitInstance.counter);
+
+				this.position.set(this.modelCamera.position);
+				this.target.set(this.modelCamera.targetPosition);
+
+				this.position.add(WarsmashGdxMapGame.this.cameraPositionTemp[0],
+						WarsmashGdxMapGame.this.cameraPositionTemp[1], WarsmashGdxMapGame.this.cameraPositionTemp[2]);
+				this.target.add(WarsmashGdxMapGame.this.cameraTargetTemp[0],
+						WarsmashGdxMapGame.this.cameraTargetTemp[1], WarsmashGdxMapGame.this.cameraTargetTemp[2]);
+				this.camera.perspective(this.modelCamera.fieldOfView,
+						Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight(), this.modelCamera.nearClippingPlane,
+						this.modelCamera.farClippingPlane);
+			}
 
 			this.camera.moveToAndFace(this.position, this.target, this.worldUp);
 		}
@@ -186,6 +261,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	private final float cameraSpeed = 10.0f;
 	private final Vector2 cameraVelocity = new Vector2();
+	private Scene portraitScene;
 
 	@Override
 	public boolean keyDown(final int keycode) {

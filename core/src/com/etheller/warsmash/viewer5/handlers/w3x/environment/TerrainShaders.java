@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
-public class HiveWEShaders {
+public class TerrainShaders {
 	public static final class Cliffs {
 		private Cliffs() {
 		}
@@ -273,7 +273,7 @@ public class HiveWEShaders {
 				"	gl_Position = is_water ? MVP * vec4((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY, water_height*128.0, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
 				+ //
 				"\r\n" + //
-				"	UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
+				"	UV = vec2(vPosition.x, vPosition.y);\r\n" + //
 				"\r\n" + //
 				"	float ground_height = texelFetch(ground_height_texture, height_pos, 0).r;\r\n" + //
 				"	float value = clamp(water_height - ground_height, 0.f, 1.f);\r\n" + //

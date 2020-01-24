@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.Node;
 import com.etheller.warsmash.viewer5.RenderBatch;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SkeletalNode;
+import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.UpdatableObject;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
@@ -58,6 +59,7 @@ public class MdxComplexInstance extends ModelInstance {
 	public Matrix4[] worldMatrices;
 	public FloatBuffer worldMatricesCopyHeap;
 	public DataTexture boneTexture;
+	public Texture[] replaceableTextures = new Texture[64];
 
 	public MdxComplexInstance(final MdxModel model) {
 		super(model);

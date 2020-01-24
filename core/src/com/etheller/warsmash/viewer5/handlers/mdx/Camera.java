@@ -1,15 +1,16 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import com.etheller.warsmash.parsers.mdlx.AnimationMap;
+import com.etheller.warsmash.util.RenderMathUtils;
 
 public class Camera extends AnimatedObject {
 
-	private final String name;
-	private final float[] position;
-	private final float fieldOfView;
-	private final float farClippingPlane;
-	private final float nearClippingPlane;
-	private final float[] targetPosition;
+	public final String name;
+	public final float[] position;
+	public final float fieldOfView;
+	public final float farClippingPlane;
+	public final float nearClippingPlane;
+	public final float[] targetPosition;
 
 	public Camera(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.Camera camera) {
 		super(model, camera);
@@ -23,11 +24,13 @@ public class Camera extends AnimatedObject {
 	}
 
 	public int getPositionTranslation(final float[] out, final int sequence, final int frame, final int counter) {
-		return this.getVectorValue(out, AnimationMap.KCTR.getWar3id(), sequence, frame, counter, this.position);
+		return this.getVectorValue(out, AnimationMap.KCTR.getWar3id(), sequence, frame, counter,
+				RenderMathUtils.FLOAT_VEC3_ZERO);
 	}
 
 	public int getTargetTranslation(final float[] out, final int sequence, final int frame, final int counter) {
-		return this.getVectorValue(out, AnimationMap.KTTR.getWar3id(), sequence, frame, counter, this.targetPosition);
+		return this.getVectorValue(out, AnimationMap.KTTR.getWar3id(), sequence, frame, counter,
+				RenderMathUtils.FLOAT_VEC3_ZERO);
 	}
 
 	public int getRotation(final float[] out, final int sequence, final int frame, final int counter) {

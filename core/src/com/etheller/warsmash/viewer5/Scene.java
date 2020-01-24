@@ -255,7 +255,7 @@ public class Scene {
 		// If this scene doesn't want alpha, clear it.
 		if (!this.alpha) {
 			gl.glDepthMask(true);
-			gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+			gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 		}
 	}
 

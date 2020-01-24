@@ -302,9 +302,9 @@ public class Terrain {
 
 		updateGroundHeights(new Rectangle(0, 0, width - 1, height - 1));
 
-		this.groundShader = webGL.createShaderProgram(HiveWEShaders.Terrain.vert, HiveWEShaders.Terrain.frag);
-		this.cliffShader = webGL.createShaderProgram(HiveWEShaders.Cliffs.vert, HiveWEShaders.Cliffs.frag);
-		this.waterShader = webGL.createShaderProgram(HiveWEShaders.Water.vert, HiveWEShaders.Water.frag);
+		this.groundShader = webGL.createShaderProgram(TerrainShaders.Terrain.vert, TerrainShaders.Terrain.frag);
+		this.cliffShader = webGL.createShaderProgram(TerrainShaders.Cliffs.vert, TerrainShaders.Cliffs.frag);
+		this.waterShader = webGL.createShaderProgram(TerrainShaders.Water.vert, TerrainShaders.Water.frag);
 
 		// TODO collision bodies (?)
 
@@ -649,6 +649,7 @@ public class Terrain {
 		this.webGL.useShaderProgram(this.groundShader);
 
 		final GL30 gl = Gdx.gl30;
+		gl.glDisable(GL30.GL_CULL_FACE);
 		gl.glDisable(GL30.GL_BLEND);
 
 		gl.glUniformMatrix4fv(this.groundShader.getUniformLocation("MVP"), 1, false,

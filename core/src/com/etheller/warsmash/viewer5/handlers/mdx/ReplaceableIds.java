@@ -13,8 +13,8 @@ public class ReplaceableIds {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			ID_TO_STR.put(Long.valueOf(i), String.format("%2d", i).replace(' ', '0'));
 		}
-		REPLACEABLE_ID_TO_STR.put(Long.valueOf(1), "TeamColor\\TeamColor00");
-		REPLACEABLE_ID_TO_STR.put(Long.valueOf(2), "TeamGlow\\TeamGlow00");
+		REPLACEABLE_ID_TO_STR.put(Long.valueOf(1), "TeamColor\\TeamColor");
+		REPLACEABLE_ID_TO_STR.put(Long.valueOf(2), "TeamGlow\\TeamGlow");
 		REPLACEABLE_ID_TO_STR.put(Long.valueOf(11), "Cliff\\Cliff0");
 		REPLACEABLE_ID_TO_STR.put(Long.valueOf(21), ""); // Used by all cursor models (HumanCursor, OrcCursor,
 															// UndeadCursor, NightElfCursor)

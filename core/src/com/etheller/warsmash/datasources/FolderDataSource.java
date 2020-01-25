@@ -53,7 +53,8 @@ public class FolderDataSource implements DataSource {
 		if ("".equals(filepath)) {
 			return false; // special case for folder data source, dont do this
 		}
-		return Files.exists(this.folderPath.resolve(filepath));
+		final Path resolvedPath = this.folderPath.resolve(filepath);
+		return Files.exists(resolvedPath) && !Files.isDirectory(resolvedPath);
 	}
 
 	@Override

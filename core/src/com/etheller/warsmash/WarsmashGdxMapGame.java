@@ -60,21 +60,21 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
 		System.err.println("Renderer: " + renderer);
 
-//		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor("E:\\Backups\\Warcraft\\Data\\127");
-		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor(
-				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3.mpq\\war3.mpq");
-		final FolderDataSourceDescriptor war3xLocalmpq = new FolderDataSourceDescriptor(
-				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3xLocal.mpq\\enus-war3local.mpq");
+		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor("E:\\Backups\\Warcraft\\Data\\127");
+//		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor(
+//				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3.mpq\\war3.mpq");
+//		final FolderDataSourceDescriptor war3xLocalmpq = new FolderDataSourceDescriptor(
+//				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3xLocal.mpq\\enus-war3local.mpq");
 		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor(
 				"D:\\NEEDS_ORGANIZING\\MPQBuild\\Test");
 		final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
 		this.codebase = new CompoundDataSourceDescriptor(
-				Arrays.<DataSourceDescriptor>asList(war3mpq, war3xLocalmpq, testingFolder, currentFolder))
+				Arrays.<DataSourceDescriptor>asList(war3mpq, /* war3xLocalmpq, */ testingFolder, currentFolder))
 						.createDataSource();
 		this.viewer = new War3MapViewer(this.codebase, this);
 
 		try {
-			this.viewer.loadMap("ReforgedGeorgeVacation.w3x");
+			this.viewer.loadMap("(2)BootyBay.w3m");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -101,7 +101,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				}, null);
 
 		this.portraitCameraManager.modelCamera = this.portraitModel.cameras.get(0);
-		this.portraitScene.camera.viewport(new Rectangle(100, 0, 100, 100));
+		this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
 
 		this.portraitInstance = (MdxComplexInstance) this.portraitModel.addInstance(0);
 
@@ -120,10 +120,15 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		Gdx.input.setInputProcessor(this);
 	}
 
+	private int frame = 0;
+
 	@Override
 	public void render() {
+		final float deltaTime = Gdx.graphics.getDeltaTime();
 		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
-		this.cameraManager.target.add(this.cameraVelocity.x, this.cameraVelocity.y, 0);
+		this.cameraManager.target.add(this.cameraVelocity.x * deltaTime, this.cameraVelocity.y * deltaTime, 0);
+		this.cameraManager.target.z = this.viewer.terrain.getGroundHeight(this.cameraManager.target.x,
+				this.cameraManager.target.y);
 		this.cameraManager.updateCamera();
 		this.portraitCameraManager.updateCamera();
 		this.viewer.updateAndRender();
@@ -137,6 +142,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		if (this.portraitInstance.sequenceEnded) {
 			this.portraitInstance
 					.setSequence((this.portraitInstance.sequence + 1) % this.portraitModel.getSequences().size());
+		}
+
+		if ((this.frame++ % 1000) == 0) {
+			System.out.println(Gdx.graphics.getFramesPerSecond());
 		}
 	}
 
@@ -156,6 +165,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public void resize(final int width, final int height) {
+		super.resize(width, height);
 		this.tempRect.x = 0;
 		this.tempRect.y = 0;
 		this.tempRect.width = width;
@@ -246,9 +256,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 						WarsmashGdxMapGame.this.cameraPositionTemp[1], WarsmashGdxMapGame.this.cameraPositionTemp[2]);
 				this.target.add(WarsmashGdxMapGame.this.cameraTargetTemp[0],
 						WarsmashGdxMapGame.this.cameraTargetTemp[1], WarsmashGdxMapGame.this.cameraTargetTemp[2]);
-				this.camera.perspective(this.modelCamera.fieldOfView,
-						Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight(), this.modelCamera.nearClippingPlane,
-						this.modelCamera.farClippingPlane);
+				this.camera.perspective(this.modelCamera.fieldOfView, this.camera.getAspect(),
+						this.modelCamera.nearClippingPlane, this.modelCamera.farClippingPlane);
 			}
 
 			this.camera.moveToAndFace(this.position, this.target, this.worldUp);
@@ -259,7 +268,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //	}
 	}
 
-	private final float cameraSpeed = 10.0f;
+	private final float cameraSpeed = 4096.0f; // per second
 	private final Vector2 cameraVelocity = new Vector2();
 	private Scene portraitScene;
 
@@ -304,6 +313,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
+		System.out.println(screenX + "," + screenY);
 		return false;
 	}
 

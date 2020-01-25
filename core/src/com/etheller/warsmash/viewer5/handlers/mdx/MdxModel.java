@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.etheller.warsmash.parsers.mdlx.Extent;
 import com.etheller.warsmash.parsers.mdlx.MdlxModel;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
@@ -131,7 +130,6 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		}
 
 		final GL20 gl = viewer.gl;
-		boolean usingTeamTextures = false;
 
 		// Textures.
 		for (final com.etheller.warsmash.parsers.mdlx.Texture texture : parser.getTextures()) {
@@ -140,15 +138,19 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 			final int flags = texture.getFlags();
 
 			if (replaceableId != 0) {
-				path = "ReplaceableTextures\\" + ReplaceableIds.getPathString(replaceableId) + ".blp";
-
-				if ((replaceableId == 1) || (replaceableId == 2)) {
-					usingTeamTextures = true;
-				}
+				// TODO This uses dumb, stupid, terrible, no-good hardcoded replaceable IDs
+				// instead of the real system, because currently MdxSimpleInstance is not
+				// supporting it correctly.
+				final String idString = ((replaceableId == 1) || (replaceableId == 2)) ? ReplaceableIds.getIdString(0)
+						: "";
+				path = "ReplaceableTextures\\" + ReplaceableIds.getPathString(replaceableId) + idString + ".blp";
 			}
 
 			if (reforged && !path.endsWith(".dds")) {
 				path = path.substring(0, path.length() - 4) + ".dds";
+			}
+			else if ("".equals(path)) {
+				path = "Textures\\white.blp";
 			}
 
 			final Texture viewerTexture = (Texture) viewer.load(path, pathSolver, solverParams);
@@ -166,24 +168,6 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 			this.replaceables.add(replaceableId);
 			this.textures.add(viewerTexture);
-		}
-
-		// Start loading the team color and glow textures if this model uses them and
-		// they weren't loaded previously.
-		if (usingTeamTextures) {
-			final List<Texture> teamColors = reforged ? MdxHandler.reforgedTeamColors : MdxHandler.teamColors;
-			final List<Texture> teamGlows = reforged ? MdxHandler.reforgedTeamGlows : MdxHandler.teamGlows;
-
-			if (teamColors.isEmpty()) {
-				for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-					final String id = ReplaceableIds.getIdString(i);
-
-					teamColors.add((Texture) viewer.load("ReplaceableTextures\\TeamColor\\TeamColor" + id + texturesExt,
-							pathSolver, solverParams));
-					teamGlows.add((Texture) viewer.load("ReplaceableTextures\\TeamGlow\\TeamGlow" + id + texturesExt,
-							pathSolver, solverParams));
-				}
-			}
 		}
 
 		// Geoset animations

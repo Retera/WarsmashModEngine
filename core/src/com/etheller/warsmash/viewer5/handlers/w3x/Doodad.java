@@ -4,10 +4,13 @@ import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 
 public class Doodad {
+	private static final War3ID TEX_FILE = War3ID.fromString("btxf");
+	private static final War3ID TEX_ID = War3ID.fromString("btxi");
 	private final ModelInstance instance;
 	private final MutableGameObject row;
 
@@ -29,6 +32,17 @@ public class Doodad {
 		if (type == WorldEditorDataType.DOODADS) {
 			final float defScale = row.readSLKTagFloat("defScale");
 			instance.uniformScale(defScale);
+		}
+		if (type == WorldEditorDataType.DESTRUCTIBLES) {
+			// TODO destructables need to be their own type, game simulation, etc
+			String replaceableTextureFile = row.getFieldAsString(TEX_FILE, 0);
+			final int replaceableTextureId = row.getFieldAsInteger(TEX_ID, 0);
+			if ((replaceableTextureFile != null) && (replaceableTextureFile.length() > 1)) {
+				if (!replaceableTextureFile.toLowerCase().endsWith(".blp")) {
+					replaceableTextureFile += ".blp";
+				}
+				instance.setReplaceableTexture(replaceableTextureId, replaceableTextureFile);
+			}
 		}
 		instance.setScene(map.worldScene);
 

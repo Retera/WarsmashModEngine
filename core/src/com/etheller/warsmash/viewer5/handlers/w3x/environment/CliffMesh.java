@@ -60,8 +60,10 @@ public class CliffMesh {
 
 	public void renderQueue(final float[] position) {
 		if (this.renderJobs.remaining() < 4) {
-			final FloatBuffer newRenderJobs = ByteBuffer.allocateDirect(this.renderJobs.capacity() * 2)
-					.order(ByteOrder.nativeOrder()).asFloatBuffer();
+			final int newCapacity = this.renderJobs.capacity() * 2;
+			final FloatBuffer newRenderJobs = ByteBuffer.allocateDirect(newCapacity * 4).order(ByteOrder.nativeOrder())
+					.asFloatBuffer();
+			newRenderJobs.clear();
 			this.renderJobs.flip();
 			newRenderJobs.put(this.renderJobs);
 			this.renderJobs = newRenderJobs;
@@ -79,32 +81,24 @@ public class CliffMesh {
 		this.gl.glBufferData(GL20.GL_ARRAY_BUFFER, this.renderJobs.remaining() * 4, this.renderJobs,
 				GL20.GL_DYNAMIC_DRAW);
 
-		this.gl.glEnableVertexAttribArray(0);
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.vertexBuffer);
 		this.gl.glVertexAttribPointer(0, 3, GL20.GL_FLOAT, false, 0, 0);
 
-		this.gl.glEnableVertexAttribArray(1);
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.uvBuffer);
 		this.gl.glVertexAttribPointer(1, 2, GL20.GL_FLOAT, false, 0, 0);
 
-		this.gl.glEnableVertexAttribArray(2);
-		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.normalBuffer);
-		this.gl.glVertexAttribPointer(2, 3, GL20.GL_FLOAT, false, 0, 0);
+//		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.normalBuffer);
+//		this.gl.glVertexAttribPointer(2, 3, GL20.GL_FLOAT, false, 0, 0);
 
-		this.gl.glEnableVertexAttribArray(3);
-		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.normalBuffer);
-		this.gl.glVertexAttribPointer(3, 4, GL20.GL_FLOAT, false, 0, 0);
-		this.gl.glVertexAttribDivisor(3, 1);
+		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.instanceBuffer);
+		this.gl.glVertexAttribPointer(2, 4, GL20.GL_FLOAT, false, 0, 0);
+		this.gl.glVertexAttribDivisor(2, 1);
 
 		this.gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 		this.gl.glDrawElementsInstanced(GL20.GL_TRIANGLES, this.indices, GL30.GL_UNSIGNED_SHORT, 0,
 				this.renderJobs.remaining() / 4);
 
-		this.gl.glVertexAttribDivisor(3, 0); // ToDo use vao
-		this.gl.glDisableVertexAttribArray(0);
-		this.gl.glDisableVertexAttribArray(1);
-		this.gl.glDisableVertexAttribArray(2);
-		this.gl.glDisableVertexAttribArray(3);
+		this.gl.glVertexAttribDivisor(2, 0); // ToDo use vao
 
 		this.renderJobs.clear();
 	}

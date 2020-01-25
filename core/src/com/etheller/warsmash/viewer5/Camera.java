@@ -146,6 +146,10 @@ public class Camera {
 		this.dirty = true;
 	}
 
+	public float getAspect() {
+		return this.aspect;
+	}
+
 	public void setLocation(final Vector3 location) {
 		this.location.set(location);
 

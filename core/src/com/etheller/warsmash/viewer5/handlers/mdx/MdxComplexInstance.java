@@ -10,9 +10,11 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.GenericNode;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.Node;
+import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.RenderBatch;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SkeletalNode;
@@ -43,7 +45,6 @@ public class MdxComplexInstance extends ModelInstance {
 	public int sequence = -1;
 	public int sequenceLoopMode = 0;
 	public boolean sequenceEnded = false;
-	public int teamColor = 0;
 	public float[] vertexColor = { 1, 1, 1, 1 };
 	// Particles do not spawn when the sequence is -1, or when the sequence finished
 	// and it's not repeating
@@ -59,7 +60,7 @@ public class MdxComplexInstance extends ModelInstance {
 	public Matrix4[] worldMatrices;
 	public FloatBuffer worldMatricesCopyHeap;
 	public DataTexture boneTexture;
-	public Texture[] replaceableTextures = new Texture[64];
+	public Texture[] replaceableTextures = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
 
 	public MdxComplexInstance(final MdxModel model) {
 		super(model);
@@ -572,9 +573,19 @@ public class MdxComplexInstance extends ModelInstance {
 	 * Set the team color of this instance.
 	 */
 	public MdxComplexInstance setTeamColor(final int id) {
-		this.teamColor = id;
-
+		this.replaceableTextures[1] = (Texture) this.model.viewer.load(
+				"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(id) + ".blp",
+				PathSolver.DEFAULT, null);
+		this.replaceableTextures[2] = (Texture) this.model.viewer.load(
+				"ReplaceableTextures\\" + ReplaceableIds.getPathString(2) + ReplaceableIds.getIdString(id) + ".blp",
+				PathSolver.DEFAULT, null);
 		return this;
+	}
+
+	@Override
+	public void setReplaceableTexture(final int replaceableTextureId, final String replaceableTextureFile) {
+		this.replaceableTextures[replaceableTextureId] = (Texture) this.model.viewer.load(replaceableTextureFile,
+				PathSolver.DEFAULT, null);
 	}
 
 	/**

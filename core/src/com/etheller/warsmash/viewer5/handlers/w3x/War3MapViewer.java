@@ -18,12 +18,14 @@ import com.etheller.warsmash.common.LoadGenericCallback;
 import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.MpqDataSource;
+import com.etheller.warsmash.datasources.SubdirDataSource;
 import com.etheller.warsmash.parsers.w3x.War3Map;
 import com.etheller.warsmash.parsers.w3x.doo.War3MapDoo;
 import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
@@ -42,12 +44,20 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain.Splat;
 
 import mpq.MPQArchive;
 import mpq.MPQException;
 
 public class War3MapViewer extends ModelViewer {
 	private static final War3ID UNIT_FILE = War3ID.fromString("umdl");
+	private static final War3ID UBER_SPLAT = War3ID.fromString("uubs");
+	private static final War3ID UNIT_SHADOW = War3ID.fromString("ushu");
+	private static final War3ID UNIT_SHADOW_X = War3ID.fromString("ushx");
+	private static final War3ID UNIT_SHADOW_Y = War3ID.fromString("ushy");
+	private static final War3ID UNIT_SHADOW_W = War3ID.fromString("ushw");
+	private static final War3ID UNIT_SHADOW_H = War3ID.fromString("ushh");
+	private static final War3ID BUILDING_SHADOW = War3ID.fromString("ushb");
 	private static final War3ID ITEM_FILE = War3ID.fromString("ifil");
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
@@ -96,7 +106,6 @@ public class War3MapViewer extends ModelViewer {
 
 		this.worldScene = this.addScene();
 
-		loadSLKs();
 	}
 
 	public void loadSLKs() {
@@ -161,6 +170,7 @@ public class War3MapViewer extends ModelViewer {
 	}
 
 	public void loadMap(final String mapFilePath) throws IOException {
+		loadSLKs();
 		final War3Map war3Map = new War3Map(this.gameDataSource, mapFilePath);
 
 		this.mapMpq = war3Map;
@@ -175,23 +185,31 @@ public class War3MapViewer extends ModelViewer {
 
 		tileset = w3iFile.getTileset();
 
-		final DataSource tilesetSource;
+		DataSource tilesetSource;
 		try {
 			// Slightly complex. Here's the theory:
 			// 1.) Copy map into RAM
 			// 2.) Setup a Data Source that will read assets
 			// from either the map or the game, giving the map priority.
 			SeekableByteChannel sbc;
-			try (InputStream mapStream = war3Map.getCompoundDataSource().getResourceAsStream(tileset + ".mpq")) {
-				final byte[] mapData = IOUtils.toByteArray(mapStream);
-				sbc = new SeekableInMemoryByteChannel(mapData);
-				final DataSource internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
-				tilesetSource = new CompoundDataSource(
-						Arrays.asList(war3Map.getCompoundDataSource(), internalMpqContentsDataSource));
+			final CompoundDataSource compoundDataSource = war3Map.getCompoundDataSource();
+			try (InputStream mapStream = compoundDataSource.getResourceAsStream(tileset + ".mpq")) {
+				if (mapStream == null) {
+					tilesetSource = new CompoundDataSource(Arrays.asList(compoundDataSource,
+							new SubdirDataSource(compoundDataSource, tileset + ".mpq/")));
+				}
+				else {
+					final byte[] mapData = IOUtils.toByteArray(mapStream);
+					sbc = new SeekableInMemoryByteChannel(mapData);
+					final DataSource internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
+					tilesetSource = new CompoundDataSource(
+							Arrays.asList(compoundDataSource, internalMpqContentsDataSource));
+				}
 			}
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
+			catch (final IOException exc) {
+				tilesetSource = new CompoundDataSource(
+						Arrays.asList(compoundDataSource, new SubdirDataSource(compoundDataSource, tileset + ".mpq/")));
+			}
 		}
 		catch (final MPQException e) {
 			throw new RuntimeException(e);
@@ -202,8 +220,8 @@ public class War3MapViewer extends ModelViewer {
 
 		final War3MapW3e terrainData = this.mapMpq.readEnvironment();
 
-		this.terrain = new Terrain(terrainData, this.webGL, this.dataSource, new WorldEditStrings(this.dataSource),
-				this);
+		this.terrain = new Terrain(terrainData, w3iFile, this.webGL, this.dataSource,
+				new WorldEditStrings(this.dataSource), this);
 
 		final float[] centerOffset = terrainData.getCenterOffset();
 		final int[] mapSize = terrainData.getMapSize();
@@ -264,7 +282,7 @@ public class War3MapViewer extends ModelViewer {
 			String file = row.readSLKTag("file");
 			final int numVar = row.readSLKTagInt("numVar");
 
-			if (file.endsWith(".mdx")) {
+			if (file.endsWith(".mdx") || file.endsWith(".mdl")) {
 				file = file.substring(0, file.length() - 4);
 			}
 
@@ -337,25 +355,28 @@ public class War3MapViewer extends ModelViewer {
 			String path = null;
 
 			// Hardcoded?
+			WorldEditorDataType type = null;
 			if (sloc.equals(unit.getId())) {
 				path = "Objects\\StartLocation\\StartLocation.mdx";
+				type = null; /// ??????
 			}
 			else {
 				row = modifications.getUnits().get(unit.getId());
 				if (row == null) {
 					row = modifications.getItems().get(unit.getId());
-					path = row.getFieldAsString(ITEM_FILE, 0);
+					if (row != null) {
+						type = WorldEditorDataType.ITEM;
+						path = row.getFieldAsString(ITEM_FILE, 0);
 
-					if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
-						path = path.substring(0, path.length() - 4);
-					}
-					if (row.readSLKTagInt("fileVerFlags") == 2) {
-						path += "_V1";
-					}
+						if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
+							path = path.substring(0, path.length() - 4);
+						}
 
-					path += ".mdx";
+						path += ".mdx";
+					}
 				}
 				else {
+					type = WorldEditorDataType.UNITS;
 					path = row.getFieldAsString(UNIT_FILE, 0);
 
 					if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
@@ -366,18 +387,60 @@ public class War3MapViewer extends ModelViewer {
 					}
 
 					path += ".mdx";
+
+					final String uberSplat = row.getFieldAsString(UBER_SPLAT, 0);
+					if (uberSplat != null) {
+						final Element uberSplatInfo = this.terrain.uberSplatTable.get(uberSplat);
+						if (uberSplatInfo != null) {
+							final String texturePath = uberSplatInfo.getField("Dir") + "\\"
+									+ uberSplatInfo.getField("file") + ".blp";
+							if (!this.terrain.splats.containsKey(texturePath)) {
+								this.terrain.splats.put(texturePath, new Splat());
+							}
+							final float x = unit.getLocation()[0];
+							final float y = unit.getLocation()[1];
+							final float s = uberSplatInfo.getFieldFloatValue("Scale");
+							this.terrain.splats.get(texturePath).locations
+									.add(new float[] { x - s, y - s, x + s, y + s, 1 });
+						}
+					}
+
+					final String unitShadow = row.getFieldAsString(UNIT_SHADOW, 0);
+					if ((unitShadow != null) && !"_".equals(unitShadow)) {
+						final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
+						final float shadowX = row.getFieldAsFloat(UNIT_SHADOW_X, 0);
+						final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
+						final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
+						final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
+						if (!this.terrain.splats.containsKey(texture)) {
+							final Splat splat = new Splat();
+							splat.opacity = 0.5f;
+							this.terrain.splats.put(texture, splat);
+						}
+						final float x = unit.getLocation()[0] - shadowX;
+						final float y = unit.getLocation()[1] - shadowY;
+						this.terrain.splats.get(texture).locations
+								.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+					}
+
+					final String buildingShadow = row.getFieldAsString(BUILDING_SHADOW, 0);
+					if ((buildingShadow != null) && !"_".equals(buildingShadow)) {
+						this.terrain.addShadow(buildingShadow, unit.getLocation()[0], unit.getLocation()[1]);
+					}
 				}
 			}
 
 			if (path != null) {
 				final MdxModel model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
 
-				this.units.add(new Unit(this, model, row, unit));
+				this.units.add(new Unit(this, model, row, unit, type));
 			}
 			else {
 				System.err.println("Unknown unit ID: " + unit.getId());
 			}
 		}
+
+		this.terrain.loadSplats();
 
 		this.unitsReady = true;
 		this.anyReady = true;
@@ -410,8 +473,9 @@ public class War3MapViewer extends ModelViewer {
 
 			worldScene.startFrame();
 			this.terrain.renderGround();
-//			this.terrain.renderCliffs();
+			this.terrain.renderCliffs();
 			worldScene.renderOpaque();
+			this.terrain.renderUberSplats();
 			this.terrain.renderWater();
 			worldScene.renderTranslucent();
 

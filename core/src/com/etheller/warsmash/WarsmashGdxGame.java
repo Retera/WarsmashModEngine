@@ -74,7 +74,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.cameraManager.setupCamera(scene);
 
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
-		this.mainModel = (MdxModel) this.viewer.load("Units\\NightElf\\DruidOfTheClaw\\DruidOfTheClaw_Portrait.mdx",
+		this.mainModel = (MdxModel) this.viewer.load("Doodads\\Cinematic\\RisingWaterDoodad\\RisingWaterDoodad.mdx",
 				new PathSolver() {
 					@Override
 					public SolvedPath solve(final String src, final Object solverParams) {
@@ -82,7 +82,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 					}
 				}, null);
 
-		this.modelCamera = this.mainModel.cameras.get(0);
+//		this.modelCamera = this.mainModel.cameras.get(0);
 
 		this.mainInstance = (MdxComplexInstance) this.mainModel.addInstance(0);
 

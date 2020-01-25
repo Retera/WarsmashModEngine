@@ -29,6 +29,7 @@ public abstract class RawOpenGLTextureResource extends Texture {
 	private int wrapT = GL20.GL_CLAMP_TO_EDGE;
 	private final int magFilter = GL20.GL_LINEAR;
 	private final int minFilter = GL20.GL_LINEAR;
+	private ByteBuffer data;
 
 	public RawOpenGLTextureResource(final ModelViewer viewer, final String extension, final PathSolver pathSolver,
 			final String fetchUrl, final ResourceHandler handler) {
@@ -124,6 +125,7 @@ public abstract class RawOpenGLTextureResource extends Texture {
 		}
 
 		buffer.flip();
+		this.data = buffer;
 
 		gl.glBindTexture(GL20.GL_TEXTURE_2D, this.handle);
 
@@ -138,6 +140,23 @@ public abstract class RawOpenGLTextureResource extends Texture {
 		this.width = imageWidth;
 		this.height = imageHeight;
 //		}
+	}
+
+	/**
+	 * I really don't like holding the reference to the original buffer like this.
+	 * Seems wasteful. It's already on the GPU. However, while porting some code for
+	 * shadow maps I hit a point where I really finally felt obligated to add this
+	 * (there is some code in the Terrain stuff that should've had this, but
+	 * doesn't, and does its own texture management as a result).
+	 *
+	 * So, as a note to future authors, please reinvent the system such that this
+	 * cached buffer data is only stored for shadow maps and terrain textures or
+	 * whatever. Right now, this holds a reference to these guys on every texture,
+	 * on every unit, on every doodad, etc. Java will not be able to garbage collect
+	 * them because we hold on to the buffer in "update()".
+	 */
+	public ByteBuffer getData() {
+		return this.data;
 	}
 
 }

@@ -10,7 +10,6 @@ import javax.imageio.ImageIO;
 import com.badlogic.gdx.graphics.GL30;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.util.ImageUtils;
-import com.etheller.warsmash.viewer5.gl.Extensions;
 
 public class GroundTexture {
 	public int id;
@@ -31,7 +30,7 @@ public class GroundTexture {
 				this.id = gl.glGenTexture();
 				gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.id);
 				gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, GL30.GL_RGBA8, this.tileSize, this.tileSize,
-						this.extended ? 32 : 16, 0, Extensions.GL_BGRA, GL30.GL_UNSIGNED_BYTE, null);
+						this.extended ? 32 : 16, 0, GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
 				gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_LINEAR);
 				gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
 				gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);

@@ -106,11 +106,11 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 	}
 
 	public int getWidth(final float[] out, final int sequence, final int frame, final int counter) {
-		return this.getScalarValue(out, AnimationMap.KP2N.getWar3id(), sequence, frame, counter, this.width);
+		return this.getScalarValue(out, AnimationMap.KP2N.getWar3id(), sequence, frame, counter, this.length);
 	}
 
 	public int getLength(final float[] out, final int sequence, final int frame, final int counter) {
-		return this.getScalarValue(out, AnimationMap.KP2W.getWar3id(), sequence, frame, counter, this.length);
+		return this.getScalarValue(out, AnimationMap.KP2W.getWar3id(), sequence, frame, counter, this.width);
 	}
 
 	public int getSpeed(final float[] out, final int sequence, final int frame, final int counter) {

@@ -177,6 +177,9 @@ public class ModelViewer {
 
 				// TODO this is a synchronous hack, skipped some Ghostwolf code
 				try {
+					if (!this.dataSource.has(finalSrc)) {
+						System.err.println("Attempting to load non-existant file: " + finalSrc);
+					}
 					resource.loadData(this.dataSource.getResourceAsStream(finalSrc), null);
 				}
 				catch (final IOException e) {

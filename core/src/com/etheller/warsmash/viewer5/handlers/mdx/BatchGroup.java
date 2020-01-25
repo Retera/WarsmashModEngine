@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.Texture;
@@ -26,8 +27,6 @@ public class BatchGroup extends GenericGroup {
 		final MdxModel model = this.model;
 		final List<Texture> textures = model.getTextures();
 		final MdxHandler handler = model.handler;
-		final List<Texture> teamColors = MdxHandler.teamColors;
-		final List<Texture> teamGlows = MdxHandler.teamGlows;
 		final List<Batch> batches = model.batches;
 		final List<Integer> replaceables = model.replaceables;
 		final ModelViewer viewer = model.viewer;
@@ -95,11 +94,9 @@ public class BatchGroup extends GenericGroup {
 				final Integer replaceable = replaceables.get(layerTexture); // TODO is this OK?
 				Texture texture;
 
-				if (replaceable == 1) {
-					texture = teamColors.get(instance.teamColor);
-				}
-				else if (replaceable == 2) {
-					texture = teamGlows.get(instance.teamColor);
+				if ((replaceable > 0) && (replaceable < WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT)
+						&& (instance.replaceableTextures[replaceable] != null)) {
+					texture = instance.replaceableTextures[replaceable];
 				}
 				else {
 					texture = textures.get(layerTexture);

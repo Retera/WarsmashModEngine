@@ -7,6 +7,7 @@ import java.util.List;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.Scene;
@@ -77,7 +78,6 @@ public class GeometryEmitterFuncs {
 		final ParticleEmitter2Object emitterObject = emitter.emitterObject;
 		final int modelSpace = emitterObject.modelSpace;
 		final float tailLength = emitterObject.tailLength;
-		final int teamColor = instance.teamColor;
 		int offset = 0;
 
 		for (int objectIndex = 0; objectIndex < emitter.alive; objectIndex++) {
@@ -131,7 +131,7 @@ public class GeometryEmitterFuncs {
 			floatView.put(floatOffset + FLOAT_OFFSET_HEALTH, object.health);
 
 			byteView.put(byteOffset + BYTE_OFFSET_TAIL, (byte) tail);
-			byteView.put(byteOffset + BYTE_OFFSET_TEAM_COLOR, (byte) teamColor);
+			byteView.put(byteOffset + BYTE_OFFSET_TEAM_COLOR, (byte) 0);
 
 			offset += 1;
 		}
@@ -154,15 +154,9 @@ public class GeometryEmitterFuncs {
 
 		gl.glBlendFunc(emitterObject.blendSrc, emitterObject.blendDst);
 
-		if (replaceableId == 1) {
-			final List<Texture> teamColors = model.reforged ? MdxHandler.reforgedTeamColors : MdxHandler.teamColors;
-
-			texture = teamColors.get(instance.teamColor);
-		}
-		else if (replaceableId == 2) {
-			final List<Texture> teamGlows = model.reforged ? MdxHandler.reforgedTeamGlows : MdxHandler.teamGlows;
-
-			texture = teamGlows.get(instance.teamColor);
+		if ((replaceableId > 0) && (replaceableId < WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT)
+				&& (instance.replaceableTextures[(int) replaceableId] != null)) {
+			texture = instance.replaceableTextures[(int) replaceableId];
 		}
 		else {
 			texture = emitterObject.internalTexture;

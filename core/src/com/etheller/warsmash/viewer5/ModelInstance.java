@@ -124,4 +124,6 @@ public abstract class ModelInstance extends Node {
 	public abstract void load();
 
 	protected abstract RenderBatch getBatch(TextureMapper textureMapper2);
+
+	public abstract void setReplaceableTexture(int replaceableTextureId, String replaceableTextureFile);
 }

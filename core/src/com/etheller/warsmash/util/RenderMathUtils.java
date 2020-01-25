@@ -451,6 +451,11 @@ public enum RenderMathUtils {
 		return out;
 	}
 
+	// ==== All of the following "wrap" calls are horribly inefficient. Eventually
+	// they should be removed entirely with better design.
+	// Until that happens, be sure to only call them during setup and not while the
+	// simulation is live. Otherwise you'll probably get some
+	// bad lag (and memory leaks?).
 	public static ShortBuffer wrapFaces(final int[] faces) {
 		final ShortBuffer wrapper = ByteBuffer.allocateDirect(faces.length * 2).order(ByteOrder.nativeOrder())
 				.asShortBuffer();
@@ -512,6 +517,38 @@ public enum RenderMathUtils {
 		for (int i = 0; i < quadIndices.length; i++) {
 			for (int j = 0; j < 3; j++) {
 				wrapper.put(quadIndices[i][j]);
+			}
+		}
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static Buffer wrap(final List<float[]> vertices) {
+		if (vertices.isEmpty()) {
+			return null;
+		}
+		final int expectedNumberOfFloats = vertices.get(0).length;
+		final FloatBuffer wrapper = ByteBuffer.allocateDirect(vertices.size() * expectedNumberOfFloats * 4)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		for (final float[] subArray : vertices) {
+			for (final float f : subArray) {
+				wrapper.put(f);
+			}
+		}
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static Buffer wrapFaces(final List<int[]> indices) {
+		if (indices.isEmpty()) {
+			return null;
+		}
+		final int expectedNumberOfValues = indices.get(0).length;
+		final ShortBuffer wrapper = ByteBuffer.allocateDirect(indices.size() * expectedNumberOfValues * 2)
+				.order(ByteOrder.nativeOrder()).asShortBuffer();
+		for (final int[] subArray : indices) {
+			for (final int value : subArray) {
+				wrapper.put((short) value);
 			}
 		}
 		wrapper.clear();

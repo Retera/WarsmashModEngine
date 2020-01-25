@@ -14,6 +14,8 @@ import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.compress.utils.IOUtils;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -24,6 +26,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.w3x.w3e.Corner;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.StandardObjectData;
@@ -32,9 +35,13 @@ import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WorldEditStrings;
 import com.etheller.warsmash.viewer5.Camera;
-import com.etheller.warsmash.viewer5.gl.Extensions;
+import com.etheller.warsmash.viewer5.PathSolver;
+import com.etheller.warsmash.viewer5.RawOpenGLTextureResource;
+import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.gl.WebGL;
+import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
+import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class Terrain {
@@ -92,8 +99,18 @@ public class Terrain {
 	private final War3MapViewer viewer;
 	public float[] centerOffset;
 	private final WebGL webGL;
+	private final ShaderProgram uberSplatShader;
+	public final DataTable uberSplatTable;
 
-	public Terrain(final War3MapW3e w3eFile, final WebGL webGL, final DataSource dataSource,
+	private final List<SplatModel> uberSplatModels;
+	private int shadowMap;
+	public final Map<String, Splat> splats = new HashMap<>();
+	public final Map<String, List<float[]>> shadows = new HashMap<>();
+	public final Map<String, Texture> shadowTextures = new HashMap<>();
+	private final int[] mapBounds;
+	private final int[] mapSize;
+
+	public Terrain(final War3MapW3e w3eFile, final War3MapW3i w3iFile, final WebGL webGL, final DataSource dataSource,
 			final WorldEditStrings worldEditStrings, final War3MapViewer viewer) throws IOException {
 		this.webGL = webGL;
 		this.viewer = viewer;
@@ -136,6 +153,10 @@ public class Terrain {
 		try (InputStream waterSlkStream = dataSource.getResourceAsStream("TerrainArt\\Water.slk")) {
 			this.waterTable.readSLK(waterSlkStream);
 		}
+		this.uberSplatTable = new DataTable(worldEditStrings);
+		try (InputStream uberSlkStream = dataSource.getResourceAsStream("Splats\\UberSplatData.slk")) {
+			this.uberSplatTable.readSLK(uberSlkStream);
+		}
 
 		final char tileset = w3eFile.getTileset();
 		final Element waterInfo = this.waterTable.get(tileset + "Sha");
@@ -147,16 +168,31 @@ public class Terrain {
 		loadWaterColor(this.maxShallowColor, "Smax", waterInfo);
 		loadWaterColor(this.minDeepColor, "Dmin", waterInfo);
 		loadWaterColor(this.maxDeepColor, "Dmax", waterInfo);
+		for (int i = 0; i < 3; i++) {
+			if (this.minDeepColor[i] > this.maxDeepColor[i]) {
+				this.maxDeepColor[i] = this.minDeepColor[i];
+			}
+		}
 
 		// Cliff Meshes
 
-		final Map<String, Integer> cliffVars = Variations.CLIFF_VARS;
+		Map<String, Integer> cliffVars = Variations.CLIFF_VARS;
 		for (final Map.Entry<String, Integer> cliffVar : cliffVars.entrySet()) {
 			final Integer maxVariations = cliffVar.getValue();
 			for (int variation = 0; variation <= maxVariations; variation++) {
 				final String fileName = "Doodads\\Terrain\\Cliffs\\Cliffs" + cliffVar.getKey() + variation + ".mdx";
 				this.cliffMeshes.add(new CliffMesh(fileName, dataSource, Gdx.gl30));
-				this.pathToCliff.put(cliffVar.getKey() + variation, this.cliffMeshes.size() - 1);
+				this.pathToCliff.put("Cliffs" + cliffVar.getKey() + variation, this.cliffMeshes.size() - 1);
+			}
+		}
+		cliffVars = Variations.CITY_CLIFF_VARS;
+		for (final Map.Entry<String, Integer> cliffVar : cliffVars.entrySet()) {
+			final Integer maxVariations = cliffVar.getValue();
+			for (int variation = 0; variation <= maxVariations; variation++) {
+				final String fileName = "Doodads\\Terrain\\CityCliffs\\CityCliffs" + cliffVar.getKey() + variation
+						+ ".mdx";
+				this.cliffMeshes.add(new CliffMesh(fileName, dataSource, Gdx.gl30));
+				this.pathToCliff.put("CityCliffs" + cliffVar.getKey() + variation, this.cliffMeshes.size() - 1);
 			}
 		}
 
@@ -165,7 +201,7 @@ public class Terrain {
 			final Element terrainTileInfo = this.terrainTable.get(groundTile.asStringValue());
 			final String dir = terrainTileInfo.getField("dir");
 			final String file = terrainTileInfo.getField("file");
-			this.groundTextures.add(new GroundTexture(dir + "/" + file + texturesExt, dataSource, Gdx.gl30));
+			this.groundTextures.add(new GroundTexture(dir + "\\" + file + texturesExt, dataSource, Gdx.gl30));
 			this.groundTextureToId.put(groundTile.asStringValue(), this.groundTextures.size() - 1);
 		}
 
@@ -182,10 +218,11 @@ public class Terrain {
 			final Element cliffInfo = this.cliffTable.get(cliffTile.asStringValue());
 			final String texDir = cliffInfo.getField("texDir");
 			final String texFile = cliffInfo.getField("texFile");
-			try (InputStream imageStream = dataSource.getResourceAsStream(texDir + "/" + texFile + texturesExt)) {
+			try (InputStream imageStream = dataSource.getResourceAsStream(texDir + "\\" + texFile + texturesExt)) {
 				final BufferedImage image = ImageIO.read(imageStream);
 				this.cliffTextures.add(new UnloadedTexture(image.getWidth(), image.getHeight(),
-						ImageUtils.getTextureBuffer(ImageUtils.forceBufferedImagesRGB(image))));
+						ImageUtils.getTextureBuffer(ImageUtils.forceBufferedImagesRGB(image)),
+						cliffInfo.getField("cliffModelDir"), cliffInfo.getField("rampModelDir")));
 			}
 			this.cliffTexturesSize = Math.max(this.cliffTexturesSize,
 					this.cliffTextures.get(this.cliffTextures.size() - 1).width);
@@ -222,8 +259,8 @@ public class Terrain {
 
 		this.groundHeight = gl.glGenTexture();
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundHeight);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
 
 		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, width, height, 0, GL30.GL_RED, GL30.GL_FLOAT,
 				RenderMathUtils.wrap(this.groundHeights));
@@ -244,13 +281,13 @@ public class Terrain {
 		this.cliffTextureArray = gl.glGenTexture();
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.cliffTextureArray);
 		gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, GL30.GL_RGBA8, this.cliffTexturesSize, this.cliffTexturesSize,
-				this.cliffTextures.size(), 0, Extensions.GL_BGRA, GL30.GL_UNSIGNED_BYTE, null);
+				this.cliffTextures.size(), 0, GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_LINEAR);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_BASE_LEVEL, 0);
 
 		int sub = 0;
 		for (final UnloadedTexture i : this.cliffTextures) {
-			gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, sub, i.width, i.height, 1, Extensions.GL_BGRA,
+			gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, sub, i.width, i.height, 1, GL30.GL_RGBA,
 					GL30.GL_UNSIGNED_BYTE, i.data);
 			sub += 1;
 		}
@@ -276,8 +313,8 @@ public class Terrain {
 		// Water textures
 		this.waterTextureArray = gl.glGenTexture();
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
-		gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, GL30.GL_RGBA8, 128, 128, this.waterTextureCount, 0,
-				Extensions.GL_BGRA, GL30.GL_UNSIGNED_BYTE, null);
+		gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, GL30.GL_SRGB8_ALPHA8, 128, 128, this.waterTextureCount, 0,
+				GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_BASE_LEVEL, 0);
@@ -294,8 +331,7 @@ public class Terrain {
 				}
 
 				gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, image.getWidth(), image.getHeight(), 1,
-						GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE,
-						ImageUtils.getTextureBuffer(ImageUtils.forceBufferedImagesRGB(image)));
+						GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, ImageUtils.getTextureBuffer(image));
 			}
 		}
 		gl.glGenerateMipmap(GL30.GL_TEXTURE_2D_ARRAY);
@@ -306,9 +342,14 @@ public class Terrain {
 		this.cliffShader = webGL.createShaderProgram(TerrainShaders.Cliffs.vert, TerrainShaders.Cliffs.frag);
 		this.waterShader = webGL.createShaderProgram(TerrainShaders.Water.vert, TerrainShaders.Water.frag);
 
+		this.uberSplatShader = webGL.createShaderProgram(W3xShaders.UberSplat.vert, W3xShaders.UberSplat.frag);
+
 		// TODO collision bodies (?)
 
 		this.centerOffset = w3eFile.getCenterOffset();
+		this.uberSplatModels = new ArrayList<>();
+		this.mapBounds = w3iFile.getCameraBoundsComplements();
+		this.mapSize = w3eFile.getMapSize();
 	}
 
 	private void updateGroundHeights(final Rectangle area) {
@@ -403,6 +444,10 @@ public class Terrain {
 					final boolean facingLeft = (bottomRight.getLayerHeight() >= bottomLeft.getLayerHeight())
 							&& (topRight.getLayerHeight() >= topLeft.getLayerHeight());
 
+					int bottomLeftCliffTex = bottomLeft.getCliffTexture();
+					if (bottomLeftCliffTex == 15) {
+						bottomLeftCliffTex -= 14;
+					}
 					if (!(facingDown && (j == 0)) && !(!facingDown && (j >= (this.rows - 2)))
 							&& !(facingLeft && (i == 0)) && !(!facingLeft && (i >= (this.columns - 2)))) {
 						final boolean br = ((bottomLeft.getRamp() != 0) != (bottomRight.getRamp() != 0))
@@ -424,7 +469,8 @@ public class Terrain {
 											+ ((bottomRight.getLayerHeight() - base)
 													* (bottomRight.getRamp() != 0 ? -4 : 1)));
 
-							fileName = "Doodads\\Terrain\\CliffTrans\\CliffTrans" + fileName + "0.mdx";
+							final String rampModelDir = this.cliffTextures.get(bottomLeftCliffTex).rampModelDir;
+							fileName = "Doodads\\Terrain\\" + rampModelDir + "\\" + rampModelDir + fileName + "0.mdx";
 
 							if (this.dataSource.has(fileName)) {
 								if (!this.pathToCliff.containsKey(fileName)) {
@@ -441,7 +487,7 @@ public class Terrain {
 									}
 								}
 
-								this.cliffs.add(new IVec3((i + ((bo ? 1 : 0) * (facingDown ? 0 : 1))),
+								this.cliffs.add(new IVec3((i + ((bo ? 1 : 0) * (facingLeft ? 0 : 1))),
 										(j - ((br ? 1 : 0) * (facingDown ? 1 : 0))), this.pathToCliff.get(fileName)));
 								bottomLeft.romp = true;
 
@@ -475,7 +521,10 @@ public class Terrain {
 					}
 
 					// Clamp to within max variations
-					fileName += Variations.getCliffVariation("Cliffs", fileName, bottomLeft.getCliffVariation());
+
+					fileName = this.cliffTextures.get(bottomLeftCliffTex).cliffModelDir + fileName
+							+ Variations.getCliffVariation(this.cliffTextures.get(bottomLeftCliffTex).cliffModelDir,
+									fileName, bottomLeft.getCliffVariation());
 					if (!this.pathToCliff.containsKey(fileName)) {
 						throw new IllegalArgumentException("No such pathToCliff entry: " + fileName);
 					}
@@ -693,12 +742,51 @@ public class Terrain {
 
 	}
 
+	public void renderUberSplats() {
+		final GL30 gl = Gdx.gl30;
+		final WebGL webGL = this.webGL;
+		final ShaderProgram shader = this.uberSplatShader;
+
+		gl.glDepthMask(false);
+		gl.glEnable(GL30.GL_BLEND);
+		gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
+		gl.glBlendEquation(GL30.GL_FUNC_ADD);
+
+		webGL.useShaderProgram(this.uberSplatShader);
+
+		shader.setUniformMatrix("u_mvp", this.camera.viewProjectionMatrix);
+		shader.setUniformi("u_heightMap", 0);
+		sizeHeap[0] = this.columns - 1;
+		sizeHeap[1] = this.rows - 1;
+		shader.setUniform2fv("u_size", sizeHeap, 0, 2);
+		sizeHeap[0] = 1 / (float) this.columns;
+		sizeHeap[1] = 1 / (float) this.rows;
+		shader.setUniform2fv("u_pixel", sizeHeap, 0, 2);
+		shader.setUniform2fv("u_centerOffset", this.centerOffset, 0, 2);
+		shader.setUniformi("u_texture", 1);
+		shader.setUniformi("u_shadowMap", 2);
+
+		gl.glActiveTexture(GL30.GL_TEXTURE0);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
+
+		gl.glActiveTexture(GL30.GL_TEXTURE2);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
+
+		// Render the cliffs
+		for (final SplatModel splat : this.uberSplatModels) {
+			splat.render(gl, shader);
+		}
+	}
+
 	public void renderWater() {
 		// Render water
 		this.webGL.useShaderProgram(this.waterShader);
 
 		final GL30 gl = Gdx.gl30;
+		gl.glDepthMask(false);
+		gl.glDisable(GL30.GL_CULL_FACE);
 		gl.glEnable(GL30.GL_BLEND);
+		gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
 
 		gl.glUniformMatrix4fv(0, 1, false, this.camera.viewProjectionMatrix.val, 0);
 		gl.glUniform4fv(1, 1, this.minShallowColor, 0);
@@ -748,13 +836,12 @@ public class Terrain {
 			this.cliffMeshes.get(i.z).renderQueue(fourComponentHeap);
 		}
 
-		this.cliffShader.begin();
+		this.webGL.useShaderProgram(this.cliffShader);
 
 		final GL30 gl = Gdx.gl30;
 
 		// WC3 models are 128x too large
 		tempMatrix.set(this.camera.viewProjectionMatrix);
-		tempMatrix.scale(1 / 128f, 1 / 128f, 1 / 128f);
 		gl.glUniformMatrix4fv(0, 1, false, tempMatrix.val, 0);
 		gl.glUniform1i(1, this.viewer.renderPathing);
 		gl.glUniform1i(2, this.viewer.renderLighting);
@@ -765,8 +852,100 @@ public class Terrain {
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundHeight);
 //		gl.glActiveTexture(GL30.GL_TEXTURE2);
 		for (final CliffMesh i : this.cliffMeshes) {
+			gl.glUniform1f(this.cliffShader.getUniformLocation("centerOffsetX"), this.centerOffset[0]);
+			gl.glUniform1f(this.cliffShader.getUniformLocation("centerOffsetY"), this.centerOffset[1]);
 			i.render();
 		}
+	}
+
+	public void addShadow(final String file, final float x, final float y) {
+		if (!this.shadows.containsKey(file)) {
+			final String path = "ReplaceableTextures\\Shadows\\" + file + ".blp";
+			this.shadows.put(file, new ArrayList<>());
+			this.shadowTextures.put(file, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null));
+		}
+		this.shadows.get(file).add(new float[] { x, y });
+	}
+
+	public void initShadows() throws IOException {
+		final GL30 gl = Gdx.gl30;
+		final float[] centerOffset = this.centerOffset;
+		final int columns = (this.columns - 1) * 4;
+		final int rows = (this.rows - 1) * 4;
+
+		final int shadowSize = columns * rows;
+		final byte[] shadowData = new byte[columns * rows];
+		if (this.viewer.mapMpq.has("war3map.shd")) {
+			final InputStream shadowSource = this.viewer.mapMpq.getResourceAsStream("war3map.shd");
+			final byte[] buffer = IOUtils.toByteArray(shadowSource);
+			for (int i = 0; i < shadowSize; i++) {
+				shadowData[i] = (byte) (buffer[i] / 2);
+			}
+		}
+
+		for (final Map.Entry<String, Texture> fileAndTexture : this.shadowTextures.entrySet()) {
+			final String file = fileAndTexture.getKey();
+			final Texture texture = fileAndTexture.getValue();
+
+			final int width = texture.getWidth();
+			final int height = texture.getHeight();
+			final int ox = (int) Math.round(width * 0.3);
+			final int oy = (int) Math.round(height * 0.7);
+			for (final float[] location : this.shadows.get(file)) {
+				final int x0 = (int) Math.floor((location[0] - centerOffset[0]) / 32.0) - ox;
+				final int y0 = (int) Math.floor((location[1] - centerOffset[1]) / 32.0) + oy;
+				for (int y = 0; y < height; ++y) {
+					if (((y0 - y) < 0) || ((y0 - y) >= rows)) {
+						continue;
+					}
+					for (int x = 0; x < width; ++x) {
+						if (((x0 + x) < 0) || ((x0 + x) >= columns)) {
+							continue;
+						}
+						if (((RawOpenGLTextureResource) texture).getData().get((((y * width) + x) * 4) + 3) != 0) {
+							shadowData[((y0 - y) * columns) + x0 + x] = (byte) 128;
+						}
+					}
+				}
+			}
+		}
+
+		final byte outsideArea = (byte) 204;
+		final int x0 = this.mapBounds[0] * 4, x1 = (this.mapSize[0] - this.mapBounds[1] - 1) * 4,
+				y0 = this.mapBounds[2] * 4, y1 = (this.mapSize[1] - this.mapBounds[3] - 1) * 4;
+		for (int y = y0; y < y1; ++y) {
+			for (int x = x0; x < x1; ++x) {
+				final RenderCorner c = this.corners[x >> 2][y >> 2];
+				if (c.getBoundary() != 0) {
+					shadowData[(y * columns) + x] = outsideArea;
+				}
+			}
+		}
+		for (int y = 0; y < rows; ++y) {
+			for (int x = 0; x < x0; ++x) {
+				shadowData[(y * columns) + x] = outsideArea;
+			}
+			for (int x = x1; x < columns; ++x) {
+				shadowData[(y * columns) + x] = outsideArea;
+			}
+		}
+		for (int x = x0; x < x1; ++x) {
+			for (int y = 0; y < y0; ++y) {
+				shadowData[(y * columns) + x] = outsideArea;
+			}
+			for (int y = y1; y < rows; ++y) {
+				shadowData[(y * columns) + x] = outsideArea;
+			}
+		}
+
+		this.shadowMap = gl.glGenBuffer();
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, columns, rows, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
+				RenderMathUtils.wrap(shadowData));
 	}
 
 //	public Vector3 groundNormal(final Vector3 out, int x, int y) {
@@ -813,12 +992,62 @@ public class Terrain {
 		private final int width;
 		private final int height;
 		private final Buffer data;
+		private final String cliffModelDir;
+		private final String rampModelDir;
 
-		public UnloadedTexture(final int width, final int height, final Buffer data) {
+		public UnloadedTexture(final int width, final int height, final Buffer data, final String cliffModelDir,
+				final String rampModelDir) {
 			this.width = width;
 			this.height = height;
 			this.data = data;
+			this.cliffModelDir = cliffModelDir;
+			this.rampModelDir = rampModelDir;
 		}
 
+	}
+
+	public float getGroundHeight(final float x, final float y) {
+		final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f;
+		final float userCellSpaceY = (y - this.centerOffset[1]) / 128.0f;
+		final int cellX = (int) userCellSpaceX;
+		final int cellY = (int) userCellSpaceY;
+
+		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
+			final float bottomLeft = this.corners[cellX][cellY].computeFinalGroundHeight();
+			final float bottomRight = this.corners[cellX][cellY].computeFinalGroundHeight();
+			final float topLeft = this.corners[cellX][cellY].computeFinalGroundHeight();
+			final float topRight = this.corners[cellX][cellY].computeFinalGroundHeight();
+			final float sqX = userCellSpaceX - cellX;
+			final float sqY = userCellSpaceY - cellY;
+			float height;
+
+			if ((sqX + sqY) < 1) {
+				height = bottomLeft + ((bottomRight - bottomLeft) * sqX) + ((topLeft - bottomLeft) * sqY);
+			}
+			else {
+				height = topRight + ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
+			}
+
+			return height * 128.0f;
+		}
+
+		return 0;
+	}
+
+	public static final class Splat {
+		public List<float[]> locations = new ArrayList<>();
+		public float opacity = 1;
+	}
+
+	public void loadSplats() throws IOException {
+		for (final Map.Entry<String, Splat> entry : this.splats.entrySet()) {
+			final String path = entry.getKey();
+			final Splat splat = entry.getValue();
+
+			final SplatModel splatModel = new SplatModel(Gdx.gl30,
+					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset);
+			splatModel.color[3] = splat.opacity;
+			this.uberSplatModels.add(splatModel);
+		}
 	}
 }

@@ -1,11 +1,15 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.BatchedInstance;
 import com.etheller.warsmash.viewer5.Model;
+import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.RenderBatch;
+import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.TextureMapper;
 
 public class MdxSimpleInstance extends BatchedInstance {
+	public Texture[] replaceableTextures = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
 
 	public MdxSimpleInstance(final Model model) {
 		super(model);
@@ -36,4 +40,9 @@ public class MdxSimpleInstance extends BatchedInstance {
 		return new MdxRenderBatch(this.scene, this.model, textureMapper);
 	}
 
+	@Override
+	public void setReplaceableTexture(final int replaceableTextureId, final String replaceableTextureFile) {
+		this.replaceableTextures[replaceableTextureId] = (Texture) this.model.viewer.load(replaceableTextureFile,
+				PathSolver.DEFAULT, null);
+	}
 }

@@ -118,6 +118,24 @@ public class WebGL {
 
 			this.currentShaderProgram = shaderProgram;
 		}
+		else if (shaderProgram == null) {
+			int oldAttribs = 0;
+			final int newAttribs = 0;
+
+			if (currentShaderProgram != null) {
+				oldAttribs = currentShaderProgram.getAttributes().length;
+				currentShaderProgram.end();
+			}
+
+			if (newAttribs > oldAttribs) {
+				this.enableVertexAttribs(oldAttribs, newAttribs);
+			}
+			else if (newAttribs < oldAttribs) {
+				this.disableVertexAttribs(newAttribs, oldAttribs);
+			}
+
+			this.currentShaderProgram = shaderProgram;
+		}
 	}
 
 	public void bindTexture(final Texture texture, final int unit) {

@@ -1,6 +1,7 @@
 package com.etheller.warsmash;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
@@ -10,14 +11,22 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
@@ -37,13 +46,18 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private CameraManager cameraManager;
 	private final Rectangle tempRect = new Rectangle();
 
-	private BitmapFont font;
-	private SpriteBatch batch;
 	private CameraManager portraitCameraManager;
 	private MdxModel portraitModel;
 	private MdxComplexInstance portraitInstance;
 	private final float[] cameraPositionTemp = new float[3];
 	private final float[] cameraTargetTemp = new float[3];
+
+	// libGDX stuff
+	private OrthographicCamera uiCamera;
+	private BitmapFont font;
+	private SpriteBatch batch;
+	private Viewport uiViewport;
+	private GlyphLayout glyphLayout;
 
 	@Override
 	public void create() {
@@ -92,7 +106,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.portraitCameraManager.setupCamera(this.portraitScene);
 
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
-		this.portraitModel = (MdxModel) this.viewer.load("Units\\NightElf\\Runner\\Runner_Portrait.mdx",
+		this.portraitModel = (MdxModel) this.viewer.load("Units\\NightElf\\DruidOfTheClaw\\DruidOfTheClaw_Portrait.mdx",
 				new PathSolver() {
 					@Override
 					public SolvedPath solve(final String src, final Object solverParams) {
@@ -105,7 +119,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		this.portraitInstance = (MdxComplexInstance) this.portraitModel.addInstance(0);
 
-		this.portraitInstance.setTeamColor(1);
+		this.portraitInstance.setTeamColor(6);
 
 		this.portraitInstance.setScene(this.portraitScene);
 
@@ -114,7 +128,38 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		this.portraitInstance.setSequenceLoopMode(0);
 
-		this.font = new BitmapFont();
+		// libGDX stuff
+		final float w = Gdx.graphics.getWidth();
+		final float h = Gdx.graphics.getHeight();
+
+		final FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(new FileHandle("fonts\\FRIZQT__.TTF") {
+			@Override
+			public InputStream read() {
+				// TODO load font name from WC3 configs, since actually in WC3 mods were able to
+				// change it
+				try {
+					return WarsmashGdxMapGame.this.viewer.dataSource.getResourceAsStream("fonts\\FRIZQT__.TTF");
+				}
+				catch (final IOException e) {
+					throw new IllegalStateException("No such file: " + path());
+				}
+			}
+		});
+		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
+		fontParam.size = 32;
+		this.font = fontGenerator.generateFont(fontParam);
+		fontGenerator.dispose();
+		this.glyphLayout = new GlyphLayout();
+
+		// Constructs a new OrthographicCamera, using the given viewport width and
+		// height
+		// Height is multiplied by aspect ratio.
+		this.uiCamera = new OrthographicCamera();
+		this.uiViewport = new FitViewport(1600, 1200, this.uiCamera);
+
+		this.uiCamera.position.set(this.uiCamera.viewportWidth / 2f, this.uiCamera.viewportHeight / 2f, 0);
+		this.uiCamera.update();
+
 		this.batch = new SpriteBatch();
 
 		Gdx.input.setInputProcessor(this);
@@ -124,6 +169,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public void render() {
+		this.uiCamera.update();
+		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
 		final float deltaTime = Gdx.graphics.getDeltaTime();
 		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
 		this.cameraManager.target.add(this.cameraVelocity.x * deltaTime, this.cameraVelocity.y * deltaTime, 0);
@@ -147,6 +194,21 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		if ((this.frame++ % 1000) == 0) {
 			System.out.println(Gdx.graphics.getFramesPerSecond());
 		}
+		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
+
+		Gdx.gl30.glDisable(GL30.GL_CULL_FACE);
+
+		this.viewer.webGL.useShaderProgram(null);
+
+		Gdx.gl30.glActiveTexture(GL30.GL_TEXTURE0);
+		this.uiViewport.apply();
+		this.batch.setProjectionMatrix(this.uiCamera.combined);
+		this.batch.begin();
+		this.font.setColor(Color.YELLOW);
+		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
+		this.glyphLayout.setText(this.font, fpsString);
+		this.font.draw(this.batch, fpsString, (this.uiViewport.getWorldWidth() - this.glyphLayout.width) / 2, 1100);
+		this.batch.end();
 	}
 
 	@Override
@@ -165,11 +227,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public void resize(final int width, final int height) {
+		final float worldFrameTestHeight = (360 / 480f) * height;
+		final float worldFrameTestY = (100 / 480f) * height;
 		super.resize(width, height);
 		this.tempRect.x = 0;
-		this.tempRect.y = 0;
+		this.tempRect.y = worldFrameTestY;
 		this.tempRect.width = width;
-		this.tempRect.height = height;
+		this.tempRect.height = worldFrameTestHeight;
 		this.cameraManager.camera.viewport(this.tempRect);
 		final float portraitTestWidth = (100 / 640f) * width;
 		final float portraitTestHeight = (100 / 480f) * height;
@@ -178,6 +242,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.tempRect.width = portraitTestWidth;
 		this.tempRect.height = portraitTestHeight;
 		this.portraitScene.camera.viewport(this.tempRect);
+
+		this.uiViewport.update(width, height);
+		this.uiCamera.position.set(this.uiCamera.viewportWidth / 2, this.uiCamera.viewportHeight / 2, 0);
 	}
 
 	class CameraManager {

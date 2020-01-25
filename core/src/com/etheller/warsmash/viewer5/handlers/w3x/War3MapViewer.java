@@ -471,6 +471,7 @@ public class War3MapViewer extends ModelViewer {
 		if (this.anyReady) {
 			final Scene worldScene = this.worldScene;
 
+			startFrame();
 			worldScene.startFrame();
 			this.terrain.renderGround();
 			this.terrain.renderCliffs();

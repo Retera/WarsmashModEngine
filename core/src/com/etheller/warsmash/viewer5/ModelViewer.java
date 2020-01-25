@@ -293,6 +293,7 @@ public class ModelViewer {
 	}
 
 	public void startFrame() {
+		Gdx.gl.glScissor(0, 0, (int) this.canvas.getWidth(), (int) this.canvas.getHeight());
 		this.gl.glDepthMask(true);
 		this.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 //		WarsmashGdxGame.bindDefaultVertexArray();

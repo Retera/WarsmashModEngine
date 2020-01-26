@@ -22,12 +22,21 @@ public class Unit {
 	private static final float[] heapZ = new float[3];
 	public final MdxComplexInstance instance;
 	public final MutableGameObject row;
+	public final float[] location = new float[3];
+	public float radius;
+	public UnitSoundset soundset;
+	public final MdxModel portraitModel;
+	public int playerIndex;
 
 	public Unit(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
-			final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit, final WorldEditorDataType type) {
+			final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit, final WorldEditorDataType type,
+			final UnitSoundset soundset, final MdxModel portraitModel) {
+		this.portraitModel = portraitModel;
 		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
 
-		instance.move(unit.getLocation());
+		final float[] location = unit.getLocation();
+		System.arraycopy(location, 0, this.location, 0, 3);
+		instance.move(location);
 		float angle;
 		if ((row != null) && row.getFieldAsBoolean(IS_BLDG, 0)) {
 			angle = (float) Math.toRadians(270.0f);
@@ -38,11 +47,13 @@ public class Unit {
 //		instance.localRotation.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle);
 		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
 		instance.scale(unit.getScale());
-		instance.setTeamColor(unit.getPlayer());
+		this.playerIndex = unit.getPlayer();
+		instance.setTeamColor(this.playerIndex);
 		instance.setScene(map.worldScene);
 
 		if (row != null) {
 			heapZ[2] = row.getFieldAsFloat(MOVE_HEIGHT, 0);
+			this.location[2] += heapZ[2];
 
 			instance.move(heapZ);
 			War3ID red;
@@ -65,9 +76,11 @@ public class Unit {
 					(row.getFieldAsInteger(green, 0)) / 255f, (row.getFieldAsInteger(blue, 0)) / 255f });
 			instance.uniformScale(row.getFieldAsFloat(scale, 0));
 
+			this.radius = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0) * 36;
 		}
 
 		this.instance = instance;
 		this.row = row;
+		this.soundset = soundset;
 	}
 }

@@ -23,6 +23,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.w3x.w3e.Corner;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
@@ -55,6 +56,7 @@ public class Terrain {
 	public ShaderProgram groundShader;
 	public ShaderProgram waterShader;
 	public ShaderProgram cliffShader;
+	public ShaderProgram testShader;
 	public float waterIndex;
 	public float waterIncreasePerFrame;
 	public float waterHeightOffset;
@@ -109,6 +111,9 @@ public class Terrain {
 	public final Map<String, Texture> shadowTextures = new HashMap<>();
 	private final int[] mapBounds;
 	private final int[] mapSize;
+	public final SoftwareGroundMesh softwareGroundMesh;
+	private final int testArrayBuffer;
+	private final int testElementBuffer;
 
 	public Terrain(final War3MapW3e w3eFile, final War3MapW3i w3iFile, final WebGL webGL, final DataSource dataSource,
 			final WorldEditStrings worldEditStrings, final War3MapViewer viewer) throws IOException {
@@ -341,6 +346,7 @@ public class Terrain {
 		this.groundShader = webGL.createShaderProgram(TerrainShaders.Terrain.vert, TerrainShaders.Terrain.frag);
 		this.cliffShader = webGL.createShaderProgram(TerrainShaders.Cliffs.vert, TerrainShaders.Cliffs.frag);
 		this.waterShader = webGL.createShaderProgram(TerrainShaders.Water.vert, TerrainShaders.Water.frag);
+		this.testShader = webGL.createShaderProgram(TerrainShaders.Test.vert, TerrainShaders.Test.frag);
 
 		this.uberSplatShader = webGL.createShaderProgram(W3xShaders.UberSplat.vert, W3xShaders.UberSplat.frag);
 
@@ -350,6 +356,18 @@ public class Terrain {
 		this.uberSplatModels = new ArrayList<>();
 		this.mapBounds = w3iFile.getCameraBoundsComplements();
 		this.mapSize = w3eFile.getMapSize();
+		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundHeights, this.groundCornerHeights,
+				this.centerOffset, width, height);
+
+		this.testArrayBuffer = gl.glGenBuffer();
+		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.testArrayBuffer);
+		gl.glBufferData(GL30.GL_ARRAY_BUFFER, this.softwareGroundMesh.vertices.length,
+				RenderMathUtils.wrap(this.softwareGroundMesh.vertices), GL30.GL_STATIC_DRAW);
+
+		this.testElementBuffer = gl.glGenBuffer();
+//		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, this.testElementBuffer);
+//		gl.glBufferData(GL30.GL_ELEMENT_ARRAY_BUFFER, this.softwareGroundMesh.indices.length,
+//				RenderMathUtils.wrap(this.softwareGroundMesh.indices), GL30.GL_STATIC_DRAW);
 	}
 
 	private void updateGroundHeights(final Rectangle area) {
@@ -430,6 +448,12 @@ public class Terrain {
 		for (int i = (int) rampArea.getX(); i < xLimit; i++) {
 			final int yLimit = (int) ((rampArea.getY() + rampArea.getHeight()) - 1);
 			for (int j = (int) rampArea.getY(); j < yLimit; j++) {
+				if ((i == (84)) && (j == (82))) {
+					System.out.println("test");
+				}
+				if ((i == (84)) && (j == (81))) {
+					System.out.println("test");
+				}
 				final RenderCorner bottomLeft = this.corners[i][j];
 				final RenderCorner bottomRight = this.corners[i + 1][j];
 				final RenderCorner topLeft = this.corners[i][j + 1];
@@ -452,11 +476,12 @@ public class Terrain {
 							&& !(facingLeft && (i == 0)) && !(!facingLeft && (i >= (this.columns - 2)))) {
 						final boolean br = ((bottomLeft.getRamp() != 0) != (bottomRight.getRamp() != 0))
 								&& ((topLeft.getRamp() != 0) != (topRight.getRamp() != 0))
-								&& !this.corners[i + bottomRight.getRamp()][j + (facingDown ? -1 : 1)].cliff;
+								&& !this.corners[i + (bottomRight.getRamp() != 0 ? 1 : 0)][j
+										+ (facingDown ? -1 : 1)].cliff;
 
 						final boolean bo = ((bottomLeft.getRamp() != 0) != (topLeft.getRamp() != 0))
 								&& ((bottomRight.getRamp() != 0) != (topRight.getRamp() != 0))
-								&& !this.corners[i + (facingLeft ? -1 : 1)][j + topLeft.getRamp()].cliff;
+								&& !this.corners[i + (facingLeft ? -1 : 1)][j + (topLeft.getRamp() != 0 ? 1 : 0)].cliff;
 
 						if (br || bo) {
 							String fileName = "" + (char) ((bottomLeft.getRamp() != 0 ? 'L' : 'A')
@@ -694,7 +719,7 @@ public class Terrain {
 
 	public void renderGround() {
 		// Render tiles
-//		this.groundShader.begin();
+
 		this.webGL.useShaderProgram(this.groundShader);
 
 		final GL30 gl = Gdx.gl30;
@@ -740,6 +765,26 @@ public class Terrain {
 
 		gl.glEnable(GL30.GL_BLEND);
 
+	}
+
+	private GL30 renderGroundIntersectionMesh() {
+		if (true) {
+			throw new UnsupportedOperationException("No longer supported");
+		}
+		this.webGL.useShaderProgram(this.testShader);
+
+		final GL30 gl = Gdx.gl30;
+		gl.glDisable(GL30.GL_CULL_FACE);
+		gl.glDisable(GL30.GL_BLEND);
+		this.testShader.setUniformMatrix("MVP", this.camera.viewProjectionMatrix);
+		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.testArrayBuffer);
+		this.testShader.setVertexAttribute("vPosition", 3, GL30.GL_FLOAT, false, 12, 0);
+
+		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, this.testElementBuffer);
+		gl.glDrawElements(GL30.GL_LINES, this.softwareGroundMesh.indices.length, GL30.GL_UNSIGNED_SHORT, 0);// );
+
+		gl.glEnable(GL30.GL_BLEND);
+		return gl;
 	}
 
 	public void renderUberSplats() {
@@ -988,6 +1033,64 @@ public class Terrain {
 //		return out;
 //	}
 
+	static Vector3 best = new Vector3();
+	static Vector3 tmp = new Vector3();
+	static Vector3 tmp1 = new Vector3();
+	static Vector3 tmp2 = new Vector3();
+	static Vector3 tmp3 = new Vector3();
+
+	/**
+	 * Intersects the given ray with list of triangles. Returns the nearest
+	 * intersection point in intersection
+	 *
+	 * @param ray          The ray
+	 * @param vertices     the vertices
+	 * @param indices      the indices, each successive 3 shorts index the 3
+	 *                     vertices of a triangle
+	 * @param vertexSize   the size of a vertex in floats
+	 * @param intersection The nearest intersection point (optional)
+	 * @return Whether the ray and the triangles intersect.
+	 */
+	public static boolean intersectRayTriangles(final Ray ray, final float[] vertices, final int[] indices,
+			final int vertexSize, final Vector3 intersection) {
+		float min_dist = Float.MAX_VALUE;
+		boolean hit = false;
+
+		if ((indices.length % 3) != 0) {
+			throw new RuntimeException("triangle list size is not a multiple of 3");
+		}
+
+		for (int i = 0; i < indices.length; i += 3) {
+			final int i1 = indices[i] * vertexSize;
+			final int i2 = indices[i + 1] * vertexSize;
+			final int i3 = indices[i + 2] * vertexSize;
+
+			final boolean result = Intersector.intersectRayTriangle(ray,
+					tmp1.set(vertices[i1], vertices[i1 + 1], vertices[i1 + 2]),
+					tmp2.set(vertices[i2], vertices[i2 + 1], vertices[i2 + 2]),
+					tmp3.set(vertices[i3], vertices[i3 + 1], vertices[i3 + 2]), tmp);
+
+			if (result == true) {
+				final float dist = ray.origin.dst2(tmp);
+				if (dist < min_dist) {
+					min_dist = dist;
+					best.set(tmp);
+					hit = true;
+				}
+			}
+		}
+
+		if (hit == false) {
+			return false;
+		}
+		else {
+			if (intersection != null) {
+				intersection.set(best);
+			}
+			return true;
+		}
+	}
+
 	private static final class UnloadedTexture {
 		private final int width;
 		private final int height;
@@ -1048,6 +1151,51 @@ public class Terrain {
 					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset);
 			splatModel.color[3] = splat.opacity;
 			this.uberSplatModels.add(splatModel);
+		}
+	}
+
+	public void removeSplatBatchModel(final SplatModel model) {
+		this.uberSplatModels.remove(model);
+	}
+
+	public void addSplatBatchModel(final SplatModel model) {
+		this.uberSplatModels.add(model);
+	}
+
+	public static final class SoftwareGroundMesh {
+		public final float[] vertices;
+		public final int[] indices;
+
+		private SoftwareGroundMesh(final float[] groundHeights, final float[] groundCornerHeights,
+				final float[] centerOffset, final int columns, final int rows) {
+			this.vertices = new float[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadVertices.length * 3];
+			this.indices = new int[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadIndices.length * 3];
+			for (int y = 0; y < (rows - 1); y++) {
+				for (int x = 0; x < (columns - 1); x++) {
+					final int instanceId = (y * (columns - 1)) + x;
+					for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadVertices.length; vertexId++) {
+						final float vPositionX = Shapes.INSTANCE.quadVertices[vertexId][0];
+						final float vPositionY = Shapes.INSTANCE.quadVertices[vertexId][1];
+						final int groundCornerHeightIndex = (int) (((vPositionY + y) * (columns)) + (vPositionX + x));
+						final float height = groundCornerHeights[groundCornerHeightIndex];
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3)] = ((vPositionX + x) * 128f)
+								+ centerOffset[0];
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3) + 1] = ((vPositionY + y) * 128f)
+								+ centerOffset[1];
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3) + 2] = height * 128f;
+					}
+					for (int triangle = 0; triangle < Shapes.INSTANCE.quadIndices.length; triangle++) {
+						for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadIndices[triangle].length; vertexId++) {
+							final int vertexIndex = Shapes.INSTANCE.quadIndices[triangle][vertexId];
+							final int indexValue = (vertexIndex + (instanceId * 4));
+							if ((indexValue * 3) >= this.vertices.length) {
+								throw new IllegalStateException();
+							}
+							this.indices[(instanceId * 2 * 3) + (triangle * 3) + vertexId] = indexValue;
+						}
+					}
+				}
+			}
 		}
 	}
 }

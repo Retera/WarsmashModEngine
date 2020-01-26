@@ -48,7 +48,7 @@ public class StandSequence {
 		final int sequencesLeft = filtered.size() - i;
 		final int random = (int) (i + Math.floor(Math.random() * sequencesLeft));
 		if (sequencesLeft <= 0) {
-			return new IndexedSequence(null, 0);
+			return null; // new IndexedSequence(null, 0);
 		}
 		final IndexedSequence sequence = filtered.get(random);
 
@@ -62,6 +62,48 @@ public class StandSequence {
 
 		if (sequence != null) {
 			target.setSequence(sequence.index);
+		}
+		else {
+			target.setSequence(0);
+		}
+	}
+
+	public static void randomWalkSequence(final MdxComplexInstance target) {
+		final MdxModel model = (MdxModel) target.model;
+		final List<Sequence> sequences = model.getSequences();
+		final IndexedSequence sequence = selectSequence("walk", sequences);
+
+		if (sequence != null) {
+			target.setSequence(sequence.index);
+		}
+		else {
+			randomStandSequence(target);
+		}
+	}
+
+	public static void randomPortraitSequence(final MdxComplexInstance target) {
+		final MdxModel model = (MdxModel) target.model;
+		final List<Sequence> sequences = model.getSequences();
+		final IndexedSequence sequence = selectSequence("portrait", sequences);
+
+		if (sequence != null) {
+			target.setSequence(sequence.index);
+		}
+		else {
+			randomStandSequence(target);
+		}
+	}
+
+	public static void randomPortraitTalkSequence(final MdxComplexInstance target) {
+		final MdxModel model = (MdxModel) target.model;
+		final List<Sequence> sequences = model.getSequences();
+		final IndexedSequence sequence = selectSequence("portrait talk", sequences);
+
+		if (sequence != null) {
+			target.setSequence(sequence.index);
+		}
+		else {
+			randomPortraitSequence(target);
 		}
 	}
 }

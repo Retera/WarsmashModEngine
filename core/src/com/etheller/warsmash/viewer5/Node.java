@@ -54,6 +54,12 @@ public abstract class Node extends GenericNode {
 		return this;
 	}
 
+	public Node setLocation(final Vector3 location) {
+		this.localLocation.set(location);
+		this.dirty = true;
+		return this;
+	}
+
 	public Node setRotation(final float[] rotation) {
 		this.localRotation.set(rotation[0], rotation[1], rotation[2], rotation[3]);
 		this.dirty = true;

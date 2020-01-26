@@ -8,11 +8,18 @@ import java.io.UnsupportedEncodingException;
 import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.common.FetchDataTypeName;
 import com.etheller.warsmash.common.LoadGenericCallback;
 import com.etheller.warsmash.datasources.CompoundDataSource;
@@ -25,6 +32,7 @@ import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
@@ -39,6 +47,7 @@ import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
@@ -58,9 +67,16 @@ public class War3MapViewer extends ModelViewer {
 	private static final War3ID UNIT_SHADOW_W = War3ID.fromString("ushw");
 	private static final War3ID UNIT_SHADOW_H = War3ID.fromString("ushh");
 	private static final War3ID BUILDING_SHADOW = War3ID.fromString("ushb");
+	public static final War3ID UNIT_SELECT_SCALE = War3ID.fromString("ussc");
+	private static final War3ID UNIT_SELECT_HEIGHT = War3ID.fromString("uslz");
+	private static final War3ID UNIT_SOUNDSET = War3ID.fromString("usnd");
 	private static final War3ID ITEM_FILE = War3ID.fromString("ifil");
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
+	private static final float[] rayHeap = new float[6];
+	private static final Vector2 mousePosHeap = new Vector2();
+	private static final Vector3 normalHeap = new Vector3();
+	private static final Vector3 intersectionHeap = new Vector3();
 	public static final StreamDataCallbackImplementation streamDataCallback = new StreamDataCallbackImplementation();
 
 	public PathSolver wc3PathSolver = PathSolver.DEFAULT;
@@ -94,6 +110,11 @@ public class War3MapViewer extends ModelViewer {
 	public int renderPathing = 0;
 	public int renderLighting = 0;
 
+	public List<SplatModel> selModels = new ArrayList<>();
+	public List<Unit> selected = new ArrayList<>();
+	private DataTable unitAckSoundsTable;
+	private MdxComplexInstance confirmationInstance;
+
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
 		this.gameDataSource = dataSource;
@@ -105,10 +126,9 @@ public class War3MapViewer extends ModelViewer {
 		this.wc3PathSolver = PathSolver.DEFAULT;
 
 		this.worldScene = this.addScene();
-
 	}
 
-	public void loadSLKs() {
+	public void loadSLKs(final WorldEditStrings worldEditStrings) throws IOException {
 		final GenericResource terrain = this.loadMapGeneric("TerrainArt\\Terrain.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
 		final GenericResource cliffTypes = this.loadMapGeneric("TerrainArt\\CliffTypes.slk", FetchDataTypeName.SLK,
@@ -157,6 +177,11 @@ public class War3MapViewer extends ModelViewer {
 		this.unitMetaData.load(unitMetaData.data.toString());
 		// emit loaded
 
+		this.unitAckSoundsTable = new DataTable(worldEditStrings);
+		try (InputStream terrainSlkStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\UnitAckSounds.slk")) {
+			this.unitAckSoundsTable.readSLK(terrainSlkStream);
+		}
+
 	}
 
 	public GenericResource loadMapGeneric(final String path, final FetchDataTypeName dataType,
@@ -170,12 +195,9 @@ public class War3MapViewer extends ModelViewer {
 	}
 
 	public void loadMap(final String mapFilePath) throws IOException {
-		loadSLKs();
 		final War3Map war3Map = new War3Map(this.gameDataSource, mapFilePath);
 
 		this.mapMpq = war3Map;
-
-//		loadSLKs();
 
 		final PathSolver wc3PathSolver = this.wc3PathSolver;
 
@@ -215,13 +237,14 @@ public class War3MapViewer extends ModelViewer {
 			throw new RuntimeException(e);
 		}
 		setDataSource(tilesetSource);
+		final WorldEditStrings worldEditStrings = new WorldEditStrings(this.dataSource);
+		loadSLKs(worldEditStrings);
 
 		this.solverParams.tileset = Character.toLowerCase(tileset);
 
 		final War3MapW3e terrainData = this.mapMpq.readEnvironment();
 
-		this.terrain = new Terrain(terrainData, w3iFile, this.webGL, this.dataSource,
-				new WorldEditStrings(this.dataSource), this);
+		this.terrain = new Terrain(terrainData, w3iFile, this.webGL, this.dataSource, worldEditStrings, this);
 
 		final float[] centerOffset = terrainData.getCenterOffset();
 		final int[] mapSize = terrainData.getMapSize();
@@ -233,6 +256,13 @@ public class War3MapViewer extends ModelViewer {
 		// Override the grid based on the map.
 		this.worldScene.grid = new Grid(centerOffset[0], centerOffset[1], (mapSize[0] * 128) - 128,
 				(mapSize[1] * 128) - 128, 16 * 128, 16 * 128);
+
+		final MdxModel confirmation = (MdxModel) load("UI\\Feedback\\Confirmation\\Confirmation.mdx",
+				PathSolver.DEFAULT, null);
+		this.confirmationInstance = (MdxComplexInstance) confirmation.addInstance();
+		this.confirmationInstance.setSequenceLoopMode(0);
+		this.confirmationInstance.setSequence(0);
+		this.confirmationInstance.setScene(this.worldScene);
 
 		if (this.terrainCliffsAndWaterLoaded) {
 			this.loadTerrainCliffsAndWater(terrainData);
@@ -349,7 +379,10 @@ public class War3MapViewer extends ModelViewer {
 
 		final War3MapUnitsDoo dooFile = mpq.readUnits();
 
+		final Map<String, UnitSoundset> soundsetNameToSoundset = new HashMap<>();
+
 		// Collect the units and items data.
+		UnitSoundset soundset = null;
 		for (final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit : dooFile.getUnits()) {
 			MutableGameObject row = null;
 			String path = null;
@@ -357,7 +390,7 @@ public class War3MapViewer extends ModelViewer {
 			// Hardcoded?
 			WorldEditorDataType type = null;
 			if (sloc.equals(unit.getId())) {
-				path = "Objects\\StartLocation\\StartLocation.mdx";
+//				path = "Objects\\StartLocation\\StartLocation.mdx";
 				type = null; /// ??????
 			}
 			else {
@@ -427,13 +460,28 @@ public class War3MapViewer extends ModelViewer {
 					if ((buildingShadow != null) && !"_".equals(buildingShadow)) {
 						this.terrain.addShadow(buildingShadow, unit.getLocation()[0], unit.getLocation()[1]);
 					}
+
+					final String soundName = row.getFieldAsString(UNIT_SOUNDSET, 0);
+					UnitSoundset unitSoundset = soundsetNameToSoundset.get(soundName);
+					if (unitSoundset == null) {
+						unitSoundset = new UnitSoundset(this.dataSource, this.unitAckSoundsTable, soundName);
+						soundsetNameToSoundset.put(soundName, unitSoundset);
+					}
+					soundset = unitSoundset;
 				}
 			}
 
 			if (path != null) {
 				final MdxModel model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
-
-				this.units.add(new Unit(this, model, row, unit, type));
+				MdxModel portraitModel;
+				final String portraitPath = path.substring(0, path.length() - 4) + "_portrait.mdx";
+				if (this.dataSource.has(portraitPath)) {
+					portraitModel = (MdxModel) this.load(portraitPath, this.mapPathSolver, this.solverParams);
+				}
+				else {
+					portraitModel = model;
+				}
+				this.units.add(new Unit(this, model, row, unit, type, soundset, portraitModel));
 			}
 			else {
 				System.err.println("Unknown unit ID: " + unit.getId());
@@ -456,12 +504,15 @@ public class War3MapViewer extends ModelViewer {
 			final List<ModelInstance> instances = this.worldScene.instances;
 
 			for (final ModelInstance instance : instances) {
-				if (instance instanceof MdxComplexInstance) {
+				if ((instance instanceof MdxComplexInstance) && (instance != this.confirmationInstance)) {
 					final MdxComplexInstance mdxComplexInstance = (MdxComplexInstance) instance;
 					if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1)) {
 						StandSequence.randomStandSequence(mdxComplexInstance);
 					}
 				}
+			}
+			if (this.confirmationInstance.sequenceEnded) {
+				this.confirmationInstance.hide();
 			}
 		}
 	}
@@ -489,6 +540,147 @@ public class War3MapViewer extends ModelViewer {
 				}
 			}
 		}
+	}
+
+	public void deselect() {
+		if (!this.selModels.isEmpty()) {
+			for (final SplatModel model : this.selModels) {
+				this.terrain.removeSplatBatchModel(model);
+			}
+			this.selModels.clear();
+		}
+		this.selected.clear();
+	}
+
+	public void doSelectUnit(final List<Unit> units) {
+		deselect();
+		if (units.isEmpty()) {
+			return;
+		}
+
+		final Map<String, Terrain.Splat> splats = new HashMap<String, Terrain.Splat>();
+		for (final Unit unit : units) {
+			if (unit.row != null) {
+				if (unit.radius > 0) {
+					final float radius = unit.radius;
+					String path;
+					// TODO these radius values must be read from UI\MiscData.txt instead
+					if (radius < 100) {
+						path = "ReplaceableTextures\\Selection\\SelectionCircleSmall.blp";
+					}
+					else if (radius < 300) {
+						path = "ReplaceableTextures\\Selection\\SelectionCircleMed.blp";
+					}
+					else {
+						path = "ReplaceableTextures\\Selection\\SelectionCircleLarge.blp";
+					}
+					if (!splats.containsKey(path)) {
+						splats.put(path, new Splat());
+					}
+					final float x = unit.location[0];
+					final float y = unit.location[1];
+					final float z = unit.row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
+					splats.get(path).locations
+							.add(new float[] { x - radius, y - radius, x + radius, y + radius, z + 5 });
+				}
+			}
+		}
+		this.selModels.clear();
+		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
+			final String path = entry.getKey();
+			final Splat locations = entry.getValue();
+			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(path, PathSolver.DEFAULT, null),
+					locations.locations, this.terrain.centerOffset);
+			model.color[0] = 0;
+			model.color[1] = 1;
+			model.color[2] = 0;
+			model.color[3] = 1;
+			this.selModels.add(model);
+			this.terrain.addSplatBatchModel(model);
+		}
+	}
+
+	public void getClickLocation(final Vector3 out, final int screenX, final int screenY) {
+		final float[] ray = rayHeap;
+		mousePosHeap.set(screenX, screenY);
+		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
+		final Ray gdxRay = new Ray(new Vector3(ray[0], ray[1], ray[2]),
+				new Vector3(ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]));
+		Terrain.intersectRayTriangles(gdxRay, this.terrain.softwareGroundMesh.vertices,
+				this.terrain.softwareGroundMesh.indices, 3, out);
+	}
+
+	public void showConfirmation(final Vector3 position, final float red, final float green, final float blue) {
+		this.confirmationInstance.show();
+		this.confirmationInstance.setSequence(0);
+		this.confirmationInstance.setLocation(position);
+		this.confirmationInstance.vertexColor[0] = red;
+		this.confirmationInstance.vertexColor[1] = green;
+		this.confirmationInstance.vertexColor[2] = blue;
+	}
+
+	public List<Unit> selectUnit(final float x, final float y, final boolean toggle) {
+		final float[] ray = rayHeap;
+		mousePosHeap.set(x, y);
+		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
+		final Vector3 dir = normalHeap;
+		dir.x = ray[3] - ray[0];
+		dir.y = ray[4] - ray[1];
+		dir.z = ray[5] - ray[2];
+		dir.nor();
+		// TODO good performance, do not create vectors on every check
+		final Vector3 eMid = new Vector3();
+		final Vector3 eSize = new Vector3();
+		final Vector3 rDir = new Vector3();
+
+		Unit entity = null;
+		float entDist = 1e6f;
+
+		for (final Unit unit : this.units) {
+			final float radius = unit.radius;
+			final float[] location = unit.location;
+			final MdxComplexInstance instance = unit.instance;
+			eMid.set(0, 0, radius / 2);
+			eSize.set(radius, radius, radius);
+
+			eMid.add(location[0], location[1], location[2]);
+			eMid.sub(ray[0], ray[1], ray[2]);
+			eMid.scl(1 / eSize.x, 1 / eSize.y, 1 / eSize.z);
+			rDir.x = dir.x / eSize.x;
+			rDir.y = dir.y / eSize.y;
+			rDir.z = dir.z / eSize.z;
+			final float dlen = rDir.len2();
+			final float dp = Math.max(0, rDir.dot(eMid)) / dlen;
+			if (dp > entDist) {
+				continue;
+			}
+			rDir.scl(dp);
+			if (rDir.dst2(eMid) < 1.0) {
+				entity = unit;
+				entDist = dp;
+			}
+		}
+		List<Unit> sel;
+		if (entity != null) {
+			if (toggle) {
+				sel = new ArrayList<>(this.selected);
+				final int idx = sel.indexOf(entity);
+				if (idx >= 0) {
+					sel.remove(idx);
+				}
+				else {
+					sel.add(entity);
+				}
+			}
+			else {
+				sel = Arrays.asList(entity);
+			}
+		}
+		else {
+			sel = Collections.emptyList();
+		}
+		this.doSelectUnit(sel);
+		return sel;
 	}
 
 	private static final class MappedDataCallbackImplementation implements LoadGenericCallback {

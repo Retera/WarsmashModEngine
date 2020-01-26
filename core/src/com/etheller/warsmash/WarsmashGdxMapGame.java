@@ -1,21 +1,23 @@
 package com.etheller.warsmash;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.Arrays;
+import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -31,23 +33,26 @@ import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
+import com.etheller.warsmash.util.DataSourceFileHandle;
+import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
-import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
-import com.etheller.warsmash.viewer5.SolvedPath;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
+import com.etheller.warsmash.viewer5.handlers.w3x.StandSequence;
+import com.etheller.warsmash.viewer5.handlers.w3x.Unit;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
+	private static final Vector3 clickLocationTemp = new Vector3();
 	private DataSource codebase;
 	private War3MapViewer viewer;
 	private CameraManager cameraManager;
 	private final Rectangle tempRect = new Rectangle();
 
 	private CameraManager portraitCameraManager;
-	private MdxModel portraitModel;
 	private MdxComplexInstance portraitInstance;
 	private final float[] cameraPositionTemp = new float[3];
 	private final float[] cameraTargetTemp = new float[3];
@@ -58,6 +63,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private SpriteBatch batch;
 	private Viewport uiViewport;
 	private GlyphLayout glyphLayout;
+
+	private Texture consoleUITexture;
+	private final Vector2 projectionTemp1 = new Vector2();
+	private final Vector2 projectionTemp2 = new Vector2();
 
 	@Override
 	public void create() {
@@ -88,11 +97,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.viewer = new War3MapViewer(this.codebase, this);
 
 		try {
-			this.viewer.loadMap("(2)BootyBay.w3m");
+			this.viewer.loadMap("Farm.w3x");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+		this.viewer.worldScene.enableAudio();
+		this.viewer.enableAudio();
 
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(this.viewer.worldScene);
@@ -106,45 +117,15 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.portraitCameraManager.setupCamera(this.portraitScene);
 
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
-		this.portraitModel = (MdxModel) this.viewer.load("Units\\NightElf\\DruidOfTheClaw\\DruidOfTheClaw_Portrait.mdx",
-				new PathSolver() {
-					@Override
-					public SolvedPath solve(final String src, final Object solverParams) {
-						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
-					}
-				}, null);
 
-		this.portraitCameraManager.modelCamera = this.portraitModel.cameras.get(0);
 		this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
-
-		this.portraitInstance = (MdxComplexInstance) this.portraitModel.addInstance(0);
-
-		this.portraitInstance.setTeamColor(6);
-
-		this.portraitInstance.setScene(this.portraitScene);
-
-		final int animIndex = 0;
-		this.portraitInstance.setSequence(animIndex);
-
-		this.portraitInstance.setSequenceLoopMode(0);
 
 		// libGDX stuff
 		final float w = Gdx.graphics.getWidth();
 		final float h = Gdx.graphics.getHeight();
 
-		final FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(new FileHandle("fonts\\FRIZQT__.TTF") {
-			@Override
-			public InputStream read() {
-				// TODO load font name from WC3 configs, since actually in WC3 mods were able to
-				// change it
-				try {
-					return WarsmashGdxMapGame.this.viewer.dataSource.getResourceAsStream("fonts\\FRIZQT__.TTF");
-				}
-				catch (final IOException e) {
-					throw new IllegalStateException("No such file: " + path());
-				}
-			}
-		});
+		final FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(
+				new DataSourceFileHandle(this.viewer.dataSource, "fonts\\FRIZQT__.TTF"));
 		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
 		fontParam.size = 32;
 		this.font = fontGenerator.generateFont(fontParam);
@@ -156,16 +137,44 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		// Height is multiplied by aspect ratio.
 		this.uiCamera = new OrthographicCamera();
 		this.uiViewport = new FitViewport(1600, 1200, this.uiCamera);
+		this.uiViewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 		this.uiCamera.position.set(this.uiCamera.viewportWidth / 2f, this.uiCamera.viewportHeight / 2f, 0);
 		this.uiCamera.update();
 
+		positionPortrait();
+
 		this.batch = new SpriteBatch();
 
-		Gdx.input.setInputProcessor(this);
-	}
+		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
+		if (this.viewer.dataSource.has("war3mapMap.tga")) {
+			try {
+				this.minimapTexture = ImageUtils.getTextureNoColorCorrection(TgaFile.readTGA("war3mapMap.tga",
+						this.viewer.dataSource.getResourceAsStream("war3mapMap.tga")));
+			}
+			catch (final IOException e) {
+				System.err.println("Could not load minimap TGA file");
+				e.printStackTrace();
+			}
+		}
+		else if (this.viewer.dataSource.has("war3mapMap.blp")) {
+			try {
+				this.minimapTexture = ImageUtils
+						.getTexture(ImageIO.read(this.viewer.dataSource.getResourceAsStream("war3mapMap.blp")));
+			}
+			catch (final IOException e) {
+				System.err.println("Could not load minimap BLP file");
+				e.printStackTrace();
+			}
+		}
 
-	private int frame = 0;
+		Gdx.input.setInputProcessor(this);
+
+//		final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "undead_dance.mp3"));
+//		music.setVolume(0.7f);
+//		music.setLooping(true);
+//		music.play();
+	}
 
 	@Override
 	public void render() {
@@ -186,14 +195,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //		this.font.draw(this.batch, Integer.toString(Gdx.graphics.getFramesPerSecond()), 0, 0);
 //		this.batch.end();
 
-		if (this.portraitInstance.sequenceEnded) {
-			this.portraitInstance
-					.setSequence((this.portraitInstance.sequence + 1) % this.portraitModel.getSequences().size());
+		if ((this.portraitInstance != null)
+				&& (this.portraitInstance.sequenceEnded || (this.portraitInstance.sequence == -1))) {
+			StandSequence.randomPortraitSequence(this.portraitInstance);
 		}
 
-		if ((this.frame++ % 1000) == 0) {
-			System.out.println(Gdx.graphics.getFramesPerSecond());
-		}
 		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
 
 		Gdx.gl30.glDisable(GL30.GL_CULL_FACE);
@@ -208,6 +214,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
 		this.glyphLayout.setText(this.font, fpsString);
 		this.font.draw(this.batch, fpsString, (this.uiViewport.getWorldWidth() - this.glyphLayout.width) / 2, 1100);
+		this.batch.draw(this.consoleUITexture, 0, 0, this.uiViewport.getWorldWidth(), 320);
+		this.batch.draw(this.minimapTexture, 35, 7, 305, 272);
 		this.batch.end();
 	}
 
@@ -227,24 +235,35 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public void resize(final int width, final int height) {
-		final float worldFrameTestHeight = (360 / 480f) * height;
-		final float worldFrameTestY = (100 / 480f) * height;
 		super.resize(width, height);
 		this.tempRect.x = 0;
-		this.tempRect.y = worldFrameTestY;
+		this.tempRect.y = 0;
 		this.tempRect.width = width;
-		this.tempRect.height = worldFrameTestHeight;
+		this.tempRect.height = height;
 		this.cameraManager.camera.viewport(this.tempRect);
 		final float portraitTestWidth = (100 / 640f) * width;
 		final float portraitTestHeight = (100 / 480f) * height;
-		this.tempRect.x = portraitTestWidth;
-		this.tempRect.y = 0;
-		this.tempRect.width = portraitTestWidth;
-		this.tempRect.height = portraitTestHeight;
-		this.portraitScene.camera.viewport(this.tempRect);
 
 		this.uiViewport.update(width, height);
 		this.uiCamera.position.set(this.uiCamera.viewportWidth / 2, this.uiCamera.viewportHeight / 2, 0);
+
+		positionPortrait();
+
+	}
+
+	private void positionPortrait() {
+		this.projectionTemp1.x = 385;
+		this.projectionTemp1.y = 0;
+		this.projectionTemp2.x = 385 + 180;
+		this.projectionTemp2.y = 177;
+		this.uiViewport.project(this.projectionTemp1);
+		this.uiViewport.project(this.projectionTemp2);
+
+		this.tempRect.x = this.projectionTemp1.x;
+		this.tempRect.y = this.projectionTemp1.y;
+		this.tempRect.width = this.projectionTemp2.x - this.projectionTemp1.x;
+		this.tempRect.height = this.projectionTemp2.y - this.projectionTemp1.y;
+		this.portraitScene.camera.viewport(this.tempRect);
 	}
 
 	class CameraManager {
@@ -276,7 +295,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			this.rotationSpeed = (float) (Math.PI / 180);
 			this.zoomFactor = 0.1f;
 			this.horizontalAngle = 0;// (float) (Math.PI / 2);
-			this.verticalAngle = (float) (Math.PI / 4);
+			this.verticalAngle = (float) (Math.PI / 5);
 			this.distance = 1600;
 			this.position = new Vector3();
 			this.target = new Vector3(0, 0, 50);
@@ -338,6 +357,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private final float cameraSpeed = 4096.0f; // per second
 	private final Vector2 cameraVelocity = new Vector2();
 	private Scene portraitScene;
+	private Texture minimapTexture;
 
 	@Override
 	public boolean keyDown(final int keycode) {
@@ -381,6 +401,45 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
 		System.out.println(screenX + "," + screenY);
+		if (button == Input.Buttons.RIGHT) {
+			this.viewer.getClickLocation(clickLocationTemp, screenX, screenY);
+			System.out.println(clickLocationTemp);
+			this.viewer.showConfirmation(clickLocationTemp, 0, 1, 0);
+			final int x = (int) ((clickLocationTemp.x - this.viewer.terrain.centerOffset[0]) / 128);
+			final int y = (int) ((clickLocationTemp.y - this.viewer.terrain.centerOffset[1]) / 128);
+			System.out.println(x + "," + y);
+		}
+		else {
+			final List<Unit> selectedUnits = this.viewer.selectUnit(screenX, screenY, true);
+			if (!selectedUnits.isEmpty()) {
+				final Unit unit = selectedUnits.get(0);
+				if (unit.soundset != null) {
+					unit.soundset.what.play(this.viewer.worldScene.audioContext, unit.location[0], unit.location[1]);
+				}
+				final MdxModel portraitModel = unit.portraitModel;
+				if (portraitModel != null) {
+					if (this.portraitInstance != null) {
+						this.portraitScene.removeInstance(this.portraitInstance);
+					}
+					this.portraitInstance = (MdxComplexInstance) portraitModel.addInstance();
+					this.portraitInstance.setSequenceLoopMode(1);
+					this.portraitInstance.setScene(this.portraitScene);
+					if (portraitModel.getCameras().size() > 0) {
+						this.portraitCameraManager.modelCamera = portraitModel.getCameras().get(0);
+					}
+					this.portraitInstance.setTeamColor(unit.playerIndex);
+					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
+
+				}
+			}
+			else {
+				if (this.portraitInstance != null) {
+					this.portraitScene.removeInstance(this.portraitInstance);
+				}
+				this.portraitInstance = null;
+				this.portraitCameraManager.modelCamera = null;
+			}
+		}
 		return false;
 	}
 

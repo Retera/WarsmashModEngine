@@ -49,6 +49,28 @@ public final class ImageUtils {
 		return texture;
 	}
 
+	public static Texture getTextureNoColorCorrection(final BufferedImage image) {
+		final int[] pixels = new int[image.getWidth() * image.getHeight()];
+		image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
+
+		// 4
+		// for
+		// RGBA,
+		// 3
+		// for
+		// RGB
+
+		final Pixmap pixmap = new Pixmap(image.getWidth(), image.getHeight(), Format.RGBA8888);
+		for (int y = 0; y < image.getHeight(); y++) {
+			for (int x = 0; x < image.getWidth(); x++) {
+				final int pixel = pixels[(y * image.getWidth()) + x];
+				pixmap.drawPixel(x, y, (pixel << 8) | (pixel >>> 24));
+			}
+		}
+		final Texture texture = new Texture(pixmap);
+		return texture;
+	}
+
 	public static Buffer getTextureBuffer(final BufferedImage image) {
 
 		final int imageWidth = image.getWidth();

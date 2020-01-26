@@ -24,6 +24,7 @@ public class TerrainShaders {
 				"layout (location = 0) out vec3 UV;\r\n" + //
 				"layout (location = 1) out vec3 Normal;\r\n" + //
 				"layout (location = 2) out vec2 pathing_map_uv;\r\n" + //
+				"layout (location = 3) out vec3 position;\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
 				"	pathing_map_uv = (vec2(vPosition.x + 128, vPosition.y) / 128 + vOffset.xy) * 4;\r\n" + //
@@ -32,10 +33,12 @@ public class TerrainShaders {
 				"	float value = texture(height_texture, (vOffset.xy + vec2(vPosition.x + 192, vPosition.y + 64) / 128.0) / vec2(size)).r;\r\n"
 				+ //
 				"\r\n" + //
-				"   vec4 myposition = vec4((vPosition + vec3(vOffset.xy + vec2(1, 0), vOffset.z + value) * 128 ), 1);\r\n"
-				+ //
+				"   position = (vPosition + vec3(vOffset.xy + vec2(1, 0), vOffset.z + value) * 128 );\r\n" + //
+				"   vec4 myposition = vec4(position, 1);\r\n" + //
 				"   myposition.x += centerOffsetX;\r\n" + //
 				"   myposition.y += centerOffsetY;\r\n" + //
+				"   position.x /= (size.x * 128.0);\r\n" + //
+				"   position.y /= (size.x * 128.0);\r\n" + //
 				"	gl_Position = MVP * myposition;\r\n" + //
 				"	UV = vec3(vUV, vOffset.a);\r\n" + //
 				"\r\n" + //
@@ -81,6 +84,25 @@ public class TerrainShaders {
 				"		color = length(pathing_color.rgb) > 0 ? color * 0.75 + pathing_color * 0.5 : color;\r\n" + //
 				"	}\r\n" + //
 				"}";
+
+		public static final String posFrag = "#version 450 core\r\n" + //
+				"\r\n" + //
+				"layout (binding = 0) uniform sampler2DArray cliff_textures;\r\n" + //
+				"layout (binding = 2) uniform usampler2D pathing_map_static;\r\n" + //
+				"\r\n" + //
+				"layout (location = 1) uniform bool show_pathing_map_static;\r\n" + //
+				"layout (location = 2) uniform bool show_lighting;\r\n" + //
+				"\r\n" + //
+				"layout (location = 0) in vec3 UV;\r\n" + //
+				"layout (location = 1) in vec3 Normal;\r\n" + //
+				"layout (location = 2) in vec2 pathing_map_uv;\r\n" + //
+				"layout (location = 3) in vec3 position;\r\n" + //
+				"\r\n" + //
+				"out vec4 color;\r\n" + //
+				"\r\n" + //
+				"void main() {\r\n" + ///
+				"	color = vec4(position.xyz, 1.0);\r\n" + //
+				"}";
 	}
 
 	public static final class Terrain {
@@ -102,7 +124,7 @@ public class TerrainShaders {
 				"layout (location = 1) out flat uvec4 texture_indices;\r\n" + //
 				"layout (location = 2) out vec2 pathing_map_uv;\r\n" + //
 				"layout (location = 3) out vec3 normal;\r\n" + //
-				"layout (location = 6) out float v2Position;\r\n" + //
+				"layout (location = 4) out vec3 position;\r\n" + //
 				"\r\n" + //
 				"void main() { \r\n" + //
 				"	ivec2 size = textureSize(terrain_texture_list, 0);\r\n" + //
@@ -123,9 +145,12 @@ public class TerrainShaders {
 				"	pathing_map_uv = (vPosition + pos) * 4;	\r\n" + //
 				"\r\n" + //
 				"	// Cliff culling\r\n" + //
-				"	gl_Position = ((texture_indices.a & 32768) == 0) ? MVP * vec4((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY, height.r*128.0, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
+				"	position = vec3((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY, height.r*128.0);\r\n"
 				+ //
-//				"   v2Position = float(texture_indices.r+texture_indices.b+texture_indices.g+texture_indices.a);\r\n" + //
+				"	gl_Position = ((texture_indices.a & 32768) == 0) ? MVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
+				+ //
+				"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
+				"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
 				"}";
 
 		public static final String frag = "#version 450 core\r\n" + //
@@ -158,10 +183,10 @@ public class TerrainShaders {
 				"layout (location = 1) in flat uvec4 texture_indices;\r\n" + //
 				"layout (location = 2) in vec2 pathing_map_uv;\r\n" + //
 				"layout (location = 3) in vec3 normal;\r\n" + //
-				"layout (location = 6) in float v2Position;\r\n" + //
+				"layout (location = 4) in vec3 position;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) out vec4 color;\r\n" + //
-				"layout (location = 1) out vec4 position;\r\n" + //
+//				"layout (location = 1) out vec4 position;\r\n" + //
 				"\r\n" + //
 				"vec4 get_fragment(uint id, vec3 uv) {\r\n" + //
 				"	vec2 dx = dFdx(uv.xy);\r\n" + //
@@ -235,7 +260,115 @@ public class TerrainShaders {
 				"		color = length(pathing_static_color.rgb) > 0 ? color * 0.75 + pathing_static_color * 0.5 : color;\r\n"
 				+ //
 				"	}\r\n" + //
-//				"	color = vec4(texture_indices.a,texture_indices.b,texture_indices.g,1.0);\r\n" + //
+				"}";
+
+		public static final String posFrag = "#version 450 core\r\n" + //
+				"\r\n" + //
+				"layout (location = 2) uniform bool show_pathing_map;\r\n" + //
+				"layout (location = 3) uniform bool show_lighting;\r\n" + //
+				"\r\n" + //
+				"layout (binding = 3) uniform sampler2DArray sample0;\r\n" + //
+				"layout (binding = 4) uniform sampler2DArray sample1;\r\n" + //
+				"layout (binding = 5) uniform sampler2DArray sample2;\r\n" + //
+				"layout (binding = 6) uniform sampler2DArray sample3;\r\n" + //
+				"layout (binding = 7) uniform sampler2DArray sample4;\r\n" + //
+				"layout (binding = 8) uniform sampler2DArray sample5;\r\n" + //
+				"layout (binding = 9) uniform sampler2DArray sample6;\r\n" + //
+				"layout (binding = 10) uniform sampler2DArray sample7;\r\n" + //
+				"layout (binding = 11) uniform sampler2DArray sample8;\r\n" + //
+				"layout (binding = 12) uniform sampler2DArray sample9;\r\n" + //
+				"layout (binding = 13) uniform sampler2DArray sample10;\r\n" + //
+				"layout (binding = 14) uniform sampler2DArray sample11;\r\n" + //
+				"layout (binding = 15) uniform sampler2DArray sample12;\r\n" + //
+				"layout (binding = 16) uniform sampler2DArray sample13;\r\n" + //
+				"layout (binding = 17) uniform sampler2DArray sample14;\r\n" + //
+				"layout (binding = 18) uniform sampler2DArray sample15;\r\n" + //
+				"layout (binding = 19) uniform sampler2DArray sample16;\r\n" + //
+				"\r\n" + //
+				"layout (binding = 20) uniform usampler2D pathing_map_static;\r\n" + //
+				"layout (binding = 21) uniform usampler2D pathing_map_dynamic;\r\n" + //
+				"\r\n" + //
+				"layout (location = 0) in vec2 UV;\r\n" + //
+				"layout (location = 1) in flat uvec4 texture_indices;\r\n" + //
+				"layout (location = 2) in vec2 pathing_map_uv;\r\n" + //
+				"layout (location = 3) in vec3 normal;\r\n" + //
+				"layout (location = 4) in vec3 position;\r\n" + //
+				"\r\n" + //
+				"layout (location = 0) out vec4 color;\r\n" + //
+				"\r\n" + //
+				"vec4 get_fragment(uint id, vec3 uv) {\r\n" + //
+				"	vec2 dx = dFdx(uv.xy);\r\n" + //
+				"	vec2 dy = dFdy(uv.xy);\r\n" + //
+				"\r\n" + //
+				"	switch(id) {\r\n" + //
+				"		case 0:\r\n" + //
+				"			return textureGrad(sample0, uv, dx, dy);\r\n" + //
+				"		case 1:\r\n" + //
+				"			return textureGrad(sample1, uv, dx, dy);\r\n" + //
+				"		case 2:\r\n" + //
+				"			return textureGrad(sample2, uv, dx, dy);\r\n" + //
+				"		case 3:\r\n" + //
+				"			return textureGrad(sample3, uv, dx, dy);\r\n" + //
+				"		case 4:\r\n" + //
+				"			return textureGrad(sample4, uv, dx, dy);\r\n" + //
+				"		case 5:\r\n" + //
+				"			return textureGrad(sample5, uv, dx, dy);\r\n" + //
+				"		case 6:\r\n" + //
+				"			return textureGrad(sample6, uv, dx, dy);\r\n" + //
+				"		case 7:\r\n" + //
+				"			return textureGrad(sample7, uv, dx, dy);\r\n" + //
+				"		case 8:\r\n" + //
+				"			return textureGrad(sample8, uv, dx, dy);\r\n" + //
+				"		case 9:\r\n" + //
+				"			return textureGrad(sample9, uv, dx, dy);\r\n" + //
+				"		case 10:\r\n" + //
+				"			return textureGrad(sample10, uv, dx, dy);\r\n" + //
+				"		case 11:\r\n" + //
+				"			return textureGrad(sample11, uv, dx, dy);\r\n" + //
+				"		case 12:\r\n" + //
+				"			return textureGrad(sample12, uv, dx, dy);\r\n" + //
+				"		case 13:\r\n" + //
+				"			return textureGrad(sample13, uv, dx, dy);\r\n" + //
+				"		case 14:\r\n" + //
+				"			return textureGrad(sample14, uv, dx, dy);\r\n" + //
+				"		case 15:\r\n" + //
+				"			return textureGrad(sample15, uv, dx, dy);\r\n" + //
+				"		case 16:\r\n" + //
+				"			return textureGrad(sample16, uv, dx, dy);\r\n" + //
+				"		case 17:\r\n" + //
+				"			return vec4(0, 0, 0, 0);\r\n" + //
+				"	}\r\n" + //
+				"}\r\n" + //
+				"\r\n" + //
+				"\r\n" + //
+				"void main() {\r\n" + //
+				"	color = vec4(position.xyz, 1.0);\r\n" + //
+				"}";
+	}
+
+	public static final class Test {
+		private Test() {
+		}
+
+		public static final String vert = "#version 450 core\r\n" + //
+				"\r\n" + //
+				"layout (location = 0) in vec3 vPosition;\r\n" + //
+				"layout (location = 1) uniform mat4 MVP;\r\n" + //
+				"\r\n" + //
+				"\r\n" + //
+				"void main() { \r\n" + //
+				"	gl_Position = MVP * vec4(vPosition, 1.0);\r\n" + //
+				"}";
+
+		public static final String frag = "#version 450 core\r\n" + //
+				"\r\n" + //
+				"\r\n" + //
+				"layout (location = 0) out vec4 color;\r\n" + //
+				"\r\n" + //
+				"\r\n" + //
+				"\r\n" + //
+				"void main() {\r\n" + //
+				"		color = vec4(1.0,1.0,1.0,1.0);\r\n" + //
 				"}";
 	}
 

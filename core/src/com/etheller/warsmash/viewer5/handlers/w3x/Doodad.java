@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 public class Doodad {
 	private static final War3ID TEX_FILE = War3ID.fromString("btxf");
 	private static final War3ID TEX_ID = War3ID.fromString("btxi");
-	private final ModelInstance instance;
+	public final ModelInstance instance;
 	private final MutableGameObject row;
 
 	public Doodad(final War3MapViewer map, final MdxModel model, final MutableGameObject row,

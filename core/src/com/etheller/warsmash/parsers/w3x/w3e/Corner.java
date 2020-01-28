@@ -95,6 +95,10 @@ public class Corner {
 		return this.ramp;
 	}
 
+	public boolean isRamp() {
+		return this.ramp != 0;
+	}
+
 	public int getBlight() {
 		return this.blight;
 	}

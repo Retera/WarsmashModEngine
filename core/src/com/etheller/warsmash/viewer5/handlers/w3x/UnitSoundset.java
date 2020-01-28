@@ -41,6 +41,8 @@ public class UnitSoundset {
 		private final float maxDistance;
 		private final float distanceCutoff;
 
+		private Sound lastPlayedSound;
+
 		public static UnitAckSound create(final DataSource dataSource, final DataTable unitAckSounds,
 				final String soundName, final String soundType) {
 			final Element row = unitAckSounds.get(soundName + soundType);
@@ -102,6 +104,7 @@ public class UnitSoundset {
 
 			// Make a sound.
 			source.start(0);
+			this.lastPlayedSound = source.buffer;
 		}
 	}
 }

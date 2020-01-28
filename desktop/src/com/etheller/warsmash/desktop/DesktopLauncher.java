@@ -3,6 +3,7 @@ package com.etheller.warsmash.desktop;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL33;
 
+import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.etheller.warsmash.WarsmashGdxMapGame;
@@ -34,10 +35,10 @@ public class DesktopLauncher {
 		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
 		config.samples = 16;
-//		config.fullscreen = true;
-//		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
-//		config.width = desktopDisplayMode.width;
-//		config.height = desktopDisplayMode.height;
+		config.fullscreen = false;
+		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
+		config.width = desktopDisplayMode.width;
+		config.height = desktopDisplayMode.height;
 		new LwjglApplication(new WarsmashGdxMapGame(), config);
 	}
 }

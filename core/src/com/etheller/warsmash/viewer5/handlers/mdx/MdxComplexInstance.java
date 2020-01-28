@@ -528,6 +528,9 @@ public class MdxComplexInstance extends ModelInstance {
 					this.counter -= frameTime;
 					this.allowParticleSpawn = false;
 				}
+				if (this.sequenceLoopMode == 3) {
+					hide();
+				}
 
 				this.sequenceEnded = true;
 			}
@@ -615,6 +618,7 @@ public class MdxComplexInstance extends ModelInstance {
 			}
 			else {
 				this.frame = (int) sequences.get(id).getInterval()[0]; // TODO not cast
+				this.sequenceEnded = false;
 			}
 
 			this.resetEventEmitters();
@@ -627,7 +631,8 @@ public class MdxComplexInstance extends ModelInstance {
 
 	/**
 	 * Set the seuqnece loop mode. 0 to never loop, 1 to loop based on the model,
-	 * and 2 to always loop.
+	 * and 2 to always loop. 3 was added by Retera as "hide after done" for gameplay
+	 * spawned effects
 	 */
 	public MdxComplexInstance setSequenceLoopMode(final int mode) {
 		this.sequenceLoopMode = mode;

@@ -8,7 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxSimpleInstance;
 
 public class TerrainDoodad {
 	private static final float[] locationHeap = new float[3];
-	private final MdxSimpleInstance instance;
+	public final MdxSimpleInstance instance;
 	private final MutableGameObject row;
 
 	public TerrainDoodad(final War3MapViewer map, final MdxModel model, final MutableGameObject row,

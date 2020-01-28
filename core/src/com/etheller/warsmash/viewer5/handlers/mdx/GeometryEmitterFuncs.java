@@ -404,10 +404,16 @@ public class GeometryEmitterFuncs {
 				bindRibbonEmitterShader((RibbonEmitter) emitter, shader);
 				break;
 			case EMITTER_SPLAT:
+				if (true) {
+					return;
+				}
 				bindEventObjectEmitterBuffer((EventObjectSplEmitter) emitter, buffer);
 				bindEventObjectSplEmitterShader((EventObjectSplEmitter) emitter, shader);
 				break;
 			default:
+				if (true) {
+					return;
+				}
 				bindEventObjectEmitterBuffer((EventObjectUbrEmitter) emitter, buffer);
 				bindEventObjectUbrEmitterShader((EventObjectUbrEmitter) emitter, shader);
 				break;

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import javax.imageio.ImageIO;
 
@@ -41,6 +42,7 @@ import com.etheller.warsmash.viewer5.RawOpenGLTextureResource;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
@@ -93,6 +95,7 @@ public class Terrain {
 	private int groundTextureData = -1;
 	private final int groundHeight;
 	private final int groundCornerHeight;
+	private final int groundCornerHeightLinear;
 	private final int cliffTextureArray;
 	private final int waterHeight;
 	private final int waterExists;
@@ -282,6 +285,16 @@ public class Terrain {
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
 
+		this.groundCornerHeightLinear = gl.glGenTexture();
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightLinear);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
+
+		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, width, height, 0, GL30.GL_RED, GL30.GL_FLOAT,
+				RenderMathUtils.wrap(this.groundCornerHeights));
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+
 		// Cliff
 		this.cliffTextureArray = gl.glGenTexture();
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.cliffTextureArray);
@@ -421,6 +434,53 @@ public class Terrain {
 				RenderMathUtils.wrap(this.groundCornerHeights));
 	}
 
+	/**
+	 * calculateRamps() is copied from Riv whereas a lot of the rest of the terrain
+	 * was copied from HiveWE
+	 */
+	private void calculateRamps() {
+		final int columns = this.mapSize[0];
+		final int rows = this.mapSize[1];
+
+		final String[] ramps = { "AAHL", "AALH", "ABHL", "AHLA", "ALHA", "ALHB", "BALH", "BHLA", "HAAL", "HBAL", "HLAA",
+				"HLAB", "LAAH", "LABH", "LHAA", "LHBA" };
+
+		// Adjust terrain height inside ramps (set rampAdjust)
+		for (int y = 1; y < (rows - 1); ++y) {
+			for (int x = 1; x < (columns - 1); ++x) {
+				final RenderCorner o = this.corners[x][y];
+				if (!o.isRamp()) {
+					continue;
+				}
+				final RenderCorner a = this.corners[x - 1][y - 1];
+				final RenderCorner b = this.corners[x - 1][y];
+				final RenderCorner c = this.corners[x - 1][y + 1];
+				final RenderCorner d = this.corners[x][y + 1];
+				final RenderCorner e = this.corners[x + 1][y + 1];
+				final RenderCorner f = this.corners[x + 1][y];
+				final RenderCorner g = this.corners[x + 1][y - 1];
+				final RenderCorner h = this.corners[x][y - 1];
+				final int base = o.getLayerHeight();
+				if ((b.isRamp() && f.isRamp()) || (d.isRamp() && h.isRamp())) {
+					float adjust = 0;
+					if (b.isRamp() && f.isRamp()) {
+						adjust = Math.max(adjust, ((b.getLayerHeight() + f.getLayerHeight()) / 2) - base);
+					}
+					if (d.isRamp() && h.isRamp()) {
+						adjust = Math.max(adjust, ((d.getLayerHeight() + h.getLayerHeight()) / 2) - base);
+					}
+					if (a.isRamp() && e.isRamp()) {
+						adjust = Math.max(adjust, (((a.getLayerHeight() + e.getLayerHeight()) / 2) - base) / 2);
+					}
+					if (c.isRamp() && g.isRamp()) {
+						adjust = Math.max(adjust, (((c.getLayerHeight() + g.getLayerHeight()) / 2) - base) / 2);
+					}
+					o.rampAdjust = adjust;
+				}
+			}
+		}
+	}
+
 	/// TODO clean
 	/// Function is a bit of a mess
 	/// Updates the cliff and ramp meshes for an area
@@ -448,12 +508,6 @@ public class Terrain {
 		for (int i = (int) rampArea.getX(); i < xLimit; i++) {
 			final int yLimit = (int) ((rampArea.getY() + rampArea.getHeight()) - 1);
 			for (int j = (int) rampArea.getY(); j < yLimit; j++) {
-				if ((i == (84)) && (j == (82))) {
-					System.out.println("test");
-				}
-				if ((i == (84)) && (j == (81))) {
-					System.out.println("test");
-				}
 				final RenderCorner bottomLeft = this.corners[i][j];
 				final RenderCorner bottomRight = this.corners[i + 1][j];
 				final RenderCorner topLeft = this.corners[i][j + 1];
@@ -558,6 +612,12 @@ public class Terrain {
 			}
 		}
 
+	}
+
+	public void logRomp(final int x, final int y) {
+		System.out.println("romp: " + this.corners[x][y].romp);
+		System.out.println("ramp: " + this.corners[x][y].isRamp());
+		System.out.println("cliff: " + this.corners[x][y].cliff);
 	}
 
 	private void updateGroundTextures(final Rectangle area) {
@@ -812,7 +872,7 @@ public class Terrain {
 		shader.setUniformi("u_shadowMap", 2);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightLinear);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
@@ -884,6 +944,7 @@ public class Terrain {
 		this.webGL.useShaderProgram(this.cliffShader);
 
 		final GL30 gl = Gdx.gl30;
+		gl.glDisable(GL30.GL_BLEND);
 
 		// WC3 models are 128x too large
 		tempMatrix.set(this.camera.viewProjectionMatrix);
@@ -1117,9 +1178,9 @@ public class Terrain {
 
 		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
 			final float bottomLeft = this.corners[cellX][cellY].computeFinalGroundHeight();
-			final float bottomRight = this.corners[cellX][cellY].computeFinalGroundHeight();
-			final float topLeft = this.corners[cellX][cellY].computeFinalGroundHeight();
-			final float topRight = this.corners[cellX][cellY].computeFinalGroundHeight();
+			final float bottomRight = this.corners[cellX + 1][cellY].computeFinalGroundHeight();
+			final float topLeft = this.corners[cellX][cellY + 1].computeFinalGroundHeight();
+			final float topRight = this.corners[cellX + 1][cellY + 1].computeFinalGroundHeight();
 			final float sqX = userCellSpaceX - cellX;
 			final float sqY = userCellSpaceY - cellY;
 			float height;
@@ -1139,6 +1200,7 @@ public class Terrain {
 
 	public static final class Splat {
 		public List<float[]> locations = new ArrayList<>();
+		public List<Consumer<SplatMover>> unitMapping = new ArrayList<>();
 		public float opacity = 1;
 	}
 
@@ -1148,7 +1210,8 @@ public class Terrain {
 			final Splat splat = entry.getValue();
 
 			final SplatModel splatModel = new SplatModel(Gdx.gl30,
-					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset);
+					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset,
+					splat.unitMapping);
 			splatModel.color[3] = splat.opacity;
 			this.uberSplatModels.add(splatModel);
 		}

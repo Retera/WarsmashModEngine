@@ -1,5 +1,6 @@
 package com.etheller.warsmash.units;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -28,5 +29,66 @@ public interface GameObject {
 	public String getName();
 
 	public Set<String> keySet();
+
+	GameObject EMPTY = new GameObject() {
+
+		@Override
+		public void setField(final String field, final String value, final int index) {
+		}
+
+		@Override
+		public void setField(final String field, final String value) {
+		}
+
+		@Override
+		public Set<String> keySet() {
+			return Collections.emptySet();
+		}
+
+		@Override
+		public ObjectData getTable() {
+			return null;
+		}
+
+		@Override
+		public String getName() {
+			return "<No data>";
+		}
+
+		@Override
+		public String getId() {
+			return "0000";
+		}
+
+		@Override
+		public int getFieldValue(final String field, final int index) {
+			return 0;
+		}
+
+		@Override
+		public int getFieldValue(final String field) {
+			return 0;
+		}
+
+		@Override
+		public float getFieldFloatValue(final String field) {
+			return 0;
+		}
+
+		@Override
+		public List<? extends GameObject> getFieldAsList(final String field, final ObjectData objectData) {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public String getField(final String field, final int index) {
+			return "";
+		}
+
+		@Override
+		public String getField(final String field) {
+			return "";
+		}
+	};
 
 }

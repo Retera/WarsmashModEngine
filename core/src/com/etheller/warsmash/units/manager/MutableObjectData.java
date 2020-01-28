@@ -266,19 +266,33 @@ public final class MutableObjectData {
 		if (mutableGameObject == null) {
 			if (this.editorData.getCustom().containsKey(id)) {
 				final ObjectDataChangeEntry customUnitData = this.editorData.getCustom().get(id);
-				mutableGameObject = new MutableGameObject(
-						this.sourceSLKData.get(customUnitData.getOldId().asStringValue()), customUnitData);
+				GameObject parentWC3Object = this.sourceSLKData.get(customUnitData.getOldId().asStringValue());
+				if (parentWC3Object == null) {
+					System.err.println("Error parsing unit data: custom unit inherits from unknown id '"
+							+ customUnitData.getOldId().asStringValue() + "'");
+					parentWC3Object = GameObject.EMPTY;
+				}
+				mutableGameObject = new MutableGameObject(parentWC3Object, customUnitData);
 				this.cachedKeyToGameObject.put(id, mutableGameObject);
 			}
 			else if (this.editorData.getOriginal().containsKey(id)) {
 				final ObjectDataChangeEntry customUnitData = this.editorData.getOriginal().get(id);
-				mutableGameObject = new MutableGameObject(
-						this.sourceSLKData.get(customUnitData.getOldId().asStringValue()),
-						this.editorData.getOriginal().get(id));
+				GameObject parentWC3Object = this.sourceSLKData.get(customUnitData.getOldId().asStringValue());
+				if (parentWC3Object == null) {
+					System.err.println("Error parsing unit data: standard unit modifies unknown id '"
+							+ customUnitData.getOldId().asStringValue() + "'");
+					parentWC3Object = GameObject.EMPTY;
+				}
+				mutableGameObject = new MutableGameObject(parentWC3Object, this.editorData.getOriginal().get(id));
 				this.cachedKeyToGameObject.put(id, mutableGameObject);
 			}
 			else if (this.sourceSLKData.get(id.asStringValue()) != null) {
-				mutableGameObject = new MutableGameObject(this.sourceSLKData.get(id.asStringValue()), null);
+				GameObject parentWC3Object = this.sourceSLKData.get(id.asStringValue());
+				if (parentWC3Object == null) {
+					System.err.println("Error parsing unit data: id does not exist: '" + id.asStringValue() + "'");
+					parentWC3Object = GameObject.EMPTY;
+				}
+				mutableGameObject = new MutableGameObject(parentWC3Object, null);
 				this.cachedKeyToGameObject.put(id, mutableGameObject);
 			}
 		}

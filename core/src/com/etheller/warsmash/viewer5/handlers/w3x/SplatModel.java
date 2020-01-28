@@ -2,7 +2,9 @@ package com.etheller.warsmash.viewer5.handlers.w3x;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.etheller.warsmash.util.RenderMathUtils;
@@ -23,7 +25,8 @@ public class SplatModel {
 	private final List<Batch> batches;
 	public final float[] color;
 
-	public SplatModel(final GL30 gl, final Texture texture, final List<float[]> locations, final float[] centerOffset) {
+	public SplatModel(final GL30 gl, final Texture texture, final List<float[]> locations, final float[] centerOffset,
+			final List<Consumer<SplatMover>> unitMapping) {
 		this.texture = texture;
 		this.batches = new ArrayList<>();
 		this.color = new float[] { 1, 1, 1, 1 };
@@ -31,8 +34,12 @@ public class SplatModel {
 		final List<float[]> vertices = new ArrayList<>();
 		final List<float[]> uvs = new ArrayList<>();
 		final List<int[]> indices = new ArrayList<>();
+		final List<SplatMover> batchRenderUnits = new ArrayList<>();
 		final int instances = locations.size();
 		for (int idx = 0; idx < instances; ++idx) {
+			final Consumer<SplatMover> unit = ((unitMapping != null) && (idx < unitMapping.size()))
+					? unitMapping.get(idx)
+					: null;
 			final float[] locs = locations.get(idx);
 			final float x0 = locs[0];
 			final float y0 = locs[1];
@@ -51,12 +58,14 @@ public class SplatModel {
 			}
 
 			int start = vertices.size();
+			final SplatMover splatMover = unit == null ? null : new SplatMover(start * 3 * 4);
 			final int step = (ix1 - ix0) + 1;
 			if ((start + newVerts) > MAX_VERTICES) {
-				this.addBatch(gl, vertices, uvs, indices);
+				this.addBatch(gl, vertices, uvs, indices, batchRenderUnits);
 				vertices.clear();
 				uvs.clear();
 				indices.clear();
+				batchRenderUnits.clear();
 				start = 0;
 			}
 
@@ -64,8 +73,12 @@ public class SplatModel {
 				final float y = (iy * 128.0f) + centerOffset[1];
 				for (int ix = ix0; ix <= ix1; ++ix) {
 					final float x = (ix * 128.0f) + centerOffset[0];
-					vertices.add(new float[] { x, y, zoffs });
+					final float[] vertex = new float[] { x, y, zoffs };
+					vertices.add(vertex);
 					uvs.add(new float[] { (x - x0) / (x1 - x0), 1.0f - ((y - y0) / (y1 - y0)) });
+					if (splatMover != null) {
+						splatMover.vertices.add(vertex);
+					}
 				}
 			}
 			for (int i = 0; i < (iy1 - iy0); ++i) {
@@ -74,16 +87,20 @@ public class SplatModel {
 					indices.add(new int[] { i0, i0 + 1, i0 + step, i0 + 1, i0 + step + 1, i0 + step });
 				}
 			}
+			if (unit != null) {
+				unit.accept(splatMover);
+				batchRenderUnits.add(splatMover);
+			}
 
 		}
 		if (indices.size() > 0) {
-			this.addBatch(gl, vertices, uvs, indices);
+			this.addBatch(gl, vertices, uvs, indices, batchRenderUnits);
 		}
 
 	}
 
 	private void addBatch(final GL30 gl, final List<float[]> vertices, final List<float[]> uvs,
-			final List<int[]> indices) {
+			final List<int[]> indices, final List<SplatMover> batchRenderUnits) {
 		final int uvsOffset = vertices.size() * 3 * 4;
 
 		final int vertexBuffer = gl.glGenBuffer();
@@ -98,6 +115,9 @@ public class SplatModel {
 				GL30.GL_STATIC_DRAW);
 
 		this.batches.add(new Batch(uvsOffset, vertexBuffer, faceBuffer, indices.size() * 6));
+		for (final SplatMover mover : batchRenderUnits) {
+			mover.vertexBuffer = vertexBuffer;
+		}
 	}
 
 	public void render(final GL30 gl, final ShaderProgram shader) {
@@ -133,6 +153,28 @@ public class SplatModel {
 			this.vertexBuffer = vertexBuffer;
 			this.faceBuffer = faceBuffer;
 			this.elements = elements;
+		}
+	}
+
+	public static final class SplatMover {
+		private int vertexBuffer;
+		private final int startOffset;
+		private final List<float[]> vertices = new ArrayList<>();
+
+		private SplatMover(final int i) {
+			this.startOffset = i;
+		}
+
+		public void move(final float deltaX, final float deltaY) {
+			for (final float[] vertex : this.vertices) {
+				vertex[0] += deltaX;
+				vertex[1] += deltaY;
+			}
+
+			final GL30 gl = Gdx.gl30;
+			gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.vertexBuffer);
+			gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, this.startOffset, 4 * 3 * this.vertices.size(),
+					RenderMathUtils.wrap(this.vertices));
 		}
 	}
 }

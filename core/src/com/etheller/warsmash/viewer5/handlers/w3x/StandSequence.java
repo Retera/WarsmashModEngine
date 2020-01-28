@@ -106,4 +106,17 @@ public class StandSequence {
 			randomPortraitSequence(target);
 		}
 	}
+
+	public static void randomSequence(final MdxComplexInstance target, final String sequenceName) {
+		final MdxModel model = (MdxModel) target.model;
+		final List<Sequence> sequences = model.getSequences();
+		final IndexedSequence sequence = selectSequence(sequenceName, sequences);
+
+		if (sequence != null) {
+			target.setSequence(sequence.index);
+		}
+		else {
+			randomStandSequence(target);
+		}
+	}
 }

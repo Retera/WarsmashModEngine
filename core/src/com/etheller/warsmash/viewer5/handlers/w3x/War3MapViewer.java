@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
@@ -39,6 +40,7 @@ import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
 import com.etheller.warsmash.util.MappedData;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WorldEditStrings;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.GenericResource;
@@ -52,8 +54,20 @@ import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain.Splat;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 
 import mpq.MPQArchive;
 import mpq.MPQException;
@@ -94,12 +108,13 @@ public class War3MapViewer extends ModelViewer {
 	public MappedData doodadMetaData = new MappedData();
 	public MappedData destructableMetaData = new MappedData();
 	public List<Doodad> doodads = new ArrayList<>();
-	public List<Object> terrainDoodads = new ArrayList<>();
+	public List<TerrainDoodad> terrainDoodads = new ArrayList<>();
 	public boolean doodadsReady;
 	public boolean unitsAndItemsLoaded;
 	public MappedData unitsData = new MappedData();
 	public MappedData unitMetaData = new MappedData();
-	public List<Unit> units = new ArrayList<>();
+	public List<RenderUnit> units = new ArrayList<>();
+	public List<RenderItem> items = new ArrayList<>();
 	public boolean unitsReady;
 	public War3Map mapMpq;
 	public PathSolver mapPathSolver = PathSolver.DEFAULT;
@@ -111,9 +126,13 @@ public class War3MapViewer extends ModelViewer {
 	public int renderLighting = 0;
 
 	public List<SplatModel> selModels = new ArrayList<>();
-	public List<Unit> selected = new ArrayList<>();
+	public List<RenderUnit> selected = new ArrayList<>();
 	private DataTable unitAckSoundsTable;
 	private MdxComplexInstance confirmationInstance;
+	public CSimulation simulation;
+	private float updateTime;
+
+	public Vector2[] startLocations = new Vector2[WarsmashConstants.MAX_PLAYERS];
 
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
@@ -260,7 +279,7 @@ public class War3MapViewer extends ModelViewer {
 		final MdxModel confirmation = (MdxModel) load("UI\\Feedback\\Confirmation\\Confirmation.mdx",
 				PathSolver.DEFAULT, null);
 		this.confirmationInstance = (MdxComplexInstance) confirmation.addInstance();
-		this.confirmationInstance.setSequenceLoopMode(0);
+		this.confirmationInstance.setSequenceLoopMode(3);
 		this.confirmationInstance.setSequence(0);
 		this.confirmationInstance.setScene(this.worldScene);
 
@@ -272,6 +291,7 @@ public class War3MapViewer extends ModelViewer {
 		}
 
 		final Warcraft3MapObjectData modifications = this.mapMpq.readModifications();
+		this.simulation = new CSimulation(modifications.getUnits(), modifications.getAbilities());
 
 		if (this.doodadsAndDestructiblesLoaded) {
 			this.loadDoodadsAndDestructibles(modifications);
@@ -309,43 +329,45 @@ public class War3MapViewer extends ModelViewer {
 				row = modifications.getDestructibles().get(doodad.getId());
 				type = WorldEditorDataType.DESTRUCTIBLES;
 			}
-			String file = row.readSLKTag("file");
-			final int numVar = row.readSLKTagInt("numVar");
+			if (row != null) {
+				String file = row.readSLKTag("file");
+				final int numVar = row.readSLKTagInt("numVar");
 
-			if (file.endsWith(".mdx") || file.endsWith(".mdl")) {
-				file = file.substring(0, file.length() - 4);
+				if (file.endsWith(".mdx") || file.endsWith(".mdl")) {
+					file = file.substring(0, file.length() - 4);
+				}
+
+				String fileVar = file;
+
+				file += ".mdx";
+
+				if (numVar > 1) {
+					fileVar += Math.min(doodad.getVariation(), numVar - 1);
+				}
+
+				fileVar += ".mdx";
+
+				// First see if the model is local.
+				// Doodads referring to local models may have invalid variations, so if the
+				// variation doesn't exist, try without a variation.
+
+				String path;
+				if (this.mapMpq.has(fileVar)) {
+					path = fileVar;
+				}
+				else {
+					path = file;
+				}
+				MdxModel model;
+				if (this.mapMpq.has(path)) {
+					model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
+				}
+				else {
+					model = (MdxModel) this.load(fileVar, this.mapPathSolver, this.solverParams);
+				}
+
+				this.doodads.add(new Doodad(this, model, row, doodad, type));
 			}
-
-			String fileVar = file;
-
-			file += ".mdx";
-
-			if (numVar > 1) {
-				fileVar += Math.min(doodad.getVariation(), numVar - 1);
-			}
-
-			fileVar += ".mdx";
-
-			// First see if the model is local.
-			// Doodads referring to local models may have invalid variations, so if the
-			// variation doesn't exist, try without a variation.
-
-			String path;
-			if (this.mapMpq.has(fileVar)) {
-				path = fileVar;
-			}
-			else {
-				path = file;
-			}
-			MdxModel model;
-			if (this.mapMpq.has(path)) {
-				model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
-			}
-			else {
-				model = (MdxModel) this.load(fileVar, this.mapPathSolver, this.solverParams);
-			}
-
-			this.doodads.add(new Doodad(this, model, row, doodad, type));
 		}
 
 		// Cliff/Terrain doodads.
@@ -386,12 +408,14 @@ public class War3MapViewer extends ModelViewer {
 		for (final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit : dooFile.getUnits()) {
 			MutableGameObject row = null;
 			String path = null;
+			Splat unitShadowSplat = null;
 
 			// Hardcoded?
 			WorldEditorDataType type = null;
 			if (sloc.equals(unit.getId())) {
 //				path = "Objects\\StartLocation\\StartLocation.mdx";
 				type = null; /// ??????
+				this.startLocations[unit.getPlayer()] = new Vector2(unit.getLocation()[0], unit.getLocation()[1]);
 			}
 			else {
 				row = modifications.getUnits().get(unit.getId());
@@ -453,7 +477,8 @@ public class War3MapViewer extends ModelViewer {
 						final float x = unit.getLocation()[0] - shadowX;
 						final float y = unit.getLocation()[1] - shadowY;
 						this.terrain.splats.get(texture).locations
-								.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+								.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 30 });
+						unitShadowSplat = this.terrain.splats.get(texture);
 					}
 
 					final String buildingShadow = row.getFieldAsString(BUILDING_SHADOW, 0);
@@ -481,7 +506,34 @@ public class War3MapViewer extends ModelViewer {
 				else {
 					portraitModel = model;
 				}
-				this.units.add(new Unit(this, model, row, unit, type, soundset, portraitModel));
+				if (type == WorldEditorDataType.UNITS) {
+					float angle;
+					if (this.simulation.getUnitData().isBuilding(row.getAlias())) {
+						// TODO pretty sure 270 is a Gameplay Constants value that should be dynamically
+						// loaded
+						angle = 270.0f;
+					}
+					else {
+						angle = (float) Math.toDegrees(unit.getAngle());
+					}
+					final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), unit.getLocation()[0],
+							unit.getLocation()[1], angle);
+					final RenderUnit renderUnit = new RenderUnit(this, model, row, unit, soundset, portraitModel,
+							simulationUnit);
+					this.units.add(renderUnit);
+					if (unitShadowSplat != null) {
+						unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+							@Override
+							public void accept(final SplatMover t) {
+								renderUnit.shadow = t;
+							}
+						});
+					}
+				}
+				else {
+					this.items.add(new RenderItem(this, model, row, unit, soundset, portraitModel)); // TODO store
+																										// somewhere
+				}
 			}
 			else {
 				System.err.println("Unknown unit ID: " + unit.getId());
@@ -501,9 +553,18 @@ public class War3MapViewer extends ModelViewer {
 
 			super.update();
 
-			final List<ModelInstance> instances = this.worldScene.instances;
-
-			for (final ModelInstance instance : instances) {
+			for (final RenderUnit unit : this.units) {
+				unit.updateAnimations(this);
+			}
+			for (final RenderItem item : this.items) {
+				final MdxComplexInstance instance = item.instance;
+				final MdxComplexInstance mdxComplexInstance = instance;
+				if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1)) {
+					StandSequence.randomStandSequence(mdxComplexInstance);
+				}
+			}
+			for (final Doodad item : this.doodads) {
+				final ModelInstance instance = item.instance;
 				if ((instance instanceof MdxComplexInstance) && (instance != this.confirmationInstance)) {
 					final MdxComplexInstance mdxComplexInstance = (MdxComplexInstance) instance;
 					if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1)) {
@@ -511,8 +572,11 @@ public class War3MapViewer extends ModelViewer {
 					}
 				}
 			}
-			if (this.confirmationInstance.sequenceEnded) {
-				this.confirmationInstance.hide();
+
+			this.updateTime += Gdx.graphics.getRawDeltaTime();
+			while (this.updateTime >= WarsmashConstants.SIMULATION_STEP_TIME) {
+				this.updateTime -= WarsmashConstants.SIMULATION_STEP_TIME;
+				this.simulation.update();
 			}
 		}
 	}
@@ -548,18 +612,21 @@ public class War3MapViewer extends ModelViewer {
 				this.terrain.removeSplatBatchModel(model);
 			}
 			this.selModels.clear();
+			for (final RenderUnit unit : this.selected) {
+				unit.selectionCircle = null;
+			}
 		}
 		this.selected.clear();
 	}
 
-	public void doSelectUnit(final List<Unit> units) {
+	public void doSelectUnit(final List<RenderUnit> units) {
 		deselect();
 		if (units.isEmpty()) {
 			return;
 		}
 
 		final Map<String, Terrain.Splat> splats = new HashMap<String, Terrain.Splat>();
-		for (final Unit unit : units) {
+		for (final RenderUnit unit : units) {
 			if (unit.row != null) {
 				if (unit.radius > 0) {
 					final float radius = unit.radius;
@@ -581,8 +648,15 @@ public class War3MapViewer extends ModelViewer {
 					final float y = unit.location[1];
 					final float z = unit.row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
 					splats.get(path).locations
-							.add(new float[] { x - radius, y - radius, x + radius, y + radius, z + 5 });
+							.add(new float[] { x - radius, y - radius, x + radius, y + radius, z + 35 });
+					splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+						@Override
+						public void accept(final SplatMover t) {
+							unit.selectionCircle = t;
+						}
+					});
 				}
+				this.selected.add(unit);
 			}
 		}
 		this.selModels.clear();
@@ -590,7 +664,7 @@ public class War3MapViewer extends ModelViewer {
 			final String path = entry.getKey();
 			final Splat locations = entry.getValue();
 			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(path, PathSolver.DEFAULT, null),
-					locations.locations, this.terrain.centerOffset);
+					locations.locations, this.terrain.centerOffset, locations.unitMapping);
 			model.color[0] = 0;
 			model.color[1] = 1;
 			model.color[2] = 0;
@@ -619,7 +693,7 @@ public class War3MapViewer extends ModelViewer {
 		this.confirmationInstance.vertexColor[2] = blue;
 	}
 
-	public List<Unit> selectUnit(final float x, final float y, final boolean toggle) {
+	public List<RenderUnit> selectUnit(final float x, final float y, final boolean toggle) {
 		final float[] ray = rayHeap;
 		mousePosHeap.set(x, y);
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
@@ -633,10 +707,10 @@ public class War3MapViewer extends ModelViewer {
 		final Vector3 eSize = new Vector3();
 		final Vector3 rDir = new Vector3();
 
-		Unit entity = null;
+		RenderUnit entity = null;
 		float entDist = 1e6f;
 
-		for (final Unit unit : this.units) {
+		for (final RenderUnit unit : this.units) {
 			final float radius = unit.radius;
 			final float[] location = unit.location;
 			final MdxComplexInstance instance = unit.instance;
@@ -660,7 +734,7 @@ public class War3MapViewer extends ModelViewer {
 				entDist = dp;
 			}
 		}
-		List<Unit> sel;
+		List<RenderUnit> sel;
 		if (entity != null) {
 			if (toggle) {
 				sel = new ArrayList<>(this.selected);
@@ -681,6 +755,50 @@ public class War3MapViewer extends ModelViewer {
 		}
 		this.doSelectUnit(sel);
 		return sel;
+	}
+
+	public RenderUnit rayPickUnit(final float x, final float y) {
+		final float[] ray = rayHeap;
+		mousePosHeap.set(x, y);
+		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
+		final Vector3 dir = normalHeap;
+		dir.x = ray[3] - ray[0];
+		dir.y = ray[4] - ray[1];
+		dir.z = ray[5] - ray[2];
+		dir.nor();
+		// TODO good performance, do not create vectors on every check
+		final Vector3 eMid = new Vector3();
+		final Vector3 eSize = new Vector3();
+		final Vector3 rDir = new Vector3();
+
+		RenderUnit entity = null;
+		float entDist = 1e6f;
+
+		for (final RenderUnit unit : this.units) {
+			final float radius = unit.radius;
+			final float[] location = unit.location;
+			final MdxComplexInstance instance = unit.instance;
+			eMid.set(0, 0, radius / 2);
+			eSize.set(radius, radius, radius);
+
+			eMid.add(location[0], location[1], location[2]);
+			eMid.sub(ray[0], ray[1], ray[2]);
+			eMid.scl(1 / eSize.x, 1 / eSize.y, 1 / eSize.z);
+			rDir.x = dir.x / eSize.x;
+			rDir.y = dir.y / eSize.y;
+			rDir.z = dir.z / eSize.z;
+			final float dlen = rDir.len2();
+			final float dp = Math.max(0, rDir.dot(eMid)) / dlen;
+			if (dp > entDist) {
+				continue;
+			}
+			rDir.scl(dp);
+			if (rDir.dst2(eMid) < 1.0) {
+				entity = unit;
+				entDist = dp;
+			}
+		}
+		return entity;
 	}
 
 	private static final class MappedDataCallbackImplementation implements LoadGenericCallback {
@@ -759,6 +877,75 @@ public class War3MapViewer extends ModelViewer {
 		numElements |= numElements >>> 8;
 		numElements |= numElements >>> 16;
 		return (numElements < 0) ? 1 : (numElements >= MAXIMUM_ACCEPTED) ? MAXIMUM_ACCEPTED : numElements + 1;
+	}
+
+	public boolean orderSmart(final float x, final float y) {
+		mousePosHeap.x = x;
+		mousePosHeap.y = y;
+		boolean ordered = false;
+		for (final RenderUnit unit : this.selected) {
+			for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
+				if (ability instanceof CAbilityMove) {
+					ability.checkCanUse(this.simulation, unit.getSimulationUnit(),
+							BooleanAbilityActivationReceiver.INSTANCE);
+					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
+						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), mousePosHeap,
+								PointAbilityTargetCheckReceiver.INSTANCE);
+						final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
+						if (target != null) {
+							ability.onOrder(this.simulation, unit.getSimulationUnit(), mousePosHeap, false);
+							unit.soundset.yes.play(this.worldScene.audioContext, unit.location[0], unit.location[1]);
+							ordered = true;
+						}
+						else {
+							System.err.println("Target not valid.");
+						}
+					}
+					else {
+						System.err.println("Ability not ok to use.");
+					}
+				}
+				else {
+					System.err.println("Ability not move.");
+				}
+			}
+
+		}
+		return ordered;
+	}
+
+	public boolean orderSmart(final RenderUnit target) {
+		boolean ordered = false;
+		for (final RenderUnit unit : this.selected) {
+			for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
+				if (ability instanceof CAbilityAttack) {
+					ability.checkCanUse(this.simulation, unit.getSimulationUnit(),
+							BooleanAbilityActivationReceiver.INSTANCE);
+					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
+						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), target.getSimulationUnit(),
+								CWidgetAbilityTargetCheckReceiver.INSTANCE);
+						final CWidget targetWidget = CWidgetAbilityTargetCheckReceiver.INSTANCE.getTarget();
+						if (targetWidget != null) {
+							ability.onOrder(this.simulation, unit.getSimulationUnit(), targetWidget, false);
+							unit.soundset.yesAttack.play(this.worldScene.audioContext, unit.location[0],
+									unit.location[1]);
+							ordered = true;
+						}
+						else {
+							System.err.println("Target not valid.");
+						}
+					}
+					else {
+						System.err.println("Ability not ok to use.");
+					}
+				}
+				else {
+					System.err.println("Ability not move.");
+				}
+			}
+
+		}
+		return ordered;
 	}
 
 }

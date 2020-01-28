@@ -13,6 +13,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
@@ -35,18 +36,24 @@ import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.ReplaceableIds;
 import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.StandSequence;
-import com.etheller.warsmash.viewer5.handlers.w3x.Unit;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.CommandCardIcon;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityStop;
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
 	private static final Vector3 clickLocationTemp = new Vector3();
+	private static final Vector2 clickLocationTemp2 = new Vector2();
 	private DataSource codebase;
 	private War3MapViewer viewer;
 	private CameraManager cameraManager;
@@ -60,6 +67,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	// libGDX stuff
 	private OrthographicCamera uiCamera;
 	private BitmapFont font;
+	private BitmapFont font24;
+	private BitmapFont font20;
 	private SpriteBatch batch;
 	private Viewport uiViewport;
 	private GlyphLayout glyphLayout;
@@ -67,6 +76,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private Texture consoleUITexture;
 	private final Vector2 projectionTemp1 = new Vector2();
 	private final Vector2 projectionTemp2 = new Vector2();
+	private RenderUnit selectedUnit;
+
+	private Texture activeButtonTexture;
+
+	private Rectangle minimap;
+
+	private final Texture[] teamColors = new Texture[WarsmashConstants.MAX_PLAYERS];
 
 	@Override
 	public void create() {
@@ -97,7 +113,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.viewer = new War3MapViewer(this.codebase, this);
 
 		try {
-			this.viewer.loadMap("Farm.w3x");
+			this.viewer.loadMap("Maps\\FrozenThrone\\Campaign\\NightElfX03.w3x");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -129,6 +145,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
 		fontParam.size = 32;
 		this.font = fontGenerator.generateFont(fontParam);
+		fontParam.size = 24;
+		this.font24 = fontGenerator.generateFont(fontParam);
+		fontParam.size = 20;
+		this.font20 = fontGenerator.generateFont(fontParam);
 		fontGenerator.dispose();
 		this.glyphLayout = new GlyphLayout();
 
@@ -168,12 +188,26 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			}
 		}
 
+		this.activeButtonTexture = ImageUtils.getBLPTexture(this.viewer.dataSource,
+				"UI\\Widgets\\Console\\Human\\CommandButton\\human-activebutton.blp");
+
+		for (int i = 0; i < this.teamColors.length; i++) {
+			this.teamColors[i] = ImageUtils.getBLPTexture(this.viewer.dataSource,
+					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
+		}
+
 		Gdx.input.setInputProcessor(this);
 
-//		final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "undead_dance.mp3"));
-//		music.setVolume(0.7f);
-//		music.setLooping(true);
-//		music.play();
+		final Music music = Gdx.audio
+				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\NightElfX1.mp3"));
+		music.setVolume(0.2f);
+		music.setLooping(true);
+		music.play();
+
+		this.minimap = new Rectangle(35, 7, 305, 272);
+
+		this.cameraManager.target.x = this.viewer.startLocations[0].x;
+		this.cameraManager.target.y = this.viewer.startLocations[0].y;
 	}
 
 	@Override
@@ -214,8 +248,58 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
 		this.glyphLayout.setText(this.font, fpsString);
 		this.font.draw(this.batch, fpsString, (this.uiViewport.getWorldWidth() - this.glyphLayout.width) / 2, 1100);
+
 		this.batch.draw(this.consoleUITexture, 0, 0, this.uiViewport.getWorldWidth(), 320);
 		this.batch.draw(this.minimapTexture, 35, 7, 305, 272);
+
+		if (this.selectedUnit != null) {
+			this.font24.setColor(Color.WHITE);
+			final String name = this.viewer.simulation.getUnitData()
+					.getName(this.selectedUnit.getSimulationUnit().getTypeId());
+			this.glyphLayout.setText(this.font24, name);
+			this.font24.draw(this.batch, name, ((this.uiViewport.getWorldWidth() - this.glyphLayout.width) / 2) + 100,
+					200);
+
+			this.font20.setColor(Color.YELLOW);
+			this.font20.draw(this.batch, "Attack:", 600, 120);
+			this.font20.draw(this.batch, "Defense:", 600, 98);
+			this.font20.draw(this.batch, "Speed:", 600, 76);
+			this.font20.setColor(Color.WHITE);
+			final int dmgMin = this.viewer.simulation.getUnitData()
+					.getA1MinDamage(this.selectedUnit.getSimulationUnit().getTypeId());
+			final int dmgMax = this.viewer.simulation.getUnitData()
+					.getA1MaxDamage(this.selectedUnit.getSimulationUnit().getTypeId());
+			final int def = this.viewer.simulation.getUnitData()
+					.getDefense(this.selectedUnit.getSimulationUnit().getTypeId());
+			this.font20.draw(this.batch, Integer.toString(dmgMin) + " - " + Integer.toString(dmgMax), 700, 120);
+			this.font20.draw(this.batch, Integer.toString(def), 700, 98);
+			this.font20.draw(this.batch, Integer.toString(this.selectedUnit.getSimulationUnit().getSpeed()), 700, 76);
+
+			final COrder currentOrder = this.selectedUnit.getSimulationUnit().getCurrentOrder();
+			for (final CommandCardIcon commandCardIcon : this.selectedUnit.getCommandCardIcons()) {
+				this.batch.draw(commandCardIcon.getTexture(), 1225 + (70 * commandCardIcon.getX()),
+						160 - (70 * commandCardIcon.getY()), 64, 64);
+				if (((currentOrder != null) && (currentOrder.getOrderId() == commandCardIcon.getOrderId()))
+						|| ((currentOrder == null) && (commandCardIcon.getOrderId() == CAbilityStop.ORDER_ID))) {
+					final int blendDstFunc = this.batch.getBlendDstFunc();
+					final int blendSrcFunc = this.batch.getBlendSrcFunc();
+					this.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+					this.batch.draw(this.activeButtonTexture, 1225 + (70 * commandCardIcon.getX()),
+							160 - (70 * commandCardIcon.getY()), 64, 64);
+					this.batch.setBlendFunction(blendSrcFunc, blendDstFunc);
+				}
+			}
+
+		}
+		for (final RenderUnit unit : this.viewer.units) {
+			final Texture minimapIcon = this.teamColors[unit.playerIndex];
+			this.batch.draw(minimapIcon,
+					this.minimap.x + (((unit.location[0] - this.viewer.terrain.centerOffset[0])
+							/ ((this.viewer.terrain.columns - 1) * 128f)) * this.minimap.width),
+					this.minimap.y + (((unit.location[1] - this.viewer.terrain.centerOffset[1])
+							/ ((this.viewer.terrain.rows - 1) * 128f)) * this.minimap.height),
+					4, 4);
+		}
 		this.batch.end();
 	}
 
@@ -401,18 +485,43 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
 		System.out.println(screenX + "," + screenY);
+		clickLocationTemp2.x = screenX;
+		clickLocationTemp2.y = screenY;
+		this.uiViewport.unproject(clickLocationTemp2);
+		if (this.minimap.contains(clickLocationTemp2.x, clickLocationTemp2.y)) {
+			final float clickX = (clickLocationTemp2.x - this.minimap.x) / this.minimap.width;
+			final float clickY = (clickLocationTemp2.y - this.minimap.y) / this.minimap.height;
+			this.cameraManager.target.x = (clickX * this.viewer.terrain.columns * 128)
+					+ this.viewer.terrain.centerOffset[0];
+			this.cameraManager.target.y = (clickY * this.viewer.terrain.rows * 128)
+					+ this.viewer.terrain.centerOffset[1];
+			return false;
+		}
 		if (button == Input.Buttons.RIGHT) {
-			this.viewer.getClickLocation(clickLocationTemp, screenX, screenY);
-			System.out.println(clickLocationTemp);
-			this.viewer.showConfirmation(clickLocationTemp, 0, 1, 0);
-			final int x = (int) ((clickLocationTemp.x - this.viewer.terrain.centerOffset[0]) / 128);
-			final int y = (int) ((clickLocationTemp.y - this.viewer.terrain.centerOffset[1]) / 128);
-			System.out.println(x + "," + y);
+			final RenderUnit rayPickUnit = this.viewer.rayPickUnit(screenX, screenY);
+			if ((rayPickUnit != null) && (rayPickUnit.playerIndex != this.selectedUnit.playerIndex)) {
+				if (this.viewer.orderSmart(rayPickUnit)) {
+					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
+				}
+			}
+			else {
+				this.viewer.getClickLocation(clickLocationTemp, screenX, screenY);
+				System.out.println(clickLocationTemp);
+				this.viewer.showConfirmation(clickLocationTemp, 0, 1, 0);
+				final int x = (int) ((clickLocationTemp.x - this.viewer.terrain.centerOffset[0]) / 128);
+				final int y = (int) ((clickLocationTemp.y - this.viewer.terrain.centerOffset[1]) / 128);
+				System.out.println(x + "," + y);
+				this.viewer.terrain.logRomp(x, y);
+				if (this.viewer.orderSmart(clickLocationTemp.x, clickLocationTemp.y)) {
+					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
+				}
+			}
 		}
 		else {
-			final List<Unit> selectedUnits = this.viewer.selectUnit(screenX, screenY, true);
+			final List<RenderUnit> selectedUnits = this.viewer.selectUnit(screenX, screenY, false);
 			if (!selectedUnits.isEmpty()) {
-				final Unit unit = selectedUnits.get(0);
+				final RenderUnit unit = selectedUnits.get(0);
+				this.selectedUnit = unit;
 				if (unit.soundset != null) {
 					unit.soundset.what.play(this.viewer.worldScene.audioContext, unit.location[0], unit.location[1]);
 				}
@@ -433,6 +542,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				}
 			}
 			else {
+				this.selectedUnit = null;
 				if (this.portraitInstance != null) {
 					this.portraitScene.removeInstance(this.portraitInstance);
 				}

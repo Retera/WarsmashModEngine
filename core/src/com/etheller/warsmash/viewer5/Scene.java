@@ -202,6 +202,10 @@ public class Scene {
 
 						if (instance.updateFrame < frame) {
 							instance.update(dt, this);
+							if (!instance.rendered) {
+								// it became hidden while it updated
+								continue;
+							}
 						}
 
 						if (instance.isBatched()) {

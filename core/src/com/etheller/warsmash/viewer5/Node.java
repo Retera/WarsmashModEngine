@@ -114,8 +114,24 @@ public abstract class Node extends GenericNode {
 		return this;
 	}
 
+	public Node moveTo(final float[] offset) {
+		this.localLocation.set(offset[0], offset[1], offset[2]);
+
+		this.dirty = true;
+
+		return this;
+	}
+
 	public Node rotate(final Quaternion rotation) {
 		RenderMathUtils.mul(this.localRotation, this.localRotation, rotation);
+
+		this.dirty = true;
+
+		return this;
+	}
+
+	public Node setLocalRotation(final Quaternion rotation) {
+		this.localRotation.set(rotation);
 
 		this.dirty = true;
 

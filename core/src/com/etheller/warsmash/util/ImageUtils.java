@@ -6,14 +6,19 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+
+import javax.imageio.ImageIO;
 
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
+import com.etheller.warsmash.datasources.DataSource;
 
 /**
  * Uses AWT stuff
@@ -21,6 +26,21 @@ import com.badlogic.gdx.graphics.Texture;
  */
 public final class ImageUtils {
 	private static final int BYTES_PER_PIXEL = 4;
+
+	public static Texture getBLPTexture(final DataSource dataSource, final String path) {
+		try {
+			try (final InputStream resourceAsStream = dataSource.getResourceAsStream(path)) {
+				if (resourceAsStream == null) {
+					throw new IllegalStateException("missing resource: " + path);
+				}
+				return ImageUtils.getTexture(ImageIO.read(resourceAsStream));
+			}
+
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	public static Texture getTexture(final BufferedImage image) {
 		final int[] pixels = new int[image.getWidth() * image.getHeight()];

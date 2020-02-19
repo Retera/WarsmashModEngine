@@ -71,6 +71,9 @@ public class DataTable implements ObjectData {
 	}
 
 	public void readTXT(final InputStream txt, final boolean canProduce) throws IOException {
+		if (txt == null) {
+			return;
+		}
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(txt, "utf-8"));
 		// BOM marker will only appear on the very beginning
 		reader.mark(4);
@@ -135,6 +138,9 @@ public class DataTable implements ObjectData {
 	}
 
 	public void readSLK(final InputStream txt) throws IOException {
+		if (txt == null) {
+			return;
+		}
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(txt, "utf-8"));
 
 		String input = "";

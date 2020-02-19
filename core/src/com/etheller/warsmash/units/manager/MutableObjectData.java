@@ -480,10 +480,8 @@ public final class MutableObjectData {
 			if (value.equals(getFieldStringFromSLKs(field, level))) {
 				if (!value.equals(getFieldAsString(field, level))) {
 					fireChangedEvent(field, level);
-					System.out.println("field was reset");
 				}
 				else {
-					System.out.println("field was unmodified");
 				}
 				resetFieldToDefaults(field, level);
 				return;
@@ -491,7 +489,6 @@ public final class MutableObjectData {
 			final Change matchingChange = getOrCreateMatchingChange(field, level);
 			matchingChange.setStrval(value);
 			matchingChange.setVartype(War3ObjectDataChangeset.VAR_TYPE_STRING);
-			System.out.println("field created change");
 			fireChangedEvent(field, level);
 		}
 
@@ -886,6 +883,9 @@ public final class MutableObjectData {
 	}
 
 	private static int asInt(final String text) {
+		if ("#VALUE!".equals(text)) {
+			return 0;
+		}
 		return text == null ? 0
 				: "".equals(text) ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Integer.parseInt(text);
 	}

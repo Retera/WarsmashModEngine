@@ -22,6 +22,7 @@ import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.UpdatableObject;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
+import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 
 public class MdxComplexInstance extends ModelInstance {
 	private static final float[] visibilityHeap = new float[1];
@@ -267,6 +268,9 @@ public class MdxComplexInstance extends ModelInstance {
 	 * children down the hierarchy.
 	 */
 	public void updateNodes(final float dt, final boolean forced) {
+		if (!this.model.ok) {
+			return;
+		}
 		final int sequence = this.sequence;
 		final int frame = this.frame;
 		final int counter = this.counter;
@@ -367,6 +371,9 @@ public class MdxComplexInstance extends ModelInstance {
 		final int frame = this.frame;
 		final int counter = this.counter;
 		final MdxModel model = (MdxModel) this.model;
+		if (!model.ok) {
+			return;
+		}
 		final List<Geoset> geosets = model.geosets;
 		final List<Layer> layers = model.layers;
 		final float[][] geosetColors = this.geosetColors;
@@ -486,20 +493,23 @@ public class MdxComplexInstance extends ModelInstance {
 	}
 
 	@Override
-	public void renderOpaque() {
+	public void renderOpaque(final Matrix4 mvp) {
 		final MdxModel model = (MdxModel) this.model;
 
 		for (final GenericGroup group : model.opaqueGroups) {
-			group.render(this);
+			group.render(this, mvp);
 		}
 	}
 
 	@Override
 	public void renderTranslucent() {
+		if (DynamicShadowManager.IS_SHADOW_MAPPING) {
+			return;
+		}
 		final MdxModel model = (MdxModel) this.model;
 
 		for (final GenericGroup group : model.translucentGroups) {
-			group.render(this);
+			group.render(this, this.scene.camera.viewProjectionMatrix);
 		}
 	}
 

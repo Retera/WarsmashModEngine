@@ -4,12 +4,14 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Matrix4;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.gl.WebGL;
+import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 
 public class BatchGroup extends GenericGroup {
 
@@ -22,7 +24,7 @@ public class BatchGroup extends GenericGroup {
 	}
 
 	@Override
-	public void render(final MdxComplexInstance instance) {
+	public void render(final MdxComplexInstance instance, final Matrix4 mvp) {
 		final Scene scene = instance.scene;
 		final MdxModel model = this.model;
 		final List<Texture> textures = model.getTextures();
@@ -36,15 +38,25 @@ public class BatchGroup extends GenericGroup {
 		final ShaderProgram shader;
 
 		if (isExtended) {
-			shader = MdxHandler.Shaders.extended;
+			if (DynamicShadowManager.IS_SHADOW_MAPPING) {
+				shader = MdxHandler.Shaders.extendedShadowMap;
+			}
+			else {
+				shader = MdxHandler.Shaders.extended;
+			}
 		}
 		else {
-			shader = MdxHandler.Shaders.complex;
+			if (DynamicShadowManager.IS_SHADOW_MAPPING) {
+				shader = MdxHandler.Shaders.complexShadowMap;
+			}
+			else {
+				shader = MdxHandler.Shaders.complex;
+			}
 		}
 
 		webGL.useShaderProgram(shader);
 
-		shader.setUniformMatrix("u_mvp", scene.camera.viewProjectionMatrix);
+		shader.setUniformMatrix("u_mvp", mvp);
 
 		final DataTexture boneTexture = instance.boneTexture;
 
@@ -89,7 +101,12 @@ public class BatchGroup extends GenericGroup {
 				shader.setUniform2fv("u_uvRot", uvAnim, 2, 2);
 				shader.setUniform1fv("u_uvScale", uvAnim, 4, 1);
 
-				layer.bind(shader);
+				if (instance.vertexColor[3] < 1.0f) {
+					layer.bindBlended(shader);
+				}
+				else {
+					layer.bind(shader);
+				}
 
 				final Integer replaceable = replaceables.get(layerTexture); // TODO is this OK?
 				Texture texture;

@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
 import com.etheller.warsmash.viewer5.gl.ClientBuffer;
 import com.etheller.warsmash.viewer5.gl.WebGL;
+import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 
 public class MdxRenderBatch extends RenderBatch {
 	private static final Matrix4 transposeHeap = new Matrix4();
@@ -59,6 +60,9 @@ public class MdxRenderBatch extends RenderBatch {
 
 	@Override
 	public void render() {
+		if (DynamicShadowManager.IS_SHADOW_MAPPING) {
+			return;
+		}
 		final int count = this.count;
 
 		if (count != 0) {

@@ -207,11 +207,45 @@ public class MdxShaders {
 
 	public static final String fsComplex = Shaders.quatTransform + "\r\n\r\n" + //
 			"    uniform sampler2D u_texture;\r\n" + //
+			"    uniform vec4 u_vertexColor;\r\n" + //
 			"    uniform float u_filterMode;\r\n" + //
 			"    varying vec2 v_uv;\r\n" + //
 			"    varying vec4 v_color;\r\n" + //
 			"    varying vec4 v_uvTransRot;\r\n" + //
 			"    varying float v_uvScale;\r\n" + //
+			"    void main() {\r\n" + //
+			"      vec2 uv = v_uv;\r\n" + //
+			"      // Translation animation\r\n" + //
+			"      uv += v_uvTransRot.xy;\r\n" + //
+			"      // Rotation animation\r\n" + //
+			"      uv = quat_transform(v_uvTransRot.zw, uv - 0.5) + 0.5;\r\n" + //
+			"      // Scale animation\r\n" + //
+			"      uv = v_uvScale * (uv - 0.5) + 0.5;\r\n" + //
+			"      vec4 texel = texture2D(u_texture, uv);\r\n" + //
+			"      vec4 color = texel * v_color;\r\n" + //
+			"      // 1bit Alpha\r\n" + //
+			"      if (u_vertexColor.a == 1.0 && u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
+			"        discard;\r\n" + //
+			"      }\r\n" + //
+			"      // \"Close to 0 alpha\"\r\n" + //
+			"      if (u_filterMode >= 5.0 && color.a < 0.02) {\r\n" + //
+			"        discard;\r\n" + //
+			"      }\r\n" + //
+			"      // if (!u_unshaded) {\r\n" + //
+			"      //   color *= clamp(dot(v_normal, lightDirection) + 0.45, 0.0, 1.0);\r\n" + //
+			"      // }\r\n" + //
+			"      gl_FragColor = color;\r\n" + //
+			"    }";
+
+	public static final String fsComplexShadowMap = "\r\n\r\n" + //
+			Shaders.quatTransform + "\r\n\r\n" + //
+			"    uniform sampler2D u_texture;\r\n" + //
+			"    uniform float u_filterMode;\r\n" + //
+			"    varying vec2 v_uv;\r\n" + //
+			"    varying vec4 v_color;\r\n" + //
+			"    varying vec4 v_uvTransRot;\r\n" + //
+			"    varying float v_uvScale;\r\n" + //
+//			"    layout(location = 0) out float fragmentdepth;\r\n" + //
 			"    void main() {\r\n" + //
 			"      vec2 uv = v_uv;\r\n" + //
 			"      // Translation animation\r\n" + //
@@ -230,10 +264,7 @@ public class MdxShaders {
 			"      if (u_filterMode >= 5.0 && color.a < 0.02) {\r\n" + //
 			"        discard;\r\n" + //
 			"      }\r\n" + //
-			"      // if (!u_unshaded) {\r\n" + //
-			"      //   color *= clamp(dot(v_normal, lightDirection) + 0.45, 0.0, 1.0);\r\n" + //
-			"      // }\r\n" + //
-			"      gl_FragColor = color;\r\n" + //
+			"      gl_FragColor = vec4(0.0, 0, 0, 1.0);//gl_FragCoord.z;\r\n" + //
 			"    }";
 
 	public static final String vsParticles = "\r\n" + //

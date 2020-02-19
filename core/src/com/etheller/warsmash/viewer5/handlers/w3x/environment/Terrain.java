@@ -41,6 +41,7 @@ import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.RawOpenGLTextureResource;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.gl.WebGL;
+import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
@@ -777,7 +778,7 @@ public class Terrain {
 		}
 	}
 
-	public void renderGround() {
+	public void renderGround(final DynamicShadowManager dynamicShadowManager) {
 		// Render tiles
 
 		this.webGL.useShaderProgram(this.groundShader);
@@ -793,8 +794,12 @@ public class Terrain {
 		gl.glUniform1i(this.groundShader.getUniformLocation("height_texture"), 0);
 		gl.glUniform1i(this.groundShader.getUniformLocation("height_cliff_texture"), 1);
 		gl.glUniform1i(this.groundShader.getUniformLocation("terrain_texture_list"), 2);
+		gl.glUniform1i(this.groundShader.getUniformLocation("shadowMap"), 20);
 		gl.glUniform1f(this.groundShader.getUniformLocation("centerOffsetX"), this.centerOffset[0]);
 		gl.glUniform1f(this.groundShader.getUniformLocation("centerOffsetY"), this.centerOffset[1]);
+
+		gl.glUniformMatrix4fv(this.groundShader.getUniformLocation("DepthBiasMVP"), 1, false,
+				dynamicShadowManager.getDepthBiasMVP().val, 0);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundHeight);
@@ -812,6 +817,9 @@ public class Terrain {
 
 //		gl.glActiveTexture(GL30.GL_TEXTURE20, /*pathingMap.getTextureStatic()*/);
 //		gl.glActiveTexture(GL30.GL_TEXTURE21, /*pathingMap.getTextureDynamic()*/);
+
+		gl.glActiveTexture(GL30.GL_TEXTURE20);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, dynamicShadowManager.getDepthTexture());
 
 //		gl.glEnableVertexAttribArray(0);
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, Shapes.INSTANCE.vertexBuffer);

@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.handlers.ModelHandler;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
 import com.etheller.warsmash.viewer5.handlers.blp.BlpHandler;
+import com.etheller.warsmash.viewer5.handlers.tga.TgaHandler;
 
 public class MdxHandler extends ModelHandler {
 
@@ -21,10 +22,15 @@ public class MdxHandler extends ModelHandler {
 	@Override
 	public boolean load(final ModelViewer viewer) {
 		viewer.addHandler(new BlpHandler());
+		viewer.addHandler(new TgaHandler());
 
 		Shaders.complex = viewer.webGL.createShaderProgram(MdxShaders.vsComplexUnshaded, MdxShaders.fsComplex);
 		Shaders.extended = viewer.webGL.createShaderProgram("#define EXTENDED_BONES\r\n" + MdxShaders.vsComplexUnshaded,
 				MdxShaders.fsComplex);
+		Shaders.complexShadowMap = viewer.webGL.createShaderProgram(MdxShaders.vsComplexUnshaded,
+				MdxShaders.fsComplexShadowMap);
+		Shaders.extendedShadowMap = viewer.webGL.createShaderProgram(
+				"#define EXTENDED_BONES\r\n" + MdxShaders.vsComplexUnshaded, MdxShaders.fsComplexShadowMap);
 		Shaders.particles = viewer.webGL.createShaderProgram(MdxShaders.vsParticles, MdxShaders.fsParticles);
 		Shaders.simple = viewer.webGL.createShaderProgram(MdxShaders.vsSimple, MdxShaders.fsSimple);
 //		Shaders.hd = viewer.webGL.createShaderProgram(MdxShaders.vsHd, MdxShaders.fsHd);
@@ -48,7 +54,9 @@ public class MdxHandler extends ModelHandler {
 		}
 
 		public static ShaderProgram complex;
+		public static ShaderProgram complexShadowMap;
 		public static ShaderProgram extended;
+		public static ShaderProgram extendedShadowMap;
 		public static ShaderProgram simple;
 		public static ShaderProgram particles;
 		public static ShaderProgram hd;

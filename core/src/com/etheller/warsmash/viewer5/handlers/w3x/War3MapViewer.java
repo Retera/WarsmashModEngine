@@ -134,6 +134,8 @@ public class War3MapViewer extends ModelViewer {
 
 	public Vector2[] startLocations = new Vector2[WarsmashConstants.MAX_PLAYERS];
 
+	private final DynamicShadowManager dynamicShadowManager = new DynamicShadowManager();
+
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
 		this.gameDataSource = dataSource;
@@ -145,6 +147,10 @@ public class War3MapViewer extends ModelViewer {
 		this.wc3PathSolver = PathSolver.DEFAULT;
 
 		this.worldScene = this.addScene();
+
+		if (!this.dynamicShadowManager.setup(webGL)) {
+			throw new IllegalStateException("FrameBuffer setup failed");
+		}
 	}
 
 	public void loadSLKs(final WorldEditStrings worldEditStrings) throws IOException {
@@ -588,7 +594,8 @@ public class War3MapViewer extends ModelViewer {
 
 			startFrame();
 			worldScene.startFrame();
-			this.terrain.renderGround();
+			worldScene.renderOpaque(this.dynamicShadowManager, this.webGL);
+			this.terrain.renderGround(this.dynamicShadowManager);
 			this.terrain.renderCliffs();
 			worldScene.renderOpaque();
 			this.terrain.renderUberSplats();

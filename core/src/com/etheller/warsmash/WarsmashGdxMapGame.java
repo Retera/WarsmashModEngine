@@ -81,6 +81,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private Texture activeButtonTexture;
 
 	private Rectangle minimap;
+	private Rectangle minimapFilledArea;
 
 	private final Texture[] teamColors = new Texture[WarsmashConstants.MAX_PLAYERS];
 
@@ -104,6 +105,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3.mpq\\war3.mpq");
 //		final FolderDataSourceDescriptor war3xLocalmpq = new FolderDataSourceDescriptor(
 //				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3xLocal.mpq\\enus-war3local.mpq");
+//		final FolderDataSourceDescriptor rebirth = new FolderDataSourceDescriptor(
+//				"E:\\Games\\Warcraft III Patch 1.31 Rebirth");
 		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor(
 				"D:\\NEEDS_ORGANIZING\\MPQBuild\\Test");
 		final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
@@ -113,7 +116,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.viewer = new War3MapViewer(this.codebase, this);
 
 		try {
-			this.viewer.loadMap("Maps\\FrozenThrone\\Campaign\\NightElfX03.w3x");
+			// "Maps\\Campaign\\NightElf03.w3m"
+			this.viewer.loadMap("Maps\\Campaign\\NightElf03.w3m");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -199,12 +203,21 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		Gdx.input.setInputProcessor(this);
 
 		final Music music = Gdx.audio
-				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\NightElfX1.mp3"));
+				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\NightElf3.mp3"));
 		music.setVolume(0.2f);
 		music.setLooping(true);
 		music.play();
 
 		this.minimap = new Rectangle(35, 7, 305, 272);
+		final float worldWidth = (this.viewer.terrain.columns - 1);
+		final float worldHeight = this.viewer.terrain.rows - 1;
+		final float worldSize = Math.max(worldWidth, worldHeight);
+		final float minimapFilledWidth = (worldWidth / worldSize) * this.minimap.width;
+		final float minimapFilledHeight = (worldHeight / worldSize) * this.minimap.height;
+
+		this.minimapFilledArea = new Rectangle(this.minimap.x + ((this.minimap.width - minimapFilledWidth) / 2),
+				this.minimap.y + ((this.minimap.height - minimapFilledHeight) / 2), minimapFilledWidth,
+				minimapFilledHeight);
 
 		this.cameraManager.target.x = this.viewer.startLocations[0].x;
 		this.cameraManager.target.y = this.viewer.startLocations[0].y;
@@ -292,12 +305,17 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		}
 		for (final RenderUnit unit : this.viewer.units) {
+			if (unit.playerIndex >= WarsmashConstants.MAX_PLAYERS) {
+				System.err.println(unit.row.getName() + " at ( " + unit.location[0] + ", " + unit.location[1] + " )"
+						+ " with " + unit.playerIndex);
+				unit.playerIndex -= 12;
+			}
 			final Texture minimapIcon = this.teamColors[unit.playerIndex];
 			this.batch.draw(minimapIcon,
-					this.minimap.x + (((unit.location[0] - this.viewer.terrain.centerOffset[0])
-							/ ((this.viewer.terrain.columns - 1) * 128f)) * this.minimap.width),
-					this.minimap.y + (((unit.location[1] - this.viewer.terrain.centerOffset[1])
-							/ ((this.viewer.terrain.rows - 1) * 128f)) * this.minimap.height),
+					this.minimapFilledArea.x + (((unit.location[0] - this.viewer.terrain.centerOffset[0])
+							/ ((this.viewer.terrain.columns - 1) * 128f)) * this.minimapFilledArea.width),
+					this.minimapFilledArea.y + (((unit.location[1] - this.viewer.terrain.centerOffset[1])
+							/ ((this.viewer.terrain.rows - 1) * 128f)) * this.minimapFilledArea.height),
 					4, 4);
 		}
 		this.batch.end();
@@ -488,9 +506,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		clickLocationTemp2.x = screenX;
 		clickLocationTemp2.y = screenY;
 		this.uiViewport.unproject(clickLocationTemp2);
-		if (this.minimap.contains(clickLocationTemp2.x, clickLocationTemp2.y)) {
-			final float clickX = (clickLocationTemp2.x - this.minimap.x) / this.minimap.width;
-			final float clickY = (clickLocationTemp2.y - this.minimap.y) / this.minimap.height;
+		if (this.minimapFilledArea.contains(clickLocationTemp2.x, clickLocationTemp2.y)) {
+			final float clickX = (clickLocationTemp2.x - this.minimapFilledArea.x) / this.minimapFilledArea.width;
+			final float clickY = (clickLocationTemp2.y - this.minimapFilledArea.y) / this.minimapFilledArea.height;
 			this.cameraManager.target.x = (clickX * this.viewer.terrain.columns * 128)
 					+ this.viewer.terrain.centerOffset[0];
 			this.cameraManager.target.y = (clickY * this.viewer.terrain.rows * 128)
@@ -533,6 +551,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 					this.portraitInstance = (MdxComplexInstance) portraitModel.addInstance();
 					this.portraitInstance.setSequenceLoopMode(1);
 					this.portraitInstance.setScene(this.portraitScene);
+//					this.portraitInstance.setVertexColor(new float[] { 1, 1, 1, 0.5f });
 					if (portraitModel.getCameras().size() > 0) {
 						this.portraitCameraManager.modelCamera = portraitModel.getCameras().get(0);
 					}
@@ -570,7 +589,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean scrolled(final int amount) {
-		this.cameraManager.distance += amount * 10.0;
+		this.cameraManager.verticalAngle -= amount / 10.f;
+		if (this.cameraManager.verticalAngle > (Math.PI / 2)) {
+			this.cameraManager.verticalAngle = (float) Math.PI / 2;
+		}
+		if (this.cameraManager.verticalAngle < (Math.PI / 5)) {
+			this.cameraManager.verticalAngle = (float) (Math.PI / 5);
+		}
 		return true;
 	}
 }

@@ -10,6 +10,7 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.StandardObjectData;
 import com.etheller.warsmash.units.StandardObjectData.WarcraftData;
+import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.units.custom.WTSFile;
 import com.etheller.warsmash.units.custom.War3ObjectDataChangeset;
 import com.etheller.warsmash.units.manager.MutableObjectData;
@@ -113,7 +114,13 @@ public final class Warcraft3MapObjectData {
 		final War3ObjectDataChangeset buffChangeset = new War3ObjectDataChangeset('h');
 		final War3ObjectDataChangeset upgradeChangeset = new War3ObjectDataChangeset('q');
 
-		final WTSFile wts = new WTSFile(dataSource.getResourceAsStream("war3map.wts"));
+		final WTS wts = dataSource.has("war3map.wts") ? new WTSFile(dataSource.getResourceAsStream("war3map.wts"))
+				: new WTS() {
+					@Override
+					public String get(final int key) {
+						return "TRIGSTR_" + key;
+					}
+				};
 		if (dataSource.has("war3map.w3u")) {
 			unitChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3u")), wts,
 					inlineWTS);

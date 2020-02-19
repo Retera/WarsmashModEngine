@@ -44,9 +44,13 @@ public class GenericObject extends AnimatedObject implements GenericIndexed {
 
 		this.index = index;
 		this.name = object.getName();
-		this.objectId = object.getObjectId();
+		int objectId = object.getObjectId();
+		if (objectId == -1) {
+			objectId = index;
+		}
+		this.objectId = objectId;
 		int parentId = object.getParentId();
-		this.pivot = (this.objectId < model.getPivotPoints().size()) ? model.getPivotPoints().get(this.objectId)
+		this.pivot = ((this.objectId < model.getPivotPoints().size())) ? model.getPivotPoints().get(this.objectId)
 				: new float[] { 0, 0, 0 };
 
 		final int flags = object.getFlags();

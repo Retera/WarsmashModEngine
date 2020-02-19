@@ -7,8 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.GL30;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
+import com.etheller.warsmash.viewer5.gl.WebGL;
+import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 
 /**
  * A scene.
@@ -44,6 +49,7 @@ public class Scene {
 	public final EmittedObjectUpdater emitterObjectUpdater;
 	public final Map<TextureMapper, RenderBatch> batches;
 	public final Comparator<ModelInstance> instanceDepthComparator;
+	public DynamicShadowManager shadowManager;
 	/**
 	 * Similar to WebGL's own `alpha` parameter.
 	 *
@@ -284,8 +290,26 @@ public class Scene {
 
 		// Render all of the opaque things of non-batched instances.
 		for (final ModelInstance instance : this.instances) {
-			instance.renderOpaque();
+			instance.renderOpaque(this.camera.viewProjectionMatrix);
 		}
+	}
+
+	public void renderOpaque(final DynamicShadowManager dynamicShadowManager, final WebGL webGL) {
+		final Matrix4 depthMatrix = dynamicShadowManager.prepareShadowMatrix();
+		dynamicShadowManager.beginShadowMap(webGL);
+		Gdx.gl30.glDepthMask(true);
+		Gdx.gl30.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
+		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
+
+		// Render all of the opaque things of non-batched instances.
+//		for (final ModelInstance instance : this.instances) {
+//			instance.renderOpaque(depthMatrix);
+//		}
+
+		dynamicShadowManager.endShadowMap();
+		final Rectangle viewport = this.camera.rect;
+		this.viewer.gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
+		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
 	}
 
 	/**

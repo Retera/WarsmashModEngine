@@ -111,6 +111,42 @@ public class Layer extends AnimatedObject {
 		}
 	}
 
+	public void bindBlended(final ShaderProgram shader) {
+		final GL20 gl = this.model.viewer.gl;
+
+		// gl.uniform1f(shader.uniforms.u_unshaded, this.unshaded);
+		shader.setUniformf("u_filterMode", this.filterMode);
+
+		gl.glEnable(GL20.GL_BLEND);
+		if ((this.blendSrc == 0) && (this.blendDst == 0)) {
+			gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+		}
+		else {
+			gl.glBlendFunc(this.blendSrc, this.blendDst);
+		}
+
+		if (this.twoSided != 0) {
+			gl.glDisable(GL20.GL_CULL_FACE);
+		}
+		else {
+			gl.glEnable(GL20.GL_CULL_FACE);
+		}
+
+		if (this.noDepthTest != 0) {
+			gl.glDisable(GL20.GL_DEPTH_TEST);
+		}
+		else {
+			gl.glEnable(GL20.GL_DEPTH_TEST);
+		}
+
+		if (this.noDepthSet != 0) {
+			gl.glDepthMask(false);
+		}
+		else {
+			gl.glDepthMask(this.depthMaskValue);
+		}
+	}
+
 	public int getAlpha(final float[] out, final int sequence, final int frame, final int counter) {
 		return this.getScalarValue(out, AnimationMap.KMTA.getWar3id(), sequence, frame, counter, this.alpha);
 	}

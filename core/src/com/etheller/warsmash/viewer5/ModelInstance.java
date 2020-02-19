@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5;
 
+import com.badlogic.gdx.math.Matrix4;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.Vector4;
 
@@ -117,7 +118,7 @@ public abstract class ModelInstance extends Node {
 		return false;
 	}
 
-	public abstract void renderOpaque();
+	public abstract void renderOpaque(Matrix4 mvp);
 
 	public abstract void renderTranslucent();
 

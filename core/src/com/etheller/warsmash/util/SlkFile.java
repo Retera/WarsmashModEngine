@@ -26,6 +26,9 @@ public class SlkFile {
 			// way
 			if (line.charAt(0) != 'B') {
 				for (final String token : line.split(";")) {
+					if (token.isEmpty()) {
+						continue;
+					}
 					final char op = token.charAt(0);
 					final String valueString = token.substring(1).trim();
 					final Object value;

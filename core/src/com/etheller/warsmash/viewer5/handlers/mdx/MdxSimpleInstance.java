@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
+import com.badlogic.gdx.math.Matrix4;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.BatchedInstance;
 import com.etheller.warsmash.viewer5.Model;
@@ -24,7 +25,7 @@ public class MdxSimpleInstance extends BatchedInstance {
 	}
 
 	@Override
-	public void renderOpaque() {
+	public void renderOpaque(final Matrix4 mvp) {
 	}
 
 	@Override

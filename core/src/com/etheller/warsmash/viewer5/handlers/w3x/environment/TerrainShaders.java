@@ -113,6 +113,7 @@ public class TerrainShaders {
 				"\r\n" + //
 				"layout (location = 0) in vec2 vPosition;\r\n" + //
 				"layout (location = 1) uniform mat4 MVP;\r\n" + //
+				"layout (location = 6) uniform mat4 DepthBiasMVP;\r\n" + //
 				"\r\n" + //
 				"layout (binding = 0) uniform sampler2D height_texture;\r\n" + //
 				"layout (binding = 1) uniform sampler2D height_cliff_texture;\r\n" + //
@@ -125,6 +126,7 @@ public class TerrainShaders {
 				"layout (location = 2) out vec2 pathing_map_uv;\r\n" + //
 				"layout (location = 3) out vec3 normal;\r\n" + //
 				"layout (location = 4) out vec3 position;\r\n" + //
+				"layout (location = 5) out vec3 ShadowCoord;\r\n" + //
 				"\r\n" + //
 				"void main() { \r\n" + //
 				"	ivec2 size = textureSize(terrain_texture_list, 0);\r\n" + //
@@ -148,6 +150,8 @@ public class TerrainShaders {
 				"	position = vec3((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY, height.r*128.0);\r\n"
 				+ //
 				"	gl_Position = ((texture_indices.a & 32768) == 0) ? MVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
+				+ //
+				"	ShadowCoord = (((texture_indices.a & 32768) == 0) ? DepthBiasMVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0)).xyz;\r\n"
 				+ //
 				"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
 				"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
@@ -176,14 +180,16 @@ public class TerrainShaders {
 				"layout (binding = 18) uniform sampler2DArray sample15;\r\n" + //
 				"layout (binding = 19) uniform sampler2DArray sample16;\r\n" + //
 				"\r\n" + //
-				"layout (binding = 20) uniform usampler2D pathing_map_static;\r\n" + //
-				"layout (binding = 21) uniform usampler2D pathing_map_dynamic;\r\n" + //
+//				"layout (binding = 20) uniform usampler2D pathing_map_static;\r\n" + //
+//				"layout (binding = 21) uniform usampler2D pathing_map_dynamic;\r\n" + //
+				"layout (binding = 20) uniform sampler2D shadowMap;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) in vec2 UV;\r\n" + //
 				"layout (location = 1) in flat uvec4 texture_indices;\r\n" + //
 				"layout (location = 2) in vec2 pathing_map_uv;\r\n" + //
 				"layout (location = 3) in vec3 normal;\r\n" + //
 				"layout (location = 4) in vec3 position;\r\n" + //
+				"layout (location = 5) in vec3 ShadowCoord;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) out vec4 color;\r\n" + //
 //				"layout (location = 1) out vec4 position;\r\n" + //
@@ -241,25 +247,30 @@ public class TerrainShaders {
 				+ //
 				"	color = color * color.a + get_fragment(texture_indices.r & 31, vec3(UV, texture_indices.r >> 5)) * (1 - color.a);\r\n"
 				+ //
+				"   float visibility = 1.0;\r\n" + //
+//				"   if ( texture2D(shadowMap, ShadowCoord.xy).z > ShadowCoord.z ) {\r\n" + //
+//				"       visibility = 0.5;\r\n" + //
+//				"   }\r\n" + //
+				"   color = vec4(color.xyz * visibility, 1.0);\r\n" + //
 				"\r\n" + //
-				"	if (show_lighting) {\r\n" + //
-				"		vec3 light_direction = vec3(-0.3, -0.3, 0.25);\r\n" + //
-				"		light_direction = normalize(light_direction);\r\n" + //
-				"\r\n" + //
-				"		color.rgb *= clamp(dot(normal, light_direction) + 0.45, 0, 1);\r\n" + //
-				"	}\r\n" + //
-				"\r\n" + //
-				"	if (show_pathing_map) {\r\n" + //
-				"		uint byte_static = texelFetch(pathing_map_static, ivec2(pathing_map_uv), 0).r;\r\n" + //
-				"		uint byte_dynamic = texelFetch(pathing_map_dynamic, ivec2(pathing_map_uv), 0).r;\r\n" + //
-				"		uint final = byte_static.r | byte_dynamic.r;\r\n" + //
-				"\r\n" + //
-				"		vec4 pathing_static_color = vec4((final & 2) >> 1, (final & 4) >> 2, (final & 8) >> 3, 0.25);\r\n"
-				+ //
-				"\r\n" + //
-				"		color = length(pathing_static_color.rgb) > 0 ? color * 0.75 + pathing_static_color * 0.5 : color;\r\n"
-				+ //
-				"	}\r\n" + //
+//				"	if (show_lighting) {\r\n" + //
+//				"		vec3 light_direction = vec3(-0.3, -0.3, 0.25);\r\n" + //
+//				"		light_direction = normalize(light_direction);\r\n" + //
+//				"\r\n" + //
+//				"		color.rgb *= clamp(dot(normal, light_direction) + 0.45, 0, 1);\r\n" + //
+//				"	}\r\n" + //
+//				"\r\n" + //
+//				"	if (show_pathing_map) {\r\n" + //
+//				"		uint byte_static = texelFetch(pathing_map_static, ivec2(pathing_map_uv), 0).r;\r\n" + //
+//				"		uint byte_dynamic = texelFetch(pathing_map_dynamic, ivec2(pathing_map_uv), 0).r;\r\n" + //
+//				"		uint final = byte_static.r | byte_dynamic.r;\r\n" + //
+//				"\r\n" + //
+//				"		vec4 pathing_static_color = vec4((final & 2) >> 1, (final & 4) >> 2, (final & 8) >> 3, 0.25);\r\n"
+//				+ //
+//				"\r\n" + //
+//				"		color = length(pathing_static_color.rgb) > 0 ? color * 0.75 + pathing_static_color * 0.5 : color;\r\n"
+//				+ //
+//				"	}\r\n" + //
 				"}";
 
 		public static final String posFrag = "#version 450 core\r\n" + //

@@ -2,11 +2,13 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Matrix4;
 import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SkeletalNode;
 import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
+import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 
 public class EmitterGroup extends GenericGroup {
 	private final MdxModel model;
@@ -16,7 +18,11 @@ public class EmitterGroup extends GenericGroup {
 	}
 
 	@Override
-	public void render(final MdxComplexInstance instance) {
+	public void render(final MdxComplexInstance instance, final Matrix4 mvp) {
+		if (DynamicShadowManager.IS_SHADOW_MAPPING) {
+			return;
+		}
+
 		final Scene scene = instance.scene;
 		final SkeletalNode[] nodes = instance.nodes;
 		final Model<?> model = instance.model;
@@ -32,7 +38,7 @@ public class EmitterGroup extends GenericGroup {
 
 		viewer.webGL.useShaderProgram(shader);
 
-		shader.setUniformMatrix("u_mvp", scene.camera.viewProjectionMatrix);
+		shader.setUniformMatrix("u_mvp", mvp);
 		shader.setUniformf("u_texture", 0);
 
 		final int a_position = shader.getAttributeLocation("a_position");

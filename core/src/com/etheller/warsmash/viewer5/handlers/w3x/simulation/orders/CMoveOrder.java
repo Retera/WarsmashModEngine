@@ -29,9 +29,8 @@ public class CMoveOrder implements COrder {
 		if (goalAngle < 0) {
 			goalAngle += 360;
 		}
-		final float facing = this.unit.getFacing();
+		float facing = this.unit.getFacing();
 		float delta = goalAngle - facing;
-		final float absDelta = Math.abs(delta);
 		final float propulsionWindow = simulation.getUnitData().getPropulsionWindow(this.unit.getTypeId());
 		final float turnRate = simulation.getUnitData().getTurnRate(this.unit.getTypeId());
 		final int speed = this.unit.getSpeed();
@@ -42,16 +41,18 @@ public class CMoveOrder implements COrder {
 		if (delta > 180) {
 			delta = -360 + delta;
 		}
+		final float absDelta = Math.abs(delta);
 
 		if ((absDelta <= 1.0) && (absDelta != 0)) {
 			this.unit.setFacing(goalAngle);
 		}
 		else {
-			float angleToAdd = ((Math.signum(delta) * turnRate) * WarsmashConstants.SIMULATION_STEP_TIME) * 360;
+			float angleToAdd = Math.signum(delta) * (float) Math.toDegrees(turnRate);
 			if (absDelta < Math.abs(angleToAdd)) {
 				angleToAdd = delta;
 			}
-			this.unit.setFacing(facing + angleToAdd);
+			facing += angleToAdd;
+			this.unit.setFacing(facing);
 		}
 		if (absDelta < propulsionWindow) {
 			final float speedTick = speed * WarsmashConstants.SIMULATION_STEP_TIME;
@@ -63,8 +64,9 @@ public class CMoveOrder implements COrder {
 				return true;
 			}
 			else {
-				this.unit.setX(prevX + (float) (Math.cos(goalAngleRad) * speedTick));
-				this.unit.setY(prevY + (float) (Math.sin(goalAngleRad) * speedTick));
+				final double radianFacing = Math.toRadians(facing);
+				this.unit.setX(prevX + (float) (Math.cos(radianFacing) * speedTick));
+				this.unit.setY(prevY + (float) (Math.sin(radianFacing) * speedTick));
 			}
 			this.wasWithinPropWindow = true;
 		}

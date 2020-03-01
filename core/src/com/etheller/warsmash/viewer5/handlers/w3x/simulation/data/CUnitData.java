@@ -23,10 +23,19 @@ public class CUnitData {
 	private static final War3ID ATTACK1_DMG_BASE = War3ID.fromString("ua1b");
 	private static final War3ID ATTACK1_DMG_DICE = War3ID.fromString("ua1d");
 	private static final War3ID ATTACK1_DMG_SIDES_PER_DIE = War3ID.fromString("ua1s");
+	private static final War3ID ATTACK1_PROJECTILE_SPEED = War3ID.fromString("ua1z");
+	private static final War3ID ATTACK1_MISSILE_ART = War3ID.fromString("ua1m");
+	private static final War3ID ATTACK1_PROJECTILE_ARC = War3ID.fromString("uma1");
+	private static final War3ID ATTACK1_COOLDOWN = War3ID.fromString("ua1c");
 	private static final War3ID ATTACK2_DMG_BASE = War3ID.fromString("ua2b");
 	private static final War3ID ATTACK2_DMG_DICE = War3ID.fromString("ua2d");
 	private static final War3ID ATTACK2_DMG_SIDES_PER_DIE = War3ID.fromString("ua2s");
+	private static final War3ID ATTACK2_PROJECTILE_SPEED = War3ID.fromString("ua2z");
+	private static final War3ID ATTACK2_MISSILE_ART = War3ID.fromString("ua2m");
+	private static final War3ID ATTACK2_PROJECTILE_ARC = War3ID.fromString("uma2");
+	private static final War3ID ATTACK2_COOLDOWN = War3ID.fromString("ua2c");
 	private static final War3ID DEFENSE = War3ID.fromString("udef");
+	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
 	private final MutableObjectData unitData;
 
 	public CUnitData(final MutableObjectData unitData) {
@@ -40,7 +49,9 @@ public class CUnitData {
 		final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
 		final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
 		final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
-		final CUnit unit = new CUnit(handleId, x, y, life, typeId, facing, manaInitial, life, manaMaximum, speed);
+		final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
+		final CUnit unit = new CUnit(handleId, x, y, life, typeId, facing, manaInitial, life, manaMaximum, speed,
+				moveHeight);
 		if (speed > 0) {
 			unit.add(simulation, CAbilityMove.INSTANCE);
 			unit.add(simulation, CAbilityPatrol.INSTANCE);
@@ -95,5 +106,37 @@ public class CUnitData {
 
 	public int getDefense(final War3ID unitTypeId) {
 		return this.unitData.get(unitTypeId).getFieldAsInteger(DEFENSE, 0);
+	}
+
+	public int getA1ProjectileSpeed(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsInteger(ATTACK1_PROJECTILE_SPEED, 0);
+	}
+
+	public float getA1ProjectileArc(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsFloat(ATTACK1_PROJECTILE_ARC, 0);
+	}
+
+	public int getA2ProjectileSpeed(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsInteger(ATTACK2_PROJECTILE_SPEED, 0);
+	}
+
+	public float getA2ProjectileArc(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsFloat(ATTACK2_PROJECTILE_ARC, 0);
+	}
+
+	public String getA1MissileArt(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsString(ATTACK1_MISSILE_ART, 0);
+	}
+
+	public String getA2MissileArt(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsString(ATTACK2_MISSILE_ART, 0);
+	}
+
+	public float getA1Cooldown(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsFloat(ATTACK1_COOLDOWN, 0);
+	}
+
+	public float getA2Cooldown(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsFloat(ATTACK2_COOLDOWN, 0);
 	}
 }

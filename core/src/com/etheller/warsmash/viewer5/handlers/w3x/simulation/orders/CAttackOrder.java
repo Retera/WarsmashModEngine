@@ -33,7 +33,6 @@ public class CAttackOrder implements COrder {
 		final float absDelta = Math.abs(delta);
 		final float propulsionWindow = simulation.getUnitData().getPropulsionWindow(this.unit.getTypeId());
 		final float turnRate = simulation.getUnitData().getTurnRate(this.unit.getTypeId());
-		final int speed = this.unit.getSpeed();
 
 		if (delta < -180) {
 			delta = 360 + delta;
@@ -53,24 +52,21 @@ public class CAttackOrder implements COrder {
 			this.unit.setFacing(facing + angleToAdd);
 		}
 		if (absDelta < propulsionWindow) {
-			final float speedTick = speed * WarsmashConstants.SIMULATION_STEP_TIME;
-			final float speedTickSq = speedTick * speedTick;
-
-			if (((deltaX * deltaX) + (deltaY * deltaY)) <= speedTickSq) {
-				this.unit.setX(this.target.getX());
-				this.unit.setY(this.target.getY());
-				return true;
-			}
-			else {
-				this.unit.setX(prevX + (float) (Math.cos(goalAngleRad) * speedTick));
-				this.unit.setY(prevY + (float) (Math.sin(goalAngleRad) * speedTick));
-			}
 			this.wasWithinPropWindow = true;
 		}
 		else {
 			// If this happens, the unit is facing the wrong way, and has to turn before
 			// moving.
 			this.wasWithinPropWindow = false;
+		}
+
+		final int cooldownEndTime = this.unit.getCooldownEndTime();
+		final int currentTurnTick = simulation.getGameTurnTick();
+		if (currentTurnTick >= cooldownEndTime) {
+			final float a1Cooldown = simulation.getUnitData().getA1Cooldown(this.unit.getTypeId());
+			final int a1CooldownSteps = (int) (a1Cooldown / WarsmashConstants.SIMULATION_STEP_TIME);
+			this.unit.setCooldownEndTime(currentTurnTick + a1CooldownSteps);
+			simulation.createProjectile(this.unit, 0, this.target);
 		}
 
 		return false;
@@ -83,10 +79,7 @@ public class CAttackOrder implements COrder {
 
 	@Override
 	public String getAnimationName() {
-		if (!this.wasWithinPropWindow) {
-			return "stand";
-		}
-		return "walk";
+		return "attack";
 	}
 
 }

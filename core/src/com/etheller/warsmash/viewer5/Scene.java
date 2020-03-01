@@ -131,6 +131,7 @@ public class Scene {
 			this.grid.remove(instance);
 
 			instance.scene = null;
+			this.instances.remove(instance);
 
 			return true;
 		}

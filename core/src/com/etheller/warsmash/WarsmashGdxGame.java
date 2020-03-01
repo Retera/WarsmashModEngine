@@ -24,6 +24,7 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SolvedPath;
+import com.etheller.warsmash.viewer5.handlers.mdx.EventObjectEmitterObject;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -74,13 +75,20 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.cameraManager.setupCamera(scene);
 
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
-		this.mainModel = (MdxModel) this.viewer.load("Doodads\\Cinematic\\RisingWaterDoodad\\RisingWaterDoodad.mdx",
+		this.mainModel = (MdxModel) this.viewer.load("Units\\Human\\HeroPaladinBoss\\HeroPaladinBoss.mdx",
 				new PathSolver() {
 					@Override
 					public SolvedPath solve(final String src, final Object solverParams) {
 						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
 					}
 				}, null);
+
+		final EventObjectEmitterObject evt = this.mainModel.getEventObjects().get(1);
+		for (final Sequence seq : this.mainModel.getSequences()) {
+			System.out.println(seq.getName() + ": " + Arrays.toString(seq.getInterval()));
+		}
+		System.out.println(Arrays.toString(evt.keyFrames));
+		System.out.println(evt.name);
 
 //		this.modelCamera = this.mainModel.cameras.get(0);
 

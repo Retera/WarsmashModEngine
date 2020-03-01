@@ -11,4 +11,9 @@ public class CItem extends CWidget {
 		this.itemType = itemType;
 	}
 
+	@Override
+	public float getFlyHeight() {
+		return 0;
+	}
+
 }

@@ -68,10 +68,36 @@ public class StandSequence {
 		}
 	}
 
+	public static void randomDeathSequence(final MdxComplexInstance target) {
+		final MdxModel model = (MdxModel) target.model;
+		final List<Sequence> sequences = model.getSequences();
+		final IndexedSequence sequence = selectSequence("death", sequences);
+
+		if (sequence != null) {
+			target.setSequence(sequence.index);
+		}
+		else {
+			target.setSequence(0);
+		}
+	}
+
 	public static void randomWalkSequence(final MdxComplexInstance target) {
 		final MdxModel model = (MdxModel) target.model;
 		final List<Sequence> sequences = model.getSequences();
 		final IndexedSequence sequence = selectSequence("walk", sequences);
+
+		if (sequence != null) {
+			target.setSequence(sequence.index);
+		}
+		else {
+			randomStandSequence(target);
+		}
+	}
+
+	public static void randomBirthSequence(final MdxComplexInstance target) {
+		final MdxModel model = (MdxModel) target.model;
+		final List<Sequence> sequences = model.getSequences();
+		final IndexedSequence sequence = selectSequence("birth", sequences);
 
 		if (sequence != null) {
 			target.setSequence(sequence.index);

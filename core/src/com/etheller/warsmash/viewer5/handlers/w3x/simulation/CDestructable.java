@@ -6,4 +6,9 @@ public class CDestructable extends CWidget {
 		super(handleId, x, y, life);
 	}
 
+	@Override
+	public float getFlyHeight() {
+		return 0;
+	}
+
 }

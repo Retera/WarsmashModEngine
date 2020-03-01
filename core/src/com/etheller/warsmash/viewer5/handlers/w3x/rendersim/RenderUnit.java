@@ -3,13 +3,16 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Quaternion;
+import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.IndexedSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.StandSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
@@ -24,6 +27,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityP
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityStop;
 
 public class RenderUnit {
+	private static final double GLOBAL_TURN_RATE = Math.toDegrees(7f);
 	private static final Quaternion tempQuat = new Quaternion();
 	private static final War3ID RED = War3ID.fromString("uclr");
 	private static final War3ID GREEN = War3ID.fromString("uclg");
@@ -41,10 +45,13 @@ public class RenderUnit {
 	private final CUnit simulationUnit;
 	private COrder lastOrder;
 	private String lastOrderAnimation;
-	private float flyingHeight = 0;
 	public SplatMover shadow;
 	public SplatMover selectionCircle;
 	private final List<CommandCardIcon> commandCardIcons = new ArrayList<>();
+
+	private float x;
+	private float y;
+	private float facing;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit, final UnitSoundset soundset,
@@ -56,8 +63,11 @@ public class RenderUnit {
 		final float[] location = unit.getLocation();
 		System.arraycopy(location, 0, this.location, 0, 3);
 		instance.move(location);
-		final float angle = (float) Math.toRadians(simulationUnit.getFacing());
+		this.facing = simulationUnit.getFacing();
+		final float angle = (float) Math.toRadians(this.facing);
 //		instance.localRotation.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle);
+		this.x = simulationUnit.getX();
+		this.y = simulationUnit.getY();
 		instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
 		instance.scale(unit.getScale());
 		this.playerIndex = unit.getPlayer();
@@ -65,7 +75,7 @@ public class RenderUnit {
 		instance.setScene(map.worldScene);
 
 		if (row != null) {
-			heapZ[2] = this.flyingHeight = row.getFieldAsFloat(MOVE_HEIGHT, 0);
+			heapZ[2] = simulationUnit.getFlyHeight();
 			this.location[2] += heapZ[2];
 
 			instance.move(heapZ);
@@ -120,20 +130,65 @@ public class RenderUnit {
 	}
 
 	public void updateAnimations(final War3MapViewer map) {
-		final float x = this.simulationUnit.getX();
+		final float deltaTime = Gdx.graphics.getDeltaTime();
+		final float simulationX = this.simulationUnit.getX();
+		final float simulationY = this.simulationUnit.getY();
+		final float simDx = simulationX - this.x;
+		final float simDy = simulationY - this.y;
+		final float distanceToSimulation = (float) Math.sqrt((simDx * simDx) + (simDy * simDy));
+		final int speed = this.simulationUnit.getSpeed();
+		final float speedDelta = speed * deltaTime;
+		if (distanceToSimulation > speedDelta) {
+			this.x += (speedDelta * simDx) / distanceToSimulation;
+			this.y += (speedDelta * simDy) / distanceToSimulation;
+		}
+		else {
+			this.x = simulationX;
+			this.y = simulationY;
+		}
+		final float x = this.x;
 		final float dx = x - this.location[0];
 		this.location[0] = x;
-		final float y = this.simulationUnit.getY();
+		final float y = this.y;
 		final float dy = y - this.location[1];
 		this.location[1] = y;
-		this.location[2] = this.flyingHeight + map.terrain.getGroundHeight(x, y);
+		this.location[2] = this.simulationUnit.getFlyHeight() + map.terrain.getGroundHeight(x, y);
 		this.instance.moveTo(this.location);
-		this.instance
-				.setLocalRotation(tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z, this.simulationUnit.getFacing()));
+		float simulationFacing = this.simulationUnit.getFacing();
+		if (simulationFacing < 0) {
+			simulationFacing += 360;
+		}
+		float renderFacing = this.facing;
+		if (renderFacing < 0) {
+			renderFacing += 360;
+		}
+		float facingDelta = simulationFacing - renderFacing;
+		if (facingDelta < -180) {
+			facingDelta = 360 + facingDelta;
+		}
+		if (facingDelta > 180) {
+			facingDelta = -360 + facingDelta;
+		}
+		final float absoluteFacingDelta = Math.abs(facingDelta);
+		float angleToAdd = (float) (Math.signum(facingDelta) * GLOBAL_TURN_RATE * deltaTime);
+		if (absoluteFacingDelta < Math.abs(angleToAdd)) {
+			angleToAdd = facingDelta;
+		}
+		this.facing = (((this.facing + angleToAdd) % 360) + 360) % 360;
+		this.instance.setLocalRotation(tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z, this.facing));
 		map.worldScene.grid.moved(this.instance);
 		final MdxComplexInstance mdxComplexInstance = this.instance;
 		final COrder currentOrder = this.simulationUnit.getCurrentOrder();
-		if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1) || (currentOrder != this.lastOrder)
+		if (this.simulationUnit.getLife() <= 0) {
+			final MdxModel model = (MdxModel) mdxComplexInstance.model;
+			final List<Sequence> sequences = model.getSequences();
+			final IndexedSequence sequence = StandSequence.selectSequence("death", sequences);
+			if ((sequence != null) && (mdxComplexInstance.sequence != sequence.index)) {
+				mdxComplexInstance.setSequence(sequence.index);
+			}
+		}
+		else if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1)
+				|| (currentOrder != this.lastOrder)
 				|| ((currentOrder != null) && (currentOrder.getAnimationName() != null)
 						&& !currentOrder.getAnimationName().equals(this.lastOrderAnimation))) {
 			if (this.simulationUnit.getCurrentOrder() != null) {

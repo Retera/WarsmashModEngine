@@ -10,8 +10,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Consumer;
 
 import org.apache.commons.compress.utils.IOUtils;
@@ -57,6 +59,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain.Splat;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -65,9 +68,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ProjectileCreator;
 
 import mpq.MPQArchive;
 import mpq.MPQException;
@@ -115,6 +120,7 @@ public class War3MapViewer extends ModelViewer {
 	public MappedData unitMetaData = new MappedData();
 	public List<RenderUnit> units = new ArrayList<>();
 	public List<RenderItem> items = new ArrayList<>();
+	public List<RenderAttackProjectile> projectiles = new ArrayList<>();
 	public boolean unitsReady;
 	public War3Map mapMpq;
 	public PathSolver mapPathSolver = PathSolver.DEFAULT;
@@ -135,6 +141,8 @@ public class War3MapViewer extends ModelViewer {
 	public Vector2[] startLocations = new Vector2[WarsmashConstants.MAX_PLAYERS];
 
 	private final DynamicShadowManager dynamicShadowManager = new DynamicShadowManager();
+
+	private final Random seededRandom = new Random(1337L);
 
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
@@ -297,7 +305,44 @@ public class War3MapViewer extends ModelViewer {
 		}
 
 		final Warcraft3MapObjectData modifications = this.mapMpq.readModifications();
-		this.simulation = new CSimulation(modifications.getUnits(), modifications.getAbilities());
+		this.simulation = new CSimulation(modifications.getUnits(), modifications.getAbilities(),
+				new ProjectileCreator() {
+					@Override
+					public CAttackProjectile create(final CSimulation simulation, final CUnit source,
+							final int attackIndex, final CWidget target) {
+						final int a1ProjectileSpeed = simulation.getUnitData().getA1ProjectileSpeed(source.getTypeId());
+						final float a1ProjectileArc = simulation.getUnitData().getA1ProjectileArc(source.getTypeId());
+						String a1MissileArt = simulation.getUnitData().getA1MissileArt(source.getTypeId());
+						final int a1MinDamage = simulation.getUnitData().getA1MinDamage(source.getTypeId());
+						final int a1MaxDamage = simulation.getUnitData().getA1MaxDamage(source.getTypeId());
+						final int damage = War3MapViewer.this.seededRandom.nextInt(a1MaxDamage - a1MinDamage)
+								+ a1MinDamage;
+						if (a1MissileArt.toLowerCase().endsWith(".mdl")) {
+							a1MissileArt = a1MissileArt.substring(0, a1MissileArt.length() - 4);
+						}
+						if (!a1MissileArt.toLowerCase().endsWith(".mdx")) {
+							a1MissileArt += ".mdx";
+						}
+						final float x = source.getX();
+						final float y = source.getY();
+						final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight();
+						final CAttackProjectile simulationAttackProjectile = new CAttackProjectile(x, y, height,
+								a1ProjectileSpeed, a1ProjectileArc, target, source, damage);
+
+						final MdxModel model = (MdxModel) load(a1MissileArt, War3MapViewer.this.mapPathSolver,
+								War3MapViewer.this.solverParams);
+						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
+						modelInstance.setScene(War3MapViewer.this.worldScene);
+						StandSequence.randomBirthSequence(modelInstance);
+						modelInstance.setLocation(x, y, height);
+						final RenderAttackProjectile renderAttackProjectile = new RenderAttackProjectile(
+								simulationAttackProjectile, modelInstance);
+
+						War3MapViewer.this.projectiles.add(renderAttackProjectile);
+
+						return simulationAttackProjectile;
+					}
+				});
 
 		if (this.doodadsAndDestructiblesLoaded) {
 			this.loadDoodadsAndDestructibles(modifications);
@@ -483,7 +528,7 @@ public class War3MapViewer extends ModelViewer {
 						final float x = unit.getLocation()[0] - shadowX;
 						final float y = unit.getLocation()[1] - shadowY;
 						this.terrain.splats.get(texture).locations
-								.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 30 });
+								.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
 						unitShadowSplat = this.terrain.splats.get(texture);
 					}
 
@@ -561,6 +606,13 @@ public class War3MapViewer extends ModelViewer {
 
 			for (final RenderUnit unit : this.units) {
 				unit.updateAnimations(this);
+			}
+			final Iterator<RenderAttackProjectile> projectileIterator = this.projectiles.iterator();
+			while (projectileIterator.hasNext()) {
+				final RenderAttackProjectile projectile = projectileIterator.next();
+				if (projectile.updateAnimations(this)) {
+					projectileIterator.remove();
+				}
 			}
 			for (final RenderItem item : this.items) {
 				final MdxComplexInstance instance = item.instance;
@@ -655,7 +707,7 @@ public class War3MapViewer extends ModelViewer {
 					final float y = unit.location[1];
 					final float z = unit.row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
 					splats.get(path).locations
-							.add(new float[] { x - radius, y - radius, x + radius, y + radius, z + 35 });
+							.add(new float[] { x - radius, y - radius, x + radius, y + radius, z + 5 });
 					splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
 						@Override
 						public void accept(final SplatMover t) {

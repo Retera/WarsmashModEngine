@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
-public class CWidget {
+public abstract class CWidget {
 	private final int handleId;
 	private float x;
 	private float y;
@@ -40,5 +40,11 @@ public class CWidget {
 	public void setLife(final float life) {
 		this.life = life;
 	}
+
+	public void damage(final CUnit source, final int damage) {
+		this.life -= damage;
+	}
+
+	public abstract float getFlyHeight();
 
 }

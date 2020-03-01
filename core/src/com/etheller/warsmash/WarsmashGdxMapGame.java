@@ -13,7 +13,6 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
@@ -84,6 +83,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private Rectangle minimapFilledArea;
 
 	private final Texture[] teamColors = new Texture[WarsmashConstants.MAX_PLAYERS];
+	private Texture solidGreenTexture;
 
 	@Override
 	public void create() {
@@ -115,15 +115,15 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 						.createDataSource();
 		this.viewer = new War3MapViewer(this.codebase, this);
 
+		this.viewer.worldScene.enableAudio();
+		this.viewer.enableAudio();
 		try {
 			// "Maps\\Campaign\\NightElf03.w3m"
-			this.viewer.loadMap("Maps\\Campaign\\NightElf03.w3m");
+			this.viewer.loadMap("ProjectileTest.w3x");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
-		this.viewer.worldScene.enableAudio();
-		this.viewer.enableAudio();
 
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(this.viewer.worldScene);
@@ -200,13 +200,16 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
 		}
 
-		Gdx.input.setInputProcessor(this);
+		this.solidGreenTexture = ImageUtils.getBLPTexture(this.viewer.dataSource,
+				"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
 
-		final Music music = Gdx.audio
-				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\NightElf3.mp3"));
-		music.setVolume(0.2f);
-		music.setLooping(true);
-		music.play();
+		Gdx.input.setInputProcessor(this);
+//
+//		final Music music = Gdx.audio
+//				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\OrcTheme.mp3"));
+//		music.setVolume(0.2f);
+//		music.setLooping(true);
+//		music.play();
 
 		this.minimap = new Rectangle(35, 7, 305, 272);
 		final float worldWidth = (this.viewer.terrain.columns - 1);
@@ -302,6 +305,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 					this.batch.setBlendFunction(blendSrcFunc, blendDstFunc);
 				}
 			}
+
+			this.batch.draw(this.solidGreenTexture, 413, 34, 122 * (this.selectedUnit.getSimulationUnit().getLife()
+					/ this.selectedUnit.getSimulationUnit().getMaximumLife()), 7);
 
 		}
 		for (final RenderUnit unit : this.viewer.units) {

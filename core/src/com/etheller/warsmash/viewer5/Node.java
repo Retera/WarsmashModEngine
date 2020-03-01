@@ -48,6 +48,12 @@ public abstract class Node extends GenericNode {
 		return this;
 	}
 
+	public Node setLocation(final float x, final float y, final float z) {
+		this.localLocation.set(x, y, z);
+		this.dirty = true;
+		return this;
+	}
+
 	public Node setLocation(final float[] location) {
 		this.localLocation.set(location);
 		this.dirty = true;

@@ -59,7 +59,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 	private int geometryEmitterType = -1;
 	public final String type;
 	private final String id;
-	private final long[] keyFrames;
+	public final long[] keyFrames;
 	private long globalSequence = -1;
 	private final long[] defval = { 1 };
 	public MdxModel internalModel;
@@ -185,7 +185,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 
 	private void load(final List<GenericResource> tables) {
 		final MappedData firstTable = (MappedData) tables.get(0).data;
-		final MappedDataRow row = firstTable.getRow(this.id);
+		final MappedDataRow row = firstTable.getRow(this.id.trim());
 
 		if (row != null) {
 			final MdxModel model = this.model;
@@ -285,8 +285,11 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 				}
 			}
 			else {
-				System.err.println("Unknown event object ID: " + this.type + this.id);
+				System.err.println("Unknown event object type: " + this.type + this.id);
 			}
+		}
+		else {
+			System.err.println("Unknown event object ID: " + this.type + this.id);
 		}
 	}
 

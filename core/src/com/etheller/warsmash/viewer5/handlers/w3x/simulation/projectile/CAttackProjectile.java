@@ -19,6 +19,7 @@ public class CAttackProjectile {
 	private boolean done;
 	private final CUnit source;
 	private final int damage;
+	private float arcCurrentHeight;
 
 	public CAttackProjectile(final float x, final float y, final float z, final float speed, final float arc,
 			final CWidget target, final CUnit source, final int damage) {
@@ -71,7 +72,8 @@ public class CAttackProjectile {
 
 		float firstTerm = ((1 / this.halfStartingDistance) * (this.totalTravelDistance - this.halfStartingDistance));
 		firstTerm = firstTerm * firstTerm;
-		this.z = this.startingHeight + ((-firstTerm + 1) * this.arcPeakHeight) + dz;
+		this.arcCurrentHeight = (-firstTerm + 1) * this.arcPeakHeight;
+		this.z = this.startingHeight + dz;
 
 		return this.done;
 	}
@@ -98,5 +100,9 @@ public class CAttackProjectile {
 
 	public boolean isDone() {
 		return this.done;
+	}
+
+	public float getArcCurrentHeight() {
+		return this.arcCurrentHeight;
 	}
 }

@@ -28,11 +28,11 @@ public class CAttackOrder implements COrder {
 		if (goalAngle < 0) {
 			goalAngle += 360;
 		}
-		final float facing = this.unit.getFacing();
+		float facing = this.unit.getFacing();
 		float delta = goalAngle - facing;
-		final float absDelta = Math.abs(delta);
 		final float propulsionWindow = simulation.getUnitData().getPropulsionWindow(this.unit.getTypeId());
 		final float turnRate = simulation.getUnitData().getTurnRate(this.unit.getTypeId());
+		final int speed = this.unit.getSpeed();
 
 		if (delta < -180) {
 			delta = 360 + delta;
@@ -40,16 +40,18 @@ public class CAttackOrder implements COrder {
 		if (delta > 180) {
 			delta = -360 + delta;
 		}
+		final float absDelta = Math.abs(delta);
 
 		if ((absDelta <= 1.0) && (absDelta != 0)) {
 			this.unit.setFacing(goalAngle);
 		}
 		else {
-			float angleToAdd = ((Math.signum(delta) * turnRate) * WarsmashConstants.SIMULATION_STEP_TIME) * 360;
+			float angleToAdd = Math.signum(delta) * (float) Math.toDegrees(turnRate);
 			if (absDelta < Math.abs(angleToAdd)) {
 				angleToAdd = delta;
 			}
-			this.unit.setFacing(facing + angleToAdd);
+			facing += angleToAdd;
+			this.unit.setFacing(facing);
 		}
 		if (absDelta < propulsionWindow) {
 			this.wasWithinPropWindow = true;

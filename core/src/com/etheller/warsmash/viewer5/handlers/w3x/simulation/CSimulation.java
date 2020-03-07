@@ -42,8 +42,10 @@ public class CSimulation {
 		return this.units;
 	}
 
-	public CUnit createUnit(final War3ID typeId, final float x, final float y, final float facing) {
-		final CUnit unit = this.unitData.create(this, this.handleIdAllocator.createId(), typeId, x, y, facing);
+	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
+			final float facing) {
+		final CUnit unit = this.unitData.create(this, this.handleIdAllocator.createId(), playerIndex, typeId, x, y,
+				facing);
 		this.units.add(unit);
 		return unit;
 	}

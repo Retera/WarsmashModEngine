@@ -310,11 +310,16 @@ public class War3MapViewer extends ModelViewer {
 					@Override
 					public CAttackProjectile create(final CSimulation simulation, final CUnit source,
 							final int attackIndex, final CWidget target) {
-						final int a1ProjectileSpeed = simulation.getUnitData().getA1ProjectileSpeed(source.getTypeId());
-						final float a1ProjectileArc = simulation.getUnitData().getA1ProjectileArc(source.getTypeId());
-						String a1MissileArt = simulation.getUnitData().getA1MissileArt(source.getTypeId());
-						final int a1MinDamage = simulation.getUnitData().getA1MinDamage(source.getTypeId());
-						final int a1MaxDamage = simulation.getUnitData().getA1MaxDamage(source.getTypeId());
+						final War3ID typeId = source.getTypeId();
+						final int a1ProjectileSpeed = simulation.getUnitData().getA1ProjectileSpeed(typeId);
+						final float a1ProjectileArc = simulation.getUnitData().getA1ProjectileArc(typeId);
+						String a1MissileArt = simulation.getUnitData().getA1MissileArt(typeId);
+						final int a1MinDamage = simulation.getUnitData().getA1MinDamage(typeId);
+						final int a1MaxDamage = simulation.getUnitData().getA1MaxDamage(typeId);
+						final float projectileLaunchX = simulation.getUnitData().getProjectileLaunchX(typeId);
+						final float projectileLaunchY = simulation.getUnitData().getProjectileLaunchY(typeId);
+						final float projectileLaunchZ = simulation.getUnitData().getProjectileLaunchZ(typeId);
+
 						final int damage = War3MapViewer.this.seededRandom.nextInt(a1MaxDamage - a1MinDamage)
 								+ a1MinDamage;
 						if (a1MissileArt.toLowerCase().endsWith(".mdl")) {
@@ -323,15 +328,23 @@ public class War3MapViewer extends ModelViewer {
 						if (!a1MissileArt.toLowerCase().endsWith(".mdx")) {
 							a1MissileArt += ".mdx";
 						}
-						final float x = source.getX();
-						final float y = source.getY();
-						final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight();
+						final float facing = (float) Math.toRadians(source.getFacing());
+						final float sinFacing = (float) Math.sin(facing);
+						final float cosFacing = (float) Math.cos(facing);
+						final float x = (source.getX() + (projectileLaunchX * cosFacing))
+								- (projectileLaunchY * sinFacing);
+						final float y = source.getY() + (projectileLaunchX * sinFacing)
+								+ (projectileLaunchY * cosFacing);
+
+						final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight()
+								+ projectileLaunchZ;
 						final CAttackProjectile simulationAttackProjectile = new CAttackProjectile(x, y, height,
 								a1ProjectileSpeed, a1ProjectileArc, target, source, damage);
 
 						final MdxModel model = (MdxModel) load(a1MissileArt, War3MapViewer.this.mapPathSolver,
 								War3MapViewer.this.solverParams);
 						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
+						modelInstance.setTeamColor(source.getPlayerIndex());
 						modelInstance.setScene(War3MapViewer.this.worldScene);
 						StandSequence.randomBirthSequence(modelInstance);
 						modelInstance.setLocation(x, y, height);
@@ -567,8 +580,8 @@ public class War3MapViewer extends ModelViewer {
 					else {
 						angle = (float) Math.toDegrees(unit.getAngle());
 					}
-					final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), unit.getLocation()[0],
-							unit.getLocation()[1], angle);
+					final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), unit.getPlayer(),
+							unit.getLocation()[0], unit.getLocation()[1], angle);
 					final RenderUnit renderUnit = new RenderUnit(this, model, row, unit, soundset, portraitModel,
 							simulationUnit);
 					this.units.add(renderUnit);

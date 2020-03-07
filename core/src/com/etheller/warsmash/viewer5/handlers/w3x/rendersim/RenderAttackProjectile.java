@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -15,7 +14,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.projectile.CAttackP
 
 public class RenderAttackProjectile {
 	private static final Quaternion pitchHeap = new Quaternion();
-	private static final Vector3 skewVector = new Vector3();
 
 	private final CAttackProjectile simulationProjectile;
 	private final MdxComplexInstance modelInstance;
@@ -37,7 +35,7 @@ public class RenderAttackProjectile {
 			final MdxModel model = (MdxModel) this.modelInstance.model;
 			final List<Sequence> sequences = model.getSequences();
 			final IndexedSequence sequence = StandSequence.selectSequence("death", sequences);
-			if (this.modelInstance.sequence != sequence.index) {
+			if ((sequence != null) && (this.modelInstance.sequence != sequence.index)) {
 				this.modelInstance.setSequence(sequence.index);
 			}
 		}
@@ -61,27 +59,20 @@ public class RenderAttackProjectile {
 			this.z = this.z + ((speed * simDz) / simD);
 		}
 
-		final float dxToTarget = this.simulationProjectile.getTarget().getX() - this.x;
-		final float dyToTarget = this.simulationProjectile.getTarget().getY() - this.y;
-		final float dzToTarget = this.simulationProjectile.getTarget().getFlyHeight() - this.z;
+		final float targetX = this.simulationProjectile.getTarget().getX();
+		final float dxToTarget = targetX - this.x;
+		final float targetY = this.simulationProjectile.getTarget().getY();
+		final float dyToTarget = targetY - this.y;
+		final float dzToTarget = (war3MapViewer.terrain.getGroundHeight(targetX, targetY)
+				+ this.simulationProjectile.getTarget().getFlyHeight()) - this.z;
 		final float d2DToTarget = (float) Math.sqrt((dxToTarget * dxToTarget) + (dyToTarget * dyToTarget));
-		final float yaw = (float) Math.atan2(dxToTarget, dyToTarget);
+		final float yaw = (float) Math.atan2(dyToTarget, dxToTarget);
 
-		final float pitch = (float) Math.atan2(dzToTarget, d2DToTarget);
+		final float pitch = (float) Math.atan2(simDz, simD);
 
-		final float arcCurrentHeight = this.simulationProjectile.getArcCurrentHeight();
-		final float oppositeYaw = yaw + (float) Math.PI;
-		skewVector.set((float) (Math.cos(oppositeYaw) * Math.cos(Math.PI / 4)),
-				(float) (Math.sin(oppositeYaw) * Math.cos(Math.PI / 4)), (float) (Math.sin(Math.PI / 4)));
-
-		final float skewX = arcCurrentHeight * skewVector.x;
-		final float skewY = arcCurrentHeight * skewVector.y;
-		final float skewZ = arcCurrentHeight * skewVector.z;
-
-		this.modelInstance.setLocation(this.x + skewX, this.y + skewY, this.z + skewZ);
-//		this.modelInstance.localRotation.setFromAxisRad(0, 0, 1, yaw);
-		this.modelInstance.localRotation.setFromAxisRad(0, -1, 0, pitch);
-//		this.modelInstance.rotateLocal(pitchHeap.setFromAxisRad(0, -1, 0, pitch));
+		this.modelInstance.setLocation(this.x, this.y, this.z);
+		this.modelInstance.localRotation.setFromAxisRad(0, 0, 1, yaw);
+		this.modelInstance.rotate(pitchHeap.setFromAxisRad(0, -1, 0, pitch));
 		war3MapViewer.worldScene.grid.moved(this.modelInstance);
 
 		final boolean everythingDone = this.simulationProjectile.isDone() && this.modelInstance.sequenceEnded;

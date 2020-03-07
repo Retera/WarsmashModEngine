@@ -11,7 +11,6 @@ public class CAttackProjectile {
 	private float z;
 	private final float startingHeight;
 	private final float speed;
-	private final float arc;
 	private final CWidget target;
 	private final float halfStartingDistance;
 	private final float arcPeakHeight;
@@ -28,7 +27,6 @@ public class CAttackProjectile {
 		this.z = z;
 		this.startingHeight = z;
 		this.speed = speed;
-		this.arc = arc;
 		this.target = target;
 		final float dx = target.getX() - x;
 		final float dy = target.getY() - y;
@@ -70,10 +68,11 @@ public class CAttackProjectile {
 		this.x = this.x + dx;
 		this.y = this.y + dy;
 
-		float firstTerm = ((1 / this.halfStartingDistance) * (this.totalTravelDistance - this.halfStartingDistance));
-		firstTerm = firstTerm * firstTerm;
-		this.arcCurrentHeight = (-firstTerm + 1) * this.arcPeakHeight;
-		this.z = this.startingHeight + dz;
+		final float distanceToPeak = this.totalTravelDistance - this.halfStartingDistance;
+		final float normPeakDist = distanceToPeak / this.halfStartingDistance;
+		final float currentHeightPercentage = 1 - (normPeakDist * normPeakDist);
+		this.arcCurrentHeight = currentHeightPercentage * this.arcPeakHeight;
+		this.z = this.startingHeight + dz + this.arcCurrentHeight;
 
 		return this.done;
 	}

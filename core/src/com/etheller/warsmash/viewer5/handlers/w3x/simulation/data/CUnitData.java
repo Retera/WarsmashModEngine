@@ -20,6 +20,9 @@ public class CUnitData {
 	private static final War3ID TURN_RATE = War3ID.fromString("umvr");
 	private static final War3ID IS_BLDG = War3ID.fromString("ubdg");
 	private static final War3ID NAME = War3ID.fromString("unam");
+	private static final War3ID PROJECTILE_LAUNCH_X = War3ID.fromString("ulpx");
+	private static final War3ID PROJECTILE_LAUNCH_Y = War3ID.fromString("ulpy");
+	private static final War3ID PROJECTILE_LAUNCH_Z = War3ID.fromString("ulpz");
 	private static final War3ID ATTACK1_DMG_BASE = War3ID.fromString("ua1b");
 	private static final War3ID ATTACK1_DMG_DICE = War3ID.fromString("ua1d");
 	private static final War3ID ATTACK1_DMG_SIDES_PER_DIE = War3ID.fromString("ua1s");
@@ -42,16 +45,16 @@ public class CUnitData {
 		this.unitData = unitData;
 	}
 
-	public CUnit create(final CSimulation simulation, final int handleId, final War3ID typeId, final float x,
-			final float y, final float facing) {
+	public CUnit create(final CSimulation simulation, final int playerIndex, final int handleId, final War3ID typeId,
+			final float x, final float y, final float facing) {
 		final MutableGameObject unitType = this.unitData.get(typeId);
 		final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
 		final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
 		final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
 		final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
 		final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
-		final CUnit unit = new CUnit(handleId, x, y, life, typeId, facing, manaInitial, life, manaMaximum, speed,
-				moveHeight);
+		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
+				speed, moveHeight);
 		if (speed > 0) {
 			unit.add(simulation, CAbilityMove.INSTANCE);
 			unit.add(simulation, CAbilityPatrol.INSTANCE);
@@ -138,5 +141,17 @@ public class CUnitData {
 
 	public float getA2Cooldown(final War3ID unitTypeId) {
 		return this.unitData.get(unitTypeId).getFieldAsFloat(ATTACK2_COOLDOWN, 0);
+	}
+
+	public float getProjectileLaunchX(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsFloat(PROJECTILE_LAUNCH_X, 0);
+	}
+
+	public float getProjectileLaunchY(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsFloat(PROJECTILE_LAUNCH_Y, 0);
+	}
+
+	public float getProjectileLaunchZ(final War3ID unitTypeId) {
+		return this.unitData.get(unitTypeId).getFieldAsFloat(PROJECTILE_LAUNCH_Z, 0);
 	}
 }

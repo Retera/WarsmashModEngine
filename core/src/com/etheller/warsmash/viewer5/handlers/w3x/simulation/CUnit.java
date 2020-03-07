@@ -17,15 +17,16 @@ public class CUnit extends CWidget {
 	private int speed;
 	private int cooldownEndTime = 0;
 	private float flyHeight;
+	private int playerIndex;
 
 	private final List<CAbility> abilities = new ArrayList<>();
 
 	private COrder currentOrder;
 	private final Queue<COrder> orderQueue = new LinkedList<>();
 
-	public CUnit(final int handleId, final float x, final float y, final float life, final War3ID typeId,
-			final float facing, final float mana, final int maximumLife, final int maximumMana, final int speed,
-			final float defaultFlyingHeight) {
+	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
+			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
+			final int speed, final float defaultFlyingHeight) {
 		super(handleId, x, y, life);
 		this.typeId = typeId;
 		this.facing = facing;
@@ -132,12 +133,21 @@ public class CUnit extends CWidget {
 		return this.cooldownEndTime;
 	}
 
+	@Override
 	public float getFlyHeight() {
 		return this.flyHeight;
 	}
 
 	public void setFlyHeight(final float flyHeight) {
 		this.flyHeight = flyHeight;
+	}
+
+	public int getPlayerIndex() {
+		return this.playerIndex;
+	}
+
+	public void setPlayerIndex(final int playerIndex) {
+		this.playerIndex = playerIndex;
 	}
 
 }

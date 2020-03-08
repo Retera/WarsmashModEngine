@@ -331,15 +331,15 @@ public class War3MapViewer extends ModelViewer {
 						final float facing = (float) Math.toRadians(source.getFacing());
 						final float sinFacing = (float) Math.sin(facing);
 						final float cosFacing = (float) Math.cos(facing);
-						final float x = (source.getX() + (projectileLaunchX * cosFacing))
-								- (projectileLaunchY * sinFacing);
-						final float y = source.getY() + (projectileLaunchX * sinFacing)
-								+ (projectileLaunchY * cosFacing);
+						final float x = (source.getX() + (projectileLaunchY * cosFacing))
+								- (projectileLaunchX * sinFacing);
+						final float y = source.getY() + (projectileLaunchY * sinFacing)
+								+ (projectileLaunchX * cosFacing);
 
 						final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight()
 								+ projectileLaunchZ;
-						final CAttackProjectile simulationAttackProjectile = new CAttackProjectile(x, y, height,
-								a1ProjectileSpeed, a1ProjectileArc, target, source, damage);
+						final CAttackProjectile simulationAttackProjectile = new CAttackProjectile(x, y,
+								a1ProjectileSpeed, target, source, damage);
 
 						final MdxModel model = (MdxModel) load(a1MissileArt, War3MapViewer.this.mapPathSolver,
 								War3MapViewer.this.solverParams);
@@ -349,7 +349,7 @@ public class War3MapViewer extends ModelViewer {
 						StandSequence.randomBirthSequence(modelInstance);
 						modelInstance.setLocation(x, y, height);
 						final RenderAttackProjectile renderAttackProjectile = new RenderAttackProjectile(
-								simulationAttackProjectile, modelInstance);
+								simulationAttackProjectile, modelInstance, height, a1ProjectileArc, War3MapViewer.this);
 
 						War3MapViewer.this.projectiles.add(renderAttackProjectile);
 

@@ -105,7 +105,7 @@ public class RenderUnit {
 						ability.getOrderId()));
 			}
 			else if (ability instanceof CAbilityAttack) {
-				this.commandCardIcons.add(new CommandCardIcon(4, 0,
+				this.commandCardIcons.add(new CommandCardIcon(-2, -2,
 						ImageUtils.getBLPTexture(map.dataSource, "ReplaceableTextures\\CommandButtons\\BTNAttack.blp"),
 						ability.getOrderId()));
 			}

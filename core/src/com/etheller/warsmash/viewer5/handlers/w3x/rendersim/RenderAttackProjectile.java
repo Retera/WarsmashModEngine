@@ -20,14 +20,34 @@ public class RenderAttackProjectile {
 	private float x;
 	private float y;
 	private float z;
+	private final float startingHeight;
+	private final float arcPeakHeight;
+	private float totalTravelDistance;
 
-	public RenderAttackProjectile(final CAttackProjectile simulationProjectile,
-			final MdxComplexInstance modelInstance) {
+	private final float targetHeight;
+
+	private float yaw;
+
+	private float pitch;
+
+	public RenderAttackProjectile(final CAttackProjectile simulationProjectile, final MdxComplexInstance modelInstance,
+			final float z, final float arc, final War3MapViewer war3MapViewer) {
 		this.simulationProjectile = simulationProjectile;
 		this.modelInstance = modelInstance;
 		this.x = simulationProjectile.getX();
 		this.y = simulationProjectile.getY();
-		this.z = simulationProjectile.getZ();
+		this.z = z;
+		this.startingHeight = z;
+		final float targetX = this.simulationProjectile.getTarget().getX();
+		final float targetY = this.simulationProjectile.getTarget().getY();
+		final float dxToTarget = targetX - this.x;
+		final float dyToTarget = targetY - this.y;
+		final float d2DToTarget = (float) StrictMath.sqrt((dxToTarget * dxToTarget) + (dyToTarget * dyToTarget));
+		final float startingDistance = d2DToTarget + this.totalTravelDistance;
+		this.targetHeight = (war3MapViewer.terrain.getGroundHeight(targetX, targetY)
+				+ this.simulationProjectile.getTarget().getFlyHeight());
+		this.arcPeakHeight = arc * startingDistance;
+		this.yaw = (float) StrictMath.atan2(dyToTarget, dxToTarget);
 	}
 
 	public boolean updateAnimations(final War3MapViewer war3MapViewer) {
@@ -46,33 +66,42 @@ public class RenderAttackProjectile {
 		}
 		final float simX = this.simulationProjectile.getX();
 		final float simY = this.simulationProjectile.getY();
-		final float simZ = this.simulationProjectile.getZ();
 		final float simDx = simX - this.x;
 		final float simDy = simY - this.y;
-		final float simDz = simZ - this.z;
-		final float simD = (float) Math.sqrt((simDx * simDx) + (simDy * simDy));
+		final float simD = (float) StrictMath.sqrt((simDx * simDx) + (simDy * simDy));
 		final float deltaTime = Gdx.graphics.getDeltaTime();
-		final float speed = Math.min(simD, this.simulationProjectile.getSpeed() * deltaTime);
+		final float speed = StrictMath.min(simD, this.simulationProjectile.getSpeed() * deltaTime);
 		if (simD > 0) {
 			this.x = this.x + ((speed * simDx) / simD);
 			this.y = this.y + ((speed * simDy) / simD);
-			this.z = this.z + ((speed * simDz) / simD);
+			final float targetX = this.simulationProjectile.getTarget().getX();
+			final float targetY = this.simulationProjectile.getTarget().getY();
+			final float dxToTarget = targetX - this.x;
+			final float dyToTarget = targetY - this.y;
+			final float d2DToTarget = (float) StrictMath.sqrt((dxToTarget * dxToTarget) + (dyToTarget * dyToTarget));
+			final float startingDistance = d2DToTarget + this.totalTravelDistance;
+			final float halfStartingDistance = startingDistance / 2f;
+
+			final float dtsz = this.targetHeight - this.startingHeight;
+			final float d1z = dtsz / (halfStartingDistance * 2);
+			this.totalTravelDistance += speed;
+			final float dz = d1z * this.totalTravelDistance;
+
+			final float distanceToPeak = this.totalTravelDistance - halfStartingDistance;
+			final float normPeakDist = distanceToPeak / halfStartingDistance;
+			final float currentHeightPercentage = 1 - (normPeakDist * normPeakDist);
+			final float arcCurrentHeight = currentHeightPercentage * this.arcPeakHeight;
+			this.z = this.startingHeight + dz + arcCurrentHeight;
+
+			this.yaw = (float) StrictMath.atan2(dyToTarget, dxToTarget);
+
+			final float slope = (-2 * (normPeakDist) * this.arcPeakHeight) / halfStartingDistance;
+			this.pitch = (float) StrictMath.atan2(slope + d1z, 1);
 		}
 
-		final float targetX = this.simulationProjectile.getTarget().getX();
-		final float dxToTarget = targetX - this.x;
-		final float targetY = this.simulationProjectile.getTarget().getY();
-		final float dyToTarget = targetY - this.y;
-		final float dzToTarget = (war3MapViewer.terrain.getGroundHeight(targetX, targetY)
-				+ this.simulationProjectile.getTarget().getFlyHeight()) - this.z;
-		final float d2DToTarget = (float) Math.sqrt((dxToTarget * dxToTarget) + (dyToTarget * dyToTarget));
-		final float yaw = (float) Math.atan2(dyToTarget, dxToTarget);
-
-		final float pitch = (float) Math.atan2(simDz, simD);
-
 		this.modelInstance.setLocation(this.x, this.y, this.z);
-		this.modelInstance.localRotation.setFromAxisRad(0, 0, 1, yaw);
-		this.modelInstance.rotate(pitchHeap.setFromAxisRad(0, -1, 0, pitch));
+		this.modelInstance.localRotation.setFromAxisRad(0, 0, 1, this.yaw);
+		this.modelInstance.rotate(pitchHeap.setFromAxisRad(0, -1, 0, this.pitch));
 		war3MapViewer.worldScene.grid.moved(this.modelInstance);
 
 		final boolean everythingDone = this.simulationProjectile.isDone() && this.modelInstance.sequenceEnded;

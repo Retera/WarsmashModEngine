@@ -49,13 +49,13 @@ public class MathSpeedBenchmark {
 			final float murlocY) {
 		final float dx = murlocX - thrallX;
 		final float dy = murlocY - thrallY;
-		return (float) Math.sqrt((dx * dx) + (dy * dy));
+		return (float) StrictMath.sqrt((dx * dx) + (dy * dy));
 	}
 
 	static float groundDistanceCos(final float thrallX, final float thrallY, final float murlocX, final float murlocY) {
 		final float dx = murlocX - thrallX;
 		final float dy = murlocY - thrallY;
-		final double angle = Math.atan2(dy, dx);
-		return (float) (dx / Math.cos(angle));
+		final double angle = StrictMath.atan2(dy, dx);
+		return (float) (dx / StrictMath.cos(angle));
 	}
 }

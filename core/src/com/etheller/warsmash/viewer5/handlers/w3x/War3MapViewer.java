@@ -93,6 +93,7 @@ public class War3MapViewer extends ModelViewer {
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
 	private static final float[] rayHeap = new float[6];
+	private static final Ray gdxRayHeap = new Ray();
 	private static final Vector2 mousePosHeap = new Vector2();
 	private static final Vector3 normalHeap = new Vector3();
 	private static final Vector3 intersectionHeap = new Vector3();
@@ -370,6 +371,9 @@ public class War3MapViewer extends ModelViewer {
 		else {
 			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
 		}
+
+		this.terrain.initShadows();
+		this.terrain.createWaves();
 	}
 
 	private void loadTerrainCliffsAndWater(final War3MapW3e w3e) {
@@ -411,6 +415,13 @@ public class War3MapViewer extends ModelViewer {
 
 				fileVar += ".mdx";
 
+				if (type == WorldEditorDataType.DESTRUCTIBLES) {
+					final String shadowString = row.readSLKTag("shadow");
+					if ((shadowString != null) && (shadowString.length() > 0) && !"_".equals(shadowString)) {
+						this.terrain.addShadow(shadowString, doodad.getLocation()[0], doodad.getLocation()[1]);
+					}
+
+				}
 				// First see if the model is local.
 				// Doodads referring to local models may have invalid variations, so if the
 				// variation doesn't exist, try without a variation.
@@ -750,9 +761,9 @@ public class War3MapViewer extends ModelViewer {
 		final float[] ray = rayHeap;
 		mousePosHeap.set(screenX, screenY);
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
-		final Ray gdxRay = new Ray(new Vector3(ray[0], ray[1], ray[2]),
-				new Vector3(ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]));
-		Terrain.intersectRayTriangles(gdxRay, this.terrain.softwareGroundMesh.vertices,
+		gdxRayHeap.set(ray[0], ray[1], ray[2], ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]);
+		gdxRayHeap.direction.nor();// needed for libgdx
+		Terrain.intersectRayTriangles(gdxRayHeap, this.terrain.softwareGroundMesh.vertices,
 				this.terrain.softwareGroundMesh.indices, 3, out);
 	}
 
@@ -766,6 +777,43 @@ public class War3MapViewer extends ModelViewer {
 	}
 
 	public List<RenderUnit> selectUnit(final float x, final float y, final boolean toggle) {
+		final float[] ray = rayHeap;
+		mousePosHeap.set(x, y);
+		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
+		gdxRayHeap.set(ray[0], ray[1], ray[2], ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]);
+		gdxRayHeap.direction.nor();// needed for libgdx
+
+		RenderUnit entity = null;
+		for (final RenderUnit unit : this.units) {
+			final MdxComplexInstance instance = unit.instance;
+			if (instance.intersectRayWithCollision(gdxRayHeap, intersectionHeap)) {
+				entity = unit;
+			}
+		}
+		List<RenderUnit> sel;
+		if (entity != null) {
+			if (toggle) {
+				sel = new ArrayList<>(this.selected);
+				final int idx = sel.indexOf(entity);
+				if (idx >= 0) {
+					sel.remove(idx);
+				}
+				else {
+					sel.add(entity);
+				}
+			}
+			else {
+				sel = Arrays.asList(entity);
+			}
+		}
+		else {
+			sel = Collections.emptyList();
+		}
+		this.doSelectUnit(sel);
+		return sel;
+	}
+
+	public List<RenderUnit> selectUnitOld(final float x, final float y, final boolean toggle) {
 		final float[] ray = rayHeap;
 		mousePosHeap.set(x, y);
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
@@ -1018,6 +1066,11 @@ public class War3MapViewer extends ModelViewer {
 
 		}
 		return ordered;
+	}
+
+	public void standOnRepeat(final MdxComplexInstance instance) {
+		instance.setSequenceLoopMode(2);
+		StandSequence.randomStandSequence(instance);
 	}
 
 }

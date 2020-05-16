@@ -6,6 +6,7 @@ public class RenderCorner extends Corner {
 	public boolean cliff;
 	public boolean romp;
 	public float rampAdjust;
+	public float depth;
 
 	public RenderCorner(final Corner corner) {
 		super(corner);

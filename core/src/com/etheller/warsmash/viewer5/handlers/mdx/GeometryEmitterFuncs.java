@@ -69,6 +69,8 @@ public class GeometryEmitterFuncs {
 	private static final Vector3 startHeap = new Vector3();
 	private static final Vector3 endHeap = new Vector3();
 	private static final float[] vectorTemp = new float[3];
+	private static final Vector3[] vector3Heap = { new Vector3(), new Vector3(), new Vector3(), new Vector3(),
+			new Vector3(), new Vector3() };
 
 	public static void bindParticleEmitter2Buffer(final ParticleEmitter2 emitter, final ClientBuffer buffer) {
 		final MdxComplexInstance instance = emitter.instance;
@@ -99,6 +101,16 @@ public class GeometryEmitterFuncs {
 				floatView.put(p0Offset + 0, location.x);
 				floatView.put(p0Offset + 1, location.y);
 				floatView.put(p0Offset + 2, location.z);
+				if (emitterObject.xYQuad != 0) {
+					final Vector3 velocity = object.velocity;
+					floatView.put(p0Offset + 3, velocity.x);
+					floatView.put(p0Offset + 4, velocity.y);
+					floatView.put(p0Offset + 5, velocity.z);
+				}
+				else {
+					floatView.put(p0Offset + 3, 0);
+					floatView.put(p0Offset + 4, 0);
+				}
 			}
 			else {
 				final Vector3 velocity = object.velocity;

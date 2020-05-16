@@ -1,7 +1,13 @@
 package com.etheller.warsmash.viewer5;
 
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.math.collision.Ray;
+
 public class Bounds {
 	public float x, y, z, r;
+	private BoundingBox boundingBox;
 
 	public void fromExtents(final float[] min, final float[] max) {
 		final float x = min[0];
@@ -15,5 +21,14 @@ public class Bounds {
 		this.y = y + (d / 2f);
 		this.z = z + (h / 2f);
 		this.r = (float) (Math.max(Math.max(w, d), h) / 2.);
+		this.boundingBox = new BoundingBox(new Vector3(min), new Vector3(max));
+	}
+
+	public void intersectRay(final Ray ray, final Vector3 intersection) {
+		Intersector.intersectRayBounds(ray, this.boundingBox, intersection);
+	}
+
+	public boolean intersectRayFast(final Ray ray) {
+		return Intersector.intersectRayBoundsFast(ray, this.boundingBox);
 	}
 }

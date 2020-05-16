@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import javax.imageio.ImageIO;
 import org.apache.commons.compress.utils.IOUtils;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Intersector;
@@ -40,6 +42,7 @@ import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.RawOpenGLTextureResource;
 import com.etheller.warsmash.viewer5.Texture;
+import com.etheller.warsmash.viewer5.gl.Extensions;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
@@ -55,6 +58,7 @@ public class Terrain {
 	private static final Vector3 normalHeap2 = new Vector3();
 	private static final float[] fourComponentHeap = new float[4];
 	private static final Matrix4 tempMatrix = new Matrix4();
+	private static final boolean WIREFRAME_TERRAIN = false;
 
 	public ShaderProgram groundShader;
 	public ShaderProgram waterShader;
@@ -114,6 +118,7 @@ public class Terrain {
 	public final Map<String, List<float[]>> shadows = new HashMap<>();
 	public final Map<String, Texture> shadowTextures = new HashMap<>();
 	private final int[] mapBounds;
+	private final float[] shaderMapBounds;
 	private final int[] mapSize;
 	public final SoftwareGroundMesh softwareGroundMesh;
 	private final int testArrayBuffer;
@@ -369,6 +374,10 @@ public class Terrain {
 		this.centerOffset = w3eFile.getCenterOffset();
 		this.uberSplatModels = new ArrayList<>();
 		this.mapBounds = w3iFile.getCameraBoundsComplements();
+		this.shaderMapBounds = new float[] { (this.mapBounds[0] * 128.0f) + this.centerOffset[0],
+				(this.mapBounds[2] * 128.0f) + this.centerOffset[1],
+				((this.columns - this.mapBounds[1] - 1) * 128.0f) + this.centerOffset[0],
+				((this.rows - this.mapBounds[3] - 1) * 128.0f) + this.centerOffset[1] };
 		this.mapSize = w3eFile.getMapSize();
 		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundHeights, this.groundCornerHeights,
 				this.centerOffset, width, height);
@@ -382,6 +391,13 @@ public class Terrain {
 //		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, this.testElementBuffer);
 //		gl.glBufferData(GL30.GL_ELEMENT_ARRAY_BUFFER, this.softwareGroundMesh.indices.length,
 //				RenderMathUtils.wrap(this.softwareGroundMesh.indices), GL30.GL_STATIC_DRAW);
+
+		this.waveBuilder = new WaveBuilder(this.mapSize, this.waterTable, viewer, this.corners, this.centerOffset,
+				this.waterHeightOffset, w3eFile, w3iFile);
+	}
+
+	public void createWaves() {
+		this.waveBuilder.createWaves(this);
 	}
 
 	private void updateGroundHeights(final Rectangle area) {
@@ -415,8 +431,12 @@ public class Terrain {
 					}
 				}
 
-				this.groundCornerHeights[(j * this.columns) + i] = this.corners[i][j].computeFinalGroundHeight()
-						+ rampHeight;
+				final RenderCorner corner = this.corners[i][j];
+				final float newGroundCornerHeight = corner.computeFinalGroundHeight() + rampHeight;
+				this.groundCornerHeights[(j * this.columns) + i] = newGroundCornerHeight;
+				corner.depth = (corner.getWater() != 0)
+						? (this.waterHeightOffset + corner.getWaterHeight()) - newGroundCornerHeight
+						: 0;
 			}
 		}
 		updateGroundHeights();
@@ -430,9 +450,13 @@ public class Terrain {
 	}
 
 	private void updateCornerHeights() {
+		final FloatBuffer groundCornerHeightsWrapped = RenderMathUtils.wrap(this.groundCornerHeights);
 		Gdx.gl30.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
 		Gdx.gl30.glTexSubImage2D(GL30.GL_TEXTURE_2D, 0, 0, 0, this.columns, this.rows, GL30.GL_RED, GL30.GL_FLOAT,
-				RenderMathUtils.wrap(this.groundCornerHeights));
+				groundCornerHeightsWrapped);
+		Gdx.gl30.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightLinear);
+		Gdx.gl30.glTexSubImage2D(GL30.GL_TEXTURE_2D, 0, 0, 0, this.columns, this.rows, GL30.GL_RED, GL30.GL_FLOAT,
+				groundCornerHeightsWrapped);
 	}
 
 	/**
@@ -819,15 +843,21 @@ public class Terrain {
 //		gl.glActiveTexture(GL30.GL_TEXTURE21, /*pathingMap.getTextureDynamic()*/);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE20);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, dynamicShadowManager.getDepthTexture());
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
 
 //		gl.glEnableVertexAttribArray(0);
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, Shapes.INSTANCE.vertexBuffer);
 		gl.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 0, 0);
 
 		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, Shapes.INSTANCE.indexBuffer);
+		if (WIREFRAME_TERRAIN) {
+			Extensions.wireframeExtension.glPolygonMode(GL20.GL_FRONT_AND_BACK, Extensions.GL_LINE);
+		}
 		gl.glDrawElementsInstanced(GL30.GL_TRIANGLES, Shapes.INSTANCE.quadIndices.length * 3, GL30.GL_UNSIGNED_INT, 0,
 				(this.columns - 1) * (this.rows - 1));
+		if (WIREFRAME_TERRAIN) {
+			Extensions.wireframeExtension.glPolygonMode(GL20.GL_FRONT_AND_BACK, Extensions.GL_FILL);
+		}
 
 //		gl.glDisableVertexAttribArray(0);
 
@@ -910,6 +940,7 @@ public class Terrain {
 		gl.glUniform1i(6, (int) this.waterIndex);
 		gl.glUniform1f(this.waterShader.getUniformLocation("centerOffsetX"), this.centerOffset[0]);
 		gl.glUniform1f(this.waterShader.getUniformLocation("centerOffsetY"), this.centerOffset[1]);
+		gl.glUniform4fv(9, 1, this.shaderMapBounds, 0);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
@@ -959,6 +990,10 @@ public class Terrain {
 		gl.glUniformMatrix4fv(0, 1, false, tempMatrix.val, 0);
 		gl.glUniform1i(1, this.viewer.renderPathing);
 		gl.glUniform1i(2, this.viewer.renderLighting);
+
+		this.cliffShader.setUniformi("shadowMap", 2);
+		gl.glActiveTexture(GL30.GL_TEXTURE2);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.cliffTextureArray);
@@ -1052,7 +1087,7 @@ public class Terrain {
 			}
 		}
 
-		this.shadowMap = gl.glGenBuffer();
+		this.shadowMap = gl.glGenTexture();
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
@@ -1107,6 +1142,7 @@ public class Terrain {
 	static Vector3 tmp1 = new Vector3();
 	static Vector3 tmp2 = new Vector3();
 	static Vector3 tmp3 = new Vector3();
+	private final WaveBuilder waveBuilder;
 
 	/**
 	 * Intersects the given ray with list of triangles. Returns the nearest
@@ -1185,10 +1221,10 @@ public class Terrain {
 		final int cellY = (int) userCellSpaceY;
 
 		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
-			final float bottomLeft = this.corners[cellX][cellY].computeFinalGroundHeight();
-			final float bottomRight = this.corners[cellX + 1][cellY].computeFinalGroundHeight();
-			final float topLeft = this.corners[cellX][cellY + 1].computeFinalGroundHeight();
-			final float topRight = this.corners[cellX + 1][cellY + 1].computeFinalGroundHeight();
+			final float bottomLeft = this.groundCornerHeights[(cellY * this.columns) + cellX];
+			final float bottomRight = this.groundCornerHeights[(cellY * this.columns) + cellX + 1];
+			final float topLeft = this.groundCornerHeights[((cellY + 1) * this.columns) + cellX];
+			final float topRight = this.groundCornerHeights[((cellY + 1) * this.columns) + cellX + 1];
 			final float sqX = userCellSpaceX - cellX;
 			final float sqY = userCellSpaceY - cellY;
 			float height;
@@ -1268,5 +1304,23 @@ public class Terrain {
 				}
 			}
 		}
+	}
+
+	public boolean inPlayableArea(float x, float y) {
+		x = (x - this.centerOffset[0]) / 128.0f;
+		y = (y - this.centerOffset[1]) / 128.0f;
+		if (x < this.mapBounds[0]) {
+			return false;
+		}
+		if (x >= (this.mapSize[0] - this.mapBounds[1] - 1)) {
+			return false;
+		}
+		if (y < this.mapBounds[2]) {
+			return false;
+		}
+		if (y >= (this.mapSize[1] - this.mapBounds[3] - 1)) {
+			return false;
+		} // TODO why do we use floor if we can use int cast?
+		return this.corners[(int) Math.floor(x)][(int) Math.floor(y)].getBoundary() == 0;
 	}
 }

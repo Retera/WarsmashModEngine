@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -13,6 +14,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
@@ -23,6 +25,8 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -85,6 +89,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private final Texture[] teamColors = new Texture[WarsmashConstants.MAX_PLAYERS];
 	private Texture solidGreenTexture;
 
+	private ShapeRenderer shapeRenderer;
+	private boolean showTalentTree;
+
+	private final List<Message> messages = new LinkedList<>();
+
 	@Override
 	public void create() {
 
@@ -107,8 +116,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3xLocal.mpq\\enus-war3local.mpq");
 //		final FolderDataSourceDescriptor rebirth = new FolderDataSourceDescriptor(
 //				"E:\\Games\\Warcraft III Patch 1.31 Rebirth");
-		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor(
-				"D:\\NEEDS_ORGANIZING\\MPQBuild\\Test");
+		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor("E:\\Backups\\Warsmash\\Data");
 		final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
 		this.codebase = new CompoundDataSourceDescriptor(
 				Arrays.<DataSourceDescriptor>asList(war3mpq, /* war3xLocalmpq, */ testingFolder, currentFolder))
@@ -118,8 +126,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.viewer.worldScene.enableAudio();
 		this.viewer.enableAudio();
 		try {
-			// "Maps\\Campaign\\NightElf03.w3m"
-			this.viewer.loadMap("ProjectileTest.w3x");
+			this.viewer.loadMap("ReforgedGeorgeVacation.w3x");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -170,7 +177,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		this.batch = new SpriteBatch();
 
-		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
+//		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
 		if (this.viewer.dataSource.has("war3mapMap.tga")) {
 			try {
 				this.minimapTexture = ImageUtils.getTextureNoColorCorrection(TgaFile.readTGA("war3mapMap.tga",
@@ -204,12 +211,12 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
 
 		Gdx.input.setInputProcessor(this);
-//
-//		final Music music = Gdx.audio
-//				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\OrcTheme.mp3"));
-//		music.setVolume(0.2f);
-//		music.setLooping(true);
-//		music.play();
+
+		final Music music = Gdx.audio
+				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\DarkAgents.mp3"));
+		music.setVolume(0.2f);
+		music.setLooping(true);
+		music.play();
 
 		this.minimap = new Rectangle(35, 7, 305, 272);
 		final float worldWidth = (this.viewer.terrain.columns - 1);
@@ -224,6 +231,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		this.cameraManager.target.x = this.viewer.startLocations[0].x;
 		this.cameraManager.target.y = this.viewer.startLocations[0].y;
+
+		this.shapeRenderer = new ShapeRenderer();
+		this.talentTreeWindow = new Rectangle(100, 300, 1400, 800);
 	}
 
 	@Override
@@ -265,7 +275,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.glyphLayout.setText(this.font, fpsString);
 		this.font.draw(this.batch, fpsString, (this.uiViewport.getWorldWidth() - this.glyphLayout.width) / 2, 1100);
 
-		this.batch.draw(this.consoleUITexture, 0, 0, this.uiViewport.getWorldWidth(), 320);
+//		this.batch.draw(this.consoleUITexture, 0, 0, this.uiViewport.getWorldWidth(), 320);
 		this.batch.draw(this.minimapTexture, 35, 7, 305, 272);
 
 		if (this.selectedUnit != null) {
@@ -280,6 +290,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			this.font20.draw(this.batch, "Attack:", 600, 120);
 			this.font20.draw(this.batch, "Defense:", 600, 98);
 			this.font20.draw(this.batch, "Speed:", 600, 76);
+			this.font20.setColor(Color.WHITE);
+			int messageIndex = 0;
+			for (final Message message : this.messages) {
+				this.font20.draw(this.batch, message.text, 100, 400 + (25 * (messageIndex++)));
+			}
 			this.font20.setColor(Color.WHITE);
 			final int dmgMin = this.viewer.simulation.getUnitData()
 					.getA1MinDamage(this.selectedUnit.getSimulationUnit().getTypeId());
@@ -325,6 +340,33 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 					4, 4);
 		}
 		this.batch.end();
+
+		if (this.showTalentTree) {
+			this.shapeRenderer.setProjectionMatrix(this.uiCamera.combined);
+
+			this.shapeRenderer.setColor(Color.BLACK);
+			this.shapeRenderer.begin(ShapeType.Filled);
+			this.shapeRenderer.rect(this.talentTreeWindow.x, this.talentTreeWindow.y, this.talentTreeWindow.width,
+					this.talentTreeWindow.height);
+			this.shapeRenderer.end();
+
+			this.shapeRenderer.setColor(Color.YELLOW);
+			this.shapeRenderer.begin(ShapeType.Line);
+			this.shapeRenderer.rect(100, 300, 1400, 800);
+			this.shapeRenderer.end();
+
+			this.batch.begin();
+
+			this.font.setColor(Color.YELLOW);
+			final String title = "Mage Talent Tree";
+			this.glyphLayout.setText(this.font, title);
+			this.font.draw(this.batch, title,
+					this.talentTreeWindow.x + ((this.talentTreeWindow.width - this.glyphLayout.width) / 2),
+					(this.talentTreeWindow.y + this.talentTreeWindow.height) - 45);
+
+			this.batch.end();
+		}
+
 	}
 
 	@Override
@@ -466,6 +508,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private final Vector2 cameraVelocity = new Vector2();
 	private Scene portraitScene;
 	private Texture minimapTexture;
+	private Rectangle talentTreeWindow;
 
 	@Override
 	public boolean keyDown(final int keycode) {
@@ -509,9 +552,25 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
 		System.out.println(screenX + "," + screenY);
+
 		clickLocationTemp2.x = screenX;
 		clickLocationTemp2.y = screenY;
 		this.uiViewport.unproject(clickLocationTemp2);
+
+		if (this.selectedUnit != null) {
+			for (final CommandCardIcon commandCardIcon : this.selectedUnit.getCommandCardIcons()) {
+				if (new Rectangle(1225 + (70 * commandCardIcon.getX()), 160 - (70 * commandCardIcon.getY()), 64, 64)
+						.contains(clickLocationTemp2)) {
+					if (button == Input.Buttons.RIGHT) {
+						this.messages.add(new Message(Gdx.input.getCurrentEventTime(), "Right mouse click"));
+					}
+					else {
+						this.messages.add(new Message(Gdx.input.getCurrentEventTime(), "Left mouse click"));
+					}
+					return true;
+				}
+			}
+		}
 		if (this.minimapFilledArea.contains(clickLocationTemp2.x, clickLocationTemp2.y)) {
 			final float clickX = (clickLocationTemp2.x - this.minimapFilledArea.x) / this.minimapFilledArea.width;
 			final float clickY = (clickLocationTemp2.y - this.minimapFilledArea.y) / this.minimapFilledArea.height;
@@ -603,5 +662,15 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			this.cameraManager.verticalAngle = (float) (Math.PI / 5);
 		}
 		return true;
+	}
+
+	private static class Message {
+		private final float time;
+		private final String text;
+
+		public Message(final float time, final String text) {
+			this.time = time;
+			this.text = text;
+		}
 	}
 }

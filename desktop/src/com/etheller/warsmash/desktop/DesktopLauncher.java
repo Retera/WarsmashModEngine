@@ -11,6 +11,7 @@ import com.etheller.warsmash.WarsmashGdxMapGame;
 import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
 import com.etheller.warsmash.viewer5.gl.DynamicShadowExtension;
 import com.etheller.warsmash.viewer5.gl.Extensions;
+import com.etheller.warsmash.viewer5.gl.WireframeExtension;
 
 public class DesktopLauncher {
 	public static void main(final String[] arg) {
@@ -44,6 +45,14 @@ public class DesktopLauncher {
 				GL11.glDrawBuffer(mode);
 			}
 		};
+		Extensions.wireframeExtension = new WireframeExtension() {
+			@Override
+			public void glPolygonMode(final int face, final int mode) {
+				GL11.glPolygonMode(face, mode);
+			}
+		};
+		Extensions.GL_LINE = GL11.GL_LINE;
+		Extensions.GL_FILL = GL11.GL_FILL;
 		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.useGL30 = true;
 		config.gles30ContextMajorVersion = 3;

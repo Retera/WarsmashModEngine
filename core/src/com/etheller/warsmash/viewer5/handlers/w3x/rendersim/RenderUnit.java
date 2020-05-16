@@ -105,7 +105,7 @@ public class RenderUnit {
 						ability.getOrderId()));
 			}
 			else if (ability instanceof CAbilityAttack) {
-				this.commandCardIcons.add(new CommandCardIcon(-2, -2,
+				this.commandCardIcons.add(new CommandCardIcon(3, 0,
 						ImageUtils.getBLPTexture(map.dataSource, "ReplaceableTextures\\CommandButtons\\BTNAttack.blp"),
 						ability.getOrderId()));
 			}
@@ -117,7 +117,7 @@ public class RenderUnit {
 								ability.getOrderId()));
 			}
 			else if (ability instanceof CAbilityPatrol) {
-				this.commandCardIcons.add(new CommandCardIcon(3, 0,
+				this.commandCardIcons.add(new CommandCardIcon(0, 1,
 						ImageUtils.getBLPTexture(map.dataSource, "ReplaceableTextures\\CommandButtons\\BTNPatrol.blp"),
 						ability.getOrderId()));
 			}
@@ -202,10 +202,10 @@ public class RenderUnit {
 		}
 		this.lastOrder = currentOrder;
 		if (this.shadow != null) {
-			this.shadow.move(dx, dy);
+			this.shadow.move(dx, dy, map.terrain.centerOffset);
 		}
 		if (this.selectionCircle != null) {
-			this.selectionCircle.move(dx, dy);
+			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
 		}
 	}
 

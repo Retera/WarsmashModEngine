@@ -9,6 +9,7 @@ import java.util.List;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.GenericNode;
@@ -680,5 +681,26 @@ public class MdxComplexInstance extends ModelInstance {
 	@Override
 	protected RenderBatch getBatch(final TextureMapper textureMapper2) {
 		throw new UnsupportedOperationException("NOT API");
+	}
+
+	public void intersectRayBounds(final Ray ray, final Vector3 intersection) {
+		this.model.bounds.intersectRay(ray, intersection);
+	}
+
+	/**
+	 * Intersects a world ray with the model's CollisionShapes. Only ever call this
+	 * function on the Gdx thread because it uses static variables to hold state
+	 * while processing.
+	 *
+	 * @param ray
+	 */
+	public boolean intersectRayWithCollision(final Ray ray, final Vector3 intersection) {
+		for (final CollisionShape collisionShape : ((MdxModel) this.model).collisionShapes) {
+			final MdxNode mdxNode = this.nodes[collisionShape.index];
+			if (collisionShape.checkIntersect(ray, mdxNode, intersection)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

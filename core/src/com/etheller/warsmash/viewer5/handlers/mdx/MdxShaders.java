@@ -363,7 +363,28 @@ public class MdxShaders {
 			"      v_color = color;\r\n" + //
 			"      \r\n" + //
 			"      if (a_tail == HEAD) {\r\n" + //
-			"        gl_Position = u_mvp * vec4(a_p0 + (u_vertices[int(a_position)] * scale), 1.0);\r\n" + //
+			"        vec3 vertices[4];\r\n" + //
+			"        if(a_p1[0] != 0.0 || a_p1[1] != 0.0) {\r\n" + //
+			"          vec3 vx;\r\n" + //
+			"          vx[0] = a_p1[0];\r\n" + //
+			"          vx[1] = a_p1[1];\r\n" + //
+			"          vx[2] = 0.0;\r\n" + //
+			"          vx = normalize(vx);\r\n" + //
+			"          vec3 vy;\r\n" + //
+			"          vy[0] = -vx[1];\r\n" + //
+			"          vy[1] = vx[0];\r\n" + //
+			"          vy[2] = 0.0;\r\n" + //
+			"          vertices[2] = - vx - vy;\r\n" + //
+			"          vertices[1] = vx - vy;\r\n" + //
+			"          vertices[0] = -vertices[2];\r\n" + //
+			"          vertices[3] = -vertices[1];\r\n" + //
+			"        } else {\r\n" + //
+			"          vertices[0] = u_vertices[0];\r\n" + //
+			"          vertices[1] = u_vertices[1];\r\n" + //
+			"          vertices[2] = u_vertices[2];\r\n" + //
+			"          vertices[3] = u_vertices[3];\r\n" + //
+			"        }\r\n" + //
+			"        gl_Position = u_mvp * vec4(a_p0 + (vertices[int(a_position)] * scale), 1.0);\r\n" + //
 			"      } else {\r\n" + //
 			"        // Get the normal to the tail in camera space.\r\n" + //
 			"        // This allows to build a 2D rectangle around the 3D tail.\r\n" + //

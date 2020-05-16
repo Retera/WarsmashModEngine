@@ -24,7 +24,6 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SolvedPath;
-import com.etheller.warsmash.viewer5.handlers.mdx.EventObjectEmitterObject;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -58,8 +57,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		System.err.println("Renderer: " + renderer);
 
 		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor("E:\\Backups\\Warcraft\\Data\\127");
-		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor(
-				"D:\\NEEDS_ORGANIZING\\MPQBuild\\Test");
+		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor("E:\\Backups\\Warsmash\\Data");
 		final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
 		this.codebase = new CompoundDataSourceDescriptor(
 				Arrays.<DataSourceDescriptor>asList(war3mpq, testingFolder, currentFolder)).createDataSource();
@@ -74,8 +72,8 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(scene);
 
-//		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
-		this.mainModel = (MdxModel) this.viewer.load("Units\\Human\\HeroPaladinBoss\\HeroPaladinBoss.mdx",
+		this.mainModel = (MdxModel) this.viewer.load("Buildings\\Other\\TempArtB\\TempArtB.mdx",
+//		this.mainModel = (MdxModel) this.viewer.load("Abilities\\Spells\\Orc\\FeralSpirit\\feralspirittarget.mdx",
 				new PathSolver() {
 					@Override
 					public SolvedPath solve(final String src, final Object solverParams) {
@@ -83,12 +81,12 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 					}
 				}, null);
 
-		final EventObjectEmitterObject evt = this.mainModel.getEventObjects().get(1);
-		for (final Sequence seq : this.mainModel.getSequences()) {
-			System.out.println(seq.getName() + ": " + Arrays.toString(seq.getInterval()));
-		}
-		System.out.println(Arrays.toString(evt.keyFrames));
-		System.out.println(evt.name);
+//		final EventObjectEmitterObject evt = this.mainModel.getEventObjects().get(1);
+//		for (final Sequence seq : this.mainModel.getSequences()) {
+//			System.out.println(seq.getName() + ": " + Arrays.toString(seq.getInterval()));
+//		}
+//		System.out.println(Arrays.toString(evt.keyFrames));
+//		System.out.println(evt.name);
 
 //		this.modelCamera = this.mainModel.cameras.get(0);
 

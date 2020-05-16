@@ -18,6 +18,7 @@ public class TerrainShaders {
 				"layout (location = 0) uniform mat4 MVP;\r\n" + //
 				"\r\n" + //
 				"layout (binding = 1) uniform sampler2D height_texture;\r\n" + //
+				"layout (binding = 3) uniform sampler2D shadowMap;\r\n" + //
 				"layout (location = 3) uniform float centerOffsetX;\r\n" + //
 				"layout (location = 4) uniform float centerOffsetY;\r\n" + //
 				"\r\n" + //
@@ -25,11 +26,14 @@ public class TerrainShaders {
 				"layout (location = 1) out vec3 Normal;\r\n" + //
 				"layout (location = 2) out vec2 pathing_map_uv;\r\n" + //
 				"layout (location = 3) out vec3 position;\r\n" + //
+				"layout (location = 4) out vec2 v_suv;\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
 				"	pathing_map_uv = (vec2(vPosition.x + 128, vPosition.y) / 128 + vOffset.xy) * 4;\r\n" + //
 				" \r\n" + //
 				"	ivec2 size = textureSize(height_texture, 0);\r\n" + //
+				"   ivec2 shadowSize = textureSize(shadowMap, 0);\r\n" + //
+				"	v_suv = pathing_map_uv / shadowSize;\r\n" + //
 				"	float value = texture(height_texture, (vOffset.xy + vec2(vPosition.x + 192, vPosition.y + 64) / 128.0) / vec2(size)).r;\r\n"
 				+ //
 				"\r\n" + //
@@ -38,7 +42,7 @@ public class TerrainShaders {
 				"   myposition.x += centerOffsetX;\r\n" + //
 				"   myposition.y += centerOffsetY;\r\n" + //
 				"   position.x /= (size.x * 128.0);\r\n" + //
-				"   position.y /= (size.x * 128.0);\r\n" + //
+				"   position.y /= (size.y * 128.0);\r\n" + //
 				"	gl_Position = MVP * myposition;\r\n" + //
 				"	UV = vec3(vUV, vOffset.a);\r\n" + //
 				"\r\n" + //
@@ -57,6 +61,7 @@ public class TerrainShaders {
 				"\r\n" + //
 				"layout (binding = 0) uniform sampler2DArray cliff_textures;\r\n" + //
 				"layout (binding = 2) uniform usampler2D pathing_map_static;\r\n" + //
+				"layout (binding = 3) uniform sampler2D shadowMap;\r\n" + //
 				"\r\n" + //
 				"layout (location = 1) uniform bool show_pathing_map_static;\r\n" + //
 				"layout (location = 2) uniform bool show_lighting;\r\n" + //
@@ -64,12 +69,15 @@ public class TerrainShaders {
 				"layout (location = 0) in vec3 UV;\r\n" + //
 				"layout (location = 1) in vec3 Normal;\r\n" + //
 				"layout (location = 2) in vec2 pathing_map_uv;\r\n" + //
+				"layout (location = 4) in vec2 v_suv;\r\n" + //
 				"\r\n" + //
 				"out vec4 color;\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
 				"	color = texture(cliff_textures, UV);\r\n" + //
 				"\r\n" + //
+				"   float shadow = texture2D(shadowMap, v_suv).r;\r\n" + //
+				"   color.rgb *= (1.0 - shadow);\r\n" + //
 				"	if (show_lighting) {\r\n" + //
 				"		vec3 light_direction = vec3(-0.3, -0.3, 0.25);\r\n" + //
 				"		light_direction = normalize(light_direction);\r\n" + //
@@ -127,6 +135,7 @@ public class TerrainShaders {
 				"layout (location = 3) out vec3 normal;\r\n" + //
 				"layout (location = 4) out vec3 position;\r\n" + //
 				"layout (location = 5) out vec3 ShadowCoord;\r\n" + //
+				"layout (location = 6) out vec2 v_suv;\r\n" + //
 				"\r\n" + //
 				"void main() { \r\n" + //
 				"	ivec2 size = textureSize(terrain_texture_list, 0);\r\n" + //
@@ -153,6 +162,7 @@ public class TerrainShaders {
 				+ //
 				"	ShadowCoord = (((texture_indices.a & 32768) == 0) ? DepthBiasMVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0)).xyz;\r\n"
 				+ //
+				"   v_suv = (vPosition + pos) / size;\r\n" + //
 				"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
 				"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
 				"}";
@@ -190,6 +200,7 @@ public class TerrainShaders {
 				"layout (location = 3) in vec3 normal;\r\n" + //
 				"layout (location = 4) in vec3 position;\r\n" + //
 				"layout (location = 5) in vec3 ShadowCoord;\r\n" + //
+				"layout (location = 6) in vec2 v_suv;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) out vec4 color;\r\n" + //
 //				"layout (location = 1) out vec4 position;\r\n" + //
@@ -247,11 +258,12 @@ public class TerrainShaders {
 				+ //
 				"	color = color * color.a + get_fragment(texture_indices.r & 31, vec3(UV, texture_indices.r >> 5)) * (1 - color.a);\r\n"
 				+ //
-				"   float visibility = 1.0;\r\n" + //
+				"   float shadow = texture2D(shadowMap, v_suv).r;\r\n" + //
+//				"   float visibility = 1.0;\r\n" + //
 //				"   if ( texture2D(shadowMap, ShadowCoord.xy).z > ShadowCoord.z ) {\r\n" + //
 //				"       visibility = 0.5;\r\n" + //
 //				"   }\r\n" + //
-				"   color = vec4(color.xyz * visibility, 1.0);\r\n" + //
+				"   color = vec4(color.xyz * (1.0 - shadow), 1.0);\r\n" + //
 				"\r\n" + //
 //				"	if (show_lighting) {\r\n" + //
 //				"		vec3 light_direction = vec3(-0.3, -0.3, 0.25);\r\n" + //
@@ -406,6 +418,7 @@ public class TerrainShaders {
 				"\r\n" + //
 				"out vec2 UV;\r\n" + //
 				"out vec4 Color;\r\n" + //
+				"out vec2 position;\r\n" + //
 				"\r\n" + //
 				"const float min_depth = 10.f / 128;\r\n" + //
 				"const float deeplevel = 64.f / 128;\r\n" + //
@@ -422,7 +435,9 @@ public class TerrainShaders {
 				"	 || texelFetch(water_exists_texture, pos + ivec2(1, 1), 0).r > 0\r\n" + //
 				"	 || texelFetch(water_exists_texture, pos + ivec2(0, 1), 0).r > 0;\r\n" + //
 				"\r\n" + //
-				"	gl_Position = is_water ? MVP * vec4((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY, water_height*128.0, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
+				"   position = vec2((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY);\r\n"
+				+ //
+				"	gl_Position = is_water ? MVP * vec4(position.xy, water_height*128.0, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
 				+ //
 				"\r\n" + //
 				"	UV = vec2((vPosition.x + pos.x%2)/2.0, (vPosition.y + pos.y%2)/2.0);\r\n" + //
@@ -445,14 +460,19 @@ public class TerrainShaders {
 				"\r\n" + //
 				"\r\n" + //
 				"layout (location = 6) uniform int current_texture;\r\n" + //
+				"layout (location = 9) uniform vec4 mapBounds;\r\n" + //
 				"\r\n" + //
 				"in vec2 UV;\r\n" + //
 				"in vec4 Color;\r\n" + //
+				"in vec2 position;\r\n" + //
 				"\r\n" + //
 				"out vec4 outColor;\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
-				"	outColor = texture(water_textures, vec3(UV, current_texture)) * Color;\r\n" + //
+				"   vec2 d2 = min(position - mapBounds.xy, mapBounds.zw - position);\r\n" + //
+				"   float d1 = clamp(min(d2.x, d2.y) / 64.0 + 1.0, 0.0, 1.0) * 0.8 + 0.2;;\r\n" + //
+				"	outColor = texture(water_textures, vec3(UV, current_texture)) * vec4(Color.rgb * d1, Color.a);\r\n"
+				+ //
 				"}";
 	}
 }

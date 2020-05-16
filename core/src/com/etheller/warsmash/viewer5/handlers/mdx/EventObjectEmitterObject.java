@@ -22,6 +22,31 @@ import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
 
 public class EventObjectEmitterObject extends GenericObject implements EmitterObject {
+	private static final class LoadGenericSoundCallback implements LoadGenericCallback {
+		private final String filename;
+
+		public LoadGenericSoundCallback(final String filename) {
+			this.filename = filename;
+		}
+
+		@Override
+		public Object call(final InputStream data) {
+			final FileHandle temp = new FileHandle(this.filename) {
+				@Override
+				public InputStream read() {
+					return data;
+				};
+			};
+			if (data != null) {
+				return Gdx.audio.newSound(temp);
+			}
+			else {
+				System.err.println("Warning: missing sound file: " + this.filename);
+				return null;
+			}
+		}
+	}
+
 	private static final LoadGenericCallback mappedDataCallback = new LoadGenericCallback() {
 
 		@Override
@@ -41,18 +66,6 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 				throw new RuntimeException(e);
 			}
 			return new MappedData(stringBuilder.toString());
-		}
-	};
-	private static final LoadGenericCallback decodedDataCallback = new LoadGenericCallback() {
-		@Override
-		public Object call(final InputStream data) {
-			final FileHandle temp = new FileHandle("sound.wav") {
-				@Override
-				public InputStream read() {
-					return data;
-				};
-			};
-			return Gdx.audio.newSound(temp);
 		}
 	};
 
@@ -266,10 +279,11 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 						final String[] fileNames = ((String) animSoundsRow.get("FileNames")).split(",");
 						final GenericResource[] resources = new GenericResource[fileNames.length];
 						for (int i = 0; i < fileNames.length; i++) {
-							final GenericResource genericResource = viewer.loadGeneric(
-									pathSolver.solve(((String) animSoundsRow.get("DirectoryBase")) + fileNames[i],
-											model.solverParams).finalSrc,
-									FetchDataTypeName.ARRAY_BUFFER, decodedDataCallback);
+							final String pathString = pathSolver.solve(
+									((String) animSoundsRow.get("DirectoryBase")) + fileNames[i],
+									model.solverParams).finalSrc;
+							final GenericResource genericResource = viewer.loadGeneric(pathString,
+									FetchDataTypeName.ARRAY_BUFFER, new LoadGenericSoundCallback(pathString));
 							if (genericResource == null) {
 								throw new IllegalStateException("Null sound: " + fileNames[i]);
 							}

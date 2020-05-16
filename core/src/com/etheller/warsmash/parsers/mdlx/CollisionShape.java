@@ -9,8 +9,8 @@ import com.google.common.io.LittleEndianDataOutputStream;
 
 public class CollisionShape extends GenericObject {
 	public static enum Type {
-		PLANE,
 		BOX,
+		PLANE,
 		SPHERE,
 		CYLINDER;
 
@@ -77,11 +77,11 @@ public class CollisionShape extends GenericObject {
 	public void readMdl(final MdlTokenInputStream stream) {
 		for (final String token : super.readMdlGeneric(stream)) {
 			switch (token) {
-			case MdlUtils.TOKEN_PLANE:
-				this.type = Type.PLANE;
-				break;
 			case MdlUtils.TOKEN_BOX:
 				this.type = Type.BOX;
+				break;
+			case MdlUtils.TOKEN_PLANE:
+				this.type = Type.PLANE;
 				break;
 			case MdlUtils.TOKEN_SPHERE:
 				this.type = Type.SPHERE;
@@ -116,11 +116,11 @@ public class CollisionShape extends GenericObject {
 		String type;
 		int vertices = 2;
 		switch (this.type) {
-		case PLANE:
-			type = MdlUtils.TOKEN_PLANE;
-			break;
 		case BOX:
 			type = MdlUtils.TOKEN_BOX;
+			break;
+		case PLANE:
+			type = MdlUtils.TOKEN_PLANE;
 			break;
 		case SPHERE:
 			type = MdlUtils.TOKEN_SPHERE;
@@ -162,6 +162,18 @@ public class CollisionShape extends GenericObject {
 		}
 
 		return size;
+	}
+
+	public float[][] getVertices() {
+		return this.vertices;
+	}
+
+	public CollisionShape.Type getType() {
+		return this.type;
+	}
+
+	public float getBoundsRadius() {
+		return this.boundsRadius;
 	}
 
 }

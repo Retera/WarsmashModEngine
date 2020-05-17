@@ -1,9 +1,13 @@
 package com.etheller.warsmash.parsers.mdlx;
 
 import java.io.IOException;
+import java.util.EnumSet;
 
 import com.etheller.warsmash.util.MdlUtils;
 import com.etheller.warsmash.util.ParseUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.io.LittleEndianDataOutputStream;
 
@@ -15,6 +19,9 @@ public class Sequence implements MdlxBlock {
 	private float rarity = 0;
 	private long syncPoint = 0;
 	private final Extent extent = new Extent();
+	private final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+	private final EnumSet<AnimationTokens.SecondaryTag> secondaryTags = EnumSet
+			.noneOf(AnimationTokens.SecondaryTag.class);
 
 	/**
 	 * Restricts us to only be able to parse models on one thread at a time, in
@@ -31,6 +38,7 @@ public class Sequence implements MdlxBlock {
 		this.rarity = stream.readFloat();
 		this.syncPoint = ParseUtils.readUInt32(stream);
 		this.extent.readMdx(stream);
+		populateTags();
 	}
 
 	@Override
@@ -79,6 +87,7 @@ public class Sequence implements MdlxBlock {
 				throw new IllegalStateException("Unknown token in Sequence \"" + this.name + "\": " + token);
 			}
 		}
+		populateTags();
 	}
 
 	@Override
@@ -100,6 +109,27 @@ public class Sequence implements MdlxBlock {
 
 		this.extent.writeMdl(stream);
 		stream.endBlock();
+	}
+
+	private void populateTags() {
+		this.primaryTags.clear();
+		this.secondaryTags.clear();
+		for (final String token : this.name.split("\\s+")) {
+			final String upperCaseToken = token.toUpperCase();
+			for (final PrimaryTag primaryTag : PrimaryTag.values()) {
+				if (upperCaseToken.equals(primaryTag.name())) {
+					this.primaryTags.add(primaryTag);
+					continue;
+				}
+			}
+			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
+				if (upperCaseToken.equals(secondaryTag.name())) {
+					this.secondaryTags.add(secondaryTag);
+					continue;
+				}
+			}
+			break;
+		}
 	}
 
 	public long[] getInterval() {

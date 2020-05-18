@@ -30,6 +30,7 @@ allprojects {
         box2DLightsVersion = '1.4'
         ashleyVersion = '1.7.0'
         aiVersion = '1.8.0'
+		antlrVersion = '4.7'
     }
 
     repositories {
@@ -64,6 +65,7 @@ project(":core") {
 
 
     dependencies {
+        compile project(":fdfparser")
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
@@ -71,6 +73,15 @@ project(":core") {
   		implementation 'com.github.inwc3:wc3libs:-SNAPSHOT'
 		compile files(fileTree(dir:'../jars', includes: ['*.jar']))
         
+    }
+}
+
+project(":fdfparser") {
+    apply plugin: "antlr"
+
+
+    dependencies {
+        antlr "org.antlr:antlr4:$antlrVersion" // use antlr version 4
     }
 }
 

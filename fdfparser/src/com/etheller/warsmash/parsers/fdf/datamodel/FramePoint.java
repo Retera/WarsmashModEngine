@@ -1,4 +1,4 @@
-package com.etheller.warsmash.parsers.fdf.templates;
+package com.etheller.warsmash.parsers.fdf.datamodel;
 
 public enum FramePoint {
 	TOPLEFT,

@@ -1,4 +1,4 @@
-package com.etheller.warsmash.parsers.fdf.templates;
+package com.etheller.warsmash.parsers.fdf.datamodel;
 
 import java.util.HashMap;
 import java.util.Map;

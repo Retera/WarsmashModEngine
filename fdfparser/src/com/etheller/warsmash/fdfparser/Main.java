@@ -4,7 +4,7 @@ import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
-import com.etheller.warsmash.parsers.fdf.templates.FrameTemplateEnvironment;
+import com.etheller.warsmash.parsers.fdf.datamodel.FrameTemplateEnvironment;
 
 public class Main {
 	public static final boolean REPORT_SYNTAX_ERRORS = true;

@@ -504,6 +504,25 @@ public class War3MapViewer extends ModelViewer {
 							path = path.substring(0, path.length() - 4);
 						}
 
+						final String unitShadow = "Shadow";
+						if ((unitShadow != null) && !"_".equals(unitShadow)) {
+							final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
+							final float shadowX = 50;
+							final float shadowY = 50;
+							final float shadowWidth = 128;
+							final float shadowHeight = 128;
+							if (!this.terrain.splats.containsKey(texture)) {
+								final Splat splat = new Splat();
+								splat.opacity = 0.5f;
+								this.terrain.splats.put(texture, splat);
+							}
+							final float x = unit.getLocation()[0] - shadowX;
+							final float y = unit.getLocation()[1] - shadowY;
+							this.terrain.splats.get(texture).locations
+									.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+							unitShadowSplat = this.terrain.splats.get(texture);
+						}
+
 						path += ".mdx";
 					}
 				}
@@ -608,6 +627,14 @@ public class War3MapViewer extends ModelViewer {
 				else {
 					this.items.add(new RenderItem(this, model, row, unit, soundset, portraitModel)); // TODO store
 																										// somewhere
+					if (unitShadowSplat != null) {
+						unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+							@Override
+							public void accept(final SplatMover t) {
+
+							}
+						});
+					}
 				}
 			}
 			else {

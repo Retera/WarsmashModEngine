@@ -2,7 +2,7 @@ package com.etheller.warsmash.parsers.fdf;
 
 import java.util.List;
 
-import com.etheller.warsmash.parsers.fdf.templates.FrameTemplateEnvironment;
+import com.etheller.warsmash.parsers.fdf.datamodel.FrameTemplateEnvironment;
 
 public class FDFStringListStatement implements FDFStatement {
 	private final List<FDFNamedString> namedStrings;

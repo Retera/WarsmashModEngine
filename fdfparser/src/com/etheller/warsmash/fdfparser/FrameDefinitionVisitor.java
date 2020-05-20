@@ -6,7 +6,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import com.etheller.warsmash.fdfparser.FDFParser.IncludeStatementContext;
 import com.etheller.warsmash.fdfparser.FDFParser.StringListStatementContext;
-import com.etheller.warsmash.parsers.fdf.templates.FrameTemplateEnvironment;
+import com.etheller.warsmash.parsers.fdf.datamodel.FrameTemplateEnvironment;
 
 public class FrameDefinitionVisitor extends FDFBaseVisitor<Void> {
 	private final FrameTemplateEnvironment templates;

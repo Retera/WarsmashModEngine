@@ -17,14 +17,20 @@ statement:
 	INCLUDE_FILE STRING_LITERAL COMMA # IncludeStatement
 	|
 	frame # FrameStatement
-	;
+	; 
 	
 frame:
-	FRAME STRING_LITERAL STRING_LITERAL OPEN_CURLY frame_element* CLOSE_CURLY # SimpleFrameDefinition
+	frame_type_qualifier STRING_LITERAL OPEN_CURLY frame_element* CLOSE_CURLY # CompDefinition
 	|
-	FRAME STRING_LITERAL STRING_LITERAL INHERITS STRING_LITERAL OPEN_CURLY frame_element* CLOSE_CURLY # FrameDefinition
+	frame_type_qualifier STRING_LITERAL INHERITS STRING_LITERAL OPEN_CURLY frame_element* CLOSE_CURLY # CompSubTypeDefinition
 	|
-	FRAME STRING_LITERAL STRING_LITERAL INHERITS WITHCHILDREN STRING_LITERAL OPEN_CURLY frame_element* CLOSE_CURLY # FrameDefinitionWithChildren
+	frame_type_qualifier STRING_LITERAL INHERITS WITHCHILDREN STRING_LITERAL OPEN_CURLY frame_element* CLOSE_CURLY # CompSubTypeDefinitionWithChildren
+	|
+	FRAME STRING_LITERAL STRING_LITERAL OPEN_CURLY frame_element* CLOSE_CURLY # FrameDefinition
+	|
+	FRAME STRING_LITERAL STRING_LITERAL INHERITS STRING_LITERAL OPEN_CURLY frame_element* CLOSE_CURLY # FrameSubTypeDefinition
+	|
+	FRAME STRING_LITERAL STRING_LITERAL INHERITS WITHCHILDREN STRING_LITERAL OPEN_CURLY frame_element* CLOSE_CURLY # FrameSubTypeDefinitionWithChildren
 	;
 	
 frame_element: 
@@ -59,6 +65,10 @@ frame_element:
 	BACKDROP_TILE_BACKGROUND COMMA # BackdropTileBackgroundElement
 	|
 	DECORATE_FILE_NAMES COMMA # DecorateFileNamesElement
+	|
+	SET_ALL_POINTS COMMA # SetAllPointsElement
+	|
+	USE_ACTIVE_CONTEXT COMMA # UseActiveContextElement
 	|
 	BACKDROP_HALF_SIDES COMMA # BackdropHalfSidesElement
 	|
@@ -165,6 +175,12 @@ frame_element:
 	CHAT_DISPLAY_SCROLL_BAR STRING_LITERAL COMMA # ChatDisplayScrollBarElement
 	|
 	CHAT_DISPLAY_EDIT_BOX STRING_LITERAL COMMA # ChatDisplayEditBoxElement
+	|
+	TEXT STRING_LITERAL COMMA # TextElement
+	|
+	FILE STRING_LITERAL COMMA # FileElement
+	|
+	FONT STRING_LITERAL COMMA FLOAT COMMA # FontElement
 	;
 	
 text_justify:
@@ -186,6 +202,14 @@ color:
 	|
 	FLOAT FLOAT FLOAT FLOAT
 	;
+	
+frame_type_qualifier:
+	STRING
+	|
+	TEXTURE
+	|
+	LAYER
+	;
 
 OPEN_CURLY : '{';
 
@@ -197,11 +221,21 @@ INCLUDE_FILE : 'IncludeFile' ;
 
 FRAME : 'Frame' ;
 
+STRING : 'String' ;
+
+TEXTURE : 'Texture' ;
+
+LAYER : 'Layer' ;
+
 INHERITS : 'INHERITS' ;
 
 WITHCHILDREN : 'WITHCHILDREN' ;
 
 DECORATE_FILE_NAMES : 'DecorateFileNames';
+
+SET_ALL_POINTS : 'SetAllPoints';
+
+USE_ACTIVE_CONTEXT : 'UseActiveContext';
 
 HEIGHT : 'Height';
 
@@ -283,6 +317,10 @@ BUTTON_TEXT : 'ButtonText';
 BUTTON_PUSHED_TEXT_OFFSET : 'ButtonPushedTextOffset';
 
 TEXT : 'Text';
+
+FILE : 'File';
+
+FONT : 'Font';
 
 SETPOINT : 'SetPoint';
 

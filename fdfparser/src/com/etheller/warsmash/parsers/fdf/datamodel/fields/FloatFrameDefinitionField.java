@@ -15,4 +15,5 @@ public class FloatFrameDefinitionField implements FrameDefinitionField {
 	public <TYPE> TYPE visit(final FrameDefinitionFieldVisitor<TYPE> visitor) {
 		return visitor.accept(this);
 	}
+
 }

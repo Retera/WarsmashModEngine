@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class FrameTemplateEnvironment {
 	private final Map<String, String> idToDecoratedString = new HashMap<>();
+	private final Map<String, FrameDefinition> idToFrame = new HashMap<>();
 
 	public void addDecoratedString(final String id, final String value) {
 		this.idToDecoratedString.put(id, value);
@@ -16,5 +17,13 @@ public class FrameTemplateEnvironment {
 			return decoratedString;
 		}
 		return id;
+	}
+
+	public void put(final String id, final FrameDefinition frame) {
+		this.idToFrame.put(id, frame);
+	}
+
+	public FrameDefinition getFrame(final String id) {
+		return this.idToFrame.get(id);
 	}
 }

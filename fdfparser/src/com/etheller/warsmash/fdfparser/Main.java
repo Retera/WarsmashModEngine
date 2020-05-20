@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
+import com.etheller.warsmash.parsers.fdf.datamodel.FrameDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameTemplateEnvironment;
 
 public class Main {
@@ -36,7 +37,8 @@ public class Main {
 			final FrameDefinitionVisitor fdfVisitor = new FrameDefinitionVisitor(templates, testFDFParserBuilder);
 			final FDFParser firstFileParser = testFDFParserBuilder.build(args[0]);
 			fdfVisitor.visit(firstFileParser.program());
-			System.out.println("Value of MONTH_12: " + templates.getDecoratedString("MONTH_12"));
+			final FrameDefinition bnetChat = templates.getFrame("BattleNetTextAreaTemplate");
+			System.out.println("Value of BattleNetTextAreaTemplate: " + bnetChat);
 		}
 		catch (final Exception exc) {
 			System.err.println(exc.getMessage());

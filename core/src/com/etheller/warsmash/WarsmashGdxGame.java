@@ -68,7 +68,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.viewer.addHandler(new MdxHandler());
 		this.viewer.enableAudio();
 
-		final Scene scene = this.viewer.addScene();
+		final Scene scene = this.viewer.addWorldScene();
 		scene.enableAudio();
 
 		this.cameraManager = new CameraManager();

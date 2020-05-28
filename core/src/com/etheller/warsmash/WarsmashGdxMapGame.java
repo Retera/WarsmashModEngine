@@ -136,7 +136,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.viewer.worldScene.enableAudio();
 		this.viewer.enableAudio();
 		try {
-			this.viewer.loadMap("PeasantTest.w3x");
+			this.viewer.loadMap("American Colo EX 1.0 unpro.w3x");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -149,11 +149,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1); // TODO remove white background
 		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
 
-		this.portraitScene = this.viewer.addScene();
+		this.portraitScene = this.viewer.addSimpleScene();
 		this.portraitCameraManager = new CameraManager();
 		this.portraitCameraManager.setupCamera(this.portraitScene);
 
-		this.uiScene = this.viewer.addScene();
+		this.uiScene = this.viewer.addSimpleScene();
 		this.uiScene.alpha = true;
 
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
@@ -649,7 +649,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 					this.portraitInstance = (MdxComplexInstance) portraitModel.addInstance();
 					this.portraitInstance.setSequenceLoopMode(1);
 					this.portraitInstance.setScene(this.portraitScene);
-//					this.portraitInstance.setVertexColor(new float[] { 1, 1, 1, 0.5f });
+					this.portraitInstance.setVertexColor(unit.instance.vertexColor);
 					if (portraitModel.getCameras().size() > 0) {
 						this.portraitCameraManager.modelCamera = portraitModel.getCameras().get(0);
 					}

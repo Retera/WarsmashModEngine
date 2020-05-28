@@ -103,8 +103,16 @@ public class ModelViewer {
 		return false;
 	}
 
-	public Scene addScene() {
-		final Scene scene = new Scene(this);
+	public Scene addSimpleScene() {
+		final Scene scene = new SimpleScene(this);
+
+		this.scenes.add(scene);
+
+		return scene;
+	}
+
+	public WorldScene addWorldScene() {
+		final WorldScene scene = new WorldScene(this);
 
 		this.scenes.add(scene);
 

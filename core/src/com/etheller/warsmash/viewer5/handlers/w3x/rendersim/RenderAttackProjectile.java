@@ -102,7 +102,7 @@ public class RenderAttackProjectile {
 		this.modelInstance.setLocation(this.x, this.y, this.z);
 		this.modelInstance.localRotation.setFromAxisRad(0, 0, 1, this.yaw);
 		this.modelInstance.rotate(pitchHeap.setFromAxisRad(0, -1, 0, this.pitch));
-		war3MapViewer.worldScene.grid.moved(this.modelInstance, this.x, this.y);
+		war3MapViewer.worldScene.instanceMoved(this.modelInstance, this.x, this.y);
 
 		final boolean everythingDone = this.simulationProjectile.isDone() && this.modelInstance.sequenceEnded;
 		if (everythingDone) {

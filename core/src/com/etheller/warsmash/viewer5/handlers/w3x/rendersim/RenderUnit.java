@@ -176,7 +176,7 @@ public class RenderUnit {
 		}
 		this.facing = (((this.facing + angleToAdd) % 360) + 360) % 360;
 		this.instance.setLocalRotation(tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z, this.facing));
-		map.worldScene.grid.moved(this.instance, this.location[0], this.location[1]);
+		map.worldScene.instanceMoved(this.instance, this.location[0], this.location[1]);
 		final MdxComplexInstance mdxComplexInstance = this.instance;
 		final COrder currentOrder = this.simulationUnit.getCurrentOrder();
 		if (this.simulationUnit.getLife() <= 0) {

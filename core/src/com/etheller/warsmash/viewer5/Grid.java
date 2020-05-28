@@ -30,7 +30,7 @@ public class Grid {
 
 		for (int row = 0; row < rows; row++) {
 			for (int column = 0; column < columns; column++) {
-				final float left = x + (columns * cellWidth);
+				final float left = x + (column * cellWidth);
 				final float right = left + cellWidth;
 				final float bottom = y + (row * cellDepth);
 				final float top = bottom + cellDepth;

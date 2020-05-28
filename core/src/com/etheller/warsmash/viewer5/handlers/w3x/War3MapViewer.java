@@ -52,6 +52,7 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.Texture;
+import com.etheller.warsmash.viewer5.WorldScene;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
@@ -101,7 +102,7 @@ public class War3MapViewer extends ModelViewer {
 
 	public PathSolver wc3PathSolver = PathSolver.DEFAULT;
 	public SolverParams solverParams = new SolverParams();
-	public Scene worldScene;
+	public WorldScene worldScene;
 	public boolean anyReady;
 	public boolean terrainCliffsAndWaterLoaded;
 	public MappedData terrainData = new MappedData();
@@ -155,7 +156,7 @@ public class War3MapViewer extends ModelViewer {
 
 		this.wc3PathSolver = PathSolver.DEFAULT;
 
-		this.worldScene = this.addScene();
+		this.worldScene = this.addWorldScene();
 
 		if (!this.dynamicShadowManager.setup(webGL)) {
 			throw new IllegalStateException("FrameBuffer setup failed");
@@ -798,6 +799,7 @@ public class War3MapViewer extends ModelViewer {
 		this.confirmationInstance.show();
 		this.confirmationInstance.setSequence(0);
 		this.confirmationInstance.setLocation(position);
+		this.worldScene.instanceMoved(this.confirmationInstance, position.x, position.y);
 		this.confirmationInstance.vertexColor[0] = red;
 		this.confirmationInstance.vertexColor[1] = green;
 		this.confirmationInstance.vertexColor[2] = blue;

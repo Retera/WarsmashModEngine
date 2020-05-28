@@ -89,7 +89,7 @@ public abstract class ModelInstance extends Node {
 		super.recalculateTransformation();
 
 		if (this.scene != null) {
-			this.scene.grid.moved(this, this.worldLocation.x, this.worldLocation.y);
+			this.scene.instanceMoved(this, this.worldLocation.x, this.worldLocation.y);
 		}
 	}
 

@@ -219,10 +219,10 @@ public enum RenderMathUtils {
 	}
 
 	public static void unpackPlanes(final Vector4[] planes, final Matrix4 m) {
-		final float a00 = m.val[Matrix4.M00], a01 = m.val[Matrix4.M10], a02 = m.val[Matrix4.M20],
-				a03 = m.val[Matrix4.M30], a10 = m.val[Matrix4.M01], a11 = m.val[Matrix4.M11], a12 = m.val[Matrix4.M21],
-				a13 = m.val[Matrix4.M31], a20 = m.val[Matrix4.M02], a21 = m.val[Matrix4.M12], a22 = m.val[Matrix4.M22],
-				a23 = m.val[Matrix4.M32], a30 = m.val[Matrix4.M03], a31 = m.val[Matrix4.M13], a32 = m.val[Matrix4.M23],
+		final float a00 = m.val[Matrix4.M00], a01 = m.val[Matrix4.M01], a02 = m.val[Matrix4.M02],
+				a03 = m.val[Matrix4.M03], a10 = m.val[Matrix4.M10], a11 = m.val[Matrix4.M11], a12 = m.val[Matrix4.M12],
+				a13 = m.val[Matrix4.M13], a20 = m.val[Matrix4.M20], a21 = m.val[Matrix4.M21], a22 = m.val[Matrix4.M22],
+				a23 = m.val[Matrix4.M23], a30 = m.val[Matrix4.M30], a31 = m.val[Matrix4.M31], a32 = m.val[Matrix4.M32],
 				a33 = m.val[Matrix4.M33];
 
 		// Left clipping plane
@@ -293,7 +293,7 @@ public enum RenderMathUtils {
 	public static Vector3 unproject(final Vector3 out, final Vector3 v, final Matrix4 inverseMatrix,
 			final Rectangle viewport) {
 		final float x = ((2 * (v.x - viewport.x)) / viewport.width) - 1;
-		final float y = 1 - ((2 * (v.y - viewport.y)) / viewport.height);
+		final float y = ((2 * (v.y - viewport.y)) / viewport.height) - 1;
 		final float z = (2 * v.z) - 1;
 
 		heap.set(x, y, z, 1);
@@ -477,6 +477,23 @@ public enum RenderMathUtils {
 		final FloatBuffer wrapper = ByteBuffer.allocateDirect(positions.length * 4).order(ByteOrder.nativeOrder())
 				.asFloatBuffer();
 		wrapper.put(positions);
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static IntBuffer wrap(final int[] positions) {
+		final IntBuffer wrapper = ByteBuffer.allocateDirect(positions.length * 4).order(ByteOrder.nativeOrder())
+				.asIntBuffer();
+		wrapper.put(positions);
+		wrapper.clear();
+		return wrapper;
+	}
+
+	public static ByteBuffer wrapAsBytes(final int[] positions) {
+		final ByteBuffer wrapper = ByteBuffer.allocateDirect(positions.length).order(ByteOrder.nativeOrder());
+		for (final int face : positions) {
+			wrapper.put((byte) face);
+		}
 		wrapper.clear();
 		return wrapper;
 	}

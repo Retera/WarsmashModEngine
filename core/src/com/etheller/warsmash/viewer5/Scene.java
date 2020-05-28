@@ -31,21 +31,18 @@ import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
  * audio is always on in LibGDX generally. So we will probably simplify or skip
  * over those behaviors other than a boolean on/off toggle for audio.
  */
-public class Scene {
+public abstract class Scene {
 
 	public final ModelViewer viewer;
 	public final Camera camera;
-	public Grid grid;
-	public int visibleCells;
-	public int visibleInstances;
 	public int updatedParticles;
 	public boolean audioEnabled;
 	public AudioContext audioContext;
 
 	public final List<ModelInstance> instances;
-	public final int currentInstance;
+	public int currentInstance;
 	public final List<ModelInstance> batchedInstances;
-	public final int currentBatchedInstance;
+	public int currentBatchedInstance;
 	public final EmittedObjectUpdater emitterObjectUpdater;
 	public final Map<TextureMapper, RenderBatch> batches;
 	public final Comparator<ModelInstance> instanceDepthComparator;
@@ -64,10 +61,7 @@ public class Scene {
 		final CanvasProvider canvas = viewer.canvas;
 		this.viewer = viewer;
 		this.camera = new Camera();
-		this.grid = new Grid(-100000, -100000, 200000, 200000, 200000, 200000);
 
-		this.visibleCells = 0;
-		this.visibleInstances = 0;
 		this.updatedParticles = 0;
 
 		this.audioEnabled = false;
@@ -117,8 +111,7 @@ public class Scene {
 
 			// Only allow instances that are actually ok to be added the scene.
 			if (instance.model.ok) {
-				this.grid.moved(instance);
-
+				instanceMoved(instance, instance.worldLocation.x, instance.worldLocation.y);
 				return true;
 			}
 		}
@@ -126,9 +119,11 @@ public class Scene {
 		return false;
 	}
 
+	public abstract void instanceMoved(ModelInstance instance, float x, float y);
+
 	public boolean removeInstance(final ModelInstance instance) {
 		if (instance.scene == this) {
-			this.grid.remove(instance);
+			innerRemove(instance);
 
 			instance.scene = null;
 			this.instances.remove(instance);
@@ -138,17 +133,9 @@ public class Scene {
 		return false;
 	}
 
-	public void clear() {
-		// First remove references to this scene stored in the instances.
-		for (final GridCell cell : this.grid.cells) {
-			for (final ModelInstance instance : cell.instances) {
-				instance.scene = null;
-			}
-		}
+	protected abstract void innerRemove(ModelInstance instance);
 
-		// Then remove references to the instances.
-		this.grid.clear();
-	}
+	public abstract void clear();
 
 	public boolean detach() {
 		if (this.viewer != null) {
@@ -191,54 +178,10 @@ public class Scene {
 
 		final int frame = this.viewer.frame;
 
-		int currentInstance = 0;
-		int currentBatchedInstance = 0;
+		final int currentInstance = 0;
+		final int currentBatchedInstance = 0;
 
-		this.visibleCells = 0;
-		this.visibleInstances = 0;
-
-		// Update and collect all of the visible instances.
-		for (final GridCell cell : this.grid.cells) {
-			if (cell.isVisible(this.camera)) {
-				this.visibleCells += 1;
-
-				for (final ModelInstance instance : new ArrayList<>(cell.instances)) {
-//					final ModelInstance instance = cell.instances.get(i);
-					if (instance.rendered && (instance.cullFrame < frame) && instance.isVisible(this.camera)) {
-						instance.cullFrame = frame;
-
-						if (instance.updateFrame < frame) {
-							instance.update(dt, this);
-							if (!instance.rendered) {
-								// it became hidden while it updated
-								continue;
-							}
-						}
-
-						if (instance.isBatched()) {
-							if (currentBatchedInstance < this.batchedInstances.size()) {
-								this.batchedInstances.set(currentBatchedInstance++, instance);
-							}
-							else {
-								this.batchedInstances.add(instance);
-								currentBatchedInstance++;
-							}
-						}
-						else {
-							if (currentInstance < this.instances.size()) {
-								this.instances.set(currentInstance++, instance);
-							}
-							else {
-								this.instances.add(instance);
-								currentInstance++;
-							}
-						}
-
-						this.visibleInstances += 1;
-					}
-				}
-			}
-		}
+		innerUpdate(dt, frame);
 
 		for (int i = this.batchedInstances.size() - 1; i >= currentBatchedInstance; i--) {
 			this.batchedInstances.remove(i);
@@ -252,6 +195,8 @@ public class Scene {
 		this.emitterObjectUpdater.update(dt);
 		this.updatedParticles = this.emitterObjectUpdater.objects.size();
 	}
+
+	protected abstract void innerUpdate(float dt, int frame);
 
 	public void startFrame() {
 		final GL20 gl = this.viewer.gl;

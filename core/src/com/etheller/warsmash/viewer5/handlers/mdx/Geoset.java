@@ -21,9 +21,13 @@ public class Geoset {
 	public boolean hasAlphaAnim;
 	public boolean hasColorAnim;
 	public boolean hasObjectAnim;
+	private final int openGLSkinType;
+	private final int skinStride;
+	private final int boneCountOffsetBytes;
 
 	public Geoset(final MdxModel model, final int index, final int positionOffset, final int normalOffset,
-			final int uvOffset, final int skinOffset, final int faceOffset, final int vertices, final int elements) {
+			final int uvOffset, final int skinOffset, final int faceOffset, final int vertices, final int elements,
+			final int openGLSkinType, final int skinStride, final int boneCountOffsetBytes) {
 		this.model = model;
 		this.index = index;
 		this.positionOffset = positionOffset;
@@ -33,6 +37,9 @@ public class Geoset {
 		this.faceOffset = faceOffset;
 		this.vertices = vertices;
 		this.elements = elements;
+		this.openGLSkinType = openGLSkinType;
+		this.skinStride = skinStride;
+		this.boneCountOffsetBytes = boneCountOffsetBytes;
 
 		for (final GeosetAnimation geosetAnimation : model.getGeosetAnimations()) {
 			if (geosetAnimation.geosetId == index) {
@@ -96,8 +103,9 @@ public class Geoset {
 		shader.setVertexAttribute("a_position", 3, GL20.GL_FLOAT, false, 0, this.positionOffset);
 //		shader.setVertexAttribute("a_normal", 3, GL20.GL_FLOAT, false, 0, this.normalOffset);
 		shader.setVertexAttribute("a_uv", 2, GL20.GL_FLOAT, false, 0, this.uvOffset + (coordId * this.vertices * 8));
-		shader.setVertexAttribute("a_bones", 4, GL20.GL_UNSIGNED_BYTE, false, 5, this.skinOffset);
-		shader.setVertexAttribute("a_boneNumber", 1, GL20.GL_UNSIGNED_BYTE, false, 5, this.skinOffset + 4);
+		shader.setVertexAttribute("a_bones", 4, this.openGLSkinType, false, this.skinStride, this.skinOffset);
+		shader.setVertexAttribute("a_boneNumber", 1, this.openGLSkinType, false, this.skinStride,
+				this.skinOffset + this.boneCountOffsetBytes);
 	}
 
 	public void bindExtended(final ShaderProgram shader, final int coordId) {
@@ -105,9 +113,11 @@ public class Geoset {
 		shader.setVertexAttribute("a_position", 3, GL20.GL_FLOAT, false, 0, this.positionOffset);
 		shader.setVertexAttribute("a_normal", 3, GL20.GL_FLOAT, false, 0, this.normalOffset);
 		shader.setVertexAttribute("a_uv", 2, GL20.GL_FLOAT, false, 0, this.uvOffset + (coordId * this.vertices * 8));
-		shader.setVertexAttribute("a_bones", 4, GL20.GL_UNSIGNED_BYTE, false, 9, this.skinOffset);
-		shader.setVertexAttribute("a_extendedBones", 4, GL20.GL_UNSIGNED_BYTE, false, 9, this.skinOffset + 4);
-		shader.setVertexAttribute("a_boneNumber", 1, GL20.GL_UNSIGNED_BYTE, false, 9, this.skinOffset + 8);
+		shader.setVertexAttribute("a_bones", 4, this.openGLSkinType, false, this.skinStride, this.skinOffset);
+		shader.setVertexAttribute("a_extendedBones", 4, this.openGLSkinType, false, this.skinStride,
+				this.skinOffset + (this.boneCountOffsetBytes / 2));
+		shader.setVertexAttribute("a_boneNumber", 1, this.openGLSkinType, false, this.skinStride,
+				this.skinOffset + this.boneCountOffsetBytes);
 	}
 
 	public void render() {

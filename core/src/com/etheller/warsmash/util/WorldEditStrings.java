@@ -9,7 +9,7 @@ import java.util.ResourceBundle;
 
 import com.etheller.warsmash.datasources.DataSource;
 
-public class WorldEditStrings {
+public class WorldEditStrings implements StringBundle {
 	private ResourceBundle bundle;
 	private ResourceBundle bundlegs;
 
@@ -30,6 +30,7 @@ public class WorldEditStrings {
 		}
 	}
 
+	@Override
 	public String getString(String string) {
 		try {
 			while (string.toUpperCase().startsWith("WESTRING")) {
@@ -60,6 +61,7 @@ public class WorldEditStrings {
 		}
 	}
 
+	@Override
 	public String getStringCaseSensitive(final String key) {
 		try {
 			return this.bundle.getString(key);

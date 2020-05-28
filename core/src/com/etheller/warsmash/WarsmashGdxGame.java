@@ -7,6 +7,7 @@ import java.util.Arrays;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -18,6 +19,7 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
+import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -72,7 +74,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(scene);
 
-		this.mainModel = (MdxModel) this.viewer.load("Buildings\\Other\\TempArtB\\TempArtB.mdx",
+		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3d\\MainMenu3d.mdx",
 //		this.mainModel = (MdxModel) this.viewer.load("Abilities\\Spells\\Orc\\FeralSpirit\\feralspirittarget.mdx",
 				new PathSolver() {
 					@Override
@@ -88,7 +90,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 //		System.out.println(Arrays.toString(evt.keyFrames));
 //		System.out.println(evt.name);
 
-//		this.modelCamera = this.mainModel.cameras.get(0);
+		this.modelCamera = this.mainModel.cameras.get(0);
 
 		this.mainInstance = (MdxComplexInstance) this.mainModel.addInstance(0);
 
@@ -96,13 +98,20 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 		int animIndex = 0;
 		for (final Sequence s : this.mainModel.getSequences()) {
-			if (s.getName().toLowerCase().startsWith("walk")) {
+			if (s.getName().toLowerCase().startsWith("stand")) {
 				animIndex = this.mainModel.getSequences().indexOf(s);
+				break;
 			}
 		}
 		this.mainInstance.setSequence(animIndex);
 
 		this.mainInstance.setSequenceLoopMode(0);
+
+		final Music music = Gdx.audio
+				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\MainScreen.mp3"));
+		music.setVolume(0.2f);
+		music.setLooping(true);
+		music.play();
 
 //		acolytesHarvestingSceneJoke2(scene);
 
@@ -489,7 +498,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 						WarsmashGdxGame.this.cameraPositionTemp[1], WarsmashGdxGame.this.cameraPositionTemp[2]);
 				this.target.add(WarsmashGdxGame.this.cameraTargetTemp[0], WarsmashGdxGame.this.cameraTargetTemp[1],
 						WarsmashGdxGame.this.cameraTargetTemp[2]);
-				this.camera.perspective(WarsmashGdxGame.this.modelCamera.fieldOfView,
+				this.camera.perspective(WarsmashGdxGame.this.modelCamera.fieldOfView * 0.75f,
 						Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight(),
 						WarsmashGdxGame.this.modelCamera.nearClippingPlane,
 						WarsmashGdxGame.this.modelCamera.farClippingPlane);

@@ -22,4 +22,9 @@ public class AnchorDefinition {
 	public float getY() {
 		return this.y;
 	}
+
+	@Override
+	public String toString() {
+		return "AnchorDefinition [myPoint=" + this.myPoint + ", x=" + this.x + ", y=" + this.y + "]";
+	}
 }

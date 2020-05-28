@@ -72,10 +72,10 @@ public class Grid {
 		}
 	}
 
-	public void moved(final ModelInstance instance) {
+	public void moved(final ModelInstance instance, final float upcomingX, final float upcomingY) {
 		final Bounds bounds = instance.model.bounds;
-		final float x = (instance.worldLocation.x + bounds.x) - this.x;
-		final float y = (instance.worldLocation.y + bounds.y) - this.y;
+		final float x = (upcomingX + bounds.x) - this.x;
+		final float y = (upcomingY + bounds.y) - this.y;
 		final float r = bounds.r;
 		final Vector3 s = instance.worldScale;
 		int left = (int) (Math.floor((x - (r * s.x)) / this.cellWidth));

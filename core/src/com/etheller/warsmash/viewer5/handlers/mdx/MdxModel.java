@@ -58,7 +58,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 	@Override
 	public ModelInstance createInstance(final int type) {
-		if (type == 1) {
+		if ((type == 1) && false) {
 			return new MdxSimpleInstance(this);
 		}
 		else {
@@ -176,7 +176,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		}
 
 		// Geosets
-		SetupGeosets.setupGeosets(this, parser.getGeosets());
+		SetupGeosets.setupGeosets(this, parser.getGeosets(), parser.getBones().size() >= 256);
 
 		this.pivotPoints = parser.getPivotPoints();
 
@@ -342,6 +342,10 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 	public List<EventObjectEmitterObject> getEventObjects() {
 		return this.eventObjects;
+	}
+
+	public List<Bone> getBones() {
+		return this.bones;
 	}
 
 }

@@ -89,17 +89,31 @@ public abstract class ModelInstance extends Node {
 		super.recalculateTransformation();
 
 		if (this.scene != null) {
-			this.scene.grid.moved(this);
+			this.scene.grid.moved(this, this.worldLocation.x, this.worldLocation.y);
 		}
 	}
 
 	public boolean isVisible(final Camera camera) {
-		if (true) {
-			return true;
+		// can't just use world location if it moves
+		float x, y, z;
+		if (this.dirty) {
+			// TODO this is an incorrect, predicted location for dirty case
+			if ((this.parent != null) && !this.dontInheritTranslation) {
+				x = this.parent.localLocation.x + this.localLocation.x;
+				y = this.parent.localLocation.y + this.localLocation.y;
+				z = this.parent.localLocation.z + this.localLocation.z;
+			}
+			else {
+				x = this.localLocation.x;
+				y = this.localLocation.y;
+				z = this.localLocation.z;
+			}
 		}
-		final float x = this.worldLocation.x;
-		final float y = this.worldLocation.y;
-		final float z = this.worldLocation.z;
+		else {
+			x = this.worldLocation.x;
+			y = this.worldLocation.y;
+			z = this.worldLocation.z;
+		}
 		final Bounds bounds = this.model.bounds;
 		final Vector4[] planes = camera.planes;
 

@@ -66,6 +66,7 @@ project(":core") {
 
     dependencies {
         compile project(":fdfparser")
+        compile project(":jassparser")
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
@@ -77,6 +78,15 @@ project(":core") {
 }
 
 project(":fdfparser") {
+    apply plugin: "antlr"
+
+
+    dependencies {
+        antlr "org.antlr:antlr4:$antlrVersion" // use antlr version 4
+    }
+}
+
+project(":jassparser") {
     apply plugin: "antlr"
 
 

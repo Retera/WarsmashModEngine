@@ -11,16 +11,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.etheller.warsmash.util.WorldEditStrings;
+import com.etheller.warsmash.util.StringBundle;
 
 public class DataTable implements ObjectData {
 	private static final boolean DEBUG = false;
 
 	Map<StringKey, Element> dataTable = new LinkedHashMap<>();
 
-	private final WorldEditStrings worldEditStrings;
+	private final StringBundle worldEditStrings;
 
-	public DataTable(final WorldEditStrings worldEditStrings) {
+	public DataTable(final StringBundle worldEditStrings) {
 		this.worldEditStrings = worldEditStrings;
 	}
 

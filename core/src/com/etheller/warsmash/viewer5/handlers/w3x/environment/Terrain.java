@@ -1025,10 +1025,14 @@ public class Terrain {
 		final int shadowSize = columns * rows;
 		final byte[] shadowData = new byte[columns * rows];
 		if (this.viewer.mapMpq.has("war3map.shd")) {
-			final InputStream shadowSource = this.viewer.mapMpq.getResourceAsStream("war3map.shd");
-			final byte[] buffer = IOUtils.toByteArray(shadowSource);
+			final byte[] buffer;
+
+			try (final InputStream shadowSource = this.viewer.mapMpq.getResourceAsStream("war3map.shd")) {
+				buffer = IOUtils.toByteArray(shadowSource);
+			}
+
 			for (int i = 0; i < shadowSize; i++) {
-				shadowData[i] = (byte) (buffer[i] / 2);
+				shadowData[i] = (byte) ((buffer[i] & 0xFF) / 2f);
 			}
 		}
 

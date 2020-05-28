@@ -533,7 +533,7 @@ public class War3MapViewer extends ModelViewer {
 					if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
 						path = path.substring(0, path.length() - 4);
 					}
-					if (row.readSLKTagInt("fileVerFlags") == 2) {
+					if ((row.readSLKTagInt("fileVerFlags") == 2) && this.dataSource.has(path + "_V1.mdx")) {
 						path += "_V1";
 					}
 
@@ -804,6 +804,7 @@ public class War3MapViewer extends ModelViewer {
 	}
 
 	public List<RenderUnit> selectUnit(final float x, final float y, final boolean toggle) {
+		System.out.println("world: " + x + "," + y);
 		final float[] ray = rayHeap;
 		mousePosHeap.set(x, y);
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);

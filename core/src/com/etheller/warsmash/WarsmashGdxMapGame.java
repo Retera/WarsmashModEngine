@@ -14,7 +14,6 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
@@ -37,6 +36,11 @@ import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
+import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
+import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -93,7 +97,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private boolean showTalentTree;
 
 	private final List<Message> messages = new LinkedList<>();
+	private MdxModel timeIndicator;
 
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see com.badlogic.gdx.ApplicationAdapter#create()
+	 */
 	@Override
 	public void create() {
 
@@ -126,7 +136,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.viewer.worldScene.enableAudio();
 		this.viewer.enableAudio();
 		try {
-			this.viewer.loadMap("ReforgedGeorgeVacation.w3x");
+			this.viewer.loadMap("PeasantTest.w3x");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -143,6 +153,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.portraitCameraManager = new CameraManager();
 		this.portraitCameraManager.setupCamera(this.portraitScene);
 
+		this.uiScene = this.viewer.addScene();
+		this.uiScene.alpha = true;
+
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
 
 		this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
@@ -150,6 +163,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		// libGDX stuff
 		final float w = Gdx.graphics.getWidth();
 		final float h = Gdx.graphics.getHeight();
+
+		this.tempRect.x = 0;
+		this.tempRect.y = 0;
+		this.tempRect.width = w;
+		this.tempRect.height = h;
+		this.uiScene.camera.viewport(this.tempRect);
+		this.uiScene.camera.ortho(0, 0.8f, 0, 0.6f, 0, 1);
 
 		final FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(
 				new DataSourceFileHandle(this.viewer.dataSource, "fonts\\FRIZQT__.TTF"));
@@ -212,13 +232,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		Gdx.input.setInputProcessor(this);
 
-		final Music music = Gdx.audio
-				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\DarkAgents.mp3"));
-		music.setVolume(0.2f);
-		music.setLooping(true);
-		music.play();
+//		final Music music = Gdx.audio
+//				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\DarkAgents.mp3"));
+//		music.setVolume(0.2f);
+//		music.setLooping(true);
+//		music.play();
 
-		this.minimap = new Rectangle(35, 7, 305, 272);
+		this.minimap = new Rectangle(18.75f, 13.75f, 278.75f, 276.25f);
 		final float worldWidth = (this.viewer.terrain.columns - 1);
 		final float worldHeight = this.viewer.terrain.rows - 1;
 		final float worldSize = Math.max(worldWidth, worldHeight);
@@ -234,6 +254,33 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		this.shapeRenderer = new ShapeRenderer();
 		this.talentTreeWindow = new Rectangle(100, 300, 1400, 800);
+
+		final Element skin = GameUI.loadSkin(this.viewer.dataSource, "Human");
+		this.gameUI = new GameUI(this.viewer.dataSource, skin, this.uiViewport);
+		String timeIndicatorPath = skin.getField("TimeOfDayIndicator");
+		if (!this.viewer.dataSource.has(timeIndicatorPath)) {
+			final int lastDotIndex = timeIndicatorPath.lastIndexOf('.');
+			if (lastDotIndex >= 0) {
+				timeIndicatorPath = timeIndicatorPath.substring(0, lastDotIndex);
+			}
+			timeIndicatorPath += ".mdx";
+		}
+		this.timeIndicator = (MdxModel) this.viewer.load(timeIndicatorPath, this.viewer.mapPathSolver,
+				this.viewer.solverParams);
+		final MdxComplexInstance timeIndicatorInstance = (MdxComplexInstance) this.timeIndicator.addInstance();
+		timeIndicatorInstance.setScene(this.uiScene);
+		timeIndicatorInstance.setSequence(0);
+		timeIndicatorInstance.setSequenceLoopMode(2);
+		try {
+			this.gameUI.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+		this.gameUI.createSimpleFrame("ConsoleUI", this.gameUI, 0);
+		final UIFrame resourceBarFrame = this.gameUI.createSimpleFrame("ResourceBarFrame", this.gameUI, 0);
+		resourceBarFrame.addAnchor(new AnchorDefinition(FramePoint.TOPRIGHT, 0, 0));
+		this.gameUI.positionBounds(this.uiViewport);
 	}
 
 	@Override
@@ -270,60 +317,35 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.uiViewport.apply();
 		this.batch.setProjectionMatrix(this.uiCamera.combined);
 		this.batch.begin();
+		this.gameUI.render(this.batch);
 		this.font.setColor(Color.YELLOW);
 		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
 		this.glyphLayout.setText(this.font, fpsString);
 		this.font.draw(this.batch, fpsString, (this.uiViewport.getWorldWidth() - this.glyphLayout.width) / 2, 1100);
 
-//		this.batch.draw(this.consoleUITexture, 0, 0, this.uiViewport.getWorldWidth(), 320);
-		this.batch.draw(this.minimapTexture, 35, 7, 305, 272);
+		this.batch.draw(this.minimapTexture, this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
 
 		if (this.selectedUnit != null) {
-			this.font24.setColor(Color.WHITE);
-			final String name = this.viewer.simulation.getUnitData()
-					.getName(this.selectedUnit.getSimulationUnit().getTypeId());
-			this.glyphLayout.setText(this.font24, name);
-			this.font24.draw(this.batch, name, ((this.uiViewport.getWorldWidth() - this.glyphLayout.width) / 2) + 100,
-					200);
-
-			this.font20.setColor(Color.YELLOW);
-			this.font20.draw(this.batch, "Attack:", 600, 120);
-			this.font20.draw(this.batch, "Defense:", 600, 98);
-			this.font20.draw(this.batch, "Speed:", 600, 76);
-			this.font20.setColor(Color.WHITE);
 			int messageIndex = 0;
 			for (final Message message : this.messages) {
 				this.font20.draw(this.batch, message.text, 100, 400 + (25 * (messageIndex++)));
 			}
 			this.font20.setColor(Color.WHITE);
-			final int dmgMin = this.viewer.simulation.getUnitData()
-					.getA1MinDamage(this.selectedUnit.getSimulationUnit().getTypeId());
-			final int dmgMax = this.viewer.simulation.getUnitData()
-					.getA1MaxDamage(this.selectedUnit.getSimulationUnit().getTypeId());
-			final int def = this.viewer.simulation.getUnitData()
-					.getDefense(this.selectedUnit.getSimulationUnit().getTypeId());
-			this.font20.draw(this.batch, Integer.toString(dmgMin) + " - " + Integer.toString(dmgMax), 700, 120);
-			this.font20.draw(this.batch, Integer.toString(def), 700, 98);
-			this.font20.draw(this.batch, Integer.toString(this.selectedUnit.getSimulationUnit().getSpeed()), 700, 76);
 
 			final COrder currentOrder = this.selectedUnit.getSimulationUnit().getCurrentOrder();
 			for (final CommandCardIcon commandCardIcon : this.selectedUnit.getCommandCardIcons()) {
-				this.batch.draw(commandCardIcon.getTexture(), 1225 + (70 * commandCardIcon.getX()),
-						160 - (70 * commandCardIcon.getY()), 64, 64);
+				this.batch.draw(commandCardIcon.getTexture(), 1235 + (86.8f * commandCardIcon.getX()),
+						190 - (88 * commandCardIcon.getY()), 78f, 78f);
 				if (((currentOrder != null) && (currentOrder.getOrderId() == commandCardIcon.getOrderId()))
 						|| ((currentOrder == null) && (commandCardIcon.getOrderId() == CAbilityStop.ORDER_ID))) {
 					final int blendDstFunc = this.batch.getBlendDstFunc();
 					final int blendSrcFunc = this.batch.getBlendSrcFunc();
 					this.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-					this.batch.draw(this.activeButtonTexture, 1225 + (70 * commandCardIcon.getX()),
-							160 - (70 * commandCardIcon.getY()), 64, 64);
+					this.batch.draw(this.activeButtonTexture, 1235 + (86.8f * commandCardIcon.getX()),
+							190 - (88 * commandCardIcon.getY()), 78f, 78f);
 					this.batch.setBlendFunction(blendSrcFunc, blendDstFunc);
 				}
 			}
-
-			this.batch.draw(this.solidGreenTexture, 413, 34, 122 * (this.selectedUnit.getSimulationUnit().getLife()
-					/ this.selectedUnit.getSimulationUnit().getMaximumLife()), 7);
-
 		}
 		for (final RenderUnit unit : this.viewer.units) {
 			if (unit.playerIndex >= WarsmashConstants.MAX_PLAYERS) {
@@ -387,9 +409,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	public void resize(final int width, final int height) {
 		super.resize(width, height);
 		this.tempRect.x = 0;
-		this.tempRect.y = 0;
 		this.tempRect.width = width;
-		this.tempRect.height = height;
+		final float topHeight = 0.02666f * height;
+		final float bottomHeight = 0.21333f * height;
+		this.tempRect.y = (int) bottomHeight;
+		this.tempRect.height = height - (int) (topHeight + bottomHeight);
 		this.cameraManager.camera.viewport(this.tempRect);
 		final float portraitTestWidth = (100 / 640f) * width;
 		final float portraitTestHeight = (100 / 480f) * height;
@@ -397,15 +421,21 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.uiViewport.update(width, height);
 		this.uiCamera.position.set(this.uiCamera.viewportWidth / 2, this.uiCamera.viewportHeight / 2, 0);
 
-		positionPortrait();
+		this.tempRect.x = this.uiViewport.getScreenX();
+		this.tempRect.y = this.uiViewport.getScreenY();
+		this.tempRect.width = this.uiViewport.getScreenWidth();
+		this.tempRect.height = this.uiViewport.getScreenHeight();
+		this.uiScene.camera.viewport(this.tempRect);
+		this.uiScene.camera.ortho(0f, 0.8f, 0f, 0.6f, -1f, 1);
 
+		positionPortrait();
 	}
 
 	private void positionPortrait() {
-		this.projectionTemp1.x = 385;
-		this.projectionTemp1.y = 0;
-		this.projectionTemp2.x = 385 + 180;
-		this.projectionTemp2.y = 177;
+		this.projectionTemp1.x = 422;
+		this.projectionTemp1.y = 57;
+		this.projectionTemp2.x = 422 + 167;
+		this.projectionTemp2.y = 57 + 170;
 		this.uiViewport.project(this.projectionTemp1);
 		this.uiViewport.project(this.projectionTemp2);
 
@@ -492,7 +522,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 						WarsmashGdxMapGame.this.cameraPositionTemp[1], WarsmashGdxMapGame.this.cameraPositionTemp[2]);
 				this.target.add(WarsmashGdxMapGame.this.cameraTargetTemp[0],
 						WarsmashGdxMapGame.this.cameraTargetTemp[1], WarsmashGdxMapGame.this.cameraTargetTemp[2]);
-				this.camera.perspective(this.modelCamera.fieldOfView, this.camera.getAspect(),
+				this.camera.perspective(this.modelCamera.fieldOfView * 0.75f, this.camera.getAspect(),
 						this.modelCamera.nearClippingPlane, this.modelCamera.farClippingPlane);
 			}
 
@@ -509,6 +539,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private Scene portraitScene;
 	private Texture minimapTexture;
 	private Rectangle talentTreeWindow;
+	private GameUI gameUI;
+	private Scene uiScene;
 
 	@Override
 	public boolean keyDown(final int keycode) {
@@ -551,6 +583,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
+		final float worldScreenY = getHeight() - screenY;
 		System.out.println(screenX + "," + screenY);
 
 		clickLocationTemp2.x = screenX;
@@ -559,8 +592,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		if (this.selectedUnit != null) {
 			for (final CommandCardIcon commandCardIcon : this.selectedUnit.getCommandCardIcons()) {
-				if (new Rectangle(1225 + (70 * commandCardIcon.getX()), 160 - (70 * commandCardIcon.getY()), 64, 64)
-						.contains(clickLocationTemp2)) {
+				if (new Rectangle(1235 + (86.8f * commandCardIcon.getX()), 190 - (88 * commandCardIcon.getY()), 78f,
+						78f).contains(clickLocationTemp2)) {
 					if (button == Input.Buttons.RIGHT) {
 						this.messages.add(new Message(Gdx.input.getCurrentEventTime(), "Right mouse click"));
 					}
@@ -581,14 +614,14 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			return false;
 		}
 		if (button == Input.Buttons.RIGHT) {
-			final RenderUnit rayPickUnit = this.viewer.rayPickUnit(screenX, screenY);
+			final RenderUnit rayPickUnit = this.viewer.rayPickUnit(screenX, worldScreenY);
 			if ((rayPickUnit != null) && (rayPickUnit.playerIndex != this.selectedUnit.playerIndex)) {
 				if (this.viewer.orderSmart(rayPickUnit)) {
 					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
 				}
 			}
 			else {
-				this.viewer.getClickLocation(clickLocationTemp, screenX, screenY);
+				this.viewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
 				System.out.println(clickLocationTemp);
 				this.viewer.showConfirmation(clickLocationTemp, 0, 1, 0);
 				final int x = (int) ((clickLocationTemp.x - this.viewer.terrain.centerOffset[0]) / 128);
@@ -601,7 +634,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			}
 		}
 		else {
-			final List<RenderUnit> selectedUnits = this.viewer.selectUnit(screenX, screenY, false);
+			final List<RenderUnit> selectedUnits = this.viewer.selectUnit(screenX, worldScreenY, false);
 			if (!selectedUnits.isEmpty()) {
 				final RenderUnit unit = selectedUnits.get(0);
 				this.selectedUnit = unit;

@@ -12,8 +12,8 @@ public class SetupGeosets {
 	private static final int EXTENDED_BATCH = 1;
 	private static final int REFORGED_BATCH = 2;
 
-	public static void setupGeosets(final MdxModel model,
-			final List<com.etheller.warsmash.parsers.mdlx.Geoset> geosets) {
+	public static void setupGeosets(final MdxModel model, final List<com.etheller.warsmash.parsers.mdlx.Geoset> geosets,
+			final boolean bigNodeSpace) {
 		if (geosets.size() > 0) {
 			final GL20 gl = model.viewer.gl;
 			int positionBytes = 0;
@@ -22,6 +22,12 @@ public class SetupGeosets {
 			int skinBytes = 0;
 			int faceBytes = 0;
 			final int[] batchTypes = new int[geosets.size()];
+
+			final int extendedBatchStride = bigNodeSpace ? 36 : 9;
+			final int normalBatchStride = bigNodeSpace ? 20 : 5;
+			final int openGLSkinType = bigNodeSpace ? GL20.GL_UNSIGNED_INT : GL20.GL_UNSIGNED_BYTE;
+			final int normalBatchBoneCountOffsetBytes = bigNodeSpace ? 16 : 4;
+			final int extendedBatchBoneCountOffsetBytes = bigNodeSpace ? 32 : 8;
 
 			for (int i = 0, l = geosets.size(); i < l; i++) {
 				final com.etheller.warsmash.parsers.mdlx.Geoset geoset = geosets.get(i);
@@ -48,12 +54,12 @@ public class SetupGeosets {
 						}
 
 						if (biggestGroup > 4) {
-							skinBytes += vertices * 9;
+							skinBytes += vertices * extendedBatchStride;
 
 							batchTypes[i] = EXTENDED_BATCH;
 						}
 						else {
-							skinBytes += vertices * 5;
+							skinBytes += vertices * normalBatchStride;
 
 							batchTypes[i] = NORMAL_BATCH;
 						}
@@ -80,17 +86,31 @@ public class SetupGeosets {
 			for (int i = 0, l = geosets.size(); i < l; i++) {
 				final com.etheller.warsmash.parsers.mdlx.Geoset geoset = geosets.get(i);
 
+				final int batchType = batchTypes[i];
 				if (true /* geoset.lod == 0 */) {
 					final float[] positions = geoset.getVertices();
 					final float[] normals = geoset.getNormals();
 					final float[][] uvSets = geoset.getUvSets();
 					final int[] faces = geoset.getFaces();
-					byte[] skin = null;
+					int[] skin = null;
 					final int vertices = geoset.getVertices().length / 3;
-					final int batchType = batchTypes[i];
+
+					int maxBones;
+					int skinStride;
+					int boneCountOffsetBytes;
+					if (batchType == EXTENDED_BATCH) {
+						maxBones = 8;
+						skinStride = extendedBatchStride;
+						boneCountOffsetBytes = extendedBatchBoneCountOffsetBytes;
+					}
+					else {
+						maxBones = 4;
+						skinStride = normalBatchStride;
+						boneCountOffsetBytes = normalBatchBoneCountOffsetBytes;
+					}
 
 					if (batchType == REFORGED_BATCH) {
-						// skin = geoset.skin;
+						// skin = geoset.skin; // THIS IS NOT IMPLEMENTED
 					}
 					else {
 						final long[] matrixIndices = geoset.getMatrixIndices();
@@ -102,12 +122,8 @@ public class SetupGeosets {
 						// That being said, there are a few models with geosets that need more, for
 						// example the Water Elemental.
 						// These geosets use a different shader, which support up to 8 bones per vertex.
-						int maxBones = 4;
-						if (batchType == EXTENDED_BATCH) {
-							maxBones = 8;
-						}
 
-						skin = new byte[vertices * (maxBones + 1)];
+						skin = new int[vertices * (maxBones + 1)];
 
 						// Slice the matrix groups
 						for (final long size : geoset.getMatrixGroups()) {
@@ -130,17 +146,18 @@ public class SetupGeosets {
 								final int bones = Math.min(matrixGroup.length, maxBones);
 
 								for (int j = 0; j < bones; j++) {
-									skin[offset + j] = (byte) (matrixGroup[j] + 1); // 1 is added to diffrentiate
+									skin[offset + j] = (int) (matrixGroup[j] + 1); // 1 is added to diffrentiate
 																					// between matrix 0, and no matrix.
 								}
 
-								skin[offset + maxBones] = (byte) bones;
+								skin[offset + maxBones] = bones;
 							}
 						}
 					}
 
 					final Geoset vGeoset = new Geoset(model, model.getGeosets().size(), positionOffset, normalOffset,
-							uvOffset, skinOffset, faceOffset, vertices, faces.length);
+							uvOffset, skinOffset, faceOffset, vertices, faces.length, openGLSkinType, skinStride,
+							boneCountOffsetBytes);
 
 					model.getGeosets().add(vGeoset);
 
@@ -173,8 +190,9 @@ public class SetupGeosets {
 					}
 
 					// Skin.
-					gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, skinOffset, skin.length, RenderMathUtils.wrap(skin));
-					skinOffset += skin.length * 1;
+					gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, skinOffset, skin.length,
+							bigNodeSpace ? RenderMathUtils.wrap(skin) : RenderMathUtils.wrapAsBytes(skin));
+					skinOffset += skin.length * (bigNodeSpace ? 4 : 1);
 
 					// Faces.
 					gl.glBufferSubData(GL20.GL_ELEMENT_ARRAY_BUFFER, faceOffset, faces.length,

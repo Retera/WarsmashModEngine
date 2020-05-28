@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetFloatFieldVisitor;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetStringFieldVisitor;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetVector4FieldVisitor;
 
 /**
  * Pretty sure this is probably not how it works in-game but this silly
@@ -58,6 +61,14 @@ public class FrameDefinition {
 		this.flags.add(flag);
 	}
 
+	public boolean has(final String flag) {
+		return this.flags.contains(flag);
+	}
+
+	public FrameDefinitionField get(final String fieldName) {
+		return this.nameToField.get(fieldName);
+	}
+
 	@Override
 	public String toString() {
 		return "FrameDefinition [frameClass=" + this.frameClass + ", frameType=" + this.frameType + ", name="
@@ -65,4 +76,51 @@ public class FrameDefinition {
 				+ this.nameToField + ", setPoints=" + this.setPoints + ", anchors=" + this.anchors + "]";
 	}
 
+	public String getFrameType() {
+		return this.frameType;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public FrameClass getFrameClass() {
+		return this.frameClass;
+	}
+
+	public List<FrameDefinition> getInnerFrames() {
+		return this.innerFrames;
+	}
+
+	public List<AnchorDefinition> getAnchors() {
+		return this.anchors;
+	}
+
+	public List<SetPointDefinition> getSetPoints() {
+		return this.setPoints;
+	}
+
+	public String getString(final String id) {
+		final FrameDefinitionField frameDefinitionField = this.nameToField.get(id);
+		if (frameDefinitionField != null) {
+			return frameDefinitionField.visit(GetStringFieldVisitor.INSTANCE);
+		}
+		return null;
+	}
+
+	public Float getFloat(final String id) {
+		final FrameDefinitionField frameDefinitionField = this.nameToField.get(id);
+		if (frameDefinitionField != null) {
+			return frameDefinitionField.visit(GetFloatFieldVisitor.INSTANCE);
+		}
+		return null;
+	}
+
+	public Vector4Definition getVector4(final String id) {
+		final FrameDefinitionField frameDefinitionField = this.nameToField.get(id);
+		if (frameDefinitionField != null) {
+			return frameDefinitionField.visit(GetVector4FieldVisitor.INSTANCE);
+		}
+		return null;
+	}
 }

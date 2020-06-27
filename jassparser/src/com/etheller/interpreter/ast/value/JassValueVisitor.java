@@ -12,4 +12,6 @@ public interface JassValueVisitor<TYPE> {
 	TYPE accept(CodeJassValue value);
 
 	TYPE accept(ArrayJassValue value);
+
+	TYPE accept(HandleJassValue value);
 }

@@ -11,17 +11,17 @@ public final class LocalScope {
 	private final Map<String, Assignable> locals = new HashMap<>();
 
 	public void createLocal(final String name, final JassType type) {
-		locals.put(name, new Assignable(type));
+		this.locals.put(name, new Assignable(type));
 	}
 
 	public void createLocal(final String name, final JassType type, final JassValue value) {
 		final Assignable assignable = new Assignable(type);
 		assignable.setValue(value);
-		locals.put(name, assignable);
+		this.locals.put(name, assignable);
 	}
 
 	public void setLocal(final String name, final JassValue value) {
-		final Assignable assignable = locals.get(name);
+		final Assignable assignable = this.locals.get(name);
 		if (assignable == null) {
 			throw new RuntimeException("Undefined local variable: " + name);
 		}
@@ -29,7 +29,7 @@ public final class LocalScope {
 	}
 
 	public JassValue getLocal(final String name) {
-		final Assignable local = locals.get(name);
+		final Assignable local = this.locals.get(name);
 		if (local == null) {
 			throw new RuntimeException("Undefined local variable: " + name);
 		}
@@ -37,6 +37,6 @@ public final class LocalScope {
 	}
 
 	public Assignable getAssignableLocal(final String name) {
-		return locals.get(name);
+		return this.locals.get(name);
 	}
 }

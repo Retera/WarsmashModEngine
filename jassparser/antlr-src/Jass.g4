@@ -26,13 +26,13 @@ type :
 	|
 	ID ARRAY # ArrayType
 	|
-	'nothing' # NothingType
+	NOTHING # NothingType
 	;
 
 global : 
-	type ID newlines # BasicGlobal
+	CONSTANT? type ID newlines # BasicGlobal
 	|
-	type ID assignTail newlines # DefinitionGlobal
+	CONSTANT? type ID assignTail newlines # DefinitionGlobal
 	;
 	
 assignTail:
@@ -58,18 +58,20 @@ expression:
 	functionExpression # FunctionCallExpression
 	|
 	'(' expression ')' # ParentheticalExpression
+	|
+	NOT expression # NotExpression
 	;
 
 functionExpression:
 	ID '(' argsList ')'
+	|
+	ID '(' ')'
 	;
 	
 argsList:
 	expression # SingleArgument
 	|
 	expression ',' argsList # ListArgument
-	|
-	#EmptyArgument
 	;
 
 //#booleanExpression:
@@ -84,6 +86,16 @@ statement:
 	SET ID '[' expression ']' EQUALS expression newlines # ArrayedAssignmentStatement
 	|
 	RETURN expression newlines # ReturnStatement
+	|
+	IF ifStatementPartial # IfStatement
+	;
+	 
+ifStatementPartial:
+	expression THEN newlines statements ENDIF newlines # SimpleIfStatement
+	|
+	expression THEN newlines statements ELSE newlines statements ENDIF newlines # IfElseStatement
+	|
+	expression THEN newlines statements ELSEIF ifStatementPartial # IfElseIfStatement
 	;
 
 param:
@@ -94,7 +106,7 @@ paramList:
 	|
 	param ',' paramList # ListParameter
 	|
-	'nothing' # NothingParameter
+	NOTHING # NothingParameter
 	;
 
 globalsBlock :
@@ -105,7 +117,7 @@ typeDefinitionBlock :
 	;
 	
 nativeBlock:
-	NATIVE ID TAKES paramList RETURNS type newlines
+	CONSTANT? NATIVE ID TAKES paramList RETURNS type newlines
 	;
 	
 block:
@@ -115,19 +127,29 @@ block:
 	;
 	
 functionBlock:
-	FUNCTION ID TAKES paramList RETURNS type newlines (statement)* ENDFUNCTION newlines
+	FUNCTION ID TAKES paramList RETURNS type newlines statements ENDFUNCTION newlines
+	;
+	
+statements:
+	(statement)*
 	;
 	
 newlines:
-	NEWLINES
+	pnewlines
 	|
 	EOF;
 	
 newlines_opt:
-	NEWLINES
+	pnewlines
 	|
 	EOF
 	|
+	;
+	
+pnewlines:
+	NEWLINE
+	|
+	NEWLINE newlines
 	;
 
 EQUALS : '=';
@@ -142,6 +164,7 @@ FUNCTION : 'function' ; // function
 TAKES : 'takes' ; // takes
 RETURNS : 'returns' ;
 ENDFUNCTION : 'endfunction' ; // endfunction
+NOTHING : 'nothing' ;
 
 CALL : 'call' ;
 SET : 'set' ;
@@ -153,6 +176,13 @@ TYPE : 'type';
 
 EXTENDS : 'extends';
 
+IF : 'if';
+THEN : 'then';
+ELSE : 'else';
+ENDIF : 'endif';
+ELSEIF : 'elseif';
+CONSTANT : 'constant';
+
 STRING_LITERAL : ('"'.*?'"');
 
 INTEGER : [0]|([1-9][0-9]*) ;
@@ -161,9 +191,10 @@ NULL : 'null' ;
 TRUE : 'true' ;
 FALSE : 'false' ;
 
+NOT : 'not';
+
 ID : ([a-zA-Z_][a-zA-Z_0-9]*) ;             // match identifiers
 
 WS : [ \t]+ -> skip ; // skip spaces, tabs
 
-NEWLINES : NEWLINE+;
-fragment NEWLINE   : '\r' '\n' | '\n' | '\r' | ('//'.*?'\n');
+NEWLINE : '//'.*?'\r\n' | '//'.*?'\n' | '//'.*?'\r' | '\r' '\n' | '\n' | '\r';

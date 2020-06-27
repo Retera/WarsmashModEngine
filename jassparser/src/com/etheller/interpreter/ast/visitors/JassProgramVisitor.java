@@ -2,9 +2,7 @@ package com.etheller.interpreter.ast.visitors;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.etheller.interpreter.JassBaseVisitor;
 import com.etheller.interpreter.JassParser.BlockContext;
@@ -22,7 +20,6 @@ import com.etheller.interpreter.ast.statement.JassStatement;
 public class JassProgramVisitor extends JassBaseVisitor<Void> {
 	private final GlobalScope globals = new GlobalScope();
 	private final JassNativeManager jassNativeManager = new JassNativeManager();
-	private final Map<String, String> typeToSuperType = new HashMap<>();
 	private final JassTypeVisitor jassTypeVisitor = new JassTypeVisitor(this.globals);
 	private final ArgumentExpressionHandler argumentExpressionHandler = new ArgumentExpressionHandler();
 	private final JassExpressionVisitor jassExpressionVisitor = new JassExpressionVisitor(
@@ -45,7 +42,9 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 			}
 		}
 		else if (ctx.nativeBlock() != null) {
-			this.jassNativeManager.registerNativeCode(ctx.nativeBlock().ID().getText(),
+			final String text = ctx.nativeBlock().ID().getText();
+			System.out.println("Registering native: " + text);
+			this.jassNativeManager.registerNativeCode(text,
 					this.jassParametersVisitor.visit(ctx.nativeBlock().paramList()),
 					this.jassTypeVisitor.visit(ctx.nativeBlock().type()), this.globals);
 		}
@@ -53,16 +52,29 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 	}
 
 	@Override
+	public Void visitFunctionBlock(final FunctionBlockContext ctx) {
+		final List<JassStatement> statements = new ArrayList<>();
+		for (final StatementContext statementContext : ctx.statements().statement()) {
+			statements.add(this.jassStatementVisitor.visit(statementContext));
+		}
+		final UserJassFunction userJassFunction = new UserJassFunction(statements,
+				this.jassParametersVisitor.visit(ctx.paramList()), this.jassTypeVisitor.visit(ctx.type()));
+		this.globals.defineFunction(ctx.ID().getText(), userJassFunction);
+		return null;
+	}
+
+	@Override
 	public Void visitProgram(final ProgramContext ctx) {
 		for (final TypeDefinitionContext typeDefinitionContext : ctx.typeDefinitionBlock().typeDefinition()) {
-			this.typeToSuperType.put(typeDefinitionContext.ID(0).getText(), typeDefinitionContext.ID(1).getText());
+			this.globals.loadTypeDefinition(typeDefinitionContext.ID(0).getText(),
+					typeDefinitionContext.ID(1).getText());
 		}
 		for (final BlockContext blockContext : ctx.block()) {
 			visit(blockContext);
 		}
 		for (final FunctionBlockContext functionBlockContext : ctx.functionBlock()) {
 			final List<JassStatement> statements = new ArrayList<>();
-			for (final StatementContext statementContext : functionBlockContext.statement()) {
+			for (final StatementContext statementContext : functionBlockContext.statements().statement()) {
 				statements.add(this.jassStatementVisitor.visit(statementContext));
 			}
 			final UserJassFunction userJassFunction = new UserJassFunction(statements,
@@ -72,7 +84,12 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 		}
 		final JassFunction mainFunction = this.globals.getFunctionByName("main");
 		if (mainFunction != null) {
-			mainFunction.call(Collections.EMPTY_LIST, this.globals);
+			try {
+				mainFunction.call(Collections.EMPTY_LIST, this.globals);
+			}
+			catch (final Exception exc) {
+				throw new RuntimeException("Exception on Line " + GlobalScope.getLineNumber(), exc);
+			}
 		}
 		return null;
 	}

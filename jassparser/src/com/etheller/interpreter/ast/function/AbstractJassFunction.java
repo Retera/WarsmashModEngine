@@ -6,6 +6,7 @@ import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
+import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
 /**
  * Not a native
@@ -24,15 +25,19 @@ public abstract class AbstractJassFunction implements JassFunction {
 
 	@Override
 	public final JassValue call(final List<JassValue> arguments, final GlobalScope globalScope) {
-		if (arguments.size() != parameters.size()) {
+		if (arguments.size() != this.parameters.size()) {
 			throw new RuntimeException("Invalid number of arguments passed to function");
 		}
 		final LocalScope localScope = new LocalScope();
-		for (int i = 0; i < parameters.size(); i++) {
-			final JassParameter parameter = parameters.get(i);
+		for (int i = 0; i < this.parameters.size(); i++) {
+			final JassParameter parameter = this.parameters.get(i);
 			final JassValue argument = arguments.get(i);
 			if (!parameter.matchesType(argument)) {
-				throw new RuntimeException("Invalid type for specified argument");
+				System.err.println(
+						parameter.getType() + " != " + argument.visit(JassTypeGettingValueVisitor.getInstance()));
+				throw new RuntimeException(
+						"Invalid type " + argument.visit(JassTypeGettingValueVisitor.getInstance()).getName()
+								+ " for specified argument " + parameter.getType().getName());
 			}
 			localScope.createLocal(parameter.getIdentifier(), parameter.getType(), argument);
 		}

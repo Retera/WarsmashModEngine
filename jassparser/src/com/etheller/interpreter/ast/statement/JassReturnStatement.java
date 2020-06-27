@@ -6,15 +6,18 @@ import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class JassReturnStatement implements JassStatement {
+	private final int lineNo;
 	private final JassExpression expression;
 
-	public JassReturnStatement(final JassExpression expression) {
+	public JassReturnStatement(final int lineNo, final JassExpression expression) {
+		this.lineNo = lineNo;
 		this.expression = expression;
 	}
 
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope) {
-		return expression.evaluate(globalScope, localScope);
+		globalScope.setLineNumber(this.lineNo);
+		return this.expression.evaluate(globalScope, localScope);
 	}
 
 }

@@ -7,21 +7,25 @@ import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class JassSetStatement implements JassStatement {
+	private final int lineNo;
 	private final String identifier;
 	private final JassExpression expression;
 
-	public JassSetStatement(final String identifier, final JassExpression expression) {
+	public JassSetStatement(final int lineNo, final String identifier, final JassExpression expression) {
+		this.lineNo = lineNo;
 		this.identifier = identifier;
 		this.expression = expression;
 	}
 
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope) {
-		final Assignable local = localScope.getAssignableLocal(identifier);
+		globalScope.setLineNumber(this.lineNo);
+		final Assignable local = localScope.getAssignableLocal(this.identifier);
 		if (local != null) {
-			local.setValue(expression.evaluate(globalScope, localScope));
-		} else {
-			globalScope.setGlobal(identifier, expression.evaluate(globalScope, localScope));
+			local.setValue(this.expression.evaluate(globalScope, localScope));
+		}
+		else {
+			globalScope.setGlobal(this.identifier, this.expression.evaluate(globalScope, localScope));
 		}
 		return null;
 	}

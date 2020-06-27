@@ -1,0 +1,47 @@
+package com.etheller.interpreter.ast.statement;
+
+import java.util.List;
+
+import com.etheller.interpreter.ast.expression.JassExpression;
+import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.LocalScope;
+import com.etheller.interpreter.ast.value.JassValue;
+import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
+
+public class JassIfElseStatement implements JassStatement {
+	private final int lineNo;
+	private final JassExpression condition;
+	private final List<JassStatement> thenStatements;
+	private final List<JassStatement> elseStatements;
+
+	public JassIfElseStatement(final int lineNo, final JassExpression condition,
+			final List<JassStatement> thenStatements, final List<JassStatement> elseStatements) {
+		this.lineNo = lineNo;
+		this.condition = condition;
+		this.thenStatements = thenStatements;
+		this.elseStatements = elseStatements;
+	}
+
+	@Override
+	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope) {
+		globalScope.setLineNumber(this.lineNo);
+		if (this.condition.evaluate(globalScope, localScope).visit(BooleanJassValueVisitor.getInstance())) {
+			for (final JassStatement statement : this.thenStatements) {
+				final JassValue returnValue = statement.execute(globalScope, localScope);
+				if (returnValue != null) {
+					return returnValue;
+				}
+			}
+		}
+		else {
+			for (final JassStatement statement : this.elseStatements) {
+				final JassValue returnValue = statement.execute(globalScope, localScope);
+				if (returnValue != null) {
+					return returnValue;
+				}
+			}
+		}
+		return null;
+	}
+
+}

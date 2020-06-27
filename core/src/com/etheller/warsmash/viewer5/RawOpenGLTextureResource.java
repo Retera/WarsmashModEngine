@@ -55,6 +55,8 @@ public abstract class RawOpenGLTextureResource extends Texture {
 	@Override
 	public void internalBind() {
 		this.viewer.gl.glBindTexture(this.target, this.handle);
+		this.viewer.gl.glTexParameteri(this.target, GL20.GL_TEXTURE_WRAP_S, this.wrapS);
+		this.viewer.gl.glTexParameteri(this.target, GL20.GL_TEXTURE_WRAP_T, this.wrapT);
 	}
 
 	@Override
@@ -81,19 +83,12 @@ public abstract class RawOpenGLTextureResource extends Texture {
 	public void setWrapS(final boolean wrapS) {
 		this.wrapS = wrapS ? GL20.GL_REPEAT : GL20.GL_CLAMP_TO_EDGE;
 		final GL20 gl = this.viewer.gl;
-
-		gl.glBindTexture(this.target, this.handle);
-		gl.glTexParameteri(this.target, GL20.GL_TEXTURE_WRAP_S, this.wrapS);
 	}
 
 	@Override
 	public void setWrapT(final boolean wrapT) {
 		this.wrapT = wrapT ? GL20.GL_REPEAT : GL20.GL_CLAMP_TO_EDGE;
 		final GL20 gl = this.viewer.gl;
-
-		gl.glBindTexture(this.target, this.handle);
-		gl.glTexParameteri(this.target, GL20.GL_TEXTURE_WRAP_T, this.wrapT);
-
 	}
 
 	public void update(final BufferedImage image) {

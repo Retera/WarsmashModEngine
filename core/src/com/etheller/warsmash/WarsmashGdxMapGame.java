@@ -14,6 +14,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
@@ -37,10 +38,8 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
 import com.etheller.warsmash.parsers.fdf.GameUI;
-import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
-import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
-import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
-import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.parsers.jass.Jass2;
+import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -120,6 +119,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		System.err.println("Renderer: " + renderer);
 
 		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor("E:\\Backups\\Warcraft\\Data\\127");
+		final FolderDataSourceDescriptor smashmpq = new FolderDataSourceDescriptor("..\\..\\resources");
 //		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor(
 //				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3.mpq\\war3.mpq");
 //		final FolderDataSourceDescriptor war3xLocalmpq = new FolderDataSourceDescriptor(
@@ -128,9 +128,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //				"E:\\Games\\Warcraft III Patch 1.31 Rebirth");
 		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor("E:\\Backups\\Warsmash\\Data");
 		final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
-		this.codebase = new CompoundDataSourceDescriptor(
-				Arrays.<DataSourceDescriptor>asList(war3mpq, /* war3xLocalmpq, */ testingFolder, currentFolder))
-						.createDataSource();
+		this.codebase = new CompoundDataSourceDescriptor(Arrays.<DataSourceDescriptor>asList(war3mpq, smashmpq,
+				/* war3xLocalmpq, */ testingFolder, currentFolder)).createDataSource();
 		this.viewer = new War3MapViewer(this.codebase, this);
 
 		this.viewer.worldScene.enableAudio();
@@ -232,11 +231,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		Gdx.input.setInputProcessor(this);
 
-//		final Music music = Gdx.audio
-//				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\DarkAgents.mp3"));
-//		music.setVolume(0.2f);
-//		music.setLooping(true);
-//		music.play();
+		final Music music = Gdx.audio
+				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\DarkAgents.mp3"));
+		music.setVolume(0.2f);
+		music.setLooping(true);
+		music.play();
 
 		this.minimap = new Rectangle(18.75f, 13.75f, 278.75f, 276.25f);
 		final float worldWidth = (this.viewer.terrain.columns - 1);
@@ -255,32 +254,12 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.shapeRenderer = new ShapeRenderer();
 		this.talentTreeWindow = new Rectangle(100, 300, 1400, 800);
 
-		final Element skin = GameUI.loadSkin(this.viewer.dataSource, "Human");
-		this.gameUI = new GameUI(this.viewer.dataSource, skin, this.uiViewport);
-		String timeIndicatorPath = skin.getField("TimeOfDayIndicator");
-		if (!this.viewer.dataSource.has(timeIndicatorPath)) {
-			final int lastDotIndex = timeIndicatorPath.lastIndexOf('.');
-			if (lastDotIndex >= 0) {
-				timeIndicatorPath = timeIndicatorPath.substring(0, lastDotIndex);
+		Jass2.loadJUI(this.codebase, this.uiViewport, new RootFrameListener() {
+			@Override
+			public void onCreate(final GameUI rootFrame) {
+				WarsmashGdxMapGame.this.gameUI = rootFrame;
 			}
-			timeIndicatorPath += ".mdx";
-		}
-		this.timeIndicator = (MdxModel) this.viewer.load(timeIndicatorPath, this.viewer.mapPathSolver,
-				this.viewer.solverParams);
-		final MdxComplexInstance timeIndicatorInstance = (MdxComplexInstance) this.timeIndicator.addInstance();
-		timeIndicatorInstance.setScene(this.uiScene);
-		timeIndicatorInstance.setSequence(0);
-		timeIndicatorInstance.setSequenceLoopMode(2);
-		try {
-			this.gameUI.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-		this.gameUI.createSimpleFrame("ConsoleUI", this.gameUI, 0);
-		final UIFrame resourceBarFrame = this.gameUI.createSimpleFrame("ResourceBarFrame", this.gameUI, 0);
-		resourceBarFrame.addAnchor(new AnchorDefinition(FramePoint.TOPRIGHT, 0, 0));
-		this.gameUI.positionBounds(this.uiViewport);
+		}, "Scripts\\common.jui", "Scripts\\melee.jui");
 	}
 
 	@Override

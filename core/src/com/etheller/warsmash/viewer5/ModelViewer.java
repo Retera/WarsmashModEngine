@@ -283,7 +283,7 @@ public class ModelViewer {
 	}
 
 	public void update() {
-		final float dt = this.frameTime * 0.001f;
+		final float dt = Gdx.graphics.getRawDeltaTime();// this.frameTime * 0.001f;
 
 		this.frame += 1;
 

@@ -1,11 +1,16 @@
 package com.etheller.interpreter.ast.visitors;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.etheller.interpreter.JassBaseVisitor;
+import com.etheller.interpreter.JassParser.ArgsListContext;
 import com.etheller.interpreter.JassParser.ArrayReferenceExpressionContext;
 import com.etheller.interpreter.JassParser.FalseExpressionContext;
 import com.etheller.interpreter.JassParser.FunctionCallExpressionContext;
 import com.etheller.interpreter.JassParser.FunctionReferenceExpressionContext;
 import com.etheller.interpreter.JassParser.IntegerLiteralExpressionContext;
+import com.etheller.interpreter.JassParser.NotExpressionContext;
 import com.etheller.interpreter.JassParser.ParentheticalExpressionContext;
 import com.etheller.interpreter.JassParser.ReferenceExpressionContext;
 import com.etheller.interpreter.JassParser.StringLiteralExpressionContext;
@@ -15,6 +20,7 @@ import com.etheller.interpreter.ast.expression.FunctionCallJassExpression;
 import com.etheller.interpreter.ast.expression.FunctionReferenceJassExpression;
 import com.etheller.interpreter.ast.expression.JassExpression;
 import com.etheller.interpreter.ast.expression.LiteralJassExpression;
+import com.etheller.interpreter.ast.expression.NotJassExpression;
 import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
@@ -61,17 +67,24 @@ public class JassExpressionVisitor extends JassBaseVisitor<JassExpression> {
 
 	@Override
 	public JassExpression visitFalseExpression(final FalseExpressionContext ctx) {
-		return new LiteralJassExpression(new BooleanJassValue(false));
+		return new LiteralJassExpression(BooleanJassValue.FALSE);
 	}
 
 	@Override
 	public JassExpression visitTrueExpression(final TrueExpressionContext ctx) {
-		return new LiteralJassExpression(new BooleanJassValue(true));
+		return new LiteralJassExpression(BooleanJassValue.TRUE);
+	}
+
+	@Override
+	public JassExpression visitNotExpression(final NotExpressionContext ctx) {
+		return new NotJassExpression(visit(ctx.expression()));
 	}
 
 	@Override
 	public JassExpression visitFunctionCallExpression(final FunctionCallExpressionContext ctx) {
-		return new FunctionCallJassExpression(ctx.functionExpression().ID().getText(),
-				argumentExpressionHandler.argumentsVisitor.visit(ctx.functionExpression().argsList()));
+		final ArgsListContext argsList = ctx.functionExpression().argsList();
+		final List<JassExpression> arguments = argsList == null ? Collections.<JassExpression>emptyList()
+				: this.argumentExpressionHandler.argumentsVisitor.visit(argsList);
+		return new FunctionCallJassExpression(ctx.functionExpression().ID().getText(), arguments);
 	}
 }

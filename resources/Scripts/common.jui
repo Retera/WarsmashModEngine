@@ -1,0 +1,94 @@
+//============================================================================
+// User Interface scripts for the Warsmash mod engine. This is
+// an attempt to get these defined in an external import that
+// a map can override. Unfortunately, although I would like for
+// this to be a JASS file, it is not very consistent with the
+// notion of the JASS2 VM to define UI, because handles are
+// mostly network synced. So, we will assume the contents
+// of this file are run in a special client-only JASS VM
+// once I implement networking, so that this script will not
+// cause a desync as it would if it was in the standard game
+// JASS files. For that reason, it will have '.jui' extension
+// to signify it runs in this modified JASS VM, instead of
+// standard '.j' as used for JASS2 script files.
+//
+// Right now there is some duplicated code from common.j --
+// maybe later on we will load that stuff first, then this
+// one in the same variable space?
+//
+
+type framehandle        extends     handle
+type framepointtype     extends     handle
+
+native LogError                                 takes string message returns nothing
+constant native ConvertFramePointType       takes integer i returns framepointtype
+
+globals
+
+//===================================================
+// UI API constants
+//===================================================
+
+    constant framepointtype         FRAMEPOINT_TOPLEFT                   = ConvertFramePointType(0)
+    constant framepointtype         FRAMEPOINT_TOP                       = ConvertFramePointType(1)
+    constant framepointtype         FRAMEPOINT_TOPRIGHT                  = ConvertFramePointType(2)
+    constant framepointtype         FRAMEPOINT_LEFT                      = ConvertFramePointType(3)
+    constant framepointtype         FRAMEPOINT_CENTER                    = ConvertFramePointType(4)
+    constant framepointtype         FRAMEPOINT_RIGHT                     = ConvertFramePointType(5)
+    constant framepointtype         FRAMEPOINT_BOTTOMLEFT                = ConvertFramePointType(6)
+    constant framepointtype         FRAMEPOINT_BOTTOM                    = ConvertFramePointType(7)
+    constant framepointtype         FRAMEPOINT_BOTTOMRIGHT               = ConvertFramePointType(8)
+endglobals
+
+//===================================================
+// UI API   
+//===================================================
+
+// Loads an entry from the file "UI\war3skins.txt" and returns
+// it as the current GAMEUI. The default possible
+// strings are "Human", "Orc", "NightElf", and "Undead".
+// Some UI FDF templates will use this information as
+// the source for lookup strings as a means to change
+// their style.
+// Calling this more than once will probably crash the game,
+// or something, so only call it once on startup.
+native CreateRootFrame	                                takes string skinName returns framehandle
+
+// Loads the (T)able (O)f (C)ontents file.
+// This must be a simple text document with each line
+// having only a filepath of a .FDF frame template
+// definition file to load. Unlike War3 engine,
+// I do not require the file to include one extra
+// blank line at the end.
+//
+// We typically call this first during UI setup, and
+// only once for a given mod.
+native LoadTOCFile                              takes string TOCFile returns framehandle
+
+// Spawn a SIMPLEFRAME element that was defined in a FDF
+// template onto the screen. The "name" field must match
+// the name of a template to spawn, loaded with LoadTOCFile.
+// The create context is pretty pointless, but I think
+// they use it so that they have an integer tag on the
+// "Attack 1" and "Attack 2" ui components. I was trying
+// to keep parity with the FDF UI APIs from 1.31, imagine
+// that.
+native CreateSimpleFrame                        takes string name, framehandle owner, integer createContext returns framehandle
+
+// Set the absolute point (often called Anchor) for the frame handle.
+// See FDF template files for examples
+native FrameSetAbsPoint                         takes framehandle frame, framepointtype point, real x, real y returns nothing
+
+// Created for Warsmash engine, not a part of 1.31 UI apis,
+// and at some point it might be removed. Basically
+// this function will apply Anchors and SetPoints assigned
+// to the frame handle and all its children and resolve where
+// they should go onscreen. Generally in my experience,
+// War3 will do this automatically in their FDF system.
+native FramePositionBounds                      takes framehandle frame returns nothing
+
+// Used to lookup fields in the Skin data, for example
+// SkinGetField("TimeOfDayIndicator") will return the
+// string "UI\\Console\\Human\\HumanUI-TimeIndicator.mdl"
+// when the "Human" skin was loaded with CreateRootFrame
+native SkinGetField                             takes string field returns string

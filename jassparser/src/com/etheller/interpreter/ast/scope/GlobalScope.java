@@ -7,34 +7,74 @@ import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
+import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.PrimitiveJassType;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
+import com.etheller.interpreter.ast.value.visitor.HandleJassTypeVisitor;
+import com.etheller.interpreter.ast.value.visitor.HandleTypeSuperTypeLoadingVisitor;
 
 public final class GlobalScope {
 	private final Map<String, Assignable> globals = new HashMap<>();
 	private final Map<String, JassFunction> functions = new HashMap<>();
 	private final Map<String, JassType> types = new HashMap<>();
+	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
+
+	public final HandleJassType handleType;
+	public final HandleJassType frameHandleType;
+	public final HandleJassType framePointType;
+
+	private static int lineNumber;
+
+	public GlobalScope() {
+		this.handleType = registerHandleType("handle");// the handle type
+		this.frameHandleType = registerHandleType("framehandle");
+		this.framePointType = registerHandleType("framepointtype");
+		registerPrimitiveType(JassType.BOOLEAN);
+		registerPrimitiveType(JassType.INTEGER);
+		registerPrimitiveType(JassType.CODE);
+		registerPrimitiveType(JassType.NOTHING);
+		registerPrimitiveType(JassType.REAL);
+		registerPrimitiveType(JassType.STRING);
+	}
+
+	public static void setLineNumber(final int lineNo) {
+		lineNumber = lineNo;
+	}
+
+	public static int getLineNumber() {
+		return lineNumber;
+	}
+
+	private HandleJassType registerHandleType(final String name) {
+		final HandleJassType handleJassType = new HandleJassType(null, name);
+		this.types.put(name, handleJassType);
+		return handleJassType;
+	}
+
+	private void registerPrimitiveType(final PrimitiveJassType type) {
+		this.types.put(type.getName(), type);
+	}
 
 	public void createGlobalArray(final String name, final JassType type) {
 		final Assignable assignable = new Assignable(type);
 		assignable.setValue(new ArrayJassValue((ArrayJassType) type)); // TODO less bad code
-		globals.put(name, assignable);
+		this.globals.put(name, assignable);
 	}
 
 	public void createGlobal(final String name, final JassType type) {
-		globals.put(name, new Assignable(type));
+		this.globals.put(name, new Assignable(type));
 	}
 
 	public void createGlobal(final String name, final JassType type, final JassValue value) {
 		final Assignable assignable = new Assignable(type);
 		assignable.setValue(value);
-		globals.put(name, assignable);
+		this.globals.put(name, assignable);
 	}
 
 	public void setGlobal(final String name, final JassValue value) {
-		final Assignable assignable = globals.get(name);
+		final Assignable assignable = this.globals.get(name);
 		if (assignable == null) {
 			throw new RuntimeException("Undefined global: " + name);
 		}
@@ -45,7 +85,7 @@ public final class GlobalScope {
 	}
 
 	public JassValue getGlobal(final String name) {
-		final Assignable global = globals.get(name);
+		final Assignable global = this.globals.get(name);
 		if (global == null) {
 			throw new RuntimeException("Undefined global: " + name);
 		}
@@ -53,42 +93,51 @@ public final class GlobalScope {
 	}
 
 	public Assignable getAssignableGlobal(final String name) {
-		return globals.get(name);
+		return this.globals.get(name);
 	}
 
 	public void defineFunction(final String name, final JassFunction function) {
-		functions.put(name, function);
+		this.functions.put(name, function);
 	}
 
 	public JassFunction getFunctionByName(final String name) {
-		return functions.get(name);
+		return this.functions.get(name);
 	}
 
-	public PrimitiveJassType parseType(final String text) {
-		if (text.equals("string")) {
-			return JassType.STRING;
-		} else if (text.equals("integer")) {
-			return JassType.INTEGER;
-		} else if (text.equals("boolean")) {
-			return JassType.BOOLEAN;
-		} else if (text.equals("real")) {
-			return JassType.REAL;
-		} else if (text.equals("code")) {
-			return JassType.CODE;
-		} else if (text.equals("nothing")) {
-			return JassType.NOTHING;
-		} else {
+	public JassType parseType(final String text) {
+		final JassType type = this.types.get(text);
+		if (type != null) {
+			return type;
+		}
+		else {
 			throw new RuntimeException("Unknown type: " + text);
 		}
 	}
 
 	public JassType parseArrayType(final String primitiveTypeName) {
 		final String arrayTypeName = primitiveTypeName + " array";
-		JassType arrayType = types.get(arrayTypeName);
+		JassType arrayType = this.types.get(arrayTypeName);
 		if (arrayType == null) {
 			arrayType = new ArrayJassType(parseType(primitiveTypeName));
-			types.put(arrayTypeName, arrayType);
+			this.types.put(arrayTypeName, arrayType);
 		}
 		return arrayType;
+	}
+
+	public void loadTypeDefinition(final String type, final String supertype) {
+		final JassType superType = this.types.get(supertype);
+		if (superType != null) {
+			final HandleJassType handleSuperType = superType.visit(HandleJassTypeVisitor.getInstance());
+			if (handleSuperType != null) {
+				final JassType jassType = this.types.get(type);
+				jassType.visit(this.handleTypeSuperTypeLoadingVisitor.reset(handleSuperType));
+			}
+			else {
+				throw new RuntimeException("type " + type + " cannot extend primitive type " + supertype);
+			}
+		}
+		else {
+			throw new RuntimeException("type " + type + " cannot extend unknown type " + supertype);
+		}
 	}
 }

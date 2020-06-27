@@ -156,14 +156,12 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 			final Texture viewerTexture = (Texture) viewer.load(path, pathSolver, solverParams);
 
 			// When the texture will load, it will apply its wrap modes.
-			if (!viewerTexture.loaded) {
-				if ((flags & 0x1) != 0) {
-					viewerTexture.setWrapS(true);
-				}
+			if ((flags & 0x1) != 0) {
+				viewerTexture.setWrapS(true);
+			}
 
-				if ((flags & 0x2) != 0) {
-					viewerTexture.setWrapT(true);
-				}
+			if ((flags & 0x2) != 0) {
+				viewerTexture.setWrapT(true);
 			}
 
 			this.replaceables.add(replaceableId);

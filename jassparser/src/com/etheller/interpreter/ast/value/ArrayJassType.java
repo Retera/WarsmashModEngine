@@ -1,14 +1,26 @@
 package com.etheller.interpreter.ast.value;
 
 public class ArrayJassType implements JassType {
-	private final PrimitiveJassType primitiveType;
+	private final JassType primitiveType;
+	private final String name;
 
-	public ArrayJassType(final PrimitiveJassType primitiveType) {
+	public ArrayJassType(final JassType primitiveType) {
 		this.primitiveType = primitiveType;
+		this.name = primitiveType.getName() + " array";
 	}
 
-	public PrimitiveJassType getPrimitiveType() {
-		return primitiveType;
+	@Override
+	public boolean isAssignableFrom(final JassType value) {
+		return value == this;
+	}
+
+	public JassType getPrimitiveType() {
+		return this.primitiveType;
+	}
+
+	@Override
+	public String getName() {
+		return this.name;
 	}
 
 	@Override

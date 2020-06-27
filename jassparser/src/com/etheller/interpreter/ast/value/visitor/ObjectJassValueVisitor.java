@@ -9,46 +9,46 @@ import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.RealJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
 
-public class ArrayJassValueVisitor implements JassValueVisitor<ArrayJassValue> {
-	private static final ArrayJassValueVisitor INSTANCE = new ArrayJassValueVisitor();
+public class ObjectJassValueVisitor<T> implements JassValueVisitor<T> {
+	private static final ObjectJassValueVisitor<?> INSTANCE = new ObjectJassValueVisitor();
 
-	public static ArrayJassValueVisitor getInstance() {
-		return INSTANCE;
+	public static <V> ObjectJassValueVisitor<V> getInstance() {
+		return (ObjectJassValueVisitor<V>) INSTANCE;
 	}
 
 	@Override
-	public ArrayJassValue accept(final IntegerJassValue value) {
+	public T accept(final IntegerJassValue value) {
 		return null;
 	}
 
 	@Override
-	public ArrayJassValue accept(final RealJassValue value) {
+	public T accept(final RealJassValue value) {
 		return null;
 	}
 
 	@Override
-	public ArrayJassValue accept(final BooleanJassValue value) {
+	public T accept(final BooleanJassValue value) {
 		return null;
 	}
 
 	@Override
-	public ArrayJassValue accept(final StringJassValue value) {
+	public T accept(final StringJassValue value) {
 		return null;
 	}
 
 	@Override
-	public ArrayJassValue accept(final CodeJassValue value) {
+	public T accept(final CodeJassValue value) {
 		return null;
 	}
 
 	@Override
-	public ArrayJassValue accept(final ArrayJassValue value) {
-		return value;
+	public T accept(final ArrayJassValue value) {
+		return null;
 	}
 
 	@Override
-	public ArrayJassValue accept(final HandleJassValue value) {
-		return null;
+	public T accept(final HandleJassValue value) {
+		return (T) value.getJavaValue();
 	}
 
 }

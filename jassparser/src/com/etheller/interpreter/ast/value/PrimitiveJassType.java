@@ -7,8 +7,14 @@ public class PrimitiveJassType implements JassType {
 		this.name = name;
 	}
 
+	@Override
+	public boolean isAssignableFrom(final JassType value) {
+		return value == this;
+	}
+
+	@Override
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	@Override

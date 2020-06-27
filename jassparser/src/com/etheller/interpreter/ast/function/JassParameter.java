@@ -14,14 +14,15 @@ public class JassParameter {
 	}
 
 	public String getIdentifier() {
-		return identifier;
+		return this.identifier;
 	}
 
 	public JassType getType() {
-		return type;
+		return this.type;
 	}
 
 	public boolean matchesType(final JassValue value) {
-		return type == value.visit(JassTypeGettingValueVisitor.getInstance());
+		final JassType valueType = value.visit(JassTypeGettingValueVisitor.getInstance());
+		return this.type.isAssignableFrom(valueType);
 	}
 }

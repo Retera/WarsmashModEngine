@@ -17,6 +17,10 @@ public class JassNativeManager {
 		this.nameToNativeCode = new HashMap<>();
 	}
 
+	public void createNative(final String name, final JassFunction nativeCode) {
+		this.nameToNativeCode.put(name, nativeCode);
+	}
+
 	public void registerNativeCode(final String name, final List<JassParameter> parameters, final JassType returnType,
 			final GlobalScope globals) {
 		if (this.registeredNativeNames.contains(name)) {

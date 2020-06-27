@@ -32,7 +32,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 
 public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvider {
 	private static final boolean SPIN = false;
-	private static final boolean ADVANCE_ANIMS = true;
+	private static final boolean ADVANCE_ANIMS = false;
 	private DataSource codebase;
 	private ModelViewer viewer;
 	private MdxModel model;
@@ -69,12 +69,12 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.viewer.enableAudio();
 
 		final Scene scene = this.viewer.addWorldScene();
-		scene.enableAudio();
+//		scene.enableAudio();
 
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(scene);
 
-		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3d\\MainMenu3d.mdx",
+		this.mainModel = (MdxModel) this.viewer.load("Doodads\\Cinematic\\ArthasIllidanFight\\ArthasIllidanFight.mdx",
 //		this.mainModel = (MdxModel) this.viewer.load("Abilities\\Spells\\Orc\\FeralSpirit\\feralspirittarget.mdx",
 				new PathSolver() {
 					@Override
@@ -90,28 +90,15 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 //		System.out.println(Arrays.toString(evt.keyFrames));
 //		System.out.println(evt.name);
 
-		this.modelCamera = this.mainModel.cameras.get(0);
-
 		this.mainInstance = (MdxComplexInstance) this.mainModel.addInstance(0);
 
 		this.mainInstance.setScene(scene);
 
-		int animIndex = 0;
-		for (final Sequence s : this.mainModel.getSequences()) {
-			if (s.getName().toLowerCase().startsWith("stand")) {
-				animIndex = this.mainModel.getSequences().indexOf(s);
-				break;
-			}
-		}
+		final int animIndex = 1;
+		this.modelCamera = this.mainModel.cameras.get(animIndex);
 		this.mainInstance.setSequence(animIndex);
 
-		this.mainInstance.setSequenceLoopMode(0);
-
-		final Music music = Gdx.audio
-				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\MainScreen.mp3"));
-		music.setVolume(0.2f);
-		music.setLooping(true);
-		music.play();
+		this.mainInstance.setSequenceLoopMode(4);
 
 //		acolytesHarvestingSceneJoke2(scene);
 
@@ -365,6 +352,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 	private com.etheller.warsmash.viewer5.handlers.mdx.Camera modelCamera;
 	private final float[] cameraPositionTemp = new float[3];
 	private final float[] cameraTargetTemp = new float[3];
+	private boolean firstFrame = true;
 
 	@Override
 	public void render() {
@@ -375,6 +363,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 				this.cameraManager.horizontalAngle = 0;
 			}
 		}
+		this.modelCamera = this.mainModel.cameras.get(this.mainInstance.sequence);
 		this.cameraManager.updateCamera();
 		this.viewer.updateAndRender();
 
@@ -390,7 +379,17 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		}
 
 		if (ADVANCE_ANIMS && this.mainInstance.sequenceEnded) {
-			this.mainInstance.setSequence((this.mainInstance.sequence + 1) % this.mainModel.getSequences().size());
+			final int sequence = (this.mainInstance.sequence + 1) % this.mainModel.getSequences().size();
+			this.mainInstance.setSequence(sequence);
+			this.mainInstance.frame += (int) (Gdx.graphics.getRawDeltaTime() * 1000);
+		}
+		if (this.firstFrame) {
+			final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(this.viewer.dataSource,
+					"Sound\\Ambient\\DoodadEffects\\FinalCinematic.mp3"));
+			music.setVolume(0.2f);
+			music.setLooping(true);
+			music.play();
+			this.firstFrame = false;
 		}
 	}
 

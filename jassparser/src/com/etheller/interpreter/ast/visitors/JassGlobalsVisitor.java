@@ -6,7 +6,6 @@ import com.etheller.interpreter.JassParser.DefinitionGlobalContext;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.value.JassType;
-import com.etheller.interpreter.ast.value.PrimitiveJassType;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
 
 public class JassGlobalsVisitor extends JassBaseVisitor<Void> {
@@ -24,25 +23,27 @@ public class JassGlobalsVisitor extends JassBaseVisitor<Void> {
 
 	@Override
 	public Void visitBasicGlobal(final BasicGlobalContext ctx) {
-		final JassType type = jassTypeVisitor.visit(ctx.type());
-		final PrimitiveJassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
+		final JassType type = this.jassTypeVisitor.visit(ctx.type());
+		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		if (arrayPrimType != null) {
-			globals.createGlobalArray(ctx.ID().getText(), type);
-		} else {
-			globals.createGlobal(ctx.ID().getText(), type);
+			this.globals.createGlobalArray(ctx.ID().getText(), type);
+		}
+		else {
+			this.globals.createGlobal(ctx.ID().getText(), type);
 		}
 		return null;
 	}
 
 	@Override
 	public Void visitDefinitionGlobal(final DefinitionGlobalContext ctx) {
-		final JassType type = jassTypeVisitor.visit(ctx.type());
-		final PrimitiveJassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
+		final JassType type = this.jassTypeVisitor.visit(ctx.type());
+		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		if (arrayPrimType != null) {
-			globals.createGlobalArray(ctx.ID().getText(), type);
-		} else {
-			globals.createGlobal(ctx.ID().getText(), type,
-					jassExpressionVisitor.visit(ctx.assignTail().expression()).evaluate(globals, EMPTY_LOCAL_SCOPE));
+			this.globals.createGlobalArray(ctx.ID().getText(), type);
+		}
+		else {
+			this.globals.createGlobal(ctx.ID().getText(), type, this.jassExpressionVisitor
+					.visit(ctx.assignTail().expression()).evaluate(this.globals, EMPTY_LOCAL_SCOPE));
 		}
 		return null;
 	}

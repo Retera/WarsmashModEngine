@@ -4,6 +4,7 @@ import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.RealJassValue;
@@ -43,6 +44,11 @@ public class JassFunctionJassValueVisitor implements JassValueVisitor<JassFuncti
 
 	@Override
 	public JassFunction accept(final ArrayJassValue value) {
+		return null;
+	}
+
+	@Override
+	public JassFunction accept(final HandleJassValue value) {
 		return null;
 	}
 

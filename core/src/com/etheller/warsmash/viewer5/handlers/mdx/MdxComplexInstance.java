@@ -522,7 +522,7 @@ public class MdxComplexInstance extends ModelInstance {
 		if (sequenceId != -1) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
-			final int frameTime = model.viewer.frameTime;
+			final int frameTime = (int) (dt * 1000);
 
 			this.frame += frameTime;
 			this.counter += frameTime;
@@ -533,6 +533,16 @@ public class MdxComplexInstance extends ModelInstance {
 					this.frame = (int) interval[0]; // TODO not cast
 
 					this.resetEventEmitters();
+				}
+				else if (this.sequenceLoopMode == 4) { // faux queued animation mode
+					final int framesPast = this.frame - (int) interval[1];
+
+					final List<Sequence> sequences = model.sequences;
+					this.sequence = (this.sequence + 1) % sequences.size();
+					this.frame = (int) sequences.get(this.sequence).getInterval()[0] + framesPast; // TODO not cast
+					this.sequenceEnded = false;
+					this.resetEventEmitters();
+					this.forced = true;
 				}
 				else {
 					this.frame = (int) interval[1]; // TODO not cast

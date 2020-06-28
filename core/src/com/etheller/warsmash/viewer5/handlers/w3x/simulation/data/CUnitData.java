@@ -1,10 +1,15 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityHoldPosition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
@@ -39,7 +44,9 @@ public class CUnitData {
 	private static final War3ID ATTACK2_COOLDOWN = War3ID.fromString("ua2c");
 	private static final War3ID DEFENSE = War3ID.fromString("udef");
 	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
+	private static final War3ID MOVE_TYPE = War3ID.fromString("umvt");
 	private final MutableObjectData unitData;
+	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
 
 	public CUnitData(final MutableObjectData unitData) {
 		this.unitData = unitData;
@@ -53,8 +60,10 @@ public class CUnitData {
 		final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
 		final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
 		final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
+		final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
+		final PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
-				speed, moveHeight);
+				speed, new CUnitType(movementType, moveHeight));
 		if (speed > 0) {
 			unit.add(simulation, CAbilityMove.INSTANCE);
 			unit.add(simulation, CAbilityPatrol.INSTANCE);

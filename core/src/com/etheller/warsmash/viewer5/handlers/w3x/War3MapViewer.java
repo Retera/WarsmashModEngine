@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +36,7 @@ import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData;
@@ -57,6 +59,7 @@ import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain.Splat;
@@ -91,6 +94,8 @@ public class War3MapViewer extends ModelViewer {
 	private static final War3ID UNIT_SELECT_HEIGHT = War3ID.fromString("uslz");
 	private static final War3ID UNIT_SOUNDSET = War3ID.fromString("usnd");
 	private static final War3ID ITEM_FILE = War3ID.fromString("ifil");
+	private static final War3ID UNIT_PATHING = War3ID.fromString("upat");
+	private static final War3ID DESTRUCTABLE_PATHING = War3ID.fromString("bptx");
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
 	private static final float[] rayHeap = new float[6];
@@ -145,6 +150,8 @@ public class War3MapViewer extends ModelViewer {
 	private final DynamicShadowManager dynamicShadowManager = new DynamicShadowManager();
 
 	private final Random seededRandom = new Random(1337L);
+
+	private final Map<String, BufferedImage> filePathToPathingMap = new HashMap<>();
 
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
@@ -279,7 +286,10 @@ public class War3MapViewer extends ModelViewer {
 
 		final War3MapW3e terrainData = this.mapMpq.readEnvironment();
 
-		this.terrain = new Terrain(terrainData, w3iFile, this.webGL, this.dataSource, worldEditStrings, this);
+		final War3MapWpm terrainPathing = this.mapMpq.readPathing();
+
+		this.terrain = new Terrain(terrainData, terrainPathing, w3iFile, this.webGL, this.dataSource, worldEditStrings,
+				this);
 
 		final float[] centerOffset = terrainData.getCenterOffset();
 		final int[] mapSize = terrainData.getMapSize();
@@ -357,7 +367,7 @@ public class War3MapViewer extends ModelViewer {
 
 						return simulationAttackProjectile;
 					}
-				});
+				}, this.terrain.pathingGrid);
 
 		if (this.doodadsAndDestructiblesLoaded) {
 			this.loadDoodadsAndDestructibles(modifications);
@@ -382,8 +392,6 @@ public class War3MapViewer extends ModelViewer {
 	}
 
 	private void loadDoodadsAndDestructibles(final Warcraft3MapObjectData modifications) throws IOException {
-		final War3MapDoo dooFile = this.mapMpq.readDoodads();
-
 		this.applyModificationFile(this.doodadsData, this.doodadMetaData, modifications.getDoodads(),
 				WorldEditorDataType.DOODADS);
 		this.applyModificationFile(this.doodadsData, this.destructableMetaData, modifications.getDestructibles(),
@@ -422,6 +430,18 @@ public class War3MapViewer extends ModelViewer {
 						this.terrain.addShadow(shadowString, doodad.getLocation()[0], doodad.getLocation()[1]);
 					}
 
+					final String pathingTexture = row.readSLKTag("pathTex");
+					if ((pathingTexture != null) && (pathingTexture.length() > 0) && !"_".equals(pathingTexture)) {
+
+						BufferedImage bufferedImage = this.filePathToPathingMap.get(pathingTexture.toLowerCase());
+						if (bufferedImage == null) {
+							bufferedImage = TgaFile.readTGA(pathingTexture,
+									this.mapMpq.getResourceAsStream(pathingTexture));
+							this.filePathToPathingMap.put(pathingTexture.toLowerCase(), bufferedImage);
+						}
+						this.terrain.pathingGrid.blitPathingOverlayTexture(doodad.getLocation()[0],
+								doodad.getLocation()[1], (int) Math.toDegrees(doodad.getAngle()), bufferedImage);
+					}
 				}
 				// First see if the model is local.
 				// Doodads referring to local models may have invalid variations, so if the
@@ -579,6 +599,17 @@ public class War3MapViewer extends ModelViewer {
 					final String buildingShadow = row.getFieldAsString(BUILDING_SHADOW, 0);
 					if ((buildingShadow != null) && !"_".equals(buildingShadow)) {
 						this.terrain.addShadow(buildingShadow, unit.getLocation()[0], unit.getLocation()[1]);
+					}
+					final String pathingTexture = row.getFieldAsString(UNIT_PATHING, 0);
+					if ((pathingTexture != null) && (pathingTexture.length() > 0) && !"_".equals(pathingTexture)) {
+						BufferedImage bufferedImage = this.filePathToPathingMap.get(pathingTexture.toLowerCase());
+						if (bufferedImage == null) {
+							bufferedImage = TgaFile.readTGA(pathingTexture,
+									this.mapMpq.getResourceAsStream(pathingTexture));
+							this.filePathToPathingMap.put(pathingTexture.toLowerCase(), bufferedImage);
+						}
+						this.terrain.pathingGrid.blitPathingOverlayTexture(unit.getLocation()[0], unit.getLocation()[1],
+								(int) Math.toDegrees(unit.getAngle()), bufferedImage);
 					}
 
 					final String soundName = row.getFieldAsString(UNIT_SOUNDSET, 0);
@@ -816,7 +847,8 @@ public class War3MapViewer extends ModelViewer {
 		RenderUnit entity = null;
 		for (final RenderUnit unit : this.units) {
 			final MdxComplexInstance instance = unit.instance;
-			if (instance.intersectRayWithCollision(gdxRayHeap, intersectionHeap)) {
+			if (instance.isVisible(this.worldScene.camera)
+					&& instance.intersectRayWithCollision(gdxRayHeap, intersectionHeap)) {
 				entity = unit;
 			}
 		}

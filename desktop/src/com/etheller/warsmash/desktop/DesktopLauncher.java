@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL33;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.etheller.warsmash.WarsmashGdxGame;
+import com.etheller.warsmash.WarsmashGdxMapGame;
 import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
 import com.etheller.warsmash.viewer5.gl.DynamicShadowExtension;
 import com.etheller.warsmash.viewer5.gl.Extensions;
@@ -58,10 +58,10 @@ public class DesktopLauncher {
 		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
 		config.samples = 16;
-//		config.fullscreen = false;
+//		config.fullscreen = true;
 //		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
 //		config.width = desktopDisplayMode.width;
 //		config.height = desktopDisplayMode.height;
-		new LwjglApplication(new WarsmashGdxGame(), config);
+		new LwjglApplication(new WarsmashGdxMapGame(), config);
 	}
 }

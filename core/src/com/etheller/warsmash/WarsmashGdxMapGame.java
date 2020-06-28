@@ -14,7 +14,6 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
@@ -135,7 +134,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.viewer.worldScene.enableAudio();
 		this.viewer.enableAudio();
 		try {
-			this.viewer.loadMap("American Colo EX 1.0 unpro.w3x");
+			this.viewer.loadMap("Pathing.w3x");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -231,11 +230,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		Gdx.input.setInputProcessor(this);
 
-		final Music music = Gdx.audio
-				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\DarkAgents.mp3"));
-		music.setVolume(0.2f);
-		music.setLooping(true);
-		music.play();
+//		final Music music = Gdx.audio.newMusic(
+//				new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\War2IntroMusic.mp3"));
+//		music.setVolume(0.2f);
+//		music.setLooping(true);
+//		music.play();
 
 		this.minimap = new Rectangle(18.75f, 13.75f, 278.75f, 276.25f);
 		final float worldWidth = (this.viewer.terrain.columns - 1);
@@ -269,8 +268,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final float deltaTime = Gdx.graphics.getDeltaTime();
 		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
 		this.cameraManager.target.add(this.cameraVelocity.x * deltaTime, this.cameraVelocity.y * deltaTime, 0);
-		this.cameraManager.target.z = this.viewer.terrain.getGroundHeight(this.cameraManager.target.x,
-				this.cameraManager.target.y);
+		this.cameraManager.target.z = Math.max(
+				this.viewer.terrain.getGroundHeight(this.cameraManager.target.x, this.cameraManager.target.y),
+				this.viewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y));
 		this.cameraManager.updateCamera();
 		this.portraitCameraManager.updateCamera();
 		this.viewer.updateAndRender();
@@ -454,10 +454,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			this.rotationSpeed = (float) (Math.PI / 180);
 			this.zoomFactor = 0.1f;
 			this.horizontalAngle = 0;// (float) (Math.PI / 2);
-			this.verticalAngle = (float) (Math.PI / 5);
-			this.distance = 1600;
+			this.verticalAngle = (float) Math.toRadians(34);
+			this.distance = 1650;
 			this.position = new Vector3();
-			this.target = new Vector3(0, 0, 50);
+			this.target = new Vector3(0, 0, 0);
 			this.worldUp = new Vector3(0, 0, 1);
 			this.vecHeap = new Vector3();
 			this.quatHeap = new Quaternion();
@@ -469,11 +469,6 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		}
 
 		private void updateCamera() {
-			// Limit the vertical angle so it doesn't flip.
-			// Since the camera uses a quaternion, flips don't matter to it, but this feels
-			// better.
-			this.verticalAngle = (float) Math.min(Math.max(0.01, this.verticalAngle), Math.PI - 0.01);
-
 			this.quatHeap.idt();
 			this.quatHeap.setFromAxisRad(0, 0, 1, this.horizontalAngle);
 			this.quatHeap2.idt();
@@ -503,6 +498,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 						WarsmashGdxMapGame.this.cameraTargetTemp[1], WarsmashGdxMapGame.this.cameraTargetTemp[2]);
 				this.camera.perspective(this.modelCamera.fieldOfView * 0.75f, this.camera.getAspect(),
 						this.modelCamera.nearClippingPlane, this.modelCamera.farClippingPlane);
+			}
+			else {
+				this.camera.perspective(70, this.camera.getAspect(), 100, 5000);
 			}
 
 			this.camera.moveToAndFace(this.position, this.target, this.worldUp);
@@ -666,13 +664,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean scrolled(final int amount) {
-		this.cameraManager.verticalAngle -= amount / 10.f;
-		if (this.cameraManager.verticalAngle > (Math.PI / 2)) {
-			this.cameraManager.verticalAngle = (float) Math.PI / 2;
-		}
-		if (this.cameraManager.verticalAngle < (Math.PI / 5)) {
-			this.cameraManager.verticalAngle = (float) (Math.PI / 5);
-		}
+//		this.cameraManager.verticalAngle -= amount / 10.f;
+//		if (this.cameraManager.verticalAngle > (Math.PI / 2)) {
+//			this.cameraManager.verticalAngle = (float) Math.PI / 2;
+//		}
+//		if (this.cameraManager.verticalAngle < (Math.PI / 5)) {
+//			this.cameraManager.verticalAngle = (float) (Math.PI / 5);
+//		}
 		return true;
 	}
 

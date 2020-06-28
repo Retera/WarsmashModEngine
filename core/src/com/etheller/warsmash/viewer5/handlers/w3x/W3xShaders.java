@@ -17,6 +17,7 @@ public class W3xShaders {
 				"    varying vec2 v_uv;\r\n" + //
 				"    varying vec2 v_suv;\r\n" + //
 				"    varying vec3 v_normal;\r\n" + //
+				"    varying float a_positionHeight;\r\n" + //
 				"    const float normalDist = 0.25;\r\n" + //
 				"    void main() {\r\n" + //
 				"      vec2 halfPixel = u_pixel * 0.5;\r\n" + //
@@ -34,6 +35,7 @@ public class W3xShaders {
 				"      v_uv = a_uv;\r\n" + //
 				"      v_suv = base / u_size;\r\n" + //
 				"      gl_Position = u_mvp * vec4(a_position.xy, height * 128.0 + a_position.z, 1.0);\r\n" + //
+				"      a_positionHeight = a_position.z;\r\n" + //
 				"    }\r\n" + //
 				" ";
 
@@ -44,6 +46,7 @@ public class W3xShaders {
 				"    varying vec2 v_uv;\r\n" + //
 				"    varying vec2 v_suv;\r\n" + //
 				"    varying vec3 v_normal;\r\n" + //
+				"    varying float a_positionHeight;\r\n" + //
 				"    const vec3 lightDirection = normalize(vec3(-0.3, -0.3, 0.25));\r\n" + //
 				"    void main() {\r\n" + //
 				"      if (any(bvec4(lessThan(v_uv, vec2(0.0)), greaterThan(v_uv, vec2(1.0))))) {\r\n" + //
@@ -52,7 +55,9 @@ public class W3xShaders {
 				"      vec4 color = texture2D(u_texture, clamp(v_uv, 0.0, 1.0)).rgba * u_color;\r\n" + //
 				"      float shadow = texture2D(u_shadowMap, v_suv).r;\r\n" + //
 				"      color.xyz *= clamp(dot(v_normal, lightDirection) + 0.45, 0.0, 1.0);\r\n" + //
-				"      color.xyz *= 1.0 - shadow;\r\n" + //
+				"      if (a_positionHeight <= 4.0) {;\r\n" + //
+				"        color.xyz *= 1.0 - shadow;\r\n" + //
+				"      };\r\n" + //
 				"      gl_FragColor = color;\r\n" + //
 				"    }\r\n" + //
 				"  ";

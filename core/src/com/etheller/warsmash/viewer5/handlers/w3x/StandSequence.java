@@ -1,11 +1,14 @@
 package com.etheller.warsmash.viewer5.handlers.w3x;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 
 public class StandSequence {
 
@@ -26,8 +29,66 @@ public class StandSequence {
 		return filtered;
 	}
 
+	private static List<IndexedSequence> filterSequences(final PrimaryTag type, final EnumSet<SecondaryTag> tags,
+			final List<Sequence> sequences) {
+		final List<IndexedSequence> filtered = new ArrayList<>();
+
+		for (int i = 0, l = sequences.size(); i < l; i++) {
+			final Sequence sequence = sequences.get(i);
+			if (sequence.getPrimaryTags().contains(type) && sequence.getSecondaryTags().containsAll(tags)
+					&& tags.containsAll(sequence.getSecondaryTags())) {
+				for (final AnimationTokens.SecondaryTag secondaryTag : sequence.getSecondaryTags()) {
+					if (tags.contains(secondaryTag)) {
+						filtered.add(new IndexedSequence(sequence, i));
+					}
+				}
+			}
+		}
+		if (filtered.isEmpty()) {
+			for (int i = 0, l = sequences.size(); i < l; i++) {
+				final Sequence sequence = sequences.get(i);
+				if (sequence.getPrimaryTags().contains(type) && sequence.getSecondaryTags().containsAll(tags)
+						&& tags.containsAll(sequence.getSecondaryTags())) {
+					filtered.add(new IndexedSequence(sequence, i));
+				}
+			}
+		}
+
+		return filtered;
+	}
+
 	public static IndexedSequence selectSequence(final String type, final List<Sequence> sequences) {
 		final List<IndexedSequence> filtered = filterSequences(type, sequences);
+
+		filtered.sort(STAND_SEQUENCE_COMPARATOR);
+
+		int i = 0;
+		for (final int l = filtered.size(); i < l; i++) {
+			final Sequence sequence = filtered.get(i).sequence;
+			final float rarity = sequence.getRarity();
+
+			if (rarity == 0) {
+				break;
+			}
+
+			if ((Math.random() * 10) > rarity) {
+				return filtered.get(i);
+			}
+		}
+
+		final int sequencesLeft = filtered.size() - i;
+		final int random = (int) (i + Math.floor(Math.random() * sequencesLeft));
+		if (sequencesLeft <= 0) {
+			return null; // new IndexedSequence(null, 0);
+		}
+		final IndexedSequence sequence = filtered.get(random);
+
+		return sequence;
+	}
+
+	public static IndexedSequence selectSequence(final AnimationTokens.PrimaryTag type,
+			final EnumSet<AnimationTokens.SecondaryTag> tags, final List<Sequence> sequences) {
+		final List<IndexedSequence> filtered = filterSequences(type, tags, sequences);
 
 		filtered.sort(STAND_SEQUENCE_COMPARATOR);
 
@@ -137,6 +198,20 @@ public class StandSequence {
 		final MdxModel model = (MdxModel) target.model;
 		final List<Sequence> sequences = model.getSequences();
 		final IndexedSequence sequence = selectSequence(sequenceName, sequences);
+
+		if (sequence != null) {
+			target.setSequence(sequence.index);
+		}
+		else {
+			randomStandSequence(target);
+		}
+	}
+
+	public static void randomSequence(final MdxComplexInstance target, final PrimaryTag animationName,
+			final EnumSet<SecondaryTag> secondaryAnimationTags) {
+		final MdxModel model = (MdxModel) target.model;
+		final List<Sequence> sequences = model.getSequences();
+		final IndexedSequence sequence = selectSequence(animationName, secondaryAnimationTags, sequences);
 
 		if (sequence != null) {
 			target.setSequence(sequence.index);

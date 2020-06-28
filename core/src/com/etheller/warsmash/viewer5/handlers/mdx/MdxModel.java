@@ -58,7 +58,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 	@Override
 	public ModelInstance createInstance(final int type) {
-		if ((type == 1) && false) {
+		if (type == 1) {
 			return new MdxSimpleInstance(this);
 		}
 		else {

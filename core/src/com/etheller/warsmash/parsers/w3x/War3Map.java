@@ -18,6 +18,7 @@ import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.google.common.io.LittleEndianDataInputStream;
 
 import mpq.MPQArchive;
@@ -69,6 +70,15 @@ public class War3Map implements DataSource {
 			environment = new War3MapW3e(stream);
 		}
 		return environment;
+	}
+
+	public War3MapWpm readPathing() throws IOException {
+		War3MapWpm pathingMap;
+		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(
+				this.dataSource.getResourceAsStream("war3map.wpm"))) {
+			pathingMap = new War3MapWpm(stream);
+		}
+		return pathingMap;
 	}
 
 	public War3MapDoo readDoodads() throws IOException {

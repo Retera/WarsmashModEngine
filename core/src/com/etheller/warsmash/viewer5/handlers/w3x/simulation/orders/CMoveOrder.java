@@ -1,6 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 
+import java.awt.Point;
+import java.util.List;
+
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -11,6 +17,8 @@ public class CMoveOrder implements COrder {
 	private final float targetX;
 	private final float targetY;
 	private boolean wasWithinPropWindow = false;
+	private List<Point> path = null;
+	private boolean recalculated = false;
 
 	public CMoveOrder(final CUnit unit, final float targetX, final float targetY) {
 		this.unit = unit;
@@ -22,8 +30,82 @@ public class CMoveOrder implements COrder {
 	public boolean update(final CSimulation simulation) {
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();
-		final float deltaY = this.targetY - prevY;
-		final float deltaX = this.targetX - prevX;
+
+		final MovementType movementType = this.unit.getUnitType().getMovementType();
+		final PathingGrid pathingGrid = simulation.getPathingGrid();
+		final int startCellX = pathingGrid.getCellX(prevX);
+		final int startCellY = pathingGrid.getCellY(prevY);
+		final int goalCellX = pathingGrid.getCellX(this.targetX);
+		final int goalCellY = pathingGrid.getCellY(this.targetY);
+		if (this.path == null) {
+			this.path = simulation.findNaiveSlowPath(startCellX, startCellY, goalCellX, goalCellY, movementType);
+			// check for smoothing
+			if (!this.path.isEmpty()) {
+				int lastX = startCellX;
+				int lastY = startCellY;
+				int smoothingGroupStartX = startCellX;
+				int smoothingGroupStartY = startCellY;
+				final Point firstPathElement = this.path.get(0);
+				double totalPathDistance = firstPathElement.distance(lastX, lastY);
+				lastX = firstPathElement.x;
+				lastY = firstPathElement.y;
+				int smoothingStartIndex = -1;
+				for (int i = 0; i < (this.path.size() - 1); i++) {
+					final Point nextPossiblePathElement = this.path.get(i + 1);
+					totalPathDistance += nextPossiblePathElement.distance(lastX, lastY);
+					if ((totalPathDistance < (1.25
+							* nextPossiblePathElement.distance(smoothingGroupStartX, smoothingGroupStartY)))
+							&& pathingGrid.isCellPathable((smoothingGroupStartX + nextPossiblePathElement.x) / 2,
+									(smoothingGroupStartY + nextPossiblePathElement.y) / 2, movementType)) {
+						if (smoothingStartIndex == -1) {
+							smoothingStartIndex = i;
+						}
+					}
+					else {
+						if (smoothingStartIndex != -1) {
+							for (int j = smoothingStartIndex; j < i; j++) {
+								final Point removed = this.path.remove(j);
+							}
+							i = smoothingStartIndex;
+						}
+						smoothingStartIndex = -1;
+						final Point smoothGroupNext = this.path.get(i);
+						smoothingGroupStartX = smoothGroupNext.x;
+						smoothingGroupStartY = smoothGroupNext.y;
+						totalPathDistance = nextPossiblePathElement.distance(smoothGroupNext);
+					}
+					lastX = nextPossiblePathElement.x;
+					lastY = nextPossiblePathElement.y;
+				}
+				if (smoothingStartIndex != -1) {
+					for (int j = smoothingStartIndex; j < (this.path.size() - 1); j++) {
+						final Point removed = this.path.remove(j);
+					}
+				}
+			}
+		}
+		float currentTargetX;
+		float currentTargetY;
+		if (this.path.size() < 2) {
+			currentTargetX = this.targetX;
+			currentTargetY = this.targetY;
+		}
+		else {
+			Point nextPathElement = this.path.get(0);
+			if ((this.path.size() > 2) && !this.recalculated) {
+				final Point secondPathElement = this.path.get(1);
+				if ((secondPathElement.distance(startCellX, startCellY) >= 5 /* 5 nodes */)
+						&& (nextPathElement.distance(startCellX, startCellY) <= 2)) {
+					nextPathElement = secondPathElement;
+					this.path.remove(0);
+				}
+			}
+			currentTargetX = pathingGrid.getWorldX(nextPathElement.x);
+			currentTargetY = pathingGrid.getWorldY(nextPathElement.y);
+		}
+
+		float deltaX = currentTargetX - prevX;
+		float deltaY = currentTargetY - prevY;
 		final double goalAngleRad = Math.atan2(deltaY, deltaX);
 		float goalAngle = (float) Math.toDegrees(goalAngleRad);
 		if (goalAngle < 0) {
@@ -56,19 +138,60 @@ public class CMoveOrder implements COrder {
 		}
 		if (absDelta < propulsionWindow) {
 			final float speedTick = speed * WarsmashConstants.SIMULATION_STEP_TIME;
-			final float speedTickSq = speedTick * speedTick;
-
-			if (((deltaX * deltaX) + (deltaY * deltaY)) <= speedTickSq) {
-				this.unit.setX(this.targetX);
-				this.unit.setY(this.targetY);
-				return true;
+			double continueDistance = speedTick;
+			do {
+				boolean done;
+				float nextX, nextY;
+				final double travelDistance = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
+				if (travelDistance <= continueDistance) {
+					nextX = currentTargetX;
+					nextY = currentTargetY;
+					continueDistance = continueDistance - travelDistance;
+					done = true;
+				}
+				else {
+					final double radianFacing = Math.toRadians(facing);
+					nextX = (prevX + (float) (Math.cos(radianFacing) * continueDistance));
+					nextY = (prevY + (float) (Math.sin(radianFacing) * continueDistance));
+					continueDistance = 0;
+					done = (pathingGrid.getCellX(nextX) == pathingGrid.getCellX(currentTargetX))
+							&& (pathingGrid.getCellY(nextY) == pathingGrid.getCellY(currentTargetY));
+				}
+				final short terrainPathing = pathingGrid.getPathing(nextX, nextY);
+				if (movementType.isPathable(terrainPathing)) {
+					this.unit.setX(nextX);
+					this.unit.setY(nextY);
+					if (done) {
+						if (this.path.isEmpty()) {
+							return true;
+						}
+						else {
+							this.path.remove(0);
+							if (this.path.size() < 2) {
+								currentTargetX = this.targetX;
+								currentTargetY = this.targetY;
+							}
+							else {
+								final Point firstPathElement = this.path.get(0);
+								currentTargetX = pathingGrid.getWorldX(firstPathElement.x);
+								currentTargetY = pathingGrid.getWorldY(firstPathElement.y);
+							}
+							deltaY = currentTargetY - prevY;
+							deltaX = currentTargetX - prevX;
+						}
+					}
+				}
+				else {
+					this.path = simulation.findNaiveSlowPath(startCellX, startCellY, goalCellX, goalCellY,
+							movementType);
+					this.recalculated = true;
+					if (this.path.isEmpty()) {
+						return true;
+					}
+				}
+				this.wasWithinPropWindow = true;
 			}
-			else {
-				final double radianFacing = Math.toRadians(facing);
-				this.unit.setX(prevX + (float) (Math.cos(radianFacing) * speedTick));
-				this.unit.setY(prevY + (float) (Math.sin(radianFacing) * speedTick));
-			}
-			this.wasWithinPropWindow = true;
+			while (continueDistance > 0);
 		}
 		else {
 			// If this happens, the unit is facing the wrong way, and has to turn before
@@ -85,11 +208,11 @@ public class CMoveOrder implements COrder {
 	}
 
 	@Override
-	public String getAnimationName() {
+	public AnimationTokens.PrimaryTag getAnimationName() {
 		if (!this.wasWithinPropWindow) {
-			return "stand";
+			return AnimationTokens.PrimaryTag.STAND;
 		}
-		return "walk";
+		return AnimationTokens.PrimaryTag.WALK;
 	}
 
 }

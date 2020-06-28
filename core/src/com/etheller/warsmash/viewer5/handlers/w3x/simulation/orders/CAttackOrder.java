@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -80,8 +81,8 @@ public class CAttackOrder implements COrder {
 	}
 
 	@Override
-	public String getAnimationName() {
-		return "attack";
+	public AnimationTokens.PrimaryTag getAnimationName() {
+		return AnimationTokens.PrimaryTag.ATTACK;
 	}
 
 }

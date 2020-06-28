@@ -31,6 +31,7 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.w3x.w3e.Corner;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.StandardObjectData;
@@ -124,8 +125,9 @@ public class Terrain {
 	private final int testArrayBuffer;
 	private final int testElementBuffer;
 
-	public Terrain(final War3MapW3e w3eFile, final War3MapW3i w3iFile, final WebGL webGL, final DataSource dataSource,
-			final WorldEditStrings worldEditStrings, final War3MapViewer viewer) throws IOException {
+	public Terrain(final War3MapW3e w3eFile, final War3MapWpm terrainPathing, final War3MapW3i w3iFile,
+			final WebGL webGL, final DataSource dataSource, final WorldEditStrings worldEditStrings,
+			final War3MapViewer viewer) throws IOException {
 		this.webGL = webGL;
 		this.viewer = viewer;
 		this.camera = viewer.worldScene.camera;
@@ -394,6 +396,7 @@ public class Terrain {
 
 		this.waveBuilder = new WaveBuilder(this.mapSize, this.waterTable, viewer, this.corners, this.centerOffset,
 				this.waterHeightOffset, w3eFile, w3iFile);
+		this.pathingGrid = new PathingGrid(terrainPathing, this.centerOffset);
 	}
 
 	public void createWaves() {
@@ -1147,6 +1150,7 @@ public class Terrain {
 	static Vector3 tmp2 = new Vector3();
 	static Vector3 tmp3 = new Vector3();
 	private final WaveBuilder waveBuilder;
+	public PathingGrid pathingGrid;
 
 	/**
 	 * Intersects the given ray with list of triangles. Returns the nearest
@@ -1244,6 +1248,34 @@ public class Terrain {
 		}
 
 		return 0;
+	}
+
+	public float getWaterHeight(final float x, final float y) {
+		final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f;
+		final float userCellSpaceY = (y - this.centerOffset[1]) / 128.0f;
+		final int cellX = (int) userCellSpaceX;
+		final int cellY = (int) userCellSpaceY;
+
+		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
+			final float bottomLeft = this.waterHeights[(cellY * this.columns) + cellX];
+			final float bottomRight = this.waterHeights[(cellY * this.columns) + cellX + 1];
+			final float topLeft = this.waterHeights[((cellY + 1) * this.columns) + cellX];
+			final float topRight = this.waterHeights[((cellY + 1) * this.columns) + cellX + 1];
+			final float sqX = userCellSpaceX - cellX;
+			final float sqY = userCellSpaceY - cellY;
+			float height;
+
+			if ((sqX + sqY) < 1) {
+				height = bottomLeft + ((bottomRight - bottomLeft) * sqX) + ((topLeft - bottomLeft) * sqY);
+			}
+			else {
+				height = topRight + ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
+			}
+
+			return ((height + this.waterHeightOffset) * 128.0f);
+		}
+
+		return this.waterHeightOffset * 128.0f;
 	}
 
 	public static final class Splat {

@@ -19,7 +19,7 @@ public class Doodad {
 		final boolean isSimple = row.readSLKTagBoolean("lightweight");
 		ModelInstance instance;
 
-		if (isSimple) {
+		if (isSimple && false) {
 			instance = model.addInstance(1);
 		}
 		else {

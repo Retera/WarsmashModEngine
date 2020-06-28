@@ -114,18 +114,18 @@ public class Sequence implements MdlxBlock {
 	private void populateTags() {
 		this.primaryTags.clear();
 		this.secondaryTags.clear();
-		for (final String token : this.name.split("\\s+")) {
+		TokenLoop: for (final String token : this.name.split("\\s+")) {
 			final String upperCaseToken = token.toUpperCase();
 			for (final PrimaryTag primaryTag : PrimaryTag.values()) {
 				if (upperCaseToken.equals(primaryTag.name())) {
 					this.primaryTags.add(primaryTag);
-					continue;
+					continue TokenLoop;
 				}
 			}
 			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 				if (upperCaseToken.equals(secondaryTag.name())) {
 					this.secondaryTags.add(secondaryTag);
-					continue;
+					continue TokenLoop;
 				}
 			}
 			break;
@@ -158,5 +158,13 @@ public class Sequence implements MdlxBlock {
 
 	public Extent getExtent() {
 		return this.extent;
+	}
+
+	public EnumSet<AnimationTokens.PrimaryTag> getPrimaryTags() {
+		return this.primaryTags;
+	}
+
+	public EnumSet<AnimationTokens.SecondaryTag> getSecondaryTags() {
+		return this.secondaryTags;
 	}
 }

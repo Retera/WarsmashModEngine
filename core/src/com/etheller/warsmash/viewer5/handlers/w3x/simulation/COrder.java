@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
+
 public interface COrder {
 	/**
 	 * Executes one step of game simulation of the current order, returning true if
@@ -25,5 +27,5 @@ public interface COrder {
 	 *
 	 * @return
 	 */
-	String getAnimationName();
+	AnimationTokens.PrimaryTag getAnimationName();
 }

@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
@@ -12,11 +13,15 @@ import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.IndexedSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.StandSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -44,7 +49,7 @@ public class RenderUnit {
 	public int playerIndex;
 	private final CUnit simulationUnit;
 	private COrder lastOrder;
-	private String lastOrderAnimation;
+	private AnimationTokens.PrimaryTag lastOrderAnimation;
 	public SplatMover shadow;
 	public SplatMover selectionCircle;
 	private final List<CommandCardIcon> commandCardIcons = new ArrayList<>();
@@ -52,6 +57,11 @@ public class RenderUnit {
 	private float x;
 	private float y;
 	private float facing;
+
+	private boolean swimming;
+
+	private final EnumSet<AnimationTokens.SecondaryTag> secondaryAnimationTags = EnumSet
+			.noneOf(AnimationTokens.SecondaryTag.class);
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit, final UnitSoundset soundset,
@@ -152,7 +162,30 @@ public class RenderUnit {
 		final float y = this.y;
 		final float dy = y - this.location[1];
 		this.location[1] = y;
-		this.location[2] = this.simulationUnit.getFlyHeight() + map.terrain.getGroundHeight(x, y);
+		final float groundHeight;
+		final MovementType movementType = this.simulationUnit.getUnitType().getMovementType();
+		final short terrainPathing = map.terrain.pathingGrid.getPathing(x, y);
+		final boolean swimming = (movementType == MovementType.AMPHIBIOUS)
+				&& PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.SWIMMABLE)
+				&& !PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.WALKABLE);
+		if ((swimming) || (movementType == MovementType.FLOAT) || (movementType == MovementType.FLY)
+				|| (movementType == MovementType.HOVER)) {
+			groundHeight = Math.max(map.terrain.getGroundHeight(x, y), map.terrain.getWaterHeight(x, y));
+		}
+		else {
+			groundHeight = map.terrain.getGroundHeight(x, y);
+		}
+		boolean changedAnimationTags = false;
+		if (swimming && !this.swimming) {
+			this.secondaryAnimationTags.add(AnimationTokens.SecondaryTag.SWIM);
+			changedAnimationTags = true;
+		}
+		else if (!swimming && this.swimming) {
+			this.secondaryAnimationTags.remove(AnimationTokens.SecondaryTag.SWIM);
+			changedAnimationTags = true;
+		}
+		this.swimming = swimming;
+		this.location[2] = this.simulationUnit.getFlyHeight() + groundHeight;
 		this.instance.moveTo(this.location);
 		float simulationFacing = this.simulationUnit.getFacing();
 		if (simulationFacing < 0) {
@@ -190,14 +223,16 @@ public class RenderUnit {
 		else if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1)
 				|| (currentOrder != this.lastOrder)
 				|| ((currentOrder != null) && (currentOrder.getAnimationName() != null)
-						&& !currentOrder.getAnimationName().equals(this.lastOrderAnimation))) {
+						&& !currentOrder.getAnimationName().equals(this.lastOrderAnimation))
+				|| changedAnimationTags) {
 			if (this.simulationUnit.getCurrentOrder() != null) {
-				final String animationName = this.simulationUnit.getCurrentOrder().getAnimationName();
-				StandSequence.randomSequence(mdxComplexInstance, animationName);
+				final AnimationTokens.PrimaryTag animationName = this.simulationUnit.getCurrentOrder()
+						.getAnimationName();
+				StandSequence.randomSequence(mdxComplexInstance, animationName, this.secondaryAnimationTags);
 				this.lastOrderAnimation = animationName;
 			}
 			else {
-				StandSequence.randomStandSequence(mdxComplexInstance);
+				StandSequence.randomSequence(mdxComplexInstance, PrimaryTag.STAND, this.secondaryAnimationTags);
 			}
 		}
 		this.lastOrder = currentOrder;

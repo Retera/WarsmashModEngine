@@ -1,13 +1,16 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ProjectileCreator;
 
@@ -19,10 +22,14 @@ public class CSimulation {
 	private final HandleIdAllocator handleIdAllocator;
 	private final ProjectileCreator projectileCreator;
 	private int gameTurnTick = 0;
+	private final PathingGrid pathingGrid;
+	private final CPathfindingProcessor pathfindingProcessor;
 
 	public CSimulation(final MutableObjectData parsedUnitData, final MutableObjectData parsedAbilityData,
-			final ProjectileCreator projectileCreator) {
+			final ProjectileCreator projectileCreator, final PathingGrid pathingGrid) {
 		this.projectileCreator = projectileCreator;
+		this.pathingGrid = pathingGrid;
+		this.pathfindingProcessor = new CPathfindingProcessor(pathingGrid);
 		this.unitData = new CUnitData(parsedUnitData);
 		this.abilityData = new CAbilityData(parsedAbilityData);
 		this.units = new ArrayList<>();
@@ -54,6 +61,15 @@ public class CSimulation {
 		final CAttackProjectile projectile = this.projectileCreator.create(this, source, attackIndex, target);
 		this.projectiles.add(projectile);
 		return projectile;
+	}
+
+	public PathingGrid getPathingGrid() {
+		return this.pathingGrid;
+	}
+
+	public List<Point> findNaiveSlowPath(final int startX, final int startY, final int goalX, final int goalY,
+			final PathingGrid.MovementType movementType) {
+		return this.pathfindingProcessor.findNaiveSlowPath(startX, startY, goalX, goalY, movementType);
 	}
 
 	public void update() {

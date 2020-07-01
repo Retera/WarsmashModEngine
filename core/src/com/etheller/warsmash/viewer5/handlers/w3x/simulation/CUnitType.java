@@ -10,10 +10,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Moveme
 public class CUnitType {
 	private final PathingGrid.MovementType movementType;
 	private final float defaultFlyingHeight;
+	private final float collisionSize;
 
-	public CUnitType(final MovementType movementType, final float defaultFlyingHeight) {
+	public CUnitType(final MovementType movementType, final float defaultFlyingHeight, final float collisionSize) {
 		this.movementType = movementType;
 		this.defaultFlyingHeight = defaultFlyingHeight;
+		this.collisionSize = collisionSize;
 	}
 
 	public float getDefaultFlyingHeight() {
@@ -22,5 +24,9 @@ public class CUnitType {
 
 	public PathingGrid.MovementType getMovementType() {
 		return this.movementType;
+	}
+
+	public float getCollisionSize() {
+		return this.collisionSize;
 	}
 }

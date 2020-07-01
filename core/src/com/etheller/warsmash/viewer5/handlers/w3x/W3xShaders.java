@@ -47,14 +47,15 @@ public class W3xShaders {
 				"    varying vec2 v_suv;\r\n" + //
 				"    varying vec3 v_normal;\r\n" + //
 				"    varying float a_positionHeight;\r\n" + //
-				"    const vec3 lightDirection = normalize(vec3(-0.3, -0.3, 0.25));\r\n" + //
+				// " const vec3 lightDirection = normalize(vec3(-0.3, -0.3, 0.25));\r\n" + //
 				"    void main() {\r\n" + //
 				"      if (any(bvec4(lessThan(v_uv, vec2(0.0)), greaterThan(v_uv, vec2(1.0))))) {\r\n" + //
 				"        discard;\r\n" + //
 				"      }\r\n" + //
 				"      vec4 color = texture2D(u_texture, clamp(v_uv, 0.0, 1.0)).rgba * u_color;\r\n" + //
 				"      float shadow = texture2D(u_shadowMap, v_suv).r;\r\n" + //
-				"      color.xyz *= clamp(dot(v_normal, lightDirection) + 0.45, 0.0, 1.0);\r\n" + //
+				// " color.xyz *= clamp(dot(v_normal, lightDirection) + 0.45, 0.0, 1.0);\r\n" +
+				// //
 				"      if (a_positionHeight <= 4.0) {;\r\n" + //
 				"        color.xyz *= 1.0 - shadow;\r\n" + //
 				"      };\r\n" + //

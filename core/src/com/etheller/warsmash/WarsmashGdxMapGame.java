@@ -50,6 +50,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.ReplaceableIds;
 import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.StandSequence;
+import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset.UnitAckSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.CommandCardIcon;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
@@ -82,6 +83,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private final Vector2 projectionTemp1 = new Vector2();
 	private final Vector2 projectionTemp2 = new Vector2();
 	private RenderUnit selectedUnit;
+	private int selectedSoundCount = 0;
 
 	private Texture activeButtonTexture;
 
@@ -595,6 +597,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			if ((rayPickUnit != null) && (rayPickUnit.playerIndex != this.selectedUnit.playerIndex)) {
 				if (this.viewer.orderSmart(rayPickUnit)) {
 					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
+					this.selectedSoundCount = 0;
 				}
 			}
 			else {
@@ -607,6 +610,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				this.viewer.terrain.logRomp(x, y);
 				if (this.viewer.orderSmart(clickLocationTemp.x, clickLocationTemp.y)) {
 					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
+					this.selectedSoundCount = 0;
 				}
 			}
 		}
@@ -614,25 +618,50 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			final List<RenderUnit> selectedUnits = this.viewer.selectUnit(screenX, worldScreenY, false);
 			if (!selectedUnits.isEmpty()) {
 				final RenderUnit unit = selectedUnits.get(0);
+				final boolean selectionChanged = this.selectedUnit != unit;
+				boolean playedNewSound = false;
+				if (selectionChanged) {
+					this.selectedSoundCount = 0;
+				}
 				this.selectedUnit = unit;
 				if (unit.soundset != null) {
-					unit.soundset.what.play(this.viewer.worldScene.audioContext, unit.location[0], unit.location[1]);
+					UnitAckSound ackSoundToPlay = unit.soundset.what;
+					final int pissedSoundCount = unit.soundset.pissed.getSoundCount();
+					int soundIndex;
+					if ((this.selectedSoundCount >= 3) && (pissedSoundCount > 0)) {
+						soundIndex = this.selectedSoundCount - 3;
+						ackSoundToPlay = unit.soundset.pissed;
+					}
+					else {
+						soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
+					}
+					if (ackSoundToPlay.play(this.viewer.worldScene.audioContext, unit.location[0], unit.location[1],
+							soundIndex)) {
+						this.selectedSoundCount++;
+						if ((this.selectedSoundCount - 3) >= pissedSoundCount) {
+							this.selectedSoundCount = 0;
+						}
+						playedNewSound = true;
+					}
 				}
-				final MdxModel portraitModel = unit.portraitModel;
-				if (portraitModel != null) {
-					if (this.portraitInstance != null) {
-						this.portraitScene.removeInstance(this.portraitInstance);
+				if (selectionChanged) {
+					final MdxModel portraitModel = unit.portraitModel;
+					if (portraitModel != null) {
+						if (this.portraitInstance != null) {
+							this.portraitScene.removeInstance(this.portraitInstance);
+						}
+						this.portraitInstance = (MdxComplexInstance) portraitModel.addInstance();
+						this.portraitInstance.setSequenceLoopMode(1);
+						this.portraitInstance.setScene(this.portraitScene);
+						this.portraitInstance.setVertexColor(unit.instance.vertexColor);
+						if (portraitModel.getCameras().size() > 0) {
+							this.portraitCameraManager.modelCamera = portraitModel.getCameras().get(0);
+						}
+						this.portraitInstance.setTeamColor(unit.playerIndex);
 					}
-					this.portraitInstance = (MdxComplexInstance) portraitModel.addInstance();
-					this.portraitInstance.setSequenceLoopMode(1);
-					this.portraitInstance.setScene(this.portraitScene);
-					this.portraitInstance.setVertexColor(unit.instance.vertexColor);
-					if (portraitModel.getCameras().size() > 0) {
-						this.portraitCameraManager.modelCamera = portraitModel.getCameras().get(0);
-					}
-					this.portraitInstance.setTeamColor(unit.playerIndex);
+				}
+				if (playedNewSound) {
 					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
-
 				}
 			}
 			else {

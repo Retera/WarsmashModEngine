@@ -45,6 +45,7 @@ public class CUnitData {
 	private static final War3ID DEFENSE = War3ID.fromString("udef");
 	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
 	private static final War3ID MOVE_TYPE = War3ID.fromString("umvt");
+	private static final War3ID COLLISION_SIZE = War3ID.fromString("ucol");
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
 
@@ -61,9 +62,10 @@ public class CUnitData {
 		final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
 		final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
 		final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
+		final float collisionSize = unitType.getFieldAsFloat(COLLISION_SIZE, 0);
 		final PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
-				speed, new CUnitType(movementType, moveHeight));
+				speed, new CUnitType(movementType, moveHeight, collisionSize));
 		if (speed > 0) {
 			unit.add(simulation, CAbilityMove.INSTANCE);
 			unit.add(simulation, CAbilityPatrol.INSTANCE);

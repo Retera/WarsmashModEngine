@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5;
 public class AudioContext {
 	private boolean running = false;
 	public Listener listener = new Listener();
+	public long lastUnitResponseEndTimeMillis;
 	public AudioDestination destination = new AudioDestination() {
 	};
 

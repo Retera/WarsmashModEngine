@@ -7,6 +7,8 @@ public class Extensions {
 
 	public static WireframeExtension wireframeExtension;
 
+	public static SoundLengthExtension soundLengthExtension;
+
 	public static int GL_LINE = 0;
 	public static int GL_FILL = 0;
 }

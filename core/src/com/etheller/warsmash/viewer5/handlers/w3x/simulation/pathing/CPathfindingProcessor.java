@@ -31,13 +31,15 @@ public class CPathfindingProcessor {
 	 * the wikipedia article on A* to jog my memory from data structures class back
 	 * in college, and is meant only as a first draft to get things working.
 	 *
+	 * @param collisionSize
+	 *
 	 *
 	 * @param start
 	 * @param goal
 	 * @return
 	 */
 	public List<Point> findNaiveSlowPath(final int startX, final int startY, final int goalX, final int goalY,
-			final PathingGrid.MovementType movementType) {
+			final PathingGrid.MovementType movementType, final float collisionSize) {
 		if ((startX == goalX) && (startY == goalY)) {
 			return Collections.emptyList();
 		}
@@ -79,9 +81,9 @@ public class CPathfindingProcessor {
 				final int x = current.point.x + direction.xOffset;
 				final int y = current.point.y + direction.yOffset;
 				if ((x >= 0) && (x < this.pathingGrid.getWidth()) && (y >= 0) && (y < this.pathingGrid.getHeight())
-						&& movementType.isPathable(this.pathingGrid.getCellPathing(x, y))
-						&& movementType.isPathable(this.pathingGrid.getCellPathing(current.point.x, y))
-						&& movementType.isPathable(this.pathingGrid.getCellPathing(x, current.point.y))) {
+						&& this.pathingGrid.isCellPathable(x, y, movementType, collisionSize)
+						&& this.pathingGrid.isCellPathable(current.point.x, y, movementType, collisionSize)
+						&& this.pathingGrid.isCellPathable(x, current.point.y, movementType, collisionSize)) {
 					double turnCost;
 					if ((current.cameFromDirection != null) && (direction != current.cameFromDirection)) {
 						turnCost = 0.25;

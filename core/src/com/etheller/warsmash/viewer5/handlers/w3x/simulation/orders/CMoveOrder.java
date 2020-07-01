@@ -18,7 +18,6 @@ public class CMoveOrder implements COrder {
 	private final float targetY;
 	private boolean wasWithinPropWindow = false;
 	private List<Point> path = null;
-	private boolean recalculated = false;
 
 	public CMoveOrder(final CUnit unit, final float targetX, final float targetY) {
 		this.unit = unit;
@@ -33,12 +32,14 @@ public class CMoveOrder implements COrder {
 
 		final MovementType movementType = this.unit.getUnitType().getMovementType();
 		final PathingGrid pathingGrid = simulation.getPathingGrid();
+		final float collisionSize = this.unit.getUnitType().getCollisionSize();
 		final int startCellX = pathingGrid.getCellX(prevX);
 		final int startCellY = pathingGrid.getCellY(prevY);
 		final int goalCellX = pathingGrid.getCellX(this.targetX);
 		final int goalCellY = pathingGrid.getCellY(this.targetY);
 		if (this.path == null) {
-			this.path = simulation.findNaiveSlowPath(startCellX, startCellY, goalCellX, goalCellY, movementType);
+			this.path = simulation.findNaiveSlowPath(startCellX, startCellY, goalCellX, goalCellY, movementType,
+					collisionSize);
 			// check for smoothing
 			if (!this.path.isEmpty()) {
 				int lastX = startCellX;
@@ -53,7 +54,7 @@ public class CMoveOrder implements COrder {
 				for (int i = 0; i < (this.path.size() - 1); i++) {
 					final Point nextPossiblePathElement = this.path.get(i + 1);
 					totalPathDistance += nextPossiblePathElement.distance(lastX, lastY);
-					if ((totalPathDistance < (1.25
+					if ((totalPathDistance < (1.15
 							* nextPossiblePathElement.distance(smoothingGroupStartX, smoothingGroupStartY)))
 							&& pathingGrid.isCellPathable((smoothingGroupStartX + nextPossiblePathElement.x) / 2,
 									(smoothingGroupStartY + nextPossiblePathElement.y) / 2, movementType)) {
@@ -64,7 +65,7 @@ public class CMoveOrder implements COrder {
 					else {
 						if (smoothingStartIndex != -1) {
 							for (int j = smoothingStartIndex; j < i; j++) {
-								final Point removed = this.path.remove(j);
+								this.path.remove(j);
 							}
 							i = smoothingStartIndex;
 						}
@@ -91,15 +92,7 @@ public class CMoveOrder implements COrder {
 			currentTargetY = this.targetY;
 		}
 		else {
-			Point nextPathElement = this.path.get(0);
-			if ((this.path.size() > 2) && !this.recalculated) {
-				final Point secondPathElement = this.path.get(1);
-				if ((secondPathElement.distance(startCellX, startCellY) >= 5 /* 5 nodes */)
-						&& (nextPathElement.distance(startCellX, startCellY) <= 2)) {
-					nextPathElement = secondPathElement;
-					this.path.remove(0);
-				}
-			}
+			final Point nextPathElement = this.path.get(0);
 			currentTargetX = pathingGrid.getWorldX(nextPathElement.x);
 			currentTargetY = pathingGrid.getWorldY(nextPathElement.y);
 		}
@@ -157,8 +150,7 @@ public class CMoveOrder implements COrder {
 					done = (pathingGrid.getCellX(nextX) == pathingGrid.getCellX(currentTargetX))
 							&& (pathingGrid.getCellY(nextY) == pathingGrid.getCellY(currentTargetY));
 				}
-				final short terrainPathing = pathingGrid.getPathing(nextX, nextY);
-				if (movementType.isPathable(terrainPathing)) {
+				if (pathingGrid.isPathable(nextX, nextY, movementType, collisionSize)) {
 					this.unit.setX(nextX);
 					this.unit.setY(nextY);
 					if (done) {
@@ -182,9 +174,8 @@ public class CMoveOrder implements COrder {
 					}
 				}
 				else {
-					this.path = simulation.findNaiveSlowPath(startCellX, startCellY, goalCellX, goalCellY,
-							movementType);
-					this.recalculated = true;
+					this.path = simulation.findNaiveSlowPath(startCellX, startCellY, goalCellX, goalCellY, movementType,
+							collisionSize);
 					if (this.path.isEmpty()) {
 						return true;
 					}

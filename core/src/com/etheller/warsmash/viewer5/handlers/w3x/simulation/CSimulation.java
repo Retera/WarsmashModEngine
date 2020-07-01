@@ -68,8 +68,8 @@ public class CSimulation {
 	}
 
 	public List<Point> findNaiveSlowPath(final int startX, final int startY, final int goalX, final int goalY,
-			final PathingGrid.MovementType movementType) {
-		return this.pathfindingProcessor.findNaiveSlowPath(startX, startY, goalX, goalY, movementType);
+			final PathingGrid.MovementType movementType, final float collisionSize) {
+		return this.pathfindingProcessor.findNaiveSlowPath(startX, startY, goalX, goalY, movementType, collisionSize);
 	}
 
 	public void update() {

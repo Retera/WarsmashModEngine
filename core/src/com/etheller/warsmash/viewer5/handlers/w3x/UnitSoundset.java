@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
@@ -12,6 +13,7 @@ import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.viewer5.AudioBufferSource;
 import com.etheller.warsmash.viewer5.AudioContext;
 import com.etheller.warsmash.viewer5.AudioPanner;
+import com.etheller.warsmash.viewer5.gl.Extensions;
 
 public class UnitSoundset {
 	public final UnitAckSound what;
@@ -84,9 +86,17 @@ public class UnitSoundset {
 			this.distanceCutoff = distanceCutoff;
 		}
 
-		public void play(final AudioContext audioContext, final float x, final float y) {
+		public boolean play(final AudioContext audioContext, final float x, final float y) {
+			return play(audioContext, x, y, (int) (Math.random() * this.sounds.size()));
+		}
+
+		public boolean play(final AudioContext audioContext, final float x, final float y, final int index) {
 			if (this.sounds.isEmpty()) {
-				return;
+				return false;
+			}
+			final long millisTime = TimeUtils.millis();
+			if (millisTime < audioContext.lastUnitResponseEndTimeMillis) {
+				return false;
 			}
 
 			final AudioPanner panner = audioContext.createPanner();
@@ -99,12 +109,19 @@ public class UnitSoundset {
 			panner.connect(audioContext.destination);
 
 			// Source.
-			source.buffer = this.sounds.get((int) (Math.random() * this.sounds.size()));
+			source.buffer = this.sounds.get(index);
 			source.connect(panner);
 
 			// Make a sound.
 			source.start(0);
 			this.lastPlayedSound = source.buffer;
+			final float duration = Extensions.soundLengthExtension.getDuration(this.lastPlayedSound);
+			audioContext.lastUnitResponseEndTimeMillis = millisTime + (long) (1000 * duration);
+			return true;
+		}
+
+		public int getSoundCount() {
+			return this.sounds.size();
 		}
 	}
 }

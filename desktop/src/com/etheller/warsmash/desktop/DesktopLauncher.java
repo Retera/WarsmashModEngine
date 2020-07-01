@@ -5,12 +5,15 @@ import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL33;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
+import com.badlogic.gdx.backends.lwjgl.audio.OpenALSound;
 import com.etheller.warsmash.WarsmashGdxMapGame;
 import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
 import com.etheller.warsmash.viewer5.gl.DynamicShadowExtension;
 import com.etheller.warsmash.viewer5.gl.Extensions;
+import com.etheller.warsmash.viewer5.gl.SoundLengthExtension;
 import com.etheller.warsmash.viewer5.gl.WireframeExtension;
 
 public class DesktopLauncher {
@@ -49,6 +52,12 @@ public class DesktopLauncher {
 			@Override
 			public void glPolygonMode(final int face, final int mode) {
 				GL11.glPolygonMode(face, mode);
+			}
+		};
+		Extensions.soundLengthExtension = new SoundLengthExtension() {
+			@Override
+			public float getDuration(final Sound sound) {
+				return ((OpenALSound) sound).duration();
 			}
 		};
 		Extensions.GL_LINE = GL11.GL_LINE;

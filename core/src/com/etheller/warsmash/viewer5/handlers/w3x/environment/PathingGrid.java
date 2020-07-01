@@ -124,6 +124,24 @@ public class PathingGrid {
 		return pathingType.isPathable(getPathing(x, y));
 	}
 
+	public boolean isPathable(final float x, final float y, final MovementType pathingType, final float collisionSize) {
+		if (collisionSize == 0f) {
+			return pathingType.isPathable(getPathing(x, y));
+		}
+		for (int i = -1; i <= 1; i++) {
+			for (int j = -1; j <= 1; j++) {
+				if (!pathingType.isPathable(getPathing(x + (i * collisionSize), y + (j * collisionSize)))) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	public boolean isCellPathable(final int x, final int y, final MovementType pathingType, final float collisionSize) {
+		return isPathable(getWorldX(x), getWorldY(y), pathingType, collisionSize);
+	}
+
 	public boolean isCellPathable(final int x, final int y, final MovementType pathingType) {
 		return pathingType.isPathable(getCellPathing(x, y));
 	}

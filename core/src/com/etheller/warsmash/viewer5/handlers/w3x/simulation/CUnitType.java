@@ -8,11 +8,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Moveme
  * probably cannot change per unit instance.
  */
 public class CUnitType {
+	private final boolean building;
 	private final PathingGrid.MovementType movementType;
 	private final float defaultFlyingHeight;
 	private final float collisionSize;
 
-	public CUnitType(final MovementType movementType, final float defaultFlyingHeight, final float collisionSize) {
+	public CUnitType(final boolean isBldg, final MovementType movementType, final float defaultFlyingHeight,
+			final float collisionSize) {
+		this.building = isBldg;
 		this.movementType = movementType;
 		this.defaultFlyingHeight = defaultFlyingHeight;
 		this.collisionSize = collisionSize;
@@ -28,5 +31,9 @@ public class CUnitType {
 
 	public float getCollisionSize() {
 		return this.collisionSize;
+	}
+
+	public boolean isBuilding() {
+		return this.building;
 	}
 }

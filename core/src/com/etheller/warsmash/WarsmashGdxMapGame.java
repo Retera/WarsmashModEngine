@@ -693,13 +693,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean scrolled(final int amount) {
-//		this.cameraManager.verticalAngle -= amount / 10.f;
-//		if (this.cameraManager.verticalAngle > (Math.PI / 2)) {
-//			this.cameraManager.verticalAngle = (float) Math.PI / 2;
-//		}
-//		if (this.cameraManager.verticalAngle < (Math.PI / 5)) {
-//			this.cameraManager.verticalAngle = (float) (Math.PI / 5);
-//		}
+		this.cameraManager.verticalAngle -= amount / 10.f;
+		if (this.cameraManager.verticalAngle > (Math.PI / 2)) {
+			this.cameraManager.verticalAngle = (float) Math.PI / 2;
+		}
+		if (this.cameraManager.verticalAngle < (float) Math.toRadians(34)) {
+			this.cameraManager.verticalAngle = (float) Math.toRadians(34);
+		}
 		return true;
 	}
 

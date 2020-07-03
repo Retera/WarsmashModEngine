@@ -1,10 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 
 public class PathingGrid {
 	private static final Map<String, MovementType> movetpToMovementType = new HashMap<>();
@@ -18,6 +21,10 @@ public class PathingGrid {
 
 	private final short[] pathingGrid;
 	private final short[] dynamicPathingOverlay; // for buildings and trees
+	private final short[] unitPathingOverlay; // for constantly moving units
+	private final short[] ignorePathingOverlay; // to prevent unit collide with self
+	private final int[] unitsAtLocationCount; // number of units at location, probably really inefficient, should
+												// probably change later
 	private final int[] pathingGridSizes;
 	private final float[] centerOffset;
 
@@ -26,6 +33,53 @@ public class PathingGrid {
 		this.pathingGrid = terrainPathing.getPathing();
 		this.pathingGridSizes = terrainPathing.getSize();
 		this.dynamicPathingOverlay = new short[this.pathingGrid.length];
+		this.unitPathingOverlay = new short[this.pathingGrid.length];
+		this.ignorePathingOverlay = new short[this.pathingGrid.length];
+		Arrays.fill(this.ignorePathingOverlay, (short) 0xFFFF);
+		this.unitsAtLocationCount = new int[this.pathingGrid.length];
+	}
+
+	public void resetUnitCollisionPathing(final Iterable<CUnit> units) {
+		Arrays.fill(this.unitPathingOverlay, (short) 0);
+		Arrays.fill(this.unitsAtLocationCount, 0);
+		for (final CUnit unit : units) {
+			final CUnitType unitType = unit.getUnitType();
+			final MovementType movementType = unitType.getMovementType();
+			if (!unitType.isBuilding() && (movementType != null)) {
+				final float collisionSize = unitType.getCollisionSize();
+				final float maxX = unit.getX() + collisionSize;
+				final float maxY = unit.getY() + collisionSize;
+				final short obstructionByte;
+				switch (movementType) {
+				case FLOAT:
+					obstructionByte = (short) (PathingGrid.PathingFlags.UNSWIMABLE);
+					break;
+				case AMPHIBIOUS:
+					obstructionByte = (short) (PathingGrid.PathingFlags.UNWALKABLE
+							| PathingGrid.PathingFlags.UNSWIMABLE);
+					break;
+				case FLY:
+					obstructionByte = (short) (PathingGrid.PathingFlags.UNFLYABLE);
+					break;
+				default:
+				case FOOT:
+				case DISABLED:
+				case HORSE:
+				case HOVER:
+					obstructionByte = (short) (PathingGrid.PathingFlags.UNWALKABLE);
+					break;
+				}
+				for (float minX = unit.getX() - collisionSize; minX < maxX; minX += 32f) {
+					for (float minY = unit.getY() - collisionSize; minY < maxY; minY += 32f) {
+						final int yy = getCellY(minY);
+						final int xx = getCellX(minX);
+						final int index = (yy * this.pathingGridSizes[0]) + xx;
+						this.unitPathingOverlay[index] |= obstructionByte;
+						this.unitsAtLocationCount[index]++;
+					}
+				}
+			}
+		}
 	}
 
 	// this blit function is basically copied from HiveWE, maybe remember to mention
@@ -87,6 +141,12 @@ public class PathingGrid {
 		return this.pathingGridSizes[1];
 	}
 
+	public boolean contains(final float x, final float y) {
+		final int cellX = getCellX(x);
+		final int cellY = getCellY(y);
+		return (cellX >= 0) && (cellY >= 0) && (cellX < this.pathingGrid[0]) && (cellY < this.pathingGrid[1]);
+	}
+
 	public short getPathing(final float x, final float y) {
 		return getCellPathing(getCellX(x), getCellY(y));
 	}
@@ -111,9 +171,30 @@ public class PathingGrid {
 		return (cellY * 32f) + this.centerOffset[1] + 16f;
 	}
 
+	public float getWorldXFromCorner(final int cornerX) {
+		return (cornerX * 32f) + this.centerOffset[0];
+	}
+
+	public float getWorldYFromCorner(final int cornerY) {
+		return (cornerY * 32f) + this.centerOffset[1];
+	}
+
+	public int getCornerX(final float x) {
+		final float userCellSpaceX = ((x + 16f) - this.centerOffset[0]) / 32.0f;
+		final int cellX = (int) userCellSpaceX;
+		return cellX;
+	}
+
+	public int getCornerY(final float y) {
+		final float userCellSpaceY = ((y + 16f) - this.centerOffset[1]) / 32.0f;
+		final int cellY = (int) userCellSpaceY;
+		return cellY;
+	}
+
 	public short getCellPathing(final int cellX, final int cellY) {
-		return (short) (this.pathingGrid[(cellY * this.pathingGridSizes[0]) + cellX]
-				| this.dynamicPathingOverlay[(cellY * this.pathingGridSizes[0]) + cellX]);
+		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
+		return (short) ((this.pathingGrid[index] | this.dynamicPathingOverlay[index] | this.unitPathingOverlay[index])
+				& this.ignorePathingOverlay[index]);
 	}
 
 	public boolean isPathable(final float x, final float y, final PathingType pathingType) {
@@ -124,18 +205,62 @@ public class PathingGrid {
 		return pathingType.isPathable(getPathing(x, y));
 	}
 
-	public boolean isPathable(final float x, final float y, final MovementType pathingType, final float collisionSize) {
+	public boolean isPathable(final float unitX, final float unitY, final MovementType pathingType,
+			final float collisionSize) {
 		if (collisionSize == 0f) {
-			return pathingType.isPathable(getPathing(x, y));
+			return pathingType.isPathable(getPathing(unitX, unitY));
 		}
 		for (int i = -1; i <= 1; i++) {
 			for (int j = -1; j <= 1; j++) {
-				if (!pathingType.isPathable(getPathing(x + (i * collisionSize), y + (j * collisionSize)))) {
+				if (!pathingType.isPathable(getPathing(unitX + (i * collisionSize), unitY + (j * collisionSize)))) {
 					return false;
 				}
 			}
 		}
+//		final float maxX = unitX + collisionSize;
+//		final float maxY = unitY + collisionSize;
+//		for (float minX = unitX - collisionSize; minX < maxX; minX += 32f) {
+//			for (float minY = unitY - collisionSize; minY < maxY; minY += 32f) {
+//				if (!pathingType.isPathable(getPathing(minX, minY))) {
+//					return false;
+//				}
+//			}
+//		}
 		return true;
+	}
+
+	public boolean isUnitCell(final float queryX, final float queryY, final float unitX, final float unitY,
+			final MovementType movementType, final float collisionSize) {
+		final float maxX = unitX + collisionSize;
+		final float maxY = unitY + collisionSize;
+		final int cellX = getCellX(queryX);
+		final int cellY = getCellY(queryY);
+		for (float minX = unitX - collisionSize; minX < maxX; minX += 32f) {
+			for (float minY = unitY - collisionSize; minY < maxY; minY += 32f) {
+				final int yy = getCellY(minY);
+				final int xx = getCellX(minX);
+				if ((yy == cellY) && (xx == cellX)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public void setUnitIgnore(final float unitX, final float unitY, final float collisionSize, final boolean ignore) {
+		final float maxX = unitX + collisionSize;
+		final float maxY = unitY + collisionSize;
+		final short ignoreFlag = (short) (ignore ? 0 : 0xFFFF);
+		for (float minX = unitX - collisionSize; minX < maxX; minX += 32f) {
+			for (float minY = unitY - collisionSize; minY < maxY; minY += 32f) {
+				final int cellY = getCellY(minY);
+				final int cellX = getCellX(minX);
+				final int index = (cellY * this.pathingGridSizes[0]) + cellX;
+				if (this.unitsAtLocationCount[index] == 1) {
+					this.ignorePathingOverlay[index] = ignoreFlag;
+				}
+			}
+		}
 	}
 
 	public boolean isCellPathable(final int x, final int y, final MovementType pathingType, final float collisionSize) {

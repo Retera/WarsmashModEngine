@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
-import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -67,12 +67,13 @@ public class CSimulation {
 		return this.pathingGrid;
 	}
 
-	public List<Point> findNaiveSlowPath(final int startX, final int startY, final int goalX, final int goalY,
-			final PathingGrid.MovementType movementType, final float collisionSize) {
+	public List<Point2D.Float> findNaiveSlowPath(final float startX, final float startY, final float goalX,
+			final float goalY, final PathingGrid.MovementType movementType, final float collisionSize) {
 		return this.pathfindingProcessor.findNaiveSlowPath(startX, startY, goalX, goalY, movementType, collisionSize);
 	}
 
 	public void update() {
+		this.pathingGrid.resetUnitCollisionPathing(this.units);
 		for (final CUnit unit : this.units) {
 			unit.update(this);
 		}

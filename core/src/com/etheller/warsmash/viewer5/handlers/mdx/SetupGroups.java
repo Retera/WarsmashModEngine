@@ -109,7 +109,7 @@ public class SetupGroups {
 		for (final Object object : objects) { // TODO reforged
 			if ((object instanceof Batch /* || object instanceof ReforgedBatch */)
 					|| (object instanceof EmitterObject)) {
-				if ((currentGroup == null) || !matchingGroup(currentGroup, objects)) {
+				if ((currentGroup == null) || !matchingGroup(currentGroup, object)) {
 					currentGroup = createMatchingGroup(model, object);
 
 					translucentGroups.add(currentGroup);

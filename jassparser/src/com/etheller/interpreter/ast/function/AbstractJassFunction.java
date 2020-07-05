@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
+import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
@@ -24,7 +25,8 @@ public abstract class AbstractJassFunction implements JassFunction {
 	}
 
 	@Override
-	public final JassValue call(final List<JassValue> arguments, final GlobalScope globalScope) {
+	public final JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+			final TriggerExecutionScope triggerScope) {
 		if (arguments.size() != this.parameters.size()) {
 			throw new RuntimeException("Invalid number of arguments passed to function");
 		}
@@ -41,9 +43,9 @@ public abstract class AbstractJassFunction implements JassFunction {
 			}
 			localScope.createLocal(parameter.getIdentifier(), parameter.getType(), argument);
 		}
-		return innerCall(arguments, globalScope, localScope);
+		return innerCall(arguments, globalScope, triggerScope, localScope);
 	}
 
 	protected abstract JassValue innerCall(final List<JassValue> arguments, final GlobalScope globalScope,
-			final LocalScope localScope);
+			TriggerExecutionScope triggerScope, final LocalScope localScope);
 }

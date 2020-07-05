@@ -2,6 +2,7 @@ package com.etheller.interpreter.ast.expression;
 
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
+import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class LiteralJassExpression implements JassExpression {
@@ -12,8 +13,9 @@ public class LiteralJassExpression implements JassExpression {
 	}
 
 	@Override
-	public JassValue evaluate(final GlobalScope globalScope, final LocalScope localScope) {
-		return value;
+	public JassValue evaluate(final GlobalScope globalScope, final LocalScope localScope,
+			final TriggerExecutionScope triggerScope) {
+		return this.value;
 	}
 
 }

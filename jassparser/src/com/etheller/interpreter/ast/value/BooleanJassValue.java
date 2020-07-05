@@ -27,4 +27,13 @@ public class BooleanJassValue implements JassValue {
 			return TRUE;
 		}
 	}
+
+	public static BooleanJassValue of(final boolean flag) {
+		if (flag) {
+			return TRUE;
+		}
+		else {
+			return FALSE;
+		}
+	}
 }

@@ -19,6 +19,11 @@
 
 type framehandle        extends     handle
 type framepointtype     extends     handle
+type trigger            extends     handle
+type triggeraction      extends     handle
+type triggercondition   extends     handle
+type boolexpr           extends     handle
+type conditionfunc      extends     boolexpr
 
 native LogError                                 takes string message returns nothing
 constant native ConvertFramePointType       takes integer i returns framepointtype
@@ -92,3 +97,22 @@ native FramePositionBounds                      takes framehandle frame returns 
 // string "UI\\Console\\Human\\HumanUI-TimeIndicator.mdl"
 // when the "Human" skin was loaded with CreateRootFrame
 native SkinGetField                             takes string field returns string
+
+//============================================================================
+// Native trigger interface
+//
+native CreateTrigger    takes nothing returns trigger
+native DestroyTrigger   takes trigger whichTrigger returns nothing
+native EnableTrigger    takes trigger whichTrigger returns nothing
+native DisableTrigger   takes trigger whichTrigger returns nothing
+native IsTriggerEnabled takes trigger whichTrigger returns boolean
+
+native TriggerAddCondition    takes trigger whichTrigger, boolexpr condition returns triggercondition
+native TriggerRemoveCondition takes trigger whichTrigger, triggercondition whichCondition returns nothing
+native TriggerClearConditions takes trigger whichTrigger returns nothing
+
+native TriggerAddAction     takes trigger whichTrigger, code actionFunc returns triggeraction
+native TriggerRemoveAction  takes trigger whichTrigger, triggeraction whichAction returns nothing
+native TriggerClearActions  takes trigger whichTrigger returns nothing
+native TriggerEvaluate      takes trigger whichTrigger returns boolean
+native TriggerExecute       takes trigger whichTrigger returns nothing

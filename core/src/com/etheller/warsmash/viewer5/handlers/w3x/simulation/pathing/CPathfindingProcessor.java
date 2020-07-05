@@ -7,16 +7,22 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 
 public class CPathfindingProcessor {
+	private static final Rectangle tempRect = new Rectangle();
 	private final PathingGrid pathingGrid;
+	private final CWorldCollision worldCollision;
 	private final Node[][] nodes;
 	private final Node[][] cornerNodes;
 	private Node goal;
 
-	public CPathfindingProcessor(final PathingGrid pathingGrid) {
+	public CPathfindingProcessor(final PathingGrid pathingGrid, final CWorldCollision worldCollision) {
 		this.pathingGrid = pathingGrid;
+		this.worldCollision = worldCollision;
 		this.nodes = new Node[pathingGrid.getHeight()][pathingGrid.getWidth()];
 		this.cornerNodes = new Node[pathingGrid.getHeight() + 1][pathingGrid.getWidth() + 1];
 		for (int i = 0; i < this.nodes.length; i++) {
@@ -46,12 +52,19 @@ public class CPathfindingProcessor {
 	 * @param goal
 	 * @return
 	 */
-	public List<Point2D.Float> findNaiveSlowPath(final float startX, final float startY, final float goalX,
-			final float goalY, final PathingGrid.MovementType movementType, final float collisionSize) {
+	public List<Point2D.Float> findNaiveSlowPath(final CUnit ignoreIntersectionsWithThisUnit, final float startX,
+			final float startY, final Point2D.Float goal, final PathingGrid.MovementType movementType,
+			final float collisionSize) {
+		final float goalX = goal.x;
+		final float goalY = goal.y;
+		if (!this.pathingGrid.isPathable(goalX, goalY, movementType, collisionSize)) {
+			return Collections.emptyList();
+		}
 		System.out.println("beginning findNaiveSlowPath for  " + startX + "," + startY + "," + goalX + "," + goalY);
 		if ((startX == goalX) && (startY == goalY)) {
 			return Collections.emptyList();
 		}
+		tempRect.set(0, 0, collisionSize * 2, collisionSize * 2);
 		Node[][] searchGraph;
 		GridMapping gridMapping;
 		if (isCollisionSizeBetterSuitedForCorners(collisionSize)) {
@@ -65,37 +78,107 @@ public class CPathfindingProcessor {
 			System.out.println("using cells");
 		}
 		this.goal = searchGraph[gridMapping.getY(this.pathingGrid, goalY)][gridMapping.getX(this.pathingGrid, goalX)];
-		final Node start = searchGraph[gridMapping.getY(this.pathingGrid, startY)][gridMapping.getX(this.pathingGrid,
-				startX)];
+		final int startGridY = gridMapping.getY(this.pathingGrid, startY);
+		final int startGridX = gridMapping.getX(this.pathingGrid, startX);
 		for (int i = 0; i < searchGraph.length; i++) {
 			for (int j = 0; j < searchGraph[i].length; j++) {
 				final Node node = searchGraph[i][j];
 				node.g = Float.POSITIVE_INFINITY;
 				node.f = Float.POSITIVE_INFINITY;
 				node.cameFrom = null;
+				node.cameFromDirection = null;
 			}
 		}
-		start.g = 0;
-		start.f = h(start);
 		final PriorityQueue<Node> openSet = new PriorityQueue<>(new Comparator<Node>() {
 			@Override
 			public int compare(final Node a, final Node b) {
 				return Double.compare(f(a), f(b));
 			}
 		});
-		openSet.add(start);
+
+		final Node start = searchGraph[startGridY][startGridX];
+		int startGridMinX;
+		int startGridMinY;
+		int startGridMaxX;
+		int startGridMaxY;
+		if (startX > start.point.x) {
+			startGridMinX = startGridX;
+			startGridMaxX = startGridX + 1;
+		}
+		else if (startX < start.point.x) {
+			startGridMinX = startGridX - 1;
+			startGridMaxX = startGridX;
+		}
+		else {
+			startGridMinX = startGridX;
+			startGridMaxX = startGridX;
+		}
+		if (startY > start.point.y) {
+			startGridMinY = startGridY;
+			startGridMaxY = startGridY + 1;
+		}
+		else if (startY < start.point.y) {
+			startGridMinY = startGridY - 1;
+			startGridMaxY = startGridY;
+		}
+		else {
+			startGridMinY = startGridY;
+			startGridMaxY = startGridY;
+		}
+		for (int cellX = startGridMinX; cellX <= startGridMaxX; cellX++) {
+			for (int cellY = startGridMinY; cellY <= startGridMaxY; cellY++) {
+				if ((cellX >= 0) && (cellX < this.pathingGrid.getWidth()) && (cellY >= 0)
+						&& (cellY < this.pathingGrid.getHeight())) {
+					final Node possibleNode = searchGraph[cellY][cellX];
+					final float x = possibleNode.point.x;
+					final float y = possibleNode.point.y;
+					if (pathableBetween(ignoreIntersectionsWithThisUnit, startX, startY, movementType, collisionSize, x,
+							y)) {
+
+						final double tentativeScore = possibleNode.point.distance(startX, startY);
+						possibleNode.g = tentativeScore;
+						possibleNode.f = tentativeScore + h(possibleNode);
+						openSet.add(possibleNode);
+
+					}
+				}
+			}
+		}
 
 		while (!openSet.isEmpty()) {
 			Node current = openSet.poll();
 			if (current == this.goal) {
 				final LinkedList<Point2D.Float> totalPath = new LinkedList<>();
 				Direction lastCameFromDirection = null;
-				while (current.cameFrom != null) {
-					if ((lastCameFromDirection == null) || (current.cameFromDirection != lastCameFromDirection)) {
-						totalPath.addFirst(current.point);
-						lastCameFromDirection = current.cameFromDirection;
-					}
+
+				if ((current.cameFrom != null)
+						&& pathableBetween(ignoreIntersectionsWithThisUnit, current.cameFrom.point.x,
+								current.cameFrom.point.y, movementType, collisionSize, goalX, goalY)) {
+					// do some basic smoothing to walk straight to the goal if it is not obstructed,
+					// skipping the last grid location
+					totalPath.addFirst(goal);
 					current = current.cameFrom;
+				}
+				else {
+					totalPath.addFirst(goal);
+					totalPath.addFirst(current.point);
+				}
+				lastCameFromDirection = current.cameFromDirection;
+				Node lastNode = null;
+				while (current.cameFrom != null) {
+					lastNode = current;
+					current = current.cameFrom;
+					if ((lastCameFromDirection == null) || (current.cameFromDirection != lastCameFromDirection)
+							|| (current.cameFromDirection == null)) {
+						if ((current.cameFromDirection != null) || (lastNode == null)
+								|| !pathableBetween(ignoreIntersectionsWithThisUnit, startX, startY, movementType,
+										collisionSize, lastNode.point.x, lastNode.point.y)) {
+							// Add the point if it's not the first one, or if we can only complete
+							// the journey by specifically walking to the first one
+							totalPath.addFirst(current.point);
+							lastCameFromDirection = current.cameFromDirection;
+						}
+					}
 				}
 				return totalPath;
 			}
@@ -103,9 +186,8 @@ public class CPathfindingProcessor {
 			for (final Direction direction : Direction.VALUES) {
 				final float x = current.point.x + (direction.xOffset * 32);
 				final float y = current.point.y + (direction.yOffset * 32);
-				if (this.pathingGrid.contains(x, y) && this.pathingGrid.isPathable(x, y, movementType, collisionSize)
-						&& this.pathingGrid.isPathable(current.point.x, y, movementType, collisionSize)
-						&& this.pathingGrid.isPathable(x, current.point.y, movementType, collisionSize)) {
+				if (this.pathingGrid.contains(x, y) && pathableBetween(ignoreIntersectionsWithThisUnit, current.point.x,
+						current.point.y, movementType, collisionSize, x, y)) {
 					double turnCost;
 					if ((current.cameFromDirection != null) && (direction != current.cameFromDirection)) {
 						turnCost = 0.25;
@@ -129,6 +211,22 @@ public class CPathfindingProcessor {
 			}
 		}
 		return Collections.emptyList();
+	}
+
+	private boolean pathableBetween(final CUnit ignoreIntersectionsWithThisUnit, final float startX, final float startY,
+			final PathingGrid.MovementType movementType, final float collisionSize, final float x, final float y) {
+		return this.pathingGrid.isPathable(x, y, movementType, collisionSize)
+				&& this.pathingGrid.isPathable(startX, y, movementType, collisionSize)
+				&& this.pathingGrid.isPathable(x, startY, movementType, collisionSize)
+				&& isPathableDynamically(x, y, ignoreIntersectionsWithThisUnit, movementType)
+				&& isPathableDynamically(x, startY, ignoreIntersectionsWithThisUnit, movementType)
+				&& isPathableDynamically(startX, y, ignoreIntersectionsWithThisUnit, movementType);
+	}
+
+	private boolean isPathableDynamically(final float x, final float y, final CUnit ignoreIntersectionsWithThisUnit,
+			final PathingGrid.MovementType movementType) {
+		return !this.worldCollision.intersectsAnythingOtherThan(tempRect.setCenter(x, y),
+				ignoreIntersectionsWithThisUnit, movementType);
 	}
 
 	public static boolean isCollisionSizeBetterSuitedForCorners(final float collisionSize) {

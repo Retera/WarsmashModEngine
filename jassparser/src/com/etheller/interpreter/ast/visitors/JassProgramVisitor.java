@@ -15,9 +15,11 @@ import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.function.JassNativeManager;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.statement.JassStatement;
 
 public class JassProgramVisitor extends JassBaseVisitor<Void> {
+	public static final TriggerExecutionScope EMPTY_TRIGGER_SCOPE = new TriggerExecutionScope(null);
 	private final GlobalScope globals = new GlobalScope();
 	private final JassNativeManager jassNativeManager = new JassNativeManager();
 	private final JassTypeVisitor jassTypeVisitor = new JassTypeVisitor(this.globals);
@@ -85,7 +87,7 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 		final JassFunction mainFunction = this.globals.getFunctionByName("main");
 		if (mainFunction != null) {
 			try {
-				mainFunction.call(Collections.EMPTY_LIST, this.globals);
+				mainFunction.call(Collections.EMPTY_LIST, this.globals, EMPTY_TRIGGER_SCOPE);
 			}
 			catch (final Exception exc) {
 				throw new RuntimeException("Exception on Line " + GlobalScope.getLineNumber(), exc);

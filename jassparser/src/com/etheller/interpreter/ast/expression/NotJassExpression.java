@@ -2,8 +2,8 @@ package com.etheller.interpreter.ast.expression;
 
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
+import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.JassValue;
-import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.NotJassValueVisitor;
 
 public class NotJassExpression implements JassExpression {
@@ -14,7 +14,8 @@ public class NotJassExpression implements JassExpression {
 	}
 
 	@Override
-	public JassValue evaluate(final GlobalScope globalScope, final LocalScope localScope) {
-		return this.expression.evaluate(globalScope, localScope).visit(NotJassValueVisitor.getInstance());
+	public JassValue evaluate(final GlobalScope globalScope, final LocalScope localScope,
+			final TriggerExecutionScope triggerScope) {
+		return this.expression.evaluate(globalScope, localScope, triggerScope).visit(NotJassValueVisitor.getInstance());
 	}
 }

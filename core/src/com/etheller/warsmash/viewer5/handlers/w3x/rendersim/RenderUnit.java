@@ -43,7 +43,7 @@ public class RenderUnit {
 	public final MdxComplexInstance instance;
 	public final MutableGameObject row;
 	public final float[] location = new float[3];
-	public float radius;
+	public float selectionScale;
 	public UnitSoundset soundset;
 	public final MdxModel portraitModel;
 	public int playerIndex;
@@ -101,7 +101,7 @@ public class RenderUnit {
 					(row.getFieldAsInteger(green, 0)) / 255f, (row.getFieldAsInteger(blue, 0)) / 255f });
 			instance.uniformScale(row.getFieldAsFloat(scale, 0));
 
-			this.radius = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0) * 36;
+			this.selectionScale = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0);
 		}
 
 		this.instance = instance;
@@ -148,7 +148,9 @@ public class RenderUnit {
 		final float distanceToSimulation = (float) Math.sqrt((simDx * simDx) + (simDy * simDy));
 		final int speed = this.simulationUnit.getSpeed();
 		final float speedDelta = speed * deltaTime;
-		if (distanceToSimulation > speedDelta) {
+		if ((distanceToSimulation > speedDelta) && (deltaTime < 1.0)) {
+			// The 1.0 here says that after 1 second of lag, units just teleport to show
+			// where they actually are
 			this.x += (speedDelta * simDx) / distanceToSimulation;
 			this.y += (speedDelta * simDy) / distanceToSimulation;
 		}

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
@@ -23,18 +24,20 @@ public class CSimulation {
 	private final ProjectileCreator projectileCreator;
 	private int gameTurnTick = 0;
 	private final PathingGrid pathingGrid;
+	private final CWorldCollision worldCollision;
 	private final CPathfindingProcessor pathfindingProcessor;
 
 	public CSimulation(final MutableObjectData parsedUnitData, final MutableObjectData parsedAbilityData,
-			final ProjectileCreator projectileCreator, final PathingGrid pathingGrid) {
+			final ProjectileCreator projectileCreator, final PathingGrid pathingGrid, final Rectangle entireMapBounds) {
 		this.projectileCreator = projectileCreator;
 		this.pathingGrid = pathingGrid;
-		this.pathfindingProcessor = new CPathfindingProcessor(pathingGrid);
 		this.unitData = new CUnitData(parsedUnitData);
 		this.abilityData = new CAbilityData(parsedAbilityData);
 		this.units = new ArrayList<>();
 		this.projectiles = new ArrayList<>();
 		this.handleIdAllocator = new HandleIdAllocator();
+		this.worldCollision = new CWorldCollision(entireMapBounds);
+		this.pathfindingProcessor = new CPathfindingProcessor(pathingGrid, this.worldCollision);
 	}
 
 	public CUnitData getUnitData() {
@@ -54,6 +57,9 @@ public class CSimulation {
 		final CUnit unit = this.unitData.create(this, this.handleIdAllocator.createId(), playerIndex, typeId, x, y,
 				facing);
 		this.units.add(unit);
+		if (!unit.getUnitType().isBuilding()) {
+			this.worldCollision.addUnit(unit);
+		}
 		return unit;
 	}
 
@@ -67,13 +73,14 @@ public class CSimulation {
 		return this.pathingGrid;
 	}
 
-	public List<Point2D.Float> findNaiveSlowPath(final float startX, final float startY, final float goalX,
-			final float goalY, final PathingGrid.MovementType movementType, final float collisionSize) {
-		return this.pathfindingProcessor.findNaiveSlowPath(startX, startY, goalX, goalY, movementType, collisionSize);
+	public List<Point2D.Float> findNaiveSlowPath(final CUnit ignoreIntersectionsWithThisUnit, final float startX,
+			final float startY, final Point2D.Float goal, final PathingGrid.MovementType movementType,
+			final float collisionSize) {
+		return this.pathfindingProcessor.findNaiveSlowPath(ignoreIntersectionsWithThisUnit, startX, startY, goal,
+				movementType, collisionSize);
 	}
 
 	public void update() {
-		this.pathingGrid.resetUnitCollisionPathing(this.units);
 		for (final CUnit unit : this.units) {
 			unit.update(this);
 		}
@@ -89,5 +96,9 @@ public class CSimulation {
 
 	public int getGameTurnTick() {
 		return this.gameTurnTick;
+	}
+
+	public CWorldCollision getWorldCollision() {
+		return this.worldCollision;
 	}
 }

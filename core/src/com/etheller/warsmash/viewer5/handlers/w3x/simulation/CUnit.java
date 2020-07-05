@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
@@ -24,6 +25,8 @@ public class CUnit extends CWidget {
 	private COrder currentOrder;
 	private final Queue<COrder> orderQueue = new LinkedList<>();
 	private final CUnitType unitType;
+
+	private Rectangle collisionRectangle;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
@@ -154,6 +157,40 @@ public class CUnit extends CWidget {
 
 	public CUnitType getUnitType() {
 		return this.unitType;
+	}
+
+	public void setCollisionRectangle(final Rectangle collisionRectangle) {
+		this.collisionRectangle = collisionRectangle;
+	}
+
+	public Rectangle getCollisionRectangle() {
+		return this.collisionRectangle;
+	}
+
+	public void setX(final float newX, final CWorldCollision collision) {
+		final float prevX = getX();
+		if (!this.unitType.isBuilding()) {
+			setX(newX);
+			collision.translate(this, newX - prevX, 0);
+		}
+	}
+
+	public void setY(final float newY, final CWorldCollision collision) {
+		final float prevY = getY();
+		if (!this.unitType.isBuilding()) {
+			setY(newY);
+			collision.translate(this, 0, newY - prevY);
+		}
+	}
+
+	public void setPoint(final float newX, final float newY, final CWorldCollision collision) {
+		final float prevX = getX();
+		final float prevY = getY();
+		setX(newX);
+		setY(newY);
+		if (!this.unitType.isBuilding()) {
+			collision.translate(this, newX - prevX, newY - prevY);
+		}
 	}
 
 }

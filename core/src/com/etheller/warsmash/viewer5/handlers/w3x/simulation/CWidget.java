@@ -29,11 +29,11 @@ public abstract class CWidget {
 		return this.life;
 	}
 
-	public void setX(final float x) {
+	protected void setX(final float x) {
 		this.x = x;
 	}
 
-	public void setY(final float y) {
+	protected void setY(final float y) {
 		this.y = y;
 	}
 

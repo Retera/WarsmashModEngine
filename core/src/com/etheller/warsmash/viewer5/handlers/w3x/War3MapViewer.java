@@ -21,6 +21,7 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -141,6 +142,7 @@ public class War3MapViewer extends ModelViewer {
 	public List<SplatModel> selModels = new ArrayList<>();
 	public List<RenderUnit> selected = new ArrayList<>();
 	private DataTable unitAckSoundsTable;
+	private DataTable miscData;
 	private MdxComplexInstance confirmationInstance;
 	public CSimulation simulation;
 	private float updateTime;
@@ -152,6 +154,8 @@ public class War3MapViewer extends ModelViewer {
 	private final Random seededRandom = new Random(1337L);
 
 	private final Map<String, BufferedImage> filePathToPathingMap = new HashMap<>();
+
+	private final List<SelectionCircleSize> selectionCircleSizes = new ArrayList<>();
 
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
@@ -223,7 +227,21 @@ public class War3MapViewer extends ModelViewer {
 		try (InputStream terrainSlkStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\UnitAckSounds.slk")) {
 			this.unitAckSoundsTable.readSLK(terrainSlkStream);
 		}
-
+		this.miscData = new DataTable(worldEditStrings);
+		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\MiscData.txt")) {
+			this.miscData.readTXT(miscDataTxtStream, true);
+		}
+		this.selectionCircleSizes.clear();
+		final Element selectionCircleData = this.miscData.get("SelectionCircle");
+		final int selectionCircleNumSizes = selectionCircleData.getFieldValue("NumSizes");
+		for (int i = 0; i < selectionCircleNumSizes; i++) {
+			final String indexString = i < 10 ? "0" + i : Integer.toString(i);
+			final float size = selectionCircleData.getFieldFloatValue("Size" + indexString);
+			final String texture = selectionCircleData.getField("Texture" + indexString);
+			final String textureDotted = selectionCircleData.getField("TextureDotted" + indexString);
+			this.selectionCircleSizes.add(new SelectionCircleSize(size, texture, textureDotted));
+		}
+		this.selectionCircleScaleFactor = selectionCircleData.getFieldFloatValue("ScaleFactor");
 	}
 
 	public GenericResource loadMapGeneric(final String path, final FetchDataTypeName dataType,
@@ -367,7 +385,8 @@ public class War3MapViewer extends ModelViewer {
 
 						return simulationAttackProjectile;
 					}
-				}, this.terrain.pathingGrid);
+				}, this.terrain.pathingGrid,
+				new Rectangle(centerOffset[0], centerOffset[1], (mapSize[0] * 128f) - 128, (mapSize[1] * 128f) - 128));
 
 		if (this.doodadsAndDestructiblesLoaded) {
 			this.loadDoodadsAndDestructibles(modifications);
@@ -770,27 +789,29 @@ public class War3MapViewer extends ModelViewer {
 		final Map<String, Terrain.Splat> splats = new HashMap<String, Terrain.Splat>();
 		for (final RenderUnit unit : units) {
 			if (unit.row != null) {
-				if (unit.radius > 0) {
-					final float radius = unit.radius;
-					String path;
-					// TODO these radius values must be read from UI\MiscData.txt instead
-					if (radius < 100) {
-						path = "ReplaceableTextures\\Selection\\SelectionCircleSmall.blp";
+				if (unit.selectionScale > 0) {
+					final float selectionSize = unit.selectionScale * this.selectionCircleScaleFactor;
+					String path = null;
+					for (int i = 0; i < this.selectionCircleSizes.size(); i++) {
+						final SelectionCircleSize selectionCircleSize = this.selectionCircleSizes.get(i);
+						if ((selectionSize < selectionCircleSize.size)
+								|| (i == (this.selectionCircleSizes.size() - 1))) {
+							path = selectionCircleSize.texture;
+							break;
+						}
 					}
-					else if (radius < 300) {
-						path = "ReplaceableTextures\\Selection\\SelectionCircleMed.blp";
-					}
-					else {
-						path = "ReplaceableTextures\\Selection\\SelectionCircleLarge.blp";
+					if (!path.toLowerCase().endsWith(".blp")) {
+						path += ".blp";
 					}
 					if (!splats.containsKey(path)) {
 						splats.put(path, new Splat());
 					}
 					final float x = unit.location[0];
 					final float y = unit.location[1];
+					System.out.println("Selecting a unit at " + x + "," + y);
 					final float z = unit.row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
-					splats.get(path).locations
-							.add(new float[] { x - radius, y - radius, x + radius, y + radius, z + 5 });
+					splats.get(path).locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
+							x + (selectionSize / 2), y + (selectionSize / 2), z + 5 });
 					splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
 						@Override
 						public void accept(final SplatMover t) {
@@ -875,109 +896,19 @@ public class War3MapViewer extends ModelViewer {
 		return sel;
 	}
 
-	public List<RenderUnit> selectUnitOld(final float x, final float y, final boolean toggle) {
-		final float[] ray = rayHeap;
-		mousePosHeap.set(x, y);
-		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
-		final Vector3 dir = normalHeap;
-		dir.x = ray[3] - ray[0];
-		dir.y = ray[4] - ray[1];
-		dir.z = ray[5] - ray[2];
-		dir.nor();
-		// TODO good performance, do not create vectors on every check
-		final Vector3 eMid = new Vector3();
-		final Vector3 eSize = new Vector3();
-		final Vector3 rDir = new Vector3();
-
-		RenderUnit entity = null;
-		float entDist = 1e6f;
-
-		for (final RenderUnit unit : this.units) {
-			final float radius = unit.radius;
-			final float[] location = unit.location;
-			final MdxComplexInstance instance = unit.instance;
-			eMid.set(0, 0, radius / 2);
-			eSize.set(radius, radius, radius);
-
-			eMid.add(location[0], location[1], location[2]);
-			eMid.sub(ray[0], ray[1], ray[2]);
-			eMid.scl(1 / eSize.x, 1 / eSize.y, 1 / eSize.z);
-			rDir.x = dir.x / eSize.x;
-			rDir.y = dir.y / eSize.y;
-			rDir.z = dir.z / eSize.z;
-			final float dlen = rDir.len2();
-			final float dp = Math.max(0, rDir.dot(eMid)) / dlen;
-			if (dp > entDist) {
-				continue;
-			}
-			rDir.scl(dp);
-			if (rDir.dst2(eMid) < 1.0) {
-				entity = unit;
-				entDist = dp;
-			}
-		}
-		List<RenderUnit> sel;
-		if (entity != null) {
-			if (toggle) {
-				sel = new ArrayList<>(this.selected);
-				final int idx = sel.indexOf(entity);
-				if (idx >= 0) {
-					sel.remove(idx);
-				}
-				else {
-					sel.add(entity);
-				}
-			}
-			else {
-				sel = Arrays.asList(entity);
-			}
-		}
-		else {
-			sel = Collections.emptyList();
-		}
-		this.doSelectUnit(sel);
-		return sel;
-	}
-
 	public RenderUnit rayPickUnit(final float x, final float y) {
 		final float[] ray = rayHeap;
 		mousePosHeap.set(x, y);
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
-		final Vector3 dir = normalHeap;
-		dir.x = ray[3] - ray[0];
-		dir.y = ray[4] - ray[1];
-		dir.z = ray[5] - ray[2];
-		dir.nor();
-		// TODO good performance, do not create vectors on every check
-		final Vector3 eMid = new Vector3();
-		final Vector3 eSize = new Vector3();
-		final Vector3 rDir = new Vector3();
+		gdxRayHeap.set(ray[0], ray[1], ray[2], ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]);
+		gdxRayHeap.direction.nor();// needed for libgdx
 
 		RenderUnit entity = null;
-		float entDist = 1e6f;
-
 		for (final RenderUnit unit : this.units) {
-			final float radius = unit.radius;
-			final float[] location = unit.location;
 			final MdxComplexInstance instance = unit.instance;
-			eMid.set(0, 0, radius / 2);
-			eSize.set(radius, radius, radius);
-
-			eMid.add(location[0], location[1], location[2]);
-			eMid.sub(ray[0], ray[1], ray[2]);
-			eMid.scl(1 / eSize.x, 1 / eSize.y, 1 / eSize.z);
-			rDir.x = dir.x / eSize.x;
-			rDir.y = dir.y / eSize.y;
-			rDir.z = dir.z / eSize.z;
-			final float dlen = rDir.len2();
-			final float dp = Math.max(0, rDir.dot(eMid)) / dlen;
-			if (dp > entDist) {
-				continue;
-			}
-			rDir.scl(dp);
-			if (rDir.dst2(eMid) < 1.0) {
+			if (instance.isVisible(this.worldScene.camera)
+					&& instance.intersectRayWithCollision(gdxRayHeap, intersectionHeap)) {
 				entity = unit;
-				entDist = dp;
 			}
 		}
 		return entity;
@@ -1047,6 +978,7 @@ public class War3MapViewer extends ModelViewer {
 	}
 
 	private static final int MAXIMUM_ACCEPTED = 1 << 30;
+	private float selectionCircleScaleFactor;
 
 	/**
 	 * Returns a power of two size for the given target capacity.
@@ -1135,4 +1067,15 @@ public class War3MapViewer extends ModelViewer {
 		StandSequence.randomStandSequence(instance);
 	}
 
+	private static final class SelectionCircleSize {
+		private final float size;
+		private final String texture;
+		private final String textureDotted;
+
+		public SelectionCircleSize(final float size, final String texture, final String textureDotted) {
+			this.size = size;
+			this.texture = texture;
+			this.textureDotted = textureDotted;
+		}
+	}
 }

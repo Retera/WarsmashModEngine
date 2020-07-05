@@ -66,7 +66,6 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private final Rectangle tempRect = new Rectangle();
 
 	private CameraManager portraitCameraManager;
-	private MdxComplexInstance portraitInstance;
 	private final float[] cameraPositionTemp = new float[3];
 	private final float[] cameraTargetTemp = new float[3];
 
@@ -136,13 +135,14 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.viewer.worldScene.enableAudio();
 		this.viewer.enableAudio();
 		try {
-			this.viewer.loadMap("Pathing.w3x");
+			this.viewer.loadMap("Maps\\Campaign\\NightElf03.w3m");
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
 
 		this.cameraManager = new CameraManager();
+
 		this.cameraManager.setupCamera(this.viewer.worldScene);
 
 		System.out.println("Loaded");
@@ -272,7 +272,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.cameraManager.target.add(this.cameraVelocity.x * deltaTime, this.cameraVelocity.y * deltaTime, 0);
 		this.cameraManager.target.z = Math.max(
 				this.viewer.terrain.getGroundHeight(this.cameraManager.target.x, this.cameraManager.target.y),
-				this.viewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y));
+				this.viewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y)) - 256;
 		this.cameraManager.updateCamera();
 		this.portraitCameraManager.updateCamera();
 		this.viewer.updateAndRender();
@@ -283,9 +283,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //		this.font.draw(this.batch, Integer.toString(Gdx.graphics.getFramesPerSecond()), 0, 0);
 //		this.batch.end();
 
-		if ((this.portraitInstance != null)
-				&& (this.portraitInstance.sequenceEnded || (this.portraitInstance.sequence == -1))) {
-			StandSequence.randomPortraitSequence(this.portraitInstance);
+		if ((this.portraitCameraManager.modelInstance != null)
+				&& (this.portraitCameraManager.modelInstance.sequenceEnded
+						|| (this.portraitCameraManager.modelInstance.sequence == -1))) {
+			StandSequence.randomPortraitSequence(this.portraitCameraManager.modelInstance);
 		}
 
 		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
@@ -429,6 +430,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	class CameraManager {
 		public com.etheller.warsmash.viewer5.handlers.mdx.Camera modelCamera;
+		private MdxComplexInstance modelInstance;
 		private CanvasProvider canvas;
 		private Camera camera;
 		private float moveSpeed;
@@ -483,13 +485,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			this.position = this.position.add(this.target);
 			if (this.modelCamera != null) {
 				this.modelCamera.getPositionTranslation(WarsmashGdxMapGame.this.cameraPositionTemp,
-						WarsmashGdxMapGame.this.portraitInstance.sequence,
-						WarsmashGdxMapGame.this.portraitInstance.frame,
-						WarsmashGdxMapGame.this.portraitInstance.counter);
+						this.modelInstance.sequence, this.modelInstance.frame, this.modelInstance.counter);
 				this.modelCamera.getTargetTranslation(WarsmashGdxMapGame.this.cameraTargetTemp,
-						WarsmashGdxMapGame.this.portraitInstance.sequence,
-						WarsmashGdxMapGame.this.portraitInstance.frame,
-						WarsmashGdxMapGame.this.portraitInstance.counter);
+						this.modelInstance.sequence, this.modelInstance.frame, this.modelInstance.counter);
 
 				this.position.set(this.modelCamera.position);
 				this.target.set(this.modelCamera.targetPosition);
@@ -596,7 +594,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			final RenderUnit rayPickUnit = this.viewer.rayPickUnit(screenX, worldScreenY);
 			if ((rayPickUnit != null) && (rayPickUnit.playerIndex != this.selectedUnit.playerIndex)) {
 				if (this.viewer.orderSmart(rayPickUnit)) {
-					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
+					StandSequence.randomPortraitTalkSequence(this.portraitCameraManager.modelInstance);
 					this.selectedSoundCount = 0;
 				}
 			}
@@ -609,7 +607,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				System.out.println(x + "," + y);
 				this.viewer.terrain.logRomp(x, y);
 				if (this.viewer.orderSmart(clickLocationTemp.x, clickLocationTemp.y)) {
-					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
+					StandSequence.randomPortraitTalkSequence(this.portraitCameraManager.modelInstance);
 					this.selectedSoundCount = 0;
 				}
 			}
@@ -647,29 +645,29 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				if (selectionChanged) {
 					final MdxModel portraitModel = unit.portraitModel;
 					if (portraitModel != null) {
-						if (this.portraitInstance != null) {
-							this.portraitScene.removeInstance(this.portraitInstance);
+						if (this.portraitCameraManager.modelInstance != null) {
+							this.portraitScene.removeInstance(this.portraitCameraManager.modelInstance);
 						}
-						this.portraitInstance = (MdxComplexInstance) portraitModel.addInstance();
-						this.portraitInstance.setSequenceLoopMode(1);
-						this.portraitInstance.setScene(this.portraitScene);
-						this.portraitInstance.setVertexColor(unit.instance.vertexColor);
+						this.portraitCameraManager.modelInstance = (MdxComplexInstance) portraitModel.addInstance();
+						this.portraitCameraManager.modelInstance.setSequenceLoopMode(1);
+						this.portraitCameraManager.modelInstance.setScene(this.portraitScene);
+						this.portraitCameraManager.modelInstance.setVertexColor(unit.instance.vertexColor);
 						if (portraitModel.getCameras().size() > 0) {
 							this.portraitCameraManager.modelCamera = portraitModel.getCameras().get(0);
 						}
-						this.portraitInstance.setTeamColor(unit.playerIndex);
+						this.portraitCameraManager.modelInstance.setTeamColor(unit.playerIndex);
 					}
 				}
 				if (playedNewSound) {
-					StandSequence.randomPortraitTalkSequence(this.portraitInstance);
+					StandSequence.randomPortraitTalkSequence(this.portraitCameraManager.modelInstance);
 				}
 			}
 			else {
 				this.selectedUnit = null;
-				if (this.portraitInstance != null) {
-					this.portraitScene.removeInstance(this.portraitInstance);
+				if (this.portraitCameraManager.modelInstance != null) {
+					this.portraitScene.removeInstance(this.portraitCameraManager.modelInstance);
 				}
-				this.portraitInstance = null;
+				this.portraitCameraManager.modelInstance = null;
 				this.portraitCameraManager.modelCamera = null;
 			}
 		}

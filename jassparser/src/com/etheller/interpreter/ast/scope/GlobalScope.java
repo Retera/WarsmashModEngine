@@ -22,15 +22,11 @@ public final class GlobalScope {
 	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
 
 	public final HandleJassType handleType;
-	public final HandleJassType frameHandleType;
-	public final HandleJassType framePointType;
 
 	private static int lineNumber;
 
 	public GlobalScope() {
 		this.handleType = registerHandleType("handle");// the handle type
-		this.frameHandleType = registerHandleType("framehandle");
-		this.framePointType = registerHandleType("framepointtype");
 		registerPrimitiveType(JassType.BOOLEAN);
 		registerPrimitiveType(JassType.INTEGER);
 		registerPrimitiveType(JassType.CODE);
@@ -47,7 +43,7 @@ public final class GlobalScope {
 		return lineNumber;
 	}
 
-	private HandleJassType registerHandleType(final String name) {
+	public HandleJassType registerHandleType(final String name) {
 		final HandleJassType handleJassType = new HandleJassType(null, name);
 		this.types.put(name, handleJassType);
 		return handleJassType;
@@ -130,7 +126,13 @@ public final class GlobalScope {
 			final HandleJassType handleSuperType = superType.visit(HandleJassTypeVisitor.getInstance());
 			if (handleSuperType != null) {
 				final JassType jassType = this.types.get(type);
-				jassType.visit(this.handleTypeSuperTypeLoadingVisitor.reset(handleSuperType));
+				if (jassType != null) {
+					jassType.visit(this.handleTypeSuperTypeLoadingVisitor.reset(handleSuperType));
+				}
+				else {
+					throw new RuntimeException(
+							"unable to declare type " + type + " because it does not exist natively");
+				}
 			}
 			else {
 				throw new RuntimeException("type " + type + " cannot extend primitive type " + supertype);

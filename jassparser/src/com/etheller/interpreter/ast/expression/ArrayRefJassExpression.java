@@ -3,6 +3,7 @@ package com.etheller.interpreter.ast.expression;
 import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
+import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.ArrayJassValueVisitor;
@@ -18,11 +19,12 @@ public class ArrayRefJassExpression implements JassExpression {
 	}
 
 	@Override
-	public JassValue evaluate(final GlobalScope globalScope, final LocalScope localScope) {
-		Assignable variable = localScope.getAssignableLocal(identifier);
-		final JassValue index = indexExpression.evaluate(globalScope, localScope);
+	public JassValue evaluate(final GlobalScope globalScope, final LocalScope localScope,
+			final TriggerExecutionScope triggerScope) {
+		Assignable variable = localScope.getAssignableLocal(this.identifier);
+		final JassValue index = this.indexExpression.evaluate(globalScope, localScope, triggerScope);
 		if (variable == null) {
-			variable = globalScope.getAssignableGlobal(identifier);
+			variable = globalScope.getAssignableGlobal(this.identifier);
 		}
 		if (variable.getValue() == null) {
 			throw new RuntimeException("Unable to use subscript on uninitialized variable");
@@ -30,7 +32,8 @@ public class ArrayRefJassExpression implements JassExpression {
 		final ArrayJassValue arrayValue = variable.getValue().visit(ArrayJassValueVisitor.getInstance());
 		if (arrayValue != null) {
 			return arrayValue.get(index.visit(IntegerJassValueVisitor.getInstance()));
-		} else {
+		}
+		else {
 			throw new RuntimeException("Not an array");
 		}
 	}

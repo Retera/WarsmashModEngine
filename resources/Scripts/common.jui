@@ -116,3 +116,16 @@ native TriggerRemoveAction  takes trigger whichTrigger, triggeraction whichActio
 native TriggerClearActions  takes trigger whichTrigger returns nothing
 native TriggerEvaluate      takes trigger whichTrigger returns boolean
 native TriggerExecute       takes trigger whichTrigger returns nothing
+
+
+//============================================================================
+// Boolean Expr API ( for compositing trigger conditions and unit filter funcs...)
+//============================================================================
+native And              takes boolexpr operandA, boolexpr operandB returns boolexpr
+native Or               takes boolexpr operandA, boolexpr operandB returns boolexpr
+native Not              takes boolexpr operand returns boolexpr
+native Condition        takes code func returns conditionfunc
+native DestroyCondition takes conditionfunc c returns nothing
+native Filter           takes code func returns filterfunc
+native DestroyFilter    takes filterfunc f returns nothing
+native DestroyBoolExpr  takes boolexpr e returns nothing

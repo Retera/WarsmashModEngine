@@ -57,7 +57,8 @@ public class CPathfindingProcessor {
 			final float collisionSize) {
 		final float goalX = goal.x;
 		final float goalY = goal.y;
-		if (!this.pathingGrid.isPathable(goalX, goalY, movementType, collisionSize)) {
+		if (!this.pathingGrid.isPathable(goalX, goalY, movementType, collisionSize)
+				|| !isPathableDynamically(goalX, goalY, ignoreIntersectionsWithThisUnit, movementType)) {
 			return Collections.emptyList();
 		}
 		System.out.println("beginning findNaiveSlowPath for  " + startX + "," + startY + "," + goalX + "," + goalY);

@@ -1,5 +1,9 @@
 package com.etheller.warsmash.desktop;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
@@ -11,6 +15,8 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.audio.OpenALSound;
 import com.etheller.warsmash.WarsmashGdxMapGame;
+import com.etheller.warsmash.units.DataTable;
+import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
 import com.etheller.warsmash.viewer5.gl.DynamicShadowExtension;
 import com.etheller.warsmash.viewer5.gl.Extensions;
@@ -61,6 +67,16 @@ public class DesktopLauncher {
 				return ((OpenALSound) sound).duration();
 			}
 		};
+		final DataTable warsmashIni = new DataTable(StringBundle.EMPTY);
+		try (FileInputStream warsmashIniInputStream = new FileInputStream("warsmash.ini")) {
+			warsmashIni.readTXT(warsmashIniInputStream, true);
+		}
+		catch (final FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 		Extensions.GL_LINE = GL11.GL_LINE;
 		Extensions.GL_FILL = GL11.GL_FILL;
 		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
@@ -72,6 +88,6 @@ public class DesktopLauncher {
 		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
 		config.width = desktopDisplayMode.width;
 		config.height = desktopDisplayMode.height;
-		new LwjglApplication(new WarsmashGdxMapGame(), config);
+		new LwjglApplication(new WarsmashGdxMapGame(warsmashIni), config);
 	}
 }

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -36,9 +36,12 @@ import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
+import com.etheller.warsmash.datasources.MpqDataSourceDescriptor;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
+import com.etheller.warsmash.units.DataTable;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -97,6 +100,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	private final List<Message> messages = new LinkedList<>();
 	private MdxModel timeIndicator;
+	private final DataTable warsmashIni;
+
+	public WarsmashGdxMapGame(final DataTable warsmashIni) {
+		this.warsmashIni = warsmashIni;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -118,24 +126,32 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
 		System.err.println("Renderer: " + renderer);
 
-		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor("E:\\Backups\\Warcraft\\Data\\127");
-		final FolderDataSourceDescriptor smashmpq = new FolderDataSourceDescriptor("..\\..\\resources");
-//		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor(
-//				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3.mpq\\war3.mpq");
-//		final FolderDataSourceDescriptor war3xLocalmpq = new FolderDataSourceDescriptor(
-//				"D:\\NEEDS_ORGANIZING\\MPQBuild\\War3xLocal.mpq\\enus-war3local.mpq");
-//		final FolderDataSourceDescriptor rebirth = new FolderDataSourceDescriptor(
-//				"E:\\Games\\Warcraft III Patch 1.31 Rebirth");
-		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor("E:\\Backups\\Warsmash\\Data");
-		final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
-		this.codebase = new CompoundDataSourceDescriptor(Arrays.<DataSourceDescriptor>asList(war3mpq, smashmpq,
-				/* war3xLocalmpq, */ testingFolder, currentFolder)).createDataSource();
+		final Element dataSourcesConfig = this.warsmashIni.get("DataSources");
+		final int dataSourcesCount = dataSourcesConfig.getFieldValue("Count");
+		final List<DataSourceDescriptor> dataSourcesList = new ArrayList<>();
+		for (int i = 0; i < dataSourcesCount; i++) {
+			final String type = dataSourcesConfig.getField("Type" + (i < 10 ? "0" : "") + i);
+			final String path = dataSourcesConfig.getField("Path" + (i < 10 ? "0" : "") + i);
+			switch (type) {
+			case "Folder": {
+				dataSourcesList.add(new FolderDataSourceDescriptor(path));
+				break;
+			}
+			case "MPQ": {
+				dataSourcesList.add(new MpqDataSourceDescriptor(path));
+				break;
+			}
+			default:
+				throw new RuntimeException("Unknown data source type: " + type);
+			}
+		}
+		this.codebase = new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
 		this.viewer = new War3MapViewer(this.codebase, this);
 
 		this.viewer.worldScene.enableAudio();
 		this.viewer.enableAudio();
 		try {
-			this.viewer.loadMap("Maps\\Campaign\\NightElf03.w3m");
+			this.viewer.loadMap(this.warsmashIni.get("Map").getField("FilePath"));
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -249,8 +265,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				this.minimap.y + ((this.minimap.height - minimapFilledHeight) / 2), minimapFilledWidth,
 				minimapFilledHeight);
 
-		this.cameraManager.target.x = this.viewer.startLocations[0].x;
-		this.cameraManager.target.y = this.viewer.startLocations[0].y;
+		if (this.viewer.startLocations[0] != null) {
+			this.cameraManager.target.x = this.viewer.startLocations[0].x;
+			this.cameraManager.target.y = this.viewer.startLocations[0].y;
+		}
 
 		this.shapeRenderer = new ShapeRenderer();
 		this.talentTreeWindow = new Rectangle(100, 300, 1400, 800);
@@ -592,7 +610,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		}
 		if (button == Input.Buttons.RIGHT) {
 			final RenderUnit rayPickUnit = this.viewer.rayPickUnit(screenX, worldScreenY);
-			if ((rayPickUnit != null) && (rayPickUnit.playerIndex != this.selectedUnit.playerIndex)) {
+			if ((rayPickUnit != null) && (this.selectedUnit != null)
+					&& (rayPickUnit.playerIndex != this.selectedUnit.playerIndex)) {
 				if (this.viewer.orderSmart(rayPickUnit)) {
 					StandSequence.randomPortraitTalkSequence(this.portraitCameraManager.modelInstance);
 					this.selectedSoundCount = 0;

@@ -17,10 +17,11 @@ public class TerrainDoodad {
 		final MdxSimpleInstance instance = (MdxSimpleInstance) model.addInstance(1);
 
 		locationHeap[0] = (doodad.getLocation()[0] * 128) + centerOffset[0] + 128;
-		locationHeap[0] = (doodad.getLocation()[1] * 128) + centerOffset[1] + 128;
+		locationHeap[1] = (doodad.getLocation()[1] * 128) + centerOffset[1] + 128;
 
 		instance.move(locationHeap);
-		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, row.readSLKTagFloat("fixedRot")));
+		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z,
+				(float) Math.toRadians(row.readSLKTagFloat("fixedRot"))));
 		instance.setScene(map.worldScene);
 
 		this.instance = instance;

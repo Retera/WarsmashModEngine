@@ -15,7 +15,7 @@ public class Shapes {
 
 	float[][] quadVertices = { { 1, 1 }, { 0, 1 }, { 0, 0 }, { 1, 0 } };
 
-	int[][] quadIndices = { { 0, 3, 1 }, { 1, 3, 2 } };
+	int[][] quadIndices = { { 1, 3, 0 }, { 2, 3, 1 } };
 
 	public void init() {
 		this.vertexBuffer = Gdx.gl30.glGenBuffer();

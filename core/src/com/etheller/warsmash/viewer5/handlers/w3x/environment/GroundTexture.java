@@ -20,6 +20,9 @@ public class GroundTexture {
 		if (path.toLowerCase().endsWith(".blp")) {
 			try (InputStream stream = dataSource.getResourceAsStream(path)) {
 				final BufferedImage image = ImageIO.read(stream);
+				if (image == null) {
+					throw new IllegalStateException("Missing ground texture: " + path);
+				}
 				final Buffer buffer = ImageUtils.getTextureBuffer(ImageUtils.forceBufferedImagesRGB(image));
 				final int width = image.getWidth();
 				final int height = image.getHeight();

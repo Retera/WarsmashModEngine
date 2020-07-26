@@ -60,6 +60,8 @@ public class RenderUnit {
 
 	private boolean swimming;
 
+	private boolean alreadyPlayedDeath = false;
+
 	private final EnumSet<AnimationTokens.SecondaryTag> secondaryAnimationTags = EnumSet
 			.noneOf(AnimationTokens.SecondaryTag.class);
 
@@ -217,9 +219,16 @@ public class RenderUnit {
 		if (this.simulationUnit.getLife() <= 0) {
 			final MdxModel model = (MdxModel) mdxComplexInstance.model;
 			final List<Sequence> sequences = model.getSequences();
-			final IndexedSequence sequence = StandSequence.selectSequence("death", sequences);
-			if ((sequence != null) && (mdxComplexInstance.sequence != sequence.index)) {
+			IndexedSequence sequence = StandSequence.selectSequence("death", sequences);
+			if (!this.alreadyPlayedDeath && (sequence != null) && (mdxComplexInstance.sequence != sequence.index)) {
 				mdxComplexInstance.setSequence(sequence.index);
+				this.alreadyPlayedDeath = true;
+			}
+			else if (mdxComplexInstance.sequenceEnded && this.alreadyPlayedDeath) {
+				sequence = StandSequence.selectSequence("dissipate", sequences);
+				if ((sequence != null) && (mdxComplexInstance.sequence != sequence.index)) {
+					mdxComplexInstance.setSequence(sequence.index);
+				}
 			}
 		}
 		else if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1)

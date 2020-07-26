@@ -122,7 +122,7 @@ public abstract class Sd<TYPE> {
 			return this.globalSequence.getValue(out,
 					this.globalSequence.end == 0 ? 0 : counter % this.globalSequence.end);
 		}
-		else if ((sequence != -1) && (this.sequences.size() > 0)) {
+		else if ((sequence != -1) && (this.sequences.size() > sequence)) {
 			return this.sequences.get(sequence).getValue(out, frame);
 		}
 		else {

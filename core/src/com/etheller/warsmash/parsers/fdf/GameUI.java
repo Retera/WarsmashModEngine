@@ -71,6 +71,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		final DataSourceFDFParserBuilder dataSourceFDFParserBuilder = new DataSourceFDFParserBuilder(this.dataSource);
 		final FrameDefinitionVisitor fdfVisitor = new FrameDefinitionVisitor(this.templates,
 				dataSourceFDFParserBuilder);
+		System.err.println("Loading TOC file: " + tocFilePath);
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(this.dataSource.getResourceAsStream(tocFilePath)))) {
 			String line;

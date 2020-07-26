@@ -46,8 +46,9 @@ public class JassExpressionVisitor extends JassBaseVisitor<JassExpression> {
 	@Override
 	public JassExpression visitStringLiteralExpression(final StringLiteralExpressionContext ctx) {
 		final String stringLiteralText = ctx.STRING_LITERAL().getText();
-		return new LiteralJassExpression(
-				new StringJassValue(stringLiteralText.substring(1, stringLiteralText.length() - 1)));
+		final String parsedString = stringLiteralText.substring(1, stringLiteralText.length() - 1).replace("\\\\",
+				"\\");
+		return new LiteralJassExpression(new StringJassValue(parsedString));
 	}
 
 	@Override

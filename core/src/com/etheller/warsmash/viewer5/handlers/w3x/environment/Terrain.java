@@ -236,6 +236,9 @@ public class Terrain {
 			final String texFile = cliffInfo.getField("texFile");
 			try (InputStream imageStream = dataSource.getResourceAsStream(texDir + "\\" + texFile + texturesExt)) {
 				final BufferedImage image = ImageIO.read(imageStream);
+				if (image == null) {
+					throw new IllegalStateException("Missing cliff texture: " + texDir + "\\" + texFile + texturesExt);
+				}
 				this.cliffTextures.add(new UnloadedTexture(image.getWidth(), image.getHeight(),
 						ImageUtils.getTextureBuffer(ImageUtils.forceBufferedImagesRGB(image)),
 						cliffInfo.getField("cliffModelDir"), cliffInfo.getField("rampModelDir")));
@@ -811,8 +814,11 @@ public class Terrain {
 		this.webGL.useShaderProgram(this.groundShader);
 
 		final GL30 gl = Gdx.gl30;
-		gl.glDisable(GL30.GL_CULL_FACE);
+		gl.glEnable(GL20.GL_CULL_FACE);
 		gl.glDisable(GL30.GL_BLEND);
+		gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+		gl.glEnable(GL20.GL_DEPTH_TEST);
+		gl.glDepthMask(true);
 
 		gl.glUniformMatrix4fv(this.groundShader.getUniformLocation("MVP"), 1, false,
 				this.camera.viewProjectionMatrix.val, 0);

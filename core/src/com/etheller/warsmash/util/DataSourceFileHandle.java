@@ -15,6 +15,11 @@ public class DataSourceFileHandle extends FileHandle {
 	}
 
 	@Override
+	public String path() {
+		return file().getPath();
+	}
+
+	@Override
 	public InputStream read() {
 		try {
 			return this.dataSource.getResourceAsStream(path());

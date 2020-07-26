@@ -43,7 +43,7 @@ public class War3MapW3i {
 	private String soundEnvironment;
 	private char lightEnvironmentTileset;
 	private final short[] waterVertexColor = new short[4];
-	private final short[] unknown2 = new short[4];
+	private final short[] unknown2ProbablyLua = new short[4];
 	private final List<Player> players = new ArrayList<>();
 	private final List<Force> forces = new ArrayList<>();
 	private final List<UpgradeAvailabilityChange> upgradeAvailabilityChanges = new ArrayList<>();
@@ -106,13 +106,17 @@ public class War3MapW3i {
 		}
 
 		if (this.version > 27) {
-			ParseUtils.readUInt8Array(stream, this.unknown2);
+			ParseUtils.readUInt8Array(stream, this.unknown2ProbablyLua);
+		}
+		if (this.version > 30) {
+			final long supportedModes = ParseUtils.readUInt32(stream);
+			final long gameDataVersion = ParseUtils.readUInt32(stream);
 		}
 
 		for (int i = 0, l = stream.readInt(); i < l; i++) {
 			final Player player = new Player();
 
-			player.load(stream);
+			player.load(stream, this.version);
 
 			this.players.add(player);
 		}
@@ -125,37 +129,49 @@ public class War3MapW3i {
 			this.forces.add(force);
 		}
 
-		for (int i = 0, l = stream.readInt(); i < l; i++) {
-			final UpgradeAvailabilityChange upgradeAvailabilityChange = new UpgradeAvailabilityChange();
+		if (stream.available() == 1) {
+			// some kind of really stupid protected map???
+			return;
+		}
+		if (stream.available() > 0) {
+			for (int i = 0, l = stream.readInt(); i < l; i++) {
+				final UpgradeAvailabilityChange upgradeAvailabilityChange = new UpgradeAvailabilityChange();
 
-			upgradeAvailabilityChange.load(stream);
+				upgradeAvailabilityChange.load(stream);
 
-			this.upgradeAvailabilityChanges.add(upgradeAvailabilityChange);
+				this.upgradeAvailabilityChanges.add(upgradeAvailabilityChange);
+			}
 		}
 
-		for (int i = 0, l = stream.readInt(); i < l; i++) {
-			final TechAvailabilityChange techAvailabilityChange = new TechAvailabilityChange();
+		if (stream.available() > 0) {
+			for (int i = 0, l = stream.readInt(); i < l; i++) {
+				final TechAvailabilityChange techAvailabilityChange = new TechAvailabilityChange();
 
-			techAvailabilityChange.load(stream);
+				techAvailabilityChange.load(stream);
 
-			this.techAvailabilityChanges.add(techAvailabilityChange);
+				this.techAvailabilityChanges.add(techAvailabilityChange);
+			}
 		}
 
-		for (int i = 0, l = stream.readInt(); i < l; i++) {
-			final RandomUnitTable randomUnitTable = new RandomUnitTable();
+		if (stream.available() > 0) {
+			for (int i = 0, l = stream.readInt(); i < l; i++) {
+				final RandomUnitTable randomUnitTable = new RandomUnitTable();
 
-			randomUnitTable.load(stream);
+				randomUnitTable.load(stream);
 
-			this.randomUnitTables.add(randomUnitTable);
+				this.randomUnitTables.add(randomUnitTable);
+			}
 		}
 
 		if (this.version > 24) {
-			for (int i = 0, l = stream.readInt(); i < l; i++) {
-				final RandomItemTable randomItemTable = new RandomItemTable();
+			if (stream.available() > 0) {
+				for (int i = 0, l = stream.readInt(); i < l; i++) {
+					final RandomItemTable randomItemTable = new RandomItemTable();
 
-				randomItemTable.load(stream);
+					randomItemTable.load(stream);
 
-				this.randomItemTables.add(randomItemTable);
+					this.randomItemTables.add(randomItemTable);
+				}
 			}
 		}
 	}
@@ -209,7 +225,7 @@ public class War3MapW3i {
 		}
 
 		if (this.version > 27) {
-			ParseUtils.writeUInt8Array(stream, this.unknown2);
+			ParseUtils.writeUInt8Array(stream, this.unknown2ProbablyLua);
 		}
 
 		ParseUtils.writeUInt32(stream, this.players.size());
@@ -411,7 +427,7 @@ public class War3MapW3i {
 	}
 
 	public short[] getUnknown2() {
-		return this.unknown2;
+		return this.unknown2ProbablyLua;
 	}
 
 	public List<Player> getPlayers() {

@@ -157,7 +157,10 @@ public class PathingGrid {
 		}
 		for (int i = -1; i <= 1; i++) {
 			for (int j = -1; j <= 1; j++) {
-				if (!pathingType.isPathable(getPathing(unitX + (i * collisionSize), unitY + (j * collisionSize)))) {
+				final float unitPathingX = unitX + (i * collisionSize);
+				final float unitPathingY = unitY + (j * collisionSize);
+				if (!contains(unitPathingX, unitPathingY)
+						|| !pathingType.isPathable(getPathing(unitPathingX, unitPathingY))) {
 					return false;
 				}
 			}

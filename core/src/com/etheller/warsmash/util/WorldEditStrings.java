@@ -14,12 +14,14 @@ public class WorldEditStrings implements StringBundle {
 	private ResourceBundle bundlegs;
 
 	public WorldEditStrings(final DataSource dataSource) {
-		try (InputStream fis = dataSource.getResourceAsStream("UI\\WorldEditStrings.txt");
-				InputStreamReader reader = new InputStreamReader(fis, "utf-8")) {
-			this.bundle = new PropertyResourceBundle(reader);
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
+		if (dataSource.has("UI\\WorldEditStrings.txt")) {
+			try (InputStream fis = dataSource.getResourceAsStream("UI\\WorldEditStrings.txt");
+					InputStreamReader reader = new InputStreamReader(fis, "utf-8")) {
+				this.bundle = new PropertyResourceBundle(reader);
+			}
+			catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 		try (InputStream fis = dataSource.getResourceAsStream("UI\\WorldEditGameStrings.txt");
 				InputStreamReader reader = new InputStreamReader(fis, "utf-8")) {
@@ -49,6 +51,9 @@ public class WorldEditStrings implements StringBundle {
 	}
 
 	private String internalGetString(final String key) {
+		if (this.bundle == null) {
+			return this.bundlegs.getString(key.toUpperCase());
+		}
 		try {
 			String string = this.bundle.getString(key.toUpperCase());
 			if ((string.charAt(0) == '"') && (string.length() >= 2) && (string.charAt(string.length() - 1) == '"')) {
@@ -63,6 +68,9 @@ public class WorldEditStrings implements StringBundle {
 
 	@Override
 	public String getStringCaseSensitive(final String key) {
+		if (this.bundle == null) {
+			return this.bundlegs.getString(key);
+		}
 		try {
 			return this.bundle.getString(key);
 		}

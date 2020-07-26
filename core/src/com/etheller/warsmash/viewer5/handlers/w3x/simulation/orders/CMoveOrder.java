@@ -45,7 +45,7 @@ public class CMoveOrder implements COrder {
 		final float startFloatingY = prevY;
 		if (this.path == null) {
 			this.path = simulation.findNaiveSlowPath(this.unit, startFloatingX, startFloatingY, this.target,
-					movementType, collisionSize);
+					movementType == null ? MovementType.FOOT : movementType, collisionSize);
 			System.out.println("init path " + this.path);
 			// check for smoothing
 			if (!this.path.isEmpty()) {
@@ -65,7 +65,8 @@ public class CMoveOrder implements COrder {
 					if ((totalPathDistance < (1.15
 							* nextPossiblePathElement.distance(smoothingGroupStartX, smoothingGroupStartY)))
 							&& pathingGrid.isPathable((smoothingGroupStartX + nextPossiblePathElement.x) / 2,
-									(smoothingGroupStartY + nextPossiblePathElement.y) / 2, movementType)) {
+									(smoothingGroupStartY + nextPossiblePathElement.y) / 2,
+									movementType == null ? MovementType.DISABLED : movementType)) {
 						if (smoothingStartIndex == -1) {
 							smoothingStartIndex = i;
 						}
@@ -163,8 +164,11 @@ public class CMoveOrder implements COrder {
 				}
 				tempRect.set(this.unit.getCollisionRectangle());
 				tempRect.setCenter(nextX, nextY);
-				if (pathingGrid.isPathable(nextX, nextY, movementType, collisionSize)// ((int) collisionSize / 16) * 16
-						&& !worldCollision.intersectsAnythingOtherThan(tempRect, this.unit, movementType)) {
+				if ((movementType == null) || (pathingGrid.isPathable(nextX, nextY, movementType, collisionSize)// ((int)
+																												// collisionSize
+																												// / 16)
+																												// * 16
+						&& !worldCollision.intersectsAnythingOtherThan(tempRect, this.unit, movementType))) {
 					this.unit.setPoint(nextX, nextY, worldCollision);
 					if (done) {
 						if (this.path.isEmpty()) {
@@ -211,7 +215,7 @@ public class CMoveOrder implements COrder {
 				}
 				else {
 					this.path = simulation.findNaiveSlowPath(this.unit, startFloatingX, startFloatingY, this.target,
-							movementType, collisionSize);
+							movementType == null ? MovementType.FOOT : movementType, collisionSize);
 					System.out.println("new path " + this.path);
 					if (this.path.isEmpty()) {
 						return true;

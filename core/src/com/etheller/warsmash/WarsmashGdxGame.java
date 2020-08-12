@@ -74,7 +74,8 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(scene);
 
-		this.mainModel = (MdxModel) this.viewer.load("Doodads\\Cinematic\\ArthasIllidanFight\\ArthasIllidanFight.mdx",
+//		this.mainModel = (MdxModel) this.viewer.load("Doodads\\Cinematic\\ArthasIllidanFight\\ArthasIllidanFight.mdx",
+		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\SinglePlayer\\NightElf_Exp\\NightElf_Exp.mdx",
 //		this.mainModel = (MdxModel) this.viewer.load("Abilities\\Spells\\Orc\\FeralSpirit\\feralspirittarget.mdx",
 				new PathSolver() {
 					@Override
@@ -94,7 +95,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 		this.mainInstance.setScene(scene);
 
-		final int animIndex = 1;
+		final int animIndex = 0;
 		this.modelCamera = this.mainModel.cameras.get(animIndex);
 		this.mainInstance.setSequence(animIndex);
 
@@ -363,7 +364,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 				this.cameraManager.horizontalAngle = 0;
 			}
 		}
-		this.modelCamera = this.mainModel.cameras.get(this.mainInstance.sequence);
+//		this.modelCamera = this.mainModel.cameras.get(this.mainInstance.sequence);
 		this.cameraManager.updateCamera();
 		this.viewer.updateAndRender();
 

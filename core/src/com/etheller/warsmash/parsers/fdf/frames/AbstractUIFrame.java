@@ -3,6 +3,8 @@ package com.etheller.warsmash.parsers.fdf.frames;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -21,9 +23,9 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 	}
 
 	@Override
-	public void render(final SpriteBatch batch) {
+	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		for (final UIFrame childFrame : this.childFrames) {
-			childFrame.render(batch);
+			childFrame.render(batch, baseFont, glyphLayout);
 		}
 	}
 

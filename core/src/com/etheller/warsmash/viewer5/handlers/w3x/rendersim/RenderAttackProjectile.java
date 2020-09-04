@@ -10,7 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.IndexedSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.StandSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 
 public class RenderAttackProjectile {
 	private static final Quaternion pitchHeap = new Quaternion();
@@ -45,7 +45,8 @@ public class RenderAttackProjectile {
 		final float d2DToTarget = (float) StrictMath.sqrt((dxToTarget * dxToTarget) + (dyToTarget * dyToTarget));
 		final float startingDistance = d2DToTarget + this.totalTravelDistance;
 		this.targetHeight = (war3MapViewer.terrain.getGroundHeight(targetX, targetY)
-				+ this.simulationProjectile.getTarget().getFlyHeight());
+				+ this.simulationProjectile.getTarget().getFlyHeight()
+				+ this.simulationProjectile.getTarget().getImpactZ());
 		this.arcPeakHeight = arc * startingDistance;
 		this.yaw = (float) StrictMath.atan2(dyToTarget, dxToTarget);
 	}

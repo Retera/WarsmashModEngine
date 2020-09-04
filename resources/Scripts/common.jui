@@ -80,9 +80,27 @@ native LoadTOCFile                              takes string TOCFile returns fra
 // that.
 native CreateSimpleFrame                        takes string name, framehandle owner, integer createContext returns framehandle
 
+// Spawn a FRAME element that was defined in an FDF
+// template onto the screen. The "name" field must
+// match the name of a template to spawn, loaded with LoadTOCFile.
+// As noted on CreateSimpleFrame, for now createContext is pointless.
+// Likewise for priority -- until it fixed.
+native CreateFrame                              takes string name, framehandle owner, integer priority, integer createContext returns framehandle
+
+
 // Set the absolute point (often called Anchor) for the frame handle.
 // See FDF template files for examples
+native FrameSetAnchor                         takes framehandle frame, framepointtype point, real x, real y returns nothing
+
+// Tasyen said: "takes one point of a Frame unbound that point and places it to a specific coordinates on the screen."
 native FrameSetAbsPoint                         takes framehandle frame, framepointtype point, real x, real y returns nothing
+
+// Set the relative point (called SetPoint in FDF templates) for the frame handle.
+// See FDF template files for examples
+// Tasyen said: places a point of FrameA relative to a point of FrameB. When FrameB moves FrameA's point will keep this rule and moves with it.
+// Note for Project Warsmash: "When FrameB moves..." might not be true... call FramePositionBounds() for now
+native FrameSetPoint                            takes framehandle frame, framepointtype point, framehandle relative, framepointtype relativePoint, real x, real y returns nothing
+
 
 // Created for Warsmash engine, not a part of 1.31 UI apis,
 // and at some point it might be removed. Basically
@@ -97,6 +115,19 @@ native FramePositionBounds                      takes framehandle frame returns 
 // string "UI\\Console\\Human\\HumanUI-TimeIndicator.mdl"
 // when the "Human" skin was loaded with CreateRootFrame
 native SkinGetField                             takes string field returns string
+
+// Sets the text value on a String Frame, currently it crashes otherwise
+native FrameSetText                             takes framehandle frame, string text returns nothing
+
+// Sets the text color on a String Frame, currently it crashes otherwise
+native FrameSetTextColor                        takes framehandle frame, integer color returns nothing
+
+native ConvertColor                             takes integer a, integer r, integer g, integer b returns integer
+
+
+// Gets a previously created Frame using its name ( from an FDF template file that was
+// previously spawned ). See previous notes about createContext. Mostly pointless?
+native GetFrameByName                           takes string name, integer createContext returns framehandle
 
 //============================================================================
 // Native trigger interface

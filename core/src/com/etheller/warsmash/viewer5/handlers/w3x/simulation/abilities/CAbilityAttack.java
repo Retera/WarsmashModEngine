@@ -47,7 +47,7 @@ public class CAbilityAttack implements CAbility {
 
 	@Override
 	public void onOrder(final CSimulation game, final CUnit caster, final CWidget target, final boolean queue) {
-		caster.order(new CAttackOrder(caster, target), queue);
+		caster.order(new CAttackOrder(caster, caster.getUnitType().getAttacks().get(0), target), queue);
 	}
 
 	@Override

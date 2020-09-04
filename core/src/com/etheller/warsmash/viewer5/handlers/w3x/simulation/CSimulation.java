@@ -6,13 +6,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ProjectileCreator;
 
 public class CSimulation {
@@ -21,14 +22,17 @@ public class CSimulation {
 	private final List<CUnit> units;
 	private final List<CAttackProjectile> projectiles;
 	private final HandleIdAllocator handleIdAllocator;
-	private final ProjectileCreator projectileCreator;
+	private transient final ProjectileCreator projectileCreator;
 	private int gameTurnTick = 0;
 	private final PathingGrid pathingGrid;
 	private final CWorldCollision worldCollision;
 	private final CPathfindingProcessor pathfindingProcessor;
+	private final CGameplayConstants gameplayConstants;
 
-	public CSimulation(final MutableObjectData parsedUnitData, final MutableObjectData parsedAbilityData,
-			final ProjectileCreator projectileCreator, final PathingGrid pathingGrid, final Rectangle entireMapBounds) {
+	public CSimulation(final DataTable miscData, final MutableObjectData parsedUnitData,
+			final MutableObjectData parsedAbilityData, final ProjectileCreator projectileCreator,
+			final PathingGrid pathingGrid, final Rectangle entireMapBounds) {
+		this.gameplayConstants = new CGameplayConstants(miscData);
 		this.projectileCreator = projectileCreator;
 		this.pathingGrid = pathingGrid;
 		this.unitData = new CUnitData(parsedUnitData);
@@ -100,5 +104,9 @@ public class CSimulation {
 
 	public CWorldCollision getWorldCollision() {
 		return this.worldCollision;
+	}
+
+	public CGameplayConstants getGameplayConstants() {
+		return this.gameplayConstants;
 	}
 }

@@ -63,6 +63,7 @@ public class MdxComplexInstance extends ModelInstance {
 	public FloatBuffer worldMatricesCopyHeap;
 	public DataTexture boneTexture;
 	public Texture[] replaceableTextures = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
+	private float animationSpeed = 1.0f;
 
 	public MdxComplexInstance(final MdxModel model) {
 		super(model);
@@ -522,7 +523,7 @@ public class MdxComplexInstance extends ModelInstance {
 		if (sequenceId != -1) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
-			final int frameTime = (int) (dt * 1000);
+			final int frameTime = (int) (dt * 1000 * this.animationSpeed);
 
 			this.frame += frameTime;
 			this.counter += frameTime;
@@ -712,5 +713,9 @@ public class MdxComplexInstance extends ModelInstance {
 			}
 		}
 		return false;
+	}
+
+	public void setAnimationSpeed(final float speedRatio) {
+		this.animationSpeed = speedRatio;
 	}
 }

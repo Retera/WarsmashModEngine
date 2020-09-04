@@ -2,11 +2,12 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Quaternion;
-import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
@@ -15,15 +16,15 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
-import com.etheller.warsmash.viewer5.handlers.w3x.IndexedSequence;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.StandSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityHoldPosition;
@@ -32,13 +33,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityP
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityStop;
 
 public class RenderUnit {
-	private static final double GLOBAL_TURN_RATE = Math.toDegrees(7f);
 	private static final Quaternion tempQuat = new Quaternion();
 	private static final War3ID RED = War3ID.fromString("uclr");
 	private static final War3ID GREEN = War3ID.fromString("uclg");
 	private static final War3ID BLUE = War3ID.fromString("uclb");
 	private static final War3ID MODEL_SCALE = War3ID.fromString("usca");
 	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
+	private static final War3ID ORIENTATION_INTERPOLATION = War3ID.fromString("uori");
 	private static final float[] heapZ = new float[3];
 	public final MdxComplexInstance instance;
 	public final MutableGameObject row;
@@ -48,8 +49,6 @@ public class RenderUnit {
 	public final MdxModel portraitModel;
 	public int playerIndex;
 	private final CUnit simulationUnit;
-	private COrder lastOrder;
-	private AnimationTokens.PrimaryTag lastOrderAnimation;
 	public SplatMover shadow;
 	public SplatMover selectionCircle;
 	private final List<CommandCardIcon> commandCardIcons = new ArrayList<>();
@@ -60,10 +59,11 @@ public class RenderUnit {
 
 	private boolean swimming;
 
-	private boolean alreadyPlayedDeath = false;
+	private final boolean alreadyPlayedDeath = false;
 
-	private final EnumSet<AnimationTokens.SecondaryTag> secondaryAnimationTags = EnumSet
-			.noneOf(AnimationTokens.SecondaryTag.class);
+	private final UnitAnimationListenerImpl unitAnimationListenerImpl;
+	private OrientationInterpolation orientationInterpolation;
+	private float currentTurnVelocity = 0;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit, final UnitSoundset soundset,
@@ -82,9 +82,11 @@ public class RenderUnit {
 		this.y = simulationUnit.getY();
 		instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
 		instance.scale(unit.getScale());
-		this.playerIndex = unit.getPlayer();
+		this.playerIndex = unit.getPlayer() & 0xFFFF;
 		instance.setTeamColor(this.playerIndex);
 		instance.setScene(map.worldScene);
+		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance);
+		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
 
 		if (row != null) {
 			heapZ[2] = simulationUnit.getFlyHeight();
@@ -104,6 +106,12 @@ public class RenderUnit {
 			instance.uniformScale(row.getFieldAsFloat(scale, 0));
 
 			this.selectionScale = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0);
+			int orientationInterpolationOrdinal = row.getFieldAsInteger(ORIENTATION_INTERPOLATION, 0);
+			if ((orientationInterpolationOrdinal < 0)
+					|| (orientationInterpolationOrdinal >= OrientationInterpolation.VALUES.length)) {
+				orientationInterpolationOrdinal = 0;
+			}
+			this.orientationInterpolation = OrientationInterpolation.VALUES[orientationInterpolationOrdinal];
 		}
 
 		this.instance = instance;
@@ -179,14 +187,11 @@ public class RenderUnit {
 		else {
 			groundHeight = map.terrain.getGroundHeight(x, y);
 		}
-		boolean changedAnimationTags = false;
 		if (swimming && !this.swimming) {
-			this.secondaryAnimationTags.add(AnimationTokens.SecondaryTag.SWIM);
-			changedAnimationTags = true;
+			this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.SWIM);
 		}
 		else if (!swimming && this.swimming) {
-			this.secondaryAnimationTags.remove(AnimationTokens.SecondaryTag.SWIM);
-			changedAnimationTags = true;
+			this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.SWIM);
 		}
 		this.swimming = swimming;
 		this.location[2] = this.simulationUnit.getFlyHeight() + groundHeight;
@@ -207,52 +212,41 @@ public class RenderUnit {
 			facingDelta = -360 + facingDelta;
 		}
 		final float absoluteFacingDelta = Math.abs(facingDelta);
-		float angleToAdd = (float) (Math.signum(facingDelta) * GLOBAL_TURN_RATE * deltaTime);
+		final float turningSign = Math.signum(facingDelta);
+
+		final float absoluteFacingDeltaRadians = (float) Math.toRadians(absoluteFacingDelta);
+		float acceleration;
+		final boolean endPhase = (absoluteFacingDeltaRadians <= this.orientationInterpolation.getEndingAccelCutoff())
+				&& ((this.currentTurnVelocity * turningSign) > 0);
+		if (endPhase) {
+			this.currentTurnVelocity = (1
+					- ((this.orientationInterpolation.getEndingAccelCutoff() - absoluteFacingDeltaRadians)
+							/ this.orientationInterpolation.getEndingAccelCutoff()))
+					* (this.orientationInterpolation.getMaxVelocity()) * turningSign;
+		}
+		else {
+			acceleration = this.orientationInterpolation.getStartingAcceleration() * turningSign;
+			this.currentTurnVelocity = this.currentTurnVelocity + acceleration;
+		}
+		if ((this.currentTurnVelocity * turningSign) > this.orientationInterpolation.getMaxVelocity()) {
+			this.currentTurnVelocity = this.orientationInterpolation.getMaxVelocity() * turningSign;
+		}
+		float angleToAdd = (float) ((Math.toDegrees(this.currentTurnVelocity) * deltaTime) / 0.03f);
+
 		if (absoluteFacingDelta < Math.abs(angleToAdd)) {
 			angleToAdd = facingDelta;
+			this.currentTurnVelocity = 0.0f;
 		}
 		this.facing = (((this.facing + angleToAdd) % 360) + 360) % 360;
 		this.instance.setLocalRotation(tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z, this.facing));
 		map.worldScene.instanceMoved(this.instance, this.location[0], this.location[1]);
-		final MdxComplexInstance mdxComplexInstance = this.instance;
-		final COrder currentOrder = this.simulationUnit.getCurrentOrder();
-		if (this.simulationUnit.getLife() <= 0) {
-			final MdxModel model = (MdxModel) mdxComplexInstance.model;
-			final List<Sequence> sequences = model.getSequences();
-			IndexedSequence sequence = StandSequence.selectSequence("death", sequences);
-			if (!this.alreadyPlayedDeath && (sequence != null) && (mdxComplexInstance.sequence != sequence.index)) {
-				mdxComplexInstance.setSequence(sequence.index);
-				this.alreadyPlayedDeath = true;
-			}
-			else if (mdxComplexInstance.sequenceEnded && this.alreadyPlayedDeath) {
-				sequence = StandSequence.selectSequence("dissipate", sequences);
-				if ((sequence != null) && (mdxComplexInstance.sequence != sequence.index)) {
-					mdxComplexInstance.setSequence(sequence.index);
-				}
-			}
-		}
-		else if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1)
-				|| (currentOrder != this.lastOrder)
-				|| ((currentOrder != null) && (currentOrder.getAnimationName() != null)
-						&& !currentOrder.getAnimationName().equals(this.lastOrderAnimation))
-				|| changedAnimationTags) {
-			if (this.simulationUnit.getCurrentOrder() != null) {
-				final AnimationTokens.PrimaryTag animationName = this.simulationUnit.getCurrentOrder()
-						.getAnimationName();
-				StandSequence.randomSequence(mdxComplexInstance, animationName, this.secondaryAnimationTags);
-				this.lastOrderAnimation = animationName;
-			}
-			else {
-				StandSequence.randomSequence(mdxComplexInstance, PrimaryTag.STAND, this.secondaryAnimationTags);
-			}
-		}
-		this.lastOrder = currentOrder;
 		if (this.shadow != null) {
 			this.shadow.move(dx, dy, map.terrain.centerOffset);
 		}
 		if (this.selectionCircle != null) {
 			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
 		}
+		this.unitAnimationListenerImpl.update();
 	}
 
 	public CUnit getSimulationUnit() {
@@ -261,5 +255,81 @@ public class RenderUnit {
 
 	public List<CommandCardIcon> getCommandCardIcons() {
 		return this.commandCardIcons;
+	}
+
+	private static final class UnitAnimationListenerImpl implements CUnitAnimationListener {
+		private final MdxComplexInstance instance;
+		private final EnumSet<AnimationTokens.SecondaryTag> secondaryAnimationTags = EnumSet
+				.noneOf(AnimationTokens.SecondaryTag.class);
+		private final EnumSet<AnimationTokens.SecondaryTag> recycleSet = EnumSet
+				.noneOf(AnimationTokens.SecondaryTag.class);
+		private PrimaryTag currentAnimation;
+		private EnumSet<SecondaryTag> currentAnimationSecondaryTags;
+		private float currentSpeedRatio;
+		private final Queue<QueuedAnimation> animationQueue = new LinkedList<>();
+
+		public UnitAnimationListenerImpl(final MdxComplexInstance instance) {
+			this.instance = instance;
+		}
+
+		public void addSecondaryTag(final AnimationTokens.SecondaryTag tag) {
+			this.secondaryAnimationTags.add(tag);
+			playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio);
+		}
+
+		public void removeSecondaryTag(final AnimationTokens.SecondaryTag tag) {
+			this.secondaryAnimationTags.remove(tag);
+			playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio);
+		}
+
+		@Override
+		public void playAnimation(final boolean force, final PrimaryTag animationName,
+				final EnumSet<SecondaryTag> secondaryAnimationTags, final float speedRatio) {
+			this.animationQueue.clear();
+			if (force || (animationName != this.currentAnimation)) {
+				this.currentAnimation = animationName;
+				this.currentAnimationSecondaryTags = secondaryAnimationTags;
+				this.currentSpeedRatio = speedRatio;
+				this.recycleSet.clear();
+				this.recycleSet.addAll(this.secondaryAnimationTags);
+				this.recycleSet.addAll(secondaryAnimationTags);
+				this.instance.setAnimationSpeed(speedRatio);
+				StandSequence.randomSequence(this.instance, animationName, this.recycleSet);
+			}
+		}
+
+		@Override
+		public void queueAnimation(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryAnimationTags) {
+			this.animationQueue.add(new QueuedAnimation(animationName, secondaryAnimationTags));
+		}
+
+		public void update() {
+			if (this.instance.sequenceEnded || (this.instance.sequence == -1)) {
+				// animation done
+				if ((this.instance.sequence != -1) && (((MdxModel) this.instance.model).getSequences()
+						.get(this.instance.sequence).getFlags() == 0)) {
+					// animation is a looping animation
+					playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags,
+							this.currentSpeedRatio);
+				}
+				else {
+					final QueuedAnimation nextAnimation = this.animationQueue.poll();
+					if (nextAnimation != null) {
+						playAnimation(true, nextAnimation.animationName, nextAnimation.secondaryAnimationTags, 1.0f);
+					}
+				}
+			}
+		}
+
+	}
+
+	private static final class QueuedAnimation {
+		private final PrimaryTag animationName;
+		private final EnumSet<SecondaryTag> secondaryAnimationTags;
+
+		public QueuedAnimation(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryAnimationTags) {
+			this.animationName = animationName;
+			this.secondaryAnimationTags = secondaryAnimationTags;
+		}
 	}
 }

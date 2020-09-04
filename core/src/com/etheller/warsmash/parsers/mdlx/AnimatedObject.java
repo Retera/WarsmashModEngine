@@ -25,7 +25,11 @@ public abstract class AnimatedObject implements Chunk, MdlxBlock {
 	public void readTimelines(final LittleEndianDataInputStream stream, long size) throws IOException {
 		while (size > 0) {
 			final War3ID name = new War3ID(Integer.reverseBytes(stream.readInt()));
-			final Timeline<?> timeline = AnimationMap.ID_TO_TAG.get(name).getImplementation().createTimeline();
+			final AnimationMap animationMap = AnimationMap.ID_TO_TAG.get(name);
+			if (animationMap == null) {
+				throw new IllegalStateException("Unable to parse: '" + name + "'");
+			}
+			final Timeline<?> timeline = animationMap.getImplementation().createTimeline();
 
 			timeline.readMdx(stream, name);
 

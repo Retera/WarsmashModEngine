@@ -47,4 +47,6 @@ public abstract class CWidget {
 
 	public abstract float getFlyHeight();
 
+	public abstract float getImpactZ();
+
 }

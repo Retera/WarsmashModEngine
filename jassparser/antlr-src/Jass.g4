@@ -19,7 +19,7 @@ program :
 
 typeDefinition :
 	TYPE ID EXTENDS ID newlines
-	; 
+	;  
 
 type :
 	ID # BasicType

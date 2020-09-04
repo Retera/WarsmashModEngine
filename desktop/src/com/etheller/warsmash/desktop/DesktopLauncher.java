@@ -84,10 +84,12 @@ public class DesktopLauncher {
 		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
 		config.samples = 16;
-		config.fullscreen = true;
-		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
-		config.width = desktopDisplayMode.width;
-		config.height = desktopDisplayMode.height;
+		config.fullscreen = false;
+		if (config.fullscreen) {
+			final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
+			config.width = desktopDisplayMode.width;
+			config.height = desktopDisplayMode.height;
+		}
 		new LwjglApplication(new WarsmashGdxMapGame(warsmashIni), config);
 	}
 }

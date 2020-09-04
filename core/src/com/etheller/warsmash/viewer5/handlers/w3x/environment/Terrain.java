@@ -544,7 +544,7 @@ public class Terrain {
 				final RenderCorner topLeft = this.corners[i][j + 1];
 				final RenderCorner topRight = this.corners[i + 1][j + 1];
 
-				if (bottomLeft.cliff) {
+				if (bottomLeft.cliff && !bottomLeft.hideCliff) {
 					final int base = Math.min(Math.min(bottomLeft.getLayerHeight(), bottomRight.getLayerHeight()),
 							Math.min(topLeft.getLayerHeight(), topRight.getLayerHeight()));
 
@@ -670,6 +670,33 @@ public class Terrain {
 		}
 
 		uploadGroundTexture();
+	}
+
+	public void removeTerrainCell(final int i, final int j) {
+		this.groundTextureList[(((j * (this.columns - 1)) + i) * 4) + 3] |= 0b1000000000000000;
+		this.corners[i][j].hideCliff = true;
+		uploadGroundTexture();
+		try {
+			updateCliffMeshes(new Rectangle(i - 1, j - 1, 1, 1)); // TODO does this work?
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void removeTerrainCellWithoutFlush(final int i, final int j) {
+		this.groundTextureList[(((j * (this.columns - 1)) + i) * 4) + 3] |= 0b1000000000000000;
+		this.corners[i][j].hideCliff = true;
+	}
+
+	public void flushRemovedTerrainCells() {
+		uploadGroundTexture();
+		try {
+			updateCliffMeshes(new Rectangle(0, 0, this.columns - 1, this.rows - 1));
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void uploadGroundTexture() {

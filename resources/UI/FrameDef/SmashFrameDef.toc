@@ -1,0 +1,2 @@
+UI\FrameDef\SmashUI\TimeOfDayIndicator.fdf
+UI\FrameDef\SmashUI\UnitPortrait.fdf

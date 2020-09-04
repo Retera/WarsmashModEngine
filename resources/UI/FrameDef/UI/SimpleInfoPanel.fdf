@@ -1,0 +1,447 @@
+
+// --- TEXT -----------------------------------------------------------------------
+
+
+String "SimpleInfoPanelTitleTextTemplate" {
+    FontColor 1.0 1.0 1.0 1.0,
+	FontShadowColor 0.0 0.0 0.0 0.9,
+	FontShadowOffset 0.002 -0.002,
+	Font "InfoPanelTextFont",0.013,
+}
+String "SimpleInfoPanelTitleTextDisabledTemplate" INHERITS "SimpleInfoPanelTitleTextTemplate" {
+    FontColor 0.2 0.2 0.2 1.0,
+}
+
+String "SimpleInfoPanelDescriptionTextTemplate" {
+    FontColor 0.99 0.827 0.0705 1.0,
+	FontShadowColor 0.0 0.0 0.0 0.9,
+    FontShadowOffset 0.001 -0.001,
+	Font "InfoPanelTextFont",0.01,
+}
+String "SimpleInfoPanelDescriptionHighlightTextTemplate" INHERITS "SimpleInfoPanelDescriptionTextTemplate" {
+	FontColor 1.0 1.0 1.0 1.0,
+}
+String "SimpleInfoPanelDescriptionDisabledTextTemplate" INHERITS "SimpleInfoPanelDescriptionTextTemplate" {
+	FontColor 0.2 0.2 0.2 1.0,
+}
+
+String "SimpleInfoPanelLabelTextTemplate" {
+    FontJustificationH JUSTIFYLEFT,
+    FontJustificationV JUSTIFYTOP,
+    FontColor 0.99 0.827 0.0705 1.0,
+	FontShadowColor 0.0 0.0 0.0 0.9,
+    FontShadowOffset 0.001 -0.001,
+	Font "InfoPanelTextFont",0.0085,
+}
+String "SimpleInfoPanelLabelHighlightTextTemplate" INHERITS "SimpleInfoPanelLabelTextTemplate" {
+	FontColor 1.0 1.0 1.0 1.0,
+}
+String "SimpleInfoPanelLabelDisabledTextTemplate" INHERITS "SimpleInfoPanelLabelTextTemplate" {
+	FontColor 0.2 0.2 0.2 1.0,
+}
+
+String "SimpleInfoPanelValueTextTemplate" INHERITS "SimpleInfoPanelLabelTextTemplate" {
+    FontColor 1.0 1.0 1.0 1.0,
+}
+
+String "SimpleInfoPanelAttributeTextTemplate" {
+    FontColor 1.0 1.0 1.0 1.0,
+	FontShadowColor 0.0 0.0 0.0 0.9,
+    FontShadowOffset 0.001 -0.001,
+	Font "InfoPanelTextFont",0.009,
+}
+String "SimpleInfoPanelAttributeDisabledTextTemplate" INHERITS "SimpleInfoPanelAttributeTextTemplate" {
+	FontColor 0.2 0.2 0.2 1.0,
+}
+
+Texture "InfoPanelIconTemplate" {
+    Width 0.032,
+    Height 0.032,
+    Anchor TOPLEFT, 0.004, -0.001,
+}
+
+Texture "ResourceIconTemplate" {
+    Width 0.014,
+    Height 0.014,
+}
+
+String "ResourceTextTemplate" INHERITS "SimpleInfoPanelValueTextTemplate" {
+    Font "InfoPanelTextFont", 0.0085,
+}
+
+// -- FRAMES ----------------------------------------------------------------
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelUnitDetail" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+
+    // --- unit name frame --------------------------------------------------
+	String "SimpleNameValue" INHERITS "SimpleInfoPanelTitleTextTemplate" {
+		Anchor TOP,0,0,
+	}
+
+    // --- hero level bar ---------------------------------------------------
+    Frame "SIMPLESTATUSBAR" "SimpleHeroLevelBar" {
+        UseActiveContext,
+        SetPoint TOP, "SimpleNameValue", BOTTOM, 0.0, -0.0015,
+        Height 0.015625,
+    }
+
+    // --- timed life bar ----------------------------------------------------
+    Frame "SIMPLESTATUSBAR" "SimpleProgressIndicator" {
+        UseActiveContext,
+        SetPoint TOP, "SimpleNameValue", BOTTOM, 0.0, -0.0015,
+        Height 0.015625,
+    }
+
+    // --- building build queue panel -------------------------------------------------
+    Frame "SIMPLESTATUSBAR" "SimpleBuildTimeIndicator" {
+        UseActiveContext,
+        SetPoint TOPLEFT, "SimpleInfoPanelUnitDetail", TOPLEFT, 0.061250, -0.038125,
+    }
+
+    String "SimpleBuildingActionLabel" INHERITS "SimpleInfoPanelDescriptionTextTemplate" {
+        SetPoint CENTER, "SimpleInfoPanelUnitDetail", TOPLEFT, 0.11375, -0.029875,
+		Text "Retarded text",
+    }
+
+    // --- unit stats panel -------------------------------------------------
+    // This is required to make sure the class text appears above the status bars.
+    Frame "SIMPLEFRAME" "SimpleUnitStatsPanel" {
+        UseActiveContext,
+		SetAllPoints,
+		DecorateFileNames,
+
+        // --- class ------------------------------------------------------------
+	    String "SimpleClassValue" INHERITS "SimpleInfoPanelValueTextTemplate" {
+            SetPoint TOP, "SimpleNameValue", BOTTOM,  0.0, -0.0055,
+            FontJustificationH JUSTIFYCENTER,
+        }
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelCargoDetail" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+
+    // --- unit name frame --------------------------------------------------
+    String "SimpleHoldNameValue" INHERITS "SimpleInfoPanelTitleTextTemplate" {
+        Anchor TOP,0,0,
+    }
+
+    String "SimpleHoldDescriptionValue" INHERITS "SimpleInfoPanelDescriptionTextTemplate" {
+        SetPoint TOP, "SimpleHoldNameValue", BOTTOM, 0.0, -0.007,
+		Width 0.188,
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelBuildingDetail" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+
+    String "SimpleBuildingNameValue" INHERITS "SimpleInfoPanelTitleTextTemplate" {
+        Anchor TOP,0,0,
+    }
+
+    String "SimpleBuildingDescriptionValue" INHERITS "SimpleInfoPanelDescriptionTextTemplate" {
+        SetPoint TOP, "SimpleBuildingNameValue", BOTTOM, 0.0, -0.007,
+		Width 0.188,
+    }
+
+    // --- building build queue panel -------------------------------------------------
+    Frame "SIMPLESTATUSBAR" "SimpleBuildTimeIndicator" {
+        UseActiveContext,
+        SetPoint TOPLEFT, "SimpleInfoPanelBuildingDetail", TOPLEFT, 0.061250, -0.038125,
+    }
+
+    String "SimpleBuildingActionLabel" INHERITS "SimpleInfoPanelDescriptionTextTemplate" {
+        SetPoint CENTER, "SimpleInfoPanelBuildingDetail", TOPLEFT, 0.11375, -0.029875,
+		Text "Retarded text",
+    }
+
+	Layer "ARTWORK" {
+		Texture "SimpleBuildQueueBackdrop" {
+            SetPoint BOTTOMLEFT, "SimpleInfoPanelBuildingDetail", BOTTOMLEFT, 0.0, 0.0,
+            SetPoint BOTTOMRIGHT, "SimpleInfoPanelBuildingDetail", BOTTOMRIGHT, 0.0, 0.0,
+			Height 0.1,
+			File "BuildQueueBackdrop",
+		}
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelItemDetail" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+
+    // --- item name frame --------------------------------------------------
+    String "SimpleItemNameValue" INHERITS "SimpleInfoPanelTitleTextTemplate" {
+        Anchor TOP,0,0,
+    }
+
+    // --- item description frame -------------------------------------------
+    String "SimpleItemDescriptionValue" INHERITS "SimpleInfoPanelDescriptionTextTemplate" {
+        Width 0.188,
+        SetPoint TOP, "SimpleItemNameValue", BOTTOM, 0.0, -0.008,
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelDestructableDetail" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+
+    // --- destructable name frame --------------------------------------------------
+    String "SimpleDestructableNameValue" INHERITS "SimpleInfoPanelTitleTextTemplate" {
+        Anchor TOP,0,0,
+    }
+
+    // --- destructable description frame -------------------------------------------
+    //String "SimpleDestructableDescriptionValue" INHERITS "SimpleInfoPanelDescriptionTextTemplate" {
+    //    Width 0.188,
+    //    SetPoint TOP, "SimpleDestructableNameValue", BOTTOM, 0.0, -0.008,
+    //}
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelIconDamage" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+    Height 0.03125,
+
+    // --- icon -------------------------------------------------------------
+    Texture "InfoPanelIconBackdrop" INHERITS "InfoPanelIconTemplate" {
+        File "HeroStrengthIcon",
+    }
+
+    // --- icon # -----------------------------------------------------------
+	String "InfoPanelIconLevel" INHERITS "SimpleInfoPanelAttributeTextTemplate" {
+        SetPoint CENTER, "InfoPanelIconBackdrop", BOTTOMRIGHT, -0.007625, 0.006875,
+	}
+
+    // --- label ------------------------------------------------------------
+    String "InfoPanelIconLabel" INHERITS "SimpleInfoPanelLabelTextTemplate" {        
+        SetPoint TOPLEFT, "InfoPanelIconBackdrop", TOPRIGHT, 0.0, -0.003,
+        Text "COLON_DAMAGE",
+    }
+
+    // --- value ------------------------------------------------------------
+    String "InfoPanelIconValue" INHERITS "SimpleInfoPanelValueTextTemplate" {
+        SetPoint TOPLEFT, "InfoPanelIconLabel", BOTTOMLEFT, 0.005, -0.003,
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelIconArmor" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+    Height 0.03125,
+
+    // --- icon -------------------------------------------------------------
+    Texture "InfoPanelIconBackdrop" INHERITS "InfoPanelIconTemplate" {
+        File "HeroStrengthIcon",
+    }
+
+    // --- icon # -----------------------------------------------------------
+	String "InfoPanelIconLevel" INHERITS "SimpleInfoPanelAttributeTextTemplate" {
+        SetPoint CENTER, "InfoPanelIconBackdrop", BOTTOMRIGHT, -0.007625, 0.006875,
+	}
+
+    // --- label ------------------------------------------------------------
+    String "InfoPanelIconLabel" INHERITS "SimpleInfoPanelLabelTextTemplate" {        
+        SetPoint TOPLEFT, "InfoPanelIconBackdrop", TOPRIGHT, 0.0, -0.003,
+        Text "COLON_ARMOR",
+    }
+
+    // --- value ------------------------------------------------------------
+    String "InfoPanelIconValue" INHERITS "SimpleInfoPanelValueTextTemplate" {
+        SetPoint TOPLEFT, "InfoPanelIconLabel", BOTTOMLEFT, 0.005, -0.003,
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelIconRank" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+    Height 0.03125,
+
+    // --- icon -------------------------------------------------------------
+    Texture "InfoPanelIconBackdrop" INHERITS "InfoPanelIconTemplate" {
+        File "HeroStrengthIcon",
+    }
+
+    // --- icon # -----------------------------------------------------------
+	String "InfoPanelIconLevel" INHERITS "SimpleInfoPanelAttributeTextTemplate" {
+        SetPoint CENTER, "InfoPanelIconBackdrop", BOTTOMRIGHT, -0.007625, 0.006875,
+	}
+
+    // --- label ------------------------------------------------------------
+    String "InfoPanelIconLabel" INHERITS "SimpleInfoPanelLabelTextTemplate" {        
+        SetPoint TOPLEFT, "InfoPanelIconBackdrop", TOPRIGHT, 0.0, -0.003,
+        Text "COLON_RANK",
+    }
+
+    // --- value ------------------------------------------------------------
+    String "InfoPanelIconValue" INHERITS "SimpleInfoPanelValueTextTemplate" {
+        SetPoint TOPLEFT, "InfoPanelIconLabel", BOTTOMLEFT, 0.005, -0.003,
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelIconFood" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+    Height 0.03125,
+
+    // --- icon -------------------------------------------------------------
+    Texture "InfoPanelIconBackdrop" INHERITS "InfoPanelIconTemplate" {
+        File "InfoPanelIconFood",
+    }
+
+    // --- icon # -----------------------------------------------------------
+	String "InfoPanelIconLevel" INHERITS "SimpleInfoPanelAttributeTextTemplate" {
+        SetPoint CENTER, "InfoPanelIconBackdrop", BOTTOMRIGHT, -0.007625, 0.006875,
+	}
+
+    // --- label ------------------------------------------------------------
+    String "InfoPanelIconLabel" INHERITS "SimpleInfoPanelLabelTextTemplate" {        
+        SetPoint TOPLEFT, "InfoPanelIconBackdrop", TOPRIGHT, 0.0, -0.003,
+        Text "COLON_FOOD",
+    }
+
+    // --- value ------------------------------------------------------------
+    String "InfoPanelIconValue" INHERITS "SimpleInfoPanelValueTextTemplate" {
+        SetPoint TOPLEFT, "InfoPanelIconLabel", BOTTOMLEFT, 0.005, -0.003,
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelIconGold" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+    Height 0.03125,
+
+    // --- icon -------------------------------------------------------------
+    Texture "InfoPanelIconBackdrop" INHERITS "InfoPanelIconTemplate" {
+        File "InfoPanelIconGold",
+    }
+
+    // --- icon # -----------------------------------------------------------
+	String "InfoPanelIconLevel" INHERITS "SimpleInfoPanelAttributeTextTemplate" {
+        SetPoint CENTER, "InfoPanelIconBackdrop", BOTTOMRIGHT, -0.007625, 0.006875,
+	}
+
+    // --- label ------------------------------------------------------------
+    String "InfoPanelIconLabel" INHERITS "SimpleInfoPanelLabelTextTemplate" {        
+        SetPoint TOPLEFT, "InfoPanelIconBackdrop", TOPRIGHT, 0.0, -0.003,
+        Text "COLON_GOLD",
+    }
+
+    // --- value ------------------------------------------------------------
+    String "InfoPanelIconValue" INHERITS "SimpleInfoPanelValueTextTemplate" {
+        SetPoint TOPLEFT, "InfoPanelIconLabel", BOTTOMLEFT, 0.005, -0.003,
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelIconHero" {
+    UseActiveContext,
+    SetAllPoints,
+    DecorateFileNames,
+    Height 0.0625,
+
+    // --- icon -------------------------------------------------------------
+    Texture "InfoPanelIconHeroIcon" INHERITS "InfoPanelIconTemplate" {
+        File "HeroStrengthIcon",
+        Anchor LEFT, 0.004, 0.0,
+    }
+
+    Frame "SIMPLEFRAME" "SimpleInfoPanelIconHeroText" {
+        UseActiveContext,
+        DecorateFileNames,
+        SetPoint LEFT, "InfoPanelIconHeroIcon", RIGHT, 0.0, 0.0,
+        SetPoint RIGHT, "SimpleInfoPanelIconHero", RIGHT, 0.0, 0.0,
+        SetPoint TOP, "SimpleInfoPanelIconHero", TOP, 0.0, 0.0,
+        SetPoint BOTTOM, "SimpleInfoPanelIconHero", BOTTOM, 0.0, 0.0,
+
+        // --- strength ---------------------------------------------------------
+        String "InfoPanelIconHeroStrengthLabel" INHERITS "SimpleInfoPanelLabelTextTemplate" {
+            Anchor TOPLEFT, 0.0, -0.003,
+            Text "COLON_STRENGTH",
+        }
+
+        String "InfoPanelIconHeroStrengthValue" INHERITS "SimpleInfoPanelValueTextTemplate" {
+            SetPoint TOPLEFT, "InfoPanelIconHeroStrengthLabel", BOTTOMLEFT, 0.005, 0.0,
+        }
+
+        // --- agility ----------------------------------------------------------
+        String "InfoPanelIconHeroAgilityLabel" INHERITS "SimpleInfoPanelLabelTextTemplate" {
+            SetPoint TOPLEFT, "InfoPanelIconHeroStrengthValue", BOTTOMLEFT, -0.005, -0.004,
+            Text "COLON_AGILITY",
+        }
+
+        String "InfoPanelIconHeroAgilityValue" INHERITS "SimpleInfoPanelValueTextTemplate" {
+            SetPoint TOPLEFT, "InfoPanelIconHeroAgilityLabel", BOTTOMLEFT, 0.005, 0.0,
+        }
+
+        // --- intellect --------------------------------------------------------
+        String "InfoPanelIconHeroIntellectLabel" INHERITS "SimpleInfoPanelLabelTextTemplate" {
+            SetPoint TOPLEFT, "InfoPanelIconHeroAgilityValue", BOTTOMLEFT, -0.005, -0.004,
+            Text "COLON_INTELLECT",
+        }
+
+        String "InfoPanelIconHeroIntellectValue" INHERITS "SimpleInfoPanelValueTextTemplate" {
+            SetPoint TOPLEFT, "InfoPanelIconHeroIntellectLabel", BOTTOMLEFT, 0.005, 0.0,
+        }
+    }
+}
+
+Frame "SIMPLEFRAME" "SimpleInfoPanelIconAlly" {
+    UseActiveContext,
+    DecorateFileNames,
+    Height 0.0625,
+
+    // --- title ------------------------------------------------------------
+    String "InfoPanelIconAllyTitle" INHERITS "SimpleInfoPanelLabelTextTemplate" {
+        SetPoint TOPLEFT, "SimpleInfoPanelIconAlly", TOPLEFT, 0.0, 0.0,
+        Text "ALLY_RESOURCES",
+    }
+
+    // --- gold -------------------------------------------------------------
+    Texture "InfoPanelIconAllyGoldIcon" INHERITS "ResourceIconTemplate" {
+        SetPoint TOPLEFT, "SimpleInfoPanelIconAlly", TOPLEFT, 0.0, -0.009,
+        File "GoldIcon",
+    }
+
+    String "InfoPanelIconAllyGoldValue" INHERITS "ResourceTextTemplate" {
+        SetPoint LEFT, "InfoPanelIconAllyGoldIcon", RIGHT, 0.005, 0.0,
+    }
+
+    // --- wood -------------------------------------------------------------
+    Texture "InfoPanelIconAllyWoodIcon" INHERITS "ResourceIconTemplate" {
+        SetPoint TOPLEFT, "InfoPanelIconAllyGoldIcon", BOTTOMLEFT, 0.0, 0.0,
+        File "LumberIcon",
+    }
+
+    String "InfoPanelIconAllyWoodValue" INHERITS "ResourceTextTemplate" {
+        SetPoint LEFT, "InfoPanelIconAllyWoodIcon", RIGHT, 0.005, 0.0,
+    }
+
+    // --- food -------------------------------------------------------------
+    Texture "InfoPanelIconAllyFoodIcon" INHERITS "ResourceIconTemplate" {
+        SetPoint TOPLEFT, "InfoPanelIconAllyWoodIcon", BOTTOMLEFT, 0.0, 0.0,
+        File "SupplyIcon",
+    }
+
+    String "InfoPanelIconAllyFoodValue" INHERITS "ResourceTextTemplate" {
+        SetPoint LEFT, "InfoPanelIconAllyFoodIcon", RIGHT, 0.005, 0.0,
+    }
+
+    // --- upkeep -----------------------------------------------------------
+    String "InfoPanelIconAllyUpkeep" INHERITS "SimpleInfoPanelValueTextTemplate" {
+        SetPoint TOPLEFT, "InfoPanelIconAllyFoodValue", BOTTOMLEFT, 0.0, -0.005,
+        Text "Upkeep",
+    }
+}

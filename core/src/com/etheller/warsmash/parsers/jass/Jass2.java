@@ -9,6 +9,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.interpreter.JassLexer;
 import com.etheller.interpreter.JassParser;
@@ -20,6 +22,7 @@ import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.HandleJassValue;
+import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
 import com.etheller.interpreter.ast.value.visitor.IntegerJassValueVisitor;
@@ -32,6 +35,8 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
+import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprAnd;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprCondition;
@@ -41,16 +46,19 @@ import com.etheller.warsmash.parsers.jass.triggers.BoolExprOr;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerAction;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerCondition;
 import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class Jass2 {
 	public static final boolean REPORT_SYNTAX_ERRORS = true;
 
 	public static JUIEnvironment loadJUI(final DataSource dataSource, final Viewport uiViewport,
+			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final War3MapViewer war3MapViewer,
 			final RootFrameListener rootFrameListener, final String... files) {
 
 		final JassProgramVisitor jassProgramVisitor = new JassProgramVisitor();
-		final JUIEnvironment environment = new JUIEnvironment(jassProgramVisitor, dataSource, uiViewport,
-				rootFrameListener);
+		final JUIEnvironment environment = new JUIEnvironment(jassProgramVisitor, dataSource, uiViewport, fontGenerator,
+				uiScene, war3MapViewer, rootFrameListener);
 		for (final String jassFile : files) {
 			try {
 				JassLexer lexer;
@@ -95,7 +103,8 @@ public class Jass2 {
 		private Element skin;
 
 		public JUIEnvironment(final JassProgramVisitor jassProgramVisitor, final DataSource dataSource,
-				final Viewport uiViewport, final RootFrameListener rootFrameListener) {
+				final Viewport uiViewport, final FreeTypeFontGenerator fontGenerator, final Scene uiScene,
+				final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener) {
 			final GlobalScope globals = jassProgramVisitor.getGlobals();
 			final HandleJassType frameHandleType = globals.registerHandleType("framehandle");
 			final HandleJassType framePointType = globals.registerHandleType("framepointtype");
@@ -128,7 +137,8 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final String skinArg = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 					final Element skin = GameUI.loadSkin(dataSource, skinArg);
-					final GameUI gameUI = new GameUI(dataSource, skin, uiViewport);
+					final GameUI gameUI = new GameUI(dataSource, skin, uiViewport, fontGenerator, uiScene,
+							war3MapViewer);
 					JUIEnvironment.this.gameUI = gameUI;
 					JUIEnvironment.this.skin = skin;
 					rootFrameListener.onCreate(gameUI);
@@ -163,7 +173,33 @@ public class Jass2 {
 					return new HandleJassValue(frameHandleType, simpleFrame);
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("FrameSetAbsPoint", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("CreateFrame", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final String templateName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+					final UIFrame ownerFrame = arguments.get(1).visit(ObjectJassValueVisitor.<UIFrame>getInstance());
+					final int priority = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+					final int createContext = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+
+					final UIFrame simpleFrame = JUIEnvironment.this.gameUI.createFrame(templateName, ownerFrame,
+							priority, createContext);
+
+					return new HandleJassValue(frameHandleType, simpleFrame);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetFrameByName", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final String templateName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+					final int createContext = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+
+					final UIFrame simpleFrame = JUIEnvironment.this.gameUI.getFrameByName(templateName, createContext);
+					return new HandleJassValue(frameHandleType, simpleFrame);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("FrameSetAnchor", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -176,6 +212,71 @@ public class Jass2 {
 					frame.addAnchor(new AnchorDefinition(framePoint, GameUI.convertX(uiViewport, (float) x),
 							GameUI.convertY(uiViewport, (float) y)));
 					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("FrameSetAbsPoint", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final UIFrame frame = arguments.get(0).visit(ObjectJassValueVisitor.<UIFrame>getInstance());
+					final FramePoint framePoint = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<FramePoint>getInstance());
+					final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+					final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+
+					frame.setFramePointX(framePoint, GameUI.convertX(uiViewport, (float) x));
+					frame.setFramePointY(framePoint, GameUI.convertY(uiViewport, (float) y));
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("FrameSetPoint", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final UIFrame frame = arguments.get(0).visit(ObjectJassValueVisitor.<UIFrame>getInstance());
+					final FramePoint framePoint = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<FramePoint>getInstance());
+					final UIFrame otherFrame = arguments.get(2).visit(ObjectJassValueVisitor.<UIFrame>getInstance());
+					final FramePoint otherPoint = arguments.get(3)
+							.visit(ObjectJassValueVisitor.<FramePoint>getInstance());
+					final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+					final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+
+					frame.addSetPoint(new SetPoint(framePoint, otherFrame, otherPoint,
+							GameUI.convertX(uiViewport, (float) x), GameUI.convertY(uiViewport, (float) y)));
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("FrameSetText", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final StringFrame frame = arguments.get(0).visit(ObjectJassValueVisitor.<StringFrame>getInstance());
+					final String text = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+
+					frame.setText(text);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("FrameSetTextColor", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final StringFrame frame = arguments.get(0).visit(ObjectJassValueVisitor.<StringFrame>getInstance());
+					final int colorInt = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					frame.setColor(new Color(colorInt));
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ConvertColor", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final int a = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					final int r = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final int g = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+					final int b = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+					return new IntegerJassValue(a | (b << 8) | (g << 16) | (r << 24));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("FramePositionBounds", new JassFunction() {

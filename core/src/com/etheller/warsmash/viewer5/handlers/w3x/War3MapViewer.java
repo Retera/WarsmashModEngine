@@ -69,11 +69,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
@@ -143,6 +144,7 @@ public class War3MapViewer extends ModelViewer {
 	public List<RenderUnit> selected = new ArrayList<>();
 	private DataTable unitAckSoundsTable;
 	private DataTable miscData;
+	private DataTable unitGlobalStrings;
 	private MdxComplexInstance confirmationInstance;
 	public CSimulation simulation;
 	private float updateTime;
@@ -230,6 +232,20 @@ public class War3MapViewer extends ModelViewer {
 		this.miscData = new DataTable(worldEditStrings);
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\MiscData.txt")) {
 			this.miscData.readTXT(miscDataTxtStream, true);
+		}
+		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("Units\\MiscData.txt")) {
+			this.miscData.readTXT(miscDataTxtStream, true);
+		}
+		this.unitGlobalStrings = new DataTable(worldEditStrings);
+		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("Units\\UnitGlobalStrings.txt")) {
+			this.unitGlobalStrings.readTXT(miscDataTxtStream, true);
+		}
+		final Element categories = this.unitGlobalStrings.get("Categories");
+		for (final CUnitClassification unitClassification : CUnitClassification.values()) {
+			if (unitClassification.getLocaleKey() != null) {
+				final String displayName = categories.getField(unitClassification.getLocaleKey());
+				unitClassification.setDisplayName(displayName);
+			}
 		}
 		this.selectionCircleSizes.clear();
 		final Element selectionCircleData = this.miscData.get("SelectionCircle");
@@ -335,7 +351,7 @@ public class War3MapViewer extends ModelViewer {
 		}
 
 		final Warcraft3MapObjectData modifications = this.mapMpq.readModifications();
-		this.simulation = new CSimulation(modifications.getUnits(), modifications.getAbilities(),
+		this.simulation = new CSimulation(this.miscData, modifications.getUnits(), modifications.getAbilities(),
 				new ProjectileCreator() {
 					@Override
 					public CAttackProjectile create(final CSimulation simulation, final CUnit source,
@@ -443,6 +459,8 @@ public class War3MapViewer extends ModelViewer {
 
 				fileVar += ".mdx";
 
+				final float maxPitch = row.readSLKTagFloat("maxPitch");
+				final float maxRoll = row.readSLKTagFloat("maxRoll");
 				if (type == WorldEditorDataType.DESTRUCTIBLES) {
 					final String shadowString = row.readSLKTag("shadow");
 					if ((shadowString != null) && (shadowString.length() > 0) && !"_".equals(shadowString)) {
@@ -490,14 +508,18 @@ public class War3MapViewer extends ModelViewer {
 					model = (MdxModel) this.load(fileVar, this.mapPathSolver, this.solverParams);
 				}
 
-				this.doodads.add(new Doodad(this, model, row, doodad, type));
+				this.doodads.add(new Doodad(this, model, row, doodad, type, maxPitch, maxRoll));
 			}
 		}
 
 		// Cliff/Terrain doodads.
 		for (final com.etheller.warsmash.parsers.w3x.doo.TerrainDoodad doodad : doo.getTerrainDoodads()) {
 			final MutableGameObject row = modifications.getDoodads().get(doodad.getId());
-			String file = "UI\\Feedback\\WaypointFlags\\WaypointFlag.mdx";// row.readSLKTag("file");
+			String file = row.readSLKTag("file");//
+			if ("".equals(file)) {
+				final String blaBla = row.readSLKTag("file");
+				System.out.println("bla");
+			}
 			if (file.toLowerCase().endsWith(".mdl")) {
 				file = file.substring(0, file.length() - 4);
 			}
@@ -506,7 +528,47 @@ public class War3MapViewer extends ModelViewer {
 			}
 			final MdxModel model = (MdxModel) this.load(file, this.mapPathSolver, this.solverParams);
 
-			this.terrainDoodads.add(new TerrainDoodad(this, model, row, doodad));
+			final String pathingTexture = row.readSLKTag("pathTex");
+			BufferedImage pathingTextureImage;
+			if ((pathingTexture != null) && (pathingTexture.length() > 0) && !"_".equals(pathingTexture)) {
+
+				pathingTextureImage = this.filePathToPathingMap.get(pathingTexture.toLowerCase());
+				if (pathingTextureImage == null) {
+					if (this.mapMpq.has(pathingTexture)) {
+						try {
+							pathingTextureImage = TgaFile.readTGA(pathingTexture,
+									this.mapMpq.getResourceAsStream(pathingTexture));
+							this.filePathToPathingMap.put(pathingTexture.toLowerCase(), pathingTextureImage);
+						}
+						catch (final Exception exc) {
+							exc.printStackTrace();
+						}
+					}
+				}
+			}
+			else {
+				pathingTextureImage = null;
+			}
+			if (pathingTextureImage != null) {
+				// blit out terrain cells under this TerrainDoodad
+				final int textureWidth = pathingTextureImage.getWidth();
+				final int textureHeight = pathingTextureImage.getHeight();
+				final int textureWidthTerrainCells = textureWidth / 4;
+				final int textureHeightTerrainCells = textureHeight / 4;
+				final int minCellX = ((int) doodad.getLocation()[0]);
+				final int minCellY = ((int) doodad.getLocation()[1]);
+				final int maxCellX = (minCellX + textureWidthTerrainCells) - 1;
+				final int maxCellY = (minCellY + textureHeightTerrainCells) - 1;
+				for (int j = minCellY; j <= maxCellY; j++) {
+					for (int i = minCellX; i <= maxCellX; i++) {
+						this.terrain.removeTerrainCellWithoutFlush(i, j);
+					}
+				}
+				this.terrain.flushRemovedTerrainCells();
+			}
+
+			System.out.println("Loading terrain doodad: " + file);
+			this.terrainDoodads.add(new TerrainDoodad(this, model, row, doodad, pathingTextureImage));
 		}
 
 		this.doodadsReady = true;

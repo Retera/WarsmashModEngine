@@ -1,0 +1,6 @@
+
+Frame "SPRITE" "TimeOfDayIndicator" {
+	DecorateFileNames,
+	BackgroundArt "TimeOfDayIndicator",
+	SetPoint BOTTOMLEFT,"ConsoleUI",BOTTOMLEFT,0,0,
+}

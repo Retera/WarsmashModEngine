@@ -3,28 +3,41 @@ package com.etheller.warsmash.parsers.fdf.frames;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 
 public abstract class AbstractRenderableFrame implements UIFrame {
+	private static final boolean DEBUG_LOG = true;
 	protected String name;
 	protected UIFrame parent;
-	protected boolean visible;
+	protected boolean visible = true;
 	protected int level;
 	protected final Rectangle renderBounds = new Rectangle(0, 0, 0, 0); // in libgdx rendering space
 	protected List<AnchorDefinition> anchors = new ArrayList<>();
+	protected List<SetPoint> setPoints = new ArrayList<>();
+	private boolean setAllPoints;
 
 	public AbstractRenderableFrame(final String name, final UIFrame parent) {
 		this.name = name;
 		this.parent = parent;
 	}
 
+	@Override
+	public void setSetAllPoints(final boolean setAllPoints) {
+		this.setAllPoints = setAllPoints;
+	}
+
+	@Override
 	public void setWidth(final float width) {
 		this.renderBounds.width = width;
 	}
 
+	@Override
 	public void setHeight(final float height) {
 		this.renderBounds.height = height;
 	}
@@ -133,6 +146,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		}
 	}
 
+	@Override
 	public void setFramePointX(final FramePoint framePoint, final float x) {
 		if (this.renderBounds.width == 0) {
 			this.renderBounds.x = x;
@@ -192,6 +206,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		}
 	}
 
+	@Override
 	public void setFramePointY(final FramePoint framePoint, final float y) {
 		if (this.renderBounds.height == 0) {
 			this.renderBounds.y = y;
@@ -236,6 +251,11 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	}
 
 	@Override
+	public void addSetPoint(final SetPoint setPointDefinition) {
+		this.setPoints.add(setPointDefinition);
+	}
+
+	@Override
 	public void positionBounds(final Viewport viewport) {
 		if (this.parent == null) {
 			// TODO this is a bit of a hack, remove later
@@ -244,7 +264,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		if ("ResourceBarFrame".equals(this.name)) {
 			System.out.println("doing resource bar");
 		}
-		if (this.anchors.isEmpty()) {
+		if (this.anchors.isEmpty() && this.setPoints.isEmpty()) {
 			this.renderBounds.x = this.parent.getFramePointX(FramePoint.LEFT);
 			this.renderBounds.y = this.parent.getFramePointY(FramePoint.BOTTOM);
 		}
@@ -254,19 +274,35 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 				final float parentPointY = this.parent.getFramePointY(anchor.getMyPoint());
 				setFramePointX(anchor.getMyPoint(), parentPointX + anchor.getX());
 				setFramePointY(anchor.getMyPoint(), parentPointY + anchor.getY());
-				System.out.println(getClass().getSimpleName() + ":" + this.name + " anchoring to: " + anchor);
+				if (DEBUG_LOG) {
+					System.out.println(getClass().getSimpleName() + ":" + this.name + " anchoring to: " + anchor);
+				}
+			}
+			for (final SetPoint setPoint : this.setPoints) {
+				final UIFrame other = setPoint.getOther();
+				if (other == null) {
+					continue;
+				}
+				final float parentPointX = other.getFramePointX(setPoint.getOtherPoint());
+				final float parentPointY = other.getFramePointY(setPoint.getOtherPoint());
+				setFramePointX(setPoint.getMyPoint(), parentPointX + setPoint.getX());
+				setFramePointY(setPoint.getMyPoint(), parentPointY + setPoint.getY());
 			}
 		}
-		if (this.renderBounds.width == 0) {
-			this.renderBounds.width = this.parent.getFramePointX(FramePoint.RIGHT)
-					- this.parent.getFramePointX(FramePoint.LEFT);
+		if (this.setAllPoints) {
+			if (this.renderBounds.width == 0) {
+				this.renderBounds.width = this.parent.getFramePointX(FramePoint.RIGHT)
+						- this.parent.getFramePointX(FramePoint.LEFT);
+			}
+			if (this.renderBounds.height == 0) {
+				this.renderBounds.height = this.parent.getFramePointY(FramePoint.TOP)
+						- this.parent.getFramePointY(FramePoint.BOTTOM);
+			}
 		}
-		if (this.renderBounds.height == 0) {
-			this.renderBounds.height = this.parent.getFramePointY(FramePoint.TOP)
-					- this.parent.getFramePointY(FramePoint.BOTTOM);
+		if (DEBUG_LOG) {
+			System.out.println(
+					getClass().getSimpleName() + ":" + this.name + " finishing position bounds: " + this.renderBounds);
 		}
-		System.out.println(
-				getClass().getSimpleName() + ":" + this.name + " finishing position bounds: " + this.renderBounds);
 		innerPositionBounds(viewport);
 	}
 
@@ -280,6 +316,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		return this.level;
 	}
 
+	@Override
 	public void setVisible(final boolean visible) {
 		this.visible = visible;
 	}
@@ -287,5 +324,14 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	public void setLevel(final int level) {
 		this.level = level;
 	}
+
+	@Override
+	public final void render(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
+		if (this.visible) {
+			internalRender(batch, baseFont, glyphLayout);
+		}
+	}
+
+	protected abstract void internalRender(SpriteBatch batch, BitmapFont baseFont, GlyphLayout glyphLayout);
 
 }

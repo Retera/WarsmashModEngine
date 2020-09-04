@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 
-import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 
@@ -19,11 +18,6 @@ public class CDoNothingOrder implements COrder {
 	@Override
 	public int getOrderId() {
 		return this.orderId;
-	}
-
-	@Override
-	public AnimationTokens.PrimaryTag getAnimationName() {
-		return AnimationTokens.PrimaryTag.STAND;
 	}
 
 }

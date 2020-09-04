@@ -6,12 +6,13 @@ import java.util.List;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.WarsmashConstants;
-import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
@@ -207,6 +208,10 @@ public class CMoveOrder implements COrder {
 							}
 							absDelta = Math.abs(delta);
 							if (absDelta >= propulsionWindow) {
+								if (this.wasWithinPropWindow) {
+									this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
+											CUnitAnimationListener.EMPTY, 1.0f);
+								}
 								this.wasWithinPropWindow = false;
 								return false;
 							}
@@ -224,6 +229,10 @@ public class CMoveOrder implements COrder {
 						this.path.add(this.target);
 					}
 				}
+				if (!this.wasWithinPropWindow) {
+					this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.WALK,
+							CUnitAnimationListener.EMPTY, 1.0f);
+				}
 				this.wasWithinPropWindow = true;
 			}
 			while (continueDistance > 0);
@@ -231,6 +240,10 @@ public class CMoveOrder implements COrder {
 		else {
 			// If this happens, the unit is facing the wrong way, and has to turn before
 			// moving.
+			if (this.wasWithinPropWindow) {
+				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
+						CUnitAnimationListener.EMPTY, 1.0f);
+			}
 			this.wasWithinPropWindow = false;
 		}
 
@@ -240,14 +253,6 @@ public class CMoveOrder implements COrder {
 	@Override
 	public int getOrderId() {
 		return CAbilityMove.ORDER_ID;
-	}
-
-	@Override
-	public AnimationTokens.PrimaryTag getAnimationName() {
-		if (!this.wasWithinPropWindow) {
-			return AnimationTokens.PrimaryTag.STAND;
-		}
-		return AnimationTokens.PrimaryTag.WALK;
 	}
 
 }

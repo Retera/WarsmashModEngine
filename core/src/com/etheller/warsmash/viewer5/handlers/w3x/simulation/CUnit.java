@@ -1,13 +1,17 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 
 public class CUnit extends CWidget {
 	private War3ID typeId;
@@ -16,6 +20,7 @@ public class CUnit extends CWidget {
 	private int maximumLife;
 	private int maximumMana;
 	private int speed;
+	private final int defense;
 	private int cooldownEndTime = 0;
 	private float flyHeight;
 	private int playerIndex;
@@ -28,9 +33,13 @@ public class CUnit extends CWidget {
 
 	private Rectangle collisionRectangle;
 
+	private final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
+
+	private transient CUnitAnimationListener unitAnimationListener;
+
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
-			final int speed, final CUnitType unitType) {
+			final int speed, final int defense, final CUnitType unitType) {
 		super(handleId, x, y, life);
 		this.typeId = typeId;
 		this.facing = facing;
@@ -38,8 +47,19 @@ public class CUnit extends CWidget {
 		this.maximumLife = maximumLife;
 		this.maximumMana = maximumMana;
 		this.speed = speed;
+		this.defense = defense;
 		this.flyHeight = unitType.getDefaultFlyingHeight();
 		this.unitType = unitType;
+		this.classifications.addAll(unitType.getClassifications());
+	}
+
+	public void setUnitAnimationListener(final CUnitAnimationListener unitAnimationListener) {
+		this.unitAnimationListener = unitAnimationListener;
+		this.unitAnimationListener.playAnimation(true, PrimaryTag.STAND, CUnitAnimationListener.EMPTY, 1.0f);
+	}
+
+	public CUnitAnimationListener getUnitAnimationListener() {
+		return this.unitAnimationListener;
 	}
 
 	public void add(final CSimulation simulation, final CAbility ability) {
@@ -109,6 +129,10 @@ public class CUnit extends CWidget {
 				// remove current order, because it's completed, polling next
 				// item from order queue
 				this.currentOrder = this.orderQueue.poll();
+			}
+			if (this.currentOrder == null) {
+				// maybe order "stop" here
+				this.unitAnimationListener.playAnimation(true, PrimaryTag.STAND, CUnitAnimationListener.EMPTY, 1.0f);
 			}
 		}
 	}
@@ -193,4 +217,21 @@ public class CUnit extends CWidget {
 		}
 	}
 
+	public EnumSet<CUnitClassification> getClassifications() {
+		return this.classifications;
+	}
+
+	public int getDefense() {
+		return this.defense;
+	}
+
+	public void damage(final CUnit source, final CAttackType attackType, final CWeaponType weaponType,
+			final int damage) {
+
+	}
+
+	@Override
+	public float getImpactZ() {
+		return this.unitType.getImpactZ();
+	}
 }

@@ -11,4 +11,8 @@ public class CDestructable extends CWidget {
 		return 0;
 	}
 
+	@Override
+	public float getImpactZ() {
+		return 0; // TODO maybe from DestructableType
+	}
 }

@@ -1,7 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
-import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
-
 public interface COrder {
 	/**
 	 * Executes one step of game simulation of the current order, returning true if
@@ -20,12 +18,4 @@ public interface COrder {
 	 * @return
 	 */
 	int getOrderId();
-
-	/**
-	 * Gets the animation name used for visuals. Calling this function should not
-	 * impact the game state of the CSimulation in any way.
-	 *
-	 * @return
-	 */
-	AnimationTokens.PrimaryTag getAnimationName();
 }

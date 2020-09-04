@@ -1,20 +1,25 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 
 import com.etheller.warsmash.util.WarsmashConstants;
-import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
 public class CAttackOrder implements COrder {
 	private final CUnit unit;
 	private boolean wasWithinPropWindow = false;
+	private final CUnitAttack unitAttack;
 	private final CWidget target;
+	private int backswingLaunchTime;
 
-	public CAttackOrder(final CUnit unit, final CWidget target) {
+	public CAttackOrder(final CUnit unit, final CUnitAttack unitAttack, final CWidget target) {
 		this.unit = unit;
+		this.unitAttack = unitAttack;
 		this.target = target;
 	}
 
@@ -31,9 +36,8 @@ public class CAttackOrder implements COrder {
 		}
 		float facing = this.unit.getFacing();
 		float delta = goalAngle - facing;
-		final float propulsionWindow = simulation.getUnitData().getPropulsionWindow(this.unit.getTypeId());
+		final float propulsionWindow = simulation.getGameplayConstants().getAttackHalfAngle();
 		final float turnRate = simulation.getUnitData().getTurnRate(this.unit.getTypeId());
-		final int speed = this.unit.getSpeed();
 
 		if (delta < -180) {
 			delta = 360 + delta;
@@ -65,11 +69,30 @@ public class CAttackOrder implements COrder {
 
 		final int cooldownEndTime = this.unit.getCooldownEndTime();
 		final int currentTurnTick = simulation.getGameTurnTick();
-		if (currentTurnTick >= cooldownEndTime) {
-			final float a1Cooldown = simulation.getUnitData().getA1Cooldown(this.unit.getTypeId());
-			final int a1CooldownSteps = (int) (a1Cooldown / WarsmashConstants.SIMULATION_STEP_TIME);
-			this.unit.setCooldownEndTime(currentTurnTick + a1CooldownSteps);
-			simulation.createProjectile(this.unit, 0, this.target);
+		if (this.wasWithinPropWindow) {
+			if (this.backswingLaunchTime != 0) {
+				if (currentTurnTick >= this.backswingLaunchTime) {
+					simulation.createProjectile(this.unit, 0, this.target);
+					this.backswingLaunchTime = 0;
+				}
+			}
+			else if (currentTurnTick >= cooldownEndTime) {
+				final float cooldownTime = this.unitAttack.getCooldownTime();
+				final float animationBackswingPoint = this.unitAttack.getAnimationBackswingPoint();
+				final int a1CooldownSteps = (int) (cooldownTime / WarsmashConstants.SIMULATION_STEP_TIME);
+				final int a1BackswingSteps = (int) (animationBackswingPoint / WarsmashConstants.SIMULATION_STEP_TIME);
+				final int a1DamagePointSteps = (int) (this.unitAttack.getAnimationDamagePoint()
+						/ WarsmashConstants.SIMULATION_STEP_TIME);
+				this.unit.setCooldownEndTime(currentTurnTick + a1CooldownSteps);
+				this.backswingLaunchTime = currentTurnTick + a1DamagePointSteps;
+				this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.ATTACK,
+						CUnitAnimationListener.EMPTY, 1.0f);
+				this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, CUnitAnimationListener.READY);
+			}
+		}
+		else {
+			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, CUnitAnimationListener.READY,
+					1.0f);
 		}
 
 		return false;
@@ -78,11 +101,6 @@ public class CAttackOrder implements COrder {
 	@Override
 	public int getOrderId() {
 		return CAbilityAttack.ORDER_ID;
-	}
-
-	@Override
-	public AnimationTokens.PrimaryTag getAnimationName() {
-		return AnimationTokens.PrimaryTag.ATTACK;
 	}
 
 }

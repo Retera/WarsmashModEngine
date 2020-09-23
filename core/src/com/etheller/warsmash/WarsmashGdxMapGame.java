@@ -30,8 +30,7 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
@@ -51,12 +50,9 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.ReplaceableIds;
 import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
-import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset.UnitAckSound;
+import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.CommandCardIcon;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityStop;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
@@ -74,17 +70,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	// libGDX stuff
 	private OrthographicCamera uiCamera;
 	private BitmapFont font;
-	private BitmapFont font24;
 	private BitmapFont font20;
 	private SpriteBatch batch;
-	private Viewport uiViewport;
+	private ExtendViewport uiViewport;
 	private GlyphLayout glyphLayout;
 
 	private Texture consoleUITexture;
-	private RenderUnit selectedUnit;
 	private int selectedSoundCount = 0;
-
-	private Texture activeButtonTexture;
 
 	private Rectangle minimap;
 	private Rectangle minimapFilledArea;
@@ -171,20 +163,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final float w = Gdx.graphics.getWidth();
 		final float h = Gdx.graphics.getHeight();
 
-		this.tempRect.x = 0;
-		this.tempRect.y = 0;
-		this.tempRect.width = w;
-		this.tempRect.height = h;
-		this.uiScene.camera.viewport(this.tempRect);
-		this.uiScene.camera.ortho(0, 0.8f, 0, 0.6f, 0, 1);
-
 		final FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(
 				new DataSourceFileHandle(this.viewer.dataSource, "fonts\\FRIZQT__.TTF"));
 		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
 		fontParam.size = 32;
 		this.font = fontGenerator.generateFont(fontParam);
-		fontParam.size = 24;
-		this.font24 = fontGenerator.generateFont(fontParam);
 		fontParam.size = 20;
 		this.font20 = fontGenerator.generateFont(fontParam);
 		this.glyphLayout = new GlyphLayout();
@@ -193,10 +176,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		// height
 		// Height is multiplied by aspect ratio.
 		this.uiCamera = new OrthographicCamera();
-		this.uiViewport = new FitViewport(1600, 1200, this.uiCamera);
+		this.uiViewport = new ExtendViewport(1600, 1200, this.uiCamera);
 		this.uiViewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-		this.uiCamera.position.set(this.uiCamera.viewportWidth / 2f, this.uiCamera.viewportHeight / 2f, 0);
+		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
 		this.uiCamera.update();
 
 		this.batch = new SpriteBatch();
@@ -223,9 +206,6 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			}
 		}
 
-		this.activeButtonTexture = ImageUtils.getBLPTexture(this.viewer.dataSource,
-				"UI\\Widgets\\Console\\Human\\CommandButton\\human-activebutton.blp");
-
 		for (int i = 0; i < this.teamColors.length; i++) {
 			this.teamColors[i] = ImageUtils.getBLPTexture(this.viewer.dataSource,
 					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
@@ -236,8 +216,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		Gdx.input.setInputProcessor(this);
 
-//		final Music music = Gdx.audio.newMusic(
-//				new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\War2IntroMusic.mp3"));
+//		final Music music = Gdx.audio
+//				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\Undead2.mp3"));
 //		music.setVolume(0.2f);
 //		music.setLooping(true);
 //		music.play();
@@ -277,6 +257,27 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				});
 		this.meleeUI.main();
 		fontGenerator.dispose();
+
+		updateUIScene();
+
+		this.meleeUI.resize();
+	}
+
+	private void updateUIScene() {
+		this.tempRect.x = this.uiViewport.getScreenX();
+		this.tempRect.y = this.uiViewport.getScreenY();
+		this.tempRect.width = this.uiViewport.getScreenWidth();
+		this.tempRect.height = this.uiViewport.getScreenHeight();
+		this.uiScene.camera.viewport(this.tempRect);
+		final float worldWidth = this.uiViewport.getWorldWidth();
+		final float worldHeight = this.uiViewport.getWorldHeight();
+		final float xScale = worldWidth / this.uiViewport.getMinWorldWidth();
+		final float yScale = worldHeight / this.uiViewport.getMinWorldHeight();
+		final float uiSceneWidth = 0.8f * xScale;
+		final float uiSceneHeight = 0.6f * yScale;
+		final float uiSceneX = ((0.8f - uiSceneWidth) / 2);
+		final float uiSceneY = ((0.6f - uiSceneHeight) / 2);
+		this.uiScene.camera.ortho(uiSceneX, uiSceneWidth + uiSceneX, uiSceneY, uiSceneHeight + uiSceneY, -1f, 1);
 	}
 
 	@Override
@@ -313,32 +314,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.font.setColor(Color.YELLOW);
 		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
 		this.glyphLayout.setText(this.font, fpsString);
-		this.font.draw(this.batch, fpsString, (this.uiViewport.getWorldWidth() - this.glyphLayout.width) / 2, 1100);
+		this.font.draw(this.batch, fpsString, (this.uiViewport.getMinWorldWidth() - this.glyphLayout.width) / 2, 1100);
 
 		this.batch.draw(this.minimapTexture, this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
 
-		if (this.selectedUnit != null) {
-			int messageIndex = 0;
-			for (final Message message : this.messages) {
-				this.font20.draw(this.batch, message.text, 100, 400 + (25 * (messageIndex++)));
-			}
-			this.font20.setColor(Color.WHITE);
-
-			final COrder currentOrder = this.selectedUnit.getSimulationUnit().getCurrentOrder();
-			for (final CommandCardIcon commandCardIcon : this.selectedUnit.getCommandCardIcons()) {
-				this.batch.draw(commandCardIcon.getTexture(), 1235 + (86.8f * commandCardIcon.getX()),
-						190 - (88 * commandCardIcon.getY()), 78f, 78f);
-				if (((currentOrder != null) && (currentOrder.getOrderId() == commandCardIcon.getOrderId()))
-						|| ((currentOrder == null) && (commandCardIcon.getOrderId() == CAbilityStop.ORDER_ID))) {
-					final int blendDstFunc = this.batch.getBlendDstFunc();
-					final int blendSrcFunc = this.batch.getBlendSrcFunc();
-					this.batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-					this.batch.draw(this.activeButtonTexture, 1235 + (86.8f * commandCardIcon.getX()),
-							190 - (88 * commandCardIcon.getY()), 78f, 78f);
-					this.batch.setBlendFunction(blendSrcFunc, blendDstFunc);
-				}
-			}
-		}
+		final Rectangle playableMapArea = this.viewer.terrain.getPlayableMapArea();
 		for (final RenderUnit unit : this.viewer.units) {
 			if (unit.playerIndex >= WarsmashConstants.MAX_PLAYERS) {
 				System.err.println(unit.row.getName() + " at ( " + unit.location[0] + ", " + unit.location[1] + " )"
@@ -347,10 +327,12 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			}
 			final Texture minimapIcon = this.teamColors[unit.playerIndex];
 			this.batch.draw(minimapIcon,
-					this.minimapFilledArea.x + (((unit.location[0] - this.viewer.terrain.centerOffset[0])
-							/ ((this.viewer.terrain.columns - 1) * 128f)) * this.minimapFilledArea.width),
-					this.minimapFilledArea.y + (((unit.location[1] - this.viewer.terrain.centerOffset[1])
-							/ ((this.viewer.terrain.rows - 1) * 128f)) * this.minimapFilledArea.height),
+					this.minimapFilledArea.x
+							+ (((unit.location[0] - playableMapArea.getX()) / (playableMapArea.getWidth()))
+									* this.minimapFilledArea.width),
+					this.minimapFilledArea.y
+							+ (((unit.location[1] - playableMapArea.getY()) / (playableMapArea.getHeight()))
+									* this.minimapFilledArea.height),
 					4, 4);
 		}
 		this.batch.end();
@@ -411,14 +393,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final float portraitTestHeight = (100 / 480f) * height;
 
 		this.uiViewport.update(width, height);
-		this.uiCamera.position.set(this.uiCamera.viewportWidth / 2, this.uiCamera.viewportHeight / 2, 0);
+		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
 
-		this.tempRect.x = this.uiViewport.getScreenX();
-		this.tempRect.y = this.uiViewport.getScreenY();
-		this.tempRect.width = this.uiViewport.getScreenWidth();
-		this.tempRect.height = this.uiViewport.getScreenHeight();
-		this.uiScene.camera.viewport(this.tempRect);
-		this.uiScene.camera.ortho(0f, 0.8f, 0f, 0.6f, -1f, 1);
+		updateUIScene();
 
 		this.meleeUI.resize();
 	}
@@ -621,20 +598,6 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		clickLocationTemp2.y = screenY;
 		this.uiViewport.unproject(clickLocationTemp2);
 
-		if (this.selectedUnit != null) {
-			for (final CommandCardIcon commandCardIcon : this.selectedUnit.getCommandCardIcons()) {
-				if (new Rectangle(1235 + (86.8f * commandCardIcon.getX()), 190 - (88 * commandCardIcon.getY()), 78f,
-						78f).contains(clickLocationTemp2)) {
-					if (button == Input.Buttons.RIGHT) {
-						this.messages.add(new Message(Gdx.input.getCurrentEventTime(), "Right mouse click"));
-					}
-					else {
-						this.messages.add(new Message(Gdx.input.getCurrentEventTime(), "Left mouse click"));
-					}
-					return true;
-				}
-			}
-		}
 		if (this.minimapFilledArea.contains(clickLocationTemp2.x, clickLocationTemp2.y)) {
 			final float clickX = (clickLocationTemp2.x - this.minimapFilledArea.x) / this.minimapFilledArea.width;
 			final float clickY = (clickLocationTemp2.y - this.minimapFilledArea.y) / this.minimapFilledArea.height;
@@ -646,24 +609,32 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		}
 		if (button == Input.Buttons.RIGHT) {
 			final RenderUnit rayPickUnit = this.viewer.rayPickUnit(screenX, worldScreenY);
-			if ((rayPickUnit != null) && (this.selectedUnit != null)
-					&& (rayPickUnit.playerIndex != this.selectedUnit.playerIndex)) {
-				if (this.viewer.orderSmart(rayPickUnit)) {
-					this.meleeUI.portraitTalk();
-					this.selectedSoundCount = 0;
+			if (this.meleeUI.getSelectedUnit() != null) {
+				if ((rayPickUnit != null) && (rayPickUnit.playerIndex != this.meleeUI.getSelectedUnit().playerIndex)
+						&& !rayPickUnit.getSimulationUnit().isDead()) {
+					if (this.viewer.orderSmart(rayPickUnit)) {
+						if (this.meleeUI.getSelectedUnit().soundset.yesAttack.playUnitResponse(
+								this.viewer.worldScene.audioContext, this.meleeUI.getSelectedUnit())) {
+							this.meleeUI.portraitTalk();
+						}
+						this.selectedSoundCount = 0;
+					}
 				}
-			}
-			else {
-				this.viewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
-				System.out.println(clickLocationTemp);
-				this.viewer.showConfirmation(clickLocationTemp, 0, 1, 0);
-				final int x = (int) ((clickLocationTemp.x - this.viewer.terrain.centerOffset[0]) / 128);
-				final int y = (int) ((clickLocationTemp.y - this.viewer.terrain.centerOffset[1]) / 128);
-				System.out.println(x + "," + y);
-				this.viewer.terrain.logRomp(x, y);
-				if (this.viewer.orderSmart(clickLocationTemp.x, clickLocationTemp.y)) {
-					this.meleeUI.portraitTalk();
-					this.selectedSoundCount = 0;
+				else {
+					this.viewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
+					System.out.println(clickLocationTemp);
+					this.viewer.showConfirmation(clickLocationTemp, 0, 1, 0);
+					final int x = (int) ((clickLocationTemp.x - this.viewer.terrain.centerOffset[0]) / 128);
+					final int y = (int) ((clickLocationTemp.y - this.viewer.terrain.centerOffset[1]) / 128);
+					System.out.println(x + "," + y);
+					this.viewer.terrain.logRomp(x, y);
+					if (this.viewer.orderSmart(clickLocationTemp.x, clickLocationTemp.y)) {
+						if (this.meleeUI.getSelectedUnit().soundset.yes.playUnitResponse(
+								this.viewer.worldScene.audioContext, this.meleeUI.getSelectedUnit())) {
+							this.meleeUI.portraitTalk();
+						}
+						this.selectedSoundCount = 0;
+					}
 				}
 			}
 		}
@@ -671,14 +642,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			final List<RenderUnit> selectedUnits = this.viewer.selectUnit(screenX, worldScreenY, false);
 			if (!selectedUnits.isEmpty()) {
 				final RenderUnit unit = selectedUnits.get(0);
-				final boolean selectionChanged = this.selectedUnit != unit;
+				final boolean selectionChanged = this.meleeUI.getSelectedUnit() != unit;
 				boolean playedNewSound = false;
 				if (selectionChanged) {
 					this.selectedSoundCount = 0;
 				}
-				this.selectedUnit = unit;
 				if (unit.soundset != null) {
-					UnitAckSound ackSoundToPlay = unit.soundset.what;
+					UnitSound ackSoundToPlay = unit.soundset.what;
 					final int pissedSoundCount = unit.soundset.pissed.getSoundCount();
 					int soundIndex;
 					if ((this.selectedSoundCount >= 3) && (pissedSoundCount > 0)) {
@@ -688,8 +658,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 					else {
 						soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
 					}
-					if (ackSoundToPlay.play(this.viewer.worldScene.audioContext, unit.location[0], unit.location[1],
-							soundIndex)) {
+					if (ackSoundToPlay.playUnitResponse(this.viewer.worldScene.audioContext, unit, soundIndex)) {
 						this.selectedSoundCount++;
 						if ((this.selectedSoundCount - 3) >= pissedSoundCount) {
 							this.selectedSoundCount = 0;
@@ -705,7 +674,6 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				}
 			}
 			else {
-				this.selectedUnit = null;
 				this.meleeUI.selectUnit(null);
 			}
 		}

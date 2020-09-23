@@ -2,6 +2,9 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks;
 
 import java.util.EnumSet;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -19,7 +22,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
  * because many of those settings did not exist. So I will attempt to emulate
  * these attacks as best as possible.
  */
-public class CUnitAttack {
+public abstract class CUnitAttack {
 	private float animationBackswingPoint;
 	private float animationDamagePoint;
 	private CAttackType attackType;
@@ -195,4 +198,5 @@ public class CUnitAttack {
 		return this.maxDamage;
 	}
 
+	public abstract void launch(CSimulation simulation, CUnit unit, CWidget target, float damage);
 }

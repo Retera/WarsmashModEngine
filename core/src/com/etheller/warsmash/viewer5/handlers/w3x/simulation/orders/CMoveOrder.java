@@ -7,12 +7,12 @@ import java.util.List;
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
@@ -24,6 +24,8 @@ public class CMoveOrder implements COrder {
 	private List<Point2D.Float> path = null;
 	private final CPathfindingProcessor.GridMapping gridMapping;
 	private final Point2D.Float target;
+	private int searchCycles = 0;
+	private CUnit followUnit;
 
 	public CMoveOrder(final CUnit unit, final float targetX, final float targetY) {
 		this.unit = unit;
@@ -31,6 +33,15 @@ public class CMoveOrder implements COrder {
 				unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
 						: CPathfindingProcessor.GridMapping.CELLS;
 		this.target = new Point2D.Float(targetX, targetY);
+	}
+
+	public CMoveOrder(final CUnit unit, final CUnit followUnit) {
+		this.unit = unit;
+		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
+				unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
+						: CPathfindingProcessor.GridMapping.CELLS;
+		this.target = new Point2D.Float(followUnit.getX(), followUnit.getY());
+		this.followUnit = followUnit;
 	}
 
 	@Override
@@ -45,12 +56,15 @@ public class CMoveOrder implements COrder {
 		final float startFloatingX = prevX;
 		final float startFloatingY = prevY;
 		if (this.path == null) {
-			this.path = simulation.findNaiveSlowPath(this.unit, startFloatingX, startFloatingY, this.target,
-					movementType == null ? MovementType.FOOT : movementType, collisionSize);
+			if (this.followUnit != null) {
+				this.target.x = this.followUnit.getX();
+				this.target.y = this.followUnit.getY();
+			}
+			this.path = simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
+					this.target, movementType == null ? MovementType.FOOT : movementType, collisionSize, true);
 			System.out.println("init path " + this.path);
 			// check for smoothing
 			if (!this.path.isEmpty()) {
-				this.path.add(this.target);
 				float lastX = startFloatingX;
 				float lastY = startFloatingY;
 				float smoothingGroupStartX = startFloatingX;
@@ -95,16 +109,40 @@ public class CMoveOrder implements COrder {
 				}
 			}
 		}
+		else if ((this.followUnit != null) && (this.path.size() > 1) && (this.target.distance(this.followUnit.getX(),
+				this.followUnit.getY()) > (0.1 * this.target.distance(this.unit.getX(), this.unit.getY())))) {
+			this.target.x = this.followUnit.getX();
+			this.target.y = this.followUnit.getY();
+			this.path = simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
+					this.target, movementType == null ? MovementType.FOOT : movementType, collisionSize,
+					this.searchCycles < 4);
+			System.out.println("new path (for target) " + this.path);
+			if (this.path.isEmpty()) {
+				return true;
+			}
+		}
 		float currentTargetX;
 		float currentTargetY;
 		if (this.path.isEmpty()) {
-			currentTargetX = this.target.x;
-			currentTargetY = this.target.y;
+			if (this.followUnit != null) {
+				currentTargetX = this.followUnit.getX();
+				currentTargetY = this.followUnit.getY();
+			}
+			else {
+				currentTargetX = this.target.x;
+				currentTargetY = this.target.y;
+			}
 		}
 		else {
-			final Point2D.Float nextPathElement = this.path.get(0);
-			currentTargetX = nextPathElement.x;
-			currentTargetY = nextPathElement.y;
+			if ((this.followUnit != null) && (this.path.size() == 1)) {
+				currentTargetX = this.followUnit.getX();
+				currentTargetY = this.followUnit.getY();
+			}
+			else {
+				final Point2D.Float nextPathElement = this.path.get(0);
+				currentTargetX = nextPathElement.x;
+				currentTargetY = nextPathElement.y;
+			}
 		}
 
 		float deltaX = currentTargetX - prevX;
@@ -172,24 +210,46 @@ public class CMoveOrder implements COrder {
 						&& !worldCollision.intersectsAnythingOtherThan(tempRect, this.unit, movementType))) {
 					this.unit.setPoint(nextX, nextY, worldCollision);
 					if (done) {
+						// if we're making headway along the path then it's OK to start thinking fast
+						// again
+						if (travelDistance > 0) {
+							this.searchCycles = 0;
+						}
 						if (this.path.isEmpty()) {
 							return true;
 						}
 						else {
+							System.out.println(this.path);
 							final Float removed = this.path.remove(0);
 							System.out.println(
-									"We think we reached  " + removed + " because are at " + nextX + "," + nextY);
-							if (this.path.isEmpty()) {
-								currentTargetX = this.target.x;
-								currentTargetY = this.target.y;
+									"We think we reached  " + removed + " because we are at " + nextX + "," + nextY);
+							final boolean emptyPath = this.path.isEmpty();
+							if (emptyPath) {
+								if (this.followUnit != null) {
+									currentTargetX = this.followUnit.getX();
+									currentTargetY = this.followUnit.getY();
+								}
+								else {
+									currentTargetX = this.target.x;
+									currentTargetY = this.target.y;
+								}
 							}
 							else {
-								final Point2D.Float firstPathElement = this.path.get(0);
-								currentTargetX = firstPathElement.x;
-								currentTargetY = firstPathElement.y;
+								if ((this.followUnit != null) && (this.path.size() == 1)) {
+									currentTargetX = this.followUnit.getX();
+									currentTargetY = this.followUnit.getY();
+								}
+								else {
+									final Point2D.Float firstPathElement = this.path.get(0);
+									currentTargetX = firstPathElement.x;
+									currentTargetY = firstPathElement.y;
+								}
 							}
-							deltaY = currentTargetY - prevY;
-							deltaX = currentTargetX - prevX;
+							deltaY = currentTargetY - nextY;
+							deltaX = currentTargetX - nextX;
+							if ((deltaX == 0.000f) && (deltaY == 0.000f) && this.path.isEmpty()) {
+								return true;
+							}
 							System.out.println("new target: " + currentTargetX + "," + currentTargetY);
 							System.out.println("new delta: " + deltaX + "," + deltaY);
 							goalAngleRad = Math.atan2(deltaY, deltaX);
@@ -210,7 +270,7 @@ public class CMoveOrder implements COrder {
 							if (absDelta >= propulsionWindow) {
 								if (this.wasWithinPropWindow) {
 									this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
-											CUnitAnimationListener.EMPTY, 1.0f);
+											SequenceUtils.EMPTY, 1.0f, true);
 								}
 								this.wasWithinPropWindow = false;
 								return false;
@@ -219,20 +279,21 @@ public class CMoveOrder implements COrder {
 					}
 				}
 				else {
-					this.path = simulation.findNaiveSlowPath(this.unit, startFloatingX, startFloatingY, this.target,
-							movementType == null ? MovementType.FOOT : movementType, collisionSize);
+					if (this.followUnit != null) {
+						this.target.x = this.followUnit.getX();
+						this.target.y = this.followUnit.getY();
+					}
+					this.path = simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
+							this.target, movementType == null ? MovementType.FOOT : movementType, collisionSize,
+							this.searchCycles < 4);
+					this.searchCycles++;
 					System.out.println("new path " + this.path);
-					if (this.path.isEmpty()) {
+					if (this.path.isEmpty() || (this.searchCycles > 5)) {
 						return true;
 					}
-					else {
-						this.path.add(this.target);
-					}
 				}
-				if (!this.wasWithinPropWindow) {
-					this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.WALK,
-							CUnitAnimationListener.EMPTY, 1.0f);
-				}
+				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.WALK, SequenceUtils.EMPTY, 1.0f,
+						true);
 				this.wasWithinPropWindow = true;
 			}
 			while (continueDistance > 0);
@@ -241,8 +302,8 @@ public class CMoveOrder implements COrder {
 			// If this happens, the unit is facing the wrong way, and has to turn before
 			// moving.
 			if (this.wasWithinPropWindow) {
-				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
-						CUnitAnimationListener.EMPTY, 1.0f);
+				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
+						true);
 			}
 			this.wasWithinPropWindow = false;
 		}

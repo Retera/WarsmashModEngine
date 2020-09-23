@@ -8,6 +8,7 @@ import java.util.Queue;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Quaternion;
+import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
@@ -17,8 +18,8 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
-import com.etheller.warsmash.viewer5.handlers.w3x.StandSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
@@ -40,6 +41,7 @@ public class RenderUnit {
 	private static final War3ID MODEL_SCALE = War3ID.fromString("usca");
 	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
 	private static final War3ID ORIENTATION_INTERPOLATION = War3ID.fromString("uori");
+	private static final War3ID ANIM_PROPS = War3ID.fromString("uani");
 	private static final float[] heapZ = new float[3];
 	public final MdxComplexInstance instance;
 	public final MutableGameObject row;
@@ -59,11 +61,14 @@ public class RenderUnit {
 
 	private boolean swimming;
 
-	private final boolean alreadyPlayedDeath = false;
+	private boolean dead = false;
 
 	private final UnitAnimationListenerImpl unitAnimationListenerImpl;
 	private OrientationInterpolation orientationInterpolation;
 	private float currentTurnVelocity = 0;
+	public long lastUnitResponseEndTimeMillis;
+	private boolean corpse;
+	private boolean boneCorpse;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit, final UnitSoundset soundset,
@@ -87,6 +92,16 @@ public class RenderUnit {
 		instance.setScene(map.worldScene);
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
+		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
+		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+			final String upperCaseToken = animationName.toUpperCase();
+			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
+				if (upperCaseToken.equals(secondaryTag.name())) {
+					this.unitAnimationListenerImpl.addSecondaryTag(secondaryTag);
+					continue TokenLoop;
+				}
+			}
+		}
 
 		if (row != null) {
 			heapZ[2] = simulationUnit.getFlyHeight();
@@ -194,6 +209,31 @@ public class RenderUnit {
 			this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.SWIM);
 		}
 		this.swimming = swimming;
+		final boolean dead = this.simulationUnit.isDead();
+		final boolean corpse = this.simulationUnit.isCorpse();
+		final boolean boneCorpse = this.simulationUnit.isBoneCorpse();
+		if (dead && !this.dead) {
+			this.unitAnimationListenerImpl.playAnimation(true, PrimaryTag.DEATH, SequenceUtils.EMPTY, 1.0f, true);
+			if (this.shadow != null) {
+				this.shadow.destroy(Gdx.gl30, map.terrain.centerOffset);
+				this.shadow = null;
+			}
+			if (this.selectionCircle != null) {
+				this.selectionCircle.destroy(Gdx.gl30, map.terrain.centerOffset);
+				this.selectionCircle = null;
+			}
+		}
+		if (boneCorpse && !this.boneCorpse) {
+			this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.BONE,
+					map.simulation.getGameplayConstants().getBoneDecayTime(), true);
+		}
+		else if (corpse && !this.corpse) {
+			this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.FLESH,
+					map.simulation.getGameplayConstants().getDecayTime(), true);
+		}
+		this.dead = dead;
+		this.corpse = corpse;
+		this.boneCorpse = boneCorpse;
 		this.location[2] = this.simulationUnit.getFlyHeight() + groundHeight;
 		this.instance.moveTo(this.location);
 		float simulationFacing = this.simulationUnit.getFacing();
@@ -266,6 +306,7 @@ public class RenderUnit {
 		private PrimaryTag currentAnimation;
 		private EnumSet<SecondaryTag> currentAnimationSecondaryTags;
 		private float currentSpeedRatio;
+		private boolean currentlyAllowingRarityVariations;
 		private final Queue<QueuedAnimation> animationQueue = new LinkedList<>();
 
 		public UnitAnimationListenerImpl(final MdxComplexInstance instance) {
@@ -274,33 +315,59 @@ public class RenderUnit {
 
 		public void addSecondaryTag(final AnimationTokens.SecondaryTag tag) {
 			this.secondaryAnimationTags.add(tag);
-			playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio);
+			playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio,
+					this.currentlyAllowingRarityVariations);
 		}
 
 		public void removeSecondaryTag(final AnimationTokens.SecondaryTag tag) {
 			this.secondaryAnimationTags.remove(tag);
-			playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio);
+			playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio,
+					this.currentlyAllowingRarityVariations);
 		}
 
 		@Override
 		public void playAnimation(final boolean force, final PrimaryTag animationName,
-				final EnumSet<SecondaryTag> secondaryAnimationTags, final float speedRatio) {
+				final EnumSet<SecondaryTag> secondaryAnimationTags, final float speedRatio,
+				final boolean allowRarityVariations) {
 			this.animationQueue.clear();
 			if (force || (animationName != this.currentAnimation)) {
 				this.currentAnimation = animationName;
 				this.currentAnimationSecondaryTags = secondaryAnimationTags;
 				this.currentSpeedRatio = speedRatio;
+				this.currentlyAllowingRarityVariations = allowRarityVariations;
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);
 				this.instance.setAnimationSpeed(speedRatio);
-				StandSequence.randomSequence(this.instance, animationName, this.recycleSet);
+				SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet, allowRarityVariations);
+			}
+		}
+
+		public void playAnimationWithDuration(final boolean force, final PrimaryTag animationName,
+				final EnumSet<SecondaryTag> secondaryAnimationTags, final float duration,
+				final boolean allowRarityVariations) {
+			this.animationQueue.clear();
+			if (force || (animationName != this.currentAnimation)) {
+				this.currentAnimation = animationName;
+				this.currentAnimationSecondaryTags = secondaryAnimationTags;
+				this.currentlyAllowingRarityVariations = allowRarityVariations;
+				this.recycleSet.clear();
+				this.recycleSet.addAll(this.secondaryAnimationTags);
+				this.recycleSet.addAll(secondaryAnimationTags);
+				final Sequence sequence = SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
+						allowRarityVariations);
+				if (sequence != null) {
+					this.currentSpeedRatio = ((sequence.getInterval()[1] - sequence.getInterval()[0]) / 1000.0f)
+							/ duration;
+					this.instance.setAnimationSpeed(this.currentSpeedRatio);
+				}
 			}
 		}
 
 		@Override
-		public void queueAnimation(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryAnimationTags) {
-			this.animationQueue.add(new QueuedAnimation(animationName, secondaryAnimationTags));
+		public void queueAnimation(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryAnimationTags,
+				final boolean allowRarityVariations) {
+			this.animationQueue.add(new QueuedAnimation(animationName, secondaryAnimationTags, allowRarityVariations));
 		}
 
 		public void update() {
@@ -310,12 +377,13 @@ public class RenderUnit {
 						.get(this.instance.sequence).getFlags() == 0)) {
 					// animation is a looping animation
 					playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags,
-							this.currentSpeedRatio);
+							this.currentSpeedRatio, this.currentlyAllowingRarityVariations);
 				}
 				else {
 					final QueuedAnimation nextAnimation = this.animationQueue.poll();
 					if (nextAnimation != null) {
-						playAnimation(true, nextAnimation.animationName, nextAnimation.secondaryAnimationTags, 1.0f);
+						playAnimation(true, nextAnimation.animationName, nextAnimation.secondaryAnimationTags, 1.0f,
+								nextAnimation.allowRarityVariations);
 					}
 				}
 			}
@@ -326,10 +394,13 @@ public class RenderUnit {
 	private static final class QueuedAnimation {
 		private final PrimaryTag animationName;
 		private final EnumSet<SecondaryTag> secondaryAnimationTags;
+		private final boolean allowRarityVariations;
 
-		public QueuedAnimation(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryAnimationTags) {
+		public QueuedAnimation(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryAnimationTags,
+				final boolean allowRarityVariations) {
 			this.animationName = animationName;
 			this.secondaryAnimationTags = secondaryAnimationTags;
+			this.allowRarityVariations = allowRarityVariations;
 		}
 	}
 }

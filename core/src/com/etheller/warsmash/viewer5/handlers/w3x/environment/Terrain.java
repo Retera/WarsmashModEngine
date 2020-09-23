@@ -383,6 +383,8 @@ public class Terrain {
 				(this.mapBounds[2] * 128.0f) + this.centerOffset[1],
 				((this.columns - this.mapBounds[1] - 1) * 128.0f) + this.centerOffset[0],
 				((this.rows - this.mapBounds[3] - 1) * 128.0f) + this.centerOffset[1] };
+		this.shaderMapBoundsRectangle = new Rectangle(this.shaderMapBounds[0], this.shaderMapBounds[1],
+				this.shaderMapBounds[2] - this.shaderMapBounds[0], this.shaderMapBounds[3] - this.shaderMapBounds[1]);
 		this.mapSize = w3eFile.getMapSize();
 		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundHeights, this.groundCornerHeights,
 				this.centerOffset, width, height);
@@ -1184,6 +1186,7 @@ public class Terrain {
 	static Vector3 tmp3 = new Vector3();
 	private final WaveBuilder waveBuilder;
 	public PathingGrid pathingGrid;
+	private final Rectangle shaderMapBoundsRectangle;
 
 	/**
 	 * Intersects the given ray with list of triangles. Returns the nearest
@@ -1391,5 +1394,9 @@ public class Terrain {
 			return false;
 		} // TODO why do we use floor if we can use int cast?
 		return this.corners[(int) Math.floor(x)][(int) Math.floor(y)].getBoundary() == 0;
+	}
+
+	public Rectangle getPlayableMapArea() {
+		return this.shaderMapBoundsRectangle;
 	}
 }

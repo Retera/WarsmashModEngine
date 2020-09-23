@@ -31,8 +31,9 @@ public class PathingGrid {
 	// this blit function is basically copied from HiveWE, maybe remember to mention
 	// that in credits as well:
 	// https://github.com/stijnherfst/HiveWE/blob/master/Base/PathingMap.cpp
-	public void blitPathingOverlayTexture(final float positionX, final float positionY, final int rotation,
+	public void blitPathingOverlayTexture(final float positionX, final float positionY, final int rotationInput,
 			final BufferedImage pathingTextureTga) {
+		final int rotation = (rotationInput + 450) % 360;
 		final int divW = ((rotation % 180) != 0) ? pathingTextureTga.getHeight() : pathingTextureTga.getWidth();
 		final int divH = ((rotation % 180) != 0) ? pathingTextureTga.getWidth() : pathingTextureTga.getHeight();
 		for (int j = 0; j < pathingTextureTga.getHeight(); j++) {
@@ -65,13 +66,13 @@ public class PathingGrid {
 
 				final int rgb = pathingTextureTga.getRGB(i, pathingTextureTga.getHeight() - 1 - j);
 				byte data = 0;
-				if ((rgb & 0xFF) > 250) {
+				if ((rgb & 0xFF) > 127) {
 					data |= PathingFlags.UNBUILDABLE;
 				}
-				if (((rgb & 0xFF00) >> 8) > 250) {
+				if (((rgb & 0xFF00) >>> 8) > 127) {
 					data |= PathingFlags.UNFLYABLE;
 				}
-				if (((rgb & 0xFF0000) >> 16) > 250) {
+				if (((rgb & 0xFF0000) >>> 16) > 127) {
 					data |= PathingFlags.UNWALKABLE;
 				}
 				this.dynamicPathingOverlay[(yy * this.pathingGridSizes[0]) + xx] |= data;

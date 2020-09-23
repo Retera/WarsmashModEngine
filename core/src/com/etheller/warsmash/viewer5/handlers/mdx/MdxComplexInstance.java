@@ -42,10 +42,11 @@ public class MdxComplexInstance extends ModelInstance {
 	public MdxNode[] nodes;
 	public SkeletalNode[] sortedNodes;
 	public int frame = 0;
+	public float floatingFrame = 0;
 	// Global sequences
 	public int counter = 0;
 	public int sequence = -1;
-	public int sequenceLoopMode = 0;
+	public SequenceLoopMode sequenceLoopMode = SequenceLoopMode.NEVER_LOOP;
 	public boolean sequenceEnded = false;
 	public float[] vertexColor = { 1, 1, 1, 1 };
 	// Particles do not spawn when the sequence is -1, or when the sequence finished
@@ -523,34 +524,40 @@ public class MdxComplexInstance extends ModelInstance {
 		if (sequenceId != -1) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
-			final int frameTime = (int) (dt * 1000 * this.animationSpeed);
+			final float frameTime = (dt * 1000 * this.animationSpeed);
 
-			this.frame += frameTime;
-			this.counter += frameTime;
+			final int lastIntegerFrame = this.frame;
+			this.floatingFrame += frameTime;
+			this.frame = (int) this.floatingFrame;
+			final int integerFrameTime = this.frame - lastIntegerFrame;
+			this.counter += integerFrameTime;
 			this.allowParticleSpawn = true;
 
-			if (this.frame >= interval[1]) {
-				if ((this.sequenceLoopMode == 2) || ((this.sequenceLoopMode == 1) && (sequence.getFlags() == 0))) {
-					this.frame = (int) interval[0]; // TODO not cast
+			if (this.floatingFrame >= interval[1]) {
+				if ((this.sequenceLoopMode == SequenceLoopMode.ALWAYS_LOOP)
+						|| ((this.sequenceLoopMode == SequenceLoopMode.MODEL_LOOP) && (sequence.getFlags() == 0))) {
+					this.floatingFrame = this.frame = (int) interval[0]; // TODO not cast
 
 					this.resetEventEmitters();
 				}
-				else if (this.sequenceLoopMode == 4) { // faux queued animation mode
-					final int framesPast = this.frame - (int) interval[1];
+				else if (this.sequenceLoopMode == SequenceLoopMode.LOOP_TO_NEXT_ANIMATION) { // faux queued animation
+																								// mode
+					final float framesPast = this.floatingFrame - interval[1];
 
 					final List<Sequence> sequences = model.sequences;
 					this.sequence = (this.sequence + 1) % sequences.size();
-					this.frame = (int) sequences.get(this.sequence).getInterval()[0] + framesPast; // TODO not cast
+					this.floatingFrame = sequences.get(this.sequence).getInterval()[0] + framesPast; // TODO not cast
+					this.frame = (int) this.floatingFrame;
 					this.sequenceEnded = false;
 					this.resetEventEmitters();
 					this.forced = true;
 				}
 				else {
-					this.frame = (int) interval[1]; // TODO not cast
-					this.counter -= frameTime;
+					this.floatingFrame = this.frame = (int) interval[1]; // TODO not cast
+					this.counter -= integerFrameTime;
 					this.allowParticleSpawn = false;
 				}
-				if (this.sequenceLoopMode == 3) {
+				if (this.sequenceLoopMode == SequenceLoopMode.NEVER_LOOP_AND_HIDE_WHEN_DONE) {
 					hide();
 				}
 
@@ -636,10 +643,12 @@ public class MdxComplexInstance extends ModelInstance {
 			if ((id < 0) || (id > (sequences.size() - 1))) {
 				this.sequence = -1;
 				this.frame = 0;
+				this.floatingFrame = 0;
 				this.allowParticleSpawn = false;
 			}
 			else {
 				this.frame = (int) sequences.get(id).getInterval()[0]; // TODO not cast
+				this.floatingFrame = this.frame;
 				this.sequenceEnded = false;
 			}
 
@@ -656,7 +665,7 @@ public class MdxComplexInstance extends ModelInstance {
 	 * and 2 to always loop. 3 was added by Retera as "hide after done" for gameplay
 	 * spawned effects
 	 */
-	public MdxComplexInstance setSequenceLoopMode(final int mode) {
+	public MdxComplexInstance setSequenceLoopMode(final SequenceLoopMode mode) {
 		this.sequenceLoopMode = mode;
 
 		return this;

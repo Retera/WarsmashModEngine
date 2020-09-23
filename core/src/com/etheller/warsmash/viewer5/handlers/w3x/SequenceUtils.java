@@ -10,7 +10,11 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 
-public class StandSequence {
+public class SequenceUtils {
+	public static final EnumSet<SecondaryTag> EMPTY = EnumSet.noneOf(SecondaryTag.class);
+	public static final EnumSet<SecondaryTag> READY = EnumSet.of(SecondaryTag.READY);
+	public static final EnumSet<SecondaryTag> FLESH = EnumSet.of(SecondaryTag.FLESH);
+	public static final EnumSet<SecondaryTag> BONE = EnumSet.of(SecondaryTag.BONE);
 
 	private static final StandSequenceComparator STAND_SEQUENCE_COMPARATOR = new StandSequenceComparator();
 
@@ -87,7 +91,8 @@ public class StandSequence {
 	}
 
 	public static IndexedSequence selectSequence(final AnimationTokens.PrimaryTag type,
-			final EnumSet<AnimationTokens.SecondaryTag> tags, final List<Sequence> sequences) {
+			final EnumSet<AnimationTokens.SecondaryTag> tags, final List<Sequence> sequences,
+			final boolean allowRarityVariations) {
 		final List<IndexedSequence> filtered = filterSequences(type, tags, sequences);
 
 		filtered.sort(STAND_SEQUENCE_COMPARATOR);
@@ -101,7 +106,7 @@ public class StandSequence {
 				break;
 			}
 
-			if ((Math.random() * 10) > rarity) {
+			if (((Math.random() * 10) > rarity) && allowRarityVariations) {
 				return filtered.get(i);
 			}
 		}
@@ -207,17 +212,22 @@ public class StandSequence {
 		}
 	}
 
-	public static void randomSequence(final MdxComplexInstance target, final PrimaryTag animationName,
-			final EnumSet<SecondaryTag> secondaryAnimationTags) {
+	public static Sequence randomSequence(final MdxComplexInstance target, final PrimaryTag animationName,
+			final EnumSet<SecondaryTag> secondaryAnimationTags, final boolean allowRarityVariations) {
 		final MdxModel model = (MdxModel) target.model;
 		final List<Sequence> sequences = model.getSequences();
-		final IndexedSequence sequence = selectSequence(animationName, secondaryAnimationTags, sequences);
+		final IndexedSequence sequence = selectSequence(animationName, secondaryAnimationTags, sequences,
+				allowRarityVariations);
 
 		if (sequence != null) {
 			target.setSequence(sequence.index);
+			return sequence.sequence;
 		}
 		else {
-			randomStandSequence(target);
+			if (!secondaryAnimationTags.isEmpty()) {
+				return randomSequence(target, animationName, EMPTY, allowRarityVariations);
+			}
+			return null;
 		}
 	}
 }

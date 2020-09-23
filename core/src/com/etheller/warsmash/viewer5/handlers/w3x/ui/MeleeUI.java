@@ -2,6 +2,8 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 
 import java.io.IOException;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -21,19 +23,25 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.util.FastNumberFormat;
+import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
-import com.etheller.warsmash.viewer5.handlers.w3x.StandSequence;
+import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.CommandCardIcon;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityStop;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CodeKeyType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
-public class MeleeUI {
+public class MeleeUI implements CUnitStateListener {
 	private final DataSource dataSource;
 	private final Viewport uiViewport;
 	private final FreeTypeFontGenerator fontGenerator;
@@ -43,6 +51,10 @@ public class MeleeUI {
 	private GameUI rootFrame;
 	private UIFrame consoleUI;
 	private UIFrame resourceBar;
+	private StringFrame resourceBarGoldText;
+	private StringFrame resourceBarLumberText;
+	private StringFrame resourceBarSupplyText;
+	private StringFrame resourceBarUpkeepText;
 	private UIFrame timeIndicator;
 	private UIFrame unitPortrait;
 	private StringFrame unitLifeText;
@@ -69,6 +81,10 @@ public class MeleeUI {
 	private StringFrame armorInfoPanelIconLevel;
 	private InfoPanelIconBackdrops damageBackdrops;
 	private InfoPanelIconBackdrops defenseBackdrops;
+	private RenderUnit selectedUnit;
+
+	// TODO remove this & replace with FDF
+	private final Texture activeButtonTexture;
 
 	public MeleeUI(final DataSource dataSource, final Viewport uiViewport, final FreeTypeFontGenerator fontGenerator,
 			final Scene uiScene, final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener) {
@@ -79,6 +95,8 @@ public class MeleeUI {
 		this.war3MapViewer = war3MapViewer;
 		this.rootFrameListener = rootFrameListener;
 
+		this.activeButtonTexture = ImageUtils.getBLPTexture(war3MapViewer.mapMpq,
+				"UI\\Widgets\\Console\\Human\\CommandButton\\human-activebutton.blp");
 	}
 
 	/**
@@ -89,7 +107,7 @@ public class MeleeUI {
 		// =================================
 		// Load skins and templates
 		// =================================
-		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 1), this.uiViewport,
+		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 3), this.uiViewport,
 				this.fontGenerator, this.uiScene, this.war3MapViewer);
 		try {
 			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
@@ -118,6 +136,16 @@ public class MeleeUI {
 		// put it in the "TOPRIGHT" corner.
 		this.resourceBar = this.rootFrame.createSimpleFrame("ResourceBarFrame", this.consoleUI, 0);
 		this.resourceBar.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, this.consoleUI, FramePoint.TOPRIGHT, 0, 0));
+		this.resourceBarGoldText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarGoldText", 0);
+		this.resourceBarGoldText.setText("500");
+		this.resourceBarLumberText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarLumberText", 0);
+		this.resourceBarLumberText.setText("150");
+		this.resourceBarSupplyText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarSupplyText", 0);
+		this.resourceBarSupplyText.setText("153/100");
+		this.resourceBarSupplyText.setColor(Color.RED);
+		this.resourceBarUpkeepText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarUpkeepText", 0);
+		this.resourceBarUpkeepText.setText("High Upkeep");
+		this.resourceBarUpkeepText.setColor(Color.RED);
 
 		// Create the Time Indicator (clock)
 		this.timeIndicator = this.rootFrame.createFrame("TimeOfDayIndicator", this.rootFrame, 0, 0);
@@ -174,6 +202,25 @@ public class MeleeUI {
 
 	public void render(final SpriteBatch batch, final BitmapFont font20, final GlyphLayout glyphLayout) {
 		this.rootFrame.render(batch, font20, glyphLayout);
+
+		if (this.selectedUnit != null) {
+			font20.setColor(Color.WHITE);
+
+			final COrder currentOrder = this.selectedUnit.getSimulationUnit().getCurrentOrder();
+			for (final CommandCardIcon commandCardIcon : this.selectedUnit.getCommandCardIcons()) {
+				batch.draw(commandCardIcon.getTexture(), 1235 + (86.8f * commandCardIcon.getX()),
+						190 - (88 * commandCardIcon.getY()), 78f, 78f);
+				if (((currentOrder != null) && (currentOrder.getOrderId() == commandCardIcon.getOrderId()))
+						|| ((currentOrder == null) && (commandCardIcon.getOrderId() == CAbilityStop.ORDER_ID))) {
+					final int blendDstFunc = batch.getBlendDstFunc();
+					final int blendSrcFunc = batch.getBlendSrcFunc();
+					batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+					batch.draw(this.activeButtonTexture, 1235 + (86.8f * commandCardIcon.getX()),
+							190 - (88 * commandCardIcon.getY()), 78f, 78f);
+					batch.setBlendFunction(blendSrcFunc, blendDstFunc);
+				}
+			}
+		}
 	}
 
 	public void portraitTalk() {
@@ -196,12 +243,12 @@ public class MeleeUI {
 			this.portraitCameraManager.updateCamera();
 			if ((this.modelInstance != null)
 					&& (this.modelInstance.sequenceEnded || (this.modelInstance.sequence == -1))) {
-				StandSequence.randomPortraitSequence(this.modelInstance);
+				SequenceUtils.randomPortraitSequence(this.modelInstance);
 			}
 		}
 
 		public void talk() {
-			StandSequence.randomPortraitTalkSequence(this.modelInstance);
+			SequenceUtils.randomPortraitTalkSequence(this.modelInstance);
 		}
 
 		public void setSelectedUnit(final RenderUnit unit) {
@@ -220,7 +267,7 @@ public class MeleeUI {
 					}
 					this.modelInstance = (MdxComplexInstance) portraitModel.addInstance();
 					this.portraitCameraManager.setModelInstance(this.modelInstance, portraitModel);
-					this.modelInstance.setSequenceLoopMode(1);
+					this.modelInstance.setSequenceLoopMode(SequenceLoopMode.MODEL_LOOP);
 					this.modelInstance.setScene(this.portraitScene);
 					this.modelInstance.setVertexColor(unit.instance.vertexColor);
 					this.modelInstance.setTeamColor(unit.playerIndex);
@@ -229,8 +276,15 @@ public class MeleeUI {
 		}
 	}
 
-	public void selectUnit(final RenderUnit unit) {
+	public void selectUnit(RenderUnit unit) {
+		if ((unit != null) && unit.getSimulationUnit().isDead()) {
+			unit = null;
+		}
+		if (this.selectedUnit != null) {
+			this.selectedUnit.getSimulationUnit().removeStateListener(this);
+		}
 		this.portrait.setSelectedUnit(unit);
+		this.selectedUnit = unit;
 		if (unit == null) {
 			this.simpleNameValue.setText("");
 			this.unitLifeText.setText("");
@@ -245,6 +299,7 @@ public class MeleeUI {
 			this.armorInfoPanelIconLevel.setText("");
 		}
 		else {
+			unit.getSimulationUnit().addStateListener(this);
 			this.simpleNameValue.setText(unit.getSimulationUnit().getUnitType().getName());
 			String classText = null;
 			for (final CUnitClassification classification : unit.getSimulationUnit().getClassifications()) {
@@ -291,8 +346,13 @@ public class MeleeUI {
 			}
 
 			this.armorIcon.setVisible(true);
-			this.armorIconBackdrop.setTexture(
-					this.defenseBackdrops.getTexture(unit.getSimulationUnit().getUnitType().getDefenseType()));
+			final Texture defenseTexture = this.defenseBackdrops
+					.getTexture(unit.getSimulationUnit().getUnitType().getDefenseType());
+			if (defenseTexture == null) {
+				throw new RuntimeException(
+						unit.getSimulationUnit().getUnitType().getDefenseType() + " can't find texture!");
+			}
+			this.armorIconBackdrop.setTexture(defenseTexture);
 			this.armorInfoPanelIconValue.setText(Integer.toString(unit.getSimulationUnit().getDefense()));
 		}
 	}
@@ -309,8 +369,8 @@ public class MeleeUI {
 		this.uiViewport.project(this.projectionTemp1);
 		this.uiViewport.project(this.projectionTemp2);
 
-		this.tempRect.x = this.projectionTemp1.x;
-		this.tempRect.y = this.projectionTemp1.y;
+		this.tempRect.x = this.projectionTemp1.x + this.uiViewport.getScreenX();
+		this.tempRect.y = this.projectionTemp1.y + this.uiViewport.getScreenY();
 		this.tempRect.width = this.projectionTemp2.x - this.projectionTemp1.x;
 		this.tempRect.height = this.projectionTemp2.y - this.projectionTemp1.y;
 		this.portrait.portraitScene.camera.viewport(this.tempRect);
@@ -325,10 +385,11 @@ public class MeleeUI {
 			for (int index = 0; index < attackTypes.length; index++) {
 				final CodeKeyType attackType = attackTypes[index];
 				String skinLookupKey = "InfoPanelIcon" + prefix + attackType.getCodeKey() + suffix;
-				try {
-					this.damageBackdropTextures[index] = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
+				final Texture suffixTexture = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
+				if (suffixTexture != null) {
+					this.damageBackdropTextures[index] = suffixTexture;
 				}
-				catch (final Exception exc) {
+				else {
 					skinLookupKey = "InfoPanelIcon" + prefix + attackType.getCodeKey();
 					this.damageBackdropTextures[index] = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
 				}
@@ -368,5 +429,21 @@ public class MeleeUI {
 			}
 
 		}
+	}
+
+	@Override
+	public void lifeChanged() {
+		if (this.selectedUnit.getSimulationUnit().isDead()) {
+			selectUnit(null);
+		}
+		else {
+			this.unitLifeText
+					.setText(FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getLife()) + " / "
+							+ this.selectedUnit.getSimulationUnit().getMaximumLife());
+		}
+	}
+
+	public RenderUnit getSelectedUnit() {
+		return this.selectedUnit;
 	}
 }

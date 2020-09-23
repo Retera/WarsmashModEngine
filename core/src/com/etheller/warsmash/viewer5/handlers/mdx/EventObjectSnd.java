@@ -29,6 +29,9 @@ public class EventObjectSnd extends EmittedObject<MdxComplexInstance, EventObjec
 			final MdxNode node = instance.nodes[emitterObject.index];
 			final AudioContext audioContext = scene.audioContext;
 			final List<Sound> decodedBuffers = emitterObject.decodedBuffers;
+			if (decodedBuffers.isEmpty()) {
+				return;
+			}
 			final AudioPanner panner = audioContext.createPanner();
 			final AudioBufferSource source = audioContext.createBufferSource();
 			final Vector3 location = node.worldLocation;

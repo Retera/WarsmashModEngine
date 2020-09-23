@@ -109,11 +109,11 @@ public final class SdSequence<TYPE> {
 				// with the default value.
 				if (framesBuilder.get(framesBuilder.size() - 1) != end) {
 					framesBuilder.add(end);
-					valuesBuilder.add(valuesBuilder.get(0));
+					valuesBuilder.add(valuesBuilder.get(valuesBuilder.size() - 1));
 
 					if (interpolationType > 1) {
-						inTansBuilder.add(inTansBuilder.get(0));
-						outTansBuilder.add(outTansBuilder.get(0));
+						inTansBuilder.add(inTansBuilder.get(inTansBuilder.size() - 1));
+						outTansBuilder.add(outTansBuilder.get(outTansBuilder.size() - 1));
 					}
 				}
 			}

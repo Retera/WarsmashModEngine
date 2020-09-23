@@ -10,19 +10,30 @@ public enum CAttackType implements CodeKeyType {
 	MAGIC,
 	HERO;
 
+	public static CAttackType[] VALUES = values();
+
 	private String codeKey;
+	private String damageKey;
 
 	private CAttackType() {
-		String name = name();
-		if (name.equals("SPELLS")) {
-			name = "MAGIC";
+		final String name = name();
+		final String computedCodeKey = name.charAt(0) + name.substring(1).toLowerCase();
+		if (computedCodeKey.equals("Spells")) {
+			this.codeKey = "Magic";
 		}
-		this.codeKey = name.charAt(0) + name.substring(1).toLowerCase();
+		else {
+			this.codeKey = computedCodeKey;
+		}
+		this.damageKey = this.codeKey;
 	}
 
 	@Override
 	public String getCodeKey() {
 		return this.codeKey;
+	}
+
+	public String getDamageKey() {
+		return this.damageKey;
 	}
 
 	public static CAttackType parseAttackType(final String attackTypeString) {

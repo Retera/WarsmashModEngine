@@ -24,6 +24,8 @@ public class SplatModel {
 	private final Texture texture;
 	private final List<Batch> batches;
 	public final float[] color;
+	private final List<float[]> locations;
+	private final List<SplatMover> splatInstances;
 
 	public SplatModel(final GL30 gl, final Texture texture, final List<float[]> locations, final float[] centerOffset,
 			final List<Consumer<SplatMover>> unitMapping) {
@@ -31,16 +33,49 @@ public class SplatModel {
 		this.batches = new ArrayList<>();
 		this.color = new float[] { 1, 1, 1, 1 };
 
+		this.locations = locations;
+		if ((unitMapping != null) && (unitMapping.size() > 0)) {
+			this.splatInstances = new ArrayList<>();
+			for (int i = 0; i < unitMapping.size(); i++) {
+				this.splatInstances.add(new SplatMover(this));
+			}
+		}
+		else {
+			this.splatInstances = null;
+		}
+		loadBatches(gl, centerOffset);
+		if ((unitMapping != null) && (unitMapping.size() > 0)) {
+			if (this.splatInstances.size() != unitMapping.size()) {
+				throw new IllegalStateException();
+			}
+			for (int i = 0; i < this.splatInstances.size(); i++) {
+				unitMapping.get(i).accept(this.splatInstances.get(i));
+			}
+		}
+	}
+
+	public void compact(final GL30 gl, final float[] centerOffset) {
+		// delete all the batches
+		for (final Batch b : this.batches) {
+			// Vertices
+			gl.glDeleteBuffer(b.vertexBuffer);
+
+			// Faces.
+			gl.glDeleteBuffer(b.faceBuffer);
+		}
+		this.batches.clear();
+
+		loadBatches(gl, centerOffset);
+	}
+
+	private void loadBatches(final GL30 gl, final float[] centerOffset) {
 		final List<float[]> vertices = new ArrayList<>();
 		final List<float[]> uvs = new ArrayList<>();
 		final List<int[]> indices = new ArrayList<>();
 		final List<SplatMover> batchRenderUnits = new ArrayList<>();
-		final int instances = locations.size();
+		final int instances = this.locations.size();
 		for (int idx = 0; idx < instances; ++idx) {
-			final Consumer<SplatMover> unit = ((unitMapping != null) && (idx < unitMapping.size()))
-					? unitMapping.get(idx)
-					: null;
-			final float[] locs = locations.get(idx);
+			final float[] locs = this.locations.get(idx);
 			final float x0 = locs[0];
 			final float y0 = locs[1];
 			final float x1 = locs[2];
@@ -61,7 +96,8 @@ public class SplatModel {
 					* ((int) Math.ceil((x1 - x0) / 128.0) + 1);
 
 			int start = vertices.size();
-			final SplatMover splatMover = unit == null ? null : new SplatMover(start * 3 * 4, indices.size() * 6 * 2);
+			final SplatMover splatMover = (this.splatInstances == null) ? null
+					: this.splatInstances.get(idx).reset(start * 3 * 4, indices.size() * 6 * 2, idx);
 
 			final int numVertsToCrate = splatMover == null ? newVerts : maxPossibleVerts;
 			if (numVertsToCrate > MAX_VERTICES) {
@@ -124,8 +160,7 @@ public class SplatModel {
 					}
 				}
 			}
-			if (unit != null) {
-				unit.accept(splatMover);
+			if (this.splatInstances != null) {
 				batchRenderUnits.add(splatMover);
 
 				while (splatMover.indices.size() < maxPossibleFaces) {
@@ -140,7 +175,6 @@ public class SplatModel {
 		if (indices.size() > 0) {
 			this.addBatch(gl, vertices, uvs, indices, batchRenderUnits);
 		}
-
 	}
 
 	private void addBatch(final GL30 gl, final List<float[]> vertices, final List<float[]> uvs,
@@ -213,17 +247,28 @@ public class SplatModel {
 		public float uvYScale;
 		public float uvXScale;
 		private int vertexBuffer;
-		private final int startOffset;
-		private final int start;
+		private int startOffset;
+		private int start;
 		private final List<float[]> vertices = new ArrayList<>();
 		private final List<float[]> uvs = new ArrayList<>();
 		private final List<int[]> indices = new ArrayList<>();
-		private final int indicesStartOffset;
+		private int indicesStartOffset;
+		private int index;
+		private final SplatModel splatModel;
 
-		private SplatMover(final int i, final int indicesStartOffset) {
+		private SplatMover(final SplatModel splatModel) {
+			this.splatModel = splatModel;
+		}
+
+		private SplatMover reset(final int i, final int indicesStartOffset, final int index) {
 			this.startOffset = i;
 			this.indicesStartOffset = indicesStartOffset;
 			this.start = i / 12;
+			this.index = index;
+			this.vertices.clear();
+			this.uvs.clear();
+			this.indices.clear();
+			return this;
 		}
 
 		public void move(final float deltaX, final float deltaY, final float[] centerOffset) {
@@ -322,6 +367,41 @@ public class SplatModel {
 					}
 				}
 			}
+			gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, this.uvsOffset + ((this.startOffset / 3) * 2),
+					4 * 2 * this.uvs.size(), RenderMathUtils.wrap(this.uvs));
+		}
+
+		public void destroy(final GL30 gl, final float[] centerOffset) {
+			this.splatModel.locations.remove(this.index);
+			this.splatModel.splatInstances.remove(this.index);
+			this.splatModel.compact(gl, centerOffset);
+		}
+
+		public void hide() {
+			// does not remove the shadow, just makes it not show, so it would still be
+			// using GPU resources
+			final GL30 gl = Gdx.gl30;
+			for (final float[] vertex : this.vertices) {
+				for (int i = 0; i < vertex.length; i++) {
+					vertex[i] = 0.0f;
+				}
+			}
+			for (final int[] indices : this.indices) {
+				for (int i = 0; i < indices.length; i++) {
+					indices[i] = 0;
+				}
+			}
+			for (final float[] uv : this.uvs) {
+				for (int i = 0; i < uv.length; i++) {
+					uv[i] = 0;
+				}
+			}
+			gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.vertexBuffer);
+			gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, this.startOffset, 4 * 3 * this.vertices.size(),
+					RenderMathUtils.wrap(this.vertices));
+			gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, this.faceBuffer);
+			gl.glBufferSubData(GL30.GL_ELEMENT_ARRAY_BUFFER, this.indicesStartOffset, 6 * 2 * this.indices.size(),
+					RenderMathUtils.wrapFaces(this.indices));
 			gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, this.uvsOffset + ((this.startOffset / 3) * 2),
 					4 * 2 * this.uvs.size(), RenderMathUtils.wrap(this.uvs));
 		}

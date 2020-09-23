@@ -1,0 +1,120 @@
+package com.etheller.warsmash.viewer5.handlers.w3x;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.utils.TimeUtils;
+import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.units.DataTable;
+import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.util.DataSourceFileHandle;
+import com.etheller.warsmash.viewer5.AudioBufferSource;
+import com.etheller.warsmash.viewer5.AudioContext;
+import com.etheller.warsmash.viewer5.AudioPanner;
+import com.etheller.warsmash.viewer5.gl.Extensions;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+
+public final class UnitSound {
+	private static final UnitSound SILENT = new UnitSound(0, 0, 0, 0, 0, 0);
+
+	private final List<Sound> sounds = new ArrayList<>();
+	private final float volume;
+	private final float pitch;
+	private final float pitchVariation;
+	private final float minDistance;
+	private final float maxDistance;
+	private final float distanceCutoff;
+
+	private Sound lastPlayedSound;
+
+	public static UnitSound create(final DataSource dataSource, final DataTable unitAckSounds, final String soundName,
+			final String soundType) {
+		final Element row = unitAckSounds.get(soundName + soundType);
+		if (row == null) {
+			return SILENT;
+		}
+		final String fileNames = row.getField("FileNames");
+		String directoryBase = row.getField("DirectoryBase");
+		if ((directoryBase.length() > 1) && !directoryBase.endsWith("\\")) {
+			directoryBase += "\\";
+		}
+		final float volume = row.getFieldFloatValue("Volume");
+		final float pitch = row.getFieldFloatValue("Pitch");
+		final float pitchVariation = row.getFieldFloatValue("PitchVariance");
+		final float minDistance = row.getFieldFloatValue("MinDistance");
+		final float maxDistance = row.getFieldFloatValue("MaxDistance");
+		final float distanceCutoff = row.getFieldFloatValue("DistanceCutoff");
+		final UnitSound sound = new UnitSound(volume, pitch, pitchVariation, minDistance, maxDistance, distanceCutoff);
+		for (final String fileName : fileNames.split(",")) {
+			String filePath = directoryBase + fileName;
+			if (!filePath.toLowerCase().endsWith(".wav")) {
+				filePath += ".wav";
+			}
+			if (dataSource.has(filePath)) {
+				sound.sounds.add(Gdx.audio.newSound(new DataSourceFileHandle(dataSource, filePath)));
+			}
+		}
+		return sound;
+	}
+
+	public UnitSound(final float volume, final float pitch, final float pitchVariation, final float minDistance,
+			final float maxDistance, final float distanceCutoff) {
+		this.volume = volume;
+		this.pitch = pitch;
+		this.pitchVariation = pitchVariation;
+		this.minDistance = minDistance;
+		this.maxDistance = maxDistance;
+		this.distanceCutoff = distanceCutoff;
+	}
+
+	public boolean playUnitResponse(final AudioContext audioContext, final RenderUnit unit) {
+		return playUnitResponse(audioContext, unit, (int) (Math.random() * this.sounds.size()));
+	}
+
+	public boolean playUnitResponse(final AudioContext audioContext, final RenderUnit unit, final int index) {
+		final long millisTime = TimeUtils.millis();
+		if (millisTime < unit.lastUnitResponseEndTimeMillis) {
+			return false;
+		}
+		if (play(audioContext, unit.location[0], unit.location[1])) {
+			final float duration = Extensions.soundLengthExtension.getDuration(this.lastPlayedSound);
+			unit.lastUnitResponseEndTimeMillis = millisTime + (long) (1000 * duration);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean play(final AudioContext audioContext, final float x, final float y) {
+		return play(audioContext, x, y, (int) (Math.random() * this.sounds.size()));
+	}
+
+	public boolean play(final AudioContext audioContext, final float x, final float y, final int index) {
+		if (this.sounds.isEmpty()) {
+			return false;
+		}
+
+		final AudioPanner panner = audioContext.createPanner();
+		final AudioBufferSource source = audioContext.createBufferSource();
+
+		// Panner settings
+		panner.setPosition(x, y, 0);
+		panner.maxDistance = this.distanceCutoff;
+		panner.refDistance = this.minDistance;
+		panner.connect(audioContext.destination);
+
+		// Source.
+		source.buffer = this.sounds.get(index);
+		source.connect(panner);
+
+		// Make a sound.
+		source.start(0);
+		this.lastPlayedSound = source.buffer;
+		return true;
+	}
+
+	public int getSoundCount() {
+		return this.sounds.size();
+	}
+}

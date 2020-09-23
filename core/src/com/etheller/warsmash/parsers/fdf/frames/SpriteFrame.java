@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 
 public class SpriteFrame extends AbstractRenderableFrame {
 
@@ -24,7 +25,7 @@ public class SpriteFrame extends AbstractRenderableFrame {
 		}
 		if (model != null) {
 			this.instance = (MdxComplexInstance) model.addInstance();
-			this.instance.setSequenceLoopMode(1);
+			this.instance.setSequenceLoopMode(SequenceLoopMode.MODEL_LOOP);
 			this.instance.setScene(this.scene);
 			this.instance.setLocation(this.renderBounds.x, this.renderBounds.y, 0);
 		}

@@ -13,7 +13,7 @@ public class AttachmentInstance implements UpdatableObject {
 		final MdxModel internalModel = attachment.internalModel;
 		final MdxComplexInstance internalInstance = (MdxComplexInstance) internalModel.addInstance();
 
-		internalInstance.setSequenceLoopMode(2);
+		internalInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		internalInstance.dontInheritScaling = false;
 		internalInstance.hide();
 		internalInstance.setParent(instance.nodes[attachment.objectId]);

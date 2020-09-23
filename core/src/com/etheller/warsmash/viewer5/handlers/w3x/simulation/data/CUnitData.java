@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -113,6 +114,8 @@ public class CUnitData {
 	private static final War3ID MOVE_TYPE = War3ID.fromString("umvt");
 	private static final War3ID COLLISION_SIZE = War3ID.fromString("ucol");
 	private static final War3ID CLASSIFICATION = War3ID.fromString("utyp");
+	private static final War3ID DEATH_TIME = War3ID.fromString("udtm");
+	private static final War3ID TARGETED_AS = War3ID.fromString("utar");
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
 
@@ -121,124 +124,137 @@ public class CUnitData {
 	}
 
 	public CUnit create(final CSimulation simulation, final int playerIndex, final int handleId, final War3ID typeId,
-			final float x, final float y, final float facing) {
+			final float x, final float y, final float facing, final BufferedImage buildingPathingPixelMap) {
 		final MutableGameObject unitType = this.unitData.get(typeId);
 		final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
 		final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
 		final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
 		final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
-		final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
-		final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
-		final float collisionSize = unitType.getFieldAsFloat(COLLISION_SIZE, 0);
-		final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);
-		final PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
-		final String classificationString = unitType.getFieldAsString(CLASSIFICATION, 0);
-		final String unitName = unitType.getFieldAsString(NAME, 0);
-		final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
-		if (classificationString != null) {
-			final String[] classificationValues = classificationString.split(",");
-			for (final String unitEditorKey : classificationValues) {
-				final CUnitClassification unitClassification = CUnitClassification
-						.parseUnitClassification(unitEditorKey);
-				if (unitClassification != null) {
-					classifications.add(unitClassification);
+		final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
+
+		CUnitType unitTypeInstance = this.unitIdToUnitType.get(typeId);
+		if (unitTypeInstance == null) {
+			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
+			final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
+			final float collisionSize = unitType.getFieldAsFloat(COLLISION_SIZE, 0);
+			final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);
+			final PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
+			final String unitName = unitType.getFieldAsString(NAME, 0);
+			final EnumSet<CTargetType> targetedAs = CTargetType
+					.parseTargetTypeSet(unitType.getFieldAsString(TARGETED_AS, 0));
+			final String classificationString = unitType.getFieldAsString(CLASSIFICATION, 0);
+			final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
+			if (classificationString != null) {
+				final String[] classificationValues = classificationString.split(",");
+				for (final String unitEditorKey : classificationValues) {
+					final CUnitClassification unitClassification = CUnitClassification
+							.parseUnitClassification(unitEditorKey);
+					if (unitClassification != null) {
+						classifications.add(unitClassification);
+					}
 				}
 			}
+			final List<CUnitAttack> attacks = new ArrayList<>();
+			final int attacksEnabled = unitType.getFieldAsInteger(ATTACKS_ENABLED, 0);
+			if ((attacksEnabled & 0x1) != 0) {
+				// attack one
+				final float animationBackswingPoint = unitType.getFieldAsFloat(ATTACK1_BACKSWING_POINT, 0);
+				final float animationDamagePoint = unitType.getFieldAsFloat(ATTACK1_DAMAGE_POINT, 0);
+				final int areaOfEffectFullDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_FULL_DMG, 0);
+				final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_HALF_DMG, 0);
+				final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_QUARTER_DMG, 0);
+				final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
+						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK1_AREA_OF_EFFECT_TARGETS, 0));
+				final CAttackType attackType = CAttackType
+						.parseAttackType(unitType.getFieldAsString(ATTACK1_ATTACK_TYPE, 0));
+				final float cooldownTime = unitType.getFieldAsFloat(ATTACK1_COOLDOWN, 0);
+				final int damageBase = unitType.getFieldAsInteger(ATTACK1_DMG_BASE, 0);
+				final float damageFactorMedium = unitType.getFieldAsFloat(ATTACK1_DAMAGE_FACTOR_HALF, 0);
+				final float damageFactorSmall = unitType.getFieldAsFloat(ATTACK1_DAMAGE_FACTOR_QUARTER, 0);
+				final float damageLossFactor = unitType.getFieldAsFloat(ATTACK1_DAMAGE_LOSS_FACTOR, 0);
+				final int damageDice = unitType.getFieldAsInteger(ATTACK1_DMG_DICE, 0);
+				final int damageSidesPerDie = unitType.getFieldAsInteger(ATTACK1_DMG_SIDES_PER_DIE, 0);
+				final float damageSpillDistance = unitType.getFieldAsFloat(ATTACK1_DMG_SPILL_DIST, 0);
+				final float damageSpillRadius = unitType.getFieldAsFloat(ATTACK1_DMG_SPILL_RADIUS, 0);
+				final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK1_DMG_UPGRADE_AMT, 0);
+				final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK1_TARGET_COUNT, 0);
+				final float projectileArc = unitType.getFieldAsFloat(ATTACK1_PROJECTILE_ARC, 0);
+				final String projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
+				final boolean projectileHomingEnabled = unitType.getFieldAsBoolean(ATTACK1_PROJECTILE_HOMING_ENABLED,
+						0);
+				final int projectileSpeed = unitType.getFieldAsInteger(ATTACK1_PROJECTILE_SPEED, 0);
+				final int range = unitType.getFieldAsInteger(ATTACK1_RANGE, 0);
+				final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK1_RANGE_MOTION_BUFFER, 0);
+				final boolean showUI = unitType.getFieldAsBoolean(ATTACK1_SHOW_UI, 0);
+				final EnumSet<CTargetType> targetsAllowed = CTargetType
+						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK1_TARGETS_ALLOWED, 0));
+				final String weaponSound = unitType.getFieldAsString(ATTACK1_WEAPON_SOUND, 0);
+				final CWeaponType weaponType = CWeaponType
+						.parseWeaponType(unitType.getFieldAsString(ATTACK1_WEAPON_TYPE, 0));
+				attacks.add(createAttack(animationBackswingPoint, animationDamagePoint, areaOfEffectFullDamage,
+						areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, attackType,
+						cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice,
+						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
+						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
+						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
+			}
+			if ((attacksEnabled & 0x2) != 0) {
+				// attack two
+				final float animationBackswingPoint = unitType.getFieldAsFloat(ATTACK2_BACKSWING_POINT, 0);
+				final float animationDamagePoint = unitType.getFieldAsFloat(ATTACK2_DAMAGE_POINT, 0);
+				final int areaOfEffectFullDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_FULL_DMG, 0);
+				final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_HALF_DMG, 0);
+				final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_QUARTER_DMG, 0);
+				final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
+						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK2_AREA_OF_EFFECT_TARGETS, 0));
+				final CAttackType attackType = CAttackType
+						.parseAttackType(unitType.getFieldAsString(ATTACK2_ATTACK_TYPE, 0));
+				final float cooldownTime = unitType.getFieldAsFloat(ATTACK2_COOLDOWN, 0);
+				final int damageBase = unitType.getFieldAsInteger(ATTACK2_DMG_BASE, 0);
+				final float damageFactorMedium = unitType.getFieldAsFloat(ATTACK2_DAMAGE_FACTOR_HALF, 0);
+				final float damageFactorSmall = unitType.getFieldAsFloat(ATTACK2_DAMAGE_FACTOR_QUARTER, 0);
+				final float damageLossFactor = unitType.getFieldAsFloat(ATTACK2_DAMAGE_LOSS_FACTOR, 0);
+				final int damageDice = unitType.getFieldAsInteger(ATTACK2_DMG_DICE, 0);
+				final int damageSidesPerDie = unitType.getFieldAsInteger(ATTACK2_DMG_SIDES_PER_DIE, 0);
+				final float damageSpillDistance = unitType.getFieldAsFloat(ATTACK2_DMG_SPILL_DIST, 0);
+				final float damageSpillRadius = unitType.getFieldAsFloat(ATTACK2_DMG_SPILL_RADIUS, 0);
+				final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK2_DMG_UPGRADE_AMT, 0);
+				final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK2_TARGET_COUNT, 0);
+				final float projectileArc = unitType.getFieldAsFloat(ATTACK2_PROJECTILE_ARC, 0);
+				final String projectileArt = unitType.getFieldAsString(ATTACK2_MISSILE_ART, 0);
+				final boolean projectileHomingEnabled = unitType.getFieldAsBoolean(ATTACK2_PROJECTILE_HOMING_ENABLED,
+						0);
+				final int projectileSpeed = unitType.getFieldAsInteger(ATTACK2_PROJECTILE_SPEED, 0);
+				final int range = unitType.getFieldAsInteger(ATTACK2_RANGE, 0);
+				final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK2_RANGE_MOTION_BUFFER, 0);
+				final boolean showUI = unitType.getFieldAsBoolean(ATTACK2_SHOW_UI, 0);
+				final EnumSet<CTargetType> targetsAllowed = CTargetType
+						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK2_TARGETS_ALLOWED, 0));
+				final String weaponSound = unitType.getFieldAsString(ATTACK2_WEAPON_SOUND, 0);
+				final CWeaponType weaponType = CWeaponType
+						.parseWeaponType(unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0));
+				attacks.add(createAttack(animationBackswingPoint, animationDamagePoint, areaOfEffectFullDamage,
+						areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, attackType,
+						cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice,
+						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
+						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
+						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
+			}
+			final int deathType = unitType.getFieldAsInteger(DEATH_TYPE, 0);
+			final boolean raise = (deathType & 0x1) != 0;
+			final boolean decay = (deathType & 0x2) != 0;
+			final String armorType = unitType.getFieldAsString(ARMOR_TYPE, 0);
+			final float impactZ = unitType.getFieldAsFloat(PROJECTILE_IMPACT_Z, 0);
+			final CDefenseType defenseType = CDefenseType.parseDefenseType(unitType.getFieldAsString(DEFENSE_TYPE, 0));
+			final float deathTime = unitType.getFieldAsFloat(DEATH_TIME, 0);
+			unitTypeInstance = new CUnitType(unitName, isBldg, movementType, moveHeight, collisionSize, classifications,
+					attacks, armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime,
+					targetedAs);
+			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
-		final List<CUnitAttack> attacks = new ArrayList<>();
-		final int attacksEnabled = unitType.getFieldAsInteger(ATTACKS_ENABLED, 0);
-		if ((attacksEnabled & 0x1) != 0) {
-			// attack one
-			final float animationBackswingPoint = unitType.getFieldAsFloat(ATTACK1_BACKSWING_POINT, 0);
-			final float animationDamagePoint = unitType.getFieldAsFloat(ATTACK1_DAMAGE_POINT, 0);
-			final int areaOfEffectFullDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_FULL_DMG, 0);
-			final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_HALF_DMG, 0);
-			final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_QUARTER_DMG, 0);
-			final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
-					.parseTargetTypeSet(unitType.getFieldAsString(ATTACK1_AREA_OF_EFFECT_TARGETS, 0));
-			final CAttackType attackType = CAttackType
-					.parseAttackType(unitType.getFieldAsString(ATTACK1_ATTACK_TYPE, 0));
-			final float cooldownTime = unitType.getFieldAsFloat(ATTACK1_COOLDOWN, 0);
-			final int damageBase = unitType.getFieldAsInteger(ATTACK1_DMG_BASE, 0);
-			final float damageFactorMedium = unitType.getFieldAsFloat(ATTACK1_DAMAGE_FACTOR_HALF, 0);
-			final float damageFactorSmall = unitType.getFieldAsFloat(ATTACK1_DAMAGE_FACTOR_QUARTER, 0);
-			final float damageLossFactor = unitType.getFieldAsFloat(ATTACK1_DAMAGE_LOSS_FACTOR, 0);
-			final int damageDice = unitType.getFieldAsInteger(ATTACK1_DMG_DICE, 0);
-			final int damageSidesPerDie = unitType.getFieldAsInteger(ATTACK1_DMG_SIDES_PER_DIE, 0);
-			final float damageSpillDistance = unitType.getFieldAsFloat(ATTACK1_DMG_SPILL_DIST, 0);
-			final float damageSpillRadius = unitType.getFieldAsFloat(ATTACK1_DMG_SPILL_RADIUS, 0);
-			final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK1_DMG_UPGRADE_AMT, 0);
-			final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK1_TARGET_COUNT, 0);
-			final float projectileArc = unitType.getFieldAsFloat(ATTACK1_PROJECTILE_ARC, 0);
-			final String projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
-			final boolean projectileHomingEnabled = unitType.getFieldAsBoolean(ATTACK1_PROJECTILE_HOMING_ENABLED, 0);
-			final int projectileSpeed = unitType.getFieldAsInteger(ATTACK1_PROJECTILE_SPEED, 0);
-			final int range = unitType.getFieldAsInteger(ATTACK1_RANGE, 0);
-			final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK1_RANGE_MOTION_BUFFER, 0);
-			final boolean showUI = unitType.getFieldAsBoolean(ATTACK1_SHOW_UI, 0);
-			final EnumSet<CTargetType> targetsAllowed = CTargetType
-					.parseTargetTypeSet(unitType.getFieldAsString(ATTACK1_TARGETS_ALLOWED, 0));
-			final String weaponSound = unitType.getFieldAsString(ATTACK1_WEAPON_SOUND, 0);
-			final CWeaponType weaponType = CWeaponType
-					.parseWeaponType(unitType.getFieldAsString(ATTACK1_WEAPON_TYPE, 0));
-			attacks.add(createAttack(animationBackswingPoint, animationDamagePoint, areaOfEffectFullDamage,
-					areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, attackType, cooldownTime,
-					damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice, damageSidesPerDie,
-					damageSpillDistance, damageSpillRadius, damageUpgradeAmount, maximumNumberOfTargets, projectileArc,
-					projectileArt, projectileHomingEnabled, projectileSpeed, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType));
-		}
-		if ((attacksEnabled & 0x2) != 0) {
-			// attack two
-			final float animationBackswingPoint = unitType.getFieldAsFloat(ATTACK2_BACKSWING_POINT, 0);
-			final float animationDamagePoint = unitType.getFieldAsFloat(ATTACK2_DAMAGE_POINT, 0);
-			final int areaOfEffectFullDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_FULL_DMG, 0);
-			final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_HALF_DMG, 0);
-			final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_QUARTER_DMG, 0);
-			final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
-					.parseTargetTypeSet(unitType.getFieldAsString(ATTACK2_AREA_OF_EFFECT_TARGETS, 0));
-			final CAttackType attackType = CAttackType
-					.parseAttackType(unitType.getFieldAsString(ATTACK2_ATTACK_TYPE, 0));
-			final float cooldownTime = unitType.getFieldAsFloat(ATTACK2_COOLDOWN, 0);
-			final int damageBase = unitType.getFieldAsInteger(ATTACK2_DMG_BASE, 0);
-			final float damageFactorMedium = unitType.getFieldAsFloat(ATTACK2_DAMAGE_FACTOR_HALF, 0);
-			final float damageFactorSmall = unitType.getFieldAsFloat(ATTACK2_DAMAGE_FACTOR_QUARTER, 0);
-			final float damageLossFactor = unitType.getFieldAsFloat(ATTACK2_DAMAGE_LOSS_FACTOR, 0);
-			final int damageDice = unitType.getFieldAsInteger(ATTACK2_DMG_DICE, 0);
-			final int damageSidesPerDie = unitType.getFieldAsInteger(ATTACK2_DMG_SIDES_PER_DIE, 0);
-			final float damageSpillDistance = unitType.getFieldAsFloat(ATTACK2_DMG_SPILL_DIST, 0);
-			final float damageSpillRadius = unitType.getFieldAsFloat(ATTACK2_DMG_SPILL_RADIUS, 0);
-			final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK2_DMG_UPGRADE_AMT, 0);
-			final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK2_TARGET_COUNT, 0);
-			final float projectileArc = unitType.getFieldAsFloat(ATTACK2_PROJECTILE_ARC, 0);
-			final String projectileArt = unitType.getFieldAsString(ATTACK2_MISSILE_ART, 0);
-			final boolean projectileHomingEnabled = unitType.getFieldAsBoolean(ATTACK2_PROJECTILE_HOMING_ENABLED, 0);
-			final int projectileSpeed = unitType.getFieldAsInteger(ATTACK2_PROJECTILE_SPEED, 0);
-			final int range = unitType.getFieldAsInteger(ATTACK2_RANGE, 0);
-			final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK2_RANGE_MOTION_BUFFER, 0);
-			final boolean showUI = unitType.getFieldAsBoolean(ATTACK2_SHOW_UI, 0);
-			final EnumSet<CTargetType> targetsAllowed = CTargetType
-					.parseTargetTypeSet(unitType.getFieldAsString(ATTACK2_TARGETS_ALLOWED, 0));
-			final String weaponSound = unitType.getFieldAsString(ATTACK2_WEAPON_SOUND, 0);
-			final CWeaponType weaponType = CWeaponType
-					.parseWeaponType(unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0));
-			attacks.add(createAttack(animationBackswingPoint, animationDamagePoint, areaOfEffectFullDamage,
-					areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, attackType, cooldownTime,
-					damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice, damageSidesPerDie,
-					damageSpillDistance, damageSpillRadius, damageUpgradeAmount, maximumNumberOfTargets, projectileArc,
-					projectileArt, projectileHomingEnabled, projectileSpeed, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType));
-		}
-		final int deathType = unitType.getFieldAsInteger(DEATH_TYPE, 0);
-		final boolean raise = (deathType & 0x1) != 0;
-		final boolean decay = (deathType & 0x2) != 0;
-		final String armorType = unitType.getFieldAsString(ARMOR_TYPE, 0);
-		final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
-		final float impactZ = unitType.getFieldAsFloat(PROJECTILE_IMPACT_Z, 0);
-		final CDefenseType defenseType = CDefenseType.parseDefenseType(unitType.getFieldAsString(DEFENSE_TYPE, 0));
+
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
-				speed, defense, new CUnitType(unitName, isBldg, movementType, moveHeight, collisionSize,
-						classifications, attacks, armorType, raise, decay, defenseType, impactZ));
+				speed, defense, unitTypeInstance);
 		if (speed > 0) {
 			unit.add(simulation, CAbilityMove.INSTANCE);
 			unit.add(simulation, CAbilityPatrol.INSTANCE);
@@ -275,7 +291,8 @@ public class CUnitData {
 			attack = new CUnitAttackMissileBounce(animationBackswingPoint, animationDamagePoint, attackType,
 					cooldownTime, damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range,
 					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt,
-					projectileHomingEnabled, projectileSpeed, damageLossFactor, maximumNumberOfTargets);
+					projectileHomingEnabled, projectileSpeed, damageLossFactor, maximumNumberOfTargets,
+					areaOfEffectFullDamage, areaOfEffectTargets);
 			break;
 		case MSPLASH:
 		case ARTILLERY:

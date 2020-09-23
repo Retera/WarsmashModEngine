@@ -279,20 +279,27 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 						final String[] fileNames = ((String) animSoundsRow.get("FileNames")).split(",");
 						final GenericResource[] resources = new GenericResource[fileNames.length];
 						for (int i = 0; i < fileNames.length; i++) {
-							final String pathString = pathSolver.solve(
-									((String) animSoundsRow.get("DirectoryBase")) + fileNames[i],
-									model.solverParams).finalSrc;
-							final GenericResource genericResource = viewer.loadGeneric(pathString,
-									FetchDataTypeName.ARRAY_BUFFER, new LoadGenericSoundCallback(pathString));
-							if (genericResource == null) {
-								throw new IllegalStateException("Null sound: " + fileNames[i]);
+							final String path = ((String) animSoundsRow.get("DirectoryBase")) + fileNames[i];
+							try {
+								final String pathString = pathSolver.solve(path, model.solverParams).finalSrc;
+								final GenericResource genericResource = viewer.loadGeneric(pathString,
+										FetchDataTypeName.ARRAY_BUFFER, new LoadGenericSoundCallback(pathString));
+								if (genericResource == null) {
+									System.err.println("Null sound: " + fileNames[i]);
+								}
+								resources[i] = genericResource;
 							}
-							resources[i] = genericResource;
+							catch (final Exception exc) {
+								System.err.println("Failed to load sound: " + path);
+								exc.printStackTrace();
+							}
 						}
 
 						// TODO JS async removed
 						for (final GenericResource resource : resources) {
-							this.decodedBuffers.add((Sound) resource.data);
+							if (resource != null) {
+								this.decodedBuffers.add((Sound) resource.data);
+							}
 						}
 						this.ok = true;
 					}

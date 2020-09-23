@@ -1,4 +1,4 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
 public interface CPlayerController {
 	boolean issueTargetOrder(int unitHandleId, int orderId, int targetHandleId);

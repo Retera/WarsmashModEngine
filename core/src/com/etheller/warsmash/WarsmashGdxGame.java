@@ -7,7 +7,6 @@ import java.util.Arrays;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -19,7 +18,6 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
-import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -29,6 +27,7 @@ import com.etheller.warsmash.viewer5.SolvedPath;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 
 public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvider {
 	private static final boolean SPIN = false;
@@ -68,21 +67,21 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		this.viewer.addHandler(new MdxHandler());
 		this.viewer.enableAudio();
 
-		final Scene scene = this.viewer.addWorldScene();
-//		scene.enableAudio();
+		final Scene scene = this.viewer.addSimpleScene();
+		scene.enableAudio();
 
 		this.cameraManager = new CameraManager();
 		this.cameraManager.setupCamera(scene);
 
 //		this.mainModel = (MdxModel) this.viewer.load("Doodads\\Cinematic\\ArthasIllidanFight\\ArthasIllidanFight.mdx",
-		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\SinglePlayer\\NightElf_Exp\\NightElf_Exp.mdx",
+//		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\SinglePlayer\\NightElf_Exp\\NightElf_Exp.mdx",
 //		this.mainModel = (MdxModel) this.viewer.load("Abilities\\Spells\\Orc\\FeralSpirit\\feralspirittarget.mdx",
-				new PathSolver() {
-					@Override
-					public SolvedPath solve(final String src, final Object solverParams) {
-						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
-					}
-				}, null);
+//				new PathSolver() {
+//					@Override
+//					public SolvedPath solve(final String src, final Object solverParams) {
+//						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
+//					}
+//				}, null);
 
 //		final EventObjectEmitterObject evt = this.mainModel.getEventObjects().get(1);
 //		for (final Sequence seq : this.mainModel.getSequences()) {
@@ -91,17 +90,19 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 //		System.out.println(Arrays.toString(evt.keyFrames));
 //		System.out.println(evt.name);
 
-		this.mainInstance = (MdxComplexInstance) this.mainModel.addInstance(0);
+//		this.mainInstance = (MdxComplexInstance) this.mainModel.addInstance(0);
 
-		this.mainInstance.setScene(scene);
-
-		final int animIndex = 0;
-		this.modelCamera = this.mainModel.cameras.get(animIndex);
-		this.mainInstance.setSequence(animIndex);
-
-		this.mainInstance.setSequenceLoopMode(4);
+//		this.mainInstance.setScene(scene);
+//
+//		final int animIndex = 0;
+//		this.modelCamera = this.mainModel.cameras.get(animIndex);
+//		this.mainInstance.setSequence(animIndex);
+//
+//		this.mainInstance.setSequenceLoopMode(SequenceLoopMode.LOOP_TO_NEXT_ANIMATION);
 
 //		acolytesHarvestingSceneJoke2(scene);
+
+		singleModelScene(scene, "Buildings\\Undead\\Necropolis\\Necropolis.mdx", "birth");
 
 		System.out.println("Loaded");
 		Gdx.gl30.glClearColor(0.5f, 0.5f, 0.5f, 1); // TODO remove white background
@@ -141,7 +142,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		}
 		instance3.setSequence(animIndex);
 
-		instance3.setSequenceLoopMode(2);
+		instance3.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 	}
 
 	private void singleModelScene(final Scene scene, final String path, final String animName) {
@@ -160,11 +161,12 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		for (final Sequence s : model2.getSequences()) {
 			if (s.getName().toLowerCase().startsWith(animName)) {
 				animIndex = model2.getSequences().indexOf(s);
+				break;
 			}
 		}
 		instance3.setSequence(animIndex);
 
-		instance3.setSequenceLoopMode(2);
+		instance3.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 	}
 
 	private void acolytesHarvestingScene(final Scene scene) {
@@ -196,7 +198,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			}
 			acolyteInstance.setSequence(animIndex);
 
-			acolyteInstance.setSequenceLoopMode(2);
+			acolyteInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 
 			final double angle = ((Math.PI * 2) / 5) * i;
 			acolyteInstance.localLocation.x = (float) Math.cos(angle) * 256;
@@ -209,7 +211,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 			effectInstance.setSequence(1);
 
-			effectInstance.setSequenceLoopMode(2);
+			effectInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 			effectInstance.localLocation.x = (float) Math.cos(angle) * 256;
 			effectInstance.localLocation.y = (float) Math.sin(angle) * 256;
 			effectInstance.localRotation.setFromAxisRad(0, 0, 1, (float) (angle));
@@ -228,7 +230,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 		mineInstance.setSequence(2);
 
-		mineInstance.setSequenceLoopMode(2);
+		mineInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 	}
 
 	private void acolytesHarvestingSceneJoke2(final Scene scene) {
@@ -260,7 +262,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			}
 			acolyteInstance.setSequence(animIndex);
 
-			acolyteInstance.setSequenceLoopMode(2);
+			acolyteInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 
 			final double angle = ((Math.PI * 2) / 5) * i;
 			acolyteInstance.localLocation.x = (float) Math.cos(angle) * 256;
@@ -273,7 +275,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 			effectInstance.setSequence(1);
 
-			effectInstance.setSequenceLoopMode(2);
+			effectInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 			effectInstance.localLocation.x = (float) Math.cos(angle) * 256;
 			effectInstance.localLocation.y = (float) Math.sin(angle) * 256;
 			effectInstance.localRotation.setFromAxisRad(0, 0, 1, (float) (angle));
@@ -295,7 +297,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		mineInstance.localScale.y = 2;
 		mineInstance.localScale.z = 2;
 
-		mineInstance.setSequenceLoopMode(2);
+		mineInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		final MdxModel mineModel2 = (MdxModel) this.viewer
 				.load("abilities\\spells\\undead\\unsummon\\unsummontarget.mdx", new PathSolver() {
 					@Override
@@ -309,7 +311,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 		mineInstance2.setSequence(0);
 
-		mineInstance2.setSequenceLoopMode(2);
+		mineInstance2.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 	}
 
 	private void makeFourHundred(final Scene scene, final MdxModel model2) {
@@ -323,7 +325,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			final int animIndex = i % model2.getSequences().size();
 			instance3.setSequence(animIndex);
 
-			instance3.setSequenceLoopMode(2);
+			instance3.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		}
 	}
 
@@ -339,7 +341,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			final int animIndex = i % model2.getSequences().size();
 			instance3.setSequence(animIndex);
 
-			instance3.setSequenceLoopMode(2);
+			instance3.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		}
 	}
 
@@ -353,13 +355,13 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 	private com.etheller.warsmash.viewer5.handlers.mdx.Camera modelCamera;
 	private final float[] cameraPositionTemp = new float[3];
 	private final float[] cameraTargetTemp = new float[3];
-	private boolean firstFrame = true;
+	private final boolean firstFrame = true;
 
 	@Override
 	public void render() {
 		Gdx.gl30.glBindVertexArray(VAO);
 		if (SPIN) {
-			this.cameraManager.horizontalAngle += 0.01;
+			this.cameraManager.horizontalAngle += 0.0001;
 			if (this.cameraManager.horizontalAngle > (2 * Math.PI)) {
 				this.cameraManager.horizontalAngle = 0;
 			}
@@ -384,14 +386,14 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			this.mainInstance.setSequence(sequence);
 			this.mainInstance.frame += (int) (Gdx.graphics.getRawDeltaTime() * 1000);
 		}
-		if (this.firstFrame) {
-			final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(this.viewer.dataSource,
-					"Sound\\Ambient\\DoodadEffects\\FinalCinematic.mp3"));
-			music.setVolume(0.2f);
-			music.setLooping(true);
-			music.play();
-			this.firstFrame = false;
-		}
+//		if (this.firstFrame) {
+//			final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(this.viewer.dataSource,
+//					"Sound\\Ambient\\DoodadEffects\\FinalCinematic.mp3"));
+//			music.setVolume(0.2f);
+//			music.setLooping(true);
+//			music.play();
+//			this.firstFrame = false;
+//		}
 	}
 
 	@Override
@@ -445,7 +447,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 			this.zoomFactor = 0.1f;
 			this.horizontalAngle = (float) (Math.PI / 2);
 			this.verticalAngle = (float) (Math.PI / 4);
-			this.distance = 1000;
+			this.distance = 500;
 			this.position = new Vector3();
 			this.target = new Vector3(0, 0, 50);
 			this.worldUp = new Vector3(0, 0, 1);
@@ -502,6 +504,9 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 						Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight(),
 						WarsmashGdxGame.this.modelCamera.nearClippingPlane,
 						WarsmashGdxGame.this.modelCamera.farClippingPlane);
+			}
+			else {
+				this.camera.perspective(70, this.camera.getAspect(), 100, 5000);
 			}
 
 			this.camera.moveToAndFace(this.position, this.target, this.worldUp);

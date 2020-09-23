@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.DataSource;
@@ -62,7 +63,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		this.viewport = viewport;
 		this.uiScene = uiScene;
 		this.modelViewer = modelViewer;
-		this.renderBounds.set(0, 0, viewport.getWorldWidth(), viewport.getWorldHeight());
+		if (viewport instanceof ExtendViewport) {
+			this.renderBounds.set(0, 0, ((ExtendViewport) viewport).getMinWorldWidth(),
+					((ExtendViewport) viewport).getMinWorldHeight());
+		}
+		else {
+			this.renderBounds.set(0, 0, viewport.getWorldWidth(), viewport.getWorldHeight());
+		}
 		this.templates = new FrameTemplateEnvironment();
 		this.fontGenerator = fontGenerator;
 		this.fontParam = new FreeTypeFontParameter();
@@ -312,10 +319,16 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public static float convertX(final Viewport viewport, final float fdfX) {
+		if (viewport instanceof ExtendViewport) {
+			return (fdfX / 0.8f) * ((ExtendViewport) viewport).getMinWorldWidth();
+		}
 		return (fdfX / 0.8f) * viewport.getWorldWidth();
 	}
 
 	public static float convertY(final Viewport viewport, final float fdfY) {
+		if (viewport instanceof ExtendViewport) {
+			return (fdfY / 0.6f) * ((ExtendViewport) viewport).getMinWorldHeight();
+		}
 		return (fdfY / 0.6f) * viewport.getWorldHeight();
 	}
 
@@ -325,8 +338,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		}
 		Texture texture = this.pathToTexture.get(path);
 		if (texture == null) {
-			texture = ImageUtils.getBLPTexture(this.dataSource, path);
-			this.pathToTexture.put(path, texture);
+			try {
+				texture = ImageUtils.getBLPTexture(this.dataSource, path);
+				this.pathToTexture.put(path, texture);
+			}
+			catch (final Exception exc) {
+
+			}
 		}
 		return texture;
 	}

@@ -2,6 +2,9 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks;
 
 import java.util.EnumSet;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -16,6 +19,11 @@ public class CUnitAttackNormal extends CUnitAttack {
 		super(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime, damageBase, damageDice,
 				damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound,
 				weaponType);
+	}
+
+	@Override
+	public void launch(final CSimulation simulation, final CUnit unit, final CWidget target, final float damage) {
+		target.damage(simulation, unit, getAttackType(), getWeaponSound(), damage);
 	}
 
 }

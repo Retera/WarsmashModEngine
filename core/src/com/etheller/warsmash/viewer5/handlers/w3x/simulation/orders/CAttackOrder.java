@@ -2,10 +2,10 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
@@ -15,16 +15,52 @@ public class CAttackOrder implements COrder {
 	private boolean wasWithinPropWindow = false;
 	private final CUnitAttack unitAttack;
 	private final CWidget target;
-	private int backswingLaunchTime;
+	private int damagePointLaunchTime;
+	private int backSwingTime;
+	private COrder moveOrder;
+	private int thisOrderCooldownEndTime;
+	private boolean wasInRange = false;
 
 	public CAttackOrder(final CUnit unit, final CUnitAttack unitAttack, final CWidget target) {
 		this.unit = unit;
 		this.unitAttack = unitAttack;
 		this.target = target;
+		createMoveOrder(unit, target);
+	}
+
+	private void createMoveOrder(final CUnit unit, final CWidget target) {
+		if ((target instanceof CUnit) && !(((CUnit) target).getUnitType().isBuilding())) {
+			this.moveOrder = new CMoveOrder(unit, (CUnit) target);
+		}
+		else {
+			this.moveOrder = new CMoveOrder(unit, target.getX(), target.getY());
+		}
 	}
 
 	@Override
 	public boolean update(final CSimulation simulation) {
+		if (this.target.isDead()
+				|| !this.target.canBeTargetedBy(simulation, this.unit, this.unitAttack.getTargetsAllowed())) {
+			return true;
+		}
+		float range = this.unitAttack.getRange();
+		if ((this.target instanceof CUnit) && (((CUnit) this.target).getCurrentOrder() instanceof CMoveOrder)
+				&& (this.damagePointLaunchTime != 0 /*
+													 * only apply range motion buffer if they were already in range and
+													 * attacked
+													 */)) {
+			range += this.unitAttack.getRangeMotionBuffer();
+		}
+		if (!this.unit.canReach(this.target, range)) {
+			if (this.moveOrder.update(simulation)) {
+				return true; // we just cant reach them
+			}
+			this.wasInRange = false;
+			this.damagePointLaunchTime = 0;
+			this.thisOrderCooldownEndTime = 0;
+			return false;
+		}
+		this.wasInRange = true;
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();
 		final float deltaY = this.target.getY() - prevY;
@@ -70,10 +106,13 @@ public class CAttackOrder implements COrder {
 		final int cooldownEndTime = this.unit.getCooldownEndTime();
 		final int currentTurnTick = simulation.getGameTurnTick();
 		if (this.wasWithinPropWindow) {
-			if (this.backswingLaunchTime != 0) {
-				if (currentTurnTick >= this.backswingLaunchTime) {
-					simulation.createProjectile(this.unit, 0, this.target);
-					this.backswingLaunchTime = 0;
+			if (this.damagePointLaunchTime != 0) {
+				if (currentTurnTick >= this.damagePointLaunchTime) {
+					final int minDamage = this.unitAttack.getMinDamage();
+					final int maxDamage = this.unitAttack.getMaxDamage();
+					final int damage = simulation.getSeededRandom().nextInt(maxDamage - minDamage) + minDamage;
+					this.unitAttack.launch(simulation, this.unit, this.target, damage);
+					this.damagePointLaunchTime = 0;
 				}
 			}
 			else if (currentTurnTick >= cooldownEndTime) {
@@ -84,15 +123,21 @@ public class CAttackOrder implements COrder {
 				final int a1DamagePointSteps = (int) (this.unitAttack.getAnimationDamagePoint()
 						/ WarsmashConstants.SIMULATION_STEP_TIME);
 				this.unit.setCooldownEndTime(currentTurnTick + a1CooldownSteps);
-				this.backswingLaunchTime = currentTurnTick + a1DamagePointSteps;
-				this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.ATTACK,
-						CUnitAnimationListener.EMPTY, 1.0f);
-				this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, CUnitAnimationListener.READY);
+				this.thisOrderCooldownEndTime = currentTurnTick + a1CooldownSteps;
+				this.damagePointLaunchTime = currentTurnTick + a1DamagePointSteps;
+				this.backSwingTime = currentTurnTick + a1DamagePointSteps + a1BackswingSteps;
+				this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.ATTACK, SequenceUtils.EMPTY, 1.0f,
+						true);
+				this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.READY, false);
+			}
+			else if ((currentTurnTick >= this.thisOrderCooldownEndTime)) {
+				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.READY, 1.0f,
+						false);
 			}
 		}
 		else {
-			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, CUnitAnimationListener.READY,
-					1.0f);
+			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.READY, 1.0f,
+					false);
 		}
 
 		return false;

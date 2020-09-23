@@ -38,34 +38,36 @@ public class Quadtree<T> {
 		add(node, 0);
 	}
 
-	public boolean intersectsAnythingOtherThan(final T sourceObjectToIgnore, final Rectangle bounds) {
+	public boolean intersect(final Rectangle bounds, final QuadtreeIntersector<T> intersector) {
 		if (this.leaf) {
 			for (int i = 0; i < this.nodes.size; i++) {
 				final Node<T> node = this.nodes.get(i);
-				if ((node.object != sourceObjectToIgnore) && node.bounds.overlaps(bounds)) {
-					return true;
+				if (node.bounds.overlaps(bounds)) {
+					if (intersector.onIntersect(node.object)) {
+						return true;
+					}
 				}
 			}
 			return false;
 		}
 		else {
 			if (this.northeast.bounds.overlaps(bounds)) {
-				if (this.northeast.intersectsAnythingOtherThan(sourceObjectToIgnore, bounds)) {
+				if (this.northeast.intersect(bounds, intersector)) {
 					return true;
 				}
 			}
 			if (this.northwest.bounds.overlaps(bounds)) {
-				if (this.northwest.intersectsAnythingOtherThan(sourceObjectToIgnore, bounds)) {
+				if (this.northwest.intersect(bounds, intersector)) {
 					return true;
 				}
 			}
 			if (this.southwest.bounds.overlaps(bounds)) {
-				if (this.southwest.intersectsAnythingOtherThan(sourceObjectToIgnore, bounds)) {
+				if (this.southwest.intersect(bounds, intersector)) {
 					return true;
 				}
 			}
 			if (this.southeast.bounds.overlaps(bounds)) {
-				if (this.southeast.intersectsAnythingOtherThan(sourceObjectToIgnore, bounds)) {
+				if (this.southeast.intersect(bounds, intersector)) {
 					return true;
 				}
 			}

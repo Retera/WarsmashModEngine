@@ -32,8 +32,8 @@ public class Player {
 		this.allyLowPriorities = ParseUtils.readUInt32(stream);
 		this.allyHighPriorities = ParseUtils.readUInt32(stream);
 		if (version > 30) {
-			enemyLowPrioritiesFlags = ParseUtils.readUInt32(stream);
-			enemyHighPrioritiesFlags = ParseUtils.readUInt32(stream);
+			this.enemyLowPrioritiesFlags = ParseUtils.readUInt32(stream);
+			this.enemyHighPrioritiesFlags = ParseUtils.readUInt32(stream);
 		}
 	}
 
@@ -50,5 +50,45 @@ public class Player {
 
 	public int getByteLength() {
 		return 33 + this.name.length();
+	}
+
+	public War3ID getId() {
+		return this.id;
+	}
+
+	public int getType() {
+		return this.type;
+	}
+
+	public int getRace() {
+		return this.race;
+	}
+
+	public int getIsFixedStartPosition() {
+		return this.isFixedStartPosition;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public float[] getStartLocation() {
+		return this.startLocation;
+	}
+
+	public long getAllyLowPriorities() {
+		return this.allyLowPriorities;
+	}
+
+	public long getAllyHighPriorities() {
+		return this.allyHighPriorities;
+	}
+
+	public long getEnemyLowPrioritiesFlags() {
+		return this.enemyLowPrioritiesFlags;
+	}
+
+	public long getEnemyHighPrioritiesFlags() {
+		return this.enemyHighPrioritiesFlags;
 	}
 }

@@ -24,7 +24,7 @@ public class TgaFile {
 
 	/**
 	 * Read a TGA image from a file
-	 * 
+	 *
 	 * @param file
 	 * @return
 	 * @throws FileNotFoundException
@@ -37,7 +37,7 @@ public class TgaFile {
 
 	/**
 	 * Read a TGA image from an input stream.
-	 * 
+	 *
 	 * @param name
 	 * @param stream
 	 * @return
@@ -142,7 +142,7 @@ public class TgaFile {
 	/**
 	 * Write a BufferedImage to a TGA file BufferedImages should be TYPE_INT_ARGB or
 	 * TYPE_INT_RGB
-	 * 
+	 *
 	 * @param src
 	 * @param file
 	 * @throws IOException

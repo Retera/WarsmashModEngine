@@ -1,11 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
+import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 import java.util.List;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
 /**
@@ -25,11 +27,18 @@ public class CUnitType {
 	private final boolean decay;
 	private final CDefenseType defenseType;
 	private final float impactZ;
+	private final float deathTime;
+
+	// TODO: this should probably not be stored as game state, i.e., is it really
+	// game data? can we store it in a cleaner way?
+	private final BufferedImage buildingPathingPixelMap;
+	private final EnumSet<CTargetType> targetedAs;
 
 	public CUnitType(final String name, final boolean isBldg, final MovementType movementType,
 			final float defaultFlyingHeight, final float collisionSize,
 			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks, final String armorType,
-			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ) {
+			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ,
+			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs) {
 		this.name = name;
 		this.building = isBldg;
 		this.movementType = movementType;
@@ -42,6 +51,9 @@ public class CUnitType {
 		this.decay = decay;
 		this.defenseType = defenseType;
 		this.impactZ = impactZ;
+		this.buildingPathingPixelMap = buildingPathingPixelMap;
+		this.deathTime = deathTime;
+		this.targetedAs = targetedAs;
 	}
 
 	public String getName() {
@@ -90,5 +102,17 @@ public class CUnitType {
 
 	public float getImpactZ() {
 		return this.impactZ;
+	}
+
+	public BufferedImage getBuildingPathingPixelMap() {
+		return this.buildingPathingPixelMap;
+	}
+
+	public float getDeathTime() {
+		return this.deathTime;
+	}
+
+	public EnumSet<CTargetType> getTargetedAs() {
+		return this.targetedAs;
 	}
 }

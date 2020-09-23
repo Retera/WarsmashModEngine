@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing;
 
 import java.awt.geom.Point2D;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -18,7 +19,8 @@ public class CPathfindingProcessor {
 	private final CWorldCollision worldCollision;
 	private final Node[][] nodes;
 	private final Node[][] cornerNodes;
-	private Node goal;
+	private final Node[] goalSet = new Node[4];
+	private int goals = 0;
 
 	public CPathfindingProcessor(final PathingGrid pathingGrid, final CWorldCollision worldCollision) {
 		this.pathingGrid = pathingGrid;
@@ -54,12 +56,21 @@ public class CPathfindingProcessor {
 	 */
 	public List<Point2D.Float> findNaiveSlowPath(final CUnit ignoreIntersectionsWithThisUnit, final float startX,
 			final float startY, final Point2D.Float goal, final PathingGrid.MovementType movementType,
-			final float collisionSize) {
+			final float collisionSize, final boolean allowSmoothing) {
+		return findNaiveSlowPath(ignoreIntersectionsWithThisUnit, null, startX, startY, goal, movementType,
+				collisionSize, allowSmoothing);
+	}
+
+	public List<Point2D.Float> findNaiveSlowPath(final CUnit ignoreIntersectionsWithThisUnit,
+			final CUnit ignoreIntersectionsWithThisSecondUnit, final float startX, final float startY,
+			final Point2D.Float goal, final PathingGrid.MovementType movementType, final float collisionSize,
+			final boolean allowSmoothing) {
 		final float goalX = goal.x;
 		final float goalY = goal.y;
-		if (!this.pathingGrid.isPathable(goalX, goalY, movementType, collisionSize)
-				|| !isPathableDynamically(goalX, goalY, ignoreIntersectionsWithThisUnit, movementType)) {
-			return Collections.emptyList();
+		float weightForHittingWalls = 1E9f;
+		if (!this.pathingGrid.isPathable(goalX, goalY, movementType, collisionSize) || !isPathableDynamically(goalX,
+				goalY, ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit, movementType)) {
+			weightForHittingWalls = 5E2f;
 		}
 		System.out.println("beginning findNaiveSlowPath for  " + startX + "," + startY + "," + goalX + "," + goalY);
 		if ((startX == goalX) && (startY == goalY)) {
@@ -78,7 +89,20 @@ public class CPathfindingProcessor {
 			gridMapping = GridMapping.CELLS;
 			System.out.println("using cells");
 		}
-		this.goal = searchGraph[gridMapping.getY(this.pathingGrid, goalY)][gridMapping.getX(this.pathingGrid, goalX)];
+		final int goalCellY = gridMapping.getY(this.pathingGrid, goalY);
+		final int goalCellX = gridMapping.getX(this.pathingGrid, goalX);
+		final Node mostLikelyGoal = searchGraph[goalCellY][goalCellX];
+		final double bestGoalDistance = mostLikelyGoal.point.distance(goalX, goalY);
+		Arrays.fill(this.goalSet, null);
+		this.goals = 0;
+		for (int i = goalCellX - 1; i <= (goalCellX + 1); i++) {
+			for (int j = goalCellY - 1; j <= (goalCellY + 1); j++) {
+				final Node possibleGoal = searchGraph[j][i];
+				if (possibleGoal.point.distance(goalX, goalY) <= bestGoalDistance) {
+					this.goalSet[this.goals++] = possibleGoal;
+				}
+			}
+		}
 		final int startGridY = gridMapping.getY(this.pathingGrid, startY);
 		final int startGridX = gridMapping.getX(this.pathingGrid, startX);
 		for (int i = 0; i < searchGraph.length; i++) {
@@ -133,10 +157,17 @@ public class CPathfindingProcessor {
 					final Node possibleNode = searchGraph[cellY][cellX];
 					final float x = possibleNode.point.x;
 					final float y = possibleNode.point.y;
-					if (pathableBetween(ignoreIntersectionsWithThisUnit, startX, startY, movementType, collisionSize, x,
-							y)) {
+					if (pathableBetween(ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit, startX,
+							startY, movementType, collisionSize, x, y)) {
 
 						final double tentativeScore = possibleNode.point.distance(startX, startY);
+						possibleNode.g = tentativeScore;
+						possibleNode.f = tentativeScore + h(possibleNode);
+						openSet.add(possibleNode);
+
+					}
+					else {
+						final double tentativeScore = weightForHittingWalls;
 						possibleNode.g = tentativeScore;
 						possibleNode.f = tentativeScore + h(possibleNode);
 						openSet.add(possibleNode);
@@ -148,13 +179,20 @@ public class CPathfindingProcessor {
 
 		while (!openSet.isEmpty()) {
 			Node current = openSet.poll();
-			if (current == this.goal) {
+			if (isGoal(current)) {
 				final LinkedList<Point2D.Float> totalPath = new LinkedList<>();
 				Direction lastCameFromDirection = null;
 
 				if ((current.cameFrom != null)
-						&& pathableBetween(ignoreIntersectionsWithThisUnit, current.cameFrom.point.x,
-								current.cameFrom.point.y, movementType, collisionSize, goalX, goalY)) {
+						&& pathableBetween(ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit,
+								current.point.x, current.point.y, movementType, collisionSize, goalX, goalY)
+						&& pathableBetween(ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit,
+								current.cameFrom.point.x, current.cameFrom.point.y, movementType, collisionSize,
+								current.point.x, current.point.y)
+						&& pathableBetween(ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit,
+								current.cameFrom.point.x, current.cameFrom.point.y, movementType, collisionSize, goalX,
+								goalY)
+						&& allowSmoothing) {
 					// do some basic smoothing to walk straight to the goal if it is not obstructed,
 					// skipping the last grid location
 					totalPath.addFirst(goal);
@@ -172,8 +210,16 @@ public class CPathfindingProcessor {
 					if ((lastCameFromDirection == null) || (current.cameFromDirection != lastCameFromDirection)
 							|| (current.cameFromDirection == null)) {
 						if ((current.cameFromDirection != null) || (lastNode == null)
-								|| !pathableBetween(ignoreIntersectionsWithThisUnit, startX, startY, movementType,
-										collisionSize, lastNode.point.x, lastNode.point.y)) {
+								|| !pathableBetween(ignoreIntersectionsWithThisUnit,
+										ignoreIntersectionsWithThisSecondUnit, startX, startY, movementType,
+										collisionSize, current.point.x, current.point.y)
+								|| !pathableBetween(ignoreIntersectionsWithThisUnit,
+										ignoreIntersectionsWithThisSecondUnit, current.point.x, current.point.y,
+										movementType, collisionSize, lastNode.point.x, lastNode.point.y)
+								|| !pathableBetween(ignoreIntersectionsWithThisUnit,
+										ignoreIntersectionsWithThisSecondUnit, startX, startY, movementType,
+										collisionSize, lastNode.point.x, lastNode.point.y)
+								|| !allowSmoothing) {
 							// Add the point if it's not the first one, or if we can only complete
 							// the journey by specifically walking to the first one
 							totalPath.addFirst(current.point);
@@ -187,8 +233,7 @@ public class CPathfindingProcessor {
 			for (final Direction direction : Direction.VALUES) {
 				final float x = current.point.x + (direction.xOffset * 32);
 				final float y = current.point.y + (direction.yOffset * 32);
-				if (this.pathingGrid.contains(x, y) && pathableBetween(ignoreIntersectionsWithThisUnit, current.point.x,
-						current.point.y, movementType, collisionSize, x, y)) {
+				if (this.pathingGrid.contains(x, y)) {
 					double turnCost;
 					if ((current.cameFromDirection != null) && (direction != current.cameFromDirection)) {
 						turnCost = 0.25;
@@ -196,7 +241,11 @@ public class CPathfindingProcessor {
 					else {
 						turnCost = 0;
 					}
-					final double tentativeScore = current.g + ((direction.length + turnCost) * 32);
+					double tentativeScore = current.g + ((direction.length + turnCost) * 32);
+					if (!pathableBetween(ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit,
+							current.point.x, current.point.y, movementType, collisionSize, x, y)) {
+						tentativeScore += (direction.length) * weightForHittingWalls;
+					}
 					final Node neighbor = searchGraph[gridMapping.getY(this.pathingGrid, y)][gridMapping
 							.getX(this.pathingGrid, x)];
 					if (tentativeScore < neighbor.g) {
@@ -214,20 +263,24 @@ public class CPathfindingProcessor {
 		return Collections.emptyList();
 	}
 
-	private boolean pathableBetween(final CUnit ignoreIntersectionsWithThisUnit, final float startX, final float startY,
+	private boolean pathableBetween(final CUnit ignoreIntersectionsWithThisUnit,
+			final CUnit ignoreIntersectionsWithThisSecondUnit, final float startX, final float startY,
 			final PathingGrid.MovementType movementType, final float collisionSize, final float x, final float y) {
 		return this.pathingGrid.isPathable(x, y, movementType, collisionSize)
 				&& this.pathingGrid.isPathable(startX, y, movementType, collisionSize)
 				&& this.pathingGrid.isPathable(x, startY, movementType, collisionSize)
-				&& isPathableDynamically(x, y, ignoreIntersectionsWithThisUnit, movementType)
-				&& isPathableDynamically(x, startY, ignoreIntersectionsWithThisUnit, movementType)
-				&& isPathableDynamically(startX, y, ignoreIntersectionsWithThisUnit, movementType);
+				&& isPathableDynamically(x, y, ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit,
+						movementType)
+				&& isPathableDynamically(x, startY, ignoreIntersectionsWithThisUnit,
+						ignoreIntersectionsWithThisSecondUnit, movementType)
+				&& isPathableDynamically(startX, y, ignoreIntersectionsWithThisUnit,
+						ignoreIntersectionsWithThisSecondUnit, movementType);
 	}
 
 	private boolean isPathableDynamically(final float x, final float y, final CUnit ignoreIntersectionsWithThisUnit,
-			final PathingGrid.MovementType movementType) {
+			final CUnit ignoreIntersectionsWithThisSecondUnit, final PathingGrid.MovementType movementType) {
 		return !this.worldCollision.intersectsAnythingOtherThan(tempRect.setCenter(x, y),
-				ignoreIntersectionsWithThisUnit, movementType);
+				ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit, movementType);
 	}
 
 	public static boolean isCollisionSizeBetterSuitedForCorners(final float collisionSize) {
@@ -242,8 +295,24 @@ public class CPathfindingProcessor {
 		return n.g;
 	}
 
+	private boolean isGoal(final Node n) {
+		for (int i = 0; i < this.goals; i++) {
+			if (n == this.goalSet[i]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public float h(final Node n) {
-		return (float) n.point.distance(this.goal.point);
+		float bestDistance = 0;
+		for (int i = 0; i < this.goals; i++) {
+			final float possibleDistance = (float) n.point.distance(this.goalSet[i].point);
+			if (possibleDistance > bestDistance) {
+				bestDistance = possibleDistance; // always overestimate
+			}
+		}
+		return bestDistance;
 	}
 
 	public static final class Node {

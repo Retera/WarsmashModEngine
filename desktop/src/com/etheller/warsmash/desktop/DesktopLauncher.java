@@ -84,8 +84,14 @@ public class DesktopLauncher {
 		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
 		config.samples = 16;
-		config.fullscreen = false;
-		if (config.fullscreen) {
+		config.vSyncEnabled = false;
+		config.foregroundFPS = 0;
+		config.backgroundFPS = 0;
+		if ((arg.length > 0) && "-windowed".equals(arg[0])) {
+			config.fullscreen = false;
+		}
+		else {
+			config.fullscreen = true;
 			final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
 			config.width = desktopDisplayMode.width;
 			config.height = desktopDisplayMode.height;

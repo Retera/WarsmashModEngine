@@ -19,6 +19,7 @@ public class AnimationTokens {
 	public static enum SecondaryTag {
 		ALTERNATE,
 		ALTERNATEEX,
+		BONE,
 		CHAIN,
 		CHANNEL,
 		COMPLETE,
@@ -56,6 +57,7 @@ public class AnimationTokens {
 		SMALL,
 		SPIKED,
 		SPIN,
+		SPELL,
 		SWIM,
 		TALK,
 		THIRD,

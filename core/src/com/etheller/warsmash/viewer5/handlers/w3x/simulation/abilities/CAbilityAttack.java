@@ -1,11 +1,14 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
 import com.badlogic.gdx.math.Vector2;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.StringsToExternalizeLater;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CAttackOrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CMoveOrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
@@ -47,7 +50,17 @@ public class CAbilityAttack implements CAbility {
 
 	@Override
 	public void onOrder(final CSimulation game, final CUnit caster, final CWidget target, final boolean queue) {
-		caster.order(new CAttackOrder(caster, caster.getUnitType().getAttacks().get(0), target), queue);
+		COrder order = null;
+		for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
+			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
+				order = new CAttackOrder(caster, attack, target);
+				break;
+			}
+		}
+		if (order == null) {
+			order = new CMoveOrder(caster, target.getX(), target.getY());
+		}
+		caster.order(order, queue);
 	}
 
 	@Override

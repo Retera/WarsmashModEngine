@@ -10,6 +10,8 @@ public enum CDefenseType implements CodeKeyType {
 	HERO,
 	DIVINE;
 
+	public static CDefenseType[] VALUES = values();
+
 	private String codeKey;
 
 	private CDefenseType() {

@@ -1,10 +1,15 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
+import java.util.EnumSet;
+
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+
 public abstract class CWidget {
 	private final int handleId;
 	private float x;
 	private float y;
-	private float life;
+	protected float life;
 
 	public CWidget(final int handleId, final float x, final float y, final float life) {
 		this.handleId = handleId;
@@ -41,12 +46,17 @@ public abstract class CWidget {
 		this.life = life;
 	}
 
-	public void damage(final CUnit source, final int damage) {
-		this.life -= damage;
-	}
+	public abstract void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
+			final String weaponType, final float damage);
 
 	public abstract float getFlyHeight();
 
 	public abstract float getImpactZ();
 
+	public boolean isDead() {
+		return this.life <= 0;
+	}
+
+	public abstract boolean canBeTargetedBy(CSimulation simulation, CUnit source,
+			final EnumSet<CTargetType> targetsAllowed);
 }

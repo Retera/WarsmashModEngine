@@ -58,6 +58,7 @@ public abstract class Scene {
 	 * If true, alpha works as usual.
 	 */
 	public boolean alpha = false;
+	private final SceneLightManager lightManager;
 
 	public Scene(final ModelViewer viewer) {
 		final CanvasProvider canvas = viewer.canvas;
@@ -85,6 +86,8 @@ public abstract class Scene {
 		this.instanceDepthComparator = new InstanceDepthComparator();
 		this.visibleCells = 0;
 		this.visibleInstances = 0;
+
+		this.lightManager = this.viewer.createLightManager();
 	}
 
 	public boolean enableAudio() {
@@ -298,6 +301,14 @@ public abstract class Scene {
 		for (final EmittedObject object : this.emitterObjectUpdater.objects) {
 			object.health = 0;
 		}
+	}
+
+	public void addLight(final SceneLightInstance lightInstance) {
+		this.lightManager.add(lightInstance);
+	}
+
+	public void removeLight(final SceneLightInstance lightInstance) {
+		this.lightManager.remove(lightInstance);
 	}
 
 	private static final class InstanceDepthComparator implements Comparator<ModelInstance> {

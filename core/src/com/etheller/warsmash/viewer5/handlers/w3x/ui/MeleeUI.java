@@ -18,6 +18,7 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
+import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
@@ -55,7 +56,7 @@ public class MeleeUI implements CUnitStateListener {
 	private StringFrame resourceBarLumberText;
 	private StringFrame resourceBarSupplyText;
 	private StringFrame resourceBarUpkeepText;
-	private UIFrame timeIndicator;
+	private SpriteFrame timeIndicator;
 	private UIFrame unitPortrait;
 	private StringFrame unitLifeText;
 	private StringFrame unitManaText;
@@ -107,7 +108,7 @@ public class MeleeUI implements CUnitStateListener {
 		// =================================
 		// Load skins and templates
 		// =================================
-		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 3), this.uiViewport,
+		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 0), this.uiViewport,
 				this.fontGenerator, this.uiScene, this.war3MapViewer);
 		try {
 			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
@@ -148,7 +149,9 @@ public class MeleeUI implements CUnitStateListener {
 		this.resourceBarUpkeepText.setColor(Color.RED);
 
 		// Create the Time Indicator (clock)
-		this.timeIndicator = this.rootFrame.createFrame("TimeOfDayIndicator", this.rootFrame, 0, 0);
+		this.timeIndicator = (SpriteFrame) this.rootFrame.createFrame("TimeOfDayIndicator", this.rootFrame, 0, 0);
+		this.timeIndicator.setSequence(0); // play the stand
+		this.timeIndicator.setAnimationSpeed(0.0f); // do not advance automatically
 
 		// Create the unit portrait stuff
 		this.portrait = new Portrait(this.war3MapViewer);
@@ -221,6 +224,9 @@ public class MeleeUI implements CUnitStateListener {
 				}
 			}
 		}
+
+		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
+				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
 	}
 
 	public void portraitTalk() {
@@ -229,12 +235,12 @@ public class MeleeUI implements CUnitStateListener {
 
 	private static final class Portrait {
 		private MdxComplexInstance modelInstance;
-		private final WarsmashGdxMapGame.CameraManager portraitCameraManager;
+		private final WarsmashGdxMapGame.PortraitCameraManager portraitCameraManager;
 		private final Scene portraitScene;
 
 		public Portrait(final War3MapViewer war3MapViewer) {
 			this.portraitScene = war3MapViewer.addSimpleScene();
-			this.portraitCameraManager = new WarsmashGdxMapGame.CameraManager();
+			this.portraitCameraManager = new WarsmashGdxMapGame.PortraitCameraManager();
 			this.portraitCameraManager.setupCamera(this.portraitScene);
 			this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
 		}
@@ -303,6 +309,11 @@ public class MeleeUI implements CUnitStateListener {
 			this.simpleNameValue.setText(unit.getSimulationUnit().getUnitType().getName());
 			String classText = null;
 			for (final CUnitClassification classification : unit.getSimulationUnit().getClassifications()) {
+				if ((classification == CUnitClassification.MECHANICAL)
+						&& unit.getSimulationUnit().getUnitType().isBuilding()) {
+					// buildings dont display MECHANICAL
+					continue;
+				}
 				if (classification.getDisplayName() != null) {
 					classText = classification.getDisplayName();
 				}
@@ -325,7 +336,11 @@ public class MeleeUI implements CUnitStateListener {
 			}
 			this.simpleBuildingActionLabel.setText("");
 
-			if (unit.getSimulationUnit().getUnitType().getAttacks().size() > 0) {
+			final boolean anyAttacks = unit.getSimulationUnit().getUnitType().getAttacks().size() > 0;
+			final UIFrame localArmorIcon;
+			final TextureFrame localArmorIconBackdrop;
+			final StringFrame localArmorInfoPanelIconValue;
+			if (anyAttacks) {
 				final CUnitAttack attackOne = unit.getSimulationUnit().getUnitType().getAttacks().get(0);
 				this.attack1Icon.setVisible(attackOne.isShowUI());
 				this.attack1IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackOne.getAttackType()));
@@ -339,21 +354,29 @@ public class MeleeUI implements CUnitStateListener {
 				else {
 					this.attack2Icon.setVisible(false);
 				}
+
+				localArmorIcon = this.armorIcon;
+				localArmorIconBackdrop = this.armorIconBackdrop;
+				localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
 			}
 			else {
-				this.attack1Icon.setVisible(false);
+				this.armorIcon.setVisible(false);
 				this.attack2Icon.setVisible(false);
+
+				localArmorIcon = this.attack1Icon;
+				localArmorIconBackdrop = this.attack1IconBackdrop;
+				localArmorInfoPanelIconValue = this.attack1InfoPanelIconValue;
 			}
 
-			this.armorIcon.setVisible(true);
+			localArmorIcon.setVisible(true);
 			final Texture defenseTexture = this.defenseBackdrops
 					.getTexture(unit.getSimulationUnit().getUnitType().getDefenseType());
 			if (defenseTexture == null) {
 				throw new RuntimeException(
 						unit.getSimulationUnit().getUnitType().getDefenseType() + " can't find texture!");
 			}
-			this.armorIconBackdrop.setTexture(defenseTexture);
-			this.armorInfoPanelIconValue.setText(Integer.toString(unit.getSimulationUnit().getDefense()));
+			localArmorIconBackdrop.setTexture(defenseTexture);
+			localArmorInfoPanelIconValue.setText(Integer.toString(unit.getSimulationUnit().getDefense()));
 		}
 	}
 

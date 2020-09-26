@@ -42,10 +42,12 @@ import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.units.StandardObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
 import com.etheller.warsmash.util.MappedData;
+import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WorldEditStrings;
@@ -56,6 +58,7 @@ import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.SceneLightManager;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.WorldScene;
 import com.etheller.warsmash.viewer5.gl.WebGL;
@@ -118,7 +121,6 @@ public class War3MapViewer extends ModelViewer {
 	public SolverParams solverParams = new SolverParams();
 	public WorldScene worldScene;
 	public boolean anyReady;
-	public boolean terrainCliffsAndWaterLoaded;
 	public MappedData terrainData = new MappedData();
 	public MappedData cliffTypesData = new MappedData();
 	public MappedData waterData = new MappedData();
@@ -151,9 +153,11 @@ public class War3MapViewer extends ModelViewer {
 	public List<RenderUnit> selected = new ArrayList<>();
 	private DataTable unitAckSoundsTable;
 	private DataTable unitCombatSoundsTable;
-	private DataTable miscData;
+	public DataTable miscData;
 	private DataTable unitGlobalStrings;
 	private MdxComplexInstance confirmationInstance;
+	private MdxComplexInstance dncUnit;
+	private MdxComplexInstance dncTerrain;
 	public CSimulation simulation;
 	private float updateTime;
 
@@ -195,7 +199,6 @@ public class War3MapViewer extends ModelViewer {
 				stringDataCallback);
 
 		// == when loaded, which is always in our system ==
-		this.terrainCliffsAndWaterLoaded = true;
 		this.terrainData.load(terrain.data.toString());
 		this.cliffTypesData.load(cliffTypes.data.toString());
 		this.waterData.load(water.data.toString());
@@ -252,6 +255,9 @@ public class War3MapViewer extends ModelViewer {
 			this.miscData.readTXT(miscDataTxtStream, true);
 		}
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("Units\\MiscGame.txt")) {
+			this.miscData.readTXT(miscDataTxtStream, true);
+		}
+		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\MiscData.txt")) {
 			this.miscData.readTXT(miscDataTxtStream, true);
 		}
 		this.unitGlobalStrings = new DataTable(worldEditStrings);
@@ -342,8 +348,11 @@ public class War3MapViewer extends ModelViewer {
 
 		final War3MapWpm terrainPathing = this.mapMpq.readPathing();
 
+		final StandardObjectData standardObjectData = new StandardObjectData(this.dataSource);
+		this.worldEditData = standardObjectData.getWorldEditData();
+
 		this.terrain = new Terrain(terrainData, terrainPathing, w3iFile, this.webGL, this.dataSource, worldEditStrings,
-				this);
+				this, this.worldEditData);
 
 		final float[] centerOffset = terrainData.getCenterOffset();
 		final int[] mapSize = terrainData.getMapSize();
@@ -363,13 +372,6 @@ public class War3MapViewer extends ModelViewer {
 		this.confirmationInstance.setSequence(0);
 		this.confirmationInstance.setScene(this.worldScene);
 
-		if (this.terrainCliffsAndWaterLoaded) {
-			this.loadTerrainCliffsAndWater(terrainData);
-		}
-		else {
-			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
-		}
-
 		final Warcraft3MapObjectData modifications = this.mapMpq.readModifications();
 		this.simulation = new CSimulation(this.miscData, modifications.getUnits(), modifications.getAbilities(),
 				new SimulationRenderController() {
@@ -388,12 +390,7 @@ public class War3MapViewer extends ModelViewer {
 						final float projectileLaunchY = simulation.getUnitData().getProjectileLaunchY(typeId);
 						final float projectileLaunchZ = simulation.getUnitData().getProjectileLaunchZ(typeId);
 
-						if (missileArt.toLowerCase().endsWith(".mdl")) {
-							missileArt = missileArt.substring(0, missileArt.length() - 4);
-						}
-						if (!missileArt.toLowerCase().endsWith(".mdx")) {
-							missileArt += ".mdx";
-						}
+						missileArt = mdx(missileArt);
 						final float facing = launchFacing;
 						final float sinFacing = (float) Math.sin(facing);
 						final float cosFacing = (float) Math.cos(facing);
@@ -435,12 +432,7 @@ public class War3MapViewer extends ModelViewer {
 								.getProjectileLaunchX(typeId);
 						final float projectileLaunchY = War3MapViewer.this.simulation.getUnitData()
 								.getProjectileLaunchY(typeId);
-						if (missileArt.toLowerCase().endsWith(".mdl")) {
-							missileArt = missileArt.substring(0, missileArt.length() - 4);
-						}
-						if (!missileArt.toLowerCase().endsWith(".mdx")) {
-							missileArt += ".mdx";
-						}
+						missileArt = mdx(missileArt);
 						final float facing = (float) Math.toRadians(source.getFacing());
 						final float sinFacing = (float) Math.sin(facing);
 						final float cosFacing = (float) Math.cos(facing);
@@ -507,9 +499,17 @@ public class War3MapViewer extends ModelViewer {
 
 		this.terrain.initShadows();
 		this.terrain.createWaves();
+
+		loadLightsAndShading(tileset);
 	}
 
-	private void loadTerrainCliffsAndWater(final War3MapW3e w3e) {
+	private void loadLightsAndShading(final char tileset) {
+		// TODO this should be set by the war3map.j actually, not by the tileset, so the
+		// call to set day night models is just for testing to make the test look pretty
+		final Element defaultTerrainLights = this.worldEditData.get("TerrainLights");
+		final Element defaultUnitLights = this.worldEditData.get("UnitLights");
+		setDayNightModels(defaultTerrainLights.getField(Character.toString(tileset)),
+				defaultUnitLights.getField(Character.toString(tileset)));
 
 	}
 
@@ -902,6 +902,10 @@ public class War3MapViewer extends ModelViewer {
 				this.updateTime -= WarsmashConstants.SIMULATION_STEP_TIME;
 				this.simulation.update();
 			}
+			this.dncTerrain.setFrameByRatio(
+					this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
+			this.dncUnit.setFrameByRatio(
+					this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
 		}
 	}
 
@@ -1007,7 +1011,7 @@ public class War3MapViewer extends ModelViewer {
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
 		gdxRayHeap.set(ray[0], ray[1], ray[2], ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]);
 		gdxRayHeap.direction.nor();// needed for libgdx
-		Terrain.intersectRayTriangles(gdxRayHeap, this.terrain.softwareGroundMesh.vertices,
+		RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.terrain.softwareGroundMesh.vertices,
 				this.terrain.softwareGroundMesh.indices, 3, out);
 	}
 
@@ -1144,6 +1148,7 @@ public class War3MapViewer extends ModelViewer {
 
 	private static final int MAXIMUM_ACCEPTED = 1 << 30;
 	private float selectionCircleScaleFactor;
+	private DataTable worldEditData;
 
 	/**
 	 * Returns a power of two size for the given target capacity.
@@ -1239,5 +1244,31 @@ public class War3MapViewer extends ModelViewer {
 			this.texture = texture;
 			this.textureDotted = textureDotted;
 		}
+	}
+
+	public void setDayNightModels(final String terrainDNCFile, final String unitDNCFile) {
+		final MdxModel terrainDNCModel = (MdxModel) load(mdx(terrainDNCFile), PathSolver.DEFAULT, null);
+		this.dncTerrain = (MdxComplexInstance) terrainDNCModel.addInstance();
+		this.dncTerrain.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+		this.dncTerrain.setSequence(0);
+		final MdxModel unitDNCModel = (MdxModel) load(mdx(unitDNCFile), PathSolver.DEFAULT, null);
+		this.dncUnit = (MdxComplexInstance) unitDNCModel.addInstance();
+		this.dncUnit.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+		this.dncUnit.setSequence(0);
+	}
+
+	private static String mdx(String mdxPath) {
+		if (mdxPath.toLowerCase().endsWith(".mdl")) {
+			mdxPath = mdxPath.substring(0, mdxPath.length() - 4);
+		}
+		if (!mdxPath.toLowerCase().endsWith(".mdx")) {
+			mdxPath += ".mdx";
+		}
+		return mdxPath;
+	}
+
+	@Override
+	public SceneLightManager createLightManager() {
+		return new W3xSceneLightManager(this);
 	}
 }

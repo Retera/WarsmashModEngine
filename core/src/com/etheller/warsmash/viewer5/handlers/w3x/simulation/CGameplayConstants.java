@@ -19,6 +19,10 @@ public class CGameplayConstants {
 	private final float boneDecayTime;
 	private final float bulletDeathTime;
 	private final float closeEnoughRange;
+	private final float dawnTimeGameHours;
+	private final float duskTimeGameHours;
+	private final float gameDayHours;
+	private final float gameDayLength;
 
 	public CGameplayConstants(final DataTable parsedDataTable) {
 		final Element miscData = parsedDataTable.get("Misc");
@@ -29,6 +33,11 @@ public class CGameplayConstants {
 		this.boneDecayTime = miscData.getFieldFloatValue("BoneDecayTime");
 		this.bulletDeathTime = miscData.getFieldFloatValue("BulletDeathTime");
 		this.closeEnoughRange = miscData.getFieldFloatValue("CloseEnoughRange");
+
+		this.dawnTimeGameHours = miscData.getFieldFloatValue("Dawn");
+		this.duskTimeGameHours = miscData.getFieldFloatValue("Dusk");
+		this.gameDayHours = miscData.getFieldFloatValue("DayHours");
+		this.gameDayLength = miscData.getFieldFloatValue("DayLength");
 
 		final CDefenseType[] defenseTypeOrder = { CDefenseType.SMALL, CDefenseType.MEDIUM, CDefenseType.LARGE,
 				CDefenseType.FORT, CDefenseType.NORMAL, CDefenseType.HERO, CDefenseType.DIVINE, CDefenseType.NONE, };
@@ -79,5 +88,21 @@ public class CGameplayConstants {
 
 	public float getCloseEnoughRange() {
 		return this.closeEnoughRange;
+	}
+
+	public float getGameDayHours() {
+		return this.gameDayHours;
+	}
+
+	public float getGameDayLength() {
+		return this.gameDayLength;
+	}
+
+	public float getDawnTimeGameHours() {
+		return this.dawnTimeGameHours;
+	}
+
+	public float getDuskTimeGameHours() {
+		return this.duskTimeGameHours;
 	}
 }

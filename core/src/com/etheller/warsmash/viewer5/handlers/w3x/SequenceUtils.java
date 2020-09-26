@@ -67,6 +67,7 @@ public class SequenceUtils {
 		filtered.sort(STAND_SEQUENCE_COMPARATOR);
 
 		int i = 0;
+		final double randomRoll = Math.random() * 100;
 		for (final int l = filtered.size(); i < l; i++) {
 			final Sequence sequence = filtered.get(i).sequence;
 			final float rarity = sequence.getRarity();
@@ -75,7 +76,7 @@ public class SequenceUtils {
 				break;
 			}
 
-			if ((Math.random() * 10) > rarity) {
+			if (randomRoll < (10 - rarity)) {
 				return filtered.get(i);
 			}
 		}
@@ -98,6 +99,7 @@ public class SequenceUtils {
 		filtered.sort(STAND_SEQUENCE_COMPARATOR);
 
 		int i = 0;
+		final double randomRoll = Math.random() * 100;
 		for (final int l = filtered.size(); i < l; i++) {
 			final Sequence sequence = filtered.get(i).sequence;
 			final float rarity = sequence.getRarity();
@@ -106,7 +108,7 @@ public class SequenceUtils {
 				break;
 			}
 
-			if (((Math.random() * 10) > rarity) && allowRarityVariations) {
+			if ((randomRoll < (10 - rarity)) && allowRarityVariations) {
 				return filtered.get(i);
 			}
 		}

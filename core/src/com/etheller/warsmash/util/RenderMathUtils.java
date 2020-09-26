@@ -8,10 +8,12 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.List;
 
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 
 public enum RenderMathUtils {
 	;
@@ -449,6 +451,128 @@ public enum RenderMathUtils {
 		slerp(sqlerpHeap2, b, c, t);
 		slerp(out, sqlerpHeap1, sqlerpHeap2, 2 * t * (1 - t));
 		return out;
+	}
+
+	static Vector3 best = new Vector3();
+	static Vector3 tmp = new Vector3();
+	static Vector3 tmp1 = new Vector3();
+	static Vector3 tmp2 = new Vector3();
+	static Vector3 tmp3 = new Vector3();
+
+	/**
+	 * Intersects the given ray with list of triangles. Returns the nearest
+	 * intersection point in intersection
+	 *
+	 * @param ray          The ray
+	 * @param vertices     the vertices
+	 * @param indices      the indices, each successive 3 shorts index the 3
+	 *                     vertices of a triangle
+	 * @param vertexSize   the size of a vertex in floats
+	 * @param intersection The nearest intersection point (optional)
+	 * @return Whether the ray and the triangles intersect.
+	 */
+	public static boolean intersectRayTriangles(final Ray ray, final float[] vertices, final int[] indices,
+			final int vertexSize, final Vector3 intersection) {
+		float min_dist = Float.MAX_VALUE;
+		boolean hit = false;
+
+		if ((indices.length % 3) != 0) {
+			throw new RuntimeException("triangle list size is not a multiple of 3");
+		}
+
+		for (int i = 0; i < indices.length; i += 3) {
+			final int i1 = indices[i] * vertexSize;
+			final int i2 = indices[i + 1] * vertexSize;
+			final int i3 = indices[i + 2] * vertexSize;
+
+			final boolean result = Intersector.intersectRayTriangle(ray,
+					tmp1.set(vertices[i1], vertices[i1 + 1], vertices[i1 + 2]),
+					tmp2.set(vertices[i2], vertices[i2 + 1], vertices[i2 + 2]),
+					tmp3.set(vertices[i3], vertices[i3 + 1], vertices[i3 + 2]), tmp);
+
+			if (result == true) {
+				final float dist = ray.origin.dst2(tmp);
+				if (dist < min_dist) {
+					min_dist = dist;
+					best.set(tmp);
+					hit = true;
+				}
+			}
+		}
+
+		if (hit == false) {
+			return false;
+		}
+		else {
+			if (intersection != null) {
+				intersection.set(best);
+			}
+			return true;
+		}
+	}
+
+	/**
+	 * Intersects the given ray with list of triangles. Returns the nearest
+	 * intersection point in intersection
+	 *
+	 * @param ray          The ray
+	 * @param vertices     the vertices
+	 * @param indices      the indices, each successive 3 shorts index the 3
+	 *                     vertices of a triangle
+	 * @param vertexSize   the size of a vertex in floats
+	 * @param intersection The nearest intersection point (optional)
+	 * @return Whether the ray and the triangles intersect.
+	 */
+	public static boolean intersectRayTriangles(final Ray ray, final float[] vertices, final int[] indices,
+			final int vertexSize, final Vector3 worldLocation, final float facingRadians, final Vector3 intersection) {
+		float min_dist = Float.MAX_VALUE;
+		boolean hit = false;
+
+		if ((indices.length % 3) != 0) {
+			throw new RuntimeException("triangle list size is not a multiple of 3");
+		}
+
+		final float facingX_X = (float) Math.cos(facingRadians);
+		final float facingX_Y = (float) Math.sin(facingRadians);
+		final double halfPi = Math.PI / 2;
+		final float facingY_X = (float) Math.cos(facingRadians + halfPi);
+		final float facingY_Y = (float) Math.sin(facingRadians + halfPi);
+		for (int i = 0; i < indices.length; i += 3) {
+			final int i1 = indices[i] * vertexSize;
+			final int i2 = indices[i + 1] * vertexSize;
+			final int i3 = indices[i + 2] * vertexSize;
+
+			final boolean result = Intersector.intersectRayTriangle(ray,
+					tmp1.set((vertices[i1] * facingX_X) + (vertices[i1 + 1] * facingY_X) + worldLocation.x,
+							(vertices[i1] * facingX_Y) + (vertices[i1 + 1] * facingY_Y) + worldLocation.y,
+							vertices[i1 + 2] + worldLocation.z),
+					tmp2.set((vertices[i2] * facingX_X) + (vertices[i2 + 1] * facingY_X) + worldLocation.x,
+							(vertices[i2] * facingX_Y) + (vertices[i2 + 1] * facingY_Y) + worldLocation.y,
+							vertices[i2 + 2] + worldLocation.z),
+					tmp3.set((vertices[i3] * facingX_X) + (vertices[i3 + 1] * facingY_X) + worldLocation.x,
+							(vertices[i3] * facingX_Y) + (vertices[i3 + 1] * facingY_Y) + worldLocation.y,
+							vertices[i3 + 2] + worldLocation.z),
+					tmp);
+
+			if (result == true) {
+				final float dist = ray.origin.dst2(tmp);
+				if (dist < min_dist) {
+					min_dist = dist;
+					best.set(tmp);
+					hit = true;
+				}
+			}
+		}
+
+		if (hit == false) {
+			return false;
+		}
+		else {
+			if (intersection != null) {
+				intersection.set(best);
+			}
+			return true;
+		}
 	}
 
 	// ==== All of the following "wrap" calls are horribly inefficient. Eventually

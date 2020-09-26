@@ -26,7 +26,6 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.w3x.w3e.Corner;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
@@ -34,7 +33,6 @@ import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.units.StandardObjectData;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
@@ -127,7 +125,7 @@ public class Terrain {
 
 	public Terrain(final War3MapW3e w3eFile, final War3MapWpm terrainPathing, final War3MapW3i w3iFile,
 			final WebGL webGL, final DataSource dataSource, final WorldEditStrings worldEditStrings,
-			final War3MapViewer viewer) throws IOException {
+			final War3MapViewer viewer, final DataTable worldEditData) throws IOException {
 		this.webGL = webGL;
 		this.viewer = viewer;
 		this.camera = viewer.worldScene.camera;
@@ -221,8 +219,6 @@ public class Terrain {
 			this.groundTextureToId.put(groundTile.asStringValue(), this.groundTextures.size() - 1);
 		}
 
-		final StandardObjectData standardObjectData = new StandardObjectData(dataSource);
-		final DataTable worldEditData = standardObjectData.getWorldEditData();
 		final Element tilesets = worldEditData.get("TileSets");
 
 		this.blightTextureIndex = this.groundTextures.size();
@@ -1179,66 +1175,9 @@ public class Terrain {
 //		return out;
 //	}
 
-	static Vector3 best = new Vector3();
-	static Vector3 tmp = new Vector3();
-	static Vector3 tmp1 = new Vector3();
-	static Vector3 tmp2 = new Vector3();
-	static Vector3 tmp3 = new Vector3();
 	private final WaveBuilder waveBuilder;
 	public PathingGrid pathingGrid;
 	private final Rectangle shaderMapBoundsRectangle;
-
-	/**
-	 * Intersects the given ray with list of triangles. Returns the nearest
-	 * intersection point in intersection
-	 *
-	 * @param ray          The ray
-	 * @param vertices     the vertices
-	 * @param indices      the indices, each successive 3 shorts index the 3
-	 *                     vertices of a triangle
-	 * @param vertexSize   the size of a vertex in floats
-	 * @param intersection The nearest intersection point (optional)
-	 * @return Whether the ray and the triangles intersect.
-	 */
-	public static boolean intersectRayTriangles(final Ray ray, final float[] vertices, final int[] indices,
-			final int vertexSize, final Vector3 intersection) {
-		float min_dist = Float.MAX_VALUE;
-		boolean hit = false;
-
-		if ((indices.length % 3) != 0) {
-			throw new RuntimeException("triangle list size is not a multiple of 3");
-		}
-
-		for (int i = 0; i < indices.length; i += 3) {
-			final int i1 = indices[i] * vertexSize;
-			final int i2 = indices[i + 1] * vertexSize;
-			final int i3 = indices[i + 2] * vertexSize;
-
-			final boolean result = Intersector.intersectRayTriangle(ray,
-					tmp1.set(vertices[i1], vertices[i1 + 1], vertices[i1 + 2]),
-					tmp2.set(vertices[i2], vertices[i2 + 1], vertices[i2 + 2]),
-					tmp3.set(vertices[i3], vertices[i3 + 1], vertices[i3 + 2]), tmp);
-
-			if (result == true) {
-				final float dist = ray.origin.dst2(tmp);
-				if (dist < min_dist) {
-					min_dist = dist;
-					best.set(tmp);
-					hit = true;
-				}
-			}
-		}
-
-		if (hit == false) {
-			return false;
-		}
-		else {
-			if (intersection != null) {
-				intersection.set(best);
-			}
-			return true;
-		}
-	}
 
 	private static final class UnloadedTexture {
 		private final int width;

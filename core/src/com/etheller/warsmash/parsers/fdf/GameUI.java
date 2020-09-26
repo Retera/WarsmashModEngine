@@ -209,7 +209,6 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				final MdxModel model = (MdxModel) this.modelViewer.load(backgroundArt, this.modelViewer.mapPathSolver,
 						this.modelViewer.solverParams);
 				spriteFrame.setModel(model);
-				spriteFrame.setSequence(0);
 				viewport2 = this.fdfCoordinateResolutionDummyViewport;
 				inflatedFrame = spriteFrame;
 			}

@@ -6,6 +6,7 @@ import com.etheller.warsmash.viewer5.BatchedInstance;
 import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.RenderBatch;
+import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.TextureMapper;
 
@@ -30,6 +31,10 @@ public class MdxSimpleInstance extends BatchedInstance {
 
 	@Override
 	public void renderTranslucent() {
+	}
+
+	@Override
+	protected void updateLights(final Scene scene2) {
 	}
 
 	@Override

@@ -50,4 +50,22 @@ public class SpriteFrame extends AbstractRenderableFrame {
 		}
 	}
 
+	public void setAnimationSpeed(final float speedRatio) {
+		if (this.instance != null) {
+			this.instance.setAnimationSpeed(speedRatio);
+		}
+	}
+
+	public void setFrame(final int animationFrame) {
+		if (this.instance != null) {
+			this.instance.setFrame(animationFrame);
+		}
+	}
+
+	public void setFrameByRatio(final float ratioOfAnimationCompleted) {
+		if (this.instance != null) {
+			this.instance.setFrameByRatio(ratioOfAnimationCompleted);
+		}
+	}
+
 }

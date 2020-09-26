@@ -24,10 +24,13 @@ public class Geoset {
 	private final int openGLSkinType;
 	private final int skinStride;
 	private final int boneCountOffsetBytes;
+	public final boolean unselectable;
+	public final com.etheller.warsmash.parsers.mdlx.Geoset mdlxGeoset;
 
 	public Geoset(final MdxModel model, final int index, final int positionOffset, final int normalOffset,
 			final int uvOffset, final int skinOffset, final int faceOffset, final int vertices, final int elements,
-			final int openGLSkinType, final int skinStride, final int boneCountOffsetBytes) {
+			final int openGLSkinType, final int skinStride, final int boneCountOffsetBytes, final boolean unselectable,
+			final com.etheller.warsmash.parsers.mdlx.Geoset mdlxGeoset) {
 		this.model = model;
 		this.index = index;
 		this.positionOffset = positionOffset;
@@ -40,6 +43,8 @@ public class Geoset {
 		this.openGLSkinType = openGLSkinType;
 		this.skinStride = skinStride;
 		this.boneCountOffsetBytes = boneCountOffsetBytes;
+		this.unselectable = unselectable;
+		this.mdlxGeoset = mdlxGeoset;
 
 		for (final GeosetAnimation geosetAnimation : model.getGeosetAnimations()) {
 			if (geosetAnimation.geosetId == index) {

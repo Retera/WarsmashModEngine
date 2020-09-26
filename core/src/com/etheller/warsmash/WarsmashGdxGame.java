@@ -27,6 +27,7 @@ import com.etheller.warsmash.viewer5.SolvedPath;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 
 public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvider {
@@ -62,7 +63,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
 		this.codebase = new CompoundDataSourceDescriptor(
 				Arrays.<DataSourceDescriptor>asList(war3mpq, testingFolder, currentFolder)).createDataSource();
-		this.viewer = new ModelViewer(this.codebase, this);
+		this.viewer = new MdxViewer(this.codebase, this);
 
 		this.viewer.addHandler(new MdxHandler());
 		this.viewer.enableAudio();

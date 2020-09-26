@@ -40,6 +40,7 @@ public class CSimulation {
 	private final CPathfindingProcessor pathfindingProcessor;
 	private final CGameplayConstants gameplayConstants;
 	private final Random seededRandom;
+	private float currentGameDayTimeElapsed;
 
 	public CSimulation(final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedAbilityData, final SimulationRenderController simulationRenderController,
@@ -145,6 +146,13 @@ public class CSimulation {
 		this.projectiles.addAll(this.newProjectiles);
 		this.newProjectiles.clear();
 		this.gameTurnTick++;
+		this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
+				% this.gameplayConstants.getGameDayLength();
+	}
+
+	public float getGameTimeOfDay() {
+		return (this.currentGameDayTimeElapsed / this.gameplayConstants.getGameDayLength())
+				* this.gameplayConstants.getGameDayHours();
 	}
 
 	public int getGameTurnTick() {

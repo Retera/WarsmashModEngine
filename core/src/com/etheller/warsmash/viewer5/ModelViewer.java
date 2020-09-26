@@ -20,7 +20,7 @@ import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
 
-public class ModelViewer {
+public abstract class ModelViewer {
 	public DataSource dataSource;
 	public final CanvasProvider canvas;
 	public List<Resource> resources;
@@ -366,4 +366,6 @@ public class ModelViewer {
 	private void onResourceLoadError() {
 		System.err.println("error, this, InvalidHandler, FailedToLoad");
 	}
+
+	public abstract SceneLightManager createLightManager();
 }

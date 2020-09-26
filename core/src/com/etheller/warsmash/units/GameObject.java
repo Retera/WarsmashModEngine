@@ -20,6 +20,8 @@ public interface GameObject {
 
 	public float getFieldFloatValue(String field);
 
+	public float getFieldFloatValue(String field, int index);
+
 	public List<? extends GameObject> getFieldAsList(String field, ObjectData objectData);
 
 	public String getId();
@@ -72,6 +74,11 @@ public interface GameObject {
 
 		@Override
 		public float getFieldFloatValue(final String field) {
+			return 0;
+		}
+
+		@Override
+		public float getFieldFloatValue(final String field, final int index) {
 			return 0;
 		}
 

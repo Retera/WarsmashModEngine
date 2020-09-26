@@ -34,6 +34,7 @@ public class MdxComplexInstance extends ModelInstance {
 	private static final float[] alphaHeap = new float[1];
 	private static final long[] textureIdHeap = new long[1];
 
+	public List<LightInstance> lights = new ArrayList<>();
 	public List<AttachmentInstance> attachments = new ArrayList<>();
 	public List<ParticleEmitter> particleEmitters = new ArrayList<>();
 	public List<ParticleEmitter2> particleEmitters2 = new ArrayList<>();
@@ -106,7 +107,9 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 
 		for (final Light light : model.lights) {
-			this.initNode(this.nodes, this.nodes[nodeIndex++], light);
+			final LightInstance lightInstance = new LightInstance(this, light);
+			this.lights.add(lightInstance);
+			this.initNode(this.nodes, this.nodes[nodeIndex++], light, lightInstance);
 		}
 
 		for (final Helper helper : model.helpers) {
@@ -601,6 +604,13 @@ public class MdxComplexInstance extends ModelInstance {
 
 	}
 
+	@Override
+	protected void updateLights(final Scene scene) {
+		for (final LightInstance light : this.lights) {
+			light.update(scene);
+		}
+	}
+
 	/**
 	 * Set the team color of this instance.
 	 */
@@ -715,10 +725,28 @@ public class MdxComplexInstance extends ModelInstance {
 	 * @param ray
 	 */
 	public boolean intersectRayWithCollision(final Ray ray, final Vector3 intersection) {
-		for (final CollisionShape collisionShape : ((MdxModel) this.model).collisionShapes) {
-			final MdxNode mdxNode = this.nodes[collisionShape.index];
-			if (collisionShape.checkIntersect(ray, mdxNode, intersection)) {
-				return true;
+		final MdxModel mdxModel = (MdxModel) this.model;
+		final List<CollisionShape> collisionShapes = mdxModel.collisionShapes;
+		if (collisionShapes.isEmpty()) {
+			for (final Geoset geoset : mdxModel.geosets) {
+				if (!geoset.unselectable) {
+					geoset.getAlpha(alphaHeap, this.sequence, this.frame, this.counter);
+					if (alphaHeap[0] > 0) {
+						final com.etheller.warsmash.parsers.mdlx.Geoset mdlxGeoset = geoset.mdlxGeoset;
+						if (CollisionShape.intersectRayTriangles(ray, this, mdlxGeoset.getVertices(),
+								mdlxGeoset.getFaces(), 3, intersection)) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		else {
+			for (final CollisionShape collisionShape : collisionShapes) {
+				final MdxNode mdxNode = this.nodes[collisionShape.index];
+				if (collisionShape.checkIntersect(ray, mdxNode, intersection)) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -726,5 +754,18 @@ public class MdxComplexInstance extends ModelInstance {
 
 	public void setAnimationSpeed(final float speedRatio) {
 		this.animationSpeed = speedRatio;
+	}
+
+	public void setFrame(final int frame) {
+		this.frame = frame;
+		this.floatingFrame = frame;
+	}
+
+	public void setFrameByRatio(final float ratioOfAnimationCompleted) {
+		final Sequence currentlyPlayingSequence = ((MdxModel) this.model).sequences.get(this.sequence);
+		this.floatingFrame = currentlyPlayingSequence.getInterval()[0]
+				+ ((currentlyPlayingSequence.getInterval()[1] - currentlyPlayingSequence.getInterval()[0])
+						* ratioOfAnimationCompleted);
+		this.frame = (int) this.floatingFrame;
 	}
 }

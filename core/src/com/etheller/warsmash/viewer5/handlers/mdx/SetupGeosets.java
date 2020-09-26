@@ -155,9 +155,10 @@ public class SetupGeosets {
 						}
 					}
 
+					final boolean unselectable = geoset.getSelectionFlags() == 4;
 					final Geoset vGeoset = new Geoset(model, model.getGeosets().size(), positionOffset, normalOffset,
 							uvOffset, skinOffset, faceOffset, vertices, faces.length, openGLSkinType, skinStride,
-							boneCountOffsetBytes);
+							boneCountOffsetBytes, unselectable, geoset);
 
 					model.getGeosets().add(vGeoset);
 

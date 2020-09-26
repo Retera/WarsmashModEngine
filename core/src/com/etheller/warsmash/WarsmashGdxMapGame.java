@@ -56,15 +56,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
-	private static final float HORIZONTAL_MAXIMUM = (float) Math.toRadians(56);
-	private static final float HORIZONTAL_MINIMUM = (float) -Math.toRadians(56);
 	private static final double HORIZONTAL_ANGLE_INCREMENT = Math.PI / 60;
 
 	private static final Vector3 clickLocationTemp = new Vector3();
 	private static final Vector2 clickLocationTemp2 = new Vector2();
 	private DataSource codebase;
 	private War3MapViewer viewer;
-	private CameraManager cameraManager;
+	private GameCameraManager cameraManager;
 	private final Rectangle tempRect = new Rectangle();
 
 	// libGDX stuff
@@ -146,7 +144,20 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			throw new RuntimeException(e);
 		}
 
-		this.cameraManager = new CameraManager();
+		final Element cameraData = this.viewer.miscData.get("Camera");
+		final Element cameraListenerData = this.viewer.miscData.get("Listener");
+		final CameraPreset[] cameraPresets = new CameraPreset[6];
+		for (int i = 0; i < cameraPresets.length; i++) {
+			cameraPresets[i] = new CameraPreset(cameraData.getFieldFloatValue("AOA", i),
+					cameraData.getFieldFloatValue("FOV", i), cameraData.getFieldFloatValue("Rotation", i),
+					cameraData.getFieldFloatValue("Rotation", i + cameraPresets.length),
+					cameraData.getFieldFloatValue("Rotation", i + (cameraPresets.length * 2)),
+					cameraData.getFieldFloatValue("Distance", i), cameraData.getFieldFloatValue("FarZ", i),
+					cameraData.getFieldFloatValue("NearZ", i), cameraData.getFieldFloatValue("Height", i),
+					cameraListenerData.getFieldFloatValue("ListenerDistance", i),
+					cameraListenerData.getFieldFloatValue("ListenerAOA", i));
+		}
+		this.cameraManager = new GameCameraManager(cameraPresets);
 
 		this.cameraManager.setupCamera(this.viewer.worldScene);
 
@@ -287,9 +298,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final float deltaTime = Gdx.graphics.getDeltaTime();
 		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
 		this.cameraManager.target.add(this.cameraVelocity.x * deltaTime, this.cameraVelocity.y * deltaTime, 0);
-		this.cameraManager.target.z = Math.max(
+		this.cameraManager.target.z = (Math.max(
 				this.viewer.terrain.getGroundHeight(this.cameraManager.target.x, this.cameraManager.target.y),
-				this.viewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y)) - 256;
+				this.viewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y)) - 256)
+				+ this.cameraManager.presets[this.cameraManager.currentPreset].height + 256;
 		this.cameraManager.updateCamera();
 		this.meleeUI.updatePortrait();
 		this.viewer.updateAndRender();
@@ -400,28 +412,26 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.meleeUI.resize();
 	}
 
-	public static class CameraManager {
-		private final float[] cameraPositionTemp = new float[3];
-		private final float[] cameraTargetTemp = new float[3];
-		public com.etheller.warsmash.viewer5.handlers.mdx.Camera modelCamera;
-		private MdxComplexInstance modelInstance;
-		private CanvasProvider canvas;
-		private Camera camera;
-		private float moveSpeed;
-		private float rotationSpeed;
-		private float zoomFactor;
-		private float horizontalAngle;
-		private float verticalAngle;
-		private float verticalAngleAcceleration;
-		private float distance;
-		private Vector3 position;
-		private Vector3 target;
-		private Vector3 worldUp;
-		private Vector3 vecHeap;
-		private Quaternion quatHeap;
-		private Quaternion quatHeap2;
-		private boolean insertDown;
-		private boolean deleteDown;
+	public static abstract class CameraManager {
+		protected final float[] cameraPositionTemp = new float[3];
+		protected final float[] cameraTargetTemp = new float[3];
+		protected CanvasProvider canvas;
+		protected Camera camera;
+		protected float moveSpeed;
+		protected float rotationSpeed;
+		protected float zoomFactor;
+		protected float horizontalAngle;
+		protected float verticalAngle;
+		protected float distance;
+		protected Vector3 position;
+		protected Vector3 target;
+		protected Vector3 worldUp;
+		protected Vector3 vecHeap;
+		protected Quaternion quatHeap;
+		protected Quaternion quatHeap2;
+
+		public CameraManager() {
+		}
 
 		// An orbit camera setup example.
 		// Left mouse button controls the orbit itself.
@@ -449,45 +459,58 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //		cameraUpdate();
 		}
 
+		public abstract void updateCamera();
+
+//	private void cameraUpdate() {
+//
+//	}
+	}
+
+	public static final class GameCameraManager extends CameraManager {
+		private final CameraPreset[] presets;
+		private int currentPreset = 0;
+
+		protected boolean insertDown;
+		protected boolean deleteDown;
+
+		public GameCameraManager(final CameraPreset[] presets) {
+			this.presets = presets;
+		}
+
+		@Override
+		public void updateCamera() {
+			this.quatHeap2.idt();
+			final CameraPreset cameraPreset = this.presets[this.currentPreset];
+			this.quatHeap.idt();
+			this.horizontalAngle = (float) Math
+					.toRadians(cameraPreset.getRotation(this.insertDown, this.deleteDown) - 90);
+			this.quatHeap.setFromAxisRad(0, 0, 1, this.horizontalAngle);
+			this.distance = Math.max(1200, cameraPreset.distance);
+			this.verticalAngle = (float) Math.toRadians(Math.min(335, cameraPreset.aoa) - 270);
+			this.quatHeap2.setFromAxisRad(1, 0, 0, this.verticalAngle);
+			this.quatHeap.mul(this.quatHeap2);
+
+			this.position.set(0, 0, 1);
+			this.quatHeap.transform(this.position);
+			this.position.nor();
+			this.position.scl(this.distance);
+			this.position = this.position.add(this.target);
+			this.camera.perspective((float) Math.toRadians(cameraPreset.fov / 2), this.camera.getAspect(),
+					cameraPreset.nearZ, cameraPreset.farZ);
+
+			this.camera.moveToAndFace(this.position, this.target, this.worldUp);
+		}
+	}
+
+	public static final class PortraitCameraManager extends CameraManager {
+		public com.etheller.warsmash.viewer5.handlers.mdx.Camera modelCamera;
+		protected MdxComplexInstance modelInstance;
+
+		@Override
 		public void updateCamera() {
 			this.quatHeap.idt();
 			this.quatHeap.setFromAxisRad(0, 0, 1, this.horizontalAngle);
-			if (this.insertDown && !this.deleteDown) {
-				this.horizontalAngle -= HORIZONTAL_ANGLE_INCREMENT;
-				if (this.horizontalAngle < HORIZONTAL_MINIMUM) {
-					this.horizontalAngle = HORIZONTAL_MINIMUM;
-				}
-			}
-			else if (this.deleteDown && !this.insertDown) {
-				this.horizontalAngle += HORIZONTAL_ANGLE_INCREMENT;
-				if (this.horizontalAngle > HORIZONTAL_MAXIMUM) {
-					this.horizontalAngle = HORIZONTAL_MAXIMUM;
-				}
-			}
-			else {
-				if (Math.abs(this.horizontalAngle) < HORIZONTAL_ANGLE_INCREMENT) {
-					this.horizontalAngle = 0;
-				}
-				else {
-					this.horizontalAngle -= HORIZONTAL_ANGLE_INCREMENT * Math.signum(this.horizontalAngle);
-				}
-			}
-
 			this.quatHeap2.idt();
-			this.verticalAngle += this.verticalAngleAcceleration;
-			this.verticalAngleAcceleration *= 0.975f;
-			if (this.verticalAngle > ((Math.PI / 2) - Math.toRadians(17))) {
-				this.verticalAngle = (float) ((Math.PI / 2) - Math.toRadians(17));
-				if (this.verticalAngleAcceleration > 0) {
-					this.verticalAngleAcceleration = 0;
-				}
-			}
-			if (this.verticalAngle < (float) Math.toRadians(34)) {
-				this.verticalAngle = (float) Math.toRadians(34);
-				if (this.verticalAngleAcceleration < 0) {
-					this.verticalAngleAcceleration = 0;
-				}
-			}
 			this.quatHeap2.setFromAxisRad(1, 0, 0, this.verticalAngle);
 			this.quatHeap.mul(this.quatHeap2);
 
@@ -525,10 +548,6 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				this.modelCamera = portraitModel.getCameras().get(0);
 			}
 		}
-
-//	private void cameraUpdate() {
-//
-//	}
 	}
 
 	private final float cameraSpeed = 4096.0f; // per second
@@ -697,12 +716,12 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean scrolled(final int amount) {
-		this.cameraManager.verticalAngleAcceleration -= amount / 100.f;
-		if (this.cameraManager.verticalAngleAcceleration > (Math.PI / 128)) {
-			this.cameraManager.verticalAngleAcceleration = (float) (Math.PI / 128);
+		this.cameraManager.currentPreset -= amount;
+		if (this.cameraManager.currentPreset < 0) {
+			this.cameraManager.currentPreset = 0;
 		}
-		if (this.cameraManager.verticalAngleAcceleration < (-Math.PI / 128)) {
-			this.cameraManager.verticalAngleAcceleration = -(float) (Math.PI / 128);
+		if (this.cameraManager.currentPreset >= this.cameraManager.presets.length) {
+			this.cameraManager.currentPreset = this.cameraManager.presets.length - 1;
 		}
 		return true;
 	}
@@ -714,6 +733,46 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		public Message(final float time, final String text) {
 			this.time = time;
 			this.text = text;
+		}
+	}
+
+	private static class CameraPreset {
+		private final float aoa;
+		private final float fov;
+		private final float rotation;
+		private final float rotationInsert;
+		private final float rotationDelete;
+		private final float distance;
+		private final float farZ;
+		private final float nearZ;
+		private final float height;
+		private final float listenerDistance;
+		private final float listenerAOA;
+
+		public CameraPreset(final float aoa, final float fov, final float rotation, final float rotationInsert,
+				final float rotationDelete, final float distance, final float farZ, final float nearZ,
+				final float height, final float listenerDistance, final float listenerAOA) {
+			this.aoa = aoa;
+			this.fov = fov;
+			this.rotation = rotation;
+			this.rotationInsert = rotationInsert;
+			this.rotationDelete = rotationDelete;
+			this.distance = distance;
+			this.farZ = farZ;
+			this.nearZ = nearZ;
+			this.height = height;
+			this.listenerDistance = listenerDistance;
+			this.listenerAOA = listenerAOA;
+		}
+
+		public float getRotation(final boolean insertDown, final boolean deleteDown) {
+			if (insertDown && !deleteDown) {
+				return this.rotationInsert;
+			}
+			if (!insertDown && deleteDown) {
+				return this.rotationDelete;
+			}
+			return this.rotation;
 		}
 	}
 }

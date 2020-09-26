@@ -132,6 +132,26 @@ public class CUnitData {
 		final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
 		final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
 
+		final CUnitType unitTypeInstance = getUnitTypeInstance(typeId, buildingPathingPixelMap, unitType);
+
+		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
+				speed, defense, unitTypeInstance);
+		if (speed > 0) {
+			unit.add(simulation, CAbilityMove.INSTANCE);
+			unit.add(simulation, CAbilityPatrol.INSTANCE);
+			unit.add(simulation, CAbilityHoldPosition.INSTANCE);
+			unit.add(simulation, CAbilityStop.INSTANCE);
+		}
+		final int dmgDice1 = unitType.getFieldAsInteger(ATTACK1_DMG_DICE, 0);
+		final int dmgDice2 = unitType.getFieldAsInteger(ATTACK2_DMG_DICE, 0);
+		if ((dmgDice1 != 0) || (dmgDice2 != 0)) {
+			unit.add(simulation, CAbilityAttack.INSTANCE);
+		}
+		return unit;
+	}
+
+	private CUnitType getUnitTypeInstance(final War3ID typeId, final BufferedImage buildingPathingPixelMap,
+			final MutableGameObject unitType) {
 		CUnitType unitTypeInstance = this.unitIdToUnitType.get(typeId);
 		if (unitTypeInstance == null) {
 			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
@@ -252,21 +272,7 @@ public class CUnitData {
 					targetedAs);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
-
-		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
-				speed, defense, unitTypeInstance);
-		if (speed > 0) {
-			unit.add(simulation, CAbilityMove.INSTANCE);
-			unit.add(simulation, CAbilityPatrol.INSTANCE);
-			unit.add(simulation, CAbilityHoldPosition.INSTANCE);
-			unit.add(simulation, CAbilityStop.INSTANCE);
-		}
-		final int dmgDice1 = unitType.getFieldAsInteger(ATTACK1_DMG_DICE, 0);
-		final int dmgDice2 = unitType.getFieldAsInteger(ATTACK2_DMG_DICE, 0);
-		if ((dmgDice1 != 0) || (dmgDice2 != 0)) {
-			unit.add(simulation, CAbilityAttack.INSTANCE);
-		}
-		return unit;
+		return unitTypeInstance;
 	}
 
 	private CUnitAttack createAttack(final float animationBackswingPoint, final float animationDamagePoint,

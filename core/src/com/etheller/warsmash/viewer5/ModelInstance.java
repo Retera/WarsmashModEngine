@@ -77,8 +77,12 @@ public abstract class ModelInstance extends Node {
 			}
 		}
 
+		this.updateLights(scene);
+
 		this.updateFrame = this.model.viewer.frame;
 	}
+
+	protected abstract void updateLights(Scene scene2);
 
 	public boolean setScene(final Scene scene) {
 		return scene.addInstance(this);

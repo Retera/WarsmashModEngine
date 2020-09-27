@@ -317,4 +317,8 @@ public abstract class Scene {
 			return -Float.compare(o2.depth, o1.depth);
 		}
 	}
+
+	public SceneLightManager getLightManager() {
+		return this.lightManager;
+	}
 }

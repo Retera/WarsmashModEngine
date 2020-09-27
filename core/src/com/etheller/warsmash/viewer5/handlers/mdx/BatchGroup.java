@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
+import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 
 public class BatchGroup extends GenericGroup {
 
@@ -36,6 +37,7 @@ public class BatchGroup extends GenericGroup {
 		final WebGL webGL = viewer.webGL;
 		final boolean isExtended = this.isExtended;
 		final ShaderProgram shader;
+		final W3xSceneLightManager lightManager = (W3xSceneLightManager) scene.getLightManager();
 
 		if (isExtended) {
 			if (DynamicShadowManager.IS_SHADOW_MAPPING) {
@@ -59,6 +61,11 @@ public class BatchGroup extends GenericGroup {
 		shader.setUniformMatrix("u_mvp", mvp);
 
 		final DataTexture boneTexture = instance.boneTexture;
+		final DataTexture unitLightsTexture = lightManager.getUnitLightsTexture();
+
+		unitLightsTexture.bind(16);
+		shader.setUniformi("u_lightTexture", 16);
+		shader.setUniformf("u_lightCount", unitLightsTexture.getHeight());
 
 		// Instances of models with no bones don't have a bone texture.
 		if (boneTexture != null) {

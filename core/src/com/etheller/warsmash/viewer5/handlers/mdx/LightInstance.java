@@ -13,14 +13,18 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 	protected final Light light;
 	private boolean visible;
 	private boolean loadedInScene;
+	private final MdxComplexInstance instance;
 
 	public LightInstance(final MdxComplexInstance instance, final Light light) {
+		this.instance = instance;
 		this.node = instance.nodes[light.index];
 		this.light = light;
 	}
 
-	public void bind(final int offset, final FloatBuffer floatBuffer, final int sequence, final int frame,
-			final int counter) {
+	public void bind(final int offset, final FloatBuffer floatBuffer) {
+		final int sequence = this.instance.sequence;
+		final int frame = this.instance.frame;
+		final int counter = this.instance.counter;
 		this.light.getAttenuationStart(scalarHeap, sequence, frame, counter);
 		final float attenuationStart = scalarHeap[0];
 		this.light.getAttenuationEnd(scalarHeap, sequence, frame, counter);

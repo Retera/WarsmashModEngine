@@ -156,8 +156,8 @@ public class War3MapViewer extends ModelViewer {
 	public DataTable miscData;
 	private DataTable unitGlobalStrings;
 	private MdxComplexInstance confirmationInstance;
-	private MdxComplexInstance dncUnit;
-	private MdxComplexInstance dncTerrain;
+	public MdxComplexInstance dncUnit;
+	public MdxComplexInstance dncTerrain;
 	public CSimulation simulation;
 	private float updateTime;
 

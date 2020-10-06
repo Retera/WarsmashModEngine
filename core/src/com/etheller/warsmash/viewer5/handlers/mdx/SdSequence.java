@@ -3,7 +3,9 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
+import com.etheller.warsmash.util.ParseUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
 
 public final class SdSequence<TYPE> {
@@ -30,9 +32,9 @@ public final class SdSequence<TYPE> {
 
 		final int interpolationType = sd.interpolationType;
 		final long[] frames = timeline.getFrames();
-		final TYPE[] values = timeline.getValues();
-		final TYPE[] inTans = timeline.getInTans();
-		final TYPE[] outTans = timeline.getOutTans();
+		final TYPE[] values = getValues(timeline);
+		final TYPE[] inTans = getInTans(timeline);
+		final TYPE[] outTans = getOutTans(timeline);
 		final TYPE defval = sd.defval;
 
 		// When using a global sequence, where the first key is outside of the
@@ -47,7 +49,12 @@ public final class SdSequence<TYPE> {
 		// This fixes problems spread over many models, e.g. HeroMountainKing
 		// (compare in WE and in Magos).
 		if (isGlobalSequence && (frames.length > 0) && (frames[0] > end)) {
-			framesBuilder.add(frames[0]);
+			if (start == end) {
+				framesBuilder.add(start);
+			}
+			else {
+				framesBuilder.add(frames[0]);
+			}
 			valuesBuilder.add(values[0]);
 		}
 
@@ -125,6 +132,33 @@ public final class SdSequence<TYPE> {
 		this.values = valuesBuilder.toArray(arrayDescriptor.create(valuesBuilder.size()));
 		this.inTans = inTansBuilder.toArray(arrayDescriptor.create(inTansBuilder.size()));
 		this.outTans = outTansBuilder.toArray(arrayDescriptor.create(outTansBuilder.size()));
+	}
+
+	private TYPE[] getValues(final Timeline<TYPE> timeline) {
+		final TYPE[] values = timeline.getValues();
+		return fixTimelineArray(timeline, values);
+	}
+
+	private TYPE[] getOutTans(final Timeline<TYPE> timeline) {
+		final TYPE[] outTans = timeline.getOutTans();
+		return fixTimelineArray(timeline, outTans);
+	}
+
+	private TYPE[] getInTans(final Timeline<TYPE> timeline) {
+		final TYPE[] inTans = timeline.getInTans();
+		return fixTimelineArray(timeline, inTans);
+	}
+
+	private TYPE[] fixTimelineArray(final Timeline<TYPE> timeline, final TYPE[] values) {
+		if (timeline.getName().equals(AnimationMap.KLAC.getWar3id())
+				|| timeline.getName().equals(AnimationMap.KLBC.getWar3id())) {
+			final float[][] flippedColorData = new float[values.length][3];
+			for (int i = 0; i < values.length; i++) {
+				flippedColorData[i] = ParseUtils.newFlippedRGB((float[]) values[i]);
+			}
+			return (TYPE[]) flippedColorData;
+		}
+		return values;
 	}
 
 //	private TYPE[] makeArray(final int size) {

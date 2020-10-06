@@ -54,6 +54,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final FreeTypeFontParameter fontParam;
 	private final Map<String, UIFrame> nameToFrame = new HashMap<>();
 	private final Viewport fdfCoordinateResolutionDummyViewport;
+	private final DataTable skinData;
 
 	public GameUI(final DataSource dataSource, final Element skin, final Viewport viewport,
 			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final War3MapViewer modelViewer) {
@@ -74,6 +75,23 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		this.fontGenerator = fontGenerator;
 		this.fontParam = new FreeTypeFontParameter();
 		this.fdfCoordinateResolutionDummyViewport = new FitViewport(0.8f, 0.6f);
+		this.skinData = new DataTable(modelViewer.getWorldEditStrings());
+		try {
+			try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("Units\\CommandFunc.txt")) {
+				this.skinData.readTXT(miscDataTxtStream, true);
+			}
+			try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("Units\\CommandStrings.txt")) {
+				this.skinData.readTXT(miscDataTxtStream, true);
+			}
+			if (this.dataSource.has("war3mapSkin.txt")) {
+				try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("war3mapSkin.txt")) {
+					this.skinData.readTXT(miscDataTxtStream, true);
+				}
+			}
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static Element loadSkin(final DataSource dataSource, final String skin) {
@@ -144,6 +162,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			throw new IllegalStateException("Decorated file name lookup not available: " + file);
 		}
 		return file;
+	}
+
+	public DataTable getSkinData() {
+		return this.skinData;
 	}
 
 	public UIFrame createFrame(final String name, final UIFrame owner, final int priority, final int createContext) {

@@ -33,6 +33,7 @@ import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.MpqDataSource;
 import com.etheller.warsmash.datasources.SubdirDataSource;
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.w3x.War3Map;
 import com.etheller.warsmash.parsers.w3x.doo.War3MapDoo;
 import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
@@ -147,7 +148,7 @@ public class War3MapViewer extends ModelViewer {
 
 	public Terrain terrain;
 	public int renderPathing = 0;
-	public int renderLighting = 0;
+	public int renderLighting = 1;
 
 	public List<SplatModel> selModels = new ArrayList<>();
 	public List<RenderUnit> selected = new ArrayList<>();
@@ -158,6 +159,7 @@ public class War3MapViewer extends ModelViewer {
 	private MdxComplexInstance confirmationInstance;
 	public MdxComplexInstance dncUnit;
 	public MdxComplexInstance dncTerrain;
+	public MdxComplexInstance dncTarget;
 	public CSimulation simulation;
 	private float updateTime;
 
@@ -172,6 +174,7 @@ public class War3MapViewer extends ModelViewer {
 	private final List<SelectionCircleSize> selectionCircleSizes = new ArrayList<>();
 
 	private final Map<CUnit, RenderUnit> unitToRenderPeer = new HashMap<>();
+	private GameUI gameUI;
 
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
@@ -260,6 +263,11 @@ public class War3MapViewer extends ModelViewer {
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\MiscData.txt")) {
 			this.miscData.readTXT(miscDataTxtStream, true);
 		}
+		if (this.dataSource.has("war3mapMisc.txt")) {
+			try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("war3mapMisc.txt")) {
+				this.miscData.readTXT(miscDataTxtStream, true);
+			}
+		}
 		this.unitGlobalStrings = new DataTable(worldEditStrings);
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("Units\\UnitGlobalStrings.txt")) {
 			this.unitGlobalStrings.readTXT(miscDataTxtStream, true);
@@ -339,8 +347,8 @@ public class War3MapViewer extends ModelViewer {
 			throw new RuntimeException(e);
 		}
 		setDataSource(tilesetSource);
-		final WorldEditStrings worldEditStrings = new WorldEditStrings(this.dataSource);
-		loadSLKs(worldEditStrings);
+		this.worldEditStrings = new WorldEditStrings(this.dataSource);
+		loadSLKs(this.worldEditStrings);
 
 		this.solverParams.tileset = Character.toLowerCase(tileset);
 
@@ -351,8 +359,8 @@ public class War3MapViewer extends ModelViewer {
 		final StandardObjectData standardObjectData = new StandardObjectData(this.dataSource);
 		this.worldEditData = standardObjectData.getWorldEditData();
 
-		this.terrain = new Terrain(terrainData, terrainPathing, w3iFile, this.webGL, this.dataSource, worldEditStrings,
-				this, this.worldEditData);
+		this.terrain = new Terrain(terrainData, terrainPathing, w3iFile, this.webGL, this.dataSource,
+				this.worldEditStrings, this, this.worldEditData);
 
 		final float[] centerOffset = terrainData.getCenterOffset();
 		final int[] mapSize = terrainData.getMapSize();
@@ -595,7 +603,13 @@ public class War3MapViewer extends ModelViewer {
 					model = (MdxModel) this.load(fileVar, this.mapPathSolver, this.solverParams);
 				}
 
-				this.doodads.add(new Doodad(this, model, row, doodad, type, maxPitch, maxRoll));
+				if (type == WorldEditorDataType.DESTRUCTIBLES) {
+					this.doodads
+							.add(new Destructable(this, model, row, doodad, type, maxPitch, maxRoll, doodad.getLife()));
+				}
+				else {
+					this.doodads.add(new Doodad(this, model, row, doodad, type, maxPitch, maxRoll));
+				}
 			}
 		}
 
@@ -763,16 +777,18 @@ public class War3MapViewer extends ModelViewer {
 							final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
 							final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
 							final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
-							if (!this.terrain.splats.containsKey(texture)) {
-								final Splat splat = new Splat();
-								splat.opacity = 0.5f;
-								this.terrain.splats.put(texture, splat);
+							if (this.mapMpq.has(texture)) {
+								if (!this.terrain.splats.containsKey(texture)) {
+									final Splat splat = new Splat();
+									splat.opacity = 0.5f;
+									this.terrain.splats.put(texture, splat);
+								}
+								final float x = unit.getLocation()[0] - shadowX;
+								final float y = unit.getLocation()[1] - shadowY;
+								this.terrain.splats.get(texture).locations
+										.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+								unitShadowSplat = this.terrain.splats.get(texture);
 							}
-							final float x = unit.getLocation()[0] - shadowX;
-							final float y = unit.getLocation()[1] - shadowY;
-							this.terrain.splats.get(texture).locations
-									.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
-							unitShadowSplat = this.terrain.splats.get(texture);
 						}
 
 						final String buildingShadow = row.getFieldAsString(BUILDING_SHADOW, 0);
@@ -890,8 +906,11 @@ public class War3MapViewer extends ModelViewer {
 				final ModelInstance instance = item.instance;
 				if ((instance instanceof MdxComplexInstance) && (instance != this.confirmationInstance)) {
 					final MdxComplexInstance mdxComplexInstance = (MdxComplexInstance) instance;
-					if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1)) {
-						SequenceUtils.randomStandSequence(mdxComplexInstance);
+					if ((mdxComplexInstance.sequence == -1)
+							|| (mdxComplexInstance.sequenceEnded && (((MdxModel) mdxComplexInstance.model).sequences
+									.get(mdxComplexInstance.sequence).getFlags() == 0))) {
+						SequenceUtils.randomSequence(mdxComplexInstance, item.getAnimation(), SequenceUtils.EMPTY,
+								true);
 					}
 				}
 			}
@@ -904,8 +923,13 @@ public class War3MapViewer extends ModelViewer {
 			}
 			this.dncTerrain.setFrameByRatio(
 					this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
+			this.dncTerrain.update(rawDeltaTime, null);
 			this.dncUnit.setFrameByRatio(
 					this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
+			this.dncUnit.update(rawDeltaTime, null);
+			this.dncTarget.setFrameByRatio(
+					this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
+			this.dncTarget.update(rawDeltaTime, null);
 		}
 	}
 
@@ -995,7 +1019,7 @@ public class War3MapViewer extends ModelViewer {
 			final String path = entry.getKey();
 			final Splat locations = entry.getValue();
 			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(path, PathSolver.DEFAULT, null),
-					locations.locations, this.terrain.centerOffset, locations.unitMapping);
+					locations.locations, this.terrain.centerOffset, locations.unitMapping, true);
 			model.color[0] = 0;
 			model.color[1] = 1;
 			model.color[2] = 0;
@@ -1037,7 +1061,8 @@ public class War3MapViewer extends ModelViewer {
 		for (final RenderUnit unit : this.units) {
 			final MdxComplexInstance instance = unit.instance;
 			if (instance.isVisible(this.worldScene.camera)
-					&& instance.intersectRayWithCollision(gdxRayHeap, intersectionHeap)
+					&& instance.intersectRayWithCollision(gdxRayHeap, intersectionHeap,
+							unit.getSimulationUnit().getUnitType().isBuilding())
 					&& !unit.getSimulationUnit().isDead()) {
 				entity = unit;
 			}
@@ -1075,8 +1100,8 @@ public class War3MapViewer extends ModelViewer {
 		RenderUnit entity = null;
 		for (final RenderUnit unit : this.units) {
 			final MdxComplexInstance instance = unit.instance;
-			if (instance.isVisible(this.worldScene.camera)
-					&& instance.intersectRayWithCollision(gdxRayHeap, intersectionHeap)) {
+			if (instance.isVisible(this.worldScene.camera) && instance.intersectRayWithCollision(gdxRayHeap,
+					intersectionHeap, unit.getSimulationUnit().getUnitType().isBuilding())) {
 				entity = unit;
 			}
 		}
@@ -1149,6 +1174,7 @@ public class War3MapViewer extends ModelViewer {
 	private static final int MAXIMUM_ACCEPTED = 1 << 30;
 	private float selectionCircleScaleFactor;
 	private DataTable worldEditData;
+	private WorldEditStrings worldEditStrings;
 
 	/**
 	 * Returns a power of two size for the given target capacity.
@@ -1255,6 +1281,12 @@ public class War3MapViewer extends ModelViewer {
 		this.dncUnit = (MdxComplexInstance) unitDNCModel.addInstance();
 		this.dncUnit.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		this.dncUnit.setSequence(0);
+		final MdxModel targetDNCModel = (MdxModel) load(
+				mdx("Environment\\DNC\\DNCLordaeron\\DNCLordaeronTarget\\DNCLordaeronTarget.mdl"), PathSolver.DEFAULT,
+				null);
+		this.dncTarget = (MdxComplexInstance) targetDNCModel.addInstance();
+		this.dncTarget.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+		this.dncTarget.setSequence(0);
 	}
 
 	private static String mdx(String mdxPath) {
@@ -1268,7 +1300,27 @@ public class War3MapViewer extends ModelViewer {
 	}
 
 	@Override
-	public SceneLightManager createLightManager() {
-		return new W3xSceneLightManager(this);
+	public SceneLightManager createLightManager(final boolean simple) {
+		if (simple) {
+			return new W3xScenePortraitLightManager(this);
+		}
+		else {
+			return new W3xSceneWorldLightManager(this);
+		}
+	}
+
+	public WorldEditStrings getWorldEditStrings() {
+		return this.worldEditStrings;
+	}
+
+	public void setGameUI(final GameUI gameUI) {
+		this.gameUI = gameUI;
+		for (final RenderUnit unit : this.units) {
+			unit.initAbilityUI(this);
+		}
+	}
+
+	public GameUI getGameUI() {
+		return this.gameUI;
 	}
 }

@@ -87,18 +87,18 @@ public class CliffMesh {
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.uvBuffer);
 		this.gl.glVertexAttribPointer(1, 2, GL20.GL_FLOAT, false, 0, 0);
 
-//		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.normalBuffer);
-//		this.gl.glVertexAttribPointer(2, 3, GL20.GL_FLOAT, false, 0, 0);
+		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.normalBuffer);
+		this.gl.glVertexAttribPointer(2, 3, GL20.GL_FLOAT, false, 0, 0);
 
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.instanceBuffer);
-		this.gl.glVertexAttribPointer(2, 4, GL20.GL_FLOAT, false, 0, 0);
-		this.gl.glVertexAttribDivisor(2, 1);
+		this.gl.glVertexAttribPointer(3, 4, GL20.GL_FLOAT, false, 0, 0);
+		this.gl.glVertexAttribDivisor(3, 1);
 
 		this.gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 		this.gl.glDrawElementsInstanced(GL20.GL_TRIANGLES, this.indices, GL30.GL_UNSIGNED_SHORT, 0,
 				this.renderJobs.remaining() / 4);
 
-		this.gl.glVertexAttribDivisor(2, 0); // ToDo use vao
+		this.gl.glVertexAttribDivisor(3, 0); // ToDo use vao
 
 		this.renderJobs.clear();
 	}

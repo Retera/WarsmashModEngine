@@ -26,10 +26,12 @@ public class SplatModel {
 	public final float[] color;
 	private final List<float[]> locations;
 	private final List<SplatMover> splatInstances;
+	private final boolean unshaded;
 
 	public SplatModel(final GL30 gl, final Texture texture, final List<float[]> locations, final float[] centerOffset,
-			final List<Consumer<SplatMover>> unitMapping) {
+			final List<Consumer<SplatMover>> unitMapping, final boolean unshaded) {
 		this.texture = texture;
+		this.unshaded = unshaded;
 		this.batches = new ArrayList<>();
 		this.color = new float[] { 1, 1, 1, 1 };
 
@@ -205,6 +207,7 @@ public class SplatModel {
 
 		gl.glActiveTexture(GL30.GL_TEXTURE1);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.texture.getGlHandle());
+		shader.setUniformi("u_show_lighting", this.unshaded ? 0 : 1);
 		shader.setUniform4fv("u_color", this.color, 0, 4);
 
 		for (final Batch b : this.batches) {

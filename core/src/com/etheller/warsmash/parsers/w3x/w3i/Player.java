@@ -3,7 +3,6 @@ package com.etheller.warsmash.parsers.w3x.w3i;
 import java.io.IOException;
 
 import com.etheller.warsmash.util.ParseUtils;
-import com.etheller.warsmash.util.War3ID;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.io.LittleEndianDataOutputStream;
 
@@ -11,7 +10,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
  * A player.
  */
 public class Player {
-	private War3ID id;
+	private int id;
 	private int type;
 	private int race;
 	private int isFixedStartPosition;
@@ -23,7 +22,7 @@ public class Player {
 	private long enemyHighPrioritiesFlags;
 
 	public void load(final LittleEndianDataInputStream stream, final int version) throws IOException {
-		this.id = ParseUtils.readWar3ID(stream);
+		this.id = (int) ParseUtils.readUInt32(stream);
 		this.type = stream.readInt();
 		this.race = stream.readInt();
 		this.isFixedStartPosition = stream.readInt();
@@ -38,7 +37,7 @@ public class Player {
 	}
 
 	public void save(final LittleEndianDataOutputStream stream) throws IOException {
-		ParseUtils.writeWar3ID(stream, this.id);
+		ParseUtils.writeUInt32(stream, this.id);
 		stream.writeInt(this.type);
 		stream.writeInt(this.race);
 		stream.writeInt(this.isFixedStartPosition);
@@ -52,7 +51,7 @@ public class Player {
 		return 33 + this.name.length();
 	}
 
-	public War3ID getId() {
+	public int getId() {
 		return this.id;
 	}
 

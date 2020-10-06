@@ -18,12 +18,14 @@ public class Light extends GenericObject {
 		case 0:
 			this.type = Type.OMNIDIRECTIONAL;
 			break;
-		case 2:
+		case 1:
 			this.type = Type.DIRECTIONAL;
 			break;
-		default:
-		case 1:
+		case 2:
 			this.type = Type.AMBIENT;
+			break;
+		default:
+			this.type = Type.DIRECTIONAL;
 			break;
 		}
 		this.attenuation = light.getAttenuation();
@@ -59,6 +61,11 @@ public class Light extends GenericObject {
 
 	public int getAmbientColor(final float[] out, final int sequence, final int frame, final int counter) {
 		return this.getVectorValue(out, AnimationMap.KLBC.getWar3id(), sequence, frame, counter, this.ambientColor);
+	}
+
+	@Override
+	public int getVisibility(final float[] out, final int sequence, final int frame, final int counter) {
+		return this.getScalarValue(out, AnimationMap.KLAV.getWar3id(), sequence, frame, counter, 1);
 	}
 
 	public static enum Type {

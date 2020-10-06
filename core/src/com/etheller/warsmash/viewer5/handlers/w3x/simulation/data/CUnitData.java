@@ -103,6 +103,9 @@ public class CUnitData {
 	private static final War3ID ATTACK2_WEAPON_SOUND = War3ID.fromString("ucs2");
 	private static final War3ID ATTACK2_WEAPON_TYPE = War3ID.fromString("ua2w");
 
+	private static final War3ID ACQUISITION_RANGE = War3ID.fromString("uacq");
+	private static final War3ID MINIMUM_ATTACK_RANGE = War3ID.fromString("uamn");
+
 	private static final War3ID PROJECTILE_IMPACT_Z = War3ID.fromString("uimz");
 
 	private static final War3ID DEATH_TYPE = War3ID.fromString("udea");
@@ -160,6 +163,8 @@ public class CUnitData {
 			final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);
 			final PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
 			final String unitName = unitType.getFieldAsString(NAME, 0);
+			final float acquisitionRange = unitType.getFieldAsFloat(ACQUISITION_RANGE, 0);
+			final float minimumAttackRange = unitType.getFieldAsFloat(MINIMUM_ATTACK_RANGE, 0);
 			final EnumSet<CTargetType> targetedAs = CTargetType
 					.parseTargetTypeSet(unitType.getFieldAsString(TARGETED_AS, 0));
 			final String classificationString = unitType.getFieldAsString(CLASSIFICATION, 0);
@@ -269,7 +274,7 @@ public class CUnitData {
 			final float deathTime = unitType.getFieldAsFloat(DEATH_TIME, 0);
 			unitTypeInstance = new CUnitType(unitName, isBldg, movementType, moveHeight, collisionSize, classifications,
 					attacks, armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime,
-					targetedAs);
+					targetedAs, acquisitionRange, minimumAttackRange);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
 		return unitTypeInstance;

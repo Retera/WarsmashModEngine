@@ -8,7 +8,9 @@ import java.util.Queue;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Quaternion;
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
@@ -34,6 +36,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityP
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityStop;
 
 public class RenderUnit {
+	private static final War3ID ABILITY_MOVE = War3ID.fromString("Amov");
+	private static final War3ID ABILITY_STOP = War3ID.fromString("Astp");
+	private static final War3ID ABILITY_HOLD_POSITION = War3ID.fromString("Ahol");
+	private static final War3ID ABILITY_PATROL = War3ID.fromString("Apat");
+	private static final War3ID ABILITY_ATTACK = War3ID.fromString("Aatk");
+
 	private static final Quaternion tempQuat = new Quaternion();
 	private static final War3ID RED = War3ID.fromString("uclr");
 	private static final War3ID GREEN = War3ID.fromString("uclg");
@@ -133,33 +141,44 @@ public class RenderUnit {
 		this.row = row;
 		this.soundset = soundset;
 
-		for (final CAbility ability : simulationUnit.getAbilities()) {
+	}
+
+	public void initAbilityUI(final War3MapViewer map) {
+		for (final CAbility ability : this.simulationUnit.getAbilities()) {
 			if (ability instanceof CAbilityMove) {
+				final GameUI gameUI = map.getGameUI();
+				final Element moveCommand = gameUI.getSkinData().get("CmdMove");
+				final String moveCommandArt = gameUI.getSkinField(moveCommand.getField("Art"));
 				this.commandCardIcons.add(new CommandCardIcon(0, 0,
-						ImageUtils.getBLPTexture(map.dataSource, "ReplaceableTextures\\CommandButtons\\BTNMove.blp"),
-						ability.getOrderId()));
+						ImageUtils.getBLPTexture(map.dataSource, moveCommandArt), ability.getOrderId()));
 			}
 			else if (ability instanceof CAbilityAttack) {
+				final GameUI gameUI = map.getGameUI();
+				final Element command = gameUI.getSkinData().get("CmdAttack");
+				final String commandArt = gameUI.getSkinField(command.getField("Art"));
 				this.commandCardIcons.add(new CommandCardIcon(3, 0,
-						ImageUtils.getBLPTexture(map.dataSource, "ReplaceableTextures\\CommandButtons\\BTNAttack.blp"),
-						ability.getOrderId()));
+						ImageUtils.getBLPTexture(map.dataSource, commandArt), ability.getOrderId()));
 			}
 			else if (ability instanceof CAbilityHoldPosition) {
-				this.commandCardIcons
-						.add(new CommandCardIcon(2, 0,
-								ImageUtils.getBLPTexture(map.dataSource,
-										"ReplaceableTextures\\CommandButtons\\BTNHoldPosition.blp"),
-								ability.getOrderId()));
+				final GameUI gameUI = map.getGameUI();
+				final Element command = gameUI.getSkinData().get("CmdHoldPos");
+				final String commandArt = gameUI.getSkinField(command.getField("Art"));
+				this.commandCardIcons.add(new CommandCardIcon(2, 0,
+						ImageUtils.getBLPTexture(map.dataSource, commandArt), ability.getOrderId()));
 			}
 			else if (ability instanceof CAbilityPatrol) {
+				final GameUI gameUI = map.getGameUI();
+				final Element command = gameUI.getSkinData().get("CmdPatrol");
+				final String commandArt = gameUI.getSkinField(command.getField("Art"));
 				this.commandCardIcons.add(new CommandCardIcon(0, 1,
-						ImageUtils.getBLPTexture(map.dataSource, "ReplaceableTextures\\CommandButtons\\BTNPatrol.blp"),
-						ability.getOrderId()));
+						ImageUtils.getBLPTexture(map.dataSource, commandArt), ability.getOrderId()));
 			}
 			else if (ability instanceof CAbilityStop) {
+				final GameUI gameUI = map.getGameUI();
+				final Element command = gameUI.getSkinData().get("CmdStop");
+				final String commandArt = gameUI.getSkinField(command.getField("Art"));
 				this.commandCardIcons.add(new CommandCardIcon(1, 0,
-						ImageUtils.getBLPTexture(map.dataSource, "ReplaceableTextures\\CommandButtons\\BTNStop.blp"),
-						ability.getOrderId()));
+						ImageUtils.getBLPTexture(map.dataSource, commandArt), ability.getOrderId()));
 			}
 		}
 	}
@@ -225,7 +244,7 @@ public class RenderUnit {
 		}
 		if (boneCorpse && !this.boneCorpse) {
 			this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.BONE,
-					map.simulation.getGameplayConstants().getBoneDecayTime(), true);
+					this.simulationUnit.getEndingDecayTime(map.simulation), true);
 		}
 		else if (corpse && !this.corpse) {
 			this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.FLESH,

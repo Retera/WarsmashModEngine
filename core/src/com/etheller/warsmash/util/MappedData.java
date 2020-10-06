@@ -49,7 +49,8 @@ public class MappedData {
 						final MappedDataRow mapped = this.map.get(name);
 
 						for (int j = 0, k = header.size(); j < k; j++) {
-							String key = (String) header.get(j);
+							final Object headerObj = header.get(j);
+							String key = headerObj == null ? null : headerObj.toString();
 
 							// UnitBalance.slk doesn't define the name of one row.
 							if (key == null) {

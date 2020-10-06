@@ -60,7 +60,7 @@ public abstract class Scene {
 	public boolean alpha = false;
 	private final SceneLightManager lightManager;
 
-	public Scene(final ModelViewer viewer) {
+	public Scene(final ModelViewer viewer, final SceneLightManager lightManager) {
 		final CanvasProvider canvas = viewer.canvas;
 		this.viewer = viewer;
 		this.camera = new Camera();
@@ -87,7 +87,7 @@ public abstract class Scene {
 		this.visibleCells = 0;
 		this.visibleInstances = 0;
 
-		this.lightManager = this.viewer.createLightManager();
+		this.lightManager = lightManager;
 	}
 
 	public boolean enableAudio() {
@@ -218,6 +218,8 @@ public abstract class Scene {
 
 		this.emitterObjectUpdater.update(dt);
 		this.updatedParticles = this.emitterObjectUpdater.objects.size();
+
+		this.lightManager.update();
 	}
 
 	protected abstract void innerUpdate(float dt, int frame);

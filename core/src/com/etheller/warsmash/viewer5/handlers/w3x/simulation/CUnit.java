@@ -16,10 +16,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CAttackOrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
 public class CUnit extends CWidget {
+	private static final Rectangle tempRect = new Rectangle();
 	private War3ID typeId;
 	private float facing; // degrees
 	private float mana;
@@ -51,6 +54,8 @@ public class CUnit extends CWidget {
 	// questionable -- it already was -- but I meant for those to inform us
 	// which fields shouldn't be persisted if we do game state save later
 	private transient CUnitStateNotifier stateNotifier = new CUnitStateNotifier();
+	private final float acquisitionRange;
+	private transient static AutoAttackTargetFinderEnum autoAttackTargetFinderEnum = new AutoAttackTargetFinderEnum();
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
@@ -67,6 +72,7 @@ public class CUnit extends CWidget {
 		this.flyHeight = unitType.getDefaultFlyingHeight();
 		this.unitType = unitType;
 		this.classifications.addAll(unitType.getClassifications());
+		this.acquisitionRange = unitType.getDefaultAcquisitionRange();
 	}
 
 	public void setUnitAnimationListener(final CUnitAnimationListener unitAnimationListener) {
@@ -172,9 +178,8 @@ public class CUnit extends CWidget {
 					this.deathTurnTick = gameTurnTick;
 				}
 			}
-			else if (game
-					.getGameTurnTick() > (this.deathTurnTick + (int) (game.getGameplayConstants().getBoneDecayTime()
-							/ WarsmashConstants.SIMULATION_STEP_TIME))) {
+			else if (game.getGameTurnTick() > (this.deathTurnTick
+					+ (int) (getEndingDecayTime(game) / WarsmashConstants.SIMULATION_STEP_TIME))) {
 				return true;
 			}
 		}
@@ -189,7 +194,31 @@ public class CUnit extends CWidget {
 				this.unitAnimationListener.playAnimation(true, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, true);
 			}
 		}
+		else {
+			// check to auto acquire targets
+			if (!this.unitType.getAttacks().isEmpty()) {
+				if (this.collisionRectangle != null) {
+					tempRect.set(this.collisionRectangle);
+				}
+				else {
+					tempRect.set(this.getX(), this.getY(), 0, 0);
+				}
+				final float halfSize = this.acquisitionRange;
+				tempRect.x -= halfSize;
+				tempRect.y -= halfSize;
+				tempRect.width += halfSize * 2;
+				tempRect.height += halfSize * 2;
+				game.getWorldCollision().enumUnitsInRect(tempRect, autoAttackTargetFinderEnum.reset(game, this));
+			}
+		}
 		return false;
+	}
+
+	public float getEndingDecayTime(final CSimulation game) {
+		if (this.unitType.isBuilding()) {
+			return game.getGameplayConstants().getStructureDecayTime();
+		}
+		return game.getGameplayConstants().getBoneDecayTime();
 	}
 
 	public void order(final COrder order, final boolean queue) {
@@ -349,8 +378,23 @@ public class CUnit extends CWidget {
 		this.life -= trueDamage;
 		simulation.unitDamageEvent(this, weaponType, this.unitType.getArmorType());
 		this.stateNotifier.lifeChanged();
-		if (!wasDead && isDead() && !this.unitType.isBuilding()) {
-			kill(simulation);
+		if (isDead()) {
+			if (!wasDead && !this.unitType.isBuilding()) {
+				kill(simulation);
+			}
+		}
+		else {
+			if (this.currentOrder == null) {
+				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(),
+						CAllianceType.PASSIVE)) {
+					for (final CUnitAttack attack : this.unitType.getAttacks()) {
+						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
+							this.order(new CAttackOrder(this, attack, source), false);
+							break;
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -477,5 +521,36 @@ public class CUnit extends CWidget {
 			}
 		}
 		return false;
+	}
+
+	public boolean isMovementDisabled() {
+		return this.unitType.isBuilding();
+	}
+
+	private static final class AutoAttackTargetFinderEnum implements CUnitEnumFunction {
+		private CSimulation game;
+		private CUnit source;
+
+		private AutoAttackTargetFinderEnum reset(final CSimulation game, final CUnit source) {
+			this.game = game;
+			this.source = source;
+			return this;
+		}
+
+		@Override
+		public boolean call(final CUnit unit) {
+			if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
+					CAllianceType.PASSIVE)) {
+				for (final CUnitAttack attack : this.source.unitType.getAttacks()) {
+					if (this.source.canReach(unit, this.source.acquisitionRange)
+							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
+							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
+						this.source.order(new CAttackOrder(this.source, attack, unit), false);
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 	}
 }

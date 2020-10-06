@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
+import com.etheller.warsmash.viewer5.Shaders;
+
 /**
  * Mostly copied from HiveWE!
  */
@@ -12,8 +14,8 @@ public class TerrainShaders {
 				"\r\n" + //
 				"layout (location = 0) in vec3 vPosition;\r\n" + //
 				"layout (location = 1) in vec2 vUV;\r\n" + //
-//				"layout (location = 2) in vec3 vNormal;\r\n" + //
-				"layout (location = 2) in vec4 vOffset;\r\n" + //
+				"layout (location = 2) in vec3 vNormal;\r\n" + //
+				"layout (location = 3) in vec4 vOffset;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) uniform mat4 MVP;\r\n" + //
 				"\r\n" + //
@@ -21,12 +23,15 @@ public class TerrainShaders {
 				"layout (binding = 3) uniform sampler2D shadowMap;\r\n" + //
 				"layout (location = 3) uniform float centerOffsetX;\r\n" + //
 				"layout (location = 4) uniform float centerOffsetY;\r\n" + //
+				"layout (location = 5) uniform sampler2D lightTexture;\r\n" + //
+				"layout (location = 6) uniform float lightCount;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) out vec3 UV;\r\n" + //
 				"layout (location = 1) out vec3 Normal;\r\n" + //
 				"layout (location = 2) out vec2 pathing_map_uv;\r\n" + //
 				"layout (location = 3) out vec3 position;\r\n" + //
 				"layout (location = 4) out vec2 v_suv;\r\n" + //
+				"layout (location = 5) out vec3 shadeColor;\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
 				"	pathing_map_uv = (vec2(vPosition.x + 128, vPosition.y) / 128 + vOffset.xy) * 4;\r\n" + //
@@ -52,9 +57,11 @@ public class TerrainShaders {
 				"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
 				"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
 				"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
-				"	vec3 terrain_normal = normalize(vec3(hL - hR, hD - hU, 2.0));\r\n" + //
+				"	vec3 terrain_normal = normalize(vNormal);//vec3(hL - hR, hD - hU, 2.0)+vNormal);\r\n" + //
 				"\r\n" + //
 				"	Normal = terrain_normal;\r\n" + //
+				Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightCount", true) + "\r\n" + //
+				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 				"}";
 
 		public static final String frag = "#version 450 core\r\n" + //
@@ -70,6 +77,7 @@ public class TerrainShaders {
 				"layout (location = 1) in vec3 Normal;\r\n" + //
 				"layout (location = 2) in vec2 pathing_map_uv;\r\n" + //
 				"layout (location = 4) in vec2 v_suv;\r\n" + //
+				"layout (location = 5) in vec3 shadeColor;\r\n" + //
 				"\r\n" + //
 				"out vec4 color;\r\n" + //
 				"\r\n" + //
@@ -79,10 +87,7 @@ public class TerrainShaders {
 				"   float shadow = texture2D(shadowMap, v_suv).r;\r\n" + //
 				"   color.rgb *= (1.0 - shadow);\r\n" + //
 				"	if (show_lighting) {\r\n" + //
-				"		vec3 light_direction = vec3(-0.3, -0.3, 0.25);\r\n" + //
-				"		light_direction = normalize(light_direction);\r\n" + //
-				"\r\n" + //
-				"		color.rgb *= clamp(dot(Normal, light_direction) + 0.45, 0, 1);\r\n" + //
+				"		color.rgb *=  shadeColor;\r\n" + //
 				"	}\r\n" + //
 				"\r\n" + //
 				"	uvec4 byte = texelFetch(pathing_map_static, ivec2(pathing_map_uv), 0);\r\n" + //
@@ -128,14 +133,16 @@ public class TerrainShaders {
 				"layout (binding = 2) uniform usampler2D terrain_texture_list;\r\n" + //
 				"layout (location = 4) uniform float centerOffsetX;\r\n" + //
 				"layout (location = 5) uniform float centerOffsetY;\r\n" + //
+				"layout (location = 7) uniform sampler2D lightTexture;\r\n" + //
+				"layout (location = 8) uniform float lightCount;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) out vec2 UV;\r\n" + //
 				"layout (location = 1) out flat uvec4 texture_indices;\r\n" + //
 				"layout (location = 2) out vec2 pathing_map_uv;\r\n" + //
-				"layout (location = 3) out vec3 normal;\r\n" + //
 				"layout (location = 4) out vec3 position;\r\n" + //
 				"layout (location = 5) out vec3 ShadowCoord;\r\n" + //
 				"layout (location = 6) out vec2 v_suv;\r\n" + //
+				"layout (location = 7) out vec3 shadeColor;\r\n" + //
 				"\r\n" + //
 				"void main() { \r\n" + //
 				"	ivec2 size = textureSize(terrain_texture_list, 0);\r\n" + //
@@ -149,15 +156,16 @@ public class TerrainShaders {
 				"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
 				"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
 				"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
-				"	normal = normalize(vec3(hL - hR, hD - hU, 2.0));\r\n" + //
+				"	vec3 normal = normalize(vec3(hL - hR, hD - hU, 2.0));\r\n" + //
 				"\r\n" + //
 				"	UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
 				"	texture_indices = texelFetch(terrain_texture_list, pos, 0);\r\n" + //
 				"	pathing_map_uv = (vPosition + pos) * 4;	\r\n" + //
 				"\r\n" + //
 				"	// Cliff culling\r\n" + //
-				"	position = vec3((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY, height.r*128.0);\r\n"
+				"	vec3 positionWorld = vec3((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY, height.r*128.0);\r\n"
 				+ //
+				"	position = positionWorld;\r\n" + //
 				"	gl_Position = ((texture_indices.a & 32768) == 0) ? MVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
 				+ //
 				"	ShadowCoord = (((texture_indices.a & 32768) == 0) ? DepthBiasMVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0)).xyz;\r\n"
@@ -165,6 +173,8 @@ public class TerrainShaders {
 				"   v_suv = (vPosition + pos) / size;\r\n" + //
 				"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
 				"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
+				Shaders.lightSystem("normal", "positionWorld", "lightTexture", "lightCount", true) + "\r\n" + //
+				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 				"}";
 
 		public static final String frag = "#version 450 core\r\n" + //
@@ -197,10 +207,10 @@ public class TerrainShaders {
 				"layout (location = 0) in vec2 UV;\r\n" + //
 				"layout (location = 1) in flat uvec4 texture_indices;\r\n" + //
 				"layout (location = 2) in vec2 pathing_map_uv;\r\n" + //
-				"layout (location = 3) in vec3 normal;\r\n" + //
 				"layout (location = 4) in vec3 position;\r\n" + //
 				"layout (location = 5) in vec3 ShadowCoord;\r\n" + //
 				"layout (location = 6) in vec2 v_suv;\r\n" + //
+				"layout (location = 7) in vec3 shadeColor;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) out vec4 color;\r\n" + //
 //				"layout (location = 1) out vec4 position;\r\n" + //
@@ -263,14 +273,12 @@ public class TerrainShaders {
 //				"   if ( texture2D(shadowMap, ShadowCoord.xy).z > ShadowCoord.z ) {\r\n" + //
 //				"       visibility = 0.5;\r\n" + //
 //				"   }\r\n" + //
-				"   color = vec4(color.xyz * (1.0 - shadow), 1.0);\r\n" + //
 				"\r\n" + //
-//				"	if (show_lighting) {\r\n" + //
-//				"		vec3 light_direction = vec3(-0.3, -0.3, 0.25);\r\n" + //
-//				"		light_direction = normalize(light_direction);\r\n" + //
-//				"\r\n" + //
-//				"		color.rgb *= clamp(dot(normal, light_direction) + 0.45, 0, 1);\r\n" + //
-//				"	}\r\n" + //
+				"	if (show_lighting) {\r\n" + //
+				"     color = vec4(color.xyz * (1.0 - shadow) * shadeColor, 1.0);\r\n" + //
+				"	} else {\r\n" + //
+				"     color = vec4(color.xyz * (1.0 - shadow), 1.0);\r\n" + //
+				"	}\r\n" + //
 //				"\r\n" + //
 //				"	if (show_pathing_map) {\r\n" + //
 //				"		uint byte_static = texelFetch(pathing_map_static, ivec2(pathing_map_uv), 0).r;\r\n" + //
@@ -415,10 +423,13 @@ public class TerrainShaders {
 				"layout (location = 3) uniform vec4 deep_color_min;\r\n" + //
 				"layout (location = 4) uniform vec4 deep_color_max;\r\n" + //
 				"layout (location = 5) uniform float water_offset;\r\n" + //
+				"layout (location = 10) uniform sampler2D lightTexture;\r\n" + //
+				"layout (location = 11) uniform float lightCount;\r\n" + //
 				"\r\n" + //
 				"out vec2 UV;\r\n" + //
 				"out vec4 Color;\r\n" + //
 				"out vec2 position;\r\n" + //
+				"out vec3 shadeColor;\r\n" + //
 				"\r\n" + //
 				"const float min_depth = 10.f / 128;\r\n" + //
 				"const float deeplevel = 64.f / 128;\r\n" + //
@@ -437,8 +448,9 @@ public class TerrainShaders {
 				"\r\n" + //
 				"   position = vec2((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY);\r\n"
 				+ //
-				"	gl_Position = is_water ? MVP * vec4(position.xy, water_height*128.0, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
-				+ //
+				"   vec4 myposition = vec4(position.xy, water_height*128.0, 1);\r\n" + //
+				"   vec3 Normal = vec3(0,0,1);\r\n" + //
+				"	gl_Position = is_water ? MVP * myposition : vec4(2.0, 0.0, 0.0, 1.0);\r\n" + //
 				"\r\n" + //
 				"	UV = vec2((vPosition.x + pos.x%2)/2.0, (vPosition.y + pos.y%2)/2.0);\r\n" + //
 				"\r\n" + //
@@ -451,6 +463,8 @@ public class TerrainShaders {
 				"		value = clamp(value - deeplevel, 0.f, maxdepth - deeplevel) / (maxdepth - deeplevel);\r\n" + //
 				"		Color = deep_color_min * (1.f - value) + deep_color_max * value;\r\n" + //
 				"	}\r\n" + //
+				Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightCount", true) + "\r\n" + //
+				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 				" }";
 
 		public static final String frag = "#version 450 core\r\n" + //
@@ -465,13 +479,14 @@ public class TerrainShaders {
 				"in vec2 UV;\r\n" + //
 				"in vec4 Color;\r\n" + //
 				"in vec2 position;\r\n" + //
+				"in vec3 shadeColor;\r\n" + //
 				"\r\n" + //
 				"out vec4 outColor;\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
 				"   vec2 d2 = min(position - mapBounds.xy, mapBounds.zw - position);\r\n" + //
 				"   float d1 = clamp(min(d2.x, d2.y) / 64.0 + 1.0, 0.0, 1.0) * 0.8 + 0.2;;\r\n" + //
-				"	outColor = texture(water_textures, vec3(UV, current_texture)) * vec4(Color.rgb * d1, Color.a);\r\n"
+				"	outColor = texture(water_textures, vec3(UV, current_texture)) * vec4(Color.rgb * d1 * shadeColor, Color.a);\r\n"
 				+ //
 				"}";
 	}

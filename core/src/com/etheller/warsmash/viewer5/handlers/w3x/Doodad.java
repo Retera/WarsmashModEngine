@@ -6,7 +6,10 @@ import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.ModelInstance;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 
 public class Doodad {
 	private static final int SAMPLE_RADIUS = 4;
@@ -30,6 +33,7 @@ public class Doodad {
 		}
 		else {
 			instance = model.addInstance();
+			((MdxComplexInstance) instance).setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
 		}
 
 		instance.move(doodad.getLocation());
@@ -50,8 +54,8 @@ public class Doodad {
 		final float pitchSampleBackwardY = y - (SAMPLE_RADIUS * (float) Math.sin(facingRadians));
 		final float pitchSampleGroundHeight1 = map.terrain.getGroundHeight(pitchSampleBackwardX, pitchSampleBackwardY);
 		final float pitchSampleGorundHeight2 = map.terrain.getGroundHeight(pitchSampleForwardX, pitchSampleForwardY);
-		pitch = Math.min(maxPitch,
-				(float) Math.atan2(pitchSampleGorundHeight2 - pitchSampleGroundHeight1, SAMPLE_RADIUS * 2));
+		pitch = Math.max(-maxPitch, Math.min(maxPitch,
+				(float) Math.atan2(pitchSampleGorundHeight2 - pitchSampleGroundHeight1, SAMPLE_RADIUS * 2)));
 		final double leftOfFacingAngle = facingRadians + (Math.PI / 2);
 		final float rollSampleForwardX = x + (SAMPLE_RADIUS * (float) Math.cos(leftOfFacingAngle));
 		final float rollSampleForwardY = y + (SAMPLE_RADIUS * (float) Math.sin(leftOfFacingAngle));
@@ -59,8 +63,8 @@ public class Doodad {
 		final float rollSampleBackwardY = y - (SAMPLE_RADIUS * (float) Math.sin(leftOfFacingAngle));
 		final float rollSampleGroundHeight1 = map.terrain.getGroundHeight(rollSampleBackwardX, rollSampleBackwardY);
 		final float rollSampleGroundHeight2 = map.terrain.getGroundHeight(rollSampleForwardX, rollSampleForwardY);
-		roll = Math.min(maxRoll,
-				(float) Math.atan2(rollSampleGroundHeight2 - rollSampleGroundHeight1, SAMPLE_RADIUS * 2));
+		roll = Math.max(-maxRoll, Math.min(maxRoll,
+				(float) Math.atan2(rollSampleGroundHeight2 - rollSampleGroundHeight1, SAMPLE_RADIUS * 2)));
 		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians));
 		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, -pitch));
 		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, roll));
@@ -85,5 +89,9 @@ public class Doodad {
 
 		this.instance = instance;
 		this.row = row;
+	}
+
+	public PrimaryTag getAnimation() {
+		return PrimaryTag.STAND;
 	}
 }

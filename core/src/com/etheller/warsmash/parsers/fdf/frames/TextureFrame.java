@@ -23,6 +23,9 @@ public class TextureFrame extends AbstractRenderableFrame {
 
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
+		if (this.texture == null) {
+			return;
+		}
 		batch.draw(this.texture, this.renderBounds.x, this.renderBounds.y, this.renderBounds.width,
 				this.renderBounds.height);
 	}
@@ -42,6 +45,10 @@ public class TextureFrame extends AbstractRenderableFrame {
 	}
 
 	public void setTexture(final Texture texture) {
+		if (texture == null) {
+			this.texture = null;
+			return;
+		}
 		final TextureRegion texRegion;
 		if (this.texCoord != null) {
 			texRegion = new TextureRegion(texture, this.texCoord.getX(), this.texCoord.getZ(), this.texCoord.getY(),

@@ -175,4 +175,15 @@ public class ParseUtils {
 		stream.write(nameBytes);
 		stream.write(0);
 	}
+
+	public static float[] flipRGB(final float[] color) {
+		final float r = color[0];
+		color[0] = color[2];
+		color[2] = r;
+		return color;
+	}
+
+	public static float[] newFlippedRGB(final float[] color) {
+		return new float[] { color[2], color[1], color[0] };
+	}
 }

@@ -6,8 +6,8 @@ import java.util.List;
 public class SimpleScene extends Scene {
 	private final List<ModelInstance> allInstances = new ArrayList<>();
 
-	public SimpleScene(final ModelViewer viewer) {
-		super(viewer);
+	public SimpleScene(final ModelViewer viewer, final SceneLightManager lightManager) {
+		super(viewer, lightManager);
 		this.visibleCells = 1;
 		this.visibleInstances = 0;
 	}

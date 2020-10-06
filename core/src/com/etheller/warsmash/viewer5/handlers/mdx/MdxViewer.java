@@ -12,7 +12,7 @@ public class MdxViewer extends ModelViewer {
 	}
 
 	@Override
-	public SceneLightManager createLightManager() {
+	public SceneLightManager createLightManager(final boolean simple) {
 		// TODO Auto-generated method stub
 		return null;
 	}

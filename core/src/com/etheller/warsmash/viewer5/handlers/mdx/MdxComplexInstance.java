@@ -242,13 +242,16 @@ public class MdxComplexInstance extends ModelInstance {
 		/// TODO: single-axis billboarding
 		if (genericObject.billboarded != 0) {
 			node.billboarded = true;
-		} // else if (genericObject.billboardedX) {
-			// node.billboardedX = true;
-			// } else if (genericObject.billboardedY) {
-			// node.billboardedY = true;
-			// } else if (genericObject.billboardedZ) {
-			// node.billboardedZ = true;
-			// }
+		}
+		else if (genericObject.billboardedX != 0) {
+			node.billboardedX = true;
+		}
+		else if (genericObject.billboardedY != 0) {
+			node.billboardedY = true;
+		}
+		else if (genericObject.billboardedZ != 0) {
+			node.billboardedZ = true;
+		}
 
 		if (object != null) {
 			node.object = object;
@@ -724,10 +727,16 @@ public class MdxComplexInstance extends ModelInstance {
 	 *
 	 * @param ray
 	 */
-	public boolean intersectRayWithCollision(final Ray ray, final Vector3 intersection) {
+	public boolean intersectRayWithCollision(final Ray ray, final Vector3 intersection, final boolean alwaysUseMesh) {
 		final MdxModel mdxModel = (MdxModel) this.model;
 		final List<CollisionShape> collisionShapes = mdxModel.collisionShapes;
-		if (collisionShapes.isEmpty()) {
+		for (final CollisionShape collisionShape : collisionShapes) {
+			final MdxNode mdxNode = this.nodes[collisionShape.index];
+			if (collisionShape.checkIntersect(ray, mdxNode, intersection)) {
+				return true;
+			}
+		}
+		if (collisionShapes.isEmpty() || alwaysUseMesh) {
 			for (final Geoset geoset : mdxModel.geosets) {
 				if (!geoset.unselectable) {
 					geoset.getAlpha(alphaHeap, this.sequence, this.frame, this.counter);
@@ -738,14 +747,6 @@ public class MdxComplexInstance extends ModelInstance {
 							return true;
 						}
 					}
-				}
-			}
-		}
-		else {
-			for (final CollisionShape collisionShape : collisionShapes) {
-				final MdxNode mdxNode = this.nodes[collisionShape.index];
-				if (collisionShape.checkIntersect(ray, mdxNode, intersection)) {
-					return true;
 				}
 			}
 		}

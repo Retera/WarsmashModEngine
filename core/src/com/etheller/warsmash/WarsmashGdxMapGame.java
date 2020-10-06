@@ -14,6 +14,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
@@ -227,15 +228,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		Gdx.input.setInputProcessor(this);
 
-//		final Music music = Gdx.audio
-//				.newMusic(new DataSourceFileHandle(this.viewer.dataSource, "Sound\\Music\\mp3Music\\Undead2.mp3"));
-//		music.setVolume(0.2f);
-//		music.setLooping(true);
-//		music.play();
-
 		this.minimap = new Rectangle(18.75f, 13.75f, 278.75f, 276.25f);
-		final float worldWidth = (this.viewer.terrain.columns - 1);
-		final float worldHeight = this.viewer.terrain.rows - 1;
+		final Rectangle playableMapArea = this.viewer.terrain.getPlayableMapArea();
+		final float worldWidth = playableMapArea.getWidth();
+		final float worldHeight = playableMapArea.getHeight();
 		final float worldSize = Math.max(worldWidth, worldHeight);
 		final float minimapFilledWidth = (worldWidth / worldSize) * this.minimap.width;
 		final float minimapFilledHeight = (worldHeight / worldSize) * this.minimap.height;
@@ -264,6 +260,16 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				new RootFrameListener() {
 					@Override
 					public void onCreate(final GameUI rootFrame) {
+						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
+
+						final String musicField = rootFrame.getSkinField("Music_V1");
+						final String[] musics = musicField.split(";");
+						final String musicPath = musics[(int) (Math.random() * musics.length)];
+						final Music music = Gdx.audio.newMusic(
+								new DataSourceFileHandle(WarsmashGdxMapGame.this.viewer.dataSource, musicPath));
+						music.setVolume(0.2f);
+						music.setLooping(true);
+						music.play();
 					}
 				});
 		this.meleeUI.main();
@@ -272,6 +278,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		updateUIScene();
 
 		this.meleeUI.resize();
+		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 	}
 
 	private void updateUIScene() {

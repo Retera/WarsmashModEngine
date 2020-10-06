@@ -24,6 +24,10 @@ public enum CDefenseType implements CodeKeyType {
 	}
 
 	public static CDefenseType parseDefenseType(final String typeString) {
-		return valueOf(typeString.toUpperCase());
+		final String upperCaseTypeString = typeString.toUpperCase();
+		if (upperCaseTypeString.equals("HEAVY")) {
+			return LARGE;
+		}
+		return valueOf(upperCaseTypeString);
 	}
 }

@@ -19,6 +19,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 
 /**
  * Uses AWT stuff
@@ -26,14 +27,27 @@ import com.etheller.warsmash.datasources.DataSource;
  */
 public final class ImageUtils {
 	private static final int BYTES_PER_PIXEL = 4;
+	public static final String DEFAULT_ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNTemp.blp";
 
 	public static Texture getBLPTexture(final DataSource dataSource, final String path) {
 		try {
 			try (final InputStream resourceAsStream = dataSource.getResourceAsStream(path)) {
-				if (resourceAsStream == null) {
-					throw new IllegalStateException("missing resource: " + path);
+				if ((resourceAsStream == null) || path.endsWith(".tga")) {
+					final String tgaPath = path.substring(0, path.length() - 4) + ".tga";
+					try (final InputStream tgaStream = dataSource.getResourceAsStream(tgaPath)) {
+						if (tgaStream == null) {
+							throw new IllegalStateException("missing resource: " + path);
+						}
+						else {
+							return ImageUtils.getTexture(TgaFile.readTGA(tgaPath, tgaStream));
+						}
+					}
 				}
-				return ImageUtils.getTexture(ImageIO.read(resourceAsStream));
+				final BufferedImage image = ImageIO.read(resourceAsStream);
+				if (image == null) {
+					throw new IllegalStateException("corrupt resource: " + path);
+				}
+				return ImageUtils.getTexture(image);
 			}
 
 		}

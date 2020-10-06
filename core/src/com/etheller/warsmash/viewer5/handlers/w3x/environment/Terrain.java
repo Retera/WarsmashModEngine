@@ -41,12 +41,15 @@ import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.RawOpenGLTextureResource;
 import com.etheller.warsmash.viewer5.Texture;
+import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.gl.Extensions;
 import com.etheller.warsmash.viewer5.gl.WebGL;
+import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
+import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
@@ -174,9 +177,16 @@ public class Terrain {
 
 		final char tileset = w3eFile.getTileset();
 		final Element waterInfo = this.waterTable.get(tileset + "Sha");
-		this.waterHeightOffset = waterInfo.getFieldFloatValue("height");
-		this.waterTextureCount = waterInfo.getFieldValue("numTex");
-		this.waterIncreasePerFrame = waterInfo.getFieldValue("texRate") / 60f;
+		if (waterInfo != null) {
+			this.waterHeightOffset = waterInfo.getFieldFloatValue("height");
+			this.waterTextureCount = waterInfo.getFieldValue("numTex");
+			this.waterIncreasePerFrame = waterInfo.getFieldValue("texRate") / 60f;
+		}
+		else {
+			this.waterHeightOffset = 0;
+			this.waterTextureCount = 0;
+			this.waterIncreasePerFrame = 0;
+		}
 
 		loadWaterColor(this.minShallowColor, "Smin", waterInfo);
 		loadWaterColor(this.maxShallowColor, "Smax", waterInfo);
@@ -213,6 +223,9 @@ public class Terrain {
 		// Ground textures
 		for (final War3ID groundTile : w3eFile.getGroundTiles()) {
 			final Element terrainTileInfo = this.terrainTable.get(groundTile.asStringValue());
+			if (terrainTileInfo == null) {
+				throw new RuntimeException("No terrain info for: " + groundTile.asStringValue());
+			}
 			final String dir = terrainTileInfo.getField("dir");
 			final String file = terrainTileInfo.getField("file");
 			this.groundTextures.add(new GroundTexture(dir + "\\" + file + texturesExt, dataSource, Gdx.gl30));
@@ -231,9 +244,25 @@ public class Terrain {
 			final String texDir = cliffInfo.getField("texDir");
 			final String texFile = cliffInfo.getField("texFile");
 			try (InputStream imageStream = dataSource.getResourceAsStream(texDir + "\\" + texFile + texturesExt)) {
-				final BufferedImage image = ImageIO.read(imageStream);
-				if (image == null) {
-					throw new IllegalStateException("Missing cliff texture: " + texDir + "\\" + texFile + texturesExt);
+				final BufferedImage image;
+				if (imageStream == null) {
+					final String tgaPath = texDir + "\\" + texFile + ".tga";
+					try (final InputStream tgaStream = dataSource.getResourceAsStream(tgaPath)) {
+						if (tgaStream != null) {
+							image = TgaFile.readTGA(tgaPath, tgaStream);
+						}
+						else {
+							throw new IllegalStateException(
+									"Missing cliff texture: " + texDir + "\\" + texFile + texturesExt);
+						}
+					}
+				}
+				else {
+					image = ImageIO.read(imageStream);
+					if (image == null) {
+						throw new IllegalStateException(
+								"Missing cliff texture: " + texDir + "\\" + texFile + texturesExt);
+					}
 				}
 				this.cliffTextures.add(new UnloadedTexture(image.getWidth(), image.getHeight(),
 						ImageUtils.getTextureBuffer(ImageUtils.forceBufferedImagesRGB(image)),
@@ -796,7 +825,7 @@ public class Terrain {
 	private static void loadWaterColor(final float[] out, final String prefix, final Element waterInfo) {
 		for (int i = 0; i < colorTags.length; i++) {
 			final String colorTag = colorTags[i];
-			out[i] = waterInfo.getFieldFloatValue(prefix + "_" + colorTag) / 255f;
+			out[i] = waterInfo == null ? 0.0f : waterInfo.getFieldFloatValue(prefix + "_" + colorTag) / 255f;
 		}
 	}
 
@@ -855,6 +884,13 @@ public class Terrain {
 		gl.glUniform1i(this.groundShader.getUniformLocation("shadowMap"), 20);
 		gl.glUniform1f(this.groundShader.getUniformLocation("centerOffsetX"), this.centerOffset[0]);
 		gl.glUniform1f(this.groundShader.getUniformLocation("centerOffsetY"), this.centerOffset[1]);
+
+		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
+		final DataTexture unitLightsTexture = lightManager.getTerrainLightsTexture();
+
+		unitLightsTexture.bind(21);
+		gl.glUniform1i(this.groundShader.getUniformLocation("lightTexture"), 21);
+		gl.glUniform1f(this.groundShader.getUniformLocation("lightCount"), unitLightsTexture.getHeight() - 0.5f);
 
 		gl.glUniformMatrix4fv(this.groundShader.getUniformLocation("DepthBiasMVP"), 1, false,
 				dynamicShadowManager.getDepthBiasMVP().val, 0);
@@ -949,6 +985,13 @@ public class Terrain {
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
 
+		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
+		final DataTexture terrainLightsTexture = lightManager.getTerrainLightsTexture();
+
+		terrainLightsTexture.bind(21);
+		gl.glUniform1i(shader.getUniformLocation("lightTexture"), 21);
+		gl.glUniform1f(shader.getUniformLocation("lightCount"), terrainLightsTexture.getHeight() - 0.5f);
+
 		// Render the cliffs
 		for (final SplatModel splat : this.uberSplatModels) {
 			splat.render(gl, shader);
@@ -975,6 +1018,13 @@ public class Terrain {
 		gl.glUniform1f(this.waterShader.getUniformLocation("centerOffsetX"), this.centerOffset[0]);
 		gl.glUniform1f(this.waterShader.getUniformLocation("centerOffsetY"), this.centerOffset[1]);
 		gl.glUniform4fv(9, 1, this.shaderMapBounds, 0);
+
+		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
+		final DataTexture unitLightsTexture = lightManager.getTerrainLightsTexture();
+
+		unitLightsTexture.bind(21);
+		gl.glUniform1i(this.waterShader.getUniformLocation("lightTexture"), 21);
+		gl.glUniform1f(this.waterShader.getUniformLocation("lightCount"), unitLightsTexture.getHeight() - 0.5f);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
@@ -1024,6 +1074,13 @@ public class Terrain {
 		gl.glUniformMatrix4fv(0, 1, false, tempMatrix.val, 0);
 		gl.glUniform1i(1, this.viewer.renderPathing);
 		gl.glUniform1i(2, this.viewer.renderLighting);
+
+		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
+		final DataTexture unitLightsTexture = lightManager.getTerrainLightsTexture();
+
+		unitLightsTexture.bind(21);
+		gl.glUniform1i(this.cliffShader.getUniformLocation("lightTexture"), 21);
+		gl.glUniform1f(this.cliffShader.getUniformLocation("lightCount"), unitLightsTexture.getHeight() - 0.5f);
 
 		this.cliffShader.setUniformi("shadowMap", 2);
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
@@ -1266,7 +1323,7 @@ public class Terrain {
 
 			final SplatModel splatModel = new SplatModel(Gdx.gl30,
 					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset,
-					splat.unitMapping);
+					splat.unitMapping, false);
 			splatModel.color[3] = splat.opacity;
 			this.uberSplatModels.add(splatModel);
 		}

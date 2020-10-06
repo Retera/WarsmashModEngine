@@ -23,6 +23,7 @@ public class CGameplayConstants {
 	private final float duskTimeGameHours;
 	private final float gameDayHours;
 	private final float gameDayLength;
+	private final float structureDecayTime;
 
 	public CGameplayConstants(final DataTable parsedDataTable) {
 		final Element miscData = parsedDataTable.get("Misc");
@@ -31,6 +32,7 @@ public class CGameplayConstants {
 		this.maxCollisionRadius = miscData.getFieldFloatValue("MaxCollisionRadius");
 		this.decayTime = miscData.getFieldFloatValue("DecayTime");
 		this.boneDecayTime = miscData.getFieldFloatValue("BoneDecayTime");
+		this.structureDecayTime = miscData.getFieldFloatValue("StructureDecayTime");
 		this.bulletDeathTime = miscData.getFieldFloatValue("BulletDeathTime");
 		this.closeEnoughRange = miscData.getFieldFloatValue("CloseEnoughRange");
 
@@ -104,5 +106,9 @@ public class CGameplayConstants {
 
 	public float getDuskTimeGameHours() {
 		return this.duskTimeGameHours;
+	}
+
+	public float getStructureDecayTime() {
+		return this.structureDecayTime;
 	}
 }

@@ -8,7 +8,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.util.RenderMathUtils;
 
 public abstract class SkeletalNode extends GenericNode {
-	protected static final Vector3 locationHeap = new Vector3();
+	protected static final Vector3 cameraRayHeap = new Vector3();
+	protected static final Vector3 billboardAxisHeap = new Vector3();
 	protected static final Quaternion rotationHeap = new Quaternion();
 	protected static final Quaternion rotationHeap2 = new Quaternion();
 	protected static final Vector3 scalingHeap = new Vector3();
@@ -16,9 +17,9 @@ public abstract class SkeletalNode extends GenericNode {
 	public UpdatableObject object;
 
 	public boolean billboarded;
-	public final boolean billboardedX;
-	public final boolean billboardedY;
-	public final boolean billboardedZ;
+	public boolean billboardedX;
+	public boolean billboardedY;
+	public boolean billboardedZ;
 
 	public SkeletalNode() {
 		this.pivot = new Vector3();
@@ -97,6 +98,36 @@ public abstract class SkeletalNode extends GenericNode {
 			computedRotation.mul(scene.camera.inverseRotation);
 
 			this.convertBasis(computedRotation);
+		}
+		else if (this.billboardedX) {
+			final Camera camera = scene.camera;
+			computedRotation = rotationHeap;
+			cameraRayHeap.set(camera.billboardedVectors[6]);
+			computedRotation.set(this.parent.inverseWorldRotation);
+			computedRotation.transform(cameraRayHeap);
+			billboardAxisHeap.set(1, 0, 0);
+			final float angle = (float) Math.atan2(cameraRayHeap.z, cameraRayHeap.y);
+			computedRotation.setFromAxisRad(billboardAxisHeap, angle);
+		}
+		else if (this.billboardedY) {
+			final Camera camera = scene.camera;
+			computedRotation = rotationHeap;
+			cameraRayHeap.set(camera.billboardedVectors[6]);
+			computedRotation.set(this.parent.inverseWorldRotation);
+			computedRotation.transform(cameraRayHeap);
+			billboardAxisHeap.set(0, 1, 0);
+			final float angle = (float) Math.atan2(cameraRayHeap.z, -cameraRayHeap.x);
+			computedRotation.setFromAxisRad(billboardAxisHeap, angle);
+		}
+		else if (this.billboardedZ) {
+			final Camera camera = scene.camera;
+			computedRotation = rotationHeap;
+			cameraRayHeap.set(camera.billboardedVectors[6]);
+			computedRotation.set(this.parent.inverseWorldRotation);
+			computedRotation.transform(cameraRayHeap);
+			billboardAxisHeap.set(0, 0, 1);
+			final float angle = (float) Math.atan2(cameraRayHeap.y, cameraRayHeap.x);
+			computedRotation.setFromAxisRad(billboardAxisHeap, angle);
 		}
 		else {
 			computedRotation = this.localRotation;

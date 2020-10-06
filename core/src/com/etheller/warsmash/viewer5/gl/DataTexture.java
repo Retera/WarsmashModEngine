@@ -28,7 +28,7 @@ public class DataTexture {
 		this.reserve(width, height);
 	}
 
-	private void reserve(final int width, final int height) {
+	public void reserve(final int width, final int height) {
 		if ((this.width < width) || (this.height < height)) {
 			final GL20 gl = this.gl;
 

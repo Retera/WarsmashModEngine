@@ -33,12 +33,15 @@ public class CUnitType {
 	// game data? can we store it in a cleaner way?
 	private final BufferedImage buildingPathingPixelMap;
 	private final EnumSet<CTargetType> targetedAs;
+	private final float defaultAcquisitionRange;
+	private final float minimumAttackRange;
 
 	public CUnitType(final String name, final boolean isBldg, final MovementType movementType,
 			final float defaultFlyingHeight, final float collisionSize,
 			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks, final String armorType,
 			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ,
-			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs) {
+			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs,
+			final float defaultAcquisitionRange, final float minimumAttackRange) {
 		this.name = name;
 		this.building = isBldg;
 		this.movementType = movementType;
@@ -54,6 +57,8 @@ public class CUnitType {
 		this.buildingPathingPixelMap = buildingPathingPixelMap;
 		this.deathTime = deathTime;
 		this.targetedAs = targetedAs;
+		this.defaultAcquisitionRange = defaultAcquisitionRange;
+		this.minimumAttackRange = minimumAttackRange;
 	}
 
 	public String getName() {
@@ -114,5 +119,13 @@ public class CUnitType {
 
 	public EnumSet<CTargetType> getTargetedAs() {
 		return this.targetedAs;
+	}
+
+	public float getDefaultAcquisitionRange() {
+		return this.defaultAcquisitionRange;
+	}
+
+	public float getMinimumAttackRange() {
+		return this.minimumAttackRange;
 	}
 }

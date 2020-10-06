@@ -104,7 +104,7 @@ public abstract class ModelViewer {
 	}
 
 	public Scene addSimpleScene() {
-		final Scene scene = new SimpleScene(this);
+		final Scene scene = new SimpleScene(this, createLightManager(true));
 
 		this.scenes.add(scene);
 
@@ -112,7 +112,7 @@ public abstract class ModelViewer {
 	}
 
 	public WorldScene addWorldScene() {
-		final WorldScene scene = new WorldScene(this);
+		final WorldScene scene = new WorldScene(this, createLightManager(false));
 
 		this.scenes.add(scene);
 
@@ -367,5 +367,5 @@ public abstract class ModelViewer {
 		System.err.println("error, this, InvalidHandler, FailedToLoad");
 	}
 
-	public abstract SceneLightManager createLightManager();
+	public abstract SceneLightManager createLightManager(boolean simple);
 }

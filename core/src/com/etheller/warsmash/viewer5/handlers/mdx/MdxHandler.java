@@ -24,13 +24,13 @@ public class MdxHandler extends ModelHandler {
 		viewer.addHandler(new BlpHandler());
 		viewer.addHandler(new TgaHandler());
 
-		Shaders.complex = viewer.webGL.createShaderProgram(MdxShaders.vsComplexUnshaded, MdxShaders.fsComplex);
-		Shaders.extended = viewer.webGL.createShaderProgram("#define EXTENDED_BONES\r\n" + MdxShaders.vsComplexUnshaded,
+		Shaders.complex = viewer.webGL.createShaderProgram(MdxShaders.vsComplex, MdxShaders.fsComplex);
+		Shaders.extended = viewer.webGL.createShaderProgram("#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex,
 				MdxShaders.fsComplex);
-		Shaders.complexShadowMap = viewer.webGL.createShaderProgram(MdxShaders.vsComplexUnshaded,
+		Shaders.complexShadowMap = viewer.webGL.createShaderProgram(MdxShaders.vsComplex,
 				MdxShaders.fsComplexShadowMap);
 		Shaders.extendedShadowMap = viewer.webGL.createShaderProgram(
-				"#define EXTENDED_BONES\r\n" + MdxShaders.vsComplexUnshaded, MdxShaders.fsComplexShadowMap);
+				"#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex, MdxShaders.fsComplexShadowMap);
 		Shaders.particles = viewer.webGL.createShaderProgram(MdxShaders.vsParticles, MdxShaders.fsParticles);
 		Shaders.simple = viewer.webGL.createShaderProgram(MdxShaders.vsSimple, MdxShaders.fsSimple);
 //		Shaders.hd = viewer.webGL.createShaderProgram(MdxShaders.vsHd, MdxShaders.fsHd);

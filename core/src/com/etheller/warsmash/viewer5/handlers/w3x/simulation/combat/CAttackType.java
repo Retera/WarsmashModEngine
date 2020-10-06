@@ -37,6 +37,10 @@ public enum CAttackType implements CodeKeyType {
 	}
 
 	public static CAttackType parseAttackType(final String attackTypeString) {
-		return valueOf(attackTypeString.toUpperCase());
+		final String upperCaseAttackType = attackTypeString.toUpperCase();
+		if ("SEIGE".equals(upperCaseAttackType)) {
+			return SIEGE;
+		}
+		return valueOf(upperCaseAttackType);
 	}
 }

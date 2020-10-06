@@ -55,4 +55,63 @@ public class Shaders {
 			"      return vec3(quat_transform(q, v.xy), v.z);\r\n" + //
 			"    }\r\n" + //
 			"  ";
+
+	public static String lightSystem(final String normalName, final String positionName, final String lightTexture,
+			final String lightCount, final boolean terrain) {
+		return "        vec3 lightFactor = vec3(0.0,0.0,0.0);\r\n" + //
+				"        float lightIndex = 0.0;\r\n" + //
+				"        for(float lightIndex = 0.0; lightIndex < " + lightCount + "; lightIndex += 1.0) {\r\n" + //
+				"          float rowPos = (lightIndex + 0.5) / " + lightCount + ";\r\n" + //
+				"          vec4 lightPosition = texture2D(" + lightTexture + ", vec2(0.125, rowPos));\r\n" + //
+				"          vec3 lightExtra = texture2D(" + lightTexture + ", vec2(0.375, rowPos)).xyz;\r\n" + //
+				"          vec4 lightColor = texture2D(" + lightTexture + ", vec2(0.625, rowPos));\r\n" + //
+				"          vec4 lightAmbColor = texture2D(" + lightTexture + ", vec2(0.875, rowPos));\r\n" + //
+				"          if(lightExtra.x > 1.5) {\r\n" + //
+				"            // Ambient light;\r\n" + //
+				"            float dist = length(" + positionName + " - vec3(lightPosition." + (terrain ? "xyw" : "xyz")
+				+ "));\r\n" + //
+				"            float attenuationStart = lightExtra.y;\r\n" + //
+				"            float attenuationEnd = lightExtra.z;\r\n" + //
+				"            if( dist <= attenuationEnd ) {\r\n" + //
+				"              float attenuationDist = clamp((dist-attenuationStart), 0.001, (attenuationEnd-attenuationStart));\r\n"
+				+ //
+				"              float attenuationFactor = 1.0/(attenuationDist);\r\n" + //
+				"              lightFactor += attenuationFactor * lightAmbColor.a * lightAmbColor.rgb;\r\n" + //
+				"              \r\n" + //
+				"            }\r\n" + //
+				"          } else if(lightExtra.x > 0.5) {\r\n" + //
+				"            // Directional (sun) light;\r\n" + //
+				"            vec3 lightDirection = vec3(lightPosition.xyz);\r\n" + //
+				"            vec3 lightFactorContribution = lightColor.a * lightColor.rgb * clamp(dot(" + normalName
+				+ ", lightDirection), 0.0, 1.0);\r\n" + //
+				"            if(lightFactorContribution.r > 1.0 || lightFactorContribution.g > 1.0 || lightFactorContribution.b > 1.0) {\r\n"
+				+ //
+				"              lightFactorContribution = normalize(lightFactorContribution);\r\n" + //
+				"            }\r\n" + //
+				"            lightFactor += lightFactorContribution + lightAmbColor.a * lightAmbColor.rgb;\r\n" + //
+				"          } else {\r\n" + //
+				"            // Omnidirectional light;\r\n" + //
+				"            vec3 deltaBtwn = " + positionName + " - lightPosition.xyz;\r\n" + //
+				"            float dist = length(" + positionName + " - vec3(lightPosition." + (terrain ? "xyw" : "xyz")
+				+ "));\r\n" + //
+				"            float attenuationStart = lightExtra.y;\r\n" + //
+				"            float attenuationEnd = lightExtra.z;\r\n" + //
+				"            if( dist <= attenuationEnd ) {\r\n" + //
+				"              float attenuationDist = clamp((dist-attenuationStart), 0.001, (attenuationEnd-attenuationStart));\r\n"
+				+ //
+				"              float attenuationFactor = 1.0/(attenuationDist);\r\n" + //
+				"              vec3 lightDirection = -deltaBtwn;\r\n" + //
+				"              vec3 lightFactorContribution = attenuationFactor * lightColor.a * lightColor.rgb * clamp(dot("
+				+ normalName + ", lightDirection), 0.0, 1.0);\r\n" + //
+				"              if(lightFactorContribution.r > 1.0 || lightFactorContribution.g > 1.0 || lightFactorContribution.b > 1.0) {\r\n"
+				+ //
+				"                lightFactorContribution = normalize(lightFactorContribution);\r\n" + //
+				"              }\r\n" + //
+				"              lightFactor += lightFactorContribution + attenuationFactor * lightAmbColor.a * lightAmbColor.rgb;\r\n"
+				+ //
+				"              \r\n" + //
+				"            }\r\n" + //
+				"          }\r\n" + //
+				"        }\r\n";
+	}
 }

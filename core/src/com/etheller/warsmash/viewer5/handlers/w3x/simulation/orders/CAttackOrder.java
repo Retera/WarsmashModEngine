@@ -29,11 +29,16 @@ public class CAttackOrder implements COrder {
 	}
 
 	private void createMoveOrder(final CUnit unit, final CWidget target) {
-		if ((target instanceof CUnit) && !(((CUnit) target).getUnitType().isBuilding())) {
-			this.moveOrder = new CMoveOrder(unit, (CUnit) target);
+		if (!unit.isMovementDisabled()) { // TODO: Check mobility instead
+			if ((target instanceof CUnit) && !(((CUnit) target).getUnitType().isBuilding())) {
+				this.moveOrder = new CMoveOrder(unit, (CUnit) target);
+			}
+			else {
+				this.moveOrder = new CMoveOrder(unit, target.getX(), target.getY());
+			}
 		}
 		else {
-			this.moveOrder = new CMoveOrder(unit, target.getX(), target.getY());
+			this.moveOrder = null;
 		}
 	}
 
@@ -51,7 +56,11 @@ public class CAttackOrder implements COrder {
 													 */)) {
 			range += this.unitAttack.getRangeMotionBuffer();
 		}
-		if (!this.unit.canReach(this.target, range)) {
+		if (!this.unit.canReach(this.target, range)
+				|| (this.unit.distance(this.target) < this.unit.getUnitType().getMinimumAttackRange())) {
+			if (this.moveOrder == null) {
+				return true;
+			}
 			if (this.moveOrder.update(simulation)) {
 				return true; // we just cant reach them
 			}
@@ -61,46 +70,51 @@ public class CAttackOrder implements COrder {
 			return false;
 		}
 		this.wasInRange = true;
-		final float prevX = this.unit.getX();
-		final float prevY = this.unit.getY();
-		final float deltaY = this.target.getY() - prevY;
-		final float deltaX = this.target.getX() - prevX;
-		final double goalAngleRad = Math.atan2(deltaY, deltaX);
-		float goalAngle = (float) Math.toDegrees(goalAngleRad);
-		if (goalAngle < 0) {
-			goalAngle += 360;
-		}
-		float facing = this.unit.getFacing();
-		float delta = goalAngle - facing;
-		final float propulsionWindow = simulation.getGameplayConstants().getAttackHalfAngle();
-		final float turnRate = simulation.getUnitData().getTurnRate(this.unit.getTypeId());
-
-		if (delta < -180) {
-			delta = 360 + delta;
-		}
-		if (delta > 180) {
-			delta = -360 + delta;
-		}
-		final float absDelta = Math.abs(delta);
-
-		if ((absDelta <= 1.0) && (absDelta != 0)) {
-			this.unit.setFacing(goalAngle);
-		}
-		else {
-			float angleToAdd = Math.signum(delta) * (float) Math.toDegrees(turnRate);
-			if (absDelta < Math.abs(angleToAdd)) {
-				angleToAdd = delta;
+		if (!this.unit.isMovementDisabled()) {
+			final float prevX = this.unit.getX();
+			final float prevY = this.unit.getY();
+			final float deltaY = this.target.getY() - prevY;
+			final float deltaX = this.target.getX() - prevX;
+			final double goalAngleRad = Math.atan2(deltaY, deltaX);
+			float goalAngle = (float) Math.toDegrees(goalAngleRad);
+			if (goalAngle < 0) {
+				goalAngle += 360;
 			}
-			facing += angleToAdd;
-			this.unit.setFacing(facing);
-		}
-		if (absDelta < propulsionWindow) {
-			this.wasWithinPropWindow = true;
+			float facing = this.unit.getFacing();
+			float delta = goalAngle - facing;
+			final float propulsionWindow = simulation.getGameplayConstants().getAttackHalfAngle();
+			final float turnRate = simulation.getUnitData().getTurnRate(this.unit.getTypeId());
+
+			if (delta < -180) {
+				delta = 360 + delta;
+			}
+			if (delta > 180) {
+				delta = -360 + delta;
+			}
+			final float absDelta = Math.abs(delta);
+
+			if ((absDelta <= 1.0) && (absDelta != 0)) {
+				this.unit.setFacing(goalAngle);
+			}
+			else {
+				float angleToAdd = Math.signum(delta) * (float) Math.toDegrees(turnRate);
+				if (absDelta < Math.abs(angleToAdd)) {
+					angleToAdd = delta;
+				}
+				facing += angleToAdd;
+				this.unit.setFacing(facing);
+			}
+			if (absDelta < propulsionWindow) {
+				this.wasWithinPropWindow = true;
+			}
+			else {
+				// If this happens, the unit is facing the wrong way, and has to turn before
+				// moving.
+				this.wasWithinPropWindow = false;
+			}
 		}
 		else {
-			// If this happens, the unit is facing the wrong way, and has to turn before
-			// moving.
-			this.wasWithinPropWindow = false;
+			this.wasWithinPropWindow = true;
 		}
 
 		final int cooldownEndTime = this.unit.getCooldownEndTime();
@@ -108,9 +122,22 @@ public class CAttackOrder implements COrder {
 		if (this.wasWithinPropWindow) {
 			if (this.damagePointLaunchTime != 0) {
 				if (currentTurnTick >= this.damagePointLaunchTime) {
-					final int minDamage = this.unitAttack.getMinDamage();
-					final int maxDamage = this.unitAttack.getMaxDamage();
-					final int damage = simulation.getSeededRandom().nextInt(maxDamage - minDamage) + minDamage;
+					int minDamage = this.unitAttack.getMinDamage();
+					final int maxDamage = Math.max(0, this.unitAttack.getMaxDamage());
+					if (minDamage > maxDamage) {
+						minDamage = maxDamage;
+					}
+					final int damage;
+					if (maxDamage == 0) {
+						damage = 0;
+					}
+					else if (minDamage == maxDamage) {
+						damage = minDamage;
+					}
+					else {
+						damage = simulation.getSeededRandom().nextInt(maxDamage - minDamage) + minDamage;
+					}
+					System.out.println(damage + " from " + minDamage + "  to " + maxDamage);
 					this.unitAttack.launch(simulation, this.unit, this.target, damage);
 					this.damagePointLaunchTime = 0;
 				}

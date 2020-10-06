@@ -86,6 +86,7 @@ public class MeleeUI implements CUnitStateListener {
 
 	// TODO remove this & replace with FDF
 	private final Texture activeButtonTexture;
+	private UIFrame inventoryCover;
 
 	public MeleeUI(final DataSource dataSource, final Viewport uiViewport, final FreeTypeFontGenerator fontGenerator,
 			final Scene uiScene, final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener) {
@@ -110,6 +111,7 @@ public class MeleeUI implements CUnitStateListener {
 		// =================================
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 0), this.uiViewport,
 				this.fontGenerator, this.uiScene, this.war3MapViewer);
+		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
 			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
 		}
@@ -142,11 +144,10 @@ public class MeleeUI implements CUnitStateListener {
 		this.resourceBarLumberText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarLumberText", 0);
 		this.resourceBarLumberText.setText("150");
 		this.resourceBarSupplyText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarSupplyText", 0);
-		this.resourceBarSupplyText.setText("153/100");
-		this.resourceBarSupplyText.setColor(Color.RED);
+		this.resourceBarSupplyText.setText("12/100");
 		this.resourceBarUpkeepText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarUpkeepText", 0);
-		this.resourceBarUpkeepText.setText("High Upkeep");
-		this.resourceBarUpkeepText.setColor(Color.RED);
+		this.resourceBarUpkeepText.setText("No Upkeep");
+		this.resourceBarUpkeepText.setColor(Color.GREEN);
 
 		// Create the Time Indicator (clock)
 		this.timeIndicator = (SpriteFrame) this.rootFrame.createFrame("TimeOfDayIndicator", this.rootFrame, 0, 0);
@@ -194,6 +195,8 @@ public class MeleeUI implements CUnitStateListener {
 		this.armorIconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 0);
 		this.armorInfoPanelIconValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconValue", 0);
 		this.armorInfoPanelIconLevel = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconLevel", 0);
+
+		this.inventoryCover = this.rootFrame.createSimpleFrame("SmashConsoleInventoryCover", this.rootFrame, 0);
 
 		this.rootFrame.positionBounds(this.uiViewport);
 		selectUnit(null);

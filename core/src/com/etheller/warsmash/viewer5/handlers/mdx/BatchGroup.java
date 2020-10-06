@@ -63,9 +63,9 @@ public class BatchGroup extends GenericGroup {
 		final DataTexture boneTexture = instance.boneTexture;
 		final DataTexture unitLightsTexture = lightManager.getUnitLightsTexture();
 
-		unitLightsTexture.bind(16);
-		shader.setUniformi("u_lightTexture", 16);
-		shader.setUniformf("u_lightCount", unitLightsTexture.getHeight());
+		unitLightsTexture.bind(14);
+		shader.setUniformi("u_lightTexture", 14);
+		shader.setUniformf("u_lightCount", unitLightsTexture.getHeight() - 0.5f);
 
 		// Instances of models with no bones don't have a bone texture.
 		if (boneTexture != null) {
@@ -103,6 +103,7 @@ public class BatchGroup extends GenericGroup {
 				shader.setUniform4fv("u_geosetColor", geosetColor, 0, geosetColor.length);
 
 				shader.setUniformf("u_layerAlpha", layerAlpha);
+				shader.setUniformf("u_unshaded", layer.unshaded);
 
 				shader.setUniform2fv("u_uvTrans", uvAnim, 0, 2);
 				shader.setUniform2fv("u_uvRot", uvAnim, 2, 2);

@@ -62,7 +62,7 @@ public class CSimulation {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			if (i < playerInfos.size()) {
 				final Player playerInfo = playerInfos.get(i);
-				this.players.add(new CPlayer(playerInfo.getId().getValue(), CMapControl.values()[playerInfo.getType()],
+				this.players.add(new CPlayer(playerInfo.getId(), CMapControl.values()[playerInfo.getType()],
 						playerInfo.getName(), CRace.parseRace(playerInfo.getRace()), playerInfo.getStartLocation()));
 			}
 			else {

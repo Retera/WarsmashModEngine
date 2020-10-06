@@ -27,6 +27,7 @@ public enum RenderMathUtils {
 	public static final float[] FLOAT_VEC3_ZERO = new float[] { 0, 0, 0 };
 	public static final float[] FLOAT_QUAT_DEFAULT = new float[] { 0, 0, 0, 1 };
 	public static final float[] FLOAT_VEC3_ONE = new float[] { 1, 1, 1 };
+	public static final float HALF_PI = (float) (Math.PI / 2.0);
 
 	// copied from ghostwolf and
 	// https://www.blend4web.com/api_doc/libs_gl-matrix2.js.html

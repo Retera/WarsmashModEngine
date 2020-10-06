@@ -15,7 +15,7 @@ import java.util.Set;
 import com.etheller.warsmash.util.StringBundle;
 
 public class DataTable implements ObjectData {
-	private static final boolean DEBUG = false;
+	public static boolean DEBUG = false;
 
 	Map<StringKey, Element> dataTable = new LinkedHashMap<>();
 
@@ -182,7 +182,7 @@ public class DataTable implements ObjectData {
 			if (input.startsWith("O;")) {
 				continue;
 			}
-			if (input.contains("X1;")) {
+			if (input.contains("X1;") || input.endsWith(";X1")) {
 				rowStartCount++;
 				col = 0;
 			}

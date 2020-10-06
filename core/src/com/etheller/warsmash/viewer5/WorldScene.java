@@ -22,8 +22,8 @@ public class WorldScene extends Scene {
 
 	public Grid grid;
 
-	public WorldScene(final ModelViewer viewer) {
-		super(viewer);
+	public WorldScene(final ModelViewer viewer, final SceneLightManager lightManager) {
+		super(viewer, lightManager);
 		this.grid = new Grid(-100000, -100000, 200000, 200000, 200000, 200000);
 	}
 

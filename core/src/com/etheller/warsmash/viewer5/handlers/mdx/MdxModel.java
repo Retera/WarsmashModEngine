@@ -87,7 +87,14 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 		// Initialize the bounds.
 		final Extent extent = parser.getExtent();
-		this.bounds.fromExtents(extent.getMin(), extent.getMax());
+		final float[] min = extent.getMin();
+		final float[] max = extent.getMax();
+		for (int i = 0; i < 3; i++) {
+			if (min[i] > max[i]) {
+				min[i] = max[i] = 0;
+			}
+		}
+		this.bounds.fromExtents(min, max);
 
 		// Sequences
 		this.sequences.addAll(parser.getSequences());

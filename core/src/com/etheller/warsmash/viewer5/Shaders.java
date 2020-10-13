@@ -86,32 +86,31 @@ public class Shaders {
 				+ ", lightDirection), 0.0, 1.0);\r\n" + //
 				"            if(lightFactorContribution.r > 1.0 || lightFactorContribution.g > 1.0 || lightFactorContribution.b > 1.0) {\r\n"
 				+ //
-				"              lightFactorContribution = normalize(lightFactorContribution);\r\n" + //
+				"              lightFactorContribution = clamp(lightFactorContribution, 0.0, 1.0);\r\n" + //
 				"            }\r\n" + //
 				"            lightFactor += lightFactorContribution + lightAmbColor.a * lightAmbColor.rgb;\r\n" + //
 				"          } else {\r\n" + //
 				"            // Omnidirectional light;\r\n" + //
 				"            vec3 deltaBtwn = " + positionName + " - lightPosition.xyz;\r\n" + //
-				"            float dist = length(" + positionName + " - vec3(lightPosition." + (terrain ? "xyw" : "xyz")
-				+ "));\r\n" + //
-				"            float attenuationStart = lightExtra.y;\r\n" + //
-				"            float attenuationEnd = lightExtra.z;\r\n" + //
-				"            if( dist <= attenuationEnd ) {\r\n" + //
-				"              float attenuationDist = clamp((dist-attenuationStart), 0.001, (attenuationEnd-attenuationStart));\r\n"
-				+ //
-				"              float attenuationFactor = 1.0/(attenuationDist);\r\n" + //
-				"              vec3 lightDirection = -deltaBtwn;\r\n" + //
-				"              vec3 lightFactorContribution = attenuationFactor * lightColor.a * lightColor.rgb * clamp(dot("
+				"            float dist = length(" + positionName + " - vec3(lightPosition." + (terrain ? "xyz" : "xyz")
+				+ ")) / 64.0 + 1.0;\r\n" + //
+				"            vec3 lightDirection = normalize(-deltaBtwn);\r\n" + //
+				"            vec3 lightFactorContribution = (lightColor.a/(pow(dist, 2.0))) * lightColor.rgb * clamp(dot("
 				+ normalName + ", lightDirection), 0.0, 1.0);\r\n" + //
-				"              if(lightFactorContribution.r > 1.0 || lightFactorContribution.g > 1.0 || lightFactorContribution.b > 1.0) {\r\n"
+				"            if(lightFactorContribution.r > 1.0 || lightFactorContribution.g > 1.0 || lightFactorContribution.b > 1.0) {\r\n"
 				+ //
-				"                lightFactorContribution = normalize(lightFactorContribution);\r\n" + //
-				"              }\r\n" + //
-				"              lightFactor += lightFactorContribution + attenuationFactor * lightAmbColor.a * lightAmbColor.rgb;\r\n"
-				+ //
-				"              \r\n" + //
+				"              lightFactorContribution = clamp(lightFactorContribution, 0.0, 1.0);\r\n" + //
 				"            }\r\n" + //
+				"            lightFactor += lightFactorContribution + (lightAmbColor.a/(pow(dist, 2.0))) * lightAmbColor.rgb;\r\n"
+				+ //
 				"          }\r\n" + //
-				"        }\r\n";
+				"        }\r\n";// + //
+
+//				"        vec4 sRGB = vec4(lightFactor, 1.0);" + //
+//				"        bvec4 cutoff = lessThan(sRGB, vec4(0.04045));" + //
+//				"        vec4 higher = pow((sRGB + vec4(0.055))/vec4(1.055), vec4(2.4));" + //
+//				"        vec4 lower = sRGB/vec4(12.92);" + //
+//				"" + //
+//				"        lightFactor = (higher * (vec4(1.0) - vec4(cutoff)) + lower * vec4(cutoff)).xyz;";
 	}
 }

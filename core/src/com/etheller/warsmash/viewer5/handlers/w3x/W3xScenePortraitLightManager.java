@@ -52,9 +52,9 @@ public class W3xScenePortraitLightManager implements SceneLightManager, W3xScene
 		this.unitLightCount = 0;
 		this.lightDataCopyHeap.clear();
 		int offset = 0;
-		if (this.viewer.dncTarget != null) {
-			if (!this.viewer.dncTarget.lights.isEmpty()) {
-				this.viewer.dncTarget.lights.get(0).bind(0, this.lightDataCopyHeap);
+		if (this.viewer.dncUnitDay != null) {
+			if (!this.viewer.dncUnitDay.lights.isEmpty()) {
+				this.viewer.dncUnitDay.lights.get(0).bind(0, this.lightDataCopyHeap);
 				offset += 16;
 				this.unitLightCount++;
 			}

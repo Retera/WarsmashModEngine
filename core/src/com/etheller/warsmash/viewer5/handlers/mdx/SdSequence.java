@@ -102,7 +102,8 @@ public final class SdSequence<TYPE> {
 			if (!this.constant) {
 				// If there is no opening keyframe for this sequence, inject one
 				// with the default value.
-				if (framesBuilder.get(0) != start) {
+				final boolean hasStart = framesBuilder.get(0) == start;
+				if (!hasStart) {
 					framesBuilder.add(start);
 					valuesBuilder.add(defval);
 
@@ -116,11 +117,12 @@ public final class SdSequence<TYPE> {
 				// with the default value.
 				if (framesBuilder.get(framesBuilder.size() - 1) != end) {
 					framesBuilder.add(end);
-					valuesBuilder.add(valuesBuilder.get(valuesBuilder.size() - 1));
+					final int sourceIndex = hasStart ? 0 : (valuesBuilder.size() - 1);
+					valuesBuilder.add(valuesBuilder.get(sourceIndex));
 
 					if (interpolationType > 1) {
-						inTansBuilder.add(inTansBuilder.get(inTansBuilder.size() - 1));
-						outTansBuilder.add(outTansBuilder.get(outTansBuilder.size() - 1));
+						inTansBuilder.add(inTansBuilder.get(sourceIndex));
+						outTansBuilder.add(outTansBuilder.get(sourceIndex));
 					}
 				}
 			}

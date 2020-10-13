@@ -763,10 +763,12 @@ public class MdxComplexInstance extends ModelInstance {
 	}
 
 	public void setFrameByRatio(final float ratioOfAnimationCompleted) {
-		final Sequence currentlyPlayingSequence = ((MdxModel) this.model).sequences.get(this.sequence);
-		this.floatingFrame = currentlyPlayingSequence.getInterval()[0]
-				+ ((currentlyPlayingSequence.getInterval()[1] - currentlyPlayingSequence.getInterval()[0])
-						* ratioOfAnimationCompleted);
-		this.frame = (int) this.floatingFrame;
+		if (this.sequence != -1) {
+			final Sequence currentlyPlayingSequence = ((MdxModel) this.model).sequences.get(this.sequence);
+			this.floatingFrame = currentlyPlayingSequence.getInterval()[0]
+					+ ((currentlyPlayingSequence.getInterval()[1] - currentlyPlayingSequence.getInterval()[0])
+							* ratioOfAnimationCompleted);
+			this.frame = (int) this.floatingFrame;
+		}
 	}
 }

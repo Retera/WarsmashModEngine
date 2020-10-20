@@ -20,6 +20,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
@@ -59,15 +60,17 @@ public class CSimulation {
 		this.pathfindingProcessor = new CPathfindingProcessor(pathingGrid, this.worldCollision);
 		this.seededRandom = seededRandom;
 		this.players = new ArrayList<>();
-		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+		for (int i = 0; i < (WarsmashConstants.MAX_PLAYERS - 4); i++) {
+			CPlayer newPlayer;
 			if (i < playerInfos.size()) {
 				final Player playerInfo = playerInfos.get(i);
-				this.players.add(new CPlayer(playerInfo.getId(), CMapControl.values()[playerInfo.getType()],
-						playerInfo.getName(), CRace.parseRace(playerInfo.getRace()), playerInfo.getStartLocation()));
+				newPlayer = new CPlayer(playerInfo.getId(), CMapControl.values()[playerInfo.getType()],
+						playerInfo.getName(), CRace.parseRace(playerInfo.getRace()), playerInfo.getStartLocation());
 			}
 			else {
-				this.players.add(new CPlayer(i, CMapControl.NONE, "Default string", CRace.OTHER, new float[] { 0, 0 }));
+				newPlayer = new CPlayer(i, CMapControl.NONE, "Default string", CRace.OTHER, new float[] { 0, 0 });
 			}
+			this.players.add(newPlayer);
 		}
 		this.players.add(new CPlayer(this.players.size(), CMapControl.NEUTRAL,
 				miscData.getLocalizedString("WESTRING_PLAYER_NA"), CRace.OTHER, new float[] { 0, 0 }));
@@ -75,8 +78,14 @@ public class CSimulation {
 				miscData.getLocalizedString("WESTRING_PLAYER_NV"), CRace.OTHER, new float[] { 0, 0 }));
 		this.players.add(new CPlayer(this.players.size(), CMapControl.NEUTRAL,
 				miscData.getLocalizedString("WESTRING_PLAYER_NE"), CRace.OTHER, new float[] { 0, 0 }));
-		this.players.add(new CPlayer(this.players.size(), CMapControl.NEUTRAL,
-				miscData.getLocalizedString("WESTRING_PLAYER_NP"), CRace.OTHER, new float[] { 0, 0 }));
+		final CPlayer neutralPassive = new CPlayer(this.players.size(), CMapControl.NEUTRAL,
+				miscData.getLocalizedString("WESTRING_PLAYER_NP"), CRace.OTHER, new float[] { 0, 0 });
+		this.players.add(neutralPassive);
+		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+			final CPlayer cPlayer = this.players.get(i);
+			cPlayer.setAlliance(neutralPassive, CAllianceType.PASSIVE, true);
+			neutralPassive.setAlliance(cPlayer, CAllianceType.PASSIVE, true);
+		}
 
 	}
 
@@ -94,8 +103,8 @@ public class CSimulation {
 
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing, final BufferedImage buildingPathingPixelMap) {
-		final CUnit unit = this.unitData.create(this, playerIndex, this.handleIdAllocator.createId(), typeId, x, y,
-				facing, buildingPathingPixelMap);
+		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
+				this.simulationRenderController, this.handleIdAllocator);
 		this.units.add(unit);
 		this.worldCollision.addUnit(unit);
 		return unit;

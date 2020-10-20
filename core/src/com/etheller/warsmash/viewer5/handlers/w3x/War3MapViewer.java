@@ -76,6 +76,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderAttackProjecti
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitTypeData;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
@@ -86,6 +88,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityM
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
@@ -109,6 +112,9 @@ public class War3MapViewer extends ModelViewer {
 	private static final War3ID ITEM_FILE = War3ID.fromString("ifil");
 	private static final War3ID UNIT_PATHING = War3ID.fromString("upat");
 	private static final War3ID DESTRUCTABLE_PATHING = War3ID.fromString("bptx");
+	private static final War3ID ELEVATION_SAMPLE_RADIUS = War3ID.fromString("uerd");
+	private static final War3ID MAX_PITCH = War3ID.fromString("umxp");
+	private static final War3ID MAX_ROLL = War3ID.fromString("umxr");
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
 	private static final float[] rayHeap = new float[6];
@@ -131,7 +137,7 @@ public class War3MapViewer extends ModelViewer {
 	public MappedData doodadsData = new MappedData();
 	public MappedData doodadMetaData = new MappedData();
 	public MappedData destructableMetaData = new MappedData();
-	public List<Doodad> doodads = new ArrayList<>();
+	public List<RenderDoodad> doodads = new ArrayList<>();
 	public List<TerrainDoodad> terrainDoodads = new ArrayList<>();
 	public boolean doodadsReady;
 	public boolean unitsAndItemsLoaded;
@@ -164,6 +170,7 @@ public class War3MapViewer extends ModelViewer {
 	public CSimulation simulation;
 	private float updateTime;
 
+	// for World Editor, I think
 	public Vector2[] startLocations = new Vector2[WarsmashConstants.MAX_PLAYERS];
 
 	private final DynamicShadowManager dynamicShadowManager = new DynamicShadowManager();
@@ -175,7 +182,9 @@ public class War3MapViewer extends ModelViewer {
 	private final List<SelectionCircleSize> selectionCircleSizes = new ArrayList<>();
 
 	private final Map<CUnit, RenderUnit> unitToRenderPeer = new HashMap<>();
+	private final Map<War3ID, RenderUnitTypeData> unitIdToTypeData = new HashMap<>();
 	private GameUI gameUI;
+	private Vector3 lightDirection;
 
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
@@ -269,6 +278,11 @@ public class War3MapViewer extends ModelViewer {
 				this.miscData.readTXT(miscDataTxtStream, true);
 			}
 		}
+		final Element light = this.miscData.get("Light");
+		final float lightX = light.getFieldFloatValue("Direction", 0);
+		final float lightY = light.getFieldFloatValue("Direction", 1);
+		final float lightZ = light.getFieldFloatValue("Direction", 2);
+		this.lightDirection = new Vector3(lightX, lightY, lightZ).nor();
 		this.unitGlobalStrings = new DataTable(worldEditStrings);
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("Units\\UnitGlobalStrings.txt")) {
 			this.unitGlobalStrings.readTXT(miscDataTxtStream, true);
@@ -381,9 +395,9 @@ public class War3MapViewer extends ModelViewer {
 		this.confirmationInstance.setSequence(0);
 		this.confirmationInstance.setScene(this.worldScene);
 
-		final Warcraft3MapObjectData modifications = this.mapMpq.readModifications();
-		this.simulation = new CSimulation(this.miscData, modifications.getUnits(), modifications.getAbilities(),
-				new SimulationRenderController() {
+		this.allObjectData = this.mapMpq.readModifications();
+		this.simulation = new CSimulation(this.miscData, this.allObjectData.getUnits(),
+				this.allObjectData.getAbilities(), new SimulationRenderController() {
 					private final Map<String, UnitSound> keyToCombatSound = new HashMap<>();
 
 					@Override
@@ -493,23 +507,37 @@ public class War3MapViewer extends ModelViewer {
 				this.seededRandom, w3iFile.getPlayers());
 
 		if (this.doodadsAndDestructiblesLoaded) {
-			this.loadDoodadsAndDestructibles(modifications);
+			this.loadDoodadsAndDestructibles(this.allObjectData);
 		}
 		else {
 			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
 		}
 
-		if (this.unitsAndItemsLoaded) {
-			this.loadUnitsAndItems(modifications);
-		}
-		else {
-			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
-		}
-
-		this.terrain.initShadows();
 		this.terrain.createWaves();
 
 		loadLightsAndShading(tileset);
+	}
+
+	/**
+	 * Loads the map information that should be loaded after UI, such as units, who
+	 * need to be able to setup their UI counterparts (icons, etc) for their
+	 * abilities while loading. This allows the dynamic creation of units while the
+	 * game is playing to better share code with the startup sequence's creation of
+	 * units.
+	 *
+	 * @throws IOException
+	 */
+	public void loadAfterUI() throws IOException {
+		if (this.unitsAndItemsLoaded) {
+			this.loadUnitsAndItems(this.allObjectData);
+		}
+		else {
+			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
+		}
+
+		// After we finish loading units, we need to update & create the stored shadow
+		// information for all unit shadows
+		this.terrain.initShadows();
 	}
 
 	private void loadLightsAndShading(final char tileset) {
@@ -605,11 +633,11 @@ public class War3MapViewer extends ModelViewer {
 				}
 
 				if (type == WorldEditorDataType.DESTRUCTIBLES) {
-					this.doodads
-							.add(new Destructable(this, model, row, doodad, type, maxPitch, maxRoll, doodad.getLife()));
+					this.doodads.add(new RenderDestructable(this, model, row, doodad, type, maxPitch, maxRoll,
+							doodad.getLife()));
 				}
 				else {
-					this.doodads.add(new Doodad(this, model, row, doodad, type, maxPitch, maxRoll));
+					this.doodads.add(new RenderDoodad(this, model, row, doodad, type, maxPitch, maxRoll));
 				}
 			}
 		}
@@ -841,8 +869,9 @@ public class War3MapViewer extends ModelViewer {
 						final float angle = (float) Math.toDegrees(unit.getAngle());
 						final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), unit.getPlayer(),
 								unit.getLocation()[0], unit.getLocation()[1], angle, buildingPathingPixelMap);
+						final RenderUnitTypeData typeData = getUnitTypeData(unit.getId(), row);
 						final RenderUnit renderUnit = new RenderUnit(this, model, row, unit, soundset, portraitModel,
-								simulationUnit);
+								simulationUnit, typeData);
 						this.unitToRenderPeer.put(simulationUnit, renderUnit);
 						this.units.add(renderUnit);
 						if (unitShadowSplat != null) {
@@ -879,6 +908,16 @@ public class War3MapViewer extends ModelViewer {
 		this.anyReady = true;
 	}
 
+	private RenderUnitTypeData getUnitTypeData(final War3ID key, final MutableGameObject row) {
+		RenderUnitTypeData unitTypeData = this.unitIdToTypeData.get(key);
+		if (unitTypeData == null) {
+			unitTypeData = new RenderUnitTypeData(row.getFieldAsFloat(MAX_PITCH, 0), row.getFieldAsFloat(MAX_ROLL, 0),
+					row.getFieldAsFloat(ELEVATION_SAMPLE_RADIUS, 0));
+			this.unitIdToTypeData.put(key, unitTypeData);
+		}
+		return unitTypeData;
+	}
+
 	@Override
 	public void update() {
 		if (this.anyReady) {
@@ -903,13 +942,15 @@ public class War3MapViewer extends ModelViewer {
 					SequenceUtils.randomStandSequence(mdxComplexInstance);
 				}
 			}
-			for (final Doodad item : this.doodads) {
+			for (final RenderDoodad item : this.doodads) {
 				final ModelInstance instance = item.instance;
-				if ((instance instanceof MdxComplexInstance) && (instance != this.confirmationInstance)) {
+				if (instance instanceof MdxComplexInstance) {
 					final MdxComplexInstance mdxComplexInstance = (MdxComplexInstance) instance;
 					if ((mdxComplexInstance.sequence == -1)
-							|| (mdxComplexInstance.sequenceEnded && (((MdxModel) mdxComplexInstance.model).sequences
-									.get(mdxComplexInstance.sequence).getFlags() == 0))) {
+							|| (mdxComplexInstance.sequenceEnded/*
+																 * && (((MdxModel) mdxComplexInstance.model).sequences
+																 * .get(mdxComplexInstance.sequence).getFlags() == 0)
+																 */)) {
 						SequenceUtils.randomSequence(mdxComplexInstance, item.getAnimation(), SequenceUtils.EMPTY,
 								true);
 					}
@@ -1178,6 +1219,8 @@ public class War3MapViewer extends ModelViewer {
 	private float selectionCircleScaleFactor;
 	private DataTable worldEditData;
 	private WorldEditStrings worldEditStrings;
+	private Warcraft3MapObjectData allObjectData;
+	private AbilityDataUI abilityDataUI;
 
 	/**
 	 * Returns a power of two size for the given target capacity.
@@ -1199,14 +1242,15 @@ public class War3MapViewer extends ModelViewer {
 		for (final RenderUnit unit : this.selected) {
 			for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
 				if (ability instanceof CAbilityMove) {
-					ability.checkCanUse(this.simulation, unit.getSimulationUnit(),
+					ability.checkCanUse(this.simulation, unit.getSimulationUnit(), OrderIds.smart,
 							BooleanAbilityActivationReceiver.INSTANCE);
 					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
-						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), mousePosHeap,
+						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), OrderIds.smart, mousePosHeap,
 								PointAbilityTargetCheckReceiver.INSTANCE);
 						final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
 						if (target != null) {
-							ability.onOrder(this.simulation, unit.getSimulationUnit(), mousePosHeap, false);
+							ability.onOrder(this.simulation, unit.getSimulationUnit(), OrderIds.smart, mousePosHeap,
+									false);
 							ordered = true;
 						}
 						else {
@@ -1231,14 +1275,15 @@ public class War3MapViewer extends ModelViewer {
 		for (final RenderUnit unit : this.selected) {
 			for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
 				if (ability instanceof CAbilityAttack) {
-					ability.checkCanUse(this.simulation, unit.getSimulationUnit(),
+					ability.checkCanUse(this.simulation, unit.getSimulationUnit(), OrderIds.smart,
 							BooleanAbilityActivationReceiver.INSTANCE);
 					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
-						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), target.getSimulationUnit(),
-								CWidgetAbilityTargetCheckReceiver.INSTANCE);
+						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), OrderIds.smart,
+								target.getSimulationUnit(), CWidgetAbilityTargetCheckReceiver.INSTANCE);
 						final CWidget targetWidget = CWidgetAbilityTargetCheckReceiver.INSTANCE.getTarget();
 						if (targetWidget != null) {
-							ability.onOrder(this.simulation, unit.getSimulationUnit(), targetWidget, false);
+							ability.onOrder(this.simulation, unit.getSimulationUnit(), OrderIds.smart, targetWidget,
+									false);
 							ordered = true;
 						}
 						else {
@@ -1308,7 +1353,7 @@ public class War3MapViewer extends ModelViewer {
 	@Override
 	public SceneLightManager createLightManager(final boolean simple) {
 		if (simple) {
-			return new W3xScenePortraitLightManager(this);
+			return new W3xScenePortraitLightManager(this, this.lightDirection);
 		}
 		else {
 			return new W3xSceneWorldLightManager(this);
@@ -1321,12 +1366,14 @@ public class War3MapViewer extends ModelViewer {
 
 	public void setGameUI(final GameUI gameUI) {
 		this.gameUI = gameUI;
-		for (final RenderUnit unit : this.units) {
-			unit.initAbilityUI(this);
-		}
+		this.abilityDataUI = new AbilityDataUI(this.allObjectData.getAbilities(), gameUI);
 	}
 
 	public GameUI getGameUI() {
 		return this.gameUI;
+	}
+
+	public AbilityDataUI getAbilityDataUI() {
+		return this.abilityDataUI;
 	}
 }

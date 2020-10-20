@@ -147,6 +147,7 @@ public abstract class Scene {
 
 	public boolean removeInstance(final ModelInstance instance) {
 		if (instance.scene == this) {
+			instance.removeLights(this);
 			innerRemove(instance);
 
 			instance.scene = null;
@@ -219,7 +220,6 @@ public abstract class Scene {
 		this.emitterObjectUpdater.update(dt);
 		this.updatedParticles = this.emitterObjectUpdater.objects.size();
 
-		this.lightManager.update();
 	}
 
 	protected abstract void innerUpdate(float dt, int frame);
@@ -239,6 +239,7 @@ public abstract class Scene {
 			gl.glDepthMask(true);
 			gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 		}
+		this.lightManager.update();
 	}
 
 	public void renderOpaque() {

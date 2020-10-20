@@ -20,7 +20,7 @@ public class TextureAnimation extends AnimatedObject {
 	}
 
 	public int getRotation(final float[] out, final int sequence, final int frame, final int counter) {
-		return this.getVectorValue(out, AnimationMap.KTAR.getWar3id(), sequence, frame, counter,
+		return this.getQuatValue(out, AnimationMap.KTAR.getWar3id(), sequence, frame, counter,
 				RenderMathUtils.FLOAT_QUAT_DEFAULT);
 	}
 

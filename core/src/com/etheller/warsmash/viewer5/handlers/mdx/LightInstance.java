@@ -88,15 +88,23 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 	public void update(final Scene scene) {
 		this.light.getVisibility(scalarHeap, this.instance.sequence, this.instance.frame, this.instance.counter);
 		this.visible = scalarHeap[0] > 0;
+		updateVisibility(scene, this.visible);
+	}
+
+	public void remove(final Scene scene) {
+		updateVisibility(scene, false);
+	}
+
+	private void updateVisibility(final Scene scene, final boolean visible) {
 		if (scene != null) {
-			if (this.loadedInScene != this.visible) {
-				if (this.visible) {
+			if (this.loadedInScene != visible) {
+				if (visible) {
 					scene.addLight(this);
 				}
 				else {
 					scene.removeLight(this);
 				}
-				this.loadedInScene = this.visible;
+				this.loadedInScene = visible;
 			}
 		}
 	}

@@ -890,7 +890,8 @@ public class Terrain {
 
 		unitLightsTexture.bind(21);
 		gl.glUniform1i(this.groundShader.getUniformLocation("lightTexture"), 21);
-		gl.glUniform1f(this.groundShader.getUniformLocation("lightCount"), unitLightsTexture.getHeight() - 0.5f);
+		gl.glUniform1f(this.groundShader.getUniformLocation("lightCount"), lightManager.getTerrainLightCount());
+		gl.glUniform1f(this.groundShader.getUniformLocation("lightTextureHeight"), unitLightsTexture.getHeight());
 
 		gl.glUniformMatrix4fv(this.groundShader.getUniformLocation("DepthBiasMVP"), 1, false,
 				dynamicShadowManager.getDepthBiasMVP().val, 0);
@@ -989,8 +990,9 @@ public class Terrain {
 		final DataTexture terrainLightsTexture = lightManager.getTerrainLightsTexture();
 
 		terrainLightsTexture.bind(21);
-		gl.glUniform1i(shader.getUniformLocation("lightTexture"), 21);
-		gl.glUniform1f(shader.getUniformLocation("lightCount"), terrainLightsTexture.getHeight() - 0.5f);
+		gl.glUniform1i(shader.getUniformLocation("u_lightTexture"), 21);
+		gl.glUniform1f(shader.getUniformLocation("u_lightCount"), lightManager.getTerrainLightCount());
+		gl.glUniform1f(shader.getUniformLocation("u_lightTextureHeight"), terrainLightsTexture.getHeight());
 
 		// Render the cliffs
 		for (final SplatModel splat : this.uberSplatModels) {
@@ -1024,7 +1026,8 @@ public class Terrain {
 
 		unitLightsTexture.bind(21);
 		gl.glUniform1i(this.waterShader.getUniformLocation("lightTexture"), 21);
-		gl.glUniform1f(this.waterShader.getUniformLocation("lightCount"), unitLightsTexture.getHeight() - 0.5f);
+		gl.glUniform1f(this.waterShader.getUniformLocation("lightCount"), lightManager.getTerrainLightCount());
+		gl.glUniform1f(this.waterShader.getUniformLocation("lightCountHeight"), unitLightsTexture.getHeight());
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
@@ -1080,7 +1083,8 @@ public class Terrain {
 
 		unitLightsTexture.bind(21);
 		gl.glUniform1i(this.cliffShader.getUniformLocation("lightTexture"), 21);
-		gl.glUniform1f(this.cliffShader.getUniformLocation("lightCount"), unitLightsTexture.getHeight() - 0.5f);
+		gl.glUniform1f(this.cliffShader.getUniformLocation("lightCount"), lightManager.getTerrainLightCount());
+		gl.glUniform1f(this.cliffShader.getUniformLocation("lightTextureHeight"), unitLightsTexture.getHeight());
 
 		this.cliffShader.setUniformi("shadowMap", 2);
 		gl.glActiveTexture(GL30.GL_TEXTURE2);

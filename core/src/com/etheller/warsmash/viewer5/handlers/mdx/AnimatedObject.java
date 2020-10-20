@@ -69,7 +69,7 @@ public class AnimatedObject {
 		return -1;
 	}
 
-	public int getQuadValue(final float[] out, final War3ID name, final int sequence, final int frame,
+	public int getQuatValue(final float[] out, final War3ID name, final int sequence, final int frame,
 			final int counter, final float[] defaultValue) {
 		if (sequence != -1) {
 			final Sd<?> animation = this.timelines.get(name);

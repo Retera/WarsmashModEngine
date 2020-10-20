@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 
-public class Doodad {
+public class RenderDoodad {
 	private static final int SAMPLE_RADIUS = 4;
 	private static final War3ID TEX_FILE = War3ID.fromString("btxf");
 	private static final War3ID TEX_ID = War3ID.fromString("btxi");
@@ -20,7 +20,7 @@ public class Doodad {
 	private final float maxPitch;
 	private final float maxRoll;
 
-	public Doodad(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
+	public RenderDoodad(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final com.etheller.warsmash.parsers.w3x.doo.Doodad doodad, final WorldEditorDataType type,
 			final float maxPitch, final float maxRoll) {
 		this.maxPitch = maxPitch;

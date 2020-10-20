@@ -11,7 +11,7 @@ public class AnimationTokens {
 		MORPH,
 		PORTRAIT,
 		SLEEP,
-		SPELL,
+//		SPELL,
 		STAND,
 		WALK;
 	}

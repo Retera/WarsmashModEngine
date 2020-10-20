@@ -8,14 +8,16 @@ public class W3xShaders {
 		}
 
 		public static final String vert = "\r\n" + //
+				"\r\n" + //
 				"    uniform mat4 u_mvp;\r\n" + //
 				"    uniform sampler2D u_heightMap;\r\n" + //
 				"    uniform vec2 u_pixel;\r\n" + //
 				"    uniform vec2 u_size;\r\n" + //
 				"    uniform vec2 u_shadowPixel;\r\n" + //
 				"    uniform vec2 u_centerOffset;\r\n" + //
-				"    uniform sampler2D lightTexture;\r\n" + //
-				"    uniform float lightCount;\r\n" + //
+				"    uniform sampler2D u_lightTexture;\r\n" + //
+				"    uniform float u_lightCount;\r\n" + //
+				"    uniform float u_lightTextureHeight;\r\n" + //
 				"    attribute vec3 a_position;\r\n" + //
 				"    attribute vec2 a_uv;\r\n" + //
 				"    varying vec2 v_uv;\r\n" + //
@@ -42,7 +44,9 @@ public class W3xShaders {
 				"      vec3 myposition = vec3(a_position.xy, height * 128.0 + a_position.z);\r\n" + //
 				"      gl_Position = u_mvp * vec4(myposition.xyz, 1.0);\r\n" + //
 				"      a_positionHeight = a_position.z;\r\n" + //
-				Shaders.lightSystem("v_normal", "myposition", "lightTexture", "lightCount", true) + "\r\n" + //
+				Shaders.lightSystem("v_normal", "myposition", "u_lightTexture", "u_lightTextureHeight", "u_lightCount",
+						true)
+				+ "\r\n" + //
 				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 				"    }\r\n" + //
 				" ";

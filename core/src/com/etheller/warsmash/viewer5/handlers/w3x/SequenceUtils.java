@@ -232,4 +232,8 @@ public class SequenceUtils {
 			return null;
 		}
 	}
+
+	public static Sequence randomSequence(final MdxComplexInstance target, final PrimaryTag animationName) {
+		return randomSequence(target, animationName, EMPTY, false);
+	}
 }

@@ -6,35 +6,70 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.StringsToExternalizeLater;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CMoveOrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CPatrolOrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 
 public class CAbilityMove implements CAbility {
-	public static final int ORDER_ID = 859999; // fake, later will use WC3 one probably
-	public static CAbilityMove INSTANCE = new CAbilityMove();
+	private final int handleId;
+
+	public CAbilityMove(final int handleId) {
+		this.handleId = handleId;
+	}
 
 	@Override
-	public void checkCanUse(final CSimulation game, final CUnit unit, final AbilityActivationReceiver receiver) {
+	public void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final CWidget target,
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
 			final AbilityTargetCheckReceiver<CWidget> receiver) {
-		receiver.mustTargetType(TargetType.POINT);
+		switch (orderId) {
+		case OrderIds.smart:
+		case OrderIds.patrol:
+			if (target instanceof CUnit) {
+				receiver.targetOk(target);
+			}
+			else {
+				receiver.mustTargetType(TargetType.UNIT_OR_POINT);
+			}
+			break;
+		default:
+			receiver.orderIdNotAccepted();
+			break;
+		}
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final Vector2 target,
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final Vector2 target,
 			final AbilityTargetCheckReceiver<Vector2> receiver) {
-		receiver.targetOk(target);
+		switch (orderId) {
+		case OrderIds.smart:
+		case OrderIds.move:
+		case OrderIds.patrol:
+			receiver.targetOk(target);
+			break;
+		default:
+			receiver.orderIdNotAccepted();
+			break;
+		}
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit,
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
-		receiver.mustTargetType(TargetType.POINT);
+		switch (orderId) {
+		case OrderIds.holdposition:
+			receiver.targetOk(null);
+			break;
+		default:
+			receiver.orderIdNotAccepted();
+			break;
+		}
 	}
 
 	@Override
@@ -48,23 +83,30 @@ public class CAbilityMove implements CAbility {
 	}
 
 	@Override
-	public void onOrder(final CSimulation game, final CUnit caster, final CWidget target, final boolean queue) {
+	public void onOrder(final CSimulation game, final CUnit caster, final int orderId, final CWidget target,
+			final boolean queue) {
+		caster.order(new CPatrolOrder(caster, orderId, (CUnit) target), queue);
+	}
+
+	@Override
+	public void onOrder(final CSimulation game, final CUnit caster, final int orderId, final Vector2 target,
+			final boolean queue) {
+		caster.order(new CMoveOrder(caster, orderId, target.x, target.y), queue);
+	}
+
+	@Override
+	public void onOrderNoTarget(final CSimulation game, final CUnit caster, final int orderId, final boolean queue) {
 		throw new IllegalArgumentException(StringsToExternalizeLater.MUST_TARGET_POINT);
 	}
 
 	@Override
-	public void onOrder(final CSimulation game, final CUnit caster, final Vector2 target, final boolean queue) {
-		caster.order(new CMoveOrder(caster, target.x, target.y), queue);
+	public <T> T visit(final CAbilityVisitor<T> visitor) {
+		return visitor.accept(this);
 	}
 
 	@Override
-	public void onOrderNoTarget(final CSimulation game, final CUnit caster, final boolean queue) {
-		throw new IllegalArgumentException(StringsToExternalizeLater.MUST_TARGET_POINT);
-	}
-
-	@Override
-	public int getOrderId() {
-		return ORDER_ID;
+	public int getHandleId() {
+		return this.handleId;
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -252,6 +253,15 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	@Override
 	public void addSetPoint(final SetPoint setPointDefinition) {
+		// TODO this is O(N) in the number of SetPoints, and that
+		// is not good performance.
+		final Iterator<SetPoint> iterator = this.setPoints.iterator();
+		while (iterator.hasNext()) {
+			final SetPoint setPoint = iterator.next();
+			if (setPoint.getMyPoint() == setPointDefinition.getMyPoint()) {
+				iterator.remove();
+			}
+		}
 		this.setPoints.add(setPointDefinition);
 	}
 
@@ -260,9 +270,6 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		if (this.parent == null) {
 			// TODO this is a bit of a hack, remove later
 			return;
-		}
-		if ("ResourceBarFrame".equals(this.name)) {
-			System.out.println("doing resource bar");
 		}
 		if (this.anchors.isEmpty() && this.setPoints.isEmpty()) {
 			this.renderBounds.x = this.parent.getFramePointX(FramePoint.LEFT);
@@ -333,5 +340,15 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	}
 
 	protected abstract void internalRender(SpriteBatch batch, BitmapFont baseFont, GlyphLayout glyphLayout);
+
+	@Override
+	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
+		return null;
+	}
+
+	@Override
+	public String getName() {
+		return this.name;
+	}
 
 }

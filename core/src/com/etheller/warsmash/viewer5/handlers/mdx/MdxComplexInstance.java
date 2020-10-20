@@ -614,6 +614,13 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 	}
 
+	@Override
+	protected void removeLights(final Scene scene2) {
+		for (final LightInstance light : this.lights) {
+			light.remove(this.scene);
+		}
+	}
+
 	/**
 	 * Set the team color of this instance.
 	 */

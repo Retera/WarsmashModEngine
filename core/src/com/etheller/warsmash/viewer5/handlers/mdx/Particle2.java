@@ -67,13 +67,12 @@ public class Particle2 extends EmittedObject<MdxComplexInstance, ParticleEmitter
 
 		// Local rotation
 		rotationHeap.idt();
-		rotationHeap.mulLeft(HALF_PI_Z);
-		rotationHeap.mulLeft(rotationHeap2.setFromAxisRad(0, 1, 0, RenderMathUtils.randomInRange(-latitude, latitude)));
+		rotationHeap.mul(HALF_PI_Z);
+		rotationHeap.mul(rotationHeap2.setFromAxisRad(0, 1, 0, RenderMathUtils.randomInRange(-latitude, latitude)));
 
 		// If this is not a line emitter, emit in a sphere rather than a circle
 		if (emitterObject.lineEmitter == 0) {
-			rotationHeap
-					.mulLeft(rotationHeap2.setFromAxisRad(1, 0, 0, RenderMathUtils.randomInRange(-latitude, latitude)));
+			rotationHeap.mul(rotationHeap2.setFromAxisRad(1, 0, 0, RenderMathUtils.randomInRange(-latitude, latitude)));
 		}
 
 		// World rotation

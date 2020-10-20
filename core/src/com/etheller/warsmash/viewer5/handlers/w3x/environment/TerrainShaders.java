@@ -25,6 +25,7 @@ public class TerrainShaders {
 				"layout (location = 4) uniform float centerOffsetY;\r\n" + //
 				"layout (location = 5) uniform sampler2D lightTexture;\r\n" + //
 				"layout (location = 6) uniform float lightCount;\r\n" + //
+				"layout (location = 7) uniform float lightTextureHeight;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) out vec3 UV;\r\n" + //
 				"layout (location = 1) out vec3 Normal;\r\n" + //
@@ -60,7 +61,9 @@ public class TerrainShaders {
 				"	vec3 terrain_normal = normalize(vNormal);//vec3(hL - hR, hD - hU, 2.0)+vNormal);\r\n" + //
 				"\r\n" + //
 				"	Normal = terrain_normal;\r\n" + //
-				Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightCount", true) + "\r\n" + //
+				Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
+						true)
+				+ "\r\n" + //
 				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 				"}";
 
@@ -135,6 +138,7 @@ public class TerrainShaders {
 				"layout (location = 5) uniform float centerOffsetY;\r\n" + //
 				"layout (location = 7) uniform sampler2D lightTexture;\r\n" + //
 				"layout (location = 8) uniform float lightCount;\r\n" + //
+				"layout (location = 9) uniform float lightTextureHeight;\r\n" + //
 				"\r\n" + //
 				"layout (location = 0) out vec2 UV;\r\n" + //
 				"layout (location = 1) out flat uvec4 texture_indices;\r\n" + //
@@ -173,7 +177,8 @@ public class TerrainShaders {
 				"   v_suv = (vPosition + pos) / size;\r\n" + //
 				"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
 				"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
-				Shaders.lightSystem("normal", "positionWorld", "lightTexture", "lightCount", true) + "\r\n" + //
+				Shaders.lightSystem("normal", "positionWorld", "lightTexture", "lightTextureHeight", "lightCount", true)
+				+ "\r\n" + //
 				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 				"}";
 
@@ -425,6 +430,7 @@ public class TerrainShaders {
 				"layout (location = 5) uniform float water_offset;\r\n" + //
 				"layout (location = 10) uniform sampler2D lightTexture;\r\n" + //
 				"layout (location = 11) uniform float lightCount;\r\n" + //
+				"layout (location = 12) uniform float lightTextureHeight;\r\n" + //
 				"\r\n" + //
 				"out vec2 UV;\r\n" + //
 				"out vec4 Color;\r\n" + //
@@ -463,7 +469,9 @@ public class TerrainShaders {
 				"		value = clamp(value - deeplevel, 0.f, maxdepth - deeplevel) / (maxdepth - deeplevel);\r\n" + //
 				"		Color = deep_color_min * (1.f - value) + deep_color_max * value;\r\n" + //
 				"	}\r\n" + //
-				Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightCount", true) + "\r\n" + //
+				Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
+						true)
+				+ "\r\n" + //
 				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 				" }";
 

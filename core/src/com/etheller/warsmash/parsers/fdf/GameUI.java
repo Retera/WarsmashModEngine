@@ -164,6 +164,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return file;
 	}
 
+	public String trySkinField(String file) {
+		if ((file != null) && this.skin.hasField(file)) {
+			file = this.skin.getField(file);
+		}
+		return file;
+	}
+
 	public DataTable getSkinData() {
 		return this.skinData;
 	}
@@ -196,6 +203,14 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return null;
 	}
 
+	public TextureFrame createTextureFrame(final String name, final UIFrame parent, final boolean decorateFileNames,
+			final Vector4Definition texCoord) {
+		final TextureFrame textureFrame = new TextureFrame(name, parent, decorateFileNames, texCoord);
+		this.nameToFrame.put(name, textureFrame);
+		add(textureFrame);
+		return textureFrame;
+	}
+
 	public UIFrame inflate(final FrameDefinition frameDefinition, final UIFrame parent,
 			final FrameDefinition parentDefinitionIfAvailable) {
 		UIFrame inflatedFrame = null;
@@ -213,7 +228,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				inflatedFrame = simpleFrame;
 			}
 			else if ("SPRITE".equals(frameDefinition.getFrameType())) {
-				final SpriteFrame spriteFrame = new SpriteFrame(frameDefinition.getName(), parent, this.uiScene);
+				final SpriteFrame spriteFrame = new SpriteFrame(frameDefinition.getName(), parent, this.uiScene,
+						viewport2);
 				String backgroundArt = frameDefinition.getString("BackgroundArt");
 				if (frameDefinition.has("DecorateFileNames") || ((parentDefinitionIfAvailable != null)
 						&& parentDefinitionIfAvailable.has("DecorateFileNames"))) {
@@ -224,13 +240,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						throw new IllegalStateException("Decorated file name lookup not available: " + backgroundArt);
 					}
 				}
-				if (backgroundArt.toLowerCase().endsWith(".mdl") || backgroundArt.toLowerCase().endsWith(".mdx")) {
-					backgroundArt = backgroundArt.substring(0, backgroundArt.length() - 4);
+				if (backgroundArt != null) {
+					setSpriteFrameModel(spriteFrame, backgroundArt);
 				}
-				backgroundArt += ".mdx";
-				final MdxModel model = (MdxModel) this.modelViewer.load(backgroundArt, this.modelViewer.mapPathSolver,
-						this.modelViewer.solverParams);
-				spriteFrame.setModel(model);
 				viewport2 = this.fdfCoordinateResolutionDummyViewport;
 				inflatedFrame = spriteFrame;
 			}
@@ -330,9 +342,24 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return inflatedFrame;
 	}
 
+	public void setSpriteFrameModel(final SpriteFrame spriteFrame, String backgroundArt) {
+		if (backgroundArt.toLowerCase().endsWith(".mdl") || backgroundArt.toLowerCase().endsWith(".mdx")) {
+			backgroundArt = backgroundArt.substring(0, backgroundArt.length() - 4);
+		}
+		backgroundArt += ".mdx";
+		final MdxModel model = (MdxModel) this.modelViewer.load(backgroundArt, this.modelViewer.mapPathSolver,
+				this.modelViewer.solverParams);
+		spriteFrame.setModel(model);
+	}
+
 	public UIFrame createFrameByType(final String typeName, final String name, final UIFrame owner,
 			final String inherits, final int createContext) {
-		throw new UnsupportedOperationException("Not yet implemented");
+		// TODO idk what inherits is doing yet, and I didn't implement createContext yet
+		// even though it looked like just mapping/indexing on int
+		final FrameDefinition frameDefinition = new FrameDefinition(FrameClass.Frame, typeName, name);
+		final UIFrame inflatedFrame = inflate(frameDefinition, owner, null);
+		add(inflatedFrame);
+		return inflatedFrame;
 	}
 
 	public UIFrame getFrameByName(final String name, final int createContext) {
@@ -351,6 +378,20 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			return (fdfY / 0.6f) * ((ExtendViewport) viewport).getMinWorldHeight();
 		}
 		return (fdfY / 0.6f) * viewport.getWorldHeight();
+	}
+
+	public static float unconvertX(final Viewport viewport, final float nonFdfX) {
+		if (viewport instanceof ExtendViewport) {
+			return (nonFdfX / ((ExtendViewport) viewport).getMinWorldWidth()) * 0.8f;
+		}
+		return (nonFdfX / viewport.getWorldWidth()) * 0.8f;
+	}
+
+	public static float unconvertY(final Viewport viewport, final float nonFdfY) {
+		if (viewport instanceof ExtendViewport) {
+			return (nonFdfY / ((ExtendViewport) viewport).getMinWorldHeight()) * 0.6f;
+		}
+		return (nonFdfY / viewport.getWorldHeight()) * 0.6f;
 	}
 
 	public Texture loadTexture(String path) {
@@ -373,5 +414,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	@Override
 	public final void positionBounds(final Viewport viewport) {
 		innerPositionBounds(viewport);
+	}
+
+	@Override
+	public void add(final UIFrame childFrame) {
+		super.add(childFrame);
+		this.nameToFrame.put(childFrame.getName(), childFrame);
 	}
 }

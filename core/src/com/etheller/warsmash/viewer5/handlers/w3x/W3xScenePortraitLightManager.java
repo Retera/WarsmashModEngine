@@ -6,20 +6,24 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.SceneLightInstance;
 import com.etheller.warsmash.viewer5.SceneLightManager;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
+import com.etheller.warsmash.viewer5.handlers.mdx.Light;
 import com.etheller.warsmash.viewer5.handlers.mdx.LightInstance;
 
 public class W3xScenePortraitLightManager implements SceneLightManager, W3xSceneLightManager {
+	private final War3MapViewer viewer;
+	private final Vector3 hardcodedLightDirection;
 	public final List<LightInstance> lights;
 	private FloatBuffer lightDataCopyHeap;
 	private final DataTexture unitLightsTexture;
-	private final War3MapViewer viewer;
 	private int unitLightCount;
 
-	public W3xScenePortraitLightManager(final War3MapViewer viewer) {
+	public W3xScenePortraitLightManager(final War3MapViewer viewer, final Vector3 lightDirection) {
 		this.viewer = viewer;
+		this.hardcodedLightDirection = lightDirection;
 		this.lights = new ArrayList<>();
 		this.unitLightsTexture = new DataTexture(viewer.gl, 4, 4, 1);
 		this.lightDataCopyHeap = ByteBuffer.allocateDirect(16 * 1 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -52,12 +56,34 @@ public class W3xScenePortraitLightManager implements SceneLightManager, W3xScene
 		this.unitLightCount = 0;
 		this.lightDataCopyHeap.clear();
 		int offset = 0;
-		if (this.viewer.dncUnitDay != null) {
-			if (!this.viewer.dncUnitDay.lights.isEmpty()) {
-				this.viewer.dncUnitDay.lights.get(0).bind(0, this.lightDataCopyHeap);
-				offset += 16;
-				this.unitLightCount++;
+		if (this.hardcodedLightDirection == null) {
+			if (this.viewer.dncTarget != null) {
+				if (!this.viewer.dncTarget.lights.isEmpty()) {
+					this.viewer.dncTarget.lights.get(0).bind(0, this.lightDataCopyHeap);
+					offset += 16;
+					this.unitLightCount++;
+				}
 			}
+		}
+		else {
+			this.lightDataCopyHeap.put(offset, this.hardcodedLightDirection.y);
+			this.lightDataCopyHeap.put(offset + 1, -this.hardcodedLightDirection.x);
+			this.lightDataCopyHeap.put(offset + 2, -this.hardcodedLightDirection.z);
+			this.lightDataCopyHeap.put(offset + 3, -this.hardcodedLightDirection.z);
+			this.lightDataCopyHeap.put(offset + 4, Light.Type.DIRECTIONAL.ordinal());
+			this.lightDataCopyHeap.put(offset + 5, 1);
+			this.lightDataCopyHeap.put(offset + 6, 2);
+			this.lightDataCopyHeap.put(offset + 7, 0);
+			this.lightDataCopyHeap.put(offset + 8, 1);
+			this.lightDataCopyHeap.put(offset + 9, 1);
+			this.lightDataCopyHeap.put(offset + 10, 1);
+			this.lightDataCopyHeap.put(offset + 11, 1);
+			this.lightDataCopyHeap.put(offset + 12, 1);
+			this.lightDataCopyHeap.put(offset + 13, 1);
+			this.lightDataCopyHeap.put(offset + 14, 1);
+			this.lightDataCopyHeap.put(offset + 15, 0.3f);
+			offset += 16;
+			this.unitLightCount++;
 		}
 		for (final LightInstance light : this.lights) {
 			light.bind(offset, this.lightDataCopyHeap);

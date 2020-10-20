@@ -48,6 +48,11 @@ public class CWidgetAbilityTargetCheckReceiver implements AbilityTargetCheckRece
 		this.target = null;
 	}
 
+	@Override
+	public void orderIdNotAccepted() {
+		this.target = null;
+	}
+
 	public CWidget getTarget() {
 		return this.target;
 	}

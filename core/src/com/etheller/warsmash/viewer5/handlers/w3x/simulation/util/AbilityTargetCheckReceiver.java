@@ -17,6 +17,8 @@ public interface AbilityTargetCheckReceiver<TARGET_TYPE> {
 
 	void targetNotInPlayableMap();
 
+	void orderIdNotAccepted();
+
 	public static enum TeamType {
 		ALLIED,
 		ENEMY,

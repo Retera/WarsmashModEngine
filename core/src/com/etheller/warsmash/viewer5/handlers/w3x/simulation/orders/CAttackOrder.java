@@ -7,11 +7,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
 public class CAttackOrder implements COrder {
 	private final CUnit unit;
+	private final int orderId;
 	private boolean wasWithinPropWindow = false;
 	private final CUnitAttack unitAttack;
 	private final CWidget target;
@@ -21,9 +21,10 @@ public class CAttackOrder implements COrder {
 	private int thisOrderCooldownEndTime;
 	private boolean wasInRange = false;
 
-	public CAttackOrder(final CUnit unit, final CUnitAttack unitAttack, final CWidget target) {
+	public CAttackOrder(final CUnit unit, final CUnitAttack unitAttack, final int orderId, final CWidget target) {
 		this.unit = unit;
 		this.unitAttack = unitAttack;
+		this.orderId = orderId;
 		this.target = target;
 		createMoveOrder(unit, target);
 	}
@@ -31,10 +32,10 @@ public class CAttackOrder implements COrder {
 	private void createMoveOrder(final CUnit unit, final CWidget target) {
 		if (!unit.isMovementDisabled()) { // TODO: Check mobility instead
 			if ((target instanceof CUnit) && !(((CUnit) target).getUnitType().isBuilding())) {
-				this.moveOrder = new CMoveOrder(unit, (CUnit) target);
+				this.moveOrder = new CMoveOrder(unit, this.orderId, (CUnit) target);
 			}
 			else {
-				this.moveOrder = new CMoveOrder(unit, target.getX(), target.getY());
+				this.moveOrder = new CMoveOrder(unit, this.orderId, target.getX(), target.getY());
 			}
 		}
 		else {
@@ -172,7 +173,7 @@ public class CAttackOrder implements COrder {
 
 	@Override
 	public int getOrderId() {
-		return CAbilityAttack.ORDER_ID;
+		return this.orderId;
 	}
 
 }

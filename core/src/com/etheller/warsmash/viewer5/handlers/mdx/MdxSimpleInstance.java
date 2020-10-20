@@ -38,6 +38,10 @@ public class MdxSimpleInstance extends BatchedInstance {
 	}
 
 	@Override
+	protected void removeLights(final Scene scene2) {
+	}
+
+	@Override
 	public void load() {
 	}
 

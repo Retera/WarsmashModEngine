@@ -12,11 +12,9 @@ public interface CAbility extends CAbilityView {
 	/* should fire when ability removed from unit */
 	void onRemove(CSimulation game, CUnit unit);
 
-	void onOrder(CSimulation game, CUnit caster, CWidget target, boolean queue);
+	void onOrder(CSimulation game, CUnit caster, int orderId, CWidget target, boolean queue);
 
-	void onOrder(CSimulation game, CUnit caster, Vector2 point, boolean queue);
+	void onOrder(CSimulation game, CUnit caster, int orderId, Vector2 point, boolean queue);
 
-	void onOrderNoTarget(CSimulation game, CUnit caster, boolean queue);
-
-	int getOrderId();
+	void onOrderNoTarget(CSimulation game, CUnit caster, int orderId, boolean queue);
 }

@@ -83,7 +83,9 @@ public class MdxShaders {
 			"      gl_FragColor = color;\r\n" + //
 			"    }\r\n";
 
-	public static final String vsComplex = "    uniform mat4 u_mvp;\r\n" + //
+	public static final String vsComplex = "\r\n" + //
+			"\r\n" + //
+			"    uniform mat4 u_mvp;\r\n" + //
 			"    uniform vec4 u_vertexColor;\r\n" + //
 			"    uniform vec4 u_geosetColor;\r\n" + //
 			"    uniform float u_layerAlpha;\r\n" + //
@@ -106,6 +108,7 @@ public class MdxShaders {
 			"    varying float v_uvScale;\r\n" + //
 			"    uniform sampler2D u_lightTexture;\r\n" + //
 			"    uniform float u_lightCount;\r\n" + //
+			"    uniform float u_lightTextureHeight;\r\n" + //
 			Shaders.boneTexture + "\r\n" + //
 			"    void transform(inout vec3 position, inout vec3 normal) {\r\n" + //
 			"      // For the broken models out there, since the game supports this.\r\n" + //
@@ -150,7 +153,8 @@ public class MdxShaders {
 			"      v_uvScale = u_uvScale;\r\n" + //
 			"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
 			"      if(!u_unshaded) {\r\n" + //
-			Shaders.lightSystem("normal", "position", "u_lightTexture", "u_lightCount", false) + "\r\n" + //
+			Shaders.lightSystem("normal", "position", "u_lightTexture", "u_lightTextureHeight", "u_lightCount", false)
+			+ "\r\n" + //
 			"        v_color.xyz *= clamp(lightFactor, 0.0, 1.0);\r\n" + //
 			"      }\r\n" + //
 			"    }";

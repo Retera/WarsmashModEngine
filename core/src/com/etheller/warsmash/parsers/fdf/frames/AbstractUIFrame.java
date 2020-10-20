@@ -35,4 +35,15 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 			childFrame.positionBounds(viewport);
 		}
 	}
+
+	@Override
+	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
+		for (final UIFrame childFrame : this.childFrames) {
+			final UIFrame clickedChild = childFrame.touchDown(screenX, screenY, button);
+			if (clickedChild != null) {
+				return clickedChild;
+			}
+		}
+		return super.touchDown(screenX, screenY, button);
+	}
 }

@@ -15,11 +15,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.HandleIdAllocator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityHoldPosition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityPatrol;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityStop;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -31,6 +29,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissileLine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissileSplash;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackNormal;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 
 public class CUnitData {
 	private static final War3ID MANA_INITIAL_AMOUNT = War3ID.fromString("umpi");
@@ -126,9 +125,11 @@ public class CUnitData {
 		this.unitData = unitData;
 	}
 
-	public CUnit create(final CSimulation simulation, final int playerIndex, final int handleId, final War3ID typeId,
-			final float x, final float y, final float facing, final BufferedImage buildingPathingPixelMap) {
+	public CUnit create(final CSimulation simulation, final int playerIndex, final War3ID typeId, final float x,
+			final float y, final float facing, final BufferedImage buildingPathingPixelMap,
+			final SimulationRenderController simulationRenderController, final HandleIdAllocator handleIdAllocator) {
 		final MutableGameObject unitType = this.unitData.get(typeId);
+		final int handleId = handleIdAllocator.createId();
 		final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
 		final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
 		final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
@@ -140,15 +141,10 @@ public class CUnitData {
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
 				speed, defense, unitTypeInstance);
 		if (speed > 0) {
-			unit.add(simulation, CAbilityMove.INSTANCE);
-			unit.add(simulation, CAbilityPatrol.INSTANCE);
-			unit.add(simulation, CAbilityHoldPosition.INSTANCE);
-			unit.add(simulation, CAbilityStop.INSTANCE);
+			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
-		final int dmgDice1 = unitType.getFieldAsInteger(ATTACK1_DMG_DICE, 0);
-		final int dmgDice2 = unitType.getFieldAsInteger(ATTACK2_DMG_DICE, 0);
-		if ((dmgDice1 != 0) || (dmgDice2 != 0)) {
-			unit.add(simulation, CAbilityAttack.INSTANCE);
+		if (!unitTypeInstance.getAttacks().isEmpty()) {
+			unit.add(simulation, new CAbilityAttack(handleIdAllocator.createId()));
 		}
 		return unit;
 	}

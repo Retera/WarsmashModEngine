@@ -14,12 +14,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 
 public class CMoveOrder implements COrder {
 	private static final Rectangle tempRect = new Rectangle();
 	private final CUnit unit;
+	private final int orderId;
 	private boolean wasWithinPropWindow = false;
 	private List<Point2D.Float> path = null;
 	private final CPathfindingProcessor.GridMapping gridMapping;
@@ -27,16 +27,18 @@ public class CMoveOrder implements COrder {
 	private int searchCycles = 0;
 	private CUnit followUnit;
 
-	public CMoveOrder(final CUnit unit, final float targetX, final float targetY) {
+	public CMoveOrder(final CUnit unit, final int orderId, final float targetX, final float targetY) {
 		this.unit = unit;
+		this.orderId = orderId;
 		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
 				unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
 						: CPathfindingProcessor.GridMapping.CELLS;
 		this.target = new Point2D.Float(targetX, targetY);
 	}
 
-	public CMoveOrder(final CUnit unit, final CUnit followUnit) {
+	public CMoveOrder(final CUnit unit, final int orderId, final CUnit followUnit) {
 		this.unit = unit;
+		this.orderId = orderId;
 		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
 				unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
 						: CPathfindingProcessor.GridMapping.CELLS;
@@ -313,7 +315,7 @@ public class CMoveOrder implements COrder {
 
 	@Override
 	public int getOrderId() {
-		return CAbilityMove.ORDER_ID;
+		return this.orderId;
 	}
 
 }

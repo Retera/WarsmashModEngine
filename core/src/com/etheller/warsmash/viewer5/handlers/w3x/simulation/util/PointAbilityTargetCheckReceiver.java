@@ -20,7 +20,6 @@ public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiv
 	@Override
 	public void mustTargetType(final TargetType correctType) {
 		this.target = null;
-
 	}
 
 	@Override
@@ -45,6 +44,11 @@ public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiv
 
 	@Override
 	public void targetNotInPlayableMap() {
+		this.target = null;
+	}
+
+	@Override
+	public void orderIdNotAccepted() {
 		this.target = null;
 	}
 

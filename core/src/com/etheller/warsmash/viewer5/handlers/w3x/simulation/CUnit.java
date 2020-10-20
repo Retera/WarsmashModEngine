@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CAttackOrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
@@ -389,7 +390,7 @@ public class CUnit extends CWidget {
 						CAllianceType.PASSIVE)) {
 					for (final CUnitAttack attack : this.unitType.getAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
-							this.order(new CAttackOrder(this, attack, source), false);
+							this.order(new CAttackOrder(this, attack, OrderIds.attack, source), false);
 							break;
 						}
 					}
@@ -527,6 +528,10 @@ public class CUnit extends CWidget {
 		return this.unitType.isBuilding();
 	}
 
+	public float getAcquisitionRange() {
+		return this.acquisitionRange;
+	}
+
 	private static final class AutoAttackTargetFinderEnum implements CUnitEnumFunction {
 		private CSimulation game;
 		private CUnit source;
@@ -545,7 +550,7 @@ public class CUnit extends CWidget {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
 							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
-						this.source.order(new CAttackOrder(this.source, attack, unit), false);
+						this.source.order(new CAttackOrder(this.source, attack, OrderIds.attack, unit), false);
 						return true;
 					}
 				}

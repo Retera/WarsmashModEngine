@@ -1,18 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Quaternion;
-import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
-import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
-import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
@@ -26,22 +21,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandCardPopulatingAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityHoldPosition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityPatrol;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityStop;
 
 public class RenderUnit {
-	private static final War3ID ABILITY_MOVE = War3ID.fromString("Amov");
-	private static final War3ID ABILITY_STOP = War3ID.fromString("Astp");
-	private static final War3ID ABILITY_HOLD_POSITION = War3ID.fromString("Ahol");
-	private static final War3ID ABILITY_PATROL = War3ID.fromString("Apat");
-	private static final War3ID ABILITY_ATTACK = War3ID.fromString("Aatk");
-
 	private static final Quaternion tempQuat = new Quaternion();
 	private static final War3ID RED = War3ID.fromString("uclr");
 	private static final War3ID GREEN = War3ID.fromString("uclg");
@@ -61,7 +48,6 @@ public class RenderUnit {
 	private final CUnit simulationUnit;
 	public SplatMover shadow;
 	public SplatMover selectionCircle;
-	private final List<CommandCardIcon> commandCardIcons = new ArrayList<>();
 
 	private float x;
 	private float y;
@@ -77,12 +63,14 @@ public class RenderUnit {
 	public long lastUnitResponseEndTimeMillis;
 	private boolean corpse;
 	private boolean boneCorpse;
+	private final RenderUnitTypeData typeData;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit, final UnitSoundset soundset,
-			final MdxModel portraitModel, final CUnit simulationUnit) {
+			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData) {
 		this.portraitModel = portraitModel;
 		this.simulationUnit = simulationUnit;
+		this.typeData = typeData;
 		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
 
 		final float[] location = unit.getLocation();
@@ -143,43 +131,10 @@ public class RenderUnit {
 
 	}
 
-	public void initAbilityUI(final War3MapViewer map) {
+	public void populateCommandCard(final CommandButtonListener commandButtonListener,
+			final AbilityDataUI abilityDataUI) {
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
-			if (ability instanceof CAbilityMove) {
-				final GameUI gameUI = map.getGameUI();
-				final Element moveCommand = gameUI.getSkinData().get("CmdMove");
-				final String moveCommandArt = gameUI.getSkinField(moveCommand.getField("Art"));
-				this.commandCardIcons.add(new CommandCardIcon(0, 0,
-						ImageUtils.getBLPTexture(map.dataSource, moveCommandArt), ability.getOrderId()));
-			}
-			else if (ability instanceof CAbilityAttack) {
-				final GameUI gameUI = map.getGameUI();
-				final Element command = gameUI.getSkinData().get("CmdAttack");
-				final String commandArt = gameUI.getSkinField(command.getField("Art"));
-				this.commandCardIcons.add(new CommandCardIcon(3, 0,
-						ImageUtils.getBLPTexture(map.dataSource, commandArt), ability.getOrderId()));
-			}
-			else if (ability instanceof CAbilityHoldPosition) {
-				final GameUI gameUI = map.getGameUI();
-				final Element command = gameUI.getSkinData().get("CmdHoldPos");
-				final String commandArt = gameUI.getSkinField(command.getField("Art"));
-				this.commandCardIcons.add(new CommandCardIcon(2, 0,
-						ImageUtils.getBLPTexture(map.dataSource, commandArt), ability.getOrderId()));
-			}
-			else if (ability instanceof CAbilityPatrol) {
-				final GameUI gameUI = map.getGameUI();
-				final Element command = gameUI.getSkinData().get("CmdPatrol");
-				final String commandArt = gameUI.getSkinField(command.getField("Art"));
-				this.commandCardIcons.add(new CommandCardIcon(0, 1,
-						ImageUtils.getBLPTexture(map.dataSource, commandArt), ability.getOrderId()));
-			}
-			else if (ability instanceof CAbilityStop) {
-				final GameUI gameUI = map.getGameUI();
-				final Element command = gameUI.getSkinData().get("CmdStop");
-				final String commandArt = gameUI.getSkinField(command.getField("Art"));
-				this.commandCardIcons.add(new CommandCardIcon(1, 0,
-						ImageUtils.getBLPTexture(map.dataSource, commandArt), ability.getOrderId()));
-			}
+			ability.visit(CommandCardPopulatingAbilityVisitor.INSTANCE.reset(commandButtonListener, abilityDataUI));
 		}
 	}
 
@@ -298,6 +253,32 @@ public class RenderUnit {
 		}
 		this.facing = (((this.facing + angleToAdd) % 360) + 360) % 360;
 		this.instance.setLocalRotation(tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z, this.facing));
+
+		final float facingRadians = (float) Math.toRadians(this.facing);
+		final float maxPitch = this.typeData.getMaxPitch();
+		final float maxRoll = this.typeData.getMaxRoll();
+		final float sampleRadius = this.typeData.getElevationSampleRadius();
+		float pitch, roll;
+		final float pitchSampleForwardX = x + (sampleRadius * (float) Math.cos(facingRadians));
+		final float pitchSampleForwardY = y + (sampleRadius * (float) Math.sin(facingRadians));
+		final float pitchSampleBackwardX = x - (sampleRadius * (float) Math.cos(facingRadians));
+		final float pitchSampleBackwardY = y - (sampleRadius * (float) Math.sin(facingRadians));
+		final float pitchSampleGroundHeight1 = map.terrain.getGroundHeight(pitchSampleBackwardX, pitchSampleBackwardY);
+		final float pitchSampleGorundHeight2 = map.terrain.getGroundHeight(pitchSampleForwardX, pitchSampleForwardY);
+		pitch = Math.max(-maxPitch, Math.min(maxPitch,
+				(float) Math.atan2(pitchSampleGorundHeight2 - pitchSampleGroundHeight1, sampleRadius * 2)));
+		final double leftOfFacingAngle = facingRadians + (Math.PI / 2);
+		final float rollSampleForwardX = x + (sampleRadius * (float) Math.cos(leftOfFacingAngle));
+		final float rollSampleForwardY = y + (sampleRadius * (float) Math.sin(leftOfFacingAngle));
+		final float rollSampleBackwardX = x - (sampleRadius * (float) Math.cos(leftOfFacingAngle));
+		final float rollSampleBackwardY = y - (sampleRadius * (float) Math.sin(leftOfFacingAngle));
+		final float rollSampleGroundHeight1 = map.terrain.getGroundHeight(rollSampleBackwardX, rollSampleBackwardY);
+		final float rollSampleGroundHeight2 = map.terrain.getGroundHeight(rollSampleForwardX, rollSampleForwardY);
+		roll = Math.max(-maxRoll, Math.min(maxRoll,
+				(float) Math.atan2(rollSampleGroundHeight2 - rollSampleGroundHeight1, sampleRadius * 2)));
+		this.instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, -pitch));
+		this.instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, roll));
+
 		map.worldScene.instanceMoved(this.instance, this.location[0], this.location[1]);
 		if (this.shadow != null) {
 			this.shadow.move(dx, dy, map.terrain.centerOffset);
@@ -310,10 +291,6 @@ public class RenderUnit {
 
 	public CUnit getSimulationUnit() {
 		return this.simulationUnit;
-	}
-
-	public List<CommandCardIcon> getCommandCardIcons() {
-		return this.commandCardIcons;
 	}
 
 	private static final class UnitAnimationListenerImpl implements CUnitAnimationListener {

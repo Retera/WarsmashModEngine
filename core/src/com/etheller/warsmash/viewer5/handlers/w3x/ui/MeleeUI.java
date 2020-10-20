@@ -2,8 +2,10 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 
 import java.io.IOException;
 
+import javax.imageio.ImageIO;
+
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -12,7 +14,6 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.etheller.warsmash.WarsmashGdxMapGame;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
@@ -25,28 +26,39 @@ import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.util.FastNumberFormat;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.ReplaceableIds;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
+import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.CommandCardIcon;
+import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
+import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
+import com.etheller.warsmash.viewer5.handlers.w3x.camera.GameCameraManager;
+import com.etheller.warsmash.viewer5.handlers.w3x.camera.PortraitCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityStop;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CodeKeyType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
-public class MeleeUI implements CUnitStateListener {
+public class MeleeUI implements CUnitStateListener, CommandButtonListener {
+	private static final int COMMAND_CARD_WIDTH = 4;
+	private static final int COMMAND_CARD_HEIGHT = 3;
+
+	private static final Vector2 screenCoordsVector = new Vector2();
 	private final DataSource dataSource;
 	private final Viewport uiViewport;
 	private final FreeTypeFontGenerator fontGenerator;
 	private final Scene uiScene;
+	private final Scene portraitScene;
+	private final GameCameraManager cameraManager;
 	private final War3MapViewer war3MapViewer;
 	private final RootFrameListener rootFrameListener;
 	private GameUI rootFrame;
@@ -82,23 +94,72 @@ public class MeleeUI implements CUnitStateListener {
 	private StringFrame armorInfoPanelIconLevel;
 	private InfoPanelIconBackdrops damageBackdrops;
 	private InfoPanelIconBackdrops defenseBackdrops;
+
+	private final CommandCardIcon[][] commandCard = new CommandCardIcon[COMMAND_CARD_HEIGHT][COMMAND_CARD_WIDTH];
+
 	private RenderUnit selectedUnit;
 
 	// TODO remove this & replace with FDF
 	private final Texture activeButtonTexture;
 	private UIFrame inventoryCover;
+	private SpriteFrame cursorFrame;
+	private MeleeUIMinimap meleeUIMinimap;
 
 	public MeleeUI(final DataSource dataSource, final Viewport uiViewport, final FreeTypeFontGenerator fontGenerator,
-			final Scene uiScene, final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener) {
+			final Scene uiScene, final Scene portraitScene, final CameraPreset[] cameraPresets,
+			final CameraRates cameraRates, final War3MapViewer war3MapViewer,
+			final RootFrameListener rootFrameListener) {
 		this.dataSource = dataSource;
 		this.uiViewport = uiViewport;
 		this.fontGenerator = fontGenerator;
 		this.uiScene = uiScene;
+		this.portraitScene = portraitScene;
 		this.war3MapViewer = war3MapViewer;
 		this.rootFrameListener = rootFrameListener;
 
+		this.cameraManager = new GameCameraManager(cameraPresets, cameraRates);
+
+		this.cameraManager.setupCamera(war3MapViewer.worldScene);
+		if (this.war3MapViewer.startLocations[0] != null) {
+			this.cameraManager.target.x = this.war3MapViewer.startLocations[0].x;
+			this.cameraManager.target.y = this.war3MapViewer.startLocations[0].y;
+		}
+
 		this.activeButtonTexture = ImageUtils.getBLPTexture(war3MapViewer.mapMpq,
 				"UI\\Widgets\\Console\\Human\\CommandButton\\human-activebutton.blp");
+
+	}
+
+	private MeleeUIMinimap createMinimap(final War3MapViewer war3MapViewer) {
+		final Rectangle minimapDisplayArea = new Rectangle(18.75f, 13.75f, 278.75f, 276.25f);
+		Texture minimapTexture = null;
+		if (war3MapViewer.dataSource.has("war3mapMap.tga")) {
+			try {
+				minimapTexture = ImageUtils.getTextureNoColorCorrection(TgaFile.readTGA("war3mapMap.tga",
+						war3MapViewer.dataSource.getResourceAsStream("war3mapMap.tga")));
+			}
+			catch (final IOException e) {
+				System.err.println("Could not load minimap TGA file");
+				e.printStackTrace();
+			}
+		}
+		else if (war3MapViewer.dataSource.has("war3mapMap.blp")) {
+			try {
+				minimapTexture = ImageUtils
+						.getTexture(ImageIO.read(war3MapViewer.dataSource.getResourceAsStream("war3mapMap.blp")));
+			}
+			catch (final IOException e) {
+				System.err.println("Could not load minimap BLP file");
+				e.printStackTrace();
+			}
+		}
+		final Texture[] teamColors = new Texture[WarsmashConstants.MAX_PLAYERS];
+		for (int i = 0; i < teamColors.length; i++) {
+			teamColors[i] = ImageUtils.getBLPTexture(war3MapViewer.dataSource,
+					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
+		}
+		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();
+		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors);
 	}
 
 	/**
@@ -109,7 +170,7 @@ public class MeleeUI implements CUnitStateListener {
 		// =================================
 		// Load skins and templates
 		// =================================
-		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 0), this.uiViewport,
+		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 3), this.uiViewport,
 				this.fontGenerator, this.uiScene, this.war3MapViewer);
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
@@ -155,7 +216,7 @@ public class MeleeUI implements CUnitStateListener {
 		this.timeIndicator.setAnimationSpeed(0.0f); // do not advance automatically
 
 		// Create the unit portrait stuff
-		this.portrait = new Portrait(this.war3MapViewer);
+		this.portrait = new Portrait(this.war3MapViewer, this.portraitScene);
 		positionPortrait();
 		this.unitPortrait = this.rootFrame.createSimpleFrame("UnitPortrait", this.consoleUI, 0);
 		this.unitLifeText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitHitPointText", 0);
@@ -198,36 +259,122 @@ public class MeleeUI implements CUnitStateListener {
 
 		this.inventoryCover = this.rootFrame.createSimpleFrame("SmashConsoleInventoryCover", this.rootFrame, 0);
 
+		int commandButtonIndex = 0;
+		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
+			for (int i = 0; i < COMMAND_CARD_WIDTH; i++) {
+				final CommandCardIcon commandCardIcon = new CommandCardIcon("SmashCommandButton_" + commandButtonIndex,
+						this.rootFrame);
+				this.rootFrame.add(commandCardIcon);
+				final TextureFrame iconFrame = this.rootFrame.createTextureFrame(
+						"SmashCommandButton_" + (commandButtonIndex) + "_Icon", this.rootFrame, false, null);
+				final SpriteFrame cooldownFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
+						"SmashCommandButton_" + (commandButtonIndex) + "_Cooldown", this.rootFrame, "", 0);
+				final SpriteFrame autocastFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
+						"SmashCommandButton_" + (commandButtonIndex) + "_Autocast", this.rootFrame, "", 0);
+				iconFrame.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
+						GameUI.convertX(this.uiViewport, 0.6175f + (0.0434f * i)),
+						GameUI.convertY(this.uiViewport, 0.095f - (0.044f * j))));
+				iconFrame.setWidth(GameUI.convertX(this.uiViewport, 0.039f));
+				iconFrame.setHeight(GameUI.convertY(this.uiViewport, 0.039f));
+				iconFrame.setTexture(ImageUtils.DEFAULT_ICON_PATH, this.rootFrame);
+				cooldownFrame.addSetPoint(new SetPoint(FramePoint.CENTER, iconFrame, FramePoint.CENTER, 0, 0));
+				this.rootFrame.setSpriteFrameModel(cooldownFrame, this.rootFrame.getSkinField("CommandButtonCooldown"));
+				cooldownFrame.setWidth(GameUI.convertX(this.uiViewport, 0.039f));
+				cooldownFrame.setHeight(GameUI.convertY(this.uiViewport, 0.039f));
+				autocastFrame.addSetPoint(new SetPoint(FramePoint.CENTER, iconFrame, FramePoint.CENTER, 0, 0));
+				this.rootFrame.setSpriteFrameModel(autocastFrame, this.rootFrame.getSkinField("CommandButtonAutocast"));
+				autocastFrame.setWidth(GameUI.convertX(this.uiViewport, 0.039f));
+				autocastFrame.setHeight(GameUI.convertY(this.uiViewport, 0.039f));
+				commandCardIcon.set(iconFrame, cooldownFrame, autocastFrame);
+				this.commandCard[j][i] = commandCardIcon;
+				commandCardIcon.setCommandButton(null);
+				commandButtonIndex++;
+			}
+		}
+
+		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashCursorFrame", this.rootFrame,
+				"", 0);
+		this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
+		this.cursorFrame.setSequence("Normal");
+		this.cursorFrame.setZDepth(1.0f);
+		Gdx.input.setCursorCatched(true);
+
+		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
+
 		this.rootFrame.positionBounds(this.uiViewport);
 		selectUnit(null);
 	}
 
-	public void updatePortrait() {
+	public void update(final float deltaTime) {
 		this.portrait.update();
+
+		int mouseX = Gdx.input.getX();
+		int mouseY = Gdx.input.getY();
+		final int minX = this.uiViewport.getScreenX();
+		final int maxX = minX + this.uiViewport.getScreenWidth();
+		final int minY = this.uiViewport.getScreenY();
+		final int maxY = minY + this.uiViewport.getScreenHeight();
+		final boolean left = mouseX <= (minX + 3);
+		final boolean right = mouseX >= (maxX - 3);
+		final boolean up = mouseY <= (minY + 3);
+		final boolean down = mouseY >= (maxY - 3);
+		this.cameraManager.applyVelocity(deltaTime, up, down, left, right);
+
+		mouseX = Math.max(minX, Math.min(maxX, mouseX));
+		mouseY = Math.max(minY, Math.min(maxY, mouseY));
+		Gdx.input.setCursorPosition(mouseX, mouseY);
+
+		screenCoordsVector.set(mouseX, mouseY);
+		this.uiViewport.unproject(screenCoordsVector);
+		this.cursorFrame.setFramePointX(FramePoint.LEFT, screenCoordsVector.x);
+		this.cursorFrame.setFramePointY(FramePoint.BOTTOM, screenCoordsVector.y);
+
+		if (down) {
+			if (left) {
+				this.cursorFrame.setSequence("Scroll Down Left");
+			}
+			else if (right) {
+				this.cursorFrame.setSequence("Scroll Down Right");
+			}
+			else {
+				this.cursorFrame.setSequence("Scroll Down");
+			}
+		}
+		else if (up) {
+			if (left) {
+				this.cursorFrame.setSequence("Scroll Up Left");
+			}
+			else if (right) {
+				this.cursorFrame.setSequence("Scroll Up Right");
+			}
+			else {
+				this.cursorFrame.setSequence("Scroll Up");
+			}
+		}
+		else if (left) {
+			this.cursorFrame.setSequence("Scroll Left");
+		}
+		else if (right) {
+			this.cursorFrame.setSequence("Scroll Right");
+		}
+		else {
+			this.cursorFrame.setSequence("Normal");
+		}
+		final float groundHeight = Math.max(
+				this.war3MapViewer.terrain.getGroundHeight(this.cameraManager.target.x, this.cameraManager.target.y),
+				this.war3MapViewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y));
+		this.cameraManager.updateTargetZ(groundHeight);
+		this.cameraManager.updateCamera();
 	}
 
 	public void render(final SpriteBatch batch, final BitmapFont font20, final GlyphLayout glyphLayout) {
 		this.rootFrame.render(batch, font20, glyphLayout);
-
 		if (this.selectedUnit != null) {
 			font20.setColor(Color.WHITE);
 
-			final COrder currentOrder = this.selectedUnit.getSimulationUnit().getCurrentOrder();
-			for (final CommandCardIcon commandCardIcon : this.selectedUnit.getCommandCardIcons()) {
-				batch.draw(commandCardIcon.getTexture(), 1235 + (86.8f * commandCardIcon.getX()),
-						190 - (88 * commandCardIcon.getY()), 78f, 78f);
-				if (((currentOrder != null) && (currentOrder.getOrderId() == commandCardIcon.getOrderId()))
-						|| ((currentOrder == null) && (commandCardIcon.getOrderId() == CAbilityStop.ORDER_ID))) {
-					final int blendDstFunc = batch.getBlendDstFunc();
-					final int blendSrcFunc = batch.getBlendSrcFunc();
-					batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-					batch.draw(this.activeButtonTexture, 1235 + (86.8f * commandCardIcon.getX()),
-							190 - (88 * commandCardIcon.getY()), 78f, 78f);
-					batch.setBlendFunction(blendSrcFunc, blendDstFunc);
-				}
-			}
 		}
 
+		this.meleeUIMinimap.render(batch, this.war3MapViewer.units);
 		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
 	}
@@ -238,12 +385,12 @@ public class MeleeUI implements CUnitStateListener {
 
 	private static final class Portrait {
 		private MdxComplexInstance modelInstance;
-		private final WarsmashGdxMapGame.PortraitCameraManager portraitCameraManager;
+		private final PortraitCameraManager portraitCameraManager;
 		private final Scene portraitScene;
 
-		public Portrait(final War3MapViewer war3MapViewer) {
-			this.portraitScene = war3MapViewer.addSimpleScene();
-			this.portraitCameraManager = new WarsmashGdxMapGame.PortraitCameraManager();
+		public Portrait(final War3MapViewer war3MapViewer, final Scene portraitScene) {
+			this.portraitScene = portraitScene;
+			this.portraitCameraManager = new PortraitCameraManager();
 			this.portraitCameraManager.setupCamera(this.portraitScene);
 			this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
 		}
@@ -294,6 +441,11 @@ public class MeleeUI implements CUnitStateListener {
 		}
 		this.portrait.setSelectedUnit(unit);
 		this.selectedUnit = unit;
+		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
+			for (int i = 0; i < COMMAND_CARD_WIDTH; i++) {
+				this.commandCard[j][i].setCommandButton(null);
+			}
+		}
 		if (unit == null) {
 			this.simpleNameValue.setText("");
 			this.unitLifeText.setText("");
@@ -340,9 +492,9 @@ public class MeleeUI implements CUnitStateListener {
 			this.simpleBuildingActionLabel.setText("");
 
 			final boolean anyAttacks = unit.getSimulationUnit().getUnitType().getAttacks().size() > 0;
-			final UIFrame localArmorIcon;
-			final TextureFrame localArmorIconBackdrop;
-			final StringFrame localArmorInfoPanelIconValue;
+			final UIFrame localArmorIcon = this.armorIcon;
+			final TextureFrame localArmorIconBackdrop = this.armorIconBackdrop;
+			final StringFrame localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
 			if (anyAttacks) {
 				final CUnitAttack attackOne = unit.getSimulationUnit().getUnitType().getAttacks().get(0);
 				this.attack1Icon.setVisible(attackOne.isShowUI());
@@ -358,17 +510,18 @@ public class MeleeUI implements CUnitStateListener {
 					this.attack2Icon.setVisible(false);
 				}
 
-				localArmorIcon = this.armorIcon;
-				localArmorIconBackdrop = this.armorIconBackdrop;
-				localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
+				this.armorIcon.addSetPoint(
+						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
+								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.06025f)));
+				this.armorIcon.positionBounds(this.uiViewport);
 			}
 			else {
-				this.armorIcon.setVisible(false);
+				this.attack1Icon.setVisible(false);
 				this.attack2Icon.setVisible(false);
 
-				localArmorIcon = this.attack1Icon;
-				localArmorIconBackdrop = this.attack1IconBackdrop;
-				localArmorInfoPanelIconValue = this.attack1InfoPanelIconValue;
+				this.armorIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
+						FramePoint.TOPLEFT, 0, GameUI.convertY(this.uiViewport, -0.030125f)));
+				this.armorIcon.positionBounds(this.uiViewport);
 			}
 
 			localArmorIcon.setVisible(true);
@@ -380,10 +533,21 @@ public class MeleeUI implements CUnitStateListener {
 			}
 			localArmorIconBackdrop.setTexture(defenseTexture);
 			localArmorInfoPanelIconValue.setText(Integer.toString(unit.getSimulationUnit().getDefense()));
+			unit.populateCommandCard(this, this.war3MapViewer.getAbilityDataUI());
 		}
 	}
 
-	public void resize() {
+	@Override
+	public void commandButton(final int buttonPositionX, final int buttonPositionY, final Texture icon,
+			final int orderId) {
+		final int x = Math.max(0, Math.min(COMMAND_CARD_WIDTH - 1, buttonPositionX));
+		final int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
+		this.commandCard[y][x].setCommandButtonData(icon, orderId);
+
+	}
+
+	public void resize(final Rectangle viewport) {
+		this.cameraManager.resize(viewport);
 		positionPortrait();
 	}
 
@@ -471,5 +635,31 @@ public class MeleeUI implements CUnitStateListener {
 
 	public RenderUnit getSelectedUnit() {
 		return this.selectedUnit;
+	}
+
+	public boolean keyDown(final int keycode) {
+		return this.cameraManager.keyDown(keycode);
+	}
+
+	public boolean keyUp(final int keycode) {
+		return this.cameraManager.keyUp(keycode);
+	}
+
+	public void scrolled(final int amount) {
+		this.cameraManager.scrolled(amount);
+	}
+
+	public boolean touchDown(final float screenX, final float screenY, final int button) {
+		if (this.meleeUIMinimap.containsMouse(screenX, screenY)) {
+			final Vector2 worldPoint = this.meleeUIMinimap.getWorldPointFromScreen(screenX, screenY);
+			this.cameraManager.target.x = worldPoint.x;
+			this.cameraManager.target.y = worldPoint.y;
+			return true;
+		}
+		screenCoordsVector.set(screenX, screenY);
+		this.uiViewport.unproject(screenCoordsVector);
+		this.rootFrame.touchDown(GameUI.unconvertX(this.uiViewport, screenCoordsVector.x),
+				GameUI.unconvertY(this.uiViewport, screenCoordsVector.y), button);
+		return false;
 	}
 }

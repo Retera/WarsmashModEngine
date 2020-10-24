@@ -75,6 +75,43 @@ public class Quadtree<T> {
 		}
 	}
 
+	public boolean intersect(float x, float y, final QuadtreeIntersector<T> intersector) {
+		if (this.leaf) {
+			for (int i = 0; i < this.nodes.size; i++) {
+				final Node<T> node = this.nodes.get(i);
+				if (node.bounds.contains(x, y)) {
+					if (intersector.onIntersect(node.object)) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		else {
+			if (this.northeast.bounds.contains(x, y)) {
+				if (this.northeast.intersect(x, y, intersector)) {
+					return true;
+				}
+			}
+			if (this.northwest.bounds.contains(x, y)) {
+				if (this.northwest.intersect(x, y, intersector)) {
+					return true;
+				}
+			}
+			if (this.southwest.bounds.contains(x, y)) {
+				if (this.southwest.intersect(x, y, intersector)) {
+					return true;
+				}
+			}
+			if (this.southeast.bounds.contains(x, y)) {
+				if (this.southeast.intersect(x, y, intersector)) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+
 	private void add(final Node<T> node, final int depth) {
 		if (this.leaf) {
 			if ((this.nodes.size >= SPLIT_THRESHOLD) && (depth < MAX_DEPTH)) {

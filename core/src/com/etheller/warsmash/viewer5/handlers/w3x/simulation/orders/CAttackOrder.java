@@ -138,7 +138,6 @@ public class CAttackOrder implements COrder {
 					else {
 						damage = simulation.getSeededRandom().nextInt(maxDamage - minDamage) + minDamage;
 					}
-					System.out.println(damage + " from " + minDamage + "  to " + maxDamage);
 					this.unitAttack.launch(simulation, this.unit, this.target, damage);
 					this.damagePointLaunchTime = 0;
 				}

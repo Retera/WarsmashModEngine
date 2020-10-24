@@ -177,7 +177,8 @@ public class CPathfindingProcessor {
 			}
 		}
 
-		while (!openSet.isEmpty()) {
+		int searchIterations = 0;
+		while (!openSet.isEmpty() && searchIterations < 150000) {
 			Node current = openSet.poll();
 			if (isGoal(current)) {
 				final LinkedList<Point2D.Float> totalPath = new LinkedList<>();
@@ -259,6 +260,7 @@ public class CPathfindingProcessor {
 					}
 				}
 			}
+			searchIterations++;
 		}
 		return Collections.emptyList();
 	}

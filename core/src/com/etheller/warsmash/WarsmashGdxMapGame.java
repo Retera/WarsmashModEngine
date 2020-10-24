@@ -38,6 +38,7 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.units.HashedGameObject;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.viewer5.CanvasProvider;
@@ -141,7 +142,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		}
 
 		final Element cameraData = this.viewer.miscData.get("Camera");
-		final Element cameraListenerData = this.viewer.miscData.get("Listener");
+		Element cameraListenerData = this.viewer.miscData.get("Listener");
+		if(cameraListenerData==null) {
+			cameraListenerData = new Element("Listener", new DataTable(null));
+		}
 		final CameraPreset[] cameraPresets = new CameraPreset[6];
 		for (int i = 0; i < cameraPresets.length; i++) {
 			cameraPresets[i] = new CameraPreset(cameraData.getFieldFloatValue("AOA", i),

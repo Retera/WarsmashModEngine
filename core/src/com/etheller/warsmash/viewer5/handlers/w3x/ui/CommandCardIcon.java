@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -11,6 +12,7 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButton;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandListener;
 
 public class CommandCardIcon extends AbstractRenderableFrame {
 
@@ -18,9 +20,14 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	private SpriteFrame cooldownFrame;
 	private SpriteFrame autocastFrame;
 	private CommandButton commandButton;
+	private int abilityHandleId;
+	private int orderId;
+	private final CommandCardCommandListener commandCardCommandListener;
 
-	public CommandCardIcon(final String name, final UIFrame parent) {
+	public CommandCardIcon(final String name, final UIFrame parent,
+			final CommandCardCommandListener commandCardCommandListener) {
 		super(name, parent);
+		this.commandCardCommandListener = commandCardCommandListener;
 	}
 
 	public void set(final TextureFrame iconFrame, final SpriteFrame cooldownFrame, final SpriteFrame autocastFrame) {
@@ -57,11 +64,13 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 		}
 	}
 
-	public void setCommandButtonData(final Texture texture, final int orderId) {
+	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId) {
 		this.iconFrame.setVisible(true);
 		this.cooldownFrame.setVisible(false);
 		this.autocastFrame.setVisible(false);
 		this.iconFrame.setTexture(texture);
+		this.abilityHandleId = abilityHandleId;
+		this.orderId = orderId;
 	}
 
 	@Override
@@ -81,6 +90,12 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
 		if (this.renderBounds.contains(screenX, screenY)) {
+			if (button == Input.Buttons.LEFT) {
+				this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.orderId);
+			}
+			else if (button == Input.Buttons.RIGHT) {
+				this.commandCardCommandListener.toggleAutoCastAbility(this.abilityHandleId);
+			}
 			return this;
 		}
 		return null;

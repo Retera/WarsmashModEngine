@@ -46,6 +46,6 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	private void addCommandButton(final IconUI iconUI, final int handleId, final int orderId) {
 		this.commandButtonListener.commandButton(iconUI.getButtonPositionX(), iconUI.getButtonPositionY(),
-				iconUI.getIcon(), orderId);
+				iconUI.getIcon(), handleId, orderId);
 	}
 }

@@ -10,7 +10,6 @@ import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
@@ -26,8 +25,6 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFont
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
@@ -50,17 +47,15 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.handlers.ModelHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
-import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
 	private static final boolean ENABLE_MUSIC = false;
-	private static final Vector3 clickLocationTemp = new Vector3();
-	private static final Vector2 clickLocationTemp2 = new Vector2();
 	private DataSource codebase;
 	private War3MapViewer viewer;
 	private final Rectangle tempRect = new Rectangle();
@@ -72,8 +67,6 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	private SpriteBatch batch;
 	private ExtendViewport uiViewport;
 	private GlyphLayout glyphLayout;
-
-	private int selectedSoundCount = 0;
 
 	private Texture solidGreenTexture;
 
@@ -227,7 +220,12 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 							music.play();
 						}
 					}
-				});
+				}, new CPlayerUnitOrderExecutor(this.viewer.simulation, new CommandErrorListener() {
+					@Override
+					public void showCommandError(final String message) {
+						WarsmashGdxMapGame.this.meleeUI.showCommandError(message);
+					}
+				}));
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 				this.viewer.mapPathSolver, "").addInstance();
 		libgdxContentInstance.setScene(this.uiScene);
@@ -361,84 +359,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
 		final float worldScreenY = getHeight() - screenY;
-		System.out.println(screenX + "," + screenY);
 
-		clickLocationTemp2.x = screenX;
-		clickLocationTemp2.y = screenY;
-		this.uiViewport.unproject(clickLocationTemp2);
-
-		if (this.meleeUI.touchDown(clickLocationTemp2.x, clickLocationTemp2.y, button)) {
+		if (this.meleeUI.touchDown(screenX, screenY, worldScreenY, button)) {
 			return false;
-		}
-		if (button == Input.Buttons.RIGHT) {
-			final RenderUnit rayPickUnit = this.viewer.rayPickUnit(screenX, worldScreenY);
-			if (this.meleeUI.getSelectedUnit() != null) {
-				if ((rayPickUnit != null) && (rayPickUnit.playerIndex != this.meleeUI.getSelectedUnit().playerIndex)
-						&& !rayPickUnit.getSimulationUnit().isDead()) {
-					if (this.viewer.orderSmart(rayPickUnit)) {
-						if (this.meleeUI.getSelectedUnit().soundset.yesAttack.playUnitResponse(
-								this.viewer.worldScene.audioContext, this.meleeUI.getSelectedUnit())) {
-							this.meleeUI.portraitTalk();
-						}
-						this.selectedSoundCount = 0;
-					}
-				}
-				else {
-					this.viewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
-					System.out.println(clickLocationTemp);
-					this.viewer.showConfirmation(clickLocationTemp, 0, 1, 0);
-					final int x = (int) ((clickLocationTemp.x - this.viewer.terrain.centerOffset[0]) / 128);
-					final int y = (int) ((clickLocationTemp.y - this.viewer.terrain.centerOffset[1]) / 128);
-					System.out.println(x + "," + y);
-					this.viewer.terrain.logRomp(x, y);
-					if (this.viewer.orderSmart(clickLocationTemp.x, clickLocationTemp.y)) {
-						if (this.meleeUI.getSelectedUnit().soundset.yes.playUnitResponse(
-								this.viewer.worldScene.audioContext, this.meleeUI.getSelectedUnit())) {
-							this.meleeUI.portraitTalk();
-						}
-						this.selectedSoundCount = 0;
-					}
-				}
-			}
-		}
-		else {
-			final List<RenderUnit> selectedUnits = this.viewer.selectUnit(screenX, worldScreenY, false);
-			if (!selectedUnits.isEmpty()) {
-				final RenderUnit unit = selectedUnits.get(0);
-				final boolean selectionChanged = this.meleeUI.getSelectedUnit() != unit;
-				boolean playedNewSound = false;
-				if (selectionChanged) {
-					this.selectedSoundCount = 0;
-				}
-				if (unit.soundset != null) {
-					UnitSound ackSoundToPlay = unit.soundset.what;
-					final int pissedSoundCount = unit.soundset.pissed.getSoundCount();
-					int soundIndex;
-					if ((this.selectedSoundCount >= 3) && (pissedSoundCount > 0)) {
-						soundIndex = this.selectedSoundCount - 3;
-						ackSoundToPlay = unit.soundset.pissed;
-					}
-					else {
-						soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
-					}
-					if (ackSoundToPlay.playUnitResponse(this.viewer.worldScene.audioContext, unit, soundIndex)) {
-						this.selectedSoundCount++;
-						if ((this.selectedSoundCount - 3) >= pissedSoundCount) {
-							this.selectedSoundCount = 0;
-						}
-						playedNewSound = true;
-					}
-				}
-				if (selectionChanged) {
-					this.meleeUI.selectUnit(unit);
-				}
-				if (playedNewSound) {
-					this.meleeUI.portraitTalk();
-				}
-			}
-			else {
-				this.meleeUI.selectUnit(null);
-			}
 		}
 		return false;
 	}

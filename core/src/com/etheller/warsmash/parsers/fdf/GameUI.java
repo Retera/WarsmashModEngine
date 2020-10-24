@@ -211,6 +211,19 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return textureFrame;
 	}
 
+	public StringFrame createStringFrame(final String name, final UIFrame parent, final Color color,
+			final TextJustify justifyH, final TextJustify justifyV, final float fdfFontSize) {
+		this.fontParam.size = (int) convertY(this.viewport, fdfFontSize);
+		if (this.fontParam.size == 0) {
+			this.fontParam.size = 24;
+		}
+		final BitmapFont frameFont = this.fontGenerator.generateFont(this.fontParam);
+		final StringFrame stringFrame = new StringFrame(name, parent, color, justifyH, justifyV, frameFont);
+		this.nameToFrame.put(name, stringFrame);
+		add(stringFrame);
+		return stringFrame;
+	}
+
 	public UIFrame inflate(final FrameDefinition frameDefinition, final UIFrame parent,
 			final FrameDefinition parentDefinitionIfAvailable) {
 		UIFrame inflatedFrame = null;

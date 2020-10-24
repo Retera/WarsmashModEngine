@@ -81,17 +81,16 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataU
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 
 import mpq.MPQArchive;
@@ -1135,6 +1134,10 @@ public class War3MapViewer extends ModelViewer {
 	}
 
 	public RenderUnit rayPickUnit(final float x, final float y) {
+		return rayPickUnit(x, y, CUnitFilterFunction.ACCEPT_ALL);
+	}
+
+	public RenderUnit rayPickUnit(final float x, final float y, final CUnitFilterFunction filter) {
 		final float[] ray = rayHeap;
 		mousePosHeap.set(x, y);
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
@@ -1146,7 +1149,11 @@ public class War3MapViewer extends ModelViewer {
 			final MdxComplexInstance instance = unit.instance;
 			if (instance.isVisible(this.worldScene.camera) && instance.intersectRayWithCollision(gdxRayHeap,
 					intersectionHeap, unit.getSimulationUnit().getUnitType().isBuilding())) {
-				entity = unit;
+				if (filter.call(unit.getSimulationUnit())) {
+					if ((entity == null) || (entity.instance.depth > instance.depth)) {
+						entity = unit;
+					}
+				}
 			}
 		}
 		return entity;
@@ -1233,41 +1240,6 @@ public class War3MapViewer extends ModelViewer {
 		numElements |= numElements >>> 8;
 		numElements |= numElements >>> 16;
 		return (numElements < 0) ? 1 : (numElements >= MAXIMUM_ACCEPTED) ? MAXIMUM_ACCEPTED : numElements + 1;
-	}
-
-	public boolean orderSmart(final float x, final float y) {
-		mousePosHeap.x = x;
-		mousePosHeap.y = y;
-		boolean ordered = false;
-		for (final RenderUnit unit : this.selected) {
-			for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
-				if (ability instanceof CAbilityMove) {
-					ability.checkCanUse(this.simulation, unit.getSimulationUnit(), OrderIds.smart,
-							BooleanAbilityActivationReceiver.INSTANCE);
-					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
-						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), OrderIds.smart, mousePosHeap,
-								PointAbilityTargetCheckReceiver.INSTANCE);
-						final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
-						if (target != null) {
-							ability.onOrder(this.simulation, unit.getSimulationUnit(), OrderIds.smart, mousePosHeap,
-									false);
-							ordered = true;
-						}
-						else {
-							System.err.println("Target not valid.");
-						}
-					}
-					else {
-						System.err.println("Ability not ok to use.");
-					}
-				}
-				else {
-					System.err.println("Ability not move.");
-				}
-			}
-
-		}
-		return ordered;
 	}
 
 	public boolean orderSmart(final RenderUnit target) {

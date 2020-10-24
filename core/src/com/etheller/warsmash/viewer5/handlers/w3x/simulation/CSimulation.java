@@ -3,8 +3,10 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -14,6 +16,7 @@ import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
@@ -42,6 +45,8 @@ public class CSimulation {
 	private final CGameplayConstants gameplayConstants;
 	private final Random seededRandom;
 	private float currentGameDayTimeElapsed;
+	private final Map<Integer, CUnit> handleIdToUnit = new HashMap<>();
+	private final Map<Integer, CAbility> handleIdToAbility = new HashMap<>();
 
 	public CSimulation(final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedAbilityData, final SimulationRenderController simulationRenderController,
@@ -106,8 +111,20 @@ public class CSimulation {
 		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
 				this.simulationRenderController, this.handleIdAllocator);
 		this.units.add(unit);
+		this.handleIdToUnit.put(unit.getHandleId(), unit);
+		for (final CAbility ability : unit.getAbilities()) {
+			this.handleIdToAbility.put(ability.getHandleId(), ability);
+		}
 		this.worldCollision.addUnit(unit);
 		return unit;
+	}
+
+	public CUnit getUnit(final int handleId) {
+		return this.handleIdToUnit.get(handleId);
+	}
+
+	public CAbility getAbility(final int handleId) {
+		return this.handleIdToAbility.get(handleId);
 	}
 
 	public CAttackProjectile createProjectile(final CUnit source, final float launchX, final float launchY,
@@ -142,6 +159,10 @@ public class CSimulation {
 			final CUnit unit = unitIterator.next();
 			if (unit.update(this)) {
 				unitIterator.remove();
+				for (final CAbility ability : unit.getAbilities()) {
+					this.handleIdToAbility.remove(ability.getHandleId());
+				}
+				this.handleIdToUnit.remove(unit.getHandleId());
 				this.simulationRenderController.removeUnit(unit);
 			}
 		}

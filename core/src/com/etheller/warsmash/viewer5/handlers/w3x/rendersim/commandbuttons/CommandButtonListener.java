@@ -34,5 +34,5 @@ public interface CommandButtonListener {
 //	int getButtonPositionY();
 //
 //	int getOrderId();
-	void commandButton(int buttonPositionX, int buttonPositionY, Texture icon, int orderId);
+	void commandButton(int buttonPositionX, int buttonPositionY, Texture icon, int abilityHandleId, int orderId);
 }

@@ -14,7 +14,6 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -137,8 +136,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	private int selectedSoundCount = 0;
 	private final ActiveCommandUnitTargetFilter activeCommandUnitTargetFilter;
-
-	private UIFrame clickUI = null;
 
 	public MeleeUI(final DataSource dataSource, final Viewport uiViewport, final FreeTypeFontGenerator fontGenerator,
 			final Scene uiScene, final Scene portraitScene, final CameraPreset[] cameraPresets,
@@ -421,7 +418,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		mouseX = Math.max(minX, Math.min(maxX, mouseX));
 		mouseY = Math.max(minY, Math.min(maxY, mouseY));
-//		Gdx.input.setCursorPosition(mouseX, mouseY);
+		if (Gdx.input.isCursorCatched()) {
+			Gdx.input.setCursorPosition(mouseX, mouseY);
+		}
 
 		screenCoordsVector.set(mouseX, mouseY);
 		this.uiViewport.unproject(screenCoordsVector);
@@ -481,18 +480,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.meleeUIMinimap.render(batch, this.war3MapViewer.units);
 		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
-
-		if (this.clickUI != null) {
-			batch.end();
-			this.shapeRenderer.setProjectionMatrix(this.uiViewport.getCamera().combined);
-			this.shapeRenderer.begin(ShapeType.Line);
-			this.shapeRenderer.rect(this.clickUI.getFramePointX(FramePoint.LEFT),
-					this.clickUI.getFramePointY(FramePoint.BOTTOM),
-					this.clickUI.getFramePointX(FramePoint.RIGHT) - this.clickUI.getFramePointX(FramePoint.LEFT),
-					this.clickUI.getFramePointY(FramePoint.TOP) - this.clickUI.getFramePointY(FramePoint.BOTTOM));
-			this.shapeRenderer.end();
-			batch.begin();
-		}
 	}
 
 	public void portraitTalk() {
@@ -787,8 +774,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.cameraManager.scrolled(amount);
 	}
 
-	private float lastX, lastY;
-
 	public boolean touchDown(final int screenX, final int screenY, final float worldScreenY, final int button) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
@@ -797,8 +782,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					screenCoordsVector.y);
 			this.cameraManager.target.x = worldPoint.x;
 			this.cameraManager.target.y = worldPoint.y;
-			this.lastX = screenCoordsVector.x;
-			this.lastY = screenCoordsVector.y;
 			return true;
 		}
 		final UIFrame clickedUIFrame = this.rootFrame.touchDown(screenCoordsVector.x, screenCoordsVector.y, button);
@@ -973,11 +956,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 			}
 		}
-		else {
-			this.clickUI = clickedUIFrame;
-			this.lastX = screenCoordsVector.x;
-			this.lastY = screenCoordsVector.y;
-		}
 		return false;
 	}
 
@@ -988,19 +966,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public boolean touchDragged(final int screenX, final int screenY, final float worldScreenY, final int pointer) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
-		final float dx = screenCoordsVector.x - this.lastX;
-		final float dy = screenCoordsVector.y - this.lastY;
 
 		if (this.meleeUIMinimap.containsMouse(screenCoordsVector.x, screenCoordsVector.y)) {
-			this.meleeUIMinimap.touchDragged(screenX, screenY, worldScreenY, pointer, dx, dy);
+			final Vector2 worldPoint = this.meleeUIMinimap.getWorldPointFromScreen(screenCoordsVector.x,
+					screenCoordsVector.y);
+			this.cameraManager.target.x = worldPoint.x;
+			this.cameraManager.target.y = worldPoint.y;
 		}
-		else if (this.clickUI != null) {
-			this.clickUI.setFramePointX(FramePoint.LEFT, this.clickUI.getFramePointX(FramePoint.LEFT) + dx);
-			this.clickUI.setFramePointY(FramePoint.BOTTOM, this.clickUI.getFramePointY(FramePoint.BOTTOM) + dy);
-		}
-
-		this.lastX = screenCoordsVector.x;
-		this.lastY = screenCoordsVector.y;
 		return false;
 	}
 }

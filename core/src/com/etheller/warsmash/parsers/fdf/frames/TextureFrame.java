@@ -66,9 +66,6 @@ public class TextureFrame extends AbstractRenderableFrame {
 
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
-		if (this.renderBounds.contains(screenX, screenY)) {
-			return this;
-		}
 		return super.touchDown(screenX, screenY, button);
 	}
 }

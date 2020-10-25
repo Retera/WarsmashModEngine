@@ -161,8 +161,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
 
 		// libGDX stuff
-		final float w = Gdx.graphics.getWidth();
-		final float h = Gdx.graphics.getHeight();
+		final int width = Gdx.graphics.getWidth();
+		final int height = Gdx.graphics.getHeight();
 
 		final FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(
 				new DataSourceFileHandle(this.viewer.dataSource, "fonts\\FRIZQT__.TTF"));
@@ -177,8 +177,18 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		// height
 		// Height is multiplied by aspect ratio.
 		this.uiCamera = new OrthographicCamera();
-		this.uiViewport = new ExtendViewport(1600, 1200, this.uiCamera);
-		this.uiViewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		int aspect3By4Width;
+		int aspect3By4Height;
+		if (width < ((height * 4) / 3)) {
+			aspect3By4Width = width;
+			aspect3By4Height = (width * 3) / 4;
+		}
+		else {
+			aspect3By4Width = (height * 4) / 3;
+			aspect3By4Height = height;
+		}
+		this.uiViewport = new ExtendViewport(aspect3By4Width, aspect3By4Height, this.uiCamera);
+		this.uiViewport.update(width, height);
 
 		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
 		this.uiCamera.update();
@@ -237,7 +247,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 		updateUIScene();
 
-		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		resize(width, height);
 
 		try {
 			this.viewer.loadAfterUI();

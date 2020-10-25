@@ -1,15 +1,17 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
 import com.badlogic.gdx.math.Vector2;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.StringsToExternalizeLater;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CAttackOrder;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CMoveOrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehaviorAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
@@ -30,6 +32,15 @@ public class CAbilityAttack implements CAbility {
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
 			final AbilityTargetCheckReceiver<CWidget> receiver) {
+		if (orderId == OrderIds.smart) {
+			if (target instanceof CUnit) {
+				if (game.getPlayer(unit.getPlayerIndex()).hasAlliance(((CUnit) target).getPlayerIndex(),
+						CAllianceType.PASSIVE)) {
+					receiver.orderIdNotAccepted();
+					return;
+				}
+			}
+		}
 		if ((orderId == OrderIds.smart) || (orderId == OrderIds.attack)) {
 			boolean canTarget = false;
 			for (final CUnitAttack attack : unit.getUnitType().getAttacks()) {
@@ -54,7 +65,30 @@ public class CAbilityAttack implements CAbility {
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final Vector2 target,
 			final AbilityTargetCheckReceiver<Vector2> receiver) {
-		receiver.mustTargetType(TargetType.UNIT);
+		switch (orderId) {
+		case OrderIds.attack:
+			receiver.targetOk(target);
+			break;
+		case OrderIds.attackground:
+			boolean allowAttackGround = false;
+			for (final CUnitAttack attack : unit.getUnitType().getAttacks()) {
+				if ((attack.getWeaponType() == CWeaponType.ARTILLERY)
+						|| (attack.getWeaponType() == CWeaponType.ALINE)) {
+					allowAttackGround = true;
+					break;
+				}
+			}
+			if (allowAttackGround) {
+				receiver.targetOk(target);
+			}
+			else {
+				receiver.orderIdNotAccepted();
+			}
+			break;
+		default:
+			receiver.orderIdNotAccepted();
+			break;
+		}
 	}
 
 	@Override
@@ -74,15 +108,15 @@ public class CAbilityAttack implements CAbility {
 	@Override
 	public void onOrder(final CSimulation game, final CUnit caster, final int orderId, final CWidget target,
 			final boolean queue) {
-		COrder order = null;
+		CBehavior order = null;
 		for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
 			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
-				order = new CAttackOrder(caster, attack, orderId, target);
+				order = new CBehaviorAttack(caster, attack, orderId, target);
 				break;
 			}
 		}
 		if (order == null) {
-			order = new CMoveOrder(caster, orderId, target.getX(), target.getY());
+			order = new CBehaviorMove(caster, orderId, target.getX(), target.getY());
 		}
 		caster.order(order, queue);
 	}

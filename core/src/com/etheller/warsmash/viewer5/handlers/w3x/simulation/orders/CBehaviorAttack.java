@@ -3,13 +3,12 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
-public class CAttackOrder implements COrder {
+public class CBehaviorAttack implements CBehavior {
 	private final CUnit unit;
 	private final int orderId;
 	private boolean wasWithinPropWindow = false;
@@ -17,11 +16,11 @@ public class CAttackOrder implements COrder {
 	private final CWidget target;
 	private int damagePointLaunchTime;
 	private int backSwingTime;
-	private COrder moveOrder;
+	private CBehavior moveOrder;
 	private int thisOrderCooldownEndTime;
 	private boolean wasInRange = false;
 
-	public CAttackOrder(final CUnit unit, final CUnitAttack unitAttack, final int orderId, final CWidget target) {
+	public CBehaviorAttack(final CUnit unit, final CUnitAttack unitAttack, final int orderId, final CWidget target) {
 		this.unit = unit;
 		this.unitAttack = unitAttack;
 		this.orderId = orderId;
@@ -32,10 +31,10 @@ public class CAttackOrder implements COrder {
 	private void createMoveOrder(final CUnit unit, final CWidget target) {
 		if (!unit.isMovementDisabled()) { // TODO: Check mobility instead
 			if ((target instanceof CUnit) && !(((CUnit) target).getUnitType().isBuilding())) {
-				this.moveOrder = new CMoveOrder(unit, this.orderId, (CUnit) target);
+				this.moveOrder = new CBehaviorMove(unit, this.orderId, (CUnit) target);
 			}
 			else {
-				this.moveOrder = new CMoveOrder(unit, this.orderId, target.getX(), target.getY());
+				this.moveOrder = new CBehaviorMove(unit, this.orderId, target.getX(), target.getY());
 			}
 		}
 		else {
@@ -50,7 +49,7 @@ public class CAttackOrder implements COrder {
 			return true;
 		}
 		float range = this.unitAttack.getRange();
-		if ((this.target instanceof CUnit) && (((CUnit) this.target).getCurrentOrder() instanceof CMoveOrder)
+		if ((this.target instanceof CUnit) && (((CUnit) this.target).getCurrentOrder() instanceof CBehaviorMove)
 				&& (this.damagePointLaunchTime != 0 /*
 													 * only apply range motion buffer if they were already in range and
 													 * attacked
@@ -138,7 +137,6 @@ public class CAttackOrder implements COrder {
 					else {
 						damage = simulation.getSeededRandom().nextInt(maxDamage - minDamage) + minDamage;
 					}
-					System.out.println(damage + " from " + minDamage + "  to " + maxDamage);
 					this.unitAttack.launch(simulation, this.unit, this.target, damage);
 					this.damagePointLaunchTime = 0;
 				}

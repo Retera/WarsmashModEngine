@@ -59,4 +59,12 @@ public class MeleeUIMinimap {
 	public boolean containsMouse(final float x, final float y) {
 		return this.minimapFilledArea.contains(x, y);
 	}
+
+	public void touchDragged(final int screenX, final int screenY, final float worldScreenY, final int pointer,
+			final float dx, final float dy) {
+		this.minimapFilledArea.x += dx;
+		this.minimapFilledArea.y += dy;
+		this.minimap.x += dx;
+		this.minimap.y += dy;
+	}
 }

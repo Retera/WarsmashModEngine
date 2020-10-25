@@ -1,12 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 
-public class CDoNothingOrder implements COrder {
+public class CBehaviorStop implements CBehavior {
 	private final int orderId;
 
-	public CDoNothingOrder(final int orderId) {
+	public CBehaviorStop(final int orderId) {
 		this.orderId = orderId;
 	}
 

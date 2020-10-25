@@ -411,6 +411,7 @@ public class Terrain {
 		this.shaderMapBoundsRectangle = new Rectangle(this.shaderMapBounds[0], this.shaderMapBounds[1],
 				this.shaderMapBounds[2] - this.shaderMapBounds[0], this.shaderMapBounds[3] - this.shaderMapBounds[1]);
 		this.mapSize = w3eFile.getMapSize();
+		this.entireMapRectangle = new Rectangle(centerOffset[0], centerOffset[1], (mapSize[0] * 128f) - 128, (mapSize[1] * 128f) - 128);
 		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundHeights, this.groundCornerHeights,
 				this.centerOffset, width, height);
 
@@ -1019,15 +1020,14 @@ public class Terrain {
 		gl.glUniform1i(6, (int) this.waterIndex);
 		gl.glUniform1f(this.waterShader.getUniformLocation("centerOffsetX"), this.centerOffset[0]);
 		gl.glUniform1f(this.waterShader.getUniformLocation("centerOffsetY"), this.centerOffset[1]);
-		gl.glUniform4fv(9, 1, this.shaderMapBounds, 0);
+		gl.glUniform4fv(11, 1, this.shaderMapBounds, 0);
 
 		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
-		final DataTexture unitLightsTexture = lightManager.getTerrainLightsTexture();
+		final DataTexture terrainLightsTexture = lightManager.getTerrainLightsTexture();
 
-		unitLightsTexture.bind(21);
-		gl.glUniform1i(this.waterShader.getUniformLocation("lightTexture"), 21);
-		gl.glUniform1f(this.waterShader.getUniformLocation("lightCount"), lightManager.getTerrainLightCount());
-		gl.glUniform1f(this.waterShader.getUniformLocation("lightCountHeight"), unitLightsTexture.getHeight());
+		terrainLightsTexture.bind(3);
+		gl.glUniform1f(9, lightManager.getTerrainLightCount());
+		gl.glUniform1f(10, terrainLightsTexture.getHeight());
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
@@ -1035,7 +1035,7 @@ public class Terrain {
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterExists);
-		gl.glActiveTexture(GL30.GL_TEXTURE3);
+		gl.glActiveTexture(GL30.GL_TEXTURE4);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
 
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, Shapes.INSTANCE.vertexBuffer);
@@ -1239,6 +1239,7 @@ public class Terrain {
 	private final WaveBuilder waveBuilder;
 	public PathingGrid pathingGrid;
 	private final Rectangle shaderMapBoundsRectangle;
+	private final Rectangle entireMapRectangle;
 
 	private static final class UnloadedTexture {
 		private final int width;
@@ -1398,5 +1399,9 @@ public class Terrain {
 
 	public Rectangle getPlayableMapArea() {
 		return this.shaderMapBoundsRectangle;
+	}
+
+	public Rectangle getEntireMap() {
+		return entireMapRectangle;
 	}
 }

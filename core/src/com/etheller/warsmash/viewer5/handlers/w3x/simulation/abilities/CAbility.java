@@ -17,4 +17,5 @@ public interface CAbility extends CAbilityView {
 	void onOrder(CSimulation game, CUnit caster, int orderId, Vector2 point, boolean queue);
 
 	void onOrderNoTarget(CSimulation game, CUnit caster, int orderId, boolean queue);
+
 }

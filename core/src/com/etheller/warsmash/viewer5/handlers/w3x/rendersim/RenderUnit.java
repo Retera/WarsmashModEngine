@@ -24,6 +24,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Moveme
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandCardPopulatingAbilityVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -131,10 +132,11 @@ public class RenderUnit {
 
 	}
 
-	public void populateCommandCard(final CommandButtonListener commandButtonListener,
+	public void populateCommandCard(final CSimulation game, final CommandButtonListener commandButtonListener,
 			final AbilityDataUI abilityDataUI) {
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
-			ability.visit(CommandCardPopulatingAbilityVisitor.INSTANCE.reset(commandButtonListener, abilityDataUI));
+			ability.visit(CommandCardPopulatingAbilityVisitor.INSTANCE.reset(game, this.simulationUnit,
+					commandButtonListener, abilityDataUI));
 		}
 	}
 
@@ -166,15 +168,43 @@ public class RenderUnit {
 		final float groundHeight;
 		final MovementType movementType = this.simulationUnit.getUnitType().getMovementType();
 		final short terrainPathing = map.terrain.pathingGrid.getPathing(x, y);
-		final boolean swimming = (movementType == MovementType.AMPHIBIOUS)
+		boolean swimming = (movementType == MovementType.AMPHIBIOUS)
 				&& PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.SWIMMABLE)
 				&& !PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.WALKABLE);
-		if ((swimming) || (movementType == MovementType.FLOAT) || (movementType == MovementType.FLY)
-				|| (movementType == MovementType.HOVER)) {
-			groundHeight = Math.max(map.terrain.getGroundHeight(x, y), map.terrain.getWaterHeight(x, y));
+		final float groundHeightTerrain = map.terrain.getGroundHeight(x, y);
+		float groundHeightTerrainAndWater;
+		MdxComplexInstance currentWalkableUnder;
+		final boolean standingOnWater = (swimming) || (movementType == MovementType.FLOAT)
+				|| (movementType == MovementType.FLY) || (movementType == MovementType.HOVER);
+		if (standingOnWater) {
+			groundHeightTerrainAndWater = Math.max(groundHeightTerrain, map.terrain.getWaterHeight(x, y));
 		}
 		else {
-			groundHeight = map.terrain.getGroundHeight(x, y);
+			// land units will have their feet pass under the surface of the water
+			groundHeightTerrainAndWater = groundHeightTerrain;
+		}
+		if (movementType == MovementType.FLOAT) {
+			// boats cant go on bridges
+			groundHeight = groundHeightTerrainAndWater;
+			currentWalkableUnder = null;
+		}
+		else {
+			currentWalkableUnder = map.getHighestWalkableUnder(x, y);
+			if (currentWalkableUnder != null) {
+				System.out.println("WALKABLE UNDER");
+			}
+			War3MapViewer.gdxRayHeap.set(x, y, 4096, 0, 0, -8192);
+			if ((currentWalkableUnder != null)
+					&& currentWalkableUnder.intersectRayWithCollision(War3MapViewer.gdxRayHeap,
+							War3MapViewer.intersectionHeap, true, true)
+					&& (War3MapViewer.intersectionHeap.z > groundHeightTerrainAndWater)) {
+				groundHeight = War3MapViewer.intersectionHeap.z;
+				swimming = false; // Naga Royal Guard should slither across a bridge, not swim in rock
+			}
+			else {
+				groundHeight = groundHeightTerrainAndWater;
+				currentWalkableUnder = null;
+			}
 		}
 		if (swimming && !this.swimming) {
 			this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.SWIM);
@@ -263,17 +293,49 @@ public class RenderUnit {
 		final float pitchSampleForwardY = y + (sampleRadius * (float) Math.sin(facingRadians));
 		final float pitchSampleBackwardX = x - (sampleRadius * (float) Math.cos(facingRadians));
 		final float pitchSampleBackwardY = y - (sampleRadius * (float) Math.sin(facingRadians));
-		final float pitchSampleGroundHeight1 = map.terrain.getGroundHeight(pitchSampleBackwardX, pitchSampleBackwardY);
-		final float pitchSampleGorundHeight2 = map.terrain.getGroundHeight(pitchSampleForwardX, pitchSampleForwardY);
-		pitch = Math.max(-maxPitch, Math.min(maxPitch,
-				(float) Math.atan2(pitchSampleGorundHeight2 - pitchSampleGroundHeight1, sampleRadius * 2)));
 		final double leftOfFacingAngle = facingRadians + (Math.PI / 2);
 		final float rollSampleForwardX = x + (sampleRadius * (float) Math.cos(leftOfFacingAngle));
 		final float rollSampleForwardY = y + (sampleRadius * (float) Math.sin(leftOfFacingAngle));
 		final float rollSampleBackwardX = x - (sampleRadius * (float) Math.cos(leftOfFacingAngle));
 		final float rollSampleBackwardY = y - (sampleRadius * (float) Math.sin(leftOfFacingAngle));
-		final float rollSampleGroundHeight1 = map.terrain.getGroundHeight(rollSampleBackwardX, rollSampleBackwardY);
-		final float rollSampleGroundHeight2 = map.terrain.getGroundHeight(rollSampleForwardX, rollSampleForwardY);
+		final float pitchSampleGroundHeight1;
+		final float pitchSampleGroundHeight2;
+		final float rollSampleGroundHeight1;
+		final float rollSampleGroundHeight2;
+		if (currentWalkableUnder != null) {
+			pitchSampleGroundHeight1 = getGroundHeightSample(groundHeight, currentWalkableUnder, pitchSampleBackwardX,
+					pitchSampleBackwardY);
+			pitchSampleGroundHeight2 = getGroundHeightSample(groundHeight, currentWalkableUnder, pitchSampleForwardX,
+					pitchSampleForwardY);
+			rollSampleGroundHeight1 = getGroundHeightSample(groundHeight, currentWalkableUnder, rollSampleBackwardX,
+					rollSampleBackwardY);
+			rollSampleGroundHeight2 = getGroundHeightSample(groundHeight, currentWalkableUnder, rollSampleForwardX,
+					rollSampleForwardY);
+		}
+		else {
+			final float pitchGroundHeight1 = map.terrain.getGroundHeight(pitchSampleBackwardX, pitchSampleBackwardY);
+			final float pitchGroundHeight2 = map.terrain.getGroundHeight(pitchSampleForwardX, pitchSampleForwardY);
+			final float rollGroundHeight1 = map.terrain.getGroundHeight(rollSampleBackwardX, rollSampleBackwardY);
+			final float rollGroundHeight2 = map.terrain.getGroundHeight(rollSampleForwardX, rollSampleForwardY);
+			if (standingOnWater) {
+				pitchSampleGroundHeight1 = Math.max(pitchGroundHeight1,
+						map.terrain.getWaterHeight(pitchSampleBackwardX, pitchSampleBackwardY));
+				pitchSampleGroundHeight2 = Math.max(pitchGroundHeight2,
+						map.terrain.getWaterHeight(pitchSampleForwardX, pitchSampleForwardY));
+				rollSampleGroundHeight1 = Math.max(rollGroundHeight1,
+						map.terrain.getWaterHeight(rollSampleBackwardX, rollSampleBackwardY));
+				rollSampleGroundHeight2 = Math.max(rollGroundHeight2,
+						map.terrain.getWaterHeight(rollSampleForwardX, rollSampleForwardY));
+			}
+			else {
+				pitchSampleGroundHeight1 = pitchGroundHeight1;
+				pitchSampleGroundHeight2 = pitchGroundHeight2;
+				rollSampleGroundHeight1 = rollGroundHeight1;
+				rollSampleGroundHeight2 = rollGroundHeight2;
+			}
+		}
+		pitch = Math.max(-maxPitch, Math.min(maxPitch,
+				(float) Math.atan2(pitchSampleGroundHeight2 - pitchSampleGroundHeight1, sampleRadius * 2)));
 		roll = Math.max(-maxRoll, Math.min(maxRoll,
 				(float) Math.atan2(rollSampleGroundHeight2 - rollSampleGroundHeight1, sampleRadius * 2)));
 		this.instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, -pitch));
@@ -287,6 +349,21 @@ public class RenderUnit {
 			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
 		}
 		this.unitAnimationListenerImpl.update();
+	}
+
+	private float getGroundHeightSample(final float groundHeight, final MdxComplexInstance currentWalkableUnder,
+			final float sampleX, final float sampleY) {
+		final float sampleGroundHeight;
+		War3MapViewer.gdxRayHeap.origin.x = sampleX;
+		War3MapViewer.gdxRayHeap.origin.y = sampleY;
+		if (currentWalkableUnder.intersectRayWithCollision(War3MapViewer.gdxRayHeap, War3MapViewer.intersectionHeap,
+				true, true)) {
+			sampleGroundHeight = War3MapViewer.intersectionHeap.z;
+		}
+		else {
+			sampleGroundHeight = groundHeight;
+		}
+		return sampleGroundHeight;
 	}
 
 	public CUnit getSimulationUnit() {

@@ -26,6 +26,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.common.FetchDataTypeName;
 import com.etheller.warsmash.common.LoadGenericCallback;
@@ -48,6 +49,8 @@ import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
 import com.etheller.warsmash.util.MappedData;
+import com.etheller.warsmash.util.Quadtree;
+import com.etheller.warsmash.util.QuadtreeIntersector;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -85,12 +88,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitFilterFunction
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 
 import mpq.MPQArchive;
@@ -117,10 +122,11 @@ public class War3MapViewer extends ModelViewer {
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
 	private static final float[] rayHeap = new float[6];
-	private static final Ray gdxRayHeap = new Ray();
+	public static final Ray gdxRayHeap = new Ray();
 	private static final Vector2 mousePosHeap = new Vector2();
 	private static final Vector3 normalHeap = new Vector3();
-	private static final Vector3 intersectionHeap = new Vector3();
+	public static final Vector3 intersectionHeap = new Vector3();
+	private static final Rectangle rectangleHeap = new Rectangle();
 	public static final StreamDataCallbackImplementation streamDataCallback = new StreamDataCallbackImplementation();
 
 	public PathSolver wc3PathSolver = PathSolver.DEFAULT;
@@ -184,6 +190,11 @@ public class War3MapViewer extends ModelViewer {
 	private final Map<War3ID, RenderUnitTypeData> unitIdToTypeData = new HashMap<>();
 	private GameUI gameUI;
 	private Vector3 lightDirection;
+
+	private Quadtree<MdxComplexInstance> walkableObjectsTree;
+	private final QuadtreeIntersectorFindsWalkableRenderHeight walkablesIntersector = new QuadtreeIntersectorFindsWalkableRenderHeight();
+	private final QuadtreeIntersectorFindsHitPoint walkablesIntersectionFinder = new QuadtreeIntersectorFindsHitPoint();
+	private final QuadtreeIntersectorFindsHighestWalkable intersectorFindsHighestWalkable = new QuadtreeIntersectorFindsHighestWalkable();
 
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
 		super(dataSource, canvas);
@@ -501,10 +512,9 @@ public class War3MapViewer extends ModelViewer {
 						War3MapViewer.this.units.remove(renderUnit);
 						War3MapViewer.this.worldScene.removeInstance(renderUnit.instance);
 					}
-				}, this.terrain.pathingGrid,
-				new Rectangle(centerOffset[0], centerOffset[1], (mapSize[0] * 128f) - 128, (mapSize[1] * 128f) - 128),
-				this.seededRandom, w3iFile.getPlayers());
+				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, w3iFile.getPlayers());
 
+		this.walkableObjectsTree = new Quadtree<>(this.terrain.getEntireMap());
 		if (this.doodadsAndDestructiblesLoaded) {
 			this.loadDoodadsAndDestructibles(this.allObjectData);
 		}
@@ -632,8 +642,20 @@ public class War3MapViewer extends ModelViewer {
 				}
 
 				if (type == WorldEditorDataType.DESTRUCTIBLES) {
-					this.doodads.add(new RenderDestructable(this, model, row, doodad, type, maxPitch, maxRoll,
-							doodad.getLife()));
+					final RenderDestructable renderDestructable = new RenderDestructable(this, model, row, doodad, type,
+							maxPitch, maxRoll, doodad.getLife());
+					if (row.readSLKTagBoolean("walkable")) {
+						final float x = doodad.getLocation()[0];
+						final float y = doodad.getLocation()[1];
+						final BoundingBox boundingBox = model.bounds.getBoundingBox();
+						final float minX = boundingBox.min.x + x;
+						final float minY = boundingBox.min.y + y;
+						final Rectangle renderDestructableBounds = new Rectangle(minX, minY, boundingBox.getWidth(),
+								boundingBox.getHeight());
+						this.walkableObjectsTree.add((MdxComplexInstance) renderDestructable.instance,
+								renderDestructableBounds);
+					}
+					this.doodads.add(renderDestructable);
 				}
 				else {
 					this.doodads.add(new RenderDoodad(this, model, row, doodad, type, maxPitch, maxRoll));
@@ -884,7 +906,7 @@ public class War3MapViewer extends ModelViewer {
 					}
 					else {
 						this.items.add(new RenderItem(this, model, row, unit, soundset, portraitModel)); // TODO store
-																											// somewhere
+						// somewhere
 						if (unitShadowSplat != null) {
 							unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
 								@Override
@@ -1080,6 +1102,15 @@ public class War3MapViewer extends ModelViewer {
 		gdxRayHeap.direction.nor();// needed for libgdx
 		RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.terrain.softwareGroundMesh.vertices,
 				this.terrain.softwareGroundMesh.indices, 3, out);
+		rectangleHeap.set(Math.min(out.x, gdxRayHeap.origin.x), Math.min(out.y, gdxRayHeap.origin.y),
+				Math.abs(out.x - gdxRayHeap.origin.x), Math.abs(out.y - gdxRayHeap.origin.y));
+		this.walkableObjectsTree.intersect(rectangleHeap, this.walkablesIntersectionFinder.reset(gdxRayHeap));
+		if (this.walkablesIntersectionFinder.found) {
+			out.set(this.walkablesIntersectionFinder.intersection);
+		}
+		else {
+			out.z = Math.max(getWalkableRenderHeight(out.x, out.y), this.terrain.getGroundHeight(out.x, out.y));
+		}
 	}
 
 	public void showConfirmation(final Vector3 position, final float red, final float green, final float blue) {
@@ -1105,9 +1136,11 @@ public class War3MapViewer extends ModelViewer {
 			final MdxComplexInstance instance = unit.instance;
 			if (instance.isVisible(this.worldScene.camera)
 					&& instance.intersectRayWithCollision(gdxRayHeap, intersectionHeap,
-							unit.getSimulationUnit().getUnitType().isBuilding())
+							unit.getSimulationUnit().getUnitType().isBuilding(), false)
 					&& !unit.getSimulationUnit().isDead()) {
-				entity = unit;
+				if ((entity == null) || (entity.instance.depth > instance.depth)) {
+					entity = unit;
+				}
 			}
 		}
 		List<RenderUnit> sel;
@@ -1148,7 +1181,7 @@ public class War3MapViewer extends ModelViewer {
 		for (final RenderUnit unit : this.units) {
 			final MdxComplexInstance instance = unit.instance;
 			if (instance.isVisible(this.worldScene.camera) && instance.intersectRayWithCollision(gdxRayHeap,
-					intersectionHeap, unit.getSimulationUnit().getUnitType().isBuilding())) {
+					intersectionHeap, unit.getSimulationUnit().getUnitType().isBuilding(), false)) {
 				if (filter.call(unit.getSimulationUnit())) {
 					if ((entity == null) || (entity.instance.depth > instance.depth)) {
 						entity = unit;
@@ -1240,6 +1273,41 @@ public class War3MapViewer extends ModelViewer {
 		numElements |= numElements >>> 8;
 		numElements |= numElements >>> 16;
 		return (numElements < 0) ? 1 : (numElements >= MAXIMUM_ACCEPTED) ? MAXIMUM_ACCEPTED : numElements + 1;
+	}
+
+	public boolean orderSmart(final float x, final float y) {
+		mousePosHeap.x = x;
+		mousePosHeap.y = y;
+		boolean ordered = false;
+		for (final RenderUnit unit : this.selected) {
+			for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
+				if (ability instanceof CAbilityMove) {
+					ability.checkCanUse(this.simulation, unit.getSimulationUnit(), OrderIds.smart,
+							BooleanAbilityActivationReceiver.INSTANCE);
+					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
+						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), OrderIds.smart, mousePosHeap,
+								PointAbilityTargetCheckReceiver.INSTANCE);
+						final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
+						if (target != null) {
+							ability.onOrder(this.simulation, unit.getSimulationUnit(), OrderIds.smart, mousePosHeap,
+									false);
+							ordered = true;
+						}
+						else {
+							System.err.println("Target not valid.");
+						}
+					}
+					else {
+						System.err.println("Ability not ok to use.");
+					}
+				}
+				else {
+					System.err.println("Ability not move.");
+				}
+			}
+
+		}
+		return ordered;
 	}
 
 	public boolean orderSmart(final RenderUnit target) {
@@ -1347,5 +1415,83 @@ public class War3MapViewer extends ModelViewer {
 
 	public AbilityDataUI getAbilityDataUI() {
 		return this.abilityDataUI;
+	}
+
+	public float getWalkableRenderHeight(final float x, final float y) {
+		this.walkableObjectsTree.intersect(x, y, this.walkablesIntersector.reset(x, y));
+		return this.walkablesIntersector.z;
+	}
+
+	public MdxComplexInstance getHighestWalkableUnder(final float x, final float y) {
+		this.walkableObjectsTree.intersect(x, y, this.intersectorFindsHighestWalkable.reset(x, y));
+		return this.intersectorFindsHighestWalkable.highestInstance;
+	}
+
+	private static final class QuadtreeIntersectorFindsWalkableRenderHeight
+			implements QuadtreeIntersector<MdxComplexInstance> {
+		private float z;
+		private final Ray ray = new Ray();
+		private final Vector3 intersection = new Vector3();
+
+		private QuadtreeIntersectorFindsWalkableRenderHeight reset(final float x, final float y) {
+			this.z = -Float.MAX_VALUE;
+			this.ray.set(x, y, 4096, 0, 0, -8192);
+			return this;
+		}
+
+		@Override
+		public boolean onIntersect(final MdxComplexInstance intersectingObject) {
+			if (intersectingObject.intersectRayWithCollision(this.ray, this.intersection, true, true)) {
+				this.z = Math.max(this.z, this.intersection.z);
+			}
+			return false;
+		}
+	}
+
+	private static final class QuadtreeIntersectorFindsHighestWalkable
+			implements QuadtreeIntersector<MdxComplexInstance> {
+		private float z;
+		private final Ray ray = new Ray();
+		private final Vector3 intersection = new Vector3();
+		private MdxComplexInstance highestInstance;
+
+		private QuadtreeIntersectorFindsHighestWalkable reset(final float x, final float y) {
+			this.z = -Float.MAX_VALUE;
+			this.ray.set(x, y, 4096, 0, 0, -8192);
+			this.highestInstance = null;
+			return this;
+		}
+
+		@Override
+		public boolean onIntersect(final MdxComplexInstance intersectingObject) {
+			if (intersectingObject.intersectRayWithCollision(this.ray, this.intersection, true, true)) {
+				if (this.intersection.z > this.z) {
+					this.z = this.intersection.z;
+					this.highestInstance = intersectingObject;
+				}
+			}
+			return false;
+		}
+	}
+
+	private static final class QuadtreeIntersectorFindsHitPoint implements QuadtreeIntersector<MdxComplexInstance> {
+		private Ray ray;
+		private final Vector3 intersection = new Vector3();
+		private boolean found;
+
+		private QuadtreeIntersectorFindsHitPoint reset(final Ray ray) {
+			this.ray = ray;
+			this.found = false;
+			return this;
+		}
+
+		@Override
+		public boolean onIntersect(final MdxComplexInstance intersectingObject) {
+			if (intersectingObject.intersectRayWithCollision(this.ray, this.intersection, true, true)) {
+				this.found = true;
+				return true;
+			}
+			return false;
+		}
 	}
 }

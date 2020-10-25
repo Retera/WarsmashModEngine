@@ -152,6 +152,9 @@ public final class SdSequence<TYPE> {
 	}
 
 	private TYPE[] fixTimelineArray(final Timeline<TYPE> timeline, final TYPE[] values) {
+		if(values == null) {
+			return null;
+		}
 		if (timeline.getName().equals(AnimationMap.KLAC.getWar3id())
 				|| timeline.getName().equals(AnimationMap.KLBC.getWar3id())) {
 			final float[][] flippedColorData = new float[values.length][3];

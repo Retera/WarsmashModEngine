@@ -83,7 +83,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 		if (this.abilityActivationReceiver.isUseOk()) {
 			final StringMsgTargetCheckReceiver<Void> targetReceiver = this.<Void>targetCheckReceiver();
 			ability.checkCanTargetNoTarget(this.game, unit, orderId, targetReceiver);
-			if (targetReceiver.getTarget() != null) {
+			if (targetReceiver.getMessage() == null) {
 				ability.onOrderNoTarget(this.game, unit, orderId, queue);
 				return true;
 			}

@@ -32,14 +32,14 @@ public class MdxHandler extends ModelHandler {
 		Shaders.extendedShadowMap = viewer.webGL.createShaderProgram(
 				"#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex, MdxShaders.fsComplexShadowMap);
 		Shaders.particles = viewer.webGL.createShaderProgram(MdxShaders.vsParticles, MdxShaders.fsParticles);
-		Shaders.simple = viewer.webGL.createShaderProgram(MdxShaders.vsSimple, MdxShaders.fsSimple);
+		//Shaders.simple = viewer.webGL.createShaderProgram(MdxShaders.vsSimple, MdxShaders.fsSimple);
 //		Shaders.hd = viewer.webGL.createShaderProgram(MdxShaders.vsHd, MdxShaders.fsHd);
 		// TODO HD reforged
 
 		// If a shader failed to compile, don't allow the handler to be registered, and
 		// send an error instead.
 		return Shaders.complex.isCompiled() && Shaders.extended.isCompiled() && Shaders.particles.isCompiled()
-				&& Shaders.simple.isCompiled() /* && Shaders.hd.isCompiled() */;
+				/* && Shaders.simple.isCompiled() && Shaders.hd.isCompiled() */;
 	}
 
 	@Override

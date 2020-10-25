@@ -27,12 +27,14 @@ import com.etheller.warsmash.parsers.fdf.datamodel.SetPointDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
+import com.etheller.warsmash.parsers.fdf.frames.FilterModeTextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.parsers.mdlx.Layer.FilterMode;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
@@ -206,6 +208,16 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	public TextureFrame createTextureFrame(final String name, final UIFrame parent, final boolean decorateFileNames,
 			final Vector4Definition texCoord) {
 		final TextureFrame textureFrame = new TextureFrame(name, parent, decorateFileNames, texCoord);
+		this.nameToFrame.put(name, textureFrame);
+		add(textureFrame);
+		return textureFrame;
+	}
+
+	public TextureFrame createTextureFrame(final String name, final UIFrame parent, final boolean decorateFileNames,
+			final Vector4Definition texCoord, final FilterMode filterMode) {
+		final FilterModeTextureFrame textureFrame = new FilterModeTextureFrame(name, parent, decorateFileNames,
+				texCoord);
+		textureFrame.setFilterMode(filterMode);
 		this.nameToFrame.put(name, textureFrame);
 		add(textureFrame);
 		return textureFrame;

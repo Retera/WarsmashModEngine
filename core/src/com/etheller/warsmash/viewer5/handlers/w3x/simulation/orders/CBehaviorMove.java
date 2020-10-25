@@ -10,13 +10,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 
-public class CMoveOrder implements COrder {
+public class CBehaviorMove implements CBehavior {
 	private static final Rectangle tempRect = new Rectangle();
 	private final CUnit unit;
 	private final int orderId;
@@ -27,7 +26,7 @@ public class CMoveOrder implements COrder {
 	private int searchCycles = 0;
 	private CUnit followUnit;
 
-	public CMoveOrder(final CUnit unit, final int orderId, final float targetX, final float targetY) {
+	public CBehaviorMove(final CUnit unit, final int orderId, final float targetX, final float targetY) {
 		this.unit = unit;
 		this.orderId = orderId;
 		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
@@ -36,7 +35,7 @@ public class CMoveOrder implements COrder {
 		this.target = new Point2D.Float(targetX, targetY);
 	}
 
-	public CMoveOrder(final CUnit unit, final int orderId, final CUnit followUnit) {
+	public CBehaviorMove(final CUnit unit, final int orderId, final CUnit followUnit) {
 		this.unit = unit;
 		this.orderId = orderId;
 		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(

@@ -134,7 +134,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		}
 
 		final Element cameraData = this.viewer.miscData.get("Camera");
-		final Element cameraListenerData = this.viewer.miscData.get("Listener");
+		Element cameraListenerData = this.viewer.miscData.get("Listener");
+		if (cameraListenerData == null) {
+			cameraListenerData = new Element("Listener", new DataTable(null));
+		}
 		final CameraPreset[] cameraPresets = new CameraPreset[6];
 		for (int i = 0; i < cameraPresets.length; i++) {
 			cameraPresets[i] = new CameraPreset(cameraData.getFieldFloatValue("AOA", i),
@@ -353,6 +356,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean keyTyped(final char character) {
+		if (character == '1') {
+			Gdx.input.setCursorCatched(!Gdx.input.isCursorCatched());
+		}
 		return false;
 	}
 
@@ -373,6 +379,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean touchDragged(final int screenX, final int screenY, final int pointer) {
+		final float worldScreenY = getHeight() - screenY;
+		if (this.meleeUI.touchDragged(screenX, screenY, worldScreenY, pointer)) {
+			return false;
+		}
 		return false;
 	}
 

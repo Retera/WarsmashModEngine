@@ -25,6 +25,9 @@ public class StringFrame extends AbstractRenderableFrame {
 	}
 
 	public void setText(final String text) {
+		if (text == null) {
+			throw new IllegalArgumentException();
+		}
 		this.text = text;
 	}
 

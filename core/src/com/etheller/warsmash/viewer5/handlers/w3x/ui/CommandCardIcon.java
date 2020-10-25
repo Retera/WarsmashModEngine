@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandL
 public class CommandCardIcon extends AbstractRenderableFrame {
 
 	private TextureFrame iconFrame;
+	private TextureFrame activeHighlightFrame;
 	private SpriteFrame cooldownFrame;
 	private SpriteFrame autocastFrame;
 	private CommandButton commandButton;
@@ -30,8 +31,10 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 		this.commandCardCommandListener = commandCardCommandListener;
 	}
 
-	public void set(final TextureFrame iconFrame, final SpriteFrame cooldownFrame, final SpriteFrame autocastFrame) {
+	public void set(final TextureFrame iconFrame, final TextureFrame activeHighlightFrame,
+			final SpriteFrame cooldownFrame, final SpriteFrame autocastFrame) {
 		this.iconFrame = iconFrame;
+		this.activeHighlightFrame = activeHighlightFrame;
 		this.cooldownFrame = cooldownFrame;
 		this.autocastFrame = autocastFrame;
 	}
@@ -40,6 +43,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 		this.commandButton = commandButton;
 		if (commandButton == null) {
 			this.iconFrame.setVisible(false);
+			this.activeHighlightFrame.setVisible(false);
 			this.cooldownFrame.setVisible(false);
 			this.autocastFrame.setVisible(false);
 		}
@@ -64,8 +68,10 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 		}
 	}
 
-	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId) {
+	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId,
+			final boolean active) {
 		this.iconFrame.setVisible(true);
+		this.activeHighlightFrame.setVisible(active);
 		this.cooldownFrame.setVisible(false);
 		this.autocastFrame.setVisible(false);
 		this.iconFrame.setTexture(texture);
@@ -76,6 +82,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	@Override
 	protected void innerPositionBounds(final Viewport viewport) {
 		this.iconFrame.positionBounds(viewport);
+		this.activeHighlightFrame.positionBounds(viewport);
 		this.cooldownFrame.positionBounds(viewport);
 		this.autocastFrame.positionBounds(viewport);
 	}
@@ -83,6 +90,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		this.iconFrame.render(batch, baseFont, glyphLayout);
+		this.activeHighlightFrame.render(batch, baseFont, glyphLayout);
 		this.cooldownFrame.render(batch, baseFont, glyphLayout);
 		this.autocastFrame.render(batch, baseFont, glyphLayout);
 	}

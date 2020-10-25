@@ -5,8 +5,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.StringsToExternalizeLater;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CMoveOrder;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CPatrolOrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehaviorMove;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -85,13 +85,13 @@ public class CAbilityMove implements CAbility {
 	@Override
 	public void onOrder(final CSimulation game, final CUnit caster, final int orderId, final CWidget target,
 			final boolean queue) {
-		caster.order(new CPatrolOrder(caster, orderId, (CUnit) target), queue);
+		caster.order(new CBehaviorPatrol(caster, orderId, (CUnit) target), queue);
 	}
 
 	@Override
 	public void onOrder(final CSimulation game, final CUnit caster, final int orderId, final Vector2 target,
 			final boolean queue) {
-		caster.order(new CMoveOrder(caster, orderId, target.x, target.y), queue);
+		caster.order(new CBehaviorMove(caster, orderId, target.x, target.y), queue);
 	}
 
 	@Override

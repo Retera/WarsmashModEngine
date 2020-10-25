@@ -17,7 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CAttackOrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehaviorAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -37,8 +38,8 @@ public class CUnit extends CWidget {
 
 	private final List<CAbility> abilities = new ArrayList<>();
 
-	private COrder currentOrder;
-	private final Queue<COrder> orderQueue = new LinkedList<>();
+	private CBehavior currentOrder;
+	private final Queue<CBehavior> orderQueue = new LinkedList<>();
 	private final CUnitType unitType;
 
 	private Rectangle collisionRectangle;
@@ -189,6 +190,7 @@ public class CUnit extends CWidget {
 				// remove current order, because it's completed, polling next
 				// item from order queue
 				this.currentOrder = this.orderQueue.poll();
+				this.stateNotifier.ordersChanged();
 			}
 			if (this.currentOrder == null) {
 				// maybe order "stop" here
@@ -222,7 +224,7 @@ public class CUnit extends CWidget {
 		return game.getGameplayConstants().getBoneDecayTime();
 	}
 
-	public void order(final COrder order, final boolean queue) {
+	public void order(final CBehavior order, final boolean queue) {
 		if (isDead()) {
 			return;
 		}
@@ -231,10 +233,12 @@ public class CUnit extends CWidget {
 		}
 		else {
 			this.currentOrder = order;
+			this.orderQueue.clear();
 		}
+		this.stateNotifier.ordersChanged();
 	}
 
-	public COrder getCurrentOrder() {
+	public CBehavior getCurrentOrder() {
 		return this.currentOrder;
 	}
 
@@ -390,7 +394,7 @@ public class CUnit extends CWidget {
 						CAllianceType.PASSIVE)) {
 					for (final CUnitAttack attack : this.unitType.getAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
-							this.order(new CAttackOrder(this, attack, OrderIds.attack, source), false);
+							this.order(new CBehaviorAttack(this, attack, OrderIds.attack, source), false);
 							break;
 						}
 					}
@@ -521,6 +525,10 @@ public class CUnit extends CWidget {
 				}
 			}
 		}
+		else {
+			System.err.println("No targeting because " + targetsAllowed + " does not contain all of "
+					+ this.unitType.getTargetedAs());
+		}
 		return false;
 	}
 
@@ -550,7 +558,7 @@ public class CUnit extends CWidget {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
 							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
-						this.source.order(new CAttackOrder(this.source, attack, OrderIds.attack, unit), false);
+						this.source.order(new CBehaviorAttack(this.source, attack, OrderIds.attack, unit), false);
 						return true;
 					}
 				}

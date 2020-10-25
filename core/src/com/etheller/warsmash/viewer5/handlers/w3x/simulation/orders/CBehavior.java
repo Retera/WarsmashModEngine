@@ -1,6 +1,8 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 
-public interface COrder {
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+
+public interface CBehavior {
 	/**
 	 * Executes one step of game simulation of the current order, returning true if
 	 * the order has completed. Many orders may wrap the move order and spend a

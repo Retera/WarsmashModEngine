@@ -428,9 +428,9 @@ public class TerrainShaders {
 				"layout (location = 3) uniform vec4 deep_color_min;\r\n" + //
 				"layout (location = 4) uniform vec4 deep_color_max;\r\n" + //
 				"layout (location = 5) uniform float water_offset;\r\n" + //
-				"layout (location = 10) uniform sampler2D lightTexture;\r\n" + //
-				"layout (location = 11) uniform float lightCount;\r\n" + //
-				"layout (location = 12) uniform float lightTextureHeight;\r\n" + //
+				"layout (binding = 3) uniform sampler2D lightTexture;\r\n" + //
+				"layout (location = 9) uniform float lightCount;\r\n" + //
+				"layout (location = 10) uniform float lightTextureHeight;\r\n" + //
 				"\r\n" + //
 				"out vec2 UV;\r\n" + //
 				"out vec4 Color;\r\n" + //
@@ -477,12 +477,12 @@ public class TerrainShaders {
 
 		public static final String frag = "#version 450 core\r\n" + //
 				"\r\n" + //
-				"layout (binding = 3) uniform sampler2DArray water_textures;\r\n" + //
+				"layout (binding = 4) uniform sampler2DArray water_textures;\r\n" + //
 				"layout (binding = 2) uniform sampler2D water_exists_texture;\r\n" + //
 				"\r\n" + //
 				"\r\n" + //
 				"layout (location = 6) uniform int current_texture;\r\n" + //
-				"layout (location = 9) uniform vec4 mapBounds;\r\n" + //
+				"layout (location = 11) uniform vec4 mapBounds;\r\n" + //
 				"\r\n" + //
 				"in vec2 UV;\r\n" + //
 				"in vec4 Color;\r\n" + //

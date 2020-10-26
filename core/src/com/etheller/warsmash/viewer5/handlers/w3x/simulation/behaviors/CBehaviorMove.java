@@ -1,4 +1,4 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Point2D.Float;
@@ -18,35 +18,58 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindin
 public class CBehaviorMove implements CBehavior {
 	private static final Rectangle tempRect = new Rectangle();
 	private final CUnit unit;
-	private final int orderId;
-	private boolean wasWithinPropWindow = false;
-	private List<Point2D.Float> path = null;
-	private final CPathfindingProcessor.GridMapping gridMapping;
-	private final Point2D.Float target;
-	private int searchCycles = 0;
-	private CUnit followUnit;
 
-	public CBehaviorMove(final CUnit unit, final int orderId, final float targetX, final float targetY) {
+	public CBehaviorMove(final CUnit unit) {
 		this.unit = unit;
-		this.orderId = orderId;
-		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
-				unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
-						: CPathfindingProcessor.GridMapping.CELLS;
-		this.target = new Point2D.Float(targetX, targetY);
 	}
 
-	public CBehaviorMove(final CUnit unit, final int orderId, final CUnit followUnit) {
-		this.unit = unit;
-		this.orderId = orderId;
+	private boolean wasWithinPropWindow = false;
+	private List<Point2D.Float> path = null;
+	private CPathfindingProcessor.GridMapping gridMapping;
+	private Point2D.Float target;
+	private int searchCycles = 0;
+	private CUnit followUnit;
+	private CRangedBehavior rangedBehavior;
+
+	public CBehaviorMove reset(final float targetX, final float targetY) {
+		return reset(targetX, targetY, null);
+	}
+
+	public CBehaviorMove reset(final float targetX, final float targetY, final CRangedBehavior rangedBehavior) {
+		this.wasWithinPropWindow = false;
 		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
-				unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
+				this.unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
+						: CPathfindingProcessor.GridMapping.CELLS;
+		this.target = new Point2D.Float(targetX, targetY);
+		this.path = null;
+		this.searchCycles = 0;
+		this.followUnit = null;
+		this.rangedBehavior = rangedBehavior;
+		return this;
+	}
+
+	public CBehaviorMove reset(final CUnit followUnit) {
+		return reset(followUnit, null);
+	}
+
+	public CBehaviorMove reset(final CUnit followUnit, final CRangedBehavior rangedBehavior) {
+		this.wasWithinPropWindow = false;
+		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
+				this.unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
 						: CPathfindingProcessor.GridMapping.CELLS;
 		this.target = new Point2D.Float(followUnit.getX(), followUnit.getY());
+		this.path = null;
+		this.searchCycles = 0;
 		this.followUnit = followUnit;
+		this.rangedBehavior = rangedBehavior;
+		return this;
 	}
 
 	@Override
-	public boolean update(final CSimulation simulation) {
+	public CBehavior update(final CSimulation simulation) {
+		if ((this.rangedBehavior != null) && this.rangedBehavior.isWithinRange(simulation)) {
+			return this.rangedBehavior;
+		}
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();
 
@@ -119,7 +142,7 @@ public class CBehaviorMove implements CBehavior {
 					this.searchCycles < 4);
 			System.out.println("new path (for target) " + this.path);
 			if (this.path.isEmpty()) {
-				return true;
+				return this.unit.pollNextOrderBehavior(simulation);
 			}
 		}
 		float currentTargetX;
@@ -217,7 +240,7 @@ public class CBehaviorMove implements CBehavior {
 							this.searchCycles = 0;
 						}
 						if (this.path.isEmpty()) {
-							return true;
+							return this.unit.pollNextOrderBehavior(simulation);
 						}
 						else {
 							System.out.println(this.path);
@@ -249,7 +272,7 @@ public class CBehaviorMove implements CBehavior {
 							deltaY = currentTargetY - nextY;
 							deltaX = currentTargetX - nextX;
 							if ((deltaX == 0.000f) && (deltaY == 0.000f) && this.path.isEmpty()) {
-								return true;
+								return this.unit.pollNextOrderBehavior(simulation);
 							}
 							System.out.println("new target: " + currentTargetX + "," + currentTargetY);
 							System.out.println("new delta: " + deltaX + "," + deltaY);
@@ -274,7 +297,7 @@ public class CBehaviorMove implements CBehavior {
 											SequenceUtils.EMPTY, 1.0f, true);
 								}
 								this.wasWithinPropWindow = false;
-								return false;
+								return this;
 							}
 						}
 					}
@@ -290,7 +313,7 @@ public class CBehaviorMove implements CBehavior {
 					this.searchCycles++;
 					System.out.println("new path " + this.path);
 					if (this.path.isEmpty() || (this.searchCycles > 5)) {
-						return true;
+						return this.unit.pollNextOrderBehavior(simulation);
 					}
 				}
 				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.WALK, SequenceUtils.EMPTY, 1.0f,
@@ -309,12 +332,7 @@ public class CBehaviorMove implements CBehavior {
 			this.wasWithinPropWindow = false;
 		}
 
-		return false;
-	}
-
-	@Override
-	public int getOrderId() {
-		return this.orderId;
+		return this;
 	}
 
 }

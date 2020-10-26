@@ -309,7 +309,8 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.font.setColor(Color.YELLOW);
 		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
 		this.glyphLayout.setText(this.font, fpsString);
-		this.font.draw(this.batch, fpsString, (this.uiViewport.getMinWorldWidth() - this.glyphLayout.width) / 2, 1100);
+		this.font.draw(this.batch, fpsString, (this.uiViewport.getMinWorldWidth() - this.glyphLayout.width) / 2,
+				1100 * this.meleeUI.getHeightRatioCorrection());
 		this.batch.end();
 
 		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);

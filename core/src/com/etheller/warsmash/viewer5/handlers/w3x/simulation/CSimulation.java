@@ -28,10 +28,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
 public class CSimulation {
-	private final CUnitData unitData;
 	private final CAbilityData abilityData;
+	private final CUnitData unitData;
 	private final List<CUnit> units;
 	private final List<CPlayer> players;
 	private final List<CAttackProjectile> projectiles;
@@ -47,6 +48,7 @@ public class CSimulation {
 	private float currentGameDayTimeElapsed;
 	private final Map<Integer, CUnit> handleIdToUnit = new HashMap<>();
 	private final Map<Integer, CAbility> handleIdToAbility = new HashMap<>();
+	private transient CommandErrorListener commandErrorListener;
 
 	public CSimulation(final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedAbilityData, final SimulationRenderController simulationRenderController,
@@ -55,8 +57,8 @@ public class CSimulation {
 		this.gameplayConstants = new CGameplayConstants(miscData);
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
-		this.unitData = new CUnitData(parsedUnitData);
 		this.abilityData = new CAbilityData(parsedAbilityData);
+		this.unitData = new CUnitData(parsedUnitData, this.abilityData);
 		this.units = new ArrayList<>();
 		this.projectiles = new ArrayList<>();
 		this.newProjectiles = new ArrayList<>();
@@ -91,6 +93,13 @@ public class CSimulation {
 			cPlayer.setAlliance(neutralPassive, CAllianceType.PASSIVE, true);
 			neutralPassive.setAlliance(cPlayer, CAllianceType.PASSIVE, true);
 		}
+
+		this.commandErrorListener = new CommandErrorListener() {
+			@Override
+			public void showCommandError(final String message) {
+				throw new RuntimeException(message);
+			}
+		};
 
 	}
 
@@ -207,5 +216,9 @@ public class CSimulation {
 
 	public CPlayer getPlayer(final int index) {
 		return this.players.get(index);
+	}
+
+	public CommandErrorListener getCommandErrorListener() {
+		return this.commandErrorListener;
 	}
 }

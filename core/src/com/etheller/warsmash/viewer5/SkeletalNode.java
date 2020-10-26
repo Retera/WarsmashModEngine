@@ -21,6 +21,8 @@ public abstract class SkeletalNode extends GenericNode {
 	public boolean billboardedY;
 	public boolean billboardedZ;
 
+	public Matrix4 localBlendMatrix;
+
 	public SkeletalNode() {
 		this.pivot = new Vector3();
 		this.localLocation = new Vector3();
@@ -33,6 +35,7 @@ public abstract class SkeletalNode extends GenericNode {
 		this.inverseWorldRotation = new Quaternion();
 		this.inverseWorldScale = new Vector3();
 		this.localMatrix = new Matrix4();
+		this.localBlendMatrix = new Matrix4();
 		this.worldMatrix = new Matrix4();
 		this.dontInheritTranslation = false;
 		this.dontInheritRotation = false;
@@ -66,7 +69,7 @@ public abstract class SkeletalNode extends GenericNode {
 		this.billboardedZ = false;
 	}
 
-	public void recalculateTransformation(final Scene scene) {
+	public void recalculateTransformation(final Scene scene, final float blendTimeRatio) {
 		final Quaternion computedRotation;
 		Vector3 computedScaling;
 
@@ -135,6 +138,12 @@ public abstract class SkeletalNode extends GenericNode {
 
 		RenderMathUtils.fromRotationTranslationScaleOrigin(computedRotation, this.localLocation, computedScaling,
 				this.localMatrix, this.pivot);
+		if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0)) {
+			for (int i = 0; i < this.localMatrix.val.length; i++) {
+				this.localMatrix.val[i] = (this.localBlendMatrix.val[i] * blendTimeRatio)
+						+ (this.localMatrix.val[i] * (1 - blendTimeRatio));
+			}
+		}
 
 		RenderMathUtils.mul(this.worldMatrix, this.parent.worldMatrix, this.localMatrix);
 
@@ -166,6 +175,10 @@ public abstract class SkeletalNode extends GenericNode {
 		this.inverseWorldLocation.x = -this.worldLocation.x;
 		this.inverseWorldLocation.y = -this.worldLocation.y;
 		this.inverseWorldLocation.z = -this.worldLocation.z;
+	}
+
+	public void beginBlending() {
+		this.localBlendMatrix.set(this.localMatrix);
 	}
 
 	public void updateChildren(final float dt, final Scene scene) {

@@ -13,11 +13,10 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
@@ -77,7 +76,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private static final Vector3 clickLocationTemp = new Vector3();
 	private static final Vector2 clickLocationTemp2 = new Vector2();
 	private final DataSource dataSource;
-	private final Viewport uiViewport;
+	private final ExtendViewport uiViewport;
 	private final FreeTypeFontGenerator fontGenerator;
 	private final Scene uiScene;
 	private final Scene portraitScene;
@@ -137,10 +136,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private int selectedSoundCount = 0;
 	private final ActiveCommandUnitTargetFilter activeCommandUnitTargetFilter;
 
-	public MeleeUI(final DataSource dataSource, final Viewport uiViewport, final FreeTypeFontGenerator fontGenerator,
-			final Scene uiScene, final Scene portraitScene, final CameraPreset[] cameraPresets,
-			final CameraRates cameraRates, final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener,
-			final CPlayerUnitOrderListener unitOrderListener) {
+	// TODO these corrections are used for old hardcoded UI stuff, we should
+	// probably remove them later
+	private final float widthRatioCorrection;
+	private final float heightRatioCorrection;
+
+	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport,
+			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final Scene portraitScene,
+			final CameraPreset[] cameraPresets, final CameraRates cameraRates, final War3MapViewer war3MapViewer,
+			final RootFrameListener rootFrameListener, final CPlayerUnitOrderListener unitOrderListener) {
 		this.dataSource = dataSource;
 		this.uiViewport = uiViewport;
 		this.fontGenerator = fontGenerator;
@@ -161,11 +165,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.activeButtonTexture = ImageUtils.getBLPTexture(war3MapViewer.mapMpq,
 				"UI\\Widgets\\Console\\Human\\CommandButton\\human-activebutton.blp");
 		this.activeCommandUnitTargetFilter = new ActiveCommandUnitTargetFilter();
+		this.widthRatioCorrection = this.uiViewport.getMinWorldWidth() / 1600f;
+		this.heightRatioCorrection = this.uiViewport.getMinWorldHeight() / 1200f;
 
 	}
 
 	private MeleeUIMinimap createMinimap(final War3MapViewer war3MapViewer) {
-		final Rectangle minimapDisplayArea = new Rectangle(18.75f, 13.75f, 278.75f, 276.25f);
+		final Rectangle minimapDisplayArea = new Rectangle(18.75f * this.widthRatioCorrection,
+				13.75f * this.heightRatioCorrection, 278.75f * this.widthRatioCorrection,
+				276.25f * this.heightRatioCorrection);
 		Texture minimapTexture = null;
 		if (war3MapViewer.dataSource.has("war3mapMap.tga")) {
 			try {
@@ -396,11 +404,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.errorMessageFrame.setText(message);
 	}
 
-	@Override
-	public void toggleAutoCastAbility(final int abilityHandleId) {
-
-	}
-
 	public void update(final float deltaTime) {
 		this.portrait.update();
 
@@ -467,8 +470,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.cameraManager.updateTargetZ(groundHeight);
 		this.cameraManager.updateCamera();
 	}
-
-	private final ShapeRenderer shapeRenderer = new ShapeRenderer();
 
 	public void render(final SpriteBatch batch, final BitmapFont font20, final GlyphLayout glyphLayout) {
 		this.rootFrame.render(batch, font20, glyphLayout);
@@ -658,10 +659,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void commandButton(final int buttonPositionX, final int buttonPositionY, final Texture icon,
-			final int abilityHandleId, final int orderId, final boolean active) {
+			final int abilityHandleId, final int orderId, final int autoCastId, final boolean active,
+			final boolean autoCastActive) {
 		final int x = Math.max(0, Math.min(COMMAND_CARD_WIDTH - 1, buttonPositionX));
 		final int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
-		this.commandCard[y][x].setCommandButtonData(icon, abilityHandleId, orderId, active);
+		this.commandCard[y][x].setCommandButtonData(icon, abilityHandleId, orderId, autoCastId, active, autoCastActive);
 	}
 
 	public void resize(final Rectangle viewport) {
@@ -670,10 +672,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public void positionPortrait() {
-		this.projectionTemp1.x = 422;
-		this.projectionTemp1.y = 57;
-		this.projectionTemp2.x = 422 + 167;
-		this.projectionTemp2.y = 57 + 170;
+		this.projectionTemp1.x = 422 * this.widthRatioCorrection;
+		this.projectionTemp1.y = 57 * this.heightRatioCorrection;
+		this.projectionTemp2.x = (422 + 167) * this.widthRatioCorrection;
+		this.projectionTemp2.y = (57 + 170) * this.heightRatioCorrection;
 		this.uiViewport.project(this.projectionTemp1);
 		this.uiViewport.project(this.projectionTemp2);
 
@@ -752,7 +754,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void ordersChanged() {
+	public void ordersChanged(final int abilityHandleId, final int orderId) {
 		clearCommandCard();
 		this.selectedUnit.populateCommandCard(this.war3MapViewer.simulation, this,
 				this.war3MapViewer.getAbilityDataUI());
@@ -798,20 +800,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							this.activeCommandUnitTargetFilter);
 					final boolean shiftDown = isShiftDown();
 					if (rayPickUnit != null) {
-						if (this.unitOrderListener.issueTargetOrder(
+						this.unitOrderListener.issueTargetOrder(
 								this.activeCommandUnit.getSimulationUnit().getHandleId(),
 								this.activeCommand.getHandleId(), this.activeCommandOrderId,
-								rayPickUnit.getSimulationUnit().getHandleId(), shiftDown)) {
-							if (getSelectedUnit().soundset.yesAttack
-									.playUnitResponse(this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
-								portraitTalk();
-							}
-							this.selectedSoundCount = 0;
-							if (!shiftDown) {
-								this.activeCommandUnit = null;
-								this.activeCommand = null;
-								this.activeCommandOrderId = -1;
-							}
+								rayPickUnit.getSimulationUnit().getHandleId(), shiftDown);
+						if (getSelectedUnit().soundset.yesAttack
+								.playUnitResponse(this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
+							portraitTalk();
+						}
+						this.selectedSoundCount = 0;
+						if (!shiftDown) {
+							this.activeCommandUnit = null;
+							this.activeCommand = null;
+							this.activeCommandOrderId = -1;
 						}
 					}
 					else {
@@ -829,21 +830,21 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							else {
 								this.war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
 							}
-							if (this.unitOrderListener.issuePointOrder(
+							this.unitOrderListener.issuePointOrder(
 									this.activeCommandUnit.getSimulationUnit().getHandleId(),
 									this.activeCommand.getHandleId(), this.activeCommandOrderId, clickLocationTemp2.x,
-									clickLocationTemp2.y, shiftDown)) {
-								if (getSelectedUnit().soundset.yes.playUnitResponse(
-										this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
-									portraitTalk();
-								}
-								this.selectedSoundCount = 0;
-								if (!shiftDown) {
-									this.activeCommandUnit = null;
-									this.activeCommand = null;
-									this.activeCommandOrderId = -1;
-								}
+									clickLocationTemp2.y, shiftDown);
+							if (getSelectedUnit().soundset.yes
+									.playUnitResponse(this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
+								portraitTalk();
 							}
+							this.selectedSoundCount = 0;
+							if (!shiftDown) {
+								this.activeCommandUnit = null;
+								this.activeCommand = null;
+								this.activeCommandOrderId = -1;
+							}
+
 						}
 					}
 				}
@@ -974,5 +975,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.cameraManager.target.y = worldPoint.y;
 		}
 		return false;
+	}
+
+	public float getHeightRatioCorrection() {
+		return this.heightRatioCorrection;
 	}
 }

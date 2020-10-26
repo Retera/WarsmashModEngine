@@ -14,11 +14,16 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehaviorAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -38,8 +43,9 @@ public class CUnit extends CWidget {
 
 	private final List<CAbility> abilities = new ArrayList<>();
 
-	private CBehavior currentOrder;
-	private final Queue<CBehavior> orderQueue = new LinkedList<>();
+	private CBehavior currentBehavior;
+	private COrder currentOrder;
+	private final Queue<COrder> orderQueue = new LinkedList<>();
 	private final CUnitType unitType;
 
 	private Rectangle collisionRectangle;
@@ -59,6 +65,12 @@ public class CUnit extends CWidget {
 	private final float acquisitionRange;
 	private transient static AutoAttackTargetFinderEnum autoAttackTargetFinderEnum = new AutoAttackTargetFinderEnum();
 
+	private transient CBehaviorMove moveBehavior;
+	private transient CBehaviorAttack attackBehavior;
+	private transient CBehaviorFollow followBehavior;
+	private transient CBehaviorPatrol patrolBehavior;
+	private transient CBehaviorStop stopBehavior;
+
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
 			final int speed, final int defense, final CUnitType unitType) {
@@ -75,6 +87,8 @@ public class CUnit extends CWidget {
 		this.unitType = unitType;
 		this.classifications.addAll(unitType.getClassifications());
 		this.acquisitionRange = unitType.getDefaultAcquisitionRange();
+		this.stopBehavior = new CBehaviorStop(this);
+		this.currentBehavior = this.stopBehavior;
 	}
 
 	public void setUnitAnimationListener(final CUnitAnimationListener unitAnimationListener) {
@@ -185,36 +199,31 @@ public class CUnit extends CWidget {
 				return true;
 			}
 		}
-		else if (this.currentOrder != null) {
-			if (this.currentOrder.update(game)) {
-				// remove current order, because it's completed, polling next
-				// item from order queue
-				this.currentOrder = this.orderQueue.poll();
-				this.stateNotifier.ordersChanged();
-			}
-			if (this.currentOrder == null) {
-				// maybe order "stop" here
-				this.unitAnimationListener.playAnimation(true, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, true);
-			}
+		else if (this.currentBehavior != null) {
+			this.currentBehavior = this.currentBehavior.update(game);
 		}
 		else {
 			// check to auto acquire targets
-			if (!this.unitType.getAttacks().isEmpty()) {
-				if (this.collisionRectangle != null) {
-					tempRect.set(this.collisionRectangle);
-				}
-				else {
-					tempRect.set(this.getX(), this.getY(), 0, 0);
-				}
-				final float halfSize = this.acquisitionRange;
-				tempRect.x -= halfSize;
-				tempRect.y -= halfSize;
-				tempRect.width += halfSize * 2;
-				tempRect.height += halfSize * 2;
-				game.getWorldCollision().enumUnitsInRect(tempRect, autoAttackTargetFinderEnum.reset(game, this));
-			}
+			autoAcquireAttackTargets(game);
 		}
 		return false;
+	}
+
+	public void autoAcquireAttackTargets(final CSimulation game) {
+		if (!this.unitType.getAttacks().isEmpty()) {
+			if (this.collisionRectangle != null) {
+				tempRect.set(this.collisionRectangle);
+			}
+			else {
+				tempRect.set(this.getX(), this.getY(), 0, 0);
+			}
+			final float halfSize = this.acquisitionRange;
+			tempRect.x -= halfSize;
+			tempRect.y -= halfSize;
+			tempRect.width += halfSize * 2;
+			tempRect.height += halfSize * 2;
+			game.getWorldCollision().enumUnitsInRect(tempRect, autoAttackTargetFinderEnum.reset(game, this));
+		}
 	}
 
 	public float getEndingDecayTime(final CSimulation game) {
@@ -224,7 +233,7 @@ public class CUnit extends CWidget {
 		return game.getGameplayConstants().getBoneDecayTime();
 	}
 
-	public void order(final CBehavior order, final boolean queue) {
+	public void order(final CSimulation game, final COrder order, final boolean queue) {
 		if (isDead()) {
 			return;
 		}
@@ -232,14 +241,37 @@ public class CUnit extends CWidget {
 			this.orderQueue.add(order);
 		}
 		else {
-			this.currentOrder = order;
+			this.currentBehavior = beginOrder(game, order);
 			this.orderQueue.clear();
 		}
-		this.stateNotifier.ordersChanged();
 	}
 
-	public CBehavior getCurrentOrder() {
-		return this.currentOrder;
+	private CBehavior beginOrder(final CSimulation game, final COrder order) {
+		final boolean omitNotify = (this.currentOrder == null) && (order == null);
+		this.currentOrder = order;
+		if (!omitNotify) {
+			this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
+		}
+		CBehavior nextBehavior;
+		if (order != null) {
+			nextBehavior = order.begin(game, this);
+		}
+		else {
+			nextBehavior = this.stopBehavior;
+		}
+		return nextBehavior;
+	}
+
+	public CBehavior getCurrentBehavior() {
+		return this.currentBehavior;
+	}
+
+	public int getCurrentAbilityHandleId() {
+		return this.currentOrder == null ? 0 : this.currentOrder.getAbilityHandleId();
+	}
+
+	public int getCurrentOrderId() {
+		return this.currentOrder == null ? OrderIds.stop : this.currentOrder.getOrderId();
 	}
 
 	public List<CAbility> getAbilities() {
@@ -389,12 +421,12 @@ public class CUnit extends CWidget {
 			}
 		}
 		else {
-			if (this.currentOrder == null) {
+			if (this.currentBehavior == null) {
 				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(),
 						CAllianceType.PASSIVE)) {
 					for (final CUnitAttack attack : this.unitType.getAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
-							this.order(new CBehaviorAttack(this, attack, OrderIds.attack, source), false);
+							this.currentBehavior = getAttackBehavior().reset(attack, source);
 							break;
 						}
 					}
@@ -404,7 +436,7 @@ public class CUnit extends CWidget {
 	}
 
 	private void kill(final CSimulation simulation) {
-		this.currentOrder = null;
+		this.currentBehavior = null;
 		this.orderQueue.clear();
 		this.deathTurnTick = simulation.getGameTurnTick();
 	}
@@ -558,12 +590,53 @@ public class CUnit extends CWidget {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
 							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
-						this.source.order(new CBehaviorAttack(this.source, attack, OrderIds.attack, unit), false);
+						this.source.currentBehavior = this.source.getAttackBehavior().reset(attack, unit);
 						return true;
 					}
 				}
 			}
 			return false;
 		}
+	}
+
+	public CBehaviorMove getMoveBehavior() {
+		return this.moveBehavior;
+	}
+
+	public void setMoveBehavior(final CBehaviorMove moveBehavior) {
+		this.moveBehavior = moveBehavior;
+	}
+
+	public CBehaviorAttack getAttackBehavior() {
+		return this.attackBehavior;
+	}
+
+	public void setAttackBehavior(final CBehaviorAttack attackBehavior) {
+		this.attackBehavior = attackBehavior;
+	}
+
+	public CBehaviorStop getStopBehavior() {
+		return this.stopBehavior;
+	}
+
+	public void setFollowBehavior(final CBehaviorFollow followBehavior) {
+		this.followBehavior = followBehavior;
+	}
+
+	public void setPatrolBehavior(final CBehaviorPatrol patrolBehavior) {
+		this.patrolBehavior = patrolBehavior;
+	}
+
+	public CBehaviorFollow getFollowBehavior() {
+		return this.followBehavior;
+	}
+
+	public CBehaviorPatrol getPatrolBehavior() {
+		return this.patrolBehavior;
+	}
+
+	public CBehavior pollNextOrderBehavior(final CSimulation game) {
+		final COrder order = this.orderQueue.poll();
+		return beginOrder(game, order);
 	}
 }

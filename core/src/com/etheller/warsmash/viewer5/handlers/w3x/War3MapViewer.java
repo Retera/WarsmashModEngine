@@ -86,16 +86,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 
 import mpq.MPQArchive;
@@ -1273,74 +1266,6 @@ public class War3MapViewer extends ModelViewer {
 		numElements |= numElements >>> 8;
 		numElements |= numElements >>> 16;
 		return (numElements < 0) ? 1 : (numElements >= MAXIMUM_ACCEPTED) ? MAXIMUM_ACCEPTED : numElements + 1;
-	}
-
-	public boolean orderSmart(final float x, final float y) {
-		mousePosHeap.x = x;
-		mousePosHeap.y = y;
-		boolean ordered = false;
-		for (final RenderUnit unit : this.selected) {
-			for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
-				if (ability instanceof CAbilityMove) {
-					ability.checkCanUse(this.simulation, unit.getSimulationUnit(), OrderIds.smart,
-							BooleanAbilityActivationReceiver.INSTANCE);
-					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
-						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), OrderIds.smart, mousePosHeap,
-								PointAbilityTargetCheckReceiver.INSTANCE);
-						final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
-						if (target != null) {
-							ability.onOrder(this.simulation, unit.getSimulationUnit(), OrderIds.smart, mousePosHeap,
-									false);
-							ordered = true;
-						}
-						else {
-							System.err.println("Target not valid.");
-						}
-					}
-					else {
-						System.err.println("Ability not ok to use.");
-					}
-				}
-				else {
-					System.err.println("Ability not move.");
-				}
-			}
-
-		}
-		return ordered;
-	}
-
-	public boolean orderSmart(final RenderUnit target) {
-		boolean ordered = false;
-		for (final RenderUnit unit : this.selected) {
-			for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
-				if (ability instanceof CAbilityAttack) {
-					ability.checkCanUse(this.simulation, unit.getSimulationUnit(), OrderIds.smart,
-							BooleanAbilityActivationReceiver.INSTANCE);
-					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
-						ability.checkCanTarget(this.simulation, unit.getSimulationUnit(), OrderIds.smart,
-								target.getSimulationUnit(), CWidgetAbilityTargetCheckReceiver.INSTANCE);
-						final CWidget targetWidget = CWidgetAbilityTargetCheckReceiver.INSTANCE.getTarget();
-						if (targetWidget != null) {
-							ability.onOrder(this.simulation, unit.getSimulationUnit(), OrderIds.smart, targetWidget,
-									false);
-							ordered = true;
-						}
-						else {
-							System.err.println("Target not valid.");
-						}
-					}
-					else {
-						System.err.println("Ability not ok to use.");
-					}
-				}
-				else {
-					System.err.println("Ability not move.");
-				}
-			}
-
-		}
-		return ordered;
 	}
 
 	public void standOnRepeat(final MdxComplexInstance instance) {

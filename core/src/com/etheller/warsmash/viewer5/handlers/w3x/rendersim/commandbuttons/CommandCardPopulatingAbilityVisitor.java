@@ -6,10 +6,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityColdArrows;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGeneric;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 
 public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void> {
 	public static final CommandCardPopulatingAbilityVisitor INSTANCE = new CommandCardPopulatingAbilityVisitor();
@@ -33,41 +34,54 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityAttack ability) {
-		addCommandButton(ability, this.abilityDataUI.getAttackUI(), ability.getHandleId(), OrderIds.attack);
+		addCommandButton(ability, this.abilityDataUI.getAttackUI(), ability.getHandleId(), OrderIds.attack, 0, false);
 		if (!this.hasStop) {
 			this.hasStop = true;
-			addCommandButton(null, this.abilityDataUI.getStopUI(), -1, OrderIds.stop);
+			addCommandButton(null, this.abilityDataUI.getStopUI(), 0, OrderIds.stop, 0, false);
 		}
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityMove ability) {
-		addCommandButton(ability, this.abilityDataUI.getMoveUI(), ability.getHandleId(), OrderIds.move);
-		addCommandButton(ability, this.abilityDataUI.getHoldPosUI(), ability.getHandleId(), OrderIds.holdposition);
-		addCommandButton(ability, this.abilityDataUI.getPatrolUI(), ability.getHandleId(), OrderIds.patrol);
+		addCommandButton(ability, this.abilityDataUI.getMoveUI(), ability.getHandleId(), OrderIds.move, 0, false);
+		addCommandButton(ability, this.abilityDataUI.getHoldPosUI(), ability.getHandleId(), OrderIds.holdposition, 0,
+				false);
+		addCommandButton(ability, this.abilityDataUI.getPatrolUI(), ability.getHandleId(), OrderIds.patrol, 0, false);
 		if (!this.hasStop) {
 			this.hasStop = true;
-			addCommandButton(null, this.abilityDataUI.getStopUI(), -1, OrderIds.stop);
+			addCommandButton(null, this.abilityDataUI.getStopUI(), 0, OrderIds.stop, 0, false);
 		}
 		return null;
 	}
 
-	private void addCommandButton(final CAbility ability, final IconUI iconUI, final int handleId, final int orderId) {
-		final boolean active;
-		if (this.unit.getCurrentOrder() == null) {
-			active = (orderId == OrderIds.stop);
+	@Override
+	public Void accept(final CAbilityGeneric ability) {
+		addCommandButton(ability, this.abilityDataUI.getUI(ability.getRawcode()).getOnIconUI(), ability.getHandleId(),
+				OrderIds.channel, 0, false);
+		return null;
+	}
+
+	@Override
+	public Void accept(final CAbilityColdArrows ability) {
+		final boolean autoCastActive = ability.isAutoCastActive();
+		int autoCastId;
+		if (autoCastActive) {
+			autoCastId = OrderIds.coldarrows;
 		}
 		else {
-			if (ability == null) {
-				active = false;
-			}
-			else {
-				ability.checkCanUse(this.game, this.unit, orderId, BooleanAbilityActivationReceiver.INSTANCE);
-				active = BooleanAbilityActivationReceiver.INSTANCE.isOk();
-			}
+			autoCastId = OrderIds.uncoldarrows;
 		}
+		addCommandButton(ability, this.abilityDataUI.getUI(ability.getRawcode()).getOnIconUI(), ability.getHandleId(),
+				OrderIds.coldarrowstarg, autoCastId, autoCastActive);
+		return null;
+	}
+
+	private void addCommandButton(final CAbility ability, final IconUI iconUI, final int handleId, final int orderId,
+			final int autoCastOrderId, final boolean autoCastActive) {
+		final boolean active = ((handleId == this.unit.getCurrentAbilityHandleId())
+				&& (orderId == this.unit.getCurrentOrderId()));
 		this.commandButtonListener.commandButton(iconUI.getButtonPositionX(), iconUI.getButtonPositionY(),
-				iconUI.getIcon(), handleId, orderId, active);
+				iconUI.getIcon(), handleId, orderId, autoCastOrderId, active, autoCastActive);
 	}
 }

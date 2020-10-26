@@ -38,6 +38,7 @@ public class RenderUnit {
 	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
 	private static final War3ID ORIENTATION_INTERPOLATION = War3ID.fromString("uori");
 	private static final War3ID ANIM_PROPS = War3ID.fromString("uani");
+	private static final War3ID BLEND_TIME = War3ID.fromString("uble");
 	private static final float[] heapZ = new float[3];
 	public final MdxComplexInstance instance;
 	public final MutableGameObject row;
@@ -124,6 +125,9 @@ public class RenderUnit {
 				orientationInterpolationOrdinal = 0;
 			}
 			this.orientationInterpolation = OrientationInterpolation.VALUES[orientationInterpolationOrdinal];
+
+			final float blendTime = row.getFieldAsFloat(BLEND_TIME, 0);
+			instance.setBlendTime(blendTime * 1000.0f);
 		}
 
 		this.instance = instance;

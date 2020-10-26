@@ -4,9 +4,10 @@ import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.StringsToExternalizeLater;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehaviorMove;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.CBehaviorPatrol;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -31,7 +32,7 @@ public class CAbilityMove implements CAbility {
 		switch (orderId) {
 		case OrderIds.smart:
 		case OrderIds.patrol:
-			if (target instanceof CUnit) {
+			if ((target instanceof CUnit) && (target != unit)) {
 				receiver.targetOk(target);
 			}
 			else {
@@ -74,7 +75,9 @@ public class CAbilityMove implements CAbility {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-
+		unit.setMoveBehavior(new CBehaviorMove(unit));
+		unit.setFollowBehavior(new CBehaviorFollow(unit));
+		unit.setPatrolBehavior(new CBehaviorPatrol(unit));
 	}
 
 	@Override
@@ -83,20 +86,23 @@ public class CAbilityMove implements CAbility {
 	}
 
 	@Override
-	public void onOrder(final CSimulation game, final CUnit caster, final int orderId, final CWidget target,
-			final boolean queue) {
-		caster.order(new CBehaviorPatrol(caster, orderId, (CUnit) target), queue);
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+		return caster.getFollowBehavior().reset((CUnit) target);
 	}
 
 	@Override
-	public void onOrder(final CSimulation game, final CUnit caster, final int orderId, final Vector2 target,
-			final boolean queue) {
-		caster.order(new CBehaviorMove(caster, orderId, target.x, target.y), queue);
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final Vector2 point) {
+		if (orderId == OrderIds.patrol) {
+			return caster.getPatrolBehavior().reset(point);
+		}
+		else {
+			return caster.getMoveBehavior().reset(point.x, point.y);
+		}
 	}
 
 	@Override
-	public void onOrderNoTarget(final CSimulation game, final CUnit caster, final int orderId, final boolean queue) {
-		throw new IllegalArgumentException(StringsToExternalizeLater.MUST_TARGET_POINT);
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override

@@ -23,6 +23,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	private CommandButton commandButton;
 	private int abilityHandleId;
 	private int orderId;
+	private int autoCastOrderId;
 	private final CommandCardCommandListener commandCardCommandListener;
 
 	public CommandCardIcon(final String name, final UIFrame parent,
@@ -45,7 +46,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 			this.iconFrame.setVisible(false);
 			this.activeHighlightFrame.setVisible(false);
 			this.cooldownFrame.setVisible(false);
-			this.autocastFrame.setVisible(false);
+			this.autocastFrame.setSequence(PrimaryTag.DEATH);
 		}
 		else {
 			if (commandButton.isEnabled()) {
@@ -64,19 +65,24 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 				this.cooldownFrame
 						.setFrameByRatio(1 - (commandButton.getCooldownRemaining() / commandButton.getCooldown()));
 			}
-			this.autocastFrame.setVisible(commandButton.isAutoCastActive());
 		}
 	}
 
 	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId,
-			final boolean active) {
+			final int autoCastOrderId, final boolean active, final boolean autoCastActive) {
 		this.iconFrame.setVisible(true);
 		this.activeHighlightFrame.setVisible(active);
 		this.cooldownFrame.setVisible(false);
-		this.autocastFrame.setVisible(false);
+		if (autoCastActive) {
+			this.autocastFrame.setSequence(PrimaryTag.STAND);
+		}
+		else {
+			this.autocastFrame.setSequence(-1);
+		}
 		this.iconFrame.setTexture(texture);
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
+		this.autoCastOrderId = autoCastOrderId;
 	}
 
 	@Override
@@ -102,7 +108,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 				this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.orderId);
 			}
 			else if (button == Input.Buttons.RIGHT) {
-				this.commandCardCommandListener.toggleAutoCastAbility(this.abilityHandleId);
+				this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.autoCastOrderId);
 			}
 			return this;
 		}

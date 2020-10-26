@@ -12,4 +12,8 @@ public interface CAbilityVisitor<T> {
 	T accept(CAbilityAttack ability);
 
 	T accept(CAbilityMove ability);
+
+	T accept(CAbilityGeneric ability);
+
+	T accept(CAbilityColdArrows ability);
 }

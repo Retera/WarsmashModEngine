@@ -24,6 +24,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	private int abilityHandleId;
 	private int orderId;
 	private int autoCastOrderId;
+	private boolean autoCastActive;
 	private final CommandCardCommandListener commandCardCommandListener;
 
 	public CommandCardIcon(final String name, final UIFrame parent,
@@ -46,7 +47,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 			this.iconFrame.setVisible(false);
 			this.activeHighlightFrame.setVisible(false);
 			this.cooldownFrame.setVisible(false);
-			this.autocastFrame.setSequence(PrimaryTag.DEATH);
+			this.autocastFrame.setVisible(false);
 		}
 		else {
 			if (commandButton.isEnabled()) {
@@ -73,11 +74,17 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 		this.iconFrame.setVisible(true);
 		this.activeHighlightFrame.setVisible(active);
 		this.cooldownFrame.setVisible(false);
-		if (autoCastActive) {
-			this.autocastFrame.setSequence(PrimaryTag.STAND);
-		}
-		else {
-			this.autocastFrame.setSequence(-1);
+		this.autocastFrame.setVisible(autoCastOrderId != 0);
+		if (autoCastOrderId != 0) {
+			if (this.autoCastActive != autoCastActive) {
+				if (autoCastActive) {
+					this.autocastFrame.setSequence(PrimaryTag.STAND);
+				}
+				else {
+					this.autocastFrame.setSequence(-1);
+				}
+			}
+			this.autoCastActive = autoCastActive;
 		}
 		this.iconFrame.setTexture(texture);
 		this.abilityHandleId = abilityHandleId;

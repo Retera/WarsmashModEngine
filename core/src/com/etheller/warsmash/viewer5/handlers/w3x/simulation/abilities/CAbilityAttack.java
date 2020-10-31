@@ -109,12 +109,12 @@ public class CAbilityAttack implements CAbility {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
 			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
-				behavior = caster.getAttackBehavior().reset(attack, target);
+				behavior = caster.getAttackBehavior().reset(OrderIds.attack, attack, target);
 				break;
 			}
 		}
 		if (behavior == null) {
-			behavior = caster.getMoveBehavior().reset(target.getX(), target.getY());
+			behavior = caster.getMoveBehavior().reset(OrderIds.attack, target.getX(), target.getY());
 		}
 		return behavior;
 	}

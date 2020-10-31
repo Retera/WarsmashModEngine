@@ -10,4 +10,6 @@ public interface CBehavior {
 	 * @return
 	 */
 	CBehavior update(CSimulation game);
+
+	int getHighlightOrderId();
 }

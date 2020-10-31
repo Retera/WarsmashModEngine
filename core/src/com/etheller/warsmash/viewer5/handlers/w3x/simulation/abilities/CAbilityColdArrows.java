@@ -94,7 +94,7 @@ public class CAbilityColdArrows implements CAbility {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
 			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
-				behavior = caster.getAttackBehavior().reset(attack, target);
+				behavior = caster.getAttackBehavior().reset(OrderIds.coldarrowstarg, attack, target);
 				break;
 			}
 		}

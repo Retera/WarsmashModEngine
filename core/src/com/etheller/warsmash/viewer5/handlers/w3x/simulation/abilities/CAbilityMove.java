@@ -87,7 +87,7 @@ public class CAbilityMove implements CAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return caster.getFollowBehavior().reset((CUnit) target);
+		return caster.getFollowBehavior().reset(OrderIds.move, (CUnit) target);
 	}
 
 	@Override
@@ -96,7 +96,7 @@ public class CAbilityMove implements CAbility {
 			return caster.getPatrolBehavior().reset(point);
 		}
 		else {
-			return caster.getMoveBehavior().reset(point.x, point.y);
+			return caster.getMoveBehavior().reset(OrderIds.move, point.x, point.y);
 		}
 	}
 

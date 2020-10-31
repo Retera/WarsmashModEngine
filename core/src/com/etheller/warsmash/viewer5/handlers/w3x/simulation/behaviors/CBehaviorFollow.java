@@ -7,12 +7,20 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
 public class CBehaviorFollow extends CAbstractRangedBehavior {
 
+	private int higlightOrderId;
+
 	public CBehaviorFollow(final CUnit unit) {
 		super(unit);
 	}
 
-	public CBehavior reset(final CUnit target) {
+	public CBehavior reset(int higlightOrderId, final CUnit target) {
+		this.higlightOrderId = higlightOrderId;
 		return innerReset(target);
+	}
+
+	@Override
+	public int getHighlightOrderId() {
+		return higlightOrderId;
 	}
 
 	@Override

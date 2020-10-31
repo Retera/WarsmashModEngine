@@ -10,6 +10,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 
 public class CBehaviorAttack extends CAbstractRangedBehavior {
 
+	private int highlightOrderId;
+
 	public CBehaviorAttack(final CUnit unit) {
 		super(unit);
 	}
@@ -19,13 +21,19 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private int backSwingTime;
 	private int thisOrderCooldownEndTime;
 
-	public CBehaviorAttack reset(final CUnitAttack unitAttack, final CWidget target) {
+	public CBehaviorAttack reset(int highlightOrderId, final CUnitAttack unitAttack, final CWidget target) {
+		this.highlightOrderId = highlightOrderId;
 		super.innerReset(target);
 		this.unitAttack = unitAttack;
 		this.damagePointLaunchTime = 0;
 		this.backSwingTime = 0;
 		this.thisOrderCooldownEndTime = 0;
 		return this;
+	}
+
+	@Override
+	public int getHighlightOrderId() {
+		return highlightOrderId;
 	}
 
 	@Override

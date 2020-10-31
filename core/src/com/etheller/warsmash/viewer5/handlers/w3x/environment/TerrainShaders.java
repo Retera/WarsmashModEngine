@@ -61,7 +61,7 @@ public class TerrainShaders {
 				"	vec3 terrain_normal = normalize(vNormal);//vec3(hL - hR, hD - hU, 2.0)+vNormal);\r\n" + //
 				"\r\n" + //
 				"	Normal = terrain_normal;\r\n" + //
-				Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
+				Shaders.lightSystem("terrain_normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
 						true)
 				+ "\r\n" + //
 				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //

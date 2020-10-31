@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.CyclicBarrier;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.War3ID;
@@ -200,7 +201,11 @@ public class CUnit extends CWidget {
 			}
 		}
 		else if (this.currentBehavior != null) {
+			CBehavior lastBehavior = this.currentBehavior;
 			this.currentBehavior = this.currentBehavior.update(game);
+			if(this.currentBehavior.getHighlightOrderId() != lastBehavior.getHighlightOrderId()) {
+				this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
+			}
 		}
 		else {
 			// check to auto acquire targets
@@ -243,15 +248,15 @@ public class CUnit extends CWidget {
 		else {
 			this.currentBehavior = beginOrder(game, order);
 			this.orderQueue.clear();
+			final boolean omitNotify = (this.currentOrder == null) && (order == null);
+			if (!omitNotify) {
+				this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
+			}
 		}
 	}
 
 	private CBehavior beginOrder(final CSimulation game, final COrder order) {
-		final boolean omitNotify = (this.currentOrder == null) && (order == null);
 		this.currentOrder = order;
-		if (!omitNotify) {
-			this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
-		}
 		CBehavior nextBehavior;
 		if (order != null) {
 			nextBehavior = order.begin(game, this);
@@ -426,7 +431,7 @@ public class CUnit extends CWidget {
 						CAllianceType.PASSIVE)) {
 					for (final CUnitAttack attack : this.unitType.getAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
-							this.currentBehavior = getAttackBehavior().reset(attack, source);
+							this.currentBehavior = getAttackBehavior().reset(OrderIds.attack, attack, source);
 							break;
 						}
 					}
@@ -590,7 +595,7 @@ public class CUnit extends CWidget {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
 							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
-						this.source.currentBehavior = this.source.getAttackBehavior().reset(attack, unit);
+						this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack, attack, unit);
 						return true;
 					}
 				}

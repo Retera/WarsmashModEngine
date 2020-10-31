@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -11,229 +12,244 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 
 public class SequenceUtils {
-	public static final EnumSet<SecondaryTag> EMPTY = EnumSet.noneOf(SecondaryTag.class);
-	public static final EnumSet<SecondaryTag> READY = EnumSet.of(SecondaryTag.READY);
-	public static final EnumSet<SecondaryTag> FLESH = EnumSet.of(SecondaryTag.FLESH);
-	public static final EnumSet<SecondaryTag> BONE = EnumSet.of(SecondaryTag.BONE);
+    public static final EnumSet<SecondaryTag> EMPTY = EnumSet.noneOf(SecondaryTag.class);
+    public static final EnumSet<SecondaryTag> READY = EnumSet.of(SecondaryTag.READY);
+    public static final EnumSet<SecondaryTag> FLESH = EnumSet.of(SecondaryTag.FLESH);
+    public static final EnumSet<SecondaryTag> BONE = EnumSet.of(SecondaryTag.BONE);
 
-	private static final StandSequenceComparator STAND_SEQUENCE_COMPARATOR = new StandSequenceComparator();
+    private static final StandSequenceComparator STAND_SEQUENCE_COMPARATOR = new StandSequenceComparator();
+    private static final SecondaryTagSequenceComparator SECONDARY_TAG_SEQUENCE_COMPARATOR = new SecondaryTagSequenceComparator(STAND_SEQUENCE_COMPARATOR);
 
-	public static List<IndexedSequence> filterSequences(final String type, final List<Sequence> sequences) {
-		final List<IndexedSequence> filtered = new ArrayList<>();
+    public static List<IndexedSequence> filterSequences(final String type, final List<Sequence> sequences) {
+        final List<IndexedSequence> filtered = new ArrayList<>();
 
-		for (int i = 0, l = sequences.size(); i < l; i++) {
-			final Sequence sequence = sequences.get(i);
-			final String name = sequence.getName().split("-")[0].trim().toLowerCase();
+        for (int i = 0, l = sequences.size(); i < l; i++) {
+            final Sequence sequence = sequences.get(i);
+            final String name = sequence.getName().split("-")[0].trim().toLowerCase();
 
-			if (name.equals(type)) {
-				filtered.add(new IndexedSequence(sequence, i));
-			}
-		}
+            if (name.equals(type)) {
+                filtered.add(new IndexedSequence(sequence, i));
+            }
+        }
 
-		return filtered;
-	}
+        return filtered;
+    }
 
-	private static List<IndexedSequence> filterSequences(final PrimaryTag type, final EnumSet<SecondaryTag> tags,
-			final List<Sequence> sequences) {
-		final List<IndexedSequence> filtered = new ArrayList<>();
+    private static List<IndexedSequence> filterSequences(final PrimaryTag type, final EnumSet<SecondaryTag> tags,
+                                                         final List<Sequence> sequences) {
+        final List<IndexedSequence> filtered = new ArrayList<>();
 
-		for (int i = 0, l = sequences.size(); i < l; i++) {
-			final Sequence sequence = sequences.get(i);
-			if (sequence.getPrimaryTags().contains(type) && sequence.getSecondaryTags().containsAll(tags)
-					&& tags.containsAll(sequence.getSecondaryTags())) {
-				for (final AnimationTokens.SecondaryTag secondaryTag : sequence.getSecondaryTags()) {
-					if (tags.contains(secondaryTag)) {
-						filtered.add(new IndexedSequence(sequence, i));
-					}
-				}
-			}
-		}
-		if (filtered.isEmpty()) {
-			for (int i = 0, l = sequences.size(); i < l; i++) {
-				final Sequence sequence = sequences.get(i);
-				if (sequence.getPrimaryTags().contains(type) && sequence.getSecondaryTags().containsAll(tags)
-						&& tags.containsAll(sequence.getSecondaryTags())) {
-					filtered.add(new IndexedSequence(sequence, i));
-				}
-			}
-		}
+        for (int i = 0, l = sequences.size(); i < l; i++) {
+            final Sequence sequence = sequences.get(i);
+            if (sequence.getPrimaryTags().contains(type) && (sequence.getSecondaryTags().containsAll(tags)
+                    && tags.containsAll(sequence.getSecondaryTags()))) {
+                filtered.add(new IndexedSequence(sequence, i));
+            }
+        }
 
-		return filtered;
-	}
+        return filtered;
+    }
 
-	public static IndexedSequence selectSequence(final String type, final List<Sequence> sequences) {
-		final List<IndexedSequence> filtered = filterSequences(type, sequences);
+    public static IndexedSequence selectSequence(final String type, final List<Sequence> sequences) {
+        final List<IndexedSequence> filtered = filterSequences(type, sequences);
 
-		filtered.sort(STAND_SEQUENCE_COMPARATOR);
+        filtered.sort(STAND_SEQUENCE_COMPARATOR);
 
-		int i = 0;
-		final double randomRoll = Math.random() * 100;
-		for (final int l = filtered.size(); i < l; i++) {
-			final Sequence sequence = filtered.get(i).sequence;
-			final float rarity = sequence.getRarity();
+        int i = 0;
+        final double randomRoll = Math.random() * 100;
+        for (final int l = filtered.size(); i < l; i++) {
+            final Sequence sequence = filtered.get(i).sequence;
+            final float rarity = sequence.getRarity();
 
-			if (rarity == 0) {
-				break;
-			}
+            if (rarity == 0) {
+                break;
+            }
 
-			if (randomRoll < (10 - rarity)) {
-				return filtered.get(i);
-			}
-		}
+            if (randomRoll < (10 - rarity)) {
+                return filtered.get(i);
+            }
+        }
 
-		final int sequencesLeft = filtered.size() - i;
-		final int random = (int) (i + Math.floor(Math.random() * sequencesLeft));
-		if (sequencesLeft <= 0) {
-			return null; // new IndexedSequence(null, 0);
-		}
-		final IndexedSequence sequence = filtered.get(random);
+        final int sequencesLeft = filtered.size() - i;
+        final int random = (int) (i + Math.floor(Math.random() * sequencesLeft));
+        if (sequencesLeft <= 0) {
+            return null; // new IndexedSequence(null, 0);
+        }
+        final IndexedSequence sequence = filtered.get(random);
 
-		return sequence;
-	}
+        return sequence;
+    }
 
-	public static IndexedSequence selectSequence(final AnimationTokens.PrimaryTag type,
-			final EnumSet<AnimationTokens.SecondaryTag> tags, final List<Sequence> sequences,
-			final boolean allowRarityVariations) {
-		final List<IndexedSequence> filtered = filterSequences(type, tags, sequences);
+    public static IndexedSequence selectSequence(final AnimationTokens.PrimaryTag type,
+                                                 final EnumSet<AnimationTokens.SecondaryTag> tags, final List<Sequence> sequences,
+                                                 final boolean allowRarityVariations) {
+        List<IndexedSequence> filtered = filterSequences(type, tags, sequences);
+        Comparator<IndexedSequence> sequenceComparator = STAND_SEQUENCE_COMPARATOR;
 
-		filtered.sort(STAND_SEQUENCE_COMPARATOR);
+        if (filtered.isEmpty() && !tags.isEmpty()) {
+            filtered = filterSequences(type, EMPTY, sequences);
+        }
+        if (filtered.isEmpty()) {
+            // find tags
+            EnumSet<SecondaryTag> fallbackTags = null;
+            for (int i = 0, l = sequences.size(); i < l; i++) {
+                final Sequence sequence = sequences.get(i);
+                if (sequence.getPrimaryTags().contains(type)) {
+                    if (fallbackTags == null || sequence.getSecondaryTags().size() < fallbackTags.size()
+                            || (sequence.getSecondaryTags().size() == fallbackTags.size() && SecondaryTagSequenceComparator.getTagsOrdinal(sequence.getSecondaryTags(), tags)
+                            > SecondaryTagSequenceComparator.getTagsOrdinal(fallbackTags, tags))
+                    ) {
+                        fallbackTags = sequence.getSecondaryTags();
+                    }
+                }
+            }
+            if (fallbackTags != null) {
+                filtered = filterSequences(type, fallbackTags, sequences);
+            }
+        }
 
-		int i = 0;
-		final double randomRoll = Math.random() * 100;
-		for (final int l = filtered.size(); i < l; i++) {
-			final Sequence sequence = filtered.get(i).sequence;
-			final float rarity = sequence.getRarity();
+        filtered.sort(sequenceComparator);
 
-			if (rarity == 0) {
-				break;
-			}
+        int i = 0;
+        final double randomRoll = Math.random() * 100;
+        for (final int l = filtered.size(); i < l; i++) {
+            final Sequence sequence = filtered.get(i).sequence;
+            final float rarity = sequence.getRarity();
 
-			if ((randomRoll < (10 - rarity)) && allowRarityVariations) {
-				return filtered.get(i);
-			}
-		}
+            if (rarity == 0) {
+                break;
+            }
 
-		final int sequencesLeft = filtered.size() - i;
-		final int random = (int) (i + Math.floor(Math.random() * sequencesLeft));
-		if (sequencesLeft <= 0) {
-			return null; // new IndexedSequence(null, 0);
-		}
-		final IndexedSequence sequence = filtered.get(random);
+            if ((randomRoll < (10 - rarity)) && allowRarityVariations) {
+                return filtered.get(i);
+            }
+        }
 
-		return sequence;
-	}
+        final int sequencesLeft = filtered.size() - i;
+        final int random = (int) (i + Math.floor(Math.random() * sequencesLeft));
+        if (sequencesLeft <= 0) {
+            return null; // new IndexedSequence(null, 0);
+        }
+        final IndexedSequence sequence = filtered.get(random);
 
-	public static void randomStandSequence(final MdxComplexInstance target) {
-		final MdxModel model = (MdxModel) target.model;
-		final List<Sequence> sequences = model.getSequences();
-		final IndexedSequence sequence = selectSequence("stand", sequences);
+        return sequence;
+    }
 
-		if (sequence != null) {
-			target.setSequence(sequence.index);
-		}
-		else {
-			target.setSequence(0);
-		}
-	}
+    public static void randomStandSequence(final MdxComplexInstance target) {
+        final MdxModel model = (MdxModel) target.model;
+        final List<Sequence> sequences = model.getSequences();
+        final IndexedSequence sequence = selectSequence("stand", sequences);
 
-	public static void randomDeathSequence(final MdxComplexInstance target) {
-		final MdxModel model = (MdxModel) target.model;
-		final List<Sequence> sequences = model.getSequences();
-		final IndexedSequence sequence = selectSequence("death", sequences);
+        if (sequence != null) {
+            target.setSequence(sequence.index);
+        } else {
+            target.setSequence(0);
+        }
+    }
 
-		if (sequence != null) {
-			target.setSequence(sequence.index);
-		}
-		else {
-			target.setSequence(0);
-		}
-	}
+    public static void randomDeathSequence(final MdxComplexInstance target) {
+        final MdxModel model = (MdxModel) target.model;
+        final List<Sequence> sequences = model.getSequences();
+        final IndexedSequence sequence = selectSequence("death", sequences);
 
-	public static void randomWalkSequence(final MdxComplexInstance target) {
-		final MdxModel model = (MdxModel) target.model;
-		final List<Sequence> sequences = model.getSequences();
-		final IndexedSequence sequence = selectSequence("walk", sequences);
+        if (sequence != null) {
+            target.setSequence(sequence.index);
+        } else {
+            target.setSequence(0);
+        }
+    }
 
-		if (sequence != null) {
-			target.setSequence(sequence.index);
-		}
-		else {
-			randomStandSequence(target);
-		}
-	}
+    public static void randomWalkSequence(final MdxComplexInstance target) {
+        final MdxModel model = (MdxModel) target.model;
+        final List<Sequence> sequences = model.getSequences();
+        final IndexedSequence sequence = selectSequence("walk", sequences);
 
-	public static void randomBirthSequence(final MdxComplexInstance target) {
-		final MdxModel model = (MdxModel) target.model;
-		final List<Sequence> sequences = model.getSequences();
-		final IndexedSequence sequence = selectSequence("birth", sequences);
+        if (sequence != null) {
+            target.setSequence(sequence.index);
+        } else {
+            randomStandSequence(target);
+        }
+    }
 
-		if (sequence != null) {
-			target.setSequence(sequence.index);
-		}
-		else {
-			randomStandSequence(target);
-		}
-	}
+    public static void randomBirthSequence(final MdxComplexInstance target) {
+        final MdxModel model = (MdxModel) target.model;
+        final List<Sequence> sequences = model.getSequences();
+        final IndexedSequence sequence = selectSequence("birth", sequences);
 
-	public static void randomPortraitSequence(final MdxComplexInstance target) {
-		final MdxModel model = (MdxModel) target.model;
-		final List<Sequence> sequences = model.getSequences();
-		final IndexedSequence sequence = selectSequence("portrait", sequences);
+        if (sequence != null) {
+            target.setSequence(sequence.index);
+        } else {
+            randomStandSequence(target);
+        }
+    }
 
-		if (sequence != null) {
-			target.setSequence(sequence.index);
-		}
-		else {
-			randomStandSequence(target);
-		}
-	}
+    public static void randomPortraitSequence(final MdxComplexInstance target) {
+        final MdxModel model = (MdxModel) target.model;
+        final List<Sequence> sequences = model.getSequences();
+        final IndexedSequence sequence = selectSequence("portrait", sequences);
 
-	public static void randomPortraitTalkSequence(final MdxComplexInstance target) {
-		final MdxModel model = (MdxModel) target.model;
-		final List<Sequence> sequences = model.getSequences();
-		final IndexedSequence sequence = selectSequence("portrait talk", sequences);
+        if (sequence != null) {
+            target.setSequence(sequence.index);
+        } else {
+            randomStandSequence(target);
+        }
+    }
 
-		if (sequence != null) {
-			target.setSequence(sequence.index);
-		}
-		else {
-			randomPortraitSequence(target);
-		}
-	}
+    public static void randomPortraitTalkSequence(final MdxComplexInstance target) {
+        final MdxModel model = (MdxModel) target.model;
+        final List<Sequence> sequences = model.getSequences();
+        final IndexedSequence sequence = selectSequence("portrait talk", sequences);
 
-	public static void randomSequence(final MdxComplexInstance target, final String sequenceName) {
-		final MdxModel model = (MdxModel) target.model;
-		final List<Sequence> sequences = model.getSequences();
-		final IndexedSequence sequence = selectSequence(sequenceName, sequences);
+        if (sequence != null) {
+            target.setSequence(sequence.index);
+        } else {
+            randomPortraitSequence(target);
+        }
+    }
 
-		if (sequence != null) {
-			target.setSequence(sequence.index);
-		}
-		else {
-			randomStandSequence(target);
-		}
-	}
+    public static void randomSequence(final MdxComplexInstance target, final String sequenceName) {
+        final MdxModel model = (MdxModel) target.model;
+        final List<Sequence> sequences = model.getSequences();
+        final IndexedSequence sequence = selectSequence(sequenceName, sequences);
 
-	public static Sequence randomSequence(final MdxComplexInstance target, final PrimaryTag animationName,
-			final EnumSet<SecondaryTag> secondaryAnimationTags, final boolean allowRarityVariations) {
-		final MdxModel model = (MdxModel) target.model;
-		final List<Sequence> sequences = model.getSequences();
-		final IndexedSequence sequence = selectSequence(animationName, secondaryAnimationTags, sequences,
-				allowRarityVariations);
+        if (sequence != null) {
+            target.setSequence(sequence.index);
+        } else {
+            randomStandSequence(target);
+        }
+    }
 
-		if (sequence != null) {
-			target.setSequence(sequence.index);
-			return sequence.sequence;
-		}
-		else {
-			if (!secondaryAnimationTags.isEmpty()) {
-				return randomSequence(target, animationName, EMPTY, allowRarityVariations);
-			}
-			return null;
-		}
-	}
+    public static Sequence randomSequence(final MdxComplexInstance target, final PrimaryTag animationName,
+                                          final boolean allowRarityVariations) {
+        final MdxModel model = (MdxModel) target.model;
+        final List<Sequence> sequences = model.getSequences();
+        final IndexedSequence sequence = selectSequence(animationName, null, sequences,
+                allowRarityVariations);
 
-	public static Sequence randomSequence(final MdxComplexInstance target, final PrimaryTag animationName) {
-		return randomSequence(target, animationName, EMPTY, false);
-	}
+        if (sequence != null) {
+            target.setSequence(sequence.index);
+            return sequence.sequence;
+        } else {
+            return null;
+        }
+    }
+
+    public static Sequence randomSequence(final MdxComplexInstance target, final PrimaryTag animationName,
+                                          final EnumSet<SecondaryTag> secondaryAnimationTags, final boolean allowRarityVariations) {
+        final MdxModel model = (MdxModel) target.model;
+        final List<Sequence> sequences = model.getSequences();
+        final IndexedSequence sequence = selectSequence(animationName, secondaryAnimationTags, sequences,
+                allowRarityVariations);
+
+        if (sequence != null) {
+            target.setSequence(sequence.index);
+            return sequence.sequence;
+        } else {
+            return null;
+        }
+    }
+
+    public static Sequence randomSequence(final MdxComplexInstance target, final PrimaryTag animationName) {
+        return randomSequence(target, animationName, EMPTY, false);
+    }
 }

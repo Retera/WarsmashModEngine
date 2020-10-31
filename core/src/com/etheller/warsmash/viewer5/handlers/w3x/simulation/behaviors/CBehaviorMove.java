@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindin
 public class CBehaviorMove implements CBehavior {
 	private static final Rectangle tempRect = new Rectangle();
 	private final CUnit unit;
+	private int highlightOrderId;
 
 	public CBehaviorMove(final CUnit unit) {
 		this.unit = unit;
@@ -31,25 +32,34 @@ public class CBehaviorMove implements CBehavior {
 	private CUnit followUnit;
 	private CRangedBehavior rangedBehavior;
 
-	public CBehaviorMove reset(final float targetX, final float targetY) {
-		return reset(targetX, targetY, null);
+	public CBehaviorMove reset(int highlightOrderId, final float targetX, final float targetY) {
+		internalResetMove(highlightOrderId, targetX, targetY);
+		this.rangedBehavior = null;
+		return this;
 	}
 
-	public CBehaviorMove reset(final float targetX, final float targetY, final CRangedBehavior rangedBehavior) {
+	private void internalResetMove(int highlightOrderId, final float targetX, final float targetY) {
+		this.highlightOrderId = highlightOrderId;
 		this.wasWithinPropWindow = false;
 		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
 				this.unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
-						: CPathfindingProcessor.GridMapping.CELLS;
+				: CPathfindingProcessor.GridMapping.CELLS;
 		this.target = new Point2D.Float(targetX, targetY);
 		this.path = null;
 		this.searchCycles = 0;
 		this.followUnit = null;
+	}
+
+	public CBehaviorMove reset(final float targetX, final float targetY, final CRangedBehavior rangedBehavior) {
+		internalResetMove(rangedBehavior.getHighlightOrderId(), targetX, targetY);
 		this.rangedBehavior = rangedBehavior;
 		return this;
 	}
 
-	public CBehaviorMove reset(final CUnit followUnit) {
-		return reset(followUnit, null);
+	public CBehaviorMove reset(int highlightOrderId, final CUnit followUnit) {
+		internalResetMove(highlightOrderId, followUnit);
+		this.rangedBehavior = null;
+		return this;
 	}
 
 	public CBehaviorMove reset(final CUnit followUnit, final CRangedBehavior rangedBehavior) {
@@ -63,6 +73,23 @@ public class CBehaviorMove implements CBehavior {
 		this.followUnit = followUnit;
 		this.rangedBehavior = rangedBehavior;
 		return this;
+	}
+
+	private void internalResetMove(int highlightOrderId, CUnit followUnit) {
+		this.highlightOrderId = highlightOrderId;
+		this.wasWithinPropWindow = false;
+		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
+				this.unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
+						: CPathfindingProcessor.GridMapping.CELLS;
+		this.target = new Float(followUnit.getX(), followUnit.getY());
+		this.path = null;
+		this.searchCycles = 0;
+		this.followUnit = followUnit;
+	}
+
+	@Override
+	public int getHighlightOrderId() {
+		return highlightOrderId;
 	}
 
 	@Override

@@ -194,9 +194,6 @@ public class RenderUnit {
 		}
 		else {
 			currentWalkableUnder = map.getHighestWalkableUnder(x, y);
-			if (currentWalkableUnder != null) {
-				System.out.println("WALKABLE UNDER");
-			}
 			War3MapViewer.gdxRayHeap.set(x, y, 4096, 0, 0, -8192);
 			if ((currentWalkableUnder != null)
 					&& currentWalkableUnder.intersectRayWithCollision(War3MapViewer.gdxRayHeap,

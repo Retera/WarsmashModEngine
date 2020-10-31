@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors;
 import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorPatrol implements CRangedBehavior {
 
@@ -18,6 +19,11 @@ public class CBehaviorPatrol implements CRangedBehavior {
 		this.target = target;
 		this.startPoint = new Vector2(this.unit.getX(), this.unit.getY());
 		return this;
+	}
+
+	@Override
+	public int getHighlightOrderId() {
+		return OrderIds.patrol;
 	}
 
 	@Override

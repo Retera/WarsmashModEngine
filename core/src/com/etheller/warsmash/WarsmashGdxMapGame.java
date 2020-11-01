@@ -157,6 +157,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final Scene portraitScene = this.viewer.addSimpleScene();
 		this.uiScene = this.viewer.addSimpleScene();
 		this.uiScene.alpha = true;
+		this.uiScene.enableAudio();
 
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
 
@@ -385,6 +386,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean touchUp(final int screenX, final int screenY, final int pointer, final int button) {
+		final float worldScreenY = getHeight() - screenY;
+
+		if (this.meleeUI.touchUp(screenX, screenY, worldScreenY, button)) {
+			return false;
+		}
 		return false;
 	}
 

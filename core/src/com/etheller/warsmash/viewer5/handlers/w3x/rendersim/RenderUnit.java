@@ -137,10 +137,10 @@ public class RenderUnit {
 	}
 
 	public void populateCommandCard(final CSimulation game, final CommandButtonListener commandButtonListener,
-			final AbilityDataUI abilityDataUI) {
+			final AbilityDataUI abilityDataUI, final int subMenuOrderId) {
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
 			ability.visit(CommandCardPopulatingAbilityVisitor.INSTANCE.reset(game, this.simulationUnit,
-					commandButtonListener, abilityDataUI));
+					commandButtonListener, abilityDataUI, subMenuOrderId));
 		}
 	}
 
@@ -405,15 +405,17 @@ public class RenderUnit {
 				final boolean allowRarityVariations) {
 			this.animationQueue.clear();
 			if (force || (animationName != this.currentAnimation)) {
-				this.currentAnimation = animationName;
-				this.currentAnimationSecondaryTags = secondaryAnimationTags;
 				this.currentSpeedRatio = speedRatio;
-				this.currentlyAllowingRarityVariations = allowRarityVariations;
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);
 				this.instance.setAnimationSpeed(speedRatio);
-				SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet, allowRarityVariations);
+				if (SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
+						allowRarityVariations) != null) {
+					this.currentAnimation = animationName;
+					this.currentAnimationSecondaryTags = secondaryAnimationTags;
+					this.currentlyAllowingRarityVariations = allowRarityVariations;
+				}
 			}
 		}
 
@@ -422,15 +424,15 @@ public class RenderUnit {
 				final boolean allowRarityVariations) {
 			this.animationQueue.clear();
 			if (force || (animationName != this.currentAnimation)) {
-				this.currentAnimation = animationName;
-				this.currentAnimationSecondaryTags = secondaryAnimationTags;
-				this.currentlyAllowingRarityVariations = allowRarityVariations;
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);
 				final Sequence sequence = SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
 						allowRarityVariations);
 				if (sequence != null) {
+					this.currentAnimation = animationName;
+					this.currentAnimationSecondaryTags = secondaryAnimationTags;
+					this.currentlyAllowingRarityVariations = allowRarityVariations;
 					this.currentSpeedRatio = ((sequence.getInterval()[1] - sequence.getInterval()[0]) / 1000.0f)
 							/ duration;
 					this.instance.setAnimationSpeed(this.currentSpeedRatio);

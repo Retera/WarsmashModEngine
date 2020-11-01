@@ -3,8 +3,8 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityColdArrows;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGeneric;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
 
 public class CAbilityData {
 	private static final War3ID COLD_ARROWS = War3ID.fromString("ACcw");

@@ -4,11 +4,13 @@ import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 import java.util.List;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitRace;
 
 /**
  * The quick (symbol table instead of map) lookup for unit type values that we
@@ -35,13 +37,19 @@ public class CUnitType {
 	private final EnumSet<CTargetType> targetedAs;
 	private final float defaultAcquisitionRange;
 	private final float minimumAttackRange;
+	private final List<War3ID> structuresBuilt;
+	private final CUnitRace unitRace;
+	private final int goldCost;
+	private final int lumberCost;
+	private final int buildTime;
 
 	public CUnitType(final String name, final boolean isBldg, final MovementType movementType,
 			final float defaultFlyingHeight, final float collisionSize,
 			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks, final String armorType,
 			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ,
 			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs,
-			final float defaultAcquisitionRange, final float minimumAttackRange) {
+			final float defaultAcquisitionRange, final float minimumAttackRange, final List<War3ID> structuresBuilt,
+			final CUnitRace unitRace, final int goldCost, final int lumberCost, final int buildTime) {
 		this.name = name;
 		this.building = isBldg;
 		this.movementType = movementType;
@@ -59,6 +67,11 @@ public class CUnitType {
 		this.targetedAs = targetedAs;
 		this.defaultAcquisitionRange = defaultAcquisitionRange;
 		this.minimumAttackRange = minimumAttackRange;
+		this.structuresBuilt = structuresBuilt;
+		this.unitRace = unitRace;
+		this.goldCost = goldCost;
+		this.lumberCost = lumberCost;
+		this.buildTime = buildTime;
 	}
 
 	public String getName() {
@@ -127,5 +140,25 @@ public class CUnitType {
 
 	public float getMinimumAttackRange() {
 		return this.minimumAttackRange;
+	}
+
+	public List<War3ID> getStructuresBuilt() {
+		return this.structuresBuilt;
+	}
+
+	public CUnitRace getRace() {
+		return this.unitRace;
+	}
+
+	public int getGoldCost() {
+		return this.goldCost;
+	}
+
+	public int getLumberCost() {
+		return this.lumberCost;
+	}
+
+	public int getBuildTime() {
+		return this.buildTime;
 	}
 }

@@ -22,15 +22,27 @@ public class AbilityDataUI {
 	private static final War3ID ICON_RESEARCH_X = War3ID.fromString("arpx");
 	private static final War3ID ICON_RESEARCH_Y = War3ID.fromString("arpy");
 
+	private static final War3ID UNIT_ICON_NORMAL_X = War3ID.fromString("ubpx");
+	private static final War3ID UNIT_ICON_NORMAL_Y = War3ID.fromString("ubpy");
+	private static final War3ID UNIT_ICON_NORMAL = War3ID.fromString("uico");
+
 	private final Map<War3ID, AbilityIconUI> rawcodeToUI = new HashMap<>();
+	private final Map<War3ID, IconUI> rawcodeToUnitUI = new HashMap<>();
 	private final IconUI moveUI;
 	private final IconUI stopUI;
 	private final IconUI holdPosUI;
 	private final IconUI patrolUI;
 	private final IconUI attackUI;
 	private final IconUI attackGroundUI;
+	private final IconUI buildHumanUI;
+	private final IconUI buildOrcUI;
+	private final IconUI buildNightElfUI;
+	private final IconUI buildUndeadUI;
+	private final IconUI buildNeutralUI;
+	private final IconUI buildNagaUI;
+	private final IconUI cancelUI;
 
-	public AbilityDataUI(final MutableObjectData abilityData, final GameUI gameUI) {
+	public AbilityDataUI(final MutableObjectData abilityData, final MutableObjectData unitData, final GameUI gameUI) {
 		final String disabledPrefix = gameUI.getSkinField("CommandButtonDisabledArtPath");
 		for (final War3ID alias : abilityData.keySet()) {
 			final MutableGameObject abilityTypeData = abilityData.get(alias);
@@ -54,12 +66,28 @@ public class AbilityDataUI {
 							new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY),
 							new IconUI(iconTurnOff, iconTurnOffDisabled, iconTurnOffX, iconTurnOffY)));
 		}
+		for (final War3ID alias : unitData.keySet()) {
+			final MutableGameObject abilityTypeData = unitData.get(alias);
+			final String iconNormalPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(UNIT_ICON_NORMAL, 0));
+			final int iconNormalX = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_X, 0);
+			final int iconNormalY = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_Y, 0);
+			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
+			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
+			this.rawcodeToUnitUI.put(alias, new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY));
+		}
 		this.moveUI = createBuiltInIconUI(gameUI, "CmdMove", disabledPrefix);
 		this.stopUI = createBuiltInIconUI(gameUI, "CmdStop", disabledPrefix);
 		this.holdPosUI = createBuiltInIconUI(gameUI, "CmdHoldPos", disabledPrefix);
 		this.patrolUI = createBuiltInIconUI(gameUI, "CmdPatrol", disabledPrefix);
 		this.attackUI = createBuiltInIconUI(gameUI, "CmdAttack", disabledPrefix);
+		this.buildHumanUI = createBuiltInIconUI(gameUI, "CmdBuildHuman", disabledPrefix);
+		this.buildOrcUI = createBuiltInIconUI(gameUI, "CmdBuildOrc", disabledPrefix);
+		this.buildNightElfUI = createBuiltInIconUI(gameUI, "CmdBuildNightElf", disabledPrefix);
+		this.buildUndeadUI = createBuiltInIconUI(gameUI, "CmdBuildUndead", disabledPrefix);
+		this.buildNagaUI = createBuiltInIconUI(gameUI, "CmdBuildNaga", disabledPrefix);
+		this.buildNeutralUI = createBuiltInIconUI(gameUI, "CmdBuild", disabledPrefix);
 		this.attackGroundUI = createBuiltInIconUI(gameUI, "CmdAttackGround", disabledPrefix);
+		this.cancelUI = createBuiltInIconUI(gameUI, "CmdCancel", disabledPrefix);
 	}
 
 	private IconUI createBuiltInIconUI(final GameUI gameUI, final String key, final String disabledPrefix) {
@@ -74,6 +102,10 @@ public class AbilityDataUI {
 
 	public AbilityIconUI getUI(final War3ID rawcode) {
 		return this.rawcodeToUI.get(rawcode);
+	}
+
+	public IconUI getUnitUI(final War3ID rawcode) {
+		return this.rawcodeToUnitUI.get(rawcode);
 	}
 
 	private static String disable(final String path, final String disabledPrefix) {
@@ -107,6 +139,34 @@ public class AbilityDataUI {
 
 	public IconUI getAttackGroundUI() {
 		return this.attackGroundUI;
+	}
+
+	public IconUI getBuildHumanUI() {
+		return this.buildHumanUI;
+	}
+
+	public IconUI getBuildNightElfUI() {
+		return this.buildNightElfUI;
+	}
+
+	public IconUI getBuildOrcUI() {
+		return this.buildOrcUI;
+	}
+
+	public IconUI getBuildUndeadUI() {
+		return this.buildUndeadUI;
+	}
+
+	public IconUI getBuildNagaUI() {
+		return this.buildNagaUI;
+	}
+
+	public IconUI getBuildNeutralUI() {
+		return this.buildNeutralUI;
+	}
+
+	public IconUI getCancelUI() {
+		return this.cancelUI;
 	}
 
 }

@@ -13,6 +13,9 @@ public abstract class SkeletalNode extends GenericNode {
 	protected static final Quaternion rotationHeap = new Quaternion();
 	protected static final Quaternion rotationHeap2 = new Quaternion();
 	protected static final Vector3 scalingHeap = new Vector3();
+	protected static final Vector3 blendLocationHeap = new Vector3();
+	protected static final Vector3 blendHeap = new Vector3();
+	protected static final Vector3 blendScaleHeap = new Vector3();
 
 	public UpdatableObject object;
 
@@ -21,7 +24,9 @@ public abstract class SkeletalNode extends GenericNode {
 	public boolean billboardedY;
 	public boolean billboardedZ;
 
-	public Matrix4 localBlendMatrix;
+	public Vector3 localBlendLocation;
+	public Quaternion localBlendRotation;
+	public Vector3 localBlendScale;
 
 	public SkeletalNode() {
 		this.pivot = new Vector3();
@@ -35,7 +40,9 @@ public abstract class SkeletalNode extends GenericNode {
 		this.inverseWorldRotation = new Quaternion();
 		this.inverseWorldScale = new Vector3();
 		this.localMatrix = new Matrix4();
-		this.localBlendMatrix = new Matrix4();
+		this.localBlendLocation = new Vector3();
+		this.localBlendRotation = new Quaternion(0, 0, 0, 1);
+		this.localBlendScale = new Vector3(1, 1, 1);
 		this.worldMatrix = new Matrix4();
 		this.dontInheritTranslation = false;
 		this.dontInheritRotation = false;
@@ -70,8 +77,10 @@ public abstract class SkeletalNode extends GenericNode {
 	}
 
 	public void recalculateTransformation(final Scene scene, final float blendTimeRatio) {
+		final float inverseBlendRatio = 1 - blendTimeRatio;
 		final Quaternion computedRotation;
 		Vector3 computedScaling;
+		Vector3 computedLocation;
 
 		if (this.dontInheritScaling) {
 			computedScaling = scalingHeap;
@@ -86,7 +95,14 @@ public abstract class SkeletalNode extends GenericNode {
 			this.worldScale.z = this.localScale.z;
 		}
 		else {
-			computedScaling = this.localScale;
+			if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0)) {
+				blendScaleHeap.set(this.localScale).scl(inverseBlendRatio)
+						.add(blendHeap.set(this.localBlendScale).scl(blendTimeRatio));
+				computedScaling = blendScaleHeap;
+			}
+			else {
+				computedScaling = this.localScale;
+			}
 
 			final Vector3 parentScale = this.parent.worldScale;
 			this.worldScale.x = parentScale.x * this.localScale.x;
@@ -133,17 +149,24 @@ public abstract class SkeletalNode extends GenericNode {
 			computedRotation.setFromAxisRad(billboardAxisHeap, angle);
 		}
 		else {
-			computedRotation = this.localRotation;
-		}
-
-		RenderMathUtils.fromRotationTranslationScaleOrigin(computedRotation, this.localLocation, computedScaling,
-				this.localMatrix, this.pivot);
-		if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0)) {
-			for (int i = 0; i < this.localMatrix.val.length; i++) {
-				this.localMatrix.val[i] = (this.localBlendMatrix.val[i] * blendTimeRatio)
-						+ (this.localMatrix.val[i] * (1 - blendTimeRatio));
+			if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0)) {
+				rotationHeap.set(this.localRotation).slerp(this.localBlendRotation, blendTimeRatio);
+				computedRotation = rotationHeap;
+			}
+			else {
+				computedRotation = this.localRotation;
 			}
 		}
+
+		if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0)) {
+			computedLocation = blendLocationHeap.set(this.localLocation).scl(inverseBlendRatio)
+					.add(blendHeap.set(this.localBlendLocation).scl(blendTimeRatio));
+		}
+		else {
+			computedLocation = this.localLocation;
+		}
+		RenderMathUtils.fromRotationTranslationScaleOrigin(computedRotation, computedLocation, computedScaling,
+				this.localMatrix, this.pivot);
 
 		RenderMathUtils.mul(this.worldMatrix, this.parent.worldMatrix, this.localMatrix);
 
@@ -178,7 +201,9 @@ public abstract class SkeletalNode extends GenericNode {
 	}
 
 	public void beginBlending() {
-		this.localBlendMatrix.set(this.localMatrix);
+		this.localBlendLocation.set(this.localLocation);
+		this.localBlendRotation.set(this.localRotation);
+		this.localBlendScale.set(this.localScale);
 	}
 
 	public void updateChildren(final float dt, final Scene scene) {

@@ -1,5 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
+import java.awt.image.BufferedImage;
+
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -16,4 +19,6 @@ public interface SimulationRenderController {
 	void spawnUnitDamageSound(CUnit damagedUnit, final String weaponSound, String armorType);
 
 	void removeUnit(CUnit unit);
+
+	BufferedImage getBuildingPathingPixelMap(War3ID rawcode);
 }

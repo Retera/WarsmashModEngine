@@ -63,9 +63,4 @@ public class TextureFrame extends AbstractRenderableFrame {
 	public void setTexture(final TextureRegion texture) {
 		this.texture = texture;
 	}
-
-	@Override
-	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
-		return super.touchDown(screenX, screenY, button);
-	}
 }

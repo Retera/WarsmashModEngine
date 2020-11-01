@@ -32,18 +32,18 @@ public class CBehaviorMove implements CBehavior {
 	private CUnit followUnit;
 	private CRangedBehavior rangedBehavior;
 
-	public CBehaviorMove reset(int highlightOrderId, final float targetX, final float targetY) {
+	public CBehaviorMove reset(final int highlightOrderId, final float targetX, final float targetY) {
 		internalResetMove(highlightOrderId, targetX, targetY);
 		this.rangedBehavior = null;
 		return this;
 	}
 
-	private void internalResetMove(int highlightOrderId, final float targetX, final float targetY) {
+	private void internalResetMove(final int highlightOrderId, final float targetX, final float targetY) {
 		this.highlightOrderId = highlightOrderId;
 		this.wasWithinPropWindow = false;
 		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
 				this.unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
-				: CPathfindingProcessor.GridMapping.CELLS;
+						: CPathfindingProcessor.GridMapping.CELLS;
 		this.target = new Point2D.Float(targetX, targetY);
 		this.path = null;
 		this.searchCycles = 0;
@@ -56,26 +56,19 @@ public class CBehaviorMove implements CBehavior {
 		return this;
 	}
 
-	public CBehaviorMove reset(int highlightOrderId, final CUnit followUnit) {
+	public CBehaviorMove reset(final int highlightOrderId, final CUnit followUnit) {
 		internalResetMove(highlightOrderId, followUnit);
 		this.rangedBehavior = null;
 		return this;
 	}
 
 	public CBehaviorMove reset(final CUnit followUnit, final CRangedBehavior rangedBehavior) {
-		this.wasWithinPropWindow = false;
-		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
-				this.unit.getUnitType().getCollisionSize()) ? CPathfindingProcessor.GridMapping.CORNERS
-						: CPathfindingProcessor.GridMapping.CELLS;
-		this.target = new Point2D.Float(followUnit.getX(), followUnit.getY());
-		this.path = null;
-		this.searchCycles = 0;
-		this.followUnit = followUnit;
+		internalResetMove(rangedBehavior.getHighlightOrderId(), followUnit);
 		this.rangedBehavior = rangedBehavior;
 		return this;
 	}
 
-	private void internalResetMove(int highlightOrderId, CUnit followUnit) {
+	private void internalResetMove(final int highlightOrderId, final CUnit followUnit) {
 		this.highlightOrderId = highlightOrderId;
 		this.wasWithinPropWindow = false;
 		this.gridMapping = CPathfindingProcessor.isCollisionSizeBetterSuitedForCorners(
@@ -89,7 +82,7 @@ public class CBehaviorMove implements CBehavior {
 
 	@Override
 	public int getHighlightOrderId() {
-		return highlightOrderId;
+		return this.highlightOrderId;
 	}
 
 	@Override

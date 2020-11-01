@@ -34,5 +34,7 @@ public interface UIFrame {
 
 	UIFrame touchDown(float screenX, float screenY, int button);
 
+	UIFrame touchUp(float screenX, float screenY, int button);
+
 	String getName();
 }

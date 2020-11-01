@@ -30,8 +30,8 @@ public class StringMsgAbilityActivationReceiver implements AbilityActivationRece
 	}
 
 	@Override
-	public void notEnoughResources(final ResourceType resource, final int amount) {
-		this.message = "NOTEXTERN: Requires " + amount + " " + resource.name().toLowerCase() + ".";
+	public void notEnoughResources(final ResourceType resource) {
+		this.message = "NOTEXTERN: Requires more " + resource.name().toLowerCase() + ".";
 	}
 
 	@Override

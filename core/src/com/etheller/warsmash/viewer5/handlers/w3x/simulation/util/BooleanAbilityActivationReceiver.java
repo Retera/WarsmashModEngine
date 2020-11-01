@@ -10,7 +10,7 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
-	public void notEnoughResources(final ResourceType resource, final int amount) {
+	public void notEnoughResources(final ResourceType resource) {
 		this.ok = false;
 	}
 

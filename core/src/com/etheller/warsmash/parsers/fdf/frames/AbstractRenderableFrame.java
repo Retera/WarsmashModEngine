@@ -347,6 +347,11 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	}
 
 	@Override
+	public UIFrame touchUp(final float screenX, final float screenY, final int button) {
+		return null;
+	}
+
+	@Override
 	public String getName() {
 		return this.name;
 	}

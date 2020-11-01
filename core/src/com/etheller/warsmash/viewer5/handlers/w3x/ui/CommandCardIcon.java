@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractRenderableFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
@@ -26,6 +27,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	private int autoCastOrderId;
 	private boolean autoCastActive;
 	private final CommandCardCommandListener commandCardCommandListener;
+	private boolean menuButton;
 
 	public CommandCardIcon(final String name, final UIFrame parent,
 			final CommandCardCommandListener commandCardCommandListener) {
@@ -70,7 +72,8 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	}
 
 	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId,
-			final int autoCastOrderId, final boolean active, final boolean autoCastActive) {
+			final int autoCastOrderId, final boolean active, final boolean autoCastActive, final boolean menuButton) {
+		this.menuButton = menuButton;
 		this.iconFrame.setVisible(true);
 		this.activeHighlightFrame.setVisible(active);
 		this.cooldownFrame.setVisible(false);
@@ -111,14 +114,46 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
 		if (this.renderBounds.contains(screenX, screenY)) {
-			if (button == Input.Buttons.LEFT) {
-				this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.orderId);
-			}
-			else if (button == Input.Buttons.RIGHT) {
-				this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.autoCastOrderId);
-			}
 			return this;
 		}
-		return null;
+		return super.touchDown(screenX, screenY, button);
+	}
+
+	@Override
+	public UIFrame touchUp(final float screenX, final float screenY, final int button) {
+		if (this.renderBounds.contains(screenX, screenY)) {
+			return this;
+		}
+		return super.touchUp(screenX, screenY, button);
+	}
+
+	public boolean isMenuButton() {
+		return this.menuButton;
+	}
+
+	public void onClick(final int button) {
+		if (button == Input.Buttons.LEFT) {
+			if (this.menuButton) {
+				this.commandCardCommandListener.openMenu(this.orderId);
+			}
+			else {
+				this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.orderId);
+			}
+		}
+		else if (button == Input.Buttons.RIGHT) {
+			this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.autoCastOrderId);
+		}
+	}
+
+	public void mouseDown(final Viewport uiViewport) {
+		this.iconFrame.setWidth(GameUI.convertX(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH));
+		this.iconFrame.setHeight(GameUI.convertY(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH));
+		positionBounds(uiViewport);
+	}
+
+	public void mouseUp(final Viewport uiViewport) {
+		this.iconFrame.setWidth(GameUI.convertX(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));
+		this.iconFrame.setHeight(GameUI.convertY(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));
+		positionBounds(uiViewport);
 	}
 }

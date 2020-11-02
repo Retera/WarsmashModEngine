@@ -60,7 +60,7 @@ public class Terrain {
 	private static final Vector3 normalHeap2 = new Vector3();
 	private static final float[] fourComponentHeap = new float[4];
 	private static final Matrix4 tempMatrix = new Matrix4();
-	private static final boolean WIREFRAME_TERRAIN = true;
+	private static final boolean WIREFRAME_TERRAIN = false;
 
 	public ShaderProgram groundShader;
 	public ShaderProgram waterShader;

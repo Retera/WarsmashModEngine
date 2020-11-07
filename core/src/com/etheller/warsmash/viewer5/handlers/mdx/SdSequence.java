@@ -6,9 +6,9 @@ import java.util.Arrays;
 import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
 import com.etheller.warsmash.util.ParseUtils;
-import com.etheller.warsmash.util.RenderMathUtils;
 
 public final class SdSequence<TYPE> {
+	private static boolean INJECT_FRAMES_GHOSTWOLF_STYLE = false;
 
 	private final Sd<TYPE> sd;
 	public final long start; // UInt32
@@ -99,7 +99,7 @@ public final class SdSequence<TYPE> {
 			}
 			this.constant = allFramesMatch;
 
-			if (!this.constant) {
+			if (!this.constant && INJECT_FRAMES_GHOSTWOLF_STYLE) {
 				// If there is no opening keyframe for this sequence, inject one
 				// with the default value.
 				final boolean hasStart = framesBuilder.get(0) == start;
@@ -152,7 +152,7 @@ public final class SdSequence<TYPE> {
 	}
 
 	private TYPE[] fixTimelineArray(final Timeline<TYPE> timeline, final TYPE[] values) {
-		if(values == null) {
+		if (values == null) {
 			return null;
 		}
 		if (timeline.getName().equals(AnimationMap.KLAC.getWar3id())
@@ -166,10 +166,6 @@ public final class SdSequence<TYPE> {
 		return values;
 	}
 
-//	private TYPE[] makeArray(final int size) {
-//		return (TYPE[]) new Object[size];
-//	}
-
 	public int getValue(final TYPE out, final long frame) {
 		final int l = this.frames.length;
 
@@ -178,26 +174,35 @@ public final class SdSequence<TYPE> {
 
 			return -1;
 		}
-		else if (frame >= this.end) {
-			this.sd.copy(out, this.values[l - 1]);
-
-			return l - 1;
-		}
 		else {
-			for (int i = 1; i < l; i++) {
-				if (this.frames[i] > frame) {
-					final long start = this.frames[i - 1];
-					final long end = this.frames[i];
-					final float t = RenderMathUtils
-							.clamp(((end - start) == 0 ? 0 : ((frame - start) / (float) (end - start))), 0, 1);
-
-					this.sd.interpolate(out, this.values, this.inTans, this.outTans, i - 1, i, t);
-
-					return i;
+			int startFrame = -1;
+			int endFrame = -1;
+			final int l1 = l - 1;
+			if ((frame < this.frames[0]) || (frame >= this.frames[l1])) {
+				startFrame = l1;
+				endFrame = 0;
+			}
+			else {
+				for (int i = 1; i < l; i++) {
+					if (this.frames[i] > frame) {
+						startFrame = i - 1;
+						endFrame = i;
+						break;
+					}
 				}
 			}
-
-			return -1;
+			long start = this.frames[startFrame];
+			final long end = this.frames[endFrame];
+			long timeBetweenFrames = end - start;
+			if (timeBetweenFrames < 0) {
+				timeBetweenFrames += (this.end - this.start);
+				if (frame < start) {
+					start = end;
+				}
+			}
+			final float t = ((timeBetweenFrames) == 0 ? 0 : ((frame - start) / (float) (timeBetweenFrames)));
+			this.sd.interpolate(out, this.values, this.inTans, this.outTans, startFrame, endFrame, t);
+			return startFrame;
 		}
 	}
 

@@ -75,4 +75,9 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
+
+	@Override
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId) {
+		return false;
+	}
 }

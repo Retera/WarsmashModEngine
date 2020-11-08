@@ -2,7 +2,6 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 
 public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	protected final CUnit unit;
@@ -12,27 +11,28 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	}
 
 	private boolean wasWithinPropWindow = false;
-	protected CWidget target;
 	private boolean wasInRange = false;
 	private CBehaviorMove moveBehavior;
 
-	protected final CAbstractRangedBehavior innerReset(final CWidget target) {
+	protected final CAbstractRangedBehavior innerReset() {
 		this.wasWithinPropWindow = false;
-		this.target = target;
 		this.wasInRange = false;
+		CBehaviorMove moveBehavior;
 		if (!this.unit.isMovementDisabled()) {
-			if ((target instanceof CUnit) && !((CUnit) target).getUnitType().isBuilding()) {
-				this.moveBehavior = this.unit.getMoveBehavior().reset((CUnit) target, this);
-			}
-			else {
-				this.moveBehavior = this.unit.getMoveBehavior().reset(target.getX(), target.getY(), this);
-			}
+			moveBehavior = setupMoveBehavior();
 		}
 		else {
-			this.moveBehavior = null;
+			moveBehavior = null;
 		}
+		this.moveBehavior = moveBehavior;
 		return this;
 	}
+
+	protected abstract CBehaviorMove setupMoveBehavior();
+
+	protected abstract float getTargetX();
+
+	protected abstract float getTargetY();
 
 	protected abstract CBehavior update(CSimulation simulation, boolean withinRange);
 
@@ -51,15 +51,14 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 			}
 			this.wasInRange = false;
 			resetBeforeMoving(simulation);
-			;
 			return this.unit.getMoveBehavior();
 		}
 		this.wasInRange = true;
 		if (!this.unit.isMovementDisabled()) {
 			final float prevX = this.unit.getX();
 			final float prevY = this.unit.getY();
-			final float deltaY = this.target.getY() - prevY;
-			final float deltaX = this.target.getX() - prevX;
+			final float deltaY = getTargetY() - prevY;
+			final float deltaX = getTargetX() - prevX;
 			final double goalAngleRad = Math.atan2(deltaY, deltaX);
 			float goalAngle = (float) Math.toDegrees(goalAngleRad);
 			if (goalAngle < 0) {

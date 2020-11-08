@@ -38,6 +38,9 @@ public class EventObjectSpn extends EmittedObject<MdxComplexInstance, EventObjec
 		final MdxModel model = (MdxModel) instance.model;
 
 		// Once the sequence finishes, this event object dies
+		if (model.getSequences().isEmpty()) {
+			System.err.println("NO SEQ FOR " + model.name);
+		}
 		if (instance.frame >= model.getSequences().get(0).getInterval()[1]) {
 			this.health = 0;
 

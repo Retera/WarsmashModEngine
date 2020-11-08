@@ -8,7 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
-public class CBehaviorAttack extends CAbstractRangedBehavior {
+public class CBehaviorAttack extends CAbstractRangedWidgetTargetBehavior {
 
 	private int highlightOrderId;
 
@@ -21,7 +21,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private int backSwingTime;
 	private int thisOrderCooldownEndTime;
 
-	public CBehaviorAttack reset(int highlightOrderId, final CUnitAttack unitAttack, final CWidget target) {
+	public CBehaviorAttack reset(final int highlightOrderId, final CUnitAttack unitAttack, final CWidget target) {
 		this.highlightOrderId = highlightOrderId;
 		super.innerReset(target);
 		this.unitAttack = unitAttack;
@@ -33,18 +33,18 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 
 	@Override
 	public int getHighlightOrderId() {
-		return highlightOrderId;
+		return this.highlightOrderId;
 	}
 
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
 		float range = this.unitAttack.getRange();
-		if ((this.target instanceof CUnit) && (((CUnit) this.target).getCurrentBehavior() instanceof CBehaviorMove)
-				&& (this.damagePointLaunchTime != 0 /*
-													 * only apply range motion buffer if they were already in range and
-													 * attacked
-													 */)) {
-			range += this.unitAttack.getRangeMotionBuffer();
+		if ((this.target instanceof CUnit) && (((CUnit) this.target).isMoving()) && (simulation
+				.getGameTurnTick() < this.unit.getCooldownEndTime() /*
+																	 * only apply range motion buffer if they were
+																	 * already in range and attacked
+																	 */)) {
+			range += this.unitAttack.getRangeMotionBuffer() + 1000;
 		}
 		return this.unit.canReach(this.target, range)
 				&& (this.unit.distance(this.target) >= this.unit.getUnitType().getMinimumAttackRange());

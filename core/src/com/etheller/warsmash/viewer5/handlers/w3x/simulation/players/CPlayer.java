@@ -12,8 +12,8 @@ public class CPlayer {
 	private final CRace race;
 	private final float[] startLocation;
 	private final EnumSet<CRacePreference> racePrefs;
-	private int gold;
-	private int lumber;
+	private int gold = 5000;
+	private int lumber = 5000;
 	private final EnumSet<CAllianceType>[] alliances = new EnumSet[WarsmashConstants.MAX_PLAYERS];
 
 	public CPlayer(final int id, final CMapControl controlType, final String name, final CRace race,

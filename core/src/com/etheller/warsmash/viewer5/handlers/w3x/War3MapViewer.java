@@ -520,6 +520,12 @@ public class War3MapViewer extends ModelViewer {
 						return War3MapViewer.this
 								.getBuildingPathingPixelMap(War3MapViewer.this.allObjectData.getUnits().get(rawcode));
 					}
+
+					@Override
+					public CUnit createUnit(final CSimulation simulation, final War3ID typeId, final int playerIndex,
+							final float x, final float y, final float facing) {
+						return null;
+					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, w3iFile.getPlayers());
 
 		this.walkableObjectsTree = new Quadtree<>(this.terrain.getEntireMap());

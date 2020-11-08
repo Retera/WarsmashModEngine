@@ -43,7 +43,7 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final Vector2 point) {
-		// TODO Auto-generated method stub
+//		caster.getMoveBehavior().reset(point.x, point.y, )
 		return null;
 	}
 

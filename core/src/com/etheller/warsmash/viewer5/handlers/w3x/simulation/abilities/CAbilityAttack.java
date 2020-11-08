@@ -10,11 +10,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.test.IAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 
-public class CAbilityAttack implements CAbility {
+public class CAbilityAttack implements CAbility, IAbility {
 	private final int handleId;
 
 	public CAbilityAttack(final int handleId) {
@@ -58,6 +59,11 @@ public class CAbilityAttack implements CAbility {
 		else {
 			receiver.orderIdNotAccepted();
 		}
+	}
+
+	@Override
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId) {
+		return true;
 	}
 
 	@Override

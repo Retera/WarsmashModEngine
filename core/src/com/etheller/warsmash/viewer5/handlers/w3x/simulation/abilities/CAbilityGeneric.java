@@ -68,6 +68,11 @@ public class CAbilityGeneric implements CAbility {
 	}
 
 	@Override
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId) {
+		return false;
+	}
+
+	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		return caster.pollNextOrderBehavior(game);
 	}

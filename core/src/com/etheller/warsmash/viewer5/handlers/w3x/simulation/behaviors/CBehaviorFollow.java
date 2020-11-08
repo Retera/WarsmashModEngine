@@ -5,7 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
-public class CBehaviorFollow extends CAbstractRangedBehavior {
+public class CBehaviorFollow extends CAbstractRangedWidgetTargetBehavior {
 
 	private int higlightOrderId;
 
@@ -13,14 +13,14 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 		super(unit);
 	}
 
-	public CBehavior reset(int higlightOrderId, final CUnit target) {
+	public CBehavior reset(final int higlightOrderId, final CUnit target) {
 		this.higlightOrderId = higlightOrderId;
 		return innerReset(target);
 	}
 
 	@Override
 	public int getHighlightOrderId() {
-		return higlightOrderId;
+		return this.higlightOrderId;
 	}
 
 	@Override

@@ -6,7 +6,6 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.CyclicBarrier;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.War3ID;
@@ -28,6 +27,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.test.IBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.test.IState;
 
 public class CUnit extends CWidget {
 	private static final Rectangle tempRect = new Rectangle();
@@ -71,6 +72,8 @@ public class CUnit extends CWidget {
 	private transient CBehaviorFollow followBehavior;
 	private transient CBehaviorPatrol patrolBehavior;
 	private transient CBehaviorStop stopBehavior;
+	private IBehavior behavior;
+	private IState state;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
@@ -201,9 +204,9 @@ public class CUnit extends CWidget {
 			}
 		}
 		else if (this.currentBehavior != null) {
-			CBehavior lastBehavior = this.currentBehavior;
+			final CBehavior lastBehavior = this.currentBehavior;
 			this.currentBehavior = this.currentBehavior.update(game);
-			if(this.currentBehavior.getHighlightOrderId() != lastBehavior.getHighlightOrderId()) {
+			if (this.currentBehavior.getHighlightOrderId() != lastBehavior.getHighlightOrderId()) {
 				this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
 			}
 		}
@@ -242,6 +245,17 @@ public class CUnit extends CWidget {
 		if (isDead()) {
 			return;
 		}
+
+		final CAbility ability = game.getAbility(order.getAbilityHandleId());
+		if (ability != null) {
+			// Allow the ability to response to the order without actually placing itself in
+			// the queue, nor modifying (interrupting) the queue.
+			if (!ability.checkBeforeQueue(game, this, order.getOrderId())) {
+				this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
+				return;
+			}
+		}
+
 		if (queue && (this.currentOrder != null)) {
 			this.orderQueue.add(order);
 		}
@@ -595,7 +609,8 @@ public class CUnit extends CWidget {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
 							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
-						this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack, attack, unit);
+						this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack, attack,
+								unit);
 						return true;
 					}
 				}
@@ -643,5 +658,14 @@ public class CUnit extends CWidget {
 	public CBehavior pollNextOrderBehavior(final CSimulation game) {
 		final COrder order = this.orderQueue.poll();
 		return beginOrder(game, order);
+	}
+
+	public boolean isMoving() {
+		return getCurrentBehavior() instanceof CBehaviorMove;
+	}
+
+	public void setBehavior(final IBehavior behavior) {
+		this.behavior = behavior;
+		this.state = behavior.resolveNext();
 	}
 }

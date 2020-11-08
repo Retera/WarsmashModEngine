@@ -64,6 +64,9 @@ public class DesktopLauncher {
 		Extensions.soundLengthExtension = new SoundLengthExtension() {
 			@Override
 			public float getDuration(final Sound sound) {
+				if (sound == null) {
+					return 1;
+				}
 				return ((OpenALSound) sound).duration();
 			}
 		};

@@ -92,6 +92,18 @@ public class CAbilityColdArrows implements CAbility {
 	}
 
 	@Override
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId) {
+		switch (orderId) {
+		case OrderIds.coldarrows:
+		case OrderIds.uncoldarrows:
+			this.autoCastActive = !this.autoCastActive;
+			return false;
+		default:
+			return true;
+		}
+	}
+
+	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
@@ -113,7 +125,6 @@ public class CAbilityColdArrows implements CAbility {
 
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
-		this.autoCastActive = !this.autoCastActive;
 		return caster.pollNextOrderBehavior(game);
 	}
 }

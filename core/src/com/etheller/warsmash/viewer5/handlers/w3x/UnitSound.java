@@ -95,6 +95,9 @@ public final class UnitSound {
 			return false;
 		}
 
+		if (audioContext == null) {
+			return true;
+		}
 		final AudioPanner panner = audioContext.createPanner();
 		final AudioBufferSource source = audioContext.createBufferSource();
 

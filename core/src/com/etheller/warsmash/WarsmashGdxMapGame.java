@@ -55,6 +55,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
+	private static final boolean ENABLE_AUDIO = false;
 	private static final boolean ENABLE_MUSIC = false;
 	private DataSource codebase;
 	private War3MapViewer viewer;
@@ -124,8 +125,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.codebase = new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
 		this.viewer = new War3MapViewer(this.codebase, this);
 
-		this.viewer.worldScene.enableAudio();
-		this.viewer.enableAudio();
+		if (ENABLE_AUDIO) {
+			this.viewer.worldScene.enableAudio();
+			this.viewer.enableAudio();
+		}
 		try {
 			this.viewer.loadMap(this.warsmashIni.get("Map").getField("FilePath"));
 		}
@@ -157,7 +160,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final Scene portraitScene = this.viewer.addSimpleScene();
 		this.uiScene = this.viewer.addSimpleScene();
 		this.uiScene.alpha = true;
-		this.uiScene.enableAudio();
+		if (ENABLE_AUDIO) {
+			this.uiScene.enableAudio();
+		}
 
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
 

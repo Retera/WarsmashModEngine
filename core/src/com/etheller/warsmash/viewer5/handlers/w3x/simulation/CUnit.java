@@ -27,8 +27,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.test.IBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.test.IState;
 
 public class CUnit extends CWidget {
 	private static final Rectangle tempRect = new Rectangle();
@@ -72,8 +70,6 @@ public class CUnit extends CWidget {
 	private transient CBehaviorFollow followBehavior;
 	private transient CBehaviorPatrol patrolBehavior;
 	private transient CBehaviorStop stopBehavior;
-	private IBehavior behavior;
-	private IState state;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
@@ -664,8 +660,4 @@ public class CUnit extends CWidget {
 		return getCurrentBehavior() instanceof CBehaviorMove;
 	}
 
-	public void setBehavior(final IBehavior behavior) {
-		this.behavior = behavior;
-		this.state = behavior.resolveNext();
-	}
 }

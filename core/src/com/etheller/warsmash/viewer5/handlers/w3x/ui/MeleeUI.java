@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +31,11 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.parsers.mdlx.Layer.FilterMode;
+import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.FastNumberFormat;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.RenderMathUtils;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
@@ -55,10 +59,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityView;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.AbstractCAbilityBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CodeKeyType;
@@ -139,6 +145,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private CAbilityView activeCommand;
 	private int activeCommandOrderId;
 	private RenderUnit activeCommandUnit;
+	private MdxComplexInstance cursorModelInstance = null;
+	private BufferedImage cursorModelPathing;
 
 	private int selectedSoundCount = 0;
 	private final ActiveCommandUnitTargetFilter activeCommandUnitTargetFilter;
@@ -373,7 +381,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void startUsingAbility(final int abilityHandleId, final int orderId) {
+	public void startUsingAbility(final int abilityHandleId, final int orderId, final boolean rightClick) {
 		// TODO not O(N)
 		CAbilityView abilityToUse = null;
 		for (final CAbility ability : this.selectedUnit.getSimulationUnit().getAbilities()) {
@@ -411,6 +419,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.unitOrderListener.issueImmediateOrder(this.selectedUnit.getSimulationUnit().getHandleId(),
 					abilityHandleId, orderId, isShiftDown());
 		}
+		if (rightClick) {
+			this.war3MapViewer.getUiSounds().getSound("AutoCastButtonClick").play(this.uiScene.audioContext, 0, 0);
+		}
 	}
 
 	@Override
@@ -434,8 +445,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void update(final float deltaTime) {
 		this.portrait.update();
 
-		int mouseX = Gdx.input.getX();
-		int mouseY = Gdx.input.getY();
+		final int baseMouseX = Gdx.input.getX();
+		int mouseX = baseMouseX;
+		final int baseMouseY = Gdx.input.getY();
+		int mouseY = baseMouseY;
 		final int minX = this.uiViewport.getScreenX();
 		final int maxX = minX + this.uiViewport.getScreenWidth();
 		final int minY = this.uiViewport.getScreenY();
@@ -458,38 +471,85 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.cursorFrame.setFramePointY(FramePoint.BOTTOM, screenCoordsVector.y);
 
 		if (this.activeCommand != null) {
-			this.cursorFrame.setSequence("Target");
-		}
-		else if (down) {
-			if (left) {
-				this.cursorFrame.setSequence("Scroll Down Left");
-			}
-			else if (right) {
-				this.cursorFrame.setSequence("Scroll Down Right");
+			if (this.activeCommand instanceof AbstractCAbilityBuild) {
+				boolean justLoaded = false;
+				if (this.cursorModelInstance == null) {
+					final MutableObjectData unitData = this.war3MapViewer.getAllObjectData().getUnits();
+					final War3ID buildingTypeId = new War3ID(this.activeCommandOrderId);
+					final String unitModelPath = this.war3MapViewer.getUnitModelPath(unitData.get(buildingTypeId));
+					final MdxModel model = (MdxModel) this.war3MapViewer.load(unitModelPath,
+							this.war3MapViewer.mapPathSolver, this.war3MapViewer.solverParams);
+					this.cursorModelInstance = (MdxComplexInstance) model.addInstance();
+					this.cursorModelInstance.setVertexColor(new float[] { 1, 1, 1, 0.5f });
+					this.cursorModelInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
+							this.war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
+					this.cursorModelInstance.setAnimationSpeed(0f);
+					justLoaded = true;
+					final CUnitType buildingUnitType = this.war3MapViewer.simulation.getUnitData()
+							.getUnitType(buildingTypeId);
+					this.cursorModelPathing = buildingUnitType.getBuildingPathingPixelMap();
+				}
+				this.war3MapViewer.getClickLocation(clickLocationTemp, baseMouseX,
+						Gdx.graphics.getHeight() - baseMouseY);
+				if (this.cursorModelPathing != null) {
+					clickLocationTemp.x = Math.round(clickLocationTemp.x / 64f) * 64f;
+					clickLocationTemp.y = Math.round(clickLocationTemp.y / 64f) * 64f;
+					clickLocationTemp.z = this.war3MapViewer.terrain.getGroundHeight(clickLocationTemp.x,
+							clickLocationTemp.y);
+				}
+				this.cursorModelInstance.setLocation(clickLocationTemp);
+				SequenceUtils.randomSequence(this.cursorModelInstance, PrimaryTag.STAND);
+				this.cursorFrame.setVisible(false);
+				if (justLoaded) {
+					this.cursorModelInstance.setScene(this.war3MapViewer.worldScene);
+				}
 			}
 			else {
-				this.cursorFrame.setSequence("Scroll Down");
+				if (this.cursorModelInstance != null) {
+					this.cursorModelInstance.detach();
+					this.cursorModelInstance = null;
+					this.cursorFrame.setVisible(true);
+				}
+				this.cursorFrame.setSequence("Target");
 			}
-		}
-		else if (up) {
-			if (left) {
-				this.cursorFrame.setSequence("Scroll Up Left");
-			}
-			else if (right) {
-				this.cursorFrame.setSequence("Scroll Up Right");
-			}
-			else {
-				this.cursorFrame.setSequence("Scroll Up");
-			}
-		}
-		else if (left) {
-			this.cursorFrame.setSequence("Scroll Left");
-		}
-		else if (right) {
-			this.cursorFrame.setSequence("Scroll Right");
 		}
 		else {
-			this.cursorFrame.setSequence("Normal");
+			if (this.cursorModelInstance != null) {
+				this.cursorModelInstance.detach();
+				this.cursorModelInstance = null;
+				this.cursorFrame.setVisible(true);
+			}
+			if (down) {
+				if (left) {
+					this.cursorFrame.setSequence("Scroll Down Left");
+				}
+				else if (right) {
+					this.cursorFrame.setSequence("Scroll Down Right");
+				}
+				else {
+					this.cursorFrame.setSequence("Scroll Down");
+				}
+			}
+			else if (up) {
+				if (left) {
+					this.cursorFrame.setSequence("Scroll Up Left");
+				}
+				else if (right) {
+					this.cursorFrame.setSequence("Scroll Up Right");
+				}
+				else {
+					this.cursorFrame.setSequence("Scroll Up");
+				}
+			}
+			else if (left) {
+				this.cursorFrame.setSequence("Scroll Left");
+			}
+			else if (right) {
+				this.cursorFrame.setSequence("Scroll Right");
+			}
+			else {
+				this.cursorFrame.setSequence("Normal");
+			}
 		}
 		final float groundHeight = Math.max(
 				this.war3MapViewer.terrain.getGroundHeight(this.cameraManager.target.x, this.cameraManager.target.y),
@@ -866,6 +926,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						}
 						this.selectedSoundCount = 0;
 						if (!shiftDown) {
+							this.subMenuOrderIdStack.clear();
 							this.activeCommandUnit = null;
 							this.activeCommand = null;
 							this.activeCommandOrderId = -1;
@@ -896,7 +957,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 								portraitTalk();
 							}
 							this.selectedSoundCount = 0;
+							if (this.activeCommand instanceof AbstractCAbilityBuild) {
+								this.war3MapViewer.getUiSounds().getSound("PlaceBuildingDefault")
+										.play(this.uiScene.audioContext, 0, 0);
+							}
 							if (!shiftDown) {
+								this.subMenuOrderIdStack.clear();
 								this.activeCommandUnit = null;
 								this.activeCommand = null;
 								this.activeCommandOrderId = -1;

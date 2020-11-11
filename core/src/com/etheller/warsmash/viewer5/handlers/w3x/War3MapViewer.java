@@ -524,7 +524,8 @@ public class War3MapViewer extends ModelViewer {
 					@Override
 					public CUnit createUnit(final CSimulation simulation, final War3ID typeId, final int playerIndex,
 							final float x, final float y, final float facing) {
-						return null;
+						return createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, 0f, playerIndex,
+								(float) Math.toRadians(facing));
 					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, w3iFile.getPlayers());
 
@@ -756,176 +757,21 @@ public class War3MapViewer extends ModelViewer {
 	private void loadUnitsAndItems(final Warcraft3MapObjectData modifications) throws IOException {
 		final War3Map mpq = this.mapMpq;
 
+		this.soundsetNameToSoundset = new HashMap<>();
+
 		if (this.dataSource.has("war3mapUnits.doo")) {
 			final War3MapUnitsDoo dooFile = mpq.readUnits();
 
-			final Map<String, UnitSoundset> soundsetNameToSoundset = new HashMap<>();
-
 			// Collect the units and items data.
-			UnitSoundset soundset = null;
 			for (final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit : dooFile.getUnits()) {
-				MutableGameObject row = null;
-				String path = null;
-				Splat unitShadowSplat = null;
-				BufferedImage buildingPathingPixelMap = null;
+				final War3ID unitId = unit.getId();
+				final float unitX = unit.getLocation()[0];
+				final float unitY = unit.getLocation()[1];
+				final float unitZ = unit.getLocation()[2];
+				final int playerIndex = unit.getPlayer();
+				final float unitAngle = unit.getAngle();
 
-				// Hardcoded?
-				WorldEditorDataType type = null;
-				if (sloc.equals(unit.getId())) {
-//				path = "Objects\\StartLocation\\StartLocation.mdx";
-					type = null; /// ??????
-					this.startLocations[unit.getPlayer()] = new Vector2(unit.getLocation()[0], unit.getLocation()[1]);
-				}
-				else {
-					row = modifications.getUnits().get(unit.getId());
-					if (row == null) {
-						row = modifications.getItems().get(unit.getId());
-						if (row != null) {
-							type = WorldEditorDataType.ITEM;
-							path = row.getFieldAsString(ITEM_FILE, 0);
-
-							if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
-								path = path.substring(0, path.length() - 4);
-							}
-
-							final String unitShadow = "Shadow";
-							if ((unitShadow != null) && !"_".equals(unitShadow)) {
-								final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
-								final float shadowX = 50;
-								final float shadowY = 50;
-								final float shadowWidth = 128;
-								final float shadowHeight = 128;
-								if (!this.terrain.splats.containsKey(texture)) {
-									final Splat splat = new Splat();
-									splat.opacity = 0.5f;
-									this.terrain.splats.put(texture, splat);
-								}
-								final float x = unit.getLocation()[0] - shadowX;
-								final float y = unit.getLocation()[1] - shadowY;
-								this.terrain.splats.get(texture).locations
-										.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
-								unitShadowSplat = this.terrain.splats.get(texture);
-							}
-
-							path += ".mdx";
-						}
-					}
-					else {
-						type = WorldEditorDataType.UNITS;
-						path = row.getFieldAsString(UNIT_FILE, 0);
-
-						if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
-							path = path.substring(0, path.length() - 4);
-						}
-						if ((row.readSLKTagInt("fileVerFlags") == 2) && this.dataSource.has(path + "_V1.mdx")) {
-							path += "_V1";
-						}
-
-						path += ".mdx";
-
-						final String uberSplat = row.getFieldAsString(UBER_SPLAT, 0);
-						if (uberSplat != null) {
-							final Element uberSplatInfo = this.terrain.uberSplatTable.get(uberSplat);
-							if (uberSplatInfo != null) {
-								final String texturePath = uberSplatInfo.getField("Dir") + "\\"
-										+ uberSplatInfo.getField("file") + ".blp";
-								if (!this.terrain.splats.containsKey(texturePath)) {
-									this.terrain.splats.put(texturePath, new Splat());
-								}
-								final float x = unit.getLocation()[0];
-								final float y = unit.getLocation()[1];
-								final float s = uberSplatInfo.getFieldFloatValue("Scale");
-								this.terrain.splats.get(texturePath).locations
-										.add(new float[] { x - s, y - s, x + s, y + s, 1 });
-							}
-						}
-
-						final String unitShadow = row.getFieldAsString(UNIT_SHADOW, 0);
-						if ((unitShadow != null) && !"_".equals(unitShadow)) {
-							final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
-							final float shadowX = row.getFieldAsFloat(UNIT_SHADOW_X, 0);
-							final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
-							final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
-							final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
-							if (this.mapMpq.has(texture)) {
-								if (!this.terrain.splats.containsKey(texture)) {
-									final Splat splat = new Splat();
-									splat.opacity = 0.5f;
-									this.terrain.splats.put(texture, splat);
-								}
-								final float x = unit.getLocation()[0] - shadowX;
-								final float y = unit.getLocation()[1] - shadowY;
-								this.terrain.splats.get(texture).locations
-										.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
-								unitShadowSplat = this.terrain.splats.get(texture);
-							}
-						}
-
-						final String buildingShadow = row.getFieldAsString(BUILDING_SHADOW, 0);
-						if ((buildingShadow != null) && !"_".equals(buildingShadow)) {
-							this.terrain.addShadow(buildingShadow, unit.getLocation()[0], unit.getLocation()[1]);
-						}
-						buildingPathingPixelMap = getBuildingPathingPixelMap(row);
-						if (buildingPathingPixelMap != null) {
-							this.terrain.pathingGrid.blitPathingOverlayTexture(unit.getLocation()[0],
-									unit.getLocation()[1], (int) Math.toDegrees(unit.getAngle()),
-									buildingPathingPixelMap);
-						}
-
-						final String soundName = row.getFieldAsString(UNIT_SOUNDSET, 0);
-						UnitSoundset unitSoundset = soundsetNameToSoundset.get(soundName);
-						if (unitSoundset == null) {
-							unitSoundset = new UnitSoundset(this.dataSource, this.unitAckSoundsTable, soundName);
-							soundsetNameToSoundset.put(soundName, unitSoundset);
-						}
-						soundset = unitSoundset;
-					}
-				}
-
-				if (path != null) {
-					final MdxModel model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
-					MdxModel portraitModel;
-					final String portraitPath = path.substring(0, path.length() - 4) + "_portrait.mdx";
-					if (this.dataSource.has(portraitPath)) {
-						portraitModel = (MdxModel) this.load(portraitPath, this.mapPathSolver, this.solverParams);
-					}
-					else {
-						portraitModel = model;
-					}
-					if (type == WorldEditorDataType.UNITS) {
-						final float angle = (float) Math.toDegrees(unit.getAngle());
-						final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), unit.getPlayer(),
-								unit.getLocation()[0], unit.getLocation()[1], angle, buildingPathingPixelMap);
-						final RenderUnitTypeData typeData = getUnitTypeData(unit.getId(), row);
-						final RenderUnit renderUnit = new RenderUnit(this, model, row, unit, soundset, portraitModel,
-								simulationUnit, typeData);
-						this.unitToRenderPeer.put(simulationUnit, renderUnit);
-						this.units.add(renderUnit);
-						if (unitShadowSplat != null) {
-							unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
-								@Override
-								public void accept(final SplatMover t) {
-									renderUnit.shadow = t;
-								}
-							});
-						}
-					}
-					else {
-						this.items.add(new RenderItem(this, model, row, unit, soundset, portraitModel)); // TODO store
-						// somewhere
-						if (unitShadowSplat != null) {
-							unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
-								@Override
-								public void accept(final SplatMover t) {
-
-								}
-							});
-						}
-					}
-				}
-				else {
-					System.err.println("Unknown unit ID: " + unit.getId());
-				}
+				createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex, unitAngle);
 			}
 		}
 
@@ -933,6 +779,187 @@ public class War3MapViewer extends ModelViewer {
 
 		this.unitsReady = true;
 		this.anyReady = true;
+	}
+
+	private CUnit createNewUnit(final Warcraft3MapObjectData modifications, final War3ID unitId, float unitX,
+			float unitY, final float unitZ, final int playerIndex, final float unitAngle) {
+		UnitSoundset soundset = null;
+		MutableGameObject row = null;
+		String path = null;
+		Splat unitShadowSplat = null;
+		BufferedImage buildingPathingPixelMap = null;
+		final float unitVertexScale = 1.0f;
+
+		// Hardcoded?
+		WorldEditorDataType type = null;
+		if (sloc.equals(unitId)) {
+//				path = "Objects\\StartLocation\\StartLocation.mdx";
+			type = null; /// ??????
+			this.startLocations[playerIndex] = new Vector2(unitX, unitY);
+		}
+		else {
+			row = modifications.getUnits().get(unitId);
+			if (row == null) {
+				row = modifications.getItems().get(unitId);
+				if (row != null) {
+					type = WorldEditorDataType.ITEM;
+					path = row.getFieldAsString(ITEM_FILE, 0);
+
+					if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
+						path = path.substring(0, path.length() - 4);
+					}
+
+					final String unitShadow = "Shadow";
+					if ((unitShadow != null) && !"_".equals(unitShadow)) {
+						final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
+						final float shadowX = 50;
+						final float shadowY = 50;
+						final float shadowWidth = 128;
+						final float shadowHeight = 128;
+						if (!this.terrain.splats.containsKey(texture)) {
+							final Splat splat = new Splat();
+							splat.opacity = 0.5f;
+							this.terrain.splats.put(texture, splat);
+						}
+						final float x = unitX - shadowX;
+						final float y = unitY - shadowY;
+						this.terrain.splats.get(texture).locations
+								.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+						unitShadowSplat = this.terrain.splats.get(texture);
+					}
+
+					path += ".mdx";
+				}
+			}
+			else {
+				type = WorldEditorDataType.UNITS;
+				path = getUnitModelPath(row);
+
+				buildingPathingPixelMap = getBuildingPathingPixelMap(row);
+				if (buildingPathingPixelMap != null) {
+					unitX = Math.round(unitX / 64f) * 64f;
+					unitY = Math.round(unitY / 64f) * 64f;
+					this.terrain.pathingGrid.blitPathingOverlayTexture(unitX, unitY, (int) Math.toDegrees(unitAngle),
+							buildingPathingPixelMap);
+				}
+
+				final String uberSplat = row.getFieldAsString(UBER_SPLAT, 0);
+				if (uberSplat != null) {
+					final Element uberSplatInfo = this.terrain.uberSplatTable.get(uberSplat);
+					if (uberSplatInfo != null) {
+						final String texturePath = uberSplatInfo.getField("Dir") + "\\" + uberSplatInfo.getField("file")
+								+ ".blp";
+						if (!this.terrain.splats.containsKey(texturePath)) {
+							this.terrain.splats.put(texturePath, new Splat());
+						}
+						final float x = unitX;
+						final float y = unitY;
+						final float s = uberSplatInfo.getFieldFloatValue("Scale");
+						this.terrain.splats.get(texturePath).locations
+								.add(new float[] { x - s, y - s, x + s, y + s, 1 });
+					}
+				}
+
+				final String unitShadow = row.getFieldAsString(UNIT_SHADOW, 0);
+				if ((unitShadow != null) && !"_".equals(unitShadow)) {
+					final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
+					final float shadowX = row.getFieldAsFloat(UNIT_SHADOW_X, 0);
+					final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
+					final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
+					final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
+					if (this.mapMpq.has(texture)) {
+						if (!this.terrain.splats.containsKey(texture)) {
+							final Splat splat = new Splat();
+							splat.opacity = 0.5f;
+							this.terrain.splats.put(texture, splat);
+						}
+						final float x = unitX - shadowX;
+						final float y = unitY - shadowY;
+						this.terrain.splats.get(texture).locations
+								.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+						unitShadowSplat = this.terrain.splats.get(texture);
+					}
+				}
+
+				final String buildingShadow = row.getFieldAsString(BUILDING_SHADOW, 0);
+				if ((buildingShadow != null) && !"_".equals(buildingShadow)) {
+					this.terrain.addShadow(buildingShadow, unitX, unitY);
+				}
+
+				final String soundName = row.getFieldAsString(UNIT_SOUNDSET, 0);
+				UnitSoundset unitSoundset = this.soundsetNameToSoundset.get(soundName);
+				if (unitSoundset == null) {
+					unitSoundset = new UnitSoundset(this.dataSource, this.unitAckSoundsTable, soundName);
+					this.soundsetNameToSoundset.put(soundName, unitSoundset);
+				}
+				soundset = unitSoundset;
+
+			}
+		}
+
+		if (path != null) {
+			final MdxModel model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
+			MdxModel portraitModel;
+			final String portraitPath = path.substring(0, path.length() - 4) + "_portrait.mdx";
+			if (this.dataSource.has(portraitPath)) {
+				portraitModel = (MdxModel) this.load(portraitPath, this.mapPathSolver, this.solverParams);
+			}
+			else {
+				portraitModel = model;
+			}
+			if (type == WorldEditorDataType.UNITS) {
+				final float angle = (float) Math.toDegrees(unitAngle);
+				final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), playerIndex, unitX, unitY,
+						angle, buildingPathingPixelMap);
+				final RenderUnitTypeData typeData = getUnitTypeData(unitId, row);
+				final RenderUnit renderUnit = new RenderUnit(this, model, row, unitX, unitY, unitZ, playerIndex,
+						soundset, portraitModel, simulationUnit, typeData);
+				this.unitToRenderPeer.put(simulationUnit, renderUnit);
+				this.units.add(renderUnit);
+				if (unitShadowSplat != null) {
+					unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+						@Override
+						public void accept(final SplatMover t) {
+							renderUnit.shadow = t;
+						}
+					});
+				}
+				return simulationUnit;
+			}
+			else {
+				this.items
+						.add(new RenderItem(this, model, row, unitX, unitY, unitZ, unitAngle, soundset, portraitModel)); // TODO
+																															// store
+				// somewhere
+				if (unitShadowSplat != null) {
+					unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+						@Override
+						public void accept(final SplatMover t) {
+
+						}
+					});
+				}
+			}
+		}
+		else {
+			System.err.println("Unknown unit ID: " + unitId);
+		}
+		return null;
+	}
+
+	public String getUnitModelPath(final MutableGameObject row) {
+		String path;
+		path = row.getFieldAsString(UNIT_FILE, 0);
+
+		if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
+			path = path.substring(0, path.length() - 4);
+		}
+		if ((row.readSLKTagInt("fileVerFlags") == 2) && this.dataSource.has(path + "_V1.mdx")) {
+			path += "_V1";
+		}
+
+		path += ".mdx";
+		return path;
 	}
 
 	private BufferedImage getBuildingPathingPixelMap(final MutableGameObject row) {
@@ -962,7 +989,7 @@ public class War3MapViewer extends ModelViewer {
 		return buildingPathingPixelMap;
 	}
 
-	private RenderUnitTypeData getUnitTypeData(final War3ID key, final MutableGameObject row) {
+	public RenderUnitTypeData getUnitTypeData(final War3ID key, final MutableGameObject row) {
 		RenderUnitTypeData unitTypeData = this.unitIdToTypeData.get(key);
 		if (unitTypeData == null) {
 			unitTypeData = new RenderUnitTypeData(row.getFieldAsFloat(MAX_PITCH, 0), row.getFieldAsFloat(MAX_ROLL, 0),
@@ -1295,6 +1322,7 @@ public class War3MapViewer extends ModelViewer {
 	private WorldEditStrings worldEditStrings;
 	private Warcraft3MapObjectData allObjectData;
 	private AbilityDataUI abilityDataUI;
+	private Map<String, UnitSoundset> soundsetNameToSoundset;
 
 	/**
 	 * Returns a power of two size for the given target capacity.
@@ -1386,6 +1414,10 @@ public class War3MapViewer extends ModelViewer {
 
 	public KeyedSounds getUiSounds() {
 		return this.uiSounds;
+	}
+
+	public Warcraft3MapObjectData getAllObjectData() {
+		return this.allObjectData;
 	}
 
 	public float getWalkableRenderHeight(final float x, final float y) {

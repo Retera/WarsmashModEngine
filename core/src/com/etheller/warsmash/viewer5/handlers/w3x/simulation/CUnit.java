@@ -462,53 +462,63 @@ public class CUnit extends CWidget {
 			final CUnit targetUnit = (CUnit) target;
 			final CUnitType targetUnitType = targetUnit.getUnitType();
 			if (targetUnitType.isBuilding() && (targetUnitType.getBuildingPathingPixelMap() != null)) {
-				final float relativeOffsetX = getX() - target.getX();
-				final float relativeOffsetY = getY() - target.getY();
-				final int rotation = ((int) targetUnit.getFacing() + 450) % 360;
 				final BufferedImage buildingPathingPixelMap = targetUnitType.getBuildingPathingPixelMap();
-				final int gridWidth = ((rotation % 180) != 0) ? buildingPathingPixelMap.getHeight()
-						: buildingPathingPixelMap.getWidth();
-				final int gridHeight = ((rotation % 180) != 0) ? buildingPathingPixelMap.getWidth()
-						: buildingPathingPixelMap.getHeight();
-				final int relativeGridX = (int) Math.floor(relativeOffsetX / 32f) + (gridWidth / 2);
-				final int relativeGridY = (int) Math.floor(relativeOffsetY / 32f) + (gridHeight / 2);
-				final int rangeInCells = (int) Math.floor(range / 32f);
-				final int rangeInCellsSquare = rangeInCells * rangeInCells;
-				int minCheckX = relativeGridX - rangeInCells;
-				int minCheckY = relativeGridY - rangeInCells;
-				int maxCheckX = relativeGridX + rangeInCells;
-				int maxCheckY = relativeGridY + rangeInCells;
-				if ((minCheckX < gridWidth) && (maxCheckX >= 0)) {
-					if ((minCheckY < gridHeight) && (maxCheckY >= 0)) {
-						if (minCheckX < 0) {
-							minCheckX = 0;
-						}
-						if (minCheckY < 0) {
-							minCheckY = 0;
-						}
-						if (maxCheckX > (gridWidth - 1)) {
-							maxCheckX = gridWidth - 1;
-						}
-						if (maxCheckY > (gridHeight - 1)) {
-							maxCheckY = gridHeight - 1;
-						}
-						for (int checkX = minCheckX; checkX <= maxCheckX; checkX++) {
-							for (int checkY = minCheckY; checkY <= maxCheckY; checkY++) {
-								final int dx = relativeGridX - checkX;
-								final int dy = relativeGridY - checkY;
-								if (((dx * dx) + (dy * dy)) <= rangeInCellsSquare) {
-									if (((getRGBFromPixelData(buildingPathingPixelMap, checkX, checkY, rotation)
-											& 0xFF0000) >>> 16) > 127) {
-										return true;
-									}
-								}
+				final float targetX = target.getX();
+				final float targetY = target.getY();
+				if (canReachToPathing(range, targetUnit.getFacing(), buildingPathingPixelMap, targetX, targetY)) {
+					return true;
+				}
+			}
+		}
+		return distance <= range;
+	}
+
+	public boolean canReachToPathing(final float range, final float rotationForPathing,
+			final BufferedImage buildingPathingPixelMap, final float targetX, final float targetY) {
+		final int rotation = ((int) rotationForPathing + 450) % 360;
+		final float relativeOffsetX = getX() - targetX;
+		final float relativeOffsetY = getY() - targetY;
+		final int gridWidth = ((rotation % 180) != 0) ? buildingPathingPixelMap.getHeight()
+				: buildingPathingPixelMap.getWidth();
+		final int gridHeight = ((rotation % 180) != 0) ? buildingPathingPixelMap.getWidth()
+				: buildingPathingPixelMap.getHeight();
+		final int relativeGridX = (int) Math.floor(relativeOffsetX / 32f) + (gridWidth / 2);
+		final int relativeGridY = (int) Math.floor(relativeOffsetY / 32f) + (gridHeight / 2);
+		final int rangeInCells = (int) Math.floor(range / 32f);
+		final int rangeInCellsSquare = rangeInCells * rangeInCells;
+		int minCheckX = relativeGridX - rangeInCells;
+		int minCheckY = relativeGridY - rangeInCells;
+		int maxCheckX = relativeGridX + rangeInCells;
+		int maxCheckY = relativeGridY + rangeInCells;
+		if ((minCheckX < gridWidth) && (maxCheckX >= 0)) {
+			if ((minCheckY < gridHeight) && (maxCheckY >= 0)) {
+				if (minCheckX < 0) {
+					minCheckX = 0;
+				}
+				if (minCheckY < 0) {
+					minCheckY = 0;
+				}
+				if (maxCheckX > (gridWidth - 1)) {
+					maxCheckX = gridWidth - 1;
+				}
+				if (maxCheckY > (gridHeight - 1)) {
+					maxCheckY = gridHeight - 1;
+				}
+				for (int checkX = minCheckX; checkX <= maxCheckX; checkX++) {
+					for (int checkY = minCheckY; checkY <= maxCheckY; checkY++) {
+						final int dx = relativeGridX - checkX;
+						final int dy = relativeGridY - checkY;
+						if (((dx * dx) + (dy * dy)) <= rangeInCellsSquare) {
+							if (((getRGBFromPixelData(buildingPathingPixelMap, checkX, checkY, rotation)
+									& 0xFF0000) >>> 16) > 127) {
+								return true;
 							}
 						}
 					}
 				}
 			}
 		}
-		return distance <= range;
+		return false;
 	}
 
 	private int getRGBFromPixelData(final BufferedImage buildingPathingPixelMap, final int checkX, final int checkY,

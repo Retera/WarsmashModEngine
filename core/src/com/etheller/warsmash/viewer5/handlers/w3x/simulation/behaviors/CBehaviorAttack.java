@@ -39,12 +39,8 @@ public class CBehaviorAttack extends CAbstractRangedWidgetTargetBehavior {
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
 		float range = this.unitAttack.getRange();
-		if ((this.target instanceof CUnit) && (((CUnit) this.target).isMoving()) && (simulation
-				.getGameTurnTick() < this.unit.getCooldownEndTime() /*
-																	 * only apply range motion buffer if they were
-																	 * already in range and attacked
-																	 */)) {
-			range += this.unitAttack.getRangeMotionBuffer() + 1000;
+		if (simulation.getGameTurnTick() < this.unit.getCooldownEndTime()) {
+			range += this.unitAttack.getRangeMotionBuffer();
 		}
 		return this.unit.canReach(this.target, range)
 				&& (this.unit.distance(this.target) >= this.unit.getUnitType().getMinimumAttackRange());

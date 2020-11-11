@@ -137,11 +137,11 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 				this.commandCardCommandListener.openMenu(this.orderId);
 			}
 			else {
-				this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.orderId);
+				this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.orderId, false);
 			}
 		}
 		else if (button == Input.Buttons.RIGHT) {
-			this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.autoCastOrderId);
+			this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.autoCastOrderId, true);
 		}
 	}
 

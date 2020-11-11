@@ -34,6 +34,7 @@ public class CSimulation {
 	private final CAbilityData abilityData;
 	private final CUnitData unitData;
 	private final List<CUnit> units;
+	private final List<CUnit> newUnits;
 	private final List<CPlayer> players;
 	private final List<CAttackProjectile> projectiles;
 	private final List<CAttackProjectile> newProjectiles;
@@ -60,6 +61,7 @@ public class CSimulation {
 		this.abilityData = new CAbilityData(parsedAbilityData);
 		this.unitData = new CUnitData(parsedUnitData, this.abilityData);
 		this.units = new ArrayList<>();
+		this.newUnits = new ArrayList<>();
 		this.projectiles = new ArrayList<>();
 		this.newProjectiles = new ArrayList<>();
 		this.handleIdAllocator = new HandleIdAllocator();
@@ -119,13 +121,18 @@ public class CSimulation {
 			final float facing, final BufferedImage buildingPathingPixelMap) {
 		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
 				this.simulationRenderController, this.handleIdAllocator);
-		this.units.add(unit);
+		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
 		for (final CAbility ability : unit.getAbilities()) {
 			this.handleIdToAbility.put(ability.getHandleId(), ability);
 		}
 		this.worldCollision.addUnit(unit);
 		return unit;
+	}
+
+	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
+			final float facing) {
+		return this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
 	}
 
 	public CUnit getUnit(final int handleId) {
@@ -175,6 +182,8 @@ public class CSimulation {
 				this.simulationRenderController.removeUnit(unit);
 			}
 		}
+		this.units.addAll(this.newUnits);
+		this.newUnits.clear();
 		final Iterator<CAttackProjectile> projectileIterator = this.projectiles.iterator();
 		while (projectileIterator.hasNext()) {
 			final CAttackProjectile projectile = projectileIterator.next();

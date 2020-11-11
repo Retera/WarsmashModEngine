@@ -55,8 +55,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
-	private static final boolean ENABLE_AUDIO = false;
-	private static final boolean ENABLE_MUSIC = false;
+	private static final boolean ENABLE_AUDIO = true;
+	private static final boolean ENABLE_MUSIC = true;
 	private DataSource codebase;
 	private War3MapViewer viewer;
 	private final Rectangle tempRect = new Rectangle();

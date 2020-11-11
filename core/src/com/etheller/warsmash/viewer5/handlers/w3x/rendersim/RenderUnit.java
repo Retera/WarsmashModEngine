@@ -30,7 +30,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListe
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
 public class RenderUnit {
-	private static final Quaternion tempQuat = new Quaternion();
+	public static final Quaternion tempQuat = new Quaternion();
 	private static final War3ID RED = War3ID.fromString("uclr");
 	private static final War3ID GREEN = War3ID.fromString("uclg");
 	private static final War3ID BLUE = War3ID.fromString("uclb");
@@ -67,25 +67,25 @@ public class RenderUnit {
 	private boolean boneCorpse;
 	private final RenderUnitTypeData typeData;
 
-	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
-			final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit, final UnitSoundset soundset,
+	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
+			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
 			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData) {
 		this.portraitModel = portraitModel;
 		this.simulationUnit = simulationUnit;
 		this.typeData = typeData;
 		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
 
-		final float[] location = unit.getLocation();
-		System.arraycopy(location, 0, this.location, 0, 3);
-		instance.move(location);
+		this.location[0] = x;
+		this.location[1] = y;
+		this.location[2] = z;
+		instance.move(this.location);
 		this.facing = simulationUnit.getFacing();
 		final float angle = (float) Math.toRadians(this.facing);
 //		instance.localRotation.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle);
 		this.x = simulationUnit.getX();
 		this.y = simulationUnit.getY();
 		instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
-		instance.scale(unit.getScale());
-		this.playerIndex = unit.getPlayer() & 0xFFFF;
+		this.playerIndex = playerIndex & 0xFFFF;
 		instance.setTeamColor(this.playerIndex);
 		instance.setScene(map.worldScene);
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance);

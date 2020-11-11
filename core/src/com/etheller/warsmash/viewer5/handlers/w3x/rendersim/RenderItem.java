@@ -20,23 +20,19 @@ public class RenderItem {
 	public float radius;
 	public UnitSoundset soundset;
 	public final MdxModel portraitModel;
-	public int playerIndex;
 
-	public RenderItem(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
-			final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit, final UnitSoundset soundset,
+	public RenderItem(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
+			final float y, final float z, final float angle, final UnitSoundset soundset,
 			final MdxModel portraitModel) {
 		this.portraitModel = portraitModel;
 		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
 
-		final float[] location = unit.getLocation();
-		System.arraycopy(location, 0, this.location, 0, 3);
-		instance.move(location);
-		final float angle = unit.getAngle();
+		this.location[0] = x;
+		this.location[1] = y;
+		this.location[2] = z;
+		instance.move(this.location);
 //		instance.localRotation.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle);
 		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
-		instance.scale(unit.getScale());
-		this.playerIndex = unit.getPlayer();
-		instance.setTeamColor(this.playerIndex);
 		instance.setScene(map.worldScene);
 
 		if (row != null) {

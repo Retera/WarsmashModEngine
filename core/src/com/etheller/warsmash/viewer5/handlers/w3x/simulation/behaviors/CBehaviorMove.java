@@ -88,7 +88,7 @@ public class CBehaviorMove implements CBehavior {
 	@Override
 	public CBehavior update(final CSimulation simulation) {
 		if ((this.rangedBehavior != null) && this.rangedBehavior.isWithinRange(simulation)) {
-			return this.rangedBehavior;
+			return this.rangedBehavior.update(simulation);
 		}
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();

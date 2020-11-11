@@ -9,9 +9,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.CBehaviorOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CAbilityOrcBuild extends AbstractCAbilityBuild {
+	private CBehaviorOrcBuild buildBehavior;
 
 	public CAbilityOrcBuild(final int handleId, final List<War3ID> structuresBuilt) {
 		super(handleId, structuresBuilt);
@@ -24,6 +26,7 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
+		this.buildBehavior = new CBehaviorOrcBuild(unit);
 	}
 
 	@Override
@@ -37,8 +40,7 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final Vector2 point) {
-		// TODO Auto-generated method stub
-		return null;
+		return this.buildBehavior.reset(point.x, point.y, orderId, getBaseOrderId());
 	}
 
 	@Override

@@ -24,6 +24,8 @@ public class CGameplayConstants {
 	private final float gameDayHours;
 	private final float gameDayLength;
 	private final float structureDecayTime;
+	private final float buildingAngle;
+	private final float rootAngle;
 
 	public CGameplayConstants(final DataTable parsedDataTable) {
 		final Element miscData = parsedDataTable.get("Misc");
@@ -40,6 +42,9 @@ public class CGameplayConstants {
 		this.duskTimeGameHours = miscData.getFieldFloatValue("Dusk");
 		this.gameDayHours = miscData.getFieldFloatValue("DayHours");
 		this.gameDayLength = miscData.getFieldFloatValue("DayLength");
+
+		this.buildingAngle = miscData.getFieldFloatValue("BuildingAngle");
+		this.rootAngle = miscData.getFieldFloatValue("RootAngle");
 
 		final CDefenseType[] defenseTypeOrder = { CDefenseType.SMALL, CDefenseType.MEDIUM, CDefenseType.LARGE,
 				CDefenseType.FORT, CDefenseType.NORMAL, CDefenseType.HERO, CDefenseType.DIVINE, CDefenseType.NONE, };
@@ -110,5 +115,13 @@ public class CGameplayConstants {
 
 	public float getStructureDecayTime() {
 		return this.structureDecayTime;
+	}
+
+	public float getBuildingAngle() {
+		return this.buildingAngle;
+	}
+
+	public float getRootAngle() {
+		return this.rootAngle;
 	}
 }

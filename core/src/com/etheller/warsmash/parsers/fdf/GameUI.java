@@ -446,4 +446,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		super.add(childFrame);
 		this.nameToFrame.put(childFrame.getName(), childFrame);
 	}
+
+	public Scene getUiScene() {
+		return uiScene;
+	}
 }

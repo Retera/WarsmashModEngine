@@ -225,6 +225,11 @@ public class SplatModel {
 
 	}
 
+	public void add(float x, float y, float z, float scale, float[] centerOffset) {
+		locations.add(new float[]{x - scale, y - scale, x + scale, y + scale, z});
+		compact(Gdx.gl30, centerOffset);
+	}
+
 	private static final class Batch {
 		private final int uvsOffset;
 		private final int vertexBuffer;

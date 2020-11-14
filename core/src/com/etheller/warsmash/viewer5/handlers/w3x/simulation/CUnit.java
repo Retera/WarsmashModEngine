@@ -70,6 +70,8 @@ public class CUnit extends CWidget {
 	private transient CBehaviorFollow followBehavior;
 	private transient CBehaviorPatrol patrolBehavior;
 	private transient CBehaviorStop stopBehavior;
+	private boolean constructing = false;
+	private float constructionProgress;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
@@ -197,6 +199,14 @@ public class CUnit extends CWidget {
 			else if (game.getGameTurnTick() > (this.deathTurnTick
 					+ (int) (getEndingDecayTime(game) / WarsmashConstants.SIMULATION_STEP_TIME))) {
 				return true;
+			}
+		}
+		else if (constructing) {
+			constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
+			if (constructionProgress >= unitType.getBuildTime()) {
+				constructing = false;
+				game.unitConstructFinishEvent(this);
+				this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
 			}
 		}
 		else if (this.currentBehavior != null) {
@@ -670,4 +680,22 @@ public class CUnit extends CWidget {
 		return getCurrentBehavior() instanceof CBehaviorMove;
 	}
 
+	public void setConstructing(boolean constructing) {
+		this.constructing = constructing;
+		if (constructing) {
+			unitAnimationListener.playAnimation(true, PrimaryTag.BIRTH, SequenceUtils.EMPTY, 0.0f, true);
+		}
+	}
+
+	public void setConstructionProgress(float constructionProgress) {
+		this.constructionProgress = constructionProgress;
+	}
+
+	public boolean isConstructing() {
+		return constructing;
+	}
+
+	public float getConstructionProgress() {
+		return constructionProgress;
+	}
 }

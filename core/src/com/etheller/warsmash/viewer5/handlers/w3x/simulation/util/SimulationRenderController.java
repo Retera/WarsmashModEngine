@@ -21,7 +21,11 @@ public interface SimulationRenderController {
 
 	void spawnUnitDamageSound(CUnit damagedUnit, final String weaponSound, String armorType);
 
+	void spawnUnitConstructionSound(CUnit constructingUnit, CUnit constructedStructure);
+
 	void removeUnit(CUnit unit);
 
 	BufferedImage getBuildingPathingPixelMap(War3ID rawcode);
+
+	void spawnUnitConstructionFinishSound(CUnit constructedStructure);
 }

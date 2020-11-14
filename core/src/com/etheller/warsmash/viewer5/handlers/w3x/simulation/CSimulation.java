@@ -223,6 +223,10 @@ public class CSimulation {
 		this.simulationRenderController.spawnUnitDamageSound(damagedUnit, weaponSound, armorType);
 	}
 
+	public void unitConstructedEvent(CUnit constructingUnit, CUnit constructedStructure) {
+		this.simulationRenderController.spawnUnitConstructionSound(constructingUnit, constructedStructure);
+	}
+
 	public CPlayer getPlayer(final int index) {
 		return this.players.get(index);
 	}
@@ -230,4 +234,8 @@ public class CSimulation {
 	public CommandErrorListener getCommandErrorListener() {
 		return this.commandErrorListener;
 	}
+
+    public void unitConstructFinishEvent(CUnit constructedStructure) {
+		this.simulationRenderController.spawnUnitConstructionFinishSound(constructedStructure);
+    }
 }

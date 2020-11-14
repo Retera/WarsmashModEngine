@@ -146,9 +146,29 @@ public class RenderUnit {
 	}
 
 	public void updateAnimations(final War3MapViewer map) {
-		final float deltaTime = Gdx.graphics.getDeltaTime();
+		final boolean wasHidden = this.instance.hidden();
+		if (this.simulationUnit.isHidden()) {
+			if (!wasHidden) {
+				if (this.selectionCircle != null) {
+					this.selectionCircle.hide();
+				}
+				if (this.shadow != null) {
+					this.shadow.hide();
+				}
+			}
+			this.instance.hide();
+			return;
+		}
+		else {
+			this.instance.show();
+		}
 		final float simulationX = this.simulationUnit.getX();
 		final float simulationY = this.simulationUnit.getY();
+		if (wasHidden) {
+			this.x = simulationX;
+			this.y = simulationY;
+		}
+		final float deltaTime = Gdx.graphics.getDeltaTime();
 		final float simDx = simulationX - this.x;
 		final float simDy = simulationY - this.y;
 		final float distanceToSimulation = (float) Math.sqrt((simDx * simDx) + (simDy * simDy));

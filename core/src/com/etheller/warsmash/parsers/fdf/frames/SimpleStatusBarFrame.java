@@ -17,6 +17,7 @@ public class SimpleStatusBarFrame extends AbstractUIFrame {
 		this.borderFrame.setSetAllPoints(true);
 		this.barFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT, 0, 0));
 		this.barFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMLEFT, this, FramePoint.BOTTOMLEFT, 0, 0));
+		this.barFrame.setSetAllPoints(true);
 		add(this.barFrame);
 		add(this.borderFrame);
 	}
@@ -26,6 +27,7 @@ public class SimpleStatusBarFrame extends AbstractUIFrame {
 	}
 
 	public void setValue(final float value) {
+		this.barFrame.setTexCoord(0, value, 0, 1);
 		this.barFrame.setWidth(this.renderBounds.width * value);
 	}
 

@@ -520,7 +520,7 @@ public class War3MapViewer extends ModelViewer {
 								.getSound(War3MapViewer.this.gameUI.getSkinField("ConstructingBuilding"));
 						if (constructingBuilding != null) {
 							constructingBuilding.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
-									War3MapViewer.this.unitToRenderPeer.get(constructingUnit));
+									War3MapViewer.this.unitToRenderPeer.get(constructedStructure));
 						}
 					}
 

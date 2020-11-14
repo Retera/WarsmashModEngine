@@ -72,6 +72,9 @@ public class CUnit extends CWidget {
 	private transient CBehaviorStop stopBehavior;
 	private boolean constructing = false;
 	private float constructionProgress;
+	private boolean hidden = false;
+	private boolean updating = true;
+	private CUnit workerInside;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
@@ -201,24 +204,32 @@ public class CUnit extends CWidget {
 				return true;
 			}
 		}
-		else if (constructing) {
-			constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
-			if (constructionProgress >= unitType.getBuildTime()) {
-				constructing = false;
-				game.unitConstructFinishEvent(this);
-				this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
+		else if (this.updating) {
+			if (this.constructing) {
+				this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
+				if (this.constructionProgress >= this.unitType.getBuildTime()) {
+					this.constructing = false;
+					if (this.workerInside != null) {
+						this.workerInside.setHidden(false);
+						this.workerInside.setUpdating(true);
+						this.workerInside.nudgeAround(game, this);
+						this.workerInside = null;
+					}
+					game.unitConstructFinishEvent(this);
+					this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
+				}
 			}
-		}
-		else if (this.currentBehavior != null) {
-			final CBehavior lastBehavior = this.currentBehavior;
-			this.currentBehavior = this.currentBehavior.update(game);
-			if (this.currentBehavior.getHighlightOrderId() != lastBehavior.getHighlightOrderId()) {
-				this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
+			else if (this.currentBehavior != null) {
+				final CBehavior lastBehavior = this.currentBehavior;
+				this.currentBehavior = this.currentBehavior.update(game);
+				if (this.currentBehavior.getHighlightOrderId() != lastBehavior.getHighlightOrderId()) {
+					this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
+				}
 			}
-		}
-		else {
-			// check to auto acquire targets
-			autoAcquireAttackTargets(game);
+			else {
+				// check to auto acquire targets
+				autoAcquireAttackTargets(game);
+			}
 		}
 		return false;
 	}
@@ -680,22 +691,67 @@ public class CUnit extends CWidget {
 		return getCurrentBehavior() instanceof CBehaviorMove;
 	}
 
-	public void setConstructing(boolean constructing) {
+	public void setConstructing(final boolean constructing) {
 		this.constructing = constructing;
 		if (constructing) {
-			unitAnimationListener.playAnimation(true, PrimaryTag.BIRTH, SequenceUtils.EMPTY, 0.0f, true);
+			this.unitAnimationListener.playAnimation(true, PrimaryTag.BIRTH, SequenceUtils.EMPTY, 0.0f, true);
 		}
 	}
 
-	public void setConstructionProgress(float constructionProgress) {
+	public void setConstructionProgress(final float constructionProgress) {
 		this.constructionProgress = constructionProgress;
 	}
 
 	public boolean isConstructing() {
-		return constructing;
+		return this.constructing;
 	}
 
 	public float getConstructionProgress() {
-		return constructionProgress;
+		return this.constructionProgress;
+	}
+
+	public void setHidden(final boolean hidden) {
+		this.hidden = hidden;
+	}
+
+	public void setUpdating(final boolean updating) {
+		this.updating = updating;
+	}
+
+	public boolean isHidden() {
+		return this.hidden;
+	}
+
+	public void setWorkerInside(final CUnit unit) {
+		this.workerInside = unit;
+	}
+
+	public CUnit getWorkerInside() {
+		return this.workerInside;
+	}
+
+	private void nudgeAround(final CSimulation simulation, final CUnit structure) {
+		float x, y;
+		if (structure.collisionRectangle != null) {
+			x = structure.collisionRectangle.x;
+			if (this.collisionRectangle != null) {
+				y = structure.collisionRectangle.y - this.collisionRectangle.height;
+			}
+			else {
+				y = structure.collisionRectangle.y;
+			}
+		}
+		else {
+			if (this.collisionRectangle != null) {
+				x = structure.getX() - (this.collisionRectangle.width / 2);
+				y = structure.getY() - (this.collisionRectangle.height / 2);
+			}
+			else {
+				x = structure.getX();
+				y = structure.getY();
+			}
+		}
+		setX(x, simulation.getWorldCollision());
+		setY(y, simulation.getWorldCollision());
 	}
 }

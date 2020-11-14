@@ -44,6 +44,14 @@ public class TextureFrame extends AbstractRenderableFrame {
 		}
 	}
 
+	public void setTexCoord(final float x, final float y, final float z, final float w) {
+		this.texCoord.set(x, y, z, w);
+		if (this.texture != null) {
+			this.texture.setRegion(this.texCoord.getX(), this.texCoord.getZ(), this.texCoord.getY(),
+					this.texCoord.getW());
+		}
+	}
+
 	public void setTexture(final Texture texture) {
 		if (texture == null) {
 			this.texture = null;

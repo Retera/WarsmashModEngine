@@ -35,9 +35,12 @@ public class CBehaviorOrcBuild extends CAbstractRangedPointTargetBehavior {
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
-		CUnit constructedStructure = simulation.createUnit(this.orderId, this.unit.getPlayerIndex(), this.targetX, this.targetY,
-				simulation.getGameplayConstants().getBuildingAngle());
+		final CUnit constructedStructure = simulation.createUnit(this.orderId, this.unit.getPlayerIndex(), this.targetX,
+				this.targetY, simulation.getGameplayConstants().getBuildingAngle());
 		constructedStructure.setConstructing(true);
+		constructedStructure.setWorkerInside(this.unit);
+		this.unit.setHidden(true);
+		this.unit.setUpdating(false);
 		simulation.unitConstructedEvent(this.unit, constructedStructure);
 		return this.unit.pollNextOrderBehavior(simulation);
 	}

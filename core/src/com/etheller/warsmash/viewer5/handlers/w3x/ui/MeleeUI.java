@@ -494,6 +494,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							this.war3MapViewer.mapPathSolver, this.war3MapViewer.solverParams);
 					this.cursorModelInstance = (MdxComplexInstance) model.addInstance();
 					this.cursorModelInstance.setVertexColor(new float[] { 1, 1, 1, 0.5f });
+					this.cursorModelInstance.setTeamColor(activeCommandUnit.getSimulationUnit().getPlayerIndex());
 					this.cursorModelInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
 							this.war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
 					this.cursorModelInstance.setAnimationSpeed(0f);

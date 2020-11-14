@@ -276,7 +276,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		case Frame:
 			if ("SIMPLEFRAME".equals(frameDefinition.getFrameType())) {
 				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinition.getName(), parent);
-				// TODO: we should not need to put ourselves in this map 2x
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
 				this.nameToFrame.put(frameDefinition.getName(), simpleFrame);
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition));
@@ -315,7 +317,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 			break;
 		case Layer:
-			// NOT HANDLED YET
+			final SimpleFrame simpleFrame = new SimpleFrame(frameDefinition.getName(), parent);
+			simpleFrame.setSetAllPoints(true);
+			this.nameToFrame.put(frameDefinition.getName(), simpleFrame);
+			for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+				simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition));
+			}
+			inflatedFrame = simpleFrame;
 			break;
 		case String:
 			final Float textLength = frameDefinition.getFloat("TextLength");

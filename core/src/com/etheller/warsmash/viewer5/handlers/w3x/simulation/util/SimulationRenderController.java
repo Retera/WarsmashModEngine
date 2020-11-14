@@ -28,4 +28,10 @@ public interface SimulationRenderController {
 	BufferedImage getBuildingPathingPixelMap(War3ID rawcode);
 
 	void spawnUnitConstructionFinishSound(CUnit constructedStructure);
+
+	void spawnBuildingDeathEffect(CUnit cUnit);
+
+	void spawnUnitReadySound(CUnit trainedUnit);
+
+	void unitRepositioned(CUnit cUnit);
 }

@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -12,8 +13,11 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
@@ -49,6 +53,8 @@ public class CUnit extends CWidget {
 	private final CUnitType unitType;
 
 	private Rectangle collisionRectangle;
+	private RemovablePathingMapInstance pathingInstance;
+	private BuildingShadow buildingShadowInstance;
 
 	private final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
 
@@ -75,10 +81,13 @@ public class CUnit extends CWidget {
 	private boolean hidden = false;
 	private boolean updating = true;
 	private CUnit workerInside;
+	private final War3ID[] buildQueue = new War3ID[WarsmashConstants.BUILD_QUEUE_SIZE];
+	private final QueueItemType[] buildQueueTypes = new QueueItemType[WarsmashConstants.BUILD_QUEUE_SIZE];
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
-			final int speed, final int defense, final CUnitType unitType) {
+			final int speed, final int defense, final CUnitType unitType,
+			final RemovablePathingMapInstance pathingInstance, final BuildingShadow buildingShadowInstance) {
 		super(handleId, x, y, life);
 		this.playerIndex = playerIndex;
 		this.typeId = typeId;
@@ -88,6 +97,8 @@ public class CUnit extends CWidget {
 		this.maximumMana = maximumMana;
 		this.speed = speed;
 		this.defense = defense;
+		this.pathingInstance = pathingInstance;
+		this.buildingShadowInstance = buildingShadowInstance;
 		this.flyHeight = unitType.getDefaultFlyingHeight();
 		this.unitType = unitType;
 		this.classifications.addAll(unitType.getClassifications());
@@ -107,6 +118,7 @@ public class CUnit extends CWidget {
 
 	public void add(final CSimulation simulation, final CAbility ability) {
 		this.abilities.add(ability);
+		simulation.onAbilityAddedToUnit(this, ability);
 		ability.onAdd(simulation, this);
 	}
 
@@ -207,31 +219,85 @@ public class CUnit extends CWidget {
 		else if (this.updating) {
 			if (this.constructing) {
 				this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
-				if (this.constructionProgress >= this.unitType.getBuildTime()) {
+				final int buildTime = this.unitType.getBuildTime();
+				final float healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / buildTime)
+						* (this.maximumLife * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
+				setLife(game, Math.min(this.life + healthGain, this.maximumLife));
+				if (this.constructionProgress >= buildTime) {
 					this.constructing = false;
-					if (this.workerInside != null) {
-						this.workerInside.setHidden(false);
-						this.workerInside.setUpdating(true);
-						this.workerInside.nudgeAround(game, this);
-						this.workerInside = null;
+					this.constructionProgress = 0;
+					popoutWorker(game);
+					final Iterator<CAbility> abilityIterator = this.abilities.iterator();
+					while (abilityIterator.hasNext()) {
+						final CAbility ability = abilityIterator.next();
+						if (ability instanceof CAbilityBuildInProgress) {
+							abilityIterator.remove();
+						}
 					}
 					game.unitConstructFinishEvent(this);
 					this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
 				}
 			}
-			else if (this.currentBehavior != null) {
-				final CBehavior lastBehavior = this.currentBehavior;
-				this.currentBehavior = this.currentBehavior.update(game);
-				if (this.currentBehavior.getHighlightOrderId() != lastBehavior.getHighlightOrderId()) {
-					this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
-				}
-			}
 			else {
-				// check to auto acquire targets
-				autoAcquireAttackTargets(game);
+				final War3ID queuedRawcode = this.buildQueue[0];
+				if (queuedRawcode != null) {
+					// queue step forward
+					this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
+					if (this.buildQueueTypes[0] == QueueItemType.UNIT) {
+						final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
+						if (this.constructionProgress >= trainedUnitType.getBuildTime()) {
+							this.constructionProgress = 0;
+							final CUnit trainedUnit = game.createUnit(queuedRawcode, this.playerIndex, getX(), getY(),
+									game.getGameplayConstants().getBuildingAngle());
+							// nudge the trained unit out around us
+							trainedUnit.nudgeAround(game, this);
+							game.unitTrainedEvent(this, trainedUnit);
+							for (int i = 0; i < (this.buildQueue.length - 1); i++) {
+								this.buildQueue[i] = this.buildQueue[i + 1];
+								this.buildQueueTypes[i] = this.buildQueueTypes[i + 1];
+							}
+							this.buildQueue[this.buildQueue.length - 1] = null;
+							this.buildQueueTypes[this.buildQueue.length - 1] = null;
+							this.stateNotifier.queueChanged();
+						}
+					}
+					else if (this.buildQueueTypes[0] == QueueItemType.RESEARCH) {
+						final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
+						if (this.constructionProgress >= trainedUnitType.getBuildTime()) {
+							this.constructionProgress = 0;
+							for (int i = 0; i < (this.buildQueue.length - 1); i++) {
+								this.buildQueue[i] = this.buildQueue[i + 1];
+								this.buildQueueTypes[i] = this.buildQueueTypes[i + 1];
+							}
+							this.buildQueue[this.buildQueue.length - 1] = null;
+							this.buildQueueTypes[this.buildQueue.length - 1] = null;
+							this.stateNotifier.queueChanged();
+						}
+					}
+				}
+				if (this.currentBehavior != null) {
+					final CBehavior lastBehavior = this.currentBehavior;
+					this.currentBehavior = this.currentBehavior.update(game);
+					if (this.currentBehavior.getHighlightOrderId() != lastBehavior.getHighlightOrderId()) {
+						this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
+					}
+				}
+				else {
+					// check to auto acquire targets
+					autoAcquireAttackTargets(game);
+				}
 			}
 		}
 		return false;
+	}
+
+	private void popoutWorker(final CSimulation game) {
+		if (this.workerInside != null) {
+			this.workerInside.setHidden(false);
+			this.workerInside.setUpdating(true);
+			this.workerInside.nudgeAround(game, this);
+			this.workerInside = null;
+		}
 	}
 
 	public void autoAcquireAttackTargets(final CSimulation game) {
@@ -452,7 +518,7 @@ public class CUnit extends CWidget {
 		simulation.unitDamageEvent(this, weaponType, this.unitType.getArmorType());
 		this.stateNotifier.lifeChanged();
 		if (isDead()) {
-			if (!wasDead && !this.unitType.isBuilding()) {
+			if (!wasDead) {
 				kill(simulation);
 			}
 		}
@@ -474,7 +540,21 @@ public class CUnit extends CWidget {
 	private void kill(final CSimulation simulation) {
 		this.currentBehavior = null;
 		this.orderQueue.clear();
-		this.deathTurnTick = simulation.getGameTurnTick();
+		if (this.constructing) {
+			simulation.createBuildingDeathEffect(this);
+		}
+		else {
+			this.deathTurnTick = simulation.getGameTurnTick();
+		}
+		if (this.pathingInstance != null) {
+			this.pathingInstance.remove();
+			this.pathingInstance = null;
+		}
+		if (this.buildingShadowInstance != null) {
+			this.buildingShadowInstance.remove();
+			this.buildingShadowInstance = null;
+		}
+		popoutWorker(simulation);
 	}
 
 	public boolean canReach(final CWidget target, final float range) {
@@ -753,5 +833,62 @@ public class CUnit extends CWidget {
 		}
 		setX(x, simulation.getWorldCollision());
 		setY(y, simulation.getWorldCollision());
+		simulation.unitRepositioned(this);
+	}
+
+	@Override
+	public void setLife(final CSimulation simulation, final float life) {
+		final boolean wasDead = isDead();
+		super.setLife(simulation, life);
+		if (isDead() && !wasDead) {
+			kill(simulation);
+		}
+		this.stateNotifier.lifeChanged();
+	}
+
+	private void queue(final War3ID rawcode, final QueueItemType queueItemType) {
+		for (int i = 0; i < this.buildQueue.length; i++) {
+			if (this.buildQueue[i] == null) {
+				this.buildQueue[i] = rawcode;
+				this.buildQueueTypes[i] = queueItemType;
+				break;
+			}
+		}
+	}
+
+	public War3ID[] getBuildQueue() {
+		return this.buildQueue;
+	}
+
+	public QueueItemType[] getBuildQueueTypes() {
+		return this.buildQueueTypes;
+	}
+
+	public float getBuildQueueTimeRemaining(final CSimulation simulation) {
+		if (this.buildQueueTypes[0] == null) {
+			return 0;
+		}
+		switch (this.buildQueueTypes[0]) {
+		case RESEARCH:
+			return 999; // TODO
+		case UNIT:
+			final CUnitType trainedUnitType = simulation.getUnitData().getUnitType(this.buildQueue[0]);
+			return trainedUnitType.getBuildTime();
+		default:
+			return 0;
+		}
+	}
+
+	public void queueTrainingUnit(final War3ID rawcode) {
+		queue(rawcode, QueueItemType.UNIT);
+	}
+
+	public void queueResearch(final War3ID rawcode) {
+		queue(rawcode, QueueItemType.RESEARCH);
+	}
+
+	public static enum QueueItemType {
+		UNIT,
+		RESEARCH;
 	}
 }

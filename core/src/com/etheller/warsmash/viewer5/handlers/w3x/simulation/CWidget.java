@@ -42,7 +42,7 @@ public abstract class CWidget {
 		this.y = y;
 	}
 
-	public void setLife(final float life) {
+	public void setLife(final CSimulation simulation, final float life) {
 		this.life = life;
 	}
 

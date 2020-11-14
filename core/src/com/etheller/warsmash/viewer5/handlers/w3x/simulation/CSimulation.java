@@ -15,7 +15,9 @@ import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
@@ -59,7 +61,7 @@ public class CSimulation {
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
 		this.abilityData = new CAbilityData(parsedAbilityData);
-		this.unitData = new CUnitData(parsedUnitData, this.abilityData);
+		this.unitData = new CUnitData(parsedUnitData, this.abilityData, this.simulationRenderController);
 		this.units = new ArrayList<>();
 		this.newUnits = new ArrayList<>();
 		this.projectiles = new ArrayList<>();
@@ -118,14 +120,12 @@ public class CSimulation {
 	}
 
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
-			final float facing, final BufferedImage buildingPathingPixelMap) {
+			final float facing, final BufferedImage buildingPathingPixelMap,
+			final RemovablePathingMapInstance pathingInstance, final BuildingShadow buildingShadowInstance) {
 		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
-				this.simulationRenderController, this.handleIdAllocator);
+				this.handleIdAllocator, pathingInstance, buildingShadowInstance);
 		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
-		for (final CAbility ability : unit.getAbilities()) {
-			this.handleIdToAbility.put(ability.getHandleId(), ability);
-		}
 		this.worldCollision.addUnit(unit);
 		return unit;
 	}
@@ -141,6 +141,10 @@ public class CSimulation {
 
 	public CAbility getAbility(final int handleId) {
 		return this.handleIdToAbility.get(handleId);
+	}
+
+	protected void onAbilityAddedToUnit(final CUnit unit, final CAbility ability) {
+		this.handleIdToAbility.put(ability.getHandleId(), ability);
 	}
 
 	public CAttackProjectile createProjectile(final CUnit source, final float launchX, final float launchY,
@@ -223,7 +227,7 @@ public class CSimulation {
 		this.simulationRenderController.spawnUnitDamageSound(damagedUnit, weaponSound, armorType);
 	}
 
-	public void unitConstructedEvent(CUnit constructingUnit, CUnit constructedStructure) {
+	public void unitConstructedEvent(final CUnit constructingUnit, final CUnit constructedStructure) {
 		this.simulationRenderController.spawnUnitConstructionSound(constructingUnit, constructedStructure);
 	}
 
@@ -235,7 +239,23 @@ public class CSimulation {
 		return this.commandErrorListener;
 	}
 
-    public void unitConstructFinishEvent(CUnit constructedStructure) {
+	public void unitConstructFinishEvent(final CUnit constructedStructure) {
 		this.simulationRenderController.spawnUnitConstructionFinishSound(constructedStructure);
-    }
+	}
+
+	public void createBuildingDeathEffect(final CUnit cUnit) {
+		this.simulationRenderController.spawnBuildingDeathEffect(cUnit);
+	}
+
+	public HandleIdAllocator getHandleIdAllocator() {
+		return this.handleIdAllocator;
+	}
+
+	public void unitTrainedEvent(final CUnit trainingUnit, final CUnit trainedUnit) {
+		this.simulationRenderController.spawnUnitReadySound(trainedUnit);
+	}
+
+	public void unitRepositioned(final CUnit cUnit) {
+		this.simulationRenderController.unitRepositioned(cUnit);
+	}
 }

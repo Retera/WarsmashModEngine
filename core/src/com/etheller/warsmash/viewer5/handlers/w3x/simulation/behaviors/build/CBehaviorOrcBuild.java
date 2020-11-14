@@ -1,9 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedPointTargetBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 
@@ -39,6 +41,9 @@ public class CBehaviorOrcBuild extends CAbstractRangedPointTargetBehavior {
 				this.targetY, simulation.getGameplayConstants().getBuildingAngle());
 		constructedStructure.setConstructing(true);
 		constructedStructure.setWorkerInside(this.unit);
+		constructedStructure.setLife(simulation,
+				constructedStructure.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
+		constructedStructure.add(simulation, new CAbilityBuildInProgress(simulation.getHandleIdAllocator().createId()));
 		this.unit.setHidden(true);
 		this.unit.setUpdating(false);
 		simulation.unitConstructedEvent(this.unit, constructedStructure);

@@ -307,8 +307,8 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 			}
 		}
 		if (DEBUG_LOG) {
-			System.out.println(
-					getClass().getSimpleName() + ":" + this.name + " finishing position bounds: " + this.renderBounds);
+			System.out.println(getClass().getSimpleName() + ":" + this.name + ":" + hashCode()
+					+ " finishing position bounds: " + this.renderBounds);
 		}
 		innerPositionBounds(viewport);
 	}

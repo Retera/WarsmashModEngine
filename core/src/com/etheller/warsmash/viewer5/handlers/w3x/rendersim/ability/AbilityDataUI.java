@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.badlogic.gdx.graphics.Texture;
@@ -26,8 +28,14 @@ public class AbilityDataUI {
 	private static final War3ID UNIT_ICON_NORMAL_Y = War3ID.fromString("ubpy");
 	private static final War3ID UNIT_ICON_NORMAL = War3ID.fromString("uico");
 
+	private static final War3ID UPGRADE_ICON_NORMAL_X = War3ID.fromString("gbpx");
+	private static final War3ID UPGRADE_ICON_NORMAL_Y = War3ID.fromString("gbpy");
+	private static final War3ID UPGRADE_ICON_NORMAL = War3ID.fromString("gar1");
+	private static final War3ID UPGRADE_LEVELS = War3ID.fromString("glvl");
+
 	private final Map<War3ID, AbilityIconUI> rawcodeToUI = new HashMap<>();
 	private final Map<War3ID, IconUI> rawcodeToUnitUI = new HashMap<>();
+	private final Map<War3ID, List<IconUI>> rawcodeToUpgradeUI = new HashMap<>();
 	private final IconUI moveUI;
 	private final IconUI stopUI;
 	private final IconUI holdPosUI;
@@ -41,8 +49,10 @@ public class AbilityDataUI {
 	private final IconUI buildNeutralUI;
 	private final IconUI buildNagaUI;
 	private final IconUI cancelUI;
+	private final IconUI cancelBuildUI;
 
-	public AbilityDataUI(final MutableObjectData abilityData, final MutableObjectData unitData, final GameUI gameUI) {
+	public AbilityDataUI(final MutableObjectData abilityData, final MutableObjectData unitData,
+			final MutableObjectData upgradeData, final GameUI gameUI) {
 		final String disabledPrefix = gameUI.getSkinField("CommandButtonDisabledArtPath");
 		for (final War3ID alias : abilityData.keySet()) {
 			final MutableGameObject abilityTypeData = abilityData.get(alias);
@@ -75,6 +85,21 @@ public class AbilityDataUI {
 			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
 			this.rawcodeToUnitUI.put(alias, new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY));
 		}
+		for (final War3ID alias : upgradeData.keySet()) {
+			final MutableGameObject upgradeTypeData = upgradeData.get(alias);
+			final int upgradeLevels = upgradeTypeData.getFieldAsInteger(UPGRADE_LEVELS, 0);
+			final int iconNormalX = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_X, 0);
+			final int iconNormalY = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_Y, 0);
+			final List<IconUI> upgradeIconsByLevel = new ArrayList<>();
+			for (int i = 0; i < upgradeLevels; i++) {
+				final String iconNormalPath = gameUI
+						.trySkinField(upgradeTypeData.getFieldAsString(UPGRADE_ICON_NORMAL, i));
+				final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
+				final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
+				upgradeIconsByLevel.add(new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY));
+			}
+			this.rawcodeToUpgradeUI.put(alias, upgradeIconsByLevel);
+		}
 		this.moveUI = createBuiltInIconUI(gameUI, "CmdMove", disabledPrefix);
 		this.stopUI = createBuiltInIconUI(gameUI, "CmdStop", disabledPrefix);
 		this.holdPosUI = createBuiltInIconUI(gameUI, "CmdHoldPos", disabledPrefix);
@@ -88,6 +113,7 @@ public class AbilityDataUI {
 		this.buildNeutralUI = createBuiltInIconUI(gameUI, "CmdBuild", disabledPrefix);
 		this.attackGroundUI = createBuiltInIconUI(gameUI, "CmdAttackGround", disabledPrefix);
 		this.cancelUI = createBuiltInIconUI(gameUI, "CmdCancel", disabledPrefix);
+		this.cancelBuildUI = createBuiltInIconUI(gameUI, "CmdCancelBuild", disabledPrefix);
 	}
 
 	private IconUI createBuiltInIconUI(final GameUI gameUI, final String key, final String disabledPrefix) {
@@ -106,6 +132,19 @@ public class AbilityDataUI {
 
 	public IconUI getUnitUI(final War3ID rawcode) {
 		return this.rawcodeToUnitUI.get(rawcode);
+	}
+
+	public IconUI getUpgradeUI(final War3ID rawcode, final int level) {
+		final List<IconUI> upgradeUI = this.rawcodeToUpgradeUI.get(rawcode);
+		if (upgradeUI != null) {
+			if (level < upgradeUI.size()) {
+				return upgradeUI.get(level);
+			}
+			else {
+				return upgradeUI.get(upgradeUI.size() - 1);
+			}
+		}
+		return null;
 	}
 
 	private static String disable(final String path, final String disabledPrefix) {
@@ -167,6 +206,10 @@ public class AbilityDataUI {
 
 	public IconUI getCancelUI() {
 		return this.cancelUI;
+	}
+
+	public IconUI getCancelBuildUI() {
+		return this.cancelBuildUI;
 	}
 
 }

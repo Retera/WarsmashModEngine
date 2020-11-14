@@ -1,7 +1,10 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
@@ -20,18 +23,20 @@ public class PathingGrid {
 	private final short[] dynamicPathingOverlay; // for buildings and trees
 	private final int[] pathingGridSizes;
 	private final float[] centerOffset;
+	private final List<RemovablePathingMapInstance> dynamicPathingInstances;
 
 	public PathingGrid(final War3MapWpm terrainPathing, final float[] centerOffset) {
 		this.centerOffset = centerOffset;
 		this.pathingGrid = terrainPathing.getPathing();
 		this.pathingGridSizes = terrainPathing.getSize();
 		this.dynamicPathingOverlay = new short[this.pathingGrid.length];
+		this.dynamicPathingInstances = new ArrayList<>();
 	}
 
 	// this blit function is basically copied from HiveWE, maybe remember to mention
 	// that in credits as well:
 	// https://github.com/stijnherfst/HiveWE/blob/master/Base/PathingMap.cpp
-	public void blitPathingOverlayTexture(final float positionX, final float positionY, final int rotationInput,
+	private void blitPathingOverlayTexture(final float positionX, final float positionY, final int rotationInput,
 			final BufferedImage pathingTextureTga) {
 		final int rotation = (rotationInput + 450) % 360;
 		final int divW = ((rotation % 180) != 0) ? pathingTextureTga.getHeight() : pathingTextureTga.getWidth();
@@ -78,6 +83,15 @@ public class PathingGrid {
 				this.dynamicPathingOverlay[(yy * this.pathingGridSizes[0]) + xx] |= data;
 			}
 		}
+	}
+
+	public RemovablePathingMapInstance blitRemovablePathingOverlayTexture(final float positionX, final float positionY,
+			final int rotationInput, final BufferedImage pathingTextureTga) {
+		final RemovablePathingMapInstance removablePathingMapInstance = new RemovablePathingMapInstance(positionX,
+				positionY, rotationInput, pathingTextureTga);
+		removablePathingMapInstance.blit();
+		this.dynamicPathingInstances.add(removablePathingMapInstance);
+		return removablePathingMapInstance;
 	}
 
 	public int getWidth() {
@@ -292,6 +306,33 @@ public class PathingGrid {
 
 		private PathingType(final int preventionFlag) {
 			this.preventionFlag = preventionFlag;
+		}
+	}
+
+	public final class RemovablePathingMapInstance {
+		private final float positionX;
+		private final float positionY;
+		private final int rotationInput;
+		private final BufferedImage pathingTextureTga;
+
+		public RemovablePathingMapInstance(final float positionX, final float positionY, final int rotationInput,
+				final BufferedImage pathingTextureTga) {
+			this.positionX = positionX;
+			this.positionY = positionY;
+			this.rotationInput = rotationInput;
+			this.pathingTextureTga = pathingTextureTga;
+		}
+
+		private void blit() {
+			blitPathingOverlayTexture(this.positionX, this.positionY, this.rotationInput, this.pathingTextureTga);
+		}
+
+		public void remove() {
+			PathingGrid.this.dynamicPathingInstances.remove(this);
+			Arrays.fill(PathingGrid.this.dynamicPathingOverlay, (short) 0);
+			for (final RemovablePathingMapInstance instance : PathingGrid.this.dynamicPathingInstances) {
+				instance.blit();
+			}
 		}
 	}
 }

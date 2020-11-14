@@ -225,9 +225,19 @@ public class SplatModel {
 
 	}
 
-	public void add(float x, float y, float z, float scale, float[] centerOffset) {
-		locations.add(new float[]{x - scale, y - scale, x + scale, y + scale, z});
+	public SplatMover add(final float x, final float y, final float w, final float h, final float zDepthUpward,
+			final float[] centerOffset) {
+		this.locations.add(new float[] { x, y, w, h, zDepthUpward });
+		final SplatMover splatMover;
+		if (this.splatInstances != null) {
+			splatMover = new SplatMover(this);
+			this.splatInstances.add(splatMover);
+		}
+		else {
+			splatMover = null;
+		}
 		compact(Gdx.gl30, centerOffset);
+		return splatMover;
 	}
 
 	private static final class Batch {
@@ -412,6 +422,13 @@ public class SplatModel {
 					RenderMathUtils.wrapFaces(this.indices));
 			gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, this.uvsOffset + ((this.startOffset / 3) * 2),
 					4 * 2 * this.uvs.size(), RenderMathUtils.wrap(this.uvs));
+		}
+
+		public void show(final float[] centerOffset) {
+			// It tries to only update if it is located at a new position... but here we are
+			// forcing it visible again by putting the position outside the map
+			this.ix0 = this.ix1 = this.iy0 = this.iy1 = Integer.MIN_VALUE;
+			move(0, 0, centerOffset);
 		}
 	}
 }

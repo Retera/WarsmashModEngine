@@ -1,7 +1,10 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 
 public class CPlayer {
@@ -15,6 +18,7 @@ public class CPlayer {
 	private int gold = 5000;
 	private int lumber = 5000;
 	private final EnumSet<CAllianceType>[] alliances = new EnumSet[WarsmashConstants.MAX_PLAYERS];
+	private final Map<War3ID, Integer> rawcodeToTechtreeUnlocked = new HashMap<>();
 
 	public CPlayer(final int id, final CMapControl controlType, final String name, final CRace race,
 			final float[] startLocation) {
@@ -105,5 +109,13 @@ public class CPlayer {
 
 	public void setColorIndex(final int colorIndex) {
 		this.colorIndex = colorIndex;
+	}
+
+	public int getTechtreeUnlocked(final War3ID rawcode) {
+		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
+		if (techtreeUnlocked == null) {
+			return 0;
+		}
+		return techtreeUnlocked;
 	}
 }

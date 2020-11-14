@@ -52,8 +52,6 @@ public class RenderUnit {
 	public SplatMover shadow;
 	public SplatMover selectionCircle;
 
-	private float x;
-	private float y;
 	private float facing;
 
 	private boolean swimming;
@@ -67,13 +65,17 @@ public class RenderUnit {
 	private boolean corpse;
 	private boolean boneCorpse;
 	private final RenderUnitTypeData typeData;
+	public final MdxModel specialArtModel;
+	public SplatMover uberSplat;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
 			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
-			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData) {
+			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
+			final MdxModel specialArtModel) {
 		this.portraitModel = portraitModel;
 		this.simulationUnit = simulationUnit;
 		this.typeData = typeData;
+		this.specialArtModel = specialArtModel;
 		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
 
 		this.location[0] = x;
@@ -83,8 +85,6 @@ public class RenderUnit {
 		this.facing = simulationUnit.getFacing();
 		final float angle = (float) Math.toRadians(this.facing);
 //		instance.localRotation.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle);
-		this.x = simulationUnit.getX();
-		this.y = simulationUnit.getY();
 		instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
 		this.playerIndex = playerIndex & 0xFFFF;
 		instance.setTeamColor(this.playerIndex);
@@ -139,9 +139,11 @@ public class RenderUnit {
 
 	public void populateCommandCard(final CSimulation game, final CommandButtonListener commandButtonListener,
 			final AbilityDataUI abilityDataUI, final int subMenuOrderId) {
+		final CommandCardPopulatingAbilityVisitor commandCardPopulatingVisitor = CommandCardPopulatingAbilityVisitor.INSTANCE
+				.reset(game, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId,
+						this.simulationUnit.isConstructing());
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
-			ability.visit(CommandCardPopulatingAbilityVisitor.INSTANCE.reset(game, this.simulationUnit,
-					commandButtonListener, abilityDataUI, subMenuOrderId));
+			ability.visit(commandCardPopulatingVisitor);
 		}
 	}
 
@@ -161,48 +163,48 @@ public class RenderUnit {
 		}
 		else {
 			this.instance.show();
+			if (wasHidden) {
+				if (this.shadow != null) {
+					this.shadow.show(map.terrain.centerOffset);
+				}
+			}
 		}
+		final float prevX = this.location[0];
+		final float prevY = this.location[1];
 		final float simulationX = this.simulationUnit.getX();
 		final float simulationY = this.simulationUnit.getY();
-		if (wasHidden) {
-			this.x = simulationX;
-			this.y = simulationY;
-		}
 		final float deltaTime = Gdx.graphics.getDeltaTime();
-		final float simDx = simulationX - this.x;
-		final float simDy = simulationY - this.y;
+		final float simDx = simulationX - this.location[0];
+		final float simDy = simulationY - this.location[1];
 		final float distanceToSimulation = (float) Math.sqrt((simDx * simDx) + (simDy * simDy));
 		final int speed = this.simulationUnit.getSpeed();
 		final float speedDelta = speed * deltaTime;
 		if ((distanceToSimulation > speedDelta) && (deltaTime < 1.0)) {
 			// The 1.0 here says that after 1 second of lag, units just teleport to show
 			// where they actually are
-			this.x += (speedDelta * simDx) / distanceToSimulation;
-			this.y += (speedDelta * simDy) / distanceToSimulation;
+			this.location[0] += (speedDelta * simDx) / distanceToSimulation;
+			this.location[1] += (speedDelta * simDy) / distanceToSimulation;
 		}
 		else {
-			this.x = simulationX;
-			this.y = simulationY;
+			this.location[0] = simulationX;
+			this.location[1] = simulationY;
 		}
-		final float x = this.x;
-		final float dx = x - this.location[0];
-		this.location[0] = x;
-		final float y = this.y;
-		final float dy = y - this.location[1];
-		this.location[1] = y;
+		final float dx = this.location[0] - prevX;
+		final float dy = this.location[1] - prevY;
 		final float groundHeight;
 		final MovementType movementType = this.simulationUnit.getUnitType().getMovementType();
-		final short terrainPathing = map.terrain.pathingGrid.getPathing(x, y);
+		final short terrainPathing = map.terrain.pathingGrid.getPathing(this.location[0], this.location[1]);
 		boolean swimming = (movementType == MovementType.AMPHIBIOUS)
 				&& PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.SWIMMABLE)
 				&& !PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.WALKABLE);
-		final float groundHeightTerrain = map.terrain.getGroundHeight(x, y);
+		final float groundHeightTerrain = map.terrain.getGroundHeight(this.location[0], this.location[1]);
 		float groundHeightTerrainAndWater;
 		MdxComplexInstance currentWalkableUnder;
 		final boolean standingOnWater = (swimming) || (movementType == MovementType.FLOAT)
 				|| (movementType == MovementType.FLY) || (movementType == MovementType.HOVER);
 		if (standingOnWater) {
-			groundHeightTerrainAndWater = Math.max(groundHeightTerrain, map.terrain.getWaterHeight(x, y));
+			groundHeightTerrainAndWater = Math.max(groundHeightTerrain,
+					map.terrain.getWaterHeight(this.location[0], this.location[1]));
 		}
 		else {
 			// land units will have their feet pass under the surface of the water
@@ -214,8 +216,8 @@ public class RenderUnit {
 			currentWalkableUnder = null;
 		}
 		else {
-			currentWalkableUnder = map.getHighestWalkableUnder(x, y);
-			War3MapViewer.gdxRayHeap.set(x, y, 4096, 0, 0, -8192);
+			currentWalkableUnder = map.getHighestWalkableUnder(this.location[0], this.location[1]);
+			War3MapViewer.gdxRayHeap.set(this.location[0], this.location[1], 4096, 0, 0, -8192);
 			if ((currentWalkableUnder != null)
 					&& currentWalkableUnder.intersectRayWithCollision(War3MapViewer.gdxRayHeap,
 							War3MapViewer.intersectionHeap, true, true)
@@ -243,6 +245,10 @@ public class RenderUnit {
 			if (this.shadow != null) {
 				this.shadow.destroy(Gdx.gl30, map.terrain.centerOffset);
 				this.shadow = null;
+			}
+			if (this.uberSplat != null) {
+				this.uberSplat.destroy(Gdx.gl30, map.terrain.centerOffset);
+				this.uberSplat = null;
 			}
 			if (this.selectionCircle != null) {
 				this.selectionCircle.destroy(Gdx.gl30, map.terrain.centerOffset);
@@ -311,15 +317,15 @@ public class RenderUnit {
 		final float maxRoll = this.typeData.getMaxRoll();
 		final float sampleRadius = this.typeData.getElevationSampleRadius();
 		float pitch, roll;
-		final float pitchSampleForwardX = x + (sampleRadius * (float) Math.cos(facingRadians));
-		final float pitchSampleForwardY = y + (sampleRadius * (float) Math.sin(facingRadians));
-		final float pitchSampleBackwardX = x - (sampleRadius * (float) Math.cos(facingRadians));
-		final float pitchSampleBackwardY = y - (sampleRadius * (float) Math.sin(facingRadians));
+		final float pitchSampleForwardX = this.location[0] + (sampleRadius * (float) Math.cos(facingRadians));
+		final float pitchSampleForwardY = this.location[1] + (sampleRadius * (float) Math.sin(facingRadians));
+		final float pitchSampleBackwardX = this.location[0] - (sampleRadius * (float) Math.cos(facingRadians));
+		final float pitchSampleBackwardY = this.location[1] - (sampleRadius * (float) Math.sin(facingRadians));
 		final double leftOfFacingAngle = facingRadians + (Math.PI / 2);
-		final float rollSampleForwardX = x + (sampleRadius * (float) Math.cos(leftOfFacingAngle));
-		final float rollSampleForwardY = y + (sampleRadius * (float) Math.sin(leftOfFacingAngle));
-		final float rollSampleBackwardX = x - (sampleRadius * (float) Math.cos(leftOfFacingAngle));
-		final float rollSampleBackwardY = y - (sampleRadius * (float) Math.sin(leftOfFacingAngle));
+		final float rollSampleForwardX = this.location[0] + (sampleRadius * (float) Math.cos(leftOfFacingAngle));
+		final float rollSampleForwardY = this.location[1] + (sampleRadius * (float) Math.sin(leftOfFacingAngle));
+		final float rollSampleBackwardX = this.location[0] - (sampleRadius * (float) Math.cos(leftOfFacingAngle));
+		final float rollSampleBackwardY = this.location[1] - (sampleRadius * (float) Math.sin(leftOfFacingAngle));
 		final float pitchSampleGroundHeight1;
 		final float pitchSampleGroundHeight2;
 		final float rollSampleGroundHeight1;
@@ -503,5 +509,22 @@ public class RenderUnit {
 			this.secondaryAnimationTags = secondaryAnimationTags;
 			this.allowRarityVariations = allowRarityVariations;
 		}
+	}
+
+	public void repositioned(final War3MapViewer map) {
+		final float prevX = this.location[0];
+		final float prevY = this.location[1];
+		final float simulationX = this.simulationUnit.getX();
+		final float simulationY = this.simulationUnit.getY();
+		final float dx = simulationX - prevX;
+		final float dy = simulationY - prevY;
+		if (this.shadow != null) {
+			this.shadow.move(dx, dy, map.terrain.centerOffset);
+		}
+		if (this.selectionCircle != null) {
+			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
+		}
+		this.location[0] = this.simulationUnit.getX();
+		this.location[1] = this.simulationUnit.getY();
 	}
 }

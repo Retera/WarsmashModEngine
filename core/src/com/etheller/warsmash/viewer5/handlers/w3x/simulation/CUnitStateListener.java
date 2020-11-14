@@ -7,6 +7,8 @@ public interface CUnitStateListener {
 
 	void ordersChanged(int abilityHandleId, int orderId);
 
+	void queueChanged();
+
 	public static final class CUnitStateNotifier extends SubscriberSetNotifier<CUnitStateListener>
 			implements CUnitStateListener {
 		@Override
@@ -20,6 +22,13 @@ public interface CUnitStateListener {
 		public void ordersChanged(final int abilityHandleId, final int orderId) {
 			for (final CUnitStateListener listener : set) {
 				listener.ordersChanged(abilityHandleId, orderId);
+			}
+		}
+
+		@Override
+		public void queueChanged() {
+			for (final CUnitStateListener listener : set) {
+				listener.queueChanged();
 			}
 		}
 	}

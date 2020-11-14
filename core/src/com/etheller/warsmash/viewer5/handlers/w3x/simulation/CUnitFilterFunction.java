@@ -9,4 +9,11 @@ public interface CUnitFilterFunction {
 			return true;
 		}
 	};
+
+	CUnitFilterFunction ACCEPT_ALL_LIVING = new CUnitFilterFunction() {
+		@Override
+		public boolean call(final CUnit unit) {
+			return !unit.isDead();
+		}
+	};
 }

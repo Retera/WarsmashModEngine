@@ -57,6 +57,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataU
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit.QueueItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
@@ -111,11 +112,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final Rectangle tempRect = new Rectangle();
 	private final Vector2 projectionTemp1 = new Vector2();
 	private final Vector2 projectionTemp2 = new Vector2();
+
 	private UIFrame simpleInfoPanelUnitDetail;
 	private StringFrame simpleNameValue;
 	private StringFrame simpleClassValue;
 	private StringFrame simpleBuildingActionLabel;
 	private SimpleStatusBarFrame simpleBuildTimeIndicator;
+
+	private UIFrame simpleInfoPanelBuildingDetail;
+	private StringFrame simpleBuildingNameValue;
+	private StringFrame simpleBuildingDescriptionValue;
+	private StringFrame simpleBuildingBuildingActionLabel;
+	private SimpleStatusBarFrame simpleBuildingBuildTimeIndicator;
+
 	private UIFrame attack1Icon;
 	private TextureFrame attack1IconBackdrop;
 	private StringFrame attack1InfoPanelIconValue;
@@ -282,12 +291,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.unitLifeText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitHitPointText", 0);
 		this.unitManaText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitManaPointText", 0);
 
+		// Create Simple Info Unit Detail
 		this.simpleInfoPanelUnitDetail = this.rootFrame.createSimpleFrame("SimpleInfoPanelUnitDetail", this.consoleUI,
 				0);
 		this.simpleInfoPanelUnitDetail
 				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, 0.0f)));
-		this.simpleInfoPanelUnitDetail.setWidth(GameUI.convertY(this.uiViewport, 0.180f));
-		this.simpleInfoPanelUnitDetail.setHeight(GameUI.convertY(this.uiViewport, 0.105f));
+		final float infoPanelUnitDetailWidth = GameUI.convertY(this.uiViewport, 0.180f);
+		this.simpleInfoPanelUnitDetail.setWidth(infoPanelUnitDetailWidth);
+		final float infoPanelUnitDetailHeight = GameUI.convertY(this.uiViewport, 0.105f);
+		this.simpleInfoPanelUnitDetail.setHeight(infoPanelUnitDetailHeight);
 		this.simpleNameValue = (StringFrame) this.rootFrame.getFrameByName("SimpleNameValue", 0);
 		this.simpleClassValue = (StringFrame) this.rootFrame.getFrameByName("SimpleClassValue", 0);
 		this.simpleBuildingActionLabel = (StringFrame) this.rootFrame.getFrameByName("SimpleBuildingActionLabel", 0);
@@ -297,8 +309,33 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		simpleBuildTimeIndicatorBar.setTexture("SimpleBuildTimeIndicator", this.rootFrame);
 		final TextureFrame simpleBuildTimeIndicatorBorder = this.simpleBuildTimeIndicator.getBorderFrame();
 		simpleBuildTimeIndicatorBorder.setTexture("SimpleBuildTimeIndicatorBorder", this.rootFrame);
-		this.simpleBuildTimeIndicator.setWidth(GameUI.convertX(this.uiViewport, 0.10538f));
-		this.simpleBuildTimeIndicator.setHeight(GameUI.convertY(this.uiViewport, 0.0103f));
+		final float buildTimeIndicatorWidth = GameUI.convertX(this.uiViewport, 0.10538f);
+		final float buildTimeIndicatorHeight = GameUI.convertY(this.uiViewport, 0.0103f);
+		this.simpleBuildTimeIndicator.setWidth(buildTimeIndicatorWidth);
+		this.simpleBuildTimeIndicator.setHeight(buildTimeIndicatorHeight);
+
+		// Create Simple Info Panel Building Detail
+		this.simpleInfoPanelBuildingDetail = this.rootFrame.createSimpleFrame("SimpleInfoPanelBuildingDetail",
+				this.consoleUI, 0);
+		this.simpleInfoPanelBuildingDetail
+				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, 0.0f)));
+		this.simpleInfoPanelBuildingDetail.setWidth(infoPanelUnitDetailWidth);
+		this.simpleInfoPanelBuildingDetail.setHeight(infoPanelUnitDetailHeight);
+		this.simpleBuildingNameValue = (StringFrame) this.rootFrame.getFrameByName("SimpleBuildingNameValue", 0);
+		this.simpleBuildingDescriptionValue = (StringFrame) this.rootFrame
+				.getFrameByName("SimpleBuildingDescriptionValue", 0);
+		this.simpleBuildingBuildingActionLabel = (StringFrame) this.rootFrame
+				.getFrameByName("SimpleBuildingActionLabel", 0);
+		this.simpleBuildingBuildTimeIndicator = (SimpleStatusBarFrame) this.rootFrame
+				.getFrameByName("SimpleBuildTimeIndicator", 0);
+		final TextureFrame simpleBuildingBuildTimeIndicatorBar = this.simpleBuildingBuildTimeIndicator.getBarFrame();
+		simpleBuildingBuildTimeIndicatorBar.setTexture("SimpleBuildTimeIndicator", this.rootFrame);
+		final TextureFrame simpleBuildingBuildTimeIndicatorBorder = this.simpleBuildingBuildTimeIndicator
+				.getBorderFrame();
+		simpleBuildingBuildTimeIndicatorBorder.setTexture("SimpleBuildTimeIndicatorBorder", this.rootFrame);
+		this.simpleBuildingBuildTimeIndicator.setWidth(buildTimeIndicatorWidth);
+		this.simpleBuildingBuildTimeIndicator.setHeight(buildTimeIndicatorHeight);
+		this.simpleInfoPanelBuildingDetail.setVisible(false);
 
 		this.attack1Icon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", this.simpleInfoPanelUnitDetail,
 				0);
@@ -494,7 +531,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							this.war3MapViewer.mapPathSolver, this.war3MapViewer.solverParams);
 					this.cursorModelInstance = (MdxComplexInstance) model.addInstance();
 					this.cursorModelInstance.setVertexColor(new float[] { 1, 1, 1, 0.5f });
-					this.cursorModelInstance.setTeamColor(activeCommandUnit.getSimulationUnit().getPlayerIndex());
+					this.cursorModelInstance.setTeamColor(this.activeCommandUnit.getSimulationUnit().getPlayerIndex());
 					this.cursorModelInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
 							this.war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
 					this.cursorModelInstance.setAnimationSpeed(0f);
@@ -570,6 +607,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					.setValue(Math.min(this.selectedUnit.getSimulationUnit().getConstructionProgress()
 							/ this.selectedUnit.getSimulationUnit().getUnitType().getBuildTime(), 0.99f));
 		}
+		if (this.simpleBuildingBuildTimeIndicator.isVisible() && (this.selectedUnit != null)) {
+			this.simpleBuildingBuildTimeIndicator
+					.setValue(Math.min(
+							this.selectedUnit.getSimulationUnit().getConstructionProgress() / this.selectedUnit
+									.getSimulationUnit().getBuildQueueTimeRemaining(this.war3MapViewer.simulation),
+							0.99f));
+		}
+
 		final float groundHeight = Math.max(
 				this.war3MapViewer.terrain.getGroundHeight(this.cameraManager.target.x, this.cameraManager.target.y),
 				this.war3MapViewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y));
@@ -687,83 +732,110 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private void reloadSelectedUnitUI(final RenderUnit unit) {
-		this.simpleNameValue.setText(unit.getSimulationUnit().getUnitType().getName());
-		String classText = null;
-		for (final CUnitClassification classification : unit.getSimulationUnit().getClassifications()) {
-			if ((classification == CUnitClassification.MECHANICAL)
-					&& unit.getSimulationUnit().getUnitType().isBuilding()) {
-				// buildings dont display MECHANICAL
-				continue;
-			}
-			if (classification.getDisplayName() != null) {
-				classText = classification.getDisplayName();
-			}
-		}
-		if (classText != null) {
-			this.simpleClassValue.setText(classText);
-		}
-		else {
-			this.simpleClassValue.setText("");
-		}
-		this.unitLifeText.setText(FastNumberFormat.formatWholeNumber(unit.getSimulationUnit().getLife()) + " / "
-				+ unit.getSimulationUnit().getMaximumLife());
-		final int maximumMana = unit.getSimulationUnit().getMaximumMana();
+		final CUnit simulationUnit = unit.getSimulationUnit();
+		this.unitLifeText.setText(
+				FastNumberFormat.formatWholeNumber(simulationUnit.getLife()) + " / " + simulationUnit.getMaximumLife());
+		final int maximumMana = simulationUnit.getMaximumMana();
 		if (maximumMana > 0) {
-			this.unitManaText.setText(
-					FastNumberFormat.formatWholeNumber(unit.getSimulationUnit().getMana()) + " / " + maximumMana);
+			this.unitManaText
+					.setText(FastNumberFormat.formatWholeNumber(simulationUnit.getMana()) + " / " + maximumMana);
 		}
 		else {
 			this.unitManaText.setText("");
 		}
-		this.simpleBuildingActionLabel.setText("");
+		if (simulationUnit.getBuildQueue()[0] != null) {
+			this.simpleInfoPanelBuildingDetail.setVisible(true);
+			this.simpleInfoPanelUnitDetail.setVisible(false);
+			this.simpleBuildingNameValue.setText(simulationUnit.getUnitType().getName());
+			this.simpleBuildingDescriptionValue.setText("");
 
-		final boolean anyAttacks = unit.getSimulationUnit().getUnitType().getAttacks().size() > 0;
-		final boolean constructing = unit.getSimulationUnit().isConstructing();
-		final UIFrame localArmorIcon = this.armorIcon;
-		final TextureFrame localArmorIconBackdrop = this.armorIconBackdrop;
-		final StringFrame localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
-		if (anyAttacks && !constructing) {
-			final CUnitAttack attackOne = unit.getSimulationUnit().getUnitType().getAttacks().get(0);
-			this.attack1Icon.setVisible(attackOne.isShowUI());
-			this.attack1IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackOne.getAttackType()));
-			this.attack1InfoPanelIconValue.setText(attackOne.getMinDamage() + " - " + attackOne.getMaxDamage());
-			if (unit.getSimulationUnit().getUnitType().getAttacks().size() > 1) {
-				final CUnitAttack attackTwo = unit.getSimulationUnit().getUnitType().getAttacks().get(1);
-				this.attack2Icon.setVisible(attackTwo.isShowUI());
-				this.attack2IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackTwo.getAttackType()));
-				this.attack2InfoPanelIconValue.setText(attackTwo.getMinDamage() + " - " + attackTwo.getMaxDamage());
+			this.simpleBuildingBuildTimeIndicator.setVisible(true);
+			this.simpleBuildTimeIndicator.setVisible(false);
+			if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.UNIT) {
+				this.simpleBuildingBuildingActionLabel
+						.setText(this.rootFrame.getTemplates().getDecoratedString("TRAINING"));
 			}
 			else {
-				this.attack2Icon.setVisible(false);
+				this.simpleBuildingBuildingActionLabel
+						.setText(this.rootFrame.getTemplates().getDecoratedString("RESEARCHING"));
 			}
-
-			this.armorIcon
-					.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-							GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.06025f)));
-			this.armorIcon.positionBounds(this.uiViewport);
-		}
-		else {
 			this.attack1Icon.setVisible(false);
 			this.attack2Icon.setVisible(false);
+			this.armorIcon.setVisible(false);
+		}
+		else {
+			this.simpleInfoPanelBuildingDetail.setVisible(false);
+			this.simpleInfoPanelUnitDetail.setVisible(true);
+			this.simpleNameValue.setText(simulationUnit.getUnitType().getName());
+			String classText = null;
+			for (final CUnitClassification classification : simulationUnit.getClassifications()) {
+				if ((classification == CUnitClassification.MECHANICAL) && simulationUnit.getUnitType().isBuilding()) {
+					// buildings dont display MECHANICAL
+					continue;
+				}
+				if (classification.getDisplayName() != null) {
+					classText = classification.getDisplayName();
+				}
+			}
+			if (classText != null) {
+				this.simpleClassValue.setText(classText);
+			}
+			else {
+				this.simpleClassValue.setText("");
+			}
 
-			this.armorIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
-					FramePoint.TOPLEFT, 0, GameUI.convertY(this.uiViewport, -0.030125f)));
-			this.armorIcon.positionBounds(this.uiViewport);
-		}
+			final boolean anyAttacks = simulationUnit.getUnitType().getAttacks().size() > 0;
+			final boolean constructing = simulationUnit.isConstructing();
+			final UIFrame localArmorIcon = this.armorIcon;
+			final TextureFrame localArmorIconBackdrop = this.armorIconBackdrop;
+			final StringFrame localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
+			if (anyAttacks && !constructing) {
+				final CUnitAttack attackOne = simulationUnit.getUnitType().getAttacks().get(0);
+				this.attack1Icon.setVisible(attackOne.isShowUI());
+				this.attack1IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackOne.getAttackType()));
+				this.attack1InfoPanelIconValue.setText(attackOne.getMinDamage() + " - " + attackOne.getMaxDamage());
+				if (simulationUnit.getUnitType().getAttacks().size() > 1) {
+					final CUnitAttack attackTwo = simulationUnit.getUnitType().getAttacks().get(1);
+					this.attack2Icon.setVisible(attackTwo.isShowUI());
+					this.attack2IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackTwo.getAttackType()));
+					this.attack2InfoPanelIconValue.setText(attackTwo.getMinDamage() + " - " + attackTwo.getMaxDamage());
+				}
+				else {
+					this.attack2Icon.setVisible(false);
+				}
 
-		localArmorIcon.setVisible(!constructing);
-		this.simpleBuildTimeIndicator.setVisible(constructing);
-		if (constructing) {
-			this.simpleBuildingActionLabel.setText(this.rootFrame.getTemplates().getDecoratedString("CONSTRUCTING"));
+				this.armorIcon.addSetPoint(
+						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
+								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.06025f)));
+				this.armorIcon.positionBounds(this.uiViewport);
+			}
+			else {
+				this.attack1Icon.setVisible(false);
+				this.attack2Icon.setVisible(false);
+
+				this.armorIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
+						FramePoint.TOPLEFT, 0, GameUI.convertY(this.uiViewport, -0.030125f)));
+				this.armorIcon.positionBounds(this.uiViewport);
+			}
+
+			localArmorIcon.setVisible(!constructing);
+			this.simpleBuildTimeIndicator.setVisible(constructing);
+			this.simpleBuildingBuildTimeIndicator.setVisible(false);
+			if (constructing) {
+				this.simpleBuildingActionLabel
+						.setText(this.rootFrame.getTemplates().getDecoratedString("CONSTRUCTING"));
+			}
+			else {
+				this.simpleBuildingActionLabel.setText("");
+			}
+			final Texture defenseTexture = this.defenseBackdrops
+					.getTexture(simulationUnit.getUnitType().getDefenseType());
+			if (defenseTexture == null) {
+				throw new RuntimeException(simulationUnit.getUnitType().getDefenseType() + " can't find texture!");
+			}
+			localArmorIconBackdrop.setTexture(defenseTexture);
+			localArmorInfoPanelIconValue.setText(Integer.toString(simulationUnit.getDefense()));
 		}
-		final Texture defenseTexture = this.defenseBackdrops
-				.getTexture(unit.getSimulationUnit().getUnitType().getDefenseType());
-		if (defenseTexture == null) {
-			throw new RuntimeException(
-					unit.getSimulationUnit().getUnitType().getDefenseType() + " can't find texture!");
-		}
-		localArmorIconBackdrop.setTexture(defenseTexture);
-		localArmorInfoPanelIconValue.setText(Integer.toString(unit.getSimulationUnit().getDefense()));
 		clearAndRepopulateCommandCard();
 	}
 
@@ -779,8 +851,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void commandButton(final int buttonPositionX, final int buttonPositionY, final Texture icon,
 			final int abilityHandleId, final int orderId, final int autoCastId, final boolean active,
 			final boolean autoCastActive, final boolean menuButton) {
-		final int x = Math.max(0, Math.min(COMMAND_CARD_WIDTH - 1, buttonPositionX));
-		final int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
+		int x = Math.max(0, Math.min(COMMAND_CARD_WIDTH - 1, buttonPositionX));
+		int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
+		while (this.commandCard[y][x].isVisible() && (y < COMMAND_CARD_HEIGHT) && (x < COMMAND_CARD_WIDTH)) {
+			x++;
+			if (x >= COMMAND_CARD_WIDTH) {
+				x = 0;
+				y++;
+			}
+		}
 		this.commandCard[y][x].setCommandButtonData(icon, abilityHandleId, orderId, autoCastId, active, autoCastActive,
 				menuButton);
 	}
@@ -877,6 +956,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		reloadSelectedUnitUI(this.selectedUnit);
 	}
 
+	@Override
+	public void queueChanged() {
+		reloadSelectedUnitUI(this.selectedUnit);
+	}
+
 	private void clearAndRepopulateCommandCard() {
 		clearCommandCard();
 		final AbilityDataUI abilityDataUI = this.war3MapViewer.getAbilityDataUI();
@@ -885,9 +969,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final IconUI cancelUI = abilityDataUI.getCancelUI();
 			this.commandButton(cancelUI.getButtonPositionX(), cancelUI.getButtonPositionY(), cancelUI.getIcon(), 0,
 					menuOrderId, 0, false, false, true);
-		}
-		else if (this.selectedUnit.getSimulationUnit().isConstructing()) {
-
 		}
 		else {
 			if (menuOrderId != 0) {

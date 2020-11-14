@@ -72,6 +72,8 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain.Splat;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderAttackInstant;
@@ -97,6 +99,7 @@ import mpq.MPQException;
 
 public class War3MapViewer extends ModelViewer {
 	private static final War3ID UNIT_FILE = War3ID.fromString("umdl");
+	private static final War3ID UNIT_SPECIAL = War3ID.fromString("uspa");
 	private static final War3ID UBER_SPLAT = War3ID.fromString("uubs");
 	private static final War3ID UNIT_SHADOW = War3ID.fromString("ushu");
 	private static final War3ID UNIT_SHADOW_X = War3ID.fromString("ushx");
@@ -553,6 +556,35 @@ public class War3MapViewer extends ModelViewer {
 						return createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, 0f, playerIndex,
 								(float) Math.toRadians(facing));
 					}
+
+					@Override
+					public void spawnBuildingDeathEffect(final CUnit source) {
+						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
+						if (renderUnit.specialArtModel != null) {
+							final MdxComplexInstance modelInstance = (MdxComplexInstance) renderUnit.specialArtModel
+									.addInstance();
+							modelInstance.setTeamColor(source.getPlayerIndex());
+							modelInstance.setLocation(renderUnit.location);
+							modelInstance.setScene(War3MapViewer.this.worldScene);
+							SequenceUtils.randomBirthSequence(modelInstance);
+							War3MapViewer.this.projectiles
+									.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
+											(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
+						}
+					}
+
+					@Override
+					public void spawnUnitReadySound(final CUnit trainedUnit) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(trainedUnit);
+						renderPeer.soundset.ready.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
+								renderPeer);
+					}
+
+					@Override
+					public void unitRepositioned(final CUnit cUnit) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
+						renderPeer.repositioned(War3MapViewer.this);
+					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, w3iFile.getPlayers());
 
 		this.walkableObjectsTree = new Quadtree<>(this.terrain.getEntireMap());
@@ -664,7 +696,7 @@ public class War3MapViewer extends ModelViewer {
 							}
 						}
 						if (bufferedImage != null) {
-							this.terrain.pathingGrid.blitPathingOverlayTexture(doodad.getLocation()[0],
+							this.terrain.pathingGrid.blitRemovablePathingOverlayTexture(doodad.getLocation()[0],
 									doodad.getLocation()[1], (int) Math.toDegrees(doodad.getAngle()), bufferedImage);
 						}
 					}
@@ -814,8 +846,13 @@ public class War3MapViewer extends ModelViewer {
 		MutableGameObject row = null;
 		String path = null;
 		Splat unitShadowSplat = null;
+		SplatMover unitShadowSplatDynamicIngame = null;
+		Splat buildingUberSplat = null;
+		SplatMover buildingUberSplatDynamicIngame = null;
 		BufferedImage buildingPathingPixelMap = null;
 		final float unitVertexScale = 1.0f;
+		RemovablePathingMapInstance pathingInstance = null;
+		BuildingShadow buildingShadowInstance = null;
 
 		// Hardcoded?
 		WorldEditorDataType type = null;
@@ -871,8 +908,8 @@ public class War3MapViewer extends ModelViewer {
 				if (buildingPathingPixelMap != null) {
 					unitX = Math.round(unitX / 64f) * 64f;
 					unitY = Math.round(unitY / 64f) * 64f;
-					this.terrain.pathingGrid.blitPathingOverlayTexture(unitX, unitY, (int) Math.toDegrees(unitAngle),
-							buildingPathingPixelMap);
+					pathingInstance = this.terrain.pathingGrid.blitRemovablePathingOverlayTexture(unitX, unitY,
+							(int) Math.toDegrees(unitAngle), buildingPathingPixelMap);
 				}
 
 				final String uberSplat = row.getFieldAsString(UBER_SPLAT, 0);
@@ -883,7 +920,7 @@ public class War3MapViewer extends ModelViewer {
 								+ ".blp";
 						final float s = uberSplatInfo.getFieldFloatValue("Scale");
 						if (this.unitsReady) {
-							this.terrain.addUberSplat(texturePath, unitX, unitY, 1, s);
+							buildingUberSplatDynamicIngame = this.terrain.addUberSplat(texturePath, unitX, unitY, 1, s);
 						}
 						else {
 							if (!this.terrain.splats.containsKey(texturePath)) {
@@ -891,8 +928,8 @@ public class War3MapViewer extends ModelViewer {
 							}
 							final float x = unitX;
 							final float y = unitY;
-							this.terrain.splats.get(texturePath).locations
-									.add(new float[] { x - s, y - s, x + s, y + s, 1 });
+							buildingUberSplat = this.terrain.splats.get(texturePath);
+							buildingUberSplat.locations.add(new float[] { x - s, y - s, x + s, y + s, 1 });
 						}
 					}
 				}
@@ -905,22 +942,28 @@ public class War3MapViewer extends ModelViewer {
 					final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
 					final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
 					if (this.mapMpq.has(texture)) {
-						if (!this.terrain.splats.containsKey(texture)) {
-							final Splat splat = new Splat();
-							splat.opacity = 0.5f;
-							this.terrain.splats.put(texture, splat);
-						}
 						final float x = unitX - shadowX;
 						final float y = unitY - shadowY;
-						this.terrain.splats.get(texture).locations
-								.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
-						unitShadowSplat = this.terrain.splats.get(texture);
+						if (this.unitsReady) {
+							unitShadowSplatDynamicIngame = this.terrain.addUnitShadowSplat(texture, x, y,
+									x + shadowWidth, y + shadowHeight, 3, 0.5f);
+						}
+						else {
+							if (!this.terrain.splats.containsKey(texture)) {
+								final Splat splat = new Splat();
+								splat.opacity = 0.5f;
+								this.terrain.splats.put(texture, splat);
+							}
+							this.terrain.splats.get(texture).locations
+									.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+							unitShadowSplat = this.terrain.splats.get(texture);
+						}
 					}
 				}
 
 				final String buildingShadow = row.getFieldAsString(BUILDING_SHADOW, 0);
 				if ((buildingShadow != null) && !"_".equals(buildingShadow)) {
-					this.terrain.addShadow(buildingShadow, unitX, unitY);
+					buildingShadowInstance = this.terrain.addShadow(buildingShadow, unitX, unitY);
 				}
 
 				final String soundName = row.getFieldAsString(UNIT_SOUNDSET, 0);
@@ -935,6 +978,21 @@ public class War3MapViewer extends ModelViewer {
 		}
 
 		if (path != null) {
+			final String unitSpecialArtPath = row.getFieldAsString(UNIT_SPECIAL, 0);
+			MdxModel specialArtModel;
+			if (unitSpecialArtPath != null) {
+				try {
+					specialArtModel = (MdxModel) this.load(mdx(unitSpecialArtPath), this.mapPathSolver,
+							this.solverParams);
+				}
+				catch (final Exception exc) {
+					exc.printStackTrace();
+					specialArtModel = null;
+				}
+			}
+			else {
+				specialArtModel = null;
+			}
 			final MdxModel model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
 			MdxModel portraitModel;
 			final String portraitPath = path.substring(0, path.length() - 4) + "_portrait.mdx";
@@ -947,10 +1005,10 @@ public class War3MapViewer extends ModelViewer {
 			if (type == WorldEditorDataType.UNITS) {
 				final float angle = (float) Math.toDegrees(unitAngle);
 				final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), playerIndex, unitX, unitY,
-						angle, buildingPathingPixelMap);
+						angle, buildingPathingPixelMap, pathingInstance, buildingShadowInstance);
 				final RenderUnitTypeData typeData = getUnitTypeData(unitId, row);
 				final RenderUnit renderUnit = new RenderUnit(this, model, row, unitX, unitY, unitZ, playerIndex,
-						soundset, portraitModel, simulationUnit, typeData);
+						soundset, portraitModel, simulationUnit, typeData, specialArtModel);
 				this.unitToRenderPeer.put(simulationUnit, renderUnit);
 				this.units.add(renderUnit);
 				if (unitShadowSplat != null) {
@@ -960,6 +1018,20 @@ public class War3MapViewer extends ModelViewer {
 							renderUnit.shadow = t;
 						}
 					});
+				}
+				if (unitShadowSplatDynamicIngame != null) {
+					renderUnit.shadow = unitShadowSplatDynamicIngame;
+				}
+				if (buildingUberSplat != null) {
+					buildingUberSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+						@Override
+						public void accept(final SplatMover t) {
+							renderUnit.uberSplat = t;
+						}
+					});
+				}
+				if (buildingUberSplatDynamicIngame != null) {
+					renderUnit.uberSplat = buildingUberSplatDynamicIngame;
 				}
 				return simulationUnit;
 			}
@@ -975,6 +1047,8 @@ public class War3MapViewer extends ModelViewer {
 
 						}
 					});
+				}
+				if (unitShadowSplatDynamicIngame != null) {
 				}
 			}
 		}
@@ -1222,24 +1296,7 @@ public class War3MapViewer extends ModelViewer {
 
 	public List<RenderUnit> selectUnit(final float x, final float y, final boolean toggle) {
 		System.out.println("world: " + x + "," + y);
-		final float[] ray = rayHeap;
-		mousePosHeap.set(x, y);
-		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
-		gdxRayHeap.set(ray[0], ray[1], ray[2], ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]);
-		gdxRayHeap.direction.nor();// needed for libgdx
-
-		RenderUnit entity = null;
-		for (final RenderUnit unit : this.units) {
-			final MdxComplexInstance instance = unit.instance;
-			if (instance.isVisible(this.worldScene.camera)
-					&& instance.intersectRayWithCollision(gdxRayHeap, intersectionHeap,
-							unit.getSimulationUnit().getUnitType().isBuilding(), false)
-					&& !unit.getSimulationUnit().isDead()) {
-				if ((entity == null) || (entity.instance.depth > instance.depth)) {
-					entity = unit;
-				}
-			}
-		}
+		final RenderUnit entity = rayPickUnit(x, y, CUnitFilterFunction.ACCEPT_ALL_LIVING);
 		List<RenderUnit> sel;
 		if (entity != null) {
 			if (toggle) {
@@ -1277,8 +1334,8 @@ public class War3MapViewer extends ModelViewer {
 		RenderUnit entity = null;
 		for (final RenderUnit unit : this.units) {
 			final MdxComplexInstance instance = unit.instance;
-			if (instance.isVisible(this.worldScene.camera) && instance.intersectRayWithCollision(gdxRayHeap,
-					intersectionHeap, unit.getSimulationUnit().getUnitType().isBuilding(), false)) {
+			if (instance.shown() && instance.isVisible(this.worldScene.camera) && instance.intersectRayWithCollision(
+					gdxRayHeap, intersectionHeap, unit.getSimulationUnit().getUnitType().isBuilding(), false)) {
 				if (filter.call(unit.getSimulationUnit()) && (intersectionHeap.z > this.terrain
 						.getGroundHeight(intersectionHeap.x, intersectionHeap.y))) {
 					if ((entity == null) || (entity.instance.depth > instance.depth)) {
@@ -1438,7 +1495,7 @@ public class War3MapViewer extends ModelViewer {
 	public void setGameUI(final GameUI gameUI) {
 		this.gameUI = gameUI;
 		this.abilityDataUI = new AbilityDataUI(this.allObjectData.getAbilities(), this.allObjectData.getUnits(),
-				gameUI);
+				this.allObjectData.getUpgrades(), gameUI);
 	}
 
 	public GameUI getGameUI() {

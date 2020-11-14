@@ -38,6 +38,8 @@ public class CUnitType {
 	private final float defaultAcquisitionRange;
 	private final float minimumAttackRange;
 	private final List<War3ID> structuresBuilt;
+	private final List<War3ID> unitsTrained;
+	private final List<War3ID> researchesAvailable;
 	private final CUnitRace unitRace;
 	private final int goldCost;
 	private final int lumberCost;
@@ -49,7 +51,8 @@ public class CUnitType {
 			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ,
 			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs,
 			final float defaultAcquisitionRange, final float minimumAttackRange, final List<War3ID> structuresBuilt,
-			final CUnitRace unitRace, final int goldCost, final int lumberCost, final int buildTime) {
+			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final CUnitRace unitRace,
+			final int goldCost, final int lumberCost, final int buildTime) {
 		this.name = name;
 		this.building = isBldg;
 		this.movementType = movementType;
@@ -68,6 +71,8 @@ public class CUnitType {
 		this.defaultAcquisitionRange = defaultAcquisitionRange;
 		this.minimumAttackRange = minimumAttackRange;
 		this.structuresBuilt = structuresBuilt;
+		this.unitsTrained = unitsTrained;
+		this.researchesAvailable = researchesAvailable;
 		this.unitRace = unitRace;
 		this.goldCost = goldCost;
 		this.lumberCost = lumberCost;
@@ -144,6 +149,14 @@ public class CUnitType {
 
 	public List<War3ID> getStructuresBuilt() {
 		return this.structuresBuilt;
+	}
+
+	public List<War3ID> getUnitsTrained() {
+		return this.unitsTrained;
+	}
+
+	public List<War3ID> getResearchesAvailable() {
+		return this.researchesAvailable;
 	}
 
 	public CUnitRace getRace() {

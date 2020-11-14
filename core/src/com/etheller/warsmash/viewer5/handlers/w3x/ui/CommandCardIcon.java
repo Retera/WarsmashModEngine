@@ -50,6 +50,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 			this.activeHighlightFrame.setVisible(false);
 			this.cooldownFrame.setVisible(false);
 			this.autocastFrame.setVisible(false);
+			setVisible(false);
 		}
 		else {
 			if (commandButton.isEnabled()) {
@@ -74,6 +75,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId,
 			final int autoCastOrderId, final boolean active, final boolean autoCastActive, final boolean menuButton) {
 		this.menuButton = menuButton;
+		setVisible(true);
 		this.iconFrame.setVisible(true);
 		this.activeHighlightFrame.setVisible(active);
 		this.cooldownFrame.setVisible(false);
@@ -113,7 +115,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
-		if (this.renderBounds.contains(screenX, screenY)) {
+		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
 			return this;
 		}
 		return super.touchDown(screenX, screenY, button);
@@ -121,7 +123,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 
 	@Override
 	public UIFrame touchUp(final float screenX, final float screenY, final int button) {
-		if (this.renderBounds.contains(screenX, screenY)) {
+		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
 			return this;
 		}
 		return super.touchUp(screenX, screenY, button);

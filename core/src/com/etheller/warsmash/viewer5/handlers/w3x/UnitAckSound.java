@@ -22,15 +22,15 @@ public final class UnitAckSound {
 	private final List<Sound> sounds = new ArrayList<>();
 	private final float volume;
 	private final float pitch;
-	private final float pitchVariation;
+	private final float pitchVariance;
 	private final float minDistance;
 	private final float maxDistance;
 	private final float distanceCutoff;
 
 	private Sound lastPlayedSound;
 
-	public static UnitAckSound create(final DataSource dataSource, final DataTable unitAckSounds, final String soundName,
-			final String soundType) {
+	public static UnitAckSound create(final DataSource dataSource, final DataTable unitAckSounds,
+			final String soundName, final String soundType) {
 		final Element row = unitAckSounds.get(soundName + soundType);
 		if (row == null) {
 			return SILENT;
@@ -40,13 +40,17 @@ public final class UnitAckSound {
 		if ((directoryBase.length() > 1) && !directoryBase.endsWith("\\")) {
 			directoryBase += "\\";
 		}
-		final float volume = row.getFieldFloatValue("Volume");
+		final float volume = row.getFieldFloatValue("Volume") / 127f;
 		final float pitch = row.getFieldFloatValue("Pitch");
-		final float pitchVariation = row.getFieldFloatValue("PitchVariance");
+		float pitchVariance = row.getFieldFloatValue("PitchVariance");
+		if (pitchVariance == 1.0f) {
+			pitchVariance = 0.0f;
+		}
 		final float minDistance = row.getFieldFloatValue("MinDistance");
 		final float maxDistance = row.getFieldFloatValue("MaxDistance");
 		final float distanceCutoff = row.getFieldFloatValue("DistanceCutoff");
-		final UnitAckSound sound = new UnitAckSound(volume, pitch, pitchVariation, minDistance, maxDistance, distanceCutoff);
+		final UnitAckSound sound = new UnitAckSound(volume, pitch, pitchVariance, minDistance, maxDistance,
+				distanceCutoff);
 		for (final String fileName : fileNames.split(",")) {
 			String filePath = directoryBase + fileName;
 			if (!filePath.toLowerCase().endsWith(".wav")) {
@@ -63,7 +67,7 @@ public final class UnitAckSound {
 			final float maxDistance, final float distanceCutoff) {
 		this.volume = volume;
 		this.pitch = pitch;
-		this.pitchVariation = pitchVariation;
+		this.pitchVariance = pitchVariation;
 		this.minDistance = minDistance;
 		this.maxDistance = maxDistance;
 		this.distanceCutoff = distanceCutoff;
@@ -96,7 +100,8 @@ public final class UnitAckSound {
 		source.connect(panner);
 
 		// Make a sound.
-		source.start(0);
+		source.start(0, this.volume,
+				(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance);
 		this.lastPlayedSound = source.buffer;
 		final float duration = Extensions.soundLengthExtension.getDuration(this.lastPlayedSound);
 		unit.lastUnitResponseEndTimeMillis = millisTime + (long) (1000 * duration);

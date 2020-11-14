@@ -9,9 +9,9 @@ public class AudioBufferSource {
 
 	}
 
-	public void start(final int value) {
+	public void start(final int value, final float volume, final float pitch) {
 		if (this.buffer != null) {
-			this.buffer.play(1);
+			this.buffer.play(volume, pitch, 0.0f);
 		}
 	}
 }

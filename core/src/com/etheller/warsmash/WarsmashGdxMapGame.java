@@ -130,7 +130,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			this.viewer.enableAudio();
 		}
 		try {
-			this.viewer.loadMap(this.warsmashIni.get("Map").getField("FilePath"));
+			this.viewer.loadMap(this.warsmashIni.get("Map").getField("FilePath"), 0);
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -222,7 +222,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				cameraRatesElement.getFieldFloatValue("FOV"), cameraRatesElement.getFieldFloatValue("Rotation"),
 				cameraRatesElement.getFieldFloatValue("Distance"), cameraRatesElement.getFieldFloatValue("Forward"),
 				cameraRatesElement.getFieldFloatValue("Strafe"));
-		this.meleeUI = new MeleeUI(this.codebase, this.uiViewport, fontGenerator, this.uiScene, portraitScene,
+		this.meleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, fontGenerator, this.uiScene, portraitScene,
 				cameraPresets, cameraRates, this.viewer, new RootFrameListener() {
 					@Override
 					public void onCreate(final GameUI rootFrame) {

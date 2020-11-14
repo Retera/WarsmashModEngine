@@ -22,7 +22,7 @@ public final class UnitSound {
 	private final List<Sound> sounds = new ArrayList<>();
 	private final float volume;
 	private final float pitch;
-	private final float pitchVariation;
+	private final float pitchVariance;
 	private final float minDistance;
 	private final float maxDistance;
 	private final float distanceCutoff;
@@ -40,13 +40,16 @@ public final class UnitSound {
 		if ((directoryBase.length() > 1) && !directoryBase.endsWith("\\")) {
 			directoryBase += "\\";
 		}
-		final float volume = row.getFieldFloatValue("Volume");
+		final float volume = row.getFieldFloatValue("Volume") / 127f;
 		final float pitch = row.getFieldFloatValue("Pitch");
-		final float pitchVariation = row.getFieldFloatValue("PitchVariance");
+		float pitchVariance = row.getFieldFloatValue("PitchVariance");
+		if (pitchVariance == 1.0f) {
+			pitchVariance = 0.0f;
+		}
 		final float minDistance = row.getFieldFloatValue("MinDistance");
 		final float maxDistance = row.getFieldFloatValue("MaxDistance");
 		final float distanceCutoff = row.getFieldFloatValue("DistanceCutoff");
-		final UnitSound sound = new UnitSound(volume, pitch, pitchVariation, minDistance, maxDistance, distanceCutoff);
+		final UnitSound sound = new UnitSound(volume, pitch, pitchVariance, minDistance, maxDistance, distanceCutoff);
 		for (final String fileName : fileNames.split(",")) {
 			String filePath = directoryBase + fileName;
 			if (!filePath.toLowerCase().endsWith(".wav")) {
@@ -63,7 +66,7 @@ public final class UnitSound {
 			final float maxDistance, final float distanceCutoff) {
 		this.volume = volume;
 		this.pitch = pitch;
-		this.pitchVariation = pitchVariation;
+		this.pitchVariance = pitchVariation;
 		this.minDistance = minDistance;
 		this.maxDistance = maxDistance;
 		this.distanceCutoff = distanceCutoff;
@@ -112,7 +115,8 @@ public final class UnitSound {
 		source.connect(panner);
 
 		// Make a sound.
-		source.start(0);
+		source.start(0, this.volume,
+				(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance);
 		this.lastPlayedSound = source.buffer;
 		return true;
 	}

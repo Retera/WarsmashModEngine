@@ -12,10 +12,13 @@ import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
-import com.etheller.warsmash.viewer5.handlers.w3x.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
+import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
@@ -64,7 +67,6 @@ public class RenderUnit {
 	private boolean corpse;
 	private boolean boneCorpse;
 	private final RenderUnitTypeData typeData;
-	public UnitSound buildSound;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
 			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
@@ -127,7 +129,6 @@ public class RenderUnit {
 
 			final float blendTime = row.getFieldAsFloat(BLEND_TIME, 0);
 			instance.setBlendTime(blendTime * 1000.0f);
-			buildSound = map.getUiSounds().getSound(row.getFieldAsString(BUILD_SOUND_LABEL, 0));
 		}
 
 		this.instance = instance;
@@ -350,8 +351,9 @@ public class RenderUnit {
 			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
 		}
 		this.unitAnimationListenerImpl.update();
-		if(!dead && simulationUnit.isConstructing()) {
-			instance.setFrameByRatio(simulationUnit.getConstructionProgress() / simulationUnit.getUnitType().getBuildTime());
+		if (!dead && this.simulationUnit.isConstructing()) {
+			this.instance.setFrameByRatio(
+					this.simulationUnit.getConstructionProgress() / this.simulationUnit.getUnitType().getBuildTime());
 		}
 	}
 

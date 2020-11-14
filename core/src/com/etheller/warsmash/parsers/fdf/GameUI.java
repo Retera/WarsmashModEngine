@@ -30,6 +30,7 @@ import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
 import com.etheller.warsmash.parsers.fdf.frames.FilterModeTextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
+import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
@@ -104,14 +105,29 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+		// TODO eliminate duplicate read of skin TXT!!
+		if (dataSource.has("war3mapSkin.txt")) {
+			try (InputStream miscDataTxtStream = dataSource.getResourceAsStream("war3mapSkin.txt")) {
+				skinsTable.readTXT(miscDataTxtStream, true);
+			}
+			catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 //		final Element main = skinsTable.get("Main");
 //		final String skinsField = main.getField("Skins");
 //		final String[] skins = skinsField.split(",");
 		final Element defaultSkin = skinsTable.get("Default");
 		final Element userSkin = skinsTable.get(skin);
+		final Element customSkin = skinsTable.get("CustomSkin");
 		for (final String key : defaultSkin.keySet()) {
 			if (!userSkin.hasField(key)) {
 				userSkin.setField(key, defaultSkin.getField(key));
+			}
+		}
+		if (customSkin != null) {
+			for (final String key : customSkin.keySet()) {
+				userSkin.setField(key, customSkin.getField(key));
 			}
 		}
 		return userSkin;
@@ -125,14 +141,29 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+		// TODO eliminate duplicate read of skin TXT!!
+		if (dataSource.has("war3mapSkin.txt")) {
+			try (InputStream miscDataTxtStream = dataSource.getResourceAsStream("war3mapSkin.txt")) {
+				skinsTable.readTXT(miscDataTxtStream, true);
+			}
+			catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 		final Element main = skinsTable.get("Main");
 		final String skinsField = main.getField("Skins");
 		final String[] skins = skinsField.split(",");
 		final Element defaultSkin = skinsTable.get("Default");
 		final Element userSkin = skinsTable.get(skins[skinIndex]);
+		final Element customSkin = skinsTable.get("CustomSkin");
 		for (final String key : defaultSkin.keySet()) {
 			if (!userSkin.hasField(key)) {
 				userSkin.setField(key, defaultSkin.getField(key));
+			}
+		}
+		if (customSkin != null) {
+			for (final String key : customSkin.keySet()) {
+				userSkin.setField(key, customSkin.getField(key));
 			}
 		}
 		return userSkin;
@@ -251,6 +282,17 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition));
 				}
 				inflatedFrame = simpleFrame;
+			}
+			else if ("SIMPLESTATUSBAR".equals(frameDefinition.getFrameType())) {
+				final boolean decorateFileNames = frameDefinition.has("DecorateFileNames")
+						|| ((parentDefinitionIfAvailable != null)
+								&& parentDefinitionIfAvailable.has("DecorateFileNames"));
+				final SimpleStatusBarFrame simpleStatusBarFrame = new SimpleStatusBarFrame(frameDefinition.getName(),
+						parent, decorateFileNames);
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					simpleStatusBarFrame.add(inflate(childDefinition, simpleStatusBarFrame, frameDefinition));
+				}
+				inflatedFrame = simpleStatusBarFrame;
 			}
 			else if ("SPRITE".equals(frameDefinition.getFrameType())) {
 				final SpriteFrame spriteFrame = new SpriteFrame(frameDefinition.getName(), parent, this.uiScene,
@@ -448,6 +490,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public Scene getUiScene() {
-		return uiScene;
+		return this.uiScene;
+	}
+
+	public FrameTemplateEnvironment getTemplates() {
+		return this.templates;
 	}
 }

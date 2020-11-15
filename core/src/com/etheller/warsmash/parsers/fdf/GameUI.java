@@ -212,9 +212,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		final FrameDefinition frameDefinition = this.templates.getFrame(name);
 		if (frameDefinition.getFrameClass() == FrameClass.Frame) {
 			if ("SPRITE".equals(frameDefinition.getFrameType())) {
-				final UIFrame inflated = inflate(frameDefinition, owner, null);
+				final UIFrame inflated = inflate(frameDefinition, owner, null,
+						frameDefinition.has("DecorateFileNames"));
 				if (this.autoPosition) {
-					inflated.positionBounds(this.viewport);
+					inflated.positionBounds(this, this.viewport);
 				}
 				add(inflated);
 				return inflated;
@@ -225,10 +226,15 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	public UIFrame createSimpleFrame(final String name, final UIFrame owner, final int createContext) {
 		final FrameDefinition frameDefinition = this.templates.getFrame(name);
-		if (frameDefinition.getFrameClass() == FrameClass.Frame) {
-			final UIFrame inflated = inflate(frameDefinition, owner, null);
+		if (frameDefinition == null) {
+			final SimpleFrame simpleFrame = new SimpleFrame(name, owner);
+			add(simpleFrame);
+			return simpleFrame;
+		}
+		else if (frameDefinition.getFrameClass() == FrameClass.Frame) {
+			final UIFrame inflated = inflate(frameDefinition, owner, null, frameDefinition.has("DecorateFileNames"));
 			if (this.autoPosition) {
-				inflated.positionBounds(this.viewport);
+				inflated.positionBounds(this, this.viewport);
 			}
 			add(inflated);
 			return inflated;
@@ -268,7 +274,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public UIFrame inflate(final FrameDefinition frameDefinition, final UIFrame parent,
-			final FrameDefinition parentDefinitionIfAvailable) {
+			final FrameDefinition parentDefinitionIfAvailable, final boolean inDecorateFileNames) {
 		UIFrame inflatedFrame = null;
 		BitmapFont frameFont = null;
 		Viewport viewport2 = this.viewport;
@@ -281,7 +287,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// mapping
 				this.nameToFrame.put(frameDefinition.getName(), simpleFrame);
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
-					simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition));
+					simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition,
+							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
 				}
 				inflatedFrame = simpleFrame;
 			}
@@ -292,7 +299,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				final SimpleStatusBarFrame simpleStatusBarFrame = new SimpleStatusBarFrame(frameDefinition.getName(),
 						parent, decorateFileNames);
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
-					simpleStatusBarFrame.add(inflate(childDefinition, simpleStatusBarFrame, frameDefinition));
+					simpleStatusBarFrame.add(inflate(childDefinition, simpleStatusBarFrame, frameDefinition,
+							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
 				}
 				inflatedFrame = simpleStatusBarFrame;
 			}
@@ -300,8 +308,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				final SpriteFrame spriteFrame = new SpriteFrame(frameDefinition.getName(), parent, this.uiScene,
 						viewport2);
 				String backgroundArt = frameDefinition.getString("BackgroundArt");
-				if (frameDefinition.has("DecorateFileNames") || ((parentDefinitionIfAvailable != null)
-						&& parentDefinitionIfAvailable.has("DecorateFileNames"))) {
+				if (frameDefinition.has("DecorateFileNames") || inDecorateFileNames) {
 					if (this.skin.hasField(backgroundArt)) {
 						backgroundArt = this.skin.getField(backgroundArt);
 					}
@@ -321,7 +328,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			simpleFrame.setSetAllPoints(true);
 			this.nameToFrame.put(frameDefinition.getName(), simpleFrame);
 			for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
-				simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition));
+				simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition,
+						inDecorateFileNames || childDefinition.has("DecorateFileNames")));
 			}
 			inflatedFrame = simpleFrame;
 			break;
@@ -365,8 +373,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			break;
 		case Texture:
 			final String file = frameDefinition.getString("File");
-			final boolean decorateFileNames = frameDefinition.has("DecorateFileNames")
-					|| ((parentDefinitionIfAvailable != null) && parentDefinitionIfAvailable.has("DecorateFileNames"));
+			final boolean decorateFileNames = frameDefinition.has("DecorateFileNames") || inDecorateFileNames;
 			final Vector4Definition texCoord = frameDefinition.getVector4("TexCoord");
 			final TextureFrame textureFrame = new TextureFrame(frameDefinition.getName(), parent, decorateFileNames,
 					texCoord);
@@ -432,7 +439,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		// TODO idk what inherits is doing yet, and I didn't implement createContext yet
 		// even though it looked like just mapping/indexing on int
 		final FrameDefinition frameDefinition = new FrameDefinition(FrameClass.Frame, typeName, name);
-		final UIFrame inflatedFrame = inflate(frameDefinition, owner, null);
+		final UIFrame inflatedFrame = inflate(frameDefinition, owner, null, frameDefinition.has("DecorateFileNames"));
 		add(inflatedFrame);
 		return inflatedFrame;
 	}
@@ -487,8 +494,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	@Override
-	public final void positionBounds(final Viewport viewport) {
-		innerPositionBounds(viewport);
+	public final void positionBounds(final GameUI gameUI, final Viewport viewport) {
+		innerPositionBounds(this, viewport);
 	}
 
 	@Override

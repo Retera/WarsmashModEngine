@@ -31,7 +31,7 @@ public class TextureFrame extends AbstractRenderableFrame {
 	}
 
 	@Override
-	protected void innerPositionBounds(final Viewport viewport) {
+	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
 	}
 
 	public void setTexture(String file, final GameUI gameUI) {

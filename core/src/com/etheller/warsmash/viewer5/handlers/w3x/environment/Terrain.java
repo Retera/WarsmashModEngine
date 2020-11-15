@@ -1383,7 +1383,7 @@ public class Terrain {
 
 			final SplatModel splatModel = new SplatModel(Gdx.gl30,
 					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset,
-					splat.unitMapping, false);
+					splat.unitMapping.isEmpty() ? null : splat.unitMapping, false);
 			splatModel.color[3] = splat.opacity;
 			this.uberSplatModels.put(path, splatModel);
 		}
@@ -1401,7 +1401,7 @@ public class Terrain {
 		SplatModel splatModel = this.uberSplatModels.get(path);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null),
-					new ArrayList<>(), this.centerOffset, null, false);
+					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false);
 			this.uberSplatModels.put(path, splatModel);
 		}
 		return splatModel.add(x - scale, y - scale, x + scale, y + scale, z, this.centerOffset);
@@ -1412,7 +1412,7 @@ public class Terrain {
 		SplatModel splatModel = this.uberSplatModels.get(texture);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(texture, PathSolver.DEFAULT, null),
-					new ArrayList<>(), this.centerOffset, null, false);
+					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false);
 			splatModel.color[3] = opacity;
 			this.uberSplatModels.put(texture, splatModel);
 		}

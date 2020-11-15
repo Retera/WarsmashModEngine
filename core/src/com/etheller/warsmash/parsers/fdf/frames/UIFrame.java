@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 
@@ -18,7 +19,7 @@ public interface UIFrame {
 
 	void setFramePointY(final FramePoint framePoint, final float y);
 
-	void positionBounds(final Viewport viewport);
+	void positionBounds(GameUI gameUI, final Viewport viewport);
 
 	void addAnchor(final AnchorDefinition anchorDefinition);
 

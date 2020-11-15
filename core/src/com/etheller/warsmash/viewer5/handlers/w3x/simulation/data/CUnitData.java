@@ -270,7 +270,10 @@ public class CUnitData {
 					final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK1_DMG_UPGRADE_AMT, 0);
 					final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK1_TARGET_COUNT, 0);
 					final float projectileArc = unitType.getFieldAsFloat(ATTACK1_PROJECTILE_ARC, 0);
-					final String projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
+					String projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
+					if ("_".equals(projectileArt) || projectileArt.isEmpty()) {
+						projectileArt = unitType.getFieldAsString(ATTACK2_MISSILE_ART, 0);
+					}
 					final boolean projectileHomingEnabled = unitType
 							.getFieldAsBoolean(ATTACK1_PROJECTILE_HOMING_ENABLED, 0);
 					final int projectileSpeed = unitType.getFieldAsInteger(ATTACK1_PROJECTILE_SPEED, 0);
@@ -319,7 +322,10 @@ public class CUnitData {
 					final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK2_DMG_UPGRADE_AMT, 0);
 					final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK2_TARGET_COUNT, 0);
 					final float projectileArc = unitType.getFieldAsFloat(ATTACK2_PROJECTILE_ARC, 0);
-					final String projectileArt = unitType.getFieldAsString(ATTACK2_MISSILE_ART, 0);
+					String projectileArt = unitType.getFieldAsString(ATTACK2_MISSILE_ART, 0);
+					if ("_".equals(projectileArt) || projectileArt.isEmpty()) {
+						projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
+					}
 					final boolean projectileHomingEnabled = unitType
 							.getFieldAsBoolean(ATTACK2_PROJECTILE_HOMING_ENABLED, 0);
 					final int projectileSpeed = unitType.getFieldAsInteger(ATTACK2_PROJECTILE_SPEED, 0);

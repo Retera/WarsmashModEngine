@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 
 public class StringFrame extends AbstractRenderableFrame {
@@ -69,7 +70,7 @@ public class StringFrame extends AbstractRenderableFrame {
 	}
 
 	@Override
-	protected void innerPositionBounds(final Viewport viewport) {
+	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
 	}
 
 }

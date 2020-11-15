@@ -284,7 +284,7 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final UIFrame frame = arguments.get(0).visit(ObjectJassValueVisitor.<UIFrame>getInstance());
-					frame.positionBounds(uiViewport);
+					frame.positionBounds(JUIEnvironment.this.gameUI, uiViewport);
 					return null;
 				}
 			});

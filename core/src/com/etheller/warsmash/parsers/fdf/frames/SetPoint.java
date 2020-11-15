@@ -1,8 +1,10 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 
-public class SetPoint {
+public class SetPoint implements FramePointAssignment {
 	private final FramePoint myPoint;
 	private final UIFrame other;
 	private final FramePoint otherPoint;
@@ -36,5 +38,15 @@ public class SetPoint {
 
 	public float getY() {
 		return this.y;
+	}
+
+	@Override
+	public float getX(final GameUI gameUI, final Viewport uiViewport) {
+		return this.other.getFramePointX(this.otherPoint) + this.x;
+	}
+
+	@Override
+	public float getY(final GameUI gameUI, final Viewport uiViewport) {
+		return this.other.getFramePointY(this.otherPoint) + this.y;
 	}
 }

@@ -98,11 +98,11 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	}
 
 	@Override
-	protected void innerPositionBounds(final Viewport viewport) {
-		this.iconFrame.positionBounds(viewport);
-		this.activeHighlightFrame.positionBounds(viewport);
-		this.cooldownFrame.positionBounds(viewport);
-		this.autocastFrame.positionBounds(viewport);
+	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
+		this.iconFrame.positionBounds(gameUI, viewport);
+		this.activeHighlightFrame.positionBounds(gameUI, viewport);
+		this.cooldownFrame.positionBounds(gameUI, viewport);
+		this.autocastFrame.positionBounds(gameUI, viewport);
 	}
 
 	@Override
@@ -147,15 +147,15 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 		}
 	}
 
-	public void mouseDown(final Viewport uiViewport) {
+	public void mouseDown(final GameUI gameUI, final Viewport uiViewport) {
 		this.iconFrame.setWidth(GameUI.convertX(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH));
 		this.iconFrame.setHeight(GameUI.convertY(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH));
-		positionBounds(uiViewport);
+		positionBounds(gameUI, uiViewport);
 	}
 
-	public void mouseUp(final Viewport uiViewport) {
+	public void mouseUp(final GameUI gameUI, final Viewport uiViewport) {
 		this.iconFrame.setWidth(GameUI.convertX(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));
 		this.iconFrame.setHeight(GameUI.convertY(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));
-		positionBounds(uiViewport);
+		positionBounds(gameUI, uiViewport);
 	}
 }

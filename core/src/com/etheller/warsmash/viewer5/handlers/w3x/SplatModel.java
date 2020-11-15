@@ -36,7 +36,7 @@ public class SplatModel {
 		this.color = new float[] { 1, 1, 1, 1 };
 
 		this.locations = locations;
-		if ((unitMapping != null) && (unitMapping.size() > 0)) {
+		if (unitMapping != null) {
 			this.splatInstances = new ArrayList<>();
 			for (int i = 0; i < unitMapping.size(); i++) {
 				this.splatInstances.add(new SplatMover(this));
@@ -46,7 +46,7 @@ public class SplatModel {
 			this.splatInstances = null;
 		}
 		loadBatches(gl, centerOffset);
-		if ((unitMapping != null) && (unitMapping.size() > 0)) {
+		if (unitMapping != null) {
 			if (this.splatInstances.size() != unitMapping.size()) {
 				throw new IllegalStateException();
 			}

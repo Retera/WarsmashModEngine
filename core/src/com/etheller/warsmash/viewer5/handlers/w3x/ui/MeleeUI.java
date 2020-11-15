@@ -24,7 +24,9 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
+import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
+import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
@@ -124,6 +126,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private StringFrame simpleBuildingDescriptionValue;
 	private StringFrame simpleBuildingBuildingActionLabel;
 	private SimpleStatusBarFrame simpleBuildingBuildTimeIndicator;
+	private final TextureFrame[] queueIconFrames = new TextureFrame[WarsmashConstants.BUILD_QUEUE_SIZE];
 
 	private UIFrame attack1Icon;
 	private TextureFrame attack1IconBackdrop;
@@ -167,6 +170,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final float widthRatioCorrection;
 	private final float heightRatioCorrection;
 	private CommandCardIcon mouseDownUIFrame;
+	private UIFrame smashSimpleInfoPanel;
+	private SimpleFrame smashAttack1IconWrapper;
+	private SimpleFrame smashAttack2IconWrapper;
+	private SimpleFrame smashArmorIconWrapper;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport,
 			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final Scene portraitScene,
@@ -291,15 +298,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.unitLifeText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitHitPointText", 0);
 		this.unitManaText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitManaPointText", 0);
 
-		// Create Simple Info Unit Detail
-		this.simpleInfoPanelUnitDetail = this.rootFrame.createSimpleFrame("SimpleInfoPanelUnitDetail", this.consoleUI,
-				0);
-		this.simpleInfoPanelUnitDetail
-				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, 0.0f)));
 		final float infoPanelUnitDetailWidth = GameUI.convertY(this.uiViewport, 0.180f);
-		this.simpleInfoPanelUnitDetail.setWidth(infoPanelUnitDetailWidth);
 		final float infoPanelUnitDetailHeight = GameUI.convertY(this.uiViewport, 0.105f);
-		this.simpleInfoPanelUnitDetail.setHeight(infoPanelUnitDetailHeight);
+		this.smashSimpleInfoPanel = this.rootFrame.createSimpleFrame("SmashSimpleInfoPanel", this.rootFrame, 0);
+		this.smashSimpleInfoPanel
+				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, 0.0f)));
+		this.smashSimpleInfoPanel.setWidth(infoPanelUnitDetailWidth);
+		this.smashSimpleInfoPanel.setHeight(infoPanelUnitDetailHeight);
+
+		// Create Simple Info Unit Detail
+		this.simpleInfoPanelUnitDetail = this.rootFrame.createSimpleFrame("SimpleInfoPanelUnitDetail",
+				this.smashSimpleInfoPanel, 0);
 		this.simpleNameValue = (StringFrame) this.rootFrame.getFrameByName("SimpleNameValue", 0);
 		this.simpleClassValue = (StringFrame) this.rootFrame.getFrameByName("SimpleClassValue", 0);
 		this.simpleBuildingActionLabel = (StringFrame) this.rootFrame.getFrameByName("SimpleBuildingActionLabel", 0);
@@ -316,11 +325,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		// Create Simple Info Panel Building Detail
 		this.simpleInfoPanelBuildingDetail = this.rootFrame.createSimpleFrame("SimpleInfoPanelBuildingDetail",
-				this.consoleUI, 0);
-		this.simpleInfoPanelBuildingDetail
-				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, 0.0f)));
-		this.simpleInfoPanelBuildingDetail.setWidth(infoPanelUnitDetailWidth);
-		this.simpleInfoPanelBuildingDetail.setHeight(infoPanelUnitDetailHeight);
+				this.smashSimpleInfoPanel, 0);
 		this.simpleBuildingNameValue = (StringFrame) this.rootFrame.getFrameByName("SimpleBuildingNameValue", 0);
 		this.simpleBuildingDescriptionValue = (StringFrame) this.rootFrame
 				.getFrameByName("SimpleBuildingDescriptionValue", 0);
@@ -336,28 +341,59 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.simpleBuildingBuildTimeIndicator.setWidth(buildTimeIndicatorWidth);
 		this.simpleBuildingBuildTimeIndicator.setHeight(buildTimeIndicatorHeight);
 		this.simpleInfoPanelBuildingDetail.setVisible(false);
+		final TextureFrame simpleBuildQueueBackdrop = (TextureFrame) this.rootFrame
+				.getFrameByName("SimpleBuildQueueBackdrop", 0);
+		simpleBuildQueueBackdrop.setWidth(infoPanelUnitDetailWidth);
+		simpleBuildQueueBackdrop.setHeight(infoPanelUnitDetailWidth * 0.5f);
 
-		this.attack1Icon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", this.simpleInfoPanelUnitDetail,
-				0);
-		this.attack1Icon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
+		this.queueIconFrames[0] = this.rootFrame.createTextureFrame("SmashBuildQueueIcon0", this.smashSimpleInfoPanel,
+				false, new Vector4Definition(0, 1, 0, 1));
+		this.queueIconFrames[0].addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
+				(infoPanelUnitDetailWidth * 15) / 256, (infoPanelUnitDetailWidth * 66) / 256));
+		this.queueIconFrames[0].setWidth((infoPanelUnitDetailWidth * 38) / 256);
+		this.queueIconFrames[0].setHeight((infoPanelUnitDetailWidth * 38) / 256);
+
+		for (int i = 1; i < this.queueIconFrames.length; i++) {
+			this.queueIconFrames[i] = this.rootFrame.createTextureFrame("SmashBuildQueueIcon" + i,
+					this.smashSimpleInfoPanel, false, new Vector4Definition(0, 1, 0, 1));
+			this.queueIconFrames[i].addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
+					(infoPanelUnitDetailWidth * (13 + (40 * (i - 1)))) / 256, (infoPanelUnitDetailWidth * 24) / 256));
+			this.queueIconFrames[i].setWidth((infoPanelUnitDetailWidth * 29) / 256);
+			this.queueIconFrames[i].setHeight((infoPanelUnitDetailWidth * 29) / 256);
+		}
+
+		this.smashAttack1IconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconDamage",
+				this.simpleInfoPanelUnitDetail, 0);
+		this.smashAttack1IconWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
 				FramePoint.TOPLEFT, 0, GameUI.convertY(this.uiViewport, -0.030125f)));
+		this.smashAttack1IconWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
+		this.smashAttack1IconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.030125f));
+		this.attack1Icon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", this.smashAttack1IconWrapper,
+				0);
 		this.attack1IconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 0);
 		this.attack1InfoPanelIconValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconValue", 0);
 		this.attack1InfoPanelIconLevel = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconLevel", 0);
 
-		this.attack2Icon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", this.simpleInfoPanelUnitDetail,
-				1);
-		this.attack2Icon
+		this.smashAttack2IconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconDamage",
+				this.simpleInfoPanelUnitDetail, 0);
+		this.smashAttack2IconWrapper
 				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
 						GameUI.convertX(this.uiViewport, 0.1f), GameUI.convertY(this.uiViewport, -0.030125f)));
+		this.smashAttack2IconWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
+		this.smashAttack2IconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.030125f));
+		this.attack2Icon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", this.smashAttack2IconWrapper,
+				1);
 		this.attack2IconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 1);
 		this.attack2InfoPanelIconValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconValue", 1);
 		this.attack2InfoPanelIconLevel = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconLevel", 1);
 
-		this.armorIcon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconArmor", this.simpleInfoPanelUnitDetail,
-				1);
-		this.armorIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-				GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.06025f)));
+		this.smashArmorIconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconArmor",
+				this.simpleInfoPanelUnitDetail, 0);
+		this.smashArmorIconWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
+				FramePoint.TOPLEFT, GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.06025f)));
+		this.smashArmorIconWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
+		this.smashArmorIconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.030125f));
+		this.armorIcon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconArmor", this.smashArmorIconWrapper, 0);
 		this.armorIconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 0);
 		this.armorInfoPanelIconValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconValue", 0);
 		this.armorInfoPanelIconLevel = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconLevel", 0);
@@ -423,7 +459,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
 
-		this.rootFrame.positionBounds(this.uiViewport);
+		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 		selectUnit(null);
 	}
 
@@ -720,10 +756,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.attack2Icon.setVisible(false);
 			this.attack1InfoPanelIconLevel.setText("");
 			this.attack2InfoPanelIconLevel.setText("");
-			this.simpleBuildingActionLabel.setText("");
+			this.simpleBuildingBuildingActionLabel.setText("");
+			this.simpleBuildingNameValue.setText("");
 			this.armorIcon.setVisible(false);
 			this.armorInfoPanelIconLevel.setText("");
 			this.simpleBuildTimeIndicator.setVisible(false);
+			this.simpleBuildingBuildTimeIndicator.setVisible(false);
+			this.simpleInfoPanelBuildingDetail.setVisible(false);
+			this.simpleInfoPanelUnitDetail.setVisible(false);
+			for (final TextureFrame queueIconFrame : this.queueIconFrames) {
+				queueIconFrame.setVisible(false);
+			}
 		}
 		else {
 			unit.getSimulationUnit().addStateListener(this);
@@ -744,6 +787,28 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.unitManaText.setText("");
 		}
 		if (simulationUnit.getBuildQueue()[0] != null) {
+			for (int i = 0; i < this.queueIconFrames.length; i++) {
+				final QueueItemType queueItemType = simulationUnit.getBuildQueueTypes()[i];
+				if (queueItemType == null) {
+					this.queueIconFrames[i].setVisible(false);
+				}
+				else {
+					this.queueIconFrames[i].setVisible(true);
+					switch (queueItemType) {
+					case RESEARCH:
+						final IconUI upgradeUI = this.war3MapViewer.getAbilityDataUI()
+								.getUpgradeUI(simulationUnit.getBuildQueue()[i], 0);
+						this.queueIconFrames[i].setTexture(upgradeUI.getIcon());
+						break;
+					case UNIT:
+					default:
+						final IconUI unitUI = this.war3MapViewer.getAbilityDataUI()
+								.getUnitUI(simulationUnit.getBuildQueue()[i]);
+						this.queueIconFrames[i].setTexture(unitUI.getIcon());
+						break;
+					}
+				}
+			}
 			this.simpleInfoPanelBuildingDetail.setVisible(true);
 			this.simpleInfoPanelUnitDetail.setVisible(false);
 			this.simpleBuildingNameValue.setText(simulationUnit.getUnitType().getName());
@@ -764,6 +829,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.armorIcon.setVisible(false);
 		}
 		else {
+			for (final TextureFrame queueIconFrame : this.queueIconFrames) {
+				queueIconFrame.setVisible(false);
+			}
 			this.simpleInfoPanelBuildingDetail.setVisible(false);
 			this.simpleInfoPanelUnitDetail.setVisible(true);
 			this.simpleNameValue.setText(simulationUnit.getUnitType().getName());
@@ -804,18 +872,21 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.attack2Icon.setVisible(false);
 				}
 
-				this.armorIcon.addSetPoint(
+				this.smashArmorIconWrapper.addSetPoint(
 						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
 								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.06025f)));
-				this.armorIcon.positionBounds(this.uiViewport);
+				this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
+				this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
 			}
 			else {
 				this.attack1Icon.setVisible(false);
 				this.attack2Icon.setVisible(false);
 
-				this.armorIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
-						FramePoint.TOPLEFT, 0, GameUI.convertY(this.uiViewport, -0.030125f)));
-				this.armorIcon.positionBounds(this.uiViewport);
+				this.smashArmorIconWrapper.addSetPoint(
+						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
+								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.030125f)));
+				this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
+				this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
 			}
 
 			localArmorIcon.setVisible(!constructing);
@@ -824,6 +895,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (constructing) {
 				this.simpleBuildingActionLabel
 						.setText(this.rootFrame.getTemplates().getDecoratedString("CONSTRUCTING"));
+				this.queueIconFrames[0].setVisible(true);
+				this.queueIconFrames[0].setTexture(this.war3MapViewer.getAbilityDataUI()
+						.getUnitUI(this.selectedUnit.getSimulationUnit().getTypeId()).getIcon());
 			}
 			else {
 				this.simpleBuildingActionLabel.setText("");
@@ -1204,7 +1278,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		else {
 			if (clickedUIFrame instanceof CommandCardIcon) {
 				this.mouseDownUIFrame = (CommandCardIcon) clickedUIFrame;
-				this.mouseDownUIFrame.mouseDown(this.uiViewport);
+				this.mouseDownUIFrame.mouseDown(this.rootFrame, this.uiViewport);
 			}
 		}
 		return false;
@@ -1219,7 +1293,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.mouseDownUIFrame.onClick(button);
 				this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0);
 			}
-			this.mouseDownUIFrame.mouseUp(this.uiViewport);
+			this.mouseDownUIFrame.mouseUp(this.rootFrame, this.uiViewport);
 		}
 		this.mouseDownUIFrame = null;
 		return false;

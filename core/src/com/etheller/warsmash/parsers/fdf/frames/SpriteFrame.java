@@ -70,7 +70,7 @@ public class SpriteFrame extends AbstractRenderableFrame {
 	}
 
 	@Override
-	protected void innerPositionBounds(final Viewport viewport) {
+	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
 		updateInstanceLocation(viewport);
 	}
 

@@ -1,27 +1,35 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.EnumMap;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 
 public abstract class AbstractRenderableFrame implements UIFrame {
+	private static final FramePoint[] LEFT_ANCHOR_PRIORITY = { FramePoint.LEFT, FramePoint.TOPLEFT,
+			FramePoint.BOTTOMLEFT };
+	private static final FramePoint[] RIGHT_ANCHOR_PRIORITY = { FramePoint.RIGHT, FramePoint.TOPRIGHT,
+			FramePoint.BOTTOMRIGHT };
+	private static final FramePoint[] CENTER_HORIZ_ANCHOR_PRIORITY = { FramePoint.CENTER, FramePoint.TOP,
+			FramePoint.BOTTOM };
+	private static final FramePoint[] CENTER_VERT_ANCHOR_PRIORITY = { FramePoint.CENTER, FramePoint.LEFT,
+			FramePoint.RIGHT };
+	private static final FramePoint[] TOP_ANCHOR_PRIORITY = { FramePoint.TOP, FramePoint.TOPLEFT, FramePoint.TOPRIGHT };
+	private static final FramePoint[] BOTTOM_ANCHOR_PRIORITY = { FramePoint.BOTTOM, FramePoint.BOTTOMLEFT,
+			FramePoint.BOTTOMRIGHT };
 	private static final boolean DEBUG_LOG = true;
 	protected String name;
 	protected UIFrame parent;
 	protected boolean visible = true;
 	protected int level;
 	protected final Rectangle renderBounds = new Rectangle(0, 0, 0, 0); // in libgdx rendering space
-	protected List<AnchorDefinition> anchors = new ArrayList<>();
-	protected List<SetPoint> setPoints = new ArrayList<>();
-	private boolean setAllPoints;
+	private final EnumMap<FramePoint, FramePointAssignment> framePointToAssignment = new EnumMap<>(FramePoint.class);
 
 	public AbstractRenderableFrame(final String name, final UIFrame parent) {
 		this.name = name;
@@ -30,7 +38,11 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	@Override
 	public void setSetAllPoints(final boolean setAllPoints) {
-		this.setAllPoints = setAllPoints;
+		for (final FramePoint framePoint : FramePoint.values()) {
+			if (!this.framePointToAssignment.containsKey(framePoint)) {
+				this.framePointToAssignment.put(framePoint, new SetPoint(framePoint, this.parent, framePoint, 0, 0));
+			}
+		}
 	}
 
 	@Override
@@ -43,88 +55,38 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		this.renderBounds.height = height;
 	}
 
-	private boolean hasLeftAnchor() {
-		for (final AnchorDefinition anchor : this.anchors) {
-			switch (anchor.getMyPoint()) {
-			case CENTER:
-			case BOTTOM:
-			case TOP:
-			case BOTTOMRIGHT:
-			case RIGHT:
-			case TOPRIGHT:
-				break;
-			case BOTTOMLEFT:
-			case LEFT:
-			case TOPLEFT:
-				return true;
-			default:
-				break;
+	private FramePointAssignment getByPriority(final FramePoint[] priorities) {
+		for (final FramePoint priorityFramePoint : priorities) {
+			final FramePointAssignment framePointAssignment = this.framePointToAssignment.get(priorityFramePoint);
+			if (framePointAssignment != null) {
+				return framePointAssignment;
 			}
 		}
-		return false;
+		return null;
 	}
 
-	private boolean hasRightAnchor() {
-		for (final AnchorDefinition anchor : this.anchors) {
-			switch (anchor.getMyPoint()) {
-			case CENTER:
-			case BOTTOM:
-			case TOP:
-			case BOTTOMLEFT:
-			case LEFT:
-			case TOPLEFT:
-				break;
-			case BOTTOMRIGHT:
-			case RIGHT:
-			case TOPRIGHT:
-				return true;
-			default:
-				break;
-			}
-		}
-		return false;
+	private FramePointAssignment getLeftAnchor() {
+		return getByPriority(LEFT_ANCHOR_PRIORITY);
 	}
 
-	private boolean hasTopAnchor() {
-		for (final AnchorDefinition anchor : this.anchors) {
-			switch (anchor.getMyPoint()) {
-			case CENTER:
-			case BOTTOM:
-			case BOTTOMLEFT:
-			case LEFT:
-			case BOTTOMRIGHT:
-			case RIGHT:
-				break;
-			case TOP:
-			case TOPLEFT:
-			case TOPRIGHT:
-				return true;
-			default:
-				break;
-			}
-		}
-		return false;
+	private FramePointAssignment getRightAnchor() {
+		return getByPriority(RIGHT_ANCHOR_PRIORITY);
 	}
 
-	private boolean hasBottomAnchor() {
-		for (final AnchorDefinition anchor : this.anchors) {
-			switch (anchor.getMyPoint()) {
-			case CENTER:
-			case LEFT:
-			case RIGHT:
-			case TOP:
-			case TOPLEFT:
-			case TOPRIGHT:
-				break;
-			case BOTTOM:
-			case BOTTOMLEFT:
-			case BOTTOMRIGHT:
-				return true;
-			default:
-				break;
-			}
-		}
-		return false;
+	private FramePointAssignment getTopAnchor() {
+		return getByPriority(TOP_ANCHOR_PRIORITY);
+	}
+
+	private FramePointAssignment getBottomAnchor() {
+		return getByPriority(BOTTOM_ANCHOR_PRIORITY);
+	}
+
+	private FramePointAssignment getCenterHorizontalAnchor() {
+		return getByPriority(CENTER_HORIZ_ANCHOR_PRIORITY);
+	}
+
+	private FramePointAssignment getCenterVerticalAnchor() {
+		return getByPriority(CENTER_VERT_ANCHOR_PRIORITY);
 	}
 
 	@Override
@@ -162,7 +124,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		case BOTTOMLEFT:
 		case LEFT:
 		case TOPLEFT:
-			if (hasRightAnchor()) {
+			if (getRightAnchor() != null) {
 				final float oldRightX = this.renderBounds.x + this.renderBounds.width;
 				this.renderBounds.x = x;
 				this.renderBounds.width = oldRightX - x;
@@ -175,7 +137,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		case BOTTOMRIGHT:
 		case RIGHT:
 		case TOPRIGHT:
-			if (hasLeftAnchor()) {
+			if (getLeftAnchor() != null) {
 				this.renderBounds.width = x - this.renderBounds.x;
 			}
 			else {
@@ -222,7 +184,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		case TOPLEFT:
 		case TOP:
 		case TOPRIGHT:
-			if (hasBottomAnchor()) {
+			if (getBottomAnchor() != null) {
 				this.renderBounds.height = y - this.renderBounds.y;
 			}
 			else {
@@ -232,7 +194,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		case BOTTOMLEFT:
 		case BOTTOM:
 		case BOTTOMRIGHT:
-			if (hasTopAnchor()) {
+			if (getTopAnchor() != null) {
 				final float oldBottomY = this.renderBounds.y + this.renderBounds.height;
 				this.renderBounds.y = y;
 				this.renderBounds.height = oldBottomY - y;
@@ -248,72 +210,83 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	@Override
 	public void addAnchor(final AnchorDefinition anchorDefinition) {
-		this.anchors.add(anchorDefinition);
+		this.framePointToAssignment.put(anchorDefinition.getMyPoint(), new SetPoint(anchorDefinition.getMyPoint(),
+				this.parent, anchorDefinition.getMyPoint(), anchorDefinition.getX(), anchorDefinition.getY()));
 	}
 
 	@Override
 	public void addSetPoint(final SetPoint setPointDefinition) {
-		// TODO this is O(N) in the number of SetPoints, and that
-		// is not good performance.
-		final Iterator<SetPoint> iterator = this.setPoints.iterator();
-		while (iterator.hasNext()) {
-			final SetPoint setPoint = iterator.next();
-			if (setPoint.getMyPoint() == setPointDefinition.getMyPoint()) {
-				iterator.remove();
-			}
-		}
-		this.setPoints.add(setPointDefinition);
+		this.framePointToAssignment.put(setPointDefinition.getMyPoint(), setPointDefinition);
 	}
 
 	@Override
-	public void positionBounds(final Viewport viewport) {
+	public void positionBounds(final GameUI gameUI, final Viewport viewport) {
 		if (this.parent == null) {
 			// TODO this is a bit of a hack, remove later
 			return;
 		}
-		if (this.anchors.isEmpty() && this.setPoints.isEmpty()) {
+		if (this.framePointToAssignment.isEmpty()) {
 			this.renderBounds.x = this.parent.getFramePointX(FramePoint.LEFT);
 			this.renderBounds.y = this.parent.getFramePointY(FramePoint.BOTTOM);
 		}
 		else {
-			for (final AnchorDefinition anchor : this.anchors) {
-				final float parentPointX = this.parent.getFramePointX(anchor.getMyPoint());
-				final float parentPointY = this.parent.getFramePointY(anchor.getMyPoint());
-				setFramePointX(anchor.getMyPoint(), parentPointX + anchor.getX());
-				setFramePointY(anchor.getMyPoint(), parentPointY + anchor.getY());
-				if (DEBUG_LOG) {
-					System.out.println(getClass().getSimpleName() + ":" + this.name + " anchoring to: " + anchor);
+			final FramePointAssignment leftAnchor = getLeftAnchor();
+			final FramePointAssignment rightAnchor = getRightAnchor();
+			final FramePointAssignment topAnchor = getTopAnchor();
+			final FramePointAssignment bottomAnchor = getBottomAnchor();
+			final FramePointAssignment centerHorizontalAnchor = getCenterHorizontalAnchor();
+			final FramePointAssignment centerVerticalAnchor = getCenterVerticalAnchor();
+			if (leftAnchor != null) {
+				this.renderBounds.x = leftAnchor.getX(gameUI, viewport);
+				if (this.renderBounds.width == 0) {
+					if (rightAnchor != null) {
+						this.renderBounds.width = rightAnchor.getX(gameUI, viewport) - this.renderBounds.x;
+					}
+					else if (centerHorizontalAnchor != null) {
+						this.renderBounds.width = (centerHorizontalAnchor.getX(gameUI, viewport) - this.renderBounds.x)
+								* 2;
+					}
 				}
 			}
-			for (final SetPoint setPoint : this.setPoints) {
-				final UIFrame other = setPoint.getOther();
-				if (other == null) {
-					continue;
+			else if (rightAnchor != null) {
+				this.renderBounds.x = rightAnchor.getX(gameUI, viewport) - this.renderBounds.width;
+				if (centerHorizontalAnchor != null) {
+					this.renderBounds.width = (this.renderBounds.x - centerHorizontalAnchor.getX(gameUI, viewport)) * 2;
 				}
-				final float parentPointX = other.getFramePointX(setPoint.getOtherPoint());
-				final float parentPointY = other.getFramePointY(setPoint.getOtherPoint());
-				setFramePointX(setPoint.getMyPoint(), parentPointX + setPoint.getX());
-				setFramePointY(setPoint.getMyPoint(), parentPointY + setPoint.getY());
 			}
-		}
-		if (this.setAllPoints) {
-			if (this.renderBounds.width == 0) {
-				this.renderBounds.width = this.parent.getFramePointX(FramePoint.RIGHT)
-						- this.parent.getFramePointX(FramePoint.LEFT);
+			else if (centerHorizontalAnchor != null) {
+				this.renderBounds.x = centerHorizontalAnchor.getX(gameUI, viewport) - (this.renderBounds.width / 2);
 			}
-			if (this.renderBounds.height == 0) {
-				this.renderBounds.height = this.parent.getFramePointY(FramePoint.TOP)
-						- this.parent.getFramePointY(FramePoint.BOTTOM);
+			if (bottomAnchor != null) {
+				this.renderBounds.y = bottomAnchor.getY(gameUI, viewport);
+				if (this.renderBounds.height == 0) {
+					if (topAnchor != null) {
+						this.renderBounds.height = topAnchor.getY(gameUI, viewport) - this.renderBounds.y;
+					}
+					else if (centerVerticalAnchor != null) {
+						this.renderBounds.height = (centerVerticalAnchor.getY(gameUI, viewport) - this.renderBounds.y)
+								* 2;
+					}
+				}
+			}
+			else if (topAnchor != null) {
+				this.renderBounds.y = topAnchor.getY(gameUI, viewport) - this.renderBounds.height;
+				if (centerVerticalAnchor != null) {
+					this.renderBounds.height = (this.renderBounds.y - centerVerticalAnchor.getY(gameUI, viewport)) * 2;
+				}
+			}
+			else if (centerVerticalAnchor != null) {
+				this.renderBounds.y = centerVerticalAnchor.getY(gameUI, viewport) - (this.renderBounds.height / 2);
 			}
 		}
 		if (DEBUG_LOG) {
 			System.out.println(getClass().getSimpleName() + ":" + this.name + ":" + hashCode()
 					+ " finishing position bounds: " + this.renderBounds);
 		}
-		innerPositionBounds(viewport);
+		innerPositionBounds(gameUI, viewport);
 	}
 
-	protected abstract void innerPositionBounds(final Viewport viewport);
+	protected abstract void innerPositionBounds(GameUI gameUI, final Viewport viewport);
 
 	public boolean isVisible() {
 		return this.visible;

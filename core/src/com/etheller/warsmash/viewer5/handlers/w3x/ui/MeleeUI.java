@@ -927,15 +927,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final boolean autoCastActive, final boolean menuButton) {
 		int x = Math.max(0, Math.min(COMMAND_CARD_WIDTH - 1, buttonPositionX));
 		int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
-		while (this.commandCard[y][x].isVisible() && (y < COMMAND_CARD_HEIGHT) && (x < COMMAND_CARD_WIDTH)) {
+		while ((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT) && this.commandCard[y][x].isVisible()) {
 			x++;
 			if (x >= COMMAND_CARD_WIDTH) {
 				x = 0;
 				y++;
 			}
 		}
-		this.commandCard[y][x].setCommandButtonData(icon, abilityHandleId, orderId, autoCastId, active, autoCastActive,
-				menuButton);
+		if((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT)) {
+			this.commandCard[y][x].setCommandButtonData(icon, abilityHandleId, orderId, autoCastId, active, autoCastActive,
+					menuButton);
+		}
 	}
 
 	public void resize(final Rectangle viewport) {

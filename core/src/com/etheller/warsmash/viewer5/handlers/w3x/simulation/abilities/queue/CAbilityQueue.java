@@ -4,7 +4,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -12,7 +11,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -37,7 +38,7 @@ public final class CAbilityQueue extends AbstractCAbility {
 	}
 
 	@Override
-	public void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		if (this.unitsTrained.contains(orderIdAsRawtype) || this.researchesAvailable.contains(orderIdAsRawtype)) {
@@ -73,8 +74,8 @@ public final class CAbilityQueue extends AbstractCAbility {
 	}
 
 	@Override
-	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final Vector2 target,
-			final AbilityTargetCheckReceiver<Vector2> receiver) {
+	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
@@ -82,6 +83,9 @@ public final class CAbilityQueue extends AbstractCAbility {
 	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		if (this.unitsTrained.contains(new War3ID(orderId)) || this.researchesAvailable.contains(new War3ID(orderId))) {
+			receiver.targetOk(null);
+		}
+		else if (orderId == OrderIds.cancel) {
 			receiver.targetOk(null);
 		}
 		else {
@@ -110,18 +114,24 @@ public final class CAbilityQueue extends AbstractCAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final Vector2 point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
-		final War3ID rawcode = new War3ID(orderId);
-		if (this.unitsTrained.contains(rawcode)) {
-			caster.queueTrainingUnit(rawcode);
+		if (orderId == OrderIds.cancel) {
+			caster.cancelBuildQueueItem(game, 0);
 		}
-		else if (this.researchesAvailable.contains(rawcode)) {
-			caster.queueResearch(rawcode);
+		else {
+			final War3ID rawcode = new War3ID(orderId);
+			if (this.unitsTrained.contains(rawcode)) {
+				caster.queueTrainingUnit(rawcode);
+			}
+			else if (this.researchesAvailable.contains(rawcode)) {
+				caster.queueResearch(rawcode);
+			}
 		}
 		return null;
 	}

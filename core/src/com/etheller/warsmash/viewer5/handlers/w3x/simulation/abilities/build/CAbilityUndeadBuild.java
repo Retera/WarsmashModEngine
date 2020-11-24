@@ -2,12 +2,12 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 
 import java.util.List;
 
-import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
@@ -42,7 +42,7 @@ public class CAbilityUndeadBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final Vector2 point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final AbilityPointTarget point) {
 		// TODO Auto-generated method stub
 		return null;
 	}

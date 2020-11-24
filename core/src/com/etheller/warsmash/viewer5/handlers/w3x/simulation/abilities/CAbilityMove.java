@@ -1,9 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
-import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
@@ -13,15 +13,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 
-public class CAbilityMove implements CAbility {
-	private final int handleId;
+public class CAbilityMove extends AbstractCAbility {
 
 	public CAbilityMove(final int handleId) {
-		this.handleId = handleId;
+		super(handleId);
 	}
 
 	@Override
-	public void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
@@ -46,8 +45,8 @@ public class CAbilityMove implements CAbility {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final Vector2 target,
-			final AbilityTargetCheckReceiver<Vector2> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		switch (orderId) {
 		case OrderIds.smart:
 		case OrderIds.move:
@@ -96,12 +95,13 @@ public class CAbilityMove implements CAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final Vector2 point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityPointTarget point) {
 		if (orderId == OrderIds.patrol) {
 			return caster.getPatrolBehavior().reset(point);
 		}
 		else {
-			return caster.getMoveBehavior().reset(OrderIds.move, point.x, point.y);
+			return caster.getMoveBehavior().reset(OrderIds.move, point);
 		}
 	}
 
@@ -113,11 +113,6 @@ public class CAbilityMove implements CAbility {
 	@Override
 	public <T> T visit(final CAbilityVisitor<T> visitor) {
 		return visitor.accept(this);
-	}
-
-	@Override
-	public int getHandleId() {
-		return this.handleId;
 	}
 
 }

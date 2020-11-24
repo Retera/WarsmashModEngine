@@ -12,4 +12,6 @@ public interface AbilityActivationReceiver {
 	void casterMovementDisabled();
 
 	void cargoCapacityUnavailable();
+
+	void disabled();
 }

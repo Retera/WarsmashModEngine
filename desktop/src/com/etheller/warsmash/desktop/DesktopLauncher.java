@@ -90,14 +90,14 @@ public class DesktopLauncher {
 //		config.vSyncEnabled = false;
 //		config.foregroundFPS = 0;
 //		config.backgroundFPS = 0;
+		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
+		config.width = desktopDisplayMode.width;
+		config.height = desktopDisplayMode.height;
 		if ((arg.length > 0) && "-windowed".equals(arg[0])) {
 			config.fullscreen = false;
 		}
 		else {
 			config.fullscreen = true;
-			final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
-			config.width = desktopDisplayMode.width;
-			config.height = desktopDisplayMode.height;
 		}
 		new LwjglApplication(new WarsmashGdxMapGame(warsmashIni), config);
 	}

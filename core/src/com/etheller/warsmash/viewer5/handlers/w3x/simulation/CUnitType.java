@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 
 /**
  * The quick (symbol table instead of map) lookup for unit type values that we
@@ -44,6 +45,8 @@ public class CUnitType {
 	private final int goldCost;
 	private final int lumberCost;
 	private final int buildTime;
+	private final EnumSet<CBuildingPathingType> preventedPathingTypes;
+	private final EnumSet<CBuildingPathingType> requiredPathingTypes;
 
 	public CUnitType(final String name, final boolean isBldg, final MovementType movementType,
 			final float defaultFlyingHeight, final float collisionSize,
@@ -52,7 +55,9 @@ public class CUnitType {
 			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs,
 			final float defaultAcquisitionRange, final float minimumAttackRange, final List<War3ID> structuresBuilt,
 			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final CUnitRace unitRace,
-			final int goldCost, final int lumberCost, final int buildTime) {
+			final int goldCost, final int lumberCost, final int buildTime,
+			final EnumSet<CBuildingPathingType> preventedPathingTypes,
+			final EnumSet<CBuildingPathingType> requiredPathingTypes) {
 		this.name = name;
 		this.building = isBldg;
 		this.movementType = movementType;
@@ -77,6 +82,8 @@ public class CUnitType {
 		this.goldCost = goldCost;
 		this.lumberCost = lumberCost;
 		this.buildTime = buildTime;
+		this.preventedPathingTypes = preventedPathingTypes;
+		this.requiredPathingTypes = requiredPathingTypes;
 	}
 
 	public String getName() {
@@ -173,5 +180,13 @@ public class CUnitType {
 
 	public int getBuildTime() {
 		return this.buildTime;
+	}
+
+	public EnumSet<CBuildingPathingType> getPreventedPathingTypes() {
+		return this.preventedPathingTypes;
+	}
+
+	public EnumSet<CBuildingPathingType> getRequiredPathingTypes() {
+		return this.requiredPathingTypes;
 	}
 }

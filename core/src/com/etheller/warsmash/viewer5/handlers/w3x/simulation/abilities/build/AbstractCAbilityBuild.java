@@ -5,7 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -13,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.menu.CAbilityMenu;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -31,7 +31,7 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 	}
 
 	@Override
-	public void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		if (this.structuresBuilt.contains(orderIdAsRawtype)) {
@@ -67,8 +67,8 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 	}
 
 	@Override
-	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final Vector2 target,
-			final AbilityTargetCheckReceiver<Vector2> receiver) {
+	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (this.structuresBuilt.contains(new War3ID(orderId))) {
 			receiver.targetOk(target);
 		}

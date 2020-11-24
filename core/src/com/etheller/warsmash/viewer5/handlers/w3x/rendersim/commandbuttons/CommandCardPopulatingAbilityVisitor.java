@@ -19,7 +19,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
@@ -32,29 +35,38 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	private AbilityDataUI abilityDataUI;
 	private int menuBaseOrderId;
 	private boolean hasStop;
-	private boolean underConstruction;
 
 	public CommandCardPopulatingAbilityVisitor reset(final CSimulation game, final CUnit unit,
 			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
-			final int menuBaseOrderId, final boolean underConstruction) {
+			final int menuBaseOrderId) {
 		this.game = game;
 		this.unit = unit;
 		this.commandButtonListener = commandButtonListener;
 		this.abilityDataUI = abilityDataUI;
 		this.menuBaseOrderId = menuBaseOrderId;
-		this.underConstruction = underConstruction;
 		this.hasStop = false;
 		return this;
 	}
 
 	@Override
 	public Void accept(final CAbilityAttack ability) {
-		if ((this.menuBaseOrderId == 0) && !this.underConstruction) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			addCommandButton(ability, this.abilityDataUI.getAttackUI(), ability.getHandleId(), OrderIds.attack, 0,
 					false, false);
+			boolean attackGroundEnabled = false;
+			for (final CUnitAttack attack : this.unit.getUnitType().getAttacks()) {
+				if (attack.getWeaponType().isAttackGroundSupported()) {
+					attackGroundEnabled = true;
+					break;
+				}
+			}
+			if (attackGroundEnabled) {
+				addCommandButton(ability, this.abilityDataUI.getAttackGroundUI(), ability.getHandleId(),
+						OrderIds.attackground, 0, false, false);
+			}
 			if (!this.hasStop) {
 				this.hasStop = true;
-				addCommandButton(null, this.abilityDataUI.getStopUI(), 0, OrderIds.stop, 0, false, false);
+				addCommandButton(ability, this.abilityDataUI.getStopUI(), 0, OrderIds.stop, 0, false, false);
 			}
 		}
 		return null;
@@ -62,7 +74,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityMove ability) {
-		if ((this.menuBaseOrderId == 0) && !this.underConstruction) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			addCommandButton(ability, this.abilityDataUI.getMoveUI(), ability.getHandleId(), OrderIds.move, 0, false,
 					false);
 			addCommandButton(ability, this.abilityDataUI.getHoldPosUI(), ability.getHandleId(), OrderIds.holdposition,
@@ -71,7 +83,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					false, false);
 			if (!this.hasStop) {
 				this.hasStop = true;
-				addCommandButton(null, this.abilityDataUI.getStopUI(), 0, OrderIds.stop, 0, false, false);
+				addCommandButton(ability, this.abilityDataUI.getStopUI(), 0, OrderIds.stop, 0, false, false);
 			}
 		}
 		return null;
@@ -79,7 +91,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityGeneric ability) {
-		if ((this.menuBaseOrderId == 0) && !this.underConstruction) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			addCommandButton(ability, this.abilityDataUI.getUI(ability.getRawcode()).getOnIconUI(),
 					ability.getHandleId(), 0, 0, false, false);
 		}
@@ -87,8 +99,26 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	}
 
 	@Override
+	public Void accept(final GenericSingleIconActiveAbility ability) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
+			addCommandButton(ability, this.abilityDataUI.getUI(ability.getAlias()).getOnIconUI(), ability.getHandleId(),
+					ability.getBaseOrderId(), 0, false, false);
+		}
+		return null;
+	}
+
+	@Override
+	public Void accept(final CAbilityRally ability) {
+		if (this.menuBaseOrderId == 0) {
+			addCommandButton(ability, this.abilityDataUI.getRallyUI(), ability.getHandleId(), ability.getBaseOrderId(),
+					0, false, false);
+		}
+		return null;
+	}
+
+	@Override
 	public Void accept(final CAbilityColdArrows ability) {
-		if ((this.menuBaseOrderId == 0) && !this.underConstruction) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			final boolean autoCastActive = ability.isAutoCastActive();
 			int autoCastId;
 			if (autoCastActive) {
@@ -140,7 +170,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	}
 
 	private void handleBuildMenu(final AbstractCAbilityBuild ability, final IconUI buildUI) {
-		if ((this.menuBaseOrderId == ability.getBaseOrderId()) && !this.underConstruction) {
+		if ((this.menuBaseOrderId == ability.getBaseOrderId()) && ability.isIconShowing()) {
 			for (final War3ID unitType : ability.getStructuresBuilt()) {
 				final IconUI unitUI = this.abilityDataUI.getUnitUI(unitType);
 				if (unitUI != null) {
@@ -157,8 +187,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton) {
 		final boolean active = ((this.unit.getCurrentBehavior() != null)
 				&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId()));
+		final boolean disabled = (ability != null) && ability.isDisabled();
 		this.commandButtonListener.commandButton(iconUI.getButtonPositionX(), iconUI.getButtonPositionY(),
-				iconUI.getIcon(), handleId, orderId, autoCastOrderId, active, autoCastActive, menuButton);
+				disabled ? iconUI.getIconDisabled() : iconUI.getIcon(), handleId, disabled ? 0 : orderId,
+				autoCastOrderId, active, autoCastActive, menuButton);
 	}
 
 	@Override
@@ -172,7 +204,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityQueue ability) {
-		if ((this.menuBaseOrderId == 0) && !this.underConstruction) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			for (final War3ID unitType : ability.getUnitsTrained()) {
 				final IconUI unitUI = this.abilityDataUI.getUnitUI(unitType);
 				if (unitUI != null) {
@@ -185,6 +217,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				if (unitUI != null) {
 					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false);
 				}
+			}
+			if (this.unit.getBuildQueueTypes()[0] != null) {
+				addCommandButton(ability, this.abilityDataUI.getCancelTrainUI(), ability.getHandleId(), OrderIds.cancel,
+						0, false, false);
 			}
 		}
 		return null;

@@ -13,9 +13,10 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButton;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandListener;
 
-public class CommandCardIcon extends AbstractRenderableFrame {
+public class CommandCardIcon extends AbstractRenderableFrame implements ClickableActionFrame {
 
 	private TextureFrame iconFrame;
 	private TextureFrame activeHighlightFrame;
@@ -116,7 +117,9 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
 		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
-			return this;
+			if (this.orderId != 0) {
+				return this;
+			}
 		}
 		return super.touchDown(screenX, screenY, button);
 	}
@@ -133,6 +136,7 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 		return this.menuButton;
 	}
 
+	@Override
 	public void onClick(final int button) {
 		if (button == Input.Buttons.LEFT) {
 			if (this.menuButton) {
@@ -147,12 +151,14 @@ public class CommandCardIcon extends AbstractRenderableFrame {
 		}
 	}
 
+	@Override
 	public void mouseDown(final GameUI gameUI, final Viewport uiViewport) {
 		this.iconFrame.setWidth(GameUI.convertX(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH));
 		this.iconFrame.setHeight(GameUI.convertY(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH));
 		positionBounds(gameUI, uiViewport);
 	}
 
+	@Override
 	public void mouseUp(final GameUI gameUI, final Viewport uiViewport) {
 		this.iconFrame.setWidth(GameUI.convertX(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));
 		this.iconFrame.setHeight(GameUI.convertY(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));

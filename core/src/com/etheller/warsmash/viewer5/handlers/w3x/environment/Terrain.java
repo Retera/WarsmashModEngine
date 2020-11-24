@@ -962,7 +962,7 @@ public class Terrain {
 		return gl;
 	}
 
-	public void renderUberSplats() {
+	public void renderUberSplats(final boolean onTopLayer) {
 		final GL30 gl = Gdx.gl30;
 		final WebGL webGL = this.webGL;
 		final ShaderProgram shader = this.uberSplatShader;
@@ -1002,7 +1002,9 @@ public class Terrain {
 
 		// Render the cliffs
 		for (final SplatModel splat : this.uberSplatModels.values()) {
-			splat.render(gl, shader);
+			if (splat.isNoDepthTest() == onTopLayer) {
+				splat.render(gl, shader);
+			}
 		}
 	}
 
@@ -1383,7 +1385,7 @@ public class Terrain {
 
 			final SplatModel splatModel = new SplatModel(Gdx.gl30,
 					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset,
-					splat.unitMapping.isEmpty() ? null : splat.unitMapping, false);
+					splat.unitMapping.isEmpty() ? null : splat.unitMapping, false, false);
 			splatModel.color[3] = splat.opacity;
 			this.uberSplatModels.put(path, splatModel);
 		}
@@ -1397,11 +1399,12 @@ public class Terrain {
 		this.uberSplatModels.put(path, model);
 	}
 
-	public SplatMover addUberSplat(final String path, final float x, final float y, final float z, final float scale) {
+	public SplatMover addUberSplat(final String path, final float x, final float y, final float z, final float scale,
+			final boolean unshaded, final boolean noDepthTest) {
 		SplatModel splatModel = this.uberSplatModels.get(path);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null),
-					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false);
+					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest);
 			this.uberSplatModels.put(path, splatModel);
 		}
 		return splatModel.add(x - scale, y - scale, x + scale, y + scale, z, this.centerOffset);
@@ -1412,7 +1415,7 @@ public class Terrain {
 		SplatModel splatModel = this.uberSplatModels.get(texture);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(texture, PathSolver.DEFAULT, null),
-					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false);
+					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false, false);
 			splatModel.color[3] = opacity;
 			this.uberSplatModels.put(texture, splatModel);
 		}

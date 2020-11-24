@@ -88,6 +88,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
@@ -281,6 +282,9 @@ public class War3MapViewer extends ModelViewer {
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("Units\\MiscGame.txt")) {
 			this.miscData.readTXT(miscDataTxtStream, true);
 		}
+		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\MiscUI.txt")) {
+			this.miscData.readTXT(miscDataTxtStream, true);
+		}
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\MiscData.txt")) {
 			this.miscData.readTXT(miscDataTxtStream, true);
 		}
@@ -423,7 +427,7 @@ public class War3MapViewer extends ModelViewer {
 					@Override
 					public CAttackProjectile createAttackProjectile(final CSimulation simulation, final float launchX,
 							final float launchY, final float launchFacing, final CUnit source,
-							final CUnitAttackMissile unitAttack, final CWidget target, final float damage,
+							final CUnitAttackMissile unitAttack, final AbilityTarget target, final float damage,
 							final int bounceIndex) {
 						final War3ID typeId = source.getTypeId();
 						final int projectileSpeed = unitAttack.getProjectileSpeed();
@@ -920,7 +924,8 @@ public class War3MapViewer extends ModelViewer {
 								+ ".blp";
 						final float s = uberSplatInfo.getFieldFloatValue("Scale");
 						if (this.unitsReady) {
-							buildingUberSplatDynamicIngame = this.terrain.addUberSplat(texturePath, unitX, unitY, 1, s);
+							buildingUberSplatDynamicIngame = this.terrain.addUberSplat(texturePath, unitX, unitY, 1, s,
+									false, false);
 						}
 						else {
 							if (!this.terrain.splats.containsKey(texturePath)) {
@@ -1180,9 +1185,10 @@ public class War3MapViewer extends ModelViewer {
 			this.terrain.renderGround(this.dynamicShadowManager);
 			this.terrain.renderCliffs();
 			worldScene.renderOpaque();
-			this.terrain.renderUberSplats();
+			this.terrain.renderUberSplats(false);
 			this.terrain.renderWater();
 			worldScene.renderTranslucent();
+			this.terrain.renderUberSplats(true);
 
 			final List<Scene> scenes = this.scenes;
 			for (final Scene scene : scenes) {
@@ -1255,7 +1261,7 @@ public class War3MapViewer extends ModelViewer {
 			final String path = entry.getKey();
 			final Splat locations = entry.getValue();
 			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(path, PathSolver.DEFAULT, null),
-					locations.locations, this.terrain.centerOffset, locations.unitMapping, true);
+					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false);
 			model.color[0] = 0;
 			model.color[1] = 1;
 			model.color[2] = 0;
@@ -1468,7 +1474,7 @@ public class War3MapViewer extends ModelViewer {
 		this.dncTarget.setSequence(0);
 	}
 
-	private static String mdx(String mdxPath) {
+	public static String mdx(String mdxPath) {
 		if (mdxPath.toLowerCase().endsWith(".mdl")) {
 			mdxPath = mdxPath.substring(0, mdxPath.length() - 4);
 		}
@@ -1526,6 +1532,10 @@ public class War3MapViewer extends ModelViewer {
 
 	public int getLocalPlayerIndex() {
 		return this.localPlayerIndex;
+	}
+
+	public RenderUnit getRenderPeer(final CUnit unit) {
+		return this.unitToRenderPeer.get(unit);
 	}
 
 	private static final class QuadtreeIntersectorFindsWalkableRenderHeight

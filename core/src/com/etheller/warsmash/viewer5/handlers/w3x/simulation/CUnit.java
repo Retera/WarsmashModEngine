@@ -18,6 +18,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Remova
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
@@ -28,9 +31,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CUnit extends CWidget {
 	private static final Rectangle tempRect = new Rectangle();
@@ -80,9 +87,11 @@ public class CUnit extends CWidget {
 	private float constructionProgress;
 	private boolean hidden = false;
 	private boolean updating = true;
+	private boolean invulnerable = false;
 	private CUnit workerInside;
 	private final War3ID[] buildQueue = new War3ID[WarsmashConstants.BUILD_QUEUE_SIZE];
 	private final QueueItemType[] buildQueueTypes = new QueueItemType[WarsmashConstants.BUILD_QUEUE_SIZE];
+	private AbilityTarget rallyPoint;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
@@ -233,6 +242,10 @@ public class CUnit extends CWidget {
 						if (ability instanceof CAbilityBuildInProgress) {
 							abilityIterator.remove();
 						}
+						else {
+							ability.setDisabled(false);
+							ability.setIconShowing(true);
+						}
 					}
 					game.unitConstructFinishEvent(this);
 					this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
@@ -252,6 +265,11 @@ public class CUnit extends CWidget {
 							// nudge the trained unit out around us
 							trainedUnit.nudgeAround(game, this);
 							game.unitTrainedEvent(this, trainedUnit);
+							if (this.rallyPoint != null) {
+								final int rallyOrderId = OrderIds.smart;
+								this.rallyPoint.visit(
+										UseAbilityOnTargetByIdVisitor.INSTANCE.reset(game, trainedUnit, rallyOrderId));
+							}
 							for (int i = 0; i < (this.buildQueue.length - 1); i++) {
 								this.buildQueue[i] = this.buildQueue[i + 1];
 								this.buildQueueTypes[i] = this.buildQueueTypes[i + 1];
@@ -293,6 +311,7 @@ public class CUnit extends CWidget {
 
 	private void popoutWorker(final CSimulation game) {
 		if (this.workerInside != null) {
+			this.workerInside.setInvulnerable(false);
 			this.workerInside.setHidden(false);
 			this.workerInside.setUpdating(true);
 			this.workerInside.nudgeAround(game, this);
@@ -456,7 +475,7 @@ public class CUnit extends CWidget {
 		return this.unitType.getImpactZ();
 	}
 
-	public double distance(final CWidget target) {
+	public double distance(final AbilityTarget target) {
 		double dx = Math.abs(target.getX() - getX());
 		double dy = Math.abs(target.getY() - getY());
 		final float thisCollisionSize = this.unitType.getCollisionSize();
@@ -504,20 +523,22 @@ public class CUnit extends CWidget {
 	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
 			final String weaponType, final float damage) {
 		final boolean wasDead = isDead();
-		final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
-				this.unitType.getDefenseType());
-		final float damageRatioFromDefense;
-		if (this.defense >= 0) {
-			damageRatioFromDefense = 1f - (float) (((this.defense) * 0.06) / (1 + (0.06 * this.defense)));
+		if (!this.invulnerable) {
+			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
+					this.unitType.getDefenseType());
+			final float damageRatioFromDefense;
+			if (this.defense >= 0) {
+				damageRatioFromDefense = 1f - (float) (((this.defense) * 0.06) / (1 + (0.06 * this.defense)));
+			}
+			else {
+				damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -this.defense);
+			}
+			final float trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * damage;
+			this.life -= trueDamage;
+			this.stateNotifier.lifeChanged();
 		}
-		else {
-			damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -this.defense);
-		}
-		final float trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * damage;
-		this.life -= trueDamage;
 		simulation.unitDamageEvent(this, weaponType, this.unitType.getArmorType());
-		this.stateNotifier.lifeChanged();
-		if (isDead()) {
+		if (!this.invulnerable && isDead()) {
 			if (!wasDead) {
 				kill(simulation);
 			}
@@ -557,7 +578,7 @@ public class CUnit extends CWidget {
 		popoutWorker(simulation);
 	}
 
-	public boolean canReach(final CWidget target, final float range) {
+	public boolean canReach(final AbilityTarget target, final float range) {
 		final double distance = distance(target);
 		if (target instanceof CUnit) {
 			final CUnit targetUnit = (CUnit) target;
@@ -572,6 +593,10 @@ public class CUnit extends CWidget {
 			}
 		}
 		return distance <= range;
+	}
+
+	public boolean canReach(final float x, final float y, final float range) {
+		return distance(x, y) <= range; // TODO use dist squared for performance
 	}
 
 	public boolean canReachToPathing(final float range, final float rotationForPathing,
@@ -802,6 +827,14 @@ public class CUnit extends CWidget {
 		return this.hidden;
 	}
 
+	public void setInvulnerable(final boolean invulnerable) {
+		this.invulnerable = invulnerable;
+	}
+
+	public boolean isInvulnerable() {
+		return this.invulnerable;
+	}
+
 	public void setWorkerInside(final CUnit unit) {
 		this.workerInside = unit;
 	}
@@ -879,6 +912,24 @@ public class CUnit extends CWidget {
 		}
 	}
 
+	public void cancelBuildQueueItem(final CSimulation game, final int cancelIndex) {
+		if ((cancelIndex >= 0) && (cancelIndex < this.buildQueueTypes.length)) {
+			if (this.buildQueueTypes[cancelIndex] != null) {
+				// TODO refund here!
+				if (cancelIndex == 0) {
+					this.constructionProgress = 0.0f;
+				}
+				for (int i = cancelIndex; i < (this.buildQueueTypes.length - 1); i++) {
+					this.buildQueueTypes[i] = this.buildQueueTypes[i + 1];
+					this.buildQueue[i] = this.buildQueue[i + 1];
+				}
+				this.buildQueueTypes[this.buildQueueTypes.length - 1] = null;
+				this.buildQueue[this.buildQueue.length - 1] = null;
+				this.stateNotifier.queueChanged();
+			}
+		}
+	}
+
 	public void queueTrainingUnit(final War3ID rawcode) {
 		queue(rawcode, QueueItemType.UNIT);
 	}
@@ -890,5 +941,93 @@ public class CUnit extends CWidget {
 	public static enum QueueItemType {
 		UNIT,
 		RESEARCH;
+	}
+
+	public void setRallyPoint(final AbilityTarget target) {
+		this.rallyPoint = target;
+		this.stateNotifier.rallyPointChanged();
+	}
+
+	public AbilityTarget getRallyPoint() {
+		return this.rallyPoint;
+	}
+
+	private static interface RallyProvider {
+		float getX();
+
+		float getY();
+	}
+
+	@Override
+	public <T> T visit(final AbilityTargetVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
+	private static final class UseAbilityOnTargetByIdVisitor implements AbilityTargetVisitor<Void> {
+		private static final UseAbilityOnTargetByIdVisitor INSTANCE = new UseAbilityOnTargetByIdVisitor();
+		private CSimulation game;
+		private CUnit trainedUnit;
+		private int rallyOrderId;
+
+		private UseAbilityOnTargetByIdVisitor reset(final CSimulation game, final CUnit trainedUnit,
+				final int rallyOrderId) {
+			this.game = game;
+			this.trainedUnit = trainedUnit;
+			this.rallyOrderId = rallyOrderId;
+			return this;
+		}
+
+		@Override
+		public Void accept(final AbilityPointTarget target) {
+			for (final CAbility ability : this.trainedUnit.getAbilities()) {
+				ability.checkCanUse(this.game, this.trainedUnit, this.rallyOrderId,
+						BooleanAbilityActivationReceiver.INSTANCE);
+				if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
+					final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
+							.<AbilityPointTarget>getInstance().reset();
+					ability.checkCanTarget(this.game, this.trainedUnit, this.rallyOrderId, target, targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable()) {
+						this.trainedUnit.order(this.game,
+								new COrderTargetPoint(ability.getHandleId(), this.rallyOrderId, target), false);
+						return null;
+					}
+				}
+			}
+			return null;
+		}
+
+		@Override
+		public Void accept(final CUnit targetUnit) {
+			return acceptWidget(this.game, this.trainedUnit, this.rallyOrderId, targetUnit);
+		}
+
+		private Void acceptWidget(final CSimulation game, final CUnit trainedUnit, final int rallyOrderId,
+				final CWidget target) {
+			for (final CAbility ability : trainedUnit.getAbilities()) {
+				ability.checkCanUse(game, trainedUnit, rallyOrderId, BooleanAbilityActivationReceiver.INSTANCE);
+				if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
+					final BooleanAbilityTargetCheckReceiver<CWidget> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
+							.<CWidget>getInstance().reset();
+					ability.checkCanTarget(game, trainedUnit, rallyOrderId, target, targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable()) {
+						trainedUnit.order(game,
+								new COrderTargetWidget(ability.getHandleId(), rallyOrderId, target.getHandleId()),
+								false);
+						return null;
+					}
+				}
+			}
+			return null;
+		}
+
+		@Override
+		public Void accept(final CDestructable target) {
+			return acceptWidget(this.game, this.trainedUnit, this.rallyOrderId, target);
+		}
+
+		@Override
+		public Void accept(final CItem target) {
+			return acceptWidget(this.game, this.trainedUnit, this.rallyOrderId, target);
+		}
 	}
 }

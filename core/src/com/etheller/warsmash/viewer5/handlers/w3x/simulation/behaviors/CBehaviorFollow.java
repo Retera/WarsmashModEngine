@@ -4,8 +4,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveVisitor;
 
-public class CBehaviorFollow extends CAbstractRangedWidgetTargetBehavior {
+public class CBehaviorFollow extends CAbstractRangedBehavior {
 
 	private int higlightOrderId;
 
@@ -36,7 +37,7 @@ public class CBehaviorFollow extends CAbstractRangedWidgetTargetBehavior {
 
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
-		return !this.target.isDead();
+		return this.target.visit(AbilityTargetStillAliveVisitor.INSTANCE);
 	}
 
 	@Override

@@ -54,4 +54,9 @@ public class StringMsgAbilityActivationReceiver implements AbilityActivationRece
 		this.message = "NOTEXTERN: Caster movement disabled.";
 	}
 
+	@Override
+	public void disabled() {
+		this.message = "NOTEXTERN: Ability is disabled.";
+	}
+
 }

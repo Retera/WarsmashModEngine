@@ -1,12 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
-import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
@@ -14,15 +13,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 
-public class CAbilityAttack implements CAbility {
-	private final int handleId;
+public class CAbilityAttack extends AbstractCAbility {
 
 	public CAbilityAttack(final int handleId) {
-		this.handleId = handleId;
+		super(handleId);
 	}
 
 	@Override
-	public void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
@@ -66,8 +64,8 @@ public class CAbilityAttack implements CAbility {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final Vector2 target,
-			final AbilityTargetCheckReceiver<Vector2> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		switch (orderId) {
 		case OrderIds.attack:
 			receiver.targetOk(target);
@@ -75,8 +73,7 @@ public class CAbilityAttack implements CAbility {
 		case OrderIds.attackground:
 			boolean allowAttackGround = false;
 			for (final CUnitAttack attack : unit.getUnitType().getAttacks()) {
-				if ((attack.getWeaponType() == CWeaponType.ARTILLERY)
-						|| (attack.getWeaponType() == CWeaponType.ALINE)) {
+				if (attack.getWeaponType().isAttackGroundSupported()) {
 					allowAttackGround = true;
 					break;
 				}
@@ -119,14 +116,32 @@ public class CAbilityAttack implements CAbility {
 			}
 		}
 		if (behavior == null) {
-			behavior = caster.getMoveBehavior().reset(OrderIds.attack, target.getX(), target.getY());
+			behavior = caster.getMoveBehavior().reset(OrderIds.attack, target);
 		}
 		return behavior;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final Vector2 point) {
-		return caster.pollNextOrderBehavior(game);
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityPointTarget point) {
+		switch (orderId) {
+		case OrderIds.attack:
+			return caster.getMoveBehavior().reset(OrderIds.attack, point);
+		case OrderIds.attackground:
+			CBehavior behavior = null;
+			for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
+				if (attack.getWeaponType().isAttackGroundSupported()) {
+					behavior = caster.getAttackBehavior().reset(OrderIds.attackground, attack, point);
+					break;
+				}
+			}
+			if (behavior == null) {
+				behavior = caster.getMoveBehavior().reset(OrderIds.attackground, point);
+			}
+			return behavior;
+		default:
+			return caster.pollNextOrderBehavior(game);
+		}
 	}
 
 	@Override
@@ -137,11 +152,6 @@ public class CAbilityAttack implements CAbility {
 	@Override
 	public <T> T visit(final CAbilityVisitor<T> visitor) {
 		return visitor.accept(this);
-	}
-
-	@Override
-	public int getHandleId() {
-		return this.handleId;
 	}
 
 }

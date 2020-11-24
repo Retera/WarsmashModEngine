@@ -1,10 +1,10 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
-import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -12,13 +12,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 /**
  * Represents an ability from the object data
  */
-public class CAbilityGeneric implements CAbility {
+public class CAbilityGeneric extends AbstractCAbility {
 	private final War3ID rawcode;
-	private final int handleId;
 
 	public CAbilityGeneric(final War3ID rawcode, final int handleId) {
+		super(handleId);
 		this.rawcode = rawcode;
-		this.handleId = handleId;
 	}
 
 	public War3ID getRawcode() {
@@ -26,7 +25,7 @@ public class CAbilityGeneric implements CAbility {
 	}
 
 	@Override
-	public void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.notAnActiveAbility();
 	}
@@ -38,8 +37,8 @@ public class CAbilityGeneric implements CAbility {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final Vector2 target,
-			final AbilityTargetCheckReceiver<Vector2> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
@@ -47,11 +46,6 @@ public class CAbilityGeneric implements CAbility {
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	public int getHandleId() {
-		return this.handleId;
 	}
 
 	@Override
@@ -78,7 +72,8 @@ public class CAbilityGeneric implements CAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final Vector2 point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 

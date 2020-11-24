@@ -231,7 +231,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 						if (ENABLE_MUSIC) {
 							final String musicField = rootFrame.getSkinField("Music_V1");
 							final String[] musics = musicField.split(";");
-							final String musicPath = musics[(int) (Math.random() * musics.length)];
+							String musicPath = musics[(int) (Math.random() * musics.length)];
+							if (true) {
+								musicPath = "Sound\\Music\\mp3Music\\OrcTheme.mp3";
+							}
 							final Music music = Gdx.audio.newMusic(
 									new DataSourceFileHandle(WarsmashGdxMapGame.this.viewer.dataSource, musicPath));
 							music.setVolume(0.2f);

@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
@@ -148,7 +149,7 @@ public class CSimulation {
 	}
 
 	public CAttackProjectile createProjectile(final CUnit source, final float launchX, final float launchY,
-			final float launchFacing, final CUnitAttackMissile attack, final CWidget target, final float damage,
+			final float launchFacing, final CUnitAttackMissile attack, final AbilityTarget target, final float damage,
 			final int bounceIndex) {
 		final CAttackProjectile projectile = this.simulationRenderController.createAttackProjectile(this, launchX,
 				launchY, launchFacing, source, attack, target, damage, bounceIndex);

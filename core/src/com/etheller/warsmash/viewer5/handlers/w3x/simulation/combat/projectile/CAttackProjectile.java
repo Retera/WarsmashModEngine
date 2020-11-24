@@ -3,7 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 
@@ -13,15 +13,15 @@ public class CAttackProjectile {
 	private final float initialTargetX;
 	private final float initialTargetY;
 	private final float speed;
-	private final CWidget target;
+	private final AbilityTarget target;
 	private boolean done;
 	private final CUnit source;
 	private final float damage;
 	private final CUnitAttackMissile unitAttack;
 	private final int bounceIndex;
 
-	public CAttackProjectile(final float x, final float y, final float speed, final CWidget target, final CUnit source,
-			final float damage, final CUnitAttackMissile unitAttack, final int bounceIndex) {
+	public CAttackProjectile(final float x, final float y, final float speed, final AbilityTarget target,
+			final CUnit source, final float damage, final CUnitAttackMissile unitAttack, final int bounceIndex) {
 		this.x = x;
 		this.y = y;
 		this.speed = speed;
@@ -77,7 +77,7 @@ public class CAttackProjectile {
 		return this.speed;
 	}
 
-	public CWidget getTarget() {
+	public AbilityTarget getTarget() {
 		return this.target;
 	}
 

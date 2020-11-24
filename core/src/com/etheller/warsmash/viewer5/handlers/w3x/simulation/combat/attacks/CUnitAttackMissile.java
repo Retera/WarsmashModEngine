@@ -5,6 +5,8 @@ import java.util.EnumSet;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -63,13 +65,16 @@ public class CUnitAttackMissile extends CUnitAttack {
 	}
 
 	@Override
-	public void launch(final CSimulation simulation, final CUnit unit, final CWidget target, final float damage) {
+	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage) {
 		simulation.createProjectile(unit, unit.getX(), unit.getY(), (float) Math.toRadians(unit.getFacing()), this,
 				target, damage, 0);
 	}
 
-	public void doDamage(final CSimulation cSimulation, final CUnit source, final CWidget target, final float damage,
-			final float x, final float y, final int bounceIndex) {
-		target.damage(cSimulation, source, getAttackType(), getWeaponSound(), damage);
+	public void doDamage(final CSimulation cSimulation, final CUnit source, final AbilityTarget target,
+			final float damage, final float x, final float y, final int bounceIndex) {
+		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
+		if (widget != null) {
+			widget.damage(cSimulation, source, getAttackType(), getWeaponSound(), damage);
+		}
 	}
 }

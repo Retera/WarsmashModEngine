@@ -4,7 +4,7 @@ import java.util.EnumSet;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -198,5 +198,5 @@ public abstract class CUnitAttack {
 		return this.maxDamage;
 	}
 
-	public abstract void launch(CSimulation simulation, CUnit unit, CWidget target, float damage);
+	public abstract void launch(CSimulation simulation, CUnit unit, AbilityTarget target, float damage);
 }

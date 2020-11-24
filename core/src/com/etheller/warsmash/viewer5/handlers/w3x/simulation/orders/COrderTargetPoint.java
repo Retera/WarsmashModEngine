@@ -4,15 +4,16 @@ import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.StringMsgTargetCheckReceiver;
 
 public class COrderTargetPoint implements COrder {
 	private final int abilityHandleId;
 	private final int orderId;
-	private final Vector2 target;
+	private final AbilityPointTarget target;
 
-	public COrderTargetPoint(final int abilityHandleId, final int orderId, final Vector2 target) {
+	public COrderTargetPoint(final int abilityHandleId, final int orderId, final AbilityPointTarget target) {
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
 		this.target = target;
@@ -37,7 +38,7 @@ public class COrderTargetPoint implements COrder {
 		final CAbility ability = game.getAbility(this.abilityHandleId);
 		ability.checkCanUse(game, caster, this.orderId, this.abilityActivationReceiver.reset());
 		if (this.abilityActivationReceiver.isUseOk()) {
-			final StringMsgTargetCheckReceiver<Vector2> targetReceiver = (StringMsgTargetCheckReceiver<Vector2>) targetCheckReceiver;
+			final StringMsgTargetCheckReceiver<AbilityPointTarget> targetReceiver = (StringMsgTargetCheckReceiver<AbilityPointTarget>) targetCheckReceiver;
 			ability.checkCanTarget(game, caster, this.orderId, this.target, targetReceiver);
 			if (targetReceiver.getTarget() != null) {
 				return ability.begin(game, caster, this.orderId, this.target);

@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 
 public class Attachment extends GenericObject {
+	protected String name;
 	protected final String path;
 	protected final int attachmentId;
 	protected MdxModel internalModel;
@@ -11,8 +12,9 @@ public class Attachment extends GenericObject {
 			final int index) {
 		super(model, attachment, index);
 
-		final String path = attachment.getPath().replace("\\", "/").toLowerCase().replace(".mdl", ".mdx");
+		final String path = attachment.getPath().toLowerCase().replace(".mdl", ".mdx");
 
+		this.name = attachment.getName().toLowerCase();
 		this.path = path;
 		this.attachmentId = attachment.getAttachmentId();
 		this.internalModel = null;
@@ -26,5 +28,13 @@ public class Attachment extends GenericObject {
 	@Override
 	public int getVisibility(final float[] out, final int sequence, final int frame, final int counter) {
 		return this.getScalarValue(out, AnimationMap.KATV.getWar3id(), sequence, frame, counter, 1);
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public int getAttachmentId() {
+		return this.attachmentId;
 	}
 }

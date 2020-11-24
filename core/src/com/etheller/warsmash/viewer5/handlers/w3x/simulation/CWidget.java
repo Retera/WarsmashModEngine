@@ -2,10 +2,11 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
 import java.util.EnumSet;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
-public abstract class CWidget {
+public abstract class CWidget implements AbilityTarget {
 	private final int handleId;
 	private float x;
 	private float y;

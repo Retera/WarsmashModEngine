@@ -50,6 +50,8 @@ public class AbilityDataUI {
 	private final IconUI buildNagaUI;
 	private final IconUI cancelUI;
 	private final IconUI cancelBuildUI;
+	private final IconUI cancelTrainUI;
+	private final IconUI rallyUI;
 
 	public AbilityDataUI(final MutableObjectData abilityData, final MutableObjectData unitData,
 			final MutableObjectData upgradeData, final GameUI gameUI) {
@@ -114,6 +116,8 @@ public class AbilityDataUI {
 		this.attackGroundUI = createBuiltInIconUI(gameUI, "CmdAttackGround", disabledPrefix);
 		this.cancelUI = createBuiltInIconUI(gameUI, "CmdCancel", disabledPrefix);
 		this.cancelBuildUI = createBuiltInIconUI(gameUI, "CmdCancelBuild", disabledPrefix);
+		this.cancelTrainUI = createBuiltInIconUI(gameUI, "CmdCancelTrain", disabledPrefix);
+		this.rallyUI = createBuiltInIconUI(gameUI, "CmdRally", disabledPrefix);
 	}
 
 	private IconUI createBuiltInIconUI(final GameUI gameUI, final String key, final String disabledPrefix) {
@@ -153,7 +157,7 @@ public class AbilityDataUI {
 		if (slashIndex != -1) {
 			name = path.substring(slashIndex + 1);
 		}
-		return disabledPrefix + name;
+		return disabledPrefix + "DIS" + name;
 	}
 
 	public IconUI getMoveUI() {
@@ -210,6 +214,14 @@ public class AbilityDataUI {
 
 	public IconUI getCancelBuildUI() {
 		return this.cancelBuildUI;
+	}
+
+	public IconUI getCancelTrainUI() {
+		return this.cancelTrainUI;
+	}
+
+	public IconUI getRallyUI() {
+		return this.rallyUI;
 	}
 
 }

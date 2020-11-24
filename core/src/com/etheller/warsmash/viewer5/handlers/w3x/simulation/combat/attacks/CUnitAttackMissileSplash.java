@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -88,8 +88,8 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 	}
 
 	@Override
-	public void doDamage(final CSimulation cSimulation, final CUnit source, final CWidget target, final float damage,
-			final float x, final float y, final int bounceIndex) {
+	public void doDamage(final CSimulation cSimulation, final CUnit source, final AbilityTarget target,
+			final float damage, final float x, final float y, final int bounceIndex) {
 		SplashDamageConsumer.INSTANCE.doDamage(cSimulation, source, target, this, x, y, damage);
 		if ((getWeaponType() != CWeaponType.ARTILLERY) && !SplashDamageConsumer.INSTANCE.hitTarget) {
 			super.doDamage(cSimulation, source, target, damage * this.damageFactorSmall, x, y, bounceIndex);
@@ -102,13 +102,13 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 		private CUnitAttackMissileSplash attack;
 		private CSimulation simulation;
 		private CUnit source;
-		private CWidget target;
+		private AbilityTarget target;
 		private float x;
 		private float y;
 		private float damage;
 		private boolean hitTarget;
 
-		public void doDamage(final CSimulation simulation, final CUnit source, final CWidget target,
+		public void doDamage(final CSimulation simulation, final CUnit source, final AbilityTarget target,
 				final CUnitAttackMissileSplash attack, final float x, final float y, final float damage) {
 			this.simulation = simulation;
 			this.source = source;

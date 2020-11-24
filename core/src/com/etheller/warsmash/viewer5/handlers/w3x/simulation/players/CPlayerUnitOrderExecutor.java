@@ -1,8 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
-import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
@@ -28,7 +28,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 	public void issuePointOrder(final int unitHandleId, final int abilityHandleId, final int orderId, final float x,
 			final float y, final boolean queue) {
 		final CUnit unit = this.game.getUnit(unitHandleId);
-		unit.order(this.game, new COrderTargetPoint(abilityHandleId, orderId, new Vector2(x, y)), queue);
+		unit.order(this.game, new COrderTargetPoint(abilityHandleId, orderId, new AbilityPointTarget(x, y)), queue);
 	}
 
 	@Override
@@ -36,6 +36,12 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 			final boolean queue) {
 		final CUnit unit = this.game.getUnit(unitHandleId);
 		unit.order(this.game, new COrderNoTarget(abilityHandleId, orderId), queue);
+	}
+
+	@Override
+	public void unitCancelTrainingItem(final int unitHandleId, final int cancelIndex) {
+		final CUnit unit = this.game.getUnit(unitHandleId);
+		unit.cancelBuildQueueItem(this.game, cancelIndex);
 	}
 
 }

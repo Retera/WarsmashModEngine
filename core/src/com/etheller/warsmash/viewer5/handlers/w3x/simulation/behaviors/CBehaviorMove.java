@@ -10,18 +10,26 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 
 public class CBehaviorMove implements CBehavior {
+
 	private static final Rectangle tempRect = new Rectangle();
 	private final CUnit unit;
 	private int highlightOrderId;
+	private final TargetVisitingResetter targetVisitingResetter;
 
 	public CBehaviorMove(final CUnit unit) {
 		this.unit = unit;
+		this.targetVisitingResetter = new TargetVisitingResetter();
 	}
 
 	private boolean wasWithinPropWindow = false;
@@ -32,9 +40,16 @@ public class CBehaviorMove implements CBehavior {
 	private CUnit followUnit;
 	private CRangedBehavior rangedBehavior;
 
-	public CBehaviorMove reset(final int highlightOrderId, final float targetX, final float targetY) {
-		internalResetMove(highlightOrderId, targetX, targetY);
+	public CBehaviorMove reset(final int highlightOrderId, final AbilityTarget target) {
+		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
 		this.rangedBehavior = null;
+		return this;
+	}
+
+	public CBehaviorMove reset(final AbilityTarget target, final CRangedBehavior rangedBehavior) {
+		final int highlightOrderId = rangedBehavior.getHighlightOrderId();
+		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
+		this.rangedBehavior = rangedBehavior;
 		return this;
 	}
 
@@ -48,24 +63,6 @@ public class CBehaviorMove implements CBehavior {
 		this.path = null;
 		this.searchCycles = 0;
 		this.followUnit = null;
-	}
-
-	public CBehaviorMove reset(final float targetX, final float targetY, final CRangedBehavior rangedBehavior) {
-		internalResetMove(rangedBehavior.getHighlightOrderId(), targetX, targetY);
-		this.rangedBehavior = rangedBehavior;
-		return this;
-	}
-
-	public CBehaviorMove reset(final int highlightOrderId, final CUnit followUnit) {
-		internalResetMove(highlightOrderId, followUnit);
-		this.rangedBehavior = null;
-		return this;
-	}
-
-	public CBehaviorMove reset(final CUnit followUnit, final CRangedBehavior rangedBehavior) {
-		internalResetMove(rangedBehavior.getHighlightOrderId(), followUnit);
-		this.rangedBehavior = rangedBehavior;
-		return this;
 	}
 
 	private void internalResetMove(final int highlightOrderId, final CUnit followUnit) {
@@ -355,4 +352,36 @@ public class CBehaviorMove implements CBehavior {
 		return this;
 	}
 
+	private final class TargetVisitingResetter implements AbilityTargetVisitor<Void> {
+		private int highlightOrderId;
+
+		private TargetVisitingResetter reset(final int highlightOrderId) {
+			this.highlightOrderId = highlightOrderId;
+			return this;
+		}
+
+		@Override
+		public Void accept(final AbilityPointTarget target) {
+			internalResetMove(this.highlightOrderId, target.x, target.y);
+			return null;
+		}
+
+		@Override
+		public Void accept(final CUnit target) {
+			internalResetMove(this.highlightOrderId, target);
+			return null;
+		}
+
+		@Override
+		public Void accept(final CDestructable target) {
+			internalResetMove(this.highlightOrderId, target.getX(), target.getY());
+			return null;
+		}
+
+		@Override
+		public Void accept(final CItem target) {
+			internalResetMove(this.highlightOrderId, target.getX(), target.getY());
+			return null;
+		}
+	}
 }

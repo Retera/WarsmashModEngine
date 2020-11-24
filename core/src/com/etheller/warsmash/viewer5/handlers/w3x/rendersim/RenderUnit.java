@@ -55,6 +55,7 @@ public class RenderUnit {
 	private float facing;
 
 	private boolean swimming;
+	private boolean working;
 
 	private boolean dead = false;
 
@@ -140,8 +141,7 @@ public class RenderUnit {
 	public void populateCommandCard(final CSimulation game, final CommandButtonListener commandButtonListener,
 			final AbilityDataUI abilityDataUI, final int subMenuOrderId) {
 		final CommandCardPopulatingAbilityVisitor commandCardPopulatingVisitor = CommandCardPopulatingAbilityVisitor.INSTANCE
-				.reset(game, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId,
-						this.simulationUnit.isConstructing());
+				.reset(game, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId);
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
 			ability.visit(commandCardPopulatingVisitor);
 		}
@@ -197,6 +197,7 @@ public class RenderUnit {
 		boolean swimming = (movementType == MovementType.AMPHIBIOUS)
 				&& PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.SWIMMABLE)
 				&& !PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.WALKABLE);
+		final boolean working = this.simulationUnit.getBuildQueueTypes()[0] != null;
 		final float groundHeightTerrain = map.terrain.getGroundHeight(this.location[0], this.location[1]);
 		float groundHeightTerrainAndWater;
 		MdxComplexInstance currentWalkableUnder;
@@ -236,7 +237,14 @@ public class RenderUnit {
 		else if (!swimming && this.swimming) {
 			this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.SWIM);
 		}
+		if (working && !this.working) {
+			this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.WORK);
+		}
+		else if (!working && this.working) {
+			this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.WORK);
+		}
 		this.swimming = swimming;
+		this.working = working;
 		final boolean dead = this.simulationUnit.isDead();
 		final boolean corpse = this.simulationUnit.isCorpse();
 		final boolean boneCorpse = this.simulationUnit.isBoneCorpse();
@@ -402,6 +410,10 @@ public class RenderUnit {
 		return this.simulationUnit;
 	}
 
+	public EnumSet<AnimationTokens.SecondaryTag> getSecondaryAnimationTags() {
+		return this.unitAnimationListenerImpl.secondaryAnimationTags;
+	}
+
 	private static final class UnitAnimationListenerImpl implements CUnitAnimationListener {
 		private final MdxComplexInstance instance;
 		private final EnumSet<AnimationTokens.SecondaryTag> secondaryAnimationTags = EnumSet
@@ -435,7 +447,8 @@ public class RenderUnit {
 				final EnumSet<SecondaryTag> secondaryAnimationTags, final float speedRatio,
 				final boolean allowRarityVariations) {
 			this.animationQueue.clear();
-			if (force || (animationName != this.currentAnimation)) {
+			if (force || (animationName != this.currentAnimation)
+					|| !secondaryAnimationTags.equals(this.currentAnimationSecondaryTags)) {
 				this.currentSpeedRatio = speedRatio;
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.secondaryAnimationTags);
@@ -454,7 +467,8 @@ public class RenderUnit {
 				final EnumSet<SecondaryTag> secondaryAnimationTags, final float duration,
 				final boolean allowRarityVariations) {
 			this.animationQueue.clear();
-			if (force || (animationName != this.currentAnimation)) {
+			if (force || (animationName != this.currentAnimation)
+					|| !secondaryAnimationTags.equals(this.currentAnimationSecondaryTags)) {
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);

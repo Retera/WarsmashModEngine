@@ -1,14 +1,14 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
-import com.badlogic.gdx.math.Vector2;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 
-public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiver<Vector2> {
+public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiver<AbilityPointTarget> {
 	public static final PointAbilityTargetCheckReceiver INSTANCE = new PointAbilityTargetCheckReceiver();
 
-	private Vector2 target;
+	private AbilityPointTarget target;
 
 	@Override
-	public void targetOk(final Vector2 target) {
+	public void targetOk(final AbilityPointTarget target) {
 		this.target = target;
 	}
 
@@ -52,7 +52,7 @@ public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiv
 		this.target = null;
 	}
 
-	public Vector2 getTarget() {
+	public AbilityPointTarget getTarget() {
 		return this.target;
 	}
 

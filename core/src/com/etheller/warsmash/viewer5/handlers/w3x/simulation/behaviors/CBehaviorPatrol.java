@@ -1,23 +1,23 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors;
 
-import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorPatrol implements CRangedBehavior {
 
 	private final CUnit unit;
-	private Vector2 target;
-	private Vector2 startPoint;
+	private AbilityPointTarget target;
+	private AbilityPointTarget startPoint;
 
 	public CBehaviorPatrol(final CUnit unit) {
 		this.unit = unit;
 	}
 
-	public CBehavior reset(final Vector2 target) {
+	public CBehavior reset(final AbilityPointTarget target) {
 		this.target = target;
-		this.startPoint = new Vector2(this.unit.getX(), this.unit.getY());
+		this.startPoint = new AbilityPointTarget(this.unit.getX(), this.unit.getY());
 		return this;
 	}
 
@@ -34,10 +34,10 @@ public class CBehaviorPatrol implements CRangedBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation simulation) {
-		final Vector2 temp = this.target;
+		final AbilityPointTarget temp = this.target;
 		this.target = this.startPoint;
 		this.startPoint = temp;
-		return this.unit.getMoveBehavior().reset(this.target.x, this.target.y, this);
+		return this.unit.getMoveBehavior().reset(this.target, this);
 	}
 
 }

@@ -3,11 +3,16 @@ package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 
 public class PathingGrid {
 	private static final Map<String, MovementType> movetpToMovementType = new HashMap<>();
@@ -83,6 +88,147 @@ public class PathingGrid {
 				this.dynamicPathingOverlay[(yy * this.pathingGridSizes[0]) + xx] |= data;
 			}
 		}
+	}
+
+	public boolean checkPathingTexture(final float positionX, final float positionY, final int rotationInput,
+			final BufferedImage pathingTextureTga, final EnumSet<CBuildingPathingType> preventPathingTypes,
+			final EnumSet<CBuildingPathingType> requirePathingTypes, final CWorldCollision cWorldCollision,
+			final CUnit unitToExcludeFromCollisionChecks) {
+		final int rotation = (rotationInput + 450) % 360;
+		final int divW = ((rotation % 180) != 0) ? pathingTextureTga.getHeight() : pathingTextureTga.getWidth();
+		final int divH = ((rotation % 180) != 0) ? pathingTextureTga.getWidth() : pathingTextureTga.getHeight();
+		short anyPathingTypesInRegion = 0;
+		short pathingTypesFillingRegion = (short) 0xFFFF;
+		for (int j = 0; j < pathingTextureTga.getHeight(); j++) {
+			for (int i = 0; i < pathingTextureTga.getWidth(); i++) {
+				int x = i;
+				int y = j;
+
+				switch (rotation) {
+				case 90:
+					x = pathingTextureTga.getHeight() - 1 - j;
+					y = i;
+					break;
+				case 180:
+					x = pathingTextureTga.getWidth() - 1 - i;
+					y = pathingTextureTga.getHeight() - 1 - j;
+					break;
+				case 270:
+					x = j;
+					y = pathingTextureTga.getWidth() - 1 - i;
+					break;
+				}
+				// Width and height for centering change if rotation is not divisible by 180
+				final int xx = (getCellX(positionX) + x) - (divW / 2);
+				final int yy = (getCellY(positionY) + y) - (divH / 2);
+
+				if ((xx < 0) || (xx > (this.pathingGridSizes[0] - 1)) || (yy < 0)
+						|| (yy > (this.pathingGridSizes[1] - 1))) {
+					continue;
+				}
+
+				final short cellPathing = getCellPathing(xx, yy);
+				anyPathingTypesInRegion |= cellPathing;
+				pathingTypesFillingRegion &= cellPathing;
+			}
+		}
+		final float width = pathingTextureTga.getWidth() * 32f;
+		final float height = pathingTextureTga.getHeight() * 32f;
+		final float offsetX = ((pathingTextureTga.getWidth() % 2) == 1) ? 16f : 0f;
+		final float offsetY = ((pathingTextureTga.getHeight() % 2) == 1) ? 16f : 0f;
+		final Rectangle pathingMapRectangle = new Rectangle((positionX - (width / 2)) + offsetX,
+				(positionY - (height / 2)) + offsetY, width, height);
+		short anyPathingTypeWithUnit = 0;
+		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
+				MovementType.AMPHIBIOUS)) {
+			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
+			anyPathingTypeWithUnit |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
+		}
+		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
+				MovementType.FLOAT)) {
+			anyPathingTypesInRegion |= PathingFlags.UNSWIMABLE;
+			anyPathingTypeWithUnit |= PathingFlags.UNSWIMABLE;
+		}
+		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
+				MovementType.FLY)) {
+			anyPathingTypesInRegion |= PathingFlags.UNFLYABLE;
+			anyPathingTypeWithUnit |= PathingFlags.UNFLYABLE;
+		}
+		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
+				MovementType.FOOT)) {
+			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE;
+			anyPathingTypeWithUnit |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE;
+		}
+		pathingTypesFillingRegion &= anyPathingTypeWithUnit;
+		for (final CBuildingPathingType pathingType : preventPathingTypes) {
+			switch (pathingType) {
+			case BLIGHTED:
+				throw new IllegalArgumentException("Blight pathing check system is Not Yet Implemented");
+			case UNAMPH:
+				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNWALKABLE)
+						&& PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNSWIMABLE)) {
+					return false;
+				}
+				break;
+			case UNBUILDABLE:
+				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNBUILDABLE)) {
+					return false;
+				}
+				break;
+			case UNFLOAT:
+				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNSWIMABLE)) {
+					return false;
+				}
+				break;
+			case UNFLYABLE:
+				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNFLYABLE)) {
+					return false;
+				}
+				break;
+			case UNWALKABLE:
+				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNWALKABLE)) {
+					return false;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		for (final CBuildingPathingType pathingType : requirePathingTypes) {
+			switch (pathingType) {
+			case BLIGHTED:
+				throw new IllegalArgumentException("Blight pathing check system is Not Yet Implemented");
+			case UNAMPH:
+				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNWALKABLE)
+						|| !PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNSWIMABLE)) {
+					return false;
+				}
+				break;
+			case UNBUILDABLE:
+				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNBUILDABLE)) {
+					return false;
+				}
+				break;
+			case UNFLOAT:
+				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNSWIMABLE)) {
+					return false;
+				}
+				break;
+			case UNFLYABLE:
+				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNFLYABLE)) {
+					return false;
+				}
+				break;
+			case UNWALKABLE:
+				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNWALKABLE)) {
+					return false;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		return true;
 	}
 
 	public RemovablePathingMapInstance blitRemovablePathingOverlayTexture(final float positionX, final float positionY,

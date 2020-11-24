@@ -9,4 +9,6 @@ public interface CPlayerUnitOrderListener {
 //	boolean issueTargetAndPointOrder(int unitHandleId, int orderId, int targetHandleId, float x, float y);
 
 	void issueImmediateOrder(int unitHandleId, int abilityHandleId, int orderId, boolean queue);
+
+	void unitCancelTrainingItem(int unitHandleId, int cancelIndex);
 }

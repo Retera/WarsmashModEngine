@@ -82,27 +82,51 @@ public class SequenceUtils {
 		return sequence;
 	}
 
+	public static int matchCount(final EnumSet<AnimationTokens.SecondaryTag> goalTagSet,
+			final EnumSet<AnimationTokens.SecondaryTag> tagsToTest) {
+		int matches = 0;
+		for (final AnimationTokens.SecondaryTag goalTag : goalTagSet) {
+			if (tagsToTest.contains(goalTag)) {
+				matches++;
+			}
+		}
+		return matches;
+	}
+
 	public static IndexedSequence selectSequence(final AnimationTokens.PrimaryTag type,
 			final EnumSet<AnimationTokens.SecondaryTag> tags, final List<Sequence> sequences,
 			final boolean allowRarityVariations) {
 		List<IndexedSequence> filtered = filterSequences(type, tags, sequences);
 		final Comparator<IndexedSequence> sequenceComparator = STAND_SEQUENCE_COMPARATOR;
 
-		if (filtered.isEmpty() && !tags.isEmpty()) {
-			filtered = filterSequences(type, EMPTY, sequences);
-		}
+//		if (filtered.isEmpty() && !tags.isEmpty()) {
+//			filtered = filterSequences(type, EMPTY, sequences);
+//		}
 		if (filtered.isEmpty()) {
 			// find tags
 			EnumSet<SecondaryTag> fallbackTags = null;
+			int fallbackTagsMatchCount = 0;
 			for (int i = 0, l = sequences.size(); i < l; i++) {
 				final Sequence sequence = sequences.get(i);
 				if (sequence.getPrimaryTags().contains(type)) {
-					if ((fallbackTags == null) || (sequence.getSecondaryTags().size() < fallbackTags.size())
-							|| ((sequence.getSecondaryTags().size() == fallbackTags.size())
-									&& (SecondaryTagSequenceComparator.getTagsOrdinal(sequence.getSecondaryTags(),
-											tags) > SecondaryTagSequenceComparator.getTagsOrdinal(fallbackTags,
-													tags)))) {
+					final int matchCount = matchCount(tags, sequence.getSecondaryTags());
+					if (matchCount > fallbackTagsMatchCount) {
 						fallbackTags = sequence.getSecondaryTags();
+						fallbackTagsMatchCount = matchCount;
+					}
+				}
+			}
+			if (fallbackTags == null) {
+				for (int i = 0, l = sequences.size(); i < l; i++) {
+					final Sequence sequence = sequences.get(i);
+					if (sequence.getPrimaryTags().contains(type)) {
+						if ((fallbackTags == null) || (sequence.getSecondaryTags().size() < fallbackTags.size())
+								|| ((sequence.getSecondaryTags().size() == fallbackTags.size())
+										&& (SecondaryTagSequenceComparator.getTagsOrdinal(sequence.getSecondaryTags(),
+												tags) > SecondaryTagSequenceComparator.getTagsOrdinal(fallbackTags,
+														tags)))) {
+							fallbackTags = sequence.getSecondaryTags();
+						}
 					}
 				}
 			}

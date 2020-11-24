@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 import java.util.EnumSet;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
@@ -35,5 +36,10 @@ public class CItem extends CWidget {
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
 			final EnumSet<CTargetType> targetsAllowed) {
 		return targetsAllowed.contains(CTargetType.ITEM);
+	}
+
+	@Override
+	public <T> T visit(final AbilityTargetVisitor<T> visitor) {
+		return visitor.accept(this);
 	}
 }

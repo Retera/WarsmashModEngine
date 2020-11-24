@@ -7,6 +7,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -51,12 +53,16 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 	}
 
 	@Override
-	public void doDamage(final CSimulation cSimulation, final CUnit source, final CWidget target, final float damage,
-			final float x, final float y, final int bounceIndex) {
+	public void doDamage(final CSimulation cSimulation, final CUnit source, final AbilityTarget target,
+			final float damage, final float x, final float y, final int bounceIndex) {
 		super.doDamage(cSimulation, source, target, damage, x, y, bounceIndex);
-		final int nextBounceIndex = bounceIndex + 1;
-		if (nextBounceIndex != this.maximumNumberOfTargets) {
-			BounceMissileConsumer.INSTANCE.nextBounce(cSimulation, source, target, this, x, y, damage, nextBounceIndex);
+		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
+		if (widget != null) {
+			final int nextBounceIndex = bounceIndex + 1;
+			if (nextBounceIndex != this.maximumNumberOfTargets) {
+				BounceMissileConsumer.INSTANCE.nextBounce(cSimulation, source, widget, this, x, y, damage,
+						nextBounceIndex);
+			}
 		}
 	}
 

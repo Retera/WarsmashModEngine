@@ -5,6 +5,8 @@ import java.util.EnumSet;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -22,8 +24,11 @@ public class CUnitAttackNormal extends CUnitAttack {
 	}
 
 	@Override
-	public void launch(final CSimulation simulation, final CUnit unit, final CWidget target, final float damage) {
-		target.damage(simulation, unit, getAttackType(), getWeaponSound(), damage);
+	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage) {
+		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
+		if (widget != null) {
+			widget.damage(simulation, unit, getAttackType(), getWeaponSound(), damage);
+		}
 	}
 
 }

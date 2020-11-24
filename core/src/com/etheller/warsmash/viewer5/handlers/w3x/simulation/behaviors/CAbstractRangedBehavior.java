@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 
 public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	protected final CUnit unit;
@@ -10,16 +11,18 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 		this.unit = unit;
 	}
 
+	protected AbilityTarget target;
 	private boolean wasWithinPropWindow = false;
 	private boolean wasInRange = false;
 	private CBehaviorMove moveBehavior;
 
-	protected final CAbstractRangedBehavior innerReset() {
+	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target) {
+		this.target = target;
 		this.wasWithinPropWindow = false;
 		this.wasInRange = false;
 		CBehaviorMove moveBehavior;
 		if (!this.unit.isMovementDisabled()) {
-			moveBehavior = setupMoveBehavior();
+			moveBehavior = this.unit.getMoveBehavior().reset(this.target, this);
 		}
 		else {
 			moveBehavior = null;
@@ -27,12 +30,6 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 		this.moveBehavior = moveBehavior;
 		return this;
 	}
-
-	protected abstract CBehaviorMove setupMoveBehavior();
-
-	protected abstract float getTargetX();
-
-	protected abstract float getTargetY();
 
 	protected abstract CBehavior update(CSimulation simulation, boolean withinRange);
 
@@ -57,8 +54,8 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 		if (!this.unit.isMovementDisabled()) {
 			final float prevX = this.unit.getX();
 			final float prevY = this.unit.getY();
-			final float deltaY = getTargetY() - prevY;
-			final float deltaX = getTargetX() - prevX;
+			final float deltaX = this.target.getX() - prevX;
+			final float deltaY = this.target.getY() - prevY;
 			final double goalAngleRad = Math.atan2(deltaY, deltaX);
 			float goalAngle = (float) Math.toDegrees(goalAngleRad);
 			if (goalAngle < 0) {

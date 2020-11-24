@@ -3,7 +3,8 @@ package com.etheller.warsmash;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -17,7 +18,10 @@ import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
+import com.etheller.warsmash.datasources.MpqDataSourceDescriptor;
 import com.etheller.warsmash.parsers.mdlx.Sequence;
+import com.etheller.warsmash.units.DataTable;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -32,7 +36,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 
 public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvider {
 	private static final boolean SPIN = false;
-	private static final boolean ADVANCE_ANIMS = false;
+	private static final boolean ADVANCE_ANIMS = true;
 	private DataSource codebase;
 	private ModelViewer viewer;
 	private MdxModel model;
@@ -42,6 +46,11 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 	private BitmapFont font;
 	private SpriteBatch batch;
+	private final DataTable warsmashIni;
+
+	public WarsmashGdxGame(final DataTable warsmashIni) {
+		this.warsmashIni = warsmashIni;
+	}
 
 	@Override
 	public void create() {
@@ -58,11 +67,26 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
 		System.err.println("Renderer: " + renderer);
 
-		final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor("E:\\Backups\\Warcraft\\Data\\127");
-		final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor("E:\\Backups\\Warsmash\\Data");
-		final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
-		this.codebase = new CompoundDataSourceDescriptor(
-				Arrays.<DataSourceDescriptor>asList(war3mpq, testingFolder, currentFolder)).createDataSource();
+		final Element dataSourcesConfig = this.warsmashIni.get("DataSources");
+		final int dataSourcesCount = dataSourcesConfig.getFieldValue("Count");
+		final List<DataSourceDescriptor> dataSourcesList = new ArrayList<>();
+		for (int i = 0; i < dataSourcesCount; i++) {
+			final String type = dataSourcesConfig.getField("Type" + (i < 10 ? "0" : "") + i);
+			final String path = dataSourcesConfig.getField("Path" + (i < 10 ? "0" : "") + i);
+			switch (type) {
+			case "Folder": {
+				dataSourcesList.add(new FolderDataSourceDescriptor(path));
+				break;
+			}
+			case "MPQ": {
+				dataSourcesList.add(new MpqDataSourceDescriptor(path));
+				break;
+			}
+			default:
+				throw new RuntimeException("Unknown data source type: " + type);
+			}
+		}
+		this.codebase = new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
 		this.viewer = new MdxViewer(this.codebase, this);
 
 		this.viewer.addHandler(new MdxHandler());
@@ -103,7 +127,8 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 //		acolytesHarvestingSceneJoke2(scene);
 
-		singleModelScene(scene, "Buildings\\Undead\\Necropolis\\Necropolis.mdx", "birth");
+//		singleModelScene(scene, "Buildings\\Undead\\Necropolis\\Necropolis.mdx", "birth");
+		singleModelScene(scene, "Units\\Orc\\KotoBeast\\KotoBeast.mdx", "spell slam");
 
 		System.out.println("Loaded");
 		Gdx.gl30.glClearColor(0.5f, 0.5f, 0.5f, 1); // TODO remove white background
@@ -168,6 +193,8 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		instance3.setSequence(animIndex);
 
 		instance3.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+		this.mainInstance = instance3;
+		this.mainModel = model2;
 	}
 
 	private void acolytesHarvestingScene(final Scene scene) {

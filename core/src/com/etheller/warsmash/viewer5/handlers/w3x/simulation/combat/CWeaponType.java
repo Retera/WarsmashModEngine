@@ -13,4 +13,8 @@ public enum CWeaponType {
 	public static CWeaponType parseWeaponType(final String weaponTypeString) {
 		return valueOf(weaponTypeString.toUpperCase());
 	}
+
+	public boolean isAttackGroundSupported() {
+		return (this == CWeaponType.ARTILLERY) || (this == CWeaponType.ALINE);
+	}
 }

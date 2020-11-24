@@ -342,7 +342,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 				if (this.keyFrames[i] < start) {
 					out[0] = 0;
 
-					return i;
+					return -1;
 				}
 				else if (this.keyFrames[i] <= frame) {
 					out[0] = 1;

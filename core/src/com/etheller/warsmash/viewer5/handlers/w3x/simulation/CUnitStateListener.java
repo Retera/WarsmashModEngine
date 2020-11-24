@@ -9,6 +9,8 @@ public interface CUnitStateListener {
 
 	void queueChanged();
 
+	void rallyPointChanged();
+
 	public static final class CUnitStateNotifier extends SubscriberSetNotifier<CUnitStateListener>
 			implements CUnitStateListener {
 		@Override
@@ -29,6 +31,13 @@ public interface CUnitStateListener {
 		public void queueChanged() {
 			for (final CUnitStateListener listener : set) {
 				listener.queueChanged();
+			}
+		}
+
+		@Override
+		public void rallyPointChanged() {
+			for (final CUnitStateListener listener : set) {
+				listener.rallyPointChanged();
 			}
 		}
 	}

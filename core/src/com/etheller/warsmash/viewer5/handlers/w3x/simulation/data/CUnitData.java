@@ -28,6 +28,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -39,9 +40,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissileLine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissileSplash;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackNormal;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 
 public class CUnitData {
+	private static final War3ID RALLY_RAWCODE = War3ID.fromString("ARal");
 	private static final War3ID MANA_INITIAL_AMOUNT = War3ID.fromString("umpi");
 	private static final War3ID MANA_MAXIMUM = War3ID.fromString("umpm");
 	private static final War3ID HIT_POINT_MAXIMUM = War3ID.fromString("uhpm");
@@ -140,6 +143,9 @@ public class CUnitData {
 	private static final War3ID LUMBER_COST = War3ID.fromString("ulum");
 	private static final War3ID BUILD_TIME = War3ID.fromString("ubld");
 
+	private static final War3ID REQUIRE_PLACE = War3ID.fromString("upar");
+	private static final War3ID PREVENT_PLACE = War3ID.fromString("upap");
+
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
 	private final CAbilityData abilityData;
@@ -206,6 +212,9 @@ public class CUnitData {
 		if (!unitsTrained.isEmpty() || !researchesAvailable.isEmpty()) {
 			unit.add(simulation, new CAbilityQueue(handleIdAllocator.createId(), unitsTrained, researchesAvailable));
 		}
+		if (!unitsTrained.isEmpty()) {
+			unit.add(simulation, new CAbilityRally(handleIdAllocator.createId()));
+		}
 		for (final String ability : abilityList.split(",")) {
 			if ((ability.length() > 0) && !"_".equals(ability)) {
 				final CAbility createAbility = this.abilityData.createAbility(ability, handleIdAllocator.createId());
@@ -270,10 +279,7 @@ public class CUnitData {
 					final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK1_DMG_UPGRADE_AMT, 0);
 					final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK1_TARGET_COUNT, 0);
 					final float projectileArc = unitType.getFieldAsFloat(ATTACK1_PROJECTILE_ARC, 0);
-					String projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
-					if ("_".equals(projectileArt) || projectileArt.isEmpty()) {
-						projectileArt = unitType.getFieldAsString(ATTACK2_MISSILE_ART, 0);
-					}
+					final String projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
 					final boolean projectileHomingEnabled = unitType
 							.getFieldAsBoolean(ATTACK1_PROJECTILE_HOMING_ENABLED, 0);
 					final int projectileSpeed = unitType.getFieldAsInteger(ATTACK1_PROJECTILE_SPEED, 0);
@@ -321,22 +327,35 @@ public class CUnitData {
 					final float damageSpillRadius = unitType.getFieldAsFloat(ATTACK2_DMG_SPILL_RADIUS, 0);
 					final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK2_DMG_UPGRADE_AMT, 0);
 					final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK2_TARGET_COUNT, 0);
-					final float projectileArc = unitType.getFieldAsFloat(ATTACK2_PROJECTILE_ARC, 0);
+					float projectileArc = unitType.getFieldAsFloat(ATTACK2_PROJECTILE_ARC, 0);
 					String projectileArt = unitType.getFieldAsString(ATTACK2_MISSILE_ART, 0);
+					int projectileSpeed = unitType.getFieldAsInteger(ATTACK2_PROJECTILE_SPEED, 0);
 					if ("_".equals(projectileArt) || projectileArt.isEmpty()) {
 						projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
+						projectileSpeed = unitType.getFieldAsInteger(ATTACK1_PROJECTILE_SPEED, 0);
+						projectileArc = unitType.getFieldAsFloat(ATTACK1_PROJECTILE_ARC, 0);
 					}
 					final boolean projectileHomingEnabled = unitType
 							.getFieldAsBoolean(ATTACK2_PROJECTILE_HOMING_ENABLED, 0);
-					final int projectileSpeed = unitType.getFieldAsInteger(ATTACK2_PROJECTILE_SPEED, 0);
 					final int range = unitType.getFieldAsInteger(ATTACK2_RANGE, 0);
 					final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK2_RANGE_MOTION_BUFFER, 0);
-					final boolean showUI = unitType.getFieldAsBoolean(ATTACK2_SHOW_UI, 0);
+					boolean showUI = unitType.getFieldAsBoolean(ATTACK2_SHOW_UI, 0);
 					final EnumSet<CTargetType> targetsAllowed = CTargetType
 							.parseTargetTypeSet(unitType.getFieldAsString(ATTACK2_TARGETS_ALLOWED, 0));
 					final String weaponSound = unitType.getFieldAsString(ATTACK2_WEAPON_SOUND, 0);
 					final CWeaponType weaponType = CWeaponType
 							.parseWeaponType(unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0));
+					if (!attacks.isEmpty()) {
+						final CUnitAttack otherAttack = attacks.get(0);
+						if ((otherAttack.getAttackType() == attackType) && (targetsAllowed.size() == 1)
+								&& (targetsAllowed.contains(CTargetType.TREE)
+										|| (targetsAllowed.contains(CTargetType.STRUCTURE)
+												&& (otherAttack.getDamageBase() == damageBase)
+												&& (otherAttack.getDamageSidesPerDie() == damageSidesPerDie)
+												&& (otherAttack.getDamageDice() == damageDice)))) {
+							showUI = false;
+						}
+					}
 					attacks.add(createAttack(animationBackswingPoint, animationDamagePoint, areaOfEffectFullDamage,
 							areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, attackType,
 							cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor,
@@ -387,13 +406,19 @@ public class CUnitData {
 				}
 			}
 
+			final EnumSet<CBuildingPathingType> preventedPathingTypes = CBuildingPathingType
+					.parsePathingTypeListSet(unitType.getFieldAsString(PREVENT_PLACE, 0));
+			final EnumSet<CBuildingPathingType> requiredPathingTypes = CBuildingPathingType
+					.parsePathingTypeListSet(unitType.getFieldAsString(REQUIRE_PLACE, 0));
+
 			final String raceString = unitType.getFieldAsString(UNIT_RACE, 0);
 			final CUnitRace unitRace = CUnitRace.parseRace(raceString);
 
 			unitTypeInstance = new CUnitType(unitName, isBldg, movementType, moveHeight, collisionSize, classifications,
 					attacks, armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime,
 					targetedAs, acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained,
-					researchesAvailable, unitRace, goldCost, lumberCost, buildTime);
+					researchesAvailable, unitRace, goldCost, lumberCost, buildTime, preventedPathingTypes,
+					requiredPathingTypes);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
 		return unitTypeInstance;

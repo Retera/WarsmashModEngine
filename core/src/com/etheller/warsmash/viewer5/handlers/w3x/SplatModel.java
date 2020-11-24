@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.etheller.warsmash.util.RenderMathUtils;
@@ -27,11 +28,13 @@ public class SplatModel {
 	private final List<float[]> locations;
 	private final List<SplatMover> splatInstances;
 	private final boolean unshaded;
+	private final boolean noDepthTest;
 
 	public SplatModel(final GL30 gl, final Texture texture, final List<float[]> locations, final float[] centerOffset,
-			final List<Consumer<SplatMover>> unitMapping, final boolean unshaded) {
+			final List<Consumer<SplatMover>> unitMapping, final boolean unshaded, final boolean noDepthTest) {
 		this.texture = texture;
 		this.unshaded = unshaded;
+		this.noDepthTest = noDepthTest;
 		this.batches = new ArrayList<>();
 		this.color = new float[] { 1, 1, 1, 1 };
 
@@ -177,6 +180,13 @@ public class SplatModel {
 		if (indices.size() > 0) {
 			this.addBatch(gl, vertices, uvs, indices, batchRenderUnits);
 		}
+		if (this.splatInstances != null) {
+			for (final SplatMover splatMover : this.splatInstances) {
+				if (splatMover.hidden) {
+					splatMover.hide();
+				}
+			}
+		}
 	}
 
 	private void addBatch(final GL30 gl, final List<float[]> vertices, final List<float[]> uvs,
@@ -205,6 +215,12 @@ public class SplatModel {
 	public void render(final GL30 gl, final ShaderProgram shader) {
 		// Texture
 
+		if (this.noDepthTest) {
+			gl.glDisable(GL20.GL_DEPTH_TEST);
+		}
+		else {
+			gl.glEnable(GL20.GL_DEPTH_TEST);
+		}
 		gl.glActiveTexture(GL30.GL_TEXTURE1);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.texture.getGlHandle());
 		shader.setUniformi("u_show_lighting", this.unshaded ? 0 : 1);
@@ -223,6 +239,10 @@ public class SplatModel {
 			gl.glDrawElements(GL30.GL_TRIANGLES, b.elements, GL30.GL_UNSIGNED_SHORT, 0);
 		}
 
+	}
+
+	public boolean isNoDepthTest() {
+		return this.noDepthTest;
 	}
 
 	public SplatMover add(final float x, final float y, final float w, final float h, final float zDepthUpward,
@@ -273,6 +293,7 @@ public class SplatModel {
 		private int indicesStartOffset;
 		private int index;
 		private final SplatModel splatModel;
+		private boolean hidden = false;
 
 		private SplatMover(final SplatModel splatModel) {
 			this.splatModel = splatModel;
@@ -294,6 +315,20 @@ public class SplatModel {
 			this.locs[2] += deltaX;
 			this.locs[1] += deltaY;
 			this.locs[3] += deltaY;
+			updateAfterMove(centerOffset);
+		}
+
+		public void setLocation(final float x, final float y, final float[] centerOffset) {
+			final float width = this.locs[2] - this.locs[0];
+			final float height = this.locs[3] - this.locs[1];
+			this.locs[0] = x - (width / 2);
+			this.locs[2] = x + (width / 2);
+			this.locs[1] = y - (height / 2);
+			this.locs[3] = y + (height / 2);
+			updateAfterMove(centerOffset);
+		}
+
+		private void updateAfterMove(final float[] centerOffset) {
 			final float x0 = this.locs[0];
 			final float y0 = this.locs[1];
 			final float x1 = this.locs[2];
@@ -422,6 +457,7 @@ public class SplatModel {
 					RenderMathUtils.wrapFaces(this.indices));
 			gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, this.uvsOffset + ((this.startOffset / 3) * 2),
 					4 * 2 * this.uvs.size(), RenderMathUtils.wrap(this.uvs));
+			this.hidden = true;
 		}
 
 		public void show(final float[] centerOffset) {
@@ -429,6 +465,7 @@ public class SplatModel {
 			// forcing it visible again by putting the position outside the map
 			this.ix0 = this.ix1 = this.iy0 = this.iy1 = Integer.MIN_VALUE;
 			move(0, 0, centerOffset);
+			this.hidden = false;
 		}
 	}
 }

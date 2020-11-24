@@ -34,6 +34,11 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 		this.ok = false;
 	}
 
+	@Override
+	public void disabled() {
+		this.ok = false;
+	}
+
 	public boolean isOk() {
 		return this.ok;
 	}

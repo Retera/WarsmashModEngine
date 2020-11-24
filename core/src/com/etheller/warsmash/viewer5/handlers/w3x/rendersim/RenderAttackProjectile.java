@@ -11,6 +11,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.IndexedSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 
@@ -48,12 +50,18 @@ public class RenderAttackProjectile implements RenderEffect {
 		final float dyToTarget = targetY - this.y;
 		final float d2DToTarget = (float) StrictMath.sqrt((dxToTarget * dxToTarget) + (dyToTarget * dyToTarget));
 		final float startingDistance = d2DToTarget + this.totalTravelDistance;
-		float impactZ = this.simulationProjectile.getTarget().getImpactZ();
-		if (simulationProjectile.getUnitAttack().getWeaponType() == CWeaponType.ARTILLERY) {
+		final CWidget widgetTarget = this.simulationProjectile.getTarget().visit(AbilityTargetWidgetVisitor.INSTANCE);
+		float impactZ;
+		float flyHeight;
+		if ((simulationProjectile.getUnitAttack().getWeaponType() == CWeaponType.ARTILLERY) || (widgetTarget == null)) {
 			impactZ = 0;
+			flyHeight = 0;
 		}
-		this.targetHeight = (war3MapViewer.terrain.getGroundHeight(targetX, targetY)
-				+ this.simulationProjectile.getTarget().getFlyHeight() + impactZ);
+		else {
+			impactZ = widgetTarget.getImpactZ();
+			flyHeight = widgetTarget.getFlyHeight();
+		}
+		this.targetHeight = (war3MapViewer.terrain.getGroundHeight(targetX, targetY) + flyHeight + impactZ);
 		this.arcPeakHeight = arc * startingDistance;
 		this.yaw = (float) StrictMath.atan2(dyToTarget, dxToTarget);
 	}

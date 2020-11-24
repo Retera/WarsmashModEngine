@@ -6,10 +6,11 @@ public abstract class EventObjectEmitter<EMITTER_OBJECT extends EventObjectEmitt
 		extends MdxEmitter<MdxComplexInstance, EMITTER_OBJECT, EMITTED_OBJECT> {
 	private static final long[] valueHeap = { 0L };
 
-	private long lastValue = 0;
+	private int lastEmissionKey;
 
 	public EventObjectEmitter(final MdxComplexInstance instance, final EMITTER_OBJECT emitterObject) {
 		super(instance, emitterObject);
+		this.lastEmissionKey = -1;
 	}
 
 	@Override
@@ -19,21 +20,18 @@ public abstract class EventObjectEmitter<EMITTER_OBJECT extends EventObjectEmitt
 		if (instance.allowParticleSpawn) {
 			final EMITTER_OBJECT emitterObject = this.emitterObject;
 
-			emitterObject.getValue(valueHeap, instance);
+			final int keyframe = emitterObject.getValue(valueHeap, instance);
 
-			final long value = valueHeap[0];
-
-			if ((value == 1) && (value != this.lastValue)) {
+			if (keyframe != this.lastEmissionKey) {
 				this.currentEmission += 1;
+				this.lastEmissionKey = keyframe;
 			}
-
-			this.lastValue = value;
 		}
 
 	}
 
 	public void reset() {
-		this.lastValue = 0;
+		this.lastEmissionKey = -1;
 	}
 
 	@Override

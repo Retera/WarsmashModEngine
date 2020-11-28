@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.etheller.warsmash.util.RenderMathUtils;
-import com.etheller.warsmash.viewer5.Texture;
+import com.etheller.warsmash.viewer5.ViewerTextureRenderable;
 
 /**
  * TODO this is copied from RivSoft stuff.
@@ -22,7 +22,7 @@ import com.etheller.warsmash.viewer5.Texture;
  */
 public class SplatModel {
 	private static final int MAX_VERTICES = 65000;
-	private final Texture texture;
+	private final ViewerTextureRenderable texture;
 	private final List<Batch> batches;
 	public final float[] color;
 	private final List<float[]> locations;
@@ -30,8 +30,9 @@ public class SplatModel {
 	private final boolean unshaded;
 	private final boolean noDepthTest;
 
-	public SplatModel(final GL30 gl, final Texture texture, final List<float[]> locations, final float[] centerOffset,
-			final List<Consumer<SplatMover>> unitMapping, final boolean unshaded, final boolean noDepthTest) {
+	public SplatModel(final GL30 gl, final ViewerTextureRenderable texture, final List<float[]> locations,
+			final float[] centerOffset, final List<Consumer<SplatMover>> unitMapping, final boolean unshaded,
+			final boolean noDepthTest) {
 		this.texture = texture;
 		this.unshaded = unshaded;
 		this.noDepthTest = noDepthTest;
@@ -245,9 +246,9 @@ public class SplatModel {
 		return this.noDepthTest;
 	}
 
-	public SplatMover add(final float x, final float y, final float w, final float h, final float zDepthUpward,
+	public SplatMover add(final float x, final float y, final float x2, final float y2, final float zDepthUpward,
 			final float[] centerOffset) {
-		this.locations.add(new float[] { x, y, w, h, zDepthUpward });
+		this.locations.add(new float[] { x, y, x2, y2, zDepthUpward });
 		final SplatMover splatMover;
 		if (this.splatInstances != null) {
 			splatMover = new SplatMover(this);

@@ -44,7 +44,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPa
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 
 public class CUnitData {
-	private static final War3ID RALLY_RAWCODE = War3ID.fromString("ARal");
 	private static final War3ID MANA_INITIAL_AMOUNT = War3ID.fromString("umpi");
 	private static final War3ID MANA_MAXIMUM = War3ID.fromString("umpm");
 	private static final War3ID HIT_POINT_MAXIMUM = War3ID.fromString("uhpm");

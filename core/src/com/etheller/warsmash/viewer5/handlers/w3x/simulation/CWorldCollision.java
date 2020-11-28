@@ -190,6 +190,9 @@ public class CWorldCollision {
 
 		@Override
 		public boolean onIntersect(final CUnit intersectingObject) {
+			if (intersectingObject.isHidden()) {
+				return false;
+			}
 			return (intersectingObject != this.firstUnit) && (intersectingObject != this.secondUnit);
 		}
 	}
@@ -208,6 +211,9 @@ public class CWorldCollision {
 
 		@Override
 		public boolean onIntersect(final CUnit intersectingObject) {
+			if (intersectingObject.isHidden()) {
+				return false;
+			}
 			if (this.done) {
 				return true;
 			}

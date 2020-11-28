@@ -2,7 +2,7 @@ package com.etheller.warsmash.viewer5;
 
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
 
-public abstract class Texture extends HandlerResource<ResourceHandler> {
+public abstract class Texture extends HandlerResource<ResourceHandler> implements ViewerTextureRenderable {
 
 	public Texture(final ModelViewer viewer, final String extension, final PathSolver pathSolver, final String fetchUrl,
 			final ResourceHandler handler) {
@@ -17,8 +17,10 @@ public abstract class Texture extends HandlerResource<ResourceHandler> {
 
 	public abstract int getHeight();
 
+	@Override
 	public abstract int getGlTarget();
 
+	@Override
 	public abstract int getGlHandle();
 
 	public abstract void setWrapS(final boolean wrapS);

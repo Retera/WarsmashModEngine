@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 
+import java.awt.image.BufferedImage;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
@@ -41,6 +42,18 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
+		final BufferedImage buildingPathingPixelMap = game.getUnitData().getUnitType(new War3ID(orderId))
+				.getBuildingPathingPixelMap();
+		if (buildingPathingPixelMap != null) {
+			point.x = (float) Math.floor(point.x / 64f) * 64f;
+			point.y = (float) Math.floor(point.y / 64f) * 64f;
+			if (((buildingPathingPixelMap.getWidth() / 2) % 2) == 1) {
+				point.x += 32f;
+			}
+			if (((buildingPathingPixelMap.getHeight() / 2) % 2) == 1) {
+				point.y += 32f;
+			}
+		}
 		return this.buildBehavior.reset(point, orderId, getBaseOrderId());
 	}
 

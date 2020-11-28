@@ -910,8 +910,14 @@ public class War3MapViewer extends ModelViewer {
 
 				buildingPathingPixelMap = getBuildingPathingPixelMap(row);
 				if (buildingPathingPixelMap != null) {
-					unitX = Math.round(unitX / 64f) * 64f;
-					unitY = Math.round(unitY / 64f) * 64f;
+					unitX = (float) Math.floor(unitX / 64f) * 64f;
+					unitY = (float) Math.floor(unitY / 64f) * 64f;
+					if (((buildingPathingPixelMap.getWidth() / 2) % 2) == 1) {
+						unitX += 32f;
+					}
+					if (((buildingPathingPixelMap.getHeight() / 2) % 2) == 1) {
+						unitY += 32f;
+					}
 					pathingInstance = this.terrain.pathingGrid.blitRemovablePathingOverlayTexture(unitX, unitY,
 							(int) Math.toDegrees(unitAngle), buildingPathingPixelMap);
 				}

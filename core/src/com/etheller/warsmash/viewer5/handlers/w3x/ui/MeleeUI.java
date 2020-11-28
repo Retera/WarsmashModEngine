@@ -11,11 +11,15 @@ import javax.imageio.ImageIO;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Pixmap.Blending;
+import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -43,6 +47,7 @@ import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.ViewerTextureRenderable;
 import com.etheller.warsmash.viewer5.handlers.mdx.Attachment;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -54,6 +59,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
@@ -61,6 +67,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.GameCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.PortraitCameraManager;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
@@ -101,6 +108,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CodeKeyType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissileSplash;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
@@ -113,6 +121,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.QueueIconListener;
 
 public class MeleeUI
 		implements CUnitStateListener, CommandButtonListener, CommandCardCommandListener, QueueIconListener {
+	private static final String BUILDING_PATHING_PREVIEW_KEY = "buildingPathingPreview";
 	public static final float DEFAULT_COMMAND_CARD_ICON_WIDTH = 0.039f;
 	public static final float DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH = 0.037f;
 	private static final int COMMAND_CARD_WIDTH = 4;
@@ -192,6 +201,11 @@ public class MeleeUI
 	private MdxComplexInstance cursorModelInstance = null;
 	private MdxComplexInstance rallyPointInstance = null;
 	private BufferedImage cursorModelPathing;
+	private Pixmap cursorModelUnderneathPathingRedGreenPixmap;
+	private Texture cursorModelUnderneathPathingRedGreenPixmapTexture;
+	private PixmapTextureData cursorModelUnderneathPathingRedGreenPixmapTextureData;
+	private SplatModel cursorModelUnderneathPathingRedGreenSplatModel;
+	private CUnitType cursorBuildingUnitType;
 	private SplatMover placementCursor = null;
 	private final CursorTargetSetupVisitor cursorTargetSetupVisitor;
 
@@ -632,10 +646,14 @@ public class MeleeUI
 				this.cursorModelInstance = null;
 				this.cursorFrame.setVisible(true);
 			}
-			else if (this.placementCursor != null) {
+			if (this.placementCursor != null) {
 				this.placementCursor.destroy(Gdx.gl30, this.war3MapViewer.terrain.centerOffset);
 				this.placementCursor = null;
 				this.cursorFrame.setVisible(true);
+			}
+			if (this.cursorModelUnderneathPathingRedGreenSplatModel != null) {
+				this.war3MapViewer.terrain.removeSplatBatchModel(BUILDING_PATHING_PREVIEW_KEY);
+				this.cursorModelUnderneathPathingRedGreenSplatModel = null;
 			}
 			if (down) {
 				if (left) {
@@ -832,6 +850,7 @@ public class MeleeUI
 			if (MeleeUI.this.cursorModelInstance == null) {
 				final MutableObjectData unitData = viewer.getAllObjectData().getUnits();
 				final War3ID buildingTypeId = new War3ID(MeleeUI.this.activeCommandOrderId);
+				MeleeUI.this.cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
 				final String unitModelPath = viewer.getUnitModelPath(unitData.get(buildingTypeId));
 				final MdxModel model = (MdxModel) viewer.load(unitModelPath, viewer.mapPathSolver, viewer.solverParams);
 				MeleeUI.this.cursorModelInstance = (MdxComplexInstance) model.addInstance();
@@ -843,14 +862,75 @@ public class MeleeUI
 						viewer.simulation.getGameplayConstants().getBuildingAngle()));
 				MeleeUI.this.cursorModelInstance.setAnimationSpeed(0f);
 				justLoaded = true;
-				final CUnitType buildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
+				final CUnitType buildingUnitType = MeleeUI.this.cursorBuildingUnitType;
 				MeleeUI.this.cursorModelPathing = buildingUnitType.getBuildingPathingPixelMap();
+
+				if (MeleeUI.this.cursorModelPathing != null) {
+					MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap = new Pixmap(
+							MeleeUI.this.cursorModelPathing.getWidth(), MeleeUI.this.cursorModelPathing.getHeight(),
+							Format.RGBA8888);
+					MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.setBlending(Blending.None);
+					MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTextureData = new PixmapTextureData(
+							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap, Format.RGBA8888, false, false);
+					MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTexture = new Texture(
+							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTextureData);
+					final ViewerTextureRenderable greenPixmap = new ViewerTextureRenderable.GdxViewerTextureRenderable(
+							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTexture);
+					MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel = new SplatModel(Gdx.gl30, greenPixmap,
+							new ArrayList<>(), viewer.terrain.centerOffset, new ArrayList<>(), true, false);
+					MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel.color[3] = 0.20f;
+				}
 			}
 			viewer.getClickLocation(clickLocationTemp, this.baseMouseX, Gdx.graphics.getHeight() - this.baseMouseY);
 			if (MeleeUI.this.cursorModelPathing != null) {
-				clickLocationTemp.x = Math.round(clickLocationTemp.x / 64f) * 64f;
-				clickLocationTemp.y = Math.round(clickLocationTemp.y / 64f) * 64f;
+				clickLocationTemp.x = (float) Math.floor(clickLocationTemp.x / 64f) * 64f;
+				clickLocationTemp.y = (float) Math.floor(clickLocationTemp.y / 64f) * 64f;
+				if (((MeleeUI.this.cursorModelPathing.getWidth() / 2) % 2) == 1) {
+					clickLocationTemp.x += 32f;
+				}
+				if (((MeleeUI.this.cursorModelPathing.getHeight() / 2) % 2) == 1) {
+					clickLocationTemp.y += 32f;
+				}
 				clickLocationTemp.z = viewer.terrain.getGroundHeight(clickLocationTemp.x, clickLocationTemp.y);
+
+				final float halfRenderWidth = MeleeUI.this.cursorModelPathing.getWidth() * 16;
+				final float halfRenderHeight = MeleeUI.this.cursorModelPathing.getHeight() * 16;
+				for (int i = 0; i < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
+					for (int j = 0; j < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
+						boolean blocked = false;
+						final short pathing = viewer.simulation.getPathingGrid().getPathing(
+								(clickLocationTemp.x + (i * 32)) - halfRenderWidth,
+								(clickLocationTemp.y + (j * 32)) - halfRenderHeight);
+						for (final CBuildingPathingType preventedType : MeleeUI.this.cursorBuildingUnitType
+								.getPreventedPathingTypes()) {
+							if (PathingFlags.isPathingFlag(pathing, preventedType)) {
+								blocked = true;
+							}
+						}
+						for (final CBuildingPathingType requiredType : MeleeUI.this.cursorBuildingUnitType
+								.getRequiredPathingTypes()) {
+							if (!PathingFlags.isPathingFlag(pathing, requiredType)) {
+								blocked = true;
+							}
+						}
+						final int color = blocked ? Color.rgba8888(1, 0, 0, 1.0f) : Color.rgba8888(0, 1, 0, 1.0f);
+						MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
+								MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j, color);
+					}
+				}
+				MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTexture
+						.load(MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTextureData);
+
+				if (justLoaded) {
+					viewer.terrain.addSplatBatchModel(BUILDING_PATHING_PREVIEW_KEY,
+							MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel);
+					MeleeUI.this.placementCursor = MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel.add(
+							clickLocationTemp.x - halfRenderWidth, clickLocationTemp.y - halfRenderHeight,
+							clickLocationTemp.x + halfRenderWidth, clickLocationTemp.y + halfRenderHeight, 10,
+							viewer.terrain.centerOffset);
+				}
+				MeleeUI.this.placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
+						viewer.terrain.centerOffset);
 			}
 			MeleeUI.this.cursorModelInstance.setLocation(clickLocationTemp);
 			SequenceUtils.randomSequence(MeleeUI.this.cursorModelInstance, PrimaryTag.STAND);

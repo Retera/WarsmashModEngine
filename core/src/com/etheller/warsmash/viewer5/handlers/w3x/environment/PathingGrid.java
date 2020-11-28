@@ -141,91 +141,37 @@ public class PathingGrid {
 		short anyPathingTypeWithUnit = 0;
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
 				MovementType.AMPHIBIOUS)) {
+			System.out.println("intersects amph unit");
 			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
 			anyPathingTypeWithUnit |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
 				MovementType.FLOAT)) {
+			System.out.println("intersects float unit");
 			anyPathingTypesInRegion |= PathingFlags.UNSWIMABLE;
 			anyPathingTypeWithUnit |= PathingFlags.UNSWIMABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
 				MovementType.FLY)) {
+			System.out.println("intersects fly unit");
 			anyPathingTypesInRegion |= PathingFlags.UNFLYABLE;
 			anyPathingTypeWithUnit |= PathingFlags.UNFLYABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
 				MovementType.FOOT)) {
+			System.out.println("intersects foot unit");
 			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE;
 			anyPathingTypeWithUnit |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE;
 		}
 		pathingTypesFillingRegion &= anyPathingTypeWithUnit;
 		for (final CBuildingPathingType pathingType : preventPathingTypes) {
-			switch (pathingType) {
-			case BLIGHTED:
-				throw new IllegalArgumentException("Blight pathing check system is Not Yet Implemented");
-			case UNAMPH:
-				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNWALKABLE)
-						&& PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNSWIMABLE)) {
-					return false;
-				}
-				break;
-			case UNBUILDABLE:
-				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNBUILDABLE)) {
-					return false;
-				}
-				break;
-			case UNFLOAT:
-				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNSWIMABLE)) {
-					return false;
-				}
-				break;
-			case UNFLYABLE:
-				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNFLYABLE)) {
-					return false;
-				}
-				break;
-			case UNWALKABLE:
-				if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, PathingFlags.UNWALKABLE)) {
-					return false;
-				}
-				break;
-			default:
-				break;
+			if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, pathingType)) {
+				return false;
 			}
 		}
 		for (final CBuildingPathingType pathingType : requirePathingTypes) {
-			switch (pathingType) {
-			case BLIGHTED:
-				throw new IllegalArgumentException("Blight pathing check system is Not Yet Implemented");
-			case UNAMPH:
-				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNWALKABLE)
-						|| !PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNSWIMABLE)) {
-					return false;
-				}
-				break;
-			case UNBUILDABLE:
-				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNBUILDABLE)) {
-					return false;
-				}
-				break;
-			case UNFLOAT:
-				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNSWIMABLE)) {
-					return false;
-				}
-				break;
-			case UNFLYABLE:
-				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNFLYABLE)) {
-					return false;
-				}
-				break;
-			case UNWALKABLE:
-				if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, PathingFlags.UNWALKABLE)) {
-					return false;
-				}
-				break;
-			default:
-				break;
+			if (!PathingFlags.isPathingFlag(pathingTypesFillingRegion, pathingType)) {
+				return false;
 			}
 		}
 		return true;
@@ -381,6 +327,26 @@ public class PathingGrid {
 
 		public static boolean isPathingFlag(final short pathingValue, final int flag) {
 			return (pathingValue & flag) != 0;
+		}
+
+		public static boolean isPathingFlag(final short pathingValue, final CBuildingPathingType pathingType) {
+			switch (pathingType) {
+			case BLIGHTED:
+				throw new IllegalArgumentException("Blight pathing check system is Not Yet Implemented");
+			case UNAMPH:
+				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNWALKABLE)
+						&& PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNSWIMABLE);
+			case UNBUILDABLE:
+				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNBUILDABLE);
+			case UNFLOAT:
+				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNSWIMABLE);
+			case UNFLYABLE:
+				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNFLYABLE);
+			case UNWALKABLE:
+				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNWALKABLE);
+			default:
+				return false;
+			}
 		}
 
 		private PathingFlags() {

@@ -30,6 +30,14 @@ public final class ImageUtils {
 	public static final String DEFAULT_ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNTemp.blp";
 
 	public static Texture getBLPTexture(final DataSource dataSource, final String path) {
+		final BufferedImage image = getBLPImage(dataSource, path);
+		if (image != null) {
+			return ImageUtils.getTexture(image);
+		}
+		return null;
+	}
+
+	public static BufferedImage getBLPImage(final DataSource dataSource, final String path) {
 		try {
 			try (final InputStream resourceAsStream = dataSource.getResourceAsStream(path)) {
 				if ((resourceAsStream == null) || path.endsWith(".tga")) {
@@ -39,7 +47,7 @@ public final class ImageUtils {
 							throw new IllegalStateException("missing resource: " + path);
 						}
 						else {
-							return ImageUtils.getTexture(TgaFile.readTGA(tgaPath, tgaStream));
+							return TgaFile.readTGA(tgaPath, tgaStream);
 						}
 					}
 				}
@@ -47,7 +55,7 @@ public final class ImageUtils {
 				if (image == null) {
 					throw new IllegalStateException("corrupt resource: " + path);
 				}
-				return ImageUtils.getTexture(image);
+				return image;
 			}
 
 		}

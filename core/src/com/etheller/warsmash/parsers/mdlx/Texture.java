@@ -90,4 +90,16 @@ public class Texture implements MdlxBlock {
 		return this.flags;
 	}
 
+	public void setReplaceableId(final int replaceableId) {
+		this.replaceableId = replaceableId;
+	}
+
+	public void setPath(final String path) {
+		this.path = path;
+	}
+
+	public void setFlags(final int flags) {
+		this.flags = flags;
+	}
+
 }

@@ -25,6 +25,43 @@ import com.etheller.warsmash.viewer5.gl.WireframeExtension;
 
 public class DesktopLauncher {
 	public static void main(final String[] arg) {
+		loadExtensions();
+		final DataTable warsmashIni = loadWarsmashIni();
+		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+		config.useGL30 = true;
+		config.gles30ContextMajorVersion = 3;
+		config.gles30ContextMinorVersion = 3;
+		// config.samples = 16;
+//		config.vSyncEnabled = false;
+//		config.foregroundFPS = 0;
+//		config.backgroundFPS = 0;
+		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
+		config.width = desktopDisplayMode.width;
+		config.height = desktopDisplayMode.height;
+		if ((arg.length > 0) && "-windowed".equals(arg[0])) {
+			config.fullscreen = false;
+		}
+		else {
+			config.fullscreen = true;
+		}
+		new LwjglApplication(new WarsmashGdxMapGame(warsmashIni), config);
+	}
+
+	public static DataTable loadWarsmashIni() {
+		final DataTable warsmashIni = new DataTable(StringBundle.EMPTY);
+		try (FileInputStream warsmashIniInputStream = new FileInputStream("warsmash.ini")) {
+			warsmashIni.readTXT(warsmashIniInputStream, true);
+		}
+		catch (final FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+		return warsmashIni;
+	}
+
+	public static void loadExtensions() {
 		Extensions.angleInstancedArrays = new ANGLEInstancedArrays() {
 			@Override
 			public void glVertexAttribDivisorANGLE(final int index, final int divisor) {
@@ -70,35 +107,7 @@ public class DesktopLauncher {
 				return ((OpenALSound) sound).duration();
 			}
 		};
-		final DataTable warsmashIni = new DataTable(StringBundle.EMPTY);
-		try (FileInputStream warsmashIniInputStream = new FileInputStream("warsmash.ini")) {
-			warsmashIni.readTXT(warsmashIniInputStream, true);
-		}
-		catch (final FileNotFoundException e) {
-			throw new RuntimeException(e);
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
 		Extensions.GL_LINE = GL11.GL_LINE;
 		Extensions.GL_FILL = GL11.GL_FILL;
-		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.useGL30 = true;
-		config.gles30ContextMajorVersion = 3;
-		config.gles30ContextMinorVersion = 3;
-		// config.samples = 16;
-//		config.vSyncEnabled = false;
-//		config.foregroundFPS = 0;
-//		config.backgroundFPS = 0;
-		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
-		config.width = desktopDisplayMode.width;
-		config.height = desktopDisplayMode.height;
-		if ((arg.length > 0) && "-windowed".equals(arg[0])) {
-			config.fullscreen = false;
-		}
-		else {
-			config.fullscreen = true;
-		}
-		new LwjglApplication(new WarsmashGdxMapGame(warsmashIni), config);
 	}
 }

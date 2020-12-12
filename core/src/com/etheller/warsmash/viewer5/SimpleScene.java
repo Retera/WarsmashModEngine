@@ -41,7 +41,9 @@ public class SimpleScene extends Scene {
 		for (final ModelInstance instance : new ArrayList<>(this.allInstances)) {
 			// Below: current SimpleScene is not checking instance visibility.
 			// It's meant to be simple. Low number of models. Render everything,
-			// dont check visible
+			// dont check visible. Then I had to add a call to isVisible() because it
+			// assigns depth, which is crazy.
+			instance.isVisible(this.camera);
 			if (instance.rendered && (instance.cullFrame < frame)) {
 				instance.cullFrame = frame;
 

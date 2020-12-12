@@ -11,13 +11,13 @@ public abstract class CameraManager {
 	protected final float[] cameraPositionTemp = new float[3];
 	protected final float[] cameraTargetTemp = new float[3];
 	protected CanvasProvider canvas;
-	protected Camera camera;
+	public Camera camera;
 	protected float moveSpeed;
 	protected float rotationSpeed;
 	protected float zoomFactor;
-	protected float horizontalAngle;
-	protected float verticalAngle;
-	protected float distance;
+	public float horizontalAngle;
+	public float verticalAngle;
+	public float distance;
 	protected Vector3 position;
 	public Vector3 target;
 	protected Vector3 worldUp;

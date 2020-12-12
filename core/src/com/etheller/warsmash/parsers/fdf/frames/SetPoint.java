@@ -49,4 +49,10 @@ public class SetPoint implements FramePointAssignment {
 	public float getY(final GameUI gameUI, final Viewport uiViewport) {
 		return this.other.getFramePointY(this.otherPoint) + this.y;
 	}
+
+	@Override
+	public String toString() {
+		return "SetPoint [myPoint=" + this.myPoint + ", other=" + this.other + ", otherPoint=" + this.otherPoint
+				+ ", x=" + this.x + ", y=" + this.y + "]";
+	}
 }

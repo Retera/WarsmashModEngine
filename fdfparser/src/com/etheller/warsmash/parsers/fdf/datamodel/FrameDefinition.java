@@ -12,6 +12,7 @@ import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetFloatFieldV
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetFontFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetStringFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetTextJustifyFieldVisitor;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetVector2FieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetVector4FieldVisitor;
 
 /**
@@ -122,6 +123,14 @@ public class FrameDefinition {
 		final FrameDefinitionField frameDefinitionField = this.nameToField.get(id);
 		if (frameDefinitionField != null) {
 			return frameDefinitionField.visit(GetVector4FieldVisitor.INSTANCE);
+		}
+		return null;
+	}
+
+	public Vector2Definition getVector2(final String id) {
+		final FrameDefinitionField frameDefinitionField = this.nameToField.get(id);
+		if (frameDefinitionField != null) {
+			return frameDefinitionField.visit(GetVector2FieldVisitor.INSTANCE);
 		}
 		return null;
 	}

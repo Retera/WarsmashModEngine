@@ -21,7 +21,7 @@ public class Camera {
 	private float fov;
 	private float aspect;
 
-	private boolean isOrtho;
+	public boolean isOrtho;
 	private float leftClipPlane;
 	private float rightClipPlane;
 	private float bottomClipPlane;
@@ -136,6 +136,8 @@ public class Camera {
 		this.topClipPlane = top;
 		this.nearClipPlane = near;
 		this.farClipPlane = far;
+
+		this.dirty = true;
 	}
 
 	public void viewport(final Rectangle viewport) {

@@ -15,10 +15,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 
 public class SpriteFrame extends AbstractRenderableFrame {
 
-	private final Scene scene;
+	protected final Scene scene;
+	protected final Viewport uiViewport;
 	private MdxComplexInstance instance;
 	private float zDepth;
-	private final Viewport uiViewport;
 
 	public SpriteFrame(final String name, final UIFrame parent, final Scene scene, final Viewport uiViewport) {
 		super(name, parent);
@@ -121,6 +121,10 @@ public class SpriteFrame extends AbstractRenderableFrame {
 				this.instance.hide();
 			}
 		}
+	}
+
+	public boolean isSequenceEnded() {
+		return this.instance.sequenceEnded;
 	}
 
 }

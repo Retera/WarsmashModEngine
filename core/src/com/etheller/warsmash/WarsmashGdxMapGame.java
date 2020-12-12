@@ -52,7 +52,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
-import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErrorListener;
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
 	private static final boolean ENABLE_AUDIO = true;
@@ -78,6 +78,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	private Scene uiScene;
 	private MeleeUI meleeUI;
+	private FreeTypeFontGenerator fontGenerator;
 
 	public WarsmashGdxMapGame(final DataTable warsmashIni) {
 		this.warsmashIni = warsmashIni;
@@ -103,27 +104,9 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
 		System.err.println("Renderer: " + renderer);
 
-		final Element dataSourcesConfig = this.warsmashIni.get("DataSources");
-		final int dataSourcesCount = dataSourcesConfig.getFieldValue("Count");
-		final List<DataSourceDescriptor> dataSourcesList = new ArrayList<>();
-		for (int i = 0; i < dataSourcesCount; i++) {
-			final String type = dataSourcesConfig.getField("Type" + (i < 10 ? "0" : "") + i);
-			final String path = dataSourcesConfig.getField("Path" + (i < 10 ? "0" : "") + i);
-			switch (type) {
-			case "Folder": {
-				dataSourcesList.add(new FolderDataSourceDescriptor(path));
-				break;
-			}
-			case "MPQ": {
-				dataSourcesList.add(new MpqDataSourceDescriptor(path));
-				break;
-			}
-			default:
-				throw new RuntimeException("Unknown data source type: " + type);
-			}
-		}
-		this.codebase = new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
-		this.viewer = new War3MapViewer(this.codebase, this);
+		final SettableCommandErrorListener commandErrorListener = new SettableCommandErrorListener();
+		this.codebase = parseDataSources(this.warsmashIni);
+		this.viewer = new War3MapViewer(this.codebase, this, commandErrorListener);
 
 		if (ENABLE_AUDIO) {
 			this.viewer.worldScene.enableAudio();
@@ -170,13 +153,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final int width = Gdx.graphics.getWidth();
 		final int height = Gdx.graphics.getHeight();
 
-		final FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(
+		this.fontGenerator = new FreeTypeFontGenerator(
 				new DataSourceFileHandle(this.viewer.dataSource, "fonts\\FRIZQT__.TTF"));
 		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
 		fontParam.size = 32;
-		this.font = fontGenerator.generateFont(fontParam);
+		this.font = this.fontGenerator.generateFont(fontParam);
 		fontParam.size = 20;
-		this.font20 = fontGenerator.generateFont(fontParam);
+		this.font20 = this.fontGenerator.generateFont(fontParam);
 		this.glyphLayout = new GlyphLayout();
 
 		// Constructs a new OrthographicCamera, using the given viewport width and
@@ -222,7 +205,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				cameraRatesElement.getFieldFloatValue("FOV"), cameraRatesElement.getFieldFloatValue("Rotation"),
 				cameraRatesElement.getFieldFloatValue("Distance"), cameraRatesElement.getFieldFloatValue("Forward"),
 				cameraRatesElement.getFieldFloatValue("Strafe"));
-		this.meleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, fontGenerator, this.uiScene, portraitScene,
+		this.meleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, this.fontGenerator, this.uiScene, portraitScene,
 				cameraPresets, cameraRates, this.viewer, new RootFrameListener() {
 					@Override
 					public void onCreate(final GameUI rootFrame) {
@@ -242,17 +225,12 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 							music.play();
 						}
 					}
-				}, new CPlayerUnitOrderExecutor(this.viewer.simulation, new CommandErrorListener() {
-					@Override
-					public void showCommandError(final String message) {
-						WarsmashGdxMapGame.this.meleeUI.showCommandError(message);
-					}
-				}));
+				}, new CPlayerUnitOrderExecutor(this.viewer.simulation, commandErrorListener));
+		commandErrorListener.setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 				this.viewer.mapPathSolver, "").addInstance();
 		libgdxContentInstance.setScene(this.uiScene);
 		this.meleeUI.main();
-		fontGenerator.dispose();
 
 		updateUIScene();
 
@@ -264,6 +242,29 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static DataSource parseDataSources(final DataTable warsmashIni) {
+		final Element dataSourcesConfig = warsmashIni.get("DataSources");
+		final int dataSourcesCount = dataSourcesConfig.getFieldValue("Count");
+		final List<DataSourceDescriptor> dataSourcesList = new ArrayList<>();
+		for (int i = 0; i < dataSourcesCount; i++) {
+			final String type = dataSourcesConfig.getField("Type" + (i < 10 ? "0" : "") + i);
+			final String path = dataSourcesConfig.getField("Path" + (i < 10 ? "0" : "") + i);
+			switch (type) {
+			case "Folder": {
+				dataSourcesList.add(new FolderDataSourceDescriptor(path));
+				break;
+			}
+			case "MPQ": {
+				dataSourcesList.add(new MpqDataSourceDescriptor(path));
+				break;
+			}
+			default:
+				throw new RuntimeException("Unknown data source type: " + type);
+			}
+		}
+		return new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
 	}
 
 	private void updateUIScene() {
@@ -280,7 +281,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final float uiSceneHeight = 0.6f * yScale;
 		final float uiSceneX = ((0.8f - uiSceneWidth) / 2);
 		final float uiSceneY = ((0.6f - uiSceneHeight) / 2);
-		this.uiScene.camera.ortho(uiSceneX, uiSceneWidth + uiSceneX, uiSceneY, uiSceneHeight + uiSceneY, -1f, 1);
+		this.uiScene.camera.ortho(uiSceneX, uiSceneWidth + uiSceneX, uiSceneY, uiSceneHeight + uiSceneY, -1024f, 1024);
 	}
 
 	@Override
@@ -328,6 +329,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public void dispose() {
+		this.fontGenerator.dispose();
 	}
 
 	@Override

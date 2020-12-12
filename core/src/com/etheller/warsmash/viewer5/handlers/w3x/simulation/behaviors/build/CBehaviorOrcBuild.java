@@ -73,6 +73,9 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 			this.unit.setInvulnerable(true);
 			simulation.unitConstructedEvent(this.unit, constructedStructure);
 		}
+		else {
+			simulation.getCommandErrorListener().showCantPlaceError();
+		}
 		return this.unit.pollNextOrderBehavior(simulation);
 	}
 

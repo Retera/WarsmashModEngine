@@ -14,6 +14,10 @@ public class StringFrame extends AbstractRenderableFrame {
 	private final TextJustify justifyH;
 	private final TextJustify justifyV;
 	private final BitmapFont frameFont;
+	private Color fontShadowColor;
+	private float fontShadowOffsetX;
+	private float fontShadowOffsetY;
+	private float alpha = 1.0f;
 
 	public StringFrame(final String name, final UIFrame parent, final Color color, final TextJustify justifyH,
 			final TextJustify justifyV, final BitmapFont frameFont) {
@@ -36,9 +40,20 @@ public class StringFrame extends AbstractRenderableFrame {
 		this.color = color;
 	}
 
+	public void setFontShadowColor(final Color fontShadowColor) {
+		this.fontShadowColor = fontShadowColor;
+	}
+
+	public void setFontShadowOffsetX(final float fontShadowOffsetX) {
+		this.fontShadowOffsetX = fontShadowOffsetX;
+	}
+
+	public void setFontShadowOffsetY(final float fontShadowOffsetY) {
+		this.fontShadowOffsetY = fontShadowOffsetY;
+	}
+
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
-		this.frameFont.setColor(this.color);
 		glyphLayout.setText(this.frameFont, this.text);
 		final float x;
 		switch (this.justifyH) {
@@ -66,11 +81,22 @@ public class StringFrame extends AbstractRenderableFrame {
 			y = this.renderBounds.y + this.frameFont.getLineHeight();
 			break;
 		}
+		if (this.fontShadowColor != null) {
+			this.frameFont.setColor(this.fontShadowColor.r, this.fontShadowColor.g, this.fontShadowColor.b,
+					this.fontShadowColor.a * this.alpha);
+			this.frameFont.draw(batch, this.text, x + this.fontShadowOffsetX, y + this.fontShadowOffsetY);
+		}
+		this.frameFont.setColor(this.color.r, this.color.g, this.color.b, this.color.a * this.alpha);
 		this.frameFont.draw(batch, this.text, x, y);
 	}
 
 	@Override
 	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
+	}
+
+	public void setAlpha(final float alpha) {
+		this.alpha = alpha;
+
 	}
 
 }

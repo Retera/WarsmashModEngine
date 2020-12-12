@@ -194,27 +194,51 @@ public class Layer extends AnimatedObject {
 	}
 
 	public FilterMode getFilterMode() {
-		return filterMode;
+		return this.filterMode;
 	}
 
 	public int getFlags() {
-		return flags;
+		return this.flags;
 	}
 
 	public int getTextureId() {
-		return textureId;
+		return this.textureId;
 	}
 
 	public int getTextureAnimationId() {
-		return textureAnimationId;
+		return this.textureAnimationId;
 	}
 
 	public long getCoordId() {
-		return coordId;
+		return this.coordId;
 	}
 
 	public float getAlpha() {
-		return alpha;
+		return this.alpha;
+	}
+
+	public void setFilterMode(final FilterMode filterMode) {
+		this.filterMode = filterMode;
+	}
+
+	public void setFlags(final int flags) {
+		this.flags = flags;
+	}
+
+	public void setTextureId(final int textureId) {
+		this.textureId = textureId;
+	}
+
+	public void setTextureAnimationId(final int textureAnimationId) {
+		this.textureAnimationId = textureAnimationId;
+	}
+
+	public void setCoordId(final long coordId) {
+		this.coordId = coordId;
+	}
+
+	public void setAlpha(final float alpha) {
+		this.alpha = alpha;
 	}
 
 }

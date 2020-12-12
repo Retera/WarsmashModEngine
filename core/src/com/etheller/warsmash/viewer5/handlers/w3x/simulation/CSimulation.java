@@ -57,7 +57,7 @@ public class CSimulation {
 	public CSimulation(final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedAbilityData, final SimulationRenderController simulationRenderController,
 			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
-			final List<Player> playerInfos) {
+			final List<Player> playerInfos, final CommandErrorListener commandErrorListener) {
 		this.gameplayConstants = new CGameplayConstants(miscData);
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
@@ -99,12 +99,7 @@ public class CSimulation {
 			neutralPassive.setAlliance(cPlayer, CAllianceType.PASSIVE, true);
 		}
 
-		this.commandErrorListener = new CommandErrorListener() {
-			@Override
-			public void showCommandError(final String message) {
-				throw new RuntimeException(message);
-			}
-		};
+		this.commandErrorListener = commandErrorListener;
 
 	}
 

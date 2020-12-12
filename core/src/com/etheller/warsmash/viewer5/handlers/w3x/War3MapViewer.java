@@ -59,13 +59,13 @@ import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.GenericResource;
 import com.etheller.warsmash.viewer5.Grid;
 import com.etheller.warsmash.viewer5.ModelInstance;
-import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SceneLightManager;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.WorldScene;
 import com.etheller.warsmash.viewer5.gl.WebGL;
+import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -93,12 +93,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 
 import mpq.MPQArchive;
 import mpq.MPQException;
 
-public class War3MapViewer extends ModelViewer {
+public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final War3ID UNIT_FILE = War3ID.fromString("umdl");
 	private static final War3ID UNIT_SPECIAL = War3ID.fromString("uspa");
 	private static final War3ID UBER_SPLAT = War3ID.fromString("uubs");
@@ -127,8 +128,6 @@ public class War3MapViewer extends ModelViewer {
 	private static final Rectangle rectangleHeap = new Rectangle();
 	public static final StreamDataCallbackImplementation streamDataCallback = new StreamDataCallbackImplementation();
 
-	public PathSolver wc3PathSolver = PathSolver.DEFAULT;
-	public SolverParams solverParams = new SolverParams();
 	public WorldScene worldScene;
 	public boolean anyReady;
 	public MappedData terrainData = new MappedData();
@@ -151,7 +150,6 @@ public class War3MapViewer extends ModelViewer {
 	public List<RenderEffect> projectiles = new ArrayList<>();
 	public boolean unitsReady;
 	public War3Map mapMpq;
-	public PathSolver mapPathSolver = PathSolver.DEFAULT;
 
 	private final DataSource gameDataSource;
 
@@ -197,8 +195,10 @@ public class War3MapViewer extends ModelViewer {
 
 	private KeyedSounds uiSounds;
 	private int localPlayerIndex;
+	private final CommandErrorListener commandErrorListener;
 
-	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas) {
+	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas,
+			final CommandErrorListener errorListener) {
 		super(dataSource, canvas);
 		this.gameDataSource = dataSource;
 
@@ -213,6 +213,8 @@ public class War3MapViewer extends ModelViewer {
 		if (!this.dynamicShadowManager.setup(webGL)) {
 			throw new IllegalStateException("FrameBuffer setup failed");
 		}
+
+		this.commandErrorListener = errorListener;
 	}
 
 	public void loadSLKs(final WorldEditStrings worldEditStrings) throws IOException {
@@ -589,7 +591,8 @@ public class War3MapViewer extends ModelViewer {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
 						renderPeer.repositioned(War3MapViewer.this);
 					}
-				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, w3iFile.getPlayers());
+				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, w3iFile.getPlayers(),
+				this.commandErrorListener);
 
 		this.walkableObjectsTree = new Quadtree<>(this.terrain.getEntireMap());
 		if (this.doodadsAndDestructiblesLoaded) {
@@ -1500,6 +1503,7 @@ public class War3MapViewer extends ModelViewer {
 		}
 	}
 
+	@Override
 	public WorldEditStrings getWorldEditStrings() {
 		return this.worldEditStrings;
 	}

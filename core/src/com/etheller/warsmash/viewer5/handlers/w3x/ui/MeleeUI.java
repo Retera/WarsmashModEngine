@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
@@ -23,6 +24,7 @@ import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -40,6 +42,7 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.parsers.mdlx.Layer.FilterMode;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.FastNumberFormat;
 import com.etheller.warsmash.util.ImageUtils;
@@ -117,10 +120,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTa
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.StringMsgAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.QueueIconListener;
 
-public class MeleeUI
-		implements CUnitStateListener, CommandButtonListener, CommandCardCommandListener, QueueIconListener {
+public class MeleeUI implements CUnitStateListener, CommandButtonListener, CommandCardCommandListener,
+		QueueIconListener, CommandErrorListener {
+	private static final long WORLD_FRAME_MESSAGE_FADEOUT_MILLIS = TimeUnit.SECONDS.toMillis(9);
+	private static final long WORLD_FRAME_MESSAGE_EXPIRE_MILLIS = TimeUnit.SECONDS.toMillis(10);
+	private static final long WORLD_FRAME_MESSAGE_FADE_DURATION = WORLD_FRAME_MESSAGE_EXPIRE_MILLIS
+			- WORLD_FRAME_MESSAGE_FADEOUT_MILLIS;
 	private static final String BUILDING_PATHING_PREVIEW_KEY = "buildingPathingPreview";
 	public static final float DEFAULT_COMMAND_CARD_ICON_WIDTH = 0.039f;
 	public static final float DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH = 0.037f;
@@ -194,6 +202,8 @@ public class MeleeUI
 	private MeleeUIMinimap meleeUIMinimap;
 	private final CPlayerUnitOrderListener unitOrderListener;
 	private StringFrame errorMessageFrame;
+	private long lastErrorMessageExpireTime;
+	private long lastErrorMessageFadeTime;
 
 	private CAbilityView activeCommand;
 	private int activeCommandOrderId;
@@ -295,7 +305,7 @@ public class MeleeUI
 		// =================================
 		// Load skins and templates
 		// =================================
-		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 2), this.uiViewport,
+		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 0), this.uiViewport,
 				this.fontGenerator, this.uiScene, this.war3MapViewer);
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
@@ -467,11 +477,19 @@ public class MeleeUI
 
 		this.inventoryCover = this.rootFrame.createSimpleFrame("SmashConsoleInventoryCover", this.rootFrame, 0);
 
-		this.errorMessageFrame = this.rootFrame.createStringFrame("SmashErrorMessageFrame", this.consoleUI,
-				new Color(0xFFFFCC00), TextJustify.LEFT, TextJustify.MIDDLE, 0.014f);
+		final Element fontHeights = this.war3MapViewer.miscData.get("FontHeights");
+		final float worldFrameMessageFontHeight = fontHeights.getFieldFloatValue("WorldFrameMessage");
+		this.errorMessageFrame = this.rootFrame.createStringFrame("SmashErrorMessageFrame", this.rootFrame,
+				new Color(0xFFCC00FF), TextJustify.LEFT, TextJustify.MIDDLE, worldFrameMessageFontHeight);
 		this.errorMessageFrame.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
-				GameUI.convertX(this.uiViewport, 0.275f), GameUI.convertY(this.uiViewport, 0.275f)));
+				GameUI.convertX(this.uiViewport, 0.212f), GameUI.convertY(this.uiViewport, 0.182f)));
 		this.errorMessageFrame.setWidth(GameUI.convertX(this.uiViewport, 0.25f));
+		this.errorMessageFrame.setHeight(GameUI.convertY(this.uiViewport, worldFrameMessageFontHeight));
+
+		this.errorMessageFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
+		this.errorMessageFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
+		this.errorMessageFrame.setFontShadowOffsetY(GameUI.convertY(this.uiViewport, -0.001f));
+		this.errorMessageFrame.setVisible(false);
 
 		int commandButtonIndex = 0;
 		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
@@ -521,7 +539,7 @@ public class MeleeUI
 				"", 0);
 		this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 		this.cursorFrame.setSequence("Normal");
-		this.cursorFrame.setZDepth(1.0f);
+		this.cursorFrame.setZDepth(-1.0f);
 		Gdx.input.setCursorCatched(true);
 
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
@@ -605,8 +623,20 @@ public class MeleeUI
 		clearAndRepopulateCommandCard();
 	}
 
+	@Override
 	public void showCommandError(final String message) {
 		this.errorMessageFrame.setText(message);
+		this.errorMessageFrame.setVisible(true);
+		this.lastErrorMessageExpireTime = TimeUtils.millis() + WORLD_FRAME_MESSAGE_EXPIRE_MILLIS;
+		this.lastErrorMessageFadeTime = TimeUtils.millis() + WORLD_FRAME_MESSAGE_FADEOUT_MILLIS;
+		this.errorMessageFrame.setAlpha(1.0f);
+	}
+
+	@Override
+	public void showCantPlaceError() {
+		showCommandError(this.rootFrame.getErrorString("Cantplace"));
+		this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("CantPlaceSound"))
+				.play(this.uiScene.audioContext, 0, 0);
 	}
 
 	public void update(final float deltaTime) {
@@ -707,6 +737,15 @@ public class MeleeUI
 				this.war3MapViewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y));
 		this.cameraManager.updateTargetZ(groundHeight);
 		this.cameraManager.updateCamera();
+		final long currentMillis = TimeUtils.millis();
+		if (currentMillis > this.lastErrorMessageExpireTime) {
+			this.errorMessageFrame.setVisible(false);
+		}
+		else if (currentMillis > this.lastErrorMessageFadeTime) {
+			final float fadeAlpha = (this.lastErrorMessageExpireTime - currentMillis)
+					/ (float) WORLD_FRAME_MESSAGE_FADE_DURATION;
+			this.errorMessageFrame.setAlpha(fadeAlpha);
+		}
 	}
 
 	public void render(final SpriteBatch batch, final BitmapFont font20, final GlyphLayout glyphLayout) {

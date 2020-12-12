@@ -357,7 +357,7 @@ public enum RenderMathUtils {
 		for (int i = 0; i < 6; i++) {
 			final int index = (first + i) % 6;
 
-			if (distanceToPlane3(planes[index], x, y, z) <= -r) {
+			if (distanceToPlane3(planes[index], x, y, z) < -r) {
 				return index;
 			}
 		}

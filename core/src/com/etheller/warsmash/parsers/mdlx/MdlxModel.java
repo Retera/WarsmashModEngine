@@ -93,6 +93,9 @@ public class MdlxModel {
 		}
 	}
 
+	public MdlxModel() {
+	}
+
 	public void loadMdx(final InputStream buffer) throws IOException {
 		final LittleEndianDataInputStream stream = new LittleEndianDataInputStream(buffer);
 		if (Integer.reverseBytes(stream.readInt()) != MDLX) {

@@ -113,8 +113,14 @@ public class DataTable implements ObjectData {
 				final StringBuilder builder = new StringBuilder();
 				boolean withinQuotedString = false;
 				final String fieldName = input.substring(0, eIndex);
+				boolean wasSlash = false;
 				for (int i = 0; i < fieldValue.length(); i++) {
 					final char c = fieldValue.charAt(i);
+					final boolean isSlash = c == '/';
+					if (isSlash && wasSlash && !withinQuotedString) {
+						builder.setLength(builder.length() - 1);
+						break; // comment starts here
+					}
 					if (c == '\"') {
 						withinQuotedString = !withinQuotedString;
 					}
@@ -125,6 +131,7 @@ public class DataTable implements ObjectData {
 					else {
 						builder.append(c);
 					}
+					wasSlash = isSlash;
 				}
 				if (builder.length() > 0) {
 					if (currentUnit == null) {

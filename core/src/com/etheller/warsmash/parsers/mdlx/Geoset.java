@@ -373,4 +373,56 @@ public class Geoset implements MdlxBlock, Chunk {
 		return this.uvSets;
 	}
 
+	public void setVertices(final float[] vertices) {
+		this.vertices = vertices;
+	}
+
+	public void setNormals(final float[] normals) {
+		this.normals = normals;
+	}
+
+	public void setFaceTypeGroups(final long[] faceTypeGroups) {
+		this.faceTypeGroups = faceTypeGroups;
+	}
+
+	public void setFaceGroups(final long[] faceGroups) {
+		this.faceGroups = faceGroups;
+	}
+
+	public void setFaces(final int[] faces) {
+		this.faces = faces;
+	}
+
+	public void setVertexGroups(final short[] vertexGroups) {
+		this.vertexGroups = vertexGroups;
+	}
+
+	public void setMatrixGroups(final long[] matrixGroups) {
+		this.matrixGroups = matrixGroups;
+	}
+
+	public void setMatrixIndices(final long[] matrixIndices) {
+		this.matrixIndices = matrixIndices;
+	}
+
+	public void setMaterialId(final long materialId) {
+		this.materialId = materialId;
+	}
+
+	public void setSelectionGroup(final long selectionGroup) {
+		this.selectionGroup = selectionGroup;
+	}
+
+	public void setSelectionFlags(final long selectionFlags) {
+		this.selectionFlags = selectionFlags;
+	}
+
+	public void setSequenceExtents(final Extent[] sequenceExtents) {
+		this.sequenceExtents = sequenceExtents;
+	}
+
+	public void setUvSets(final float[][] uvSets) {
+		this.uvSets = uvSets;
+	}
+
 }

@@ -59,7 +59,7 @@ public abstract class HashedGameObject implements GameObject {
 	public int getFieldValue(final String field) {
 		int i = 0;
 		try {
-			i = Integer.parseInt(getField(field));
+			i = Integer.parseInt(getField(field).trim());
 		}
 		catch (final NumberFormatException e) {
 
@@ -71,7 +71,7 @@ public abstract class HashedGameObject implements GameObject {
 	public float getFieldFloatValue(final String field) {
 		float i = 0;
 		try {
-			i = Float.parseFloat(getField(field));
+			i = Float.parseFloat(getField(field).trim());
 		}
 		catch (final NumberFormatException e) {
 
@@ -83,7 +83,7 @@ public abstract class HashedGameObject implements GameObject {
 	public float getFieldFloatValue(final String field, final int index) {
 		float i = 0;
 		try {
-			i = Float.parseFloat(getField(field, index));
+			i = Float.parseFloat(getField(field, index).trim());
 		}
 		catch (final NumberFormatException e) {
 
@@ -133,7 +133,7 @@ public abstract class HashedGameObject implements GameObject {
 	public int getFieldValue(final String field, final int index) {
 		int i = 0;
 		try {
-			i = Integer.parseInt(getField(field, index));
+			i = Integer.parseInt(getField(field, index).trim());
 		}
 		catch (final NumberFormatException e) {
 

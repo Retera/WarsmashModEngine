@@ -4,12 +4,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -19,14 +22,17 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.fdfparser.FDFParser;
 import com.etheller.warsmash.fdfparser.FrameDefinitionVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
+import com.etheller.warsmash.parsers.fdf.datamodel.BackdropCornerFlags;
 import com.etheller.warsmash.parsers.fdf.datamodel.FontDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameClass;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameTemplateEnvironment;
 import com.etheller.warsmash.parsers.fdf.datamodel.SetPointDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
+import com.etheller.warsmash.parsers.fdf.datamodel.Vector2Definition;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
+import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
 import com.etheller.warsmash.parsers.fdf.frames.FilterModeTextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
@@ -41,15 +47,15 @@ import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
-import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final DataSource dataSource;
 	private final Element skin;
 	private final Viewport viewport;
 	private final Scene uiScene;
-	private final War3MapViewer modelViewer;
+	private final AbstractMdxModelViewer modelViewer;
 	private final FrameTemplateEnvironment templates;
 	private final Map<String, Texture> pathToTexture = new HashMap<>();
 	private final boolean autoPosition = false;
@@ -58,9 +64,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final Map<String, UIFrame> nameToFrame = new HashMap<>();
 	private final Viewport fdfCoordinateResolutionDummyViewport;
 	private final DataTable skinData;
+	private final Element errorStrings;
 
 	public GameUI(final DataSource dataSource, final Element skin, final Viewport viewport,
-			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final War3MapViewer modelViewer) {
+			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final AbstractMdxModelViewer modelViewer) {
 		super("GameUI", null);
 		this.dataSource = dataSource;
 		this.skin = skin;
@@ -95,6 +102,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+		this.errorStrings = this.skinData.get("Errors");
 	}
 
 	public static Element loadSkin(final DataSource dataSource, final String skin) {
@@ -220,6 +228,15 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				add(inflated);
 				return inflated;
 			}
+			else if ("FRAME".equals(frameDefinition.getFrameType())) {
+				final UIFrame inflated = inflate(frameDefinition, owner, null,
+						frameDefinition.has("DecorateFileNames"));
+				if (this.autoPosition) {
+					inflated.positionBounds(this, this.viewport);
+				}
+				add(inflated);
+				return inflated;
+			}
 		}
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
@@ -264,7 +281,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			final TextJustify justifyH, final TextJustify justifyV, final float fdfFontSize) {
 		this.fontParam.size = (int) convertY(this.viewport, fdfFontSize);
 		if (this.fontParam.size == 0) {
-			this.fontParam.size = 24;
+			this.fontParam.size = 128;
 		}
 		final BitmapFont frameFont = this.fontGenerator.generateFont(this.fontParam);
 		final StringFrame stringFrame = new StringFrame(name, parent, color, justifyH, justifyV, frameFont);
@@ -309,18 +326,169 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						viewport2);
 				String backgroundArt = frameDefinition.getString("BackgroundArt");
 				if (frameDefinition.has("DecorateFileNames") || inDecorateFileNames) {
-					if (this.skin.hasField(backgroundArt)) {
-						backgroundArt = this.skin.getField(backgroundArt);
-					}
-					else {
-						throw new IllegalStateException("Decorated file name lookup not available: " + backgroundArt);
+					if (backgroundArt != null) {
+						if (this.skin.hasField(backgroundArt)) {
+							backgroundArt = this.skin.getField(backgroundArt);
+						}
+						else {
+							throw new IllegalStateException(
+									"Decorated file name lookup not available: " + backgroundArt);
+						}
 					}
 				}
 				if (backgroundArt != null) {
 					setSpriteFrameModel(spriteFrame, backgroundArt);
 				}
-				viewport2 = this.fdfCoordinateResolutionDummyViewport;
+				viewport2 = this.viewport; // TODO was fdfCoordinateResolutionDummyViewport here previously, but is that
+											// a good idea?
 				inflatedFrame = spriteFrame;
+			}
+			else if ("FRAME".equals(frameDefinition.getFrameType())) {
+				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinition.getName(), parent);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinition.getName(), simpleFrame);
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition,
+							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+				}
+				inflatedFrame = simpleFrame;
+			}
+			else if ("TEXT".equals(frameDefinition.getFrameType())) {
+				final Float textLength = frameDefinition.getFloat("TextLength");
+				TextJustify justifyH = frameDefinition.getTextJustify("FontJustificationH");
+				if (justifyH == null) {
+					justifyH = TextJustify.CENTER;
+				}
+				TextJustify justifyV = frameDefinition.getTextJustify("FontJustificationV");
+				if (justifyV == null) {
+					justifyV = TextJustify.MIDDLE;
+				}
+
+				Color fontColor;
+				final Vector4Definition fontColorDefinition = frameDefinition.getVector4("FontColor");
+				if (fontColorDefinition == null) {
+					fontColor = Color.WHITE;
+				}
+				else {
+					fontColor = new Color(fontColorDefinition.getX(), fontColorDefinition.getY(),
+							fontColorDefinition.getZ(), fontColorDefinition.getW());
+				}
+
+				Color fontShadowColor;
+				final Vector4Definition fontShadowColorDefinition = frameDefinition.getVector4("FontShadowColor");
+				if (fontShadowColorDefinition == null) {
+					fontShadowColor = null;
+				}
+				else {
+					fontShadowColor = new Color(fontShadowColorDefinition.getX(), fontShadowColorDefinition.getY(),
+							fontShadowColorDefinition.getZ(), fontShadowColorDefinition.getW());
+				}
+				final FontDefinition font = frameDefinition.getFont("FrameFont");
+				final Float height = frameDefinition.getFloat("Height");
+				this.fontParam.size = (int) convertY(viewport2,
+						font == null ? (height == null ? 0.06f : height) : font.getFontSize());
+				if (this.fontParam.size == 0) {
+					this.fontParam.size = 24;
+				}
+				frameFont = this.fontGenerator.generateFont(this.fontParam);
+				final StringFrame stringFrame = new StringFrame(frameDefinition.getName(), parent, fontColor, justifyH,
+						justifyV, frameFont);
+				if (fontShadowColor != null) {
+					final Vector2Definition shadowOffset = frameDefinition.getVector2("FontShadowOffset");
+					stringFrame.setFontShadowColor(fontShadowColor);
+					stringFrame.setFontShadowOffsetX(convertX(viewport2, shadowOffset.getX()));
+					stringFrame.setFontShadowOffsetY(convertY(viewport2, shadowOffset.getY()));
+				}
+				inflatedFrame = stringFrame;
+				String text = frameDefinition.getString("Text");
+				if (text != null) {
+					final String decoratedString = this.templates.getDecoratedString(text);
+					if (decoratedString != text) {
+						text = decoratedString;
+					}
+					stringFrame.setText(text);
+				}
+			}
+			else if ("GLUETEXTBUTTON".equals(frameDefinition.getFrameType())) {
+				// ButtonText & ControlBackdrop
+				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinition.getName(), parent);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinition.getName(), simpleFrame);
+				final String buttonTextKey = frameDefinition.getString("ButtonText");
+				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					if (childDefinition.getName().equals(buttonTextKey)
+							|| childDefinition.getName().equals(controlBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, simpleFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						simpleFrame.add(inflatedChild);
+					}
+				}
+				inflatedFrame = simpleFrame;
+			}
+			else if ("GLUEBUTTON".equals(frameDefinition.getFrameType())) {
+				// ButtonText & ControlBackdrop
+				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinition.getName(), parent);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinition.getName(), simpleFrame);
+				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					if (childDefinition.getName().equals(controlBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, simpleFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						simpleFrame.add(inflatedChild);
+					}
+				}
+				inflatedFrame = simpleFrame;
+			}
+			else if ("BACKDROP".equals(frameDefinition.getFrameType())) {
+				final boolean tileBackground = frameDefinition.has("BackdropTileBackground");
+				final String backgroundString = frameDefinition.getString("BackdropBackground");
+				String cornerFlagsString = frameDefinition.getString("BackdropCornerFlags");
+				if (cornerFlagsString == null) {
+					cornerFlagsString = "";
+				}
+				final EnumSet<BackdropCornerFlags> cornerFlags = BackdropCornerFlags
+						.parseCornerFlags(cornerFlagsString);
+				final Float cornerSizeNullable = frameDefinition.getFloat("BackdropCornerSize");
+				final float cornerSize = GameUI.convertX(viewport2,
+						cornerSizeNullable == null ? 0.0f : cornerSizeNullable);
+				final Float backgroundSizeNullable = frameDefinition.getFloat("BackdropBackgroundSize");
+				final float backgroundSize = GameUI.convertX(viewport2,
+						backgroundSizeNullable == null ? 0.0f : backgroundSizeNullable);
+				Vector4Definition backgroundInsets = frameDefinition.getVector4("BackdropBackgroundInsets");
+				if (backgroundInsets != null) {
+					backgroundInsets.setX(GameUI.convertX(viewport2, backgroundInsets.getX()));
+					backgroundInsets.setY(GameUI.convertY(viewport2, backgroundInsets.getY()));
+					backgroundInsets.setZ(GameUI.convertX(viewport2, backgroundInsets.getZ()));
+					backgroundInsets.setW(GameUI.convertY(viewport2, backgroundInsets.getW()));
+				}
+				else {
+					backgroundInsets = new Vector4Definition(0, 0, 0, 0);
+				}
+				final String edgeFileString = frameDefinition.getString("BackdropEdgeFile");
+				System.out.println(frameDefinition.getName() + " wants edge file: " + edgeFileString);
+				final Texture background = backgroundString == null ? null : loadTexture(backgroundString);
+				final Texture edgeFile = edgeFileString == null ? null : loadTexture(edgeFileString);
+				System.out.println(frameDefinition.getName() + " got edge file: " + edgeFile);
+
+				final BackdropFrame backdropFrame = new BackdropFrame(frameDefinition.getName(), parent,
+						inDecorateFileNames || frameDefinition.has("DecorateFileNames"), tileBackground, background,
+						cornerFlags, cornerSize, backgroundSize, backgroundInsets, edgeFile);
+				this.nameToFrame.put(frameDefinition.getName(), backdropFrame);
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					backdropFrame.add(inflate(childDefinition, backdropFrame, frameDefinition,
+							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+				}
+				inflatedFrame = backdropFrame;
 			}
 			break;
 		case Layer:
@@ -407,14 +575,19 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				inflatedFrame.setHeight(convertY(viewport2, frameDefinition.getFont("Font").getFontSize()));
 			}
 			for (final AnchorDefinition anchor : frameDefinition.getAnchors()) {
-				inflatedFrame.addAnchor(new AnchorDefinition(anchor.getMyPoint(), convertX(viewport2, anchor.getX()),
-						convertY(viewport2, anchor.getY())));
+				inflatedFrame.addAnchor(new AnchorDefinition(anchor.getMyPoint(),
+						convertX(this.viewport, anchor.getX()), convertY(this.viewport, anchor.getY())));
 			}
 			for (final SetPointDefinition setPointDefinition : frameDefinition.getSetPoints()) {
-				inflatedFrame.addSetPoint(new SetPoint(setPointDefinition.getMyPoint(),
-						getFrameByName(setPointDefinition.getOther(), 0 /* TODO: createContext */),
-						setPointDefinition.getOtherPoint(), convertX(viewport2, setPointDefinition.getX()),
-						convertY(viewport2, setPointDefinition.getY())));
+				final UIFrame otherFrameByName = getFrameByName(setPointDefinition.getOther(),
+						0 /* TODO: createContext */);
+				if (otherFrameByName == null) {
+					throw new IllegalStateException("Failing to pin " + frameDefinition.getName() + " to "
+							+ setPointDefinition.getOther() + " because it was null!");
+				}
+				inflatedFrame.addSetPoint(new SetPoint(setPointDefinition.getMyPoint(), otherFrameByName,
+						setPointDefinition.getOtherPoint(), convertX(this.viewport, setPointDefinition.getX()),
+						convertY(this.viewport, setPointDefinition.getY())));
 			}
 			this.nameToFrame.put(frameDefinition.getName(), inflatedFrame);
 		}
@@ -499,6 +672,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	@Override
+	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
+		super.internalRender(batch, baseFont, glyphLayout);
+	}
+
+	@Override
 	public void add(final UIFrame childFrame) {
 		super.add(childFrame);
 		this.nameToFrame.put(childFrame.getName(), childFrame);
@@ -510,5 +688,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	public FrameTemplateEnvironment getTemplates() {
 		return this.templates;
+	}
+
+	public String getErrorString(final String key) {
+		return this.errorStrings.getField(key);
 	}
 }

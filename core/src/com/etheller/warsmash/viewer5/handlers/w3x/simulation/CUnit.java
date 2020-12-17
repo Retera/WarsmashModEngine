@@ -14,6 +14,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -452,6 +453,51 @@ public class CUnit extends CWidget {
 		}
 	}
 
+	public void setPointAndCheckUnstuck(final float newX, final float newY, final CSimulation game) {
+		final CWorldCollision collision = game.getWorldCollision();
+		final PathingGrid pathingGrid = game.getPathingGrid();
+		;
+		float outputX = newX, outputY = newY;
+		int checkX = 0;
+		int checkY = 0;
+		float collisionSize;
+		if (this.unitType.getBuildingPathingPixelMap() != null) {
+			tempRect.setSize(this.unitType.getBuildingPathingPixelMap().getWidth() * 32,
+					this.unitType.getBuildingPathingPixelMap().getHeight() * 32);
+			collisionSize = tempRect.getWidth() / 2;
+		}
+		else if (this.collisionRectangle != null) {
+			tempRect.set(this.collisionRectangle);
+			collisionSize = this.unitType.getCollisionSize();
+		}
+		else {
+			tempRect.setSize(16, 16);
+			collisionSize = this.unitType.getCollisionSize();
+		}
+		boolean repos = false;
+		for (int i = 0; i < 300; i++) {
+			final float centerX = newX + (checkX * 64);
+			final float centerY = newY + (checkY * 64);
+			tempRect.setCenter(centerX, centerY);
+			if (!collision.intersectsAnythingOtherThan(tempRect, this, this.unitType.getMovementType())
+					&& pathingGrid.isPathable(centerX, centerY, this.unitType.getMovementType(), collisionSize)) {
+				outputX = centerX;
+				outputY = centerY;
+				if (i != 0) {
+					repos = true;
+				}
+				break;
+			}
+			final double angle = ((((int) Math.floor(Math.sqrt((4 * i) + 1))) % 4) * Math.PI) / 2;
+			checkX -= (int) Math.cos(angle);
+			checkY -= (int) Math.sin(angle);
+		}
+		setPoint(outputX, outputY, collision);
+		if (repos) {
+			game.unitRepositioned(this);
+		}
+	}
+
 	public void setPoint(final float newX, final float newY, final CWorldCollision collision) {
 		final float prevX = getX();
 		final float prevY = getY();
@@ -844,29 +890,7 @@ public class CUnit extends CWidget {
 	}
 
 	private void nudgeAround(final CSimulation simulation, final CUnit structure) {
-		float x, y;
-		if (structure.collisionRectangle != null) {
-			x = structure.collisionRectangle.x;
-			if (this.collisionRectangle != null) {
-				y = structure.collisionRectangle.y - this.collisionRectangle.height;
-			}
-			else {
-				y = structure.collisionRectangle.y;
-			}
-		}
-		else {
-			if (this.collisionRectangle != null) {
-				x = structure.getX() - (this.collisionRectangle.width / 2);
-				y = structure.getY() - (this.collisionRectangle.height / 2);
-			}
-			else {
-				x = structure.getX();
-				y = structure.getY();
-			}
-		}
-		setX(x, simulation.getWorldCollision());
-		setY(y, simulation.getWorldCollision());
-		simulation.unitRepositioned(this);
+		setPointAndCheckUnstuck(structure.getX(), structure.getY(), simulation);
 	}
 
 	@Override

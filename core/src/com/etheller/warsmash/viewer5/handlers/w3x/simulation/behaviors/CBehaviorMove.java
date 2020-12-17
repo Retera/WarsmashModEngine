@@ -39,6 +39,7 @@ public class CBehaviorMove implements CBehavior {
 	private int searchCycles = 0;
 	private CUnit followUnit;
 	private CRangedBehavior rangedBehavior;
+	private boolean firstUpdate = true;
 
 	public CBehaviorMove reset(final int highlightOrderId, final AbilityTarget target) {
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
@@ -63,6 +64,7 @@ public class CBehaviorMove implements CBehavior {
 		this.path = null;
 		this.searchCycles = 0;
 		this.followUnit = null;
+		this.firstUpdate = true;
 	}
 
 	private void internalResetMove(final int highlightOrderId, final CUnit followUnit) {
@@ -75,6 +77,7 @@ public class CBehaviorMove implements CBehavior {
 		this.path = null;
 		this.searchCycles = 0;
 		this.followUnit = followUnit;
+		this.firstUpdate = true;
 	}
 
 	@Override
@@ -86,6 +89,12 @@ public class CBehaviorMove implements CBehavior {
 	public CBehavior update(final CSimulation simulation) {
 		if ((this.rangedBehavior != null) && this.rangedBehavior.isWithinRange(simulation)) {
 			return this.rangedBehavior.update(simulation);
+		}
+		if (this.firstUpdate) {
+			// when units start moving, if they're on top of other units, maybe push them to
+			// the side
+			this.unit.setPointAndCheckUnstuck(this.unit.getX(), this.unit.getY(), simulation);
+			this.firstUpdate = false;
 		}
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();

@@ -1259,6 +1259,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						@Override
 						public void accept(final SplatMover t) {
 							unit.selectionCircle = t;
+							if (unit.instance.hidden()) {
+								unit.selectionCircle.hide();
+							}
 						}
 					});
 				}

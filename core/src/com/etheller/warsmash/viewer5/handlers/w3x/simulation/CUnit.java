@@ -474,7 +474,7 @@ public class CUnit extends CWidget {
 			tempRect.setSize(16, 16);
 			collisionSize = this.unitType.getCollisionSize();
 		}
-		boolean repos = false;
+		final boolean repos = false;
 		for (int i = 0; i < 300; i++) {
 			final float centerX = newX + (checkX * 64);
 			final float centerY = newY + (checkY * 64);
@@ -483,9 +483,6 @@ public class CUnit extends CWidget {
 					&& pathingGrid.isPathable(centerX, centerY, this.unitType.getMovementType(), collisionSize)) {
 				outputX = centerX;
 				outputY = centerY;
-				if (i != 0) {
-					repos = true;
-				}
 				break;
 			}
 			final double angle = ((((int) Math.floor(Math.sqrt((4 * i) + 1))) % 4) * Math.PI) / 2;
@@ -493,9 +490,7 @@ public class CUnit extends CWidget {
 			checkY -= (int) Math.sin(angle);
 		}
 		setPoint(outputX, outputY, collision);
-		if (repos) {
-			game.unitRepositioned(this);
-		}
+		game.unitRepositioned(this);
 	}
 
 	public void setPoint(final float newX, final float newY, final CWorldCollision collision) {

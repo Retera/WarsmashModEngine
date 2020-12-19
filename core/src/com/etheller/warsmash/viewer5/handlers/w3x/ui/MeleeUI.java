@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -174,6 +175,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private StringFrame simpleBuildingBuildingActionLabel;
 	private SimpleStatusBarFrame simpleBuildingBuildTimeIndicator;
 	private final QueueIcon[] queueIconFrames = new QueueIcon[WarsmashConstants.BUILD_QUEUE_SIZE];
+	private QueueIcon selectWorkerInsideFrame;
 
 	private UIFrame attack1Icon;
 	private TextureFrame attack1IconBackdrop;
@@ -438,6 +440,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			queueIconFrameBackdrop.setHeight(queueIconWidth);
 			this.rootFrame.add(this.queueIconFrames[i]);
 		}
+		this.selectWorkerInsideFrame = new QueueIcon("SmashBuildQueueWorkerIcon", this.smashSimpleInfoPanel, this, 1);
+		final TextureFrame selectWorkerInsideIconFrameBackdrop = new TextureFrame("SmashBuildQueueWorkerIconBackdrop",
+				this.queueIconFrames[0], false, new Vector4Definition(0, 1, 0, 1));
+		this.selectWorkerInsideFrame.set(selectWorkerInsideIconFrameBackdrop);
+		selectWorkerInsideIconFrameBackdrop
+				.addSetPoint(new SetPoint(FramePoint.CENTER, this.selectWorkerInsideFrame, FramePoint.CENTER, 0, 0));
+		this.selectWorkerInsideFrame
+				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.queueIconFrames[1], FramePoint.TOPLEFT, 0, 0));
+		this.selectWorkerInsideFrame.setWidth(frontQueueIconWidth);
+		this.selectWorkerInsideFrame.setHeight(frontQueueIconWidth);
+		selectWorkerInsideIconFrameBackdrop.setWidth(frontQueueIconWidth);
+		selectWorkerInsideIconFrameBackdrop.setHeight(frontQueueIconWidth);
+		this.rootFrame.add(this.selectWorkerInsideFrame);
 
 		this.smashAttack1IconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconDamage",
 				this.simpleInfoPanelUnitDetail, 0);
@@ -1162,6 +1177,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			for (final QueueIcon queueIconFrame : this.queueIconFrames) {
 				queueIconFrame.setVisible(false);
 			}
+			this.selectWorkerInsideFrame.setVisible(false);
 			this.rallyPointInstance.hide();
 			this.rallyPointInstance.detach();
 		}
@@ -1320,9 +1336,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.queueIconFrames[0].setVisible(true);
 				this.queueIconFrames[0].setTexture(this.war3MapViewer.getAbilityDataUI()
 						.getUnitUI(this.selectedUnit.getSimulationUnit().getTypeId()).getIcon());
+
+				if (this.selectedUnit.getSimulationUnit().getWorkerInside() != null) {
+					this.selectWorkerInsideFrame.setVisible(true);
+					this.selectWorkerInsideFrame.setTexture(this.war3MapViewer.getAbilityDataUI()
+							.getUnitUI(this.selectedUnit.getSimulationUnit().getWorkerInside().getTypeId()).getIcon());
+				}
+				else {
+					this.selectWorkerInsideFrame.setVisible(false);
+				}
 			}
 			else {
 				this.simpleBuildingActionLabel.setText("");
+				this.selectWorkerInsideFrame.setVisible(false);
 			}
 			final Texture defenseTexture = this.defenseBackdrops
 					.getTexture(simulationUnit.getUnitType().getDefenseType());
@@ -1673,50 +1699,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				else {
 					final List<RenderUnit> selectedUnits = this.war3MapViewer.selectUnit(screenX, worldScreenY, false);
-					if (!selectedUnits.isEmpty()) {
-						final RenderUnit unit = selectedUnits.get(0);
-						final boolean selectionChanged = getSelectedUnit() != unit;
-						boolean playedNewSound = false;
-						if (selectionChanged) {
-							this.selectedSoundCount = 0;
-						}
-						if (unit.soundset != null) {
-							UnitSound ackSoundToPlay = unit.soundset.what;
-							int soundIndex;
-							final int pissedSoundCount = unit.soundset.pissed.getSoundCount();
-							if (unit.getSimulationUnit().isConstructing()) {
-								ackSoundToPlay = this.war3MapViewer.getUiSounds()
-										.getSound(this.rootFrame.getSkinField("ConstructingBuilding"));
-								soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
-							}
-							else {
-								if ((this.selectedSoundCount >= 3) && (pissedSoundCount > 0)) {
-									soundIndex = this.selectedSoundCount - 3;
-									ackSoundToPlay = unit.soundset.pissed;
-								}
-								else {
-									soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
-								}
-							}
-							if ((ackSoundToPlay != null) && ackSoundToPlay
-									.playUnitResponse(this.war3MapViewer.worldScene.audioContext, unit, soundIndex)) {
-								this.selectedSoundCount++;
-								if ((this.selectedSoundCount - 3) >= pissedSoundCount) {
-									this.selectedSoundCount = 0;
-								}
-								playedNewSound = true;
-							}
-						}
-						if (selectionChanged) {
-							selectUnit(unit);
-						}
-						if (playedNewSound) {
-							portraitTalk();
-						}
-					}
-					else {
-						selectUnit(null);
-					}
+					selectUnits(selectedUnits);
 				}
 			}
 		}
@@ -1727,6 +1710,53 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		return false;
+	}
+
+	private void selectUnits(final List<RenderUnit> selectedUnits) {
+		if (!selectedUnits.isEmpty()) {
+			final RenderUnit unit = selectedUnits.get(0);
+			final boolean selectionChanged = getSelectedUnit() != unit;
+			boolean playedNewSound = false;
+			if (selectionChanged) {
+				this.selectedSoundCount = 0;
+			}
+			if (unit.soundset != null) {
+				UnitSound ackSoundToPlay = unit.soundset.what;
+				int soundIndex;
+				final int pissedSoundCount = unit.soundset.pissed.getSoundCount();
+				if (unit.getSimulationUnit().isConstructing()) {
+					ackSoundToPlay = this.war3MapViewer.getUiSounds()
+							.getSound(this.rootFrame.getSkinField("ConstructingBuilding"));
+					soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
+				}
+				else {
+					if ((this.selectedSoundCount >= 3) && (pissedSoundCount > 0)) {
+						soundIndex = this.selectedSoundCount - 3;
+						ackSoundToPlay = unit.soundset.pissed;
+					}
+					else {
+						soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
+					}
+				}
+				if ((ackSoundToPlay != null) && ackSoundToPlay
+						.playUnitResponse(this.war3MapViewer.worldScene.audioContext, unit, soundIndex)) {
+					this.selectedSoundCount++;
+					if ((this.selectedSoundCount - 3) >= pissedSoundCount) {
+						this.selectedSoundCount = 0;
+					}
+					playedNewSound = true;
+				}
+			}
+			if (selectionChanged) {
+				selectUnit(unit);
+			}
+			if (playedNewSound) {
+				portraitTalk();
+			}
+		}
+		else {
+			selectUnit(null);
+		}
 	}
 
 	public boolean touchUp(final int screenX, final int screenY, final float worldScreenY, final int button) {
@@ -1769,20 +1799,30 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void queueIconClicked(final int index) {
 		final CUnit simulationUnit = this.selectedUnit.getSimulationUnit();
 		if (simulationUnit.isConstructing()) {
-			for (final CAbility ability : simulationUnit.getAbilities()) {
-				ability.checkCanUse(this.war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
-						BooleanAbilityActivationReceiver.INSTANCE);
-				if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
+			switch (index) {
+			case 0:
+				for (final CAbility ability : simulationUnit.getAbilities()) {
+					ability.checkCanUse(this.war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
+							BooleanAbilityActivationReceiver.INSTANCE);
+					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
 
-					final BooleanAbilityTargetCheckReceiver<Void> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
-							.<Void>getInstance().reset();
-					ability.checkCanTargetNoTarget(this.war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
-							targetCheckReceiver);
-					if (targetCheckReceiver.isTargetable()) {
-						this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(), ability.getHandleId(),
-								OrderIds.cancel, false);
+						final BooleanAbilityTargetCheckReceiver<Void> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
+								.<Void>getInstance().reset();
+						ability.checkCanTargetNoTarget(this.war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
+								targetCheckReceiver);
+						if (targetCheckReceiver.isTargetable()) {
+							this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
+									ability.getHandleId(), OrderIds.cancel, false);
+						}
 					}
 				}
+				break;
+			case 1:
+				final List<RenderUnit> unitList = Arrays.asList(
+						this.war3MapViewer.getRenderPeer(this.selectedUnit.getSimulationUnit().getWorkerInside()));
+				this.war3MapViewer.doSelectUnit(unitList);
+				selectUnits(unitList);
+				break;
 			}
 		}
 		else {

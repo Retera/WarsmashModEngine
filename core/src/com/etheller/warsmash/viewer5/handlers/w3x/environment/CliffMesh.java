@@ -8,6 +8,7 @@ import java.nio.FloatBuffer;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.mdlx.Geoset;
 import com.etheller.warsmash.parsers.mdlx.MdlxModel;
@@ -71,7 +72,7 @@ public class CliffMesh {
 		this.renderJobs.put(position);
 	}
 
-	public void render() {
+	public void render(final ShaderProgram cliffShader) {
 		if (this.renderJobs.position() == 0) {
 			return;
 		}
@@ -82,23 +83,24 @@ public class CliffMesh {
 				GL20.GL_DYNAMIC_DRAW);
 
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.vertexBuffer);
-		this.gl.glVertexAttribPointer(0, 3, GL20.GL_FLOAT, false, 0, 0);
+		this.gl.glVertexAttribPointer(cliffShader.getAttributeLocation("vPosition"), 3, GL20.GL_FLOAT, false, 0, 0);
 
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.uvBuffer);
-		this.gl.glVertexAttribPointer(1, 2, GL20.GL_FLOAT, false, 0, 0);
+		this.gl.glVertexAttribPointer(cliffShader.getAttributeLocation("vUV"), 2, GL20.GL_FLOAT, false, 0, 0);
 
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.normalBuffer);
-		this.gl.glVertexAttribPointer(2, 3, GL20.GL_FLOAT, false, 0, 0);
+		this.gl.glVertexAttribPointer(cliffShader.getAttributeLocation("vNormal"), 3, GL20.GL_FLOAT, false, 0, 0);
 
 		this.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.instanceBuffer);
-		this.gl.glVertexAttribPointer(3, 4, GL20.GL_FLOAT, false, 0, 0);
-		this.gl.glVertexAttribDivisor(3, 1);
+		final int offsetAttributeLocation = cliffShader.getAttributeLocation("vOffset");
+		this.gl.glVertexAttribPointer(offsetAttributeLocation, 4, GL20.GL_FLOAT, false, 0, 0);
+		this.gl.glVertexAttribDivisor(offsetAttributeLocation, 1);
 
 		this.gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 		this.gl.glDrawElementsInstanced(GL20.GL_TRIANGLES, this.indices, GL30.GL_UNSIGNED_SHORT, 0,
 				this.renderJobs.remaining() / 4);
 
-		this.gl.glVertexAttribDivisor(3, 0); // ToDo use vao
+		this.gl.glVertexAttribDivisor(offsetAttributeLocation, 0); // ToDo use vao
 
 		this.renderJobs.clear();
 	}

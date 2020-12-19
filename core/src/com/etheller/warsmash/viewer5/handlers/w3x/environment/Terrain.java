@@ -66,7 +66,6 @@ public class Terrain {
 	public ShaderProgram groundShader;
 	public ShaderProgram waterShader;
 	public ShaderProgram cliffShader;
-	public ShaderProgram testShader;
 	public float waterIndex;
 	public float waterIncreasePerFrame;
 	public float waterHeightOffset;
@@ -399,7 +398,6 @@ public class Terrain {
 		this.groundShader = webGL.createShaderProgram(TerrainShaders.Terrain.vert, TerrainShaders.Terrain.frag);
 		this.cliffShader = webGL.createShaderProgram(TerrainShaders.Cliffs.vert, TerrainShaders.Cliffs.frag);
 		this.waterShader = webGL.createShaderProgram(TerrainShaders.Water.vert, TerrainShaders.Water.frag);
-		this.testShader = webGL.createShaderProgram(TerrainShaders.Test.vert, TerrainShaders.Test.frag);
 
 		this.uberSplatShader = webGL.createShaderProgram(W3xShaders.UberSplat.vert, W3xShaders.UberSplat.frag);
 
@@ -902,15 +900,35 @@ public class Terrain {
 		gl.glUniformMatrix4fv(this.groundShader.getUniformLocation("DepthBiasMVP"), 1, false,
 				dynamicShadowManager.getDepthBiasMVP().val, 0);
 
+		gl.glUniform1i(this.groundShader.getUniformLocation("cliff_textures"), 0);
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundHeight);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE1);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
 
+		gl.glUniform1i(this.groundShader.getUniformLocation("pathing_map_static"), 2);
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundTextureData);
 
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample0"), 3);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample1"), 4);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample2"), 5);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample3"), 6);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample4"), 7);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample5"), 8);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample6"), 9);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample7"), 10);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample8"), 11);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample9"), 12);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample10"), 13);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample11"), 14);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample12"), 15);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample13"), 16);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample14"), 17);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample15"), 18);
+		gl.glUniform1i(this.groundShader.getUniformLocation("sample16"), 19);
+		gl.glUniform1i(this.groundShader.getUniformLocation("shadowMap"), 20);
 		for (int i = 0; i < this.groundTextures.size(); i++) {
 			gl.glActiveTexture(GL30.GL_TEXTURE3 + i);
 			gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.groundTextures.get(i).id);
@@ -924,7 +942,7 @@ public class Terrain {
 
 //		gl.glEnableVertexAttribArray(0);
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, Shapes.INSTANCE.vertexBuffer);
-		gl.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 0, 0);
+		gl.glVertexAttribPointer(this.groundShader.getAttributeLocation("vPosition"), 2, GL30.GL_FLOAT, false, 0, 0);
 
 		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, Shapes.INSTANCE.indexBuffer);
 		if (WIREFRAME_TERRAIN) {
@@ -940,26 +958,6 @@ public class Terrain {
 
 		gl.glEnable(GL30.GL_BLEND);
 
-	}
-
-	private GL30 renderGroundIntersectionMesh() {
-		if (true) {
-			throw new UnsupportedOperationException("No longer supported");
-		}
-		this.webGL.useShaderProgram(this.testShader);
-
-		final GL30 gl = Gdx.gl30;
-		gl.glDisable(GL30.GL_CULL_FACE);
-		gl.glDisable(GL30.GL_BLEND);
-		this.testShader.setUniformMatrix("MVP", this.camera.viewProjectionMatrix);
-		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.testArrayBuffer);
-		this.testShader.setVertexAttribute("vPosition", 3, GL30.GL_FLOAT, false, 12, 0);
-
-		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, this.testElementBuffer);
-		gl.glDrawElements(GL30.GL_LINES, this.softwareGroundMesh.indices.length, GL30.GL_UNSIGNED_SHORT, 0);// );
-
-		gl.glEnable(GL30.GL_BLEND);
-		return gl;
 	}
 
 	public void renderUberSplats(final boolean onTopLayer) {
@@ -1018,24 +1016,29 @@ public class Terrain {
 		gl.glEnable(GL30.GL_BLEND);
 		gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
 
-		gl.glUniformMatrix4fv(0, 1, false, this.camera.viewProjectionMatrix.val, 0);
-		gl.glUniform4fv(1, 1, this.minShallowColor, 0);
-		gl.glUniform4fv(2, 1, this.maxShallowColor, 0);
-		gl.glUniform4fv(3, 1, this.minDeepColor, 0);
-		gl.glUniform4fv(4, 1, this.maxDeepColor, 0);
-		gl.glUniform1f(5, this.waterHeightOffset);
-		gl.glUniform1i(6, (int) this.waterIndex);
-		gl.glUniform1f(this.waterShader.getUniformLocation("centerOffsetX"), this.centerOffset[0]);
-		gl.glUniform1f(this.waterShader.getUniformLocation("centerOffsetY"), this.centerOffset[1]);
-		gl.glUniform4fv(11, 1, this.shaderMapBounds, 0);
+		this.waterShader.setUniformMatrix4fv("MVP", this.camera.viewProjectionMatrix.val, 0, 16);
+		this.waterShader.setUniform4fv("shallow_color_min", this.minShallowColor, 0, 4);
+		this.waterShader.setUniform4fv("shallow_color_max", this.maxShallowColor, 0, 4);
+		this.waterShader.setUniform4fv("deep_color_min", this.minDeepColor, 0, 4);
+		this.waterShader.setUniform4fv("deep_color_max", this.maxDeepColor, 0, 4);
+		this.waterShader.setUniformf("water_offset", this.waterHeightOffset);
+		this.waterShader.setUniformi("current_texture", (int) this.waterIndex);
+		this.waterShader.setUniformf("centerOffsetX", this.centerOffset[0]);
+		this.waterShader.setUniformf("centerOffsetY", this.centerOffset[1]);
+		this.waterShader.setUniform4fv("mapBounds", this.shaderMapBounds, 0, 4);
 
 		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
 		final DataTexture terrainLightsTexture = lightManager.getTerrainLightsTexture();
 
 		terrainLightsTexture.bind(3);
-		gl.glUniform1f(9, lightManager.getTerrainLightCount());
-		gl.glUniform1f(10, terrainLightsTexture.getHeight());
+		this.waterShader.setUniformi("lightTexture", 3);
+		this.waterShader.setUniformf("lightCount", lightManager.getTerrainLightCount());
+		this.waterShader.setUniformf("lightTextureHeight", terrainLightsTexture.getHeight());
 
+		this.waterShader.setUniformi("water_height_texture", 0);
+		this.waterShader.setUniformi("ground_height_texture", 1);
+		this.waterShader.setUniformi("water_exists_texture", 2);
+		this.waterShader.setUniformi("water_textures", 4);
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
 		gl.glActiveTexture(GL30.GL_TEXTURE1);
@@ -1046,7 +1049,7 @@ public class Terrain {
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
 
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, Shapes.INSTANCE.vertexBuffer);
-		gl.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 0, 0);
+		gl.glVertexAttribPointer(this.waterShader.getAttributeLocation("vPosition"), 2, GL30.GL_FLOAT, false, 0, 0);
 
 		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, Shapes.INSTANCE.indexBuffer);
 		gl.glDrawElementsInstanced(GL30.GL_TRIANGLES, Shapes.INSTANCE.quadIndices.length * 3, GL30.GL_UNSIGNED_INT, 0,
@@ -1081,9 +1084,8 @@ public class Terrain {
 
 		// WC3 models are 128x too large
 		tempMatrix.set(this.camera.viewProjectionMatrix);
-		gl.glUniformMatrix4fv(0, 1, false, tempMatrix.val, 0);
-		gl.glUniform1i(1, this.viewer.renderPathing);
-		gl.glUniform1i(2, this.viewer.renderLighting);
+		gl.glUniformMatrix4fv(this.cliffShader.getUniformLocation("MVP"), 1, false, tempMatrix.val, 0);
+		gl.glUniform1i(this.cliffShader.getUniformLocation("show_lighting"), this.viewer.renderLighting);
 
 		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
 		final DataTexture unitLightsTexture = lightManager.getTerrainLightsTexture();
@@ -1097,15 +1099,17 @@ public class Terrain {
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
 
+		this.cliffShader.setUniformi("cliff_textures", 0);
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.cliffTextureArray);
+		this.cliffShader.setUniformi("height_texture", 1);
 		gl.glActiveTexture(GL30.GL_TEXTURE1);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundHeight);
 //		gl.glActiveTexture(GL30.GL_TEXTURE2);
 		for (final CliffMesh i : this.cliffMeshes) {
 			gl.glUniform1f(this.cliffShader.getUniformLocation("centerOffsetX"), this.centerOffset[0]);
 			gl.glUniform1f(this.cliffShader.getUniformLocation("centerOffsetY"), this.centerOffset[1]);
-			i.render();
+			i.render(this.cliffShader);
 		}
 	}
 

@@ -44,6 +44,8 @@ public class CUnitType {
 	private final CUnitRace unitRace;
 	private final int goldCost;
 	private final int lumberCost;
+	private final int foodUsed;
+	private final int foodMade;
 	private final int buildTime;
 	private final EnumSet<CBuildingPathingType> preventedPathingTypes;
 	private final EnumSet<CBuildingPathingType> requiredPathingTypes;
@@ -55,7 +57,7 @@ public class CUnitType {
 			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs,
 			final float defaultAcquisitionRange, final float minimumAttackRange, final List<War3ID> structuresBuilt,
 			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final CUnitRace unitRace,
-			final int goldCost, final int lumberCost, final int buildTime,
+			final int goldCost, final int lumberCost, final int foodUsed, final int foodMade, final int buildTime,
 			final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes) {
 		this.name = name;
@@ -81,6 +83,8 @@ public class CUnitType {
 		this.unitRace = unitRace;
 		this.goldCost = goldCost;
 		this.lumberCost = lumberCost;
+		this.foodUsed = foodUsed;
+		this.foodMade = foodMade;
 		this.buildTime = buildTime;
 		this.preventedPathingTypes = preventedPathingTypes;
 		this.requiredPathingTypes = requiredPathingTypes;
@@ -176,6 +180,14 @@ public class CUnitType {
 
 	public int getLumberCost() {
 		return this.lumberCost;
+	}
+
+	public int getFoodUsed() {
+		return this.foodUsed;
+	}
+
+	public int getFoodMade() {
+		return this.foodMade;
 	}
 
 	public int getBuildTime() {

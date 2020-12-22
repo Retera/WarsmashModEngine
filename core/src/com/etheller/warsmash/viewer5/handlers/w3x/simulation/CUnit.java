@@ -94,6 +94,9 @@ public class CUnit extends CWidget {
 	private final QueueItemType[] buildQueueTypes = new QueueItemType[WarsmashConstants.BUILD_QUEUE_SIZE];
 	private AbilityTarget rallyPoint;
 
+	private int foodMade;
+	private int foodUsed;
+
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
 			final int speed, final int defense, final CUnitType unitType,
@@ -248,6 +251,10 @@ public class CUnit extends CWidget {
 							ability.setIconShowing(true);
 						}
 					}
+					if (this.unitType.getFoodMade() != 0) {
+						final CPlayer player = game.getPlayer(this.playerIndex);
+						player.setFoodCap(player.getFoodCap() + this.unitType.getFoodMade());
+					}
 					game.unitConstructFinishEvent(this);
 					this.stateNotifier.ordersChanged(getCurrentAbilityHandleId(), getCurrentOrderId());
 				}
@@ -263,6 +270,10 @@ public class CUnit extends CWidget {
 							this.constructionProgress = 0;
 							final CUnit trainedUnit = game.createUnit(queuedRawcode, this.playerIndex, getX(), getY(),
 									game.getGameplayConstants().getBuildingAngle());
+							// dont add food cost to player 2x
+							trainedUnit.setFoodUsed(trainedUnitType.getFoodUsed());
+							game.getPlayer(this.playerIndex).setUnitFoodMade(trainedUnit,
+									trainedUnitType.getFoodMade());
 							// nudge the trained unit out around us
 							trainedUnit.nudgeAround(game, this);
 							game.unitTrainedEvent(this, trainedUnit);
@@ -272,11 +283,9 @@ public class CUnit extends CWidget {
 										UseAbilityOnTargetByIdVisitor.INSTANCE.reset(game, trainedUnit, rallyOrderId));
 							}
 							for (int i = 0; i < (this.buildQueue.length - 1); i++) {
-								this.buildQueue[i] = this.buildQueue[i + 1];
-								this.buildQueueTypes[i] = this.buildQueueTypes[i + 1];
+								setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
 							}
-							this.buildQueue[this.buildQueue.length - 1] = null;
-							this.buildQueueTypes[this.buildQueue.length - 1] = null;
+							setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
 							this.stateNotifier.queueChanged();
 						}
 					}
@@ -285,11 +294,9 @@ public class CUnit extends CWidget {
 						if (this.constructionProgress >= trainedUnitType.getBuildTime()) {
 							this.constructionProgress = 0;
 							for (int i = 0; i < (this.buildQueue.length - 1); i++) {
-								this.buildQueue[i] = this.buildQueue[i + 1];
-								this.buildQueueTypes[i] = this.buildQueueTypes[i + 1];
+								setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
 							}
-							this.buildQueue[this.buildQueue.length - 1] = null;
-							this.buildQueueTypes[this.buildQueue.length - 1] = null;
+							setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
 							this.stateNotifier.queueChanged();
 						}
 					}
@@ -617,6 +624,13 @@ public class CUnit extends CWidget {
 			this.buildingShadowInstance = null;
 		}
 		popoutWorker(simulation);
+		final CPlayer player = simulation.getPlayer(this.playerIndex);
+		if (this.foodMade != 0) {
+			player.setUnitFoodMade(this, 0);
+		}
+		if (this.foodUsed != 0) {
+			player.setUnitFoodUsed(this, 0);
+		}
 	}
 
 	public boolean canReach(final AbilityTarget target, final float range) {
@@ -898,14 +912,14 @@ public class CUnit extends CWidget {
 		this.stateNotifier.lifeChanged();
 	}
 
-	private void queue(final War3ID rawcode, final QueueItemType queueItemType) {
+	private boolean queue(final CSimulation game, final War3ID rawcode, final QueueItemType queueItemType) {
 		for (int i = 0; i < this.buildQueue.length; i++) {
 			if (this.buildQueue[i] == null) {
-				this.buildQueue[i] = rawcode;
-				this.buildQueueTypes[i] = queueItemType;
-				break;
+				setBuildQueueItem(game, i, rawcode, queueItemType);
+				return true;
 			}
 		}
+		return false;
 	}
 
 	public War3ID[] getBuildQueue() {
@@ -933,28 +947,62 @@ public class CUnit extends CWidget {
 
 	public void cancelBuildQueueItem(final CSimulation game, final int cancelIndex) {
 		if ((cancelIndex >= 0) && (cancelIndex < this.buildQueueTypes.length)) {
-			if (this.buildQueueTypes[cancelIndex] != null) {
+			final QueueItemType cancelledType = this.buildQueueTypes[cancelIndex];
+			if (cancelledType != null) {
 				// TODO refund here!
 				if (cancelIndex == 0) {
 					this.constructionProgress = 0.0f;
+					switch (cancelledType) {
+					case RESEARCH:
+						break;
+					case UNIT:
+						final CPlayer player = game.getPlayer(this.playerIndex);
+						final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
+						player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
+						break;
+					}
+				}
+				switch (cancelledType) {
+				case RESEARCH:
+					break;
+				case UNIT:
+					final CPlayer player = game.getPlayer(this.playerIndex);
+					final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
+					player.refundFor(unitType);
+					break;
 				}
 				for (int i = cancelIndex; i < (this.buildQueueTypes.length - 1); i++) {
-					this.buildQueueTypes[i] = this.buildQueueTypes[i + 1];
-					this.buildQueue[i] = this.buildQueue[i + 1];
+					setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
 				}
-				this.buildQueueTypes[this.buildQueueTypes.length - 1] = null;
-				this.buildQueue[this.buildQueue.length - 1] = null;
+				setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
 				this.stateNotifier.queueChanged();
 			}
 		}
 	}
 
-	public void queueTrainingUnit(final War3ID rawcode) {
-		queue(rawcode, QueueItemType.UNIT);
+	public void setBuildQueueItem(final CSimulation game, final int index, final War3ID rawcode,
+			final QueueItemType queueItemType) {
+		this.buildQueue[index] = rawcode;
+		this.buildQueueTypes[index] = queueItemType;
+		if ((index == 0) && (rawcode != null) && (queueItemType == QueueItemType.UNIT)) {
+			final CPlayer player = game.getPlayer(this.playerIndex);
+			final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[index]);
+			if (unitType.getFoodUsed() != 0) {
+				player.setFoodUsed(player.getFoodUsed() + unitType.getFoodUsed());
+			}
+		}
 	}
 
-	public void queueResearch(final War3ID rawcode) {
-		queue(rawcode, QueueItemType.RESEARCH);
+	public void queueTrainingUnit(final CSimulation game, final War3ID rawcode) {
+		if (queue(game, rawcode, QueueItemType.UNIT)) {
+			final CPlayer player = game.getPlayer(this.playerIndex);
+			final CUnitType unitType = game.getUnitData().getUnitType(rawcode);
+			player.chargeFor(unitType);
+		}
+	}
+
+	public void queueResearch(final CSimulation game, final War3ID rawcode) {
+		queue(game, rawcode, QueueItemType.RESEARCH);
 	}
 
 	public static enum QueueItemType {
@@ -1048,5 +1096,25 @@ public class CUnit extends CWidget {
 		public Void accept(final CItem target) {
 			return acceptWidget(this.game, this.trainedUnit, this.rallyOrderId, target);
 		}
+	}
+
+	public int getFoodMade() {
+		return this.foodMade;
+	}
+
+	public int getFoodUsed() {
+		return this.foodUsed;
+	}
+
+	public int setFoodMade(final int foodMade) {
+		final int delta = foodMade - this.foodMade;
+		this.foodMade = foodMade;
+		return delta;
+	}
+
+	public int setFoodUsed(final int foodUsed) {
+		final int delta = foodUsed - this.foodUsed;
+		this.foodUsed = foodUsed;
+		return delta;
 	}
 }

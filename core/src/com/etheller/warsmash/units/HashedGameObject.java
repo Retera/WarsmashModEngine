@@ -124,6 +124,9 @@ public abstract class HashedGameObject implements GameObject {
 				if (list.size() > index) {
 					value = list.get(index);
 				}
+				else if (list.size() > 0) {
+					value = list.get(list.size() - 1);
+				}
 			}
 		}
 		return value;

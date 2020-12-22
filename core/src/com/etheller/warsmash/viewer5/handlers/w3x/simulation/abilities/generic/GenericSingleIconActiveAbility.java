@@ -7,4 +7,6 @@ public interface GenericSingleIconActiveAbility extends CAbility {
 	War3ID getAlias();
 
 	int getBaseOrderId();
+
+	boolean isToggleOn();
 }

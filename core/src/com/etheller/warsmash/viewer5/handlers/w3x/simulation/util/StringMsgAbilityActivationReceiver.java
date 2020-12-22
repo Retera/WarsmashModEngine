@@ -1,12 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
 public class StringMsgAbilityActivationReceiver implements AbilityActivationReceiver {
-	private static final StringMsgAbilityActivationReceiver INSTANCE = new StringMsgAbilityActivationReceiver();
-
-	public static StringMsgAbilityActivationReceiver getInstance() {
-		return INSTANCE;
-	}
-
 	private String message;
 	private boolean useOk = false;
 

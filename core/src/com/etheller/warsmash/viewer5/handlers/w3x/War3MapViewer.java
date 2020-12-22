@@ -295,6 +295,17 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				this.miscData.readTXT(miscDataTxtStream, true);
 			}
 		}
+		final Element misc = this.miscData.get("Misc");
+		// TODO Find the upkeep constants inside the assets files ?????
+		if (!misc.hasField("UpkeepUsage")) {
+			misc.setField("UpkeepUsage", "50,80,10000,10000,10000,10000,10000,10000,10000,10000");
+		}
+		if (!misc.hasField("UpkeepGoldTax")) {
+			misc.setField("UpkeepGoldTax", "0.00,0.30,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60");
+		}
+		if (!misc.hasField("UpkeepLumberTax")) {
+			misc.setField("UpkeepLumberTax", "0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00");
+		}
 		final Element light = this.miscData.get("Light");
 		final float lightX = light.getFieldFloatValue("Direction", 0);
 		final float lightY = light.getFieldFloatValue("Direction", 1);
@@ -840,6 +851,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex, unitAngle);
 			}
 		}
+		this.simulation.unitsLoaded();
 
 		this.terrain.loadSplats();
 

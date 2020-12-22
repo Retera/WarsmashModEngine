@@ -182,8 +182,7 @@ public class CSimulation {
 				this.simulationRenderController.removeUnit(unit);
 			}
 		}
-		this.units.addAll(this.newUnits);
-		this.newUnits.clear();
+		finishAddingNewUnits();
 		final Iterator<CAttackProjectile> projectileIterator = this.projectiles.iterator();
 		while (projectileIterator.hasNext()) {
 			final CAttackProjectile projectile = projectileIterator.next();
@@ -196,6 +195,11 @@ public class CSimulation {
 		this.gameTurnTick++;
 		this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
 				% this.gameplayConstants.getGameDayLength();
+	}
+
+	private void finishAddingNewUnits() {
+		this.units.addAll(this.newUnits);
+		this.newUnits.clear();
 	}
 
 	public float getGameTimeOfDay() {
@@ -253,5 +257,16 @@ public class CSimulation {
 
 	public void unitRepositioned(final CUnit cUnit) {
 		this.simulationRenderController.unitRepositioned(cUnit);
+	}
+
+	public void unitsLoaded() {
+		// called on startup after the system loads the map's units layer, but not any
+		// custom scripts yet
+		finishAddingNewUnits();
+		for (final CUnit unit : this.units) {
+			final CPlayer player = this.players.get(unit.getPlayerIndex());
+			player.setUnitFoodUsed(unit, unit.getUnitType().getFoodUsed());
+			player.setUnitFoodMade(unit, unit.getUnitType().getFoodMade());
+		}
 	}
 }

@@ -141,6 +141,8 @@ public class CUnitData {
 	private static final War3ID GOLD_COST = War3ID.fromString("ugol");
 	private static final War3ID LUMBER_COST = War3ID.fromString("ulum");
 	private static final War3ID BUILD_TIME = War3ID.fromString("ubld");
+	private static final War3ID FOOD_USED = War3ID.fromString("ufoo");
+	private static final War3ID FOOD_MADE = War3ID.fromString("ufma");
 
 	private static final War3ID REQUIRE_PLACE = War3ID.fromString("upar");
 	private static final War3ID PREVENT_PLACE = War3ID.fromString("upap");
@@ -377,6 +379,8 @@ public class CUnitData {
 			final int goldCost = unitType.getFieldAsInteger(GOLD_COST, 0);
 			final int lumberCost = unitType.getFieldAsInteger(LUMBER_COST, 0);
 			final int buildTime = unitType.getFieldAsInteger(BUILD_TIME, 0);
+			final int foodUsed = unitType.getFieldAsInteger(FOOD_USED, 0);
+			final int foodMade = unitType.getFieldAsInteger(FOOD_MADE, 0);
 
 			final String unitsTrainedString = unitType.getFieldAsString(UNITS_TRAINED, 0);
 			final String[] unitsTrainedStringItems = unitsTrainedString.trim().split(",");
@@ -416,8 +420,8 @@ public class CUnitData {
 			unitTypeInstance = new CUnitType(unitName, isBldg, movementType, moveHeight, collisionSize, classifications,
 					attacks, armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime,
 					targetedAs, acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained,
-					researchesAvailable, unitRace, goldCost, lumberCost, buildTime, preventedPathingTypes,
-					requiredPathingTypes);
+					researchesAvailable, unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime,
+					preventedPathingTypes, requiredPathingTypes);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
 		return unitTypeInstance;

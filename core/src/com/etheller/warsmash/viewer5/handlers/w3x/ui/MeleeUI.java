@@ -78,6 +78,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit.QueueItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
@@ -113,19 +114,22 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissileSplash;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationErrorHandler;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.StringMsgAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.QueueIconListener;
 
 public class MeleeUI implements CUnitStateListener, CommandButtonListener, CommandCardCommandListener,
-		QueueIconListener, CommandErrorListener {
+		QueueIconListener, CommandErrorListener, CPlayerStateListener {
 	private static final long WORLD_FRAME_MESSAGE_FADEOUT_MILLIS = TimeUnit.SECONDS.toMillis(9);
 	private static final long WORLD_FRAME_MESSAGE_EXPIRE_MILLIS = TimeUnit.SECONDS.toMillis(10);
 	private static final long WORLD_FRAME_MESSAGE_FADE_DURATION = WORLD_FRAME_MESSAGE_EXPIRE_MILLIS
@@ -234,6 +238,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private SimpleFrame smashAttack2IconWrapper;
 	private SimpleFrame smashArmorIconWrapper;
 	private final RallyPositioningVisitor rallyPositioningVisitor;
+	private final CPlayer localPlayer;
+	private MeleeUIAbilityActivationReceiver meleeUIAbilityActivationReceiver;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport,
 			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final Scene portraitScene,
@@ -251,8 +257,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.cameraManager = new GameCameraManager(cameraPresets, cameraRates);
 
 		this.cameraManager.setupCamera(war3MapViewer.worldScene);
-		final float[] startLocation = this.war3MapViewer.simulation.getPlayer(war3MapViewer.getLocalPlayerIndex())
-				.getStartLocation();
+		this.localPlayer = this.war3MapViewer.simulation.getPlayer(war3MapViewer.getLocalPlayerIndex());
+		final float[] startLocation = this.localPlayer.getStartLocation();
 		this.cameraManager.target.x = startLocation[0];
 		this.cameraManager.target.y = startLocation[1];
 
@@ -263,6 +269,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.heightRatioCorrection = this.uiViewport.getMinWorldHeight() / 1200f;
 		this.rallyPositioningVisitor = new RallyPositioningVisitor();
 		this.cursorTargetSetupVisitor = new CursorTargetSetupVisitor();
+
+		this.localPlayer.addStateListener(this);
 	}
 
 	private MeleeUIMinimap createMinimap(final War3MapViewer war3MapViewer) {
@@ -307,8 +315,35 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		// =================================
 		// Load skins and templates
 		// =================================
-		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 0), this.uiViewport,
-				this.fontGenerator, this.uiScene, this.war3MapViewer);
+		final CRace race = this.localPlayer.getRace();
+		final int racialSkinIndex;
+		int racialCommandIndex;
+		switch (race) {
+		case HUMAN:
+			racialSkinIndex = 1;
+			racialCommandIndex = 0;
+			break;
+		case ORC:
+			racialSkinIndex = 0;
+			racialCommandIndex = 1;
+			break;
+		case NIGHTELF:
+			racialSkinIndex = 2;
+			racialCommandIndex = 3;
+			break;
+		case UNDEAD:
+			racialSkinIndex = 3;
+			racialCommandIndex = 2;
+			break;
+		case DEMON:
+		case OTHER:
+		default:
+			racialSkinIndex = -1;
+			racialCommandIndex = 0;
+			break;
+		}
+		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, racialSkinIndex), this.uiViewport,
+				this.fontGenerator, this.uiScene, this.war3MapViewer, racialCommandIndex);
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
 			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
@@ -338,14 +373,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.resourceBar = this.rootFrame.createSimpleFrame("ResourceBarFrame", this.consoleUI, 0);
 		this.resourceBar.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, this.consoleUI, FramePoint.TOPRIGHT, 0, 0));
 		this.resourceBarGoldText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarGoldText", 0);
-		this.resourceBarGoldText.setText("500");
+		goldChanged();
 		this.resourceBarLumberText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarLumberText", 0);
-		this.resourceBarLumberText.setText("150");
+		lumberChanged();
 		this.resourceBarSupplyText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarSupplyText", 0);
-		this.resourceBarSupplyText.setText("12/100");
+		foodChanged();
 		this.resourceBarUpkeepText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarUpkeepText", 0);
-		this.resourceBarUpkeepText.setText("No Upkeep");
-		this.resourceBarUpkeepText.setColor(Color.GREEN);
+		upkeepChanged();
 
 		// Create the Time Indicator (clock)
 		this.timeIndicator = (SpriteFrame) this.rootFrame.createFrame("TimeOfDayIndicator", this.rootFrame, 0, 0);
@@ -559,6 +593,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
 
+		this.meleeUIAbilityActivationReceiver = new MeleeUIAbilityActivationReceiver(
+				new AbilityActivationErrorHandler(this.rootFrame.getErrorString("NoGold"),
+						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoGoldSound"))),
+				new AbilityActivationErrorHandler(this.rootFrame.getErrorString("NoLumber"),
+						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoLumberSound"))),
+				new AbilityActivationErrorHandler(this.rootFrame.getErrorString("NoFood"),
+						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))),
+				new AbilityActivationErrorHandler("", this.war3MapViewer.getUiSounds().getSound("InterfaceError")));
+
 		final MdxModel rallyModel = (MdxModel) this.war3MapViewer.load(
 				War3MapViewer.mdx(this.rootFrame.getSkinField("RallyIndicatorDst")), this.war3MapViewer.mapPathSolver,
 				this.war3MapViewer.solverParams);
@@ -591,14 +634,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		if (abilityToUse != null) {
-			final StringMsgAbilityActivationReceiver stringMsgActivationReceiver = StringMsgAbilityActivationReceiver
-					.getInstance().reset();
 			abilityToUse.checkCanUse(this.war3MapViewer.simulation, this.selectedUnit.getSimulationUnit(), orderId,
-					stringMsgActivationReceiver);
-			if (!stringMsgActivationReceiver.isUseOk()) {
-				showCommandError(stringMsgActivationReceiver.getMessage());
-			}
-			else {
+					this.meleeUIAbilityActivationReceiver.reset(this, this.war3MapViewer.worldScene.audioContext,
+							this.selectedUnit));
+			if (this.meleeUIAbilityActivationReceiver.isUseOk()) {
 				final BooleanAbilityTargetCheckReceiver<Void> noTargetReceiver = BooleanAbilityTargetCheckReceiver
 						.<Void>getInstance().reset();
 				abilityToUse.checkCanTargetNoTarget(this.war3MapViewer.simulation,
@@ -1026,7 +1065,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			int index = -1;
 			for (int i = 0; i < model.attachments.size(); i++) {
 				final Attachment attachment = model.attachments.get(i);
-				if (attachment.getName().startsWith("sprite first ref")) {
+				if (attachment.getName().startsWith("sprite")) {
 					index = i;
 					break;
 				}
@@ -1473,6 +1512,29 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					.setText(FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getLife()) + " / "
 							+ this.selectedUnit.getSimulationUnit().getMaximumLife());
 		}
+	}
+
+	@Override
+	public void goldChanged() {
+		this.resourceBarGoldText.setText(Integer.toString(this.localPlayer.getGold()));
+	}
+
+	@Override
+	public void lumberChanged() {
+		this.resourceBarLumberText.setText(Integer.toString(this.localPlayer.getLumber()));
+	}
+
+	@Override
+	public void foodChanged() {
+		this.resourceBarSupplyText.setText(this.localPlayer.getFoodUsed() + "/" + this.localPlayer.getFoodCap());
+		this.resourceBarSupplyText
+				.setColor(this.localPlayer.getFoodUsed() > this.localPlayer.getFoodCap() ? Color.RED : Color.WHITE);
+	}
+
+	@Override
+	public void upkeepChanged() {
+		this.resourceBarUpkeepText.setText("Upkeep NYI");
+		this.resourceBarUpkeepText.setColor(Color.CYAN);
 	}
 
 	@Override

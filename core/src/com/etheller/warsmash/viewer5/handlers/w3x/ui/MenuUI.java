@@ -65,7 +65,7 @@ public class MenuUI {
 		// Load skins and templates
 		// =================================
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 1), this.uiViewport,
-				this.fontGenerator, this.uiScene, this.viewer);
+				this.fontGenerator, this.uiScene, this.viewer, 0);
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
 			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");

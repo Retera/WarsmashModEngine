@@ -6,12 +6,14 @@ import java.util.List;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.CBehaviorOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
 public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 	private CBehaviorOrcBuild buildBehavior;
@@ -42,8 +44,9 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
-		final BufferedImage buildingPathingPixelMap = game.getUnitData().getUnitType(new War3ID(orderId))
-				.getBuildingPathingPixelMap();
+		final War3ID orderIdAsRawtype = new War3ID(orderId);
+		final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
+		final BufferedImage buildingPathingPixelMap = unitType.getBuildingPathingPixelMap();
 		if (buildingPathingPixelMap != null) {
 			point.x = (float) Math.floor(point.x / 64f) * 64f;
 			point.y = (float) Math.floor(point.y / 64f) * 64f;
@@ -54,6 +57,8 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 				point.y += 32f;
 			}
 		}
+		final CPlayer player = game.getPlayer(caster.getPlayerIndex());
+		player.chargeFor(unitType);
 		return this.buildBehavior.reset(point, orderId, getBaseOrderId());
 	}
 

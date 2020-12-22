@@ -19,22 +19,22 @@ public abstract class AbstractCAbility implements CAbility {
 	}
 
 	@Override
-	public boolean isDisabled() {
+	public final boolean isDisabled() {
 		return this.disabled;
 	}
 
 	@Override
-	public void setDisabled(final boolean disabled) {
+	public final void setDisabled(final boolean disabled) {
 		this.disabled = disabled;
 	}
 
 	@Override
-	public boolean isIconShowing() {
+	public final boolean isIconShowing() {
 		return this.iconShowing;
 	}
 
 	@Override
-	public void setIconShowing(final boolean iconShowing) {
+	public final void setIconShowing(final boolean iconShowing) {
 		this.iconShowing = iconShowing;
 	}
 

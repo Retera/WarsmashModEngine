@@ -47,7 +47,12 @@ public final class CAbilityQueue extends AbstractCAbility {
 				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 				if (player.getGold() >= unitType.getGoldCost()) {
 					if (player.getLumber() >= unitType.getLumberCost()) {
-						receiver.useOk();
+						if ((player.getFoodUsed() + unitType.getFoodUsed()) <= player.getFoodCap()) {
+							receiver.useOk();
+						}
+						else {
+							receiver.notEnoughResources(ResourceType.FOOD);
+						}
 					}
 					else {
 						receiver.notEnoughResources(ResourceType.LUMBER);
@@ -127,10 +132,10 @@ public final class CAbilityQueue extends AbstractCAbility {
 		else {
 			final War3ID rawcode = new War3ID(orderId);
 			if (this.unitsTrained.contains(rawcode)) {
-				caster.queueTrainingUnit(rawcode);
+				caster.queueTrainingUnit(game, rawcode);
 			}
 			else if (this.researchesAvailable.contains(rawcode)) {
-				caster.queueResearch(rawcode);
+				caster.queueResearch(game, rawcode);
 			}
 		}
 		return null;

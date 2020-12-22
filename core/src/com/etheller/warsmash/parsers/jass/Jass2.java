@@ -138,7 +138,7 @@ public class Jass2 {
 					final String skinArg = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 					final Element skin = GameUI.loadSkin(dataSource, skinArg);
 					final GameUI gameUI = new GameUI(dataSource, skin, uiViewport, fontGenerator, uiScene,
-							war3MapViewer);
+							war3MapViewer, 0);
 					JUIEnvironment.this.gameUI = gameUI;
 					JUIEnvironment.this.skin = skin;
 					rootFrameListener.onCreate(gameUI);

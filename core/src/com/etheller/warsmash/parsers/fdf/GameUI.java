@@ -56,6 +56,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final Viewport viewport;
 	private final Scene uiScene;
 	private final AbstractMdxModelViewer modelViewer;
+	private final int racialCommandIndex;
 	private final FrameTemplateEnvironment templates;
 	private final Map<String, Texture> pathToTexture = new HashMap<>();
 	private final boolean autoPosition = false;
@@ -67,13 +68,15 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final Element errorStrings;
 
 	public GameUI(final DataSource dataSource, final Element skin, final Viewport viewport,
-			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final AbstractMdxModelViewer modelViewer) {
+			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final AbstractMdxModelViewer modelViewer,
+			final int racialCommandIndex) {
 		super("GameUI", null);
 		this.dataSource = dataSource;
 		this.skin = skin;
 		this.viewport = viewport;
 		this.uiScene = uiScene;
 		this.modelViewer = modelViewer;
+		this.racialCommandIndex = racialCommandIndex;
 		if (viewport instanceof ExtendViewport) {
 			this.renderBounds.set(0, 0, ((ExtendViewport) viewport).getMinWorldWidth(),
 					((ExtendViewport) viewport).getMinWorldHeight());
@@ -162,7 +165,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		final String skinsField = main.getField("Skins");
 		final String[] skins = skinsField.split(",");
 		final Element defaultSkin = skinsTable.get("Default");
-		final Element userSkin = skinsTable.get(skins[skinIndex]);
+		final Element userSkin;
+		if ((skinIndex >= 0) && (skinIndex < skins.length)) {
+			userSkin = skinsTable.get(skins[skinIndex]);
+		}
+		else {
+			userSkin = new Element("UserSkin", skinsTable);
+		}
 		final Element customSkin = skinsTable.get("CustomSkin");
 		for (final String key : defaultSkin.keySet()) {
 			if (!userSkin.hasField(key)) {
@@ -318,6 +327,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					simpleStatusBarFrame.add(inflate(childDefinition, simpleStatusBarFrame, frameDefinition,
 							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+				}
+				final String barTexture = frameDefinition.getString("BarTexture");
+				if (barTexture != null) {
+					simpleStatusBarFrame.getBarFrame().setTexture(barTexture, this);
+					simpleStatusBarFrame.getBorderFrame().setTexture(barTexture + "Border", this);
 				}
 				inflatedFrame = simpleStatusBarFrame;
 			}
@@ -691,6 +705,6 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public String getErrorString(final String key) {
-		return this.errorStrings.getField(key);
+		return this.errorStrings.getField(key, this.racialCommandIndex);
 	}
 }

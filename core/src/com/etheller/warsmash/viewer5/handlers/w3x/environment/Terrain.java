@@ -244,6 +244,10 @@ public class Terrain {
 		// Cliff Textures
 		for (final War3ID cliffTile : w3eFile.getCliffTiles()) {
 			final Element cliffInfo = this.cliffTable.get(cliffTile.asStringValue());
+			if(cliffInfo == null) {
+				System.err.println("Missing cliff type: " + cliffTile.asStringValue());
+				continue;
+			}
 			final String texDir = cliffInfo.getField("texDir");
 			final String texFile = cliffInfo.getField("texFile");
 			try (InputStream imageStream = dataSource.getResourceAsStream(texDir + "\\" + texFile + texturesExt)) {

@@ -59,6 +59,9 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 		}
 		final CPlayer player = game.getPlayer(caster.getPlayerIndex());
 		player.chargeFor(unitType);
+		if (unitType.getFoodUsed() != 0) {
+			player.setFoodUsed(player.getFoodUsed() + unitType.getFoodUsed());
+		}
 		return this.buildBehavior.reset(point, orderId, getBaseOrderId());
 	}
 

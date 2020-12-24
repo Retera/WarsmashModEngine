@@ -117,7 +117,7 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
 		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
-			if (this.orderId != 0) {
+			if (this.orderId != 0 || menuButton) {
 				return this;
 			}
 		}

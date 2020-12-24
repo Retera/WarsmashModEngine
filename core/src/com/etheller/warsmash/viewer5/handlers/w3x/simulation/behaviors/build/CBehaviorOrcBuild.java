@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
 public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	private int highlightOrderId;
@@ -63,6 +64,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 			constructedStructure.setWorkerInside(this.unit);
 			constructedStructure.setLife(simulation,
 					constructedStructure.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
+			constructedStructure.setFoodUsed(unitTypeToCreate.getFoodUsed());
 			constructedStructure.add(simulation,
 					new CAbilityBuildInProgress(simulation.getHandleIdAllocator().createId()));
 			for (final CAbility ability : constructedStructure.getAbilities()) {
@@ -74,6 +76,8 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 			simulation.unitConstructedEvent(this.unit, constructedStructure);
 		}
 		else {
+			CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
+			player.setFoodUsed(player.getFoodUsed() - unitTypeToCreate.getFoodUsed());
 			simulation.getCommandErrorListener().showCantPlaceError();
 		}
 		return this.unit.pollNextOrderBehavior(simulation);

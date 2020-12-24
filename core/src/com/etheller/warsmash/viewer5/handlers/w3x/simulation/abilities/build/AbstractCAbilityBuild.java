@@ -40,7 +40,12 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 				if (player.getGold() >= unitType.getGoldCost()) {
 					if (player.getLumber() >= unitType.getLumberCost()) {
-						receiver.useOk();
+						if ((player.getFoodUsed() + unitType.getFoodUsed()) <= player.getFoodCap()) {
+							receiver.useOk();
+						}
+						else {
+							receiver.notEnoughResources(ResourceType.FOOD);
+						}
 					}
 					else {
 						receiver.notEnoughResources(ResourceType.LUMBER);

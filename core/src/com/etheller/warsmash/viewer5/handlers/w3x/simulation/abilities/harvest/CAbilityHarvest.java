@@ -80,7 +80,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-
+		receiver.orderIdNotAccepted();
 	}
 
 	@Override

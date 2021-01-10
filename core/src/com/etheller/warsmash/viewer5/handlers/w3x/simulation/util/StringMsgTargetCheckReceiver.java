@@ -64,6 +64,11 @@ public final class StringMsgTargetCheckReceiver<TARGET_TYPE> implements AbilityT
 	}
 
 	@Override
+	public void mustTargetResources() {
+		this.message = "NOTEXTERN: Must target resources.";
+	}
+
+	@Override
 	public void targetOutsideRange(final double howMuch) {
 		this.message = "NOTEXTERN: Target is outside range.";
 	}

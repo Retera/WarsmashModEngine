@@ -47,7 +47,8 @@ public final class CAbilityQueue extends AbstractCAbility {
 				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 				if (player.getGold() >= unitType.getGoldCost()) {
 					if (player.getLumber() >= unitType.getLumberCost()) {
-						if ((player.getFoodUsed() + unitType.getFoodUsed()) <= player.getFoodCap()) {
+						if ((unitType.getFoodUsed() == 0)
+								|| ((player.getFoodUsed() + unitType.getFoodUsed()) <= player.getFoodCap())) {
 							receiver.useOk();
 						}
 						else {

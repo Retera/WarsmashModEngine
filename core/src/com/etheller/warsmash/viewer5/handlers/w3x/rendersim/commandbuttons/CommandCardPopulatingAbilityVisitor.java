@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityIconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -19,6 +20,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -101,9 +103,15 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	@Override
 	public Void accept(final GenericSingleIconActiveAbility ability) {
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
-			addCommandButton(ability, this.abilityDataUI.getUI(ability.getAlias()).getOnIconUI(), ability.getHandleId(),
-					ability.getBaseOrderId(), 0, false, false);
+			final AbilityIconUI ui = this.abilityDataUI.getUI(ability.getAlias());
+			addCommandButton(ability, ability.isToggleOn() ? ui.getOffIconUI() : ui.getOnIconUI(),
+					ability.getHandleId(), ability.getBaseOrderId(), 0, false, false);
 		}
+		return null;
+	}
+
+	@Override
+	public Void accept(final GenericNoIconAbility ability) {
 		return null;
 	}
 

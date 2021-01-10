@@ -101,6 +101,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -318,29 +319,35 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final CRace race = this.localPlayer.getRace();
 		final int racialSkinIndex;
 		int racialCommandIndex;
-		switch (race) {
-		case HUMAN:
+		if (race == null) {
 			racialSkinIndex = 1;
 			racialCommandIndex = 0;
-			break;
-		case ORC:
-			racialSkinIndex = 0;
-			racialCommandIndex = 1;
-			break;
-		case NIGHTELF:
-			racialSkinIndex = 2;
-			racialCommandIndex = 3;
-			break;
-		case UNDEAD:
-			racialSkinIndex = 3;
-			racialCommandIndex = 2;
-			break;
-		case DEMON:
-		case OTHER:
-		default:
-			racialSkinIndex = -1;
-			racialCommandIndex = 0;
-			break;
+		}
+		else {
+			switch (race) {
+			case HUMAN:
+				racialSkinIndex = 1;
+				racialCommandIndex = 0;
+				break;
+			case ORC:
+				racialSkinIndex = 0;
+				racialCommandIndex = 1;
+				break;
+			case NIGHTELF:
+				racialSkinIndex = 2;
+				racialCommandIndex = 3;
+				break;
+			case UNDEAD:
+				racialSkinIndex = 3;
+				racialCommandIndex = 2;
+				break;
+			case DEMON:
+			case OTHER:
+			default:
+				racialSkinIndex = -1;
+				racialCommandIndex = 0;
+				break;
+			}
 		}
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, racialSkinIndex), this.uiViewport,
 				this.fontGenerator, this.uiScene, this.war3MapViewer, racialCommandIndex);
@@ -918,6 +925,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public Void accept(final GenericSingleIconActiveAbility ability) {
+			handleTargetCursor(ability);
+			return null;
+		}
+
+		@Override
+		public Void accept(final GenericNoIconAbility ability) {
+			// this should probably never happen
 			handleTargetCursor(ability);
 			return null;
 		}

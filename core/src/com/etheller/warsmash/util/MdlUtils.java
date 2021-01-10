@@ -30,6 +30,7 @@ public class MdlUtils {
 	public static final String TOKEN_BITMAP = "Bitmap";
 
 	public static final String TOKEN_TVERTEX_ANIM_SPACE = "TVertexAnim ";
+	public static final String TOKEN_TVERTEX_ANIM = "TVertexAnim";
 
 	public static final String TOKEN_DONT_INTERP = "DontInterp";
 	public static final String TOKEN_LINEAR = "Linear";
@@ -177,7 +178,6 @@ public class MdlUtils {
 	public static final String TOKEN_TEXTURES = "Textures";
 	public static final String TOKEN_MATERIALS = "Materials";
 	public static final String TOKEN_TEXTURE_ANIMS = "TextureAnims";
-	public static final String TOKEN_TEXTURE_ANIM = "TextureAnim";
 	public static final String TOKEN_PIVOT_POINTS = "PivotPoints";
 
 	public static final String TOKEN_ATTACHMENT = "Attachment";

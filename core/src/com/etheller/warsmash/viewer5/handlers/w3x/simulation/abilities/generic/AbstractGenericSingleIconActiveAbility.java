@@ -27,34 +27,43 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractCAb
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
 			final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == getBaseOrderId()) {
-			receiver.targetOk(target);
+			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		}
 		else {
 			receiver.orderIdNotAccepted();
 		}
 	}
+
+	protected abstract void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+			AbilityTargetCheckReceiver<CWidget> receiver);
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (orderId == getBaseOrderId()) {
-			receiver.targetOk(target);
+			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		}
 		else {
 			receiver.orderIdNotAccepted();
 		}
 	}
 
+	protected abstract void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+			AbilityTargetCheckReceiver<AbilityPointTarget> receiver);
+
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		if (orderId == getBaseOrderId()) {
-			receiver.targetOk(null);
+			innerCheckCanTargetNoTarget(game, unit, orderId, receiver);
 		}
 		else {
 			receiver.orderIdNotAccepted();
 		}
 	}
+
+	protected abstract void innerCheckCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
+			AbilityTargetCheckReceiver<Void> receiver);
 
 	@Override
 	public <T> T visit(final CAbilityVisitor<T> visitor) {

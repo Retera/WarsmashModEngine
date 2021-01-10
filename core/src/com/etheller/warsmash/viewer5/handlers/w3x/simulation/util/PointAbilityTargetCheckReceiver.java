@@ -23,6 +23,11 @@ public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiv
 	}
 
 	@Override
+	public void mustTargetResources() {
+		this.target = null;
+	}
+
+	@Override
 	public void targetOutsideRange(final double howMuch) {
 		this.target = null;
 	}

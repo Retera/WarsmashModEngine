@@ -20,7 +20,11 @@ public class CWidgetAbilityTargetCheckReceiver implements AbilityTargetCheckRece
 	@Override
 	public void mustTargetType(final TargetType correctType) {
 		this.target = null;
+	}
 
+	@Override
+	public void mustTargetResources() {
+		this.target = null;
 	}
 
 	@Override

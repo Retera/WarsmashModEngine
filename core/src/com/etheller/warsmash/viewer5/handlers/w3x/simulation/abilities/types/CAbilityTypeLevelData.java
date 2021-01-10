@@ -1,4 +1,4 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types;
 
 import java.util.EnumSet;
 

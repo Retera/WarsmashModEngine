@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Remova
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -1116,5 +1117,22 @@ public class CUnit extends CWidget {
 		final int delta = foodUsed - this.foodUsed;
 		this.foodUsed = foodUsed;
 		return delta;
+	}
+
+	public int getGold() {
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityGoldMine) {
+				return ((CAbilityGoldMine) ability).getGold();
+			}
+		}
+		return 0;
+	}
+
+	public void setGold(final int goldAmount) {
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityGoldMine) {
+				((CAbilityGoldMine) ability).setGold(goldAmount);
+			}
+		}
 	}
 }

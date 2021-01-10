@@ -1,20 +1,21 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types;
 
 import java.util.EnumSet;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
-public class CAbilityType {
+public abstract class CAbilityType<TYPE_LEVEL_DATA extends CAbilityTypeLevelData> {
 	/* alias: defines which ability editor ability to use */
 	private final War3ID alias;
 	/* code: defines which CAbility class to use */
 	private final War3ID code;
 
-	private final List<CAbilityTypeLevelData> levelData;
+	private final List<TYPE_LEVEL_DATA> levelData;
 
-	public CAbilityType(final War3ID alias, final War3ID code, final List<CAbilityTypeLevelData> levelData) {
+	public CAbilityType(final War3ID alias, final War3ID code, final List<TYPE_LEVEL_DATA> levelData) {
 		this.alias = alias;
 		this.code = code;
 		this.levelData = levelData;
@@ -32,8 +33,10 @@ public class CAbilityType {
 		return getLevelData(level).getTargetsAllowed();
 	}
 
-	private CAbilityTypeLevelData getLevelData(final int level) {
+	protected final TYPE_LEVEL_DATA getLevelData(final int level) {
 		return this.levelData.get(level);
 	}
+
+	public abstract CAbility createAbility(int handleId);
 
 }

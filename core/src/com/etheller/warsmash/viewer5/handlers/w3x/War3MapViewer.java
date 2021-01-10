@@ -848,7 +848,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final int playerIndex = unit.getPlayer();
 				final float unitAngle = unit.getAngle();
 
-				createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex, unitAngle);
+				final CUnit unitCreated = createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex,
+						unitAngle);
+				if (unit.getGoldAmount() != 0) {
+					unitCreated.setGold(unit.getGoldAmount());
+				}
 			}
 		}
 		this.simulation.unitsLoaded();

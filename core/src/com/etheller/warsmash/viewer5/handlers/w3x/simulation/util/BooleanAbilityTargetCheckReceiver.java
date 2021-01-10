@@ -34,6 +34,11 @@ public final class BooleanAbilityTargetCheckReceiver<TARGET_TYPE> implements Abi
 	}
 
 	@Override
+	public void mustTargetResources() {
+		this.targetable = false;
+	}
+
+	@Override
 	public void targetOutsideRange(final double howMuch) {
 		this.targetable = false;
 	}

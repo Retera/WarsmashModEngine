@@ -7,6 +7,8 @@ public interface AbilityTargetCheckReceiver<TARGET_TYPE> {
 
 	void mustTargetType(TargetType correctType);
 
+	void mustTargetResources();
+
 	void targetOutsideRange(double howMuch);
 
 	void notAnActiveAbility();
@@ -29,6 +31,6 @@ public interface AbilityTargetCheckReceiver<TARGET_TYPE> {
 		UNIT,
 		POINT,
 		UNIT_OR_POINT,
-		NO_TARGET,
+		NO_TARGET
 	}
 }

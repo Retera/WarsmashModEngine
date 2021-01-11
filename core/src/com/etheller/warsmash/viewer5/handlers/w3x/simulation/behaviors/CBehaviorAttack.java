@@ -3,13 +3,10 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
 public class CBehaviorAttack extends CAbstractRangedBehavior {
@@ -54,7 +51,8 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
-		return this.target.visit(this.abilityTargetStillAliveVisitor.reset(simulation, this.unit, this.unitAttack));
+		return this.target.visit(
+				this.abilityTargetStillAliveVisitor.reset(simulation, this.unit, this.unitAttack.getTargetsAllowed()));
 	}
 
 	@Override
@@ -115,44 +113,6 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 		}
 
 		return this;
-	}
-
-	public static class AbilityTargetStillAliveAndTargetableVisitor implements AbilityTargetVisitor<Boolean> {
-		private CSimulation simulation;
-		private CUnit unit;
-		private CUnitAttack unitAttack;
-
-		public AbilityTargetStillAliveAndTargetableVisitor reset(final CSimulation simulation, final CUnit unit,
-				final CUnitAttack unitAttack) {
-			this.simulation = simulation;
-			this.unit = unit;
-			this.unitAttack = unitAttack;
-			return this;
-		}
-
-		@Override
-		public Boolean accept(final AbilityPointTarget target) {
-			return Boolean.TRUE;
-		}
-
-		@Override
-		public Boolean accept(final CUnit target) {
-			return !target.isDead()
-					&& target.canBeTargetedBy(this.simulation, this.unit, this.unitAttack.getTargetsAllowed());
-		}
-
-		@Override
-		public Boolean accept(final CDestructable target) {
-			return !target.isDead()
-					&& target.canBeTargetedBy(this.simulation, this.unit, this.unitAttack.getTargetsAllowed());
-		}
-
-		@Override
-		public Boolean accept(final CItem target) {
-			return !target.isDead()
-					&& target.canBeTargetedBy(this.simulation, this.unit, this.unitAttack.getTargetsAllowed());
-		}
-
 	}
 
 }

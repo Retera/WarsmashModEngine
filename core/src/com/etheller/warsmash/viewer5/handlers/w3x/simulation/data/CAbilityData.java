@@ -12,6 +12,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionColdArrows;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionHarvest;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionReturnResources;
 
 public class CAbilityData {
 
@@ -22,11 +24,14 @@ public class CAbilityData {
 	public CAbilityData(final MutableObjectData abilityData) {
 		this.abilityData = abilityData;
 		this.aliasToAbilityType = new HashMap<>();
+		registerCodes();
 	}
 
 	private void registerCodes() {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ACcw"), new CAbilityTypeDefinitionColdArrows());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Agld"), new CAbilityTypeDefinitionGoldMine());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Artn"), new CAbilityTypeDefinitionReturnResources());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Ahar"), new CAbilityTypeDefinitionHarvest());
 	}
 
 	public CAbilityType<?> getAbilityType(final War3ID alias) {
@@ -35,7 +40,10 @@ public class CAbilityData {
 			final MutableGameObject mutableGameObject = this.abilityData.get(alias);
 			final War3ID code = mutableGameObject.getCode();
 			final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
-			abilityType = abilityTypeDefinition.createAbilityType(alias, mutableGameObject);
+			if (abilityTypeDefinition != null) {
+				abilityType = abilityTypeDefinition.createAbilityType(alias, mutableGameObject);
+				this.aliasToAbilityType.put(alias, abilityType);
+			}
 		}
 		return abilityType;
 	}

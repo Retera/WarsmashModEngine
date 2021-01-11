@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -88,7 +89,8 @@ public class CUnit extends CWidget {
 	private boolean constructing = false;
 	private float constructionProgress;
 	private boolean hidden = false;
-	private boolean updating = true;
+	private boolean paused = false;
+	private boolean acceptingOrders = true;
 	private boolean invulnerable = false;
 	private CUnit workerInside;
 	private final War3ID[] buildQueue = new War3ID[WarsmashConstants.BUILD_QUEUE_SIZE];
@@ -230,7 +232,7 @@ public class CUnit extends CWidget {
 				return true;
 			}
 		}
-		else if (this.updating) {
+		else if (!this.paused) {
 			if (this.constructing) {
 				this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
 				final int buildTime = this.unitType.getBuildTime();
@@ -322,7 +324,7 @@ public class CUnit extends CWidget {
 		if (this.workerInside != null) {
 			this.workerInside.setInvulnerable(false);
 			this.workerInside.setHidden(false);
-			this.workerInside.setUpdating(true);
+			this.workerInside.setPaused(false);
 			this.workerInside.nudgeAround(game, this);
 			this.workerInside = null;
 		}
@@ -367,7 +369,7 @@ public class CUnit extends CWidget {
 			}
 		}
 
-		if (queue && (this.currentOrder != null)) {
+		if ((queue || !this.acceptingOrders) && (this.currentOrder != null)) {
 			this.orderQueue.add(order);
 		}
 		else {
@@ -406,6 +408,25 @@ public class CUnit extends CWidget {
 
 	public List<CAbility> getAbilities() {
 		return this.abilities;
+	}
+
+	public <T> T getAbility(final CAbilityVisitor<T> visitor) {
+		for (final CAbility ability : this.abilities) {
+			final T visited = ability.visit(visitor);
+			if (visited != null) {
+				return visited;
+			}
+		}
+		return null;
+	}
+
+	public <T extends CAbility> T getFirstAbilityOfType(final Class<T> cAbilityClass) {
+		for (final CAbility ability : this.abilities) {
+			if (cAbilityClass.isAssignableFrom(ability.getClass())) {
+				return (T) ability;
+			}
+		}
+		return null;
 	}
 
 	public void setCooldownEndTime(final int cooldownEndTime) {
@@ -875,8 +896,12 @@ public class CUnit extends CWidget {
 		this.hidden = hidden;
 	}
 
-	public void setUpdating(final boolean updating) {
-		this.updating = updating;
+	public void setPaused(final boolean paused) {
+		this.paused = paused;
+	}
+
+	public void setAcceptingOrders(final boolean acceptingOrders) {
+		this.acceptingOrders = acceptingOrders;
 	}
 
 	public boolean isHidden() {

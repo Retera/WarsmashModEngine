@@ -1,4 +1,6 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest;
+
+import java.util.EnumSet;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -9,19 +11,18 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
-public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
-	private int gold;
-	private int activeMiners;
-	private final float miningDuration;
-	private final int miningCapacity;
+/**
+ * Was probably named CAbilityReturn in 2002, idk
+ */
+public class CAbilityReturnResources extends AbstractGenericNoIconAbility {
+	private final EnumSet<ResourceType> acceptedResourceTypes;
 
-	public CAbilityGoldMine(final int handleId, final War3ID alias, final int maxGold, final float miningDuration,
-			final int miningCapacity) {
+	public CAbilityReturnResources(final int handleId, final War3ID alias,
+			final EnumSet<ResourceType> acceptedResourceTypes) {
 		super(handleId, alias);
-		this.gold = maxGold;
-		this.miningDuration = miningDuration;
-		this.miningCapacity = miningCapacity;
+		this.acceptedResourceTypes = acceptedResourceTypes;
 	}
 
 	@Override
@@ -74,28 +75,7 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 		receiver.notAnActiveAbility();
 	}
 
-	public int getGold() {
-		return this.gold;
+	public boolean accepts(final ResourceType resourceType) {
+		return this.acceptedResourceTypes.contains(resourceType);
 	}
-
-	public void setGold(final int gold) {
-		this.gold = gold;
-	}
-
-	public int getActiveMiners() {
-		return this.activeMiners;
-	}
-
-	public void setActiveMiners(final int activeMiners) {
-		this.activeMiners = activeMiners;
-	}
-
-	public int getMiningCapacity() {
-		return this.miningCapacity;
-	}
-
-	public float getMiningDuration() {
-		return this.miningDuration;
-	}
-
 }

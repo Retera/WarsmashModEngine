@@ -164,6 +164,9 @@ public class RenderUnit {
 		else {
 			this.instance.show();
 			if (wasHidden) {
+				if (this.selectionCircle != null) {
+					this.selectionCircle.show(map.terrain.centerOffset);
+				}
 				if (this.shadow != null) {
 					this.shadow.show(map.terrain.centerOffset);
 				}
@@ -430,12 +433,14 @@ public class RenderUnit {
 			this.instance = instance;
 		}
 
+		@Override
 		public void addSecondaryTag(final AnimationTokens.SecondaryTag tag) {
 			this.secondaryAnimationTags.add(tag);
 			playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio,
 					this.currentlyAllowingRarityVariations);
 		}
 
+		@Override
 		public void removeSecondaryTag(final AnimationTokens.SecondaryTag tag) {
 			this.secondaryAnimationTags.remove(tag);
 			playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio,

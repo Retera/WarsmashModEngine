@@ -71,12 +71,12 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 				ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
 			}
 			this.unit.setHidden(true);
-			this.unit.setUpdating(false);
+			this.unit.setPaused(true);
 			this.unit.setInvulnerable(true);
 			simulation.unitConstructedEvent(this.unit, constructedStructure);
 		}
 		else {
-			CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
+			final CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
 			player.setFoodUsed(player.getFoodUsed() - unitTypeToCreate.getFoodUsed());
 			simulation.getCommandErrorListener().showCantPlaceError();
 		}

@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 
-import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -12,11 +11,14 @@ public class COrderTargetPoint implements COrder {
 	private final int abilityHandleId;
 	private final int orderId;
 	private final AbilityPointTarget target;
+	private final boolean queued;
 
-	public COrderTargetPoint(final int abilityHandleId, final int orderId, final AbilityPointTarget target) {
+	public COrderTargetPoint(final int abilityHandleId, final int orderId, final AbilityPointTarget target,
+			final boolean queued) {
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
 		this.target = target;
+		this.queued = queued;
 	}
 
 	@Override
@@ -29,8 +31,14 @@ public class COrderTargetPoint implements COrder {
 		return this.orderId;
 	}
 
-	public Vector2 getTarget() {
+	@Override
+	public AbilityPointTarget getTarget(final CSimulation game) {
 		return this.target;
+	}
+
+	@Override
+	public boolean isQueued() {
+		return this.queued;
 	}
 
 	@Override

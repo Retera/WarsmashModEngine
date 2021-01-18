@@ -4,6 +4,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.StringMsgTargetCheckReceiver;
 
@@ -11,11 +12,14 @@ public class COrderTargetWidget implements COrder {
 	private final int abilityHandleId;
 	private final int orderId;
 	private final int targetHandleId;
+	private final boolean queued;
 
-	public COrderTargetWidget(final int abilityHandleId, final int orderId, final int targetHandleId) {
+	public COrderTargetWidget(final int abilityHandleId, final int orderId, final int targetHandleId,
+			final boolean queued) {
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
 		this.targetHandleId = targetHandleId;
+		this.queued = queued;
 	}
 
 	@Override
@@ -26,6 +30,17 @@ public class COrderTargetWidget implements COrder {
 	@Override
 	public int getOrderId() {
 		return this.orderId;
+	}
+
+	@Override
+	public AbilityTarget getTarget(final CSimulation game) {
+		final CUnit target = game.getUnit(this.targetHandleId);
+		return target;
+	}
+
+	@Override
+	public boolean isQueued() {
+		return this.queued;
 	}
 
 	@Override

@@ -508,6 +508,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final float height = War3MapViewer.this.terrain.getGroundHeight(targetX, targetY)
 								+ target.getFlyHeight() + target.getImpactZ();
 
+						System.out.println(
+								"Spawning INSTANT: " + missileArt + "  at " + targetX + ", " + targetY + ", " + height);
 						final MdxModel model = (MdxModel) load(missileArt, War3MapViewer.this.mapPathSolver,
 								War3MapViewer.this.solverParams);
 						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();

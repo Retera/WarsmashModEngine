@@ -5,11 +5,13 @@ import com.etheller.warsmash.util.SubscriberSetNotifier;
 public interface CUnitStateListener {
 	void lifeChanged(); // hp (current) changes
 
-	void ordersChanged(int abilityHandleId, int orderId);
+	void ordersChanged();
 
 	void queueChanged();
 
 	void rallyPointChanged();
+
+	void waypointsChanged();
 
 	public static final class CUnitStateNotifier extends SubscriberSetNotifier<CUnitStateListener>
 			implements CUnitStateListener {
@@ -21,9 +23,9 @@ public interface CUnitStateListener {
 		}
 
 		@Override
-		public void ordersChanged(final int abilityHandleId, final int orderId) {
+		public void ordersChanged() {
 			for (final CUnitStateListener listener : set) {
-				listener.ordersChanged(abilityHandleId, orderId);
+				listener.ordersChanged();
 			}
 		}
 
@@ -38,6 +40,13 @@ public interface CUnitStateListener {
 		public void rallyPointChanged() {
 			for (final CUnitStateListener listener : set) {
 				listener.rallyPointChanged();
+			}
+		}
+
+		@Override
+		public void waypointsChanged() {
+			for (final CUnitStateListener listener : set) {
+				listener.waypointsChanged();
 			}
 		}
 	}

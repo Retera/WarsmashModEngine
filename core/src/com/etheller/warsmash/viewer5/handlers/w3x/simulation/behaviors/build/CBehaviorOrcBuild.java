@@ -93,4 +93,14 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 
 	}
 
+	@Override
+	public void begin(final CSimulation game) {
+
+	}
+
+	@Override
+	public void end(final CSimulation game) {
+
+	}
+
 }

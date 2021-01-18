@@ -24,13 +24,15 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private int backSwingTime;
 	private int thisOrderCooldownEndTime;
 
-	public CBehaviorAttack reset(final int highlightOrderId, final CUnitAttack unitAttack, final AbilityTarget target) {
+	public CBehaviorAttack reset(final int highlightOrderId, final CUnitAttack unitAttack, final AbilityTarget target,
+			final boolean disableMove) {
 		this.highlightOrderId = highlightOrderId;
 		super.innerReset(target);
 		this.unitAttack = unitAttack;
 		this.damagePointLaunchTime = 0;
 		this.backSwingTime = 0;
 		this.thisOrderCooldownEndTime = 0;
+		setDisableMove(disableMove);
 		return this;
 	}
 
@@ -113,6 +115,16 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 		}
 
 		return this;
+	}
+
+	@Override
+	public void begin(final CSimulation game) {
+
+	}
+
+	@Override
+	public void end(final CSimulation game) {
+
 	}
 
 }

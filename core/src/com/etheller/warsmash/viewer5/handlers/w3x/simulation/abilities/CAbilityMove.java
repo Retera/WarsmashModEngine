@@ -6,6 +6,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -77,6 +78,7 @@ public class CAbilityMove extends AbstractCAbility {
 		unit.setMoveBehavior(new CBehaviorMove(unit));
 		unit.setFollowBehavior(new CBehaviorFollow(unit));
 		unit.setPatrolBehavior(new CBehaviorPatrol(unit));
+		unit.setHoldPositionBehavior(new CBehaviorHoldPosition(unit));
 	}
 
 	@Override
@@ -107,6 +109,9 @@ public class CAbilityMove extends AbstractCAbility {
 
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+		if (orderId == OrderIds.holdposition) {
+			caster.setHoldingPosition(true);
+		}
 		return caster.pollNextOrderBehavior(game);
 	}
 

@@ -79,8 +79,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			addCommandButton(ability, this.abilityDataUI.getMoveUI(), ability.getHandleId(), OrderIds.move, 0, false,
 					false);
-			addCommandButton(ability, this.abilityDataUI.getHoldPosUI(), ability.getHandleId(), OrderIds.holdposition,
-					0, false, false);
+			addCommandButton(ability, this.abilityDataUI.getHoldPosUI(), 0, OrderIds.holdposition, 0, false, false);
 			addCommandButton(ability, this.abilityDataUI.getPatrolUI(), ability.getHandleId(), OrderIds.patrol, 0,
 					false, false);
 			if (!this.hasStop) {

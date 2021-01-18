@@ -400,4 +400,14 @@ public class CBehaviorMove implements CBehavior {
 			return null;
 		}
 	}
+
+	@Override
+	public void begin(final CSimulation game) {
+
+	}
+
+	@Override
+	public void end(final CSimulation game) {
+
+	}
 }

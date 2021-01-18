@@ -121,23 +121,25 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 		double nearestDropoffDistance = Float.MAX_VALUE;
 		for (final CUnit unit : simulation.getUnits()) {
 			if (unit.getPlayerIndex() == this.unit.getPlayerIndex()) {
-				boolean acceptedUnit = false;
-				for (final CAbility ability : unit.getAbilities()) {
-					if (ability instanceof CAbilityReturnResources) {
-						final CAbilityReturnResources abilityReturnResources = (CAbilityReturnResources) ability;
-						if (abilityReturnResources.accepts(this.abilityHarvest.getCarriedResourceType())) {
-							acceptedUnit = true;
-							break;
+				if (unit.visit(AbilityTargetStillAliveVisitor.INSTANCE)) {
+					boolean acceptedUnit = false;
+					for (final CAbility ability : unit.getAbilities()) {
+						if (ability instanceof CAbilityReturnResources) {
+							final CAbilityReturnResources abilityReturnResources = (CAbilityReturnResources) ability;
+							if (abilityReturnResources.accepts(this.abilityHarvest.getCarriedResourceType())) {
+								acceptedUnit = true;
+								break;
+							}
 						}
 					}
-				}
-				if (acceptedUnit) {
-					// TODO maybe use distance squared, problem is that we're using this
-					// inefficient more complex distance function on unit
-					final double distance = unit.distanceSquaredNoCollision(this.unit);
-					if (distance < nearestDropoffDistance) {
-						nearestDropoffDistance = distance;
-						nearestDropoffPoint = unit;
+					if (acceptedUnit) {
+						// TODO maybe use distance squared, problem is that we're using this
+						// inefficient more complex distance function on unit
+						final double distance = unit.distanceSquaredNoCollision(this.unit);
+						if (distance < nearestDropoffDistance) {
+							nearestDropoffDistance = distance;
+							nearestDropoffPoint = unit;
+						}
 					}
 				}
 			}
@@ -167,6 +169,16 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 			}
 		}
 		return nearestMine;
+	}
+
+	@Override
+	public void begin(final CSimulation game) {
+
+	}
+
+	@Override
+	public void end(final CSimulation game) {
+
 	}
 
 }

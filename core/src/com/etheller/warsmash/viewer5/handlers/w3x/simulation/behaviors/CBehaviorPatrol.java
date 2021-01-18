@@ -40,4 +40,14 @@ public class CBehaviorPatrol implements CRangedBehavior {
 		return this.unit.getMoveBehavior().reset(this.target, this, false);
 	}
 
+	@Override
+	public void begin(final CSimulation game) {
+
+	}
+
+	@Override
+	public void end(final CSimulation game) {
+
+	}
+
 }

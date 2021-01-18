@@ -11,5 +11,9 @@ public interface CBehavior {
 	 */
 	CBehavior update(CSimulation game);
 
+	void begin(CSimulation game);
+
+	void end(CSimulation game);
+
 	int getHighlightOrderId();
 }

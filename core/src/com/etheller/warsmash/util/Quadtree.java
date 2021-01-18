@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 
 public class Quadtree<T> {
-	private static final int MAX_DEPTH = 9;
+	private static final int MAX_DEPTH = 9; // 2^9 = 512, and 512 is the biggest map size...
 	private static final int SPLIT_THRESHOLD = 6;
 
 	private final Rectangle bounds;

@@ -4,8 +4,11 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
@@ -113,6 +116,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CodeKeyType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissileSplash;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -241,6 +245,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final RallyPositioningVisitor rallyPositioningVisitor;
 	private final CPlayer localPlayer;
 	private MeleeUIAbilityActivationReceiver meleeUIAbilityActivationReceiver;
+	private MdxModel waypointModel;
+	private final List<MdxComplexInstance> waypointModelInstances = new ArrayList<>();
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport,
 			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final Scene portraitScene,
@@ -618,6 +624,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.rallyPointInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		SequenceUtils.randomStandSequence(this.rallyPointInstance);
 		this.rallyPointInstance.hide();
+		this.waypointModel = (MdxModel) this.war3MapViewer.load(
+				War3MapViewer.mdx(this.rootFrame.getSkinField("WaypointIndicator")), this.war3MapViewer.mapPathSolver,
+				this.war3MapViewer.solverParams);
 
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 
@@ -1062,12 +1071,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private final class RallyPositioningVisitor implements AbilityTargetVisitor<Void> {
+		private MdxComplexInstance rallyPointInstance = null;
+
+		public RallyPositioningVisitor reset(final MdxComplexInstance rallyPointInstance) {
+			this.rallyPointInstance = rallyPointInstance;
+			return this;
+		}
+
 		@Override
 		public Void accept(final AbilityPointTarget target) {
-			MeleeUI.this.rallyPointInstance.setParent(null);
+			this.rallyPointInstance.setParent(null);
 			final float rallyPointX = target.getX();
 			final float rallyPointY = target.getY();
-			MeleeUI.this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+			this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
 					MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
 			return null;
 		}
@@ -1094,14 +1110,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			if (index != -1) {
 				final MdxNode attachment = renderUnit.instance.getAttachment(index);
-				MeleeUI.this.rallyPointInstance.setParent(attachment);
-				MeleeUI.this.rallyPointInstance.setLocation(0, 0, 0);
+				this.rallyPointInstance.setParent(attachment);
+				this.rallyPointInstance.setLocation(0, 0, 0);
 			}
 			else {
-				MeleeUI.this.rallyPointInstance.setParent(null);
+				this.rallyPointInstance.setParent(null);
 				final float rallyPointX = target.getX();
 				final float rallyPointY = target.getY();
-				MeleeUI.this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+				this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
 						MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
 			}
 			return null;
@@ -1109,20 +1125,20 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public Void accept(final CDestructable target) {
-			MeleeUI.this.rallyPointInstance.setParent(null);
+			this.rallyPointInstance.setParent(null);
 			final float rallyPointX = target.getX();
 			final float rallyPointY = target.getY();
-			MeleeUI.this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+			this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
 					MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
 			return null;
 		}
 
 		@Override
 		public Void accept(final CItem target) {
-			MeleeUI.this.rallyPointInstance.setParent(null);
+			this.rallyPointInstance.setParent(null);
 			final float rallyPointX = target.getX();
 			final float rallyPointY = target.getY();
-			MeleeUI.this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+			this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
 					MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
 			return null;
 		}
@@ -1233,6 +1249,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.selectWorkerInsideFrame.setVisible(false);
 			this.rallyPointInstance.hide();
 			this.rallyPointInstance.detach();
+			repositionWaypointFlags(null);
 		}
 		else {
 			unit.getSimulationUnit().addStateListener(this);
@@ -1255,13 +1272,86 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.war3MapViewer.simulation.getPlayer(simulationUnit.getPlayerIndex()).getColorIndex());
 			this.rallyPointInstance.show();
 			this.rallyPointInstance.detach();
-			rallyPoint.visit(this.rallyPositioningVisitor);
+			rallyPoint.visit(this.rallyPositioningVisitor.reset(this.rallyPointInstance));
 			this.rallyPointInstance.setScene(this.war3MapViewer.worldScene);
 		}
 		else {
 			this.rallyPointInstance.hide();
 			this.rallyPointInstance.detach();
 		}
+	}
+
+	@Override
+	public void waypointsChanged() {
+		if (this.selectedUnit != null) {
+			final CUnit simulationUnit = this.selectedUnit.getSimulationUnit();
+			repositionWaypointFlags(simulationUnit);
+		}
+		else {
+			repositionWaypointFlags(null);
+		}
+	}
+
+	private void repositionWaypointFlags(final CUnit simulationUnit) {
+		final Iterator<COrder> iterator;
+		int orderIndex = 0;
+		if (simulationUnit != null) {
+			final Queue<COrder> orderQueue = simulationUnit.getOrderQueue();
+			iterator = orderQueue.iterator();
+			final COrder order = simulationUnit.getCurrentOrder();
+			if ((order != null) && order.isQueued()) {
+				final MdxComplexInstance waypointModelInstance = getOrCreateWaypointIndicator(orderIndex);
+				final AbilityTarget target = order.getTarget(this.war3MapViewer.simulation);
+				if (target != null) {
+					waypointModelInstance.show();
+					waypointModelInstance.detach();
+					target.visit(this.rallyPositioningVisitor.reset(waypointModelInstance));
+					waypointModelInstance.setScene(this.war3MapViewer.worldScene);
+				}
+				else {
+					waypointModelInstance.hide();
+					waypointModelInstance.detach();
+				}
+				orderIndex++;
+			}
+		}
+		else {
+			iterator = Collections.emptyIterator();
+		}
+		for (; (orderIndex < this.waypointModelInstances.size()) || (iterator.hasNext()); orderIndex++) {
+			final MdxComplexInstance waypointModelInstance = getOrCreateWaypointIndicator(orderIndex);
+			if (iterator.hasNext()) {
+				final COrder order = iterator.next();
+				final AbilityTarget target = order.getTarget(this.war3MapViewer.simulation);
+				if (target != null) {
+					waypointModelInstance.show();
+					waypointModelInstance.detach();
+					target.visit(this.rallyPositioningVisitor.reset(waypointModelInstance));
+					waypointModelInstance.setScene(this.war3MapViewer.worldScene);
+				}
+				else {
+					waypointModelInstance.hide();
+					waypointModelInstance.detach();
+				}
+			}
+			else {
+				waypointModelInstance.hide();
+				waypointModelInstance.detach();
+			}
+		}
+	}
+
+	private MdxComplexInstance getOrCreateWaypointIndicator(final int index) {
+		while (index >= this.waypointModelInstances.size()) {
+			final MdxComplexInstance waypointModelInstance = (MdxComplexInstance) this.waypointModel.addInstance();
+			waypointModelInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
+					this.war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
+			waypointModelInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+			SequenceUtils.randomStandSequence(waypointModelInstance);
+			waypointModelInstance.hide();
+			this.waypointModelInstances.add(waypointModelInstance);
+		}
+		return this.waypointModelInstances.get(index);
 	}
 
 	private void reloadSelectedUnitUI(final RenderUnit unit) {
@@ -1277,6 +1367,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.unitManaText.setText("");
 		}
 		repositionRallyPoint(simulationUnit);
+		repositionWaypointFlags(simulationUnit);
 		if (simulationUnit.getBuildQueue()[0] != null) {
 			for (int i = 0; i < this.queueIconFrames.length; i++) {
 				final QueueItemType queueItemType = simulationUnit.getBuildQueueTypes()[i];
@@ -1558,7 +1649,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void ordersChanged(final int abilityHandleId, final int orderId) {
+	public void ordersChanged() {
 		reloadSelectedUnitUI(this.selectedUnit);
 	}
 

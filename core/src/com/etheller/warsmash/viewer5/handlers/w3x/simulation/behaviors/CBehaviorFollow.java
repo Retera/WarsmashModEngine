@@ -44,4 +44,14 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 	protected void resetBeforeMoving(final CSimulation simulation) {
 	}
 
+	@Override
+	public void begin(final CSimulation game) {
+
+	}
+
+	@Override
+	public void end(final CSimulation game) {
+
+	}
+
 }

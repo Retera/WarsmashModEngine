@@ -16,6 +16,7 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	protected AbilityTarget target;
 	private boolean wasWithinPropWindow = false;
 	private boolean wasInRange = false;
+	private boolean disableMove = false;
 	private CBehaviorMove moveBehavior;
 
 	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target) {
@@ -45,7 +46,7 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 			return this.unit.pollNextOrderBehavior(simulation);
 		}
 		if (!isWithinRange(simulation)) {
-			if (this.moveBehavior == null) {
+			if ((this.moveBehavior == null) || this.disableMove) {
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
 			this.wasInRange = false;
@@ -101,6 +102,10 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 		}
 
 		return update(simulation, this.wasWithinPropWindow);
+	}
+
+	public void setDisableMove(final boolean disableMove) {
+		this.disableMove = disableMove;
 	}
 
 }

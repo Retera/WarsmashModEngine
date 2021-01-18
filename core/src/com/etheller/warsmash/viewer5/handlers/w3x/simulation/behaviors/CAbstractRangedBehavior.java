@@ -6,9 +6,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 
 public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	protected final CUnit unit;
+	private final boolean disableCollision;
 
-	public CAbstractRangedBehavior(final CUnit unit) {
+	public CAbstractRangedBehavior(final CUnit unit, final boolean disableCollision) {
 		this.unit = unit;
+		this.disableCollision = disableCollision;
 	}
 
 	protected AbilityTarget target;
@@ -22,7 +24,7 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 		this.wasInRange = false;
 		CBehaviorMove moveBehavior;
 		if (!this.unit.isMovementDisabled()) {
-			moveBehavior = this.unit.getMoveBehavior().reset(this.target, this);
+			moveBehavior = this.unit.getMoveBehavior().reset(this.target, this, this.disableCollision);
 		}
 		else {
 			moveBehavior = null;

@@ -7,6 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 public abstract class AbstractGenericSingleIconActiveAbility extends AbstractCAbility
@@ -29,6 +30,9 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractCAb
 		if (orderId == getBaseOrderId()) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		}
+		else if (orderId == OrderIds.smart) {
+			innerCheckCanSmartTarget(game, unit, orderId, target, receiver);
+		}
 		else {
 			receiver.orderIdNotAccepted();
 		}
@@ -37,11 +41,17 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractCAb
 	protected abstract void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver);
 
+	protected abstract void innerCheckCanSmartTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+			AbilityTargetCheckReceiver<CWidget> receiver);
+
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (orderId == getBaseOrderId()) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
+		}
+		else if (orderId == OrderIds.smart) {
+			innerCheckCanSmartTarget(game, unit, orderId, target, receiver);
 		}
 		else {
 			receiver.orderIdNotAccepted();
@@ -50,6 +60,9 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractCAb
 
 	protected abstract void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
 			AbilityTargetCheckReceiver<AbilityPointTarget> receiver);
+
+	protected abstract void innerCheckCanSmartTarget(CSimulation game, CUnit unit, int orderId,
+			AbilityPointTarget target, AbilityTargetCheckReceiver<AbilityPointTarget> receiver);
 
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,

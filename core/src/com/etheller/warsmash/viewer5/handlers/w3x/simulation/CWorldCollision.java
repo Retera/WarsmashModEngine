@@ -9,6 +9,7 @@ import com.etheller.warsmash.util.QuadtreeIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 
 public class CWorldCollision {
+	private static final float MINIMUM_COLLISION_SIZE = 0.001f /* THIS IS TO STOP QUADTREE FROM BUSTING */;
 	private final Quadtree<CUnit> groundUnitCollision;
 	private final Quadtree<CUnit> airUnitCollision;
 	private final Quadtree<CUnit> seaUnitCollision;
@@ -30,7 +31,8 @@ public class CWorldCollision {
 	public void addUnit(final CUnit unit) {
 		Rectangle bounds = unit.getCollisionRectangle();
 		if (bounds == null) {
-			final float collisionSize = Math.min(this.maxCollisionRadius, unit.getUnitType().getCollisionSize());
+			final float collisionSize = Math.max(MINIMUM_COLLISION_SIZE,
+					Math.min(this.maxCollisionRadius, unit.getUnitType().getCollisionSize()));
 			bounds = new Rectangle(unit.getX() - collisionSize, unit.getY() - collisionSize, collisionSize * 2,
 					collisionSize * 2);
 			unit.setCollisionRectangle(bounds);
@@ -54,9 +56,11 @@ public class CWorldCollision {
 				case FLY:
 					this.airUnitCollision.add(unit, bounds);
 					break;
-				default:
 				case DISABLED:
+					break;
+				default:
 				case FOOT:
+				case FOOT_NO_COLLISION:
 				case HORSE:
 				case HOVER:
 					this.groundUnitCollision.add(unit, bounds);
@@ -86,9 +90,11 @@ public class CWorldCollision {
 					case FLY:
 						this.airUnitCollision.remove(unit, bounds);
 						break;
-					default:
 					case DISABLED:
+						break;
+					default:
 					case FOOT:
+					case FOOT_NO_COLLISION:
 					case HORSE:
 					case HOVER:
 						this.groundUnitCollision.remove(unit, bounds);
@@ -133,8 +139,10 @@ public class CWorldCollision {
 			case FLY:
 				return this.airUnitCollision.intersect(newPossibleRectangle,
 						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
-			default:
 			case DISABLED:
+			case FOOT_NO_COLLISION:
+				return false;
+			default:
 			case FOOT:
 			case HORSE:
 			case HOVER:
@@ -167,9 +175,11 @@ public class CWorldCollision {
 			case FLY:
 				this.airUnitCollision.translate(unit, bounds, xShift, yShift);
 				break;
-			default:
 			case DISABLED:
+				break;
+			default:
 			case FOOT:
+			case FOOT_NO_COLLISION:
 			case HORSE:
 			case HOVER:
 				this.groundUnitCollision.translate(unit, bounds, xShift, yShift);

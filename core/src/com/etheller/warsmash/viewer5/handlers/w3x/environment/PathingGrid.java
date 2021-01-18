@@ -18,7 +18,7 @@ public class PathingGrid {
 	private static final Map<String, MovementType> movetpToMovementType = new HashMap<>();
 	static {
 		for (final MovementType movementType : MovementType.values()) {
-			if (movementType != MovementType.DISABLED) {
+			if (!movementType.typeKey.isEmpty()) {
 				movetpToMovementType.put(movementType.typeKey, movementType);
 			}
 		}
@@ -355,6 +355,12 @@ public class PathingGrid {
 
 	public static enum MovementType {
 		FOOT("foot") {
+			@Override
+			public boolean isPathable(final short pathingValue) {
+				return !PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNWALKABLE);
+			}
+		},
+		FOOT_NO_COLLISION("") {
 			@Override
 			public boolean isPathable(final short pathingValue) {
 				return !PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNWALKABLE);

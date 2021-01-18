@@ -11,7 +11,7 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 	private int higlightOrderId;
 
 	public CBehaviorFollow(final CUnit unit) {
-		super(unit);
+		super(unit, false);
 	}
 
 	public CBehavior reset(final int higlightOrderId, final CUnit target) {

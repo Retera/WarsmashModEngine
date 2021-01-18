@@ -57,9 +57,9 @@ public class Particle extends EmittedObject<MdxComplexInstance, ParticleEmitter>
 
 		// Local rotation
 		rotationHeap.idt();
-		rotationHeap.mulLeft(rotationHeap2.setFromAxisRad(0, 0, 1,
+		rotationHeap.mul(rotationHeap2.setFromAxisRad(0, 0, 1,
 				RenderMathUtils.randomInRange((float) -Math.PI, (float) Math.PI)));
-		rotationHeap.mulLeft(rotationHeap2.setFromAxisRad(0, 1, 0,
+		rotationHeap.mul(rotationHeap2.setFromAxisRad(0, 1, 0,
 				RenderMathUtils.randomInRange(-latitudeHeap[0], latitudeHeap[0])));
 		velocity.set(RenderMathUtils.VEC3_UNIT_Z);
 		rotationHeap.transform(velocity);

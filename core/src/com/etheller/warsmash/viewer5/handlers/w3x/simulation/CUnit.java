@@ -571,6 +571,12 @@ public class CUnit extends CWidget {
 		return groundDistance;
 	}
 
+	public double distanceSquaredNoCollision(final AbilityTarget target) {
+		final double dx = Math.abs(target.getX() - getX());
+		final double dy = Math.abs(target.getY() - getY());
+		return (dx * dx) + (dy * dy);
+	}
+
 	public double distance(final float x, final float y) {
 		double dx = Math.abs(x - getX());
 		double dy = Math.abs(y - getY());
@@ -687,7 +693,7 @@ public class CUnit extends CWidget {
 				: buildingPathingPixelMap.getHeight();
 		final int relativeGridX = (int) Math.floor(relativeOffsetX / 32f) + (gridWidth / 2);
 		final int relativeGridY = (int) Math.floor(relativeOffsetY / 32f) + (gridHeight / 2);
-		final int rangeInCells = (int) Math.floor(range / 32f);
+		final int rangeInCells = (int) Math.floor(range / 32f) + 1;
 		final int rangeInCellsSquare = rangeInCells * rangeInCells;
 		int minCheckX = relativeGridX - rangeInCells;
 		int minCheckY = relativeGridY - rangeInCells;

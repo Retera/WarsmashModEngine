@@ -1540,9 +1540,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void foodChanged() {
-		this.resourceBarSupplyText.setText(this.localPlayer.getFoodUsed() + "/" + this.localPlayer.getFoodCap());
-		this.resourceBarSupplyText
-				.setColor(this.localPlayer.getFoodUsed() > this.localPlayer.getFoodCap() ? Color.RED : Color.WHITE);
+		final int foodCap = this.localPlayer.getFoodCap();
+		if (foodCap == 0) {
+			this.resourceBarSupplyText.setText(Integer.toString(this.localPlayer.getFoodUsed()));
+			this.resourceBarSupplyText.setColor(Color.WHITE);
+		}
+		else {
+			this.resourceBarSupplyText.setText(this.localPlayer.getFoodUsed() + "/" + foodCap);
+			this.resourceBarSupplyText.setColor(this.localPlayer.getFoodUsed() > foodCap ? Color.RED : Color.WHITE);
+		}
 	}
 
 	@Override

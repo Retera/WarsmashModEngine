@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import com.etheller.warsmash.parsers.mdlx.AnimationMap;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
 
@@ -82,7 +83,8 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 		for (int i = 0; i < 3; i++) {
 			final float[] color = colors[i];
 
-			this.colors[i] = new float[] { color[0], color[1], color[2], alpha[i] / 255f };
+			this.colors[i] = new float[] { color[0], color[1], color[2],
+					(alpha[i] / 255f) * WarsmashConstants.MODEL_DETAIL_PARTICLE_FACTOR_INVERSE };
 		}
 
 		this.scaling = emitter.getSegmentScaling();

@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorHarvest;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -20,6 +21,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	private final int goldCapacity;
 	private final int lumberCapacity;
 	private CBehaviorHarvest behaviorHarvest;
+	private CBehaviorReturnResources behaviorReturnResources;
 	private int carriedResourceAmount;
 	private ResourceType carriedResourceType;
 
@@ -34,6 +36,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
 		this.behaviorHarvest = new CBehaviorHarvest(unit, this);
+		this.behaviorReturnResources = new CBehaviorReturnResources(unit, this);
 	}
 
 	@Override
@@ -98,7 +101,19 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	}
 
 	@Override
+	protected void innerCheckCanSmartTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		innerCheckCanTarget(game, unit, orderId, target, receiver);
+	}
+
+	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	protected void innerCheckCanSmartTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
@@ -132,6 +147,14 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	public void setCarriedResources(final ResourceType carriedResourceType, final int carriedResourceAmount) {
 		this.carriedResourceType = carriedResourceType;
 		this.carriedResourceAmount = carriedResourceAmount;
+	}
+
+	public CBehaviorHarvest getBehaviorHarvest() {
+		return this.behaviorHarvest;
+	}
+
+	public CBehaviorReturnResources getBehaviorReturnResources() {
+		return this.behaviorReturnResources;
 	}
 
 }

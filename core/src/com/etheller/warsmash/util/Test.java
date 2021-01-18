@@ -15,6 +15,8 @@ public class Test {
 		else {
 			System.out.println("no match");
 		}
+
+//		Quadtree<String> myQT = new Quadtree<>(new Rectangle(-, y, width, height))
 	}
 
 }

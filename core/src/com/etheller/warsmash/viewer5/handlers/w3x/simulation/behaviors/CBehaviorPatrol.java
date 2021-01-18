@@ -37,7 +37,7 @@ public class CBehaviorPatrol implements CRangedBehavior {
 		final AbilityPointTarget temp = this.target;
 		this.target = this.startPoint;
 		this.startPoint = temp;
-		return this.unit.getMoveBehavior().reset(this.target, this);
+		return this.unit.getMoveBehavior().reset(this.target, this, false);
 	}
 
 }

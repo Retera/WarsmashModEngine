@@ -39,6 +39,11 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 		this.damageFactorSmall = damageFactorSmall;
 	}
 
+	@Override
+	public int getRange() {
+		return super.getRange();
+	}
+
 	public int getAreaOfEffectFullDamage() {
 		return this.areaOfEffectFullDamage;
 	}

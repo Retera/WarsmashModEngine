@@ -15,7 +15,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private final AbilityTargetStillAliveAndTargetableVisitor abilityTargetStillAliveVisitor;
 
 	public CBehaviorAttack(final CUnit unit) {
-		super(unit);
+		super(unit, false);
 		this.abilityTargetStillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 

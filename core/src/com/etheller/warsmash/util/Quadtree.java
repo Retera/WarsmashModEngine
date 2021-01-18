@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 
 public class Quadtree<T> {
-	private static final int MAX_DEPTH = 64;
+	private static final int MAX_DEPTH = 9;
 	private static final int SPLIT_THRESHOLD = 6;
 
 	private final Rectangle bounds;
@@ -75,7 +75,7 @@ public class Quadtree<T> {
 		}
 	}
 
-	public boolean intersect(float x, float y, final QuadtreeIntersector<T> intersector) {
+	public boolean intersect(final float x, final float y, final QuadtreeIntersector<T> intersector) {
 		if (this.leaf) {
 			for (int i = 0; i < this.nodes.size; i++) {
 				final Node<T> node = this.nodes.get(i);
@@ -123,17 +123,25 @@ public class Quadtree<T> {
 				return;
 			}
 		}
+		boolean overlapsAny = false;
 		if (this.northeast.bounds.overlaps(node.bounds)) {
 			this.northeast.add(node, depth + 1);
+			overlapsAny = true;
 		}
 		if (this.northwest.bounds.overlaps(node.bounds)) {
 			this.northwest.add(node, depth + 1);
+			overlapsAny = true;
 		}
 		if (this.southwest.bounds.overlaps(node.bounds)) {
 			this.southwest.add(node, depth + 1);
+			overlapsAny = true;
 		}
 		if (this.southeast.bounds.overlaps(node.bounds)) {
 			this.southeast.add(node, depth + 1);
+			overlapsAny = true;
+		}
+		if (!overlapsAny) {
+			throw new IllegalStateException("Does not overlap anything!");
 		}
 	}
 

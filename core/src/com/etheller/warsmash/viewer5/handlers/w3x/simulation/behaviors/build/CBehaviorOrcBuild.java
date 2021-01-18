@@ -21,7 +21,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	private War3ID orderId;
 
 	public CBehaviorOrcBuild(final CUnit unit) {
-		super(unit);
+		super(unit, false);
 	}
 
 	public CBehavior reset(final AbilityPointTarget target, final int orderId, final int highlightOrderId) {

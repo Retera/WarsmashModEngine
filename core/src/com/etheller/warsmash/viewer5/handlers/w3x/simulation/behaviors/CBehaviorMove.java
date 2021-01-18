@@ -40,17 +40,21 @@ public class CBehaviorMove implements CBehavior {
 	private CUnit followUnit;
 	private CRangedBehavior rangedBehavior;
 	private boolean firstUpdate = true;
+	private boolean disableCollision = false;
 
 	public CBehaviorMove reset(final int highlightOrderId, final AbilityTarget target) {
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
 		this.rangedBehavior = null;
+		this.disableCollision = false;
 		return this;
 	}
 
-	public CBehaviorMove reset(final AbilityTarget target, final CRangedBehavior rangedBehavior) {
+	public CBehaviorMove reset(final AbilityTarget target, final CRangedBehavior rangedBehavior,
+			final boolean disableCollision) {
 		final int highlightOrderId = rangedBehavior.getHighlightOrderId();
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
 		this.rangedBehavior = rangedBehavior;
+		this.disableCollision = disableCollision;
 		return this;
 	}
 
@@ -99,7 +103,13 @@ public class CBehaviorMove implements CBehavior {
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();
 
-		final MovementType movementType = this.unit.getUnitType().getMovementType();
+		MovementType movementType = this.unit.getUnitType().getMovementType();
+		if (movementType == null) {
+			movementType = MovementType.DISABLED;
+		}
+		else if ((movementType == MovementType.FOOT) && this.disableCollision) {
+			movementType = MovementType.FOOT_NO_COLLISION;
+		}
 		final PathingGrid pathingGrid = simulation.getPathingGrid();
 		final CWorldCollision worldCollision = simulation.getWorldCollision();
 		final float collisionSize = this.unit.getUnitType().getCollisionSize();
@@ -111,7 +121,7 @@ public class CBehaviorMove implements CBehavior {
 				this.target.y = this.followUnit.getY();
 			}
 			this.path = simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
-					this.target, movementType == null ? MovementType.FOOT : movementType, collisionSize, true);
+					this.target, movementType, collisionSize, true);
 			System.out.println("init path " + this.path);
 			// check for smoothing
 			if (!this.path.isEmpty()) {
@@ -130,8 +140,7 @@ public class CBehaviorMove implements CBehavior {
 					if ((totalPathDistance < (1.15
 							* nextPossiblePathElement.distance(smoothingGroupStartX, smoothingGroupStartY)))
 							&& pathingGrid.isPathable((smoothingGroupStartX + nextPossiblePathElement.x) / 2,
-									(smoothingGroupStartY + nextPossiblePathElement.y) / 2,
-									movementType == null ? MovementType.DISABLED : movementType)) {
+									(smoothingGroupStartY + nextPossiblePathElement.y) / 2, movementType)) {
 						if (smoothingStartIndex == -1) {
 							smoothingStartIndex = i;
 						}
@@ -164,8 +173,7 @@ public class CBehaviorMove implements CBehavior {
 			this.target.x = this.followUnit.getX();
 			this.target.y = this.followUnit.getY();
 			this.path = simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
-					this.target, movementType == null ? MovementType.FOOT : movementType, collisionSize,
-					this.searchCycles < 4);
+					this.target, movementType, collisionSize, this.searchCycles < 4);
 			System.out.println("new path (for target) " + this.path);
 			if (this.path.isEmpty()) {
 				return this.unit.pollNextOrderBehavior(simulation);
@@ -334,8 +342,7 @@ public class CBehaviorMove implements CBehavior {
 						this.target.y = this.followUnit.getY();
 					}
 					this.path = simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
-							this.target, movementType == null ? MovementType.FOOT : movementType, collisionSize,
-							this.searchCycles < 4);
+							this.target, movementType, collisionSize, this.searchCycles < 4);
 					this.searchCycles++;
 					System.out.println("new path " + this.path);
 					if (this.path.isEmpty() || (this.searchCycles > 5)) {

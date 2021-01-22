@@ -44,6 +44,10 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	}
 
 	@Override
+	public void onTick(final CSimulation game, final CUnit unit) {
+	}
+
+	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		return this.behaviorHarvest.reset(target);
 	}
@@ -56,12 +60,15 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+		if (isToggleOn() && (orderId == OrderIds.returnresources)) {
+			return this.behaviorReturnResources.reset(game);
+		}
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
 	public int getBaseOrderId() {
-		return OrderIds.harvest;
+		return isToggleOn() ? OrderIds.returnresources : OrderIds.harvest;
 	}
 
 	@Override
@@ -121,7 +128,12 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	protected void innerCheckCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
-
+		if ((orderId == OrderIds.returnresources) && isToggleOn()) {
+			receiver.targetOk(null);
+		}
+		else {
+			receiver.orderIdNotAccepted();
+		}
 	}
 
 	public int getDamageToTree() {

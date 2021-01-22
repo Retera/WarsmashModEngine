@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 import java.awt.image.BufferedImage;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -26,7 +27,13 @@ public interface SimulationRenderController {
 
 	void removeUnit(CUnit unit);
 
+	void removeDestructable(CDestructable dest);
+
 	BufferedImage getBuildingPathingPixelMap(War3ID rawcode);
+
+	BufferedImage getDestructablePathingPixelMap(War3ID rawcode);
+
+	BufferedImage getDestructablePathingDeathPixelMap(War3ID rawcode);
 
 	void spawnUnitConstructionFinishSound(CUnit constructedStructure);
 

@@ -29,6 +29,10 @@ public class CAbilityBuildInProgress extends AbstractCAbility {
 	}
 
 	@Override
+	public void onTick(final CSimulation game, final CUnit unit) {
+	}
+
+	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId) {
 		final CPlayer player = game.getPlayer(caster.getPlayerIndex());
 		player.refundFor(caster.getUnitType());

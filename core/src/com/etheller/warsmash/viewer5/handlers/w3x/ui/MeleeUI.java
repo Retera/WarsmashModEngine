@@ -172,6 +172,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final Vector2 projectionTemp1 = new Vector2();
 	private final Vector2 projectionTemp2 = new Vector2();
 
+	// tooltip
+	private UIFrame tooltipFrame;
+	private StringFrame tooltipText;
+
 	private UIFrame simpleInfoPanelUnitDetail;
 	private StringFrame simpleNameValue;
 	private StringFrame simpleClassValue;
@@ -238,6 +242,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final float widthRatioCorrection;
 	private final float heightRatioCorrection;
 	private ClickableActionFrame mouseDownUIFrame;
+	private ClickableActionFrame mouseOverUIFrame;
 	private UIFrame smashSimpleInfoPanel;
 	private SimpleFrame smashAttack1IconWrapper;
 	private SimpleFrame smashAttack2IconWrapper;
@@ -596,6 +601,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				commandButtonIndex++;
 			}
 		}
+
+		this.tooltipFrame = this.rootFrame.createFrame("SmashToolTip", this.rootFrame, 0, 0);
+		this.tooltipFrame.addAnchor(new AnchorDefinition(FramePoint.BOTTOMRIGHT, GameUI.convertX(this.uiViewport, 0.f),
+				GameUI.convertY(this.uiViewport, 0.176f)));
+		this.tooltipFrame.setWidth(GameUI.convertX(this.uiViewport, 0.176f));
+		this.tooltipText = (StringFrame) this.rootFrame.getFrameByName("SmashToolTipText", 0);
+		this.tooltipFrame.setVisible(false);
+//		this.tooltipFrame = this.rootFrame.createFrameByType("BACKDROP", "SmashToolTipBackdrop", this.rootFrame, "", 0);
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashCursorFrame", this.rootFrame,
 				"", 0);
@@ -1960,6 +1973,29 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					screenCoordsVector.y);
 			this.cameraManager.target.x = worldPoint.x;
 			this.cameraManager.target.y = worldPoint.y;
+		}
+		return false;
+	}
+
+	public boolean mouseMoved(final int screenX, final int screenY, final float worldScreenY) {
+		screenCoordsVector.set(screenX, screenY);
+		this.uiViewport.unproject(screenCoordsVector);
+		final UIFrame mousedUIFrame = this.rootFrame.getFrameChildUnderMouse(screenCoordsVector.x,
+				screenCoordsVector.y);
+		if (mousedUIFrame != this.mouseOverUIFrame) {
+			if (mousedUIFrame instanceof ClickableActionFrame) {
+				this.mouseOverUIFrame = (ClickableActionFrame) mousedUIFrame;
+				final String toolTip = this.mouseOverUIFrame.getToolTip();
+				this.tooltipText.setText(toolTip);
+				System.out.println("tooltip text assign to " + toolTip);
+				this.tooltipFrame.setHeight(GameUI.convertY(this.uiViewport, 0.020f));
+				this.tooltipFrame.positionBounds(this.rootFrame, this.uiViewport);
+				this.tooltipFrame.setVisible(true);
+			}
+			else {
+				this.mouseOverUIFrame = null;
+				this.tooltipFrame.setVisible(false);
+			}
 		}
 		return false;
 	}

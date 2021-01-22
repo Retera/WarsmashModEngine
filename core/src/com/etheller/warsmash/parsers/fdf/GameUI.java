@@ -227,27 +227,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	public UIFrame createFrame(final String name, final UIFrame owner, final int priority, final int createContext) {
 		final FrameDefinition frameDefinition = this.templates.getFrame(name);
-		if (frameDefinition.getFrameClass() == FrameClass.Frame) {
-			if ("SPRITE".equals(frameDefinition.getFrameType())) {
-				final UIFrame inflated = inflate(frameDefinition, owner, null,
-						frameDefinition.has("DecorateFileNames"));
-				if (this.autoPosition) {
-					inflated.positionBounds(this, this.viewport);
-				}
-				add(inflated);
-				return inflated;
-			}
-			else if ("FRAME".equals(frameDefinition.getFrameType())) {
-				final UIFrame inflated = inflate(frameDefinition, owner, null,
-						frameDefinition.has("DecorateFileNames"));
-				if (this.autoPosition) {
-					inflated.positionBounds(this, this.viewport);
-				}
-				add(inflated);
-				return inflated;
-			}
-		}
-		throw new UnsupportedOperationException("Not yet implemented");
+		final UIFrame inflatedFrame = inflate(frameDefinition, owner, null, frameDefinition.has("DecorateFileNames"));
+		add(inflatedFrame);
+		return inflatedFrame;
 	}
 
 	public UIFrame createSimpleFrame(final String name, final UIFrame owner, final int createContext) {
@@ -465,7 +447,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 			else if ("BACKDROP".equals(frameDefinition.getFrameType())) {
 				final boolean tileBackground = frameDefinition.has("BackdropTileBackground");
-				final String backgroundString = frameDefinition.getString("BackdropBackground");
+				String backgroundString = frameDefinition.getString("BackdropBackground");
 				String cornerFlagsString = frameDefinition.getString("BackdropCornerFlags");
 				if (cornerFlagsString == null) {
 					cornerFlagsString = "";
@@ -488,19 +470,25 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				else {
 					backgroundInsets = new Vector4Definition(0, 0, 0, 0);
 				}
-				final String edgeFileString = frameDefinition.getString("BackdropEdgeFile");
+				final boolean decorateFileNames = frameDefinition.has("DecorateFileNames") || inDecorateFileNames;
+				String edgeFileString = frameDefinition.getString("BackdropEdgeFile");
 				System.out.println(frameDefinition.getName() + " wants edge file: " + edgeFileString);
+				if (decorateFileNames && (edgeFileString != null)) {
+					edgeFileString = getSkinField(edgeFileString);
+				}
+				if (decorateFileNames && (edgeFileString != null)) {
+					backgroundString = getSkinField(backgroundString);
+				}
 				final Texture background = backgroundString == null ? null : loadTexture(backgroundString);
 				final Texture edgeFile = edgeFileString == null ? null : loadTexture(edgeFileString);
 				System.out.println(frameDefinition.getName() + " got edge file: " + edgeFile);
 
 				final BackdropFrame backdropFrame = new BackdropFrame(frameDefinition.getName(), parent,
-						inDecorateFileNames || frameDefinition.has("DecorateFileNames"), tileBackground, background,
-						cornerFlags, cornerSize, backgroundSize, backgroundInsets, edgeFile);
+						decorateFileNames, tileBackground, background, cornerFlags, cornerSize, backgroundSize,
+						backgroundInsets, edgeFile);
 				this.nameToFrame.put(frameDefinition.getName(), backdropFrame);
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
-					backdropFrame.add(inflate(childDefinition, backdropFrame, frameDefinition,
-							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+					backdropFrame.add(inflate(childDefinition, backdropFrame, frameDefinition, decorateFileNames));
 				}
 				inflatedFrame = backdropFrame;
 			}

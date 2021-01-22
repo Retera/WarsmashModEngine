@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
@@ -50,6 +51,7 @@ public class RenderUnit {
 	public int playerIndex;
 	private final CUnit simulationUnit;
 	public SplatMover shadow;
+	private BuildingShadow buildingShadowInstance;
 	public SplatMover selectionCircle;
 
 	private float facing;
@@ -72,11 +74,12 @@ public class RenderUnit {
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
 			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
 			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
-			final MdxModel specialArtModel) {
+			final MdxModel specialArtModel, final BuildingShadow buildingShadow) {
 		this.portraitModel = portraitModel;
 		this.simulationUnit = simulationUnit;
 		this.typeData = typeData;
 		this.specialArtModel = specialArtModel;
+		this.buildingShadowInstance = buildingShadow;
 		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
 
 		this.location[0] = x;
@@ -256,6 +259,10 @@ public class RenderUnit {
 			if (this.shadow != null) {
 				this.shadow.destroy(Gdx.gl30, map.terrain.centerOffset);
 				this.shadow = null;
+			}
+			if (this.buildingShadowInstance != null) {
+				this.buildingShadowInstance.remove();
+				this.buildingShadowInstance = null;
 			}
 			if (this.uberSplat != null) {
 				this.uberSplat.destroy(Gdx.gl30, map.terrain.centerOffset);

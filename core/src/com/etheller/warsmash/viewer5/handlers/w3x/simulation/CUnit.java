@@ -13,7 +13,6 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
-import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
@@ -64,7 +63,6 @@ public class CUnit extends CWidget {
 
 	private Rectangle collisionRectangle;
 	private RemovablePathingMapInstance pathingInstance;
-	private BuildingShadow buildingShadowInstance;
 
 	private final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
 
@@ -93,7 +91,7 @@ public class CUnit extends CWidget {
 	private boolean paused = false;
 	private boolean acceptingOrders = true;
 	private boolean invulnerable = false;
-	private boolean holdingPosition = false;
+	private CBehavior defaultBehavior;
 	private COrder currentOrder = null;
 	private CUnit workerInside;
 	private final War3ID[] buildQueue = new War3ID[WarsmashConstants.BUILD_QUEUE_SIZE];
@@ -106,7 +104,7 @@ public class CUnit extends CWidget {
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
 			final int speed, final int defense, final CUnitType unitType,
-			final RemovablePathingMapInstance pathingInstance, final BuildingShadow buildingShadowInstance) {
+			final RemovablePathingMapInstance pathingInstance) {
 		super(handleId, x, y, life);
 		this.playerIndex = playerIndex;
 		this.typeId = typeId;
@@ -117,13 +115,13 @@ public class CUnit extends CWidget {
 		this.speed = speed;
 		this.defense = defense;
 		this.pathingInstance = pathingInstance;
-		this.buildingShadowInstance = buildingShadowInstance;
 		this.flyHeight = unitType.getDefaultFlyingHeight();
 		this.unitType = unitType;
 		this.classifications.addAll(unitType.getClassifications());
 		this.acquisitionRange = unitType.getDefaultAcquisitionRange();
 		this.stopBehavior = new CBehaviorStop(this);
-		this.currentBehavior = this.stopBehavior;
+		this.defaultBehavior = this.stopBehavior;
+		this.currentBehavior = this.defaultBehavior;
 	}
 
 	public void setUnitAnimationListener(final CUnitAnimationListener unitAnimationListener) {
@@ -307,14 +305,20 @@ public class CUnit extends CWidget {
 						}
 					}
 				}
+				for (final CAbility ability : this.abilities) {
+					ability.onTick(game, this);
+				}
 				if (this.currentBehavior != null) {
 					final CBehavior lastBehavior = this.currentBehavior;
+					final int lastBehaviorHighlightOrderId = lastBehavior.getHighlightOrderId();
 					this.currentBehavior = this.currentBehavior.update(game);
 					if (lastBehavior != this.currentBehavior) {
 						lastBehavior.end(game);
 						this.currentBehavior.begin(game);
 					}
-					if (this.currentBehavior.getHighlightOrderId() != lastBehavior.getHighlightOrderId()) {
+					if (this.currentBehavior.getHighlightOrderId() != lastBehaviorHighlightOrderId) {
+						System.out.println("order ID change detected from  "
+								+ this.currentBehavior.getHighlightOrderId() + " to  " + lastBehaviorHighlightOrderId);
 						this.stateNotifier.ordersChanged();
 					}
 				}
@@ -387,7 +391,7 @@ public class CUnit extends CWidget {
 			this.stateNotifier.waypointsChanged();
 		}
 		else {
-			setHoldingPosition(false);
+			setDefaultBehavior(this.stopBehavior);
 			if (this.currentBehavior != null) {
 				this.currentBehavior.end(game);
 			}
@@ -408,12 +412,7 @@ public class CUnit extends CWidget {
 			nextBehavior = order.begin(game, this);
 		}
 		else {
-			if (this.holdingPosition) {
-				nextBehavior = this.holdPositionBehavior;
-			}
-			else {
-				nextBehavior = this.stopBehavior;
-			}
+			nextBehavior = this.defaultBehavior;
 		}
 		return nextBehavior;
 	}
@@ -636,7 +635,7 @@ public class CUnit extends CWidget {
 			}
 		}
 		else {
-			if (this.currentBehavior == null) {
+			if ((this.currentBehavior == null) || (this.currentBehavior == this.defaultBehavior)) {
 				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(),
 						CAllianceType.PASSIVE)) {
 					for (final CUnitAttack attack : this.unitType.getAttacks()) {
@@ -666,10 +665,6 @@ public class CUnit extends CWidget {
 		if (this.pathingInstance != null) {
 			this.pathingInstance.remove();
 			this.pathingInstance = null;
-		}
-		if (this.buildingShadowInstance != null) {
-			this.buildingShadowInstance.remove();
-			this.buildingShadowInstance = null;
 		}
 		popoutWorker(simulation);
 		final CPlayer player = simulation.getPlayer(this.playerIndex);
@@ -909,10 +904,10 @@ public class CUnit extends CWidget {
 	}
 
 	public CBehavior pollNextOrderBehavior(final CSimulation game) {
-		if (this.holdingPosition) {
+		if (this.defaultBehavior != this.stopBehavior) {
 			// kind of a stupid hack, meant to align in feel with some behaviors that were
 			// observed on War3
-			return this.holdPositionBehavior;
+			return this.defaultBehavior;
 		}
 		final COrder order = this.orderQueue.poll();
 		final CBehavior nextOrderBehavior = beginOrder(game, order);
@@ -1194,6 +1189,10 @@ public class CUnit extends CWidget {
 		return delta;
 	}
 
+	public void setDefaultBehavior(final CBehavior defaultBehavior) {
+		this.defaultBehavior = defaultBehavior;
+	}
+
 	public int getGold() {
 		for (final CAbility ability : this.abilities) {
 			if (ability instanceof CAbilityGoldMine) {
@@ -1209,10 +1208,6 @@ public class CUnit extends CWidget {
 				((CAbilityGoldMine) ability).setGold(goldAmount);
 			}
 		}
-	}
-
-	public void setHoldingPosition(final boolean holdingPosition) {
-		this.holdingPosition = holdingPosition;
 	}
 
 	public Queue<COrder> getOrderQueue() {

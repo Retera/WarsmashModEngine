@@ -15,7 +15,6 @@ import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
-import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -24,6 +23,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CDestructableData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
@@ -36,8 +36,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListene
 public class CSimulation {
 	private final CAbilityData abilityData;
 	private final CUnitData unitData;
+	private final CDestructableData destructableData;
 	private final List<CUnit> units;
 	private final List<CUnit> newUnits;
+	private final List<CDestructable> destructables;
 	private final List<CPlayer> players;
 	private final List<CAttackProjectile> projectiles;
 	private final List<CAttackProjectile> newProjectiles;
@@ -51,20 +53,24 @@ public class CSimulation {
 	private final Random seededRandom;
 	private float currentGameDayTimeElapsed;
 	private final Map<Integer, CUnit> handleIdToUnit = new HashMap<>();
+	private final Map<Integer, CDestructable> handleIdToDestructable = new HashMap<>();
 	private final Map<Integer, CAbility> handleIdToAbility = new HashMap<>();
 	private transient CommandErrorListener commandErrorListener;
 
 	public CSimulation(final DataTable miscData, final MutableObjectData parsedUnitData,
-			final MutableObjectData parsedAbilityData, final SimulationRenderController simulationRenderController,
-			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
-			final List<Player> playerInfos, final CommandErrorListener commandErrorListener) {
+			final MutableObjectData parsedDestructableData, final MutableObjectData parsedAbilityData,
+			final SimulationRenderController simulationRenderController, final PathingGrid pathingGrid,
+			final Rectangle entireMapBounds, final Random seededRandom, final List<Player> playerInfos,
+			final CommandErrorListener commandErrorListener) {
 		this.gameplayConstants = new CGameplayConstants(miscData);
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
 		this.abilityData = new CAbilityData(parsedAbilityData);
 		this.unitData = new CUnitData(parsedUnitData, this.abilityData, this.simulationRenderController);
+		this.destructableData = new CDestructableData(parsedDestructableData, simulationRenderController);
 		this.units = new ArrayList<>();
 		this.newUnits = new ArrayList<>();
+		this.destructables = new ArrayList<>();
 		this.projectiles = new ArrayList<>();
 		this.newProjectiles = new ArrayList<>();
 		this.handleIdAllocator = new HandleIdAllocator();
@@ -117,13 +123,22 @@ public class CSimulation {
 
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing, final BufferedImage buildingPathingPixelMap,
-			final RemovablePathingMapInstance pathingInstance, final BuildingShadow buildingShadowInstance) {
+			final RemovablePathingMapInstance pathingInstance) {
 		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
-				this.handleIdAllocator, pathingInstance, buildingShadowInstance);
+				this.handleIdAllocator, pathingInstance);
 		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
 		this.worldCollision.addUnit(unit);
 		return unit;
+	}
+
+	public CDestructable createDestructable(final War3ID typeId, final float x, final float y,
+			final RemovablePathingMapInstance pathingInstance, final RemovablePathingMapInstance pathingInstanceDeath) {
+		final CDestructable dest = this.destructableData.create(this, typeId, x, y, this.handleIdAllocator,
+				pathingInstance, pathingInstanceDeath);
+		this.handleIdToDestructable.put(dest.getHandleId(), dest);
+		this.destructables.add(dest);
+		return dest;
 	}
 
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,

@@ -10,4 +10,6 @@ public interface ClickableActionFrame extends UIFrame {
 	void mouseUp(final GameUI gameUI, final Viewport uiViewport);
 
 	void onClick(int button);
+
+	String getToolTip();
 }

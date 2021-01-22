@@ -542,7 +542,8 @@ public class MdxComplexInstance extends ModelInstance {
 			this.counter += integerFrameTime;
 			this.allowParticleSpawn = true;
 
-			if (this.floatingFrame >= interval[1]) {
+			final long animEnd = interval[1] - 1;
+			if (this.floatingFrame >= animEnd) {
 				if ((this.sequenceLoopMode == SequenceLoopMode.ALWAYS_LOOP)
 						|| ((this.sequenceLoopMode == SequenceLoopMode.MODEL_LOOP) && (sequence.getFlags() == 0))) {
 					this.floatingFrame = this.frame = (int) interval[0]; // TODO not cast
@@ -551,7 +552,7 @@ public class MdxComplexInstance extends ModelInstance {
 				}
 				else if (this.sequenceLoopMode == SequenceLoopMode.LOOP_TO_NEXT_ANIMATION) { // faux queued animation
 					// mode
-					final float framesPast = this.floatingFrame - interval[1];
+					final float framesPast = this.floatingFrame - animEnd;
 
 					final List<Sequence> sequences = model.sequences;
 					this.sequence = (this.sequence + 1) % sequences.size();
@@ -562,7 +563,7 @@ public class MdxComplexInstance extends ModelInstance {
 					this.forced = true;
 				}
 				else {
-					this.floatingFrame = this.frame = (int) interval[1]; // TODO not cast
+					this.floatingFrame = this.frame = (int) animEnd; // TODO not cast
 					this.counter -= integerFrameTime;
 					this.allowParticleSpawn = false;
 				}

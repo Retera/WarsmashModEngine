@@ -37,5 +37,7 @@ public interface UIFrame {
 
 	UIFrame touchUp(float screenX, float screenY, int button);
 
+	UIFrame getFrameChildUnderMouse(float screenX, float screenY);
+
 	String getName();
 }

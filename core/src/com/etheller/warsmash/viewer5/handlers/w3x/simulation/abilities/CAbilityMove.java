@@ -87,6 +87,10 @@ public class CAbilityMove extends AbstractCAbility {
 	}
 
 	@Override
+	public void onTick(final CSimulation game, final CUnit unit) {
+	}
+
+	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId) {
 		return true;
 	}
@@ -100,7 +104,9 @@ public class CAbilityMove extends AbstractCAbility {
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
 		if (orderId == OrderIds.patrol) {
-			return caster.getPatrolBehavior().reset(point);
+			final CBehavior patrolBehavior = caster.getPatrolBehavior().reset(point);
+			caster.setDefaultBehavior(patrolBehavior);
+			return patrolBehavior;
 		}
 		else {
 			return caster.getMoveBehavior().reset(OrderIds.move, point);
@@ -110,7 +116,7 @@ public class CAbilityMove extends AbstractCAbility {
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
 		if (orderId == OrderIds.holdposition) {
-			caster.setHoldingPosition(true);
+			caster.setDefaultBehavior(caster.getHoldPositionBehavior());
 		}
 		return caster.pollNextOrderBehavior(game);
 	}

@@ -96,4 +96,17 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 		this.iconFrame.setHeight(this.defaultHeight);
 		positionBounds(gameUI, uiViewport);
 	}
+
+	@Override
+	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
+		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
+			return this;
+		}
+		return null;
+	}
+
+	@Override
+	public String getToolTip() {
+		return "QueueIcon " + this.queueIconIndexId;
+	}
 }

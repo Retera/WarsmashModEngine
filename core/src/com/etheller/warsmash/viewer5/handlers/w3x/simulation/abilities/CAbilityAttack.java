@@ -107,6 +107,10 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
+	public void onTick(final CSimulation game, final CUnit unit) {
+	}
+
+	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
@@ -126,6 +130,9 @@ public class CAbilityAttack extends AbstractCAbility {
 			final AbilityPointTarget point) {
 		switch (orderId) {
 		case OrderIds.attack:
+			if (caster.getMoveBehavior() == null) {
+				return caster.pollNextOrderBehavior(game);
+			}
 			return caster.getMoveBehavior().reset(OrderIds.attack, point);
 		case OrderIds.attackground:
 			CBehavior behavior = null;

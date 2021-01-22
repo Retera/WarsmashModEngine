@@ -115,6 +115,10 @@ public final class CAbilityQueue extends AbstractCAbility {
 	}
 
 	@Override
+	public void onTick(final CSimulation game, final CUnit unit) {
+	}
+
+	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		return null;
 	}

@@ -58,4 +58,15 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 		}
 		return super.touchUp(screenX, screenY, button);
 	}
+
+	@Override
+	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
+		for (final UIFrame childFrame : this.childFrames) {
+			final UIFrame clickedChild = childFrame.getFrameChildUnderMouse(screenX, screenY);
+			if (clickedChild != null) {
+				return clickedChild;
+			}
+		}
+		return super.getFrameChildUnderMouse(screenX, screenY);
+	}
 }

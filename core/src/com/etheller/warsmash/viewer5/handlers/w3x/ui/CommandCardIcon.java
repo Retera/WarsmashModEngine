@@ -117,7 +117,7 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
 		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
-			if (this.orderId != 0 || menuButton) {
+			if ((this.orderId != 0) || this.menuButton) {
 				return this;
 			}
 		}
@@ -163,5 +163,18 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 		this.iconFrame.setWidth(GameUI.convertX(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));
 		this.iconFrame.setHeight(GameUI.convertY(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));
 		positionBounds(gameUI, uiViewport);
+	}
+
+	@Override
+	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
+		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
+			return this;
+		}
+		return null;
+	}
+
+	@Override
+	public String getToolTip() {
+		return "CommandCardIcon w/ OID=" + this.orderId;
 	}
 }

@@ -1,0 +1,42 @@
+/*
+ *  ToolTip.fdf
+ *  ---------------------
+ *  These are some definitions to help us externalize the art of the tooltip.
+ * We want to use the following:
+ 
+	ToolTipBackground=UI\Widgets\ToolTips\Human\human-tooltip-background.blp
+	ToolTipBorder=UI\Widgets\ToolTips\Human\human-tooltip-border.blp
+	ToolTipGoldIcon=UI\Widgets\ToolTips\Human\ToolTipGoldIcon.blp
+	ToolTipLumberIcon=UI\Widgets\ToolTips\Human\ToolTipLumberIcon.blp
+	ToolTipStonesIcon=UI\Widgets\ToolTips\Human\ToolTipStonesIcon.blp
+	ToolTipManaIcon=UI\Widgets\ToolTips\Human\ToolTipManaIcon.blp
+	ToolTipSupplyIcon=UI\Widgets\ToolTips\Human\ToolTipSupplyIcon.blp
+ */
+ 
+Frame "FRAME" "SmashToolTip" {
+	Frame "BACKDROP" "SmashToolTipBackdrop" {
+		SetAllPoints,
+		DecorateFileNames,
+	    BackdropTileBackground,
+	    BackdropBackground  "ToolTipBackground",
+	    BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+	    BackdropCornerSize  0.008,
+	    BackdropBackgroundSize  0.036,
+	    BackdropBackgroundInsets 0.0035 0.0035 0.0035 0.0035,
+	    BackdropEdgeFile  "ToolTipBorder",
+	    BackdropBlendAll,
+	}
+	Frame "TEXT" "SmashToolTipText" {
+		SetAllPoints,
+	    DecorateFileNames,
+	    FrameFont "MasterFont", 0.013, "",
+	    FontJustificationH JUSTIFYLEFT,
+	    FontJustificationV JUSTIFYTOP,
+	    FontFlags "FIXEDSIZE",
+	    FontColor 0.99 0.827 0.0705 1.0,
+	    FontHighlightColor 1.0 1.0 1.0 1.0,
+	    FontDisabledColor 0.2 0.2 0.2 1.0,
+		FontShadowColor 0.0 0.0 0.0 0.9,
+	    FontShadowOffset 0.001 -0.001,
+	}
+}

@@ -62,6 +62,10 @@ public class CAbilityGeneric extends AbstractCAbility {
 	}
 
 	@Override
+	public void onTick(final CSimulation game, final CUnit unit) {
+	}
+
+	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId) {
 		return false;
 	}

@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
@@ -43,7 +44,10 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 			}
 			else if (orderId == OrderIds.holdposition) {
 				unit.order(this.game, null, queue);
-				unit.setHoldingPosition(true);
+				final CBehaviorHoldPosition holdPositionBehavior = unit.getHoldPositionBehavior();
+				if (holdPositionBehavior != null) {
+					unit.setDefaultBehavior(holdPositionBehavior);
+				}
 			}
 		}
 		else {

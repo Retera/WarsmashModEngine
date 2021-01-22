@@ -65,70 +65,47 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior implements Ability
 
 	@Override
 	public CBehavior accept(final CUnit target) {
-		if (this.popoutFromMineTurnTick == 0) {
-			if ((this.abilityHarvest.getCarriedResourceAmount() == 0)
-					|| (this.abilityHarvest.getCarriedResourceType() != ResourceType.GOLD)) {
-				for (final CAbility ability : target.getAbilities()) {
-					if (ability instanceof CAbilityGoldMine) {
-						final CAbilityGoldMine abilityGoldMine = (CAbilityGoldMine) ability;
-						final int activeMiners = abilityGoldMine.getActiveMiners();
-						if (activeMiners < abilityGoldMine.getMiningCapacity()) {
-							abilityGoldMine.setActiveMiners(activeMiners + 1);
-							if (activeMiners == 0) {
-								target.getUnitAnimationListener().addSecondaryTag(SecondaryTag.WORK);
-							}
-							this.unit.setHidden(true);
-							this.unit.setInvulnerable(true);
-							this.popoutFromMineTurnTick = this.simulation.getGameTurnTick()
-									+ (int) (abilityGoldMine.getMiningDuration()
-											/ WarsmashConstants.SIMULATION_STEP_TIME);
-							this.abilityGoldMine = abilityGoldMine;
-						}
-						else {
-							// we are stuck waiting to mine, let's make sure we play stand animation
-							this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
-									SequenceUtils.EMPTY, 1.0f, true);
-						}
-						return this;
+		if ((this.abilityHarvest.getCarriedResourceAmount() == 0)
+				|| (this.abilityHarvest.getCarriedResourceType() != ResourceType.GOLD)) {
+			for (final CAbility ability : target.getAbilities()) {
+				if (ability instanceof CAbilityGoldMine) {
+					final CAbilityGoldMine abilityGoldMine = (CAbilityGoldMine) ability;
+					final int activeMiners = abilityGoldMine.getActiveMinerCount();
+					if (activeMiners < abilityGoldMine.getMiningCapacity()) {
+						abilityGoldMine.addMiner(this);
+						this.unit.setHidden(true);
+						this.unit.setInvulnerable(true);
+						this.unit.setPaused(true);
+						this.popoutFromMineTurnTick = this.simulation.getGameTurnTick()
+								+ (int) (abilityGoldMine.getMiningDuration() / WarsmashConstants.SIMULATION_STEP_TIME);
+						this.abilityGoldMine = abilityGoldMine;
 					}
+					else {
+						// we are stuck waiting to mine, let's make sure we play stand animation
+						this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY,
+								1.0f, true);
+					}
+					return this;
 				}
-				// weird invalid target and we have no resources, consider harvesting done
-				return this.unit.pollNextOrderBehavior(this.simulation);
 			}
-			else {
-				// we have some GOLD and we're not in a mine (?) lets do a return resources
-				// order
-				return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
-			}
+			// weird invalid target and we have no resources, consider harvesting done
+			return this.unit.pollNextOrderBehavior(this.simulation);
 		}
 		else {
-			if (this.simulation.getGameTurnTick() >= this.popoutFromMineTurnTick) {
-				this.popoutFromMineTurnTick = 0;
-				this.unit.setHidden(false);
-				this.unit.setInvulnerable(false);
-				final int activeMiners = this.abilityGoldMine.getActiveMiners() - 1;
-				this.abilityGoldMine.setActiveMiners(activeMiners);
-				if (activeMiners == 0) {
-					target.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.WORK);
-				}
-				int mineGoldRemaining = this.abilityGoldMine.getGold();
-				final int goldMined = Math.min(mineGoldRemaining, this.abilityHarvest.getGoldCapacity());
-				this.abilityHarvest.setCarriedResources(ResourceType.GOLD, goldMined);
-				mineGoldRemaining -= goldMined;
-				this.abilityGoldMine.setGold(mineGoldRemaining);
-				if (mineGoldRemaining <= 0) {
-					target.setLife(this.simulation, 0);
-				}
-				this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.GOLD);
-				this.simulation.unitRepositioned(this.unit);
-				// we just finished getting gold, lets do a return resources order
-				return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
-			}
-			else {
-				// continue working inside mine
-				return this;
-			}
+			// we have some GOLD and we're not in a mine (?) lets do a return resources
+			// order
+			return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
 		}
+	}
+
+	public void popoutFromMine(final int goldMined) {
+		this.popoutFromMineTurnTick = 0;
+		this.unit.setHidden(false);
+		this.unit.setInvulnerable(false);
+		this.unit.setPaused(false);
+		this.abilityHarvest.setCarriedResources(ResourceType.GOLD, goldMined);
+		this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.GOLD);
+		this.simulation.unitRepositioned(this.unit);
 	}
 
 	@Override
@@ -165,6 +142,14 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior implements Ability
 	@Override
 	public void end(final CSimulation game) {
 
+	}
+
+	public int getPopoutFromMineTurnTick() {
+		return this.popoutFromMineTurnTick;
+	}
+
+	public int getGoldCapacity() {
+		return this.abilityHarvest.getGoldCapacity();
 	}
 
 }

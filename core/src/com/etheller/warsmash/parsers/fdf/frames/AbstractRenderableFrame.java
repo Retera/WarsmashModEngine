@@ -325,6 +325,11 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	}
 
 	@Override
+	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
+		return null;
+	}
+
+	@Override
 	public String getName() {
 		return this.name;
 	}

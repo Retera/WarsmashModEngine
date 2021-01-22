@@ -186,6 +186,12 @@ public class PathingGrid {
 		return removablePathingMapInstance;
 	}
 
+	public RemovablePathingMapInstance createRemovablePathingOverlayTexture(final float positionX,
+			final float positionY, final int rotationInput, final BufferedImage pathingTextureTga) {
+		return new RemovablePathingMapInstance(positionX,
+				positionY, rotationInput, pathingTextureTga);
+	}
+
 	public int getWidth() {
 		return this.pathingGridSizes[0];
 	}
@@ -451,6 +457,11 @@ public class PathingGrid {
 			for (final RemovablePathingMapInstance instance : PathingGrid.this.dynamicPathingInstances) {
 				instance.blit();
 			}
+		}
+
+		public void add() {
+			PathingGrid.this.dynamicPathingInstances.add(this);
+			blit();
 		}
 	}
 }

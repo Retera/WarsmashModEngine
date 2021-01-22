@@ -19,6 +19,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPa
  */
 public class CUnitType {
 	private final String name;
+	private final int life;
+	private final int manaInitial;
+	private final int manaMaximum;
+	private final int speed;
+	private final int defense;
+	private final String abilityList;
 	private final boolean building;
 	private final PathingGrid.MovementType movementType;
 	private final float defaultFlyingHeight;
@@ -50,7 +56,8 @@ public class CUnitType {
 	private final EnumSet<CBuildingPathingType> preventedPathingTypes;
 	private final EnumSet<CBuildingPathingType> requiredPathingTypes;
 
-	public CUnitType(final String name, final boolean isBldg, final MovementType movementType,
+	public CUnitType(final String name, final int life, final int manaInitial, final int manaMaximum, final int speed,
+			final int defense, final String abilityList, final boolean isBldg, final MovementType movementType,
 			final float defaultFlyingHeight, final float collisionSize,
 			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks, final String armorType,
 			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ,
@@ -61,6 +68,12 @@ public class CUnitType {
 			final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes) {
 		this.name = name;
+		this.life = life;
+		this.manaInitial = manaInitial;
+		this.manaMaximum = manaMaximum;
+		this.speed = speed;
+		this.defense = defense;
+		this.abilityList = abilityList;
 		this.building = isBldg;
 		this.movementType = movementType;
 		this.defaultFlyingHeight = defaultFlyingHeight;
@@ -92,6 +105,30 @@ public class CUnitType {
 
 	public String getName() {
 		return this.name;
+	}
+
+	public int getLife() {
+		return this.life;
+	}
+
+	public int getManaInitial() {
+		return this.manaInitial;
+	}
+
+	public int getManaMaximum() {
+		return this.manaMaximum;
+	}
+
+	public int getSpeed() {
+		return this.speed;
+	}
+
+	public int getDefense() {
+		return this.defense;
+	}
+
+	public String getAbilityList() {
+		return this.abilityList;
 	}
 
 	public float getDefaultFlyingHeight() {

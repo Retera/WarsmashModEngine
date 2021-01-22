@@ -415,6 +415,10 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public boolean mouseMoved(final int screenX, final int screenY) {
+		final float worldScreenY = getHeight() - screenY;
+		if (this.meleeUI.mouseMoved(screenX, screenY, worldScreenY)) {
+			return false;
+		}
 		return false;
 	}
 

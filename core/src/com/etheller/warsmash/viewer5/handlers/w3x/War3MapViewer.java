@@ -83,6 +83,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitTypeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
@@ -115,6 +116,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final War3ID ITEM_FILE = War3ID.fromString("ifil");
 	private static final War3ID UNIT_PATHING = War3ID.fromString("upat");
 	private static final War3ID DESTRUCTABLE_PATHING = War3ID.fromString("bptx");
+	private static final War3ID DESTRUCTABLE_PATHING_DEATH = War3ID.fromString("bptd");
 	private static final War3ID ELEVATION_SAMPLE_RADIUS = War3ID.fromString("uerd");
 	private static final War3ID MAX_PITCH = War3ID.fromString("umxp");
 	private static final War3ID MAX_ROLL = War3ID.fromString("umxr");
@@ -184,6 +186,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private final List<SelectionCircleSize> selectionCircleSizes = new ArrayList<>();
 
 	private final Map<CUnit, RenderUnit> unitToRenderPeer = new HashMap<>();
+	private final Map<CDestructable, RenderDestructable> destructableToRenderPeer = new HashMap<>();
 	private final Map<War3ID, RenderUnitTypeData> unitIdToTypeData = new HashMap<>();
 	private GameUI gameUI;
 	private Vector3 lightDirection;
@@ -434,7 +437,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		this.allObjectData = this.mapMpq.readModifications();
 		this.simulation = new CSimulation(this.miscData, this.allObjectData.getUnits(),
-				this.allObjectData.getAbilities(), new SimulationRenderController() {
+				this.allObjectData.getDestructibles(), this.allObjectData.getAbilities(),
+				new SimulationRenderController() {
 					private final Map<String, UnitSound> keyToCombatSound = new HashMap<>();
 
 					@Override
@@ -552,9 +556,32 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
+					public void removeDestructable(final CDestructable dest) {
+						final RenderDestructable renderPeer = War3MapViewer.this.destructableToRenderPeer.remove(dest);
+						War3MapViewer.this.doodads.remove(renderPeer);
+						War3MapViewer.this.worldScene.removeInstance(renderPeer.instance);
+						if (renderPeer.walkableBounds != null) {
+							War3MapViewer.this.walkableObjectsTree.remove((MdxComplexInstance) renderPeer.instance,
+									renderPeer.walkableBounds);
+						}
+					}
+
+					@Override
 					public BufferedImage getBuildingPathingPixelMap(final War3ID rawcode) {
 						return War3MapViewer.this
 								.getBuildingPathingPixelMap(War3MapViewer.this.allObjectData.getUnits().get(rawcode));
+					}
+
+					@Override
+					public BufferedImage getDestructablePathingDeathPixelMap(final War3ID rawcode) {
+						return War3MapViewer.this.getDestructablePathingDeathPixelMap(
+								War3MapViewer.this.allObjectData.getDestructibles().get(rawcode));
+					}
+
+					@Override
+					public BufferedImage getDestructablePathingPixelMap(final War3ID rawcode) {
+						return War3MapViewer.this.getDestructablePathingPixelMap(
+								War3MapViewer.this.allObjectData.getDestructibles().get(rawcode));
 					}
 
 					@Override
@@ -620,6 +647,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		loadLightsAndShading(tileset);
 	}
 
+	protected BufferedImage getDestructablePathingPixelMap(final MutableGameObject row) {
+		return loadPathingTexture(row.getFieldAsString(DESTRUCTABLE_PATHING, 0));
+	}
+
+	protected BufferedImage getDestructablePathingDeathPixelMap(final MutableGameObject row) {
+		return loadPathingTexture(row.getFieldAsString(DESTRUCTABLE_PATHING_DEATH, 0));
+	}
+
 	private void loadSounds() {
 		this.uiSounds = new KeyedSounds(this.uiSoundsTable, this.mapMpq);
 	}
@@ -672,6 +707,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				type = WorldEditorDataType.DESTRUCTIBLES;
 			}
 			if (row != null) {
+				BuildingShadow destructableShadow = null;
+				RemovablePathingMapInstance destructablePathing = null;
+				RemovablePathingMapInstance destructablePathingDeath = null;
 				String file = row.readSLKTag("file");
 				final int numVar = row.readSLKTagInt("numVar");
 
@@ -694,28 +732,26 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				if (type == WorldEditorDataType.DESTRUCTIBLES) {
 					final String shadowString = row.readSLKTag("shadow");
 					if ((shadowString != null) && (shadowString.length() > 0) && !"_".equals(shadowString)) {
-						this.terrain.addShadow(shadowString, doodad.getLocation()[0], doodad.getLocation()[1]);
+						destructableShadow = this.terrain.addShadow(shadowString, doodad.getLocation()[0],
+								doodad.getLocation()[1]);
 					}
 
-					final String pathingTexture = row.readSLKTag("pathTex");
-					if ((pathingTexture != null) && (pathingTexture.length() > 0) && !"_".equals(pathingTexture)) {
-
-						BufferedImage bufferedImage = this.filePathToPathingMap.get(pathingTexture.toLowerCase());
-						if (bufferedImage == null) {
-							if (this.mapMpq.has(pathingTexture)) {
-								try {
-									bufferedImage = TgaFile.readTGA(pathingTexture,
-											this.mapMpq.getResourceAsStream(pathingTexture));
-									this.filePathToPathingMap.put(pathingTexture.toLowerCase(), bufferedImage);
-								}
-								catch (final Exception exc) {
-									exc.printStackTrace();
-								}
-							}
+					final BufferedImage destructablePathingPixelMap = getDestructablePathingPixelMap(row);
+					if (destructablePathingPixelMap != null) {
+						destructablePathing = this.terrain.pathingGrid.createRemovablePathingOverlayTexture(
+								doodad.getLocation()[0], doodad.getLocation()[1],
+								(int) Math.toDegrees(doodad.getAngle()), destructablePathingPixelMap);
+						if (doodad.getLife() > 0) {
+							destructablePathing.add();
 						}
-						if (bufferedImage != null) {
-							this.terrain.pathingGrid.blitRemovablePathingOverlayTexture(doodad.getLocation()[0],
-									doodad.getLocation()[1], (int) Math.toDegrees(doodad.getAngle()), bufferedImage);
+					}
+					final BufferedImage destructablePathingDeathPixelMap = getDestructablePathingDeathPixelMap(row);
+					if (destructablePathingDeathPixelMap != null) {
+						destructablePathingDeath = this.terrain.pathingGrid.createRemovablePathingOverlayTexture(
+								doodad.getLocation()[0], doodad.getLocation()[1],
+								(int) Math.toDegrees(doodad.getAngle()), destructablePathingDeathPixelMap);
+						if (doodad.getLife() <= 0) {
+							destructablePathingDeath.add();
 						}
 					}
 				}
@@ -739,11 +775,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				}
 
 				if (type == WorldEditorDataType.DESTRUCTIBLES) {
+					final float x = doodad.getLocation()[0];
+					final float y = doodad.getLocation()[1];
+					this.simulation.createDestructable(row.getAlias(), x, y, destructablePathing,
+							destructablePathingDeath);
 					final RenderDestructable renderDestructable = new RenderDestructable(this, model, row, doodad, type,
-							maxPitch, maxRoll, doodad.getLife());
+							maxPitch, maxRoll, doodad.getLife(), destructableShadow);
 					if (row.readSLKTagBoolean("walkable")) {
-						final float x = doodad.getLocation()[0];
-						final float y = doodad.getLocation()[1];
 						final BoundingBox boundingBox = model.bounds.getBoundingBox();
 						final float minX = boundingBox.min.x + x;
 						final float minY = boundingBox.min.y + y;
@@ -751,6 +789,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								boundingBox.getHeight());
 						this.walkableObjectsTree.add((MdxComplexInstance) renderDestructable.instance,
 								renderDestructableBounds);
+						renderDestructable.walkableBounds = renderDestructableBounds;
 					}
 					this.doodads.add(renderDestructable);
 				}
@@ -1035,10 +1074,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			if (type == WorldEditorDataType.UNITS) {
 				final float angle = (float) Math.toDegrees(unitAngle);
 				final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), playerIndex, unitX, unitY,
-						angle, buildingPathingPixelMap, pathingInstance, buildingShadowInstance);
+						angle, buildingPathingPixelMap, pathingInstance);
 				final RenderUnitTypeData typeData = getUnitTypeData(unitId, row);
 				final RenderUnit renderUnit = new RenderUnit(this, model, row, unitX, unitY, unitZ, playerIndex,
-						soundset, portraitModel, simulationUnit, typeData, specialArtModel);
+						soundset, portraitModel, simulationUnit, typeData, specialArtModel, buildingShadowInstance);
 				this.unitToRenderPeer.put(simulationUnit, renderUnit);
 				this.units.add(renderUnit);
 				if (unitShadowSplat != null) {
@@ -1104,8 +1143,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	private BufferedImage getBuildingPathingPixelMap(final MutableGameObject row) {
-		BufferedImage buildingPathingPixelMap = null;
 		final String pathingTexture = row.getFieldAsString(UNIT_PATHING, 0);
+		final BufferedImage buildingPathingPixelMap = loadPathingTexture(pathingTexture);
+		return buildingPathingPixelMap;
+	}
+
+	private BufferedImage loadPathingTexture(final String pathingTexture) {
+		BufferedImage buildingPathingPixelMap = null;
 		if ((pathingTexture != null) && (pathingTexture.length() > 0) && !"_".equals(pathingTexture)) {
 			buildingPathingPixelMap = this.filePathToPathingMap.get(pathingTexture.toLowerCase());
 			if (buildingPathingPixelMap == null) {

@@ -10,7 +10,6 @@ import java.util.Map;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -161,21 +160,19 @@ public class CUnitData {
 
 	public CUnit create(final CSimulation simulation, final int playerIndex, final War3ID typeId, final float x,
 			final float y, final float facing, final BufferedImage buildingPathingPixelMap,
-			final HandleIdAllocator handleIdAllocator, final RemovablePathingMapInstance pathingInstance,
-			final BuildingShadow buildingShadowInstance) {
+			final HandleIdAllocator handleIdAllocator, final RemovablePathingMapInstance pathingInstance) {
 		final MutableGameObject unitType = this.unitData.get(typeId);
 		final int handleId = handleIdAllocator.createId();
-		final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
-		final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
-		final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
-		final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
-		final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
-		final String abilityList = unitType.getFieldAsString(ABILITIES_NORMAL, 0);
 
 		final CUnitType unitTypeInstance = getUnitTypeInstance(typeId, buildingPathingPixelMap, unitType);
+		final int life = unitTypeInstance.getLife();
+		final int manaInitial = unitTypeInstance.getManaInitial();
+		final int manaMaximum = unitTypeInstance.getManaMaximum();
+		final int speed = unitTypeInstance.getSpeed();
+		final int defense = unitTypeInstance.getDefense();
 
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
-				speed, defense, unitTypeInstance, pathingInstance, buildingShadowInstance);
+				speed, defense, unitTypeInstance, pathingInstance);
 		if (speed > 0) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
@@ -216,7 +213,7 @@ public class CUnitData {
 		if (!unitsTrained.isEmpty()) {
 			unit.add(simulation, new CAbilityRally(handleIdAllocator.createId()));
 		}
-		for (final String ability : abilityList.split(",")) {
+		for (final String ability : unitTypeInstance.getAbilityList().split(",")) {
 			if ((ability.length() > 0) && !"_".equals(ability)) {
 				final CAbility createAbility = this.abilityData.createAbility(ability, handleIdAllocator.createId());
 				if (createAbility != null) {
@@ -231,6 +228,13 @@ public class CUnitData {
 			final MutableGameObject unitType) {
 		CUnitType unitTypeInstance = this.unitIdToUnitType.get(typeId);
 		if (unitTypeInstance == null) {
+			final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
+			final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
+			final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
+			final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
+			final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
+			final String abilityList = unitType.getFieldAsString(ABILITIES_NORMAL, 0);
+
 			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
 			final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
 			final float collisionSize = unitType.getFieldAsFloat(COLLISION_SIZE, 0);
@@ -417,11 +421,11 @@ public class CUnitData {
 			final String raceString = unitType.getFieldAsString(UNIT_RACE, 0);
 			final CUnitRace unitRace = CUnitRace.parseRace(raceString);
 
-			unitTypeInstance = new CUnitType(unitName, isBldg, movementType, moveHeight, collisionSize, classifications,
-					attacks, armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime,
-					targetedAs, acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained,
-					researchesAvailable, unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime,
-					preventedPathingTypes, requiredPathingTypes);
+			unitTypeInstance = new CUnitType(unitName, life, manaInitial, manaMaximum, speed, defense, abilityList,
+					isBldg, movementType, moveHeight, collisionSize, classifications, attacks, armorType, raise, decay,
+					defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
+					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, unitRace, goldCost,
+					lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
 		return unitTypeInstance;

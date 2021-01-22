@@ -36,6 +36,10 @@ public class CAbilityReturnResources extends AbstractGenericNoIconAbility {
 	}
 
 	@Override
+	public void onTick(final CSimulation game, final CUnit unit) {
+	}
+
+	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		return null;
 	}

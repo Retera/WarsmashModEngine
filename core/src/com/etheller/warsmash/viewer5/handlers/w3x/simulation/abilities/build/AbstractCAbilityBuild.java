@@ -93,4 +93,8 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId) {
 		return true;
 	}
+
+	@Override
+	public void onTick(final CSimulation game, final CUnit unit) {
+	}
 }

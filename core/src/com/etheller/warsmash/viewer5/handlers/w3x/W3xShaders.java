@@ -20,6 +20,7 @@ public class W3xShaders {
 				"    uniform float u_lightTextureHeight;\r\n" + //
 				"    attribute vec3 a_position;\r\n" + //
 				"    attribute vec2 a_uv;\r\n" + //
+				"    attribute float a_absoluteHeight;\r\n" + //
 				"    varying vec2 v_uv;\r\n" + //
 				"    varying vec2 v_suv;\r\n" + //
 				"    varying vec3 v_normal;\r\n" + //
@@ -29,19 +30,28 @@ public class W3xShaders {
 				"    void main() {\r\n" + //
 				"      vec2 halfPixel = u_pixel * 0.5;\r\n" + //
 				"      vec2 base = (a_position.xy - u_centerOffset) / 128.0;\r\n" + //
-				"      float height = texture2D(u_heightMap, base * u_pixel + halfPixel).r;\r\n" + //
-				"      float hL = texture2D(u_heightMap, vec2(base - vec2(normalDist, 0.0)) * u_pixel + halfPixel).r;\r\n"
-				+ //
-				"      float hR = texture2D(u_heightMap, vec2(base + vec2(normalDist, 0.0)) * u_pixel + halfPixel).r;\r\n"
-				+ //
-				"      float hD = texture2D(u_heightMap, vec2(base - vec2(0.0, normalDist)) * u_pixel + halfPixel).r;\r\n"
-				+ //
-				"      float hU = texture2D(u_heightMap, vec2(base + vec2(0.0, normalDist)) * u_pixel + halfPixel).r;\r\n"
-				+ //
+				"      float height;\r\n" + //
+				"      float hL;\r\n" + //
+				"      float hR;\r\n" + //
+				"      float hD;\r\n" + //
+				"      float hU;\r\n" + //
+				"      if (a_absoluteHeight < -256.0) {\r\n" + //
+				"        height = texture2D(u_heightMap, base * u_pixel + halfPixel).r * 128.0;\r\n" + //
+				"        hL = texture2D(u_heightMap, vec2(base - vec2(normalDist, 0.0)) * u_pixel + halfPixel).r;\r\n" + //
+				"        hR = texture2D(u_heightMap, vec2(base + vec2(normalDist, 0.0)) * u_pixel + halfPixel).r;\r\n" + //
+				"        hD = texture2D(u_heightMap, vec2(base - vec2(0.0, normalDist)) * u_pixel + halfPixel).r;\r\n" + //
+				"        hU = texture2D(u_heightMap, vec2(base + vec2(0.0, normalDist)) * u_pixel + halfPixel).r;\r\n" + //
+				"      } else {\r\n" + //
+				"        height = a_absoluteHeight;\r\n" + //
+				"        hL = a_absoluteHeight;\r\n" + //
+				"        hR = a_absoluteHeight;\r\n" + //
+				"        hD = a_absoluteHeight;\r\n" + //
+				"        hU = a_absoluteHeight;\r\n" + //
+				"      }\r\n" + //
 				"      v_normal = normalize(vec3(hL - hR, hD - hU, normalDist * 2.0));\r\n" + //
 				"      v_uv = a_uv;\r\n" + //
 				"      v_suv = base / u_size;\r\n" + //
-				"      vec3 myposition = vec3(a_position.xy, height * 128.0 + a_position.z);\r\n" + //
+				"      vec3 myposition = vec3(a_position.xy, height + a_position.z);\r\n" + //
 				"      gl_Position = u_mvp * vec4(myposition.xyz, 1.0);\r\n" + //
 				"      a_positionHeight = a_position.z;\r\n" + //
 				Shaders.lightSystem("v_normal", "myposition", "u_lightTexture", "u_lightTextureHeight", "u_lightCount",

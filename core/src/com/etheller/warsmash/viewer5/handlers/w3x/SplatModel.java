@@ -22,6 +22,7 @@ import com.etheller.warsmash.viewer5.ViewerTextureRenderable;
  */
 public class SplatModel {
 	private static final int MAX_VERTICES = 65000;
+	private static final float NO_ABS_HEIGHT = -257f;
 	private final ViewerTextureRenderable texture;
 	private final List<Batch> batches;
 	public final float[] color;
@@ -77,6 +78,7 @@ public class SplatModel {
 	private void loadBatches(final GL30 gl, final float[] centerOffset) {
 		final List<float[]> vertices = new ArrayList<>();
 		final List<float[]> uvs = new ArrayList<>();
+		final List<float[]> absoluteHeights = new ArrayList<>();
 		final List<int[]> indices = new ArrayList<>();
 		final List<SplatMover> batchRenderUnits = new ArrayList<>();
 		final int instances = this.locations.size();
@@ -112,9 +114,10 @@ public class SplatModel {
 
 			final int step = (ix1 - ix0) + 1;
 			if ((start + numVertsToCrate) > MAX_VERTICES) {
-				this.addBatch(gl, vertices, uvs, indices, batchRenderUnits);
+				this.addBatch(gl, vertices, uvs, absoluteHeights, indices, batchRenderUnits);
 				vertices.clear();
 				uvs.clear();
+				absoluteHeights.clear();
 				indices.clear();
 				batchRenderUnits.clear();
 				start = 0;
@@ -130,9 +133,12 @@ public class SplatModel {
 					vertices.add(vertex);
 					final float[] uv = new float[] { (x - x0) / uvXScale, 1.0f - ((y - y0) / uvYScale) };
 					uvs.add(uv);
+					final float[] absHeight = new float[] { NO_ABS_HEIGHT };
+					absoluteHeights.add(absHeight);
 					if (splatMover != null) {
 						splatMover.vertices.add(vertex);
 						splatMover.uvs.add(uv);
+						splatMover.absoluteHeights.add(absHeight);
 					}
 				}
 			}
@@ -152,8 +158,11 @@ public class SplatModel {
 					vertices.add(vertex);
 					final float[] uv = new float[] { (x - x0) / uvXScale, 1.0f - ((y - y0) / uvYScale) };
 					uvs.add(uv);
+					final float[] absHeight = new float[] { NO_ABS_HEIGHT };
+					absoluteHeights.add(absHeight);
 					splatMover.vertices.add(vertex);
 					splatMover.uvs.add(uv);
+					splatMover.absoluteHeights.add(absHeight);
 				}
 			}
 			for (int i = 0; i < (iy1 - iy0); ++i) {
@@ -179,7 +188,7 @@ public class SplatModel {
 
 		}
 		if (indices.size() > 0) {
-			this.addBatch(gl, vertices, uvs, indices, batchRenderUnits);
+			this.addBatch(gl, vertices, uvs, absoluteHeights, indices, batchRenderUnits);
 		}
 		if (this.splatInstances != null) {
 			for (final SplatMover splatMover : this.splatInstances) {
@@ -191,25 +200,30 @@ public class SplatModel {
 	}
 
 	private void addBatch(final GL30 gl, final List<float[]> vertices, final List<float[]> uvs,
-			final List<int[]> indices, final List<SplatMover> batchRenderUnits) {
+			final List<float[]> absoluteHeights, final List<int[]> indices, final List<SplatMover> batchRenderUnits) {
 		final int uvsOffset = vertices.size() * 3 * 4;
+		final int paramsOffset = uvsOffset + (uvs.size() * 4 * 2);
 
 		final int vertexBuffer = gl.glGenBuffer();
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, vertexBuffer);
-		gl.glBufferData(GL30.GL_ARRAY_BUFFER, uvsOffset + (uvs.size() * 4 * 2), null, GL30.GL_STATIC_DRAW);
-		gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, 0, vertices.size() * 4 * 5, RenderMathUtils.wrap(vertices));
+		gl.glBufferData(GL30.GL_ARRAY_BUFFER, uvsOffset + (uvs.size() * 4 * 2) + (absoluteHeights.size() * 4), null,
+				GL30.GL_STATIC_DRAW);
+		gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, 0, vertices.size() * 4 * 3, RenderMathUtils.wrap(vertices));
 		gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, uvsOffset, uvs.size() * 4 * 2, RenderMathUtils.wrap(uvs));
+		gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, paramsOffset, absoluteHeights.size() * 4,
+				RenderMathUtils.wrap(absoluteHeights));
 
 		final int faceBuffer = gl.glGenBuffer();
 		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, faceBuffer);
 		gl.glBufferData(GL30.GL_ELEMENT_ARRAY_BUFFER, indices.size() * 6 * 2, RenderMathUtils.wrapFaces(indices),
 				GL30.GL_STATIC_DRAW);
 
-		this.batches.add(new Batch(uvsOffset, vertexBuffer, faceBuffer, indices.size() * 6));
+		this.batches.add(new Batch(uvsOffset, vertexBuffer, faceBuffer, indices.size() * 6, paramsOffset));
 		for (final SplatMover mover : batchRenderUnits) {
 			mover.vertexBuffer = vertexBuffer;
 			mover.uvsOffset = uvsOffset;
 			mover.faceBuffer = faceBuffer;
+			mover.absHeightsOffset = paramsOffset;
 		}
 	}
 
@@ -232,6 +246,7 @@ public class SplatModel {
 			gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, b.vertexBuffer);
 			shader.setVertexAttribute("a_position", 3, GL30.GL_FLOAT, false, 12, 0);
 			shader.setVertexAttribute("a_uv", 2, GL30.GL_FLOAT, false, 8, b.uvsOffset);
+			shader.setVertexAttribute("a_absoluteHeight", 1, GL30.GL_FLOAT, false, 4, b.paramsOffset);
 
 			// Faces.
 			gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, b.faceBuffer);
@@ -266,16 +281,20 @@ public class SplatModel {
 		private final int vertexBuffer;
 		private final int faceBuffer;
 		private final int elements;
+		private final int paramsOffset;
 
-		public Batch(final int uvsOffset, final int vertexBuffer, final int faceBuffer, final int elements) {
+		public Batch(final int uvsOffset, final int vertexBuffer, final int faceBuffer, final int elements,
+				final int paramsOffset) {
 			this.uvsOffset = uvsOffset;
 			this.vertexBuffer = vertexBuffer;
 			this.faceBuffer = faceBuffer;
 			this.elements = elements;
+			this.paramsOffset = paramsOffset;
 		}
 	}
 
 	public static final class SplatMover {
+		public int absHeightsOffset;
 		public int faceBuffer;
 		public int uvsOffset;
 		public int iy1;
@@ -290,11 +309,14 @@ public class SplatModel {
 		private int start;
 		private final List<float[]> vertices = new ArrayList<>();
 		private final List<float[]> uvs = new ArrayList<>();
+		private final List<float[]> absoluteHeights = new ArrayList<>();
 		private final List<int[]> indices = new ArrayList<>();
 		private int indicesStartOffset;
 		private int index;
 		private final SplatModel splatModel;
 		private boolean hidden = false;
+		private boolean heightIsAbsolute = false;
+		private float absoluteHeightValue = 0.0f;
 
 		private SplatMover(final SplatModel splatModel) {
 			this.splatModel = splatModel;
@@ -307,6 +329,7 @@ public class SplatModel {
 			this.index = index;
 			this.vertices.clear();
 			this.uvs.clear();
+			this.absoluteHeights.clear();
 			this.indices.clear();
 			return this;
 		}
@@ -423,6 +446,9 @@ public class SplatModel {
 			}
 			gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, this.uvsOffset + ((this.startOffset / 3) * 2),
 					4 * 2 * this.uvs.size(), RenderMathUtils.wrap(this.uvs));
+			if (this.heightIsAbsolute) {
+				updateAbsoluteHeightParams();
+			}
 		}
 
 		public void destroy(final GL30 gl, final float[] centerOffset) {
@@ -467,6 +493,25 @@ public class SplatModel {
 			this.ix0 = this.ix1 = this.iy0 = this.iy1 = Integer.MIN_VALUE;
 			move(0, 0, centerOffset);
 			this.hidden = false;
+		}
+
+		public void setHeightAbsolute(final boolean absolute, final float absoluteHeightValue) {
+			this.absoluteHeightValue = absoluteHeightValue;
+			if (absolute != this.heightIsAbsolute) {
+				this.heightIsAbsolute = absolute;
+				updateAbsoluteHeightParams();
+			}
+		}
+
+		private void updateAbsoluteHeightParams() {
+			final GL30 gl = Gdx.gl30;
+			final float height = this.heightIsAbsolute ? this.absoluteHeightValue : NO_ABS_HEIGHT;
+			for (final float[] absHeight : this.absoluteHeights) {
+				absHeight[0] = height;
+			}
+			gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.vertexBuffer);
+			gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, this.absHeightsOffset + (this.startOffset / 3),
+					this.absoluteHeights.size() * 4, RenderMathUtils.wrap(this.absoluteHeights));
 		}
 	}
 }

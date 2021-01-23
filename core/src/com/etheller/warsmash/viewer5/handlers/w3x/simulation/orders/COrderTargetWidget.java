@@ -34,7 +34,7 @@ public class COrderTargetWidget implements COrder {
 
 	@Override
 	public AbilityTarget getTarget(final CSimulation game) {
-		final CUnit target = game.getUnit(this.targetHandleId);
+		final CWidget target = game.getWidget(this.targetHandleId);
 		return target;
 	}
 
@@ -48,7 +48,7 @@ public class COrderTargetWidget implements COrder {
 		final CAbility ability = game.getAbility(this.abilityHandleId);
 		ability.checkCanUse(game, caster, this.orderId, abilityActivationReceiver.reset());
 		if (abilityActivationReceiver.isUseOk()) {
-			final CUnit target = game.getUnit(this.targetHandleId);
+			final CWidget target = game.getWidget(this.targetHandleId);
 			final StringMsgTargetCheckReceiver<CWidget> targetReceiver = (StringMsgTargetCheckReceiver<CWidget>) targetCheckReceiver;
 			ability.checkCanTarget(game, caster, this.orderId, target, targetReceiver);
 			if (targetReceiver.getTarget() != null) {

@@ -239,7 +239,12 @@ public class CSimulation {
 	}
 
 	public void unitDamageEvent(final CUnit damagedUnit, final String weaponSound, final String armorType) {
-		this.simulationRenderController.spawnUnitDamageSound(damagedUnit, weaponSound, armorType);
+		this.simulationRenderController.spawnDamageSound(damagedUnit, weaponSound, armorType);
+	}
+
+	public void destructableDamageEvent(final CDestructable damagedDestructable, final String weaponSound,
+			final String armorType) {
+		this.simulationRenderController.spawnDamageSound(damagedDestructable, weaponSound, armorType);
 	}
 
 	public void unitConstructedEvent(final CUnit constructingUnit, final CUnit constructedStructure) {
@@ -283,5 +288,17 @@ public class CSimulation {
 			player.setUnitFoodUsed(unit, unit.getUnitType().getFoodUsed());
 			player.setUnitFoodMade(unit, unit.getUnitType().getFoodMade());
 		}
+	}
+
+	public CWidget getWidget(final int handleId) {
+		final CUnit unit = this.handleIdToUnit.get(handleId);
+		if (unit != null) {
+			return unit;
+		}
+		final CDestructable destructable = this.handleIdToDestructable.get(handleId);
+		if (destructable != null) {
+			return destructable;
+		}
+		return null;
 	}
 }

@@ -21,7 +21,7 @@ public interface SimulationRenderController {
 
 	void createInstantAttackEffect(CSimulation cSimulation, CUnit source, CUnitAttackInstant attack, CWidget target);
 
-	void spawnUnitDamageSound(CUnit damagedUnit, final String weaponSound, String armorType);
+	void spawnDamageSound(CWidget damagedDestructable, String weaponSound, String armorType);
 
 	void spawnUnitConstructionSound(CUnit constructingUnit, CUnit constructedStructure);
 

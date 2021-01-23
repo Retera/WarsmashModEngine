@@ -47,12 +47,8 @@ public class CAttackProjectile {
 		final float d1y = dtsy / c;
 
 		float travelDistance = Math.min(c, this.speed * WarsmashConstants.SIMULATION_STEP_TIME);
-		if (c <= travelDistance) {
-			if (!this.done) {
-				this.unitAttack.doDamage(cSimulation, this.source, this.target, this.damage, this.x, this.y,
-						this.bounceIndex);
-			}
-			this.done = true;
+		final boolean done = c <= travelDistance;
+		if (done) {
 			travelDistance = c;
 		}
 
@@ -62,6 +58,11 @@ public class CAttackProjectile {
 		this.x = this.x + dx;
 		this.y = this.y + dy;
 
+		if (done && !this.done) {
+			this.unitAttack.doDamage(cSimulation, this.source, this.target, this.damage, this.x, this.y,
+					this.bounceIndex);
+			this.done = true;
+		}
 		return this.done;
 	}
 

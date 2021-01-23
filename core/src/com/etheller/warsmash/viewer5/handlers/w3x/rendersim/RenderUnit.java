@@ -28,9 +28,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.Comma
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
-public class RenderUnit {
+public class RenderUnit implements RenderWidget {
 	public static final Quaternion tempQuat = new Quaternion();
 	private static final War3ID RED = War3ID.fromString("uclr");
 	private static final War3ID GREEN = War3ID.fromString("uclg");
@@ -41,6 +42,7 @@ public class RenderUnit {
 	private static final War3ID ANIM_PROPS = War3ID.fromString("uani");
 	private static final War3ID BLEND_TIME = War3ID.fromString("uble");
 	private static final War3ID BUILD_SOUND_LABEL = War3ID.fromString("ubsl");
+	private static final War3ID UNIT_SELECT_HEIGHT = War3ID.fromString("uslz");
 	private static final float[] heapZ = new float[3];
 	public final MdxComplexInstance instance;
 	public final MutableGameObject row;
@@ -74,7 +76,8 @@ public class RenderUnit {
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
 			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
 			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
-			final MdxModel specialArtModel, final BuildingShadow buildingShadow) {
+			final MdxModel specialArtModel, final BuildingShadow buildingShadow,
+			final float selectionCircleScaleFactor) {
 		this.portraitModel = portraitModel;
 		this.simulationUnit = simulationUnit;
 		this.typeData = typeData;
@@ -123,7 +126,7 @@ public class RenderUnit {
 					(row.getFieldAsInteger(green, 0)) / 255f, (row.getFieldAsInteger(blue, 0)) / 255f });
 			instance.uniformScale(row.getFieldAsFloat(scale, 0));
 
-			this.selectionScale = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0);
+			this.selectionScale = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0) * selectionCircleScaleFactor;
 			int orientationInterpolationOrdinal = row.getFieldAsInteger(ORIENTATION_INTERPOLATION, 0);
 			if ((orientationInterpolationOrdinal < 0)
 					|| (orientationInterpolationOrdinal >= OrientationInterpolation.VALUES.length)) {
@@ -150,6 +153,7 @@ public class RenderUnit {
 		}
 	}
 
+	@Override
 	public void updateAnimations(final War3MapViewer map) {
 		final boolean wasHidden = this.instance.hidden();
 		if (this.simulationUnit.isHidden()) {
@@ -390,9 +394,12 @@ public class RenderUnit {
 		map.worldScene.instanceMoved(this.instance, this.location[0], this.location[1]);
 		if (this.shadow != null) {
 			this.shadow.move(dx, dy, map.terrain.centerOffset);
+			this.shadow.setHeightAbsolute(currentWalkableUnder != null, this.location[2] + map.imageWalkableZOffset);
 		}
 		if (this.selectionCircle != null) {
 			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
+			this.selectionCircle.setHeightAbsolute(currentWalkableUnder != null,
+					this.location[2] + map.imageWalkableZOffset);
 		}
 		this.unitAnimationListenerImpl.update();
 		if (!dead && this.simulationUnit.isConstructing()) {
@@ -552,5 +559,50 @@ public class RenderUnit {
 		}
 		this.location[0] = this.simulationUnit.getX();
 		this.location[1] = this.simulationUnit.getY();
+	}
+
+	@Override
+	public MdxComplexInstance getInstance() {
+		return this.instance;
+	}
+
+	@Override
+	public CWidget getSimulationWidget() {
+		return this.simulationUnit;
+	}
+
+	@Override
+	public boolean isIntersectedOnMeshAlways() {
+		return this.simulationUnit.getUnitType().isBuilding();
+	}
+
+	@Override
+	public float getSelectionHeight() {
+		return this.row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
+	}
+
+	@Override
+	public float getSelectionScale() {
+		return this.selectionScale;
+	}
+
+	@Override
+	public float getX() {
+		return this.location[0];
+	}
+
+	@Override
+	public float getY() {
+		return this.location[1];
+	}
+
+	@Override
+	public void unassignSelectionCircle() {
+		this.selectionCircle = null;
+	}
+
+	@Override
+	public void assignSelectionCircle(final SplatMover t) {
+		this.selectionCircle = t;
 	}
 }

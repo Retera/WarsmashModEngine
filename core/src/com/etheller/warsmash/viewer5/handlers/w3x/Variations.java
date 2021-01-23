@@ -144,11 +144,16 @@ public class Variations {
 	}
 
 	public static int getCliffVariation(final String dir, final String tag, final int variation) {
+		final Integer vars;
 		if ("Cliffs".equals(dir)) {
-			return Math.min(variation, CLIFF_VARS.get(tag));
+			vars = CLIFF_VARS.get(tag);
 		}
 		else {
-			return Math.min(variation, CITY_CLIFF_VARS.get(tag));
+			vars = CITY_CLIFF_VARS.get(tag);
 		}
+		if (variation < vars) {
+			return variation;
+		}
+		return variation % (vars + 1);
 	}
 }

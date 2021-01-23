@@ -244,7 +244,7 @@ public class Terrain {
 		// Cliff Textures
 		for (final War3ID cliffTile : w3eFile.getCliffTiles()) {
 			final Element cliffInfo = this.cliffTable.get(cliffTile.asStringValue());
-			if(cliffInfo == null) {
+			if (cliffInfo == null) {
 				System.err.println("Missing cliff type: " + cliffTile.asStringValue());
 				continue;
 			}
@@ -656,10 +656,10 @@ public class Terrain {
 
 					// Cliff model path
 
-					String fileName = "" + (char) (('A' + bottomLeft.getLayerHeight()) - base)
-							+ (char) (('A' + topLeft.getLayerHeight()) - base)
+					String fileName = "" + (char) (('A' + topLeft.getLayerHeight()) - base)
 							+ (char) (('A' + topRight.getLayerHeight()) - base)
-							+ (char) (('A' + bottomRight.getLayerHeight()) - base);
+							+ (char) (('A' + bottomRight.getLayerHeight()) - base)
+							+ (char) (('A' + bottomLeft.getLayerHeight()) - base);
 
 					if ("AAAA".equals(fileName)) {
 						continue;

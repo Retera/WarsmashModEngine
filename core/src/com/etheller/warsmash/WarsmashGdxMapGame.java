@@ -56,7 +56,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErro
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
 	private static final boolean ENABLE_AUDIO = true;
-	private static final boolean ENABLE_MUSIC = false;
+	private static final boolean ENABLE_MUSIC = true;
 	private DataSource codebase;
 	private War3MapViewer viewer;
 	private final Rectangle tempRect = new Rectangle();
@@ -215,7 +215,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 							final String musicField = rootFrame.getSkinField("Music_V1");
 							final String[] musics = musicField.split(";");
 							String musicPath = musics[(int) (Math.random() * musics.length)];
-							if (true) {
+							if (false) {
 								musicPath = "Sound\\Music\\mp3Music\\OrcTheme.mp3";
 							}
 							final Music music = Gdx.audio.newMusic(

@@ -123,8 +123,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 			this.y = y;
 			this.damage = damage;
 			this.hitTarget = false;
-			final float doubleMaxArea = attack.areaOfEffectSmallDamage
-					+ (this.simulation.getGameplayConstants().getCloseEnoughRange() * 2);
+			final float doubleMaxArea = (attack.areaOfEffectSmallDamage) * 2;
 			final float maxArea = doubleMaxArea / 2;
 			this.rect.set(x - maxArea, y - maxArea, doubleMaxArea, doubleMaxArea);
 			simulation.getWorldCollision().enumUnitsInRect(this.rect, this);
@@ -133,17 +132,17 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 		@Override
 		public boolean call(final CUnit enumUnit) {
 			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
-				final double distance = enumUnit.distance(this.x, this.y)
-						- this.simulation.getGameplayConstants().getCloseEnoughRange();
-				if (distance <= (this.attack.areaOfEffectFullDamage / 2)) {
+				final double distance = enumUnit.distance(this.x, this.y);
+				System.out.println("enum distance=" + distance);
+				if (distance <= (this.attack.areaOfEffectFullDamage)) {
 					enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
 							this.attack.getWeaponSound(), this.damage);
 				}
-				else if (distance <= (this.attack.areaOfEffectMediumDamage / 2)) {
+				else if (distance <= (this.attack.areaOfEffectMediumDamage)) {
 					enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
 							this.attack.getWeaponSound(), this.damage * this.attack.damageFactorMedium);
 				}
-				else if (distance <= (this.attack.areaOfEffectSmallDamage / 2)) {
+				else if (distance <= (this.attack.areaOfEffectSmallDamage)) {
 					enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
 							this.attack.getWeaponSound(), this.damage * this.attack.damageFactorSmall);
 				}

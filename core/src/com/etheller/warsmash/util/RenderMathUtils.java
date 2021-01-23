@@ -486,7 +486,7 @@ public enum RenderMathUtils {
 			final int i2 = indices[i + 1] * vertexSize;
 			final int i3 = indices[i + 2] * vertexSize;
 
-			final boolean result = Intersector.intersectRayTriangle(ray,
+			final boolean result = FixedIntersector.intersectRayTriangle(ray,
 					tmp1.set(vertices[i1], vertices[i1 + 1], vertices[i1 + 2]),
 					tmp2.set(vertices[i2], vertices[i2 + 1], vertices[i2 + 2]),
 					tmp3.set(vertices[i3], vertices[i3 + 1], vertices[i3 + 2]), tmp);

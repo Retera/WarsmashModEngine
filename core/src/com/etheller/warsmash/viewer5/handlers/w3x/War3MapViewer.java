@@ -78,17 +78,20 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain.Splat;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDoodad;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitTypeData;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
@@ -111,7 +114,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final War3ID UNIT_SHADOW_H = War3ID.fromString("ushh");
 	private static final War3ID BUILDING_SHADOW = War3ID.fromString("ushb");
 	public static final War3ID UNIT_SELECT_SCALE = War3ID.fromString("ussc");
-	private static final War3ID UNIT_SELECT_HEIGHT = War3ID.fromString("uslz");
 	private static final War3ID UNIT_SOUNDSET = War3ID.fromString("usnd");
 	private static final War3ID ITEM_FILE = War3ID.fromString("ifil");
 	private static final War3ID UNIT_PATHING = War3ID.fromString("upat");
@@ -147,6 +149,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public boolean unitsAndItemsLoaded;
 	public MappedData unitsData = new MappedData();
 	public MappedData unitMetaData = new MappedData();
+	public List<RenderWidget> widgets = new ArrayList<>();
 	public List<RenderUnit> units = new ArrayList<>();
 	public List<RenderItem> items = new ArrayList<>();
 	public List<RenderEffect> projectiles = new ArrayList<>();
@@ -160,7 +163,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public int renderLighting = 1;
 
 	public List<SplatModel> selModels = new ArrayList<>();
-	public List<RenderUnit> selected = new ArrayList<>();
+	public List<RenderWidget> selected = new ArrayList<>();
 	private DataTable unitAckSoundsTable;
 	private DataTable unitCombatSoundsTable;
 	public DataTable miscData;
@@ -336,6 +339,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			this.selectionCircleSizes.add(new SelectionCircleSize(size, texture, textureDotted));
 		}
 		this.selectionCircleScaleFactor = selectionCircleData.getFieldFloatValue("ScaleFactor");
+		this.imageWalkableZOffset = selectionCircleData.getFieldValue("ImageWalkableZOffset");
 
 		this.uiSoundsTable = new DataTable(worldEditStrings);
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\UISounds.slk")) {
@@ -524,7 +528,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public void spawnUnitDamageSound(final CUnit damagedUnit, final String weaponSound,
+					public void spawnDamageSound(final CWidget damagedDestructable, final String weaponSound,
 							final String armorType) {
 						final String key = weaponSound + armorType;
 						UnitSound combatSound = this.keyToCombatSound.get(key);
@@ -533,8 +537,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									War3MapViewer.this.unitCombatSoundsTable, weaponSound, armorType);
 							this.keyToCombatSound.put(key, combatSound);
 						}
-						combatSound.play(War3MapViewer.this.worldScene.audioContext, damagedUnit.getX(),
-								damagedUnit.getY());
+						combatSound.play(War3MapViewer.this.worldScene.audioContext, damagedDestructable.getX(),
+								damagedDestructable.getY());
 					}
 
 					@Override
@@ -551,6 +555,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void removeUnit(final CUnit unit) {
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.remove(unit);
+						War3MapViewer.this.widgets.remove(renderUnit);
 						War3MapViewer.this.units.remove(renderUnit);
 						War3MapViewer.this.worldScene.removeInstance(renderUnit.instance);
 					}
@@ -777,10 +782,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				if (type == WorldEditorDataType.DESTRUCTIBLES) {
 					final float x = doodad.getLocation()[0];
 					final float y = doodad.getLocation()[1];
-					this.simulation.createDestructable(row.getAlias(), x, y, destructablePathing,
-							destructablePathingDeath);
+					final CDestructable simulationDestructable = this.simulation.createDestructable(row.getAlias(), x,
+							y, destructablePathing, destructablePathingDeath);
 					final RenderDestructable renderDestructable = new RenderDestructable(this, model, row, doodad, type,
-							maxPitch, maxRoll, doodad.getLife(), destructableShadow);
+							maxPitch, maxRoll, doodad.getLife(), destructableShadow, simulationDestructable);
 					if (row.readSLKTagBoolean("walkable")) {
 						final BoundingBox boundingBox = model.bounds.getBoundingBox();
 						final float minX = boundingBox.min.x + x;
@@ -792,6 +797,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						renderDestructable.walkableBounds = renderDestructableBounds;
 					}
 					this.doodads.add(renderDestructable);
+					this.widgets.add(renderDestructable);
 				}
 				else {
 					this.doodads.add(new RenderDoodad(this, model, row, doodad, type, maxPitch, maxRoll));
@@ -1077,8 +1083,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						angle, buildingPathingPixelMap, pathingInstance);
 				final RenderUnitTypeData typeData = getUnitTypeData(unitId, row);
 				final RenderUnit renderUnit = new RenderUnit(this, model, row, unitX, unitY, unitZ, playerIndex,
-						soundset, portraitModel, simulationUnit, typeData, specialArtModel, buildingShadowInstance);
+						soundset, portraitModel, simulationUnit, typeData, specialArtModel, buildingShadowInstance,
+						this.selectionCircleScaleFactor);
 				this.unitToRenderPeer.put(simulationUnit, renderUnit);
+				this.widgets.add(renderUnit);
 				this.units.add(renderUnit);
 				if (unitShadowSplat != null) {
 					unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
@@ -1191,7 +1199,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 			super.update();
 
-			for (final RenderUnit unit : this.units) {
+			for (final RenderWidget unit : this.widgets) {
 				unit.updateAnimations(this);
 			}
 			final Iterator<RenderEffect> projectileIterator = this.projectiles.iterator();
@@ -1276,57 +1284,54 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				this.terrain.removeSplatBatchModel("selection");
 			}
 			this.selModels.clear();
-			for (final RenderUnit unit : this.selected) {
-				unit.selectionCircle = null;
+			for (final RenderWidget unit : this.selected) {
+				unit.unassignSelectionCircle();
 			}
 		}
 		this.selected.clear();
 	}
 
-	public void doSelectUnit(final List<RenderUnit> units) {
+	public void doSelectUnit(final List<RenderWidget> units) {
 		deselect();
 		if (units.isEmpty()) {
 			return;
 		}
 
 		final Map<String, Terrain.Splat> splats = new HashMap<String, Terrain.Splat>();
-		for (final RenderUnit unit : units) {
-			if (unit.row != null) {
-				if (unit.selectionScale > 0) {
-					final float selectionSize = unit.selectionScale * this.selectionCircleScaleFactor;
-					String path = null;
-					for (int i = 0; i < this.selectionCircleSizes.size(); i++) {
-						final SelectionCircleSize selectionCircleSize = this.selectionCircleSizes.get(i);
-						if ((selectionSize < selectionCircleSize.size)
-								|| (i == (this.selectionCircleSizes.size() - 1))) {
-							path = selectionCircleSize.texture;
-							break;
-						}
+		for (final RenderWidget unit : units) {
+			if (unit.getSelectionScale() > 0) {
+				final float selectionSize = unit.getSelectionScale();
+				String path = null;
+				for (int i = 0; i < this.selectionCircleSizes.size(); i++) {
+					final SelectionCircleSize selectionCircleSize = this.selectionCircleSizes.get(i);
+					if ((selectionSize < selectionCircleSize.size) || (i == (this.selectionCircleSizes.size() - 1))) {
+						path = selectionCircleSize.texture;
+						break;
 					}
-					if (!path.toLowerCase().endsWith(".blp")) {
-						path += ".blp";
-					}
-					if (!splats.containsKey(path)) {
-						splats.put(path, new Splat());
-					}
-					final float x = unit.location[0];
-					final float y = unit.location[1];
-					System.out.println("Selecting a unit at " + x + "," + y);
-					final float z = unit.row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
-					splats.get(path).locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
-							x + (selectionSize / 2), y + (selectionSize / 2), z + 5 });
-					splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
-						@Override
-						public void accept(final SplatMover t) {
-							unit.selectionCircle = t;
-							if (unit.instance.hidden()) {
-								unit.selectionCircle.hide();
-							}
-						}
-					});
 				}
-				this.selected.add(unit);
+				if (!path.toLowerCase().endsWith(".blp")) {
+					path += ".blp";
+				}
+				if (!splats.containsKey(path)) {
+					splats.put(path, new Splat());
+				}
+				final float x = unit.getX();
+				final float y = unit.getY();
+				System.out.println("Selecting a unit at " + x + "," + y);
+				final float z = unit.getSelectionHeight();
+				splats.get(path).locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
+						x + (selectionSize / 2), y + (selectionSize / 2), z + 5 });
+				splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+					@Override
+					public void accept(final SplatMover t) {
+						unit.assignSelectionCircle(t);
+						if (unit.getInstance().hidden()) {
+							t.hide();
+						}
+					}
+				});
 			}
+			this.selected.add(unit);
 		}
 		this.selModels.clear();
 		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
@@ -1372,10 +1377,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.confirmationInstance.vertexColor[2] = blue;
 	}
 
-	public List<RenderUnit> selectUnit(final float x, final float y, final boolean toggle) {
+	public List<RenderWidget> selectUnit(final float x, final float y, final boolean toggle) {
 		System.out.println("world: " + x + "," + y);
-		final RenderUnit entity = rayPickUnit(x, y, CUnitFilterFunction.ACCEPT_ALL_LIVING);
-		List<RenderUnit> sel;
+		final RenderWidget entity = rayPickUnit(x, y, CWidgetFilterFunction.ACCEPT_ALL_LIVING);
+		List<RenderWidget> sel;
 		if (entity != null) {
 			if (toggle) {
 				sel = new ArrayList<>(this.selected);
@@ -1398,25 +1403,25 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return sel;
 	}
 
-	public RenderUnit rayPickUnit(final float x, final float y) {
-		return rayPickUnit(x, y, CUnitFilterFunction.ACCEPT_ALL);
+	public RenderWidget rayPickUnit(final float x, final float y) {
+		return rayPickUnit(x, y, CWidgetFilterFunction.ACCEPT_ALL);
 	}
 
-	public RenderUnit rayPickUnit(final float x, final float y, final CUnitFilterFunction filter) {
+	public RenderWidget rayPickUnit(final float x, final float y, final CWidgetFilterFunction filter) {
 		final float[] ray = rayHeap;
 		mousePosHeap.set(x, y);
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
 		gdxRayHeap.set(ray[0], ray[1], ray[2], ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]);
 		gdxRayHeap.direction.nor();// needed for libgdx
 
-		RenderUnit entity = null;
-		for (final RenderUnit unit : this.units) {
-			final MdxComplexInstance instance = unit.instance;
-			if (instance.shown() && instance.isVisible(this.worldScene.camera) && instance.intersectRayWithCollision(
-					gdxRayHeap, intersectionHeap, unit.getSimulationUnit().getUnitType().isBuilding(), false)) {
-				if (filter.call(unit.getSimulationUnit()) && (intersectionHeap.z > this.terrain
+		RenderWidget entity = null;
+		for (final RenderWidget unit : this.widgets) {
+			final MdxComplexInstance instance = unit.getInstance();
+			if (instance.shown() && instance.isVisible(this.worldScene.camera) && instance
+					.intersectRayWithCollision(gdxRayHeap, intersectionHeap, unit.isIntersectedOnMeshAlways(), false)) {
+				if (filter.call(unit.getSimulationWidget()) && (intersectionHeap.z > this.terrain
 						.getGroundHeight(intersectionHeap.x, intersectionHeap.y))) {
-					if ((entity == null) || (entity.instance.depth > instance.depth)) {
+					if ((entity == null) || (entity.getInstance().depth > instance.depth)) {
 						entity = unit;
 					}
 				}
@@ -1495,6 +1500,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private Warcraft3MapObjectData allObjectData;
 	private AbilityDataUI abilityDataUI;
 	private Map<String, UnitSoundset> soundsetNameToSoundset;
+	public int imageWalkableZOffset;
 
 	/**
 	 * Returns a power of two size for the given target capacity.

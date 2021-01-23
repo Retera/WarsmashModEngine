@@ -35,15 +35,16 @@ public class TerrainShaders {
 				"out vec3 shadeColor;\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
-				"	pathing_map_uv = (vec2(vPosition.x + 128, vPosition.y) / 128 + vOffset.xy) * 4;\r\n" + //
+				"	pathing_map_uv = (vec2(vPosition.y, -vPosition.x) / 128 + vOffset.xy) * 4;\r\n" + //
 				" \r\n" + //
 				"	ivec2 size = textureSize(height_texture, 0);\r\n" + //
 				"   ivec2 shadowSize = textureSize(shadowMap, 0);\r\n" + //
 				"	v_suv = pathing_map_uv / shadowSize;\r\n" + //
-				"	float value = texture(height_texture, (vOffset.xy + vec2(vPosition.x + 192, vPosition.y + 64) / 128.0) / vec2(size)).r;\r\n"
+				"	float value = texture(height_texture, (vOffset.xy + vec2(vPosition.y + 64, -vPosition.x + 64) / 128.0) / vec2(size)).r;\r\n"
 				+ //
 				"\r\n" + //
-				"   position = (vPosition + vec3(vOffset.xy + vec2(1, 0), vOffset.z + value) * 128 );\r\n" + //
+				"   position = (vec3(vPosition.y, -vPosition.x, vPosition.z) + vec3(vOffset.xy, vOffset.z + value) * 128 );\r\n"
+				+ //
 				"   vec4 myposition = vec4(position, 1);\r\n" + //
 				"   myposition.x += centerOffsetX;\r\n" + //
 				"   myposition.y += centerOffsetY;\r\n" + //
@@ -52,13 +53,14 @@ public class TerrainShaders {
 				"	gl_Position = MVP * myposition;\r\n" + //
 				"	UV = vec3(vUV, vOffset.a);\r\n" + //
 				"\r\n" + //
-				"	ivec2 height_pos = ivec2(vOffset.xy + vec2(vPosition.x + 128, vPosition.y) / 128);\r\n" + //
+				"	ivec2 height_pos = ivec2(vOffset.xy + vec2(vPosition.y, -vPosition.x) / 128);\r\n" + //
 				"	ivec3 off = ivec3(1, 1, 0);\r\n" + //
 				"	float hL = texelFetch(height_texture, height_pos - off.xz, 0).r;\r\n" + //
 				"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
 				"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
 				"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
-				"	vec3 terrain_normal = normalize(vNormal);//vec3(hL - hR, hD - hU, 2.0)+vNormal);\r\n" + //
+				"	vec3 terrain_normal = normalize(vec3(vNormal.y, -vNormal.x, vNormal.z));//vec3(hL - hR, hD - hU, 2.0)+vNormal);\r\n"
+				+ //
 				"\r\n" + //
 				"	Normal = terrain_normal;\r\n" + //
 				Shaders.lightSystem("terrain_normal", "myposition.xyz", "lightTexture", "lightTextureHeight",

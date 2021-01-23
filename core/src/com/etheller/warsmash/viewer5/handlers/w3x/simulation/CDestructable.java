@@ -36,6 +36,7 @@ public class CDestructable extends CWidget {
 	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
 			final String weaponType, final float damage) {
 		this.life -= damage;
+		simulation.destructableDamageEvent(this, weaponType, this.destType.getArmorType());
 	}
 
 	@Override
@@ -50,7 +51,7 @@ public class CDestructable extends CWidget {
 			}
 		}
 		else {
-			System.err.println("No targeting because " + targetsAllowed + " does not contain all of "
+			System.err.println("Not targeting because " + targetsAllowed + " does not contain all of "
 					+ this.destType.getTargetedAs());
 		}
 		return false;
@@ -59,5 +60,9 @@ public class CDestructable extends CWidget {
 	@Override
 	public <T> T visit(final AbilityTargetVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+
+	public CDestructableType getDestType() {
+		return this.destType;
 	}
 }

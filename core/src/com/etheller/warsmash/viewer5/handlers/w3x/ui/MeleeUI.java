@@ -76,6 +76,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.camera.GameCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.PortraitCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
@@ -85,10 +86,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListene
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit.QueueItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGeneric;
@@ -252,6 +253,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private MeleeUIAbilityActivationReceiver meleeUIAbilityActivationReceiver;
 	private MdxModel waypointModel;
 	private final List<MdxComplexInstance> waypointModelInstances = new ArrayList<>();
+	private List<RenderUnit> selectedUnits;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport,
 			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final Scene portraitScene,
@@ -1157,9 +1159,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
-	private final class ActiveCommandUnitTargetFilter implements CUnitFilterFunction {
+	private final class ActiveCommandUnitTargetFilter implements CWidgetFilterFunction {
 		@Override
-		public boolean call(final CUnit unit) {
+		public boolean call(final CWidget unit) {
 			final BooleanAbilityTargetCheckReceiver<CWidget> targetReceiver = BooleanAbilityTargetCheckReceiver
 					.<CWidget>getInstance();
 			MeleeUI.this.activeCommand.checkCanTarget(MeleeUI.this.war3MapViewer.simulation,
@@ -1735,16 +1737,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					clearAndRepopulateCommandCard();
 				}
 				else {
-					final RenderUnit rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
+					final RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 							this.activeCommandUnitTargetFilter);
 					final boolean shiftDown = isShiftDown();
 					if (rayPickUnit != null) {
 						this.unitOrderListener.issueTargetOrder(
 								this.activeCommandUnit.getSimulationUnit().getHandleId(),
 								this.activeCommand.getHandleId(), this.activeCommandOrderId,
-								rayPickUnit.getSimulationUnit().getHandleId(), shiftDown);
-						if (getSelectedUnit().soundset.yesAttack
-								.playUnitResponse(this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
+								rayPickUnit.getSimulationWidget().getHandleId(), shiftDown);
+						final UnitSound yesSound = (this.activeCommand instanceof CAbilityAttack)
+								? getSelectedUnit().soundset.yesAttack
+								: getSelectedUnit().soundset.yes;
+						if (yesSound.playUnitResponse(this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
 							portraitTalk();
 						}
 						this.selectedSoundCount = 0;
@@ -1808,14 +1812,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			else {
 				if (button == Input.Buttons.RIGHT) {
 					if (getSelectedUnit() != null) {
-						final RenderUnit rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY);
-						if ((rayPickUnit != null) && !rayPickUnit.getSimulationUnit().isDead()) {
+						final RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY);
+						if ((rayPickUnit != null) && !rayPickUnit.getSimulationWidget().isDead()) {
 							boolean ordered = false;
 							boolean rallied = false;
-							for (final RenderUnit unit : this.war3MapViewer.selected) {
+							boolean attacked = false;
+							for (final RenderUnit unit : this.selectedUnits) {
 								for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
 									ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(),
-											OrderIds.smart, rayPickUnit.getSimulationUnit(),
+											OrderIds.smart, rayPickUnit.getSimulationWidget(),
 											CWidgetAbilityTargetCheckReceiver.INSTANCE);
 									final CWidget targetWidget = CWidgetAbilityTargetCheckReceiver.INSTANCE.getTarget();
 									if (targetWidget != null) {
@@ -1823,14 +1828,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 												ability.getHandleId(), OrderIds.smart, targetWidget.getHandleId(),
 												isShiftDown());
 										rallied |= ability instanceof CAbilityRally;
+										attacked |= ability instanceof CAbilityAttack;
 										ordered = true;
 									}
 								}
 
 							}
 							if (ordered) {
-								if (getSelectedUnit().soundset.yesAttack.playUnitResponse(
-										this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
+								final UnitSound yesSound = attacked ? getSelectedUnit().soundset.yesAttack
+										: getSelectedUnit().soundset.yes;
+								if (yesSound.playUnitResponse(this.war3MapViewer.worldScene.audioContext,
+										getSelectedUnit())) {
 									portraitTalk();
 								}
 								if (rallied) {
@@ -1838,54 +1846,20 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 											.play(this.uiScene.audioContext, 0, 0);
 								}
 								this.selectedSoundCount = 0;
+							}
+							else {
+								rightClickMove(screenX, worldScreenY);
 							}
 						}
 						else {
-							this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
-							this.war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
-							clickLocationTemp2.set(clickLocationTemp.x, clickLocationTemp.y);
-
-							boolean ordered = false;
-							boolean rallied = false;
-							for (final RenderUnit unit : this.war3MapViewer.selected) {
-								for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
-									ability.checkCanUse(this.war3MapViewer.simulation, unit.getSimulationUnit(),
-											OrderIds.smart, BooleanAbilityActivationReceiver.INSTANCE);
-									if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
-										ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(),
-												OrderIds.smart, clickLocationTemp2,
-												PointAbilityTargetCheckReceiver.INSTANCE);
-										final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
-										if (target != null) {
-											this.unitOrderListener.issuePointOrder(
-													unit.getSimulationUnit().getHandleId(), ability.getHandleId(),
-													OrderIds.smart, clickLocationTemp2.x, clickLocationTemp2.y,
-													isShiftDown());
-											rallied |= ability instanceof CAbilityRally;
-											ordered = true;
-										}
-									}
-								}
-
-							}
-
-							if (ordered) {
-								if (getSelectedUnit().soundset.yes.playUnitResponse(
-										this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
-									portraitTalk();
-								}
-								if (rallied) {
-									this.war3MapViewer.getUiSounds().getSound("RallyPointPlace")
-											.play(this.uiScene.audioContext, 0, 0);
-								}
-								this.selectedSoundCount = 0;
-							}
+							rightClickMove(screenX, worldScreenY);
 						}
 					}
 				}
 				else {
-					final List<RenderUnit> selectedUnits = this.war3MapViewer.selectUnit(screenX, worldScreenY, false);
-					selectUnits(selectedUnits);
+					final List<RenderWidget> selectedUnits = this.war3MapViewer.selectUnit(screenX, worldScreenY,
+							false);
+					selectWidgets(selectedUnits);
 				}
 			}
 		}
@@ -1898,7 +1872,57 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return false;
 	}
 
+	private void rightClickMove(final int screenX, final float worldScreenY) {
+		this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
+		this.war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
+		clickLocationTemp2.set(clickLocationTemp.x, clickLocationTemp.y);
+
+		boolean ordered = false;
+		boolean rallied = false;
+		for (final RenderUnit unit : this.selectedUnits) {
+			for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
+				ability.checkCanUse(this.war3MapViewer.simulation, unit.getSimulationUnit(), OrderIds.smart,
+						BooleanAbilityActivationReceiver.INSTANCE);
+				if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
+					ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(), OrderIds.smart,
+							clickLocationTemp2, PointAbilityTargetCheckReceiver.INSTANCE);
+					final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
+					if (target != null) {
+						this.unitOrderListener.issuePointOrder(unit.getSimulationUnit().getHandleId(),
+								ability.getHandleId(), OrderIds.smart, clickLocationTemp2.x, clickLocationTemp2.y,
+								isShiftDown());
+						rallied |= ability instanceof CAbilityRally;
+						ordered = true;
+					}
+				}
+			}
+
+		}
+
+		if (ordered) {
+			if (getSelectedUnit().soundset.yes.playUnitResponse(this.war3MapViewer.worldScene.audioContext,
+					getSelectedUnit())) {
+				portraitTalk();
+			}
+			if (rallied) {
+				this.war3MapViewer.getUiSounds().getSound("RallyPointPlace").play(this.uiScene.audioContext, 0, 0);
+			}
+			this.selectedSoundCount = 0;
+		}
+	}
+
+	private void selectWidgets(final List<RenderWidget> selectedUnits) {
+		final List<RenderUnit> units = new ArrayList<>();
+		for (final RenderWidget widget : selectedUnits) {
+			if (widget instanceof RenderUnit) {
+				units.add((RenderUnit) widget);
+			}
+		}
+		selectUnits(units);
+	}
+
 	private void selectUnits(final List<RenderUnit> selectedUnits) {
+		this.selectedUnits = selectedUnits;
 		if (!selectedUnits.isEmpty()) {
 			final RenderUnit unit = selectedUnits.get(0);
 			final boolean selectionChanged = getSelectedUnit() != unit;
@@ -2027,10 +2051,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				break;
 			case 1:
-				final List<RenderUnit> unitList = Arrays.asList(
+				final List<RenderWidget> unitList = Arrays.asList(
 						this.war3MapViewer.getRenderPeer(this.selectedUnit.getSimulationUnit().getWorkerInside()));
 				this.war3MapViewer.doSelectUnit(unitList);
-				selectUnits(unitList);
+				selectWidgets(unitList);
 				break;
 			}
 		}

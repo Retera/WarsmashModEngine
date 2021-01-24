@@ -133,7 +133,6 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 		public boolean call(final CUnit enumUnit) {
 			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
 				final double distance = enumUnit.distance(this.x, this.y);
-				System.out.println("enum distance=" + distance);
 				if (distance <= (this.attack.areaOfEffectFullDamage)) {
 					enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
 							this.attack.getWeaponSound(), this.damage);

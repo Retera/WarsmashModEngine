@@ -47,10 +47,8 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 		if (simulation.getGameTurnTick() < this.unit.getCooldownEndTime()) {
 			range += this.unitAttack.getRangeMotionBuffer();
 		}
-		final double rangeCheckDistance = this.unit.distance(this.target);
-		System.out.println("rangeCheckDistance=" + rangeCheckDistance);
 		return this.unit.canReach(this.target, range)
-				&& (rangeCheckDistance >= this.unit.getUnitType().getMinimumAttackRange());
+				&& (this.unit.distance(this.target) >= this.unit.getUnitType().getMinimumAttackRange());
 	}
 
 	@Override

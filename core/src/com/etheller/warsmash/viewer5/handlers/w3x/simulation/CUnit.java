@@ -342,7 +342,8 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean autoAcquireAttackTargets(final CSimulation game, final boolean disableMove) {
-		if (!this.unitType.getAttacks().isEmpty()) {
+		if (!this.unitType.getAttacks().isEmpty()
+				&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 			if (this.collisionRectangle != null) {
 				tempRect.set(this.collisionRectangle);
 			}

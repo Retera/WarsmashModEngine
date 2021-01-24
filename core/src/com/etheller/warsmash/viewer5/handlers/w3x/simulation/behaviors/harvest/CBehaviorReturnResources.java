@@ -26,8 +26,13 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 		this.abilityHarvest = abilityHarvest;
 	}
 
-	public CBehaviorReturnResources reset(final CSimulation simulation) {
-		innerReset(findNearestDropoffPoint(simulation));
+	public CBehavior reset(final CSimulation simulation) {
+		final CUnit nearestDropoffPoint = findNearestDropoffPoint(simulation);
+		if (nearestDropoffPoint == null) {
+			// TODO it is unconventional not to return self here
+			return this.unit.pollNextOrderBehavior(simulation);
+		}
+		innerReset(nearestDropoffPoint);
 		return this;
 	}
 

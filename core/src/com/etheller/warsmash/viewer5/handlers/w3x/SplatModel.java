@@ -30,13 +30,15 @@ public class SplatModel implements Comparable<SplatModel> {
 	private final List<SplatMover> splatInstances;
 	private final boolean unshaded;
 	private final boolean noDepthTest;
+	private final boolean highPriority;
 
 	public SplatModel(final GL30 gl, final ViewerTextureRenderable texture, final List<float[]> locations,
 			final float[] centerOffset, final List<Consumer<SplatMover>> unitMapping, final boolean unshaded,
-			final boolean noDepthTest) {
+			final boolean noDepthTest, final boolean highPriority) {
 		this.texture = texture;
 		this.unshaded = unshaded;
 		this.noDepthTest = noDepthTest;
+		this.highPriority = highPriority;
 		this.batches = new ArrayList<>();
 		this.color = new float[] { 1, 1, 1, 1 };
 
@@ -259,6 +261,10 @@ public class SplatModel implements Comparable<SplatModel> {
 
 	public boolean isNoDepthTest() {
 		return this.noDepthTest;
+	}
+
+	public boolean isHighPriority() {
+		return this.highPriority;
 	}
 
 	public SplatMover add(final float x, final float y, final float x2, final float y2, final float zDepthUpward,

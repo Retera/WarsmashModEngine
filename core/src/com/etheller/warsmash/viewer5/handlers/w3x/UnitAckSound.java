@@ -91,8 +91,7 @@ public final class UnitAckSound {
 
 		// Panner settings
 		panner.setPosition(unit.location[0], unit.location[1], unit.location[2]);
-		panner.maxDistance = this.distanceCutoff;
-		panner.refDistance = this.minDistance;
+		panner.setDistances(this.distanceCutoff, this.minDistance);
 		panner.connect(audioContext.destination);
 
 		// Source.
@@ -103,7 +102,7 @@ public final class UnitAckSound {
 		source.start(0, this.volume,
 				(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance);
 		this.lastPlayedSound = source.buffer;
-		final float duration = Extensions.soundLengthExtension.getDuration(this.lastPlayedSound);
+		final float duration = Extensions.audio.getDuration(this.lastPlayedSound);
 		unit.lastUnitResponseEndTimeMillis = millisTime + (long) (1000 * duration);
 		return true;
 	}

@@ -1044,7 +1044,7 @@ public class Terrain {
 
 		// Render the cliffs
 		for (final SplatModel splat : this.uberSplatModelsList) {
-			if (splat.isNoDepthTest() == onTopLayer) {
+			if (splat.isHighPriority() == onTopLayer) {
 				splat.render(gl, shader);
 			}
 		}
@@ -1433,7 +1433,7 @@ public class Terrain {
 
 			final SplatModel splatModel = new SplatModel(Gdx.gl30,
 					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset,
-					splat.unitMapping.isEmpty() ? null : splat.unitMapping, false, false);
+					splat.unitMapping.isEmpty() ? null : splat.unitMapping, false, false, false);
 			splatModel.color[3] = splat.opacity;
 			this.addSplatBatchModel(path, splatModel);
 		}
@@ -1450,11 +1450,11 @@ public class Terrain {
 	}
 
 	public SplatMover addUberSplat(final String path, final float x, final float y, final float z, final float scale,
-			final boolean unshaded, final boolean noDepthTest) {
+			final boolean unshaded, final boolean noDepthTest, final boolean highPriority) {
 		SplatModel splatModel = this.uberSplatModels.get(path);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null),
-					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest);
+					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest, highPriority);
 			this.addSplatBatchModel(path, splatModel);
 		}
 		return splatModel.add(x - scale, y - scale, x + scale, y + scale, z, this.centerOffset);
@@ -1465,7 +1465,7 @@ public class Terrain {
 		SplatModel splatModel = this.uberSplatModels.get(texture);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(texture, PathSolver.DEFAULT, null),
-					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false, false);
+					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false, false, false);
 			splatModel.color[3] = opacity;
 			this.addSplatBatchModel(texture, splatModel);
 		}

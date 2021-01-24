@@ -38,8 +38,7 @@ public class EventObjectSnd extends EmittedObject<MdxComplexInstance, EventObjec
 
 			// Panner settings
 			panner.setPosition(location.x, location.y, location.z);
-			panner.maxDistance = emitterObject.distanceCutoff;
-			panner.refDistance = emitterObject.minDistance;
+			panner.setDistances(emitterObject.distanceCutoff, emitterObject.minDistance);
 			panner.connect(audioContext.destination);
 
 			// Source.

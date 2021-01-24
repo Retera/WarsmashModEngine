@@ -1008,7 +1008,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					final ViewerTextureRenderable greenPixmap = new ViewerTextureRenderable.GdxViewerTextureRenderable(
 							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTexture);
 					MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel = new SplatModel(Gdx.gl30, greenPixmap,
-							new ArrayList<>(), viewer.terrain.centerOffset, new ArrayList<>(), true, false);
+							new ArrayList<>(), viewer.terrain.centerOffset, new ArrayList<>(), true, false, true);
 					MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel.color[3] = 0.20f;
 				}
 			}
@@ -1077,7 +1077,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (MeleeUI.this.placementCursor == null) {
 				MeleeUI.this.placementCursor = viewer.terrain.addUberSplat(
 						MeleeUI.this.rootFrame.getSkinField("PlacementCursor"), clickLocationTemp.x,
-						clickLocationTemp.y, 10, radius, true, true);
+						clickLocationTemp.y, 10, radius, true, true, true);
 			}
 			MeleeUI.this.placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
 					viewer.terrain.centerOffset);

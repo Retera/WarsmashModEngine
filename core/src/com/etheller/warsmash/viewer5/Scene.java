@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
+import com.etheller.warsmash.viewer5.gl.Extensions;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 
@@ -92,7 +93,7 @@ public abstract class Scene {
 
 	public boolean enableAudio() {
 		if (this.audioContext == null) {
-			this.audioContext = new AudioContext();
+			this.audioContext = Extensions.audio.createContext(this instanceof WorldScene);
 		}
 		if (!this.audioContext.isRunning()) {
 			this.audioContext.resume();
@@ -197,7 +198,7 @@ public abstract class Scene {
 			final float upZ = this.camera.directionZ.z;
 			final AudioContext.Listener listener = this.audioContext.listener;
 
-			listener.setPosition(-x, -y, -z);
+			listener.setPosition(x, y, z);
 			listener.setOrientation(forwardX, forwardY, forwardZ, upX, upY, upZ);
 		}
 

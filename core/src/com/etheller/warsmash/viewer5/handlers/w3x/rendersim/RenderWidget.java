@@ -20,8 +20,6 @@ public interface RenderWidget {
 
 	float getY();
 
-	float getSelectionHeight();
-
 	void unassignSelectionCircle();
 
 	void assignSelectionCircle(SplatMover t);

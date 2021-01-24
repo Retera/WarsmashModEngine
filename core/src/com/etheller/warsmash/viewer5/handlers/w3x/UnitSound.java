@@ -82,7 +82,7 @@ public final class UnitSound {
 			return false;
 		}
 		if (play(audioContext, unit.location[0], unit.location[1])) {
-			final float duration = Extensions.soundLengthExtension.getDuration(this.lastPlayedSound);
+			final float duration = Extensions.audio.getDuration(this.lastPlayedSound);
 			unit.lastUnitResponseEndTimeMillis = millisTime + (long) (1000 * duration);
 			return true;
 		}
@@ -106,8 +106,7 @@ public final class UnitSound {
 
 		// Panner settings
 		panner.setPosition(x, y, 0);
-		panner.maxDistance = this.distanceCutoff;
-		panner.refDistance = this.minDistance;
+		panner.setDistances(this.distanceCutoff, this.minDistance);
 		panner.connect(audioContext.destination);
 
 		// Source.

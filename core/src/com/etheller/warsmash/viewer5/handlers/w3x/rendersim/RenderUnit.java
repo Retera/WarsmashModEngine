@@ -72,6 +72,7 @@ public class RenderUnit implements RenderWidget {
 	private final RenderUnitTypeData typeData;
 	public final MdxModel specialArtModel;
 	public SplatMover uberSplat;
+	private float selectionHeight;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
 			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
@@ -127,6 +128,7 @@ public class RenderUnit implements RenderWidget {
 			instance.uniformScale(row.getFieldAsFloat(scale, 0));
 
 			this.selectionScale = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0) * selectionCircleScaleFactor;
+			this.selectionHeight = row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
 			int orientationInterpolationOrdinal = row.getFieldAsInteger(ORIENTATION_INTERPOLATION, 0);
 			if ((orientationInterpolationOrdinal < 0)
 					|| (orientationInterpolationOrdinal >= OrientationInterpolation.VALUES.length)) {
@@ -289,6 +291,7 @@ public class RenderUnit implements RenderWidget {
 		this.corpse = corpse;
 		this.boneCorpse = boneCorpse;
 		this.location[2] = this.simulationUnit.getFlyHeight() + groundHeight;
+		final float selectionCircleHeight = this.selectionHeight + groundHeight;
 		this.instance.moveTo(this.location);
 		float simulationFacing = this.simulationUnit.getFacing();
 		if (simulationFacing < 0) {
@@ -394,12 +397,14 @@ public class RenderUnit implements RenderWidget {
 		map.worldScene.instanceMoved(this.instance, this.location[0], this.location[1]);
 		if (this.shadow != null) {
 			this.shadow.move(dx, dy, map.terrain.centerOffset);
-			this.shadow.setHeightAbsolute(currentWalkableUnder != null, this.location[2] + map.imageWalkableZOffset);
+			this.shadow.setHeightAbsolute(currentWalkableUnder != null, groundHeight + map.imageWalkableZOffset);
 		}
 		if (this.selectionCircle != null) {
 			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
-			this.selectionCircle.setHeightAbsolute(currentWalkableUnder != null,
-					this.location[2] + map.imageWalkableZOffset);
+			this.selectionCircle.setHeightAbsolute(
+					(currentWalkableUnder != null)
+							|| ((movementType == MovementType.FLY) || (movementType == MovementType.HOVER)),
+					selectionCircleHeight + map.imageWalkableZOffset);
 		}
 		this.unitAnimationListenerImpl.update();
 		if (!dead && this.simulationUnit.isConstructing()) {
@@ -574,11 +579,6 @@ public class RenderUnit implements RenderWidget {
 	@Override
 	public boolean isIntersectedOnMeshAlways() {
 		return this.simulationUnit.getUnitType().isBuilding();
-	}
-
-	@Override
-	public float getSelectionHeight() {
-		return this.row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
 	}
 
 	@Override

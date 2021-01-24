@@ -995,7 +995,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final float s = uberSplatInfo.getFieldFloatValue("Scale");
 						if (this.unitsReady) {
 							buildingUberSplatDynamicIngame = this.terrain.addUberSplat(texturePath, unitX, unitY, 1, s,
-									false, false);
+									false, false, false);
 						}
 						else {
 							if (!this.terrain.splats.containsKey(texturePath)) {
@@ -1318,9 +1318,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final float x = unit.getX();
 				final float y = unit.getY();
 				System.out.println("Selecting a unit at " + x + "," + y);
-				final float z = unit.getSelectionHeight();
 				splats.get(path).locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
-						x + (selectionSize / 2), y + (selectionSize / 2), z + 5 });
+						x + (selectionSize / 2), y + (selectionSize / 2), 5 });
 				splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
 					@Override
 					public void accept(final SplatMover t) {
@@ -1338,7 +1337,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final String path = entry.getKey();
 			final Splat locations = entry.getValue();
 			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(path, PathSolver.DEFAULT, null),
-					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false);
+					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true);
 			model.color[0] = 0;
 			model.color[1] = 1;
 			model.color[2] = 0;

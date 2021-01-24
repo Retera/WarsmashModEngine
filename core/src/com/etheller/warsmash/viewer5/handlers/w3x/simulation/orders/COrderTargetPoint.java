@@ -63,4 +63,47 @@ public class COrderTargetPoint implements COrder {
 
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = (prime * result) + this.abilityHandleId;
+		result = (prime * result) + this.orderId;
+		result = (prime * result) + (this.queued ? 1231 : 1237);
+		result = (prime * result) + ((this.target == null) ? 0 : this.target.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final COrderTargetPoint other = (COrderTargetPoint) obj;
+		if (this.abilityHandleId != other.abilityHandleId) {
+			return false;
+		}
+		if (this.orderId != other.orderId) {
+			return false;
+		}
+		if (this.queued != other.queued) {
+			return false;
+		}
+		if (this.target == null) {
+			if (other.target != null) {
+				return false;
+			}
+		}
+		else if (!this.target.equals(other.target)) {
+			return false;
+		}
+		return true;
+	}
+
 }

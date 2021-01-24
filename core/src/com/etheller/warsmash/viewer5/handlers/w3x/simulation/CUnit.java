@@ -92,7 +92,7 @@ public class CUnit extends CWidget {
 	private boolean acceptingOrders = true;
 	private boolean invulnerable = false;
 	private CBehavior defaultBehavior;
-	private COrder currentOrder = null;
+	private COrder lastStartedOrder = null;
 	private CUnit workerInside;
 	private final War3ID[] buildQueue = new War3ID[WarsmashConstants.BUILD_QUEUE_SIZE];
 	private final QueueItemType[] buildQueueTypes = new QueueItemType[WarsmashConstants.BUILD_QUEUE_SIZE];
@@ -384,6 +384,12 @@ public class CUnit extends CWidget {
 			}
 		}
 
+		if ((this.lastStartedOrder != null) && this.lastStartedOrder.equals(order)
+				&& (this.lastStartedOrder.getOrderId() == OrderIds.smart)) {
+			// I skip your spammed move orders, TODO this will probably break some repeat
+			// attack order or something later
+			return;
+		}
 		if ((queue || !this.acceptingOrders) && ((this.currentBehavior != this.stopBehavior)
 				&& (this.currentBehavior != this.holdPositionBehavior))) {
 			this.orderQueue.add(order);
@@ -405,7 +411,7 @@ public class CUnit extends CWidget {
 	}
 
 	private CBehavior beginOrder(final CSimulation game, final COrder order) {
-		this.currentOrder = order;
+		this.lastStartedOrder = order;
 		CBehavior nextBehavior;
 		if (order != null) {
 			nextBehavior = order.begin(game, this);
@@ -1214,6 +1220,6 @@ public class CUnit extends CWidget {
 	}
 
 	public COrder getCurrentOrder() {
-		return this.currentOrder;
+		return this.lastStartedOrder;
 	}
 }

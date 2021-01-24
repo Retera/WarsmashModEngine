@@ -59,4 +59,38 @@ public class COrderNoTarget implements COrder {
 		return null;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = (prime * result) + this.abilityHandleId;
+		result = (prime * result) + this.orderId;
+		result = (prime * result) + (this.queued ? 1231 : 1237);
+		return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final COrderNoTarget other = (COrderNoTarget) obj;
+		if (this.abilityHandleId != other.abilityHandleId) {
+			return false;
+		}
+		if (this.orderId != other.orderId) {
+			return false;
+		}
+		if (this.queued != other.queued) {
+			return false;
+		}
+		return true;
+	}
+
 }

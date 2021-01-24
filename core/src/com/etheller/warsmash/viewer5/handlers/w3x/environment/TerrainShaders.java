@@ -59,8 +59,20 @@ public class TerrainShaders {
 				"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
 				"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
 				"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
-				"	vec3 terrain_normal = normalize(vec3(vNormal.y, -vNormal.x, vNormal.z));//vec3(hL - hR, hD - hU, 2.0)+vNormal);\r\n"
-				+ //
+				"	bool edgeX = (vPosition.y) == float((int(vPosition.y))/128*128);\r\n" + //
+				"	bool edgeY = (vPosition.x) == float((int(vPosition.x))/128*128);\r\n" + //
+				"	bool edgeZ = (vPosition.z) == float((int(vPosition.z))/128*128);\r\n" + //
+				"	vec3 terrain_normal = vec3(vNormal.y, -vNormal.x, vNormal.z);\r\n" + //
+				"	if(edgeX) {\r\n" + //
+				"	  terrain_normal.x = hL - hR;\r\n" + //
+				"	}\r\n" + //
+				"	if(edgeY) {\r\n" + //
+				"	  terrain_normal.y = hD - hU;\r\n" + //
+				"	}\r\n" + //
+				"	if(edgeZ) {\r\n" + //
+				"	  terrain_normal.z = 2.0;\r\n" + //
+				"	}\r\n" + //
+				"	terrain_normal = normalize(terrain_normal);\r\n" + //
 				"\r\n" + //
 				"	Normal = terrain_normal;\r\n" + //
 				Shaders.lightSystem("terrain_normal", "myposition.xyz", "lightTexture", "lightTextureHeight",

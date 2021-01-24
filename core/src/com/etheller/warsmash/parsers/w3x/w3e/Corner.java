@@ -99,6 +99,10 @@ public class Corner {
 		return this.ramp != 0;
 	}
 
+	public void setRamp(final int ramp) {
+		this.ramp = ramp;
+	}
+
 	public int getBlight() {
 		return this.blight;
 	}
@@ -125,6 +129,10 @@ public class Corner {
 
 	public int getCliffTexture() {
 		return this.cliffTexture;
+	}
+
+	public void setCliffTexture(final int cliffTexture) {
+		this.cliffTexture = cliffTexture;
 	}
 
 	public int getLayerHeight() {

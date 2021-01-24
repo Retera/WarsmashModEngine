@@ -62,6 +62,11 @@ public class Terrain {
 	private static final float[] fourComponentHeap = new float[4];
 	private static final Matrix4 tempMatrix = new Matrix4();
 	private static final boolean WIREFRAME_TERRAIN = false;
+	// In WC3 they didn't finish developing the height 3 ramps
+	// There are a couple of models for some of them but generally they are just bad
+	// voodoo. Enabling this setting should be coupled with creating
+	// new artwork for advanced ramp use cases that don't exist in WC3.
+	private static final boolean DISALLOW_HEIGHT_3_RAMPS = true;
 
 	public ShaderProgram groundShader;
 	public ShaderProgram waterShader;
@@ -595,51 +600,83 @@ public class Terrain {
 					if (!(facingDown && (j == 0)) && !(!facingDown && (j >= (this.rows - 2)))
 							&& !(facingLeft && (i == 0)) && !(!facingLeft && (i >= (this.columns - 2)))) {
 						final boolean verticalRamp = ((bottomLeft.isRamp()) != (bottomRight.isRamp()))
-								&& ((topLeft.isRamp()) != (topRight.isRamp()))
-								&& !this.corners[i][j + (facingDown ? -1 : 1)].cliff;
+								&& ((topLeft.isRamp()) != (topRight.isRamp()));
 
 						final boolean horizontalRamp = ((bottomLeft.isRamp()) != (topLeft.isRamp()))
-								&& ((bottomRight.isRamp()) != (topRight.isRamp()))
-								&& !this.corners[i + (facingLeft ? -1 : 1)][j].cliff;
+								&& ((bottomRight.isRamp()) != (topRight.isRamp()));
 
 						if (verticalRamp || horizontalRamp) {
-							String fileName = ""
-									+ (char) ((topLeft.isRamp() ? 'L' : 'A')
-											+ ((topLeft.getLayerHeight() - base) * (topLeft.isRamp() ? -4 : 1)))
-									+ (char) ((topRight.isRamp() ? 'L' : 'A')
-											+ ((topRight.getLayerHeight() - base) * (topRight.isRamp() ? -4 : 1)))
-									+ (char) ((bottomRight.isRamp() ? 'L' : 'A')
-											+ ((bottomRight.getLayerHeight() - base) * (bottomRight.isRamp() ? -4 : 1)))
-									+ (char) ((bottomLeft.isRamp() ? 'L' : 'A')
-											+ ((bottomLeft.getLayerHeight() - base) * (bottomLeft.isRamp() ? -4 : 1)));
-
-							final String rampModelDir = this.cliffTextures.get(bottomLeftCliffTex).rampModelDir;
-							fileName = "Doodads\\Terrain\\" + rampModelDir + "\\" + rampModelDir + fileName + "0.mdx";
-
-							if (this.dataSource.has(fileName)) {
-								if (!this.pathToCliff.containsKey(fileName)) {
-									this.cliffMeshes.add(new CliffMesh(fileName, this.dataSource, Gdx.gl30));
-									this.pathToCliff.put(fileName, this.cliffMeshes.size() - 1);
+							final boolean rampBlockedByCliff = ((verticalRamp
+									&& this.corners[i][j + (facingDown ? -1 : 1)].cliff)
+									|| (horizontalRamp && this.corners[i + (facingLeft ? -1 : 1)][j].cliff));
+							final int topLeftHeight = topLeft.getLayerHeight() - base;
+							final int topRightHeight = topRight.getLayerHeight() - base;
+							final int bottomRightHeight = bottomRight.getLayerHeight() - base;
+							final int bottomLeftHeight = bottomLeft.getLayerHeight() - base;
+							boolean invalidRamp = false;
+							if (DISALLOW_HEIGHT_3_RAMPS) {
+								if (topLeftHeight > 1) {
+									invalidRamp = true;
+									topLeft.setRamp(0);
 								}
+								if (topRightHeight > 1) {
+									invalidRamp = true;
+									topRight.setRamp(0);
+								}
+								if (bottomRightHeight > 1) {
+									invalidRamp = true;
+									bottomRight.setRamp(0);
+								}
+								if (bottomLeftHeight > 1) {
+									invalidRamp = true;
+									bottomLeft.setRamp(0);
+								}
+								if (rampBlockedByCliff) {
+									invalidRamp = true;
+								}
+							}
+							if (!invalidRamp) {
+								String fileName = "" + getRampLetter(topLeftHeight, topLeft.isRamp())
+										+ getRampLetter(topRightHeight, topRight.isRamp())
+										+ getRampLetter(bottomRightHeight, bottomRight.isRamp())
+										+ getRampLetter(bottomLeftHeight, bottomLeft.isRamp());
 
-								for (int ji = this.cliffs.size(); ji-- > 0;) {
-									final IVec3 pos = this.cliffs.get(ji);
-									if ((pos.x == (i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0))))
-											&& (pos.y == (j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0))))) {
-										this.cliffs.remove(ji);
-										break;
+								final String rampModelDir = this.cliffTextures.get(bottomLeftCliffTex).rampModelDir;
+								fileName = "Doodads\\Terrain\\" + rampModelDir + "\\" + rampModelDir + fileName
+										+ "0.mdx";
+
+								if (this.dataSource.has(fileName)) {
+									if (!this.pathToCliff.containsKey(fileName)) {
+										this.cliffMeshes.add(new CliffMesh(fileName, this.dataSource, Gdx.gl30));
+										this.pathToCliff.put(fileName, this.cliffMeshes.size() - 1);
 									}
+
+									for (int ji = this.cliffs.size(); ji-- > 0;) {
+										final IVec3 pos = this.cliffs.get(ji);
+										if ((pos.x == (i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0))))
+												&& (pos.y == (j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0))))) {
+											this.cliffs.remove(ji);
+											break;
+										}
+									}
+
+									this.cliffs.add(new IVec3((i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0))),
+											(j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0))),
+											this.pathToCliff.get(fileName)));
+									bottomLeft.romp = true;
+									bottomLeft.setCliffTexture(bottomLeftCliffTex);
+									bottomRight.setCliffTexture(bottomLeftCliffTex);
+									topLeft.setCliffTexture(bottomLeftCliffTex);
+									topRight.setCliffTexture(bottomLeftCliffTex);
+									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
+											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))]
+													.setCliffTexture(bottomLeftCliffTex);
+
+									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
+											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))].romp = true;
+
+									continue;
 								}
-
-								this.cliffs.add(new IVec3((i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0))),
-										(j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0))),
-										this.pathToCliff.get(fileName)));
-								bottomLeft.romp = true;
-
-								this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
-										+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))].romp = true;
-
-								continue;
 							}
 						}
 					}
@@ -1501,5 +1538,23 @@ public class Terrain {
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, Terrain.this.shadowMap);
 		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, columns, rows, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
 				RenderMathUtils.wrap(Terrain.this.shadowData));
+	}
+
+	private static char getRampLetter(final int layerHeightOffset, final boolean isRamp) {
+		if (isRamp) {
+			switch (layerHeightOffset) {
+			case 0:
+				return 'L';
+			case 1:
+				return 'H';
+			case 2:
+				return 'X';
+			default:
+				throw new IllegalArgumentException("Invalid ramp");
+			}
+		}
+		else {
+			return (char) ('A' + layerHeightOffset);
+		}
 	}
 }

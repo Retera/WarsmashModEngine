@@ -594,25 +594,24 @@ public class Terrain {
 					}
 					if (!(facingDown && (j == 0)) && !(!facingDown && (j >= (this.rows - 2)))
 							&& !(facingLeft && (i == 0)) && !(!facingLeft && (i >= (this.columns - 2)))) {
-						final boolean br = ((bottomLeft.getRamp() != 0) != (bottomRight.getRamp() != 0))
-								&& ((topLeft.getRamp() != 0) != (topRight.getRamp() != 0))
-								&& !this.corners[i + (bottomRight.getRamp() != 0 ? 1 : 0)][j
-										+ (facingDown ? -1 : 1)].cliff;
+						final boolean verticalRamp = ((bottomLeft.isRamp()) != (bottomRight.isRamp()))
+								&& ((topLeft.isRamp()) != (topRight.isRamp()))
+								&& !this.corners[i][j + (facingDown ? -1 : 1)].cliff;
 
-						final boolean bo = ((bottomLeft.getRamp() != 0) != (topLeft.getRamp() != 0))
-								&& ((bottomRight.getRamp() != 0) != (topRight.getRamp() != 0))
-								&& !this.corners[i + (facingLeft ? -1 : 1)][j + (topLeft.getRamp() != 0 ? 1 : 0)].cliff;
+						final boolean horizontalRamp = ((bottomLeft.isRamp()) != (topLeft.isRamp()))
+								&& ((bottomRight.isRamp()) != (topRight.isRamp()))
+								&& !this.corners[i + (facingLeft ? -1 : 1)][j].cliff;
 
-						if (br || bo) {
-							String fileName = "" + (char) ((bottomLeft.getRamp() != 0 ? 'L' : 'A')
-									+ ((bottomLeft.getLayerHeight() - base) * (bottomLeft.getRamp() != 0 ? -4 : 1)))
-									+ (char) ((topLeft.getRamp() != 0 ? 'L' : 'A')
-											+ ((topLeft.getLayerHeight() - base) * (topLeft.getRamp() != 0 ? -4 : 1)))
-									+ (char) ((topRight.getRamp() != 0 ? 'L' : 'A')
-											+ ((topRight.getLayerHeight() - base) * (topRight.getRamp() != 0 ? -4 : 1)))
-									+ (char) ((bottomRight.getRamp() != 0 ? 'L' : 'A')
-											+ ((bottomRight.getLayerHeight() - base)
-													* (bottomRight.getRamp() != 0 ? -4 : 1)));
+						if (verticalRamp || horizontalRamp) {
+							String fileName = ""
+									+ (char) ((topLeft.isRamp() ? 'L' : 'A')
+											+ ((topLeft.getLayerHeight() - base) * (topLeft.isRamp() ? -4 : 1)))
+									+ (char) ((topRight.isRamp() ? 'L' : 'A')
+											+ ((topRight.getLayerHeight() - base) * (topRight.isRamp() ? -4 : 1)))
+									+ (char) ((bottomRight.isRamp() ? 'L' : 'A')
+											+ ((bottomRight.getLayerHeight() - base) * (bottomRight.isRamp() ? -4 : 1)))
+									+ (char) ((bottomLeft.isRamp() ? 'L' : 'A')
+											+ ((bottomLeft.getLayerHeight() - base) * (bottomLeft.isRamp() ? -4 : 1)));
 
 							final String rampModelDir = this.cliffTextures.get(bottomLeftCliffTex).rampModelDir;
 							fileName = "Doodads\\Terrain\\" + rampModelDir + "\\" + rampModelDir + fileName + "0.mdx";
@@ -625,19 +624,20 @@ public class Terrain {
 
 								for (int ji = this.cliffs.size(); ji-- > 0;) {
 									final IVec3 pos = this.cliffs.get(ji);
-									if ((pos.x == (i + ((bo ? 1 : 0) * (facingLeft ? 0 : 1))))
-											&& (pos.y == (j - ((br ? 1 : 0) * (facingDown ? 1 : 0))))) {
+									if ((pos.x == (i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0))))
+											&& (pos.y == (j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0))))) {
 										this.cliffs.remove(ji);
 										break;
 									}
 								}
 
-								this.cliffs.add(new IVec3((i + ((bo ? 1 : 0) * (facingLeft ? 0 : 1))),
-										(j - ((br ? 1 : 0) * (facingDown ? 1 : 0))), this.pathToCliff.get(fileName)));
+								this.cliffs.add(new IVec3((i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0))),
+										(j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0))),
+										this.pathToCliff.get(fileName)));
 								bottomLeft.romp = true;
 
-								this.corners[i + ((facingLeft ? -1 : 1) * (bo ? 1 : 0))][j
-										+ ((facingDown ? -1 : 1) * (br ? 1 : 0))].romp = true;
+								this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
+										+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))].romp = true;
 
 								continue;
 							}
@@ -788,8 +788,8 @@ public class Terrain {
 							final RenderCorner topLeft = this.corners[x + i][y + j + 1];
 							final RenderCorner topRight = this.corners[x + i + 1][y + j + 1];
 
-							if ((bottomLeft.getRamp() != 0) && (topLeft.getRamp() != 0) && (bottomRight.getRamp() != 0)
-									&& (topRight.getRamp() != 0) && (!bottomLeft.romp) && (!bottomRight.romp)
+							if ((bottomLeft.isRamp()) && (topLeft.isRamp()) && (bottomRight.isRamp())
+									&& (topRight.isRamp()) && (!bottomLeft.romp) && (!bottomRight.romp)
 									&& (!topLeft.romp) && (!topRight.romp)) {
 								break ILoop;
 							}
@@ -825,8 +825,8 @@ public class Terrain {
 		final RenderCorner topLeft = this.corners[x][y + 1];
 		final RenderCorner topRight = this.corners[x + 1][y + 1];
 
-		return (bottomLeft.getRamp() != 0) && (topLeft.getRamp() != 0) && (bottomRight.getRamp() != 0)
-				&& (topRight.getRamp() != 0) && !((bottomLeft.getLayerHeight() == topRight.getLayerHeight())
+		return (bottomLeft.isRamp()) && (topLeft.isRamp()) && (bottomRight.isRamp()) && (topRight.isRamp())
+				&& !((bottomLeft.getLayerHeight() == topRight.getLayerHeight())
 						&& (topLeft.getLayerHeight() == bottomRight.getLayerHeight()));
 	}
 

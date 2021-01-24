@@ -7,6 +7,7 @@ import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -120,6 +121,7 @@ public class Terrain {
 	public final DataTable uberSplatTable;
 
 	private final Map<String, SplatModel> uberSplatModels;
+	private final List<SplatModel> uberSplatModelsList;
 	private int shadowMap;
 	public final Map<String, Splat> splats = new HashMap<>();
 	public final Map<String, List<float[]>> shadows = new HashMap<>();
@@ -414,6 +416,7 @@ public class Terrain {
 
 		this.centerOffset = w3eFile.getCenterOffset();
 		this.uberSplatModels = new LinkedHashMap<>();
+		this.uberSplatModelsList = new ArrayList<>();
 		this.mapBounds = w3iFile.getCameraBoundsComplements();
 		this.shaderMapBounds = new float[] { (this.mapBounds[0] * 128.0f) + this.centerOffset[0],
 				(this.mapBounds[2] * 128.0f) + this.centerOffset[1],
@@ -1040,7 +1043,7 @@ public class Terrain {
 		gl.glUniform1f(shader.getUniformLocation("u_lightTextureHeight"), terrainLightsTexture.getHeight());
 
 		// Render the cliffs
-		for (final SplatModel splat : this.uberSplatModels.values()) {
+		for (final SplatModel splat : this.uberSplatModelsList) {
 			if (splat.isNoDepthTest() == onTopLayer) {
 				splat.render(gl, shader);
 			}
@@ -1432,16 +1435,18 @@ public class Terrain {
 					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset,
 					splat.unitMapping.isEmpty() ? null : splat.unitMapping, false, false);
 			splatModel.color[3] = splat.opacity;
-			this.uberSplatModels.put(path, splatModel);
+			this.addSplatBatchModel(path, splatModel);
 		}
 	}
 
 	public void removeSplatBatchModel(final String path) {
-		this.uberSplatModels.remove(path);
+		this.uberSplatModelsList.remove(this.uberSplatModels.remove(path));
 	}
 
 	public void addSplatBatchModel(final String path, final SplatModel model) {
 		this.uberSplatModels.put(path, model);
+		this.uberSplatModelsList.add(model);
+		Collections.sort(this.uberSplatModelsList);
 	}
 
 	public SplatMover addUberSplat(final String path, final float x, final float y, final float z, final float scale,
@@ -1450,7 +1455,7 @@ public class Terrain {
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null),
 					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest);
-			this.uberSplatModels.put(path, splatModel);
+			this.addSplatBatchModel(path, splatModel);
 		}
 		return splatModel.add(x - scale, y - scale, x + scale, y + scale, z, this.centerOffset);
 	}
@@ -1462,7 +1467,7 @@ public class Terrain {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(texture, PathSolver.DEFAULT, null),
 					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false, false);
 			splatModel.color[3] = opacity;
-			this.uberSplatModels.put(texture, splatModel);
+			this.addSplatBatchModel(texture, splatModel);
 		}
 		return splatModel.add(x, y, x2, y2, zDepthUpward, this.centerOffset);
 	}

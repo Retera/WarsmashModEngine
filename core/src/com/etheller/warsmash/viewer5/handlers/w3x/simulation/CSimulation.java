@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
@@ -48,7 +49,7 @@ public class CSimulation {
 	private int gameTurnTick = 0;
 	private final PathingGrid pathingGrid;
 	private final CWorldCollision worldCollision;
-	private final CPathfindingProcessor pathfindingProcessor;
+	private final CPathfindingProcessor[] pathfindingProcessors;
 	private final CGameplayConstants gameplayConstants;
 	private final Random seededRandom;
 	private float currentGameDayTimeElapsed;
@@ -75,7 +76,10 @@ public class CSimulation {
 		this.newProjectiles = new ArrayList<>();
 		this.handleIdAllocator = new HandleIdAllocator();
 		this.worldCollision = new CWorldCollision(entireMapBounds, this.gameplayConstants.getMaxCollisionRadius());
-		this.pathfindingProcessor = new CPathfindingProcessor(pathingGrid, this.worldCollision);
+		this.pathfindingProcessors = new CPathfindingProcessor[WarsmashConstants.MAX_PLAYERS];
+		for (int i = 0; i < this.pathfindingProcessors.length; i++) {
+			this.pathfindingProcessors[i] = new CPathfindingProcessor(pathingGrid, this.worldCollision);
+		}
 		this.seededRandom = seededRandom;
 		this.players = new ArrayList<>();
 		for (int i = 0; i < (WarsmashConstants.MAX_PLAYERS - 4); i++) {
@@ -175,13 +179,19 @@ public class CSimulation {
 		return this.pathingGrid;
 	}
 
-	public List<Point2D.Float> findNaiveSlowPath(final CUnit ignoreIntersectionsWithThisUnit,
+	public void findNaiveSlowPath(final CUnit ignoreIntersectionsWithThisUnit,
 			final CUnit ignoreIntersectionsWithThisSecondUnit, final float startX, final float startY,
 			final Point2D.Float goal, final PathingGrid.MovementType movementType, final float collisionSize,
-			final boolean allowSmoothing) {
-		return this.pathfindingProcessor.findNaiveSlowPath(ignoreIntersectionsWithThisUnit,
+			final boolean allowSmoothing, final CBehaviorMove queueItem) {
+		final int playerIndex = queueItem.getUnit().getPlayerIndex();
+		this.pathfindingProcessors[playerIndex].findNaiveSlowPath(ignoreIntersectionsWithThisUnit,
 				ignoreIntersectionsWithThisSecondUnit, startX, startY, goal, movementType, collisionSize,
-				allowSmoothing);
+				allowSmoothing, queueItem);
+	}
+
+	public void removeFromPathfindingQueue(final CBehaviorMove behaviorMove) {
+		final int playerIndex = behaviorMove.getUnit().getPlayerIndex();
+		this.pathfindingProcessors[playerIndex].removeFromPathfindingQueue(behaviorMove);
 	}
 
 	public void update() {
@@ -207,6 +217,9 @@ public class CSimulation {
 		}
 		this.projectiles.addAll(this.newProjectiles);
 		this.newProjectiles.clear();
+		for (final CPathfindingProcessor pathfindingProcessor : this.pathfindingProcessors) {
+			pathfindingProcessor.update(this);
+		}
 		this.gameTurnTick++;
 		this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
 				% this.gameplayConstants.getGameDayLength();

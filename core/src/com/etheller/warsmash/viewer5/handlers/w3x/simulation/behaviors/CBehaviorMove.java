@@ -21,6 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 
 public class CBehaviorMove implements CBehavior {
+	private static boolean ALWAYS_INTERRUPT_MOVE = false;
 
 	private static final Rectangle tempRect = new Rectangle();
 	private final CUnit unit;
@@ -41,6 +42,9 @@ public class CBehaviorMove implements CBehavior {
 	private CRangedBehavior rangedBehavior;
 	private boolean firstUpdate = true;
 	private boolean disableCollision = false;
+	private boolean pathfindingActive = false;
+	private boolean firstPathfindJob = false;
+	private boolean pathfindingFailedGiveUp;
 
 	public CBehaviorMove reset(final int highlightOrderId, final AbilityTarget target) {
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
@@ -69,6 +73,7 @@ public class CBehaviorMove implements CBehavior {
 		this.searchCycles = 0;
 		this.followUnit = null;
 		this.firstUpdate = true;
+		this.pathfindingFailedGiveUp = false;
 	}
 
 	private void internalResetMove(final int highlightOrderId, final CUnit followUnit) {
@@ -82,6 +87,7 @@ public class CBehaviorMove implements CBehavior {
 		this.searchCycles = 0;
 		this.followUnit = followUnit;
 		this.firstUpdate = true;
+		this.pathfindingFailedGiveUp = false;
 	}
 
 	@Override
@@ -100,6 +106,9 @@ public class CBehaviorMove implements CBehavior {
 			this.unit.setPointAndCheckUnstuck(this.unit.getX(), this.unit.getY(), simulation);
 			this.firstUpdate = false;
 		}
+		if (this.pathfindingFailedGiveUp) {
+			return this.unit.pollNextOrderBehavior(simulation);
+		}
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();
 
@@ -116,72 +125,31 @@ public class CBehaviorMove implements CBehavior {
 		final float startFloatingX = prevX;
 		final float startFloatingY = prevY;
 		if (this.path == null) {
-			if (this.followUnit != null) {
-				this.target.x = this.followUnit.getX();
-				this.target.y = this.followUnit.getY();
-			}
-			this.path = simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
-					this.target, movementType, collisionSize, true);
-			System.out.println("init path " + this.path);
-			// check for smoothing
-			if (!this.path.isEmpty()) {
-				float lastX = startFloatingX;
-				float lastY = startFloatingY;
-				float smoothingGroupStartX = startFloatingX;
-				float smoothingGroupStartY = startFloatingY;
-				final Point2D.Float firstPathElement = this.path.get(0);
-				double totalPathDistance = firstPathElement.distance(lastX, lastY);
-				lastX = firstPathElement.x;
-				lastY = firstPathElement.y;
-				int smoothingStartIndex = -1;
-				for (int i = 0; i < (this.path.size() - 1); i++) {
-					final Point2D.Float nextPossiblePathElement = this.path.get(i + 1);
-					totalPathDistance += nextPossiblePathElement.distance(lastX, lastY);
-					if ((totalPathDistance < (1.15
-							* nextPossiblePathElement.distance(smoothingGroupStartX, smoothingGroupStartY)))
-							&& pathingGrid.isPathable((smoothingGroupStartX + nextPossiblePathElement.x) / 2,
-									(smoothingGroupStartY + nextPossiblePathElement.y) / 2, movementType)) {
-						if (smoothingStartIndex == -1) {
-							smoothingStartIndex = i;
-						}
-					}
-					else {
-						if (smoothingStartIndex != -1) {
-							for (int j = i - 1; j >= smoothingStartIndex; j--) {
-								this.path.remove(j);
-							}
-							i = smoothingStartIndex;
-						}
-						smoothingStartIndex = -1;
-						final Point2D.Float smoothGroupNext = this.path.get(i);
-						smoothingGroupStartX = smoothGroupNext.x;
-						smoothingGroupStartY = smoothGroupNext.y;
-						totalPathDistance = nextPossiblePathElement.distance(smoothGroupNext);
-					}
-					lastX = nextPossiblePathElement.x;
-					lastY = nextPossiblePathElement.y;
+			if (!this.pathfindingActive) {
+				if (this.followUnit != null) {
+					this.target.x = this.followUnit.getX();
+					this.target.y = this.followUnit.getY();
 				}
-				if (smoothingStartIndex != -1) {
-					for (int j = smoothingStartIndex; j < (this.path.size() - 1); j++) {
-						final Point2D.Float removed = this.path.remove(j);
-					}
-				}
+				simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY, this.target,
+						movementType, collisionSize, true, this);
+				this.pathfindingActive = true;
+				this.firstPathfindJob = true;
 			}
 		}
 		else if ((this.followUnit != null) && (this.path.size() > 1) && (this.target.distance(this.followUnit.getX(),
 				this.followUnit.getY()) > (0.1 * this.target.distance(this.unit.getX(), this.unit.getY())))) {
 			this.target.x = this.followUnit.getX();
 			this.target.y = this.followUnit.getY();
-			this.path = simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
-					this.target, movementType, collisionSize, this.searchCycles < 4);
-			System.out.println("new path (for target) " + this.path);
-			if (this.path.isEmpty()) {
-				return this.unit.pollNextOrderBehavior(simulation);
+			if (this.pathfindingActive) {
+				simulation.removeFromPathfindingQueue(this);
 			}
+			simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY, this.target,
+					movementType, collisionSize, this.searchCycles < 4, this);
+			this.pathfindingActive = true;
 		}
 		float currentTargetX;
 		float currentTargetY;
-		if (this.path.isEmpty()) {
+		if ((this.path == null) || this.path.isEmpty()) {
 			if (this.followUnit != null) {
 				currentTargetX = this.followUnit.getX();
 				currentTargetY = this.followUnit.getY();
@@ -212,8 +180,8 @@ public class CBehaviorMove implements CBehavior {
 		}
 		float facing = this.unit.getFacing();
 		float delta = goalAngle - facing;
-		final float propulsionWindow = simulation.getUnitData().getPropulsionWindow(this.unit.getTypeId());
-		final float turnRate = simulation.getUnitData().getTurnRate(this.unit.getTypeId());
+		final float propulsionWindow = this.unit.getUnitType().getPropWindow();
+		final float turnRate = this.unit.getUnitType().getTurnRate();
 		final int speed = this.unit.getSpeed();
 
 		if (delta < -180) {
@@ -235,7 +203,7 @@ public class CBehaviorMove implements CBehavior {
 			facing += angleToAdd;
 			this.unit.setFacing(facing);
 		}
-		if (absDelta < propulsionWindow) {
+		if ((this.path != null) && !this.pathfindingActive && (absDelta < propulsionWindow)) {
 			final float speedTick = speed * WarsmashConstants.SIMULATION_STEP_TIME;
 			double continueDistance = speedTick;
 			do {
@@ -262,9 +230,9 @@ public class CBehaviorMove implements CBehavior {
 				tempRect.set(this.unit.getCollisionRectangle());
 				tempRect.setCenter(nextX, nextY);
 				if ((movementType == null) || (pathingGrid.isPathable(nextX, nextY, movementType, collisionSize)// ((int)
-																												// collisionSize
-																												// / 16)
-																												// * 16
+						// collisionSize
+						// / 16)
+						// * 16
 						&& !worldCollision.intersectsAnythingOtherThan(tempRect, this.unit, movementType))) {
 					this.unit.setPoint(nextX, nextY, worldCollision);
 					if (done) {
@@ -341,12 +309,12 @@ public class CBehaviorMove implements CBehavior {
 						this.target.x = this.followUnit.getX();
 						this.target.y = this.followUnit.getY();
 					}
-					this.path = simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
-							this.target, movementType, collisionSize, this.searchCycles < 4);
-					this.searchCycles++;
-					System.out.println("new path " + this.path);
-					if (this.path.isEmpty() || (this.searchCycles > 5)) {
-						return this.unit.pollNextOrderBehavior(simulation);
+					if (!this.pathfindingActive) {
+						simulation.findNaiveSlowPath(this.unit, this.followUnit, startFloatingX, startFloatingY,
+								this.target, movementType, collisionSize, this.searchCycles < 4, this);
+						this.pathfindingActive = true;
+						this.searchCycles++;
+						return this;
 					}
 				}
 				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.WALK, SequenceUtils.EMPTY, 1.0f,
@@ -408,6 +376,86 @@ public class CBehaviorMove implements CBehavior {
 
 	@Override
 	public void end(final CSimulation game) {
+		if (ALWAYS_INTERRUPT_MOVE) {
+			game.removeFromPathfindingQueue(this);
+			this.pathfindingActive = false;
+		}
+	}
 
+	public CUnit getUnit() {
+		return this.unit;
+	}
+
+	public void pathFound(final List<Point2D.Float> waypoints, final CSimulation simulation) {
+		this.pathfindingActive = false;
+
+		final float prevX = this.unit.getX();
+		final float prevY = this.unit.getY();
+
+		MovementType movementType = this.unit.getUnitType().getMovementType();
+		if (movementType == null) {
+			movementType = MovementType.DISABLED;
+		}
+		else if ((movementType == MovementType.FOOT) && this.disableCollision) {
+			movementType = MovementType.FOOT_NO_COLLISION;
+		}
+		final PathingGrid pathingGrid = simulation.getPathingGrid();
+		final CWorldCollision worldCollision = simulation.getWorldCollision();
+		final float collisionSize = this.unit.getUnitType().getCollisionSize();
+		final float startFloatingX = prevX;
+		final float startFloatingY = prevY;
+
+		this.path = waypoints;
+		if (this.firstPathfindJob) {
+			this.firstPathfindJob = false;
+			System.out.println("init path " + this.path);
+			// check for smoothing
+			if (!this.path.isEmpty()) {
+				float lastX = startFloatingX;
+				float lastY = startFloatingY;
+				float smoothingGroupStartX = startFloatingX;
+				float smoothingGroupStartY = startFloatingY;
+				final Point2D.Float firstPathElement = this.path.get(0);
+				double totalPathDistance = firstPathElement.distance(lastX, lastY);
+				lastX = firstPathElement.x;
+				lastY = firstPathElement.y;
+				int smoothingStartIndex = -1;
+				for (int i = 0; i < (this.path.size() - 1); i++) {
+					final Point2D.Float nextPossiblePathElement = this.path.get(i + 1);
+					totalPathDistance += nextPossiblePathElement.distance(lastX, lastY);
+					if ((totalPathDistance < (1.15
+							* nextPossiblePathElement.distance(smoothingGroupStartX, smoothingGroupStartY)))
+							&& pathingGrid.isPathable((smoothingGroupStartX + nextPossiblePathElement.x) / 2,
+									(smoothingGroupStartY + nextPossiblePathElement.y) / 2, movementType)) {
+						if (smoothingStartIndex == -1) {
+							smoothingStartIndex = i;
+						}
+					}
+					else {
+						if (smoothingStartIndex != -1) {
+							for (int j = i - 1; j >= smoothingStartIndex; j--) {
+								this.path.remove(j);
+							}
+							i = smoothingStartIndex;
+						}
+						smoothingStartIndex = -1;
+						final Point2D.Float smoothGroupNext = this.path.get(i);
+						smoothingGroupStartX = smoothGroupNext.x;
+						smoothingGroupStartY = smoothGroupNext.y;
+						totalPathDistance = nextPossiblePathElement.distance(smoothGroupNext);
+					}
+					lastX = nextPossiblePathElement.x;
+					lastY = nextPossiblePathElement.y;
+				}
+				if (smoothingStartIndex != -1) {
+					for (int j = smoothingStartIndex; j < (this.path.size() - 1); j++) {
+						final Point2D.Float removed = this.path.remove(j);
+					}
+				}
+			}
+		}
+		else if (this.path.isEmpty() || (this.searchCycles > 6)) {
+			this.pathfindingFailedGiveUp = true;
+		}
 	}
 }

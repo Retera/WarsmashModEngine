@@ -20,7 +20,7 @@ import com.etheller.warsmash.viewer5.ViewerTextureRenderable;
  * move around the unit selection circles without memory allocations? For now I
  * plan to simply port the RivSoft stuff, and come back later.
  */
-public class SplatModel {
+public class SplatModel implements Comparable<SplatModel> {
 	private static final int MAX_VERTICES = 65000;
 	private static final float NO_ABS_HEIGHT = -257f;
 	private final ViewerTextureRenderable texture;
@@ -512,6 +512,26 @@ public class SplatModel {
 			gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.vertexBuffer);
 			gl.glBufferSubData(GL30.GL_ARRAY_BUFFER, this.absHeightsOffset + (this.startOffset / 3),
 					this.absoluteHeights.size() * 4, RenderMathUtils.wrap(this.absoluteHeights));
+		}
+	}
+
+	@Override
+	public int compareTo(final SplatModel other) {
+		if (this.locations.isEmpty()) {
+			if (other.locations.isEmpty()) {
+				return 0;
+			}
+			else {
+				return 1;
+			}
+		}
+		else {
+			if (other.locations.isEmpty()) {
+				return -1;
+			}
+			else {
+				return Float.compare(this.locations.get(0)[4], other.locations.get(0)[4]);
+			}
 		}
 	}
 }

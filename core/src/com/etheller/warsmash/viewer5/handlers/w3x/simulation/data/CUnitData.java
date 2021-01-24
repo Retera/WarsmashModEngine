@@ -238,6 +238,9 @@ public class CUnitData {
 			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
 			final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
 			final float collisionSize = unitType.getFieldAsFloat(COLLISION_SIZE, 0);
+			final float propWindow = unitType.getFieldAsFloat(PROPULSION_WINDOW, 0);
+			final float turnRate = unitType.getFieldAsFloat(TURN_RATE, 0);
+
 			final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);
 			final PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
 			final String unitName = unitType.getFieldAsString(NAME, 0);
@@ -425,7 +428,8 @@ public class CUnitData {
 					isBldg, movementType, moveHeight, collisionSize, classifications, attacks, armorType, raise, decay,
 					defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
 					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, unitRace, goldCost,
-					lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes);
+					lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow,
+					turnRate);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
 		return unitTypeInstance;

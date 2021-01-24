@@ -317,8 +317,6 @@ public class CUnit extends CWidget {
 						this.currentBehavior.begin(game);
 					}
 					if (this.currentBehavior.getHighlightOrderId() != lastBehaviorHighlightOrderId) {
-						System.out.println("order ID change detected from  "
-								+ this.currentBehavior.getHighlightOrderId() + " to  " + lastBehaviorHighlightOrderId);
 						this.stateNotifier.ordersChanged();
 					}
 				}

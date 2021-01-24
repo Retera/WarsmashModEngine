@@ -55,6 +55,8 @@ public class CUnitType {
 	private final int buildTime;
 	private final EnumSet<CBuildingPathingType> preventedPathingTypes;
 	private final EnumSet<CBuildingPathingType> requiredPathingTypes;
+	private final float propWindow;
+	private final float turnRate;
 
 	public CUnitType(final String name, final int life, final int manaInitial, final int manaMaximum, final int speed,
 			final int defense, final String abilityList, final boolean isBldg, final MovementType movementType,
@@ -66,7 +68,7 @@ public class CUnitType {
 			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final CUnitRace unitRace,
 			final int goldCost, final int lumberCost, final int foodUsed, final int foodMade, final int buildTime,
 			final EnumSet<CBuildingPathingType> preventedPathingTypes,
-			final EnumSet<CBuildingPathingType> requiredPathingTypes) {
+			final EnumSet<CBuildingPathingType> requiredPathingTypes, final float propWindow, final float turnRate) {
 		this.name = name;
 		this.life = life;
 		this.manaInitial = manaInitial;
@@ -101,6 +103,8 @@ public class CUnitType {
 		this.buildTime = buildTime;
 		this.preventedPathingTypes = preventedPathingTypes;
 		this.requiredPathingTypes = requiredPathingTypes;
+		this.propWindow = propWindow;
+		this.turnRate = turnRate;
 	}
 
 	public String getName() {
@@ -237,5 +241,13 @@ public class CUnitType {
 
 	public EnumSet<CBuildingPathingType> getRequiredPathingTypes() {
 		return this.requiredPathingTypes;
+	}
+
+	public float getPropWindow() {
+		return this.propWindow;
+	}
+
+	public float getTurnRate() {
+		return this.turnRate;
 	}
 }

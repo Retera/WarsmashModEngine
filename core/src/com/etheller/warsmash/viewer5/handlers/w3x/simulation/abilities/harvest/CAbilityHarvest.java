@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -100,6 +101,9 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 					}
 				}
 			}
+			receiver.mustTargetResources();
+		}
+		else if (target instanceof CDestructable) {
 			receiver.mustTargetResources();
 		}
 		else {

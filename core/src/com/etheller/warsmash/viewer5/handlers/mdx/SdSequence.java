@@ -3,9 +3,9 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
-import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
 import com.etheller.warsmash.util.ParseUtils;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxTimeline;
 
 public final class SdSequence<TYPE> {
 	private static boolean INJECT_FRAMES_GHOSTWOLF_STYLE = false;
@@ -19,7 +19,7 @@ public final class SdSequence<TYPE> {
 	public TYPE[] outTans;
 	public boolean constant;
 
-	public SdSequence(final Sd<TYPE> sd, final long start, final long end, final Timeline<TYPE> timeline,
+	public SdSequence(final Sd<TYPE> sd, final long start, final long end, final MdlxTimeline<TYPE> timeline,
 			final boolean isGlobalSequence, final SdArrayDescriptor<TYPE> arrayDescriptor) {
 		this.sd = sd;
 		this.start = start;
@@ -136,22 +136,22 @@ public final class SdSequence<TYPE> {
 		this.outTans = outTansBuilder.toArray(arrayDescriptor.create(outTansBuilder.size()));
 	}
 
-	private TYPE[] getValues(final Timeline<TYPE> timeline) {
+	private TYPE[] getValues(final MdlxTimeline<TYPE> timeline) {
 		final TYPE[] values = timeline.getValues();
 		return fixTimelineArray(timeline, values);
 	}
 
-	private TYPE[] getOutTans(final Timeline<TYPE> timeline) {
+	private TYPE[] getOutTans(final MdlxTimeline<TYPE> timeline) {
 		final TYPE[] outTans = timeline.getOutTans();
 		return fixTimelineArray(timeline, outTans);
 	}
 
-	private TYPE[] getInTans(final Timeline<TYPE> timeline) {
+	private TYPE[] getInTans(final MdlxTimeline<TYPE> timeline) {
 		final TYPE[] inTans = timeline.getInTans();
 		return fixTimelineArray(timeline, inTans);
 	}
 
-	private TYPE[] fixTimelineArray(final Timeline<TYPE> timeline, final TYPE[] values) {
+	private TYPE[] fixTimelineArray(final MdlxTimeline<TYPE> timeline, final TYPE[] values) {
 		if (values == null) {
 			return null;
 		}

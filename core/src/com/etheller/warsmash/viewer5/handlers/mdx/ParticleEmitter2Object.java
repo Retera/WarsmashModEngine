@@ -1,9 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter2;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter2.HeadOrTail;
 
 public class ParticleEmitter2Object extends GenericObject implements EmitterObject {
 	public float width;
@@ -33,8 +35,7 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 	public int blendDst;
 	public int priorityPlane;
 
-	public ParticleEmitter2Object(final MdxModel model,
-			final com.etheller.warsmash.parsers.mdlx.ParticleEmitter2 emitter, final int index) {
+	public ParticleEmitter2Object(final MdxModel model, final MdlxParticleEmitter2 emitter, final int index) {
 		super(model, emitter, index);
 
 		this.width = emitter.getWidth();
@@ -68,10 +69,10 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 
 		this.replaceableId = emitter.getReplaceableId();
 
-		final long headOrTail = emitter.getHeadOrTail();
+		final HeadOrTail headOrTail = emitter.getHeadOrTail();
 
-		this.head = ((headOrTail == 0) || (headOrTail == 2));
-		this.tail = ((headOrTail == 1) || (headOrTail == 2));
+		this.head = headOrTail.isIncludesHead();
+		this.tail = headOrTail.isIncludesTail();
 
 		this.cellWidth = 1f / emitter.getColumns();
 		this.cellHeight = 1f / emitter.getRows();

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
@@ -55,6 +56,28 @@ public class MpqDataSource implements DataSource {
 		final ArchivedFileStream stream = new ArchivedFileStream(this.inputChannel, this.extractor, file);
 		final InputStream newInputStream = Channels.newInputStream(stream);
 		return newInputStream;
+	}
+
+	@Override
+	public ByteBuffer read(final String path) throws IOException {
+		ArchivedFile file = null;
+		try {
+			file = this.archive.lookupHash2(new HashLookup(path));
+		}
+		catch (final MPQException exc) {
+			if (exc.getMessage().equals("lookup not found")) {
+				return null;
+			}
+			else {
+				throw new IOException(exc);
+			}
+		}
+		try (final ArchivedFileStream stream = new ArchivedFileStream(this.inputChannel, this.extractor, file)) {
+			final long size = stream.size();
+			final ByteBuffer buffer = ByteBuffer.allocate((int) size);
+			stream.read(buffer);
+			return buffer;
+		}
 	}
 
 	@Override

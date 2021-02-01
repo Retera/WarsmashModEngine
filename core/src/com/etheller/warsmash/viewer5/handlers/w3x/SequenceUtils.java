@@ -5,9 +5,9 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 
-import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 

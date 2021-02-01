@@ -2,8 +2,8 @@ package com.etheller.warsmash.viewer5.handlers.blp;
 
 import java.util.ArrayList;
 
-import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.HandlerResource;
+import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
 

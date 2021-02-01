@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxLight;
 
 public class Light extends GenericObject {
 
@@ -11,17 +12,17 @@ public class Light extends GenericObject {
 	private final float[] ambientColor;
 	private final float ambientIntensity;
 
-	public Light(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.Light light, final int index) {
+	public Light(final MdxModel model, final MdlxLight light, final int index) {
 		super(model, light, index);
 
 		switch (light.getType()) {
-		case 0:
+		case OMNIDIRECTIONAL:
 			this.type = Type.OMNIDIRECTIONAL;
 			break;
-		case 1:
+		case DIRECTIONAL:
 			this.type = Type.DIRECTIONAL;
 			break;
-		case 2:
+		case AMBIENT:
 			this.type = Type.AMBIENT;
 			break;
 		default:

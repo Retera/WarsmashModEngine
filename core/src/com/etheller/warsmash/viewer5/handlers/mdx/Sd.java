@@ -5,9 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.etheller.warsmash.parsers.mdlx.Sequence;
-import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
 import com.etheller.warsmash.util.War3ID;
+import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxTimeline;
 
 public abstract class Sd<TYPE> {
 	public MdxModel model;
@@ -85,7 +84,7 @@ public abstract class Sd<TYPE> {
 
 	}
 
-	public Sd(final MdxModel model, final Timeline<TYPE> timeline, final SdArrayDescriptor<TYPE> arrayDescriptor) {
+	public Sd(final MdxModel model, final MdlxTimeline<TYPE> timeline, final SdArrayDescriptor<TYPE> arrayDescriptor) {
 		final List<Long> globalSequences = model.getGlobalSequences();
 		final int globalSequenceId = timeline.getGlobalSequenceId();
 		final Integer forcedInterp = forcedInterpMap.get(timeline.getName());

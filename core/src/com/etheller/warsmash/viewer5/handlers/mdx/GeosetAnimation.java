@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxGeosetAnimation;
 
 public class GeosetAnimation extends AnimatedObject {
 
@@ -8,8 +9,7 @@ public class GeosetAnimation extends AnimatedObject {
 	private final float[] color;
 	public final int geosetId;
 
-	public GeosetAnimation(final MdxModel model,
-			final com.etheller.warsmash.parsers.mdlx.GeosetAnimation geosetAnimation) {
+	public GeosetAnimation(final MdxModel model, final MdlxGeosetAnimation geosetAnimation) {
 		super(model, geosetAnimation);
 
 		final float[] color = geosetAnimation.getColor();

@@ -3,6 +3,7 @@ package com.etheller.warsmash.parsers.w3x;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.util.Arrays;
 import java.util.Collection;
@@ -117,6 +118,11 @@ public class War3Map implements DataSource {
 	@Override
 	public boolean has(final String filepath) {
 		return this.dataSource.has(filepath);
+	}
+
+	@Override
+	public ByteBuffer read(final String path) throws IOException {
+		return this.dataSource.read(path);
 	}
 
 	@Override

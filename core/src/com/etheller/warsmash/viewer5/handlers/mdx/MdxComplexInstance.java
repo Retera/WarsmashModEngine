@@ -10,7 +10,6 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
-import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.GenericNode;
 import com.etheller.warsmash.viewer5.ModelInstance;
@@ -24,6 +23,7 @@ import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.UpdatableObject;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
 
 public class MdxComplexInstance extends ModelInstance {
 	private static final float[] visibilityHeap = new float[1];
@@ -764,7 +764,7 @@ public class MdxComplexInstance extends ModelInstance {
 				if (!geoset.unselectable) {
 					geoset.getAlpha(alphaHeap, this.sequence, this.frame, this.counter);
 					if (alphaHeap[0] > 0) {
-						final com.etheller.warsmash.parsers.mdlx.Geoset mdlxGeoset = geoset.mdlxGeoset;
+						final MdlxGeoset mdlxGeoset = geoset.mdlxGeoset;
 						if (CollisionShape.intersectRayTriangles(ray, this, mdlxGeoset.getVertices(),
 								mdlxGeoset.getFaces(), 3, intersection)) {
 							return true;

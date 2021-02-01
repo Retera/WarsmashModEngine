@@ -3,6 +3,7 @@ package com.etheller.warsmash.datasources;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -19,6 +20,11 @@ public class SubdirDataSource implements DataSource {
 	@Override
 	public File getFile(final String filepath) throws IOException {
 		return this.dataSource.getFile(this.subdir + filepath);
+	}
+
+	@Override
+	public ByteBuffer read(final String path) throws IOException {
+		return this.dataSource.read(this.subdir + path);
 	}
 
 	@Override

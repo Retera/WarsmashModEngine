@@ -2,8 +2,9 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import java.util.Locale;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter;
 
 public class ParticleEmitterObject extends GenericObject implements EmitterObject {
 	public MdxModel internalModel;
@@ -22,8 +23,7 @@ public class ParticleEmitterObject extends GenericObject implements EmitterObjec
 	 */
 	public boolean ok = false;
 
-	public ParticleEmitterObject(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.ParticleEmitter emitter,
-			final int index) {
+	public ParticleEmitterObject(final MdxModel model, final MdlxParticleEmitter emitter, final int index) {
 		super(model, emitter, index);
 
 		this.internalModel = (MdxModel) model.viewer.load(

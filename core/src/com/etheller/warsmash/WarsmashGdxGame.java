@@ -14,7 +14,6 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.datasources.DataSource;
-import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.viewer5.Camera;
@@ -27,6 +26,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 
 public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvider {

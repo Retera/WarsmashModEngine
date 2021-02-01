@@ -16,8 +16,6 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
-import javax.imageio.ImageIO;
-
 import org.apache.commons.compress.utils.IOUtils;
 
 import com.badlogic.gdx.Gdx;
@@ -36,6 +34,7 @@ import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.ImageUtils.AnyExtensionImage;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WorldEditStrings;
@@ -46,7 +45,6 @@ import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.gl.Extensions;
 import com.etheller.warsmash.viewer5.gl.WebGL;
-import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
@@ -257,31 +255,12 @@ public class Terrain {
 			}
 			final String texDir = cliffInfo.getField("texDir");
 			final String texFile = cliffInfo.getField("texFile");
-			try (InputStream imageStream = dataSource.getResourceAsStream(texDir + "\\" + texFile + texturesExt)) {
-				final BufferedImage image;
-				if (imageStream == null) {
-					final String tgaPath = texDir + "\\" + texFile + ".tga";
-					try (final InputStream tgaStream = dataSource.getResourceAsStream(tgaPath)) {
-						if (tgaStream != null) {
-							image = TgaFile.readTGA(tgaPath, tgaStream);
-						}
-						else {
-							throw new IllegalStateException(
-									"Missing cliff texture: " + texDir + "\\" + texFile + texturesExt);
-						}
-					}
-				}
-				else {
-					image = ImageIO.read(imageStream);
-					if (image == null) {
-						throw new IllegalStateException(
-								"Missing cliff texture: " + texDir + "\\" + texFile + texturesExt);
-					}
-				}
-				this.cliffTextures.add(new UnloadedTexture(image.getWidth(), image.getHeight(),
-						ImageUtils.getTextureBuffer(ImageUtils.forceBufferedImagesRGB(image)),
-						cliffInfo.getField("cliffModelDir"), cliffInfo.getField("rampModelDir")));
-			}
+			final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
+					texDir + "\\" + texFile + texturesExt, "cliff texture");
+			final BufferedImage image = imageInfo.getRGBCorrectImageData();
+			this.cliffTextures
+					.add(new UnloadedTexture(image.getWidth(), image.getHeight(), ImageUtils.getTextureBuffer(image),
+							cliffInfo.getField("cliffModelDir"), cliffInfo.getField("rampModelDir")));
 			this.cliffTexturesSize = Math.max(this.cliffTexturesSize,
 					this.cliffTextures.get(this.cliffTextures.size() - 1).width);
 			this.cliffToGroundTexture.add(this.groundTextureToId.get(cliffInfo.getField("groundTile")));
@@ -381,26 +360,32 @@ public class Terrain {
 		// Water textures
 		this.waterTextureArray = gl.glGenTexture();
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
-		gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, GL30.GL_SRGB8_ALPHA8, 128, 128, this.waterTextureCount, 0,
-				GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
+
+		final String fileName = waterInfo.getField("texFile");
+		final List<BufferedImage> waterTextures = new ArrayList<>();
+		boolean anyWaterTextureNeedsSRGB = false;
+		for (int i = 0; i < this.waterTextureCount; i++) {
+			final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
+					fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt, "water texture");
+			final BufferedImage image = imageInfo.getImageData();
+			if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
+				System.err
+						.println("Odd water texture size detected of " + image.getWidth() + " x " + image.getHeight());
+			}
+			anyWaterTextureNeedsSRGB |= imageInfo.isNeedsSRGBFix();
+			waterTextures.add(image);
+		}
+
+		gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, anyWaterTextureNeedsSRGB ? GL30.GL_SRGB8_ALPHA8 : GL30.GL_RGBA8,
+				128, 128, this.waterTextureCount, 0, GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_BASE_LEVEL, 0);
 
-		final String fileName = waterInfo.getField("texFile");
-		for (int i = 0; i < this.waterTextureCount; i++) {
-
-			try (InputStream imageStream = dataSource
-					.getResourceAsStream(fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt)) {
-				final BufferedImage image = ImageIO.read(imageStream);
-				if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
-					System.err.println(
-							"Odd water texture size detected of " + image.getWidth() + " x " + image.getHeight());
-				}
-
-				gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, image.getWidth(), image.getHeight(), 1,
-						GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, ImageUtils.getTextureBuffer(image));
-			}
+		for (int i = 0; i < waterTextures.size(); i++) {
+			final BufferedImage image = waterTextures.get(i);
+			gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, image.getWidth(), image.getHeight(), 1,
+					GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, ImageUtils.getTextureBuffer(image));
 		}
 		gl.glGenerateMipmap(GL30.GL_TEXTURE_2D_ARRAY);
 

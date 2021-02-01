@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x;
 
-import com.etheller.warsmash.parsers.mdlx.Sequence;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 
 public class IndexedSequence {
 	public final Sequence sequence;

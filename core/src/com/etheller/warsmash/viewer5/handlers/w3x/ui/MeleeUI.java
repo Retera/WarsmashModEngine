@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
-import javax.imageio.ImageIO;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
@@ -45,7 +43,6 @@ import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
-import com.etheller.warsmash.parsers.mdlx.Layer.FilterMode;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.FastNumberFormat;
@@ -133,6 +130,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFram
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.QueueIconListener;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
 public class MeleeUI implements CUnitStateListener, CommandButtonListener, CommandCardCommandListener,
 		QueueIconListener, CommandErrorListener, CPlayerStateListener {
@@ -276,7 +274,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.cameraManager.target.x = startLocation[0];
 		this.cameraManager.target.y = startLocation[1];
 
-		this.activeButtonTexture = ImageUtils.getBLPTexture(war3MapViewer.mapMpq,
+		this.activeButtonTexture = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
 				"UI\\Widgets\\Console\\Human\\CommandButton\\human-activebutton.blp");
 		this.activeCommandUnitTargetFilter = new ActiveCommandUnitTargetFilter();
 		this.widthRatioCorrection = this.uiViewport.getMinWorldWidth() / 1600f;
@@ -303,18 +301,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		else if (war3MapViewer.dataSource.has("war3mapMap.blp")) {
-			try {
-				minimapTexture = ImageUtils
-						.getTexture(ImageIO.read(war3MapViewer.dataSource.getResourceAsStream("war3mapMap.blp")));
-			}
-			catch (final IOException e) {
-				System.err.println("Could not load minimap BLP file");
-				e.printStackTrace();
-			}
+			minimapTexture = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource, "war3mapMap.blp");
 		}
 		final Texture[] teamColors = new Texture[WarsmashConstants.MAX_PLAYERS];
 		for (int i = 0; i < teamColors.length; i++) {
-			teamColors[i] = ImageUtils.getBLPTexture(war3MapViewer.dataSource,
+			teamColors[i] = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource,
 					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
 		}
 		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();

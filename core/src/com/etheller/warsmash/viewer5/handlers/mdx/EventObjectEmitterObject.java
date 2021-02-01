@@ -20,6 +20,8 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxEventObject;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter2;
 
 public class EventObjectEmitterObject extends GenericObject implements EmitterObject {
 	private static final class LoadGenericSoundCallback implements LoadGenericCallback {
@@ -106,8 +108,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 	 */
 	private boolean ok = false;
 
-	public EventObjectEmitterObject(final MdxModel model,
-			final com.etheller.warsmash.parsers.mdlx.EventObject eventObject, final int index) {
+	public EventObjectEmitterObject(final MdxModel model, final MdlxEventObject eventObject, final int index) {
 		super(model, eventObject, index);
 
 		final ModelViewer viewer = model.viewer;
@@ -256,8 +257,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 				}
 
 				final int[] blendModes = FilterMode
-						.emitterFilterMode(com.etheller.warsmash.parsers.mdlx.ParticleEmitter2.FilterMode
-								.fromId(getInt(row, "BlendMode")));
+						.emitterFilterMode(MdlxParticleEmitter2.FilterMode.fromId(getInt(row, "BlendMode")));
 
 				this.blendSrc = blendModes[0];
 				this.blendDst = blendModes[1];

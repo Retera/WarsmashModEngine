@@ -3,8 +3,10 @@ package com.etheller.warsmash.datasources;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.HashSet;
@@ -34,7 +36,7 @@ public class FolderDataSource implements DataSource {
 
 	@Override
 	public InputStream getResourceAsStream(String filepath) throws IOException {
-		filepath=fixFilepath(filepath);
+		filepath = fixFilepath(filepath);
 		if (!has(filepath)) {
 			return null;
 		}
@@ -43,7 +45,7 @@ public class FolderDataSource implements DataSource {
 
 	@Override
 	public File getFile(String filepath) throws IOException {
-		filepath=fixFilepath(filepath);
+		filepath = fixFilepath(filepath);
 		if (!has(filepath)) {
 			return null;
 		}
@@ -51,8 +53,17 @@ public class FolderDataSource implements DataSource {
 	}
 
 	@Override
+	public ByteBuffer read(String path) throws IOException {
+		path = fixFilepath(path);
+		if (!has(path)) {
+			return null;
+		}
+		return ByteBuffer.wrap(Files.readAllBytes(Paths.get(path)));
+	}
+
+	@Override
 	public boolean has(String filepath) {
-		filepath=fixFilepath(filepath);
+		filepath = fixFilepath(filepath);
 		if ("".equals(filepath)) {
 			return false; // special case for folder data source, dont do this
 		}
@@ -69,7 +80,8 @@ public class FolderDataSource implements DataSource {
 	public void close() {
 	}
 
-	private static String fixFilepath(String filepath) {
-		return filepath.replace('\\', File.separatorChar).replace('/', File.separatorChar);
+	private static String fixFilepath(final String filepath) {
+		return filepath.replace('\\', File.separatorChar).replace('/', File.separatorChar).replace(':',
+				File.separatorChar);
 	}
 }

@@ -1,7 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxCamera;
 
 public class Camera extends AnimatedObject {
 
@@ -12,7 +13,7 @@ public class Camera extends AnimatedObject {
 	public final float nearClippingPlane;
 	public final float[] targetPosition;
 
-	public Camera(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.Camera camera) {
+	public Camera(final MdxModel model, final MdlxCamera camera) {
 		super(model, camera);
 
 		this.name = camera.getName();

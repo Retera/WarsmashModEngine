@@ -6,14 +6,14 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
 
 public class SetupGeosets {
 	private static final int NORMAL_BATCH = 0;
 	private static final int EXTENDED_BATCH = 1;
 	private static final int REFORGED_BATCH = 2;
 
-	public static void setupGeosets(final MdxModel model, final List<com.etheller.warsmash.parsers.mdlx.Geoset> geosets,
-			final boolean bigNodeSpace) {
+	public static void setupGeosets(final MdxModel model, final List<MdlxGeoset> geosets, final boolean bigNodeSpace) {
 		if (geosets.size() > 0) {
 			final GL20 gl = model.viewer.gl;
 			int positionBytes = 0;
@@ -30,7 +30,7 @@ public class SetupGeosets {
 			final int extendedBatchBoneCountOffsetBytes = bigNodeSpace ? 32 : 8;
 
 			for (int i = 0, l = geosets.size(); i < l; i++) {
-				final com.etheller.warsmash.parsers.mdlx.Geoset geoset = geosets.get(i);
+				final MdlxGeoset geoset = geosets.get(i);
 
 				if (true /* geoset.getLod() == 0 */) {
 					final int vertices = geoset.getVertices().length / 3;
@@ -84,7 +84,7 @@ public class SetupGeosets {
 			gl.glBufferData(GL20.GL_ELEMENT_ARRAY_BUFFER, faceBytes, null, GL20.GL_STATIC_DRAW);
 
 			for (int i = 0, l = geosets.size(); i < l; i++) {
-				final com.etheller.warsmash.parsers.mdlx.Geoset geoset = geosets.get(i);
+				final MdlxGeoset geoset = geosets.get(i);
 
 				final int batchType = batchTypes[i];
 				if (true /* geoset.lod == 0 */) {

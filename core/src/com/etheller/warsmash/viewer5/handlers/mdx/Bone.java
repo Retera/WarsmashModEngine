@@ -1,10 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
+import com.hiveworkshop.rms.parsers.mdlx.MdlxBone;
+
 public class Bone extends GenericObject {
 
 	private final GeosetAnimation geosetAnimation;
 
-	public Bone(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.Bone bone, final int index) {
+	public Bone(final MdxModel model, final MdlxBone bone, final int index) {
 		super(model, bone, index);
 
 		GeosetAnimation geosetAnimation = null;

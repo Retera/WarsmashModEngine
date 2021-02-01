@@ -1,7 +1,7 @@
 package com.etheller.warsmash.desktop.editor.mdx.listeners;
 
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
 import com.etheller.warsmash.util.SubscriberSetNotifier;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
 
 public interface YseraGUIListener {
 	void openModel(MdlxModel model);

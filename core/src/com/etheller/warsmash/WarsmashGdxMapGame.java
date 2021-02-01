@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -26,6 +27,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.etheller.warsmash.datasources.CascDataSourceDescriptor;
 import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
@@ -56,7 +58,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErro
 
 public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
 	private static final boolean ENABLE_AUDIO = true;
-	private static final boolean ENABLE_MUSIC = false;
+	private static final boolean ENABLE_MUSIC = true;
 	private DataSource codebase;
 	private War3MapViewer viewer;
 	private final Rectangle tempRect = new Rectangle();
@@ -186,7 +188,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 //		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
 
-		this.solidGreenTexture = ImageUtils.getBLPTexture(this.viewer.dataSource,
+		this.solidGreenTexture = ImageUtils.getAnyExtensionTexture(this.viewer.dataSource,
 				"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
 
 		Gdx.input.setInputProcessor(this);
@@ -258,6 +260,11 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			}
 			case "MPQ": {
 				dataSourcesList.add(new MpqDataSourceDescriptor(path));
+				break;
+			}
+			case "CASC": {
+				final String prefixes = dataSourcesConfig.getField("Prefixes" + (i < 10 ? "0" : "") + i);
+				dataSourcesList.add(new CascDataSourceDescriptor(path, Arrays.asList(prefixes.split(","))));
 				break;
 			}
 			default:

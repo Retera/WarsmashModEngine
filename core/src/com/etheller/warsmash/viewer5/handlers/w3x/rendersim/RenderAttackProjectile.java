@@ -3,9 +3,9 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 import java.util.List;
 
 import com.badlogic.gdx.math.Quaternion;
-import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.IndexedSequence;

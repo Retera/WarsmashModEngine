@@ -26,7 +26,7 @@ public class TgaTexture extends RawOpenGLTextureResource {
 		BufferedImage img;
 		try {
 			img = TgaFile.readTGA(this.fetchUrl, src);
-			update(img);
+			update(img, false);
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);

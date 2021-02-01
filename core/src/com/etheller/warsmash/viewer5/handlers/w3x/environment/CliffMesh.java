@@ -1,7 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -10,9 +9,9 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.etheller.warsmash.datasources.DataSource;
-import com.etheller.warsmash.parsers.mdlx.Geoset;
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
 
 public class CliffMesh {
 	public int vertexBuffer;
@@ -28,11 +27,8 @@ public class CliffMesh {
 	public CliffMesh(final String path, final DataSource dataSource, final GL30 gl) throws IOException {
 		this.gl = gl;
 		if (path.endsWith(".mdx") || path.endsWith(".MDX")) {
-			MdlxModel model;
-			try (InputStream stream = dataSource.getResourceAsStream(path)) {
-				model = new MdlxModel(stream);
-			}
-			final Geoset geoset = model.getGeosets().get(0);
+			final MdlxModel model = new MdlxModel(dataSource.read(path));
+			final MdlxGeoset geoset = model.getGeosets().get(0);
 
 			this.vertexBuffer = gl.glGenBuffer();
 			gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, this.vertexBuffer);

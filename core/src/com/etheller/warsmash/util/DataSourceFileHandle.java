@@ -10,7 +10,7 @@ public class DataSourceFileHandle extends FileHandle {
 	private final DataSource dataSource;
 
 	public DataSourceFileHandle(final DataSource dataSource, final String path) {
-		super(path);
+		super(fixPath(dataSource, path));
 		this.dataSource = dataSource;
 	}
 
@@ -27,5 +27,15 @@ public class DataSourceFileHandle extends FileHandle {
 		catch (final IOException e) {
 			throw new RuntimeException("Failed to load FileHandle from DataSource: " + path());
 		}
+	}
+
+	private static String fixPath(final DataSource dataSource, String path) {
+		if (!dataSource.has(path) && (path.toLowerCase().endsWith(".wav") || path.toLowerCase().endsWith(".mp3"))) {
+			final String otherPossiblePath = path.substring(0, path.lastIndexOf('.')) + ".flac";
+			if (dataSource.has(otherPossiblePath)) {
+				path = otherPossiblePath;
+			}
+		}
+		return path;
 	}
 }

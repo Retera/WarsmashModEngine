@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.viewer5.GenericNode;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionShape;
 
 public class CollisionShape extends GenericObject {
 	private static Vector3 intersectHeap = new Vector3();
@@ -15,8 +16,7 @@ public class CollisionShape extends GenericObject {
 	private static Ray intersectRayHeap = new Ray();
 	private Intersectable intersectable;
 
-	public CollisionShape(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.CollisionShape object,
-			final int index) {
+	public CollisionShape(final MdxModel model, final MdlxCollisionShape object, final int index) {
 		super(model, object, index);
 		final float[][] vertices = object.getVertices();
 

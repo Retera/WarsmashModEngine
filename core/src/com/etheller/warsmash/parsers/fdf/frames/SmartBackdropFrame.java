@@ -6,13 +6,14 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.BackdropCornerFlags;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
-import com.etheller.warsmash.parsers.mdlx.Geoset;
-import com.etheller.warsmash.parsers.mdlx.Layer;
-import com.etheller.warsmash.parsers.mdlx.Layer.FilterMode;
-import com.etheller.warsmash.parsers.mdlx.Material;
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
-import com.etheller.warsmash.parsers.mdlx.Texture;
 import com.etheller.warsmash.viewer5.Scene;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxMaterial;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture.WrapMode;
 
 public class SmartBackdropFrame extends SpriteFrame {
 	private final boolean decorateFileNames;
@@ -49,21 +50,21 @@ public class SmartBackdropFrame extends SpriteFrame {
 		final MdlxModel model = new MdlxModel();
 		final int edgeFileMaterialId = generateMaterial(model, this.edgeFileString, true);
 		final int backgroundMaterialId = generateMaterial(model, this.backgroundString, this.tileBackground);
-		final Geoset edgeGeoset = new Geoset();
+		final MdlxGeoset edgeGeoset = new MdlxGeoset();
 		final float[] edgeGeosetVertices = new float[32 * 4];
 		return model;
 	}
 
 	private int generateMaterial(final MdlxModel model, final String path, final boolean wrap) {
-		final Texture edgeFileReference = new Texture();
+		final MdlxTexture edgeFileReference = new MdlxTexture();
 		if (wrap) {
-			edgeFileReference.setFlags(0x2 | 0x1);
+			edgeFileReference.setWrapMode(WrapMode.REPEAT_BOTH);
 		}
 		edgeFileReference.setPath(path);
 		final int textureId = model.getTextures().size();
 		model.getTextures().add(edgeFileReference);
-		final Material edgeFileMaterial = new Material();
-		final Layer edgeFileMaterialLayer = new Layer();
+		final MdlxMaterial edgeFileMaterial = new MdlxMaterial();
+		final MdlxLayer edgeFileMaterialLayer = new MdlxLayer();
 		edgeFileMaterialLayer.setAlpha(1.0f);
 		edgeFileMaterialLayer.setFilterMode(FilterMode.BLEND);
 		edgeFileMaterialLayer.setTextureId(textureId);

@@ -1,11 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxTimeline;
 
 public class ScalarSd extends Sd<float[]> {
 
-	public ScalarSd(final MdxModel model, final Timeline<float[]> timeline) {
+	public ScalarSd(final MdxModel model, final MdlxTimeline<float[]> timeline) {
 		super(model, timeline, SdArrayDescriptor.FLOAT_ARRAY);
 	}
 

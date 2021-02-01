@@ -1,12 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxTextureAnimation;
 
 public class TextureAnimation extends AnimatedObject {
 
-	public TextureAnimation(final MdxModel model,
-			final com.etheller.warsmash.parsers.mdlx.TextureAnimation textureAnimation) {
+	public TextureAnimation(final MdxModel model, final MdlxTextureAnimation textureAnimation) {
 		super(model, textureAnimation);
 
 		this.addVariants(AnimationMap.KTAT.getWar3id(), "translation");

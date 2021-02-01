@@ -148,6 +148,15 @@ public abstract class ModelViewer {
 			final SolvedPath solved = pathSolver.solve(src, solverParams);
 
 			finalSrc = solved.getFinalSrc();
+			if (!this.dataSource.has(finalSrc)) {
+				final String ddsPath = finalSrc.substring(0, finalSrc.lastIndexOf('.')) + ".dds";
+				if (this.dataSource.has(ddsPath)) {
+					finalSrc = ddsPath;
+				}
+				else {
+					System.err.println("Attempting to load non-existant file: " + finalSrc);
+				}
+			}
 			extension = solved.getExtension();
 			isFetch = solved.isFetch();
 
@@ -185,9 +194,6 @@ public abstract class ModelViewer {
 
 				// TODO this is a synchronous hack, skipped some Ghostwolf code
 				try {
-					if (!this.dataSource.has(finalSrc)) {
-						System.err.println("Attempting to load non-existant file: " + finalSrc);
-					}
 					resource.loadData(this.dataSource.getResourceAsStream(finalSrc), null);
 				}
 				catch (final IOException e) {

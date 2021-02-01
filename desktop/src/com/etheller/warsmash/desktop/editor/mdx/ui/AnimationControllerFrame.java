@@ -5,7 +5,7 @@ import javax.swing.WindowConstants;
 
 import com.etheller.warsmash.WarsmashPreviewApplication;
 import com.etheller.warsmash.desktop.editor.mdx.listeners.YseraGUIListener;
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
 
 public class AnimationControllerFrame extends JFrame implements YseraGUIListener {
 	private final AnimationControllerPanel animationControllerPanel;

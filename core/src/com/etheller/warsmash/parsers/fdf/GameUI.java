@@ -41,7 +41,6 @@ import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
-import com.etheller.warsmash.parsers.mdlx.Layer.FilterMode;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
@@ -49,6 +48,7 @@ import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
 public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final DataSource dataSource;
@@ -658,7 +658,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		Texture texture = this.pathToTexture.get(path);
 		if (texture == null) {
 			try {
-				texture = ImageUtils.getBLPTexture(this.dataSource, path);
+				texture = ImageUtils.getAnyExtensionTexture(this.dataSource, path);
 				this.pathToTexture.put(path, texture);
 			}
 			catch (final Exception exc) {

@@ -1,7 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxRibbonEmitter;
 
 public class RibbonEmitterObject extends GenericObject implements EmitterObject {
 	public Layer layer;
@@ -23,8 +24,7 @@ public class RibbonEmitterObject extends GenericObject implements EmitterObject 
 	 */
 	public boolean ok = true;
 
-	public RibbonEmitterObject(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.RibbonEmitter emitter,
-			final int index) {
+	public RibbonEmitterObject(final MdxModel model, final MdlxRibbonEmitter emitter, final int index) {
 		super(model, emitter, index);
 
 		this.layer = model.getMaterials().get(emitter.getMaterialId()).layers.get(0);

@@ -25,8 +25,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.WarsmashPreviewApplication;
 import com.etheller.warsmash.desktop.editor.mdx.listeners.YseraGUIListener;
 import com.etheller.warsmash.desktop.editor.util.ExceptionPopup;
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.PortraitCameraManager;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
 
 public class YseraPanel extends JPanel {
 	private static final Quaternion IDENTITY = new Quaternion();

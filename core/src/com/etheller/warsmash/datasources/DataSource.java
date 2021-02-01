@@ -3,6 +3,7 @@ package com.etheller.warsmash.datasources;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 
 public interface DataSource {
@@ -26,6 +27,8 @@ public interface DataSource {
 	 * @throws IOException
 	 */
 	File getFile(String filepath) throws IOException;
+
+	ByteBuffer read(String path) throws IOException;
 
 	/**
 	 * Returns true if the data source contains a valid entry for a particular file.

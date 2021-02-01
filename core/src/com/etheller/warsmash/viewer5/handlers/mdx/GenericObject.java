@@ -1,7 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxGenericObject;
 
 public class GenericObject extends AnimatedObject implements GenericIndexed {
 
@@ -38,8 +39,7 @@ public class GenericObject extends AnimatedObject implements GenericIndexed {
 	public final boolean hasScaleAnim;
 	public final boolean hasGenericAnim;
 
-	public GenericObject(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.GenericObject object,
-			final int index) {
+	public GenericObject(final MdxModel model, final MdlxGenericObject object, final int index) {
 		super(model, object);
 
 		this.index = index;

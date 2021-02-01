@@ -52,11 +52,12 @@ public final class UnitSound {
 		final UnitSound sound = new UnitSound(volume, pitch, pitchVariance, minDistance, maxDistance, distanceCutoff);
 		for (final String fileName : fileNames.split(",")) {
 			String filePath = directoryBase + fileName;
-			if (!filePath.toLowerCase().endsWith(".wav")) {
-				filePath += ".wav";
+			final int lastDotIndex = filePath.lastIndexOf('.');
+			if (lastDotIndex != -1) {
+				filePath = filePath.substring(0, lastDotIndex);
 			}
-			if (dataSource.has(filePath)) {
-				sound.sounds.add(Gdx.audio.newSound(new DataSourceFileHandle(dataSource, filePath)));
+			if (dataSource.has(filePath + ".wav") || dataSource.has(filePath + ".flac")) {
+				sound.sounds.add(Gdx.audio.newSound(new DataSourceFileHandle(dataSource, filePath + ".wav")));
 			}
 		}
 		return sound;

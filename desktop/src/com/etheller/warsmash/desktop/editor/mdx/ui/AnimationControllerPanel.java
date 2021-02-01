@@ -25,15 +25,15 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
 import com.etheller.warsmash.WarsmashPreviewApplication;
 import com.etheller.warsmash.desktop.editor.mdx.listeners.YseraGUIListener;
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
-import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxSequence;
 
 public class AnimationControllerPanel extends JPanel implements YseraGUIListener {
 	private final WarsmashPreviewApplication previewApplication;
-	private final DefaultComboBoxModel<Sequence> animations;
-	private final JComboBox<Sequence> animationBox;
+	private final DefaultComboBoxModel<MdlxSequence> animations;
+	private final JComboBox<MdlxSequence> animationBox;
 	private MdlxModel model;
 	private JRadioButton defaultLoopButton;
 	private JRadioButton alwaysLoopButton;
@@ -51,7 +51,7 @@ public class AnimationControllerPanel extends JPanel implements YseraGUIListener
 			@Override
 			public Component getListCellRendererComponent(final JList list, final Object value, final int index,
 					final boolean isSelected, final boolean cellHasFocus) {
-				Object display = value == null ? "(Unanimated)" : ((Sequence) value).getName();
+				Object display = value == null ? "(Unanimated)" : ((MdlxSequence) value).getName();
 				if ((value != null) && (AnimationControllerPanel.this.model != null)) {
 					display = "(" + AnimationControllerPanel.this.model.getSequences().indexOf(value) + ") " + display;
 				}
@@ -197,7 +197,7 @@ public class AnimationControllerPanel extends JPanel implements YseraGUIListener
 		this.animations.removeAllElements();
 		this.animations.addElement(null);
 		if (this.model != null) {
-			for (final Sequence animation : this.model.getSequences()) {
+			for (final MdlxSequence animation : this.model.getSequences()) {
 				this.animations.addElement(animation);
 			}
 		}

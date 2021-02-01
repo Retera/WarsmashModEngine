@@ -72,4 +72,7 @@ public class MpqDataSourceDescriptor implements DataSourceDescriptor {
 		return true;
 	}
 
+	public String getMpqFilePath() {
+		return this.mpqFilePath;
+	}
 }

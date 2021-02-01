@@ -1,9 +1,6 @@
 package com.etheller.warsmash;
 
-import java.io.IOException;
 import java.util.Arrays;
-
-import javax.imageio.ImageIO;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -32,13 +29,7 @@ public class WarsmashTestMyTextureGame extends ApplicationAdapter {
 		this.codebase = new CompoundDataSourceDescriptor(
 				Arrays.<DataSourceDescriptor>asList(war3mpq, testingFolder, currentFolder)).createDataSource();
 
-		try {
-			this.texture = ImageUtils
-					.getTexture(ImageIO.read(this.codebase.getResourceAsStream("Textures\\Dust3x.blp")));
-		}
-		catch (final IOException e) {
-			e.printStackTrace();
-		}
+		this.texture = ImageUtils.getAnyExtensionTexture(this.codebase, "Textures\\Dust3x.blp");
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		this.batch = new SpriteBatch();
 		this.batch.enableBlending();

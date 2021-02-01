@@ -2,17 +2,36 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.compress.utils.IOUtils;
+
 import com.badlogic.gdx.graphics.GL20;
-import com.etheller.warsmash.parsers.mdlx.Extent;
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
-import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Texture;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxAttachment;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxBone;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxCamera;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionShape;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxEventObject;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxExtent;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxGeosetAnimation;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxHelper;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxLight;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxMaterial;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter2;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxRibbonEmitter;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxSequence;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture.WrapMode;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxTextureAnimation;
 
 public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	public boolean reforged = false;
@@ -73,7 +92,8 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 			parser = (MdlxModel) bufferOrParser;
 		}
 		else {
-			parser = new MdlxModel((InputStream) bufferOrParser);
+			System.err.println("Wasting memory with conversion from InputStream to buffer in MdxModel");
+			parser = new MdlxModel(ByteBuffer.wrap(IOUtils.toByteArray((InputStream) bufferOrParser)));
 		}
 
 		final ModelViewer viewer = this.viewer;
@@ -86,7 +106,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		this.name = parser.getName();
 
 		// Initialize the bounds.
-		final Extent extent = parser.getExtent();
+		final MdlxExtent extent = parser.getExtent();
 		final float[] min = extent.getMin();
 		final float[] max = extent.getMax();
 		for (int i = 0; i < 3; i++) {
@@ -97,23 +117,24 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		this.bounds.fromExtents(min, max);
 
 		// Sequences
-		this.sequences.addAll(parser.getSequences());
+		for (final MdlxSequence sequence : parser.getSequences()) {
+			this.sequences.add(new Sequence(sequence));
+		}
 
 		// Global sequences
 		this.globalSequences.addAll(parser.getGlobalSequences());
 
 		// Texture animations
-		for (final com.etheller.warsmash.parsers.mdlx.TextureAnimation textureAnimation : parser
-				.getTextureAnimations()) {
+		for (final MdlxTextureAnimation textureAnimation : parser.getTextureAnimations()) {
 			this.textureAnimations.add(new TextureAnimation(this, textureAnimation));
 		}
 
 		// Materials
 		int layerId = 0;
-		for (final com.etheller.warsmash.parsers.mdlx.Material material : parser.getMaterials()) {
+		for (final MdlxMaterial material : parser.getMaterials()) {
 			final List<Layer> layers = new ArrayList<>();
 
-			for (final com.etheller.warsmash.parsers.mdlx.Layer layer : material.getLayers()) {
+			for (final MdlxLayer layer : material.getLayers()) {
 				final Layer vLayer = new Layer(this, layer, layerId++, material.getPriorityPlane());
 
 				layers.add(vLayer);
@@ -139,10 +160,10 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		final GL20 gl = viewer.gl;
 
 		// Textures.
-		for (final com.etheller.warsmash.parsers.mdlx.Texture texture : parser.getTextures()) {
+		for (final MdlxTexture texture : parser.getTextures()) {
 			String path = texture.getPath();
 			final int replaceableId = texture.getReplaceableId();
-			final int flags = texture.getFlags();
+			final WrapMode wrapMode = texture.getWrapMode();
 
 			if (replaceableId != 0) {
 				// TODO This uses dumb, stupid, terrible, no-good hardcoded replaceable IDs
@@ -163,11 +184,11 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 			final Texture viewerTexture = (Texture) viewer.load(path, pathSolver, solverParams);
 
 			// When the texture will load, it will apply its wrap modes.
-			if ((flags & 0x1) != 0) {
+			if (wrapMode.isWrapWidth()) {
 				viewerTexture.setWrapS(true);
 			}
 
-			if ((flags & 0x2) != 0) {
+			if (wrapMode.isWrapHeight()) {
 				viewerTexture.setWrapT(true);
 			}
 
@@ -176,7 +197,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		}
 
 		// Geoset animations
-		for (final com.etheller.warsmash.parsers.mdlx.GeosetAnimation geosetAnimation : parser.getGeosetAnimations()) {
+		for (final MdlxGeosetAnimation geosetAnimation : parser.getGeosetAnimations()) {
 			this.geosetAnimations.add(new GeosetAnimation(this, geosetAnimation));
 		}
 
@@ -189,53 +210,52 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		int objectId = 0;
 
 		// Bones
-		for (final com.etheller.warsmash.parsers.mdlx.Bone bone : parser.getBones()) {
+		for (final MdlxBone bone : parser.getBones()) {
 			this.bones.add(new Bone(this, bone, objectId++));
 		}
 
 		// Lights
-		for (final com.etheller.warsmash.parsers.mdlx.Light light : parser.getLights()) {
+		for (final MdlxLight light : parser.getLights()) {
 			this.lights.add(new Light(this, light, objectId++));
 		}
 
 		// Helpers
-		for (final com.etheller.warsmash.parsers.mdlx.Helper helper : parser.getHelpers()) {
+		for (final MdlxHelper helper : parser.getHelpers()) {
 			this.helpers.add(new Helper(this, helper, objectId++));
 		}
 
 		// Attachments
-		for (final com.etheller.warsmash.parsers.mdlx.Attachment attachment : parser.getAttachments()) {
+		for (final MdlxAttachment attachment : parser.getAttachments()) {
 			this.attachments.add(new Attachment(this, attachment, objectId++));
 		}
 
 		// Particle Emitters
-		for (final com.etheller.warsmash.parsers.mdlx.ParticleEmitter particleEmitter : parser.getParticleEmitters()) {
+		for (final MdlxParticleEmitter particleEmitter : parser.getParticleEmitters()) {
 			this.particleEmitters.add(new ParticleEmitterObject(this, particleEmitter, objectId++));
 		}
 
 		// Particle Emitters 2
-		for (final com.etheller.warsmash.parsers.mdlx.ParticleEmitter2 particleEmitter2 : parser
-				.getParticleEmitters2()) {
+		for (final MdlxParticleEmitter2 particleEmitter2 : parser.getParticleEmitters2()) {
 			this.particleEmitters2.add(new ParticleEmitter2Object(this, particleEmitter2, objectId++));
 		}
 
 		// Ribbon emitters
-		for (final com.etheller.warsmash.parsers.mdlx.RibbonEmitter ribbonEmitter : parser.getRibbonEmitters()) {
+		for (final MdlxRibbonEmitter ribbonEmitter : parser.getRibbonEmitters()) {
 			this.ribbonEmitters.add(new RibbonEmitterObject(this, ribbonEmitter, objectId++));
 		}
 
 		// Camera
-		for (final com.etheller.warsmash.parsers.mdlx.Camera camera : parser.getCameras()) {
+		for (final MdlxCamera camera : parser.getCameras()) {
 			this.cameras.add(new Camera(this, camera));
 		}
 
 		// Event objects
-		for (final com.etheller.warsmash.parsers.mdlx.EventObject eventObject : parser.getEventObjects()) {
+		for (final MdlxEventObject eventObject : parser.getEventObjects()) {
 			this.eventObjects.add(new EventObjectEmitterObject(this, eventObject, objectId++));
 		}
 
 		// Collision shapes
-		for (final com.etheller.warsmash.parsers.mdlx.CollisionShape collisionShape : parser.getCollisionShapes()) {
+		for (final MdlxCollisionShape collisionShape : parser.getCollisionShapes()) {
 			this.collisionShapes.add(new CollisionShape(this, collisionShape, objectId++));
 		}
 

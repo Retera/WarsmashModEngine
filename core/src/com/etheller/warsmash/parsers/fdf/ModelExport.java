@@ -10,7 +10,8 @@ import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
+import com.hiveworkshop.rms.parsers.mdlx.util.MdxUtils;
 
 public class ModelExport {
 
@@ -24,9 +25,9 @@ public class ModelExport {
 
 		try (InputStream modelStream = dataSource
 				.getResourceAsStream("UI\\Glues\\MainMenu\\MainMenu3D\\MainMenu3D.mdx")) {
-			final MdlxModel model = new MdlxModel(modelStream);
+			final MdlxModel model = new MdlxModel(dataSource.read("UI\\Glues\\MainMenu\\MainMenu3D\\MainMenu3D.mdx"));
 			try (FileOutputStream fos = new FileOutputStream(new File("C:\\Temp\\MainMenu3D.mdl"))) {
-				model.saveMdl(fos);
+				MdxUtils.saveMdl(model, fos);
 			}
 		}
 		catch (final IOException e) {

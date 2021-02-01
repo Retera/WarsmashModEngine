@@ -2,7 +2,8 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer;
 
 /**
  * An MDX layer.
@@ -26,11 +27,10 @@ public class Layer extends AnimatedObject {
 	public boolean blended;
 	public TextureAnimation textureAnimation;
 
-	public Layer(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.Layer layer, final int layerId,
-			final int priorityPlane) {
+	public Layer(final MdxModel model, final MdlxLayer layer, final int layerId, final int priorityPlane) {
 		super(model, layer);
 
-		final com.etheller.warsmash.parsers.mdlx.Layer.FilterMode filterMode = layer.getFilterMode();
+		final MdlxLayer.FilterMode filterMode = layer.getFilterMode();
 		final int textureAnimationId = layer.getTextureAnimationId();
 		final GL20 gl = model.viewer.gl;
 
@@ -50,8 +50,8 @@ public class Layer extends AnimatedObject {
 		this.noDepthTest = flags & 0x40;
 		this.noDepthSet = flags & 0x80;
 
-		this.depthMaskValue = ((filterMode == com.etheller.warsmash.parsers.mdlx.Layer.FilterMode.NONE)
-				|| (filterMode == com.etheller.warsmash.parsers.mdlx.Layer.FilterMode.TRANSPARENT));
+		this.depthMaskValue = ((filterMode == MdlxLayer.FilterMode.NONE)
+				|| (filterMode == MdlxLayer.FilterMode.TRANSPARENT));
 
 		this.blendSrc = 0;
 		this.blendDst = 0;

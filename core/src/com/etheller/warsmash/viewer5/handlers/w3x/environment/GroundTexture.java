@@ -2,15 +2,12 @@ package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.Buffer;
-
-import javax.imageio.ImageIO;
 
 import com.badlogic.gdx.graphics.GL30;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.util.ImageUtils;
-import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
+import com.etheller.warsmash.util.ImageUtils.AnyExtensionImage;
 
 public class GroundTexture {
 	public int id;
@@ -18,34 +15,15 @@ public class GroundTexture {
 	public boolean extended;
 
 	public GroundTexture(final String path, final DataSource dataSource, final GL30 gl) throws IOException {
-		if (path.toLowerCase().endsWith(".blp")) {
-			try (InputStream stream = dataSource.getResourceAsStream(path)) {
-				if (stream == null) {
-					final String tgaPath = path.substring(0, path.length() - 4) + ".tga";
-					try (final InputStream tgaStream = dataSource.getResourceAsStream(tgaPath)) {
-						if (tgaStream != null) {
-							final BufferedImage tgaData = TgaFile.readTGA(tgaPath, tgaStream);
-							loadImage(path, gl, tgaData);
-						}
-						else {
-							throw new IllegalStateException("Missing ground texture: " + path);
-						}
-					}
-				}
-				else {
-					final BufferedImage image = ImageIO.read(stream);
-					loadImage(path, gl, image);
-				}
-			}
-		}
-
+		final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource, path, "ground texture");
+		loadImage(path, gl, imageInfo.getImageData(), imageInfo.isNeedsSRGBFix());
 	}
 
-	private void loadImage(final String path, final GL30 gl, final BufferedImage image) {
+	private void loadImage(final String path, final GL30 gl, final BufferedImage image, final boolean sRGBFix) {
 		if (image == null) {
 			throw new IllegalStateException("Missing ground texture: " + path);
 		}
-		final Buffer buffer = ImageUtils.getTextureBuffer(ImageUtils.forceBufferedImagesRGB(image));
+		final Buffer buffer = ImageUtils.getTextureBuffer(sRGBFix ? ImageUtils.forceBufferedImagesRGB(image) : image);
 		final int width = image.getWidth();
 		final int height = image.getHeight();
 

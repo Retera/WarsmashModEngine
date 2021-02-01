@@ -5,6 +5,7 @@ import java.util.Arrays;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
 
 public class Geoset {
 	public MdxModel model;
@@ -25,12 +26,12 @@ public class Geoset {
 	private final int skinStride;
 	private final int boneCountOffsetBytes;
 	public final boolean unselectable;
-	public final com.etheller.warsmash.parsers.mdlx.Geoset mdlxGeoset;
+	public final MdlxGeoset mdlxGeoset;
 
 	public Geoset(final MdxModel model, final int index, final int positionOffset, final int normalOffset,
 			final int uvOffset, final int skinOffset, final int faceOffset, final int vertices, final int elements,
 			final int openGLSkinType, final int skinStride, final int boneCountOffsetBytes, final boolean unselectable,
-			final com.etheller.warsmash.parsers.mdlx.Geoset mdlxGeoset) {
+			final MdlxGeoset mdlxGeoset) {
 		this.model = model;
 		this.index = index;
 		this.positionOffset = positionOffset;

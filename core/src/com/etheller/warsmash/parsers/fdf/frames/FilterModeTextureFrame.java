@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
-import com.etheller.warsmash.parsers.mdlx.Layer.FilterMode;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
 public class FilterModeTextureFrame extends TextureFrame {
 	private int blendSrc;

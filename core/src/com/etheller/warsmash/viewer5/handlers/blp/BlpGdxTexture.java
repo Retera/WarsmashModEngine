@@ -29,7 +29,7 @@ public class BlpGdxTexture extends GdxTextureResource {
 		BufferedImage img;
 		try {
 			img = ImageIO.read(src);
-			setGdxTexture(ImageUtils.getTexture(img));
+			setGdxTexture(ImageUtils.getTexture(img, true));
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);

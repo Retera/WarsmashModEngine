@@ -3,23 +3,24 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.etheller.warsmash.parsers.mdlx.timeline.FloatArrayTimeline;
-import com.etheller.warsmash.parsers.mdlx.timeline.FloatTimeline;
-import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
-import com.etheller.warsmash.parsers.mdlx.timeline.UInt32Timeline;
 import com.etheller.warsmash.util.War3ID;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxAnimatedObject;
+import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxFloatArrayTimeline;
+import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxFloatTimeline;
+import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxTimeline;
+import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxUInt32Timeline;
 
 public class AnimatedObject {
 	public MdxModel model;
 	public Map<War3ID, Sd<?>> timelines;
 	public Map<String, byte[]> variants;
 
-	public AnimatedObject(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.AnimatedObject object) {
+	public AnimatedObject(final MdxModel model, final MdlxAnimatedObject object) {
 		this.model = model;
 		this.timelines = new HashMap<>();
 		this.variants = new HashMap<>();
 
-		for (final Timeline<?> timeline : object.getTimelines()) {
+		for (final MdlxTimeline<?> timeline : object.getTimelines()) {
 			this.timelines.put(timeline.getName(), createTypedSd(model, timeline));
 		}
 	}
@@ -126,15 +127,15 @@ public class AnimatedObject {
 		return false;
 	}
 
-	private Sd<?> createTypedSd(final MdxModel model, final Timeline<?> timeline) {
-		if (timeline instanceof UInt32Timeline) {
-			return new UInt32Sd(model, (UInt32Timeline) timeline);
+	private Sd<?> createTypedSd(final MdxModel model, final MdlxTimeline<?> timeline) {
+		if (timeline instanceof MdlxUInt32Timeline) {
+			return new UInt32Sd(model, (MdlxUInt32Timeline) timeline);
 		}
-		else if (timeline instanceof FloatTimeline) {
-			return new ScalarSd(model, (FloatTimeline) timeline);
+		else if (timeline instanceof MdlxFloatTimeline) {
+			return new ScalarSd(model, (MdlxFloatTimeline) timeline);
 		}
-		else if (timeline instanceof FloatArrayTimeline) {
-			final FloatArrayTimeline faTimeline = (FloatArrayTimeline) timeline;
+		else if (timeline instanceof MdlxFloatArrayTimeline) {
+			final MdlxFloatArrayTimeline faTimeline = (MdlxFloatArrayTimeline) timeline;
 			final int arraySize = faTimeline.getArraySize();
 			if (arraySize == 3) {
 				return new VectorSd(model, faTimeline);

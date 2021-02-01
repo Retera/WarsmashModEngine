@@ -27,7 +27,6 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
-import com.etheller.warsmash.parsers.mdlx.Sequence;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
@@ -46,6 +45,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MenuUI;
@@ -141,7 +141,7 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 
 //		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
 
-		this.solidGreenTexture = ImageUtils.getBLPTexture(this.viewer.dataSource,
+		this.solidGreenTexture = ImageUtils.getAnyExtensionTexture(this.viewer.dataSource,
 				"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
 
 		Gdx.input.setInputProcessor(this);

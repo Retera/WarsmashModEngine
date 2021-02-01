@@ -1,7 +1,6 @@
 package com.etheller.warsmash;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -17,8 +16,8 @@ import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
-import com.etheller.warsmash.parsers.mdlx.Geoset;
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
 
 public class WarsmashTestGameAttributes2 extends ApplicationAdapter {
 	private int arrayBuffer;
@@ -36,8 +35,8 @@ public class WarsmashTestGameAttributes2 extends ApplicationAdapter {
 				.createDataSource();
 
 		final MdlxModel model;
-		try (InputStream modelStream = this.codebase.getResourceAsStream("Buildings\\Other\\TempArtB\\TempArtB.mdx")) {
-			model = new MdlxModel(modelStream);
+		try {
+			model = new MdlxModel(this.codebase.read("Buildings\\Other\\TempArtB\\TempArtB.mdx"));
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -67,7 +66,7 @@ public class WarsmashTestGameAttributes2 extends ApplicationAdapter {
 
 		Gdx.gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, this.elementBuffer);
 
-		final Geoset geoset0 = model.getGeosets().get(0);
+		final MdlxGeoset geoset0 = model.getGeosets().get(0);
 		final float[] vertices = geoset0.getVertices();
 		final ByteBuffer vertexByteBuffer = ByteBuffer.allocateDirect(4 * 9);
 		vertexByteBuffer.order(ByteOrder.LITTLE_ENDIAN);

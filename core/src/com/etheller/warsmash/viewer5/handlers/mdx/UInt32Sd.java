@@ -1,11 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.timeline.Timeline;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxTimeline;
 
 public class UInt32Sd extends Sd<long[]> {
 
-	public UInt32Sd(final MdxModel model, final Timeline<long[]> timeline) {
+	public UInt32Sd(final MdxModel model, final MdlxTimeline<long[]> timeline) {
 		super(model, timeline, SdArrayDescriptor.LONG_ARRAY);
 	}
 

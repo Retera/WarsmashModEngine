@@ -84,6 +84,8 @@ public class OpenALAudio implements Audio {
 		registerMusic("wav", Wav.Music.class);
 		registerSound("mp3", Mp3.Sound.class);
 		registerMusic("mp3", Mp3.Music.class);
+		registerSound("flac", Flac.Sound.class);
+		registerMusic("flac", Flac.Music.class);
 
 		try {
 			AL.create();

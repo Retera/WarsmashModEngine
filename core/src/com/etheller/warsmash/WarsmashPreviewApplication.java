@@ -14,7 +14,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.datasources.DataSource;
-import com.etheller.warsmash.parsers.mdlx.MdlxModel;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -26,6 +25,8 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.PortraitCameraManager;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
+import com.hiveworkshop.rms.parsers.mdlx.util.MdxUtils;
 
 public class WarsmashPreviewApplication extends ApplicationAdapter implements CanvasProvider {
 	private DataSource codebase;
@@ -138,7 +139,7 @@ public class WarsmashPreviewApplication extends ApplicationAdapter implements Ca
 				this.mdxHandler, ".mdx", PathSolver.DEFAULT, filename));
 		final MdlxModel mdlxModel;
 		try (FileInputStream stream = new FileInputStream(filename)) {
-			mdlxModel = new MdlxModel(stream);
+			mdlxModel = MdxUtils.loadMdlx(stream);
 			mdx.load(mdlxModel);
 			mdx.ok = true;
 //			mdx.lateLoad();

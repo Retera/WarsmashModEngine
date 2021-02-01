@@ -3,12 +3,12 @@ package com.etheller.warsmash.datasources;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,11 +44,23 @@ public class CompoundDataSource implements DataSource {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if (filepath.toLowerCase(Locale.US).endsWith(".blp")) {
-			return getFile(filepath.substring(0, filepath.lastIndexOf(".")) + ".dds");
+		return null;
+	}
+
+	@Override
+	public ByteBuffer read(final String path) throws IOException {
+		try {
+			for (int i = this.mpqList.size() - 1; i >= 0; i--) {
+				final DataSource mpq = this.mpqList.get(i);
+				final ByteBuffer buffer = mpq.read(path);
+				if (buffer != null) {
+					return buffer;
+				}
+			}
 		}
-		if (filepath.toLowerCase(Locale.US).endsWith(".tif")) {
-			return getFile(filepath.substring(0, filepath.lastIndexOf(".")) + ".dds");
+		catch (final IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -68,12 +80,6 @@ public class CompoundDataSource implements DataSource {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if (filepath.toLowerCase(Locale.US).endsWith(".blp")) {
-			return getResourceAsStream(filepath.substring(0, filepath.lastIndexOf(".")) + ".dds");
-		}
-		if (filepath.toLowerCase(Locale.US).endsWith(".tif")) {
-			return getResourceAsStream(filepath.substring(0, filepath.lastIndexOf(".")) + ".dds");
-		}
 		return null;
 	}
 
@@ -87,12 +93,6 @@ public class CompoundDataSource implements DataSource {
 			if (mpq.has(filepath)) {
 				return true;
 			}
-		}
-		if (filepath.toLowerCase(Locale.US).endsWith(".blp")) {
-			return has(filepath.substring(0, filepath.lastIndexOf(".")) + ".dds");
-		}
-		if (filepath.toLowerCase(Locale.US).endsWith(".tif")) {
-			return has(filepath.substring(0, filepath.lastIndexOf(".")) + ".dds");
 		}
 		return false;
 	}

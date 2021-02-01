@@ -19,6 +19,7 @@ package com.etheller.warsmash.audio;
 import java.io.EOFException;
 import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.GdxRuntimeException;
@@ -85,16 +86,20 @@ public class Wav {
 		public int channels, sampleRate, dataRemaining;
 
 		public WavInputStream(final FileHandle file) {
-			super(file.read());
+			this(file.read(), file);
+		}
+
+		public WavInputStream(final InputStream stream, final Object loggableFile) {
+			super(stream);
 			try {
 				if ((read() != 'R') || (read() != 'I') || (read() != 'F') || (read() != 'F')) {
-					throw new GdxRuntimeException("RIFF header not found: " + file);
+					throw new GdxRuntimeException("RIFF header not found: " + loggableFile);
 				}
 
 				skipFully(4);
 
 				if ((read() != 'W') || (read() != 'A') || (read() != 'V') || (read() != 'E')) {
-					throw new GdxRuntimeException("Invalid wave file header: " + file);
+					throw new GdxRuntimeException("Invalid wave file header: " + loggableFile);
 				}
 
 				final int fmtChunkLength = seekToChunk('f', 'm', 't', ' ');
@@ -148,7 +153,7 @@ public class Wav {
 			}
 			catch (final Throwable ex) {
 				StreamUtils.closeQuietly(this);
-				throw new GdxRuntimeException("Error reading WAV file: " + file, ex);
+				throw new GdxRuntimeException("Error reading WAV file: " + loggableFile, ex);
 			}
 		}
 

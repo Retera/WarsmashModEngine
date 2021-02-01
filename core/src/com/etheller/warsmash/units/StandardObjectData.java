@@ -101,6 +101,10 @@ public class StandardObjectData {
 
 		try {
 			destructableData.readSLK(this.source.getResourceAsStream("Units\\DestructableData.slk"));
+			final InputStream unitSkin = this.source.getResourceAsStream("Units\\DestructableSkin.txt");
+			if (unitSkin != null) {
+				destructableData.readTXT(unitSkin, true);
+			}
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -190,6 +194,11 @@ public class StandardObjectData {
 			profile.readTXT(this.source.getResourceAsStream("Units\\UndeadAbilityStrings.txt"), true);
 			profile.readTXT(this.source.getResourceAsStream("Units\\ItemAbilityFunc.txt"), true);
 			profile.readTXT(this.source.getResourceAsStream("Units\\ItemAbilityStrings.txt"), true);
+
+			final InputStream unitSkin = this.source.getResourceAsStream("Units\\AbilitySkin.txt");
+			if (unitSkin != null) {
+				profile.readTXT(unitSkin, true);
+			}
 
 			abilityData.readSLK(this.source.getResourceAsStream("Units\\AbilityData.slk"));
 		}

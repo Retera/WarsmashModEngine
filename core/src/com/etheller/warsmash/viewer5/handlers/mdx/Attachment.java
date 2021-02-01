@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import com.etheller.warsmash.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxAttachment;
 
 public class Attachment extends GenericObject {
 	protected String name;
@@ -8,8 +9,7 @@ public class Attachment extends GenericObject {
 	protected final int attachmentId;
 	protected MdxModel internalModel;
 
-	public Attachment(final MdxModel model, final com.etheller.warsmash.parsers.mdlx.Attachment attachment,
-			final int index) {
+	public Attachment(final MdxModel model, final MdlxAttachment attachment, final int index) {
 		super(model, attachment, index);
 
 		final String path = attachment.getPath().toLowerCase().replace(".mdl", ".mdx");

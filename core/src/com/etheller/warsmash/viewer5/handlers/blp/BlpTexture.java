@@ -28,7 +28,7 @@ public class BlpTexture extends RawOpenGLTextureResource {
 		BufferedImage img;
 		try {
 			img = ImageIO.read(src);
-			update(img);
+			update(img, true);
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);

@@ -21,6 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
@@ -31,6 +32,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceTy
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
@@ -125,6 +127,10 @@ public class CSimulation {
 		return this.units;
 	}
 
+	public List<CDestructable> getDestructables() {
+		return this.destructables;
+	}
+
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing, final BufferedImage buildingPathingPixelMap,
 			final RemovablePathingMapInstance pathingInstance) {
@@ -164,9 +170,9 @@ public class CSimulation {
 
 	public CAttackProjectile createProjectile(final CUnit source, final float launchX, final float launchY,
 			final float launchFacing, final CUnitAttackMissile attack, final AbilityTarget target, final float damage,
-			final int bounceIndex) {
+			final int bounceIndex, final CUnitAttackListener attackListener) {
 		final CAttackProjectile projectile = this.simulationRenderController.createAttackProjectile(this, launchX,
-				launchY, launchFacing, source, attack, target, damage, bounceIndex);
+				launchY, launchFacing, source, attack, target, damage, bounceIndex, attackListener);
 		this.newProjectiles.add(projectile);
 		return projectile;
 	}
@@ -290,6 +296,10 @@ public class CSimulation {
 
 	public void unitRepositioned(final CUnit cUnit) {
 		this.simulationRenderController.unitRepositioned(cUnit);
+	}
+
+	public void unitGainResourceEvent(final CUnit unit, final ResourceType resourceType, final int amount) {
+		this.simulationRenderController.spawnGainResourceTextTag(unit, resourceType, amount);
 	}
 
 	public void unitsLoaded() {

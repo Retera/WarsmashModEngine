@@ -13,27 +13,30 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
-public class CBehaviorHarvest extends CAbstractRangedBehavior implements AbilityTargetVisitor<CBehavior> {
+public class CBehaviorHarvest extends CAbstractRangedBehavior
+		implements AbilityTargetVisitor<CBehavior>, CBehaviorAttackListener {
 	private final CAbilityHarvest abilityHarvest;
 	private CSimulation simulation;
 	private int popoutFromMineTurnTick = 0;
-	private CAbilityGoldMine abilityGoldMine;
 
 	public CBehaviorHarvest(final CUnit unit, final CAbilityHarvest abilityHarvest) {
-		super(unit, true);
+		super(unit);
 		this.abilityHarvest = abilityHarvest;
 	}
 
 	public CBehaviorHarvest reset(final CWidget target) {
-		innerReset(target);
-		this.abilityGoldMine = null;
+		innerReset(target, target instanceof CUnit);
+		this.abilityHarvest.setLastHarvestTarget(target);
 		if (this.popoutFromMineTurnTick != 0) {
 			// TODO this check is probably only for debug and should be removed after
 			// extensive testing
@@ -76,9 +79,9 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior implements Ability
 						this.unit.setHidden(true);
 						this.unit.setInvulnerable(true);
 						this.unit.setPaused(true);
+						this.unit.setAcceptingOrders(false);
 						this.popoutFromMineTurnTick = this.simulation.getGameTurnTick()
 								+ (int) (abilityGoldMine.getMiningDuration() / WarsmashConstants.SIMULATION_STEP_TIME);
-						this.abilityGoldMine = abilityGoldMine;
 					}
 					else {
 						// we are stuck waiting to mine, let's make sure we play stand animation
@@ -103,6 +106,8 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior implements Ability
 		this.unit.setHidden(false);
 		this.unit.setInvulnerable(false);
 		this.unit.setPaused(false);
+		this.unit.setAcceptingOrders(true);
+		dropResources();
 		this.abilityHarvest.setCarriedResources(ResourceType.GOLD, goldMined);
 		this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.GOLD);
 		this.simulation.unitRepositioned(this.unit);
@@ -110,13 +115,47 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior implements Ability
 
 	@Override
 	public CBehavior accept(final CDestructable target) {
-		// TODO cut trees!
-		if (String.valueOf(target).length() > 5) {
-			return this.unit.pollNextOrderBehavior(this.simulation);
+		if ((this.abilityHarvest.getCarriedResourceType() != ResourceType.LUMBER)
+				|| (this.abilityHarvest.getCarriedResourceAmount() < this.abilityHarvest.getLumberCapacity())) {
+			return this.unit.getAttackBehavior().reset(getHighlightOrderId(), this.abilityHarvest.getTreeAttack(),
+					target, false, this);
 		}
 		else {
-			return null;
+			// we have some LUMBER and we can't carry any more, time to return resources
+			return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
 		}
+	}
+
+	@Override
+	public void onHit(final AbilityTarget target, final float damage) {
+		if (this.abilityHarvest.getCarriedResourceType() != ResourceType.LUMBER) {
+			dropResources();
+		}
+		this.abilityHarvest.setCarriedResources(ResourceType.LUMBER,
+				Math.min(this.abilityHarvest.getCarriedResourceAmount() + this.abilityHarvest.getDamageToTree(),
+						this.abilityHarvest.getLumberCapacity()));
+		this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.LUMBER);
+	}
+
+	@Override
+	public void onLaunch() {
+
+	}
+
+	@Override
+	public CBehavior onFirstUpdateAfterBackswing(final CBehaviorAttack currentAttackBehavior) {
+		if (this.abilityHarvest.getCarriedResourceAmount() >= this.abilityHarvest.getLumberCapacity()) {
+			return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
+		}
+		return currentAttackBehavior;
+	}
+
+	@Override
+	public CBehavior onFinish(final CSimulation game, final CUnit finishingUnit) {
+		if (this.abilityHarvest.getCarriedResourceAmount() >= this.abilityHarvest.getLumberCapacity()) {
+			return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
+		}
+		return updateOnInvalidTarget(game);
 	}
 
 	@Override
@@ -127,6 +166,20 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior implements Ability
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
 		return this.target.visit(AbilityTargetStillAliveVisitor.INSTANCE);
+	}
+
+	@Override
+	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
+		if (this.target instanceof CDestructable) {
+			// wood
+			final CDestructable nearestTree = CBehaviorReturnResources.findNearestTree(this.unit, this.abilityHarvest,
+					simulation, (CDestructable) this.target);
+			if (nearestTree != null) {
+				this.target = nearestTree;
+				return this;
+			}
+		}
+		return this.unit.pollNextOrderBehavior(simulation);
 	}
 
 	@Override
@@ -150,6 +203,22 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior implements Ability
 
 	public int getGoldCapacity() {
 		return this.abilityHarvest.getGoldCapacity();
+	}
+
+	private void dropResources() {
+		if (this.abilityHarvest.getCarriedResourceType() != null) {
+			switch (this.abilityHarvest.getCarriedResourceType()) {
+			case FOOD:
+				throw new IllegalStateException("Unit used Harvest skill to carry FOOD resource!");
+			case GOLD:
+				this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.GOLD);
+				break;
+			case LUMBER:
+				this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.LUMBER);
+				break;
+			}
+		}
+		this.abilityHarvest.setCarriedResources(null, 0);
 	}
 
 }

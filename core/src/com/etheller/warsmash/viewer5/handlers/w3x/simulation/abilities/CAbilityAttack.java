@@ -6,6 +6,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
@@ -35,6 +36,10 @@ public class CAbilityAttack extends AbstractCAbility {
 					receiver.orderIdNotAccepted();
 					return;
 				}
+			}
+			else {
+				receiver.orderIdNotAccepted();
+				return;
 			}
 		}
 		if ((orderId == OrderIds.smart) || (orderId == OrderIds.attack)) {
@@ -115,7 +120,8 @@ public class CAbilityAttack extends AbstractCAbility {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
 			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
-				behavior = caster.getAttackBehavior().reset(OrderIds.attack, attack, target, false);
+				behavior = caster.getAttackBehavior().reset(OrderIds.attack, attack, target, false,
+						CBehaviorAttackListener.DO_NOTHING);
 				break;
 			}
 		}
@@ -138,7 +144,8 @@ public class CAbilityAttack extends AbstractCAbility {
 			CBehavior behavior = null;
 			for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
 				if (attack.getWeaponType().isAttackGroundSupported()) {
-					behavior = caster.getAttackBehavior().reset(OrderIds.attackground, attack, point, false);
+					behavior = caster.getAttackBehavior().reset(OrderIds.attackground, attack, point, false,
+							CBehaviorAttackListener.DO_NOTHING);
 					break;
 				}
 			}

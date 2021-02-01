@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
@@ -310,10 +311,11 @@ public class Camera {
 		final Rectangle viewport = this.rect;
 
 		vectorHeap.set(v);
-		vectorHeap.prj(this.inverseViewMatrix);
+		vectorHeap.prj(this.viewProjectionMatrix);
 
 		out.x = Math.round(((vectorHeap.x + 1) / 2) * viewport.width);
-		out.y = Math.round(((vectorHeap.y + 1) / 2) * viewport.height);
+		out.y = ((Gdx.graphics.getHeight() - viewport.y - viewport.height) + (viewport.height))
+				- Math.round(((vectorHeap.y + 1) / 2) * viewport.height);
 
 		return out;
 	}

@@ -15,7 +15,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private final AbilityTargetStillAliveAndTargetableVisitor abilityTargetStillAliveVisitor;
 
 	public CBehaviorAttack(final CUnit unit) {
-		super(unit, false);
+		super(unit);
 		this.abilityTargetStillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 
@@ -23,10 +23,12 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private int damagePointLaunchTime;
 	private int backSwingTime;
 	private int thisOrderCooldownEndTime;
+	private CBehaviorAttackListener attackListener;
 
 	public CBehaviorAttack reset(final int highlightOrderId, final CUnitAttack unitAttack, final AbilityTarget target,
-			final boolean disableMove) {
+			final boolean disableMove, final CBehaviorAttackListener attackListener) {
 		this.highlightOrderId = highlightOrderId;
+		this.attackListener = attackListener;
 		super.innerReset(target);
 		this.unitAttack = unitAttack;
 		this.damagePointLaunchTime = 0;
@@ -64,6 +66,11 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	}
 
 	@Override
+	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
+		return this.attackListener.onFinish(simulation, this.unit);
+	}
+
+	@Override
 	public CBehavior update(final CSimulation simulation, final boolean withinRange) {
 		final int cooldownEndTime = this.unit.getCooldownEndTime();
 		final int currentTurnTick = simulation.getGameTurnTick();
@@ -85,7 +92,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 					else {
 						damage = simulation.getSeededRandom().nextInt(maxDamage - minDamage) + minDamage;
 					}
-					this.unitAttack.launch(simulation, this.unit, this.target, damage);
+					this.unitAttack.launch(simulation, this.unit, this.target, damage, this.attackListener);
 					this.damagePointLaunchTime = 0;
 				}
 			}
@@ -114,6 +121,11 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 					false);
 		}
 
+		if ((this.backSwingTime != 0) && (currentTurnTick >= this.backSwingTime)) {
+			this.backSwingTime = 0;
+			System.out.println("INTERRUPT AFTER BACKSWING");
+			return this.attackListener.onFirstUpdateAfterBackswing(this);
+		}
 		return this;
 	}
 

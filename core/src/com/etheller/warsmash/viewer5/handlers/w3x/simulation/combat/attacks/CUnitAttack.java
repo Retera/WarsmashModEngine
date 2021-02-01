@@ -198,5 +198,6 @@ public abstract class CUnitAttack {
 		return this.maxDamage;
 	}
 
-	public abstract void launch(CSimulation simulation, CUnit unit, AbilityTarget target, float damage);
+	public abstract void launch(CSimulation simulation, CUnit unit, AbilityTarget target, float damage,
+			CUnitAttackListener attackListener);
 }

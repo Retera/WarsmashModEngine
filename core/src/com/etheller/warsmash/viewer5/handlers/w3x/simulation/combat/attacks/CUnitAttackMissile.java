@@ -65,16 +65,20 @@ public class CUnitAttackMissile extends CUnitAttack {
 	}
 
 	@Override
-	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage) {
+	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage,
+			final CUnitAttackListener attackListener) {
+		attackListener.onLaunch();
 		simulation.createProjectile(unit, unit.getX(), unit.getY(), (float) Math.toRadians(unit.getFacing()), this,
-				target, damage, 0);
+				target, damage, 0, attackListener);
 	}
 
 	public void doDamage(final CSimulation cSimulation, final CUnit source, final AbilityTarget target,
-			final float damage, final float x, final float y, final int bounceIndex) {
+			final float damage, final float x, final float y, final int bounceIndex,
+			final CUnitAttackListener attackListener) {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			widget.damage(cSimulation, source, getAttackType(), getWeaponSound(), damage);
+			attackListener.onHit(target, damage);
 		}
 	}
 }

@@ -17,6 +17,7 @@ public class SequenceUtils {
 	public static final EnumSet<SecondaryTag> FLESH = EnumSet.of(SecondaryTag.FLESH);
 	public static final EnumSet<SecondaryTag> TALK = EnumSet.of(SecondaryTag.TALK);
 	public static final EnumSet<SecondaryTag> BONE = EnumSet.of(SecondaryTag.BONE);
+	public static final EnumSet<SecondaryTag> HIT = EnumSet.of(SecondaryTag.HIT);
 
 	private static final StandSequenceComparator STAND_SEQUENCE_COMPARATOR = new StandSequenceComparator();
 	private static final SecondaryTagSequenceComparator SECONDARY_TAG_SEQUENCE_COMPARATOR = new SecondaryTagSequenceComparator(

@@ -6,11 +6,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 
 public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	protected final CUnit unit;
-	private final boolean disableCollision;
 
-	public CAbstractRangedBehavior(final CUnit unit, final boolean disableCollision) {
+	public CAbstractRangedBehavior(final CUnit unit) {
 		this.unit = unit;
-		this.disableCollision = disableCollision;
 	}
 
 	protected AbilityTarget target;
@@ -20,12 +18,16 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	private CBehaviorMove moveBehavior;
 
 	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target) {
+		return innerReset(target, false);
+	}
+
+	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target, final boolean disableCollision) {
 		this.target = target;
 		this.wasWithinPropWindow = false;
 		this.wasInRange = false;
 		CBehaviorMove moveBehavior;
 		if (!this.unit.isMovementDisabled()) {
-			moveBehavior = this.unit.getMoveBehavior().reset(this.target, this, this.disableCollision);
+			moveBehavior = this.unit.getMoveBehavior().reset(this.target, this, disableCollision);
 		}
 		else {
 			moveBehavior = null;
@@ -36,6 +38,8 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 
 	protected abstract CBehavior update(CSimulation simulation, boolean withinRange);
 
+	protected abstract CBehavior updateOnInvalidTarget(CSimulation simulation);
+
 	protected abstract boolean checkTargetStillValid(CSimulation simulation);
 
 	protected abstract void resetBeforeMoving(CSimulation simulation);
@@ -43,7 +47,7 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	@Override
 	public final CBehavior update(final CSimulation simulation) {
 		if (!checkTargetStillValid(simulation)) {
-			return this.unit.pollNextOrderBehavior(simulation);
+			return updateOnInvalidTarget(simulation);
 		}
 		if (!isWithinRange(simulation)) {
 			if ((this.moveBehavior == null) || this.disableMove) {

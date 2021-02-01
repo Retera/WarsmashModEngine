@@ -25,6 +25,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
@@ -591,12 +592,6 @@ public class CUnit extends CWidget {
 		return groundDistance;
 	}
 
-	public double distanceSquaredNoCollision(final AbilityTarget target) {
-		final double dx = Math.abs(target.getX() - getX());
-		final double dy = Math.abs(target.getY() - getY());
-		return (dx * dx) + (dy * dy);
-	}
-
 	public double distance(final float x, final float y) {
 		double dx = Math.abs(x - getX());
 		double dy = Math.abs(y - getY());
@@ -645,7 +640,8 @@ public class CUnit extends CWidget {
 						CAllianceType.PASSIVE)) {
 					for (final CUnitAttack attack : this.unitType.getAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
-							this.currentBehavior = getAttackBehavior().reset(OrderIds.attack, attack, source, false);
+							this.currentBehavior = getAttackBehavior().reset(OrderIds.attack, attack, source, false,
+									CBehaviorAttackListener.DO_NOTHING);
 							this.currentBehavior.begin(simulation);
 							break;
 						}
@@ -693,6 +689,17 @@ public class CUnit extends CWidget {
 				if (canReachToPathing(range, targetUnit.getFacing(), buildingPathingPixelMap, targetX, targetY)) {
 					return true;
 				}
+			}
+		}
+		else if (target instanceof CDestructable) {
+			final CDestructable targetDest = (CDestructable) target;
+			final CDestructableType targetDestType = targetDest.getDestType();
+			final BufferedImage pathingPixelMap = targetDest.isDead() ? targetDestType.getPathingDeathPixelMap()
+					: targetDestType.getPathingPixelMap();
+			final float targetX = target.getX();
+			final float targetY = target.getY();
+			if ((pathingPixelMap != null) && canReachToPathing(range, 270, pathingPixelMap, targetX, targetY)) {
+				return true;
 			}
 		}
 		return distance <= range;
@@ -853,7 +860,7 @@ public class CUnit extends CWidget {
 							this.source.currentBehavior.end(this.game);
 						}
 						this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack, attack,
-								unit, this.disableMove);
+								unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING);
 						this.source.currentBehavior.begin(this.game);
 						this.foundAnyTarget = true;
 						return true;

@@ -23,10 +23,12 @@ public abstract class CWidget implements AbilityTarget {
 		return this.handleId;
 	}
 
+	@Override
 	public float getX() {
 		return this.x;
 	}
 
+	@Override
 	public float getY() {
 		return this.y;
 	}
@@ -60,4 +62,10 @@ public abstract class CWidget implements AbilityTarget {
 
 	public abstract boolean canBeTargetedBy(CSimulation simulation, CUnit source,
 			final EnumSet<CTargetType> targetsAllowed);
+
+	public double distanceSquaredNoCollision(final AbilityTarget target) {
+		final double dx = Math.abs(target.getX() - getX());
+		final double dy = Math.abs(target.getY() - getY());
+		return (dx * dx) + (dy * dy);
+	}
 }

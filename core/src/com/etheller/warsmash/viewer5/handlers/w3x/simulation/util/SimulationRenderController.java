@@ -9,12 +9,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 
 public interface SimulationRenderController {
 	CAttackProjectile createAttackProjectile(CSimulation simulation, float launchX, float launchY, float launchFacing,
-			CUnit source, CUnitAttackMissile attack, AbilityTarget target, float damage, int bounceIndex);
+			CUnit source, CUnitAttackMissile attack, AbilityTarget target, float damage, int bounceIndex,
+			CUnitAttackListener attackListener);
 
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);
@@ -42,4 +44,6 @@ public interface SimulationRenderController {
 	void spawnUnitReadySound(CUnit trainedUnit);
 
 	void unitRepositioned(CUnit cUnit);
+
+	void spawnGainResourceTextTag(CUnit gainingUnit, ResourceType resourceType, int amount);
 }

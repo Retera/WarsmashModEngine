@@ -24,10 +24,13 @@ public class CUnitAttackNormal extends CUnitAttack {
 	}
 
 	@Override
-	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage) {
+	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage,
+			final CUnitAttackListener attackListener) {
+		attackListener.onLaunch();
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			widget.damage(simulation, unit, getAttackType(), getWeaponSound(), damage);
+			attackListener.onHit(target, damage);
 		}
 	}
 

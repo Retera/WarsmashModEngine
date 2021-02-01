@@ -21,7 +21,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	private War3ID orderId;
 
 	public CBehaviorOrcBuild(final CUnit unit) {
-		super(unit, false);
+		super(unit);
 	}
 
 	public CBehavior reset(final AbilityPointTarget target, final int orderId, final int highlightOrderId) {
@@ -86,6 +86,11 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
 		return true;
+	}
+
+	@Override
+	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
+		return this.unit.pollNextOrderBehavior(simulation);
 	}
 
 	@Override

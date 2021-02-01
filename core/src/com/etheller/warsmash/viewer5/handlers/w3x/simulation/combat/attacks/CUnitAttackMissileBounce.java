@@ -54,14 +54,15 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 
 	@Override
 	public void doDamage(final CSimulation cSimulation, final CUnit source, final AbilityTarget target,
-			final float damage, final float x, final float y, final int bounceIndex) {
-		super.doDamage(cSimulation, source, target, damage, x, y, bounceIndex);
+			final float damage, final float x, final float y, final int bounceIndex,
+			final CUnitAttackListener attackListener) {
+		super.doDamage(cSimulation, source, target, damage, x, y, bounceIndex, attackListener);
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			final int nextBounceIndex = bounceIndex + 1;
 			if (nextBounceIndex != this.maximumNumberOfTargets) {
 				BounceMissileConsumer.INSTANCE.nextBounce(cSimulation, source, widget, this, x, y, damage,
-						nextBounceIndex);
+						nextBounceIndex, attackListener);
 			}
 		}
 	}
@@ -77,11 +78,12 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 		private float y;
 		private float damage;
 		private int bounceIndex;
+		private CUnitAttackListener attackListener;
 		private boolean launched = false;
 
 		public void nextBounce(final CSimulation simulation, final CUnit source, final CWidget target,
 				final CUnitAttackMissileBounce attack, final float x, final float y, final float damage,
-				final int bounceIndex) {
+				final int bounceIndex, final CUnitAttackListener attackListener) {
 			this.simulation = simulation;
 			this.source = source;
 			this.target = target;
@@ -90,6 +92,7 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 			this.y = y;
 			this.damage = damage;
 			this.bounceIndex = bounceIndex;
+			this.attackListener = attackListener;
 			this.launched = false;
 			final float doubleMaxArea = attack.areaOfEffectFullDamage
 					+ (this.simulation.getGameplayConstants().getCloseEnoughRange() * 2);
@@ -112,7 +115,7 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 				final float dy = enumUnit.getY() - this.y;
 				final float angle = (float) Math.atan2(dy, dx);
 				this.simulation.createProjectile(this.source, this.x, this.y, angle, this.attack, enumUnit,
-						this.damage * (1.0f - this.attack.damageLossFactor), this.bounceIndex);
+						this.damage * (1.0f - this.attack.damageLossFactor), this.bounceIndex, this.attackListener);
 				this.launched = true;
 				return true;
 			}

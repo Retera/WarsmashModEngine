@@ -11,7 +11,7 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 	private int higlightOrderId;
 
 	public CBehaviorFollow(final CUnit unit) {
-		super(unit, false);
+		super(unit);
 	}
 
 	public CBehavior reset(final int higlightOrderId, final CUnit target) {
@@ -33,6 +33,11 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
 		this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, false);
 		return this;
+	}
+
+	@Override
+	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
+		return this.unit.pollNextOrderBehavior(simulation);
 	}
 
 	@Override

@@ -34,11 +34,14 @@ public class CUnitAttackInstant extends CUnitAttack {
 	}
 
 	@Override
-	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage) {
+	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage,
+			final CUnitAttackListener attackListener) {
+		attackListener.onLaunch();
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			simulation.createInstantAttackEffect(unit, this, widget);
 			widget.damage(simulation, unit, getAttackType(), getWeaponSound(), damage);
+			attackListener.onHit(target, damage);
 		}
 	}
 

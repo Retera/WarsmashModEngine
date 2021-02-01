@@ -20,7 +20,7 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 	private final float miningDuration;
 	private final int miningCapacity;
 	private final List<CBehaviorHarvest> activeMiners;
-	private final boolean wasEmpty;
+	private boolean wasEmpty;
 
 	public CAbilityGoldMine(final int handleId, final War3ID alias, final int maxGold, final float miningDuration,
 			final int miningCapacity) {
@@ -52,6 +52,7 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 			else {
 				unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.WORK);
 			}
+			this.wasEmpty = empty;
 		}
 		for (int i = this.activeMiners.size() - 1; i >= 0; i--) {
 			final CBehaviorHarvest activeMiner = this.activeMiners.get(i);

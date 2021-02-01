@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -65,6 +66,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
+import com.etheller.warsmash.viewer5.handlers.w3x.TextTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
@@ -252,6 +254,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private MdxModel waypointModel;
 	private final List<MdxComplexInstance> waypointModelInstances = new ArrayList<>();
 	private List<RenderUnit> selectedUnits;
+	private BitmapFont textTagFont;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport,
 			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final Scene portraitScene,
@@ -634,9 +637,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				War3MapViewer.mdx(this.rootFrame.getSkinField("WaypointIndicator")), this.war3MapViewer.mapPathSolver,
 				this.war3MapViewer.solverParams);
 
+		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
+		fontParam.size = (int) GameUI.convertY(this.uiViewport, 0.012f);
+		this.textTagFont = this.fontGenerator.generateFont(fontParam);
+
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 
 		selectUnit(null);
+
 	}
 
 	@Override
@@ -834,6 +842,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.meleeUIMinimap.render(batch, this.war3MapViewer.units);
 		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
+		for (final TextTag textTag : this.war3MapViewer.textTags) {
+			this.war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, textTag.getPosition());
+			final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
+			this.textTagFont.setColor(textTag.getColor());
+			glyphLayout.setText(this.textTagFont, textTag.getText());
+			this.textTagFont.draw(batch, textTag.getText(), unprojected.x - (glyphLayout.width / 2),
+					(unprojected.y - (glyphLayout.height / 2)));
+		}
 	}
 
 	public void portraitTalk() {

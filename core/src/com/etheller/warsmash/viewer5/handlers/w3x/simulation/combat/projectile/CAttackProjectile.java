@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 
 public class CAttackProjectile {
@@ -19,9 +20,11 @@ public class CAttackProjectile {
 	private final float damage;
 	private final CUnitAttackMissile unitAttack;
 	private final int bounceIndex;
+	private final CUnitAttackListener attackListener;
 
 	public CAttackProjectile(final float x, final float y, final float speed, final AbilityTarget target,
-			final CUnit source, final float damage, final CUnitAttackMissile unitAttack, final int bounceIndex) {
+			final CUnit source, final float damage, final CUnitAttackMissile unitAttack, final int bounceIndex,
+			final CUnitAttackListener attackListener) {
 		this.x = x;
 		this.y = y;
 		this.speed = speed;
@@ -30,6 +33,7 @@ public class CAttackProjectile {
 		this.damage = damage;
 		this.unitAttack = unitAttack;
 		this.bounceIndex = bounceIndex;
+		this.attackListener = attackListener;
 		this.initialTargetX = target.getX();
 		this.initialTargetY = target.getY();
 	}
@@ -60,7 +64,7 @@ public class CAttackProjectile {
 
 		if (done && !this.done) {
 			this.unitAttack.doDamage(cSimulation, this.source, this.target, this.damage, this.x, this.y,
-					this.bounceIndex);
+					this.bounceIndex, this.attackListener);
 			this.done = true;
 		}
 		return this.done;

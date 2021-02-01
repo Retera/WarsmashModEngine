@@ -23,6 +23,7 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -94,8 +95,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
@@ -104,6 +107,8 @@ import mpq.MPQArchive;
 import mpq.MPQException;
 
 public class War3MapViewer extends AbstractMdxModelViewer {
+	private static final Color PLACEHOLDER_LUMBER_COLOR = new Color(0.0f, 200f / 255f, 80f / 255f, 1.0f);
+	private static final Color PLACEHOLDER_GOLD_COLOR = new Color(1.0f, 220f / 255f, 0f, 1.0f);
 	private static final War3ID UNIT_FILE = War3ID.fromString("umdl");
 	private static final War3ID UNIT_SPECIAL = War3ID.fromString("uspa");
 	private static final War3ID UBER_SPLAT = War3ID.fromString("uubs");
@@ -202,6 +207,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private KeyedSounds uiSounds;
 	private int localPlayerIndex;
 	private final CommandErrorListener commandErrorListener;
+
+	public final List<TextTag> textTags = new ArrayList<>();
 
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas,
 			final CommandErrorListener errorListener) {
@@ -449,7 +456,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public CAttackProjectile createAttackProjectile(final CSimulation simulation, final float launchX,
 							final float launchY, final float launchFacing, final CUnit source,
 							final CUnitAttackMissile unitAttack, final AbilityTarget target, final float damage,
-							final int bounceIndex) {
+							final int bounceIndex, final CUnitAttackListener attackListener) {
 						final War3ID typeId = source.getTypeId();
 						final int projectileSpeed = unitAttack.getProjectileSpeed();
 						final float projectileArc = unitAttack.getProjectileArc();
@@ -468,7 +475,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight()
 								+ projectileLaunchZ;
 						final CAttackProjectile simulationAttackProjectile = new CAttackProjectile(x, y,
-								projectileSpeed, target, source, damage, unitAttack, bounceIndex);
+								projectileSpeed, target, source, damage, unitAttack, bounceIndex, attackListener);
 
 						final MdxModel model = (MdxModel) load(missileArt, War3MapViewer.this.mapPathSolver,
 								War3MapViewer.this.solverParams);
@@ -563,7 +570,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void removeDestructable(final CDestructable dest) {
 						final RenderDestructable renderPeer = War3MapViewer.this.destructableToRenderPeer.remove(dest);
-						War3MapViewer.this.doodads.remove(renderPeer);
 						War3MapViewer.this.worldScene.removeInstance(renderPeer.instance);
 						if (renderPeer.walkableBounds != null) {
 							War3MapViewer.this.walkableObjectsTree.remove((MdxComplexInstance) renderPeer.instance,
@@ -633,6 +639,24 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public void unitRepositioned(final CUnit cUnit) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
 						renderPeer.repositioned(War3MapViewer.this);
+					}
+
+					@Override
+					public void spawnGainResourceTextTag(final CUnit gainingUnit, final ResourceType resourceType,
+							final int amount) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(gainingUnit);
+						switch (resourceType) {
+						case FOOD:
+							throw new IllegalArgumentException();
+						case GOLD:
+							War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), "+" + amount,
+									PLACEHOLDER_GOLD_COLOR));
+							break;
+						case LUMBER:
+							War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), "+" + amount,
+									PLACEHOLDER_LUMBER_COLOR));
+							break;
+						}
 					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, w3iFile.getPlayers(),
 				this.commandErrorListener);
@@ -784,6 +808,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					final float y = doodad.getLocation()[1];
 					final CDestructable simulationDestructable = this.simulation.createDestructable(row.getAlias(), x,
 							y, destructablePathing, destructablePathingDeath);
+					simulationDestructable.setLife(this.simulation,
+							simulationDestructable.getLife() * (doodad.getLife() / 100f));
 					final RenderDestructable renderDestructable = new RenderDestructable(this, model, row, doodad, type,
 							maxPitch, maxRoll, doodad.getLife(), destructableShadow, simulationDestructable);
 					if (row.readSLKTagBoolean("walkable")) {
@@ -796,7 +822,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								renderDestructableBounds);
 						renderDestructable.walkableBounds = renderDestructableBounds;
 					}
-					this.doodads.add(renderDestructable);
 					this.widgets.add(renderDestructable);
 				}
 				else {
@@ -1199,6 +1224,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 			super.update();
 
+			final Iterator<TextTag> textTagIterator = this.textTags.iterator();
+			while (textTagIterator.hasNext()) {
+				if (textTagIterator.next().update()) {
+					textTagIterator.remove();
+				}
+			}
 			for (final RenderWidget unit : this.widgets) {
 				unit.updateAnimations(this);
 			}
@@ -1682,5 +1713,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 			return false;
 		}
+	}
+
+	public void add(final TextTag textTag) {
+		this.textTags.add(textTag);
 	}
 }

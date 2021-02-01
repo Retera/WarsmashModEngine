@@ -24,7 +24,10 @@ public class CAbilityTypeDefinitionHarvest extends AbstractCAbilityTypeDefinitio
 		final int damageToTree = abilityEditorData.getFieldAsInteger(DAMAGE_TO_TREE, level);
 		final int goldCapacity = abilityEditorData.getFieldAsInteger(GOLD_CAPACITY, level);
 		final int lumberCapacity = abilityEditorData.getFieldAsInteger(LUMBER_CAPACITY, level);
-		return new CAbilityTypeHarvestLevelData(targetsAllowedAtLevel, damageToTree, goldCapacity, lumberCapacity);
+		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE, level);
+		final float duration = abilityEditorData.getFieldAsFloat(DURATION, level);
+		return new CAbilityTypeHarvestLevelData(targetsAllowedAtLevel, damageToTree, goldCapacity, lumberCapacity,
+				castRange, duration);
 	}
 
 	@Override

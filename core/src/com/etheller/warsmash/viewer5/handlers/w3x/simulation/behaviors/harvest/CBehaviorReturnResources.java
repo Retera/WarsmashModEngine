@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
@@ -22,7 +23,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 	private CSimulation simulation;
 
 	public CBehaviorReturnResources(final CUnit unit, final CAbilityHarvest abilityHarvest) {
-		super(unit, true);
+		super(unit);
 		this.abilityHarvest = abilityHarvest;
 	}
 
@@ -32,7 +33,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 			// TODO it is unconventional not to return self here
 			return this.unit.pollNextOrderBehavior(simulation);
 		}
-		innerReset(nearestDropoffPoint);
+		innerReset(nearestDropoffPoint, true);
 		return this;
 	}
 
@@ -65,22 +66,44 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 				final CAbilityReturnResources abilityReturnResources = (CAbilityReturnResources) ability;
 				if (abilityReturnResources.accepts(this.abilityHarvest.getCarriedResourceType())) {
 					final CPlayer player = this.simulation.getPlayer(this.unit.getPlayerIndex());
+					CWidget nextTarget = null;
 					switch (this.abilityHarvest.getCarriedResourceType()) {
 					case FOOD:
 						throw new IllegalStateException("Unit used Harvest skill to carry FOOD resource!");
 					case GOLD:
 						player.setGold(player.getGold() + this.abilityHarvest.getCarriedResourceAmount());
 						this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.GOLD);
+						if ((this.abilityHarvest.getLastHarvestTarget() != null) && this.abilityHarvest
+								.getLastHarvestTarget().visit(AbilityTargetStillAliveVisitor.INSTANCE)) {
+							nextTarget = this.abilityHarvest.getLastHarvestTarget();
+						}
+						else {
+							nextTarget = findNearestMine(this.unit, this.simulation);
+						}
 						break;
 					case LUMBER:
 						player.setLumber(player.getLumber() + this.abilityHarvest.getCarriedResourceAmount());
 						this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.LUMBER);
+						if (this.abilityHarvest.getLastHarvestTarget() != null) {
+							if (this.abilityHarvest.getLastHarvestTarget()
+									.visit(AbilityTargetStillAliveVisitor.INSTANCE)) {
+								nextTarget = this.abilityHarvest.getLastHarvestTarget();
+							}
+							else {
+								nextTarget = findNearestTree(this.unit, this.abilityHarvest, this.simulation,
+										this.abilityHarvest.getLastHarvestTarget());
+							}
+						}
+						else {
+							nextTarget = findNearestTree(this.unit, this.abilityHarvest, this.simulation, this.unit);
+						}
 						break;
 					}
+					this.simulation.unitGainResourceEvent(this.unit, this.abilityHarvest.getCarriedResourceType(),
+							this.abilityHarvest.getCarriedResourceAmount());
 					this.abilityHarvest.setCarriedResources(null, 0);
-					final CUnit nearestMine = findNearestMine(this.unit, this.simulation);
-					if (nearestMine != null) {
-						return this.abilityHarvest.getBehaviorHarvest().reset(nearestMine);
+					if (nextTarget != null) {
+						return this.abilityHarvest.getBehaviorHarvest().reset(nextTarget);
 					}
 					return this.unit.pollNextOrderBehavior(this.simulation);
 				}
@@ -102,18 +125,17 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
-		final boolean aliveCheck = this.target.visit(AbilityTargetStillAliveVisitor.INSTANCE);
-		if (!aliveCheck) {
-			final CUnit nearestDropoff = findNearestDropoffPoint(simulation);
-			if (nearestDropoff == null) {
-				return false;
-			}
-			else {
-				this.target = nearestDropoff;
-				return true;
-			}
+		return this.target.visit(AbilityTargetStillAliveVisitor.INSTANCE);
+	}
+
+	@Override
+	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
+		final CUnit nearestDropoff = findNearestDropoffPoint(simulation);
+		if (nearestDropoff != null) {
+			this.target = nearestDropoff;
+			return this;
 		}
-		return true;
+		return this.unit.pollNextOrderBehavior(simulation);
 	}
 
 	@Override
@@ -167,6 +189,24 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 				// TODO maybe use distance squared, problem is that we're using this
 				// inefficient more complex distance function on unit
 				final double distance = unit.distanceSquaredNoCollision(worker);
+				if (distance < nearestMineDistance) {
+					nearestMineDistance = distance;
+					nearestMine = unit;
+				}
+			}
+		}
+		return nearestMine;
+	}
+
+	public static CDestructable findNearestTree(final CUnit worker, final CAbilityHarvest abilityHarvest,
+			final CSimulation simulation, final CWidget toObject) {
+		CDestructable nearestMine = null;
+		double nearestMineDistance = Float.MAX_VALUE;
+		for (final CDestructable unit : simulation.getDestructables()) {
+			if (unit.canBeTargetedBy(simulation, worker, abilityHarvest.getTreeAttack().getTargetsAllowed())) {
+				// TODO maybe use distance squared, problem is that we're using this
+				// inefficient more complex distance function on unit
+				final double distance = unit.distanceSquaredNoCollision(toObject);
 				if (distance < nearestMineDistance) {
 					nearestMineDistance = distance;
 					nearestMine = unit;

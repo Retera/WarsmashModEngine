@@ -150,4 +150,8 @@ public final class CAbilityQueue extends AbstractCAbility {
 	public <T> T visit(final CAbilityVisitor<T> visitor) {
 		return visitor.accept(this);
 	}
+
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
 }

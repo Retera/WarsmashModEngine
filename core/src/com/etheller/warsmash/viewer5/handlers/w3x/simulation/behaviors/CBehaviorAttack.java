@@ -123,7 +123,6 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 
 		if ((this.backSwingTime != 0) && (currentTurnTick >= this.backSwingTime)) {
 			this.backSwingTime = 0;
-			System.out.println("INTERRUPT AFTER BACKSWING");
 			return this.attackListener.onFirstUpdateAfterBackswing(this);
 		}
 		return this;

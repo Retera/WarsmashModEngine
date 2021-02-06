@@ -203,7 +203,8 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 		CDestructable nearestMine = null;
 		double nearestMineDistance = Float.MAX_VALUE;
 		for (final CDestructable unit : simulation.getDestructables()) {
-			if (unit.canBeTargetedBy(simulation, worker, abilityHarvest.getTreeAttack().getTargetsAllowed())) {
+			if (!unit.isDead()
+					&& unit.canBeTargetedBy(simulation, worker, abilityHarvest.getTreeAttack().getTargetsAllowed())) {
 				// TODO maybe use distance squared, problem is that we're using this
 				// inefficient more complex distance function on unit
 				final double distance = unit.distanceSquaredNoCollision(toObject);

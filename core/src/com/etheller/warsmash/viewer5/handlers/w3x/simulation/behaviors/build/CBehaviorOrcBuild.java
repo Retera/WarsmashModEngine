@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	private int highlightOrderId;
 	private War3ID orderId;
+	private boolean unitCreated = false;
 
 	public CBehaviorOrcBuild(final CUnit unit) {
 		super(unit);
@@ -27,6 +28,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	public CBehavior reset(final AbilityPointTarget target, final int orderId, final int highlightOrderId) {
 		this.highlightOrderId = highlightOrderId;
 		this.orderId = new War3ID(orderId);
+		this.unitCreated = false;
 		return innerReset(target);
 	}
 
@@ -44,41 +46,44 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
-		final CUnitType unitTypeToCreate = simulation.getUnitData().getUnitType(this.orderId);
-		final BufferedImage buildingPathingPixelMap = unitTypeToCreate.getBuildingPathingPixelMap();
-		boolean buildLocationObstructed = false;
-		if (buildingPathingPixelMap != null) {
-			final EnumSet<CBuildingPathingType> preventedPathingTypes = unitTypeToCreate.getPreventedPathingTypes();
-			final EnumSet<CBuildingPathingType> requiredPathingTypes = unitTypeToCreate.getRequiredPathingTypes();
+		if (!this.unitCreated) {
+			this.unitCreated = true;
+			final CUnitType unitTypeToCreate = simulation.getUnitData().getUnitType(this.orderId);
+			final BufferedImage buildingPathingPixelMap = unitTypeToCreate.getBuildingPathingPixelMap();
+			boolean buildLocationObstructed = false;
+			if (buildingPathingPixelMap != null) {
+				final EnumSet<CBuildingPathingType> preventedPathingTypes = unitTypeToCreate.getPreventedPathingTypes();
+				final EnumSet<CBuildingPathingType> requiredPathingTypes = unitTypeToCreate.getRequiredPathingTypes();
 
-			if (!simulation.getPathingGrid().checkPathingTexture(this.target.getX(), this.target.getY(),
-					(int) simulation.getGameplayConstants().getBuildingAngle(), buildingPathingPixelMap,
-					preventedPathingTypes, requiredPathingTypes, simulation.getWorldCollision(), this.unit)) {
-				buildLocationObstructed = true;
+				if (!simulation.getPathingGrid().checkPathingTexture(this.target.getX(), this.target.getY(),
+						(int) simulation.getGameplayConstants().getBuildingAngle(), buildingPathingPixelMap,
+						preventedPathingTypes, requiredPathingTypes, simulation.getWorldCollision(), this.unit)) {
+					buildLocationObstructed = true;
+				}
 			}
-		}
-		if (!buildLocationObstructed) {
-			final CUnit constructedStructure = simulation.createUnit(this.orderId, this.unit.getPlayerIndex(),
-					this.target.getX(), this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
-			constructedStructure.setConstructing(true);
-			constructedStructure.setWorkerInside(this.unit);
-			constructedStructure.setLife(simulation,
-					constructedStructure.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
-			constructedStructure.setFoodUsed(unitTypeToCreate.getFoodUsed());
-			constructedStructure.add(simulation,
-					new CAbilityBuildInProgress(simulation.getHandleIdAllocator().createId()));
-			for (final CAbility ability : constructedStructure.getAbilities()) {
-				ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
+			if (!buildLocationObstructed) {
+				final CUnit constructedStructure = simulation.createUnit(this.orderId, this.unit.getPlayerIndex(),
+						this.target.getX(), this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
+				constructedStructure.setConstructing(true);
+				constructedStructure.setWorkerInside(this.unit);
+				constructedStructure.setLife(simulation,
+						constructedStructure.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
+				constructedStructure.setFoodUsed(unitTypeToCreate.getFoodUsed());
+				constructedStructure.add(simulation,
+						new CAbilityBuildInProgress(simulation.getHandleIdAllocator().createId()));
+				for (final CAbility ability : constructedStructure.getAbilities()) {
+					ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
+				}
+				this.unit.setHidden(true);
+				this.unit.setPaused(true);
+				this.unit.setInvulnerable(true);
+				simulation.unitConstructedEvent(this.unit, constructedStructure);
 			}
-			this.unit.setHidden(true);
-			this.unit.setPaused(true);
-			this.unit.setInvulnerable(true);
-			simulation.unitConstructedEvent(this.unit, constructedStructure);
-		}
-		else {
-			final CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
-			player.setFoodUsed(player.getFoodUsed() - unitTypeToCreate.getFoodUsed());
-			simulation.getCommandErrorListener().showCantPlaceError();
+			else {
+				final CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
+				refund(player, unitTypeToCreate);
+				simulation.getCommandErrorListener().showCantPlaceError();
+			}
 		}
 		return this.unit.pollNextOrderBehavior(simulation);
 	}
@@ -105,7 +110,16 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 
 	@Override
 	public void end(final CSimulation game) {
+		if (!this.unitCreated) {
+			final CPlayer player = game.getPlayer(this.unit.getPlayerIndex());
+			final CUnitType unitTypeToCreate = game.getUnitData().getUnitType(this.orderId);
+			refund(player, unitTypeToCreate);
+		}
+	}
 
+	private void refund(final CPlayer player, final CUnitType unitTypeToCreate) {
+		player.setFoodUsed(player.getFoodUsed() - unitTypeToCreate.getFoodUsed());
+		player.refundFor(unitTypeToCreate);
 	}
 
 }

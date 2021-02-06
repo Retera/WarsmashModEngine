@@ -15,6 +15,8 @@ public interface CAbility extends CAbilityView {
 
 	void onTick(CSimulation game, CUnit unit);
 
+	void onCancelFromQueue(CSimulation game, CUnit unit, int orderId);
+
 	/* return false to not do anything, such as for toggling autocast */
 	boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId);
 

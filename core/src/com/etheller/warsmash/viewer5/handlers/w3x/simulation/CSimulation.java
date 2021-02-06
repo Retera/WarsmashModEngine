@@ -324,4 +324,8 @@ public class CSimulation {
 		}
 		return null;
 	}
+
+	public void createEffectOnUnit(final CUnit unit, final String effectPath) {
+		this.simulationRenderController.spawnEffectOnUnit(unit, effectPath);
+	}
 }

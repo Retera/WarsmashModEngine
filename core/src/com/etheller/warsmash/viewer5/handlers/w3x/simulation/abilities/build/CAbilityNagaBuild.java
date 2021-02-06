@@ -36,7 +36,8 @@ public class CAbilityNagaBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityPointTarget point) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -49,5 +50,11 @@ public class CAbilityNagaBuild extends AbstractCAbilityBuild {
 	@Override
 	public int getBaseOrderId() {
 		return OrderIds.nagabuild;
+	}
+
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+		// TODO Auto-generated method stub
+
 	}
 }

@@ -103,4 +103,8 @@ public class CAbilityRally extends AbstractCAbility {
 		return OrderIds.setrally;
 	}
 
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
 }

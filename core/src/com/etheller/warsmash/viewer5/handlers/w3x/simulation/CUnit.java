@@ -405,6 +405,11 @@ public class CUnit extends CWidget {
 			if (this.currentBehavior != null) {
 				this.currentBehavior.begin(game);
 			}
+			for (final COrder queuedOrder : this.orderQueue) {
+				final int abilityHandleId = queuedOrder.getAbilityHandleId();
+				final CAbility ability = game.getAbility(abilityHandleId);
+				ability.onCancelFromQueue(game, this, queuedOrder.getOrderId());
+			}
 			this.orderQueue.clear();
 			this.stateNotifier.ordersChanged();
 			this.stateNotifier.waypointsChanged();
@@ -1130,6 +1135,7 @@ public class CUnit extends CWidget {
 
 		@Override
 		public Void accept(final AbilityPointTarget target) {
+			CAbility abilityToUse = null;
 			for (final CAbility ability : this.trainedUnit.getAbilities()) {
 				ability.checkCanUse(this.game, this.trainedUnit, this.rallyOrderId,
 						BooleanAbilityActivationReceiver.INSTANCE);
@@ -1138,12 +1144,12 @@ public class CUnit extends CWidget {
 							.<AbilityPointTarget>getInstance().reset();
 					ability.checkCanTarget(this.game, this.trainedUnit, this.rallyOrderId, target, targetCheckReceiver);
 					if (targetCheckReceiver.isTargetable()) {
-						this.trainedUnit.order(this.game,
-								new COrderTargetPoint(ability.getHandleId(), this.rallyOrderId, target, false), false);
-						return null;
+						abilityToUse = ability;
 					}
 				}
 			}
+			this.trainedUnit.order(this.game,
+					new COrderTargetPoint(abilityToUse.getHandleId(), this.rallyOrderId, target, false), false);
 			return null;
 		}
 
@@ -1154,6 +1160,7 @@ public class CUnit extends CWidget {
 
 		private Void acceptWidget(final CSimulation game, final CUnit trainedUnit, final int rallyOrderId,
 				final CWidget target) {
+			CAbility abilityToUse = null;
 			for (final CAbility ability : trainedUnit.getAbilities()) {
 				ability.checkCanUse(game, trainedUnit, rallyOrderId, BooleanAbilityActivationReceiver.INSTANCE);
 				if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
@@ -1161,12 +1168,13 @@ public class CUnit extends CWidget {
 							.<CWidget>getInstance().reset();
 					ability.checkCanTarget(game, trainedUnit, rallyOrderId, target, targetCheckReceiver);
 					if (targetCheckReceiver.isTargetable()) {
-						trainedUnit.order(game, new COrderTargetWidget(ability.getHandleId(), rallyOrderId,
-								target.getHandleId(), false), false);
-						return null;
+						abilityToUse = ability;
 					}
 				}
 			}
+			trainedUnit.order(game,
+					new COrderTargetWidget(abilityToUse.getHandleId(), rallyOrderId, target.getHandleId(), false),
+					false);
 			return null;
 		}
 

@@ -221,4 +221,8 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 		return this.lastHarvestTarget;
 	}
 
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
 }

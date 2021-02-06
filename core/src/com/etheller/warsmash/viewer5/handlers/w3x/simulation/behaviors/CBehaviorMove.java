@@ -45,6 +45,7 @@ public class CBehaviorMove implements CBehavior {
 	private boolean pathfindingActive = false;
 	private boolean firstPathfindJob = false;
 	private boolean pathfindingFailedGiveUp;
+	private int giveUpUntilTurnTick;
 
 	public CBehaviorMove reset(final int highlightOrderId, final AbilityTarget target) {
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
@@ -74,6 +75,7 @@ public class CBehaviorMove implements CBehavior {
 		this.followUnit = null;
 		this.firstUpdate = true;
 		this.pathfindingFailedGiveUp = false;
+		this.giveUpUntilTurnTick = 0;
 	}
 
 	private void internalResetMove(final int highlightOrderId, final CUnit followUnit) {
@@ -88,6 +90,7 @@ public class CBehaviorMove implements CBehavior {
 		this.followUnit = followUnit;
 		this.firstUpdate = true;
 		this.pathfindingFailedGiveUp = false;
+		this.giveUpUntilTurnTick = 0;
 	}
 
 	@Override
@@ -203,7 +206,9 @@ public class CBehaviorMove implements CBehavior {
 			facing += angleToAdd;
 			this.unit.setFacing(facing);
 		}
-		if ((this.path != null) && !this.pathfindingActive && (absDelta < propulsionWindow)) {
+		final boolean blockedByGiveUpUntilTickDelay = simulation.getGameTurnTick() < this.giveUpUntilTurnTick;
+		if (!blockedByGiveUpUntilTickDelay && (this.path != null) && !this.pathfindingActive
+				&& (absDelta < propulsionWindow)) {
 			final float speedTick = speed * WarsmashConstants.SIMULATION_STEP_TIME;
 			double continueDistance = speedTick;
 			do {
@@ -455,7 +460,13 @@ public class CBehaviorMove implements CBehavior {
 			}
 		}
 		else if (this.path.isEmpty() || (this.searchCycles > 6)) {
-			this.pathfindingFailedGiveUp = true;
+			if (this.searchCycles > 9) {
+				this.pathfindingFailedGiveUp = true;
+			}
+			else {
+				this.giveUpUntilTurnTick = simulation.getGameTurnTick()
+						+ (int) (5 / WarsmashConstants.SIMULATION_STEP_TIME);
+			}
 		}
 	}
 }

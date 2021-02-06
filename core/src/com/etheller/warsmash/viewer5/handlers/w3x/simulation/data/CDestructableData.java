@@ -45,7 +45,7 @@ public class CDestructableData {
 
 		final CDestructableType unitTypeInstance = getUnitTypeInstance(typeId, unitType);
 
-		final int life = unitTypeInstance.getLife();
+		final float life = unitTypeInstance.getLife();
 
 		final CDestructable destructable = new CDestructable(handleId, x, y, life, unitTypeInstance, pathingInstance,
 				pathingInstanceDeath);
@@ -60,7 +60,7 @@ public class CDestructableData {
 			final BufferedImage buildingPathingDeathPixelMap = this.simulationRenderController
 					.getDestructablePathingDeathPixelMap(typeId);
 			final String name = unitType.getFieldAsString(NAME, 0);
-			final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
+			final float life = unitType.getFieldAsFloat(HIT_POINT_MAXIMUM, 0);
 			final EnumSet<CTargetType> targetedAs = CTargetType
 					.parseTargetTypeSet(unitType.getFieldAsString(TARGETED_AS, 0));
 			final String armorType = unitType.getFieldAsString(ARMOR_TYPE, 0);

@@ -128,4 +128,8 @@ public class CAbilityColdArrows extends AbstractCAbility {
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
 		return caster.pollNextOrderBehavior(game);
 	}
+
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
 }

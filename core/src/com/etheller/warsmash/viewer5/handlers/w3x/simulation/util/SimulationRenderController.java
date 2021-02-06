@@ -46,4 +46,6 @@ public interface SimulationRenderController {
 	void unitRepositioned(CUnit cUnit);
 
 	void spawnGainResourceTextTag(CUnit gainingUnit, ResourceType resourceType, int amount);
+
+	void spawnEffectOnUnit(CUnit unit, String effectPath);
 }

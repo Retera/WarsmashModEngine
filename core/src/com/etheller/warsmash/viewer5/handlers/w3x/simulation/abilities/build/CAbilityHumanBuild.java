@@ -42,7 +42,8 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityPointTarget point) {
 //		caster.getMoveBehavior().reset(point.x, point.y, )
 		return null;
 	}
@@ -56,6 +57,12 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 	@Override
 	public <T> T visit(final CAbilityVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

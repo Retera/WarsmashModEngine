@@ -66,6 +66,17 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+		final CPlayer player = game.getPlayer(unit.getPlayerIndex());
+		final War3ID orderIdAsRawtype = new War3ID(orderId);
+		final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
+		player.refundFor(unitType);
+		if (unitType.getFoodUsed() != 0) {
+			player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
+		}
+	}
+
+	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
 		return caster.pollNextOrderBehavior(game);
 	}

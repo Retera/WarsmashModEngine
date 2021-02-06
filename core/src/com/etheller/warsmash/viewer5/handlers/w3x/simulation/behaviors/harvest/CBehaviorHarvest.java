@@ -173,10 +173,9 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		if (this.target instanceof CDestructable) {
 			// wood
 			final CDestructable nearestTree = CBehaviorReturnResources.findNearestTree(this.unit, this.abilityHarvest,
-					simulation, (CDestructable) this.target);
+					simulation, this.unit);
 			if (nearestTree != null) {
-				this.target = nearestTree;
-				return this;
+				return reset(nearestTree);
 			}
 		}
 		return this.unit.pollNextOrderBehavior(simulation);

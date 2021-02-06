@@ -109,6 +109,10 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 		receiver.notAnActiveAbility();
 	}
 
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
 	public int getGold() {
 		return this.gold;
 	}

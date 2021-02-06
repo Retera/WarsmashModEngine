@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector3;
 
 public class TextTag {
 	private final Vector3 position;
+	private float screenCoordsZHeight;
 	private final String text;
 	private final Color color;
 	private int lifetime = 0;
@@ -17,7 +18,7 @@ public class TextTag {
 	}
 
 	public boolean update() {
-		this.position.z += 1.0f;
+		this.screenCoordsZHeight += 1.0f;
 		this.lifetime++;
 		return this.lifetime > 196;
 	}
@@ -32,5 +33,9 @@ public class TextTag {
 
 	public String getText() {
 		return this.text;
+	}
+
+	public float getScreenCoordsZHeight() {
+		return this.screenCoordsZHeight;
 	}
 }

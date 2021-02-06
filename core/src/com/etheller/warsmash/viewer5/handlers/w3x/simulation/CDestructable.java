@@ -37,7 +37,16 @@ public class CDestructable extends CWidget {
 	@Override
 	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
 			final String weaponType, final float damage) {
+		final boolean wasDead = isDead();
 		this.life -= damage;
+		if (!wasDead && isDead()) {
+			if (this.pathingInstance != null) {
+				this.pathingInstance.remove();
+			}
+			if (this.pathingInstanceDeath != null) {
+				this.pathingInstanceDeath.add();
+			}
+		}
 		simulation.destructableDamageEvent(this, weaponType, this.destType.getArmorType());
 	}
 

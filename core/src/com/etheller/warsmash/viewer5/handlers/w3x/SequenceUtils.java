@@ -18,6 +18,7 @@ public class SequenceUtils {
 	public static final EnumSet<SecondaryTag> TALK = EnumSet.of(SecondaryTag.TALK);
 	public static final EnumSet<SecondaryTag> BONE = EnumSet.of(SecondaryTag.BONE);
 	public static final EnumSet<SecondaryTag> HIT = EnumSet.of(SecondaryTag.HIT);
+	public static final EnumSet<SecondaryTag> SPELL = EnumSet.of(SecondaryTag.SPELL);
 
 	private static final StandSequenceComparator STAND_SEQUENCE_COMPARATOR = new StandSequenceComparator();
 	private static final SecondaryTagSequenceComparator SECONDARY_TAG_SEQUENCE_COMPARATOR = new SecondaryTagSequenceComparator(
@@ -44,8 +45,9 @@ public class SequenceUtils {
 
 		for (int i = 0, l = sequences.size(); i < l; i++) {
 			final Sequence sequence = sequences.get(i);
-			if (sequence.getPrimaryTags().contains(type) && (sequence.getSecondaryTags().containsAll(tags)
-					&& tags.containsAll(sequence.getSecondaryTags()))) {
+			if ((sequence.getPrimaryTags().contains(type) || (type == null))
+					&& (sequence.getSecondaryTags().containsAll(tags)
+							&& tags.containsAll(sequence.getSecondaryTags()))) {
 				filtered.add(new IndexedSequence(sequence, i));
 			}
 		}
@@ -109,7 +111,7 @@ public class SequenceUtils {
 			int fallbackTagsMatchCount = 0;
 			for (int i = 0, l = sequences.size(); i < l; i++) {
 				final Sequence sequence = sequences.get(i);
-				if (sequence.getPrimaryTags().contains(type)) {
+				if (sequence.getPrimaryTags().contains(type) || (type == null)) {
 					final int matchCount = matchCount(tags, sequence.getSecondaryTags());
 					if (matchCount > fallbackTagsMatchCount) {
 						fallbackTags = sequence.getSecondaryTags();
@@ -120,7 +122,7 @@ public class SequenceUtils {
 			if (fallbackTags == null) {
 				for (int i = 0, l = sequences.size(); i < l; i++) {
 					final Sequence sequence = sequences.get(i);
-					if (sequence.getPrimaryTags().contains(type)) {
+					if (sequence.getPrimaryTags().contains(type) || (type == null)) {
 						if ((fallbackTags == null) || (sequence.getSecondaryTags().size() < fallbackTags.size())
 								|| ((sequence.getSecondaryTags().size() == fallbackTags.size())
 										&& (SecondaryTagSequenceComparator.getTagsOrdinal(sequence.getSecondaryTags(),
@@ -281,7 +283,12 @@ public class SequenceUtils {
 			return sequence.sequence;
 		}
 		else {
-			return null;
+			if (animationName == null) {
+				return null;
+			}
+			else {
+				return randomSequence(target, null, secondaryAnimationTags, allowRarityVariations);
+			}
 		}
 	}
 

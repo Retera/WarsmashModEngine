@@ -844,11 +844,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
 		for (final TextTag textTag : this.war3MapViewer.textTags) {
 			this.war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, textTag.getPosition());
-			final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
-			this.textTagFont.setColor(textTag.getColor());
-			glyphLayout.setText(this.textTagFont, textTag.getText());
-			this.textTagFont.draw(batch, textTag.getText(), unprojected.x - (glyphLayout.width / 2),
-					(unprojected.y - (glyphLayout.height / 2)));
+			if (this.war3MapViewer.worldScene.camera.rect.contains(screenCoordsVector.x,
+					(Gdx.graphics.getHeight() - screenCoordsVector.y) + textTag.getScreenCoordsZHeight())) {
+				final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
+				this.textTagFont.setColor(textTag.getColor());
+				glyphLayout.setText(this.textTagFont, textTag.getText());
+				this.textTagFont.draw(batch, textTag.getText(), unprojected.x - (glyphLayout.width / 2),
+						(unprojected.y - (glyphLayout.height / 2)) + textTag.getScreenCoordsZHeight());
+			}
 		}
 	}
 
@@ -1151,7 +1154,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final float rallyPointX = target.getX();
 			final float rallyPointY = target.getY();
 			this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
-					MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
+					MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY) + 192);
 			return null;
 		}
 
@@ -1431,6 +1434,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.attack1Icon.setVisible(false);
 			this.attack2Icon.setVisible(false);
 			this.armorIcon.setVisible(false);
+			this.selectWorkerInsideFrame.setVisible(false);
 		}
 		else {
 			for (final QueueIcon queueIconFrame : this.queueIconFrames) {

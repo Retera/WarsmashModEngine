@@ -629,6 +629,24 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
+					public void spawnEffectOnUnit(final CUnit unit, final String effectPath) {
+						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(unit);
+						final MdxModel spawnedEffectModel = (MdxModel) load(mdx(effectPath), PathSolver.DEFAULT, null);
+						if (spawnedEffectModel != null) {
+							final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel
+									.addInstance();
+							modelInstance.setTeamColor(unit.getPlayerIndex());
+							modelInstance.setLocation(renderUnit.location);
+							modelInstance.setScene(War3MapViewer.this.worldScene);
+							SequenceUtils.randomBirthSequence(modelInstance);
+							War3MapViewer.this.projectiles
+									.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
+											(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
+						}
+
+					}
+
+					@Override
 					public void spawnUnitReadySound(final CUnit trainedUnit) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(trainedUnit);
 						renderPeer.soundset.ready.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
@@ -823,6 +841,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						renderDestructable.walkableBounds = renderDestructableBounds;
 					}
 					this.widgets.add(renderDestructable);
+					this.destructableToRenderPeer.put(simulationDestructable, renderDestructable);
 				}
 				else {
 					this.doodads.add(new RenderDoodad(this, model, row, doodad, type, maxPitch, maxRoll));
@@ -1645,6 +1664,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public RenderUnit getRenderPeer(final CUnit unit) {
 		return this.unitToRenderPeer.get(unit);
+	}
+
+	public RenderDestructable getRenderPeer(final CDestructable dest) {
+		return this.destructableToRenderPeer.get(dest);
 	}
 
 	private static final class QuadtreeIntersectorFindsWalkableRenderHeight

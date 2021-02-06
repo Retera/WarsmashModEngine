@@ -126,4 +126,8 @@ public class CAbilityMove extends AbstractCAbility {
 		return visitor.accept(this);
 	}
 
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
 }

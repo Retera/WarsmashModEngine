@@ -7,13 +7,17 @@ public class IconUI {
 	private final Texture iconDisabled;
 	private final int buttonPositionX;
 	private final int buttonPositionY;
+	private final String toolTip;
+	private final String uberTip;
 
-	public IconUI(final Texture icon, final Texture iconDisabled, final int buttonPositionX,
-			final int buttonPositionY) {
+	public IconUI(final Texture icon, final Texture iconDisabled, final int buttonPositionX, final int buttonPositionY,
+			final String toolTip, final String uberTip) {
 		this.icon = icon;
 		this.iconDisabled = iconDisabled;
 		this.buttonPositionX = buttonPositionX;
 		this.buttonPositionY = buttonPositionY;
+		this.toolTip = toolTip;
+		this.uberTip = uberTip;
 	}
 
 	public Texture getIcon() {
@@ -30,5 +34,13 @@ public class IconUI {
 
 	public int getButtonPositionY() {
 		return this.buttonPositionY;
+	}
+
+	public String getToolTip() {
+		return this.toolTip;
+	}
+
+	public String getUberTip() {
+		return this.uberTip;
 	}
 }

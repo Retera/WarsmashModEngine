@@ -19,6 +19,7 @@ public class SequenceUtils {
 	public static final EnumSet<SecondaryTag> BONE = EnumSet.of(SecondaryTag.BONE);
 	public static final EnumSet<SecondaryTag> HIT = EnumSet.of(SecondaryTag.HIT);
 	public static final EnumSet<SecondaryTag> SPELL = EnumSet.of(SecondaryTag.SPELL);
+	public static final EnumSet<SecondaryTag> WORK = EnumSet.of(SecondaryTag.WORK);
 
 	private static final StandSequenceComparator STAND_SEQUENCE_COMPARATOR = new StandSequenceComparator();
 	private static final SecondaryTagSequenceComparator SECONDARY_TAG_SEQUENCE_COMPARATOR = new SecondaryTagSequenceComparator(
@@ -283,7 +284,8 @@ public class SequenceUtils {
 			return sequence.sequence;
 		}
 		else {
-			if (animationName == null) {
+			if ((animationName == null) || (secondaryAnimationTags.size() != 1)
+					|| !secondaryAnimationTags.contains(SecondaryTag.SPELL)) {
 				return null;
 			}
 			else {

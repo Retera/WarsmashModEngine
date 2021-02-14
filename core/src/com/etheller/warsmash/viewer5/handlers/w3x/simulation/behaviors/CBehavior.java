@@ -13,7 +13,7 @@ public interface CBehavior {
 
 	void begin(CSimulation game);
 
-	void end(CSimulation game);
+	void end(CSimulation game, boolean interrupted);
 
 	int getHighlightOrderId();
 }

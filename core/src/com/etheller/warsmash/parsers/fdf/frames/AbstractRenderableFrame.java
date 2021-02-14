@@ -30,6 +30,8 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	protected int level;
 	protected final Rectangle renderBounds = new Rectangle(0, 0, 0, 0); // in libgdx rendering space
 	private final EnumMap<FramePoint, FramePointAssignment> framePointToAssignment = new EnumMap<>(FramePoint.class);
+	protected float assignedHeight;
+	protected float assignedWidth;
 
 	public AbstractRenderableFrame(final String name, final UIFrame parent) {
 		this.name = name;
@@ -47,11 +49,13 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	@Override
 	public void setWidth(final float width) {
+		this.assignedWidth = width;
 		this.renderBounds.width = width;
 	}
 
 	@Override
 	public void setHeight(final float height) {
+		this.assignedHeight = height;
 		this.renderBounds.height = height;
 	}
 
@@ -63,6 +67,10 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 			}
 		}
 		return null;
+	}
+
+	public void clearFramePointAssignments() {
+		this.framePointToAssignment.clear();
 	}
 
 	private FramePointAssignment getLeftAnchor() {
@@ -238,7 +246,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 			final FramePointAssignment centerVerticalAnchor = getCenterVerticalAnchor();
 			if (leftAnchor != null) {
 				this.renderBounds.x = leftAnchor.getX(gameUI, viewport);
-				if (this.renderBounds.width == 0) {
+				if (this.assignedWidth == 0) {
 					if (rightAnchor != null) {
 						this.renderBounds.width = rightAnchor.getX(gameUI, viewport) - this.renderBounds.x;
 					}
@@ -259,7 +267,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 			}
 			if (bottomAnchor != null) {
 				this.renderBounds.y = bottomAnchor.getY(gameUI, viewport);
-				if (this.renderBounds.height == 0) {
+				if (this.assignedHeight == 0) {
 					if (topAnchor != null) {
 						this.renderBounds.height = topAnchor.getY(gameUI, viewport) - this.renderBounds.y;
 					}

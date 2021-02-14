@@ -13,6 +13,11 @@ public class SettableCommandErrorListener implements CommandErrorListener {
 		this.delegate.showCantPlaceError();
 	}
 
+	@Override
+	public void showNoFoodError() {
+		this.delegate.showNoFoodError();
+	}
+
 	public void setDelegate(final CommandErrorListener delegate) {
 		this.delegate = delegate;
 	}

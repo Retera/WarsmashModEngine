@@ -110,6 +110,7 @@ public class CBehaviorMove implements CBehavior {
 			this.firstUpdate = false;
 		}
 		if (this.pathfindingFailedGiveUp) {
+			onMoveGiveUp(simulation);
 			return this.unit.pollNextOrderBehavior(simulation);
 		}
 		final float prevX = this.unit.getX();
@@ -247,6 +248,7 @@ public class CBehaviorMove implements CBehavior {
 							this.searchCycles = 0;
 						}
 						if (this.path.isEmpty()) {
+							onMoveGiveUp(simulation);
 							return this.unit.pollNextOrderBehavior(simulation);
 						}
 						else {
@@ -279,6 +281,7 @@ public class CBehaviorMove implements CBehavior {
 							deltaY = currentTargetY - nextY;
 							deltaX = currentTargetX - nextX;
 							if ((deltaX == 0.000f) && (deltaY == 0.000f) && this.path.isEmpty()) {
+								onMoveGiveUp(simulation);
 								return this.unit.pollNextOrderBehavior(simulation);
 							}
 							System.out.println("new target: " + currentTargetX + "," + currentTargetY);
@@ -341,6 +344,12 @@ public class CBehaviorMove implements CBehavior {
 		return this;
 	}
 
+	private void onMoveGiveUp(final CSimulation simulation) {
+		if (this.rangedBehavior != null) {
+			this.rangedBehavior.endMove(simulation, true);
+		}
+	}
+
 	private final class TargetVisitingResetter implements AbilityTargetVisitor<Void> {
 		private int highlightOrderId;
 
@@ -380,10 +389,13 @@ public class CBehaviorMove implements CBehavior {
 	}
 
 	@Override
-	public void end(final CSimulation game) {
+	public void end(final CSimulation game, final boolean interrupted) {
 		if (ALWAYS_INTERRUPT_MOVE) {
 			game.removeFromPathfindingQueue(this);
 			this.pathfindingActive = false;
+		}
+		if (this.rangedBehavior != null) {
+			this.rangedBehavior.endMove(game, interrupted);
 		}
 	}
 

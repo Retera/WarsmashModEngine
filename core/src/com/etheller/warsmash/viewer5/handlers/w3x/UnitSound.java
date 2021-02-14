@@ -82,7 +82,7 @@ public final class UnitSound {
 		if (millisTime < unit.lastUnitResponseEndTimeMillis) {
 			return false;
 		}
-		if (play(audioContext, unit.location[0], unit.location[1])) {
+		if (play(audioContext, unit.location[0], unit.location[1], unit.location[2])) {
 			final float duration = Extensions.audio.getDuration(this.lastPlayedSound);
 			unit.lastUnitResponseEndTimeMillis = millisTime + (long) (1000 * duration);
 			return true;
@@ -90,11 +90,11 @@ public final class UnitSound {
 		return false;
 	}
 
-	public boolean play(final AudioContext audioContext, final float x, final float y) {
-		return play(audioContext, x, y, (int) (Math.random() * this.sounds.size()));
+	public boolean play(final AudioContext audioContext, final float x, final float y, final float z) {
+		return play(audioContext, x, y, z, (int) (Math.random() * this.sounds.size()));
 	}
 
-	public boolean play(final AudioContext audioContext, final float x, final float y, final int index) {
+	public boolean play(final AudioContext audioContext, final float x, final float y, final float z, final int index) {
 		if (this.sounds.isEmpty()) {
 			return false;
 		}
@@ -106,7 +106,7 @@ public final class UnitSound {
 		final AudioBufferSource source = audioContext.createBufferSource();
 
 		// Panner settings
-		panner.setPosition(x, y, 0);
+		panner.setPosition(x, y, z);
 		panner.setDistances(this.distanceCutoff, this.minDistance);
 		panner.connect(audioContext.destination);
 

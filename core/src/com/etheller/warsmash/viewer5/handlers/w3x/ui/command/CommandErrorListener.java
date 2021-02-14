@@ -4,4 +4,6 @@ public interface CommandErrorListener {
 	void showCommandError(String message);
 
 	void showCantPlaceError();
+
+	void showNoFoodError();
 }

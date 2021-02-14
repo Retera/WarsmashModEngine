@@ -5,4 +5,5 @@ public enum ResourceType {
 	LUMBER,
 	FOOD;
 
+	public static final ResourceType[] VALUES = values();
 }

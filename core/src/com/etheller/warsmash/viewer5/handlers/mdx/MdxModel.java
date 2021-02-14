@@ -114,7 +114,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 				min[i] = max[i] = 0;
 			}
 		}
-		this.bounds.fromExtents(min, max);
+		this.bounds.fromExtents(min, max, extent.getBoundsRadius());
 
 		// Sequences
 		for (final MdlxSequence sequence : parser.getSequences()) {

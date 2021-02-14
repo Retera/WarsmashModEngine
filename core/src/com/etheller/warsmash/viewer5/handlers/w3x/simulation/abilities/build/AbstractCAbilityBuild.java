@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public abstract class AbstractCAbilityBuild extends AbstractCAbility implements CAbilityMenu {
+	private static boolean REFUND_ON_ORDER_CANCEL = false;
 	private final Set<War3ID> structuresBuilt;
 
 	public AbstractCAbilityBuild(final int handleId, final List<War3ID> structuresBuilt) {
@@ -92,6 +93,19 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId) {
 		return true;
+	}
+
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+		if (REFUND_ON_ORDER_CANCEL) {
+			final CPlayer player = game.getPlayer(unit.getPlayerIndex());
+			final War3ID orderIdAsRawtype = new War3ID(orderId);
+			final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
+			player.refundFor(unitType);
+			if (unitType.getFoodUsed() != 0) {
+				player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
+			}
+		}
 	}
 
 	@Override

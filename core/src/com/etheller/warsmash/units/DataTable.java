@@ -6,9 +6,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -109,11 +111,11 @@ public class DataTable implements ObjectData {
 			else if (input.contains("=")) {
 				final int eIndex = input.indexOf("=");
 				final String fieldValue = input.substring(eIndex + 1);
-				int fieldIndex = 0;
 				final StringBuilder builder = new StringBuilder();
 				boolean withinQuotedString = false;
 				final String fieldName = input.substring(0, eIndex);
 				boolean wasSlash = false;
+				final List<String> values = new ArrayList<>();
 				for (int i = 0; i < fieldValue.length(); i++) {
 					final char c = fieldValue.charAt(i);
 					final boolean isSlash = c == '/';
@@ -125,7 +127,7 @@ public class DataTable implements ObjectData {
 						withinQuotedString = !withinQuotedString;
 					}
 					else if (!withinQuotedString && (c == ',')) {
-						currentUnit.setField(fieldName, builder.toString().trim(), fieldIndex++);
+						values.add(builder.toString().trim());
 						builder.setLength(0); // empty buffer
 					}
 					else {
@@ -137,8 +139,12 @@ public class DataTable implements ObjectData {
 					if (currentUnit == null) {
 						System.out.println("null for " + input);
 					}
-					currentUnit.setField(fieldName, builder.toString().trim(), fieldIndex++);
+					if ("Nofood".equals(fieldName)) {
+						System.out.println(builder.toString().trim());
+					}
+					values.add(builder.toString().trim());
 				}
+				currentUnit.setField(fieldName, values);
 			}
 		}
 

@@ -28,10 +28,11 @@ public final class Warcraft3MapObjectData {
 	private final MutableObjectData upgrades;
 	private final List<MutableObjectData> datas;
 	private transient Map<WorldEditorDataType, MutableObjectData> typeToData = new HashMap<>();
+	private final WTS wts;
 
 	public Warcraft3MapObjectData(final MutableObjectData units, final MutableObjectData items,
 			final MutableObjectData destructibles, final MutableObjectData doodads, final MutableObjectData abilities,
-			final MutableObjectData buffs, final MutableObjectData upgrades) {
+			final MutableObjectData buffs, final MutableObjectData upgrades, final WTS wts) {
 		this.units = units;
 		this.items = items;
 		this.destructibles = destructibles;
@@ -50,6 +51,7 @@ public final class Warcraft3MapObjectData {
 		for (final MutableObjectData data : this.datas) {
 			this.typeToData.put(data.getWorldEditorDataType(), data);
 		}
+		this.wts = wts;
 	}
 
 	public MutableObjectData getDataByType(final WorldEditorDataType type) {
@@ -88,6 +90,10 @@ public final class Warcraft3MapObjectData {
 		return this.datas;
 	}
 
+	public WTS getWts() {
+		return this.wts;
+	}
+
 	public static Warcraft3MapObjectData load(final DataSource dataSource, final boolean inlineWTS) throws IOException {
 
 		final StandardObjectData standardObjectData = new StandardObjectData(dataSource);
@@ -115,12 +121,7 @@ public final class Warcraft3MapObjectData {
 		final War3ObjectDataChangeset upgradeChangeset = new War3ObjectDataChangeset('q');
 
 		final WTS wts = dataSource.has("war3map.wts") ? new WTSFile(dataSource.getResourceAsStream("war3map.wts"))
-				: new WTS() {
-					@Override
-					public String get(final int key) {
-						return "TRIGSTR_" + key;
-					}
-				};
+				: WTS.DO_NOTHING;
 		if (dataSource.has("war3map.w3u")) {
 			unitChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3u")), wts,
 					inlineWTS);
@@ -168,6 +169,6 @@ public final class Warcraft3MapObjectData {
 				standardUpgrades, standardUpgradeMeta, upgradeChangeset);
 
 		return new Warcraft3MapObjectData(unitData, itemData, destructableData, doodadData, abilityData, buffData,
-				upgradeData);
+				upgradeData, wts);
 	}
 }

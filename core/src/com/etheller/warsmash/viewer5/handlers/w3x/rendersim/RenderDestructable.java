@@ -128,6 +128,11 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	}
 
 	@Override
+	public float getZ() {
+		return this.instance.localLocation.z;
+	}
+
+	@Override
 	public void unassignSelectionCircle() {
 		this.selectionCircle = null;
 	}

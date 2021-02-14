@@ -54,7 +54,12 @@ public class CBehaviorPatrol implements CRangedBehavior {
 	}
 
 	@Override
-	public void end(final CSimulation game) {
+	public void end(final CSimulation game, final boolean interrupted) {
+
+	}
+
+	@Override
+	public void endMove(final CSimulation game, final boolean interrupted) {
 
 	}
 

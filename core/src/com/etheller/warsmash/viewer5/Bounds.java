@@ -9,7 +9,7 @@ public class Bounds {
 	public float x, y, z, r;
 	private BoundingBox boundingBox;
 
-	public void fromExtents(final float[] min, final float[] max) {
+	public void fromExtents(final float[] min, final float[] max, final float boundsRadius) {
 		final float x = min[0];
 		final float y = min[1];
 		final float z = min[2];
@@ -20,7 +20,7 @@ public class Bounds {
 		this.x = x + (w / 2f);
 		this.y = y + (d / 2f);
 		this.z = z + (h / 2f);
-		this.r = (float) (Math.max(Math.max(w, d), h) / 2.);
+		this.r = boundsRadius > 0 ? boundsRadius : (float) (Math.max(Math.max(w, d), h) / 2.);
 		this.boundingBox = new BoundingBox(new Vector3(min), new Vector3(max));
 	}
 
@@ -33,6 +33,6 @@ public class Bounds {
 	}
 
 	public BoundingBox getBoundingBox() {
-		return boundingBox;
+		return this.boundingBox;
 	}
 }

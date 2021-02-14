@@ -6,6 +6,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityIconU
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGeneric;
@@ -134,8 +135,9 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			else {
 				autoCastId = OrderIds.uncoldarrows;
 			}
-			addCommandButton(ability, this.abilityDataUI.getUI(ability.getRawcode()).getOnIconUI(),
-					ability.getHandleId(), OrderIds.coldarrowstarg, autoCastId, autoCastActive, false);
+			final IconUI onIconUI = this.abilityDataUI.getUI(ability.getRawcode()).getOnIconUI();
+			addCommandButton(ability, onIconUI, ability.getHandleId(), OrderIds.coldarrowstarg, autoCastId,
+					autoCastActive, false);
 		}
 		return null;
 	}
@@ -181,7 +183,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			for (final War3ID unitType : ability.getStructuresBuilt()) {
 				final IconUI unitUI = this.abilityDataUI.getUnitUI(unitType);
 				if (unitUI != null) {
-					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false);
+					final CUnitType simulationUnitType = this.game.getUnitData().getUnitType(unitType);
+					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false,
+							simulationUnitType.getGoldCost(), simulationUnitType.getLumberCost(),
+							simulationUnitType.getFoodUsed());
 				}
 			}
 		}
@@ -192,12 +197,19 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	private void addCommandButton(final CAbility ability, final IconUI iconUI, final int handleId, final int orderId,
 			final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton) {
+		addCommandButton(ability, iconUI, handleId, orderId, autoCastOrderId, autoCastActive, menuButton, 0, 0, 0);
+	}
+
+	private void addCommandButton(final CAbility ability, final IconUI iconUI, final int handleId, final int orderId,
+			final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton, final int goldCost,
+			final int lumberCost, final int foodCost) {
 		final boolean active = ((this.unit.getCurrentBehavior() != null)
 				&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId()));
 		final boolean disabled = (ability != null) && ability.isDisabled();
 		this.commandButtonListener.commandButton(iconUI.getButtonPositionX(), iconUI.getButtonPositionY(),
 				disabled ? iconUI.getIconDisabled() : iconUI.getIcon(), handleId, disabled ? 0 : orderId,
-				autoCastOrderId, active, autoCastActive, menuButton);
+				autoCastOrderId, active, autoCastActive, menuButton, iconUI.getToolTip(), iconUI.getUberTip(), goldCost,
+				lumberCost, foodCost);
 	}
 
 	@Override
@@ -215,7 +227,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			for (final War3ID unitType : ability.getUnitsTrained()) {
 				final IconUI unitUI = this.abilityDataUI.getUnitUI(unitType);
 				if (unitUI != null) {
-					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false);
+					final CUnitType simulationUnitType = this.game.getUnitData().getUnitType(unitType);
+					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false,
+							simulationUnitType.getGoldCost(), simulationUnitType.getLumberCost(),
+							simulationUnitType.getFoodUsed());
 				}
 			}
 			for (final War3ID unitType : ability.getResearchesAvailable()) {

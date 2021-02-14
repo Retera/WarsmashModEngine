@@ -192,7 +192,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 	}
 
 	@Override
-	public void end(final CSimulation game) {
+	public void end(final CSimulation game, final boolean interrupted) {
 
 	}
 
@@ -218,6 +218,11 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 			}
 		}
 		this.abilityHarvest.setCarriedResources(null, 0);
+	}
+
+	@Override
+	public void endMove(final CSimulation game, final boolean interrupted) {
+
 	}
 
 }

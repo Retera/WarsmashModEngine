@@ -138,7 +138,7 @@ public class Jass2 {
 					final String skinArg = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 					final Element skin = GameUI.loadSkin(dataSource, skinArg);
 					final GameUI gameUI = new GameUI(dataSource, skin, uiViewport, fontGenerator, uiScene,
-							war3MapViewer, 0);
+							war3MapViewer, 0, war3MapViewer.getAllObjectData().getWts());
 					JUIEnvironment.this.gameUI = gameUI;
 					JUIEnvironment.this.skin = skin;
 					rootFrameListener.onCreate(gameUI);
@@ -254,7 +254,7 @@ public class Jass2 {
 					final StringFrame frame = arguments.get(0).visit(ObjectJassValueVisitor.<StringFrame>getInstance());
 					final String text = arguments.get(1).visit(StringJassValueVisitor.getInstance());
 
-					frame.setText(text);
+					JUIEnvironment.this.gameUI.setText(frame, text);
 					return null;
 				}
 			});

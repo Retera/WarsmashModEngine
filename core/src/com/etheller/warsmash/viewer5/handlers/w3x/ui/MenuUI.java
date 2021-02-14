@@ -15,6 +15,7 @@ import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
+import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 
@@ -65,7 +66,7 @@ public class MenuUI {
 		// Load skins and templates
 		// =================================
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, 1), this.uiViewport,
-				this.fontGenerator, this.uiScene, this.viewer, 0);
+				this.fontGenerator, this.uiScene, this.viewer, 0, WTS.DO_NOTHING);
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
 			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");

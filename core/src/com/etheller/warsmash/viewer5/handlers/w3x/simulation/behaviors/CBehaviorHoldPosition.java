@@ -35,7 +35,7 @@ public class CBehaviorHoldPosition implements CBehavior {
 	}
 
 	@Override
-	public void end(final CSimulation game) {
+	public void end(final CSimulation game, boolean interrupted) {
 
 	}
 

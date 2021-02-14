@@ -23,15 +23,25 @@ public class AbilityDataUI {
 	private static final War3ID ICON_RESEARCH = War3ID.fromString("arar");
 	private static final War3ID ICON_RESEARCH_X = War3ID.fromString("arpx");
 	private static final War3ID ICON_RESEARCH_Y = War3ID.fromString("arpy");
+	private static final War3ID ABILITY_TIP = War3ID.fromString("atp1");
+	private static final War3ID ABILITY_UBER_TIP = War3ID.fromString("aub1");
+	private static final War3ID ABILITY_UN_TIP = War3ID.fromString("aut1");
+	private static final War3ID ABILITY_UN_UBER_TIP = War3ID.fromString("auu1");
+	private static final War3ID ABILITY_RESEARCH_TIP = War3ID.fromString("aret");
+	private static final War3ID ABILITY_RESEARCH_UBER_TIP = War3ID.fromString("arut");
 
 	private static final War3ID UNIT_ICON_NORMAL_X = War3ID.fromString("ubpx");
 	private static final War3ID UNIT_ICON_NORMAL_Y = War3ID.fromString("ubpy");
 	private static final War3ID UNIT_ICON_NORMAL = War3ID.fromString("uico");
+	private static final War3ID UNIT_TIP = War3ID.fromString("utip");
+	private static final War3ID UNIT_UBER_TIP = War3ID.fromString("utub");
 
 	private static final War3ID UPGRADE_ICON_NORMAL_X = War3ID.fromString("gbpx");
 	private static final War3ID UPGRADE_ICON_NORMAL_Y = War3ID.fromString("gbpy");
 	private static final War3ID UPGRADE_ICON_NORMAL = War3ID.fromString("gar1");
 	private static final War3ID UPGRADE_LEVELS = War3ID.fromString("glvl");
+	private static final War3ID UPGRADE_TIP = War3ID.fromString("gtp1");
+	private static final War3ID UPGRADE_UBER_TIP = War3ID.fromString("gub1");
 
 	private final Map<War3ID, AbilityIconUI> rawcodeToUI = new HashMap<>();
 	private final Map<War3ID, IconUI> rawcodeToUnitUI = new HashMap<>();
@@ -61,6 +71,12 @@ public class AbilityDataUI {
 			final String iconResearchPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(ICON_RESEARCH, 0));
 			final String iconNormalPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(ICON_NORMAL, 0));
 			final String iconTurnOffPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(ICON_TURN_OFF, 0));
+			final String iconTip = abilityTypeData.getFieldAsString(ABILITY_TIP, 0);
+			final String iconUberTip = abilityTypeData.getFieldAsString(ABILITY_UBER_TIP, 0);
+			final String iconTurnOffTip = abilityTypeData.getFieldAsString(ABILITY_UN_TIP, 0);
+			final String iconTurnOffUberTip = abilityTypeData.getFieldAsString(ABILITY_UN_UBER_TIP, 0);
+			final String iconResearchTip = abilityTypeData.getFieldAsString(ABILITY_RESEARCH_TIP, 0);
+			final String iconResearchUberTip = abilityTypeData.getFieldAsString(ABILITY_RESEARCH_UBER_TIP, 0);
 			final int iconResearchX = abilityTypeData.getFieldAsInteger(ICON_RESEARCH_X, 0);
 			final int iconResearchY = abilityTypeData.getFieldAsInteger(ICON_RESEARCH_Y, 0);
 			final int iconNormalX = abilityTypeData.getFieldAsInteger(ICON_NORMAL_X, 0);
@@ -74,18 +90,24 @@ public class AbilityDataUI {
 			final Texture iconTurnOff = gameUI.loadTexture(iconTurnOffPath);
 			final Texture iconTurnOffDisabled = gameUI.loadTexture(disable(iconTurnOffPath, disabledPrefix));
 			this.rawcodeToUI.put(alias,
-					new AbilityIconUI(new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY),
-							new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY),
-							new IconUI(iconTurnOff, iconTurnOffDisabled, iconTurnOffX, iconTurnOffY)));
+					new AbilityIconUI(
+							new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY,
+									iconResearchTip, iconResearchUberTip),
+							new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip, iconUberTip),
+							new IconUI(iconTurnOff, iconTurnOffDisabled, iconTurnOffX, iconTurnOffY, iconTurnOffTip,
+									iconTurnOffUberTip)));
 		}
 		for (final War3ID alias : unitData.keySet()) {
 			final MutableGameObject abilityTypeData = unitData.get(alias);
 			final String iconNormalPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(UNIT_ICON_NORMAL, 0));
 			final int iconNormalX = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_X, 0);
 			final int iconNormalY = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_Y, 0);
+			final String iconTip = abilityTypeData.getFieldAsString(UNIT_TIP, 0);
+			final String iconUberTip = abilityTypeData.getFieldAsString(UNIT_UBER_TIP, 0);
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
 			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
-			this.rawcodeToUnitUI.put(alias, new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY));
+			this.rawcodeToUnitUI.put(alias,
+					new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip, iconUberTip));
 		}
 		for (final War3ID alias : upgradeData.keySet()) {
 			final MutableGameObject upgradeTypeData = upgradeData.get(alias);
@@ -94,11 +116,14 @@ public class AbilityDataUI {
 			final int iconNormalY = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_Y, 0);
 			final List<IconUI> upgradeIconsByLevel = new ArrayList<>();
 			for (int i = 0; i < upgradeLevels; i++) {
+				final String iconTip = upgradeTypeData.getFieldAsString(UPGRADE_TIP, 0);
+				final String iconUberTip = upgradeTypeData.getFieldAsString(UPGRADE_UBER_TIP, 0);
 				final String iconNormalPath = gameUI
 						.trySkinField(upgradeTypeData.getFieldAsString(UPGRADE_ICON_NORMAL, i));
 				final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
 				final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
-				upgradeIconsByLevel.add(new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY));
+				upgradeIconsByLevel.add(
+						new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip, iconUberTip));
 			}
 			this.rawcodeToUpgradeUI.put(alias, upgradeIconsByLevel);
 		}
@@ -127,7 +152,9 @@ public class AbilityDataUI {
 		final Texture iconDisabled = gameUI.loadTexture(disable(iconPath, disabledPrefix));
 		final int buttonPositionX = builtInAbility.getFieldValue("Buttonpos", 0);
 		final int buttonPositionY = builtInAbility.getFieldValue("Buttonpos", 1);
-		return new IconUI(icon, iconDisabled, buttonPositionX, buttonPositionY);
+		final String tip = builtInAbility.getField("Tip");
+		final String uberTip = builtInAbility.getField("UberTip");
+		return new IconUI(icon, iconDisabled, buttonPositionX, buttonPositionY, tip, uberTip);
 	}
 
 	public AbilityIconUI getUI(final War3ID rawcode) {

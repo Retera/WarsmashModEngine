@@ -22,22 +22,46 @@ Frame "FRAME" "SmashToolTip" {
 	    BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
 	    BackdropCornerSize  0.008,
 	    BackdropBackgroundSize  0.036,
-	    BackdropBackgroundInsets 0.0035 0.0035 0.0035 0.0035,
+	    BackdropBackgroundInsets 0.0025 0.0025 0.0025 0.0025,
 	    BackdropEdgeFile  "ToolTipBorder",
 	    BackdropBlendAll,
 	}
 	Frame "TEXT" "SmashToolTipText" {
-		SetAllPoints,
 	    DecorateFileNames,
-	    FrameFont "MasterFont", 0.008, "",
+	    FrameFont "MasterFont", 0.010, "",
 	    FontJustificationH JUSTIFYLEFT,
 	    FontJustificationV JUSTIFYTOP,
 	    FontFlags "FIXEDSIZE",
-	    //FontColor 0.99 0.827 0.0705 1.0,
 	    FontColor 1.0 1.0 1.0 1.0,
-	    FontHighlightColor 1.0 1.0 1.0 1.0,
-	    FontDisabledColor 0.2 0.2 0.2 1.0,
-		FontShadowColor 0.0 0.0 0.0 0.9,
-	    FontShadowOffset 0.001 -0.001,
 	}
+	Frame "TEXT" "SmashUberTipText" {
+	    DecorateFileNames,
+	    FrameFont "MasterFont", 0.010, "",
+	    FontJustificationH JUSTIFYLEFT,
+	    FontJustificationV JUSTIFYTOP,
+	    FontFlags "FIXEDSIZE",
+	    FontColor 1.0 1.0 1.0 1.0,
+	}
+}
+Frame "SIMPLEFRAME" "SmashToolTipIconResource" {
+    DecorateFileNames,
+    Height 0.010,
+
+    // --- icon -------------------------------------------------------------
+    Texture "SmashToolTipIconResourceBackdrop" {
+    	Anchor LEFT, 0.0, 0.0
+	    Width 0.008,
+	    Height 0.008,
+        File "ToolTipStonesIcon",
+    }
+
+    // --- label ------------------------------------------------------------
+    String "SmashToolTipIconResourceLabel" {        
+        SetPoint LEFT, "SmashToolTipIconResourceBackdrop", RIGHT, 0.001, 0.000,
+	    FontJustificationH JUSTIFYLEFT,
+	    FontJustificationV JUSTIFYMIDDLE,
+	    FontColor 0.99 0.827 0.0705 1.0,
+		Font "InfoPanelTextFont",0.0085,
+        Text "275",
+    }
 }

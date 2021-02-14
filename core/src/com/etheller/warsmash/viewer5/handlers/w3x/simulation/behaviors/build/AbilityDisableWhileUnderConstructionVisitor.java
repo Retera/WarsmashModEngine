@@ -120,7 +120,7 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 
 	@Override
 	public Void accept(final GenericNoIconAbility ability) {
-		ability.setDisabled(false);
+		ability.setDisabled(true);
 		ability.setIconShowing(false);
 		return null;
 	}

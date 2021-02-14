@@ -603,24 +603,24 @@ public class Terrain {
 							final int bottomLeftHeight = bottomLeft.getLayerHeight() - base;
 							boolean invalidRamp = false;
 							if (DISALLOW_HEIGHT_3_RAMPS) {
-								if (topLeftHeight > 1) {
+								if (rampBlockedByCliff) {
+									invalidRamp = true;
+								}
+								else if (topLeftHeight > 1) {
 									invalidRamp = true;
 									topLeft.setRamp(0);
 								}
-								if (topRightHeight > 1) {
+								else if (topRightHeight > 1) {
 									invalidRamp = true;
 									topRight.setRamp(0);
 								}
-								if (bottomRightHeight > 1) {
+								else if (bottomRightHeight > 1) {
 									invalidRamp = true;
 									bottomRight.setRamp(0);
 								}
-								if (bottomLeftHeight > 1) {
+								else if (bottomLeftHeight > 1) {
 									invalidRamp = true;
 									bottomLeft.setRamp(0);
-								}
-								if (rampBlockedByCliff) {
-									invalidRamp = true;
 								}
 							}
 							if (!invalidRamp) {
@@ -699,6 +699,15 @@ public class Terrain {
 						throw new IllegalArgumentException("No such pathToCliff entry: " + fileName);
 					}
 					this.cliffs.add(new IVec3(i, j, this.pathToCliff.get(fileName)));
+				}
+			}
+		}
+		for (int i = (int) rampArea.getX(); i < xLimit; i++) {
+			final int yLimit = (int) ((rampArea.getY() + rampArea.getHeight()) - 1);
+			for (int j = (int) rampArea.getY(); j < yLimit; j++) {
+				final RenderCorner bottomLeft = this.corners[i][j];
+				if (bottomLeft.isRamp() && !bottomLeft.romp) {
+					bottomLeft.hideCliff = true;
 				}
 			}
 		}

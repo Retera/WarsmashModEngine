@@ -109,4 +109,24 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 	public String getToolTip() {
 		return "QueueIcon " + this.queueIconIndexId;
 	}
+
+	@Override
+	public String getUberTip() {
+		return "The |cffffcc00QueueIcon|r is a hardcoded Warsmash engine component that is not yet loading its |cffffaa88description|r.";
+	}
+
+	@Override
+	public int getToolTipFoodCost() {
+		return 0;
+	}
+
+	@Override
+	public int getToolTipGoldCost() {
+		return 0;
+	}
+
+	@Override
+	public int getToolTipLumberCost() {
+		return 0;
+	}
 }

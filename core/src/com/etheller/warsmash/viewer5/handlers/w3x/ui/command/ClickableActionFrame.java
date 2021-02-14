@@ -12,4 +12,12 @@ public interface ClickableActionFrame extends UIFrame {
 	void onClick(int button);
 
 	String getToolTip();
+
+	String getUberTip();
+
+	int getToolTipGoldCost();
+
+	int getToolTipLumberCost();
+
+	int getToolTipFoodCost();
 }

@@ -537,6 +537,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void spawnDamageSound(final CWidget damagedDestructable, final String weaponSound,
 							final String armorType) {
+						RenderWidget damagedWidget = War3MapViewer.this.unitToRenderPeer.get(damagedDestructable);
+						if (damagedWidget == null) {
+							damagedWidget = War3MapViewer.this.destructableToRenderPeer.get(damagedDestructable);
+						}
 						final String key = weaponSound + armorType;
 						UnitSound combatSound = this.keyToCombatSound.get(key);
 						if (combatSound == null) {
@@ -545,7 +549,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							this.keyToCombatSound.put(key, combatSound);
 						}
 						combatSound.play(War3MapViewer.this.worldScene.audioContext, damagedDestructable.getX(),
-								damagedDestructable.getY());
+								damagedDestructable.getY(), damagedWidget.getZ());
 					}
 
 					@Override
@@ -599,9 +603,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public void spawnUnitConstructionFinishSound(final CUnit constructedStructure) {
 						final UnitSound constructingBuilding = War3MapViewer.this.uiSounds
 								.getSound(War3MapViewer.this.gameUI.getSkinField("JobDoneSound"));
+						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(constructedStructure);
 						if (constructingBuilding != null) {
 							constructingBuilding.play(War3MapViewer.this.worldScene.audioContext,
-									constructedStructure.getX(), constructedStructure.getY());
+									constructedStructure.getX(), constructedStructure.getY(), renderUnit.getZ());
 						}
 					}
 

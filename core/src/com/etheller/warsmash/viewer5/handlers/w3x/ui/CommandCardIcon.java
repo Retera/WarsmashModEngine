@@ -29,6 +29,11 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	private boolean autoCastActive;
 	private final CommandCardCommandListener commandCardCommandListener;
 	private boolean menuButton;
+	private String tip;
+	private String uberTip;
+	private int tipGoldCost;
+	private int tipLumberCost;
+	private int tipFoodCost;
 
 	public CommandCardIcon(final String name, final UIFrame parent,
 			final CommandCardCommandListener commandCardCommandListener) {
@@ -74,7 +79,8 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	}
 
 	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId,
-			final int autoCastOrderId, final boolean active, final boolean autoCastActive, final boolean menuButton) {
+			final int autoCastOrderId, final boolean active, final boolean autoCastActive, final boolean menuButton,
+			final String tip, final String uberTip, final int goldCost, final int lumberCost, final int foodCost) {
 		this.menuButton = menuButton;
 		setVisible(true);
 		this.iconFrame.setVisible(true);
@@ -96,6 +102,11 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
 		this.autoCastOrderId = autoCastOrderId;
+		this.tip = tip;
+		this.uberTip = uberTip;
+		this.tipGoldCost = goldCost;
+		this.tipLumberCost = lumberCost;
+		this.tipFoodCost = foodCost;
 	}
 
 	@Override
@@ -175,6 +186,26 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 
 	@Override
 	public String getToolTip() {
-		return "CommandCardIcon w/ OID=" + this.orderId;
+		return this.tip;
+	}
+
+	@Override
+	public String getUberTip() {
+		return this.uberTip;
+	}
+
+	@Override
+	public int getToolTipGoldCost() {
+		return this.tipGoldCost;
+	}
+
+	@Override
+	public int getToolTipLumberCost() {
+		return this.tipLumberCost;
+	}
+
+	@Override
+	public int getToolTipFoodCost() {
+		return this.tipFoodCost;
 	}
 }

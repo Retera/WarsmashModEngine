@@ -84,6 +84,9 @@ public class CAbilityReturnResources extends AbstractGenericNoIconAbility {
 	}
 
 	public boolean accepts(final ResourceType resourceType) {
+		if (isDisabled()) {
+			return false;
+		}
 		return this.acceptedResourceTypes.contains(resourceType);
 	}
 }

@@ -5,6 +5,8 @@ import java.util.EnumSet;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
@@ -16,12 +18,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
-public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
+public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
+	private static int delayAnimationTicks = (int) (2.267f / WarsmashConstants.SIMULATION_STEP_TIME);
 	private int highlightOrderId;
 	private War3ID orderId;
 	private boolean unitCreated = false;
+	private int doneTick = 0;
 
-	public CBehaviorOrcBuild(final CUnit unit) {
+	public CBehaviorUndeadBuild(final CUnit unit) {
 		super(unit);
 	}
 
@@ -34,6 +38,9 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
+		if (this.doneTick != 0) {
+			return true;
+		}
 		final CUnitType unitType = simulation.getUnitData().getUnitType(this.orderId);
 		return this.unit.canReachToPathing(0, simulation.getGameplayConstants().getBuildingAngle(),
 				unitType.getBuildingPathingPixelMap(), this.target.getX(), this.target.getY());
@@ -46,7 +53,12 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
-		if (!this.unitCreated) {
+		if (this.doneTick != 0) {
+			if (simulation.getGameTurnTick() > this.doneTick) {
+				return this.unit.pollNextOrderBehavior(simulation);
+			}
+		}
+		else if (!this.unitCreated) {
 			this.unitCreated = true;
 			final CUnitType unitTypeToCreate = simulation.getUnitData().getUnitType(this.orderId);
 			final BufferedImage buildingPathingPixelMap = unitTypeToCreate.getBuildingPathingPixelMap();
@@ -65,7 +77,6 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, this.unit.getPlayerIndex(),
 						this.target.getX(), this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
 				constructedStructure.setConstructing(true);
-				constructedStructure.setWorkerInside(this.unit);
 				constructedStructure.setLife(simulation,
 						constructedStructure.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
 				constructedStructure.setFoodUsed(unitTypeToCreate.getFoodUsed());
@@ -74,18 +85,25 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 				for (final CAbility ability : constructedStructure.getAbilities()) {
 					ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
 				}
-				this.unit.setHidden(true);
-				this.unit.setPaused(true);
-				this.unit.setInvulnerable(true);
+				final float deltaX = this.unit.getX() - this.target.getX();
+				final float deltaY = this.unit.getY() - this.target.getY();
+				final float delta = (float) Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
+				this.unit.setPoint(this.target.getX() + ((deltaX / delta) * unitTypeToCreate.getCollisionSize()),
+						this.target.getY() + ((deltaY / delta) * unitTypeToCreate.getCollisionSize()),
+						simulation.getWorldCollision());
+				simulation.unitRepositioned(this.unit);
 				simulation.unitConstructedEvent(this.unit, constructedStructure);
+				this.doneTick = simulation.getGameTurnTick() + delayAnimationTicks;
 			}
 			else {
 				final CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
 				refund(player, unitTypeToCreate);
 				simulation.getCommandErrorListener().showCantPlaceError();
+				return this.unit.pollNextOrderBehavior(simulation);
 			}
 		}
-		return this.unit.pollNextOrderBehavior(simulation);
+		this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.WORK, 1.0f, true);
+		return this;
 	}
 
 	@Override

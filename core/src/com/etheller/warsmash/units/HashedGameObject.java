@@ -32,6 +32,16 @@ public abstract class HashedGameObject implements GameObject {
 		}
 	}
 
+	public void setField(final String field, final List<String> value) {
+		final StringKey key = new StringKey(field);
+		if (value.isEmpty()) {
+			this.fields.remove(key);
+		}
+		else {
+			this.fields.put(key, value);
+		}
+	}
+
 	@Override
 	public String getField(final String field) {
 		final String value = "";

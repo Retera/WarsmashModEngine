@@ -43,6 +43,7 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.viewer5.Scene;
@@ -66,10 +67,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final Viewport fdfCoordinateResolutionDummyViewport;
 	private final DataTable skinData;
 	private final Element errorStrings;
+	private final GlyphLayout glyphLayout;
+	private final WTS mapStrings;
 
 	public GameUI(final DataSource dataSource, final Element skin, final Viewport viewport,
 			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final AbstractMdxModelViewer modelViewer,
-			final int racialCommandIndex) {
+			final int racialCommandIndex, final WTS mapStrings) {
 		super("GameUI", null);
 		this.dataSource = dataSource;
 		this.skin = skin;
@@ -106,6 +109,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			throw new RuntimeException(e);
 		}
 		this.errorStrings = this.skinData.get("Errors");
+		this.glyphLayout = new GlyphLayout();
+		this.mapStrings = mapStrings;
 	}
 
 	public static Element loadSkin(final DataSource dataSource, final String skin) {
@@ -275,7 +280,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			this.fontParam.size = 128;
 		}
 		final BitmapFont frameFont = this.fontGenerator.generateFont(this.fontParam);
-		final StringFrame stringFrame = new StringFrame(name, parent, color, justifyH, justifyV, frameFont);
+		final StringFrame stringFrame = new StringFrame(name, parent, color, justifyH, justifyV, frameFont, name);
 		this.nameToFrame.put(name, stringFrame);
 		add(stringFrame);
 		return stringFrame;
@@ -389,8 +394,17 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					this.fontParam.size = 24;
 				}
 				frameFont = this.fontGenerator.generateFont(this.fontParam);
+				String textString = frameDefinition.getName();
+				String text = frameDefinition.getString("Text");
+				if (text != null) {
+					final String decoratedString = this.templates.getDecoratedString(text);
+					if (decoratedString != text) {
+						text = decoratedString;
+					}
+					textString = text;
+				}
 				final StringFrame stringFrame = new StringFrame(frameDefinition.getName(), parent, fontColor, justifyH,
-						justifyV, frameFont);
+						justifyV, frameFont, textString);
 				if (fontShadowColor != null) {
 					final Vector2Definition shadowOffset = frameDefinition.getVector2("FontShadowOffset");
 					stringFrame.setFontShadowColor(fontShadowColor);
@@ -398,14 +412,6 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					stringFrame.setFontShadowOffsetY(convertY(viewport2, shadowOffset.getY()));
 				}
 				inflatedFrame = stringFrame;
-				String text = frameDefinition.getString("Text");
-				if (text != null) {
-					final String decoratedString = this.templates.getDecoratedString(text);
-					if (decoratedString != text) {
-						text = decoratedString;
-					}
-					stringFrame.setText(text);
-				}
 			}
 			else if ("GLUETEXTBUTTON".equals(frameDefinition.getFrameType())) {
 				// ButtonText & ControlBackdrop
@@ -529,17 +535,18 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				this.fontParam.size = 24;
 			}
 			frameFont = this.fontGenerator.generateFont(this.fontParam);
-			final StringFrame stringFrame = new StringFrame(frameDefinition.getName(), parent, fontColor, justifyH,
-					justifyV, frameFont);
-			inflatedFrame = stringFrame;
+			String textString = frameDefinition.getName();
 			String text = frameDefinition.getString("Text");
 			if (text != null) {
 				final String decoratedString = this.templates.getDecoratedString(text);
 				if (decoratedString != text) {
 					text = decoratedString;
 				}
-				stringFrame.setText(text);
+				textString = text;
 			}
+			final StringFrame stringFrame = new StringFrame(frameDefinition.getName(), parent, fontColor, justifyH,
+					justifyV, frameFont, textString);
+			inflatedFrame = stringFrame;
 			break;
 		case Texture:
 			final String file = frameDefinition.getString("File");
@@ -693,6 +700,18 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public String getErrorString(final String key) {
-		return this.errorStrings.getField(key, this.racialCommandIndex);
+		String errorString = this.errorStrings.getField(key, this.racialCommandIndex);
+		if (errorString.startsWith("TRIGSTR_")) {
+			errorString = this.mapStrings.get(Integer.parseInt(errorString.substring(8)));
+		}
+		return errorString;
+	}
+
+	public GlyphLayout getGlyphLayout() {
+		return this.glyphLayout;
+	}
+
+	public void setText(final StringFrame stringFrame, final String text) {
+		stringFrame.setText(text, this, this.viewport);
 	}
 }

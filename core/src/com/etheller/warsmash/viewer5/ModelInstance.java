@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5;
 
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.Vector4;
 
@@ -89,6 +90,64 @@ public abstract class ModelInstance extends Node {
 	}
 
 	@Override
+	public Node move(final float[] offset) {
+		final Node result = super.move(offset);
+		updateSceneGridLocationInfo();
+		return result;
+	}
+
+	@Override
+	public Node moveTo(final float[] offset) {
+		final Node result = super.moveTo(offset);
+		updateSceneGridLocationInfo();
+		return result;
+	}
+
+	@Override
+	public Node setLocation(final float x, final float y, final float z) {
+		final Node result = super.setLocation(x, y, z);
+		updateSceneGridLocationInfo();
+		return result;
+	}
+
+	@Override
+	public Node setLocation(final float[] location) {
+		final Node result = super.setLocation(location);
+		updateSceneGridLocationInfo();
+		return result;
+	}
+
+	@Override
+	public Node setLocation(final Vector3 location) {
+		final Node result = super.setLocation(location);
+		updateSceneGridLocationInfo();
+		return result;
+	}
+
+	private void updateSceneGridLocationInfo() {
+		if (this.scene != null) {
+			// can't just use world location if it moves
+			float x, y;
+			if (this.dirty) {
+				// TODO this is an incorrect, predicted location for dirty case
+				if ((this.parent != null) && !this.dontInheritTranslation) {
+					x = this.parent.localLocation.x + this.localLocation.x;
+					y = this.parent.localLocation.y + this.localLocation.y;
+				}
+				else {
+					x = this.localLocation.x;
+					y = this.localLocation.y;
+				}
+			}
+			else {
+				x = this.worldLocation.x;
+				y = this.worldLocation.y;
+			}
+			this.scene.instanceMoved(this, x, y);
+		}
+	}
+
+	@Override
 	public void recalculateTransformation() {
 		super.recalculateTransformation();
 
@@ -100,28 +159,48 @@ public abstract class ModelInstance extends Node {
 	public boolean isVisible(final Camera camera) {
 		// can't just use world location if it moves
 		float x, y, z;
+		float sx, sy, sz;
 		if (this.dirty) {
 			// TODO this is an incorrect, predicted location for dirty case
 			if ((this.parent != null) && !this.dontInheritTranslation) {
 				x = this.parent.localLocation.x + this.localLocation.x;
 				y = this.parent.localLocation.y + this.localLocation.y;
 				z = this.parent.localLocation.z + this.localLocation.z;
+				sx = this.parent.localScale.x * this.localScale.x;
+				sy = this.parent.localScale.y * this.localScale.y;
+				sz = this.parent.localScale.z * this.localScale.z;
 			}
 			else {
 				x = this.localLocation.x;
 				y = this.localLocation.y;
 				z = this.localLocation.z;
+				sx = this.localScale.x;
+				sy = this.localScale.y;
+				sz = this.localScale.z;
 			}
 		}
 		else {
 			x = this.worldLocation.x;
 			y = this.worldLocation.y;
 			z = this.worldLocation.z;
+			sx = this.worldScale.x;
+			sy = this.worldScale.y;
+			sz = this.worldScale.z;
 		}
+		// Get the biggest scaling dimension.
+		if (sy > sx) {
+			sx = sy;
+		}
+
+		if (sz > sx) {
+			sx = sz;
+		}
+
 		final Bounds bounds = this.model.bounds;
 		final Vector4[] planes = camera.planes;
 
-		this.plane = RenderMathUtils.testSphere(planes, x + bounds.x, y + bounds.y, z, bounds.r, this.plane);
+		this.plane = RenderMathUtils.testSphere(planes, x + bounds.x, y + bounds.y, z + bounds.z, bounds.r * sx,
+				this.plane);
 
 		if (this.plane == -1) {
 			this.depth = RenderMathUtils.distanceToPlane3(planes[4], x, y, z);

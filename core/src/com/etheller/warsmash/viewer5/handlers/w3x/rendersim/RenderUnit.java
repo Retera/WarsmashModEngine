@@ -480,6 +480,11 @@ public class RenderUnit implements RenderWidget {
 	}
 
 	@Override
+	public float getZ() {
+		return this.location[2];
+	}
+
+	@Override
 	public void unassignSelectionCircle() {
 		this.selectionCircle = null;
 	}

@@ -19,7 +19,7 @@ public class CAbilityRally extends AbstractCAbility {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-
+		unit.setRallyPoint(unit);
 	}
 
 	@Override

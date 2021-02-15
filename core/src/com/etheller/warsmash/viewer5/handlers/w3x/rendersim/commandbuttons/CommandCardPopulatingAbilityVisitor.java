@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons;
 
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityIconUI;
@@ -28,6 +29,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void> {
 	public static final CommandCardPopulatingAbilityVisitor INSTANCE = new CommandCardPopulatingAbilityVisitor();
@@ -38,11 +41,14 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	private AbilityDataUI abilityDataUI;
 	private int menuBaseOrderId;
 	private boolean hasStop;
+	private final CommandCardActivationReceiverPreviewCallback previewCallback = new CommandCardActivationReceiverPreviewCallback();
+	private GameUI gameUI;
 
-	public CommandCardPopulatingAbilityVisitor reset(final CSimulation game, final CUnit unit,
+	public CommandCardPopulatingAbilityVisitor reset(final CSimulation game, final GameUI gameUI, final CUnit unit,
 			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
 			final int menuBaseOrderId) {
 		this.game = game;
+		this.gameUI = gameUI;
 		this.unit = unit;
 		this.commandButtonListener = commandButtonListener;
 		this.abilityDataUI = abilityDataUI;
@@ -201,15 +207,26 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	}
 
 	private void addCommandButton(final CAbility ability, final IconUI iconUI, final int handleId, final int orderId,
-			final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton, final int goldCost,
-			final int lumberCost, final int foodCost) {
+			final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton, int goldCost,
+			int lumberCost, int foodCost) {
+		ability.checkCanUse(this.game, this.unit, orderId, this.previewCallback.reset());
 		final boolean active = ((this.unit.getCurrentBehavior() != null)
 				&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId()));
-		final boolean disabled = (ability != null) && ability.isDisabled();
+		final boolean disabled = ((ability != null) && ability.isDisabled()) || this.previewCallback.disabled;
+		String uberTip = iconUI.getUberTip();
+		if (disabled) {
+			// dont show these on disabled
+			goldCost = 0;
+			lumberCost = 0;
+			foodCost = 0;
+		}
+		if (this.previewCallback.isShowingRequirements()) {
+			uberTip = this.previewCallback.getRequirementsText() + "|r" + uberTip;
+		}
 		this.commandButtonListener.commandButton(iconUI.getButtonPositionX(), iconUI.getButtonPositionY(),
 				disabled ? iconUI.getIconDisabled() : iconUI.getIcon(), handleId, disabled ? 0 : orderId,
-				autoCastOrderId, active, autoCastActive, menuButton, iconUI.getToolTip(), iconUI.getUberTip(), goldCost,
-				lumberCost, foodCost);
+				autoCastOrderId, active, autoCastActive, menuButton, iconUI.getToolTip(), uberTip, goldCost, lumberCost,
+				foodCost);
 	}
 
 	@Override
@@ -246,5 +263,70 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			}
 		}
 		return null;
+	}
+
+	private final class CommandCardActivationReceiverPreviewCallback implements AbilityActivationReceiver {
+		private boolean disabled;
+		private final StringBuilder requirementsTextBuilder = new StringBuilder();
+
+		public CommandCardActivationReceiverPreviewCallback reset() {
+			this.disabled = false;
+			this.requirementsTextBuilder.setLength(0);
+			return this;
+		}
+
+		@Override
+		public void useOk() {
+
+		}
+
+		@Override
+		public void notEnoughResources(final ResourceType resource) {
+
+		}
+
+		@Override
+		public void notAnActiveAbility() {
+
+		}
+
+		@Override
+		public void missingRequirement(final War3ID type, final int level) {
+			this.disabled = true;
+			if (this.requirementsTextBuilder.length() == 0) {
+				this.requirementsTextBuilder.append(CommandCardPopulatingAbilityVisitor.this.gameUI.getTemplates()
+						.getDecoratedString("REQUIRESTOOLTIP"));
+				this.requirementsTextBuilder.append("|n - ");
+			}
+			else {
+				this.requirementsTextBuilder.append(" - ");
+			}
+			final CUnitType unitType = CommandCardPopulatingAbilityVisitor.this.game.getUnitData().getUnitType(type);
+			this.requirementsTextBuilder
+					.append(unitType == null ? "NOTEXTERN Unknown ('" + type + "')" : unitType.getName());
+			this.requirementsTextBuilder.append("|n");
+		}
+
+		@Override
+		public void casterMovementDisabled() {
+
+		}
+
+		@Override
+		public void cargoCapacityUnavailable() {
+		}
+
+		@Override
+		public void disabled() {
+			this.disabled = true;
+		}
+
+		public boolean isShowingRequirements() {
+			return this.requirementsTextBuilder.length() != 0;
+		}
+
+		public String getRequirementsText() {
+			return this.requirementsTextBuilder.toString();
+		}
 	}
 }

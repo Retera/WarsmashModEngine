@@ -150,6 +150,26 @@ public class CPlayer {
 		return techtreeUnlocked;
 	}
 
+	public void addTechtreeUnlocked(final War3ID rawcode) {
+		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
+		if (techtreeUnlocked == null) {
+			this.rawcodeToTechtreeUnlocked.put(rawcode, 1);
+		}
+		else {
+			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked + 1);
+		}
+	}
+
+	public void removeTechtreeUnlocked(final War3ID rawcode) {
+		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
+		if (techtreeUnlocked == null) {
+			this.rawcodeToTechtreeUnlocked.put(rawcode, -1);
+		}
+		else {
+			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked - 1);
+		}
+	}
+
 	public void addStateListener(final CPlayerStateListener listener) {
 		this.stateNotifier.subscribe(listener);
 	}

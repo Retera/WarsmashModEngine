@@ -236,6 +236,9 @@ public class CUnit extends CWidget {
 			}
 		}
 		else if (!this.paused) {
+			if ((this.rallyPoint != this) && (this.rallyPoint instanceof CUnit) && ((CUnit) this.rallyPoint).isDead()) {
+				setRallyPoint(this);
+			}
 			if (this.constructing) {
 				this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
 				final int buildTime = this.unitType.getBuildTime();
@@ -296,8 +299,9 @@ public class CUnit extends CWidget {
 									game.getGameplayConstants().getBuildingAngle());
 							// dont add food cost to player 2x
 							trainedUnit.setFoodUsed(trainedUnitType.getFoodUsed());
-							game.getPlayer(this.playerIndex).setUnitFoodMade(trainedUnit,
-									trainedUnitType.getFoodMade());
+							final CPlayer player = game.getPlayer(this.playerIndex);
+							player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
+							player.addTechtreeUnlocked(queuedRawcode);
 							// nudge the trained unit out around us
 							trainedUnit.nudgeAround(game, this);
 							game.unitTrainedEvent(this, trainedUnit);

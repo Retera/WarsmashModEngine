@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.HandleIdAllocator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
@@ -136,6 +137,9 @@ public class CUnitData {
 	private static final War3ID UNITS_TRAINED = War3ID.fromString("utra");
 	private static final War3ID RESEARCHES_AVAILABLE = War3ID.fromString("ures");
 	private static final War3ID UNIT_RACE = War3ID.fromString("urac");
+
+	private static final War3ID REQUIRES = War3ID.fromString("ureq");
+	private static final War3ID REQUIRES_AMOUNT = War3ID.fromString("urqc");
 
 	private static final War3ID GOLD_COST = War3ID.fromString("ugol");
 	private static final War3ID LUMBER_COST = War3ID.fromString("ulum");
@@ -416,6 +420,40 @@ public class CUnitData {
 				}
 			}
 
+			final String requirementsString = unitType.getFieldAsString(REQUIRES, 0);
+			final String requirementsLevelsString = unitType.getFieldAsString(REQUIRES_AMOUNT, 0);
+			final String[] requirementsStringItems = requirementsString.split(",");
+			final String[] requirementsLevelsStringItems = requirementsLevelsString.split(",");
+			final List<CUnitTypeRequirement> requirements = new ArrayList<>();
+			for (int i = 0; i < requirementsStringItems.length; i++) {
+				final String item = requirementsStringItems[i];
+				if (!item.isEmpty()) {
+					int level;
+					if (i < requirementsLevelsStringItems.length) {
+						if (requirementsLevelsStringItems[i].isEmpty()) {
+							level = 1;
+						}
+						else {
+							level = Integer.parseInt(requirementsLevelsStringItems[i]);
+						}
+					}
+					else if (requirementsLevelsStringItems.length > 0) {
+						final String requirementLevel = requirementsLevelsStringItems[requirementsLevelsStringItems.length
+								- 1];
+						if (requirementLevel.isEmpty()) {
+							level = 1;
+						}
+						else {
+							level = Integer.parseInt(requirementLevel);
+						}
+					}
+					else {
+						level = 1;
+					}
+					requirements.add(new CUnitTypeRequirement(War3ID.fromString(item), level));
+				}
+			}
+
 			final EnumSet<CBuildingPathingType> preventedPathingTypes = CBuildingPathingType
 					.parsePathingTypeListSet(unitType.getFieldAsString(PREVENT_PLACE, 0));
 			final EnumSet<CBuildingPathingType> requiredPathingTypes = CBuildingPathingType
@@ -429,7 +467,7 @@ public class CUnitData {
 					defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
 					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, unitRace, goldCost,
 					lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow,
-					turnRate);
+					turnRate, requirements);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
 		return unitTypeInstance;

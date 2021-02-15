@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
+import com.etheller.warsmash.util.War3ID;
+
 public class StringMsgAbilityActivationReceiver implements AbilityActivationReceiver {
 	private String message;
 	private boolean useOk = false;
@@ -34,8 +36,8 @@ public class StringMsgAbilityActivationReceiver implements AbilityActivationRece
 	}
 
 	@Override
-	public void missingRequirement(final String name) {
-		this.message = "NOTEXTERN: Requires " + name;
+	public void missingRequirement(final War3ID type, final int level) {
+		this.message = "NOTEXTERN: Requires " + type;
 	}
 
 	@Override

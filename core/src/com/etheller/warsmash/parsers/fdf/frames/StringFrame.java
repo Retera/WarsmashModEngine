@@ -97,6 +97,7 @@ public class StringFrame extends AbstractRenderableFrame {
 					final char escapedCharacter = this.text.charAt(i + 1);
 					switch (escapedCharacter) {
 					case 'c':
+					case 'C':
 						if ((i + 9) < this.text.length()) {
 							int colorInt;
 							try {
@@ -161,6 +162,7 @@ public class StringFrame extends AbstractRenderableFrame {
 						}
 						break;
 					case 'r':
+					case 'R':
 						i++; {
 						final String wordString = currentWord.toString();
 						currentWord.setLength(0);
@@ -210,7 +212,8 @@ public class StringFrame extends AbstractRenderableFrame {
 					}
 						currentColor = this.color;
 						break;
-					case 'n': {
+					case 'n':
+					case 'N': {
 
 						final String wordString = currentWord.toString();
 						currentWord.setLength(0);
@@ -344,6 +347,9 @@ public class StringFrame extends AbstractRenderableFrame {
 			singleStringFrame.setHeight(this.frameFont.getLineHeight());
 			singleStringFrame.setWidth(glyphLayout.width);
 			singleStringFrame.setAlpha(this.alpha);
+			singleStringFrame.setFontShadowColor(this.fontShadowColor);
+			singleStringFrame.setFontShadowOffsetX(this.fontShadowOffsetX);
+			singleStringFrame.setFontShadowOffsetY(this.fontShadowOffsetY);
 			singleStringFrame.addAnchor(new AnchorDefinition(FramePoint.TOPLEFT, currentXCoordForFrames, -usedHeight));
 			this.internalFrames.add(singleStringFrame);
 			currentXCoordForFrames = currentXCoordForWord;

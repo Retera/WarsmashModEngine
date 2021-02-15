@@ -418,7 +418,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.unitManaText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitManaPointText", 0);
 
 		final float infoPanelUnitDetailWidth = GameUI.convertY(this.uiViewport, 0.180f);
-		final float infoPanelUnitDetailHeight = GameUI.convertY(this.uiViewport, 0.105f);
+		final float infoPanelUnitDetailHeight = GameUI.convertY(this.uiViewport, 0.110f);
 		this.smashSimpleInfoPanel = this.rootFrame.createSimpleFrame("SmashSimpleInfoPanel", this.rootFrame, 0);
 		this.smashSimpleInfoPanel
 				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, 0.0f)));
@@ -556,7 +556,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				new Color(0xFFCC00FF), TextJustify.LEFT, TextJustify.MIDDLE, worldFrameMessageFontHeight);
 		this.errorMessageFrame.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
 				GameUI.convertX(this.uiViewport, 0.212f), GameUI.convertY(this.uiViewport, 0.182f)));
-		this.errorMessageFrame.setWidth(GameUI.convertX(this.uiViewport, 0.25f));
+		this.errorMessageFrame.setWidth(GameUI.convertX(this.uiViewport, 0.35f));
 		this.errorMessageFrame.setHeight(GameUI.convertY(this.uiViewport, worldFrameMessageFontHeight));
 
 		this.errorMessageFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
@@ -1773,7 +1773,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.commandButton(cancelUI.getButtonPositionX(), cancelUI.getButtonPositionY(), cancelUI.getIcon(), 0,
 						exitOrderId, 0, false, false, true, cancelUI.getToolTip(), cancelUI.getUberTip(), 0, 0, 0);
 			}
-			this.selectedUnit.populateCommandCard(this.war3MapViewer.simulation, this, abilityDataUI, menuOrderId);
+			this.selectedUnit.populateCommandCard(this.war3MapViewer.simulation, this.rootFrame, this, abilityDataUI,
+					menuOrderId);
 		}
 	}
 
@@ -1941,7 +1942,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				else {
 					final List<RenderWidget> selectedUnits = this.war3MapViewer.selectUnit(screenX, worldScreenY,
 							false);
-					selectWidgets(selectedUnits);
+					if (!selectedUnits.isEmpty()) {
+						selectWidgets(selectedUnits);
+					}
 				}
 			}
 		}

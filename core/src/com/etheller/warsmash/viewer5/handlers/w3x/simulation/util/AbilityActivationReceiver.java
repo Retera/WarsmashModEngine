@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
+import com.etheller.warsmash.util.War3ID;
+
 public interface AbilityActivationReceiver {
 	void useOk();
 
@@ -7,7 +9,7 @@ public interface AbilityActivationReceiver {
 
 	void notAnActiveAbility();
 
-	void missingRequirement(String name);
+	void missingRequirement(War3ID type, int level);
 
 	void casterMovementDisabled();
 

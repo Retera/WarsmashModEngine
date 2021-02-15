@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Quaternion;
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
@@ -142,10 +143,11 @@ public class RenderUnit implements RenderWidget {
 
 	}
 
-	public void populateCommandCard(final CSimulation game, final CommandButtonListener commandButtonListener,
-			final AbilityDataUI abilityDataUI, final int subMenuOrderId) {
+	public void populateCommandCard(final CSimulation game, final GameUI gameUI,
+			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
+			final int subMenuOrderId) {
 		final CommandCardPopulatingAbilityVisitor commandCardPopulatingVisitor = CommandCardPopulatingAbilityVisitor.INSTANCE
-				.reset(game, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId);
+				.reset(game, gameUI, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId);
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
 			ability.visit(commandCardPopulatingVisitor);
 		}

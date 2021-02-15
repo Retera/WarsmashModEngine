@@ -57,7 +57,7 @@ public class WorldScene extends Scene {
 
 		// Update and collect all of the visible instances.
 		for (final GridCell cell : this.grid.cells) {
-			if (cell.isVisible(this.camera)) {
+			if (cell.isVisible(this.camera) || true) {
 				this.visibleCells += 1;
 
 				for (final ModelInstance instance : new ArrayList<>(cell.instances)) {

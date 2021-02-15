@@ -279,6 +279,8 @@ public class CSimulation {
 	}
 
 	public void unitConstructFinishEvent(final CUnit constructedStructure) {
+		final CPlayer player = getPlayer(constructedStructure.getPlayerIndex());
+		player.addTechtreeUnlocked(constructedStructure.getTypeId());
 		this.simulationRenderController.spawnUnitConstructionFinishSound(constructedStructure);
 	}
 
@@ -310,6 +312,7 @@ public class CSimulation {
 			final CPlayer player = this.players.get(unit.getPlayerIndex());
 			player.setUnitFoodUsed(unit, unit.getUnitType().getFoodUsed());
 			player.setUnitFoodMade(unit, unit.getUnitType().getFoodMade());
+			player.addTechtreeUnlocked(unit.getTypeId());
 		}
 	}
 

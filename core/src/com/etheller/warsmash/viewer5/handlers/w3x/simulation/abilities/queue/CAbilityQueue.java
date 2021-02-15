@@ -8,6 +8,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
@@ -45,22 +46,36 @@ public final class CAbilityQueue extends AbstractCAbility {
 			final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
 			if (unitType != null) {
 				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
-				if (player.getGold() >= unitType.getGoldCost()) {
-					if (player.getLumber() >= unitType.getLumberCost()) {
-						if ((unitType.getFoodUsed() == 0)
-								|| ((player.getFoodUsed() + unitType.getFoodUsed()) <= player.getFoodCap())) {
-							receiver.useOk();
+				final List<CUnitTypeRequirement> requirements = unitType.getRequirements();
+				boolean requirementsMet = true;
+				for (final CUnitTypeRequirement requirement : requirements) {
+					if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
+						requirementsMet = false;
+					}
+				}
+				if (requirementsMet) {
+					if (player.getGold() >= unitType.getGoldCost()) {
+						if (player.getLumber() >= unitType.getLumberCost()) {
+							if ((unitType.getFoodUsed() == 0)
+									|| ((player.getFoodUsed() + unitType.getFoodUsed()) <= player.getFoodCap())) {
+								receiver.useOk();
+							}
+							else {
+								receiver.notEnoughResources(ResourceType.FOOD);
+							}
 						}
 						else {
-							receiver.notEnoughResources(ResourceType.FOOD);
+							receiver.notEnoughResources(ResourceType.LUMBER);
 						}
 					}
 					else {
-						receiver.notEnoughResources(ResourceType.LUMBER);
+						receiver.notEnoughResources(ResourceType.GOLD);
 					}
 				}
 				else {
-					receiver.notEnoughResources(ResourceType.GOLD);
+					for (final CUnitTypeRequirement requirement : requirements) {
+						receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+					}
 				}
 			}
 			else {

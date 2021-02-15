@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
+import com.etheller.warsmash.util.War3ID;
+
 public class BooleanAbilityActivationReceiver implements AbilityActivationReceiver {
 	public static final BooleanAbilityActivationReceiver INSTANCE = new BooleanAbilityActivationReceiver();
 	private boolean ok;
@@ -20,7 +22,7 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
-	public void missingRequirement(final String name) {
+	public void missingRequirement(final War3ID type, final int level) {
 		this.ok = false;
 	}
 

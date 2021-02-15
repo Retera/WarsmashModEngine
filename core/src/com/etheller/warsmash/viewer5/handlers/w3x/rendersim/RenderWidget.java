@@ -44,7 +44,7 @@ public interface RenderWidget {
 		private final EnumSet<AnimationTokens.SecondaryTag> recycleSet = EnumSet
 				.noneOf(AnimationTokens.SecondaryTag.class);
 		private PrimaryTag currentAnimation;
-		private EnumSet<SecondaryTag> currentAnimationSecondaryTags;
+		private EnumSet<SecondaryTag> currentAnimationSecondaryTags = SequenceUtils.EMPTY;
 		private float currentSpeedRatio;
 		private boolean currentlyAllowingRarityVariations;
 		private final Queue<QueuedAnimation> animationQueue = new LinkedList<>();

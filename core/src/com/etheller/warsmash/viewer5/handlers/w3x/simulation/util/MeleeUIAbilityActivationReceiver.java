@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.AudioContext;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
@@ -59,7 +60,7 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
-	public void missingRequirement(final String name) {
+	public void missingRequirement(final War3ID type, final int level) {
 		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
 	}
 

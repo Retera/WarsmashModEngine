@@ -31,13 +31,13 @@ Frame "SIMPLEFRAME" "UnitPortrait" {
 	}
 	
     String "UnitPortraitHitPointText" INHERITS "UnitPortraitTextTemplate" {
-        Anchor BOTTOM, 0, 0.0115,
+        Anchor BOTTOM, 0, 0.014,
         FontJustificationH JUSTIFYCENTER,
     	FontColor 0.0 1.0 0.0 1.0,
     }
 	
     String "UnitPortraitManaPointText" INHERITS "UnitPortraitTextTemplate" {
-        Anchor BOTTOM, 0, -0.0030,
+        Anchor BOTTOM, 0, -0.0005,
         FontJustificationH JUSTIFYCENTER,
     	FontColor 1.0 1.0 1.0 1.0,
     }

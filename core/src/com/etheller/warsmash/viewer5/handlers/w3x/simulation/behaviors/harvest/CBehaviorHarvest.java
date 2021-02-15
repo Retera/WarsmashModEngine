@@ -92,7 +92,12 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 				}
 			}
 			// weird invalid target and we have no resources, consider harvesting done
-			return this.unit.pollNextOrderBehavior(this.simulation);
+			if (this.abilityHarvest.getCarriedResourceAmount() == 0) {
+				return this.unit.pollNextOrderBehavior(this.simulation);
+			}
+			else {
+				return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
+			}
 		}
 		else {
 			// we have some GOLD and we're not in a mine (?) lets do a return resources

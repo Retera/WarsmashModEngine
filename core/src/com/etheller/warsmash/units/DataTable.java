@@ -139,9 +139,6 @@ public class DataTable implements ObjectData {
 					if (currentUnit == null) {
 						System.out.println("null for " + input);
 					}
-					if ("Nofood".equals(fieldName)) {
-						System.out.println(builder.toString().trim());
-					}
 					values.add(builder.toString().trim());
 				}
 				currentUnit.setField(fieldName, values);

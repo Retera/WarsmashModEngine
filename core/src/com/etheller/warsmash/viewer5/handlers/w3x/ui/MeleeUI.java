@@ -146,7 +146,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private static final String BUILDING_PATHING_PREVIEW_KEY = "buildingPathingPreview";
 	public static final float DEFAULT_COMMAND_CARD_ICON_WIDTH = 0.039f;
 	public static final float DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH = 0.037f;
-	private static final int COMMAND_CARD_WIDTH = 4;
+	private static final int COMMAND_CARD_WIDTH = 5;
 	private static final int COMMAND_CARD_HEIGHT = 3;
 
 	private static final Vector2 screenCoordsVector = new Vector2();
@@ -1748,6 +1748,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	@Override
 	public void ordersChanged() {
 		reloadSelectedUnitUI(this.selectedUnit);
+		if (this.mouseOverUIFrame instanceof ClickableActionFrame) {
+			loadTooltip();
+		}
 	}
 
 	@Override
@@ -2094,50 +2097,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (mousedUIFrame != this.mouseOverUIFrame) {
 			if (mousedUIFrame instanceof ClickableActionFrame) {
 				this.mouseOverUIFrame = (ClickableActionFrame) mousedUIFrame;
-				final int goldCost = this.mouseOverUIFrame.getToolTipGoldCost();
-				final int lumberCost = this.mouseOverUIFrame.getToolTipLumberCost();
-				final int foodCost = this.mouseOverUIFrame.getToolTipFoodCost();
-				final String toolTip = this.mouseOverUIFrame.getToolTip();
-				this.rootFrame.setText(this.tooltipUberTipText, this.mouseOverUIFrame.getUberTip());
-				int resourceIndex = 0;
-				if (goldCost != 0) {
-					this.tooltipResourceFrames[resourceIndex].setVisible(true);
-					this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipGoldIcon", this.rootFrame);
-					this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(goldCost));
-					resourceIndex++;
-				}
-				if (lumberCost != 0) {
-					this.tooltipResourceFrames[resourceIndex].setVisible(true);
-					this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipLumberIcon", this.rootFrame);
-					this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(lumberCost));
-					resourceIndex++;
-				}
-				if (foodCost != 0) {
-					this.tooltipResourceFrames[resourceIndex].setVisible(true);
-					this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipSupplyIcon", this.rootFrame);
-					this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(foodCost));
-					resourceIndex++;
-				}
-				for (int i = resourceIndex; i < this.tooltipResourceFrames.length; i++) {
-					this.tooltipResourceFrames[i].setVisible(false);
-				}
-				float resourcesHeight;
-				if (resourceIndex != 0) {
-					this.tooltipUberTipText.addSetPoint(this.uberTipWithResourcesSetPoint);
-					resourcesHeight = 0.014f;
-				}
-				else {
-					this.tooltipUberTipText.addSetPoint(this.uberTipNoResourcesSetPoint);
-					resourcesHeight = 0.004f;
-				}
-				this.rootFrame.setText(this.tooltipText, toolTip);
-				final float predictedViewportHeight = this.tooltipText.getPredictedViewportHeight()
-						+ GameUI.convertY(this.uiViewport, resourcesHeight)
-						+ this.tooltipUberTipText.getPredictedViewportHeight()
-						+ GameUI.convertY(this.uiViewport, 0.003f);
-				this.tooltipFrame.setHeight(predictedViewportHeight);
-				this.tooltipFrame.positionBounds(this.rootFrame, this.uiViewport);
-				this.tooltipFrame.setVisible(true);
+				loadTooltip();
 			}
 			else {
 				this.mouseOverUIFrame = null;
@@ -2145,6 +2105,52 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		return false;
+	}
+
+	private void loadTooltip() {
+		final int goldCost = this.mouseOverUIFrame.getToolTipGoldCost();
+		final int lumberCost = this.mouseOverUIFrame.getToolTipLumberCost();
+		final int foodCost = this.mouseOverUIFrame.getToolTipFoodCost();
+		final String toolTip = this.mouseOverUIFrame.getToolTip();
+		this.rootFrame.setText(this.tooltipUberTipText, this.mouseOverUIFrame.getUberTip());
+		int resourceIndex = 0;
+		if (goldCost != 0) {
+			this.tooltipResourceFrames[resourceIndex].setVisible(true);
+			this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipGoldIcon", this.rootFrame);
+			this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(goldCost));
+			resourceIndex++;
+		}
+		if (lumberCost != 0) {
+			this.tooltipResourceFrames[resourceIndex].setVisible(true);
+			this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipLumberIcon", this.rootFrame);
+			this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(lumberCost));
+			resourceIndex++;
+		}
+		if (foodCost != 0) {
+			this.tooltipResourceFrames[resourceIndex].setVisible(true);
+			this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipSupplyIcon", this.rootFrame);
+			this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(foodCost));
+			resourceIndex++;
+		}
+		for (int i = resourceIndex; i < this.tooltipResourceFrames.length; i++) {
+			this.tooltipResourceFrames[i].setVisible(false);
+		}
+		float resourcesHeight;
+		if (resourceIndex != 0) {
+			this.tooltipUberTipText.addSetPoint(this.uberTipWithResourcesSetPoint);
+			resourcesHeight = 0.014f;
+		}
+		else {
+			this.tooltipUberTipText.addSetPoint(this.uberTipNoResourcesSetPoint);
+			resourcesHeight = 0.004f;
+		}
+		this.rootFrame.setText(this.tooltipText, toolTip);
+		final float predictedViewportHeight = this.tooltipText.getPredictedViewportHeight()
+				+ GameUI.convertY(this.uiViewport, resourcesHeight)
+				+ this.tooltipUberTipText.getPredictedViewportHeight() + GameUI.convertY(this.uiViewport, 0.003f);
+		this.tooltipFrame.setHeight(predictedViewportHeight);
+		this.tooltipFrame.positionBounds(this.rootFrame, this.uiViewport);
+		this.tooltipFrame.setVisible(true);
 	}
 
 	public float getHeightRatioCorrection() {

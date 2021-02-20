@@ -20,7 +20,7 @@ public abstract class AbstractCAbilityTypeDefinition<TYPE_LEVEL_DATA extends CAb
 	public CAbilityType<?> createAbilityType(final War3ID alias, final MutableGameObject abilityEditorData) {
 		final int levels = abilityEditorData.getFieldAsInteger(LEVELS, 0);
 		final List<TYPE_LEVEL_DATA> levelData = new ArrayList<>();
-		for (int level = 0; level < levels; level++) {
+		for (int level = 1; level <= levels; level++) {
 			levelData.add(createLevelData(abilityEditorData, level));
 		}
 		return innerCreateAbilityType(alias, abilityEditorData, levelData);

@@ -11,6 +11,7 @@ import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -246,7 +247,10 @@ public class CUnitData {
 			final float turnRate = unitType.getFieldAsFloat(TURN_RATE, 0);
 
 			final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);
-			final PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
+			PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
+			if (movementType == null) {
+				movementType = MovementType.DISABLED;
+			}
 			final String unitName = unitType.getFieldAsString(NAME, 0);
 			final float acquisitionRange = unitType.getFieldAsFloat(ACQUISITION_RANGE, 0);
 			final float minimumAttackRange = unitType.getFieldAsFloat(MINIMUM_ATTACK_RANGE, 0);

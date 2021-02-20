@@ -541,6 +541,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						if (damagedWidget == null) {
 							damagedWidget = War3MapViewer.this.destructableToRenderPeer.get(damagedDestructable);
 						}
+						if (damagedWidget == null) {
+							return;
+						}
 						final String key = weaponSound + armorType;
 						UnitSound combatSound = this.keyToCombatSound.get(key);
 						if (combatSound == null) {

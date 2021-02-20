@@ -146,7 +146,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private static final String BUILDING_PATHING_PREVIEW_KEY = "buildingPathingPreview";
 	public static final float DEFAULT_COMMAND_CARD_ICON_WIDTH = 0.039f;
 	public static final float DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH = 0.037f;
-	private static final int COMMAND_CARD_WIDTH = 5;
+	private static final int COMMAND_CARD_WIDTH = 4;
 	private static final int COMMAND_CARD_HEIGHT = 3;
 
 	private static final Vector2 screenCoordsVector = new Vector2();

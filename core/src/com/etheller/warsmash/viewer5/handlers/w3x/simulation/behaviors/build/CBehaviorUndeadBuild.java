@@ -42,8 +42,12 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 			return true;
 		}
 		final CUnitType unitType = simulation.getUnitData().getUnitType(this.orderId);
+		final BufferedImage buildingPathingPixelMap = unitType.getBuildingPathingPixelMap();
+		if (buildingPathingPixelMap == null) {
+			return this.unit.canReach(this.target.getX(), this.target.getY(), unitType.getCollisionSize());
+		}
 		return this.unit.canReachToPathing(0, simulation.getGameplayConstants().getBuildingAngle(),
-				unitType.getBuildingPathingPixelMap(), this.target.getX(), this.target.getY());
+				buildingPathingPixelMap, this.target.getX(), this.target.getY());
 	}
 
 	@Override

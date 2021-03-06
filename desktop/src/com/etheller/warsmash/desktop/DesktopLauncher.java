@@ -15,12 +15,15 @@ import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL33;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglNativesLoader;
-import com.etheller.warsmash.WarsmashGdxMapGame;
+import com.etheller.warsmash.WarsmashGdxMapScreen;
+import com.etheller.warsmash.WarsmashGdxMenuScreen;
+import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.audio.OpenALSound;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.util.StringBundle;
@@ -40,21 +43,40 @@ public class DesktopLauncher {
 		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
 		// config.samples = 16;
-//		config.vSyncEnabled = false;
-//		config.foregroundFPS = 0;
-//		config.backgroundFPS = 0;
+		config.vSyncEnabled = false;
+		config.foregroundFPS = 0;
+		config.backgroundFPS = 0;
 		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
 		config.width = desktopDisplayMode.width;
 		config.height = desktopDisplayMode.height;
-		if ((arg.length > 0) && "-windowed".equals(arg[0])) {
-			config.fullscreen = false;
-		}
-		else {
-			config.fullscreen = true;
+		String fileToLoad = null;
+		config.fullscreen = true;
+		for (int argIndex = 0; argIndex < arg.length; argIndex++) {
+			if ("-windowed".equals(arg[argIndex])) {
+				config.fullscreen = false;
+			}
+			else if ((arg.length > (argIndex + 1)) && "-loadfile".equals(arg[argIndex])) {
+				argIndex++;
+				fileToLoad = arg[argIndex];
+			}
 		}
 		loadExtensions();
 		final DataTable warsmashIni = loadWarsmashIni();
-		new LwjglApplication(new WarsmashGdxMapGame(warsmashIni), config);
+		final WarsmashGdxMultiScreenGame warsmashGdxMultiScreenGame = new WarsmashGdxMultiScreenGame();
+		new LwjglApplication(warsmashGdxMultiScreenGame, config);
+		final String finalFileToLoad = fileToLoad;
+		Gdx.app.postRunnable(new Runnable() {
+			@Override
+			public void run() {
+				if (finalFileToLoad != null) {
+					warsmashGdxMultiScreenGame.setScreen(new WarsmashGdxMapScreen(warsmashIni, finalFileToLoad));
+				}
+				else {
+					warsmashGdxMultiScreenGame
+							.setScreen(new WarsmashGdxMenuScreen(warsmashIni, warsmashGdxMultiScreenGame));
+				}
+			}
+		});
 	}
 
 	public static DataTable loadWarsmashIni() {
@@ -123,8 +145,9 @@ public class DesktopLauncher {
 
 			@Override
 			public void play(final Sound buffer, final float volume, final float pitch, final float x, final float y,
-					final float z, final boolean is3dSound, final float maxDistance, final float refDistance) {
-				((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance);
+					final float z, final boolean is3dSound, final float maxDistance, final float refDistance,
+					final boolean looping) {
+				((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance, looping);
 			}
 
 			@Override

@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class AbilityDataUI {
 	// Standard ability icon fields
@@ -30,6 +32,13 @@ public class AbilityDataUI {
 	private static final War3ID ABILITY_RESEARCH_TIP = War3ID.fromString("aret");
 	private static final War3ID ABILITY_RESEARCH_UBER_TIP = War3ID.fromString("arut");
 
+	private static final War3ID CASTER_ART = War3ID.fromString("acat");
+	private static final War3ID TARGET_ART = War3ID.fromString("atat");
+	private static final War3ID SPECIAL_ART = War3ID.fromString("asat");
+	private static final War3ID EFFECT_ART = War3ID.fromString("aeat");
+	private static final War3ID AREA_EFFECT_ART = War3ID.fromString("aaea");
+	private static final War3ID MISSILE_ART = War3ID.fromString("amat");
+
 	private static final War3ID UNIT_ICON_NORMAL_X = War3ID.fromString("ubpx");
 	private static final War3ID UNIT_ICON_NORMAL_Y = War3ID.fromString("ubpy");
 	private static final War3ID UNIT_ICON_NORMAL = War3ID.fromString("uico");
@@ -43,7 +52,7 @@ public class AbilityDataUI {
 	private static final War3ID UPGRADE_TIP = War3ID.fromString("gtp1");
 	private static final War3ID UPGRADE_UBER_TIP = War3ID.fromString("gub1");
 
-	private final Map<War3ID, AbilityIconUI> rawcodeToUI = new HashMap<>();
+	private final Map<War3ID, AbilityUI> rawcodeToUI = new HashMap<>();
 	private final Map<War3ID, IconUI> rawcodeToUnitUI = new HashMap<>();
 	private final Map<War3ID, List<IconUI>> rawcodeToUpgradeUI = new HashMap<>();
 	private final IconUI moveUI;
@@ -62,9 +71,10 @@ public class AbilityDataUI {
 	private final IconUI cancelBuildUI;
 	private final IconUI cancelTrainUI;
 	private final IconUI rallyUI;
+	private final IconUI selectSkillUI;
 
 	public AbilityDataUI(final MutableObjectData abilityData, final MutableObjectData unitData,
-			final MutableObjectData upgradeData, final GameUI gameUI) {
+			final MutableObjectData upgradeData, final GameUI gameUI, final War3MapViewer viewer) {
 		final String disabledPrefix = gameUI.getSkinField("CommandButtonDisabledArtPath");
 		for (final War3ID alias : abilityData.keySet()) {
 			final MutableGameObject abilityTypeData = abilityData.get(alias);
@@ -89,13 +99,23 @@ public class AbilityDataUI {
 			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
 			final Texture iconTurnOff = gameUI.loadTexture(iconTurnOffPath);
 			final Texture iconTurnOffDisabled = gameUI.loadTexture(disable(iconTurnOffPath, disabledPrefix));
+
+			final List<String> casterArt = Arrays.asList(abilityTypeData.getFieldAsString(CASTER_ART, 0).split(","));
+			final List<String> targetArt = Arrays.asList(abilityTypeData.getFieldAsString(TARGET_ART, 0).split(","));
+			final List<String> specialArt = Arrays.asList(abilityTypeData.getFieldAsString(SPECIAL_ART, 0).split(","));
+			final List<String> effectArt = Arrays.asList(abilityTypeData.getFieldAsString(EFFECT_ART, 0).split(","));
+			final List<String> areaEffectArt = Arrays
+					.asList(abilityTypeData.getFieldAsString(AREA_EFFECT_ART, 0).split(","));
+			final List<String> missileArt = Arrays.asList(abilityTypeData.getFieldAsString(MISSILE_ART, 0).split(","));
+
 			this.rawcodeToUI.put(alias,
-					new AbilityIconUI(
+					new AbilityUI(
 							new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY,
 									iconResearchTip, iconResearchUberTip),
 							new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip, iconUberTip),
 							new IconUI(iconTurnOff, iconTurnOffDisabled, iconTurnOffX, iconTurnOffY, iconTurnOffTip,
-									iconTurnOffUberTip)));
+									iconTurnOffUberTip),
+							casterArt, targetArt, specialArt, effectArt, areaEffectArt, missileArt));
 		}
 		for (final War3ID alias : unitData.keySet()) {
 			final MutableGameObject abilityTypeData = unitData.get(alias);
@@ -143,6 +163,7 @@ public class AbilityDataUI {
 		this.cancelBuildUI = createBuiltInIconUI(gameUI, "CmdCancelBuild", disabledPrefix);
 		this.cancelTrainUI = createBuiltInIconUI(gameUI, "CmdCancelTrain", disabledPrefix);
 		this.rallyUI = createBuiltInIconUI(gameUI, "CmdRally", disabledPrefix);
+		this.selectSkillUI = createBuiltInIconUI(gameUI, "CmdSelectSkill", disabledPrefix);
 	}
 
 	private IconUI createBuiltInIconUI(final GameUI gameUI, final String key, final String disabledPrefix) {
@@ -157,7 +178,7 @@ public class AbilityDataUI {
 		return new IconUI(icon, iconDisabled, buttonPositionX, buttonPositionY, tip, uberTip);
 	}
 
-	public AbilityIconUI getUI(final War3ID rawcode) {
+	public AbilityUI getUI(final War3ID rawcode) {
 		return this.rawcodeToUI.get(rawcode);
 	}
 
@@ -249,6 +270,10 @@ public class AbilityDataUI {
 
 	public IconUI getRallyUI() {
 		return this.rallyUI;
+	}
+
+	public IconUI getSelectSkillUI() {
+		return this.selectSkillUI;
 	}
 
 }

@@ -12,6 +12,7 @@ public abstract class SkeletalNode extends GenericNode {
 	protected static final Vector3 billboardAxisHeap = new Vector3();
 	protected static final Quaternion rotationHeap = new Quaternion();
 	protected static final Quaternion rotationHeap2 = new Quaternion();
+	protected static final Quaternion rotationHeap3 = new Quaternion();
 	protected static final Vector3 scalingHeap = new Vector3();
 	protected static final Vector3 blendLocationHeap = new Vector3();
 	protected static final Vector3 blendHeap = new Vector3();
@@ -133,10 +134,33 @@ public abstract class SkeletalNode extends GenericNode {
 			computedRotation = rotationHeap;
 			cameraRayHeap.set(camera.billboardedVectors[6]);
 			computedRotation.set(this.parent.inverseWorldRotation);
+
+			// Compute local rotation
+			if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0)) {
+				rotationHeap2.set(this.localRotation).slerp(this.localBlendRotation, blendTimeRatio);
+			}
+			else {
+				rotationHeap2.set(this.localRotation);
+			}
+			// Inverse that local rotation
+			rotationHeap2.x = -rotationHeap2.x;
+			rotationHeap2.y = -rotationHeap2.y;
+			rotationHeap2.z = -rotationHeap2.z;
+			rotationHeap3.set(computedRotation);
+			RenderMathUtils.mul(computedRotation, rotationHeap2, rotationHeap3);
+
 			computedRotation.transform(cameraRayHeap);
+
 			billboardAxisHeap.set(0, 1, 0);
 			final float angle = (float) Math.atan2(cameraRayHeap.z, -cameraRayHeap.x);
 			computedRotation.setFromAxisRad(billboardAxisHeap, angle);
+
+			// Inverse that local rotation back to what it was
+			rotationHeap2.x = -rotationHeap2.x;
+			rotationHeap2.y = -rotationHeap2.y;
+			rotationHeap2.z = -rotationHeap2.z;
+			rotationHeap3.set(computedRotation);
+			RenderMathUtils.mul(computedRotation, rotationHeap2, rotationHeap3);
 		}
 		else if (this.billboardedZ) {
 			final Camera camera = scene.camera;

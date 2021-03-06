@@ -778,6 +778,15 @@ public class MdxComplexInstance extends ModelInstance {
 
 	public void setAnimationSpeed(final float speedRatio) {
 		this.animationSpeed = speedRatio;
+		for (final AttachmentInstance attachmentInstance : this.attachments) {
+			if (attachmentInstance.internalInstance != null) {
+				attachmentInstance.internalInstance.setAnimationSpeed(speedRatio);
+			}
+		}
+	}
+
+	public float getAnimationSpeed() {
+		return this.animationSpeed;
 	}
 
 	public void setBlendTime(final float blendTime) {
@@ -796,6 +805,11 @@ public class MdxComplexInstance extends ModelInstance {
 					+ ((currentlyPlayingSequence.getInterval()[1] - currentlyPlayingSequence.getInterval()[0])
 							* ratioOfAnimationCompleted);
 			this.frame = (int) this.floatingFrame;
+			for (final AttachmentInstance attachmentInstance : this.attachments) {
+				if (attachmentInstance.internalInstance != null) {
+					attachmentInstance.internalInstance.setFrameByRatio(ratioOfAnimationCompleted);
+				}
+			}
 		}
 	}
 }

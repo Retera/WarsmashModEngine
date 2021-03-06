@@ -25,6 +25,14 @@ public class CUnitAttackInstant extends CUnitAttack {
 		this.projectileArt = projectileArt;
 	}
 
+	@Override
+	public CUnitAttack copy() {
+		return new CUnitAttackInstant(getAnimationBackswingPoint(), getAnimationDamagePoint(), getAttackType(),
+				getCooldownTime(), getDamageBase(), getDamageDice(), getDamageSidesPerDie(), getDamageUpgradeAmount(),
+				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType(),
+				this.projectileArt);
+	}
+
 	public String getProjectileArt() {
 		return this.projectileArt;
 	}

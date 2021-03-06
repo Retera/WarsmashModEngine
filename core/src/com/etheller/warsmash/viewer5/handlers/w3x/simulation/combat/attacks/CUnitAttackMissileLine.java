@@ -24,6 +24,15 @@ public class CUnitAttackMissileLine extends CUnitAttackMissile {
 		this.damageSpillRadius = damageSpillRadius;
 	}
 
+	@Override
+	public CUnitAttack copy() {
+		return new CUnitAttackMissileLine(getAnimationBackswingPoint(), getAnimationDamagePoint(), getAttackType(),
+				getCooldownTime(), getDamageBase(), getDamageDice(), getDamageSidesPerDie(), getDamageUpgradeAmount(),
+				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType(),
+				getProjectileArc(), getProjectileArt(), isProjectileHomingEnabled(), getProjectileSpeed(),
+				this.damageSpillDistance, this.damageSpillRadius);
+	}
+
 	public float getDamageSpillDistance() {
 		return this.damageSpillDistance;
 	}

@@ -135,16 +135,19 @@ public class FrameDefinitionFieldVisitor extends FDFBaseVisitor<Void> {
 
 	@Override
 	public Void visitFontElement(final FontElementContext ctx) {
-		this.frameDefinition.set(ctx.ID().getText(),
-				new FontFrameDefinitionField(new FontDefinition(ctx.STRING_LITERAL(0).getText(),
-						Float.parseFloat(ctx.FLOAT().getText()), ctx.STRING_LITERAL(1).getText())));
+		String text = ctx.STRING_LITERAL(0).getText();
+		text = text.substring(1, text.length() - 1);
+		this.frameDefinition.set(ctx.ID().getText(), new FontFrameDefinitionField(
+				new FontDefinition(text, Float.parseFloat(ctx.FLOAT().getText()), ctx.STRING_LITERAL(1).getText())));
 		return null;
 	}
 
 	@Override
 	public Void visitSimpleFontElement(final SimpleFontElementContext ctx) {
-		this.frameDefinition.set(ctx.ID().getText(), new FontFrameDefinitionField(
-				new FontDefinition(ctx.STRING_LITERAL().getText(), Float.parseFloat(ctx.FLOAT().getText()), null)));
+		String text = ctx.STRING_LITERAL().getText();
+		text = text.substring(1, text.length() - 1);
+		this.frameDefinition.set(ctx.ID().getText(),
+				new FontFrameDefinitionField(new FontDefinition(text, Float.parseFloat(ctx.FLOAT().getText()), null)));
 		return null;
 	}
 

@@ -53,7 +53,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 		this.behaviorHarvest = new CBehaviorHarvest(unit, this);
 		this.behaviorReturnResources = new CBehaviorReturnResources(unit, this);
 
-		final List<CUnitAttack> unitAttacks = unit.getUnitType().getAttacks();
+		final List<CUnitAttack> unitAttacks = unit.getAttacks();
 		CUnitAttack bestFitTreeAttack = null;
 		for (final CUnitAttack attack : unitAttacks) {
 			if (attack.getTargetsAllowed().contains(CTargetType.TREE)) {

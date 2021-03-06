@@ -40,6 +40,16 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 	}
 
 	@Override
+	public CUnitAttack copy() {
+		return new CUnitAttackMissileSplash(getAnimationBackswingPoint(), getAnimationDamagePoint(), getAttackType(),
+				getCooldownTime(), getDamageBase(), getDamageDice(), getDamageSidesPerDie(), getDamageUpgradeAmount(),
+				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType(),
+				getProjectileArc(), getProjectileArt(), isProjectileHomingEnabled(), getProjectileSpeed(),
+				this.areaOfEffectFullDamage, this.areaOfEffectMediumDamage, this.areaOfEffectSmallDamage,
+				this.areaOfEffectTargets, this.damageFactorMedium, this.damageFactorSmall);
+	}
+
+	@Override
 	public int getRange() {
 		return super.getRange();
 	}

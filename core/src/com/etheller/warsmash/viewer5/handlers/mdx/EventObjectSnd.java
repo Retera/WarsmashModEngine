@@ -48,7 +48,8 @@ public class EventObjectSnd extends EmittedObject<MdxComplexInstance, EventObjec
 			// Make a sound.
 			source.start(0, emitterObject.volume,
 					(emitterObject.pitch + ((float) Math.random() * emitterObject.pitchVariance * 2))
-							- emitterObject.pitchVariance);
+							- emitterObject.pitchVariance,
+					false);
 		}
 	}
 

@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CGameplayConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
@@ -28,6 +30,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNightElfBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -53,6 +57,8 @@ public class CUnitData {
 	private static final War3ID TURN_RATE = War3ID.fromString("umvr");
 	private static final War3ID IS_BLDG = War3ID.fromString("ubdg");
 	private static final War3ID NAME = War3ID.fromString("unam");
+	private static final War3ID PROPER_NAMES = War3ID.fromString("upro");
+	private static final War3ID PROPER_NAMES_COUNT = War3ID.fromString("upru");
 	private static final War3ID PROJECTILE_LAUNCH_X = War3ID.fromString("ulpx");
 	private static final War3ID PROJECTILE_LAUNCH_Y = War3ID.fromString("ulpy");
 	private static final War3ID PROJECTILE_LAUNCH_Z = War3ID.fromString("ulpz");
@@ -133,6 +139,7 @@ public class CUnitData {
 	private static final War3ID TARGETED_AS = War3ID.fromString("utar");
 
 	private static final War3ID ABILITIES_NORMAL = War3ID.fromString("uabi");
+	private static final War3ID ABILITIES_HERO = War3ID.fromString("uhab");
 
 	private static final War3ID STRUCTURES_BUILT = War3ID.fromString("ubui");
 	private static final War3ID UNITS_TRAINED = War3ID.fromString("utra");
@@ -151,13 +158,25 @@ public class CUnitData {
 	private static final War3ID REQUIRE_PLACE = War3ID.fromString("upar");
 	private static final War3ID PREVENT_PLACE = War3ID.fromString("upap");
 
+	private static final War3ID UNIT_LEVEL = War3ID.fromString("ulev");
+
+	private static final War3ID STR = War3ID.fromString("ustr");
+	private static final War3ID STR_PLUS = War3ID.fromString("ustp");
+	private static final War3ID AGI = War3ID.fromString("uagi");
+	private static final War3ID AGI_PLUS = War3ID.fromString("uagp");
+	private static final War3ID INT = War3ID.fromString("uint");
+	private static final War3ID INT_PLUS = War3ID.fromString("uinp");
+	private static final War3ID PRIMARY_ATTRIBUTE = War3ID.fromString("upra");
+
+	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
 	private final CAbilityData abilityData;
 	private final SimulationRenderController simulationRenderController;
 
-	public CUnitData(final MutableObjectData unitData, final CAbilityData abilityData,
-			final SimulationRenderController simulationRenderController) {
+	public CUnitData(final CGameplayConstants gameplayConstants, final MutableObjectData unitData,
+			final CAbilityData abilityData, final SimulationRenderController simulationRenderController) {
+		this.gameplayConstants = gameplayConstants;
 		this.unitData = unitData;
 		this.abilityData = abilityData;
 		this.simulationRenderController = simulationRenderController;
@@ -174,14 +193,20 @@ public class CUnitData {
 		final int manaInitial = unitTypeInstance.getManaInitial();
 		final int manaMaximum = unitTypeInstance.getManaMaximum();
 		final int speed = unitTypeInstance.getSpeed();
-		final int defense = unitTypeInstance.getDefense();
 
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
-				speed, defense, unitTypeInstance, pathingInstance);
+				speed, unitTypeInstance, pathingInstance);
 		if (speed > 0) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
-		if (!unitTypeInstance.getAttacks().isEmpty()) {
+		if (unitTypeInstance.isHero()) {
+			final List<CUnitAttack> heroAttacks = new ArrayList<>();
+			for (final CUnitAttack attack : unitTypeInstance.getAttacks()) {
+				heroAttacks.add(attack.copy());
+			}
+			unit.setUnitSpecificAttacks(heroAttacks);
+		}
+		if (!unit.getAttacks().isEmpty()) {
 			unit.add(simulation, new CAbilityAttack(handleIdAllocator.createId()));
 		}
 		final List<War3ID> structuresBuilt = unitTypeInstance.getStructuresBuilt();
@@ -218,6 +243,12 @@ public class CUnitData {
 		if (!unitsTrained.isEmpty()) {
 			unit.add(simulation, new CAbilityRally(handleIdAllocator.createId()));
 		}
+		if (unitTypeInstance.isHero()) {
+			final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
+			unit.add(simulation, new CAbilityHero(handleIdAllocator.createId(), heroAbilityList));
+			// reset initial mana after the value is adjusted for hero data
+			unit.setMana(manaInitial);
+		}
 		for (final String ability : unitTypeInstance.getAbilityList().split(",")) {
 			if ((ability.length() > 0) && !"_".equals(ability)) {
 				final CAbility createAbility = this.abilityData.createAbility(ability, handleIdAllocator.createId());
@@ -239,12 +270,30 @@ public class CUnitData {
 			final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
 			final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
 			final String abilityList = unitType.getFieldAsString(ABILITIES_NORMAL, 0);
+			final String heroAbilityListString = unitType.getFieldAsString(ABILITIES_HERO, 0);
+			final int unitLevel = unitType.getFieldAsInteger(UNIT_LEVEL, 0);
 
 			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
 			final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
 			final float collisionSize = unitType.getFieldAsFloat(COLLISION_SIZE, 0);
 			final float propWindow = unitType.getFieldAsFloat(PROPULSION_WINDOW, 0);
 			final float turnRate = unitType.getFieldAsFloat(TURN_RATE, 0);
+
+			final float strPlus = unitType.getFieldAsFloat(STR_PLUS, 0);
+			final float agiPlus = unitType.getFieldAsFloat(AGI_PLUS, 0);
+			final float intPlus = unitType.getFieldAsFloat(INT_PLUS, 0);
+
+			final int strength = unitType.getFieldAsInteger(STR, 0);
+			final int agility = unitType.getFieldAsInteger(AGI, 0);
+			final int intelligence = unitType.getFieldAsInteger(INT, 0);
+			if (typeId.toString().equals("Hjai")) {
+				System.out.println("bp");
+			}
+			final CPrimaryAttribute primaryAttribute = CPrimaryAttribute
+					.parsePrimaryAttribute(unitType.getFieldAsString(PRIMARY_ATTRIBUTE, 0));
+
+			final String properNames = unitType.getFieldAsString(PROPER_NAMES, 0);
+			final int properNamesCount = unitType.getFieldAsInteger(PROPER_NAMES_COUNT, 0);
 
 			final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);
 			PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
@@ -424,6 +473,14 @@ public class CUnitData {
 				}
 			}
 
+			final String[] heroAbilityListStringItems = heroAbilityListString.split(",");
+			final List<War3ID> heroAbilityList = new ArrayList<>();
+			for (final String heroAbilityItem : heroAbilityListStringItems) {
+				if (heroAbilityItem.length() == 4) {
+					heroAbilityList.add(War3ID.fromString(heroAbilityItem));
+				}
+			}
+
 			final String requirementsString = unitType.getFieldAsString(REQUIRES, 0);
 			final String requirementsLevelsString = unitType.getFieldAsString(REQUIRES_AMOUNT, 0);
 			final String[] requirementsStringItems = requirementsString.split(",");
@@ -466,15 +523,36 @@ public class CUnitData {
 			final String raceString = unitType.getFieldAsString(UNIT_RACE, 0);
 			final CUnitRace unitRace = CUnitRace.parseRace(raceString);
 
+			final boolean hero = Character.isUpperCase(typeId.charAt(0));
+
+			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
+
 			unitTypeInstance = new CUnitType(unitName, life, manaInitial, manaMaximum, speed, defense, abilityList,
 					isBldg, movementType, moveHeight, collisionSize, classifications, attacks, armorType, raise, decay,
 					defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
 					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, unitRace, goldCost,
 					lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow,
-					turnRate, requirements);
+					turnRate, requirements, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence, intPlus,
+					primaryAttribute, heroAbilityList, heroProperNames, properNamesCount);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
 		return unitTypeInstance;
+	}
+
+	private static int[] populateHeroStatTable(final int maxHeroLevel, final float statPerLevel) {
+		final int[] table = new int[maxHeroLevel];
+		float sumBonusAtLevel = 0f;
+		for (int i = 0; i < table.length; i++) {
+			final float newSumBonusAtLevel = sumBonusAtLevel + statPerLevel;
+			if (i == 0) {
+				table[i] = (int) newSumBonusAtLevel;
+			}
+			else {
+				table[i] = (int) newSumBonusAtLevel - table[i - 1];
+			}
+			sumBonusAtLevel = newSumBonusAtLevel;
+		}
+		return table;
 	}
 
 	private CUnitAttack createAttack(final float animationBackswingPoint, final float animationDamagePoint,

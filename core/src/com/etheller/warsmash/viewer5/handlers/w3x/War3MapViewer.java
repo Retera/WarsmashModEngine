@@ -67,9 +67,11 @@ import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.WorldScene;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
+import com.etheller.warsmash.viewer5.handlers.mdx.Attachment;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxNode;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
@@ -87,6 +89,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitTypeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -107,6 +110,7 @@ import mpq.MPQArchive;
 import mpq.MPQException;
 
 public class War3MapViewer extends AbstractMdxModelViewer {
+	private static final War3ID ABILITY_HERO_RAWCODE = War3ID.fromString("AHer");
 	private static final Color PLACEHOLDER_LUMBER_COLOR = new Color(0.0f, 200f / 255f, 80f / 255f, 1.0f);
 	private static final Color PLACEHOLDER_GOLD_COLOR = new Color(1.0f, 220f / 255f, 0f, 1.0f);
 	private static final War3ID UNIT_FILE = War3ID.fromString("umdl");
@@ -628,6 +632,42 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									.addInstance();
 							modelInstance.setTeamColor(source.getPlayerIndex());
 							modelInstance.setLocation(renderUnit.location);
+							modelInstance.setScene(War3MapViewer.this.worldScene);
+							SequenceUtils.randomBirthSequence(modelInstance);
+							War3MapViewer.this.projectiles
+									.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
+											(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
+						}
+					}
+
+					@Override
+					public void spawnGainLevelEffect(final CUnit source) {
+						final AbilityUI heroUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_HERO_RAWCODE);
+						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
+						final String heroLevelUpArt = heroUI.getCasterArt(0);
+						final MdxModel heroLevelUpModel = loadModel(heroLevelUpArt);
+						if (heroLevelUpModel != null) {
+							final MdxComplexInstance modelInstance = (MdxComplexInstance) heroLevelUpModel
+									.addInstance();
+							modelInstance.setTeamColor(source.getPlayerIndex());
+
+							final MdxModel model = (MdxModel) renderUnit.instance.model;
+							int index = -1;
+							for (int i = 0; i < model.attachments.size(); i++) {
+								final Attachment attachment = model.attachments.get(i);
+								if (attachment.getName().startsWith("origin ref")) {
+									index = i;
+									break;
+								}
+							}
+							if (index != -1) {
+								final MdxNode attachment = renderUnit.instance.getAttachment(index);
+								modelInstance.setParent(attachment);
+							}
+							else {
+								modelInstance.setLocation(renderUnit.location);
+							}
+
 							modelInstance.setScene(War3MapViewer.this.worldScene);
 							SequenceUtils.randomBirthSequence(modelInstance);
 							War3MapViewer.this.projectiles
@@ -1253,7 +1293,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 			final Iterator<TextTag> textTagIterator = this.textTags.iterator();
 			while (textTagIterator.hasNext()) {
-				if (textTagIterator.next().update()) {
+				if (textTagIterator.next().update(Gdx.graphics.getDeltaTime())) {
 					textTagIterator.remove();
 				}
 			}
@@ -1619,6 +1659,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return mdxPath;
 	}
 
+	public MdxModel loadModel(final String path) {
+		return (MdxModel) load(mdx(path), PathSolver.DEFAULT, null);
+	}
+
 	@Override
 	public SceneLightManager createLightManager(final boolean simple) {
 		if (simple) {
@@ -1637,7 +1681,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public void setGameUI(final GameUI gameUI) {
 		this.gameUI = gameUI;
 		this.abilityDataUI = new AbilityDataUI(this.allObjectData.getAbilities(), this.allObjectData.getUnits(),
-				this.allObjectData.getUpgrades(), gameUI);
+				this.allObjectData.getUpgrades(), gameUI, this);
 	}
 
 	public GameUI getGameUI() {

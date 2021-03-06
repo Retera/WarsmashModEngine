@@ -17,6 +17,7 @@ public class AttachmentInstance implements UpdatableObject {
 		internalInstance.dontInheritScaling = false;
 		internalInstance.hide();
 		internalInstance.setParent(instance.nodes[attachment.objectId]);
+		internalInstance.setAnimationSpeed(instance.getAnimationSpeed());
 
 		this.instance = instance;
 		this.attachment = attachment;

@@ -8,7 +8,7 @@ public class TextTag {
 	private float screenCoordsZHeight;
 	private final String text;
 	private final Color color;
-	private int lifetime = 0;
+	private float lifetime = 0;
 
 	public TextTag(final Vector3 position, final String text, final Color color) {
 		this.position = position;
@@ -17,14 +17,18 @@ public class TextTag {
 		position.z += 64f;
 	}
 
-	public boolean update() {
-		this.screenCoordsZHeight += 1.0f;
-		this.lifetime++;
-		return this.lifetime > 196;
+	public boolean update(final float deltaTime) {
+		this.screenCoordsZHeight += 60.0f * deltaTime;
+		this.lifetime += deltaTime;
+		return this.lifetime > 3.5f;
 	}
 
 	public Vector3 getPosition() {
 		return this.position;
+	}
+
+	public float getRemainingLife() {
+		return 3.5f - this.lifetime;
 	}
 
 	public Color getColor() {

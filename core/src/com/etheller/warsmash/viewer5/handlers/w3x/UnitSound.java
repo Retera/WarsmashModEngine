@@ -17,7 +17,7 @@ import com.etheller.warsmash.viewer5.gl.Extensions;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 
 public final class UnitSound {
-	private static final UnitSound SILENT = new UnitSound(0, 0, 0, 0, 0, 0);
+	private static final UnitSound SILENT = new UnitSound(0, 0, 0, 0, 0, 0, false);
 
 	private final List<Sound> sounds = new ArrayList<>();
 	private final float volume;
@@ -26,6 +26,7 @@ public final class UnitSound {
 	private final float minDistance;
 	private final float maxDistance;
 	private final float distanceCutoff;
+	private final boolean looping;
 
 	private Sound lastPlayedSound;
 
@@ -49,7 +50,15 @@ public final class UnitSound {
 		final float minDistance = row.getFieldFloatValue("MinDistance");
 		final float maxDistance = row.getFieldFloatValue("MaxDistance");
 		final float distanceCutoff = row.getFieldFloatValue("DistanceCutoff");
-		final UnitSound sound = new UnitSound(volume, pitch, pitchVariance, minDistance, maxDistance, distanceCutoff);
+		final String[] flags = row.getField("Flags").split(",");
+		boolean looping = false;
+		for (final String flag : flags) {
+			if ("LOOPING".equals(flag)) {
+				looping = true;
+			}
+		}
+		final UnitSound sound = new UnitSound(volume, pitch, pitchVariance, minDistance, maxDistance, distanceCutoff,
+				looping);
 		for (final String fileName : fileNames.split(",")) {
 			String filePath = directoryBase + fileName;
 			final int lastDotIndex = filePath.lastIndexOf('.');
@@ -64,13 +73,14 @@ public final class UnitSound {
 	}
 
 	public UnitSound(final float volume, final float pitch, final float pitchVariation, final float minDistance,
-			final float maxDistance, final float distanceCutoff) {
+			final float maxDistance, final float distanceCutoff, final boolean looping) {
 		this.volume = volume;
 		this.pitch = pitch;
 		this.pitchVariance = pitchVariation;
 		this.minDistance = minDistance;
 		this.maxDistance = maxDistance;
 		this.distanceCutoff = distanceCutoff;
+		this.looping = looping;
 	}
 
 	public boolean playUnitResponse(final AudioContext audioContext, final RenderUnit unit) {
@@ -116,12 +126,18 @@ public final class UnitSound {
 
 		// Make a sound.
 		source.start(0, this.volume,
-				(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance);
+				(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance, this.looping);
 		this.lastPlayedSound = source.buffer;
 		return true;
 	}
 
 	public int getSoundCount() {
 		return this.sounds.size();
+	}
+
+	public void stop() {
+		for (final Sound sound : this.sounds) {
+			sound.stop();
+		}
 	}
 }

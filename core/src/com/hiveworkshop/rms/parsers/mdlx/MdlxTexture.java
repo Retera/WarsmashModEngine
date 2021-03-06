@@ -8,10 +8,10 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxTexture implements MdlxBlock {
 	public enum WrapMode {
-		REPEAT_BOTH(true, true),
+		REPEAT_BOTH(false, false),
 		WRAP_WIDTH(true, false),
 		WRAP_HEIGHT(false, true),
-		WRAP_BOTH(false, false);
+		WRAP_BOTH(true, true);
 
 		private final boolean wrapWidth;
 		private final boolean wrapHeight;

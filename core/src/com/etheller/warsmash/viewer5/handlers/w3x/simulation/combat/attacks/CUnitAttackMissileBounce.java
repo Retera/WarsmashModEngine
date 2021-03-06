@@ -36,6 +36,16 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 		this.areaOfEffectTargets = areaOfEffectTargets;
 	}
 
+	@Override
+	public CUnitAttack copy() {
+		return new CUnitAttackMissileBounce(getAnimationBackswingPoint(), getAnimationDamagePoint(), getAttackType(),
+				getCooldownTime(), getDamageBase(), getDamageDice(), getDamageSidesPerDie(), getDamageUpgradeAmount(),
+				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType(),
+				getProjectileArc(), getProjectileArt(), isProjectileHomingEnabled(), getProjectileSpeed(),
+				this.damageLossFactor, this.maximumNumberOfTargets, this.areaOfEffectFullDamage,
+				this.areaOfEffectTargets);
+	}
+
 	public float getDamageLossFactor() {
 		return this.damageLossFactor;
 	}

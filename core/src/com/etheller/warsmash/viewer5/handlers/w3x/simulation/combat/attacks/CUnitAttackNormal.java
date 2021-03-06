@@ -24,6 +24,13 @@ public class CUnitAttackNormal extends CUnitAttack {
 	}
 
 	@Override
+	public CUnitAttack copy() {
+		return new CUnitAttackNormal(getAnimationBackswingPoint(), getAnimationDamagePoint(), getAttackType(),
+				getCooldownTime(), getDamageBase(), getDamageDice(), getDamageSidesPerDie(), getDamageUpgradeAmount(),
+				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType());
+	}
+
+	@Override
 	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage,
 			final CUnitAttackListener attackListener) {
 		attackListener.onLaunch();

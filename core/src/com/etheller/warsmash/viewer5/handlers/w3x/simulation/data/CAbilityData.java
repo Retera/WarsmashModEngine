@@ -40,6 +40,9 @@ public class CAbilityData {
 		CAbilityType<?> abilityType = this.aliasToAbilityType.get(alias);
 		if (abilityType == null) {
 			final MutableGameObject mutableGameObject = this.abilityData.get(alias);
+			if (mutableGameObject == null) {
+				return null;
+			}
 			final War3ID code = mutableGameObject.getCode();
 			final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
 			if (abilityTypeDefinition != null) {

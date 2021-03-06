@@ -9,20 +9,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
@@ -56,7 +52,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnit
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErrorListener;
 
-public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
+public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Screen {
 	private static final boolean ENABLE_AUDIO = true;
 	private static final boolean ENABLE_MUSIC = false;
 	private DataSource codebase;
@@ -65,8 +61,6 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	// libGDX stuff
 	private OrthographicCamera uiCamera;
-	private BitmapFont font;
-	private BitmapFont font20;
 	private SpriteBatch batch;
 	private ExtendViewport uiViewport;
 	private GlyphLayout glyphLayout;
@@ -80,10 +74,13 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	private Scene uiScene;
 	private MeleeUI meleeUI;
-	private FreeTypeFontGenerator fontGenerator;
 
-	public WarsmashGdxMapGame(final DataTable warsmashIni) {
+	private Music currentMusic;
+	private final String fileToLoad;
+
+	public WarsmashGdxMapScreen(final DataTable warsmashIni, final String fileToLoad) {
 		this.warsmashIni = warsmashIni;
+		this.fileToLoad = fileToLoad;
 	}
 
 	/*
@@ -92,7 +89,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	 * @see com.badlogic.gdx.ApplicationAdapter#create()
 	 */
 	@Override
-	public void create() {
+	public void show() {
 
 		final ByteBuffer tempByteBuffer = ByteBuffer.allocateDirect(4);
 		tempByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -115,7 +112,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 			this.viewer.enableAudio();
 		}
 		try {
-			this.viewer.loadMap(this.warsmashIni.get("Map").getField("FilePath"), 0);
+			this.viewer.loadMap(this.fileToLoad, 0);
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -155,13 +152,6 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		final int width = Gdx.graphics.getWidth();
 		final int height = Gdx.graphics.getHeight();
 
-		this.fontGenerator = new FreeTypeFontGenerator(
-				new DataSourceFileHandle(this.viewer.dataSource, "fonts\\FRIZQT__.TTF"));
-		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
-		fontParam.size = 32;
-		this.font = this.fontGenerator.generateFont(fontParam);
-		fontParam.size = 20;
-		this.font20 = this.fontGenerator.generateFont(fontParam);
 		this.glyphLayout = new GlyphLayout();
 
 		// Constructs a new OrthographicCamera, using the given viewport width and
@@ -207,24 +197,25 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 				cameraRatesElement.getFieldFloatValue("FOV"), cameraRatesElement.getFieldFloatValue("Rotation"),
 				cameraRatesElement.getFieldFloatValue("Distance"), cameraRatesElement.getFieldFloatValue("Forward"),
 				cameraRatesElement.getFieldFloatValue("Strafe"));
-		this.meleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, this.fontGenerator, this.uiScene, portraitScene,
-				cameraPresets, cameraRates, this.viewer, new RootFrameListener() {
+		this.meleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, this.uiScene, portraitScene, cameraPresets,
+				cameraRates, this.viewer, new RootFrameListener() {
 					@Override
 					public void onCreate(final GameUI rootFrame) {
-						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
+						WarsmashGdxMapScreen.this.viewer.setGameUI(rootFrame);
 
 						if (ENABLE_MUSIC) {
 							final String musicField = rootFrame.getSkinField("Music_V1");
 							final String[] musics = musicField.split(";");
 							String musicPath = musics[(int) (Math.random() * musics.length)];
-							if (true) {
+							if (false) {
 								musicPath = "Sound\\Music\\mp3Music\\PH1.mp3";
 							}
 							final Music music = Gdx.audio.newMusic(
-									new DataSourceFileHandle(WarsmashGdxMapGame.this.viewer.dataSource, musicPath));
+									new DataSourceFileHandle(WarsmashGdxMapScreen.this.viewer.dataSource, musicPath));
 							music.setVolume(0.2f);
 							music.setLooping(true);
 							music.play();
+							WarsmashGdxMapScreen.this.currentMusic = music;
 						}
 					}
 				}, new CPlayerUnitOrderExecutor(this.viewer.simulation, commandErrorListener));
@@ -292,7 +283,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 	}
 
 	@Override
-	public void render() {
+	public void render(final float delta) {
 		this.uiCamera.update();
 		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
 		final float deltaTime = Gdx.graphics.getDeltaTime();
@@ -322,12 +313,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		this.uiViewport.apply();
 		this.batch.setProjectionMatrix(this.uiCamera.combined);
 		this.batch.begin();
-		this.meleeUI.render(this.batch, this.font20, this.glyphLayout);
-		this.font.setColor(Color.YELLOW);
-		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
-		this.glyphLayout.setText(this.font, fpsString);
-		this.font.draw(this.batch, fpsString, (this.uiViewport.getMinWorldWidth() - this.glyphLayout.width) / 2,
-				1100 * this.meleeUI.getHeightRatioCorrection());
+		this.meleeUI.render(this.batch, this.glyphLayout);
 		this.batch.end();
 
 		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
@@ -336,7 +322,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public void dispose() {
-		this.fontGenerator.dispose();
+		this.meleeUI.dispose();
 	}
 
 	@Override
@@ -351,7 +337,7 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 
 	@Override
 	public void resize(final int width, final int height) {
-		super.resize(width, height);
+//		super.resize(width, height);
 
 		this.uiViewport.update(width, height);
 		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
@@ -528,5 +514,20 @@ public class WarsmashGdxMapGame extends ApplicationAdapter implements CanvasProv
 		protected void error(final Exception e) {
 		}
 
+	}
+
+	@Override
+	public void pause() {
+	}
+
+	@Override
+	public void resume() {
+	}
+
+	@Override
+	public void hide() {
+		if (this.currentMusic != null) {
+			this.currentMusic.stop();
+		}
 	}
 }

@@ -1,7 +1,15 @@
 package com.etheller.warsmash;
 
+import com.etheller.warsmash.util.War3ID;
+
 public class TestMain {
 	public static void main(final String[] args) {
+		if (true) {
+			System.out.println(War3ID.fromString("hwat").getValue());
+			System.out.println(Integer.toHexString(War3ID.fromString("hwat").getValue()));
+			System.out.println(new War3ID(0x68776174));
+			return;
+		}
 //		System.out.println(Integer.parseInt("4294967295"));
 		for (int i = 1; i <= 30; i++) {
 //			System.out.println(a(i));

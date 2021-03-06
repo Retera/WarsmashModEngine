@@ -13,6 +13,8 @@ public interface CUnitStateListener {
 
 	void waypointsChanged();
 
+	void heroStatsChanged();
+
 	public static final class CUnitStateNotifier extends SubscriberSetNotifier<CUnitStateListener>
 			implements CUnitStateListener {
 		@Override
@@ -47,6 +49,13 @@ public interface CUnitStateListener {
 		public void waypointsChanged() {
 			for (final CUnitStateListener listener : set) {
 				listener.waypointsChanged();
+			}
+		}
+
+		@Override
+		public void heroStatsChanged() {
+			for (final CUnitStateListener listener : set) {
+				listener.heroStatsChanged();
 			}
 		}
 	}

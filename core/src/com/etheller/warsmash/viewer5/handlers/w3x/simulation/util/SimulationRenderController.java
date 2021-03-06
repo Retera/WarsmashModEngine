@@ -41,6 +41,8 @@ public interface SimulationRenderController {
 
 	void spawnBuildingDeathEffect(CUnit cUnit);
 
+	void spawnGainLevelEffect(CUnit cUnit);
+
 	void spawnUnitReadySound(CUnit trainedUnit);
 
 	void unitRepositioned(CUnit cUnit);

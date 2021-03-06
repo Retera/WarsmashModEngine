@@ -98,7 +98,7 @@ public final class ImageUtils {
 		}
 
 		public boolean isNeedsSRGBFix() {
-			return false;
+			return this.needsSRGBFix;
 		}
 	}
 
@@ -217,9 +217,6 @@ public final class ImageUtils {
 	 * @return Resulting sRGB image.
 	 */
 	public static BufferedImage forceBufferedImagesRGB(final BufferedImage in) {
-		if (true) {
-			return in;
-		}
 		// Resolve input ColorSpace.
 		final ColorSpace inCS = in.getColorModel().getColorSpace();
 		final ColorSpace sRGBCS = ColorSpace.getInstance(ColorSpace.CS_sRGB);

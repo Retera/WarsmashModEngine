@@ -52,6 +52,7 @@ public class CSimulation {
 	private final PathingGrid pathingGrid;
 	private final CWorldCollision worldCollision;
 	private final CPathfindingProcessor[] pathfindingProcessors;
+	private final List<CUnit>[] playerHeroes;
 	private final CGameplayConstants gameplayConstants;
 	private final Random seededRandom;
 	private float currentGameDayTimeElapsed;
@@ -69,7 +70,8 @@ public class CSimulation {
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
 		this.abilityData = new CAbilityData(parsedAbilityData);
-		this.unitData = new CUnitData(parsedUnitData, this.abilityData, this.simulationRenderController);
+		this.unitData = new CUnitData(this.gameplayConstants, parsedUnitData, this.abilityData,
+				this.simulationRenderController);
 		this.destructableData = new CDestructableData(parsedDestructableData, simulationRenderController);
 		this.units = new ArrayList<>();
 		this.newUnits = new ArrayList<>();
@@ -79,8 +81,10 @@ public class CSimulation {
 		this.handleIdAllocator = new HandleIdAllocator();
 		this.worldCollision = new CWorldCollision(entireMapBounds, this.gameplayConstants.getMaxCollisionRadius());
 		this.pathfindingProcessors = new CPathfindingProcessor[WarsmashConstants.MAX_PLAYERS];
-		for (int i = 0; i < this.pathfindingProcessors.length; i++) {
+		this.playerHeroes = new ArrayList[WarsmashConstants.MAX_PLAYERS];
+		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			this.pathfindingProcessors[i] = new CPathfindingProcessor(pathingGrid, this.worldCollision);
+			this.playerHeroes[i] = new ArrayList<>();
 		}
 		this.seededRandom = seededRandom;
 		this.players = new ArrayList<>();
@@ -211,6 +215,7 @@ public class CSimulation {
 				}
 				this.handleIdToUnit.remove(unit.getHandleId());
 				this.simulationRenderController.removeUnit(unit);
+				this.playerHeroes[unit.getPlayerIndex()].remove(unit);
 			}
 		}
 		finishAddingNewUnits();
@@ -304,6 +309,18 @@ public class CSimulation {
 		this.simulationRenderController.spawnGainResourceTextTag(unit, resourceType, amount);
 	}
 
+	public void unitGainLevelEvent(final CUnit unit) {
+		this.simulationRenderController.spawnGainLevelEffect(unit);
+	}
+
+	public void heroCreateEvent(final CUnit hero) {
+		this.playerHeroes[hero.getPlayerIndex()].add(hero);
+	}
+
+	public List<CUnit> getPlayerHeroes(final int playerIndex) {
+		return this.playerHeroes[playerIndex];
+	}
+
 	public void unitsLoaded() {
 		// called on startup after the system loads the map's units layer, but not any
 		// custom scripts yet
@@ -331,4 +348,5 @@ public class CSimulation {
 	public void createEffectOnUnit(final CUnit unit, final String effectPath) {
 		this.simulationRenderController.spawnEffectOnUnit(unit, effectPath);
 	}
+
 }

@@ -10,7 +10,6 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.interpreter.JassLexer;
 import com.etheller.interpreter.JassParser;
@@ -52,13 +51,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 public class Jass2 {
 	public static final boolean REPORT_SYNTAX_ERRORS = true;
 
-	public static JUIEnvironment loadJUI(final DataSource dataSource, final Viewport uiViewport,
-			final FreeTypeFontGenerator fontGenerator, final Scene uiScene, final War3MapViewer war3MapViewer,
-			final RootFrameListener rootFrameListener, final String... files) {
+	public static JUIEnvironment loadJUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene,
+			final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener, final String... files) {
 
 		final JassProgramVisitor jassProgramVisitor = new JassProgramVisitor();
-		final JUIEnvironment environment = new JUIEnvironment(jassProgramVisitor, dataSource, uiViewport, fontGenerator,
-				uiScene, war3MapViewer, rootFrameListener);
+		final JUIEnvironment environment = new JUIEnvironment(jassProgramVisitor, dataSource, uiViewport, uiScene,
+				war3MapViewer, rootFrameListener);
 		for (final String jassFile : files) {
 			try {
 				JassLexer lexer;
@@ -103,8 +101,8 @@ public class Jass2 {
 		private Element skin;
 
 		public JUIEnvironment(final JassProgramVisitor jassProgramVisitor, final DataSource dataSource,
-				final Viewport uiViewport, final FreeTypeFontGenerator fontGenerator, final Scene uiScene,
-				final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener) {
+				final Viewport uiViewport, final Scene uiScene, final War3MapViewer war3MapViewer,
+				final RootFrameListener rootFrameListener) {
 			final GlobalScope globals = jassProgramVisitor.getGlobals();
 			final HandleJassType frameHandleType = globals.registerHandleType("framehandle");
 			final HandleJassType framePointType = globals.registerHandleType("framepointtype");
@@ -137,8 +135,8 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final String skinArg = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 					final Element skin = GameUI.loadSkin(dataSource, skinArg);
-					final GameUI gameUI = new GameUI(dataSource, skin, uiViewport, fontGenerator, uiScene,
-							war3MapViewer, 0, war3MapViewer.getAllObjectData().getWts());
+					final GameUI gameUI = new GameUI(dataSource, skin, uiViewport, uiScene, war3MapViewer, 0,
+							war3MapViewer.getAllObjectData().getWts());
 					JUIEnvironment.this.gameUI = gameUI;
 					JUIEnvironment.this.skin = skin;
 					rootFrameListener.onCreate(gameUI);

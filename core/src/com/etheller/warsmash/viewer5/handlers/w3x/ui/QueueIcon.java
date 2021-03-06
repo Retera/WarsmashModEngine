@@ -98,6 +98,14 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 	}
 
 	@Override
+	public void mouseEnter(final GameUI gameUI, final Viewport uiViewport) {
+	}
+
+	@Override
+	public void mouseExit(final GameUI gameUI, final Viewport uiViewport) {
+	}
+
+	@Override
 	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
 		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
 			return this;

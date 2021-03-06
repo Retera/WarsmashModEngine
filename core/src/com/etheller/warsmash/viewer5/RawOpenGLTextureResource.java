@@ -91,8 +91,7 @@ public abstract class RawOpenGLTextureResource extends Texture {
 		final GL20 gl = this.viewer.gl;
 	}
 
-	public void update(final BufferedImage image, boolean sRGBFix) {
-		sRGBFix = false;
+	public void update(final BufferedImage image, final boolean sRGBFix) {
 		final GL20 gl = this.viewer.gl;
 
 		final int imageWidth = image.getWidth();

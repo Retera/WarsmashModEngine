@@ -226,8 +226,8 @@ public class OpenALSound implements Sound {
 	}
 
 	public long play(final float volume, final float pitch, final float x, final float y, final float z,
-			final boolean is3DSound, final float maxDistance, final float refDistance) {
-		final long id = play();
+			final boolean is3DSound, final float maxDistance, final float refDistance, final boolean looping) {
+		final long id = looping ? loop() : play();
 		setPitch(id, pitch);
 		setVolume(id, volume);
 		setPosition(id, x, y, z, is3DSound, maxDistance, refDistance);

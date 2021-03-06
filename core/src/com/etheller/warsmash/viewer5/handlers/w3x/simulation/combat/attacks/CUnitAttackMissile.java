@@ -32,6 +32,14 @@ public class CUnitAttackMissile extends CUnitAttack {
 		this.projectileSpeed = projectileSpeed;
 	}
 
+	@Override
+	public CUnitAttack copy() {
+		return new CUnitAttackMissile(this.getAnimationBackswingPoint(), getAnimationDamagePoint(), getAttackType(),
+				getCooldownTime(), getDamageBase(), getDamageDice(), getDamageSidesPerDie(), getDamageUpgradeAmount(),
+				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType(),
+				this.projectileArc, this.projectileArt, this.projectileHomingEnabled, this.projectileSpeed);
+	}
+
 	public float getProjectileArc() {
 		return this.projectileArc;
 	}

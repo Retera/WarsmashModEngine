@@ -7,6 +7,7 @@ import java.util.List;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
@@ -58,6 +59,18 @@ public class CUnitType {
 	private final float propWindow;
 	private final float turnRate;
 	private final List<CUnitTypeRequirement> requirements;
+	private final int level;
+	private final boolean hero;
+	private final int startingStrength;
+	private final float strengthPerLevel;
+	private final int startingAgility;
+	private final float agilityPerLevel;
+	private final int startingIntelligence;
+	private final float intelligencePerLevel;
+	private final CPrimaryAttribute primaryAttribute;
+	private final List<War3ID> heroAbilityList;
+	private final List<String> heroProperNames;
+	private final int properNamesCount;
 
 	public CUnitType(final String name, final int life, final int manaInitial, final int manaMaximum, final int speed,
 			final int defense, final String abilityList, final boolean isBldg, final MovementType movementType,
@@ -70,7 +83,10 @@ public class CUnitType {
 			final int goldCost, final int lumberCost, final int foodUsed, final int foodMade, final int buildTime,
 			final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes, final float propWindow, final float turnRate,
-			final List<CUnitTypeRequirement> requirements) {
+			final List<CUnitTypeRequirement> requirements, final int level, final boolean hero, final int strength,
+			final float strengthPerLevel, final int agility, final float agilityPerLevel, final int intelligence,
+			final float intelligencePerLevel, final CPrimaryAttribute primaryAttribute,
+			final List<War3ID> heroAbilityList, final List<String> heroProperNames, final int properNamesCount) {
 		this.name = name;
 		this.life = life;
 		this.manaInitial = manaInitial;
@@ -108,6 +124,18 @@ public class CUnitType {
 		this.propWindow = propWindow;
 		this.turnRate = turnRate;
 		this.requirements = requirements;
+		this.level = level;
+		this.hero = hero;
+		this.startingStrength = strength;
+		this.strengthPerLevel = strengthPerLevel;
+		this.startingAgility = agility;
+		this.agilityPerLevel = agilityPerLevel;
+		this.startingIntelligence = intelligence;
+		this.intelligencePerLevel = intelligencePerLevel;
+		this.primaryAttribute = primaryAttribute;
+		this.heroAbilityList = heroAbilityList;
+		this.heroProperNames = heroProperNames;
+		this.properNamesCount = properNamesCount;
 	}
 
 	public String getName() {
@@ -256,5 +284,53 @@ public class CUnitType {
 
 	public List<CUnitTypeRequirement> getRequirements() {
 		return this.requirements;
+	}
+
+	public int getLevel() {
+		return this.level;
+	}
+
+	public boolean isHero() {
+		return this.hero;
+	}
+
+	public int getStartingStrength() {
+		return this.startingStrength;
+	}
+
+	public float getStrengthPerLevel() {
+		return this.strengthPerLevel;
+	}
+
+	public int getStartingAgility() {
+		return this.startingAgility;
+	}
+
+	public float getAgilityPerLevel() {
+		return this.agilityPerLevel;
+	}
+
+	public int getStartingIntelligence() {
+		return this.startingIntelligence;
+	}
+
+	public float getIntelligencePerLevel() {
+		return this.intelligencePerLevel;
+	}
+
+	public CPrimaryAttribute getPrimaryAttribute() {
+		return this.primaryAttribute;
+	}
+
+	public List<War3ID> getHeroAbilityList() {
+		return this.heroAbilityList;
+	}
+
+	public List<String> getHeroProperNames() {
+		return this.heroProperNames;
+	}
+
+	public int getProperNamesCount() {
+		return this.properNamesCount;
 	}
 }

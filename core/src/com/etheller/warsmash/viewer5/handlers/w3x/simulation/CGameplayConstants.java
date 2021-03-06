@@ -27,6 +27,44 @@ public class CGameplayConstants {
 	private final float buildingAngle;
 	private final float rootAngle;
 
+	private final float defenseArmor;
+
+	private final int heroExpRange;
+
+	private final int maxHeroLevel;
+	private final int maxUnitLevel;
+	private final int[] needHeroXp;
+	private final int[] needHeroXpSum;
+	private final int[] grantHeroXp;
+	private final int[] grantNormalXp;
+	private final int[] heroFactorXp;
+	private final float summonedKillFactor;
+	private final float strAttackBonus;
+	private final float strHitPointBonus;
+	private final float strRegenBonus;
+	private final float intManaBonus;
+	private final float intRegenBonus;
+	private final float agiDefenseBonus;
+	private final float agiDefenseBase;
+	private final int agiMoveBonus;
+	private final float agiAttackSpeedBonus;
+
+	private final int needHeroXPFormulaA;
+	private final int needHeroXPFormulaB;
+	private final int needHeroXPFormulaC;
+	private final int grantHeroXPFormulaA;
+	private final int grantHeroXPFormulaB;
+	private final int grantHeroXPFormulaC;
+	private final int grantNormalXPFormulaA;
+	private final int grantNormalXPFormulaB;
+	private final int grantNormalXPFormulaC;
+
+	private final int heroAbilityLevelSkip;
+
+	private final boolean globalExperience;
+	private final boolean maxLevelHeroesDrainExp;
+	private final boolean buildingKillsGiveExp;
+
 	public CGameplayConstants(final DataTable parsedDataTable) {
 		final Element miscData = parsedDataTable.get("Misc");
 		// TODO use radians for half angle
@@ -67,6 +105,56 @@ public class CGameplayConstants {
 				}
 			}
 		}
+
+		this.defenseArmor = miscData.getFieldFloatValue("DefenseArmor");
+
+		this.globalExperience = miscData.getFieldValue("GlobalExperience") != 0;
+		this.maxLevelHeroesDrainExp = miscData.getFieldValue("MaxLevelHeroesDrainExp") != 0;
+		this.buildingKillsGiveExp = miscData.getFieldValue("BuildingKillsGiveExp") != 0;
+
+		this.heroExpRange = miscData.getFieldValue("HeroExpRange");
+
+		this.maxHeroLevel = miscData.getFieldValue("MaxHeroLevel");
+		this.maxUnitLevel = miscData.getFieldValue("MaxUnitLevel");
+
+		this.needHeroXPFormulaA = miscData.getFieldValue("NeedHeroXPFormulaA");
+		this.needHeroXPFormulaB = miscData.getFieldValue("NeedHeroXPFormulaB");
+		this.needHeroXPFormulaC = miscData.getFieldValue("NeedHeroXPFormulaC");
+		this.grantHeroXPFormulaA = miscData.getFieldValue("GrantHeroXPFormulaA");
+		this.grantHeroXPFormulaB = miscData.getFieldValue("GrantHeroXPFormulaB");
+		this.grantHeroXPFormulaC = miscData.getFieldValue("GrantHeroXPFormulaC");
+		this.grantNormalXPFormulaA = miscData.getFieldValue("GrantNormalXPFormulaA");
+		this.grantNormalXPFormulaB = miscData.getFieldValue("GrantNormalXPFormulaB");
+		this.grantNormalXPFormulaC = miscData.getFieldValue("GrantNormalXPFormulaC");
+
+		this.needHeroXp = parseTable(miscData.getField("NeedHeroXP"), this.needHeroXPFormulaA, this.needHeroXPFormulaB,
+				this.needHeroXPFormulaC, this.maxHeroLevel);
+		this.needHeroXpSum = new int[this.needHeroXp.length];
+		for (int i = 0; i < this.needHeroXpSum.length; i++) {
+			if (i == 0) {
+				this.needHeroXpSum[i] = this.needHeroXp[i];
+			}
+			else {
+				this.needHeroXpSum[i] = this.needHeroXp[i] + this.needHeroXpSum[i - 1];
+			}
+		}
+		this.grantHeroXp = parseTable(miscData.getField("GrantHeroXP"), this.grantHeroXPFormulaA,
+				this.grantHeroXPFormulaB, this.grantHeroXPFormulaC, this.maxHeroLevel);
+		this.grantNormalXp = parseTable(miscData.getField("GrantNormalXP"), this.grantNormalXPFormulaA,
+				this.grantNormalXPFormulaB, this.grantNormalXPFormulaC, this.maxUnitLevel);
+		this.heroFactorXp = parseIntArray(miscData.getField("HeroFactorXP"));
+		this.summonedKillFactor = miscData.getFieldFloatValue("SummonedKillFactor");
+		this.strAttackBonus = miscData.getFieldFloatValue("StrAttackBonus");
+		this.strHitPointBonus = miscData.getFieldFloatValue("StrHitPointBonus");
+		this.strRegenBonus = miscData.getFieldFloatValue("StrRegenBonus");
+		this.intManaBonus = miscData.getFieldFloatValue("IntManaBonus");
+		this.intRegenBonus = miscData.getFieldFloatValue("IntRegenBonus");
+		this.agiDefenseBonus = miscData.getFieldFloatValue("AgiDefenseBonus");
+		this.agiDefenseBase = miscData.getFieldFloatValue("AgiDefenseBase");
+		this.agiMoveBonus = miscData.getFieldValue("AgiMoveBonus");
+		this.agiAttackSpeedBonus = miscData.getFieldFloatValue("AgiAttackSpeedBonus");
+
+		this.heroAbilityLevelSkip = miscData.getFieldValue("HeroAbilityLevelSkip");
 	}
 
 	public float getAttackHalfAngle() {
@@ -123,5 +211,135 @@ public class CGameplayConstants {
 
 	public float getRootAngle() {
 		return this.rootAngle;
+	}
+
+	public float getDefenseArmor() {
+		return this.defenseArmor;
+	}
+
+	public boolean isGlobalExperience() {
+		return this.globalExperience;
+	}
+
+	public boolean isMaxLevelHeroesDrainExp() {
+		return this.maxLevelHeroesDrainExp;
+	}
+
+	public boolean isBuildingKillsGiveExp() {
+		return this.buildingKillsGiveExp;
+	}
+
+	public int getHeroAbilityLevelSkip() {
+		return this.heroAbilityLevelSkip;
+	}
+
+	public int getHeroExpRange() {
+		return this.heroExpRange;
+	}
+
+	public int getMaxHeroLevel() {
+		return this.maxHeroLevel;
+	}
+
+	public int getMaxUnitLevel() {
+		return this.maxUnitLevel;
+	}
+
+	public float getSummonedKillFactor() {
+		return this.summonedKillFactor;
+	}
+
+	public float getStrAttackBonus() {
+		return this.strAttackBonus;
+	}
+
+	public float getStrHitPointBonus() {
+		return this.strHitPointBonus;
+	}
+
+	public float getStrRegenBonus() {
+		return this.strRegenBonus;
+	}
+
+	public float getIntManaBonus() {
+		return this.intManaBonus;
+	}
+
+	public float getIntRegenBonus() {
+		return this.intRegenBonus;
+	}
+
+	public float getAgiDefenseBonus() {
+		return this.agiDefenseBonus;
+	}
+
+	public float getAgiDefenseBase() {
+		return this.agiDefenseBase;
+	}
+
+	public int getAgiMoveBonus() {
+		return this.agiMoveBonus;
+	}
+
+	public float getAgiAttackSpeedBonus() {
+		return this.agiAttackSpeedBonus;
+	}
+
+	public float getHeroFactorXp(final int level) {
+		return getTableValue(this.heroFactorXp, level) / 100f;
+	}
+
+	public int getNeedHeroXP(final int level) {
+		return getTableValue(this.needHeroXp, level);
+	}
+
+	public int getNeedHeroXPSum(final int level) {
+		return getTableValue(this.needHeroXpSum, level);
+	}
+
+	public int getGrantHeroXP(final int level) {
+		return getTableValue(this.grantHeroXp, level);
+	}
+
+	public int getGrantNormalXP(final int level) {
+		return getTableValue(this.grantNormalXp, level);
+	}
+
+	private static int getTableValue(final int[] table, int level) {
+		if (level <= 0) {
+			return 0;
+		}
+		if (level > table.length) {
+			level = table.length;
+		}
+		return table[level - 1];
+	}
+
+	/*
+	 * This incorporates the function "f(x)" documented both on
+	 * http://classic.battle.net/war3/basics/heroes.shtml and also on MiscGame.txt.
+	 */
+	private static int[] parseTable(final String txt, final int formulaA, final int formulaB, final int formulaC,
+			final int tableSize) {
+		final String[] splitTxt = txt.split(",");
+		final int[] result = new int[tableSize];
+		for (int i = 0; i < tableSize; i++) {
+			if (i < splitTxt.length) {
+				result[i] = Integer.parseInt(splitTxt[i]);
+			}
+			else {
+				result[i] = (formulaA * result[i - 1]) + (formulaB * i) + formulaC;
+			}
+		}
+		return result;
+	}
+
+	private static int[] parseIntArray(final String txt) {
+		final String[] splitTxt = txt.split(",");
+		final int[] result = new int[splitTxt.length];
+		for (int i = 0; i < splitTxt.length; i++) {
+			result[i] = Integer.parseInt(splitTxt[i]);
+		}
+		return result;
 	}
 }

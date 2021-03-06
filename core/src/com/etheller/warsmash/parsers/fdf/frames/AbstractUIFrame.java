@@ -46,10 +46,12 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
-		for (final UIFrame childFrame : this.childFrames) {
-			final UIFrame clickedChild = childFrame.touchDown(screenX, screenY, button);
-			if (clickedChild != null) {
-				return clickedChild;
+		if (isVisible()) {
+			for (final UIFrame childFrame : this.childFrames) {
+				final UIFrame clickedChild = childFrame.touchDown(screenX, screenY, button);
+				if (clickedChild != null) {
+					return clickedChild;
+				}
 			}
 		}
 		return super.touchDown(screenX, screenY, button);
@@ -57,10 +59,12 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 
 	@Override
 	public UIFrame touchUp(final float screenX, final float screenY, final int button) {
-		for (final UIFrame childFrame : this.childFrames) {
-			final UIFrame clickedChild = childFrame.touchUp(screenX, screenY, button);
-			if (clickedChild != null) {
-				return clickedChild;
+		if (isVisible()) {
+			for (final UIFrame childFrame : this.childFrames) {
+				final UIFrame clickedChild = childFrame.touchUp(screenX, screenY, button);
+				if (clickedChild != null) {
+					return clickedChild;
+				}
 			}
 		}
 		return super.touchUp(screenX, screenY, button);
@@ -68,10 +72,12 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 
 	@Override
 	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
-		for (final UIFrame childFrame : this.childFrames) {
-			final UIFrame clickedChild = childFrame.getFrameChildUnderMouse(screenX, screenY);
-			if (clickedChild != null) {
-				return clickedChild;
+		if (isVisible()) {
+			for (final UIFrame childFrame : this.childFrames) {
+				final UIFrame clickedChild = childFrame.getFrameChildUnderMouse(screenX, screenY);
+				if (clickedChild != null) {
+					return clickedChild;
+				}
 			}
 		}
 		return super.getFrameChildUnderMouse(screenX, screenY);

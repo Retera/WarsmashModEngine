@@ -5,20 +5,16 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
@@ -30,6 +26,7 @@ import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.Model;
@@ -50,7 +47,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MenuUI;
 
-public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements CanvasProvider, InputProcessor {
+public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Screen {
 	private static final boolean ENABLE_AUDIO = true;
 	private static final boolean ENABLE_MUSIC = true;
 	private DataSource codebase;
@@ -61,8 +58,6 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 
 	// libGDX stuff
 	private OrthographicCamera uiCamera;
-	private BitmapFont font;
-	private BitmapFont font20;
 	private SpriteBatch batch;
 	private ExtendViewport uiViewport;
 	private GlyphLayout glyphLayout;
@@ -71,14 +66,16 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 	private Scene uiScene;
 	private Texture solidGreenTexture;
 	private MenuUI menuUI;
+	private final WarsmashGdxMultiScreenGame game;
+	private Music currentMusic;
 
-	public WarsmashGdxMenuTestGame(final DataTable warsmashIni) {
+	public WarsmashGdxMenuScreen(final DataTable warsmashIni, final WarsmashGdxMultiScreenGame game) {
 		this.warsmashIni = warsmashIni;
+		this.game = game;
 	}
 
 	@Override
-	public void create() {
-
+	public void show() {
 		final ByteBuffer tempByteBuffer = ByteBuffer.allocateDirect(4);
 		tempByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 		final IntBuffer temp = tempByteBuffer.asIntBuffer();
@@ -91,7 +88,7 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
 		System.err.println("Renderer: " + renderer);
 
-		this.codebase = WarsmashGdxMapGame.parseDataSources(this.warsmashIni);
+		this.codebase = WarsmashGdxMapScreen.parseDataSources(this.warsmashIni);
 		this.viewer = new MdxViewer(this.codebase, this);
 
 		this.viewer.addHandler(new MdxHandler());
@@ -108,13 +105,6 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 		final int width = Gdx.graphics.getWidth();
 		final int height = Gdx.graphics.getHeight();
 
-		final FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(
-				new DataSourceFileHandle(this.viewer.dataSource, "fonts\\FRIZQT__.TTF"));
-		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
-		fontParam.size = 32;
-		this.font = fontGenerator.generateFont(fontParam);
-		fontParam.size = 20;
-		this.font20 = fontGenerator.generateFont(fontParam);
 		this.glyphLayout = new GlyphLayout();
 
 		// Constructs a new OrthographicCamera, using the given viewport width and
@@ -184,27 +174,30 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 		System.out.println("Loaded");
 		Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1);
 
-		this.menuUI = new MenuUI(this.viewer.dataSource, this.uiViewport, fontGenerator, this.uiScene, this.viewer,
-				new RootFrameListener() {
+		this.menuUI = new MenuUI(this.viewer.dataSource, this.uiViewport, this.uiScene, this.viewer, this.game,
+				this.warsmashIni, new RootFrameListener() {
 					@Override
 					public void onCreate(final GameUI rootFrame) {
 //						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
 
 						if (ENABLE_MUSIC) {
-							final String musicField = rootFrame.getSkinField("GlueMusic_V1");
+							final String musicField = rootFrame
+									.getSkinField("GlueMusic_V" + WarsmashConstants.GAME_VERSION);
 							final String[] musics = musicField.split(";");
 							final String musicPath = musics[(int) (Math.random() * musics.length)];
-							final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(
-									WarsmashGdxMenuTestGame.this.viewer.dataSource, musicPath));
+							final Music music = Gdx.audio.newMusic(
+									new DataSourceFileHandle(WarsmashGdxMenuScreen.this.viewer.dataSource, musicPath));
 							music.setVolume(0.2f);
 							music.setLooping(true);
 							music.play();
+							WarsmashGdxMenuScreen.this.currentMusic = music;
 						}
 
 						singleModelScene(scene,
-								War3MapViewer.mdx(rootFrame.getSkinField("GlueSpriteLayerBackground_V1")), "Stand");
-						WarsmashGdxMenuTestGame.this.modelCamera = WarsmashGdxMenuTestGame.this.mainModel.cameras
-								.get(0);
+								War3MapViewer.mdx(rootFrame
+										.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION)),
+								"Stand");
+						WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras.get(0);
 					}
 				});
 
@@ -213,7 +206,6 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 		libgdxContentInstance.setLocation(0f, 0f, -0.5f);
 		libgdxContentInstance.setScene(this.uiScene);
 		this.menuUI.main();
-		fontGenerator.dispose();
 
 		updateUIScene();
 
@@ -487,7 +479,7 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 	private final boolean firstFrame = true;
 
 	@Override
-	public void render() {
+	public void render(final float delta) {
 
 		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
 		final float deltaTime = Gdx.graphics.getDeltaTime();
@@ -507,6 +499,7 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 
 	@Override
 	public void dispose() {
+		this.menuUI.dispose();
 	}
 
 	@Override
@@ -525,7 +518,7 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 		this.tempRect.height = height;
 		this.cameraManager.camera.viewport(this.tempRect);
 
-		super.resize(width, height);
+//		super.resize(width, height);
 
 		this.uiViewport.update(width, height);
 		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
@@ -595,20 +588,16 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 			this.quatHeap.transform(this.position);
 			this.position.scl(this.distance);
 			this.position = this.position.add(this.target);
-			if (WarsmashGdxMenuTestGame.this.modelCamera != null) {
-				WarsmashGdxMenuTestGame.this.modelCamera.getPositionTranslation(
-						WarsmashGdxMenuTestGame.this.cameraPositionTemp,
-						WarsmashGdxMenuTestGame.this.mainInstance.sequence,
-						WarsmashGdxMenuTestGame.this.mainInstance.frame,
-						WarsmashGdxMenuTestGame.this.mainInstance.counter);
-				WarsmashGdxMenuTestGame.this.modelCamera.getTargetTranslation(
-						WarsmashGdxMenuTestGame.this.cameraTargetTemp,
-						WarsmashGdxMenuTestGame.this.mainInstance.sequence,
-						WarsmashGdxMenuTestGame.this.mainInstance.frame,
-						WarsmashGdxMenuTestGame.this.mainInstance.counter);
+			if (WarsmashGdxMenuScreen.this.modelCamera != null) {
+				WarsmashGdxMenuScreen.this.modelCamera.getPositionTranslation(
+						WarsmashGdxMenuScreen.this.cameraPositionTemp, WarsmashGdxMenuScreen.this.mainInstance.sequence,
+						WarsmashGdxMenuScreen.this.mainInstance.frame, WarsmashGdxMenuScreen.this.mainInstance.counter);
+				WarsmashGdxMenuScreen.this.modelCamera.getTargetTranslation(WarsmashGdxMenuScreen.this.cameraTargetTemp,
+						WarsmashGdxMenuScreen.this.mainInstance.sequence, WarsmashGdxMenuScreen.this.mainInstance.frame,
+						WarsmashGdxMenuScreen.this.mainInstance.counter);
 
-				this.position.set(WarsmashGdxMenuTestGame.this.modelCamera.position);
-				this.target.set(WarsmashGdxMenuTestGame.this.modelCamera.targetPosition);
+				this.position.set(WarsmashGdxMenuScreen.this.modelCamera.position);
+				this.target.set(WarsmashGdxMenuScreen.this.modelCamera.targetPosition);
 //				this.vecHeap2.set(this.target);
 //				this.vecHeap2.sub(this.position);
 //				this.vecHeap.set(this.vecHeap2);
@@ -618,16 +607,15 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 //				this.vecHeap.scl(this.camera.rect.height / 2f);
 //				this.position.add(this.vecHeap);
 
-				this.position.add(WarsmashGdxMenuTestGame.this.cameraPositionTemp[0],
-						WarsmashGdxMenuTestGame.this.cameraPositionTemp[1],
-						WarsmashGdxMenuTestGame.this.cameraPositionTemp[2]);
-				this.target.add(WarsmashGdxMenuTestGame.this.cameraTargetTemp[0],
-						WarsmashGdxMenuTestGame.this.cameraTargetTemp[1],
-						WarsmashGdxMenuTestGame.this.cameraTargetTemp[2]);
-				this.camera.perspective(WarsmashGdxMenuTestGame.this.modelCamera.fieldOfView * 0.75f,
+				this.position.add(WarsmashGdxMenuScreen.this.cameraPositionTemp[0],
+						WarsmashGdxMenuScreen.this.cameraPositionTemp[1],
+						WarsmashGdxMenuScreen.this.cameraPositionTemp[2]);
+				this.target.add(WarsmashGdxMenuScreen.this.cameraTargetTemp[0],
+						WarsmashGdxMenuScreen.this.cameraTargetTemp[1], WarsmashGdxMenuScreen.this.cameraTargetTemp[2]);
+				this.camera.perspective(WarsmashGdxMenuScreen.this.modelCamera.fieldOfView * 0.75f,
 						Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight(),
-						WarsmashGdxMenuTestGame.this.modelCamera.nearClippingPlane,
-						WarsmashGdxMenuTestGame.this.modelCamera.farClippingPlane);
+						WarsmashGdxMenuScreen.this.modelCamera.nearClippingPlane,
+						WarsmashGdxMenuScreen.this.modelCamera.farClippingPlane);
 			}
 			else {
 				this.camera.perspective(70, this.camera.getAspect(), 100, 5000);
@@ -665,25 +653,39 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
-		// TODO Auto-generated method stub
+		final float worldScreenY = getHeight() - screenY;
+
+		if (this.menuUI.touchDown(screenX, screenY, worldScreenY, button)) {
+			return false;
+		}
 		return false;
 	}
 
 	@Override
 	public boolean touchUp(final int screenX, final int screenY, final int pointer, final int button) {
-		// TODO Auto-generated method stub
+		final float worldScreenY = getHeight() - screenY;
+
+		if (this.menuUI.touchUp(screenX, screenY, worldScreenY, button)) {
+			return false;
+		}
 		return false;
 	}
 
 	@Override
 	public boolean touchDragged(final int screenX, final int screenY, final int pointer) {
-		// TODO Auto-generated method stub
+		final float worldScreenY = getHeight() - screenY;
+		if (this.menuUI.touchDragged(screenX, screenY, worldScreenY, pointer)) {
+			return false;
+		}
 		return false;
 	}
 
 	@Override
 	public boolean mouseMoved(final int screenX, final int screenY) {
-		// TODO Auto-generated method stub
+		final float worldScreenY = getHeight() - screenY;
+		if (this.menuUI.mouseMoved(screenX, screenY, worldScreenY)) {
+			return false;
+		}
 		return false;
 	}
 
@@ -706,14 +708,7 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 		this.uiViewport.apply();
 		this.batch.setProjectionMatrix(this.uiCamera.combined);
 		this.batch.begin();
-		this.menuUI.render(this.batch, this.font20, this.glyphLayout);
-		this.font.setColor(Color.YELLOW);
-		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
-		this.glyphLayout.setText(this.font, fpsString);
-		if (false) {
-			this.font.draw(this.batch, fpsString, (this.uiViewport.getMinWorldWidth() - this.glyphLayout.width) / 2,
-					1100 * this.menuUI.getHeightRatioCorrection());
-		}
+		this.menuUI.render(this.batch, this.glyphLayout);
 		this.batch.end();
 
 		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
@@ -803,5 +798,21 @@ public class WarsmashGdxMenuTestGame extends ApplicationAdapter implements Canva
 		protected void error(final Exception e) {
 		}
 
+	}
+
+	@Override
+	public void hide() {
+		if (this.currentMusic != null) {
+			this.currentMusic.stop();
+		}
+		this.menuUI.hide();
+	}
+
+	@Override
+	public void pause() {
+	}
+
+	@Override
+	public void resume() {
 	}
 }

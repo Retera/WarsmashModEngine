@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -51,7 +52,13 @@ public class CUnit extends CWidget {
 	private int maximumLife;
 	private int maximumMana;
 	private int speed;
-	private final int defense;
+	private int agilityDefenseBonus;
+	private int permanentDefenseBonus;
+	private int temporaryDefenseBonus;
+
+	private int currentDefenseDisplay;
+	private int currentDefense;
+
 	private int cooldownEndTime = 0;
 	private float flyHeight;
 	private int playerIndex;
@@ -103,10 +110,11 @@ public class CUnit extends CWidget {
 	private int foodMade;
 	private int foodUsed;
 
+	private List<CUnitAttack> unitSpecificAttacks;
+
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
-			final int speed, final int defense, final CUnitType unitType,
-			final RemovablePathingMapInstance pathingInstance) {
+			final int speed, final CUnitType unitType, final RemovablePathingMapInstance pathingInstance) {
 		super(handleId, x, y, life);
 		this.playerIndex = playerIndex;
 		this.typeId = typeId;
@@ -115,7 +123,6 @@ public class CUnit extends CWidget {
 		this.maximumLife = maximumLife;
 		this.maximumMana = maximumMana;
 		this.speed = speed;
-		this.defense = defense;
 		this.pathingInstance = pathingInstance;
 		this.flyHeight = unitType.getDefaultFlyingHeight();
 		this.unitType = unitType;
@@ -124,6 +131,34 @@ public class CUnit extends CWidget {
 		this.stopBehavior = new CBehaviorStop(this);
 		this.defaultBehavior = this.stopBehavior;
 		this.currentBehavior = this.defaultBehavior;
+	}
+
+	private void computeDerivedFields() {
+		this.currentDefenseDisplay = this.unitType.getDefense() + this.agilityDefenseBonus + this.permanentDefenseBonus;
+		this.currentDefense = this.currentDefenseDisplay + this.temporaryDefenseBonus;
+	}
+
+	public void setAgilityDefenseBonus(final int agilityDefenseBonus) {
+		this.agilityDefenseBonus = agilityDefenseBonus;
+		computeDerivedFields();
+	}
+
+	public void setPermanentDefenseBonus(final int permanentDefenseBonus) {
+		this.permanentDefenseBonus = permanentDefenseBonus;
+		computeDerivedFields();
+	}
+
+	public void setTemporaryDefenseBonus(final int temporaryDefenseBonus) {
+		this.temporaryDefenseBonus = temporaryDefenseBonus;
+		computeDerivedFields();
+	}
+
+	public int getTemporaryDefenseBonus() {
+		return this.temporaryDefenseBonus;
+	}
+
+	public int getCurrentDefenseDisplay() {
+		return this.currentDefenseDisplay;
 	}
 
 	public void setUnitAnimationListener(final CUnitAnimationListener unitAnimationListener) {
@@ -365,8 +400,7 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean autoAcquireAttackTargets(final CSimulation game, final boolean disableMove) {
-		if (!this.unitType.getAttacks().isEmpty()
-				&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
+		if (!this.getAttacks().isEmpty() && !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 			if (this.collisionRectangle != null) {
 				tempRect.set(this.collisionRectangle);
 			}
@@ -587,7 +621,7 @@ public class CUnit extends CWidget {
 	}
 
 	public int getDefense() {
-		return this.defense;
+		return this.currentDefense;
 	}
 
 	@Override
@@ -647,11 +681,13 @@ public class CUnit extends CWidget {
 			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
 					this.unitType.getDefenseType());
 			final float damageRatioFromDefense;
-			if (this.defense >= 0) {
-				damageRatioFromDefense = 1f - (float) (((this.defense) * 0.06) / (1 + (0.06 * this.defense)));
+			final int defense = this.currentDefense;
+			if (defense >= 0) {
+				damageRatioFromDefense = 1f - (((defense) * simulation.getGameplayConstants().getDefenseArmor())
+						/ (1 + (simulation.getGameplayConstants().getDefenseArmor() * defense)));
 			}
 			else {
-				damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -this.defense);
+				damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -defense);
 			}
 			final float trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * damage;
 			this.life -= trueDamage;
@@ -660,14 +696,14 @@ public class CUnit extends CWidget {
 		simulation.unitDamageEvent(this, weaponType, this.unitType.getArmorType());
 		if (!this.invulnerable && isDead()) {
 			if (!wasDead) {
-				kill(simulation);
+				kill(simulation, source);
 			}
 		}
 		else {
 			if ((this.currentBehavior == null) || (this.currentBehavior == this.defaultBehavior)) {
 				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(),
 						CAllianceType.PASSIVE)) {
-					for (final CUnitAttack attack : this.unitType.getAttacks()) {
+					for (final CUnitAttack attack : this.getAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
 							this.currentBehavior = getAttackBehavior().reset(OrderIds.attack, attack, source, false,
 									CBehaviorAttackListener.DO_NOTHING);
@@ -680,7 +716,7 @@ public class CUnit extends CWidget {
 		}
 	}
 
-	private void kill(final CSimulation simulation) {
+	private void kill(final CSimulation simulation, final CUnit source) {
 		if (this.currentBehavior != null) {
 			this.currentBehavior.end(simulation, true);
 		}
@@ -703,6 +739,55 @@ public class CUnit extends CWidget {
 		}
 		if (this.foodUsed != 0) {
 			player.setUnitFoodUsed(this, 0);
+		}
+
+		// Award hero experience
+		if (source != null) {
+			final CPlayer sourcePlayer = simulation.getPlayer(source.getPlayerIndex());
+			if (!sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
+				final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
+				if (gameplayConstants.isBuildingKillsGiveExp() || !source.getUnitType().isBuilding()) {
+					final CUnit killedUnit = this;
+					final CAbilityHero killedUnitHeroData = getHeroData();
+					final boolean killedUnitIsAHero = killedUnitHeroData != null;
+					int availableAwardXp;
+					if (killedUnitIsAHero) {
+						availableAwardXp = gameplayConstants.getGrantHeroXP(killedUnitHeroData.getHeroLevel());
+					}
+					else {
+						availableAwardXp = gameplayConstants.getGrantNormalXP(this.unitType.getLevel());
+					}
+					final List<CUnit> xpReceivingHeroes = new ArrayList<>();
+					final int heroExpRange = gameplayConstants.getHeroExpRange();
+					simulation.getWorldCollision().enumUnitsInRect(new Rectangle(this.getX() - heroExpRange,
+							this.getY() - heroExpRange, heroExpRange * 2, heroExpRange * 2), new CUnitEnumFunction() {
+								@Override
+								public boolean call(final CUnit unit) {
+									if ((unit.distance(killedUnit) <= heroExpRange)
+											&& sourcePlayer.hasAlliance(unit.getPlayerIndex(), CAllianceType.SHARED_XP)
+											&& (unit.getHeroData() != null)) {
+										xpReceivingHeroes.add(unit);
+									}
+									return false;
+								}
+							});
+					if (xpReceivingHeroes.isEmpty()) {
+						if (gameplayConstants.isGlobalExperience()) {
+							for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+								if (sourcePlayer.hasAlliance(i, CAllianceType.SHARED_XP)) {
+									xpReceivingHeroes.addAll(simulation.getPlayerHeroes(i));
+								}
+							}
+						}
+					}
+					for (final CUnit receivingHero : xpReceivingHeroes) {
+						final CAbilityHero heroData = receivingHero.getHeroData();
+						heroData.addXp(simulation, receivingHero,
+								(int) (availableAwardXp * (1f / xpReceivingHeroes.size())
+										* gameplayConstants.getHeroFactorXp(heroData.getHeroLevel())));
+					}
+				}
+			}
 		}
 	}
 
@@ -881,7 +966,7 @@ public class CUnit extends CWidget {
 		public boolean call(final CUnit unit) {
 			if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
 					CAllianceType.PASSIVE)) {
-				for (final CUnitAttack attack : this.source.unitType.getAttacks()) {
+				for (final CUnitAttack attack : this.source.getAttacks()) {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
 							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
@@ -1020,7 +1105,7 @@ public class CUnit extends CWidget {
 		final boolean wasDead = isDead();
 		super.setLife(simulation, life);
 		if (isDead() && !wasDead) {
-			kill(simulation);
+			kill(simulation, null);
 		}
 		this.stateNotifier.lifeChanged();
 	}
@@ -1136,6 +1221,10 @@ public class CUnit extends CWidget {
 	public void setRallyPoint(final AbilityTarget target) {
 		this.rallyPoint = target;
 		this.stateNotifier.rallyPointChanged();
+	}
+
+	public void internalPublishHeroStatsChanged() {
+		this.stateNotifier.heroStatsChanged();
 	}
 
 	public AbilityTarget getRallyPoint() {
@@ -1274,5 +1363,29 @@ public class CUnit extends CWidget {
 
 	public COrder getCurrentOrder() {
 		return this.lastStartedOrder;
+	}
+
+	public CAbilityHero getHeroData() {
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityHero) {
+				return (CAbilityHero) ability;
+			}
+		}
+		return null;
+	}
+
+	public void setUnitSpecificAttacks(final List<CUnitAttack> unitSpecificAttacks) {
+		this.unitSpecificAttacks = unitSpecificAttacks;
+	}
+
+	public List<CUnitAttack> getUnitSpecificAttacks() {
+		return this.unitSpecificAttacks;
+	}
+
+	public List<CUnitAttack> getAttacks() {
+		if (this.unitSpecificAttacks != null) {
+			return this.unitSpecificAttacks;
+		}
+		return this.unitType.getAttacks();
 	}
 }

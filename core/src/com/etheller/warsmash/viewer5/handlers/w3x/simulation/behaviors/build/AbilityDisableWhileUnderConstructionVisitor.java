@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 
@@ -120,6 +121,13 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 
 	@Override
 	public Void accept(final GenericNoIconAbility ability) {
+		ability.setDisabled(true);
+		ability.setIconShowing(false);
+		return null;
+	}
+
+	@Override
+	public Void accept(final CAbilityHero ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
 		return null;

@@ -3,7 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityIconUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -24,6 +24,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
@@ -63,7 +64,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			addCommandButton(ability, this.abilityDataUI.getAttackUI(), ability.getHandleId(), OrderIds.attack, 0,
 					false, false);
 			boolean attackGroundEnabled = false;
-			for (final CUnitAttack attack : this.unit.getUnitType().getAttacks()) {
+			for (final CUnitAttack attack : this.unit.getAttacks()) {
 				if (attack.getWeaponType().isAttackGroundSupported()) {
 					attackGroundEnabled = true;
 					break;
@@ -100,8 +101,13 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	@Override
 	public Void accept(final CAbilityGeneric ability) {
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
-			addCommandButton(ability, this.abilityDataUI.getUI(ability.getRawcode()).getOnIconUI(),
-					ability.getHandleId(), 0, 0, false, false);
+			final AbilityUI abilityUI = this.abilityDataUI.getUI(ability.getRawcode());
+			if (abilityUI != null) {
+				addCommandButton(ability, abilityUI.getOnIconUI(), ability.getHandleId(), 0, 0, false, false);
+			}
+			else {
+				addCommandButton(ability, this.abilityDataUI.getStopUI(), ability.getHandleId(), 0, 0, false, false);
+			}
 		}
 		return null;
 	}
@@ -109,7 +115,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	@Override
 	public Void accept(final GenericSingleIconActiveAbility ability) {
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
-			final AbilityIconUI ui = this.abilityDataUI.getUI(ability.getAlias());
+			final AbilityUI ui = this.abilityDataUI.getUI(ability.getAlias());
 			addCommandButton(ability, ability.isToggleOn() ? ui.getOffIconUI() : ui.getOnIconUI(),
 					ability.getHandleId(), ability.getBaseOrderId(), 0, false, false);
 		}
@@ -328,5 +334,11 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		public String getRequirementsText() {
 			return this.requirementsTextBuilder.toString();
 		}
+	}
+
+	@Override
+	public Void accept(final CAbilityHero ability) {
+		// TODO
+		return null;
 	}
 }

@@ -134,7 +134,13 @@ public class Flac {
 		}
 
 		// Start writing WAV output file
-		final int bytesPerSample = streamInfo.sampleDepth / 8;
+		int bytesPerSample = streamInfo.sampleDepth / 8;
+		final boolean needsDownscaleForLibgdx = bytesPerSample >= 3;
+		int downsampleBytes = 0;
+		if (needsDownscaleForLibgdx) {
+			downsampleBytes = bytesPerSample - 2;
+			bytesPerSample = 2;
+		}
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(baos))) {
 			// Header chunk
@@ -151,14 +157,17 @@ public class Flac {
 			writeLittleInt32(out, streamInfo.sampleRate);
 			writeLittleInt32(out, streamInfo.sampleRate * streamInfo.numChannels * bytesPerSample);
 			writeLittleInt16(out, streamInfo.numChannels * bytesPerSample);
-			writeLittleInt16(out, streamInfo.sampleDepth);
+			writeLittleInt16(out, needsDownscaleForLibgdx ? 16 : streamInfo.sampleDepth);
 
 			// Audio data chunk ("data")
 			out.writeInt(0x64617461); // "data"
 			writeLittleInt32(out, sampleDataLen);
 			for (int i = 0; i < samples[0].length; i++) {
 				for (int j = 0; j < samples.length; j++) {
-					final int val = samples[j][i];
+					int val = samples[j][i];
+					for (int k = 0; k < downsampleBytes; k++) {
+						val = val >>> 8;
+					}
 					if (bytesPerSample == 1) {
 						out.write(val + 128); // Convert to unsigned, as per WAV PCM conventions
 					}

@@ -314,9 +314,9 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	}
 
 	@Override
-	public final void render(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
+	public final void render(final SpriteBatch batch, final BitmapFont font20, final GlyphLayout glyphLayout) {
 		if (this.visible) {
-			internalRender(batch, baseFont, glyphLayout);
+			internalRender(batch, font20, glyphLayout);
 		}
 	}
 

@@ -1,13 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityIconUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
 
 public class AbilityCommandButton implements CommandButton {
-	private final AbilityIconUI abilityIconUI;
+	private final AbilityUI abilityIconUI;
 	private final int orderId;
 
-	public AbilityCommandButton(final AbilityIconUI abilityIconUI, final int orderId) {
+	public AbilityCommandButton(final AbilityUI abilityIconUI, final int orderId) {
 		this.abilityIconUI = abilityIconUI;
 		this.orderId = orderId;
 	}

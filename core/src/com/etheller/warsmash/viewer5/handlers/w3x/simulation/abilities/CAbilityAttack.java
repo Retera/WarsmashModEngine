@@ -44,7 +44,7 @@ public class CAbilityAttack extends AbstractCAbility {
 		}
 		if ((orderId == OrderIds.smart) || (orderId == OrderIds.attack)) {
 			boolean canTarget = false;
-			for (final CUnitAttack attack : unit.getUnitType().getAttacks()) {
+			for (final CUnitAttack attack : unit.getAttacks()) {
 				if (target.canBeTargetedBy(game, unit, attack.getTargetsAllowed())) {
 					canTarget = true;
 					break;
@@ -77,7 +77,7 @@ public class CAbilityAttack extends AbstractCAbility {
 			break;
 		case OrderIds.attackground:
 			boolean allowAttackGround = false;
-			for (final CUnitAttack attack : unit.getUnitType().getAttacks()) {
+			for (final CUnitAttack attack : unit.getAttacks()) {
 				if (attack.getWeaponType().isAttackGroundSupported()) {
 					allowAttackGround = true;
 					break;
@@ -118,7 +118,7 @@ public class CAbilityAttack extends AbstractCAbility {
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		CBehavior behavior = null;
-		for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
+		for (final CUnitAttack attack : caster.getAttacks()) {
 			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
 				behavior = caster.getAttackBehavior().reset(OrderIds.attack, attack, target, false,
 						CBehaviorAttackListener.DO_NOTHING);
@@ -142,7 +142,7 @@ public class CAbilityAttack extends AbstractCAbility {
 			return caster.getMoveBehavior().reset(OrderIds.attack, point);
 		case OrderIds.attackground:
 			CBehavior behavior = null;
-			for (final CUnitAttack attack : caster.getUnitType().getAttacks()) {
+			for (final CUnitAttack attack : caster.getAttacks()) {
 				if (attack.getWeaponType().isAttackGroundSupported()) {
 					behavior = caster.getAttackBehavior().reset(OrderIds.attackground, attack, point, false,
 							CBehaviorAttackListener.DO_NOTHING);

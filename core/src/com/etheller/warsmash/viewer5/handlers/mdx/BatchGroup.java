@@ -98,7 +98,12 @@ public class BatchGroup extends GenericGroup {
 			final float layerAlpha = instance.layerAlphas[layerIndex];
 
 			if ((geosetColor[3] > 0) && (layerAlpha > 0)) {
-				final int layerTexture = instance.layerTextures[layerIndex];
+				// BELOW: I updated it to "Math.max(0," because MDL and MDX parser for PRSCMOD
+				// menu screen behaved differently,
+				// the MDL case was getting "no data" for default value when unanimated, and "no
+				// data" resolved to -1,
+				// whereas MDX binary contained an "unused" 0 value.
+				final int layerTexture = Math.max(0, instance.layerTextures[layerIndex]);
 				final float[] uvAnim = instance.uvAnims[layerIndex];
 
 				shader.setUniform4fv("u_geosetColor", geosetColor, 0, geosetColor.length);

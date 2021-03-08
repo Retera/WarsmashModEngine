@@ -12,7 +12,6 @@ public abstract class SkeletalNode extends GenericNode {
 	protected static final Vector3 billboardAxisHeap = new Vector3();
 	protected static final Quaternion rotationHeap = new Quaternion();
 	protected static final Quaternion rotationHeap2 = new Quaternion();
-	protected static final Quaternion rotationHeap3 = new Quaternion();
 	protected static final Vector3 scalingHeap = new Vector3();
 	protected static final Vector3 blendLocationHeap = new Vector3();
 	protected static final Vector3 blendHeap = new Vector3();
@@ -120,76 +119,77 @@ public abstract class SkeletalNode extends GenericNode {
 			this.convertBasis(computedRotation);
 		}
 		else {
+			computedRotation = rotationHeap.set(this.localRotation);
 			if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0)) {
-				rotationHeap.set(this.localRotation).slerp(this.localBlendRotation, blendTimeRatio);
-				computedRotation = rotationHeap;
-			}
-			else {
-				computedRotation = this.localRotation;
+				computedRotation.slerp(this.localBlendRotation, blendTimeRatio);
 			}
 
 			if (this.billboardedX) {
+				if (computedScaling == this.localScale) {
+					computedScaling = scalingHeap.set(computedScaling);
+				}
+				// It took me many hours to deduce from playing around that this negative one
+				// multiplier should be here. I suggest a lot of testing before you remove it.
+				computedScaling.z *= -1;
+
 				final Camera camera = scene.camera;
 				cameraRayHeap.set(camera.billboardedVectors[6]);
-				rotationHeap2.set(this.parent.inverseWorldRotation);
 
-				rotationHeap3.set(computedRotation);
+				rotationHeap2.set(computedRotation);
 				// Inverse that local rotation
-				rotationHeap3.x = -rotationHeap3.x;
-				rotationHeap3.y = -rotationHeap3.y;
-				rotationHeap3.z = -rotationHeap3.z;
+				rotationHeap2.x = -rotationHeap2.x;
+				rotationHeap2.y = -rotationHeap2.y;
+				rotationHeap2.z = -rotationHeap2.z;
 
-				rotationHeap3.mul(rotationHeap2);
+				rotationHeap2.mul(this.parent.inverseWorldRotation);
 
-				rotationHeap3.transform(cameraRayHeap);
+				rotationHeap2.transform(cameraRayHeap);
 
 				billboardAxisHeap.set(1, 0, 0);
 				final float angle = (float) Math.atan2(cameraRayHeap.z, cameraRayHeap.y);
-				rotationHeap3.setFromAxisRad(billboardAxisHeap, angle);
+				rotationHeap2.setFromAxisRad(billboardAxisHeap, angle);
 
-				RenderMathUtils.mul(computedRotation, computedRotation, rotationHeap3);
+				RenderMathUtils.mul(computedRotation, computedRotation, rotationHeap2);
 			}
 			else if (this.billboardedY) {
 				final Camera camera = scene.camera;
 				cameraRayHeap.set(camera.billboardedVectors[6]);
-				rotationHeap2.set(this.parent.inverseWorldRotation);
 
-				rotationHeap3.set(computedRotation);
+				rotationHeap2.set(computedRotation);
 				// Inverse that local rotation
-				rotationHeap3.x = -rotationHeap3.x;
-				rotationHeap3.y = -rotationHeap3.y;
-				rotationHeap3.z = -rotationHeap3.z;
+				rotationHeap2.x = -rotationHeap2.x;
+				rotationHeap2.y = -rotationHeap2.y;
+				rotationHeap2.z = -rotationHeap2.z;
 
-				rotationHeap3.mul(rotationHeap2);
+				rotationHeap2.mul(this.parent.inverseWorldRotation);
 
-				rotationHeap3.transform(cameraRayHeap);
+				rotationHeap2.transform(cameraRayHeap);
 
 				billboardAxisHeap.set(0, 1, 0);
-				final float angle = (float) Math.atan2(cameraRayHeap.z, -cameraRayHeap.x);
-				rotationHeap3.setFromAxisRad(billboardAxisHeap, angle);
+				final float angle = (float) Math.atan2(-cameraRayHeap.z, cameraRayHeap.x);
+				rotationHeap2.setFromAxisRad(billboardAxisHeap, angle);
 
-				RenderMathUtils.mul(computedRotation, computedRotation, rotationHeap3);
+				RenderMathUtils.mul(computedRotation, computedRotation, rotationHeap2);
 			}
 			else if (this.billboardedZ) {
 				final Camera camera = scene.camera;
 				cameraRayHeap.set(camera.billboardedVectors[6]);
-				rotationHeap2.set(this.parent.inverseWorldRotation);
 
-				rotationHeap3.set(computedRotation);
+				rotationHeap2.set(computedRotation);
 				// Inverse that local rotation
-				rotationHeap3.x = -rotationHeap3.x;
-				rotationHeap3.y = -rotationHeap3.y;
-				rotationHeap3.z = -rotationHeap3.z;
+				rotationHeap2.x = -rotationHeap2.x;
+				rotationHeap2.y = -rotationHeap2.y;
+				rotationHeap2.z = -rotationHeap2.z;
 
-				rotationHeap3.mul(rotationHeap2);
+				rotationHeap2.mul(this.parent.inverseWorldRotation);
 
-				rotationHeap3.transform(cameraRayHeap);
+				rotationHeap2.transform(cameraRayHeap);
 
 				billboardAxisHeap.set(0, 0, 1);
 				final float angle = (float) Math.atan2(cameraRayHeap.y, cameraRayHeap.x);
-				rotationHeap3.setFromAxisRad(billboardAxisHeap, angle);
+				rotationHeap2.setFromAxisRad(billboardAxisHeap, angle);
 
-				RenderMathUtils.mul(computedRotation, computedRotation, rotationHeap3);
+				RenderMathUtils.mul(computedRotation, computedRotation, rotationHeap2);
 			}
 		}
 

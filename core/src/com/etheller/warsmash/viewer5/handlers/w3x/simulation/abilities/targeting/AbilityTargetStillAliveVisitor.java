@@ -24,7 +24,7 @@ public class AbilityTargetStillAliveVisitor implements AbilityTargetVisitor<Bool
 
 	@Override
 	public Boolean accept(final CItem target) {
-		return !target.isDead();
+		return !target.isDead() && !target.isHidden();
 	}
 
 }

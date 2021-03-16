@@ -168,6 +168,8 @@ public class CUnitData {
 	private static final War3ID INT_PLUS = War3ID.fromString("uinp");
 	private static final War3ID PRIMARY_ATTRIBUTE = War3ID.fromString("upra");
 
+	private static final War3ID CAN_FLEE = War3ID.fromString("ufle");
+
 	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
@@ -278,6 +280,8 @@ public class CUnitData {
 			final float collisionSize = unitType.getFieldAsFloat(COLLISION_SIZE, 0);
 			final float propWindow = unitType.getFieldAsFloat(PROPULSION_WINDOW, 0);
 			final float turnRate = unitType.getFieldAsFloat(TURN_RATE, 0);
+
+			final boolean canFlee = unitType.getFieldAsBoolean(CAN_FLEE, 0);
 
 			final float strPlus = unitType.getFieldAsFloat(STR_PLUS, 0);
 			final float agiPlus = unitType.getFieldAsFloat(AGI_PLUS, 0);
@@ -533,7 +537,7 @@ public class CUnitData {
 					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, unitRace, goldCost,
 					lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow,
 					turnRate, requirements, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence, intPlus,
-					primaryAttribute, heroAbilityList, heroProperNames, properNamesCount);
+					primaryAttribute, heroAbilityList, heroProperNames, properNamesCount, canFlee);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
 		return unitTypeInstance;

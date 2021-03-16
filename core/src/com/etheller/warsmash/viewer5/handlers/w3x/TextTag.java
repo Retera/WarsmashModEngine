@@ -20,7 +20,7 @@ public class TextTag {
 	public boolean update(final float deltaTime) {
 		this.screenCoordsZHeight += 60.0f * deltaTime;
 		this.lifetime += deltaTime;
-		return this.lifetime > 3.5f;
+		return this.lifetime > 2.5f;
 	}
 
 	public Vector3 getPosition() {
@@ -28,7 +28,7 @@ public class TextTag {
 	}
 
 	public float getRemainingLife() {
-		return 3.5f - this.lifetime;
+		return 2.5f - this.lifetime;
 	}
 
 	public Color getColor() {

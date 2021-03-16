@@ -6,4 +6,6 @@ public interface CommandErrorListener {
 	void showCantPlaceError();
 
 	void showNoFoodError();
+
+	void showInventoryFullError();
 }

@@ -15,6 +15,8 @@ public interface CUnitStateListener {
 
 	void heroStatsChanged();
 
+	void inventoryChanged();
+
 	public static final class CUnitStateNotifier extends SubscriberSetNotifier<CUnitStateListener>
 			implements CUnitStateListener {
 		@Override
@@ -56,6 +58,13 @@ public interface CUnitStateListener {
 		public void heroStatsChanged() {
 			for (final CUnitStateListener listener : set) {
 				listener.heroStatsChanged();
+			}
+		}
+
+		@Override
+		public void inventoryChanged() {
+			for (final CUnitStateListener listener : set) {
+				listener.inventoryChanged();
 			}
 		}
 	}

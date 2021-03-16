@@ -433,7 +433,7 @@ public class GeometryEmitterFuncs {
 
 			buffer.bindAndUpdate(size);
 
-			shader.setUniformi("u_emitter", emitterType);
+			shader.setUniformf("u_emitter", emitterType);
 
 			shader.setVertexAttribute("a_p0", 3, GL20.GL_FLOAT, false, BYTES_PER_OBJECT, BYTE_OFFSET_P0);
 			shader.setVertexAttribute("a_p1", 3, GL20.GL_FLOAT, false, BYTES_PER_OBJECT, BYTE_OFFSET_P1);

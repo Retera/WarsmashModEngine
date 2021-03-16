@@ -65,6 +65,17 @@ public class CGameplayConstants {
 	private final boolean maxLevelHeroesDrainExp;
 	private final boolean buildingKillsGiveExp;
 
+	private final float dropItemRange;
+	private final float giveItemRange;
+	private final float pickupItemRange;
+	private final float pawnItemRange;
+	private final float pawnItemRate;
+
+	private final float followRange;
+	private final float structureFollowRange;
+	private final float followItemRange;
+	private final float spellCastRangeBuffer;
+
 	public CGameplayConstants(final DataTable parsedDataTable) {
 		final Element miscData = parsedDataTable.get("Misc");
 		// TODO use radians for half angle
@@ -155,6 +166,18 @@ public class CGameplayConstants {
 		this.agiAttackSpeedBonus = miscData.getFieldFloatValue("AgiAttackSpeedBonus");
 
 		this.heroAbilityLevelSkip = miscData.getFieldValue("HeroAbilityLevelSkip");
+
+		this.dropItemRange = miscData.getFieldFloatValue("DropItemRange");
+		this.giveItemRange = miscData.getFieldFloatValue("GiveItemRange");
+		this.pickupItemRange = miscData.getFieldFloatValue("PickupItemRange");
+		this.pawnItemRange = miscData.getFieldFloatValue("PawnItemRange");
+		this.pawnItemRate = miscData.getFieldFloatValue("PawnItemRate");
+
+		this.followRange = miscData.getFieldFloatValue("FollowRange");
+		this.structureFollowRange = miscData.getFieldFloatValue("StructureFollowRange");
+		this.followItemRange = miscData.getFieldFloatValue("FollowItemRange");
+
+		this.spellCastRangeBuffer = miscData.getFieldFloatValue("SpellCastRangeBuffer");
 	}
 
 	public float getAttackHalfAngle() {
@@ -303,6 +326,26 @@ public class CGameplayConstants {
 
 	public int getGrantNormalXP(final int level) {
 		return getTableValue(this.grantNormalXp, level);
+	}
+
+	public float getDropItemRange() {
+		return this.dropItemRange;
+	}
+
+	public float getPickupItemRange() {
+		return this.pickupItemRange;
+	}
+
+	public float getGiveItemRange() {
+		return this.giveItemRange;
+	}
+
+	public float getPawnItemRange() {
+		return this.pawnItemRange;
+	}
+
+	public float getPawnItemRate() {
+		return this.pawnItemRate;
 	}
 
 	private static int getTableValue(final int[] table, int level) {

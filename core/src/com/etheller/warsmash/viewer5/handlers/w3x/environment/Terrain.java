@@ -188,7 +188,7 @@ public class Terrain {
 		if (waterInfo != null) {
 			this.waterHeightOffset = waterInfo.getFieldFloatValue("height");
 			this.waterTextureCount = waterInfo.getFieldValue("numTex");
-			this.waterIncreasePerFrame = waterInfo.getFieldValue("texRate") / 60f;
+			this.waterIncreasePerFrame = waterInfo.getFieldValue("texRate");
 		}
 		else {
 			this.waterHeightOffset = 0;
@@ -896,8 +896,8 @@ public class Terrain {
 		}
 	}
 
-	public void update() {
-		this.waterIndex += this.waterIncreasePerFrame;
+	public void update(final float deltaTime) {
+		this.waterIndex += this.waterIncreasePerFrame * deltaTime;
 
 		if (this.waterIndex >= this.waterTextureCount) {
 			this.waterIndex = 0;

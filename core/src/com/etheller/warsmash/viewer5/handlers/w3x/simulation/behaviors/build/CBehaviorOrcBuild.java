@@ -61,9 +61,10 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 					buildLocationObstructed = true;
 				}
 			}
+			final int playerIndex = this.unit.getPlayerIndex();
 			if (!buildLocationObstructed) {
-				final CUnit constructedStructure = simulation.createUnit(this.orderId, this.unit.getPlayerIndex(),
-						this.target.getX(), this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
+				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX(),
+						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
 				constructedStructure.setConstructing(true);
 				constructedStructure.setWorkerInside(this.unit);
 				constructedStructure.setLife(simulation,
@@ -80,9 +81,9 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 				simulation.unitConstructedEvent(this.unit, constructedStructure);
 			}
 			else {
-				final CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
+				final CPlayer player = simulation.getPlayer(playerIndex);
 				refund(player, unitTypeToCreate);
-				simulation.getCommandErrorListener().showCantPlaceError();
+				simulation.getCommandErrorListener(playerIndex).showCantPlaceError();
 			}
 		}
 		return this.unit.pollNextOrderBehavior(simulation);

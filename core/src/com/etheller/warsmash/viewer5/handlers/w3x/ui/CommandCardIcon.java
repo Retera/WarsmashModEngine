@@ -12,7 +12,6 @@ import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButton;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandListener;
 
@@ -22,7 +21,8 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	private TextureFrame activeHighlightFrame;
 	private SpriteFrame cooldownFrame;
 	private SpriteFrame autocastFrame;
-	private CommandButton commandButton;
+	private float defaultWidth;
+	private float defaultHeight;
 	private int abilityHandleId;
 	private int orderId;
 	private int autoCastOrderId;
@@ -49,33 +49,16 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 		this.autocastFrame = autocastFrame;
 	}
 
-	public void setCommandButton(final CommandButton commandButton) {
-		this.commandButton = commandButton;
-		if (commandButton == null) {
-			this.iconFrame.setVisible(false);
+	public void clear() {
+		this.iconFrame.setVisible(false);
+		if (this.activeHighlightFrame != null) {
 			this.activeHighlightFrame.setVisible(false);
-			this.cooldownFrame.setVisible(false);
+		}
+		this.cooldownFrame.setVisible(false);
+		if (this.autocastFrame != null) {
 			this.autocastFrame.setVisible(false);
-			setVisible(false);
 		}
-		else {
-			if (commandButton.isEnabled()) {
-				this.iconFrame.setTexture(commandButton.getIcon());
-			}
-			else {
-				this.iconFrame.setTexture(commandButton.getDisabledIcon());
-			}
-			if (commandButton.getCooldownRemaining() <= 0) {
-				this.cooldownFrame.setVisible(false);
-			}
-			else {
-				this.cooldownFrame.setVisible(true);
-				this.cooldownFrame.setSequence(PrimaryTag.STAND);
-				this.cooldownFrame.setAnimationSpeed(commandButton.getCooldown());
-				this.cooldownFrame
-						.setFrameByRatio(1 - (commandButton.getCooldownRemaining() / commandButton.getCooldown()));
-			}
-		}
+		setVisible(false);
 	}
 
 	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId,
@@ -84,19 +67,23 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 		this.menuButton = menuButton;
 		setVisible(true);
 		this.iconFrame.setVisible(true);
-		this.activeHighlightFrame.setVisible(active);
+		if (this.activeHighlightFrame != null) {
+			this.activeHighlightFrame.setVisible(active);
+		}
 		this.cooldownFrame.setVisible(false);
-		this.autocastFrame.setVisible(autoCastOrderId != 0);
-		if (autoCastOrderId != 0) {
-			if (this.autoCastActive != autoCastActive) {
-				if (autoCastActive) {
-					this.autocastFrame.setSequence(PrimaryTag.STAND);
+		if (this.autocastFrame != null) {
+			this.autocastFrame.setVisible(autoCastOrderId != 0);
+			if (autoCastOrderId != 0) {
+				if (this.autoCastActive != autoCastActive) {
+					if (autoCastActive) {
+						this.autocastFrame.setSequence(PrimaryTag.STAND);
+					}
+					else {
+						this.autocastFrame.setSequence(-1);
+					}
 				}
-				else {
-					this.autocastFrame.setSequence(-1);
-				}
+				this.autoCastActive = autoCastActive;
 			}
-			this.autoCastActive = autoCastActive;
 		}
 		this.iconFrame.setTexture(texture);
 		this.abilityHandleId = abilityHandleId;
@@ -112,23 +99,32 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	@Override
 	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
 		this.iconFrame.positionBounds(gameUI, viewport);
-		this.activeHighlightFrame.positionBounds(gameUI, viewport);
+		if (this.activeHighlightFrame != null) {
+			this.activeHighlightFrame.positionBounds(gameUI, viewport);
+		}
 		this.cooldownFrame.positionBounds(gameUI, viewport);
-		this.autocastFrame.positionBounds(gameUI, viewport);
+		if (this.autocastFrame != null) {
+			this.autocastFrame.positionBounds(gameUI, viewport);
+		}
 	}
 
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		this.iconFrame.render(batch, baseFont, glyphLayout);
-		this.activeHighlightFrame.render(batch, baseFont, glyphLayout);
+		if (this.activeHighlightFrame != null) {
+			this.activeHighlightFrame.render(batch, baseFont, glyphLayout);
+		}
 		this.cooldownFrame.render(batch, baseFont, glyphLayout);
-		this.autocastFrame.render(batch, baseFont, glyphLayout);
+		if (this.autocastFrame != null) {
+			this.autocastFrame.render(batch, baseFont, glyphLayout);
+		}
 	}
 
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
 		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
-			if ((this.orderId != 0) || this.menuButton) {
+			if (((button == Input.Buttons.LEFT) && (this.orderId != 0))
+					|| ((button == Input.Buttons.RIGHT) && (this.autoCastOrderId != 0)) || this.menuButton) {
 				return this;
 			}
 		}
@@ -154,26 +150,38 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 				this.commandCardCommandListener.openMenu(this.orderId);
 			}
 			else {
-				this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.orderId, false);
+				this.commandCardCommandListener.onClick(this.abilityHandleId, this.orderId, false);
 			}
 		}
 		else if (button == Input.Buttons.RIGHT) {
-			this.commandCardCommandListener.startUsingAbility(this.abilityHandleId, this.autoCastOrderId, true);
+			this.commandCardCommandListener.onClick(this.abilityHandleId, this.autoCastOrderId, true);
 		}
 	}
 
 	@Override
 	public void mouseDown(final GameUI gameUI, final Viewport uiViewport) {
-		this.iconFrame.setWidth(GameUI.convertX(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH));
-		this.iconFrame.setHeight(GameUI.convertY(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_PRESSED_WIDTH));
+		this.iconFrame.setWidth(this.defaultWidth * 0.95f);
+		this.iconFrame.setHeight(this.defaultHeight * 0.95f);
 		positionBounds(gameUI, uiViewport);
 	}
 
 	@Override
 	public void mouseUp(final GameUI gameUI, final Viewport uiViewport) {
-		this.iconFrame.setWidth(GameUI.convertX(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));
-		this.iconFrame.setHeight(GameUI.convertY(uiViewport, MeleeUI.DEFAULT_COMMAND_CARD_ICON_WIDTH));
+		this.iconFrame.setWidth(this.defaultWidth);
+		this.iconFrame.setHeight(this.defaultHeight);
 		positionBounds(gameUI, uiViewport);
+	}
+
+	@Override
+	public void setWidth(final float width) {
+		this.defaultWidth = width;
+		super.setWidth(width);
+	}
+
+	@Override
+	public void setHeight(final float height) {
+		this.defaultHeight = height;
+		super.setHeight(height);
 	}
 
 	@Override

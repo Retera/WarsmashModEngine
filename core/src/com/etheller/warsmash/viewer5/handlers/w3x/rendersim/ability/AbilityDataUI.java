@@ -45,6 +45,13 @@ public class AbilityDataUI {
 	private static final War3ID UNIT_TIP = War3ID.fromString("utip");
 	private static final War3ID UNIT_UBER_TIP = War3ID.fromString("utub");
 
+	private static final War3ID ITEM_ICON_NORMAL_X = War3ID.fromString("ubpx");
+	private static final War3ID ITEM_ICON_NORMAL_Y = War3ID.fromString("ubpy");
+	private static final War3ID ITEM_ICON_NORMAL = War3ID.fromString("iico");
+	private static final War3ID ITEM_TIP = War3ID.fromString("utip");
+	private static final War3ID ITEM_UBER_TIP = War3ID.fromString("utub");
+	private static final War3ID ITEM_DESCRIPTION = War3ID.fromString("ides");
+
 	private static final War3ID UPGRADE_ICON_NORMAL_X = War3ID.fromString("gbpx");
 	private static final War3ID UPGRADE_ICON_NORMAL_Y = War3ID.fromString("gbpy");
 	private static final War3ID UPGRADE_ICON_NORMAL = War3ID.fromString("gar1");
@@ -54,6 +61,7 @@ public class AbilityDataUI {
 
 	private final Map<War3ID, AbilityUI> rawcodeToUI = new HashMap<>();
 	private final Map<War3ID, IconUI> rawcodeToUnitUI = new HashMap<>();
+	private final Map<War3ID, ItemUI> rawcodeToItemUI = new HashMap<>();
 	private final Map<War3ID, List<IconUI>> rawcodeToUpgradeUI = new HashMap<>();
 	private final IconUI moveUI;
 	private final IconUI stopUI;
@@ -74,7 +82,8 @@ public class AbilityDataUI {
 	private final IconUI selectSkillUI;
 
 	public AbilityDataUI(final MutableObjectData abilityData, final MutableObjectData unitData,
-			final MutableObjectData upgradeData, final GameUI gameUI, final War3MapViewer viewer) {
+			final MutableObjectData itemData, final MutableObjectData upgradeData, final GameUI gameUI,
+			final War3MapViewer viewer) {
 		final String disabledPrefix = gameUI.getSkinField("CommandButtonDisabledArtPath");
 		for (final War3ID alias : abilityData.keySet()) {
 			final MutableGameObject abilityTypeData = abilityData.get(alias);
@@ -128,6 +137,21 @@ public class AbilityDataUI {
 			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
 			this.rawcodeToUnitUI.put(alias,
 					new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip, iconUberTip));
+		}
+		for (final War3ID alias : itemData.keySet()) {
+			final MutableGameObject abilityTypeData = itemData.get(alias);
+			final String iconNormalPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(ITEM_ICON_NORMAL, 0));
+			final int iconNormalX = abilityTypeData.getFieldAsInteger(ITEM_ICON_NORMAL_X, 0);
+			final int iconNormalY = abilityTypeData.getFieldAsInteger(ITEM_ICON_NORMAL_Y, 0);
+			final String iconTip = abilityTypeData.getFieldAsString(ITEM_TIP, 0);
+			final String iconUberTip = abilityTypeData.getFieldAsString(ITEM_UBER_TIP, 0);
+			final String iconDescription = abilityTypeData.getFieldAsString(ITEM_DESCRIPTION, 0);
+			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
+			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
+			this.rawcodeToItemUI.put(alias,
+					new ItemUI(
+							new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip, iconUberTip),
+							abilityTypeData.getName(), iconDescription, iconNormalPath));
 		}
 		for (final War3ID alias : upgradeData.keySet()) {
 			final MutableGameObject upgradeTypeData = upgradeData.get(alias);
@@ -184,6 +208,10 @@ public class AbilityDataUI {
 
 	public IconUI getUnitUI(final War3ID rawcode) {
 		return this.rawcodeToUnitUI.get(rawcode);
+	}
+
+	public ItemUI getItemUI(final War3ID rawcode) {
+		return this.rawcodeToItemUI.get(rawcode);
 	}
 
 	public IconUI getUpgradeUI(final War3ID rawcode, final int level) {

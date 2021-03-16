@@ -20,6 +20,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -45,7 +46,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbility
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CUnit extends CWidget {
-	private static final Rectangle tempRect = new Rectangle();
 	private War3ID typeId;
 	private float facing; // degrees
 	private float mana;
@@ -436,7 +436,7 @@ public class CUnit extends CWidget {
 			if (ability != null) {
 				// Allow the ability to response to the order without actually placing itself in
 				// the queue, nor modifying (interrupting) the queue.
-				if (!ability.checkBeforeQueue(game, this, order.getOrderId())) {
+				if (!ability.checkBeforeQueue(game, this, order.getOrderId(), order.getTarget(game))) {
 					this.stateNotifier.ordersChanged();
 					return;
 				}
@@ -629,9 +629,15 @@ public class CUnit extends CWidget {
 		return this.unitType.getImpactZ();
 	}
 
+	public double angleTo(final AbilityTarget target) {
+		final double dx = target.getX() - getX();
+		final double dy = target.getY() - getY();
+		return StrictMath.atan2(dy, dx);
+	}
+
 	public double distance(final AbilityTarget target) {
-		double dx = Math.abs(target.getX() - getX());
-		double dy = Math.abs(target.getY() - getY());
+		double dx = StrictMath.abs(target.getX() - getX());
+		double dy = StrictMath.abs(target.getY() - getY());
 		final float thisCollisionSize = this.unitType.getCollisionSize();
 		float targetCollisionSize;
 		if (target instanceof CUnit) {
@@ -701,16 +707,27 @@ public class CUnit extends CWidget {
 		}
 		else {
 			if ((this.currentBehavior == null) || (this.currentBehavior == this.defaultBehavior)) {
-				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(),
-						CAllianceType.PASSIVE)) {
+				boolean foundMatchingReturnFireAttack = false;
+				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(), CAllianceType.PASSIVE)
+						&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 					for (final CUnitAttack attack : this.getAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
 							this.currentBehavior = getAttackBehavior().reset(OrderIds.attack, attack, source, false,
 									CBehaviorAttackListener.DO_NOTHING);
 							this.currentBehavior.begin(simulation);
+							foundMatchingReturnFireAttack = true;
 							break;
 						}
 					}
+				}
+				if (!foundMatchingReturnFireAttack && this.unitType.isCanFlee() && !isMovementDisabled()
+						&& (this.moveBehavior != null)) {
+					final double angleTo = source.angleTo(this);
+					final int distanceToFlee = getSpeed();
+					this.currentBehavior = this.moveBehavior.reset(OrderIds.move,
+							new AbilityPointTarget((float) (getX() + (distanceToFlee * StrictMath.cos(angleTo))),
+									(float) (getY() + (distanceToFlee * StrictMath.sin(angleTo)))));
+					this.currentBehavior.begin(simulation);
 				}
 			}
 		}
@@ -1194,7 +1211,7 @@ public class CUnit extends CWidget {
 					}
 					else {
 						this.queuedUnitFoodPaid = false;
-						game.getCommandErrorListener().showNoFoodError();
+						game.getCommandErrorListener(this.playerIndex).showNoFoodError();
 					}
 				}
 			}
@@ -1374,6 +1391,15 @@ public class CUnit extends CWidget {
 		return null;
 	}
 
+	public CAbilityInventory getInventoryData() {
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityInventory) {
+				return (CAbilityInventory) ability;
+			}
+		}
+		return null;
+	}
+
 	public void setUnitSpecificAttacks(final List<CUnitAttack> unitSpecificAttacks) {
 		this.unitSpecificAttacks = unitSpecificAttacks;
 	}
@@ -1387,5 +1413,19 @@ public class CUnit extends CWidget {
 			return this.unitSpecificAttacks;
 		}
 		return this.unitType.getAttacks();
+	}
+
+	public void onPickUpItem(final CSimulation game, final CItem item, final boolean playUserUISounds) {
+		this.stateNotifier.inventoryChanged();
+		if (playUserUISounds) {
+			game.unitPickUpItemEvent(this, item);
+		}
+	}
+
+	public void onDropItem(final CSimulation game, final CItem droppedItem, final boolean playUserUISounds) {
+		this.stateNotifier.inventoryChanged();
+		if (playUserUISounds) {
+			game.unitDropItemEvent(this, droppedItem);
+		}
 	}
 }

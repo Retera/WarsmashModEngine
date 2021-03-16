@@ -6,6 +6,8 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
@@ -510,6 +512,11 @@ public class MdxComplexInstance extends ModelInstance {
 		for (final GenericGroup group : model.opaqueGroups) {
 			group.render(this, mvp);
 		}
+
+		final int glGetError = Gdx.gl.glGetError();
+		if (glGetError != GL20.GL_NO_ERROR) {
+			throw new IllegalStateException("GL ERROR: " + glGetError + " ON " + model.name + " (Opaque)");
+		}
 	}
 
 	@Override
@@ -521,6 +528,11 @@ public class MdxComplexInstance extends ModelInstance {
 
 		for (final GenericGroup group : model.translucentGroups) {
 			group.render(this, this.scene.camera.viewProjectionMatrix);
+
+			final int glGetError = Gdx.gl.glGetError();
+			if (glGetError != GL20.GL_NO_ERROR) {
+				throw new IllegalStateException("GL ERROR: " + glGetError + " ON " + model.name + " (Translucent)");
+			}
 		}
 	}
 

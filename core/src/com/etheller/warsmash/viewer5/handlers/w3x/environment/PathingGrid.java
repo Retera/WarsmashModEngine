@@ -83,7 +83,7 @@ public class PathingGrid {
 					data |= PathingFlags.UNFLYABLE;
 				}
 				if (((rgb & 0xFF0000) >>> 16) > 127) {
-					data |= PathingFlags.UNWALKABLE;
+					data |= PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
 				}
 				this.dynamicPathingOverlay[(yy * this.pathingGridSizes[0]) + xx] |= data;
 			}
@@ -188,8 +188,7 @@ public class PathingGrid {
 
 	public RemovablePathingMapInstance createRemovablePathingOverlayTexture(final float positionX,
 			final float positionY, final int rotationInput, final BufferedImage pathingTextureTga) {
-		return new RemovablePathingMapInstance(positionX,
-				positionY, rotationInput, pathingTextureTga);
+		return new RemovablePathingMapInstance(positionX, positionY, rotationInput, pathingTextureTga);
 	}
 
 	public int getWidth() {

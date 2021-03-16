@@ -4,6 +4,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 
 public interface CAbility extends CAbilityView {
@@ -18,7 +19,7 @@ public interface CAbility extends CAbilityView {
 	void onCancelFromQueue(CSimulation game, CUnit unit, int orderId);
 
 	/* return false to not do anything, such as for toggling autocast */
-	boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId);
+	boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId, AbilityTarget target);
 
 	CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target);
 

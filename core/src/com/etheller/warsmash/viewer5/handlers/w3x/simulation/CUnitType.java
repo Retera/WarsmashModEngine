@@ -71,6 +71,7 @@ public class CUnitType {
 	private final List<War3ID> heroAbilityList;
 	private final List<String> heroProperNames;
 	private final int properNamesCount;
+	private final boolean canFlee;
 
 	public CUnitType(final String name, final int life, final int manaInitial, final int manaMaximum, final int speed,
 			final int defense, final String abilityList, final boolean isBldg, final MovementType movementType,
@@ -86,7 +87,8 @@ public class CUnitType {
 			final List<CUnitTypeRequirement> requirements, final int level, final boolean hero, final int strength,
 			final float strengthPerLevel, final int agility, final float agilityPerLevel, final int intelligence,
 			final float intelligencePerLevel, final CPrimaryAttribute primaryAttribute,
-			final List<War3ID> heroAbilityList, final List<String> heroProperNames, final int properNamesCount) {
+			final List<War3ID> heroAbilityList, final List<String> heroProperNames, final int properNamesCount,
+			final boolean canFlee) {
 		this.name = name;
 		this.life = life;
 		this.manaInitial = manaInitial;
@@ -136,6 +138,7 @@ public class CUnitType {
 		this.heroAbilityList = heroAbilityList;
 		this.heroProperNames = heroProperNames;
 		this.properNamesCount = properNamesCount;
+		this.canFlee = canFlee;
 	}
 
 	public String getName() {
@@ -332,5 +335,9 @@ public class CUnitType {
 
 	public int getProperNamesCount() {
 		return this.properNamesCount;
+	}
+
+	public boolean isCanFlee() {
+		return this.canFlee;
 	}
 }

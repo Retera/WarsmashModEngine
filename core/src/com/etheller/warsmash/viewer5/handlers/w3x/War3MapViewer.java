@@ -24,6 +24,7 @@ import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -91,6 +92,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
@@ -130,6 +132,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final War3ID DESTRUCTABLE_PATHING_DEATH = War3ID.fromString("bptd");
 	private static final War3ID ELEVATION_SAMPLE_RADIUS = War3ID.fromString("uerd");
 	private static final War3ID MAX_PITCH = War3ID.fromString("umxp");
+	private static final War3ID ALLOW_CUSTOM_TEAM_COLOR = War3ID.fromString("utcc");
+	private static final War3ID TEAM_COLOR = War3ID.fromString("utco");
 	private static final War3ID MAX_ROLL = War3ID.fromString("umxr");
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
@@ -160,7 +164,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public MappedData unitMetaData = new MappedData();
 	public List<RenderWidget> widgets = new ArrayList<>();
 	public List<RenderUnit> units = new ArrayList<>();
-	public List<RenderItem> items = new ArrayList<>();
 	public List<RenderEffect> projectiles = new ArrayList<>();
 	public boolean unitsReady;
 	public War3Map mapMpq;
@@ -199,6 +202,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private final Map<CUnit, RenderUnit> unitToRenderPeer = new HashMap<>();
 	private final Map<CDestructable, RenderDestructable> destructableToRenderPeer = new HashMap<>();
+	private final Map<CItem, RenderItem> itemToRenderPeer = new HashMap<>();
 	private final Map<War3ID, RenderUnitTypeData> unitIdToTypeData = new HashMap<>();
 	private GameUI gameUI;
 	private Vector3 lightDirection;
@@ -451,7 +455,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.confirmationInstance.setScene(this.worldScene);
 
 		this.allObjectData = this.mapMpq.readModifications();
-		this.simulation = new CSimulation(this.miscData, this.allObjectData.getUnits(),
+		this.simulation = new CSimulation(this.miscData, this.allObjectData.getUnits(), this.allObjectData.getItems(),
 				this.allObjectData.getDestructibles(), this.allObjectData.getAbilities(),
 				new SimulationRenderController() {
 					private final Map<String, UnitSound> keyToCombatSound = new HashMap<>();
@@ -541,10 +545,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void spawnDamageSound(final CWidget damagedDestructable, final String weaponSound,
 							final String armorType) {
-						RenderWidget damagedWidget = War3MapViewer.this.unitToRenderPeer.get(damagedDestructable);
-						if (damagedWidget == null) {
-							damagedWidget = War3MapViewer.this.destructableToRenderPeer.get(damagedDestructable);
-						}
+						final RenderWidget damagedWidget = getRenderPeer(damagedDestructable);
 						if (damagedWidget == null) {
 							return;
 						}
@@ -621,7 +622,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public CUnit createUnit(final CSimulation simulation, final War3ID typeId, final int playerIndex,
 							final float x, final float y, final float facing) {
 						return createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, 0f, playerIndex,
-								(float) Math.toRadians(facing));
+								playerIndex, (float) Math.toRadians(facing));
 					}
 
 					@Override
@@ -722,6 +723,26 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), "+" + amount,
 									PLACEHOLDER_LUMBER_COLOR));
 							break;
+						}
+					}
+
+					@Override
+					public void spawnUIUnitGetItemSound(final CUnit cUnit, final CItem item) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
+						if (localPlayerIndex == renderPeer.getSimulationUnit().getPlayerIndex()) {
+							War3MapViewer.this.uiSounds.getSound("ItemGet").play(
+									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+									renderPeer.getZ());
+						}
+					}
+
+					@Override
+					public void spawnUIUnitDropItemSound(final CUnit cUnit, final CItem item) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
+						if (localPlayerIndex == renderPeer.getSimulationUnit().getPlayerIndex()) {
+							War3MapViewer.this.uiSounds.getSound("ItemDrop").play(
+									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+									renderPeer.getZ());
 						}
 					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, w3iFile.getPlayers(),
@@ -983,10 +1004,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final float unitY = unit.getLocation()[1];
 				final float unitZ = unit.getLocation()[2];
 				final int playerIndex = unit.getPlayer();
+				final int customTeamColor = unit.getCustomTeamColor();
 				final float unitAngle = unit.getAngle();
 
 				final CUnit unitCreated = createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex,
-						unitAngle);
+						customTeamColor, unitAngle);
 				if (unit.getGoldAmount() != 0) {
 					unitCreated.setGold(unit.getGoldAmount());
 				}
@@ -1001,7 +1023,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	private CUnit createNewUnit(final Warcraft3MapObjectData modifications, final War3ID unitId, float unitX,
-			float unitY, final float unitZ, final int playerIndex, final float unitAngle) {
+			float unitY, final float unitZ, final int playerIndex, int customTeamColor, final float unitAngle) {
 		UnitSoundset soundset = null;
 		MutableGameObject row = null;
 		String path = null;
@@ -1174,7 +1196,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), playerIndex, unitX, unitY,
 						angle, buildingPathingPixelMap, pathingInstance);
 				final RenderUnitTypeData typeData = getUnitTypeData(unitId, row);
-				final RenderUnit renderUnit = new RenderUnit(this, model, row, unitX, unitY, unitZ, playerIndex,
+				if (!typeData.isAllowCustomTeamColor() || (customTeamColor == -1)) {
+					if (typeData.getTeamColor() != -1) {
+						customTeamColor = typeData.getTeamColor();
+					}
+					else {
+						customTeamColor = playerIndex;
+					}
+				}
+				final RenderUnit renderUnit = new RenderUnit(this, model, row, unitX, unitY, unitZ, customTeamColor,
 						soundset, portraitModel, simulationUnit, typeData, specialArtModel, buildingShadowInstance,
 						this.selectionCircleScaleFactor);
 				this.unitToRenderPeer.put(simulationUnit, renderUnit);
@@ -1205,19 +1235,22 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				return simulationUnit;
 			}
 			else {
-				this.items
-						.add(new RenderItem(this, model, row, unitX, unitY, unitZ, unitAngle, soundset, portraitModel)); // TODO
-				// store
-				// somewhere
+				final CItem simulationItem = this.simulation.createItem(row.getAlias(), unitX, unitY);
+				final RenderItem renderItem = new RenderItem(this, model, row, unitX, unitY, unitZ, unitAngle, soundset,
+						portraitModel, simulationItem);
+				this.widgets.add(renderItem);
+				this.itemToRenderPeer.put(simulationItem, renderItem);
+
 				if (unitShadowSplat != null) {
 					unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
 						@Override
 						public void accept(final SplatMover t) {
-
+							renderItem.shadow = t;
 						}
 					});
 				}
 				if (unitShadowSplatDynamicIngame != null) {
+					renderItem.shadow = unitShadowSplatDynamicIngame;
 				}
 			}
 		}
@@ -1278,7 +1311,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		RenderUnitTypeData unitTypeData = this.unitIdToTypeData.get(key);
 		if (unitTypeData == null) {
 			unitTypeData = new RenderUnitTypeData(row.getFieldAsFloat(MAX_PITCH, 0), row.getFieldAsFloat(MAX_ROLL, 0),
-					row.getFieldAsFloat(ELEVATION_SAMPLE_RADIUS, 0));
+					row.getFieldAsFloat(ELEVATION_SAMPLE_RADIUS, 0), row.getFieldAsBoolean(ALLOW_CUSTOM_TEAM_COLOR, 0),
+					row.getFieldAsInteger(TEAM_COLOR, 0));
 			this.unitIdToTypeData.put(key, unitTypeData);
 		}
 		return unitTypeData;
@@ -1287,13 +1321,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	@Override
 	public void update() {
 		if (this.anyReady) {
-			this.terrain.update();
+			final float deltaTime = Gdx.graphics.getDeltaTime();
+			this.terrain.update(deltaTime);
 
 			super.update();
 
 			final Iterator<TextTag> textTagIterator = this.textTags.iterator();
 			while (textTagIterator.hasNext()) {
-				if (textTagIterator.next().update(Gdx.graphics.getDeltaTime())) {
+				if (textTagIterator.next().update(deltaTime)) {
 					textTagIterator.remove();
 				}
 			}
@@ -1305,13 +1340,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final RenderEffect projectile = projectileIterator.next();
 				if (projectile.updateAnimations(this, Gdx.graphics.getDeltaTime())) {
 					projectileIterator.remove();
-				}
-			}
-			for (final RenderItem item : this.items) {
-				final MdxComplexInstance instance = item.instance;
-				final MdxComplexInstance mdxComplexInstance = instance;
-				if (mdxComplexInstance.sequenceEnded || (mdxComplexInstance.sequence == -1)) {
-					SequenceUtils.randomStandSequence(mdxComplexInstance);
 				}
 			}
 			for (final RenderDoodad item : this.doodads) {
@@ -1372,6 +1400,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					scene.renderOpaque();
 					scene.renderTranslucent();
 				}
+			}
+
+			final int glGetError = Gdx.gl.glGetError();
+			if (glGetError != GL20.GL_NO_ERROR) {
+				throw new IllegalStateException("GL ERROR: " + glGetError);
 			}
 		}
 	}
@@ -1492,11 +1525,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			else {
 				sel = Arrays.asList(entity);
 			}
+			this.doSelectUnit(sel);
 		}
 		else {
 			sel = Collections.emptyList();
 		}
-		this.doSelectUnit(sel);
 		return sel;
 	}
 
@@ -1659,6 +1692,17 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return mdxPath;
 	}
 
+	public String blp(String iconPath) {
+		final int lastDotIndex = iconPath.lastIndexOf('.');
+		if (lastDotIndex != -1) {
+			iconPath = iconPath.substring(0, lastDotIndex);
+		}
+		if (!iconPath.toLowerCase().endsWith(".blp")) {
+			iconPath += ".blp";
+		}
+		return iconPath;
+	}
+
 	public MdxModel loadModel(final String path) {
 		return (MdxModel) load(mdx(path), PathSolver.DEFAULT, null);
 	}
@@ -1681,7 +1725,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public void setGameUI(final GameUI gameUI) {
 		this.gameUI = gameUI;
 		this.abilityDataUI = new AbilityDataUI(this.allObjectData.getAbilities(), this.allObjectData.getUnits(),
-				this.allObjectData.getUpgrades(), gameUI, this);
+				this.allObjectData.getItems(), this.allObjectData.getUpgrades(), gameUI, this);
 	}
 
 	public GameUI getGameUI() {
@@ -1720,6 +1764,21 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public RenderDestructable getRenderPeer(final CDestructable dest) {
 		return this.destructableToRenderPeer.get(dest);
+	}
+
+	public RenderItem getRenderPeer(final CItem item) {
+		return this.itemToRenderPeer.get(item);
+	}
+
+	private RenderWidget getRenderPeer(final CWidget damagedDestructable) {
+		RenderWidget damagedWidget = War3MapViewer.this.unitToRenderPeer.get(damagedDestructable);
+		if (damagedWidget == null) {
+			damagedWidget = War3MapViewer.this.destructableToRenderPeer.get(damagedDestructable);
+		}
+		if (damagedWidget == null) {
+			damagedWidget = War3MapViewer.this.itemToRenderPeer.get(damagedDestructable);
+		}
+		return damagedWidget;
 	}
 
 	private static final class QuadtreeIntersectorFindsWalkableRenderHeight
@@ -1793,4 +1852,5 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public void add(final TextTag textTag) {
 		this.textTags.add(textTag);
 	}
+
 }

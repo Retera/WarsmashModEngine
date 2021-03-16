@@ -44,12 +44,13 @@ public class COrderNoTarget implements COrder {
 				return ability.beginNoTarget(game, caster, this.orderId);
 			}
 			else {
-				game.getCommandErrorListener().showCommandError(targetReceiver.getMessage());
+				game.getCommandErrorListener(caster.getPlayerIndex()).showCommandError(targetReceiver.getMessage());
 				return caster.pollNextOrderBehavior(game);
 			}
 		}
 		else {
-			game.getCommandErrorListener().showCommandError(this.abilityActivationReceiver.getMessage());
+			game.getCommandErrorListener(caster.getPlayerIndex())
+					.showCommandError(this.abilityActivationReceiver.getMessage());
 			return caster.pollNextOrderBehavior(game);
 		}
 	}

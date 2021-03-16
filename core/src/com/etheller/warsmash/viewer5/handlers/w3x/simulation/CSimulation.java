@@ -26,6 +26,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CDestructableData;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CItemData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
@@ -40,9 +41,11 @@ public class CSimulation {
 	private final CAbilityData abilityData;
 	private final CUnitData unitData;
 	private final CDestructableData destructableData;
+	private final CItemData itemData;
 	private final List<CUnit> units;
 	private final List<CUnit> newUnits;
 	private final List<CDestructable> destructables;
+	private final List<CItem> items;
 	private final List<CPlayer> players;
 	private final List<CAttackProjectile> projectiles;
 	private final List<CAttackProjectile> newProjectiles;
@@ -58,14 +61,15 @@ public class CSimulation {
 	private float currentGameDayTimeElapsed;
 	private final Map<Integer, CUnit> handleIdToUnit = new HashMap<>();
 	private final Map<Integer, CDestructable> handleIdToDestructable = new HashMap<>();
+	private final Map<Integer, CItem> handleIdToItem = new HashMap<>();
 	private final Map<Integer, CAbility> handleIdToAbility = new HashMap<>();
 	private transient CommandErrorListener commandErrorListener;
 
 	public CSimulation(final DataTable miscData, final MutableObjectData parsedUnitData,
-			final MutableObjectData parsedDestructableData, final MutableObjectData parsedAbilityData,
-			final SimulationRenderController simulationRenderController, final PathingGrid pathingGrid,
-			final Rectangle entireMapBounds, final Random seededRandom, final List<Player> playerInfos,
-			final CommandErrorListener commandErrorListener) {
+			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
+			final MutableObjectData parsedAbilityData, final SimulationRenderController simulationRenderController,
+			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
+			final List<Player> playerInfos, final CommandErrorListener commandErrorListener) {
 		this.gameplayConstants = new CGameplayConstants(miscData);
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
@@ -73,9 +77,11 @@ public class CSimulation {
 		this.unitData = new CUnitData(this.gameplayConstants, parsedUnitData, this.abilityData,
 				this.simulationRenderController);
 		this.destructableData = new CDestructableData(parsedDestructableData, simulationRenderController);
+		this.itemData = new CItemData(parsedItemData);
 		this.units = new ArrayList<>();
 		this.newUnits = new ArrayList<>();
 		this.destructables = new ArrayList<>();
+		this.items = new ArrayList<>();
 		this.projectiles = new ArrayList<>();
 		this.newProjectiles = new ArrayList<>();
 		this.handleIdAllocator = new HandleIdAllocator();
@@ -153,6 +159,13 @@ public class CSimulation {
 		this.handleIdToDestructable.put(dest.getHandleId(), dest);
 		this.destructables.add(dest);
 		return dest;
+	}
+
+	public CItem createItem(final War3ID alias, final float unitX, final float unitY) {
+		final CItem item = this.itemData.create(this, alias, unitX, unitY, this.handleIdAllocator.createId());
+		this.handleIdToItem.put(item.getHandleId(), item);
+		this.items.add(item);
+		return item;
 	}
 
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
@@ -271,6 +284,10 @@ public class CSimulation {
 		this.simulationRenderController.spawnDamageSound(damagedDestructable, weaponSound, armorType);
 	}
 
+	public void itemDamageEvent(final CItem damageItem, final String weaponSound, final String armorType) {
+		this.simulationRenderController.spawnDamageSound(damageItem, weaponSound, armorType);
+	}
+
 	public void unitConstructedEvent(final CUnit constructingUnit, final CUnit constructedStructure) {
 		this.simulationRenderController.spawnUnitConstructionSound(constructingUnit, constructedStructure);
 	}
@@ -279,7 +296,7 @@ public class CSimulation {
 		return this.players.get(index);
 	}
 
-	public CommandErrorListener getCommandErrorListener() {
+	public CommandErrorListener getCommandErrorListener(final int playerIndex) {
 		return this.commandErrorListener;
 	}
 
@@ -317,6 +334,14 @@ public class CSimulation {
 		this.playerHeroes[hero.getPlayerIndex()].add(hero);
 	}
 
+	public void unitPickUpItemEvent(final CUnit cUnit, final CItem item) {
+		this.simulationRenderController.spawnUIUnitGetItemSound(cUnit, item);
+	}
+
+	public void unitDropItemEvent(final CUnit cUnit, final CItem item) {
+		this.simulationRenderController.spawnUIUnitDropItemSound(cUnit, item);
+	}
+
 	public List<CUnit> getPlayerHeroes(final int playerIndex) {
 		return this.playerHeroes[playerIndex];
 	}
@@ -341,6 +366,10 @@ public class CSimulation {
 		final CDestructable destructable = this.handleIdToDestructable.get(handleId);
 		if (destructable != null) {
 			return destructable;
+		}
+		final CItem item = this.handleIdToItem.get(handleId);
+		if (item != null) {
+			return item;
 		}
 		return null;
 	}

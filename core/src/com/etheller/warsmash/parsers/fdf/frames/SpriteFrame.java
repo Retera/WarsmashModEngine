@@ -127,4 +127,11 @@ public class SpriteFrame extends AbstractRenderableFrame {
 		return this.instance.sequenceEnded;
 	}
 
+	public void setReplaceableId(final int replaceableId, final String blpPath) {
+		if (this.instance != null) {
+			this.instance.setReplaceableTexture(replaceableId, blpPath);
+		}
+
+	}
+
 }

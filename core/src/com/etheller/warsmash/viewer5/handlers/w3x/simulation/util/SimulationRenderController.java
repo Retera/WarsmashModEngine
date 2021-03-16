@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -50,4 +51,8 @@ public interface SimulationRenderController {
 	void spawnGainResourceTextTag(CUnit gainingUnit, ResourceType resourceType, int amount);
 
 	void spawnEffectOnUnit(CUnit unit, String effectPath);
+
+	void spawnUIUnitGetItemSound(CUnit cUnit, CItem item);
+
+	void spawnUIUnitDropItemSound(CUnit cUnit, CItem item);
 }

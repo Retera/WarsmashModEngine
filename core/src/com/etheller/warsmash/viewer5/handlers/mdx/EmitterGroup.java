@@ -39,7 +39,7 @@ public class EmitterGroup extends GenericGroup {
 		viewer.webGL.useShaderProgram(shader);
 
 		shader.setUniformMatrix("u_mvp", mvp);
-		shader.setUniformf("u_texture", 0);
+		shader.setUniformi("u_texture", 0);
 
 		final int a_position = shader.getAttributeLocation("a_position");
 		instancedArrays.glVertexAttribDivisorANGLE(a_position, 0);

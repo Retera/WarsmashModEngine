@@ -48,18 +48,30 @@ public class StringFrame extends AbstractRenderableFrame {
 
 	public void setColor(final Color color) {
 		this.color = color;
+		for (final SingleStringFrame internalFrame : this.internalFrames) {
+			internalFrame.setColor(color);
+		}
 	}
 
 	public void setFontShadowColor(final Color fontShadowColor) {
 		this.fontShadowColor = fontShadowColor;
+		for (final SingleStringFrame internalFrame : this.internalFrames) {
+			internalFrame.setFontShadowColor(fontShadowColor);
+		}
 	}
 
 	public void setFontShadowOffsetX(final float fontShadowOffsetX) {
 		this.fontShadowOffsetX = fontShadowOffsetX;
+		for (final SingleStringFrame internalFrame : this.internalFrames) {
+			internalFrame.setFontShadowOffsetX(fontShadowOffsetX);
+		}
 	}
 
 	public void setFontShadowOffsetY(final float fontShadowOffsetY) {
 		this.fontShadowOffsetY = fontShadowOffsetY;
+		for (final SingleStringFrame internalFrame : this.internalFrames) {
+			internalFrame.setFontShadowOffsetY(fontShadowOffsetY);
+		}
 	}
 
 	@Override
@@ -414,6 +426,9 @@ public class StringFrame extends AbstractRenderableFrame {
 
 	public void setAlpha(final float alpha) {
 		this.alpha = alpha;
+		for (final SingleStringFrame internalFrame : this.internalFrames) {
+			internalFrame.setAlpha(alpha);
+		}
 
 	}
 

@@ -20,6 +20,9 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 	private float defaultHeight;
 	private final int queueIconIndexId;
 
+	private String toolTip;
+	private String uberTip;
+
 	public QueueIcon(final String name, final UIFrame parent, final QueueIconListener clickListener,
 			final int queueIconIndexId) {
 		super(name, parent);
@@ -113,14 +116,22 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 		return null;
 	}
 
+	public void setToolTip(final String toolTip) {
+		this.toolTip = toolTip;
+	}
+
+	public void setUberTip(final String uberTip) {
+		this.uberTip = uberTip;
+	}
+
 	@Override
 	public String getToolTip() {
-		return "QueueIcon " + this.queueIconIndexId;
+		return this.toolTip;
 	}
 
 	@Override
 	public String getUberTip() {
-		return "The |cffffcc00QueueIcon|r is a hardcoded Warsmash engine component that is not yet loading its |cffffaa88description|r.";
+		return this.uberTip;
 	}
 
 	@Override

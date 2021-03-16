@@ -52,12 +52,13 @@ public class COrderTargetPoint implements COrder {
 				return ability.begin(game, caster, this.orderId, this.target);
 			}
 			else {
-				game.getCommandErrorListener().showCommandError(targetReceiver.getMessage());
+				game.getCommandErrorListener(caster.getPlayerIndex()).showCommandError(targetReceiver.getMessage());
 				return caster.pollNextOrderBehavior(game);
 			}
 		}
 		else {
-			game.getCommandErrorListener().showCommandError(this.abilityActivationReceiver.getMessage());
+			game.getCommandErrorListener(caster.getPlayerIndex())
+					.showCommandError(this.abilityActivationReceiver.getMessage());
 			return caster.pollNextOrderBehavior(game);
 		}
 

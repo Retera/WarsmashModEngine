@@ -42,7 +42,7 @@ public class MdlxTextureAnimation extends MdlxAnimatedObject {
 
 	@Override
 	public void writeMdl(final MdlTokenOutputStream stream, final int version) {
-		stream.startBlock(MdlUtils.TOKEN_TVERTEX_ANIM_SPACE);
+		stream.startBlock(MdlUtils.TOKEN_TVERTEX_ANIM);
 		writeTimeline(stream, AnimationMap.KTAT);
 		writeTimeline(stream, AnimationMap.KTAR);
 		writeTimeline(stream, AnimationMap.KTAS);

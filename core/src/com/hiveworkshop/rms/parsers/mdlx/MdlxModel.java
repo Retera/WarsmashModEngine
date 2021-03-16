@@ -393,7 +393,7 @@ public class MdlxModel {
 				break;
 			case MdlUtils.TOKEN_TEXTURE_ANIMS:
 				loadNumberedObjectBlock(this.textureAnimations, MdlxBlockDescriptor.TEXTURE_ANIMATION,
-						MdlUtils.TOKEN_TEXTURE_ANIM, stream);
+						MdlUtils.TOKEN_TVERTEX_ANIM, stream);
 				break;
 			case MdlUtils.TOKEN_GEOSET:
 				loadObject(this.geosets, MdlxBlockDescriptor.GEOSET, stream);

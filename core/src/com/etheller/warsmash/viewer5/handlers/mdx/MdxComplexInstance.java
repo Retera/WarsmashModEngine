@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.Bounds;
 import com.etheller.warsmash.viewer5.GenericNode;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.Node;
@@ -748,8 +749,23 @@ public class MdxComplexInstance extends ModelInstance {
 		throw new UnsupportedOperationException("NOT API");
 	}
 
+	public Bounds getBounds() {
+		if (this.sequence == -1) {
+			return this.model.bounds;
+		}
+		else {
+			final Bounds sequenceBounds = ((MdxModel) this.model).sequences.get(this.sequence).getBounds();
+			if (sequenceBounds.r == 0) {
+				return this.model.bounds;
+			}
+			else {
+				return sequenceBounds;
+			}
+		}
+	}
+
 	public void intersectRayBounds(final Ray ray, final Vector3 intersection) {
-		this.model.bounds.intersectRay(ray, intersection);
+		getBounds().intersectRay(ray, intersection);
 	}
 
 	/**

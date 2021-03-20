@@ -6,7 +6,7 @@ import java.util.List;
 import com.etheller.warsmash.viewer5.handlers.ModelHandler;
 
 public abstract class Model<HANDLER extends ModelHandler> extends HandlerResource<HANDLER> {
-	public Bounds bounds;
+	public final Bounds bounds;
 	public List<ModelInstance> preloadedInstances;
 
 	public Model(final HANDLER handler, final ModelViewer viewer, final String extension, final PathSolver pathSolver,

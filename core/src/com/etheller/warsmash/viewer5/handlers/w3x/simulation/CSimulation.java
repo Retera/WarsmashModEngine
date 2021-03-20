@@ -5,12 +5,13 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Random;
 
 import com.badlogic.gdx.math.Rectangle;
-import com.etheller.warsmash.parsers.w3x.w3i.Player;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
@@ -24,20 +25,24 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfigStartLoc;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CDestructableData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CItemData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
-public class CSimulation {
+public class CSimulation implements CPlayerAPI {
 	private final CAbilityData abilityData;
 	private final CUnitData unitData;
 	private final CDestructableData destructableData;
@@ -63,13 +68,14 @@ public class CSimulation {
 	private final Map<Integer, CDestructable> handleIdToDestructable = new HashMap<>();
 	private final Map<Integer, CItem> handleIdToItem = new HashMap<>();
 	private final Map<Integer, CAbility> handleIdToAbility = new HashMap<>();
+	private final LinkedList<CTimer> activeTimers = new LinkedList<>();
 	private transient CommandErrorListener commandErrorListener;
 
-	public CSimulation(final DataTable miscData, final MutableObjectData parsedUnitData,
+	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
 			final MutableObjectData parsedAbilityData, final SimulationRenderController simulationRenderController,
 			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
-			final List<Player> playerInfos, final CommandErrorListener commandErrorListener) {
+			final CommandErrorListener commandErrorListener) {
 		this.gameplayConstants = new CGameplayConstants(miscData);
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
@@ -94,27 +100,19 @@ public class CSimulation {
 		}
 		this.seededRandom = seededRandom;
 		this.players = new ArrayList<>();
-		for (int i = 0; i < (WarsmashConstants.MAX_PLAYERS - 4); i++) {
-			CPlayer newPlayer;
-			if (i < playerInfos.size()) {
-				final Player playerInfo = playerInfos.get(i);
-				newPlayer = new CPlayer(playerInfo.getId(), CMapControl.values()[playerInfo.getType()],
-						playerInfo.getName(), CRace.parseRace(playerInfo.getRace()), playerInfo.getStartLocation());
-			}
-			else {
-				newPlayer = new CPlayer(i, CMapControl.NONE, "Default string", CRace.OTHER, new float[] { 0, 0 });
-			}
+		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+			final CBasePlayer configPlayer = config.getPlayer(i);
+			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
+			final CPlayer newPlayer = new CPlayer(CRace.OTHER, new float[] { startLoc.getX(), startLoc.getY() },
+					configPlayer);
 			this.players.add(newPlayer);
 		}
-		this.players.add(new CPlayer(this.players.size(), CMapControl.NEUTRAL,
-				miscData.getLocalizedString("WESTRING_PLAYER_NA"), CRace.OTHER, new float[] { 0, 0 }));
-		this.players.add(new CPlayer(this.players.size(), CMapControl.NEUTRAL,
-				miscData.getLocalizedString("WESTRING_PLAYER_NV"), CRace.OTHER, new float[] { 0, 0 }));
-		this.players.add(new CPlayer(this.players.size(), CMapControl.NEUTRAL,
-				miscData.getLocalizedString("WESTRING_PLAYER_NE"), CRace.OTHER, new float[] { 0, 0 }));
-		final CPlayer neutralPassive = new CPlayer(this.players.size(), CMapControl.NEUTRAL,
-				miscData.getLocalizedString("WESTRING_PLAYER_NP"), CRace.OTHER, new float[] { 0, 0 });
-		this.players.add(neutralPassive);
+		this.players.get(this.players.size() - 4).setName(miscData.getLocalizedString("WESTRING_PLAYER_NA"));
+		this.players.get(this.players.size() - 3).setName(miscData.getLocalizedString("WESTRING_PLAYER_NV"));
+		this.players.get(this.players.size() - 2).setName(miscData.getLocalizedString("WESTRING_PLAYER_NE"));
+		final CPlayer neutralPassive = this.players.get(this.players.size() - 1);
+		neutralPassive.setName(miscData.getLocalizedString("WESTRING_PLAYER_NP"));
+
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CPlayer cPlayer = this.players.get(i);
 			cPlayer.setAlliance(neutralPassive, CAllianceType.PASSIVE, true);
@@ -133,12 +131,36 @@ public class CSimulation {
 		return this.abilityData;
 	}
 
+	public CDestructableData getDestructableData() {
+		return this.destructableData;
+	}
+
+	public CItemData getItemData() {
+		return this.itemData;
+	}
+
 	public List<CUnit> getUnits() {
 		return this.units;
 	}
 
 	public List<CDestructable> getDestructables() {
 		return this.destructables;
+	}
+
+	public void registerTimer(final CTimer timer) {
+		final ListIterator<CTimer> listIterator = this.activeTimers.listIterator();
+		while (listIterator.hasNext()) {
+			final CTimer nextTimer = listIterator.next();
+			if (nextTimer.getEngineFireTick() > timer.getEngineFireTick()) {
+				listIterator.previous();
+				listIterator.add(timer);
+			}
+		}
+		this.activeTimers.add(timer);
+	}
+
+	public void unregisterTimer(final CTimer time) {
+		this.activeTimers.remove(time);
 	}
 
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
@@ -247,6 +269,10 @@ public class CSimulation {
 		this.gameTurnTick++;
 		this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
 				% this.gameplayConstants.getGameDayLength();
+		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
+			this.activeTimers.pop().fire(this);
+		}
+
 	}
 
 	private void finishAddingNewUnits() {
@@ -292,6 +318,7 @@ public class CSimulation {
 		this.simulationRenderController.spawnUnitConstructionSound(constructingUnit, constructedStructure);
 	}
 
+	@Override
 	public CPlayer getPlayer(final int index) {
 		return this.players.get(index);
 	}

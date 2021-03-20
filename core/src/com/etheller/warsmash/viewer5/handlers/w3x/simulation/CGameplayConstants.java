@@ -348,6 +348,22 @@ public class CGameplayConstants {
 		return this.pawnItemRate;
 	}
 
+	public float getFollowRange() {
+		return this.followRange;
+	}
+
+	public float getStructureFollowRange() {
+		return this.structureFollowRange;
+	}
+
+	public float getFollowItemRange() {
+		return this.followItemRange;
+	}
+
+	public float getSpellCastRangeBuffer() {
+		return this.spellCastRangeBuffer;
+	}
+
 	private static int getTableValue(final int[] table, int level) {
 		if (level <= 0) {
 			return 0;

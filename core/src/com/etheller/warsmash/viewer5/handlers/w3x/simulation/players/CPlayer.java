@@ -1,29 +1,22 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener.CPlayerStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 
-public class CPlayer {
-	private final int id;
-	private int colorIndex;
-	private final CMapControl controlType;
-	private String name;
+public class CPlayer extends CBasePlayer {
 	private final CRace race;
 	private final float[] startLocation;
-	private final EnumSet<CRacePreference> racePrefs;
 	private int gold = 500;
 	private int lumber = 150;
 	private int foodCap;
 	private int foodUsed;
-	private final EnumSet<CAllianceType>[] alliances = new EnumSet[WarsmashConstants.MAX_PLAYERS];
 	private final Map<War3ID, Integer> rawcodeToTechtreeUnlocked = new HashMap<>();
 
 	// if you use triggers for this then the transient tag here becomes really
@@ -31,71 +24,18 @@ public class CPlayer {
 	// which fields shouldn't be persisted if we do game state save later
 	private transient CPlayerStateNotifier stateNotifier = new CPlayerStateNotifier();
 
-	public CPlayer(final int id, final CMapControl controlType, final String name, final CRace race,
-			final float[] startLocation) {
-		this.id = id;
-		this.colorIndex = id;
-		this.controlType = controlType;
-		this.name = name;
+	public CPlayer(final CRace race, final float[] startLocation, final CBasePlayer configPlayer) {
+		super(configPlayer);
 		this.race = race;
 		this.startLocation = startLocation;
-		this.racePrefs = EnumSet.noneOf(CRacePreference.class);
-		for (int i = 0; i < this.alliances.length; i++) {
-			if (i == this.id) {
-				// player is fully allied with self
-				this.alliances[i] = EnumSet.allOf(CAllianceType.class);
-			}
-			else {
-				this.alliances[i] = EnumSet.noneOf(CAllianceType.class);
-			}
-		}
 	}
 
-	public int getId() {
-		return this.id;
-	}
-
-	public int getColorIndex() {
-		return this.colorIndex;
-	}
-
-	public CMapControl getControlType() {
-		return this.controlType;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(final String name) {
-		this.name = name;
+	public void setAlliance(final CPlayer other, final CAllianceType alliance, final boolean flag) {
+		setAlliance(other.getId(), alliance, flag);
 	}
 
 	public CRace getRace() {
 		return this.race;
-	}
-
-	public boolean isRacePrefSet(final CRacePreference racePref) {
-		return this.racePrefs.contains(racePref);
-	}
-
-	public void setAlliance(final CPlayer otherPlayer, final CAllianceType allianceType, final boolean value) {
-		final EnumSet<CAllianceType> alliancesWithOtherPlayer = this.alliances[otherPlayer.getId()];
-		if (value) {
-			alliancesWithOtherPlayer.add(allianceType);
-		}
-		else {
-			alliancesWithOtherPlayer.remove(allianceType);
-		}
-	}
-
-	public boolean hasAlliance(final CPlayer otherPlayer, final CAllianceType allianceType) {
-		return hasAlliance(otherPlayer.getId(), allianceType);
-	}
-
-	public boolean hasAlliance(final int otherPlayerIndex, final CAllianceType allianceType) {
-		final EnumSet<CAllianceType> alliancesWithOtherPlayer = this.alliances[otherPlayerIndex];
-		return alliancesWithOtherPlayer.contains(allianceType);
 	}
 
 	public int getGold() {
@@ -136,10 +76,6 @@ public class CPlayer {
 	public void setFoodUsed(final int foodUsed) {
 		this.foodUsed = foodUsed;
 		this.stateNotifier.foodChanged();
-	}
-
-	public void setColorIndex(final int colorIndex) {
-		this.colorIndex = colorIndex;
 	}
 
 	public int getTechtreeUnlocked(final War3ID rawcode) {

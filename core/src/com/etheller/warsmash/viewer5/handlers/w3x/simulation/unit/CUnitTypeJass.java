@@ -1,0 +1,39 @@
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit;
+
+public enum CUnitTypeJass {
+	HERO,
+	DEAD,
+	STRUCTURE,
+
+	FLYING,
+	GROUND,
+
+	ATTACKS_FLYING,
+	ATTACKS_GROUND,
+
+	MELEE_ATTACKER,
+	RANGED_ATTACKER,
+
+	GIANT,
+	SUMMONED,
+	STUNNED,
+	PLAGUED,
+	SNARED,
+
+	UNDEAD,
+	MECHANICAL,
+	PEON,
+	SAPPER,
+	TOWNHALL,
+	ANCIENT,
+
+	TAUREN,
+	POISONED,
+	POLYMORPHED,
+	SLEEPING,
+	RESISTANT,
+	ETHEREAL,
+	MAGIC_IMMUNE;
+
+	public static CUnitTypeJass[] VALUES = values();
+}

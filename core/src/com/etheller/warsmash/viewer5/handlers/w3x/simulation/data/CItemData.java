@@ -58,6 +58,14 @@ public class CItemData {
 		return new CItem(handleId, x, y, itemTypeInstance.getHitPoints(), typeId, itemTypeInstance);
 	}
 
+	public CItemType getItemType(final War3ID typeId) {
+		final MutableGameObject itemType = this.itemData.get(typeId);
+		if (itemType == null) {
+			return null;
+		}
+		return getItemTypeInstance(typeId, itemType);
+	}
+
 	private CItemType getItemTypeInstance(final War3ID typeId, final MutableGameObject itemType) {
 		CItemType itemTypeInstance = this.itemIdToItemType.get(typeId);
 		if (itemTypeInstance == null) {

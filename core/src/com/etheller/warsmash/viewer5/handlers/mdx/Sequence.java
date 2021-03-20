@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import java.util.EnumSet;
 
+import com.etheller.warsmash.viewer5.Bounds;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
@@ -10,12 +11,16 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxSequence;
 
 public class Sequence {
 	private final MdlxSequence sequence;
+	private final Bounds bounds;
 	private final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
 	private final EnumSet<AnimationTokens.SecondaryTag> secondaryTags = EnumSet
 			.noneOf(AnimationTokens.SecondaryTag.class);
 
 	public Sequence(final MdlxSequence sequence) {
 		this.sequence = sequence;
+		this.bounds = new Bounds();
+		final MdlxExtent sequenceExtent = sequence.getExtent();
+		this.bounds.fromExtents(sequenceExtent.getMin(), sequenceExtent.getMax(), sequenceExtent.getBoundsRadius());
 		populateTags();
 	}
 
@@ -62,6 +67,10 @@ public class Sequence {
 
 	public long getSyncPoint() {
 		return this.sequence.getSyncPoint();
+	}
+
+	public Bounds getBounds() {
+		return this.bounds;
 	}
 
 	public MdlxExtent getExtent() {

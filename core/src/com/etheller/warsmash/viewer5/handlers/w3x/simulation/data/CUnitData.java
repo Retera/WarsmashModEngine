@@ -173,6 +173,7 @@ public class CUnitData {
 	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
+	private final Map<String, War3ID> jassLegacyNameToUnitId = new HashMap<>();
 	private final CAbilityData abilityData;
 	private final SimulationRenderController simulationRenderController;
 
@@ -266,6 +267,7 @@ public class CUnitData {
 			final MutableGameObject unitType) {
 		CUnitType unitTypeInstance = this.unitIdToUnitType.get(typeId);
 		if (unitTypeInstance == null) {
+			final String legacyName = getLegacyName(unitType);
 			final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
 			final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
 			final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
@@ -531,16 +533,31 @@ public class CUnitData {
 
 			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
 
-			unitTypeInstance = new CUnitType(unitName, life, manaInitial, manaMaximum, speed, defense, abilityList,
-					isBldg, movementType, moveHeight, collisionSize, classifications, attacks, armorType, raise, decay,
-					defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
-					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, unitRace, goldCost,
-					lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow,
-					turnRate, requirements, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence, intPlus,
-					primaryAttribute, heroAbilityList, heroProperNames, properNamesCount, canFlee);
+			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, manaInitial, manaMaximum, speed,
+					defense, abilityList, isBldg, movementType, moveHeight, collisionSize, classifications, attacks,
+					armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs,
+					acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, unitRace,
+					goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes,
+					propWindow, turnRate, requirements, unitLevel, hero, strength, strPlus, agility, agiPlus,
+					intelligence, intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount,
+					canFlee);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
+			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}
 		return unitTypeInstance;
+	}
+
+	private String getLegacyName(final MutableGameObject unitType) {
+		String legacyName;
+		if (unitType.isCustom()) {
+			legacyName = "custom_" + unitType.getAlias();
+		}
+		else {
+			// ?? this might be correct here, not sure, legacy name is mostly only used
+			// for spawning hidden units in campaign secrets
+			legacyName = unitType.readSLKTag("name");
+		}
+		return legacyName;
 	}
 
 	private static int[] populateHeroStatTable(final int maxHeroLevel, final float statPerLevel) {
@@ -712,5 +729,23 @@ public class CUnitData {
 		final BufferedImage buildingPathingPixelMap = this.simulationRenderController
 				.getBuildingPathingPixelMap(rawcode);
 		return getUnitTypeInstance(rawcode, buildingPathingPixelMap, unitType);
+	}
+
+	public CUnitType getUnitTypeByJassLegacyName(final String jassLegacyName) {
+		final War3ID typeId = this.jassLegacyNameToUnitId.get(jassLegacyName);
+		if (typeId == null) {
+			// VERY inefficient, but this is a crazy system anyway, they should not be using
+			// this!
+			System.err.println(
+					"We are doing a highly inefficient lookup for a non-cached unit type based on its legacy string ID that I am pretty sure is not used by modding community: "
+							+ jassLegacyName);
+			for (final War3ID key : this.unitData.keySet()) {
+				final MutableGameObject mutableGameObject = this.unitData.get(key);
+				if (jassLegacyName.equals(getLegacyName(mutableGameObject))) {
+					return getUnitType(mutableGameObject.getAlias());
+				}
+			}
+		}
+		return getUnitType(typeId);
 	}
 }

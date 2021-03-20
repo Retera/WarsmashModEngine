@@ -11,4 +11,6 @@ public enum CAllianceType {
 	SHARED_ADVANCED_CONTROL,
 	RESCUABLE,
 	SHARED_VISION_FORCED;
+
+	public static CAllianceType[] VALUES = values();
 }

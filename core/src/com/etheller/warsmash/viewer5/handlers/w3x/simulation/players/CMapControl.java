@@ -7,4 +7,6 @@ public enum CMapControl {
 	NEUTRAL,
 	CREEP,
 	NONE;
+
+	public static CMapControl[] VALUES = values();
 }

@@ -721,7 +721,7 @@ public class CUnit extends CWidget {
 					}
 				}
 				if (!foundMatchingReturnFireAttack && this.unitType.isCanFlee() && !isMovementDisabled()
-						&& (this.moveBehavior != null)) {
+						&& (this.moveBehavior != null) && (this.playerIndex != source.getPlayerIndex())) {
 					final double angleTo = source.angleTo(this);
 					final int distanceToFlee = getSpeed();
 					this.currentBehavior = this.moveBehavior.reset(OrderIds.move,

@@ -20,6 +20,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPa
  */
 public class CUnitType {
 	private final String name;
+	private final String legacyName;
+	private final War3ID typeId;
 	private final int life;
 	private final int manaInitial;
 	private final int manaMaximum;
@@ -73,15 +75,16 @@ public class CUnitType {
 	private final int properNamesCount;
 	private final boolean canFlee;
 
-	public CUnitType(final String name, final int life, final int manaInitial, final int manaMaximum, final int speed,
-			final int defense, final String abilityList, final boolean isBldg, final MovementType movementType,
-			final float defaultFlyingHeight, final float collisionSize,
-			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks, final String armorType,
-			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ,
-			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs,
-			final float defaultAcquisitionRange, final float minimumAttackRange, final List<War3ID> structuresBuilt,
-			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final CUnitRace unitRace,
-			final int goldCost, final int lumberCost, final int foodUsed, final int foodMade, final int buildTime,
+	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int life,
+			final int manaInitial, final int manaMaximum, final int speed, final int defense, final String abilityList,
+			final boolean isBldg, final MovementType movementType, final float defaultFlyingHeight,
+			final float collisionSize, final EnumSet<CUnitClassification> classifications,
+			final List<CUnitAttack> attacks, final String armorType, final boolean raise, final boolean decay,
+			final CDefenseType defenseType, final float impactZ, final BufferedImage buildingPathingPixelMap,
+			final float deathTime, final EnumSet<CTargetType> targetedAs, final float defaultAcquisitionRange,
+			final float minimumAttackRange, final List<War3ID> structuresBuilt, final List<War3ID> unitsTrained,
+			final List<War3ID> researchesAvailable, final CUnitRace unitRace, final int goldCost, final int lumberCost,
+			final int foodUsed, final int foodMade, final int buildTime,
 			final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes, final float propWindow, final float turnRate,
 			final List<CUnitTypeRequirement> requirements, final int level, final boolean hero, final int strength,
@@ -90,6 +93,8 @@ public class CUnitType {
 			final List<War3ID> heroAbilityList, final List<String> heroProperNames, final int properNamesCount,
 			final boolean canFlee) {
 		this.name = name;
+		this.legacyName = legacyName;
+		this.typeId = typeId;
 		this.life = life;
 		this.manaInitial = manaInitial;
 		this.manaMaximum = manaMaximum;
@@ -143,6 +148,14 @@ public class CUnitType {
 
 	public String getName() {
 		return this.name;
+	}
+
+	public String getLegacyName() {
+		return this.legacyName;
+	}
+
+	public War3ID getTypeId() {
+		return this.typeId;
 	}
 
 	public int getLife() {

@@ -187,7 +187,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 							final String musicPath = musics[(int) (Math.random() * musics.length)];
 							final Music music = Gdx.audio.newMusic(
 									new DataSourceFileHandle(WarsmashGdxMenuScreen.this.viewer.dataSource, musicPath));
-							music.setVolume(0.2f);
+//							music.setVolume(0.2f);
 							music.setLooping(true);
 							music.play();
 							WarsmashGdxMenuScreen.this.currentMusic = music;

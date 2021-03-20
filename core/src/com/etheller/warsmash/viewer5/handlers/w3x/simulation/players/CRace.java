@@ -14,6 +14,8 @@ public enum CRace {
 		this.id = id;
 	}
 
+	public static CRace[] VALUES = values();
+
 	public int getId() {
 		return this.id;
 	}

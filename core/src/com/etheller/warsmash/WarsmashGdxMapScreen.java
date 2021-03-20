@@ -35,6 +35,7 @@ import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.ModelInstance;
@@ -48,6 +49,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErrorListener;
@@ -105,7 +107,8 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 
 		final SettableCommandErrorListener commandErrorListener = new SettableCommandErrorListener();
 		this.codebase = parseDataSources(this.warsmashIni);
-		this.viewer = new War3MapViewer(this.codebase, this, commandErrorListener);
+		this.viewer = new War3MapViewer(this.codebase, this, commandErrorListener,
+				new War3MapConfig(WarsmashConstants.MAX_PLAYERS));
 
 		if (ENABLE_AUDIO) {
 			this.viewer.worldScene.enableAudio();
@@ -218,7 +221,8 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 							WarsmashGdxMapScreen.this.currentMusic = music;
 						}
 					}
-				}, new CPlayerUnitOrderExecutor(this.viewer.simulation, commandErrorListener));
+				}, new CPlayerUnitOrderExecutor(this.viewer.simulation, this.viewer.getLocalPlayerIndex(),
+						commandErrorListener));
 		commandErrorListener.setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 				this.viewer.mapPathSolver, "").addInstance();

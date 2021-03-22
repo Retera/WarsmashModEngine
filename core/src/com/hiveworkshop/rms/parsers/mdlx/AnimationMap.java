@@ -219,7 +219,7 @@ public enum AnimationMap {
 	/**
 	 * Camera source rotation
 	 */
-	KCRL(MdlUtils.TOKEN_ROTATION, MdlxTimelineDescriptor.UINT32_TIMELINE),
+	KCRL(MdlUtils.TOKEN_ROTATION, MdlxTimelineDescriptor.FLOAT_TIMELINE),
 	// GenericObject
 	/**
 	 * Generic object translation

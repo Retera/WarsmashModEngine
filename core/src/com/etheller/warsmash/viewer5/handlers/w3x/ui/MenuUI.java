@@ -10,35 +10,43 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.etheller.warsmash.WarsmashGdxMapScreen;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.warsmash.SingleModelScreen;
 import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
+import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
+import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.custom.WTS;
+import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WorldEditStrings;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 
 public class MenuUI {
 	private static final Vector2 screenCoordsVector = new Vector2();
+	private static boolean ENABLE_NOT_YET_IMPLEMENTED_BUTTONS = false;
 
 	private final DataSource dataSource;
 	private final Scene uiScene;
-	private final ExtendViewport uiViewport;
+	private final Viewport uiViewport;
 	private final MdxViewer viewer;
 	private final RootFrameListener rootFrameListener;
 	private final float widthRatioCorrection;
@@ -48,6 +56,7 @@ public class MenuUI {
 
 	private ClickableFrame mouseDownUIFrame;
 	private ClickableFrame mouseOverUIFrame;
+	private FocusableFrame focusUIFrame;
 
 	private UIFrame mainMenuFrame;
 
@@ -74,8 +83,12 @@ public class MenuUI {
 	private MenuState menuState;
 
 	private UIFrame singlePlayerMenu;
+	private UIFrame singlePlayerMainPanel;
+
+	private UIFrame skirmish;
 
 	private UIFrame profilePanel;
+	private EditBoxFrame newProfileEditBox;
 
 	private GlueButtonFrame profileButton;
 	private GlueTextButtonFrame campaignButton;
@@ -83,8 +96,10 @@ public class MenuUI {
 	private GlueTextButtonFrame viewReplayButton;
 	private GlueTextButtonFrame customCampaignButton;
 	private GlueTextButtonFrame skirmishButton;
-	private GlueTextButtonFrame cancelButton;
+	private GlueTextButtonFrame singlePlayerCancelButton;
 	private GlueButtonFrame editionButton;
+
+	private GlueTextButtonFrame skirmishCancelButton;
 
 	private final WarsmashGdxMultiScreenGame screenManager;
 
@@ -92,19 +107,50 @@ public class MenuUI {
 
 	private UnitSound glueScreenLoop;
 
-	public MenuUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
-			final MdxViewer viewer, final WarsmashGdxMultiScreenGame screenManager, final DataTable warsmashIni,
-			final RootFrameListener rootFrameListener) {
+	private SpriteFrame warcraftIIILogo;
+	// Campaign
+	private UIFrame campaignMenu;
+	private SpriteFrame campaignFade;
+	private GlueTextButtonFrame campaignBackButton;
+	private UIFrame missionSelectFrame;
+	private UIFrame campaignSelectFrame;
+	private final DataTable campaignStrings;
+	private SpriteFrame campaignWarcraftIIILogo;
+	private final SingleModelScreen menuScreen;
+
+	private String currentCampaignBackgroundModel;
+	private String currentCampaignAmbientSound;
+	private int currentCampaignCursor;
+	private String[] campaignList;
+	private Element[] campaignDatas;
+	private UnitSound mainMenuGlueScreenLoop;
+	private GlueTextButtonFrame addProfileButton;
+	private GlueTextButtonFrame deleteProfileButton;
+	private GlueTextButtonFrame selectProfileButton;
+
+	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
+			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
+			final DataTable warsmashIni, final RootFrameListener rootFrameListener) {
 		this.dataSource = dataSource;
 		this.uiViewport = uiViewport;
 		this.uiScene = uiScene;
 		this.viewer = viewer;
 		this.screenManager = screenManager;
+		this.menuScreen = menuScreen;
 		this.warsmashIni = warsmashIni;
 		this.rootFrameListener = rootFrameListener;
 
-		this.widthRatioCorrection = this.uiViewport.getMinWorldWidth() / 1600f;
-		this.heightRatioCorrection = this.uiViewport.getMinWorldHeight() / 1200f;
+		this.widthRatioCorrection = getMinWorldWidth() / 1600f;
+		this.heightRatioCorrection = getMinWorldHeight() / 1200f;
+
+		this.campaignStrings = new DataTable(StringBundle.EMPTY);
+		try (InputStream campaignStringStream = dataSource.getResourceAsStream(
+				"UI\\CampaignStrings" + (WarsmashConstants.GAME_VERSION == 1 ? "_exp" : "") + ".txt")) {
+			this.campaignStrings.readTXT(campaignStringStream, true);
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public float getHeightRatioCorrection() {
@@ -138,13 +184,13 @@ public class MenuUI {
 
 		// Create main menu
 		this.mainMenuFrame = this.rootFrame.createFrame("MainMenuFrame", this.rootFrame, 0, 0);
-		this.mainMenuFrame.setVisible(false);
 
-		final SpriteFrame warcraftIIILogo = (SpriteFrame) this.rootFrame.getFrameByName("WarCraftIIILogo", 0);
-		this.rootFrame.setSpriteFrameModel(warcraftIIILogo,
+		this.warcraftIIILogo = (SpriteFrame) this.rootFrame.getFrameByName("WarCraftIIILogo", 0);
+		this.rootFrame.setSpriteFrameModel(this.warcraftIIILogo,
 				this.rootFrame.getSkinField("MainMenuLogo_V" + WarsmashConstants.GAME_VERSION));
-		warcraftIIILogo.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.mainMenuFrame, FramePoint.TOPLEFT,
+		this.warcraftIIILogo.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.mainMenuFrame, FramePoint.TOPLEFT,
 				GameUI.convertX(this.uiViewport, 0.13f), GameUI.convertY(this.uiViewport, -0.08f)));
+		setMainMenuVisible(false);
 		this.rootFrame.getFrameByName("RealmSelect", 0).setVisible(false);
 
 		this.glueSpriteLayerTopRight = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
@@ -170,17 +216,7 @@ public class MenuUI {
 		this.cursorFrame.setZDepth(-1.0f);
 		Gdx.input.setCursorCatched(true);
 
-		// Create single player
-		this.singlePlayerMenu = this.rootFrame.createFrame("SinglePlayerMenu", this.rootFrame, 0, 0);
-		this.singlePlayerMenu.setVisible(false);
-
-		this.profilePanel = this.rootFrame.getFrameByName("ProfilePanel", 0);
-		this.profilePanel.setVisible(false);
-
-		// position all
-		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
-
-		// Main Menu
+		// Main Menu interactivity
 		this.singlePlayerButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("SinglePlayerButton", 0);
 		this.battleNetButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("BattleNetButton", 0);
 		this.realmButton = (GlueButtonFrame) this.rootFrame.getFrameByName("RealmButton", 0);
@@ -197,7 +233,7 @@ public class MenuUI {
 					WarsmashConstants.GAME_VERSION = (WarsmashConstants.GAME_VERSION == 1 ? 0 : 1);
 					MenuUI.this.glueSpriteLayerTopLeft.setSequence("MainMenu Death");
 					MenuUI.this.glueSpriteLayerTopRight.setSequence("MainMenu Death");
-					MenuUI.this.mainMenuFrame.setVisible(false);
+					setMainMenuVisible(false);
 					MenuUI.this.menuState = MenuState.RESTARTING;
 				}
 			});
@@ -214,7 +250,7 @@ public class MenuUI {
 			public void run() {
 				MenuUI.this.glueSpriteLayerTopLeft.setSequence("MainMenu Death");
 				MenuUI.this.glueSpriteLayerTopRight.setSequence("MainMenu Death");
-				MenuUI.this.mainMenuFrame.setVisible(false);
+				setMainMenuVisible(false);
 				MenuUI.this.menuState = MenuState.QUITTING;
 			}
 		});
@@ -224,12 +260,37 @@ public class MenuUI {
 			public void run() {
 				MenuUI.this.glueSpriteLayerTopLeft.setSequence("MainMenu Death");
 				MenuUI.this.glueSpriteLayerTopRight.setSequence("MainMenu Death");
-				MenuUI.this.mainMenuFrame.setVisible(false);
+				setMainMenuVisible(false);
 				MenuUI.this.menuState = MenuState.GOING_TO_SINGLE_PLAYER;
 			}
 		});
 
-		// Single Player
+		// Create single player
+		this.singlePlayerMenu = this.rootFrame.createFrame("SinglePlayerMenu", this.rootFrame, 0, 0);
+		this.singlePlayerMenu.setVisible(false);
+
+		this.profilePanel = this.rootFrame.getFrameByName("ProfilePanel", 0);
+		this.profilePanel.setVisible(false);
+
+		this.newProfileEditBox = (EditBoxFrame) this.rootFrame.getFrameByName("NewProfileEditBox", 0);
+		final StringFrame profileListText = (StringFrame) this.rootFrame.getFrameByName("ProfileListText", 0);
+		final SimpleFrame profileListContainer = (SimpleFrame) this.rootFrame.getFrameByName("ProfileListContainer", 0);
+		final ListBoxFrame profileListBox = (ListBoxFrame) this.rootFrame.createFrameByType("LISTBOX", "ListBoxWar3",
+				profileListContainer, "WITHCHILDREN", 0);
+		profileListBox.setSetAllPoints(true);
+		profileListBox.setFrameFont(profileListText.getFrameFont());
+		profileListBox.addItem("Test1", this.rootFrame, this.uiViewport);
+		profileListBox.addItem("Test2", this.rootFrame, this.uiViewport);
+		profileListBox.addItem("Test3", this.rootFrame, this.uiViewport);
+		profileListContainer.add(profileListBox);
+
+		this.addProfileButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("AddProfileButton", 0);
+		this.deleteProfileButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("DeleteProfileButton", 0);
+		this.selectProfileButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("SelectProfileButton", 0);
+
+		this.singlePlayerMainPanel = this.rootFrame.getFrameByName("MainPanel", 0);
+
+		// Single Player Interactivity
 		this.profileButton = (GlueButtonFrame) this.rootFrame.getFrameByName("ProfileButton", 0);
 		this.campaignButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("CampaignButton", 0);
 		this.loadSavedButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("LoadSavedButton", 0);
@@ -237,16 +298,21 @@ public class MenuUI {
 		this.customCampaignButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("CustomCampaignButton", 0);
 		this.skirmishButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("SkirmishButton", 0);
 
-		this.cancelButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("CancelButton", 0);
+		this.singlePlayerCancelButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("CancelButton", 0);
 
 		final StringFrame profileNameText = (StringFrame) this.rootFrame.getFrameByName("ProfileNameText", 0);
 		this.rootFrame.setText(profileNameText, "WorldEdit");
 
-		this.profileButton.setEnabled(false);
-		this.loadSavedButton.setEnabled(false);
-		this.viewReplayButton.setEnabled(false);
-		this.customCampaignButton.setEnabled(false);
-		this.skirmishButton.setEnabled(false);
+		setSinglePlayerButtonsEnabled(true);
+
+		this.profileButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("RealmSelection Birth");
+				setSinglePlayerButtonsEnabled(true);
+				MenuUI.this.menuState = MenuState.SINGLE_PLAYER_PROFILE;
+			}
+		});
 
 		this.campaignButton.setOnClick(new Runnable() {
 			@Override
@@ -254,28 +320,123 @@ public class MenuUI {
 				MenuUI.this.glueSpriteLayerTopLeft.setSequence("SinglePlayer Death");
 				MenuUI.this.glueSpriteLayerTopRight.setSequence("SinglePlayer Death");
 				MenuUI.this.singlePlayerMenu.setVisible(false);
+				MenuUI.this.profilePanel.setVisible(false);
 				MenuUI.this.menuState = MenuState.GOING_TO_CAMPAIGN;
 			}
 		});
 
-		this.cancelButton.setOnClick(new Runnable() {
+		this.skirmishButton.setOnClick(new Runnable() {
 			@Override
 			public void run() {
 				MenuUI.this.glueSpriteLayerTopLeft.setSequence("SinglePlayer Death");
 				MenuUI.this.glueSpriteLayerTopRight.setSequence("SinglePlayer Death");
 				MenuUI.this.singlePlayerMenu.setVisible(false);
+				MenuUI.this.profilePanel.setVisible(false);
+				MenuUI.this.menuState = MenuState.GOING_TO_SINGLE_PLAYER_SKIRMISH;
+			}
+		});
+
+		this.singlePlayerCancelButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				if (MenuUI.this.menuState == MenuState.SINGLE_PLAYER_PROFILE) {
+					MenuUI.this.glueSpriteLayerTopLeft.setSequence("RealmSelection Death");
+					MenuUI.this.profilePanel.setVisible(false);
+				}
+				else {
+					MenuUI.this.glueSpriteLayerTopLeft.setSequence("SinglePlayer Death");
+				}
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("SinglePlayer Death");
+				MenuUI.this.singlePlayerMenu.setVisible(false);
 				MenuUI.this.menuState = MenuState.GOING_TO_MAIN_MENU;
+			}
+		});
+
+		// Create skirmish UI
+		this.skirmish = this.rootFrame.createFrame("Skirmish", this.rootFrame, 0, 0);
+		this.skirmish.setVisible(false);
+
+		this.skirmishCancelButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("CancelButton", 0);
+		this.skirmishCancelButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("SinglePlayerSkirmish Death");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("SinglePlayerSkirmish Death");
+				MenuUI.this.skirmish.setVisible(false);
+				MenuUI.this.menuState = MenuState.GOING_TO_SINGLE_PLAYER;
 
 			}
 		});
 
-		this.menuState = MenuState.MAIN_MENU;
+		// Create Campaign UI
+
+		this.campaignMenu = this.rootFrame.createFrame("CampaignMenu", this.rootFrame, 0, 0);
+		this.campaignMenu.setVisible(false);
+		this.campaignFade = (SpriteFrame) this.rootFrame.getFrameByName("SlidingDoors", 0);
+		this.campaignFade.setVisible(false);
+		this.campaignBackButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("BackButton", 0);
+		this.campaignBackButton.setVisible(false);
+		this.missionSelectFrame = this.rootFrame.getFrameByName("MissionSelectFrame", 0);
+		this.missionSelectFrame.setVisible(false);
+		this.campaignSelectFrame = this.rootFrame.getFrameByName("CampaignSelectFrame", 0);
+		this.campaignSelectFrame.setVisible(false);
+
+		this.campaignWarcraftIIILogo = (SpriteFrame) this.rootFrame.getFrameByName("WarCraftIIILogo", 0);
+		this.rootFrame.setSpriteFrameModel(this.campaignWarcraftIIILogo,
+				this.rootFrame.getSkinField("MainMenuLogo_V" + WarsmashConstants.GAME_VERSION));
+		this.campaignWarcraftIIILogo.setVisible(false);
+
+		this.campaignBackButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				MenuUI.this.campaignMenu.setVisible(false);
+				MenuUI.this.campaignBackButton.setVisible(false);
+				MenuUI.this.missionSelectFrame.setVisible(false);
+				MenuUI.this.campaignSelectFrame.setVisible(false);
+				MenuUI.this.campaignFade.setSequence("Birth");
+				MenuUI.this.menuState = MenuState.LEAVING_CAMPAIGN;
+			}
+		});
+		final Element campaignIndex = this.campaignStrings.get("Index");
+		this.campaignList = campaignIndex.getField("CampaignList").split(",");
+		this.campaignDatas = new Element[this.campaignList.length];
+		for (int i = 0; i < this.campaignList.length; i++) {
+			final String campaign = this.campaignList[i];
+			this.campaignDatas[i] = this.campaignStrings.get(campaign);
+			if ((this.campaignDatas[i] != null) && (this.currentCampaignBackgroundModel == null)) {
+				this.currentCampaignBackgroundModel = this.rootFrame.getSkinField(
+						this.campaignDatas[i].getField("Background") + "_V" + WarsmashConstants.GAME_VERSION);
+				this.currentCampaignAmbientSound = this.rootFrame
+						.trySkinField(this.campaignDatas[i].getField("AmbientSound"));
+				this.currentCampaignCursor = this.campaignDatas[i].getFieldValue("Cursor");
+			}
+		}
+
+		// position all
+		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
+
+		this.menuState = MenuState.GOING_TO_MAIN_MENU;
 
 		loadSounds();
 
 		final String glueLoopField = this.rootFrame.getSkinField("GlueScreenLoop_V" + WarsmashConstants.GAME_VERSION);
-		this.glueScreenLoop = this.uiSounds.getSound(glueLoopField);
+		this.mainMenuGlueScreenLoop = this.uiSounds.getSound(glueLoopField);
+		this.glueScreenLoop = this.mainMenuGlueScreenLoop;
 		this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
+	}
+
+	protected void setSinglePlayerButtonsEnabled(final boolean b) {
+		this.profileButton.setEnabled(b);
+		this.campaignButton.setEnabled(b);
+		this.loadSavedButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
+		this.viewReplayButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
+		this.customCampaignButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
+		this.skirmishButton.setEnabled(b);
+	}
+
+	private void setMainMenuVisible(final boolean visible) {
+		this.mainMenuFrame.setVisible(visible);
+		this.warcraftIIILogo.setVisible(visible);
 	}
 
 	public void resize() {
@@ -288,12 +449,28 @@ public class MenuUI {
 		font.setColor(Color.YELLOW);
 		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
 		glyphLayout.setText(font, fpsString);
-		font.draw(batch, fpsString, (this.uiViewport.getMinWorldWidth() - glyphLayout.width) / 2,
-				1100 * this.heightRatioCorrection);
+		font.draw(batch, fpsString, (getMinWorldWidth() - glyphLayout.width) / 2, 1100 * this.heightRatioCorrection);
 		this.rootFrame.render(batch, font20, glyphLayout);
 	}
 
+	private float getMinWorldWidth() {
+		if (this.uiViewport instanceof ExtendViewport) {
+			return ((ExtendViewport) this.uiViewport).getMinWorldWidth();
+		}
+		return this.uiViewport.getWorldWidth();
+	}
+
+	private float getMinWorldHeight() {
+		if (this.uiViewport instanceof ExtendViewport) {
+			return ((ExtendViewport) this.uiViewport).getMinWorldHeight();
+		}
+		return this.uiViewport.getWorldHeight();
+	}
+
 	public void update(final float deltaTime) {
+		if ((this.focusUIFrame != null) && !this.focusUIFrame.isVisibleOnScreen()) {
+			setFocusFrame(getNextFocusFrame());
+		}
 
 		final int baseMouseX = Gdx.input.getX();
 		int mouseX = baseMouseX;
@@ -316,7 +493,8 @@ public class MenuUI {
 		this.cursorFrame.setFramePointY(FramePoint.BOTTOM, screenCoordsVector.y);
 		this.cursorFrame.setSequence("Normal");
 
-		if (this.glueSpriteLayerTopRight.isSequenceEnded()) {
+		if (this.glueSpriteLayerTopRight.isSequenceEnded() && this.glueSpriteLayerTopLeft.isSequenceEnded()
+				&& (!this.campaignFade.isVisible() || this.campaignFade.isSequenceEnded())) {
 			switch (this.menuState) {
 			case GOING_TO_MAIN_MENU:
 				this.glueSpriteLayerTopLeft.setSequence("MainMenu Birth");
@@ -324,7 +502,7 @@ public class MenuUI {
 				this.menuState = MenuState.MAIN_MENU;
 				break;
 			case MAIN_MENU:
-				this.mainMenuFrame.setVisible(true);
+				setMainMenuVisible(true);
 				this.glueSpriteLayerTopLeft.setSequence("MainMenu Stand");
 				this.glueSpriteLayerTopRight.setSequence("MainMenu Stand");
 				break;
@@ -333,14 +511,82 @@ public class MenuUI {
 				this.glueSpriteLayerTopRight.setSequence("SinglePlayer Birth");
 				this.menuState = MenuState.SINGLE_PLAYER;
 				break;
+			case LEAVING_CAMPAIGN:
+				this.glueSpriteLayerTopLeft.setSequence("Birth");
+				this.glueSpriteLayerTopRight.setSequence("Birth");
+				if (this.campaignFade.isVisible()) {
+					this.campaignFade.setSequence("Death");
+				}
+				this.glueScreenLoop.stop();
+				this.glueScreenLoop = this.mainMenuGlueScreenLoop;
+				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
+				this.menuScreen.setModel(
+						this.rootFrame.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION));
+				this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
+				this.menuState = MenuState.GOING_TO_SINGLE_PLAYER;
+				break;
 			case SINGLE_PLAYER:
 				this.singlePlayerMenu.setVisible(true);
+				this.campaignFade.setVisible(false);
+				setSinglePlayerButtonsEnabled(true);
 				this.glueSpriteLayerTopLeft.setSequence("SinglePlayer Stand");
 				this.glueSpriteLayerTopRight.setSequence("SinglePlayer Stand");
 				break;
+			case GOING_TO_SINGLE_PLAYER_SKIRMISH:
+				this.glueSpriteLayerTopLeft.setSequence("SinglePlayerSkirmish Birth");
+				this.glueSpriteLayerTopRight.setSequence("SinglePlayerSkirmish Birth");
+				this.menuState = MenuState.SINGLE_PLAYER_SKIRMISH;
+				break;
+			case SINGLE_PLAYER_SKIRMISH:
+				this.skirmish.setVisible(true);
+				this.glueSpriteLayerTopLeft.setSequence("SinglePlayerSkirmish Stand");
+				this.glueSpriteLayerTopRight.setSequence("SinglePlayerSkirmish Stand");
+				break;
 			case GOING_TO_CAMPAIGN:
-				MenuUI.this.screenManager.setScreen(new WarsmashGdxMapScreen(MenuUI.this.warsmashIni,
-						this.warsmashIni.get("Map").getField("FilePath")));
+				this.glueSpriteLayerTopLeft.setSequence("Death");
+				this.glueSpriteLayerTopRight.setSequence("Death");
+				this.campaignMenu.setVisible(true);
+				this.campaignFade.setVisible(true);
+				this.campaignFade.setSequence("Birth");
+				this.menuState = MenuState.GOING_TO_CAMPAIGN_PART2;
+				break;
+			case GOING_TO_CAMPAIGN_PART2:
+				this.menuScreen.setModel(this.currentCampaignBackgroundModel);
+				this.glueScreenLoop.stop();
+				this.glueScreenLoop = this.uiSounds.getSound(this.currentCampaignAmbientSound);
+				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
+				final DataTable skinData = this.rootFrame.getSkinData();
+				final Element skinDataMain = skinData.get("Main");
+				int currentCampaignCursor = this.currentCampaignCursor;
+				if (currentCampaignCursor == 3) {
+					currentCampaignCursor = 2;
+				}
+				else if (currentCampaignCursor == 2) {
+					currentCampaignCursor = 3;
+				}
+				final String cursorSkin = skinDataMain.getField("Skins", currentCampaignCursor);
+				this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
+
+				this.campaignFade.setSequence("Death");
+				this.menuState = MenuState.CAMPAIGN;
+				break;
+			case CAMPAIGN:
+				this.campaignBackButton.setVisible(true);
+				this.campaignWarcraftIIILogo.setVisible(true);
+				this.campaignSelectFrame.setVisible(true);
+				break;
+			case GOING_TO_SINGLE_PLAYER_PROFILE:
+				this.glueSpriteLayerTopLeft.setSequence("RealmSelection Birth");
+				this.menuState = MenuState.SINGLE_PLAYER_PROFILE;
+				break;
+			case SINGLE_PLAYER_PROFILE:
+				this.profilePanel.setVisible(true);
+				this.glueSpriteLayerTopLeft.setSequence("RealmSelection Stand");
+				// TODO the below should probably be some generic focusing thing when we enter a
+				// new view?
+				if ((this.newProfileEditBox != null) && this.newProfileEditBox.isFocusable()) {
+					setFocusFrame(this.newProfileEditBox);
+				}
 				break;
 			case QUITTING:
 				Gdx.app.exit();
@@ -356,6 +602,10 @@ public class MenuUI {
 
 	}
 
+	private FocusableFrame getNextFocusFrame() {
+		return this.rootFrame.getNextFocusFrame();
+	}
+
 	public boolean touchDown(final int screenX, final int screenY, final float worldScreenY, final int button) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
@@ -365,8 +615,24 @@ public class MenuUI {
 				this.mouseDownUIFrame = (ClickableFrame) clickedUIFrame;
 				this.mouseDownUIFrame.mouseDown(this.rootFrame, this.uiViewport);
 			}
+			if (clickedUIFrame instanceof FocusableFrame) {
+				final FocusableFrame clickedFocusableFrame = (FocusableFrame) clickedUIFrame;
+				if (clickedFocusableFrame.isFocusable()) {
+					setFocusFrame(clickedFocusableFrame);
+				}
+			}
 		}
 		return false;
+	}
+
+	private void setFocusFrame(final FocusableFrame clickedFocusableFrame) {
+		if (this.focusUIFrame != null) {
+			this.focusUIFrame.onFocusLost();
+		}
+		this.focusUIFrame = clickedFocusableFrame;
+		if (this.focusUIFrame != null) {
+			this.focusUIFrame.onFocusGained();
+		}
 	}
 
 	public boolean touchUp(final int screenX, final int screenY, final float worldScreenY, final int button) {
@@ -437,9 +703,15 @@ public class MenuUI {
 		GOING_TO_MAIN_MENU,
 		MAIN_MENU,
 		GOING_TO_SINGLE_PLAYER,
+		LEAVING_CAMPAIGN,
 		SINGLE_PLAYER,
+		GOING_TO_SINGLE_PLAYER_SKIRMISH,
+		SINGLE_PLAYER_SKIRMISH,
 		GOING_TO_CAMPAIGN,
+		GOING_TO_CAMPAIGN_PART2,
 		CAMPAIGN,
+		GOING_TO_SINGLE_PLAYER_PROFILE,
+		SINGLE_PLAYER_PROFILE,
 		QUITTING,
 		RESTARTING;
 	}
@@ -452,5 +724,26 @@ public class MenuUI {
 		if (this.rootFrame != null) {
 			this.rootFrame.dispose();
 		}
+	}
+
+	public boolean keyDown(final int keycode) {
+		if (this.focusUIFrame != null) {
+			this.focusUIFrame.keyDown(keycode);
+		}
+		return false;
+	}
+
+	public boolean keyUp(final int keycode) {
+		if (this.focusUIFrame != null) {
+			this.focusUIFrame.keyUp(keycode);
+		}
+		return false;
+	}
+
+	public boolean keyTyped(final char character) {
+		if (this.focusUIFrame != null) {
+			this.focusUIFrame.keyTyped(character);
+		}
+		return false;
 	}
 }

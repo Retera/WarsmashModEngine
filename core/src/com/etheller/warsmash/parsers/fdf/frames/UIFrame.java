@@ -31,7 +31,15 @@ public interface UIFrame {
 
 	void setSetAllPoints(boolean setAllPoints);
 
+	void setSetAllPoints(boolean setAllPoints, float inset);
+
 	void setVisible(boolean visible);
+
+	UIFrame getParent();
+
+	boolean isVisible();
+
+	boolean isVisibleOnScreen();
 
 	UIFrame touchDown(float screenX, float screenY, int button);
 

@@ -48,6 +48,28 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	}
 
 	@Override
+	public void setSetAllPoints(final boolean setAllPoints, final float inset) {
+		this.framePointToAssignment.put(FramePoint.TOPLEFT,
+				new SetPoint(FramePoint.TOPLEFT, this.parent, FramePoint.TOPLEFT, inset, -inset));
+		this.framePointToAssignment.put(FramePoint.LEFT,
+				new SetPoint(FramePoint.LEFT, this.parent, FramePoint.LEFT, inset, 0));
+		this.framePointToAssignment.put(FramePoint.BOTTOMLEFT,
+				new SetPoint(FramePoint.BOTTOMLEFT, this.parent, FramePoint.BOTTOMLEFT, inset, inset));
+		this.framePointToAssignment.put(FramePoint.BOTTOM,
+				new SetPoint(FramePoint.BOTTOM, this.parent, FramePoint.BOTTOM, 0, inset));
+		this.framePointToAssignment.put(FramePoint.BOTTOMRIGHT,
+				new SetPoint(FramePoint.BOTTOMRIGHT, this.parent, FramePoint.BOTTOMRIGHT, -inset, inset));
+		this.framePointToAssignment.put(FramePoint.RIGHT,
+				new SetPoint(FramePoint.RIGHT, this.parent, FramePoint.RIGHT, -inset, 0));
+		this.framePointToAssignment.put(FramePoint.TOPRIGHT,
+				new SetPoint(FramePoint.TOPRIGHT, this.parent, FramePoint.TOPRIGHT, -inset, -inset));
+		this.framePointToAssignment.put(FramePoint.TOP,
+				new SetPoint(FramePoint.TOP, this.parent, FramePoint.TOP, 0, -inset));
+		this.framePointToAssignment.put(FramePoint.CENTER,
+				new SetPoint(FramePoint.CENTER, this.parent, FramePoint.CENTER, 0, 0));
+	}
+
+	@Override
 	public void setWidth(final float width) {
 		this.assignedWidth = width;
 		this.renderBounds.width = width;
@@ -296,6 +318,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	protected abstract void innerPositionBounds(GameUI gameUI, final Viewport viewport);
 
+	@Override
 	public boolean isVisible() {
 		return this.visible;
 	}
@@ -318,6 +341,22 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		if (this.visible) {
 			internalRender(batch, font20, glyphLayout);
 		}
+	}
+
+	@Override
+	public UIFrame getParent() {
+		return this.parent;
+	}
+
+	@Override
+	public boolean isVisibleOnScreen() {
+		boolean visibleOnScreen = this.visible;
+		UIFrame ancestor = this.parent;
+		while (visibleOnScreen && (ancestor != null)) {
+			visibleOnScreen &= ancestor.isVisible();
+			ancestor = ancestor.getParent();
+		}
+		return visibleOnScreen;
 	}
 
 	protected abstract void internalRender(SpriteBatch batch, BitmapFont baseFont, GlyphLayout glyphLayout);

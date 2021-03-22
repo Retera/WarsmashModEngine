@@ -35,6 +35,7 @@ import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StringJassValueVisitor;
 import com.etheller.interpreter.ast.visitors.JassProgramVisitor;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.parsers.fdf.GameSkin;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
@@ -227,11 +228,11 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final String skinArg = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-					final Element skin = GameUI.loadSkin(dataSource, skinArg);
+					final GameSkin skin = GameUI.loadSkin(dataSource, skinArg);
 					final GameUI gameUI = new GameUI(dataSource, skin, uiViewport, uiScene, war3MapViewer, 0,
 							war3MapViewer.getAllObjectData().getWts());
 					JUIEnvironment.this.gameUI = gameUI;
-					JUIEnvironment.this.skin = skin;
+					JUIEnvironment.this.skin = skin.getSkin();
 					rootFrameListener.onCreate(gameUI);
 					return new HandleJassValue(frameHandleType, gameUI);
 				}

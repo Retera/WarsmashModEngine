@@ -31,6 +31,11 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 	}
 
 	@Override
+	public void setVisible(final boolean visible) {
+		super.setVisible(visible);
+	}
+
+	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		for (final UIFrame childFrame : this.childFrames) {
 			childFrame.render(batch, baseFont, glyphLayout);

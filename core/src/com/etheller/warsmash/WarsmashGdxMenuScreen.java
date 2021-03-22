@@ -20,6 +20,8 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
@@ -44,10 +46,11 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MenuUI;
 
-public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Screen {
+public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Screen, SingleModelScreen {
 	private static final boolean ENABLE_AUDIO = true;
 	private static final boolean ENABLE_MUSIC = true;
 	private DataSource codebase;
@@ -59,7 +62,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 	// libGDX stuff
 	private OrthographicCamera uiCamera;
 	private SpriteBatch batch;
-	private ExtendViewport uiViewport;
+	private Viewport uiViewport;
 	private GlyphLayout glyphLayout;
 
 	private final DataTable warsmashIni;
@@ -68,6 +71,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 	private MenuUI menuUI;
 	private final WarsmashGdxMultiScreenGame game;
 	private Music currentMusic;
+	private boolean hasPlayedStandHack = false;
 
 	public WarsmashGdxMenuScreen(final DataTable warsmashIni, final WarsmashGdxMultiScreenGame game) {
 		this.warsmashIni = warsmashIni;
@@ -94,8 +98,8 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 		this.viewer.addHandler(new MdxHandler());
 		this.viewer.enableAudio();
 
-		final Scene scene = this.viewer.addSimpleScene();
-		scene.enableAudio();
+		this.scene = this.viewer.addSimpleScene();
+		this.scene.enableAudio();
 
 		this.uiScene = this.viewer.addSimpleScene();
 		this.uiScene.alpha = true;
@@ -121,10 +125,10 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 			aspect3By4Width = (height * 4) / 3;
 			aspect3By4Height = height;
 		}
-		this.uiViewport = new ExtendViewport(aspect3By4Width, aspect3By4Height, this.uiCamera);
+		this.uiViewport = new FitViewport(aspect3By4Width, aspect3By4Height, this.uiCamera);
 		this.uiViewport.update(width, height);
 
-		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
+		this.uiCamera.position.set(getMinWorldWidth() / 2, getMinWorldHeight() / 2, 0);
 		this.uiCamera.update();
 
 		this.batch = new SpriteBatch();
@@ -137,7 +141,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 		Gdx.input.setInputProcessor(this);
 
 		this.cameraManager = new CameraManager();
-		this.cameraManager.setupCamera(scene);
+		this.cameraManager.setupCamera(this.scene);
 
 //		this.mainModel = (MdxModel) this.viewer.load("Doodads\\Cinematic\\ArthasIllidanFight\\ArthasIllidanFight.mdx",
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\SinglePlayer\\NightElf_Exp\\NightElf_Exp.mdx",
@@ -174,7 +178,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 		System.out.println("Loaded");
 		Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1);
 
-		this.menuUI = new MenuUI(this.viewer.dataSource, this.uiViewport, this.uiScene, this.viewer, this.game,
+		this.menuUI = new MenuUI(this.viewer.dataSource, this.uiViewport, this.uiScene, this.viewer, this.game, this,
 				this.warsmashIni, new RootFrameListener() {
 					@Override
 					public void onCreate(final GameUI rootFrame) {
@@ -193,7 +197,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 							WarsmashGdxMenuScreen.this.currentMusic = music;
 						}
 
-						singleModelScene(scene,
+						singleModelScene(WarsmashGdxMenuScreen.this.scene,
 								War3MapViewer.mdx(rootFrame
 										.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION)),
 								"Stand");
@@ -213,6 +217,20 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 
 	}
 
+	private float getMinWorldWidth() {
+		if (this.uiViewport instanceof ExtendViewport) {
+			return ((ExtendViewport) this.uiViewport).getMinWorldWidth();
+		}
+		return this.uiViewport.getWorldWidth();
+	}
+
+	private float getMinWorldHeight() {
+		if (this.uiViewport instanceof ExtendViewport) {
+			return ((ExtendViewport) this.uiViewport).getMinWorldHeight();
+		}
+		return this.uiViewport.getWorldHeight();
+	}
+
 	private void updateUIScene() {
 		this.tempRect.x = this.uiViewport.getScreenX();
 		this.tempRect.y = this.uiViewport.getScreenY();
@@ -221,8 +239,8 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 		this.uiScene.camera.viewport(this.tempRect);
 		final float worldWidth = this.uiViewport.getWorldWidth();
 		final float worldHeight = this.uiViewport.getWorldHeight();
-		final float xScale = worldWidth / this.uiViewport.getMinWorldWidth();
-		final float yScale = worldHeight / this.uiViewport.getMinWorldHeight();
+		final float xScale = worldWidth / getMinWorldWidth();
+		final float yScale = worldHeight / getMinWorldHeight();
 		final float uiSceneWidth = 0.8f * xScale;
 		final float uiSceneHeight = 0.6f * yScale;
 		final float uiSceneX = ((0.8f - uiSceneWidth) / 2);
@@ -285,9 +303,25 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 		}
 		instance3.setSequence(animIndex);
 
-		instance3.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+		instance3.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
 		this.mainInstance = instance3;
 		this.mainModel = model2;
+	}
+
+	@Override
+	public void setModel(final String path) {
+		if (this.mainInstance != null) {
+			this.mainInstance.detach();
+		}
+		singleModelScene(this.scene, War3MapViewer.mdx(path), "birth");
+		WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras.get(0);
+		// this hack is because we only have the queued animation system in RenderWidget
+		// which is stupid and back and needs to get moved to the model instance
+		// itself... our model instance class is a
+		// hacky replica of a model viewer tool with a bunch of irrelevant loop type
+		// settings instead of what it should be
+		this.hasPlayedStandHack = false;
+
 	}
 
 	private void acolytesHarvestingScene(final Scene scene) {
@@ -477,6 +511,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 	private final float[] cameraPositionTemp = new float[3];
 	private final float[] cameraTargetTemp = new float[3];
 	private final boolean firstFrame = true;
+	private Scene scene;
 
 	@Override
 	public void render(final float delta) {
@@ -486,6 +521,12 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
 		this.cameraManager.updateCamera();
 		this.menuUI.update(deltaTime);
+		if (this.mainInstance.sequenceEnded
+				&& (((this.mainModel.getSequences().get(this.mainInstance.sequence).getFlags() & 0x1) == 0)
+						|| !this.hasPlayedStandHack)) {
+			SequenceUtils.randomStandSequence(this.mainInstance);
+			this.hasPlayedStandHack = true;
+		}
 		this.viewer.updateAndRender();
 
 		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
@@ -516,12 +557,26 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 	public void resize(final int width, final int height) {
 		this.tempRect.width = width;
 		this.tempRect.height = height;
+		final float fourThirdsHeight = (this.tempRect.height * 4) / 3;
+		if (fourThirdsHeight < this.tempRect.width) {
+			final float dx = this.tempRect.width - fourThirdsHeight;
+			this.tempRect.width = fourThirdsHeight;
+			this.tempRect.x = dx / 2;
+		}
+		else {
+			final float threeFourthsWidth = (this.tempRect.width * 3) / 4;
+			if (threeFourthsWidth < this.tempRect.height) {
+				final float dy = this.tempRect.height - threeFourthsWidth;
+				this.tempRect.height = threeFourthsWidth;
+				this.tempRect.y = dy;
+			}
+		}
 		this.cameraManager.camera.viewport(this.tempRect);
 
 //		super.resize(width, height);
 
 		this.uiViewport.update(width, height);
-		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
+		this.uiCamera.position.set(getMinWorldWidth() / 2, getMinWorldHeight() / 2, 0);
 
 		this.menuUI.resize();
 		updateUIScene();
@@ -612,8 +667,8 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 						WarsmashGdxMenuScreen.this.cameraPositionTemp[2]);
 				this.target.add(WarsmashGdxMenuScreen.this.cameraTargetTemp[0],
 						WarsmashGdxMenuScreen.this.cameraTargetTemp[1], WarsmashGdxMenuScreen.this.cameraTargetTemp[2]);
-				this.camera.perspective(WarsmashGdxMenuScreen.this.modelCamera.fieldOfView * 0.75f,
-						Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight(),
+				this.camera.perspective(WarsmashGdxMenuScreen.this.modelCamera.fieldOfView * 0.6f,
+						this.camera.rect.width / this.camera.rect.height,
 						WarsmashGdxMenuScreen.this.modelCamera.nearClippingPlane,
 						WarsmashGdxMenuScreen.this.modelCamera.farClippingPlane);
 			}
@@ -635,20 +690,17 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 
 	@Override
 	public boolean keyDown(final int keycode) {
-		// TODO Auto-generated method stub
-		return false;
+		return this.menuUI.keyDown(keycode);
 	}
 
 	@Override
 	public boolean keyUp(final int keycode) {
-		// TODO Auto-generated method stub
-		return false;
+		return this.menuUI.keyUp(keycode);
 	}
 
 	@Override
 	public boolean keyTyped(final char character) {
-		// TODO Auto-generated method stub
-		return false;
+		return this.menuUI.keyTyped(character);
 	}
 
 	@Override

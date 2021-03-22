@@ -715,9 +715,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.tooltipUberTipText = (StringFrame) this.rootFrame.getFrameByName("SmashUberTipText", 0);
 		this.tooltipUberTipText.setWidth(GameUI.convertX(this.uiViewport, 0.274f));
 		this.uberTipNoResourcesSetPoint = new SetPoint(FramePoint.TOPLEFT, this.tooltipText, FramePoint.BOTTOMLEFT, 0,
-				GameUI.convertY(this.uiViewport, -0.014f));
+				GameUI.convertY(this.uiViewport, -0.004f));
 		this.uberTipWithResourcesSetPoint = new SetPoint(FramePoint.TOPLEFT, this.tooltipText, FramePoint.BOTTOMLEFT, 0,
-				GameUI.convertY(this.uiViewport, -0.024f));
+				GameUI.convertY(this.uiViewport, -0.014f));
 		this.tooltipUberTipText.addSetPoint(this.uberTipNoResourcesSetPoint);
 		this.tooltipResourceFrames = new UIFrame[ResourceType.VALUES.length];
 		this.tooltipResourceIconFrames = new TextureFrame[ResourceType.VALUES.length];

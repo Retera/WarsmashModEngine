@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
@@ -14,6 +16,7 @@ import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 
 public class StringFrame extends AbstractRenderableFrame {
+	private static final boolean DEBUG = false;
 	private final List<SingleStringFrame> internalFrames = new ArrayList<>();
 	private Color color;
 	private String text = "Default string";
@@ -27,6 +30,8 @@ public class StringFrame extends AbstractRenderableFrame {
 	private final SimpleFrame internalFramesContainer;
 	private float predictedViewportHeight;
 
+	static ShapeRenderer shapeRenderer = new ShapeRenderer();
+
 	public StringFrame(final String name, final UIFrame parent, final Color color, final TextJustify justifyH,
 			final TextJustify justifyV, final BitmapFont frameFont, final String text) {
 		super(name, parent);
@@ -36,6 +41,10 @@ public class StringFrame extends AbstractRenderableFrame {
 		this.frameFont = frameFont;
 		this.text = text;
 		this.internalFramesContainer = new SimpleFrame(null, this);
+	}
+
+	public String getText() {
+		return this.text;
 	}
 
 	public void setText(final String text, final GameUI gameUI, final Viewport viewport) {
@@ -77,11 +86,32 @@ public class StringFrame extends AbstractRenderableFrame {
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		this.internalFramesContainer.render(batch, baseFont, glyphLayout);
+
+		if (DEBUG) {
+			batch.end();
+			shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+			shapeRenderer.setColor(1f, 1f, 1f, 1f);
+			shapeRenderer.begin(ShapeType.Line);
+			shapeRenderer.rect(this.renderBounds.x, this.renderBounds.y, this.renderBounds.width,
+					this.renderBounds.height);
+
+			shapeRenderer.end();
+
+			batch.begin();
+		}
+	}
+
+	@Override
+	public void positionBounds(final GameUI gameUI, final Viewport viewport) {
+		createInternalFrames(gameUI.getGlyphLayout());
+		if (this.renderBounds.height == 0) {
+			this.renderBounds.height = getPredictedViewportHeight();
+		}
+		super.positionBounds(gameUI, viewport);
 	}
 
 	@Override
 	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
-		createInternalFrames(gameUI.getGlyphLayout());
 		this.internalFramesContainer.positionBounds(gameUI, viewport);
 	}
 
@@ -436,4 +466,7 @@ public class StringFrame extends AbstractRenderableFrame {
 		return this.predictedViewportHeight;
 	}
 
+	public BitmapFont getFrameFont() {
+		return this.frameFont;
+	}
 }

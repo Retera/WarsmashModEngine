@@ -22,14 +22,15 @@ public class BackdropFrame extends AbstractUIFrame {
 	private final float edgeUVWidth;
 	private final float edgeFileHeight;
 	private final float edgeUVHeight;
+	private final boolean mirrored;
 
 	public BackdropFrame(final String name, final UIFrame parent, final boolean decorateFileNames,
 			final boolean tileBackground, final Texture background, final EnumSet<BackdropCornerFlags> cornerFlags,
 			final float cornerSize, final float backgroundSize, final Vector4Definition backgroundInsets,
-			final Texture edgeFile) {
+			final Texture edgeFile, final boolean mirrored) {
 		super(name, parent);
 		this.decorateFileNames = decorateFileNames;
-		this.tileBackground = tileBackground;
+		this.tileBackground = tileBackground && (backgroundSize > 0);
 		this.background = background;
 		this.cornerFlags = cornerFlags;
 		this.cornerSize = cornerSize;
@@ -40,6 +41,7 @@ public class BackdropFrame extends AbstractUIFrame {
 		this.edgeFileHeight = edgeFile == null ? 0.0f : edgeFile.getHeight();
 		this.edgeUVWidth = 1f / 8f;
 		this.edgeUVHeight = 1f;
+		this.mirrored = mirrored;
 	}
 
 	@Override
@@ -83,7 +85,13 @@ public class BackdropFrame extends AbstractUIFrame {
 						backgroundHeightRemainderRatio);
 			}
 			else {
-				batch.draw(this.background, backgroundX, backgroundY, backgroundWidth, backgroundHeight);
+				if (this.mirrored) {
+					batch.draw(this.background, backgroundX, backgroundY, backgroundWidth, backgroundHeight, 0, 0,
+							this.background.getWidth(), this.background.getHeight(), true, false);
+				}
+				else {
+					batch.draw(this.background, backgroundX, backgroundY, backgroundWidth, backgroundHeight);
+				}
 			}
 		}
 		if (this.edgeFile != null) {
@@ -181,4 +189,7 @@ public class BackdropFrame extends AbstractUIFrame {
 		super.internalRender(batch, baseFont, glyphLayout);
 	}
 
+	public float getCornerSize() {
+		return this.cornerSize;
+	}
 }

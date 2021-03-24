@@ -381,4 +381,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		return this.name;
 	}
 
+	public Rectangle getRenderBounds() {
+		return this.renderBounds;
+	}
 }

@@ -349,7 +349,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 											// a good idea?
 				inflatedFrame = spriteFrame;
 			}
-			else if ("FRAME".equals(frameDefinition.getFrameType())) {
+			else if ("FRAME".equals(frameDefinition.getFrameType())
+					|| "DIALOG".equals(frameDefinition.getFrameType())) {
 				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinition.getName(), parent);
 				// TODO: we should not need to put ourselves in this map 2x, but we do
 				// since there are nested inflate calls happening before the general case

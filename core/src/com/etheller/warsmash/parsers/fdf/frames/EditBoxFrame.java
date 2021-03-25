@@ -25,6 +25,7 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 	private GameUI gameUI;
 	private Viewport viewport;
 	private GlyphLayout glyphLayout;
+	private Runnable onChange;
 
 	public EditBoxFrame(final String name, final UIFrame parent, final float editBorderSize,
 			final Color editCursorColor) {
@@ -107,6 +108,9 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 				final String newText = prevText.substring(0, cursorIndex - 1)
 						+ prevText.substring(cursorIndex, prevTextLength);
 				this.editTextFrame.setText(newText, this.gameUI, this.viewport);
+				if (this.onChange != null) {
+					this.onChange.run();
+				}
 			}
 			break;
 		}
@@ -129,6 +133,9 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 					+ prevText.substring(cursorIndex, prevTextLength);
 			this.editTextFrame.setText(newText, this.gameUI, this.viewport);
 			this.cursorIndex++;
+			if (this.onChange != null) {
+				this.onChange.run();
+			}
 		}
 		return false;
 	}
@@ -159,6 +166,14 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 			return this;
 		}
 		return super.touchDown(screenX, screenY, button);
+	}
+
+	public String getText() {
+		return this.editTextFrame.getText();
+	}
+
+	public void setOnChange(final Runnable onChange) {
+		this.onChange = onChange;
 	}
 
 }

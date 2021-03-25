@@ -31,6 +31,7 @@ public class ListBoxFrame extends ControlFrame {
 	private final TextureFrame mouseHighlightFrame;
 	private GameUI gameUI;
 	private Viewport viewport;
+	private Runnable onSelect;
 
 	public ListBoxFrame(final String name, final UIFrame parent, final Viewport viewport) {
 		super(name, parent);
@@ -87,23 +88,23 @@ public class ListBoxFrame extends ControlFrame {
 
 	public void addItem(final String item, final GameUI gameUI, final Viewport viewport) {
 		this.listItems.add(item);
-//		updateUI(gameUI, viewport);
+		updateUI(gameUI, viewport);
 	}
 
 	public void setItems(final List<String> items, final GameUI gameUI, final Viewport viewport) {
 		this.listItems.clear();
 		this.listItems.addAll(items);
-//		updateUI(gameUI, viewport);
+		updateUI(gameUI, viewport);
 	}
 
 	public void removeItem(final String item, final GameUI gameUI, final Viewport viewport) {
 		this.listItems.remove(item);
-//		updateUI(gameUI, viewport);
+		updateUI(gameUI, viewport);
 	}
 
 	public void removeItem(final int index, final GameUI gameUI, final Viewport viewport) {
 		this.listItems.remove(index);
-//		updateUI(gameUI, viewport);
+		updateUI(gameUI, viewport);
 	}
 
 	public void setSelectedIndex(final int selectedIndex) {
@@ -164,11 +165,13 @@ public class ListBoxFrame extends ControlFrame {
 			for (final SingleStringFrame stringFrame : this.stringFrames) {
 				if (stringFrame.getRenderBounds().contains(screenX, screenY)) {
 					this.selectedIndex = index;
-					System.out.println("selected: " + index);
 				}
 				index++;
 			}
 			updateUI(this.gameUI, this.viewport);
+			if (this.onSelect != null) {
+				this.onSelect.run();
+			}
 			return this;
 		}
 		return super.touchDown(screenX, screenY, button);
@@ -182,7 +185,6 @@ public class ListBoxFrame extends ControlFrame {
 			for (final SingleStringFrame stringFrame : this.stringFrames) {
 				if (stringFrame.getRenderBounds().contains(screenX, screenY)) {
 					mouseOverIndex = index;
-					System.out.println("moused over: " + index);
 				}
 				index++;
 			}
@@ -192,5 +194,9 @@ public class ListBoxFrame extends ControlFrame {
 			}
 		}
 		return super.getFrameChildUnderMouse(screenX, screenY);
+	}
+
+	public void setOnSelect(final Runnable onSelect) {
+		this.onSelect = onSelect;
 	}
 }

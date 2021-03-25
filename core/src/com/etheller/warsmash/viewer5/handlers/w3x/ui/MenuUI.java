@@ -127,6 +127,9 @@ public class MenuUI {
 	private GlueTextButtonFrame addProfileButton;
 	private GlueTextButtonFrame deleteProfileButton;
 	private GlueTextButtonFrame selectProfileButton;
+	private final PlayerProfileManager profileManager;
+	private StringFrame profileNameText;
+	private UIFrame confirmDialog;
 
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
 			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
@@ -151,6 +154,8 @@ public class MenuUI {
 		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+
+		this.profileManager = PlayerProfileManager.loadFromGdx();
 	}
 
 	public float getHeightRatioCorrection() {
@@ -273,20 +278,92 @@ public class MenuUI {
 		this.profilePanel.setVisible(false);
 
 		this.newProfileEditBox = (EditBoxFrame) this.rootFrame.getFrameByName("NewProfileEditBox", 0);
+		this.newProfileEditBox.setOnChange(new Runnable() {
+			@Override
+			public void run() {
+				MenuUI.this.addProfileButton
+						.setEnabled(!MenuUI.this.profileManager.hasProfile(MenuUI.this.newProfileEditBox.getText()));
+			}
+		});
 		final StringFrame profileListText = (StringFrame) this.rootFrame.getFrameByName("ProfileListText", 0);
 		final SimpleFrame profileListContainer = (SimpleFrame) this.rootFrame.getFrameByName("ProfileListContainer", 0);
 		final ListBoxFrame profileListBox = (ListBoxFrame) this.rootFrame.createFrameByType("LISTBOX", "ListBoxWar3",
 				profileListContainer, "WITHCHILDREN", 0);
 		profileListBox.setSetAllPoints(true);
 		profileListBox.setFrameFont(profileListText.getFrameFont());
-		profileListBox.addItem("Test1", this.rootFrame, this.uiViewport);
-		profileListBox.addItem("Test2", this.rootFrame, this.uiViewport);
-		profileListBox.addItem("Test3", this.rootFrame, this.uiViewport);
+		for (final PlayerProfile profile : this.profileManager.getProfiles()) {
+			profileListBox.addItem(profile.getName(), this.rootFrame, this.uiViewport);
+		}
 		profileListContainer.add(profileListBox);
 
 		this.addProfileButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("AddProfileButton", 0);
 		this.deleteProfileButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("DeleteProfileButton", 0);
 		this.selectProfileButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("SelectProfileButton", 0);
+		this.selectProfileButton.setEnabled(false);
+		this.deleteProfileButton.setEnabled(false);
+		this.addProfileButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				final String newProfileName = MenuUI.this.newProfileEditBox.getText();
+				if (!newProfileName.isEmpty() && !MenuUI.this.profileManager.hasProfile(newProfileName)) {
+					MenuUI.this.profileManager.addProfile(newProfileName);
+					profileListBox.addItem(newProfileName, MenuUI.this.rootFrame, MenuUI.this.uiViewport);
+					MenuUI.this.addProfileButton.setEnabled(false);
+				}
+			}
+		});
+		this.deleteProfileButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				final int selectedIndex = profileListBox.getSelectedIndex();
+				final boolean validSelect = (selectedIndex >= 0)
+						&& (selectedIndex < MenuUI.this.profileManager.getProfiles().size());
+				if (validSelect) {
+					if (MenuUI.this.profileManager.getProfiles().size() > 1) {
+						final PlayerProfile profileToRemove = MenuUI.this.profileManager.getProfiles()
+								.get(selectedIndex);
+						final String removeProfileName = profileToRemove.getName();
+						final boolean deletingCurrentProfile = removeProfileName
+								.equals(MenuUI.this.profileManager.getCurrentProfile());
+						MenuUI.this.profileManager.removeProfile(profileToRemove);
+						profileListBox.removeItem(selectedIndex, MenuUI.this.rootFrame, MenuUI.this.uiViewport);
+						if (deletingCurrentProfile) {
+							setCurrentProfile(MenuUI.this.profileManager.getProfiles().get(0).getName());
+						}
+					}
+				}
+			}
+		});
+		this.selectProfileButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				final int selectedIndex = profileListBox.getSelectedIndex();
+				final boolean validSelect = (selectedIndex >= 0)
+						&& (selectedIndex < MenuUI.this.profileManager.getProfiles().size());
+				if (validSelect) {
+					final PlayerProfile profileToSelect = MenuUI.this.profileManager.getProfiles().get(selectedIndex);
+					final String selectedProfileName = profileToSelect.getName();
+					setCurrentProfile(selectedProfileName);
+
+					MenuUI.this.glueSpriteLayerTopLeft.setSequence("RealmSelection Death");
+					MenuUI.this.profilePanel.setVisible(false);
+					MenuUI.this.menuState = MenuState.SINGLE_PLAYER;
+					setSinglePlayerButtonsEnabled(false);
+				}
+
+			}
+
+		});
+		profileListBox.setOnSelect(new Runnable() {
+			@Override
+			public void run() {
+				final int selectedIndex = profileListBox.getSelectedIndex();
+				final boolean validSelect = (selectedIndex >= 0)
+						&& (selectedIndex < MenuUI.this.profileManager.getProfiles().size());
+				MenuUI.this.selectProfileButton.setEnabled(validSelect);
+				MenuUI.this.deleteProfileButton.setEnabled(validSelect);
+			}
+		});
 
 		this.singlePlayerMainPanel = this.rootFrame.getFrameByName("MainPanel", 0);
 
@@ -300,8 +377,8 @@ public class MenuUI {
 
 		this.singlePlayerCancelButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("CancelButton", 0);
 
-		final StringFrame profileNameText = (StringFrame) this.rootFrame.getFrameByName("ProfileNameText", 0);
-		this.rootFrame.setText(profileNameText, "WorldEdit");
+		this.profileNameText = (StringFrame) this.rootFrame.getFrameByName("ProfileNameText", 0);
+		this.rootFrame.setText(this.profileNameText, this.profileManager.getCurrentProfile());
 
 		setSinglePlayerButtonsEnabled(true);
 
@@ -309,7 +386,7 @@ public class MenuUI {
 			@Override
 			public void run() {
 				MenuUI.this.glueSpriteLayerTopLeft.setSequence("RealmSelection Birth");
-				setSinglePlayerButtonsEnabled(true);
+				setSinglePlayerButtonsEnabled(false);
 				MenuUI.this.menuState = MenuState.SINGLE_PLAYER_PROFILE;
 			}
 		});
@@ -412,6 +489,9 @@ public class MenuUI {
 			}
 		}
 
+		this.confirmDialog = this.rootFrame.createFrame("DialogWar3", this.rootFrame, 0, 0);
+		this.confirmDialog.setVisible(false);
+
 		// position all
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 
@@ -425,6 +505,11 @@ public class MenuUI {
 		this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
 	}
 
+	private void setCurrentProfile(final String selectedProfileName) {
+		this.profileManager.setCurrentProfile(selectedProfileName);
+		this.rootFrame.setText(MenuUI.this.profileNameText, selectedProfileName);
+	}
+
 	protected void setSinglePlayerButtonsEnabled(final boolean b) {
 		this.profileButton.setEnabled(b);
 		this.campaignButton.setEnabled(b);
@@ -432,6 +517,7 @@ public class MenuUI {
 		this.viewReplayButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
 		this.customCampaignButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
 		this.skirmishButton.setEnabled(b);
+		this.singlePlayerCancelButton.setEnabled(b);
 	}
 
 	private void setMainMenuVisible(final boolean visible) {
@@ -581,6 +667,7 @@ public class MenuUI {
 				break;
 			case SINGLE_PLAYER_PROFILE:
 				this.profilePanel.setVisible(true);
+				setSinglePlayerButtonsEnabled(true);
 				this.glueSpriteLayerTopLeft.setSequence("RealmSelection Stand");
 				// TODO the below should probably be some generic focusing thing when we enter a
 				// new view?

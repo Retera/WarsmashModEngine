@@ -29,6 +29,10 @@ public interface UIFrame {
 
 	void setHeight(final float height);
 
+	float getAssignedWidth();
+
+	float getAssignedHeight();
+
 	void setSetAllPoints(boolean setAllPoints);
 
 	void setSetAllPoints(boolean setAllPoints, float inset);

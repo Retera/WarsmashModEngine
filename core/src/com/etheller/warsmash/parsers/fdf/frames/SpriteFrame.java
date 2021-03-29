@@ -13,7 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 
-public class SpriteFrame extends AbstractRenderableFrame {
+public class SpriteFrame extends AbstractUIFrame {
 
 	protected final Scene scene;
 	protected final Viewport uiViewport;
@@ -49,7 +49,7 @@ public class SpriteFrame extends AbstractRenderableFrame {
 
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
-
+		super.internalRender(batch, baseFont, glyphLayout);
 	}
 
 	@Override
@@ -71,6 +71,7 @@ public class SpriteFrame extends AbstractRenderableFrame {
 
 	@Override
 	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
+		super.innerPositionBounds(gameUI, viewport);
 		updateInstanceLocation(viewport);
 	}
 

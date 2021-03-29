@@ -21,7 +21,6 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglNativesLoader;
-import com.etheller.warsmash.WarsmashGdxMapScreen;
 import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.audio.OpenALSound;
@@ -68,12 +67,11 @@ public class DesktopLauncher {
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
+				final WarsmashGdxMenuScreen menuScreen = new WarsmashGdxMenuScreen(warsmashIni,
+						warsmashGdxMultiScreenGame);
+				warsmashGdxMultiScreenGame.setScreen(menuScreen);
 				if (finalFileToLoad != null) {
-					warsmashGdxMultiScreenGame.setScreen(new WarsmashGdxMapScreen(warsmashIni, finalFileToLoad));
-				}
-				else {
-					warsmashGdxMultiScreenGame
-							.setScreen(new WarsmashGdxMenuScreen(warsmashIni, warsmashGdxMultiScreenGame));
+					menuScreen.startMap(finalFileToLoad);
 				}
 			}
 		});

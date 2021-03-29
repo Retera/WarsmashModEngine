@@ -8,9 +8,11 @@ import java.util.Map;
 import java.util.Set;
 
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringPairFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetFloatFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetFontFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetStringFieldVisitor;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetStringPairFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetTextJustifyFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetVector2FieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetVector4FieldVisitor;
@@ -107,6 +109,14 @@ public class FrameDefinition {
 		final FrameDefinitionField frameDefinitionField = this.nameToField.get(id);
 		if (frameDefinitionField != null) {
 			return frameDefinitionField.visit(GetStringFieldVisitor.INSTANCE);
+		}
+		return null;
+	}
+
+	public StringPairFrameDefinitionField getStringPair(final String id) {
+		final FrameDefinitionField frameDefinitionField = this.nameToField.get(id);
+		if (frameDefinitionField != null) {
+			return frameDefinitionField.visit(GetStringPairFieldVisitor.INSTANCE);
 		}
 		return null;
 	}

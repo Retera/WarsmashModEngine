@@ -7,7 +7,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 
-public class GlueButtonFrame extends AbstractRenderableFrame implements ClickableFrame {
+public class SimpleButtonFrame extends AbstractRenderableFrame implements ClickableFrame {
+
 	private UIFrame controlBackdrop;
 	private UIFrame controlPushedBackdrop;
 	private UIFrame controlDisabledBackdrop;
@@ -16,12 +17,21 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 	private boolean enabled = true;
 	private boolean highlightOnMouseOver;
 	private boolean mouseOver = false;
+	private boolean pushed = false;
 
 	private UIFrame activeChild;
+	private UIFrame activeTextChild;
+
+	private UIFrame buttonText;
+	private UIFrame disabledText;
+	private UIFrame highlightText;
+
+	private UIFrame pushedText;
+	private UIFrame pushedHighlightText;
 
 	private Runnable onClick;
 
-	public GlueButtonFrame(final String name, final UIFrame parent) {
+	public SimpleButtonFrame(final String name, final UIFrame parent) {
 		super(name, parent);
 	}
 
@@ -42,15 +52,18 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 
 	public void setControlMouseOverHighlight(final UIFrame controlMouseOverHighlight) {
 		this.controlMouseOverHighlight = controlMouseOverHighlight;
+		this.highlightOnMouseOver |= controlMouseOverHighlight != null;
 	}
 
 	public void setEnabled(final boolean enabled) {
 		this.enabled = enabled;
 		if (this.enabled) {
 			this.activeChild = this.controlBackdrop;
+			this.activeTextChild = this.buttonText;
 		}
 		else {
 			this.activeChild = this.controlDisabledBackdrop;
+			this.activeTextChild = this.disabledText;
 		}
 	}
 
@@ -76,11 +89,28 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 		if (this.controlMouseOverHighlight != null) {
 			this.controlMouseOverHighlight.positionBounds(gameUI, viewport);
 		}
+		if (this.buttonText != null) {
+			this.buttonText.positionBounds(gameUI, viewport);
+		}
+		if (this.pushedText != null) {
+			this.pushedText.positionBounds(gameUI, viewport);
+		}
+		if (this.disabledText != null) {
+			this.disabledText.positionBounds(gameUI, viewport);
+		}
+		if (this.highlightText != null) {
+			this.highlightText.positionBounds(gameUI, viewport);
+		}
+		if (this.pushedHighlightText != null) {
+			this.pushedHighlightText.positionBounds(gameUI, viewport);
+		}
 		if (this.enabled) {
 			this.activeChild = this.controlBackdrop;
+			this.activeTextChild = this.buttonText;
 		}
 		else {
 			this.activeChild = this.controlDisabledBackdrop;
+			this.activeTextChild = this.disabledText;
 		}
 	}
 
@@ -88,6 +118,9 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		if (this.activeChild != null) {
 			this.activeChild.render(batch, baseFont, glyphLayout);
+		}
+		if (this.activeTextChild != null) {
+			this.activeTextChild.render(batch, baseFont, glyphLayout);
 		}
 		if (this.mouseOver) {
 			this.controlMouseOverHighlight.render(batch, baseFont, glyphLayout);
@@ -98,6 +131,8 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 	public void mouseDown(final GameUI gameUI, final Viewport uiViewport) {
 		if (this.enabled) {
 			this.activeChild = this.controlPushedBackdrop;
+			this.pushed = true;
+			this.activeTextChild = this.mouseOver ? this.pushedHighlightText : this.pushedText;
 		}
 	}
 
@@ -105,19 +140,27 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 	public void mouseUp(final GameUI gameUI, final Viewport uiViewport) {
 		if (this.enabled) {
 			this.activeChild = this.controlBackdrop;
+			this.activeTextChild = this.mouseOver ? this.highlightText : this.buttonText;
 		}
+		this.pushed = false;
 	}
 
 	@Override
 	public void mouseEnter(final GameUI gameUI, final Viewport uiViewport) {
 		if (this.highlightOnMouseOver) {
 			this.mouseOver = true;
+			if (this.enabled) {
+				this.activeTextChild = this.pushed ? this.pushedHighlightText : this.highlightText;
+			}
 		}
 	}
 
 	@Override
 	public void mouseExit(final GameUI gameUI, final Viewport uiViewport) {
 		this.mouseOver = false;
+		if (this.enabled) {
+			this.activeTextChild = this.pushed ? this.pushedText : this.buttonText;
+		}
 	}
 
 	@Override
@@ -151,4 +194,24 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 		return super.getFrameChildUnderMouse(screenX, screenY);
 	}
 
+	public void setButtonText(final UIFrame buttonText) {
+		this.buttonText = buttonText;
+	}
+
+	public void setPushedHighlightText(final UIFrame pushedHighlightText) {
+		this.pushedHighlightText = pushedHighlightText;
+	}
+
+	public void setPushedText(final UIFrame pushedText) {
+		this.pushedText = pushedText;
+	}
+
+	public void setHighlightText(final UIFrame highlightText) {
+		this.highlightText = highlightText;
+		this.highlightOnMouseOver |= highlightText != null;
+	}
+
+	public void setDisabledText(final UIFrame disabledText) {
+		this.disabledText = disabledText;
+	}
 }

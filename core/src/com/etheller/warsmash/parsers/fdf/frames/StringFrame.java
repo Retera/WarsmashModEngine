@@ -16,7 +16,6 @@ import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 
 public class StringFrame extends AbstractRenderableFrame {
-	private static final boolean DEBUG = false;
 	private final List<SingleStringFrame> internalFrames = new ArrayList<>();
 	private Color color;
 	private String text = "Default string";
@@ -62,6 +61,10 @@ public class StringFrame extends AbstractRenderableFrame {
 		}
 	}
 
+	public Color getColor() {
+		return this.color;
+	}
+
 	public void setFontShadowColor(final Color fontShadowColor) {
 		this.fontShadowColor = fontShadowColor;
 		for (final SingleStringFrame internalFrame : this.internalFrames) {
@@ -87,7 +90,7 @@ public class StringFrame extends AbstractRenderableFrame {
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		this.internalFramesContainer.render(batch, baseFont, glyphLayout);
 
-		if (DEBUG) {
+		if (GameUI.DEBUG) {
 			batch.end();
 			shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
 			shapeRenderer.setColor(1f, 1f, 1f, 1f);

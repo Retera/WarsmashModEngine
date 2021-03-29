@@ -15,7 +15,7 @@ public class BackdropFrame extends AbstractUIFrame {
 	private final Texture background;
 	private final EnumSet<BackdropCornerFlags> cornerFlags;
 	private final float cornerSize;
-	private final float backgroundSize;
+	private float backgroundSize;
 	private final Vector4Definition backgroundInsets;
 	private final Texture edgeFile;
 	private final float edgeFileWidth;
@@ -42,6 +42,8 @@ public class BackdropFrame extends AbstractUIFrame {
 		this.edgeUVWidth = 1f / 8f;
 		this.edgeUVHeight = 1f;
 		this.mirrored = mirrored;
+		this.backgroundSize -= (backgroundInsets.getX() + backgroundInsets.getY() + backgroundInsets.getZ()
+				+ backgroundInsets.getW()) / 2f;
 	}
 
 	@Override

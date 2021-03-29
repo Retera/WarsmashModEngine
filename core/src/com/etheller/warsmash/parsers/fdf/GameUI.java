@@ -27,11 +27,13 @@ import com.etheller.warsmash.parsers.fdf.datamodel.ControlStyle;
 import com.etheller.warsmash.parsers.fdf.datamodel.FontDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameClass;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameDefinition;
+import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameTemplateEnvironment;
 import com.etheller.warsmash.parsers.fdf.datamodel.SetPointDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector2Definition;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringPairFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
 import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ControlFrame;
@@ -41,10 +43,12 @@ import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
+import com.etheller.warsmash.parsers.fdf.frames.SimpleButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
+import com.etheller.warsmash.parsers.fdf.frames.TextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.units.DataTable;
@@ -59,7 +63,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
 public final class GameUI extends AbstractUIFrame implements UIFrame {
-	private static final boolean PIN_FAIL_IS_FATAL = false;
+	public static final boolean DEBUG = false;
+	private static final boolean PIN_FAIL_IS_FATAL = true;
 	private final DataSource dataSource;
 	private final Element skin;
 	private final Viewport viewport;
@@ -347,6 +352,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				viewport2 = this.viewport; // TODO was fdfCoordinateResolutionDummyViewport here previously, but is that
 											// a good idea?
+				this.nameToFrame.put(frameDefinition.getName(), spriteFrame);
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					spriteFrame.add(inflate(childDefinition, spriteFrame, frameDefinition,
+							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+				}
 				inflatedFrame = spriteFrame;
 			}
 			else if ("FRAME".equals(frameDefinition.getFrameType())
@@ -371,6 +381,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				TextJustify justifyV = frameDefinition.getTextJustify("FontJustificationV");
 				if (justifyV == null) {
 					justifyV = TextJustify.MIDDLE;
+				}
+				for (final SetPointDefinition setPoint : frameDefinition.getSetPoints()) {
+					if (((setPoint.getMyPoint() == FramePoint.TOP) && (setPoint.getOtherPoint() == FramePoint.TOP))
+							|| ((setPoint.getMyPoint() == FramePoint.BOTTOM)
+									&& (setPoint.getOtherPoint() == FramePoint.BOTTOM))) {
+						justifyH = TextJustify.CENTER;
+					}
 				}
 
 				Color fontColor;
@@ -472,6 +489,88 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				inflatedFrame = glueButtonFrame;
 			}
+			else if ("SIMPLEBUTTON".equals(frameDefinition.getFrameType())) {
+				// ButtonText & ControlBackdrop
+				final SimpleButtonFrame simpleButtonFrame = new SimpleButtonFrame(frameDefinition.getName(), parent);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinition.getName(), simpleButtonFrame);
+				final StringPairFrameDefinitionField normalTextDefinition = frameDefinition.getStringPair("NormalText");
+				final StringPairFrameDefinitionField disabledTextDefinition = frameDefinition
+						.getStringPair("DisabledText");
+				final StringPairFrameDefinitionField highlightTextDefinition = frameDefinition
+						.getStringPair("HighlightText");
+				final String normalTextureDefinition = frameDefinition.getString("NormalTexture");
+				final String pushedTextureDefinition = frameDefinition.getString("PushedTexture");
+				final String disabledTextureDefinition = frameDefinition.getString("DisabledTexture");
+				final String useHighlightDefinition = frameDefinition.getString("UseHighlight");
+
+				final boolean decorateFileNamesOnThisFrame = frameDefinition.has("DecorateFileNames")
+						|| inDecorateFileNames;
+				final UIFrame normalText = inflate(this.templates.getFrame(normalTextDefinition.getFirst()),
+						simpleButtonFrame, frameDefinition, decorateFileNamesOnThisFrame);
+				setDecoratedText((StringFrame) normalText, normalTextDefinition.getSecond());
+				normalText.setSetAllPoints(true);
+				final UIFrame disabledText = inflate(this.templates.getFrame(disabledTextDefinition.getFirst()),
+						simpleButtonFrame, frameDefinition, decorateFileNamesOnThisFrame);
+				setDecoratedText((StringFrame) disabledText, disabledTextDefinition.getSecond());
+				disabledText.setSetAllPoints(true);
+				final UIFrame highlightText = inflate(this.templates.getFrame(highlightTextDefinition.getFirst()),
+						simpleButtonFrame, frameDefinition, decorateFileNamesOnThisFrame);
+				setDecoratedText((StringFrame) highlightText, highlightTextDefinition.getSecond());
+				highlightText.setSetAllPoints(true);
+				final UIFrame normalTexture = inflate(this.templates.getFrame(normalTextureDefinition),
+						simpleButtonFrame, frameDefinition, decorateFileNamesOnThisFrame);
+				normalTexture.setSetAllPoints(true);
+				final UIFrame pushedTexture = inflate(this.templates.getFrame(pushedTextureDefinition),
+						simpleButtonFrame, frameDefinition, decorateFileNamesOnThisFrame);
+				pushedTexture.setSetAllPoints(true);
+				final UIFrame disabledTexture = inflate(this.templates.getFrame(disabledTextureDefinition),
+						simpleButtonFrame, frameDefinition, decorateFileNamesOnThisFrame);
+				disabledTexture.setSetAllPoints(true);
+				final UIFrame useHighlight = inflate(this.templates.getFrame(useHighlightDefinition), simpleButtonFrame,
+						frameDefinition, decorateFileNamesOnThisFrame);
+				useHighlight.setSetAllPoints(true);
+				simpleButtonFrame.setButtonText(normalText);
+				simpleButtonFrame.setDisabledText(disabledText);
+				simpleButtonFrame.setHighlightText(highlightText);
+				simpleButtonFrame.setControlBackdrop(normalTexture);
+				simpleButtonFrame.setControlDisabledBackdrop(disabledTexture);
+				simpleButtonFrame.setControlMouseOverHighlight(useHighlight);
+				simpleButtonFrame.setControlPushedBackdrop(pushedTexture);
+
+				final Vector2Definition pushedTextOffset = frameDefinition.getVector2("ButtonPushedTextOffset");
+				if (pushedTextOffset != null) {
+					final UIFrame pushedNormalText = inflate(this.templates.getFrame(normalTextDefinition.getFirst()),
+							simpleButtonFrame, frameDefinition, decorateFileNamesOnThisFrame);
+					setDecoratedText((StringFrame) pushedNormalText, normalTextDefinition.getSecond());
+					final UIFrame pushedHighlightText = inflate(
+							this.templates.getFrame(highlightTextDefinition.getFirst()), simpleButtonFrame,
+							frameDefinition, decorateFileNamesOnThisFrame);
+					setDecoratedText((StringFrame) pushedHighlightText, highlightTextDefinition.getSecond());
+					pushedNormalText.addSetPoint(new SetPoint(FramePoint.TOPLEFT, simpleButtonFrame, FramePoint.TOPLEFT,
+							GameUI.convertX(viewport2, pushedTextOffset.getX()),
+							GameUI.convertY(viewport2, pushedTextOffset.getY())));
+					pushedNormalText.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, simpleButtonFrame,
+							FramePoint.BOTTOMRIGHT, GameUI.convertX(viewport2, pushedTextOffset.getX()),
+							GameUI.convertY(viewport2, pushedTextOffset.getY())));
+					pushedHighlightText.addSetPoint(new SetPoint(FramePoint.TOPLEFT, simpleButtonFrame,
+							FramePoint.TOPLEFT, GameUI.convertX(viewport2, pushedTextOffset.getX()),
+							GameUI.convertY(viewport2, pushedTextOffset.getY())));
+					pushedHighlightText.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, simpleButtonFrame,
+							FramePoint.BOTTOMRIGHT, GameUI.convertX(viewport2, pushedTextOffset.getX()),
+							GameUI.convertY(viewport2, pushedTextOffset.getY())));
+					simpleButtonFrame.setPushedText(pushedNormalText);
+					simpleButtonFrame.setPushedHighlightText(pushedHighlightText);
+				}
+				else {
+					simpleButtonFrame.setPushedText(normalText);
+					simpleButtonFrame.setPushedHighlightText(highlightText);
+				}
+
+				inflatedFrame = simpleButtonFrame;
+			}
 			else if ("GLUEBUTTON".equals(frameDefinition.getFrameType())) {
 				// ButtonText & ControlBackdrop
 				final GlueButtonFrame glueButtonFrame = new GlueButtonFrame(frameDefinition.getName(), parent);
@@ -483,6 +582,56 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
 				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
 				final String controlMouseOverHighlightKey = frameDefinition.getString("ControlMouseOverHighlight");
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					if (childDefinition.getName().equals(controlBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						glueButtonFrame.setControlBackdrop(inflatedChild);
+					}
+					else if (childDefinition.getName().equals(controlPushedBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						glueButtonFrame.setControlPushedBackdrop(inflatedChild);
+					}
+					else if (childDefinition.getName().equals(controlDisabledBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						glueButtonFrame.setControlDisabledBackdrop(inflatedChild);
+					}
+					else if (childDefinition.getName().equals(controlMouseOverHighlightKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						glueButtonFrame.setControlMouseOverHighlight(inflatedChild);
+					}
+				}
+				final EnumSet<ControlStyle> controlStyle = ControlStyle
+						.parseControlStyle(frameDefinition.getString("ControlStyle"));
+				if (controlStyle.contains(ControlStyle.AUTOTRACK)
+						&& controlStyle.contains(ControlStyle.HIGHLIGHTONMOUSEOVER)) {
+					glueButtonFrame.setHighlightOnMouseOver(true);
+				}
+				inflatedFrame = glueButtonFrame;
+			}
+			else if ("TEXTBUTTON".equals(frameDefinition.getFrameType())) {
+				// ButtonText & ControlBackdrop
+				final TextButtonFrame glueButtonFrame = new TextButtonFrame(frameDefinition.getName(), parent);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinition.getName(), glueButtonFrame);
+				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
+				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
+				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
+				final String controlMouseOverHighlightKey = frameDefinition.getString("ControlMouseOverHighlight");
+				final Vector2Definition pushedTextOffset = frameDefinition.getVector2("ButtonPushedTextOffset");
+				if (pushedTextOffset != null) {
+					glueButtonFrame.setButtonPushedTextOffsetX(pushedTextOffset.getX());
+					glueButtonFrame.setButtonPushedTextOffsetY(pushedTextOffset.getY());
+				}
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
@@ -598,7 +747,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				final String highlightAlphaFile = frameDefinition.getString("HighlightAlphaFile");
 				final String highlightAlphaMode = frameDefinition.getString("HighlightAlphaMode");
 				final FilterModeTextureFrame textureFrame = new FilterModeTextureFrame(frameDefinition.getName(),
-						parent, false, null);
+						parent, inDecorateFileNames || frameDefinition.has("DecorateFileNames"), null);
 				textureFrame.setTexture(highlightAlphaFile, this);
 				if ("ADD".equals(highlightAlphaMode)) {
 					textureFrame.setFilterMode(FilterMode.ADDALPHA);
@@ -623,10 +772,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						backgroundSizeNullable == null ? 0.0f : backgroundSizeNullable);
 				Vector4Definition backgroundInsets = frameDefinition.getVector4("BackdropBackgroundInsets");
 				if (backgroundInsets != null) {
-					backgroundInsets.setX(GameUI.convertX(viewport2, backgroundInsets.getX()));
-					backgroundInsets.setY(GameUI.convertY(viewport2, backgroundInsets.getY()));
-					backgroundInsets.setZ(GameUI.convertX(viewport2, backgroundInsets.getZ()));
-					backgroundInsets.setW(GameUI.convertY(viewport2, backgroundInsets.getW()));
+					backgroundInsets = new Vector4Definition(GameUI.convertX(viewport2, backgroundInsets.getX()),
+							GameUI.convertY(viewport2, backgroundInsets.getY()),
+							GameUI.convertX(viewport2, backgroundInsets.getZ()),
+							GameUI.convertY(viewport2, backgroundInsets.getW()));
 				}
 				else {
 					backgroundInsets = new Vector4Definition(0, 0, 0, 0);
@@ -708,8 +857,17 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			final String file = frameDefinition.getString("File");
 			final boolean decorateFileNames = frameDefinition.has("DecorateFileNames") || inDecorateFileNames;
 			final Vector4Definition texCoord = frameDefinition.getVector4("TexCoord");
-			final TextureFrame textureFrame = new TextureFrame(frameDefinition.getName(), parent, decorateFileNames,
-					texCoord);
+			TextureFrame textureFrame;
+			final String alphaMode = frameDefinition.getString("AlphaMode");
+			if ((alphaMode != null) && alphaMode.equals("ADD")) {
+				final FilterModeTextureFrame filterModeTextureFrame = new FilterModeTextureFrame(
+						frameDefinition.getName(), parent, decorateFileNames, texCoord);
+				filterModeTextureFrame.setFilterMode(FilterMode.ADDALPHA);
+				textureFrame = filterModeTextureFrame;
+			}
+			else {
+				textureFrame = new TextureFrame(frameDefinition.getName(), parent, decorateFileNames, texCoord);
+			}
 			textureFrame.setTexture(file, this);
 			inflatedFrame = textureFrame;
 			break;
@@ -735,9 +893,6 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			final Float height = frameDefinition.getFloat("Height");
 			if (height != null) {
 				inflatedFrame.setHeight(convertY(viewport2, height));
-			}
-			else if (frameDefinition.getFont("Font") != null) {
-				inflatedFrame.setHeight(convertY(viewport2, frameDefinition.getFont("Font").getFontSize()));
 			}
 			for (final AnchorDefinition anchor : frameDefinition.getAnchors()) {
 				inflatedFrame.addAnchor(new AnchorDefinition(anchor.getMyPoint(),
@@ -885,6 +1040,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	public void setText(final StringFrame stringFrame, final String text) {
 		stringFrame.setText(text, this, this.viewport);
+	}
+
+	public void setDecoratedText(final StringFrame stringFrame, final String text) {
+		stringFrame.setText(this.templates.getDecoratedString(text), this, this.viewport);
 	}
 
 	public BitmapFont getFont() {

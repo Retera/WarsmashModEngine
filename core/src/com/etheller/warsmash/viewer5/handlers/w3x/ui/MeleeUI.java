@@ -36,7 +36,9 @@ import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
 import com.etheller.warsmash.parsers.fdf.frames.FilterModeTextureFrame;
+import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
+import com.etheller.warsmash.parsers.fdf.frames.SimpleButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
@@ -137,6 +139,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbility
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.QueueIconListener;
@@ -263,8 +266,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	// probably remove them later
 	private final float widthRatioCorrection;
 	private final float heightRatioCorrection;
-	private ClickableActionFrame mouseDownUIFrame;
-	private ClickableActionFrame mouseOverUIFrame;
+	private ClickableFrame mouseDownUIFrame;
+	private ClickableFrame mouseOverUIFrame;
 	private UIFrame smashSimpleInfoPanel;
 	private SimpleFrame smashAttack1IconWrapper;
 	private SimpleFrame smashAttack2IconWrapper;
@@ -287,11 +290,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final StringBuilder recycleStringBuilder = new StringBuilder();
 	private CItem draggingItem;
 	private final ItemCommandCardCommandListener itemCommandCardCommandListener;
+	private SimpleButtonFrame questsButton;
+	private SimpleButtonFrame menuButton;
+	private SimpleButtonFrame alliesButton;
+	private SimpleButtonFrame chatButton;
+	private final Runnable exitGameRunnable;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
 			final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener,
-			final CPlayerUnitOrderListener unitOrderListener) {
+			final CPlayerUnitOrderListener unitOrderListener, final Runnable exitGameRunnable) {
 		this.dataSource = dataSource;
 		this.uiViewport = uiViewport;
 		this.uiScene = uiScene;
@@ -299,6 +307,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.war3MapViewer = war3MapViewer;
 		this.rootFrameListener = rootFrameListener;
 		this.unitOrderListener = unitOrderListener;
+		this.exitGameRunnable = exitGameRunnable;
 
 		this.cameraManager = new GameCameraManager(cameraPresets, cameraRates);
 
@@ -427,6 +436,131 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		foodChanged();
 		this.resourceBarUpkeepText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarUpkeepText", 0);
 		upkeepChanged();
+
+		final UIFrame upperButtonBar = this.rootFrame.createSimpleFrame("UpperButtonBarFrame", this.consoleUI, 0);
+		upperButtonBar.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.consoleUI, FramePoint.TOPLEFT, 0, 0));
+
+		this.questsButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarQuestsButton", 0);
+		this.questsButton.setEnabled(false);
+		this.menuButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarMenuButton", 0);
+		this.alliesButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarAlliesButton", 0);
+		this.alliesButton.setEnabled(false);
+		this.chatButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarChatButton", 0);
+		this.chatButton.setEnabled(false);
+
+		final UIFrame escMenuBackdrop = this.rootFrame.createFrame("EscMenuBackdrop", this.rootFrame, 0, 0);
+		escMenuBackdrop.setVisible(false);
+		escMenuBackdrop.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+		final UIFrame escMenuMainPanel = this.rootFrame.createFrame("EscMenuMainPanel", this.rootFrame, 0, 0);
+		escMenuMainPanel.setVisible(false);
+		escMenuMainPanel.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+
+		final UIFrame escMenuInnerMainPanel = this.rootFrame.getFrameByName("MainPanel", 0);
+		final GlueTextButtonFrame pauseButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("PauseButton", 0);
+		pauseButton.setEnabled(false);
+		final GlueTextButtonFrame saveGameButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("SaveGameButton",
+				0);
+		saveGameButton.setEnabled(false);
+		final GlueTextButtonFrame loadGameButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("LoadGameButton",
+				0);
+		loadGameButton.setEnabled(false);
+		final GlueTextButtonFrame optionsButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("OptionsButton",
+				0);
+		optionsButton.setEnabled(false);
+		final GlueTextButtonFrame helpButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("HelpButton", 0);
+		helpButton.setEnabled(false);
+		final GlueTextButtonFrame tipsButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("TipsButton", 0);
+		tipsButton.setEnabled(false);
+		final GlueTextButtonFrame endGameButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("EndGameButton",
+				0);
+		final GlueTextButtonFrame returnButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("ReturnButton", 0);
+
+		final UIFrame escMenuInnerEndGamePanel = this.rootFrame.getFrameByName("EndGamePanel", 0);
+		final GlueTextButtonFrame endGamePreviousButton = (GlueTextButtonFrame) this.rootFrame
+				.getFrameByName("PreviousButton", 0);
+		final GlueTextButtonFrame endGameQuitButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("QuitButton",
+				0);
+		final GlueTextButtonFrame endGameRestartButton = (GlueTextButtonFrame) this.rootFrame
+				.getFrameByName("RestartButton", 0);
+		endGameRestartButton.setEnabled(false);
+		final GlueTextButtonFrame endGameExitButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("ExitButton",
+				0);
+
+		final UIFrame escMenuInnerConfirmQuitPanel = this.rootFrame.getFrameByName("ConfirmQuitPanel", 0);
+		final GlueTextButtonFrame confirmQuitCancelButton = (GlueTextButtonFrame) this.rootFrame
+				.getFrameByName("ConfirmQuitCancelButton", 0);
+		final GlueTextButtonFrame confirmQuitQuitButton = (GlueTextButtonFrame) this.rootFrame
+				.getFrameByName("ConfirmQuitQuitButton", 0);
+		final UIFrame escMenuInnerHelpPanel = this.rootFrame.getFrameByName("HelpPanel", 0);
+		final UIFrame escMenuInnerTipsPanel = this.rootFrame.getFrameByName("TipsPanel", 0);
+		escMenuInnerMainPanel.setVisible(false);
+		escMenuInnerEndGamePanel.setVisible(false);
+		escMenuInnerConfirmQuitPanel.setVisible(false);
+		escMenuInnerHelpPanel.setVisible(false);
+		escMenuInnerTipsPanel.setVisible(false);
+
+		this.menuButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				escMenuBackdrop.setVisible(true);
+				escMenuMainPanel.setVisible(true);
+				escMenuInnerMainPanel.setVisible(true);
+				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerMainPanel);
+			}
+		});
+		returnButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				escMenuBackdrop.setVisible(false);
+				escMenuMainPanel.setVisible(false);
+				escMenuInnerMainPanel.setVisible(false);
+			}
+		});
+		endGameButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				escMenuInnerMainPanel.setVisible(false);
+				escMenuInnerEndGamePanel.setVisible(true);
+				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerEndGamePanel);
+			}
+		});
+		endGamePreviousButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				escMenuInnerEndGamePanel.setVisible(false);
+				escMenuInnerMainPanel.setVisible(true);
+				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerMainPanel);
+			}
+		});
+		endGameQuitButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				escMenuInnerEndGamePanel.setVisible(false);
+				MeleeUI.this.exitGameRunnable.run();
+			}
+		});
+		endGameExitButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				escMenuInnerEndGamePanel.setVisible(false);
+				escMenuInnerConfirmQuitPanel.setVisible(true);
+				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerConfirmQuitPanel);
+			}
+		});
+		confirmQuitCancelButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				escMenuInnerEndGamePanel.setVisible(true);
+				escMenuInnerConfirmQuitPanel.setVisible(false);
+				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerEndGamePanel);
+			}
+		});
+		confirmQuitQuitButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				Gdx.app.exit();
+			}
+		});
 
 		// Create the Time Indicator (clock)
 		this.timeIndicator = (SpriteFrame) this.rootFrame.createFrame("TimeOfDayIndicator", this.rootFrame, 0, 0);
@@ -594,10 +728,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		this.inventoryBarFrame = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInventoryBar",
 				this.rootFrame, 0);
-		this.inventoryBarFrame.setWidth(GameUI.convertX(this.uiViewport, 0.064f));
+		this.inventoryBarFrame.setWidth(GameUI.convertX(this.uiViewport, 0.079f));
 		this.inventoryBarFrame.setHeight(GameUI.convertY(this.uiViewport, 0.115f));
 		this.inventoryBarFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, this.consoleUI, FramePoint.BOTTOMLEFT,
-				GameUI.convertX(this.uiViewport, 0.496f), GameUI.convertY(this.uiViewport, 0.0f)));
+				GameUI.convertX(this.uiViewport, 0.591f), GameUI.convertY(this.uiViewport, 0.0f)));
+
+		if (GameUI.DEBUG) {
+			final FilterModeTextureFrame placeholderPreview = new FilterModeTextureFrame(null, this.inventoryBarFrame,
+					false, null);
+			placeholderPreview.setFilterMode(FilterMode.ADDALPHA);
+			placeholderPreview.setTexture("ReplaceableTextures\\TeamColor\\TeamColor06.blp", this.rootFrame);
+			placeholderPreview.setSetAllPoints(true);
+			this.inventoryBarFrame.add(placeholderPreview);
+		}
 
 		int commandButtonIndex = 0;
 		for (int j = 0; j < INVENTORY_HEIGHT; j++) {
@@ -610,8 +753,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						"SmashInventoryButton_" + (commandButtonIndex) + "_Icon", this.rootFrame, false, null);
 				final SpriteFrame cooldownFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
 						"SmashInventoryButton_" + (commandButtonIndex) + "_Cooldown", this.rootFrame, "", 0);
-				commandCardIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame,
-						FramePoint.TOPRIGHT, GameUI.convertX(this.uiViewport, 0.0187f + (0.04f * i)),
+				commandCardIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame, FramePoint.TOPLEFT,
+						GameUI.convertX(this.uiViewport, 0.0037f + (0.04f * i)),
 						GameUI.convertY(this.uiViewport, -0.0021f - (0.03815f * j))));
 				commandCardIcon.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
 				commandCardIcon.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
@@ -630,12 +773,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		this.inventoryTitleFrame = this.rootFrame.createStringFrame("SmashInventoryText", this.inventoryBarFrame,
-				new Color(0xFCDE12FF), TextJustify.LEFT, TextJustify.MIDDLE, 0.0109f);
+				new Color(0xFCDE12FF), TextJustify.CENTER, TextJustify.MIDDLE, 0.0109f);
 		this.rootFrame.setText(this.inventoryTitleFrame, this.rootFrame.getTemplates().getDecoratedString("INVENTORY"));
 		this.inventoryTitleFrame
-				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame, FramePoint.TOPRIGHT,
-						GameUI.convertX(this.uiViewport, 0.029f), GameUI.convertY(this.uiViewport, 0.0165625f)));
-		this.inventoryTitleFrame.setWidth(GameUI.convertX(this.uiViewport, 0.076875f));
+				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame, FramePoint.TOPLEFT,
+						GameUI.convertX(this.uiViewport, 0.004f), GameUI.convertY(this.uiViewport, 0.0165625f)));
+		this.inventoryTitleFrame.setWidth(GameUI.convertX(this.uiViewport, 0.071f));
 		this.inventoryTitleFrame.setHeight(GameUI.convertX(this.uiViewport, 0.01125f));
 		this.inventoryTitleFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
 		this.inventoryTitleFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
@@ -731,7 +874,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					.getFrameByName("SmashToolTipIconResourceLabel", i);
 			this.tooltipResourceFrames[i].addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.tooltipText,
 					FramePoint.BOTTOMLEFT, GameUI.convertX(this.uiViewport, 0.004f + (0.032f * i)),
-					GameUI.convertY(this.uiViewport, -0.011f)));
+					GameUI.convertY(this.uiViewport, -0.001f)));
 			// have we really no better API than the below???
 			((AbstractUIFrame) this.tooltipFrame).add(this.tooltipResourceFrames[i]);
 			this.rootFrame.remove(this.tooltipResourceFrames[i]);
@@ -777,6 +920,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		selectUnit(null);
 
+	}
+
+	private void updateEscMenuCurrentPanel(final UIFrame escMenuBackdrop, final UIFrame escMenuMainPanel,
+			final UIFrame escMenuInnerMainPanel) {
+		escMenuMainPanel.setHeight(escMenuInnerMainPanel.getAssignedHeight());
+		escMenuMainPanel.setWidth(escMenuInnerMainPanel.getAssignedWidth());
+		escMenuBackdrop.setHeight(escMenuInnerMainPanel.getAssignedHeight());
+		escMenuBackdrop.setWidth(escMenuInnerMainPanel.getAssignedWidth());
+		escMenuMainPanel.positionBounds(MeleeUI.this.rootFrame, MeleeUI.this.uiViewport);
+		escMenuBackdrop.positionBounds(MeleeUI.this.rootFrame, MeleeUI.this.uiViewport);
 	}
 
 	@Override
@@ -2043,7 +2196,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void ordersChanged() {
 		reloadSelectedUnitUI(this.selectedUnit);
 		if (this.mouseOverUIFrame instanceof ClickableActionFrame) {
-			loadTooltip();
+			loadTooltip((ClickableActionFrame) this.mouseOverUIFrame);
 		}
 	}
 
@@ -2284,8 +2437,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		else {
-			if (clickedUIFrame instanceof ClickableActionFrame) {
-				this.mouseDownUIFrame = (ClickableActionFrame) clickedUIFrame;
+			if (clickedUIFrame instanceof ClickableFrame) {
+				this.mouseDownUIFrame = (ClickableFrame) clickedUIFrame;
 				this.mouseDownUIFrame.mouseDown(this.rootFrame, this.uiViewport);
 			}
 		}
@@ -2403,7 +2556,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (this.mouseDownUIFrame != null) {
 			if (clickedUIFrame == this.mouseDownUIFrame) {
 				this.mouseDownUIFrame.onClick(button);
-				this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0, 0);
+				if (this.mouseDownUIFrame instanceof ClickableActionFrame) {
+					this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0,
+							0);
+				}
+				else {
+					this.war3MapViewer.getUiSounds().getSound("MenuButtonClick").play(this.uiScene.audioContext, 0, 0,
+							0);
+				}
 			}
 			this.mouseDownUIFrame.mouseUp(this.rootFrame, this.uiViewport);
 		}
@@ -2434,9 +2594,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final UIFrame mousedUIFrame = this.rootFrame.getFrameChildUnderMouse(screenCoordsVector.x,
 				screenCoordsVector.y);
 		if (mousedUIFrame != this.mouseOverUIFrame) {
-			if (mousedUIFrame instanceof ClickableActionFrame) {
-				this.mouseOverUIFrame = (ClickableActionFrame) mousedUIFrame;
-				loadTooltip();
+			if (this.mouseOverUIFrame != null) {
+				this.mouseOverUIFrame.mouseExit(this.rootFrame, this.uiViewport);
+			}
+			if (mousedUIFrame instanceof ClickableFrame) {
+				this.mouseOverUIFrame = (ClickableFrame) mousedUIFrame;
+				if (this.mouseOverUIFrame != null) {
+					this.mouseOverUIFrame.mouseEnter(this.rootFrame, this.uiViewport);
+				}
+				if (mousedUIFrame instanceof ClickableActionFrame) {
+					loadTooltip((ClickableActionFrame) mousedUIFrame);
+				}
 			}
 			else {
 				this.mouseOverUIFrame = null;
@@ -2446,12 +2614,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return false;
 	}
 
-	private void loadTooltip() {
-		final int goldCost = this.mouseOverUIFrame.getToolTipGoldCost();
-		final int lumberCost = this.mouseOverUIFrame.getToolTipLumberCost();
-		final int foodCost = this.mouseOverUIFrame.getToolTipFoodCost();
-		final String toolTip = this.mouseOverUIFrame.getToolTip();
-		final String uberTip = this.mouseOverUIFrame.getUberTip();
+	private void loadTooltip(final ClickableActionFrame mousedUIFrame) {
+		final int goldCost = mousedUIFrame.getToolTipGoldCost();
+		final int lumberCost = mousedUIFrame.getToolTipLumberCost();
+		final int foodCost = mousedUIFrame.getToolTipFoodCost();
+		final String toolTip = mousedUIFrame.getToolTip();
+		final String uberTip = mousedUIFrame.getUberTip();
 		if ((toolTip == null) || (uberTip == null)) {
 			this.tooltipFrame.setVisible(false);
 		}

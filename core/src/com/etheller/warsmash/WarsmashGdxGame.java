@@ -63,7 +63,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		System.err.println("Renderer: " + renderer);
 
 		this.codebase = WarsmashGdxMapScreen.parseDataSources(this.warsmashIni);
-		this.viewer = new MdxViewer(this.codebase, this);
+		this.viewer = new MdxViewer(this.codebase, this, new Vector3(0.3f, 0.3f, -0.25f));
 
 		this.viewer.addHandler(new MdxHandler());
 		this.viewer.enableAudio();

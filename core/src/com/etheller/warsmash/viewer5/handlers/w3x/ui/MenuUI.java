@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.SingleModelScreen;
+import com.etheller.warsmash.WarsmashGdxMapScreen;
 import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.datasources.DataSource;
@@ -27,6 +28,8 @@ import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
+import com.etheller.warsmash.parsers.w3x.War3Map;
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.custom.WTS;
@@ -36,8 +39,14 @@ import com.etheller.warsmash.util.WorldEditStrings;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuData;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMission;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 
 public class MenuUI {
@@ -118,11 +127,9 @@ public class MenuUI {
 	private SpriteFrame campaignWarcraftIIILogo;
 	private final SingleModelScreen menuScreen;
 
-	private String currentCampaignBackgroundModel;
-	private String currentCampaignAmbientSound;
-	private int currentCampaignCursor;
+	private CampaignMenuData currentCampaign;
 	private String[] campaignList;
-	private Element[] campaignDatas;
+	private CampaignMenuData[] campaignDatas;
 	private UnitSound mainMenuGlueScreenLoop;
 	private GlueTextButtonFrame addProfileButton;
 	private GlueTextButtonFrame deleteProfileButton;
@@ -130,6 +137,18 @@ public class MenuUI {
 	private final PlayerProfileManager profileManager;
 	private StringFrame profileNameText;
 	private UIFrame confirmDialog;
+	private CampaignMenuUI campaignRootMenuUI;
+	private CampaignMenuUI currentMissionSelectMenuUI;
+	private UIFrame loadingFrame;
+	private UIFrame loadingCustomPanel;
+	private UIFrame loadingMeleePanel;
+	private StringFrame loadingTitleText;
+	private StringFrame loadingSubtitleText;
+	private StringFrame loadingText;
+	private SpriteFrame loadingBar;
+	private String mapFilepathToStart;
+	private LoadingMap loadingMap;
+	private SpriteFrame loadingBackground;
 
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
 			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
@@ -455,6 +474,9 @@ public class MenuUI {
 		this.campaignBackButton.setVisible(false);
 		this.missionSelectFrame = this.rootFrame.getFrameByName("MissionSelectFrame", 0);
 		this.missionSelectFrame.setVisible(false);
+		final StringFrame missionName = (StringFrame) this.rootFrame.getFrameByName("MissionName", 0);
+		final StringFrame missionNameHeader = (StringFrame) this.rootFrame.getFrameByName("MissionNameHeader", 0);
+
 		this.campaignSelectFrame = this.rootFrame.getFrameByName("CampaignSelectFrame", 0);
 		this.campaignSelectFrame.setVisible(false);
 
@@ -462,35 +484,129 @@ public class MenuUI {
 		this.rootFrame.setSpriteFrameModel(this.campaignWarcraftIIILogo,
 				this.rootFrame.getSkinField("MainMenuLogo_V" + WarsmashConstants.GAME_VERSION));
 		this.campaignWarcraftIIILogo.setVisible(false);
+		this.campaignWarcraftIIILogo
+				.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, this.campaignMenu, FramePoint.TOPRIGHT,
+						GameUI.convertX(this.uiViewport, -0.13f), GameUI.convertY(this.uiViewport, -0.08f)));
+		this.campaignRootMenuUI = new CampaignMenuUI(null, this.campaignMenu, this.rootFrame, this.uiViewport);
+		this.campaignRootMenuUI.setVisible(false);
+		this.campaignRootMenuUI.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, this.campaignMenu, FramePoint.TOPRIGHT,
+				GameUI.convertX(this.uiViewport, -0.0f), GameUI.convertY(this.uiViewport, -0.12f)));
+		this.campaignRootMenuUI.setWidth(GameUI.convertX(this.uiViewport, 0.30f));
+		this.campaignRootMenuUI.setHeight(GameUI.convertY(this.uiViewport, 0.42f));
+		this.rootFrame.add(this.campaignRootMenuUI);
 
 		this.campaignBackButton.setOnClick(new Runnable() {
 			@Override
 			public void run() {
-				MenuUI.this.campaignMenu.setVisible(false);
-				MenuUI.this.campaignBackButton.setVisible(false);
-				MenuUI.this.missionSelectFrame.setVisible(false);
-				MenuUI.this.campaignSelectFrame.setVisible(false);
-				MenuUI.this.campaignFade.setSequence("Birth");
-				MenuUI.this.menuState = MenuState.LEAVING_CAMPAIGN;
+				if (MenuUI.this.currentMissionSelectMenuUI != null) {
+					MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
+					MenuUI.this.missionSelectFrame.setVisible(false);
+					MenuUI.this.menuState = MenuState.CAMPAIGN;
+					MenuUI.this.currentMissionSelectMenuUI = null;
+				}
+				else {
+					MenuUI.this.campaignMenu.setVisible(false);
+					MenuUI.this.campaignBackButton.setVisible(false);
+					MenuUI.this.missionSelectFrame.setVisible(false);
+					MenuUI.this.campaignSelectFrame.setVisible(false);
+					MenuUI.this.campaignWarcraftIIILogo.setVisible(false);
+					MenuUI.this.campaignRootMenuUI.setVisible(false);
+					MenuUI.this.campaignFade.setSequence("Birth");
+					MenuUI.this.menuState = MenuState.LEAVING_CAMPAIGN;
+				}
 			}
 		});
 		final Element campaignIndex = this.campaignStrings.get("Index");
 		this.campaignList = campaignIndex.getField("CampaignList").split(",");
-		this.campaignDatas = new Element[this.campaignList.length];
+		this.campaignDatas = new CampaignMenuData[this.campaignList.length];
 		for (int i = 0; i < this.campaignList.length; i++) {
 			final String campaign = this.campaignList[i];
-			this.campaignDatas[i] = this.campaignStrings.get(campaign);
-			if ((this.campaignDatas[i] != null) && (this.currentCampaignBackgroundModel == null)) {
-				this.currentCampaignBackgroundModel = this.rootFrame.getSkinField(
-						this.campaignDatas[i].getField("Background") + "_V" + WarsmashConstants.GAME_VERSION);
-				this.currentCampaignAmbientSound = this.rootFrame
-						.trySkinField(this.campaignDatas[i].getField("AmbientSound"));
-				this.currentCampaignCursor = this.campaignDatas[i].getFieldValue("Cursor");
+			final Element campaignElement = this.campaignStrings.get(campaign);
+			if (campaignElement != null) {
+				final CampaignMenuData newCampaign = new CampaignMenuData(campaignElement);
+				this.campaignDatas[i] = newCampaign;
+				if (this.currentCampaign == null) {
+					this.currentCampaign = newCampaign;
+				}
+
+			}
+		}
+		for (final CampaignMenuData campaign : this.campaignDatas) {
+			if (campaign != null) {
+				final CampaignMenuUI missionSelectMenuUI = new CampaignMenuUI(null, this.campaignMenu, this.rootFrame,
+						this.uiViewport);
+				missionSelectMenuUI.setVisible(false);
+				missionSelectMenuUI
+						.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, this.campaignMenu, FramePoint.TOPRIGHT,
+								GameUI.convertX(this.uiViewport, -0.0f), GameUI.convertY(this.uiViewport, -0.12f)));
+				missionSelectMenuUI.setWidth(GameUI.convertX(this.uiViewport, 0.30f));
+				missionSelectMenuUI.setHeight(GameUI.convertY(this.uiViewport, 0.42f));
+				this.rootFrame.add(missionSelectMenuUI);
+
+				for (final CampaignMission mission : campaign.getMissions()) {
+					missionSelectMenuUI.addButton(mission.getHeader(), mission.getMissionName(), new Runnable() {
+						@Override
+						public void run() {
+							MenuUI.this.campaignMenu.setVisible(false);
+							MenuUI.this.campaignBackButton.setVisible(false);
+							MenuUI.this.missionSelectFrame.setVisible(false);
+							MenuUI.this.campaignSelectFrame.setVisible(false);
+							MenuUI.this.campaignWarcraftIIILogo.setVisible(false);
+							MenuUI.this.campaignRootMenuUI.setVisible(false);
+							MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
+							MenuUI.this.campaignFade.setSequence("Birth");
+							MenuUI.this.mapFilepathToStart = mission.getMapFilename();
+						}
+					});
+				}
+
+				this.campaignRootMenuUI.addButton(campaign.getHeader(), campaign.getName(), new Runnable() {
+					@Override
+					public void run() {
+						if (campaign != MenuUI.this.currentCampaign) {
+							MenuUI.this.campaignMenu.setVisible(false);
+							MenuUI.this.campaignBackButton.setVisible(false);
+							MenuUI.this.missionSelectFrame.setVisible(false);
+							MenuUI.this.campaignSelectFrame.setVisible(false);
+							MenuUI.this.campaignWarcraftIIILogo.setVisible(false);
+							MenuUI.this.campaignRootMenuUI.setVisible(false);
+							MenuUI.this.campaignFade.setSequence("Birth");
+							MenuUI.this.currentCampaign = campaign;
+							MenuUI.this.currentMissionSelectMenuUI = missionSelectMenuUI;
+							MenuUI.this.menuState = MenuState.GOING_TO_MISSION_SELECT;
+						}
+						else {
+							MenuUI.this.campaignSelectFrame.setVisible(false);
+							MenuUI.this.campaignRootMenuUI.setVisible(false);
+							MenuUI.this.currentMissionSelectMenuUI.setVisible(true);
+							MenuUI.this.missionSelectFrame.setVisible(true);
+							MenuUI.this.menuState = MenuState.MISSION_SELECT;
+						}
+						MenuUI.this.rootFrame.setText(missionName, campaign.getName());
+						MenuUI.this.rootFrame.setText(missionNameHeader, campaign.getHeader());
+					}
+				});
+				if (campaign == MenuUI.this.currentCampaign) {
+					MenuUI.this.currentMissionSelectMenuUI = missionSelectMenuUI;
+				}
 			}
 		}
 
 		this.confirmDialog = this.rootFrame.createFrame("DialogWar3", this.rootFrame, 0, 0);
 		this.confirmDialog.setVisible(false);
+
+		this.loadingFrame = this.rootFrame.createFrame("Loading", this.rootFrame, 0, 0);
+		this.loadingFrame.setVisible(false);
+		this.loadingCustomPanel = this.rootFrame.getFrameByName("LoadingCustomPanel", 0);
+		this.loadingCustomPanel.setVisible(false);
+		this.loadingTitleText = (StringFrame) this.rootFrame.getFrameByName("LoadingTitleText", 0);
+		this.loadingSubtitleText = (StringFrame) this.rootFrame.getFrameByName("LoadingSubtitleText", 0);
+		this.loadingText = (StringFrame) this.rootFrame.getFrameByName("LoadingText", 0);
+		this.loadingBar = (SpriteFrame) this.rootFrame.getFrameByName("LoadingBar", 0);
+		this.loadingBackground = (SpriteFrame) this.rootFrame.getFrameByName("LoadingBackground", 0);
+
+		this.loadingMeleePanel = this.rootFrame.getFrameByName("LoadingMeleePanel", 0);
+		this.loadingMeleePanel.setVisible(false);
 
 		// position all
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
@@ -503,6 +619,62 @@ public class MenuUI {
 		this.mainMenuGlueScreenLoop = this.uiSounds.getSound(glueLoopField);
 		this.glueScreenLoop = this.mainMenuGlueScreenLoop;
 		this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
+	}
+
+	private void internalStartMap(final String mapFilename) {
+		this.loadingFrame.setVisible(true);
+		this.loadingBar.setVisible(true);
+		this.loadingCustomPanel.setVisible(true);
+		final DataSource codebase = WarsmashGdxMapScreen.parseDataSources(this.warsmashIni);
+		final War3MapViewer viewer = new War3MapViewer(codebase, this.screenManager,
+				new War3MapConfig(WarsmashConstants.MAX_PLAYERS));
+
+		if (WarsmashGdxMapScreen.ENABLE_AUDIO) {
+			viewer.worldScene.enableAudio();
+			viewer.enableAudio();
+		}
+		try {
+			final War3Map map = viewer.beginLoadingMap(mapFilename);
+			final War3MapW3i mapInfo = map.readMapInformation();
+			final DataTable worldEditData = viewer.loadWorldEditData(map);
+			final WTS wts = viewer.preloadWTS(map);
+
+			final int loadingScreen = mapInfo.getLoadingScreen();
+			System.out.println("LOADING SCREEN INT: " + loadingScreen);
+			final int campaignBackground = mapInfo.getCampaignBackground();
+			final Element loadingScreens = worldEditData.get("LoadingScreens");
+			final String key = String.format("%2s", Integer.toString(campaignBackground)).replace(' ', '0');
+			final int animationSequenceIndex = loadingScreens.getFieldValue(key, 2);
+			final String campaignScreenModel = loadingScreens.getField(key, 3);
+
+			this.menuScreen.setModel(null);
+			this.rootFrame.setSpriteFrameModel(this.loadingBackground, campaignScreenModel);
+			this.loadingBackground.setSequence(animationSequenceIndex);
+			this.rootFrame.setSpriteFrameModel(this.loadingBar, this.rootFrame.getSkinField("LoadingProgressBar"));
+			this.loadingBar.setSequence(0);
+			this.loadingBar.setFrameByRatio(0.5f);
+			this.loadingBar.setZDepth(1.0f);
+			this.rootFrame.setText(this.loadingTitleText, getStringWithWTS(wts, mapInfo.getLoadingScreenTitle()));
+			this.rootFrame.setText(this.loadingSubtitleText, getStringWithWTS(wts, mapInfo.getLoadingScreenSubtitle()));
+			this.rootFrame.setText(this.loadingText, getStringWithWTS(wts, mapInfo.getLoadingScreenText()));
+			this.loadingMap = new LoadingMap(viewer, map, mapInfo);
+
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static String getStringWithWTS(final WTS wts, String string) {
+		if (string.startsWith("TRIGSTR_")) {
+			string = wts.get(Integer.parseInt(string.substring(8)));
+		}
+		return string;
+	}
+
+	public void startMap(final String mapFilename) {
+		this.mainMenuFrame.setVisible(false);
+		internalStartMap(mapFilename);
 	}
 
 	private void setCurrentProfile(final String selectedProfileName) {
@@ -554,6 +726,29 @@ public class MenuUI {
 	}
 
 	public void update(final float deltaTime) {
+		if (this.mapFilepathToStart != null) {
+			this.campaignFade.setVisible(false);
+			internalStartMap(this.mapFilepathToStart);
+			this.mapFilepathToStart = null;
+			return;
+		}
+		else if (this.loadingMap != null) {
+			try {
+				this.loadingMap.viewer.loadMap(this.loadingMap.map, this.loadingMap.mapInfo, 0);
+			}
+			catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
+			// TODO not cast menu screen
+			MenuUI.this.screenManager.setScreen(new WarsmashGdxMapScreen(this.loadingMap.viewer, this.screenManager,
+					(WarsmashGdxMenuScreen) this.menuScreen));
+			this.loadingMap = null;
+
+			this.loadingBar.setVisible(false);
+			this.loadingFrame.setVisible(false);
+			this.loadingBackground.setVisible(false);
+			return;
+		}
 		if ((this.focusUIFrame != null) && !this.focusUIFrame.isVisibleOnScreen()) {
 			setFocusFrame(getNextFocusFrame());
 		}
@@ -636,30 +831,53 @@ public class MenuUI {
 				this.campaignFade.setSequence("Birth");
 				this.menuState = MenuState.GOING_TO_CAMPAIGN_PART2;
 				break;
-			case GOING_TO_CAMPAIGN_PART2:
-				this.menuScreen.setModel(this.currentCampaignBackgroundModel);
+			case GOING_TO_CAMPAIGN_PART2: {
+				final String currentCampaignBackgroundModel = this.rootFrame
+						.getSkinField(this.currentCampaign.getBackground() + "_V" + WarsmashConstants.GAME_VERSION);
+				final String currentCampaignAmbientSound = this.rootFrame
+						.trySkinField(this.currentCampaign.getAmbientSound());
+				this.menuScreen.setModel(currentCampaignBackgroundModel);
 				this.glueScreenLoop.stop();
-				this.glueScreenLoop = this.uiSounds.getSound(this.currentCampaignAmbientSound);
+				this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
 				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
 				final DataTable skinData = this.rootFrame.getSkinData();
-				final Element skinDataMain = skinData.get("Main");
-				int currentCampaignCursor = this.currentCampaignCursor;
-				if (currentCampaignCursor == 3) {
-					currentCampaignCursor = 2;
-				}
-				else if (currentCampaignCursor == 2) {
-					currentCampaignCursor = 3;
-				}
-				final String cursorSkin = skinDataMain.getField("Skins", currentCampaignCursor);
+				final String cursorSkin = CRace.VALUES[this.currentCampaign.getCursor()].name();
 				this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
 
 				this.campaignFade.setSequence("Death");
 				this.menuState = MenuState.CAMPAIGN;
 				break;
+			}
 			case CAMPAIGN:
+				this.campaignMenu.setVisible(true);
 				this.campaignBackButton.setVisible(true);
 				this.campaignWarcraftIIILogo.setVisible(true);
 				this.campaignSelectFrame.setVisible(true);
+				this.campaignRootMenuUI.setVisible(true);
+				break;
+			case GOING_TO_MISSION_SELECT: {
+				final String currentCampaignBackgroundModel = this.rootFrame
+						.getSkinField(this.currentCampaign.getBackground() + "_V" + WarsmashConstants.GAME_VERSION);
+				final String currentCampaignAmbientSound = this.rootFrame
+						.trySkinField(this.currentCampaign.getAmbientSound());
+				this.menuScreen.setModel(currentCampaignBackgroundModel);
+				this.glueScreenLoop.stop();
+				this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
+				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
+				final DataTable skinData = this.rootFrame.getSkinData();
+				final String cursorSkin = CRace.VALUES[this.currentCampaign.getCursor()].name();
+				this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
+
+				this.campaignFade.setSequence("Death");
+				this.menuState = MenuState.MISSION_SELECT;
+				break;
+			}
+			case MISSION_SELECT:
+				this.campaignMenu.setVisible(true);
+				this.campaignBackButton.setVisible(true);
+				this.campaignWarcraftIIILogo.setVisible(true);
+				this.currentMissionSelectMenuUI.setVisible(true);
+				this.missionSelectFrame.setVisible(true);
 				break;
 			case GOING_TO_SINGLE_PLAYER_PROFILE:
 				this.glueSpriteLayerTopLeft.setSequence("RealmSelection Birth");
@@ -796,9 +1014,12 @@ public class MenuUI {
 		SINGLE_PLAYER_SKIRMISH,
 		GOING_TO_CAMPAIGN,
 		GOING_TO_CAMPAIGN_PART2,
+		GOING_TO_MISSION_SELECT,
+		MISSION_SELECT,
 		CAMPAIGN,
 		GOING_TO_SINGLE_PLAYER_PROFILE,
 		SINGLE_PLAYER_PROFILE,
+		GOING_TO_LOADING_SCREEN,
 		QUITTING,
 		RESTARTING;
 	}
@@ -832,5 +1053,58 @@ public class MenuUI {
 			this.focusUIFrame.keyTyped(character);
 		}
 		return false;
+	}
+
+	public void onReturnFromGame() {
+//		MenuUI.this.campaignMenu.setVisible(true);
+//		MenuUI.this.campaignBackButton.setVisible(true);
+//		MenuUI.this.missionSelectFrame.setVisible(true);
+//		MenuUI.this.campaignSelectFrame.setVisible(false);
+//		MenuUI.this.campaignWarcraftIIILogo.setVisible(true);
+//		MenuUI.this.campaignRootMenuUI.setVisible(false);
+//		MenuUI.this.currentMissionSelectMenuUI.setVisible(true);
+		switch (this.menuState) {
+		default:
+		case GOING_TO_MAIN_MENU:
+		case MAIN_MENU:
+			this.glueScreenLoop.stop();
+			this.glueScreenLoop = this.mainMenuGlueScreenLoop;
+			this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
+			this.menuScreen.setModel(
+					this.rootFrame.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION));
+			this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
+			break;
+		case CAMPAIGN:
+		case MISSION_SELECT:
+			final String currentCampaignBackgroundModel = this.rootFrame
+					.getSkinField(this.currentCampaign.getBackground() + "_V" + WarsmashConstants.GAME_VERSION);
+			final String currentCampaignAmbientSound = this.rootFrame
+					.trySkinField(this.currentCampaign.getAmbientSound());
+			this.menuScreen.setModel(currentCampaignBackgroundModel);
+			this.glueScreenLoop.stop();
+			this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
+			this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
+			final DataTable skinData = this.rootFrame.getSkinData();
+			final String cursorSkin = CRace.VALUES[this.currentCampaign.getCursor()].name();
+			this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
+			break;
+		}
+//		MenuUI.this.campaignFade.setSequence("Death");
+//		this.campaignFade.setVisible(true);
+//		this.menuState = MenuState.MISSION_SELECT;
+	}
+
+	private static final class LoadingMap {
+
+		private final War3MapViewer viewer;
+		private final War3Map map;
+		private final War3MapW3i mapInfo;
+
+		public LoadingMap(final War3MapViewer viewer, final War3Map map, final War3MapW3i mapInfo) {
+			this.viewer = viewer;
+			this.map = map;
+			this.mapInfo = mapInfo;
+		}
+
 	}
 }

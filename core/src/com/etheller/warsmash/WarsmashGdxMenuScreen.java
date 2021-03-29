@@ -50,7 +50,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MenuUI;
 
-public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Screen, SingleModelScreen {
+public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleModelScreen {
 	private static final boolean ENABLE_AUDIO = true;
 	private static final boolean ENABLE_MUSIC = true;
 	private DataSource codebase;
@@ -72,6 +72,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 	private final WarsmashGdxMultiScreenGame game;
 	private Music currentMusic;
 	private boolean hasPlayedStandHack = false;
+	private boolean loaded = false;
 
 	public WarsmashGdxMenuScreen(final DataTable warsmashIni, final WarsmashGdxMultiScreenGame game) {
 		this.warsmashIni = warsmashIni;
@@ -80,68 +81,68 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 
 	@Override
 	public void show() {
-		final ByteBuffer tempByteBuffer = ByteBuffer.allocateDirect(4);
-		tempByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-		final IntBuffer temp = tempByteBuffer.asIntBuffer();
+		if (!this.loaded) {
+			this.loaded = true;
+			final ByteBuffer tempByteBuffer = ByteBuffer.allocateDirect(4);
+			tempByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+			final IntBuffer temp = tempByteBuffer.asIntBuffer();
 //
-		Gdx.gl30.glGenVertexArrays(1, temp);
-		WarsmashGdxGame.VAO = temp.get(0);
+			Gdx.gl30.glGenVertexArrays(1, temp);
+			WarsmashGdxGame.VAO = temp.get(0);
 
-		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
+			Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
 
-		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
-		System.err.println("Renderer: " + renderer);
+			final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
+			System.err.println("Renderer: " + renderer);
 
-		this.codebase = WarsmashGdxMapScreen.parseDataSources(this.warsmashIni);
-		this.viewer = new MdxViewer(this.codebase, this);
+			this.codebase = WarsmashGdxMapScreen.parseDataSources(this.warsmashIni);
+			this.viewer = new MdxViewer(this.codebase, this.game, Vector3.Zero);
 
-		this.viewer.addHandler(new MdxHandler());
-		this.viewer.enableAudio();
+			this.viewer.addHandler(new MdxHandler());
+			this.viewer.enableAudio();
 
-		this.scene = this.viewer.addSimpleScene();
-		this.scene.enableAudio();
+			this.scene = this.viewer.addSimpleScene();
+			this.scene.enableAudio();
 
-		this.uiScene = this.viewer.addSimpleScene();
-		this.uiScene.alpha = true;
-		if (ENABLE_AUDIO) {
-			this.uiScene.enableAudio();
-		}
-		final int width = Gdx.graphics.getWidth();
-		final int height = Gdx.graphics.getHeight();
+			this.uiScene = this.viewer.addSimpleScene();
+			this.uiScene.alpha = true;
+			if (ENABLE_AUDIO) {
+				this.uiScene.enableAudio();
+			}
+			final int width = Gdx.graphics.getWidth();
+			final int height = Gdx.graphics.getHeight();
 
-		this.glyphLayout = new GlyphLayout();
+			this.glyphLayout = new GlyphLayout();
 
-		// Constructs a new OrthographicCamera, using the given viewport width and
-		// height
-		// Height is multiplied by aspect ratio.
-		this.uiCamera = new OrthographicCamera();
-		int aspect3By4Width;
-		int aspect3By4Height;
-		if (width < ((height * 4) / 3)) {
-			aspect3By4Width = width;
-			aspect3By4Height = (width * 3) / 4;
-		}
-		else {
-			aspect3By4Width = (height * 4) / 3;
-			aspect3By4Height = height;
-		}
-		this.uiViewport = new FitViewport(aspect3By4Width, aspect3By4Height, this.uiCamera);
-		this.uiViewport.update(width, height);
+			// Constructs a new OrthographicCamera, using the given viewport width and
+			// height
+			// Height is multiplied by aspect ratio.
+			this.uiCamera = new OrthographicCamera();
+			int aspect3By4Width;
+			int aspect3By4Height;
+			if (width < ((height * 4) / 3)) {
+				aspect3By4Width = width;
+				aspect3By4Height = (width * 3) / 4;
+			}
+			else {
+				aspect3By4Width = (height * 4) / 3;
+				aspect3By4Height = height;
+			}
+			this.uiViewport = new FitViewport(aspect3By4Width, aspect3By4Height, this.uiCamera);
+			this.uiViewport.update(width, height);
 
-		this.uiCamera.position.set(getMinWorldWidth() / 2, getMinWorldHeight() / 2, 0);
-		this.uiCamera.update();
+			this.uiCamera.position.set(getMinWorldWidth() / 2, getMinWorldHeight() / 2, 0);
+			this.uiCamera.update();
 
-		this.batch = new SpriteBatch();
+			this.batch = new SpriteBatch();
 
 //		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
 
-		this.solidGreenTexture = ImageUtils.getAnyExtensionTexture(this.viewer.dataSource,
-				"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
+			this.solidGreenTexture = ImageUtils.getAnyExtensionTexture(this.viewer.dataSource,
+					"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
 
-		Gdx.input.setInputProcessor(this);
-
-		this.cameraManager = new CameraManager();
-		this.cameraManager.setupCamera(this.scene);
+			this.cameraManager = new CameraManager();
+			this.cameraManager.setupCamera(this.scene);
 
 //		this.mainModel = (MdxModel) this.viewer.load("Doodads\\Cinematic\\ArthasIllidanFight\\ArthasIllidanFight.mdx",
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\SinglePlayer\\NightElf_Exp\\NightElf_Exp.mdx",
@@ -175,45 +176,51 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 //		singleModelScene(scene, "Buildings\\Undead\\Necropolis\\Necropolis.mdx", "birth");
 //		singleModelScene(scene, "Units\\Orc\\KotoBeast\\KotoBeast.mdx", "spell slam");
 
-		System.out.println("Loaded");
-		Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1);
+			System.out.println("Loaded");
+			Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1);
 
-		this.menuUI = new MenuUI(this.viewer.dataSource, this.uiViewport, this.uiScene, this.viewer, this.game, this,
-				this.warsmashIni, new RootFrameListener() {
-					@Override
-					public void onCreate(final GameUI rootFrame) {
+			this.menuUI = new MenuUI(this.viewer.dataSource, this.uiViewport, this.uiScene, this.viewer, this.game,
+					this, this.warsmashIni, new RootFrameListener() {
+						@Override
+						public void onCreate(final GameUI rootFrame) {
 //						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
 
-						if (ENABLE_MUSIC) {
-							final String musicField = rootFrame
-									.getSkinField("GlueMusic_V" + WarsmashConstants.GAME_VERSION);
-							final String[] musics = musicField.split(";");
-							final String musicPath = musics[(int) (Math.random() * musics.length)];
-							final Music music = Gdx.audio.newMusic(
-									new DataSourceFileHandle(WarsmashGdxMenuScreen.this.viewer.dataSource, musicPath));
+							if (ENABLE_MUSIC) {
+								final String musicField = rootFrame
+										.getSkinField("GlueMusic_V" + WarsmashConstants.GAME_VERSION);
+								final String[] musics = musicField.split(";");
+								final String musicPath = musics[(int) (Math.random() * musics.length)];
+								final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(
+										WarsmashGdxMenuScreen.this.viewer.dataSource, musicPath));
 //							music.setVolume(0.2f);
-							music.setLooping(true);
-							music.play();
-							WarsmashGdxMenuScreen.this.currentMusic = music;
+								music.setLooping(true);
+								music.play();
+								WarsmashGdxMenuScreen.this.currentMusic = music;
+							}
+
+							singleModelScene(WarsmashGdxMenuScreen.this.scene, War3MapViewer.mdx(rootFrame
+									.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION)),
+									"Stand");
+							WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras
+									.get(0);
 						}
+					});
 
-						singleModelScene(WarsmashGdxMenuScreen.this.scene,
-								War3MapViewer.mdx(rootFrame
-										.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION)),
-								"Stand");
-						WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras.get(0);
-					}
-				});
+			final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
+					PathSolver.DEFAULT, "").addInstance();
+			libgdxContentInstance.setLocation(0f, 0f, -0.5f);
+			libgdxContentInstance.setScene(this.uiScene);
+			this.menuUI.main();
 
-		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
-				PathSolver.DEFAULT, "").addInstance();
-		libgdxContentInstance.setLocation(0f, 0f, -0.5f);
-		libgdxContentInstance.setScene(this.uiScene);
-		this.menuUI.main();
+			updateUIScene();
 
-		updateUIScene();
+			resize(width, height);
+		}
 
-		resize(width, height);
+		Gdx.input.setInputProcessor(this);
+		if (this.currentMusic != null) {
+			this.currentMusic.play();
+		}
 
 	}
 
@@ -313,14 +320,21 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 		if (this.mainInstance != null) {
 			this.mainInstance.detach();
 		}
-		singleModelScene(this.scene, War3MapViewer.mdx(path), "birth");
-		WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras.get(0);
-		// this hack is because we only have the queued animation system in RenderWidget
-		// which is stupid and back and needs to get moved to the model instance
-		// itself... our model instance class is a
-		// hacky replica of a model viewer tool with a bunch of irrelevant loop type
-		// settings instead of what it should be
-		this.hasPlayedStandHack = false;
+		if (path == null) {
+			this.modelCamera = null;
+			this.mainInstance = null;
+			this.mainModel = null;
+		}
+		else {
+			singleModelScene(this.scene, War3MapViewer.mdx(path), "birth");
+			WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras.get(0);
+			// this hack is because we only have the queued animation system in RenderWidget
+			// which is stupid and back and needs to get moved to the model instance
+			// itself... our model instance class is a
+			// hacky replica of a model viewer tool with a bunch of irrelevant loop type
+			// settings instead of what it should be
+			this.hasPlayedStandHack = false;
+		}
 
 	}
 
@@ -521,7 +535,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
 		this.cameraManager.updateCamera();
 		this.menuUI.update(deltaTime);
-		if (this.mainInstance.sequenceEnded
+		if ((this.mainInstance != null) && this.mainInstance.sequenceEnded
 				&& (((this.mainModel.getSequences().get(this.mainInstance.sequence).getFlags() & 0x1) == 0)
 						|| !this.hasPlayedStandHack)) {
 			SequenceUtils.randomStandSequence(this.mainInstance);
@@ -541,16 +555,6 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 	@Override
 	public void dispose() {
 		this.menuUI.dispose();
-	}
-
-	@Override
-	public float getWidth() {
-		return Gdx.graphics.getWidth();
-	}
-
-	@Override
-	public float getHeight() {
-		return Gdx.graphics.getHeight();
 	}
 
 	@Override
@@ -705,7 +709,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
-		final float worldScreenY = getHeight() - screenY;
+		final float worldScreenY = this.game.getHeight() - screenY;
 
 		if (this.menuUI.touchDown(screenX, screenY, worldScreenY, button)) {
 			return false;
@@ -715,7 +719,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 
 	@Override
 	public boolean touchUp(final int screenX, final int screenY, final int pointer, final int button) {
-		final float worldScreenY = getHeight() - screenY;
+		final float worldScreenY = this.game.getHeight() - screenY;
 
 		if (this.menuUI.touchUp(screenX, screenY, worldScreenY, button)) {
 			return false;
@@ -725,7 +729,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 
 	@Override
 	public boolean touchDragged(final int screenX, final int screenY, final int pointer) {
-		final float worldScreenY = getHeight() - screenY;
+		final float worldScreenY = this.game.getHeight() - screenY;
 		if (this.menuUI.touchDragged(screenX, screenY, worldScreenY, pointer)) {
 			return false;
 		}
@@ -734,7 +738,7 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 
 	@Override
 	public boolean mouseMoved(final int screenX, final int screenY) {
-		final float worldScreenY = getHeight() - screenY;
+		final float worldScreenY = this.game.getHeight() - screenY;
 		if (this.menuUI.mouseMoved(screenX, screenY, worldScreenY)) {
 			return false;
 		}
@@ -866,5 +870,13 @@ public class WarsmashGdxMenuScreen implements CanvasProvider, InputProcessor, Sc
 
 	@Override
 	public void resume() {
+	}
+
+	public void startMap(final String finalFileToLoad) {
+		this.menuUI.startMap(finalFileToLoad);
+	}
+
+	public void onReturnFromGame() {
+		this.menuUI.onReturnFromGame();
 	}
 }

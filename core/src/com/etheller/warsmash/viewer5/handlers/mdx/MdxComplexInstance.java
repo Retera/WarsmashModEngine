@@ -542,7 +542,7 @@ public class MdxComplexInstance extends ModelInstance {
 		final MdxModel model = (MdxModel) this.model;
 		final int sequenceId = this.sequence;
 
-		if (sequenceId != -1) {
+		if ((sequenceId != -1) && (model.sequences.size() != 0)) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
 			final float frameTime = (dt * 1000 * this.animationSpeed);

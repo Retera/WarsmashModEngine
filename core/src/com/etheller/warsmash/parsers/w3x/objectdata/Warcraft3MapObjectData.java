@@ -94,7 +94,19 @@ public final class Warcraft3MapObjectData {
 		return this.wts;
 	}
 
+	public static WTS loadWTS(final DataSource dataSource) throws IOException {
+		final WTS wts = dataSource.has("war3map.wts") ? new WTSFile(dataSource.getResourceAsStream("war3map.wts"))
+				: WTS.DO_NOTHING;
+		return wts;
+	}
+
 	public static Warcraft3MapObjectData load(final DataSource dataSource, final boolean inlineWTS) throws IOException {
+		final WTS wts = loadWTS(dataSource);
+		return load(dataSource, inlineWTS, wts);
+	}
+
+	public static Warcraft3MapObjectData load(final DataSource dataSource, final boolean inlineWTS, final WTS wts)
+			throws IOException {
 
 		final StandardObjectData standardObjectData = new StandardObjectData(dataSource);
 		final WarcraftData standardUnits = standardObjectData.getStandardUnits();
@@ -120,8 +132,6 @@ public final class Warcraft3MapObjectData {
 		final War3ObjectDataChangeset buffChangeset = new War3ObjectDataChangeset('h');
 		final War3ObjectDataChangeset upgradeChangeset = new War3ObjectDataChangeset('q');
 
-		final WTS wts = dataSource.has("war3map.wts") ? new WTSFile(dataSource.getResourceAsStream("war3map.wts"))
-				: WTS.DO_NOTHING;
 		if (dataSource.has("war3map.w3u")) {
 			unitChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3u")), wts,
 					inlineWTS);

@@ -292,9 +292,6 @@ public class CUnitData {
 			final int strength = unitType.getFieldAsInteger(STR, 0);
 			final int agility = unitType.getFieldAsInteger(AGI, 0);
 			final int intelligence = unitType.getFieldAsInteger(INT, 0);
-			if (typeId.toString().equals("Hjai")) {
-				System.out.println("bp");
-			}
 			final CPrimaryAttribute primaryAttribute = CPrimaryAttribute
 					.parsePrimaryAttribute(unitType.getFieldAsString(PRIMARY_ATTRIBUTE, 0));
 

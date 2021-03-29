@@ -18,6 +18,7 @@ import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 
@@ -153,6 +154,7 @@ public final class ImageUtils {
 			}
 		}
 		final Texture texture = new Texture(pixmap);
+		texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		return texture;
 	}
 
@@ -175,6 +177,7 @@ public final class ImageUtils {
 			}
 		}
 		final Texture texture = new Texture(pixmap);
+		texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		return texture;
 	}
 

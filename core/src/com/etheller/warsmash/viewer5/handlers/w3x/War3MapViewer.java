@@ -48,6 +48,7 @@ import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.StandardObjectData;
+import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
@@ -110,7 +111,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
-import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 
 import mpq.MPQArchive;
@@ -220,14 +221,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private KeyedSounds uiSounds;
 	private int localPlayerIndex;
-	private final CommandErrorListener commandErrorListener;
+	private final SettableCommandErrorListener commandErrorListener;
 
 	public final List<TextTag> textTags = new ArrayList<>();
 
 	private final War3MapConfig mapConfig;
 
-	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas,
-			final CommandErrorListener errorListener, final War3MapConfig mapConfig) {
+	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas, final War3MapConfig mapConfig) {
 		super(dataSource, canvas);
 		this.gameDataSource = dataSource;
 
@@ -243,7 +243,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			throw new IllegalStateException("FrameBuffer setup failed");
 		}
 
-		this.commandErrorListener = errorListener;
+		this.commandErrorListener = new SettableCommandErrorListener();
 		this.mapConfig = mapConfig;
 	}
 
@@ -384,17 +384,35 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 	}
 
-	public void loadMap(final String mapFilePath, final int localPlayerIndex) throws IOException {
+	public War3Map beginLoadingMap(final String mapFilePath) throws IOException {
+		return new War3Map(this.gameDataSource, mapFilePath);
+	}
+
+	public DataTable loadWorldEditData(final War3Map map) {
+		final StandardObjectData standardObjectData = new StandardObjectData(map);
+		this.worldEditData = standardObjectData.getWorldEditData();
+		return this.worldEditData;
+	}
+
+	public WTS preloadWTS(final War3Map map) {
+		try {
+			this.preloadedWTS = Warcraft3MapObjectData.loadWTS(map);
+			return this.preloadedWTS;
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void loadMap(final War3Map war3Map, final War3MapW3i w3iFile, final int localPlayerIndex)
+			throws IOException {
 		this.localPlayerIndex = localPlayerIndex;
-		final War3Map war3Map = new War3Map(this.gameDataSource, mapFilePath);
 
 		this.mapMpq = war3Map;
 
 		final PathSolver wc3PathSolver = this.wc3PathSolver;
 
 		char tileset = 'A';
-
-		final War3MapW3i w3iFile = this.mapMpq.readMapInformation();
 
 		if (ENABLE_WORLDEDIT_AS_GAMEPLAY_DATA_HACK) {
 			int playerIndex = 0;
@@ -450,9 +468,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		final War3MapWpm terrainPathing = this.mapMpq.readPathing();
 
-		final StandardObjectData standardObjectData = new StandardObjectData(this.dataSource);
-		this.worldEditData = standardObjectData.getWorldEditData();
-
 		this.terrain = new Terrain(terrainData, terrainPathing, w3iFile, this.webGL, this.dataSource,
 				this.worldEditStrings, this, this.worldEditData);
 
@@ -474,7 +489,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.confirmationInstance.setSequence(0);
 		this.confirmationInstance.setScene(this.worldScene);
 
-		this.allObjectData = this.mapMpq.readModifications();
+		if (this.preloadedWTS != null) {
+			this.allObjectData = this.mapMpq.readModifications(this.preloadedWTS);
+		}
+		else {
+			this.allObjectData = this.mapMpq.readModifications();
+		}
 		this.simulation = new CSimulation(this.mapConfig, this.miscData, this.allObjectData.getUnits(),
 				this.allObjectData.getItems(), this.allObjectData.getDestructibles(), this.allObjectData.getAbilities(),
 				new SimulationRenderController() {
@@ -1650,6 +1670,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private AbilityDataUI abilityDataUI;
 	private Map<String, UnitSoundset> soundsetNameToSoundset;
 	public int imageWalkableZOffset;
+	private WTS preloadedWTS;
 
 	/**
 	 * Returns a power of two size for the given target capacity.
@@ -1870,6 +1891,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public void add(final TextTag textTag) {
 		this.textTags.add(textTag);
+	}
+
+	public SettableCommandErrorListener getCommandErrorListener() {
+		return this.commandErrorListener;
 	}
 
 	public War3MapConfig getMapConfig() {

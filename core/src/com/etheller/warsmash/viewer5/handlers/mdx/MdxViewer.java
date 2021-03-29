@@ -12,15 +12,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.W3xScenePortraitLightManager;
 public class MdxViewer extends AbstractMdxModelViewer {
 
 	private final WorldEditStrings worldEditStrings;
+	private final Vector3 defaultLighting;
 
-	public MdxViewer(final DataSource dataSource, final CanvasProvider canvas) {
+	public MdxViewer(final DataSource dataSource, final CanvasProvider canvas, final Vector3 defaultLighting) {
 		super(dataSource, canvas);
+		this.defaultLighting = defaultLighting;
 		this.worldEditStrings = new WorldEditStrings(this.dataSource);
 	}
 
 	@Override
 	public SceneLightManager createLightManager(final boolean simple) {
-		return new W3xScenePortraitLightManager(this, new Vector3(0.3f, 0.3f, -0.25f));
+		return new W3xScenePortraitLightManager(this, this.defaultLighting);
 	}
 
 	@Override

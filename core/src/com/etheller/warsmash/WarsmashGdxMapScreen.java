@@ -36,7 +36,6 @@ import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.WarsmashConstants;
-import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -49,16 +48,13 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
-import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErrorListener;
 
-public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Screen {
-	private static final boolean ENABLE_AUDIO = true;
-	private static final boolean ENABLE_MUSIC = false;
-	private DataSource codebase;
-	private War3MapViewer viewer;
+public class WarsmashGdxMapScreen implements InputProcessor, Screen {
+	public static final boolean ENABLE_AUDIO = true;
+	private static final boolean ENABLE_MUSIC = true;
+	private final War3MapViewer viewer;
 	private final Rectangle tempRect = new Rectangle();
 
 	// libGDX stuff
@@ -72,17 +68,19 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 	private ShapeRenderer shapeRenderer;
 
 	private MdxModel timeIndicator;
-	private final DataTable warsmashIni;
 
 	private Scene uiScene;
 	private MeleeUI meleeUI;
 
 	private Music currentMusic;
-	private final String fileToLoad;
+	private final WarsmashGdxMultiScreenGame screenManager;
+	private final WarsmashGdxMenuScreen menuScreen;
 
-	public WarsmashGdxMapScreen(final DataTable warsmashIni, final String fileToLoad) {
-		this.warsmashIni = warsmashIni;
-		this.fileToLoad = fileToLoad;
+	public WarsmashGdxMapScreen(final War3MapViewer mapViewer, final WarsmashGdxMultiScreenGame screenManager,
+			final WarsmashGdxMenuScreen menuScreen) {
+		this.viewer = mapViewer;
+		this.screenManager = screenManager;
+		this.menuScreen = menuScreen;
 	}
 
 	/*
@@ -104,22 +102,6 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 
 		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
 		System.err.println("Renderer: " + renderer);
-
-		final SettableCommandErrorListener commandErrorListener = new SettableCommandErrorListener();
-		this.codebase = parseDataSources(this.warsmashIni);
-		this.viewer = new War3MapViewer(this.codebase, this, commandErrorListener,
-				new War3MapConfig(WarsmashConstants.MAX_PLAYERS));
-
-		if (ENABLE_AUDIO) {
-			this.viewer.worldScene.enableAudio();
-			this.viewer.enableAudio();
-		}
-		try {
-			this.viewer.loadMap(this.fileToLoad, 0);
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
 
 		final Element cameraData = this.viewer.miscData.get("Camera");
 		Element cameraListenerData = this.viewer.miscData.get("Listener");
@@ -207,7 +189,8 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 						WarsmashGdxMapScreen.this.viewer.setGameUI(rootFrame);
 
 						if (ENABLE_MUSIC) {
-							final String musicField = rootFrame.getSkinField("Music_V1");
+							final String musicField = rootFrame
+									.getSkinField("Music_V" + WarsmashConstants.GAME_VERSION);
 							final String[] musics = musicField.split(";");
 							String musicPath = musics[(int) (Math.random() * musics.length)];
 							if (false) {
@@ -215,15 +198,22 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 							}
 							final Music music = Gdx.audio.newMusic(
 									new DataSourceFileHandle(WarsmashGdxMapScreen.this.viewer.dataSource, musicPath));
-							music.setVolume(0.2f);
+							music.setVolume(1.0f);
 							music.setLooping(true);
 							music.play();
 							WarsmashGdxMapScreen.this.currentMusic = music;
 						}
 					}
 				}, new CPlayerUnitOrderExecutor(this.viewer.simulation, this.viewer.getLocalPlayerIndex(),
-						commandErrorListener));
-		commandErrorListener.setDelegate(this.meleeUI);
+						this.viewer.getCommandErrorListener()),
+				new Runnable() {
+					@Override
+					public void run() {
+						WarsmashGdxMapScreen.this.menuScreen.onReturnFromGame();
+						WarsmashGdxMapScreen.this.screenManager.setScreen(WarsmashGdxMapScreen.this.menuScreen);
+					}
+				});
+		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 				this.viewer.mapPathSolver, "").addInstance();
 		libgdxContentInstance.setScene(this.uiScene);
@@ -330,16 +320,6 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 	}
 
 	@Override
-	public float getWidth() {
-		return Gdx.graphics.getWidth();
-	}
-
-	@Override
-	public float getHeight() {
-		return Gdx.graphics.getHeight();
-	}
-
-	@Override
 	public void resize(final int width, final int height) {
 //		super.resize(width, height);
 
@@ -383,7 +363,7 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
-		final float worldScreenY = getHeight() - screenY;
+		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
 
 		if (this.meleeUI.touchDown(screenX, screenY, worldScreenY, button)) {
 			return false;
@@ -393,7 +373,7 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 
 	@Override
 	public boolean touchUp(final int screenX, final int screenY, final int pointer, final int button) {
-		final float worldScreenY = getHeight() - screenY;
+		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
 
 		if (this.meleeUI.touchUp(screenX, screenY, worldScreenY, button)) {
 			return false;
@@ -403,7 +383,7 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 
 	@Override
 	public boolean touchDragged(final int screenX, final int screenY, final int pointer) {
-		final float worldScreenY = getHeight() - screenY;
+		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
 		if (this.meleeUI.touchDragged(screenX, screenY, worldScreenY, pointer)) {
 			return false;
 		}
@@ -412,7 +392,7 @@ public class WarsmashGdxMapScreen implements CanvasProvider, InputProcessor, Scr
 
 	@Override
 	public boolean mouseMoved(final int screenX, final int screenY) {
-		final float worldScreenY = getHeight() - screenY;
+		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
 		if (this.meleeUI.mouseMoved(screenX, screenY, worldScreenY)) {
 			return false;
 		}

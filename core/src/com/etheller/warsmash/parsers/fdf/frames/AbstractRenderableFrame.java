@@ -76,6 +76,16 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	}
 
 	@Override
+	public float getAssignedWidth() {
+		return this.assignedWidth;
+	}
+
+	@Override
+	public float getAssignedHeight() {
+		return this.assignedHeight;
+	}
+
+	@Override
 	public void setHeight(final float height) {
 		this.assignedHeight = height;
 		this.renderBounds.height = height;

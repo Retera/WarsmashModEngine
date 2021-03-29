@@ -48,7 +48,7 @@ public class TextureFrame extends AbstractRenderableFrame {
 
 	public void setTexture(String file, final GameUI gameUI) {
 		if (this.decorateFileNames) {
-			file = gameUI.getSkinField(file);
+			file = gameUI.trySkinField(file);
 		}
 		final Texture texture = gameUI.loadTexture(file);
 		if (texture != null) {

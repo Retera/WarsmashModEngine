@@ -20,6 +20,7 @@ import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
+import com.etheller.warsmash.units.custom.WTS;
 import com.google.common.io.LittleEndianDataInputStream;
 
 import mpq.MPQArchive;
@@ -102,6 +103,11 @@ public class War3Map implements DataSource {
 
 	public Warcraft3MapObjectData readModifications() throws IOException {
 		final Warcraft3MapObjectData changes = Warcraft3MapObjectData.load(this.dataSource, true);
+		return changes;
+	}
+
+	public Warcraft3MapObjectData readModifications(final WTS preloadedWTS) throws IOException {
+		final Warcraft3MapObjectData changes = Warcraft3MapObjectData.load(this.dataSource, true, preloadedWTS);
 		return changes;
 	}
 

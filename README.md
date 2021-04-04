@@ -1,6 +1,9 @@
 # Warsmash: Mod Engine
 This is a Warcraft III modding project that aspires to eventually make Warcraft III modding easier by providing a replacement component for the game program that can be more easily modified while still requiring the Blizzard Warcraft III game and assets to be installed on the computer only from Blizzard. In short, buy Warcraft III from Blizzard, and then you can begin to use this mod engine with it.
 
+## Gameplay Example
+https://www.youtube.com/watch?v=YyMg95j82R8
+
 ## How to Install
 1. Clone the repo
 2. Open the repo as a Gradle Project with your Java IDE of choice (IntelliJ seems to be the easiest to get working)

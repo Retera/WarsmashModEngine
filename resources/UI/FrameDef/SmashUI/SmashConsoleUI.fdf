@@ -1,0 +1,81 @@
+// I had to override this because the Blizzard version is missing the "ConsoleTexture01Top" names.
+Frame "SIMPLEFRAME" "ConsoleUI" {
+	DecorateFileNames,
+
+    // The top of the UI console
+    Texture "ConsoleTexture01Top" {
+        File "ConsoleTexture01",
+        Width 0.256,
+        Height 0.032,
+        TexCoord 0, 1, 0, 0.125,
+        AlphaMode "ALPHAKEY",
+        Anchor TOPLEFT,0,0,
+    }
+    Texture "ConsoleTexture02Top" {
+        File "ConsoleTexture02",
+        Width 0.087,
+        Height 0.032,
+        TexCoord 0, 0.33984375, 0, 0.125,
+        AlphaMode "ALPHAKEY",
+        Anchor TOPLEFT,0.256, 0,
+    }
+    Texture "ConsoleTexture02Top" {
+        File "ConsoleTexture02",
+        Width 0.053,
+        Height 0.032,
+        TexCoord 0.79296875, 1, 0, 0.125,
+        AlphaMode "ALPHAKEY",
+        Anchor TOPRIGHT,-0.288, 0,
+    } 
+    Texture "ConsoleTexture03Top" {
+        File "ConsoleTexture03",
+        Width 0.256,
+        Height 0.032,
+        TexCoord 0, 1, 0, 0.125,
+        AlphaMode "ALPHAKEY",
+        Anchor TOPRIGHT,-0.032, 0,
+    }
+    Texture "ConsoleTexture04Top" {
+        File "ConsoleTexture04",
+        Width 0.032,
+        Height 0.032,
+        TexCoord 0, 1, 0, 0.125,
+        AlphaMode "ALPHAKEY",
+        Anchor TOPRIGHT,0,0,
+    }
+
+    // The bottom of the UI console
+    Texture "ConsoleTexture01Bottom" {
+        File "ConsoleTexture01",
+        Width 0.256,
+        Height 0.176,
+        TexCoord 0, 1, 0.3125, 1,
+        AlphaMode "ALPHAKEY",
+        Anchor BOTTOMLEFT,0,0,
+    }
+    Texture "ConsoleTexture02Bottom" {
+        File "ConsoleTexture02",
+        Width 0.256,
+        Height 0.15,
+        TexCoord 0, 1, 0.4140625, 1,
+        AlphaMode "ALPHAKEY",
+        Anchor BOTTOMLEFT,0.256,0,
+    }
+    Texture "ConsoleTexture03Bottom" {
+        File "ConsoleTexture03",
+        Width 0.256,
+        Height 0.176,
+        TexCoord 0, 1, 0.3125, 1,
+        AlphaMode "ALPHAKEY",
+        Anchor BOTTOMRIGHT,-0.032,0.0,
+    }
+    Texture "ConsoleTexture04Bottom" {
+        File "ConsoleTexture04",
+        Width 0.032,
+        Height 0.176,
+        TexCoord 0, 1, 0.3125, 1,
+        AlphaMode "ALPHAKEY",
+        Anchor BOTTOMRIGHT,0,0,
+    }
+
+}

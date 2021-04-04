@@ -1,0 +1,517 @@
+package com.etheller.warsmash;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.GL30;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.etheller.warsmash.datasources.CascDataSourceDescriptor;
+import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
+import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.datasources.DataSourceDescriptor;
+import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
+import com.etheller.warsmash.datasources.MpqDataSourceDescriptor;
+import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
+import com.etheller.warsmash.units.DataTable;
+import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.util.DataSourceFileHandle;
+import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.Model;
+import com.etheller.warsmash.viewer5.ModelInstance;
+import com.etheller.warsmash.viewer5.ModelViewer;
+import com.etheller.warsmash.viewer5.PathSolver;
+import com.etheller.warsmash.viewer5.RenderBatch;
+import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.TextureMapper;
+import com.etheller.warsmash.viewer5.handlers.ModelHandler;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
+import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
+
+public class WarsmashGdxMapScreen implements InputProcessor, Screen {
+	public static final boolean ENABLE_AUDIO = true;
+	private static final boolean ENABLE_MUSIC = false;
+	private final War3MapViewer viewer;
+	private final Rectangle tempRect = new Rectangle();
+
+	// libGDX stuff
+	private OrthographicCamera uiCamera;
+	private SpriteBatch batch;
+	private ExtendViewport uiViewport;
+	private GlyphLayout glyphLayout;
+
+	private Texture solidGreenTexture;
+
+	private ShapeRenderer shapeRenderer;
+
+	private MdxModel timeIndicator;
+
+	private Scene uiScene;
+	private MeleeUI meleeUI;
+
+	private Music currentMusic;
+	private final WarsmashGdxMultiScreenGame screenManager;
+	private final WarsmashGdxMenuScreen menuScreen;
+
+	public WarsmashGdxMapScreen(final War3MapViewer mapViewer, final WarsmashGdxMultiScreenGame screenManager,
+			final WarsmashGdxMenuScreen menuScreen) {
+		this.viewer = mapViewer;
+		this.screenManager = screenManager;
+		this.menuScreen = menuScreen;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see com.badlogic.gdx.ApplicationAdapter#create()
+	 */
+	@Override
+	public void show() {
+
+		final ByteBuffer tempByteBuffer = ByteBuffer.allocateDirect(4);
+		tempByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+		final IntBuffer temp = tempByteBuffer.asIntBuffer();
+
+		Gdx.gl30.glGenVertexArrays(1, temp);
+		WarsmashGdxGame.VAO = temp.get(0);
+
+		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
+
+		final String renderer = Gdx.gl.glGetString(GL20.GL_RENDERER);
+		System.err.println("Renderer: " + renderer);
+
+		final Element cameraData = this.viewer.miscData.get("Camera");
+		Element cameraListenerData = this.viewer.miscData.get("Listener");
+		if (cameraListenerData == null) {
+			cameraListenerData = new Element("Listener", new DataTable(null));
+		}
+		final CameraPreset[] cameraPresets = new CameraPreset[6];
+		for (int i = 0; i < cameraPresets.length; i++) {
+			cameraPresets[i] = new CameraPreset(cameraData.getFieldFloatValue("AOA", i),
+					cameraData.getFieldFloatValue("FOV", i), cameraData.getFieldFloatValue("Rotation", i),
+					cameraData.getFieldFloatValue("Rotation", i + cameraPresets.length),
+					cameraData.getFieldFloatValue("Rotation", i + (cameraPresets.length * 2)),
+					cameraData.getFieldFloatValue("Distance", i), cameraData.getFieldFloatValue("FarZ", i),
+					cameraData.getFieldFloatValue("NearZ", i), cameraData.getFieldFloatValue("Height", i),
+					cameraListenerData.getFieldFloatValue("ListenerDistance", i),
+					cameraListenerData.getFieldFloatValue("ListenerAOA", i));
+		}
+
+		System.out.println("Loaded");
+		Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1); // TODO remove white background
+		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
+
+		final Scene portraitScene = this.viewer.addSimpleScene();
+		this.uiScene = this.viewer.addSimpleScene();
+		this.uiScene.alpha = true;
+		if (ENABLE_AUDIO) {
+			this.uiScene.enableAudio();
+		}
+
+//		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\MainMenu\\MainMenu3D_exp\\MainMenu3D_exp.mdx",
+
+		// libGDX stuff
+		final int width = Gdx.graphics.getWidth();
+		final int height = Gdx.graphics.getHeight();
+
+		this.glyphLayout = new GlyphLayout();
+
+		// Constructs a new OrthographicCamera, using the given viewport width and
+		// height
+		// Height is multiplied by aspect ratio.
+		this.uiCamera = new OrthographicCamera();
+		int aspect3By4Width;
+		int aspect3By4Height;
+		if (width < ((height * 4) / 3)) {
+			aspect3By4Width = width;
+			aspect3By4Height = (width * 3) / 4;
+		}
+		else {
+			aspect3By4Width = (height * 4) / 3;
+			aspect3By4Height = height;
+		}
+		this.uiViewport = new ExtendViewport(aspect3By4Width, aspect3By4Height, this.uiCamera);
+		this.uiViewport.update(width, height);
+
+		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
+		this.uiCamera.update();
+
+		this.batch = new SpriteBatch();
+
+//		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
+
+		this.solidGreenTexture = ImageUtils.getAnyExtensionTexture(this.viewer.dataSource,
+				"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
+
+		Gdx.input.setInputProcessor(this);
+
+		this.shapeRenderer = new ShapeRenderer();
+
+//		Jass2.loadJUI(this.codebase, this.uiViewport, fontGenerator, this.uiScene, this.viewer,
+//				new RootFrameListener() {
+//					@Override
+//					public void onCreate(final GameUI rootFrame) {
+//						WarsmashGdxMapGame.this.gameUI = rootFrame;
+//					}
+//				}, "Scripts\\common.jui", "Scripts\\melee.jui");
+		final Element cameraRatesElement = this.viewer.miscData.get("CameraRates");
+		final CameraRates cameraRates = new CameraRates(cameraRatesElement.getFieldFloatValue("AOA"),
+				cameraRatesElement.getFieldFloatValue("FOV"), cameraRatesElement.getFieldFloatValue("Rotation"),
+				cameraRatesElement.getFieldFloatValue("Distance"), cameraRatesElement.getFieldFloatValue("Forward"),
+				cameraRatesElement.getFieldFloatValue("Strafe"));
+		this.meleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, this.uiScene, portraitScene, cameraPresets,
+				cameraRates, this.viewer, new RootFrameListener() {
+					@Override
+					public void onCreate(final GameUI rootFrame) {
+						WarsmashGdxMapScreen.this.viewer.setGameUI(rootFrame);
+
+						if (ENABLE_MUSIC) {
+							final String musicField = rootFrame
+									.getSkinField("Music_V" + WarsmashConstants.GAME_VERSION);
+							final String[] musics = musicField.split(";");
+							String musicPath = musics[(int) (Math.random() * musics.length)];
+							if (false) {
+								musicPath = "Sound\\Music\\mp3Music\\PH1.mp3";
+							}
+							final Music music = Gdx.audio.newMusic(
+									new DataSourceFileHandle(WarsmashGdxMapScreen.this.viewer.dataSource, musicPath));
+							music.setVolume(1.0f);
+							music.setLooping(true);
+							music.play();
+							WarsmashGdxMapScreen.this.currentMusic = music;
+						}
+					}
+				}, new CPlayerUnitOrderExecutor(this.viewer.simulation, this.viewer.getLocalPlayerIndex(),
+						this.viewer.getCommandErrorListener()),
+				new Runnable() {
+					@Override
+					public void run() {
+						WarsmashGdxMapScreen.this.menuScreen.onReturnFromGame();
+						WarsmashGdxMapScreen.this.screenManager.setScreen(WarsmashGdxMapScreen.this.menuScreen);
+					}
+				});
+		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
+		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
+				this.viewer.mapPathSolver, "").addInstance();
+		libgdxContentInstance.setScene(this.uiScene);
+		this.meleeUI.main();
+
+		updateUIScene();
+
+		resize(width, height);
+
+		try {
+			this.viewer.loadAfterUI();
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static DataSource parseDataSources(final DataTable warsmashIni) {
+		final Element dataSourcesConfig = warsmashIni.get("DataSources");
+		final int dataSourcesCount = dataSourcesConfig.getFieldValue("Count");
+		final List<DataSourceDescriptor> dataSourcesList = new ArrayList<>();
+		for (int i = 0; i < dataSourcesCount; i++) {
+			final String type = dataSourcesConfig.getField("Type" + (i < 10 ? "0" : "") + i);
+			final String path = dataSourcesConfig.getField("Path" + (i < 10 ? "0" : "") + i);
+			switch (type) {
+			case "Folder": {
+				dataSourcesList.add(new FolderDataSourceDescriptor(path));
+				break;
+			}
+			case "MPQ": {
+				dataSourcesList.add(new MpqDataSourceDescriptor(path));
+				break;
+			}
+			case "CASC": {
+				final String prefixes = dataSourcesConfig.getField("Prefixes" + (i < 10 ? "0" : "") + i);
+				dataSourcesList.add(new CascDataSourceDescriptor(path, Arrays.asList(prefixes.split(","))));
+				break;
+			}
+			default:
+				throw new RuntimeException("Unknown data source type: " + type);
+			}
+		}
+		return new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
+	}
+
+	private void updateUIScene() {
+		this.tempRect.x = this.uiViewport.getScreenX();
+		this.tempRect.y = this.uiViewport.getScreenY();
+		this.tempRect.width = this.uiViewport.getScreenWidth();
+		this.tempRect.height = this.uiViewport.getScreenHeight();
+		this.uiScene.camera.viewport(this.tempRect);
+		final float worldWidth = this.uiViewport.getWorldWidth();
+		final float worldHeight = this.uiViewport.getWorldHeight();
+		final float xScale = worldWidth / this.uiViewport.getMinWorldWidth();
+		final float yScale = worldHeight / this.uiViewport.getMinWorldHeight();
+		final float uiSceneWidth = 0.8f * xScale;
+		final float uiSceneHeight = 0.6f * yScale;
+		final float uiSceneX = ((0.8f - uiSceneWidth) / 2);
+		final float uiSceneY = ((0.6f - uiSceneHeight) / 2);
+		this.uiScene.camera.ortho(uiSceneX, uiSceneWidth + uiSceneX, uiSceneY, uiSceneHeight + uiSceneY, -1024f, 1024);
+	}
+
+	@Override
+	public void render(final float delta) {
+		this.uiCamera.update();
+		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
+		final float deltaTime = Gdx.graphics.getDeltaTime();
+		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
+		this.meleeUI.update(deltaTime);
+		this.viewer.updateAndRender();
+
+		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
+
+		Gdx.gl30.glDisable(GL30.GL_CULL_FACE);
+
+		this.viewer.webGL.useShaderProgram(null);
+
+		Gdx.gl30.glActiveTexture(GL30.GL_TEXTURE0);
+	}
+
+	private void renderLibGDXContent() {
+
+		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
+
+		Gdx.gl30.glDisable(GL30.GL_CULL_FACE);
+
+		this.viewer.webGL.useShaderProgram(null);
+
+		Gdx.gl30.glActiveTexture(GL30.GL_TEXTURE0);
+
+		this.uiViewport.apply();
+		this.batch.setProjectionMatrix(this.uiCamera.combined);
+		this.batch.begin();
+		this.meleeUI.render(this.batch, this.glyphLayout);
+		this.batch.end();
+
+		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
+		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
+	}
+
+	@Override
+	public void dispose() {
+		this.meleeUI.dispose();
+	}
+
+	@Override
+	public void resize(final int width, final int height) {
+//		super.resize(width, height);
+
+		this.uiViewport.update(width, height);
+		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
+
+		this.meleeUI.resize(setupWorldFrameViewport(width, height));
+		updateUIScene();
+
+	}
+
+	private Rectangle setupWorldFrameViewport(final int width, final int height) {
+		this.tempRect.x = 0;
+		this.tempRect.width = width;
+		final float topHeight = 0.02666f * height;
+		final float bottomHeight = 0.21333f * height;
+		this.tempRect.y = (int) bottomHeight;
+		this.tempRect.height = height - (int) (topHeight + bottomHeight);
+		return this.tempRect;
+	}
+
+	@Override
+	public boolean keyDown(final int keycode) {
+		this.meleeUI.keyDown(keycode);
+		return true;
+	}
+
+	@Override
+	public boolean keyUp(final int keycode) {
+		this.meleeUI.keyUp(keycode);
+		return true;
+	}
+
+	@Override
+	public boolean keyTyped(final char character) {
+		if (character == '1') {
+			Gdx.input.setCursorCatched(!Gdx.input.isCursorCatched());
+		}
+		return false;
+	}
+
+	@Override
+	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
+		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
+
+		if (this.meleeUI.touchDown(screenX, screenY, worldScreenY, button)) {
+			return false;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean touchUp(final int screenX, final int screenY, final int pointer, final int button) {
+		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
+
+		if (this.meleeUI.touchUp(screenX, screenY, worldScreenY, button)) {
+			return false;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean touchDragged(final int screenX, final int screenY, final int pointer) {
+		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
+		if (this.meleeUI.touchDragged(screenX, screenY, worldScreenY, pointer)) {
+			return false;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean mouseMoved(final int screenX, final int screenY) {
+		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
+		if (this.meleeUI.mouseMoved(screenX, screenY, worldScreenY)) {
+			return false;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean scrolled(final int amount) {
+		this.meleeUI.scrolled(amount);
+		return true;
+	}
+
+	private static class Message {
+		private final float time;
+		private final String text;
+
+		public Message(final float time, final String text) {
+			this.time = time;
+			this.text = text;
+		}
+	}
+
+	private class LibGDXContentLayerModelInstance extends ModelInstance {
+
+		public LibGDXContentLayerModelInstance(final Model model) {
+			super(model);
+		}
+
+		@Override
+		public void updateAnimations(final float dt) {
+
+		}
+
+		@Override
+		public void clearEmittedObjects() {
+
+		}
+
+		@Override
+		protected void updateLights(final Scene scene2) {
+
+		}
+
+		@Override
+		public void renderOpaque(final Matrix4 mvp) {
+
+		}
+
+		@Override
+		public void renderTranslucent() {
+			renderLibGDXContent();
+		}
+
+		@Override
+		public void load() {
+		}
+
+		@Override
+		protected RenderBatch getBatch(final TextureMapper textureMapper2) {
+			throw new UnsupportedOperationException("NOT API");
+		}
+
+		@Override
+		public void setReplaceableTexture(final int replaceableTextureId, final String replaceableTextureFile) {
+
+		}
+
+		@Override
+		public boolean isBatched() {
+			return super.isBatched();
+		}
+
+		@Override
+		protected void removeLights(final Scene scene2) {
+			// TODO Auto-generated method stub
+
+		}
+
+	}
+
+	private class LibGDXContentLayerModel extends Model {
+
+		public LibGDXContentLayerModel(final ModelHandler handler, final ModelViewer viewer, final String extension,
+				final PathSolver pathSolver, final String fetchUrl) {
+			super(handler, viewer, extension, pathSolver, fetchUrl);
+			this.ok = true;
+		}
+
+		@Override
+		protected ModelInstance createInstance(final int type) {
+			return new LibGDXContentLayerModelInstance(this);
+		}
+
+		@Override
+		protected void lateLoad() {
+		}
+
+		@Override
+		protected void load(final InputStream src, final Object options) {
+		}
+
+		@Override
+		protected void error(final Exception e) {
+		}
+
+	}
+
+	@Override
+	public void pause() {
+	}
+
+	@Override
+	public void resume() {
+	}
+
+	@Override
+	public void hide() {
+		if (this.currentMusic != null) {
+			this.currentMusic.stop();
+		}
+	}
+}

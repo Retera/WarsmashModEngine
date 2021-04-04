@@ -1,0 +1,162 @@
+//============================================================================
+// User Interface scripts for the Warsmash mod engine. This is
+// an attempt to get these defined in an external import that
+// a map can override. Unfortunately, although I would like for
+// this to be a JASS file, it is not very consistent with the
+// notion of the JASS2 VM to define UI, because handles are
+// mostly network synced. So, we will assume the contents
+// of this file are run in a special client-only JASS VM
+// once I implement networking, so that this script will not
+// cause a desync as it would if it was in the standard game
+// JASS files. For that reason, it will have '.jui' extension
+// to signify it runs in this modified JASS VM, instead of
+// standard '.j' as used for JASS2 script files.
+//
+// Right now there is some duplicated code from common.j --
+// maybe later on we will load that stuff first, then this
+// one in the same variable space?
+//
+
+type framehandle        extends     handle
+type framepointtype     extends     handle
+type trigger            extends     handle
+type triggeraction      extends     handle
+type triggercondition   extends     handle
+type boolexpr           extends     handle
+type conditionfunc      extends     boolexpr
+
+native LogError                                 takes string message returns nothing
+constant native ConvertFramePointType       takes integer i returns framepointtype
+
+globals
+
+//===================================================
+// UI API constants
+//===================================================
+
+    constant framepointtype         FRAMEPOINT_TOPLEFT                   = ConvertFramePointType(0)
+    constant framepointtype         FRAMEPOINT_TOP                       = ConvertFramePointType(1)
+    constant framepointtype         FRAMEPOINT_TOPRIGHT                  = ConvertFramePointType(2)
+    constant framepointtype         FRAMEPOINT_LEFT                      = ConvertFramePointType(3)
+    constant framepointtype         FRAMEPOINT_CENTER                    = ConvertFramePointType(4)
+    constant framepointtype         FRAMEPOINT_RIGHT                     = ConvertFramePointType(5)
+    constant framepointtype         FRAMEPOINT_BOTTOMLEFT                = ConvertFramePointType(6)
+    constant framepointtype         FRAMEPOINT_BOTTOM                    = ConvertFramePointType(7)
+    constant framepointtype         FRAMEPOINT_BOTTOMRIGHT               = ConvertFramePointType(8)
+endglobals
+
+//===================================================
+// UI API   
+//===================================================
+
+// Loads an entry from the file "UI\war3skins.txt" and returns
+// it as the current GAMEUI. The default possible
+// strings are "Human", "Orc", "NightElf", and "Undead".
+// Some UI FDF templates will use this information as
+// the source for lookup strings as a means to change
+// their style.
+// Calling this more than once will probably crash the game,
+// or something, so only call it once on startup.
+native CreateRootFrame	                                takes string skinName returns framehandle
+
+// Loads the (T)able (O)f (C)ontents file.
+// This must be a simple text document with each line
+// having only a filepath of a .FDF frame template
+// definition file to load. Unlike War3 engine,
+// I do not require the file to include one extra
+// blank line at the end.
+//
+// We typically call this first during UI setup, and
+// only once for a given mod.
+native LoadTOCFile                              takes string TOCFile returns framehandle
+
+// Spawn a SIMPLEFRAME element that was defined in a FDF
+// template onto the screen. The "name" field must match
+// the name of a template to spawn, loaded with LoadTOCFile.
+// The create context is pretty pointless, but I think
+// they use it so that they have an integer tag on the
+// "Attack 1" and "Attack 2" ui components. I was trying
+// to keep parity with the FDF UI APIs from 1.31, imagine
+// that.
+native CreateSimpleFrame                        takes string name, framehandle owner, integer createContext returns framehandle
+
+// Spawn a FRAME element that was defined in an FDF
+// template onto the screen. The "name" field must
+// match the name of a template to spawn, loaded with LoadTOCFile.
+// As noted on CreateSimpleFrame, for now createContext is pointless.
+// Likewise for priority -- until it fixed.
+native CreateFrame                              takes string name, framehandle owner, integer priority, integer createContext returns framehandle
+
+
+// Set the absolute point (often called Anchor) for the frame handle.
+// See FDF template files for examples
+native FrameSetAnchor                         takes framehandle frame, framepointtype point, real x, real y returns nothing
+
+// Tasyen said: "takes one point of a Frame unbound that point and places it to a specific coordinates on the screen."
+native FrameSetAbsPoint                         takes framehandle frame, framepointtype point, real x, real y returns nothing
+
+// Set the relative point (called SetPoint in FDF templates) for the frame handle.
+// See FDF template files for examples
+// Tasyen said: places a point of FrameA relative to a point of FrameB. When FrameB moves FrameA's point will keep this rule and moves with it.
+// Note for Project Warsmash: "When FrameB moves..." might not be true... call FramePositionBounds() for now
+native FrameSetPoint                            takes framehandle frame, framepointtype point, framehandle relative, framepointtype relativePoint, real x, real y returns nothing
+
+
+// Created for Warsmash engine, not a part of 1.31 UI apis,
+// and at some point it might be removed. Basically
+// this function will apply Anchors and SetPoints assigned
+// to the frame handle and all its children and resolve where
+// they should go onscreen. Generally in my experience,
+// War3 will do this automatically in their FDF system.
+native FramePositionBounds                      takes framehandle frame returns nothing
+
+// Used to lookup fields in the Skin data, for example
+// SkinGetField("TimeOfDayIndicator") will return the
+// string "UI\\Console\\Human\\HumanUI-TimeIndicator.mdl"
+// when the "Human" skin was loaded with CreateRootFrame
+native SkinGetField                             takes string field returns string
+
+// Sets the text value on a String Frame, currently it crashes otherwise
+native FrameSetText                             takes framehandle frame, string text returns nothing
+
+// Sets the text color on a String Frame, currently it crashes otherwise
+native FrameSetTextColor                        takes framehandle frame, integer color returns nothing
+
+native ConvertColor                             takes integer a, integer r, integer g, integer b returns integer
+
+
+// Gets a previously created Frame using its name ( from an FDF template file that was
+// previously spawned ). See previous notes about createContext. Mostly pointless?
+native GetFrameByName                           takes string name, integer createContext returns framehandle
+
+//============================================================================
+// Native trigger interface
+//
+native CreateTrigger    takes nothing returns trigger
+native DestroyTrigger   takes trigger whichTrigger returns nothing
+native EnableTrigger    takes trigger whichTrigger returns nothing
+native DisableTrigger   takes trigger whichTrigger returns nothing
+native IsTriggerEnabled takes trigger whichTrigger returns boolean
+
+native TriggerAddCondition    takes trigger whichTrigger, boolexpr condition returns triggercondition
+native TriggerRemoveCondition takes trigger whichTrigger, triggercondition whichCondition returns nothing
+native TriggerClearConditions takes trigger whichTrigger returns nothing
+
+native TriggerAddAction     takes trigger whichTrigger, code actionFunc returns triggeraction
+native TriggerRemoveAction  takes trigger whichTrigger, triggeraction whichAction returns nothing
+native TriggerClearActions  takes trigger whichTrigger returns nothing
+native TriggerEvaluate      takes trigger whichTrigger returns boolean
+native TriggerExecute       takes trigger whichTrigger returns nothing
+
+
+//============================================================================
+// Boolean Expr API ( for compositing trigger conditions and unit filter funcs...)
+//============================================================================
+native And              takes boolexpr operandA, boolexpr operandB returns boolexpr
+native Or               takes boolexpr operandA, boolexpr operandB returns boolexpr
+native Not              takes boolexpr operand returns boolexpr
+native Condition        takes code func returns conditionfunc
+native DestroyCondition takes conditionfunc c returns nothing
+native Filter           takes code func returns filterfunc
+native DestroyFilter    takes filterfunc f returns nothing
+native DestroyBoolExpr  takes boolexpr e returns nothing

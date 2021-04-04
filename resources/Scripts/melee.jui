@@ -1,0 +1,73 @@
+
+globals
+// Defaults for testing:
+	constant string SKIN = "NightElf"
+// Major UI components
+	framehandle ROOT_FRAME
+	framehandle CONSOLE_UI
+	framehandle RESOURCE_BAR
+	framehandle RESOURCE_BAR_GOLD_TEXT
+	framehandle RESOURCE_BAR_LUMBER_TEXT
+	framehandle RESOURCE_BAR_SUPPLY_TEXT
+	framehandle RESOURCE_BAR_UPKEEP_TEXT
+	framehandle TIME_INDICATOR
+	framehandle SIMPLE_INFO_PANEL_UNIT_DETAIL
+	framehandle UNIT_PORTRAIT
+	framehandle UNIT_LIFE_TEXT
+	framehandle UNIT_MANA_TEXT
+endglobals
+
+
+function main takes nothing returns nothing
+	// =================================
+	// Load skins and templates
+	// =================================
+	set ROOT_FRAME = CreateRootFrame(SKIN)
+	if not LoadTOCFile("UI\\FrameDef\\FrameDef.toc") then
+		call LogError("Unable to load FrameDef.toc")
+	endif
+	if not LoadTOCFile("UI\\FrameDef\\SmashFrameDef.toc") then
+		call LogError("Unable to load SmashFrameDef.toc")
+	endif
+	// =================================
+	// Load major UI components
+	// =================================
+	// Console UI is the background with the racial theme
+	set CONSOLE_UI = CreateSimpleFrame("ConsoleUI", ROOT_FRAME, 0)
+	// Resource bar is a 3 part bar with Gold, Lumber, and Food.
+	// Its template does not specify where to put it, so we must
+	// put it in the "TOPRIGHT" corner.
+	set RESOURCE_BAR = CreateSimpleFrame("ResourceBarFrame", CONSOLE_UI, 0)
+	call FrameSetPoint(RESOURCE_BAR, FRAMEPOINT_TOPRIGHT, CONSOLE_UI, FRAMEPOINT_TOPRIGHT, 0, 0)
+
+	// Create the Time Indicator (clock)
+	set TIME_INDICATOR = CreateFrame("TimeOfDayIndicator", ROOT_FRAME, 0, 0)
+	
+	// Create the unit portrait stuff (for now this doesn't actually create the 3D, only HP/mana)
+	set UNIT_PORTRAIT = CreateSimpleFrame("UnitPortrait", CONSOLE_UI, 0)
+	set UNIT_LIFE_TEXT = GetFrameByName("UnitPortraitHitPointText", 0)
+	set UNIT_MANA_TEXT = GetFrameByName("UnitPortraitManaPointText", 0)
+	
+	// Set default values
+	call FrameSetText(UNIT_LIFE_TEXT, "706 / 725")
+	call FrameSetText(UNIT_MANA_TEXT, "405 / 405")
+	
+	
+	// Retrieve inflated sub-frames and store references
+	set RESOURCE_BAR_GOLD_TEXT = GetFrameByName("ResourceBarGoldText", 0)
+	set RESOURCE_BAR_LUMBER_TEXT = GetFrameByName("ResourceBarLumberText", 0)
+	set RESOURCE_BAR_SUPPLY_TEXT = GetFrameByName("ResourceBarSupplyText", 0)
+	set RESOURCE_BAR_UPKEEP_TEXT = GetFrameByName("ResourceBarUpkeepText", 0)
+	
+	// Set default values
+	call FrameSetText(RESOURCE_BAR_GOLD_TEXT, "500")
+	call FrameSetText(RESOURCE_BAR_LUMBER_TEXT, "150")
+	call FrameSetText(RESOURCE_BAR_SUPPLY_TEXT, "5/10")
+	call FrameSetText(RESOURCE_BAR_UPKEEP_TEXT, "No Upkeep")
+	call FrameSetTextColor(RESOURCE_BAR_UPKEEP_TEXT, ConvertColor(255, 0, 255, 0))
+	
+	// Assemble the UI and resolve the location of every component that
+	// has Anchors and SetPoints (maybe in future version this call
+	// wont be necessary!)
+	call FramePositionBounds(ROOT_FRAME)
+endfunction

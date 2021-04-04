@@ -1,0 +1,44 @@
+/*
+ *  UnitPortrait.fdf
+ *  ---------------------
+ *  Right now the actual 3d portrait is hardcoded like the
+ *  original game, eventually that should be a config file
+ *  like this so that a map can override it.
+ */
+
+String "UnitPortraitTextTemplate" {
+    Font "MasterFont",0.011,
+    Height 0.01640625,
+    TextLength 20,
+}
+
+Frame "SIMPLEFRAME" "UnitPortrait" {
+	DecorateFileNames,
+    SetPoint BOTTOMLEFT,"ConsoleUI",BOTTOMLEFT,0.211,0,
+	Width 0.0835,
+	Height 0.114,
+    
+    Frame "SIMPLEFRAME" "UnitPortraitModel" {
+		DecorateFileNames,
+    	SetPoint BOTTOM,"UnitPortrait",BOTTOM,0,0.0285,
+		Width 0.0835,
+		Height 0.085,
+	
+	    //Texture {
+	        //File "IdlePeon",
+	    //    AlphaMode "ALPHAKEY",
+	    //}
+	}
+	
+    String "UnitPortraitHitPointText" INHERITS "UnitPortraitTextTemplate" {
+        Anchor BOTTOM, 0, 0.014,
+        FontJustificationH JUSTIFYCENTER,
+    	FontColor 0.0 1.0 0.0 1.0,
+    }
+	
+    String "UnitPortraitManaPointText" INHERITS "UnitPortraitTextTemplate" {
+        Anchor BOTTOM, 0, -0.0005,
+        FontJustificationH JUSTIFYCENTER,
+    	FontColor 1.0 1.0 1.0 1.0,
+    }
+}

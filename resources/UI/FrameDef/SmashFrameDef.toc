@@ -1,0 +1,4 @@
+UI\FrameDef\SmashUI\TimeOfDayIndicator.fdf
+UI\FrameDef\SmashUI\UnitPortrait.fdf
+UI\FrameDef\SmashUI\InventoryCover.fdf
+UI\FrameDef\SmashUI\ToolTip.fdf

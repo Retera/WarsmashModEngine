@@ -40,6 +40,10 @@ public class SingleStringFrame extends AbstractRenderableFrame {
 		this.color = color;
 	}
 
+	public Color getColor() {
+		return this.color;
+	}
+
 	public void setFontShadowColor(final Color fontShadowColor) {
 		this.fontShadowColor = fontShadowColor;
 	}

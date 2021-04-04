@@ -166,12 +166,23 @@ public class MenuUI {
 		this.heightRatioCorrection = getMinWorldHeight() / 1200f;
 
 		this.campaignStrings = new DataTable(StringBundle.EMPTY);
-		try (InputStream campaignStringStream = dataSource.getResourceAsStream(
-				"UI\\CampaignStrings" + (WarsmashConstants.GAME_VERSION == 1 ? "_exp" : "") + ".txt")) {
-			this.campaignStrings.readTXT(campaignStringStream, true);
+		final String campaignStringPath = "UI\\CampaignStrings" + (WarsmashConstants.GAME_VERSION == 1 ? "_exp" : "")
+				+ ".txt";
+		if (dataSource.has(campaignStringPath)) {
+			try (InputStream campaignStringStream = dataSource.getResourceAsStream(campaignStringPath)) {
+				this.campaignStrings.readTXT(campaignStringStream, true);
+			}
+			catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
+		else {
+			try (InputStream campaignStringStream = dataSource.getResourceAsStream("UI\\CampaignInfoClassic.txt")) {
+				this.campaignStrings.readTXT(campaignStringStream, true);
+			}
+			catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 
 		this.profileManager = PlayerProfileManager.loadFromGdx();

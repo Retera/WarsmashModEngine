@@ -54,6 +54,10 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 		}
 	}
 
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
 	public void setHighlightOnMouseOver(final boolean highlightOnMouseOver) {
 		this.highlightOnMouseOver = highlightOnMouseOver;
 	}
@@ -112,12 +116,20 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 	public void mouseEnter(final GameUI gameUI, final Viewport uiViewport) {
 		if (this.highlightOnMouseOver) {
 			this.mouseOver = true;
+			onMouseEnter();
 		}
+	}
+
+	protected void onMouseEnter() {
 	}
 
 	@Override
 	public void mouseExit(final GameUI gameUI, final Viewport uiViewport) {
 		this.mouseOver = false;
+		onMouseExit();
+	}
+
+	protected void onMouseExit() {
 	}
 
 	@Override

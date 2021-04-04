@@ -52,7 +52,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.MenuUI;
 
 public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleModelScreen {
 	private static final boolean ENABLE_AUDIO = true;
-	private static final boolean ENABLE_MUSIC = true;
+	private static final boolean ENABLE_MUSIC = false;
 	private DataSource codebase;
 	private MdxViewer viewer;
 	private MdxModel model;

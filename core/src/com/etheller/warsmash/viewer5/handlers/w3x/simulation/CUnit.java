@@ -4,9 +4,11 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.War3ID;
@@ -37,15 +39,21 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionEnumFunction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CUnit extends CWidget {
+	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
+
 	private War3ID typeId;
 	private float facing; // degrees
 	private float mana;
@@ -111,6 +119,8 @@ public class CUnit extends CWidget {
 	private int foodUsed;
 
 	private List<CUnitAttack> unitSpecificAttacks;
+	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
+	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
@@ -474,6 +484,74 @@ public class CUnit extends CWidget {
 		}
 	}
 
+	public boolean order(final CSimulation simulation, final int orderId, final AbilityTarget target) {
+		if (orderId == OrderIds.stop) {
+			order(simulation, new COrderNoTarget(0, orderId, false), false);
+			return true;
+		}
+		for (final CAbility ability : this.abilities) {
+			final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+			ability.checkCanUse(simulation, this, orderId, activationReceiver);
+			if (activationReceiver.isOk()) {
+				if (target == null) {
+					final BooleanAbilityTargetCheckReceiver<Void> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+							.<Void>getInstance().reset();
+					ability.checkCanTargetNoTarget(simulation, this, orderId, booleanTargetReceiver);
+					if (booleanTargetReceiver.isTargetable()) {
+						order(simulation, new COrderNoTarget(ability.getHandleId(), orderId, false), false);
+						return true;
+					}
+				}
+				final boolean targetable = target.visit(new AbilityTargetVisitor<Boolean>() {
+					@Override
+					public Boolean accept(final AbilityPointTarget target) {
+						final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+								.<AbilityPointTarget>getInstance().reset();
+						ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
+						final boolean pointTargetable = booleanTargetReceiver.isTargetable();
+						if (pointTargetable) {
+							order(simulation, new COrderTargetPoint(ability.getHandleId(), orderId, target, false),
+									false);
+						}
+						return pointTargetable;
+					}
+
+					public Boolean acceptWidget(final CWidget target) {
+						final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+								.<CWidget>getInstance().reset();
+						ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
+						final boolean widgetTargetable = booleanTargetReceiver.isTargetable();
+						if (widgetTargetable) {
+							order(simulation,
+									new COrderTargetWidget(ability.getHandleId(), orderId, target.getHandleId(), false),
+									false);
+						}
+						return widgetTargetable;
+					}
+
+					@Override
+					public Boolean accept(final CUnit target) {
+						return acceptWidget(target);
+					}
+
+					@Override
+					public Boolean accept(final CDestructable target) {
+						return acceptWidget(target);
+					}
+
+					@Override
+					public Boolean accept(final CItem target) {
+						return acceptWidget(target);
+					}
+				});
+				if (targetable) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private CBehavior beginOrder(final CSimulation game, final COrder order) {
 		this.lastStartedOrder = order;
 		CBehavior nextBehavior;
@@ -550,20 +628,22 @@ public class CUnit extends CWidget {
 		return this.collisionRectangle;
 	}
 
-	public void setX(final float newX, final CWorldCollision collision) {
+	public void setX(final float newX, final CWorldCollision collision, final CRegionManager regionManager) {
 		final float prevX = getX();
 		if (!this.unitType.isBuilding()) {
 			setX(newX);
 			collision.translate(this, newX - prevX, 0);
 		}
+		checkRegionEvents(regionManager);
 	}
 
-	public void setY(final float newY, final CWorldCollision collision) {
+	public void setY(final float newY, final CWorldCollision collision, final CRegionManager regionManager) {
 		final float prevY = getY();
 		if (!this.unitType.isBuilding()) {
 			setY(newY);
 			collision.translate(this, 0, newY - prevY);
 		}
+		checkRegionEvents(regionManager);
 	}
 
 	public void setPointAndCheckUnstuck(final float newX, final float newY, final CSimulation game) {
@@ -602,11 +682,12 @@ public class CUnit extends CWidget {
 			checkX -= (int) Math.cos(angle);
 			checkY -= (int) Math.sin(angle);
 		}
-		setPoint(outputX, outputY, collision);
+		setPoint(outputX, outputY, collision, game.getRegionManager());
 		game.unitRepositioned(this);
 	}
 
-	public void setPoint(final float newX, final float newY, final CWorldCollision collision) {
+	public void setPoint(final float newX, final float newY, final CWorldCollision collision,
+			final CRegionManager regionManager) {
 		final float prevX = getX();
 		final float prevY = getY();
 		setX(newX);
@@ -614,6 +695,29 @@ public class CUnit extends CWidget {
 		if (!this.unitType.isBuilding()) {
 			collision.translate(this, newX - prevX, newY - prevY);
 		}
+		checkRegionEvents(regionManager);
+	}
+
+	private void checkRegionEvents(final CRegionManager regionManager) {
+		final Set<CRegion> temp = this.containingRegions;
+		this.containingRegions = this.priorContainingRegions;
+		this.priorContainingRegions = temp;
+		this.containingRegions.clear();
+		regionManager.checkRegions(this.collisionRectangle == null ? tempRect.set(this.getX(), this.getY(), 0, 0)
+				: this.collisionRectangle, regionCheckerImpl.reset(this));
+		for (final CRegion region : this.priorContainingRegions) {
+			if (!this.containingRegions.contains(region)) {
+				onLeaveRegion(region);
+			}
+		}
+	}
+
+	private void onEnterRegion(final CRegion region) {
+
+	}
+
+	private void onLeaveRegion(final CRegion region) {
+
 	}
 
 	public EnumSet<CUnitClassification> getClassifications() {
@@ -1427,5 +1531,29 @@ public class CUnit extends CWidget {
 		if (playUserUISounds) {
 			game.unitDropItemEvent(this, droppedItem);
 		}
+	}
+
+	public boolean isInRegion(final CRegion region) {
+		return this.containingRegions.contains(region);
+	}
+
+	private static final class RegionCheckerImpl implements CRegionEnumFunction {
+		private CUnit unit;
+
+		public RegionCheckerImpl reset(final CUnit unit) {
+			this.unit = unit;
+			return this;
+		}
+
+		@Override
+		public boolean call(final CRegion region) {
+			if (this.unit.containingRegions.add(region)) {
+				if (!this.unit.priorContainingRegions.contains(region)) {
+					this.unit.onEnterRegion(region);
+				}
+			}
+			return false;
+		}
+
 	}
 }

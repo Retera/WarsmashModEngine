@@ -30,15 +30,22 @@ public class StringFrame extends AbstractRenderableFrame {
 	private float predictedViewportHeight;
 
 	static ShapeRenderer shapeRenderer = new ShapeRenderer();
+	private final Color fontHighlightColor;
+	private final Color fontDisabledColor;
+	private final Color fontColor;
 
 	public StringFrame(final String name, final UIFrame parent, final Color color, final TextJustify justifyH,
-			final TextJustify justifyV, final BitmapFont frameFont, final String text) {
+			final TextJustify justifyV, final BitmapFont frameFont, final String text, final Color fontHighlightColor,
+			final Color fontDisabledColor) {
 		super(name, parent);
+		this.fontColor = color;
 		this.color = color;
 		this.justifyH = justifyH;
 		this.justifyV = justifyV;
 		this.frameFont = frameFont;
 		this.text = text;
+		this.fontHighlightColor = fontHighlightColor;
+		this.fontDisabledColor = fontDisabledColor;
 		this.internalFramesContainer = new SimpleFrame(null, this);
 	}
 
@@ -55,14 +62,28 @@ public class StringFrame extends AbstractRenderableFrame {
 	}
 
 	public void setColor(final Color color) {
-		this.color = color;
 		for (final SingleStringFrame internalFrame : this.internalFrames) {
-			internalFrame.setColor(color);
+			if (internalFrame.getColor() == this.color) {
+				internalFrame.setColor(color);
+			}
 		}
+		this.color = color;
 	}
 
 	public Color getColor() {
 		return this.color;
+	}
+
+	public Color getFontOriginalColor() {
+		return this.fontColor;
+	}
+
+	public Color getFontDisabledColor() {
+		return this.fontDisabledColor;
+	}
+
+	public Color getFontHighlightColor() {
+		return this.fontHighlightColor;
 	}
 
 	public void setFontShadowColor(final Color fontShadowColor) {

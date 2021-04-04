@@ -56,7 +56,6 @@ public class CampaignMenuUI extends SimpleFrame {
 		super.innerPositionBounds(gameUI, viewport);
 		final float myHeight = this.renderBounds.height;
 		final int buttonCount = this.buttonUIs.size();
-		System.out.println("myheight / count is " + myHeight + "/" + buttonCount);
 		final float buttonSpacing = Math.min(myHeight / buttonCount, GameUI.convertY(this.uiViewport, 0.056f));
 		final float buttonsHeight = buttonSpacing * buttonCount;
 		final float expectedHeight = Math.min(buttonsHeight, myHeight);
@@ -65,12 +64,10 @@ public class CampaignMenuUI extends SimpleFrame {
 		UIFrame lastButton = null;
 		for (final CampaignButtonUI campaignButtonUI : this.buttonUIs) {
 			if (lastButton == null) {
-				System.out.println("offsetting from this " + getName() + " by " + yOffset);
 				campaignButtonUI.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT, 0, -yOffset));
 				campaignButtonUI.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, this, FramePoint.TOPRIGHT, 0, -yOffset));
 			}
 			else {
-				System.out.println("offsetting from bs " + lastButton.getName() + " by " + buttonSpacing);
 				campaignButtonUI.addSetPoint(
 						new SetPoint(FramePoint.TOPLEFT, lastButton, FramePoint.TOPLEFT, 0, -buttonSpacing));
 				campaignButtonUI.addSetPoint(

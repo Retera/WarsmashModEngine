@@ -225,6 +225,9 @@ public class CWorldCollision {
 				return false;
 			}
 			if (this.done) {
+				// This check is because we may use the intersector for multiple intersect
+				// calls, see "enumUnitsInRect" and how it uses this intersector first on the
+				// ground unit layer, then the flying unit layer, without recycling
 				return true;
 			}
 			if (this.intersectedUnits.add(intersectingObject)) {

@@ -2,6 +2,8 @@ package com.etheller.warsmash.parsers.jass;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -12,6 +14,8 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.interpreter.JassLexer;
 import com.etheller.interpreter.JassParser;
@@ -42,6 +46,7 @@ import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprAnd;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprCondition;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprFilter;
@@ -52,12 +57,17 @@ import com.etheller.warsmash.parsers.jass.triggers.TriggerCondition;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -75,6 +85,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerStat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CStartLocPrio;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CGameState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CUnitState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJass;
@@ -557,6 +568,8 @@ public class Jass2 {
 		public CommonEnvironment(final JassProgramVisitor jassProgramVisitor, final DataSource dataSource,
 				final Viewport uiViewport, final Scene uiScene, final War3MapViewer war3MapViewer,
 				final RootFrameListener rootFrameListener) {
+			final Rectangle tempRect = new Rectangle();
+			final CSimulation simulation = war3MapViewer.simulation;
 			final GlobalScope globals = jassProgramVisitor.getGlobals();
 			final HandleJassType agentType = globals.registerHandleType("agent");
 			final HandleJassType eventType = globals.registerHandleType("event");
@@ -1022,8 +1035,7 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final String idString = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-					final CUnitType unitType = war3MapViewer.simulation.getUnitData()
-							.getUnitTypeByJassLegacyName(idString);
+					final CUnitType unitType = simulation.getUnitData().getUnitTypeByJassLegacyName(idString);
 					if (unitType == null) {
 						return new IntegerJassValue(0);
 					}
@@ -1036,8 +1048,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final Integer id = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 					final War3ID war3id = new War3ID(id);
-					return new StringJassValue(
-							war3MapViewer.simulation.getUnitData().getUnitType(war3id).getLegacyName());
+					return new StringJassValue(simulation.getUnitData().getUnitType(war3id).getLegacyName());
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("AbilityId", new JassFunction() {
@@ -1060,7 +1071,6 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final Integer id = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 					final War3ID war3id = new War3ID(id);
-					final CSimulation simulation = war3MapViewer.simulation;
 					final CUnitType unitType = simulation.getUnitData().getUnitType(war3id);
 					if (unitType != null) {
 						return new StringJassValue(unitType.getName());
@@ -1328,8 +1338,11 @@ public class Jass2 {
 			final War3MapConfig mapConfig = war3MapViewer.getMapConfig();
 			registerConfigNatives(jassProgramVisitor, mapConfig, startlocprioType, gametypeType, placementType,
 					gamespeedType, gamedifficultyType, mapdensityType, locationType, playerType, playercolorType,
-					mapcontrolType, playerslotstateType, war3MapViewer.simulation);
+					mapcontrolType, playerslotstateType, simulation);
 
+			// ============================================================================
+			// Timer API
+			//
 			jassProgramVisitor.getJassNativeManager().createNative("CreateTimer", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -1342,7 +1355,7 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final CTimerJass timer = arguments.get(0).visit(ObjectJassValueVisitor.<CTimerJass>getInstance());
-					war3MapViewer.simulation.unregisterTimer(timer);
+					simulation.unregisterTimer(timer);
 					return null;
 				}
 			});
@@ -1358,7 +1371,7 @@ public class Jass2 {
 						timer.setTimeoutTime(timeout.floatValue());
 						timer.setRepeats(periodic);
 						timer.setHandlerFunc(handlerFunc);
-						timer.start(war3MapViewer.simulation);
+						timer.start(simulation);
 					}
 					return null;
 				}
@@ -1368,7 +1381,7 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final CTimerJass timer = arguments.get(0).visit(ObjectJassValueVisitor.<CTimerJass>getInstance());
-					return new RealJassValue(timer.getElapsed(war3MapViewer.simulation));
+					return new RealJassValue(timer.getElapsed(simulation));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("TimerGetRemaining", new JassFunction() {
@@ -1376,7 +1389,7 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final CTimerJass timer = arguments.get(0).visit(ObjectJassValueVisitor.<CTimerJass>getInstance());
-					return new RealJassValue(timer.getRemaining(war3MapViewer.simulation));
+					return new RealJassValue(timer.getRemaining(simulation));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("TimerGetTimeout", new JassFunction() {
@@ -1392,7 +1405,7 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final CTimerJass timer = arguments.get(0).visit(ObjectJassValueVisitor.<CTimerJass>getInstance());
-					timer.pause(war3MapViewer.simulation);
+					timer.pause(simulation);
 					return null;
 				}
 			});
@@ -1401,10 +1414,951 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final CTimerJass timer = arguments.get(0).visit(ObjectJassValueVisitor.<CTimerJass>getInstance());
-					timer.resume(war3MapViewer.simulation);
+					timer.resume(simulation);
 					return null;
 				}
 			});
+
+			// ============================================================================
+			// Group API
+			//
+			jassProgramVisitor.getJassNativeManager().createNative("CreateGroup", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(groupType, new ArrayList<CUnit>());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyGroup", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					System.err.println(
+							"DestroyGroup called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupAddUnit", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final CUnit whichUnit = arguments.get(1).visit(ObjectJassValueVisitor.<CUnit>getInstance());
+					group.add(whichUnit);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupRemoveUnit", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final CUnit whichUnit = arguments.get(1).visit(ObjectJassValueVisitor.<CUnit>getInstance());
+					group.remove(whichUnit);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupClear", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					group.clear();
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsOfType", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final String unitname = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+					final TriggerBooleanExpression filter = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					for (final CUnit unit : simulation.getUnits()) {
+						if (unitname.equals(unit.getUnitType().getLegacyName())) {
+							if (filter.evaluate(globalScope,
+									CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+								// TODO the trigger scope for evaluation here might need to be a clean one?
+								group.add(unit);
+							}
+						}
+					}
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsOfPlayer", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final CPlayerJass player = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					final TriggerBooleanExpression filter = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					for (final CUnit unit : simulation.getUnits()) {
+						if (unit.getPlayerIndex() == player.getId()) {
+							if (filter.evaluate(globalScope,
+									CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+								// TODO the trigger scope for evaluation here might need to be a clean one?
+								group.add(unit);
+							}
+						}
+					}
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsOfTypeCounted", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final String unitname = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+					final TriggerBooleanExpression filter = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					final Integer countLimit = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+					int count = 0;
+					for (final CUnit unit : simulation.getUnits()) {
+						if (unitname.equals(unit.getUnitType().getLegacyName())) {
+							if (filter.evaluate(globalScope,
+									CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+								// TODO the trigger scope for evaluation here might need to be a clean one?
+								group.add(unit);
+								count++;
+								if (count >= countLimit) {
+									break;
+								}
+							}
+						}
+					}
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsInRect", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final Rectangle rect = arguments.get(1).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					final TriggerBooleanExpression filter = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					simulation.getWorldCollision().enumUnitsInRect(rect, new CUnitEnumFunction() {
+						@Override
+						public boolean call(final CUnit unit) {
+							if (filter.evaluate(globalScope,
+									CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+								// TODO the trigger scope for evaluation here might need to be a clean one?
+								group.add(unit);
+							}
+							return false;
+						}
+					});
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsInRectCounted", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final Rectangle rect = arguments.get(1).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					final TriggerBooleanExpression filter = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					final Integer countLimit = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+					simulation.getWorldCollision().enumUnitsInRect(rect, new CUnitEnumFunction() {
+						int count = 0;
+
+						@Override
+						public boolean call(final CUnit unit) {
+							if (filter.evaluate(globalScope,
+									CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+								// TODO the trigger scope for evaluation here might need to be a clean one?
+								group.add(unit);
+								this.count++;
+								if (this.count >= countLimit) {
+									return true;
+								}
+							}
+							return false;
+						}
+					});
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsInRange", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float radius = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final TriggerBooleanExpression filter = arguments.get(4)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					simulation.getWorldCollision().enumUnitsInRect(tempRect.set(x - radius, y - radius, radius, radius),
+							new CUnitEnumFunction() {
+
+								@Override
+								public boolean call(final CUnit unit) {
+									if (unit.distance(x, y) <= radius) {
+										if (filter.evaluate(globalScope,
+												CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+											// TODO the trigger scope for evaluation here might need to be a clean one?
+											group.add(unit);
+										}
+									}
+									return false;
+								}
+							});
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsInRangeOfLoc", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final Point2D.Double whichLocation = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					final float x = (float) whichLocation.x;
+					final float y = (float) whichLocation.y;
+					final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final TriggerBooleanExpression filter = arguments.get(3)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					simulation.getWorldCollision().enumUnitsInRect(tempRect.set(x - radius, y - radius, radius, radius),
+							new CUnitEnumFunction() {
+
+								@Override
+								public boolean call(final CUnit unit) {
+									if (unit.distance(x, y) <= radius) {
+										if (filter.evaluate(globalScope,
+												CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+											// TODO the trigger scope for evaluation here might need to be a clean one?
+											group.add(unit);
+										}
+									}
+									return false;
+								}
+							});
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsInRangeCounted", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float radius = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final TriggerBooleanExpression filter = arguments.get(4)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					final Integer countLimit = arguments.get(5).visit(IntegerJassValueVisitor.getInstance());
+					simulation.getWorldCollision().enumUnitsInRect(tempRect.set(x - radius, y - radius, radius, radius),
+							new CUnitEnumFunction() {
+								int count = 0;
+
+								@Override
+								public boolean call(final CUnit unit) {
+									if (unit.distance(x, y) <= radius) {
+										if (filter.evaluate(globalScope,
+												CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+											// TODO the trigger scope for evaluation here might need to be a clean one?
+											group.add(unit);
+											this.count++;
+											if (this.count >= countLimit) {
+												return true;
+											}
+										}
+									}
+									return false;
+								}
+							});
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsInRangeOfLocCounted",
+					new JassFunction() {
+						@Override
+						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+								final TriggerExecutionScope triggerScope) {
+							final List<CUnit> group = arguments.get(0)
+									.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+							final Point2D.Double whichLocation = arguments.get(1)
+									.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+							final float x = (float) whichLocation.x;
+							final float y = (float) whichLocation.y;
+							final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance())
+									.floatValue();
+							final TriggerBooleanExpression filter = arguments.get(3)
+									.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+							final Integer countLimit = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
+							simulation.getWorldCollision().enumUnitsInRect(
+									tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
+										int count = 0;
+
+										@Override
+										public boolean call(final CUnit unit) {
+											if (unit.distance(x, y) <= radius) {
+												if (filter.evaluate(globalScope,
+														CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+													// TODO the trigger scope for evaluation here might need to be a
+													// clean one?
+													group.add(unit);
+													this.count++;
+													if (this.count >= countLimit) {
+														return true;
+													}
+												}
+											}
+											return false;
+										}
+									});
+							return null;
+						}
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsSelected", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final CPlayerJass whyichPlayer = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					final TriggerBooleanExpression filter = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					throw new UnsupportedOperationException("GroupEnumUnitsSelected not supported yet.");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupImmediateOrder", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final String order = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+					final int orderId = OrderIdUtils.getOrderId(order);
+					boolean success = true;
+					for (final CUnit unit : group) {
+						success &= unit.order(simulation, orderId, null);
+					}
+					return BooleanJassValue.of(success);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupImmediateOrderById", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final int order = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					boolean success = true;
+					for (final CUnit unit : group) {
+						success &= unit.order(simulation, order, null);
+					}
+					return BooleanJassValue.of(success);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupPointOrder", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final String order = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+					final Double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+					final Double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+					final AbilityPointTarget target = new AbilityPointTarget(x.floatValue(), y.floatValue());
+					final int orderId = OrderIdUtils.getOrderId(order);
+					boolean success = true;
+					for (final CUnit unit : group) {
+						success &= unit.order(simulation, orderId, target);
+					}
+					return BooleanJassValue.of(success);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupPointOrderLoc", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final String order = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+					final Point2D.Double whichLocation = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					final AbilityPointTarget target = new AbilityPointTarget((float) whichLocation.x,
+							(float) whichLocation.y);
+					final int orderId = OrderIdUtils.getOrderId(order);
+					boolean success = true;
+					for (final CUnit unit : group) {
+						success &= unit.order(simulation, orderId, target);
+					}
+					return BooleanJassValue.of(success);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupPointOrderById", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final Double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+					final Double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+					final AbilityPointTarget target = new AbilityPointTarget(x.floatValue(), y.floatValue());
+					boolean success = true;
+					for (final CUnit unit : group) {
+						success &= unit.order(simulation, orderId, target);
+					}
+					return BooleanJassValue.of(success);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupPointOrderByIdLoc", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final Point2D.Double whichLocation = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					final AbilityPointTarget target = new AbilityPointTarget((float) whichLocation.x,
+							(float) whichLocation.y);
+					boolean success = true;
+					for (final CUnit unit : group) {
+						success &= unit.order(simulation, orderId, target);
+					}
+					return BooleanJassValue.of(success);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupTargetOrder", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final String order = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+					final CWidget target = arguments.get(2).visit(ObjectJassValueVisitor.<CWidget>getInstance());
+					final int orderId = OrderIdUtils.getOrderId(order);
+					boolean success = true;
+					for (final CUnit unit : group) {
+						success &= unit.order(simulation, orderId, target);
+					}
+					return BooleanJassValue.of(success);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupTargetOrderById", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final CWidget target = arguments.get(2).visit(ObjectJassValueVisitor.<CWidget>getInstance());
+					boolean success = true;
+					for (final CUnit unit : group) {
+						success &= unit.order(simulation, orderId, target);
+					}
+					return BooleanJassValue.of(success);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ForGroup", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					final JassFunction callback = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+					for (final CUnit unit : group) {
+						callback.call(Collections.<JassValue>emptyList(), globalScope,
+								CommonTriggerExecutionScope.enumScope(triggerScope, unit));
+					}
+					return new HandleJassValue(unitType, group.get(0));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("FirstOfGroup", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+					return new HandleJassValue(unitType, group.get(0));
+				}
+			});
+			// ============================================================================
+			// Force API
+			//
+			jassProgramVisitor.getJassNativeManager().createNative("CreateForce", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(forceType, new ArrayList<CPlayerJass>());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyForce", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CPlayerJass> force = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
+					System.err.println(
+							"DestroyForce called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ForceAddPlayer", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CPlayerJass> force = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
+					final CPlayerJass player = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					force.add(player);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ForceRemovePlayer", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CPlayerJass> force = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
+					final CPlayerJass player = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					force.remove(player);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ForceClear", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CPlayerJass> force = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
+					force.clear();
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ForceEnumPlayers", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CPlayerJass> force = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
+					final TriggerBooleanExpression filter = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+						final CPlayerJass jassPlayer = simulation.getPlayer(i);
+						if (filter.evaluate(globalScope,
+								CommonTriggerExecutionScope.filterScope(triggerScope, jassPlayer))) {
+							force.add(jassPlayer);
+						}
+					}
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ForceEnumPlayersCounted", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CPlayerJass> force = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
+					final TriggerBooleanExpression filter = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					final Integer countLimit = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+					int count = 0;
+					for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (count < countLimit); i++) {
+						final CPlayerJass jassPlayer = simulation.getPlayer(i);
+						if (filter.evaluate(globalScope,
+								CommonTriggerExecutionScope.filterScope(triggerScope, jassPlayer))) {
+							force.add(jassPlayer);
+							count++;
+						}
+					}
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ForceEnumAllies", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CPlayerJass> force = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
+					final CPlayerJass player = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					final TriggerBooleanExpression filter = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+						final CPlayerJass jassPlayer = simulation.getPlayer(i);
+						if (player.hasAlliance(i, CAllianceType.PASSIVE)) {
+							if (filter.evaluate(globalScope,
+									CommonTriggerExecutionScope.filterScope(triggerScope, jassPlayer))) {
+								force.add(jassPlayer);
+							}
+						}
+					}
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ForceEnumEnemies", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CPlayerJass> force = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
+					final CPlayerJass player = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					final TriggerBooleanExpression filter = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+						final CPlayerJass jassPlayer = simulation.getPlayer(i);
+						if (!player.hasAlliance(i, CAllianceType.PASSIVE)) {
+							if (filter.evaluate(globalScope,
+									CommonTriggerExecutionScope.filterScope(triggerScope, jassPlayer))) {
+								force.add(jassPlayer);
+							}
+						}
+					}
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ForForce", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final List<CPlayerJass> force = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
+					final JassFunction callback = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+					for (final CPlayerJass player : force) {
+						callback.call(Collections.<JassValue>emptyList(), globalScope,
+								CommonTriggerExecutionScope.enumScope(triggerScope, player));
+					}
+					return null;
+				}
+			});
+			// ============================================================================
+			// Region and Location API
+			//
+			jassProgramVisitor.getJassNativeManager().createNative("Rect", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final float minx = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float miny = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float maxx = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float maxy = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
+					return new HandleJassValue(rectType, new Rectangle(minx, miny, maxx - minx, maxy - miny));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RectFromLoc", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Point2D.Double min = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					final Point2D.Double max = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					final float minx = (float) min.x;
+					final float miny = (float) min.y;
+					final float maxx = (float) max.x;
+					final float maxy = (float) max.y;
+					return new HandleJassValue(rectType, new Rectangle(minx, miny, maxx - minx, maxy - miny));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RemoveRect", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					System.err.println(
+							"RemoveRect called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetRect", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					final float minx = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float miny = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float maxx = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float maxy = arguments.get(4).visit(RealJassValueVisitor.getInstance()).floatValue();
+					rect.set(minx, miny, maxx - minx, maxy - miny);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetRectFromLoc", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					final Point2D.Double min = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					final Point2D.Double max = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					final float minx = (float) min.x;
+					final float miny = (float) min.y;
+					final float maxx = (float) max.x;
+					final float maxy = (float) max.y;
+					rect.set(minx, miny, maxx - minx, maxy - miny);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("MoveRectTo", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					final float newCenterX = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float newCenterY = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					rect.setCenter(newCenterX, newCenterY);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("MoveRectToLoc", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					final Point2D.Double newCenterLoc = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					rect.setCenter((float) newCenterLoc.x, (float) newCenterLoc.y);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetRectCenterX", new JassFunction() {
+				Vector2 centerHeap = new Vector2();
+
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					return new RealJassValue(rect.getCenter(this.centerHeap).x);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetRectCenterY", new JassFunction() {
+				Vector2 centerHeap = new Vector2();
+
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					return new RealJassValue(rect.getCenter(this.centerHeap).y);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetRectMinX", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					return new RealJassValue(rect.getX());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetRectMinY", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					return new RealJassValue(rect.getY());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetRectMaxX", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					return new RealJassValue(rect.getX() + rect.getWidth());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetRectMaxY", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					return new RealJassValue(rect.getY() + rect.getHeight());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("CreateRegion", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(regionType, new CRegion());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RemoveRegion", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					region.remove(simulation.getRegionManager());
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RegionAddRect", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final Rectangle rect = arguments.get(1).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					region.addRect(rect, simulation.getRegionManager());
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RegionClearRect", new JassFunction() {
+
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final Rectangle rect = arguments.get(1).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					region.clearRect(rect, simulation.getRegionManager());
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RegionAddCell", new JassFunction() {
+
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					region.addCell(x, y, simulation.getRegionManager());
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RegionAddCellAtLoc", new JassFunction() {
+
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final Point2D.Double whichLocation = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					region.addCell((float) whichLocation.x, (float) whichLocation.y, simulation.getRegionManager());
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RegionClearCell", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					region.clearCell(x, y, simulation.getRegionManager());
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RegionClearCellAtLoc", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final Point2D.Double whichLocation = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					region.clearCell((float) whichLocation.x, (float) whichLocation.y, simulation.getRegionManager());
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("Location", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final float x = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float y = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					return new HandleJassValue(locationType, new Point2D.Double(x, y));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RemoveLocation", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Point2D.Double whichLocation = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					System.err.println(
+							"RemoveRect called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("MoveLocation", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Point2D.Double whichLocation = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					whichLocation.x = x;
+					whichLocation.y = y;
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetLocationX", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Point2D.Double whichLocation = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					return new RealJassValue(whichLocation.x);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetLocationY", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Point2D.Double whichLocation = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					return new RealJassValue(whichLocation.y);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetLocationZ", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Point2D.Double whichLocation = arguments.get(0)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					return new RealJassValue(
+							war3MapViewer.terrain.getGroundHeight((float) whichLocation.x, (float) whichLocation.y));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRegion", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion whichRegion = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final CUnit whichUnit = arguments.get(1).visit(ObjectJassValueVisitor.<CUnit>getInstance());
+					return BooleanJassValue.of(whichUnit.isInRegion(whichRegion));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("IsPointInRegion", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion whichRegion = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+					return BooleanJassValue.of(whichRegion.contains(x, y, simulation.getRegionManager()));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("IsLocationInRegion", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CRegion whichRegion = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final Point2D.Double whichLocation = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					return BooleanJassValue.of(whichRegion.contains((float) whichLocation.x, (float) whichLocation.y,
+							simulation.getRegionManager()));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetWorldBounds", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final float worldMinX = simulation.getPathingGrid().getWorldX(0) - 16f;
+					final float worldMinY = simulation.getPathingGrid().getWorldY(0) - 16f;
+					final float worldMaxX = simulation.getPathingGrid()
+							.getWorldX(simulation.getPathingGrid().getWidth() - 1) + 16f;
+					final float worldMaxY = simulation.getPathingGrid()
+							.getWorldY(simulation.getPathingGrid().getHeight() - 1) + 16f;
+					return new HandleJassValue(rectType,
+							new Rectangle(worldMinX, worldMinY, worldMaxX - worldMinX, worldMaxY - worldMinY));
+				}
+			});
+
 		}
 
 		private void registerConfigNatives(final JassProgramVisitor jassProgramVisitor, final War3MapConfig mapConfig,

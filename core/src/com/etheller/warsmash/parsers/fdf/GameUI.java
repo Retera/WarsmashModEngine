@@ -294,7 +294,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			this.fontParam.size = 128;
 		}
 		final BitmapFont frameFont = this.fontGenerator.generateFont(this.fontParam);
-		final StringFrame stringFrame = new StringFrame(name, parent, color, justifyH, justifyV, frameFont, name);
+		final StringFrame stringFrame = new StringFrame(name, parent, color, justifyH, justifyV, frameFont, name, null,
+				null);
 		this.nameToFrame.put(name, stringFrame);
 		add(stringFrame);
 		return stringFrame;
@@ -400,6 +401,28 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 							fontColorDefinition.getZ(), fontColorDefinition.getW());
 				}
 
+				Color fontHighlightColor;
+				final Vector4Definition fontHighlightColorDefinition = frameDefinition.getVector4("FontHighlightColor");
+				if (fontHighlightColorDefinition == null) {
+					fontHighlightColor = null;
+				}
+				else {
+					fontHighlightColor = new Color(fontHighlightColorDefinition.getX(),
+							fontHighlightColorDefinition.getY(), fontHighlightColorDefinition.getZ(),
+							fontHighlightColorDefinition.getW());
+				}
+
+				Color fontDisabledColor;
+				final Vector4Definition fontDisabledColorDefinition = frameDefinition.getVector4("FontDisabledColor");
+				if (fontDisabledColorDefinition == null) {
+					fontDisabledColor = null;
+				}
+				else {
+					fontDisabledColor = new Color(fontDisabledColorDefinition.getX(),
+							fontDisabledColorDefinition.getY(), fontDisabledColorDefinition.getZ(),
+							fontDisabledColorDefinition.getW());
+				}
+
 				Color fontShadowColor;
 				final Vector4Definition fontShadowColorDefinition = frameDefinition.getVector4("FontShadowColor");
 				if (fontShadowColorDefinition == null) {
@@ -428,7 +451,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					textString = text;
 				}
 				final StringFrame stringFrame = new StringFrame(frameDefinition.getName(), parent, fontColor, justifyH,
-						justifyV, frameFont, textString);
+						justifyV, frameFont, textString, fontHighlightColor, fontDisabledColor);
 				if (fontShadowColor != null) {
 					final Vector2Definition shadowOffset = frameDefinition.getVector2("FontShadowOffset");
 					stringFrame.setFontShadowColor(fontShadowColor);
@@ -850,7 +873,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				textString = text;
 			}
 			final StringFrame stringFrame = new StringFrame(frameDefinition.getName(), parent, fontColor, justifyH,
-					justifyV, frameFont, textString);
+					justifyV, frameFont, textString, null, null);
 			inflatedFrame = stringFrame;
 			break;
 		case Texture:

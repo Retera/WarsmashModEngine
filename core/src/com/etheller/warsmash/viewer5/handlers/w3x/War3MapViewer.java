@@ -939,11 +939,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					final RenderDestructable renderDestructable = new RenderDestructable(this, model, row, doodad, type,
 							maxPitch, maxRoll, doodad.getLife(), destructableShadow, simulationDestructable);
 					if (row.readSLKTagBoolean("walkable")) {
+						final float angle = doodad.getAngle();
 						final BoundingBox boundingBox = model.bounds.getBoundingBox();
-						final float minX = boundingBox.min.x + x;
-						final float minY = boundingBox.min.y + y;
-						final Rectangle renderDestructableBounds = new Rectangle(minX, minY, boundingBox.getWidth(),
-								boundingBox.getHeight());
+						final Rectangle renderDestructableBounds = getRotatedBoundingBox(x, y, angle, boundingBox);
+						System.out.println("ROTATED BOUNDS TO: " + renderDestructableBounds);
 						this.walkableObjectsTree.add((MdxComplexInstance) renderDestructable.instance,
 								renderDestructableBounds);
 						renderDestructable.walkableBounds = renderDestructableBounds;
@@ -1018,6 +1017,39 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		this.doodadsReady = true;
 		this.anyReady = true;
+	}
+
+	private Rectangle getRotatedBoundingBox(final float x, final float y, final float angle,
+			final BoundingBox boundingBox) {
+		final float x1 = boundingBox.min.x;
+		final float y1 = boundingBox.min.y;
+		final float x2 = boundingBox.min.x + boundingBox.getWidth();
+		final float y2 = boundingBox.min.y;
+		final float x3 = boundingBox.min.x + boundingBox.getWidth();
+		final float y3 = boundingBox.min.y + boundingBox.getHeight();
+		final float x4 = boundingBox.min.x;
+		final float y4 = boundingBox.min.y + boundingBox.getHeight();
+		final float angle1 = (float) StrictMath.atan2(y1, x1) + angle;
+		final float len1 = (float) StrictMath.sqrt((x1 * x1) + (y1 * y1));
+		final float angle2 = (float) StrictMath.atan2(y2, x2) + angle;
+		final float len2 = (float) StrictMath.sqrt((x2 * x2) + (y2 * y2));
+		final float angle3 = (float) StrictMath.atan2(y3, x3) + angle;
+		final float len3 = (float) StrictMath.sqrt((x3 * x3) + (y3 * y3));
+		final float angle4 = (float) StrictMath.atan2(y4, x4) + angle;
+		final float len4 = (float) StrictMath.sqrt((x4 * x4) + (y4 * y4));
+		final double x1prime = StrictMath.cos(angle1) * len1;
+		final double x2prime = StrictMath.cos(angle2) * len2;
+		final double x3prime = StrictMath.cos(angle3) * len3;
+		final double x4prime = StrictMath.cos(angle4) * len4;
+		final double y1prime = StrictMath.sin(angle1) * len1;
+		final double y2prime = StrictMath.sin(angle2) * len2;
+		final double y3prime = StrictMath.sin(angle3) * len3;
+		final double y4prime = StrictMath.sin(angle4) * len4;
+		final float minX = (float) StrictMath.min(StrictMath.min(x1prime, x2prime), StrictMath.min(x3prime, x4prime));
+		final float minY = (float) StrictMath.min(StrictMath.min(y1prime, y2prime), StrictMath.min(y3prime, y4prime));
+		final float maxX = (float) StrictMath.max(StrictMath.max(x1prime, x2prime), StrictMath.max(x3prime, x4prime));
+		final float maxY = (float) StrictMath.max(StrictMath.max(y1prime, y2prime), StrictMath.max(y3prime, y4prime));
+		return new Rectangle(x + minX, y + minY, maxX - minX, maxY - minY);
 	}
 
 	private void applyModificationFile(final MappedData doodadsData2, final MappedData doodadMetaData2,
@@ -1728,6 +1760,16 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 		if (!mdxPath.toLowerCase().endsWith(".mdx")) {
 			mdxPath += ".mdx";
+		}
+		return mdxPath;
+	}
+
+	public static String mdl(String mdxPath) {
+		if (mdxPath.toLowerCase().endsWith(".mdx")) {
+			mdxPath = mdxPath.substring(0, mdxPath.length() - 4);
+		}
+		if (!mdxPath.toLowerCase().endsWith(".mdl")) {
+			mdxPath += ".mdl";
 		}
 		return mdxPath;
 	}

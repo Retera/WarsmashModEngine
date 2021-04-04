@@ -37,6 +37,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindin
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
@@ -70,6 +71,7 @@ public class CSimulation implements CPlayerAPI {
 	private final Map<Integer, CAbility> handleIdToAbility = new HashMap<>();
 	private final LinkedList<CTimer> activeTimers = new LinkedList<>();
 	private transient CommandErrorListener commandErrorListener;
+	private final CRegionManager regionManager;
 
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
@@ -92,6 +94,7 @@ public class CSimulation implements CPlayerAPI {
 		this.newProjectiles = new ArrayList<>();
 		this.handleIdAllocator = new HandleIdAllocator();
 		this.worldCollision = new CWorldCollision(entireMapBounds, this.gameplayConstants.getMaxCollisionRadius());
+		this.regionManager = new CRegionManager(entireMapBounds, pathingGrid);
 		this.pathfindingProcessors = new CPathfindingProcessor[WarsmashConstants.MAX_PLAYERS];
 		this.playerHeroes = new ArrayList[WarsmashConstants.MAX_PLAYERS];
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
@@ -291,6 +294,10 @@ public class CSimulation implements CPlayerAPI {
 
 	public CWorldCollision getWorldCollision() {
 		return this.worldCollision;
+	}
+
+	public CRegionManager getRegionManager() {
+		return this.regionManager;
 	}
 
 	public CGameplayConstants getGameplayConstants() {

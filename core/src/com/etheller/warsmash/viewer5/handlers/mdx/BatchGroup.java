@@ -97,7 +97,7 @@ public class BatchGroup extends GenericGroup {
 			final float[] geosetColor = instance.geosetColors[geosetIndex];
 			final float layerAlpha = instance.layerAlphas[layerIndex];
 
-			if ((geosetColor[3] > 0) && (layerAlpha > 0)) {
+			if ((geosetColor[3] > 0.01) && (layerAlpha > 0.01)) {
 				// BELOW: I updated it to "Math.max(0," because MDL and MDX parser for PRSCMOD
 				// menu screen behaved differently,
 				// the MDL case was getting "no data" for default value when unanimated, and "no

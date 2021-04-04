@@ -24,7 +24,8 @@ public class Quadtree<T> {
 	}
 
 	public void add(final T object, final Rectangle bounds) {
-		add(new Node<T>(object, bounds), 0);
+		final Node<T> node = new Node<T>(object, bounds);
+		add(node, 0);
 	}
 
 	public void remove(final T object, final Rectangle bounds) {

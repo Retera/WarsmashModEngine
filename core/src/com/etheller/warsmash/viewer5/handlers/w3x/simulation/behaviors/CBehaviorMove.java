@@ -240,7 +240,7 @@ public class CBehaviorMove implements CBehavior {
 						// / 16)
 						// * 16
 						&& !worldCollision.intersectsAnythingOtherThan(tempRect, this.unit, movementType))) {
-					this.unit.setPoint(nextX, nextY, worldCollision);
+					this.unit.setPoint(nextX, nextY, worldCollision, simulation.getRegionManager());
 					if (done) {
 						// if we're making headway along the path then it's OK to start thinking fast
 						// again

@@ -15,6 +15,8 @@ public interface CPlayerJass {
 
 	void setAlliance(int otherPlayerIndex, CAllianceType whichAllianceSetting, boolean value);
 
+	boolean hasAlliance(int otherPlayerIndex, CAllianceType allianceType);
+
 	void setTaxRate(int otherPlayerIndex, CPlayerState whichResource, int rate);
 
 	void setRacePref(CRacePreference whichRacePreference);

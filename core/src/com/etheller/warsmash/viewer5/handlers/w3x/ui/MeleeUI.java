@@ -295,6 +295,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private SimpleButtonFrame alliesButton;
 	private SimpleButtonFrame chatButton;
 	private final Runnable exitGameRunnable;
+	private SimpleFrame smashEscMenu;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -448,12 +449,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.chatButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarChatButton", 0);
 		this.chatButton.setEnabled(false);
 
-		final UIFrame escMenuBackdrop = this.rootFrame.createFrame("EscMenuBackdrop", this.rootFrame, 0, 0);
+		this.smashEscMenu = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashEscMenu", this.rootFrame, 0);
+		this.smashEscMenu.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+		final UIFrame escMenuBackdrop = this.rootFrame.createFrame("EscMenuBackdrop", this.smashEscMenu, 0, 0);
 		escMenuBackdrop.setVisible(false);
-		escMenuBackdrop.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
-		final UIFrame escMenuMainPanel = this.rootFrame.createFrame("EscMenuMainPanel", this.rootFrame, 0, 0);
+		final UIFrame escMenuMainPanel = this.rootFrame.createFrame("EscMenuMainPanel", this.smashEscMenu, 0, 0);
 		escMenuMainPanel.setVisible(false);
-		escMenuMainPanel.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+		this.smashEscMenu.add(escMenuBackdrop);
+		this.smashEscMenu.add(escMenuMainPanel);
 
 		final UIFrame escMenuInnerMainPanel = this.rootFrame.getFrameByName("MainPanel", 0);
 		final GlueTextButtonFrame pauseButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("PauseButton", 0);
@@ -504,6 +507,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			public void run() {
 				escMenuBackdrop.setVisible(true);
 				escMenuMainPanel.setVisible(true);
+				MeleeUI.this.smashEscMenu.setVisible(true);
 				escMenuInnerMainPanel.setVisible(true);
 				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerMainPanel);
 			}
@@ -513,6 +517,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			public void run() {
 				escMenuBackdrop.setVisible(false);
 				escMenuMainPanel.setVisible(false);
+				MeleeUI.this.smashEscMenu.setVisible(false);
 				escMenuInnerMainPanel.setVisible(false);
 			}
 		});
@@ -924,12 +929,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	private void updateEscMenuCurrentPanel(final UIFrame escMenuBackdrop, final UIFrame escMenuMainPanel,
 			final UIFrame escMenuInnerMainPanel) {
-		escMenuMainPanel.setHeight(escMenuInnerMainPanel.getAssignedHeight());
-		escMenuMainPanel.setWidth(escMenuInnerMainPanel.getAssignedWidth());
-		escMenuBackdrop.setHeight(escMenuInnerMainPanel.getAssignedHeight());
+		this.smashEscMenu.setWidth(escMenuInnerMainPanel.getAssignedWidth());
+		this.smashEscMenu.setHeight(escMenuInnerMainPanel.getAssignedHeight());
 		escMenuBackdrop.setWidth(escMenuInnerMainPanel.getAssignedWidth());
-		escMenuMainPanel.positionBounds(MeleeUI.this.rootFrame, MeleeUI.this.uiViewport);
-		escMenuBackdrop.positionBounds(MeleeUI.this.rootFrame, MeleeUI.this.uiViewport);
+		escMenuBackdrop.setHeight(escMenuInnerMainPanel.getAssignedHeight());
+		this.smashEscMenu.positionBounds(this.rootFrame, this.uiViewport);
+
 	}
 
 	@Override

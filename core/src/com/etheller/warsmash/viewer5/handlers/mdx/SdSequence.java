@@ -167,7 +167,7 @@ public final class SdSequence<TYPE> {
 	}
 
 	public int getValue(final TYPE out, final long frame) {
-		final int l = this.frames.length;
+		final int length = this.frames.length;
 
 		if (this.constant || (frame < this.start)) {
 			this.sd.copy(out, this.values[0]);
@@ -175,34 +175,34 @@ public final class SdSequence<TYPE> {
 			return -1;
 		}
 		else {
-			int startFrame = -1;
-			int endFrame = -1;
-			final int l1 = l - 1;
-			if ((frame < this.frames[0]) || (frame >= this.frames[l1])) {
-				startFrame = l1;
-				endFrame = 0;
+			int startFrameIndex = -1;
+			int endFrameIndex = -1;
+			final int lengthLessOne = length - 1;
+			if ((frame < this.frames[0]) || (frame >= this.frames[lengthLessOne])) {
+				startFrameIndex = lengthLessOne;
+				endFrameIndex = 0;
 			}
 			else {
-				for (int i = 1; i < l; i++) {
+				for (int i = 1; i < length; i++) {
 					if (this.frames[i] > frame) {
-						startFrame = i - 1;
-						endFrame = i;
+						startFrameIndex = i - 1;
+						endFrameIndex = i;
 						break;
 					}
 				}
 			}
-			long start = this.frames[startFrame];
-			final long end = this.frames[endFrame];
-			long timeBetweenFrames = end - start;
+			long startFrame = this.frames[startFrameIndex];
+			final long endFrame = this.frames[endFrameIndex];
+			long timeBetweenFrames = endFrame - startFrame;
 			if (timeBetweenFrames < 0) {
 				timeBetweenFrames += (this.end - this.start);
-				if (frame < start) {
-					start = end;
+				if (frame < startFrame) {
+					startFrame = endFrame;
 				}
 			}
-			final float t = ((timeBetweenFrames) == 0 ? 0 : ((frame - start) / (float) (timeBetweenFrames)));
-			this.sd.interpolate(out, this.values, this.inTans, this.outTans, startFrame, endFrame, t);
-			return startFrame;
+			final float t = ((timeBetweenFrames) == 0 ? 0 : ((frame - startFrame) / (float) (timeBetweenFrames)));
+			this.sd.interpolate(out, this.values, this.inTans, this.outTans, startFrameIndex, endFrameIndex, t);
+			return startFrameIndex;
 		}
 	}
 

@@ -19,7 +19,7 @@ https://www.youtube.com/watch?v=YyMg95j82R8
 *(This process will hopefully become easier in the future)*
 
 ## Background and History
-My current codebase is running on Java 8. It contains:
+My current codebase is running on Java 8 and the LibGDX game engine coupled with the port of the mdx-m3-viewer's engine. It contains:
 - A transcription of only the relevant portions of this WebGL viewer necessary to load MDX models and W3X map data, and to display the models https://github.com/flowtsohg/mdx-m3-viewer
   - I changed several things about the viewer as of the time of writing, such as a naive implementation of Light objects that will support the Day/Night cycle of the game as well as support point lights for torches and other game objects, however there is a memory leak in my Light system so that it will cause progressively increasing lag on slower computers
   - After the development of this project began, there was code sharing between the MDLX parser in this repo and the one in the "conflictfixes" branch of ReteraModelStudio. Other users (tw1lac and flowtsohg) made contributions to the MDLX parser while it was sitting in that repo, and then I copied it back to this repo, so at this point this repo is including a few changes that were made by those users, but in an undocumented way. Hopefully I will clean this up and get the MDLX parser split from both of these projects off to its own repo. However, credits and thanks to them for their changes to that code (I think it was mostly flowtsohg)! My lack of the git history for those changes in this repo is not an attempt to remove citation/credits for their work, but is rather the result of laziness.

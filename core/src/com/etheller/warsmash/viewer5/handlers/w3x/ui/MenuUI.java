@@ -149,6 +149,7 @@ public class MenuUI {
 	private String mapFilepathToStart;
 	private LoadingMap loadingMap;
 	private SpriteFrame loadingBackground;
+	private boolean unifiedCampaignInfo = false;
 
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
 			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
@@ -179,6 +180,7 @@ public class MenuUI {
 		else {
 			try (InputStream campaignStringStream = dataSource.getResourceAsStream("UI\\CampaignInfoClassic.txt")) {
 				this.campaignStrings.readTXT(campaignStringStream, true);
+				unifiedCampaignInfo = true;
 			}
 			catch (final IOException e) {
 				throw new RuntimeException(e);
@@ -593,8 +595,8 @@ public class MenuUI {
 							MenuUI.this.missionSelectFrame.setVisible(true);
 							MenuUI.this.menuState = MenuState.MISSION_SELECT;
 						}
-						MenuUI.this.rootFrame.setText(missionName, campaign.getName());
-						MenuUI.this.rootFrame.setText(missionNameHeader, campaign.getHeader());
+						MenuUI.this.rootFrame.setDecoratedText(missionName, campaign.getName());
+						MenuUI.this.rootFrame.setDecoratedText(missionNameHeader, campaign.getHeader());
 					}
 				});
 				if (campaign == MenuUI.this.currentCampaign) {
@@ -843,8 +845,7 @@ public class MenuUI {
 				this.menuState = MenuState.GOING_TO_CAMPAIGN_PART2;
 				break;
 			case GOING_TO_CAMPAIGN_PART2: {
-				final String currentCampaignBackgroundModel = this.rootFrame
-						.getSkinField(this.currentCampaign.getBackground() + "_V" + WarsmashConstants.GAME_VERSION);
+				final String currentCampaignBackgroundModel = getCurrentBackgroundModel();
 				final String currentCampaignAmbientSound = this.rootFrame
 						.trySkinField(this.currentCampaign.getAmbientSound());
 				this.menuScreen.setModel(currentCampaignBackgroundModel);
@@ -867,8 +868,7 @@ public class MenuUI {
 				this.campaignRootMenuUI.setVisible(true);
 				break;
 			case GOING_TO_MISSION_SELECT: {
-				final String currentCampaignBackgroundModel = this.rootFrame
-						.getSkinField(this.currentCampaign.getBackground() + "_V" + WarsmashConstants.GAME_VERSION);
+				final String currentCampaignBackgroundModel = getCurrentBackgroundModel();
 				final String currentCampaignAmbientSound = this.rootFrame
 						.trySkinField(this.currentCampaign.getAmbientSound());
 				this.menuScreen.setModel(currentCampaignBackgroundModel);
@@ -1087,8 +1087,7 @@ public class MenuUI {
 			break;
 		case CAMPAIGN:
 		case MISSION_SELECT:
-			final String currentCampaignBackgroundModel = this.rootFrame
-					.getSkinField(this.currentCampaign.getBackground() + "_V" + WarsmashConstants.GAME_VERSION);
+			final String currentCampaignBackgroundModel = getCurrentBackgroundModel();
 			final String currentCampaignAmbientSound = this.rootFrame
 					.trySkinField(this.currentCampaign.getAmbientSound());
 			this.menuScreen.setModel(currentCampaignBackgroundModel);
@@ -1103,6 +1102,16 @@ public class MenuUI {
 //		MenuUI.this.campaignFade.setSequence("Death");
 //		this.campaignFade.setVisible(true);
 //		this.menuState = MenuState.MISSION_SELECT;
+	}
+
+	private String getCurrentBackgroundModel() {
+		String background = this.currentCampaign.getBackground();
+		String versionedBackground = background + "_V" + WarsmashConstants.GAME_VERSION;
+		if(this.rootFrame.hasSkinField(versionedBackground)) {
+			return this.rootFrame.getSkinField(versionedBackground);
+		}
+		return this.rootFrame
+				.getSkinField(background );
 	}
 
 	private static final class LoadingMap {

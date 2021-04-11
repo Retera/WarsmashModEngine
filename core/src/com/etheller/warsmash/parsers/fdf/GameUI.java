@@ -221,6 +221,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		}
 	}
 
+	public boolean hasSkinField(String file) {
+		return (file != null) && this.skin.hasField(file);
+	}
+
 	public String getSkinField(String file) {
 		if ((file != null) && this.skin.hasField(file)) {
 			file = this.skin.getField(file);

@@ -34,11 +34,11 @@ public class CampaignMenuUI extends SimpleFrame {
 
 		final StringFrame headerText = (StringFrame) this.rootFrame.createFrame("StandardSmallTextTemplate",
 				campaignButtonUI, 0, 0);
-		this.rootFrame.setText(headerText, header);
+		this.rootFrame.setDecoratedText(headerText, header);
 		campaignButtonUI.add(headerText);
 		final StringFrame nameText = (StringFrame) this.rootFrame.createFrame("StandardValueTextTemplate",
 				campaignButtonUI, 0, 0);
-		this.rootFrame.setText(nameText, name);
+		this.rootFrame.setDecoratedText(nameText, name);
 		headerText.addSetPoint(new SetPoint(FramePoint.TOPLEFT, campaignArrowButton, FramePoint.TOPRIGHT, 0, 0));
 		nameText.addSetPoint(new SetPoint(FramePoint.TOPLEFT, headerText, FramePoint.BOTTOMLEFT, 0, 0));
 		campaignButtonUI.add(nameText);

@@ -155,6 +155,7 @@ public class TVFSDecoder {
 					storageBuffer.get(encodingKeyDecoder);
 
 					final int physicalSize = storageBuffer.getInt();
+					storageBuffer.get();
 					final int actualSize = storageBuffer.getInt();
 
 					final StorageReference reference = new StorageReference(offset, size, new Key(encodingKeyDecoder),

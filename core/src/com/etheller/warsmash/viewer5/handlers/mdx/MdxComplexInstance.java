@@ -764,8 +764,51 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 	}
 
-	public void intersectRayBounds(final Ray ray, final Vector3 intersection) {
-		getBounds().intersectRay(ray, intersection);
+	public boolean intersectRayBounds(final Ray ray, final Vector3 intersection) {
+		return CollisionShape.intersectRayBounds(getBounds(), this.worldMatrix, ray, intersection);
+	}
+
+	/**
+	 * Intersects a world ray with the model's CollisionShapes. Only ever call this
+	 * function on the Gdx thread because it uses static variables to hold state
+	 * while processing.
+	 *
+	 * @param ray
+	 */
+	public boolean intersectRayWithCollisionSimple(final Ray ray, final Vector3 intersection) {
+		final MdxModel mdxModel = (MdxModel) this.model;
+		final List<CollisionShape> collisionShapes = mdxModel.collisionShapes;
+		for (final CollisionShape collisionShape : collisionShapes) {
+			final MdxNode mdxNode = this.nodes[collisionShape.index];
+			if (collisionShape.checkIntersect(ray, mdxNode, intersection)) {
+				return true;
+			}
+		}
+		return intersectRayBounds(ray, intersection);
+	}
+
+	/**
+	 * Intersects a world ray with the model's geosets. Only ever call this function
+	 * on the Gdx thread because it uses static variables to hold state while
+	 * processing.
+	 *
+	 * @param ray
+	 */
+	public boolean intersectRayWithMeshSlow(final Ray ray, final Vector3 intersection) {
+		final MdxModel mdxModel = (MdxModel) this.model;
+		for (final Geoset geoset : mdxModel.geosets) {
+			if (!geoset.unselectable) {
+				geoset.getAlpha(alphaHeap, this.sequence, this.frame, this.counter);
+				if (alphaHeap[0] > 0) {
+					final MdlxGeoset mdlxGeoset = geoset.mdlxGeoset;
+					if (CollisionShape.intersectRayTriangles(ray, this, mdlxGeoset.getVertices(), mdlxGeoset.getFaces(),
+							3, intersection)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	/**

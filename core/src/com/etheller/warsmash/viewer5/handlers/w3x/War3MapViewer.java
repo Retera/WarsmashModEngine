@@ -107,7 +107,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
@@ -118,6 +120,8 @@ import mpq.MPQArchive;
 import mpq.MPQException;
 
 public class War3MapViewer extends AbstractMdxModelViewer {
+	public static int DEBUG_DEPTH = 9999;
+
 	private static final War3ID ABILITY_HERO_RAWCODE = War3ID.fromString("AHer");
 	private static final Color PLACEHOLDER_LUMBER_COLOR = new Color(0.0f, 200f / 255f, 80f / 255f, 1.0f);
 	private static final Color PLACEHOLDER_GOLD_COLOR = new Color(1.0f, 220f / 255f, 0f, 1.0f);
@@ -148,6 +152,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final Vector2 mousePosHeap = new Vector2();
 	private static final Vector3 normalHeap = new Vector3();
 	public static final Vector3 intersectionHeap = new Vector3();
+	public static final Vector3 intersectionHeap2 = new Vector3();
 	private static final Rectangle rectangleHeap = new Rectangle();
 	public static final StreamDataCallbackImplementation streamDataCallback = new StreamDataCallbackImplementation();
 	private static final boolean ENABLE_WORLDEDIT_AS_GAMEPLAY_DATA_HACK = true;
@@ -1080,8 +1085,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 				final CUnit unitCreated = createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex,
 						customTeamColor, unitAngle);
-				if (unit.getGoldAmount() != 0) {
-					unitCreated.setGold(unit.getGoldAmount());
+				if (unitCreated != null) {
+					if (unit.getGoldAmount() != 0) {
+						unitCreated.setGold(unit.getGoldAmount());
+					}
 				}
 			}
 		}
@@ -1370,7 +1377,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 					this.filePathToPathingMap.put(pathingTexture.toLowerCase(), buildingPathingPixelMap);
 				}
-				catch (final IOException exc) {
+				catch (final Exception exc) {
 					System.err.println("Failure to get pathing: " + exc.getClass() + ":" + exc.getMessage());
 				}
 			}
@@ -1455,21 +1462,41 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 			startFrame();
 			worldScene.startFrame();
-			worldScene.renderOpaque(this.dynamicShadowManager, this.webGL);
-			this.terrain.renderGround(this.dynamicShadowManager);
-			this.terrain.renderCliffs();
-			worldScene.renderOpaque();
-			this.terrain.renderUberSplats(false);
-			this.terrain.renderWater();
-			worldScene.renderTranslucent();
-			this.terrain.renderUberSplats(true);
+			if (DEBUG_DEPTH > 0) {
+				worldScene.renderOpaque(this.dynamicShadowManager, this.webGL);
+			}
+			if (DEBUG_DEPTH > 1) {
+				this.terrain.renderGround(this.dynamicShadowManager);
+			}
+			if (DEBUG_DEPTH > 2) {
+				this.terrain.renderCliffs();
+			}
+			if (DEBUG_DEPTH > 3) {
+				worldScene.renderOpaque();
+			}
+			if (DEBUG_DEPTH > 4) {
+				this.terrain.renderUberSplats(false);
+			}
+			if (DEBUG_DEPTH > 5) {
+				this.terrain.renderWater();
+			}
+			if (DEBUG_DEPTH > 6) {
+				worldScene.renderTranslucent();
+			}
+			if (DEBUG_DEPTH > 7) {
+				this.terrain.renderUberSplats(true);
+			}
 
 			final List<Scene> scenes = this.scenes;
 			for (final Scene scene : scenes) {
 				if (scene != worldScene) {
 					scene.startFrame();
-					scene.renderOpaque();
-					scene.renderTranslucent();
+					if (DEBUG_DEPTH > 8) {
+						scene.renderOpaque();
+					}
+					if (DEBUG_DEPTH > 9) {
+						scene.renderTranslucent();
+					}
 				}
 			}
 
@@ -1502,6 +1529,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final Map<String, Terrain.Splat> splats = new HashMap<String, Terrain.Splat>();
 		for (final RenderWidget unit : units) {
 			if (unit.getSelectionScale() > 0) {
+				String allyKey = "n:";
 				final float selectionSize = unit.getSelectionScale();
 				String path = null;
 				for (int i = 0; i < this.selectionCircleSizes.size(); i++) {
@@ -1514,6 +1542,17 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				if (!path.toLowerCase().endsWith(".blp")) {
 					path += ".blp";
 				}
+				if (unit instanceof RenderUnit) {
+					final int selectedUnitPlayerIndex = ((RenderUnit) unit).getSimulationUnit().getPlayerIndex();
+					final CPlayer localPlayer = this.simulation.getPlayer(this.localPlayerIndex);
+					if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
+						allyKey = "e:";
+					}
+					else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.HELP_REQUEST)) {
+						allyKey = "f:";
+					}
+				}
+				path = allyKey + path;
 				if (!splats.containsKey(path)) {
 					splats.put(path, new Splat());
 				}
@@ -1537,13 +1576,31 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.selModels.clear();
 		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
 			final String path = entry.getKey();
+			final String filePath = path.substring(2);
+			final String allyKey = path.substring(0, 2);
 			final Splat locations = entry.getValue();
-			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(path, PathSolver.DEFAULT, null),
+			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(filePath, PathSolver.DEFAULT, null),
 					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true);
-			model.color[0] = 0;
-			model.color[1] = 1;
-			model.color[2] = 0;
-			model.color[3] = 1;
+			switch (allyKey) {
+			case "e:":
+				model.color[0] = 1;
+				model.color[1] = 0;
+				model.color[2] = 0;
+				model.color[3] = 1;
+				break;
+			case "f:":
+				model.color[0] = 0;
+				model.color[1] = 1;
+				model.color[2] = 0;
+				model.color[3] = 1;
+				break;
+			default:
+				model.color[0] = 1;
+				model.color[1] = 1;
+				model.color[2] = 0;
+				model.color[3] = 1;
+				break;
+			}
 			this.selModels.add(model);
 			this.terrain.addSplatBatchModel("selection", model);
 		}
@@ -1616,14 +1673,26 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		gdxRayHeap.direction.nor();// needed for libgdx
 
 		RenderWidget entity = null;
+		intersectionHeap2.set(ray[3], ray[4], ray[5]);
 		for (final RenderWidget unit : this.widgets) {
 			final MdxComplexInstance instance = unit.getInstance();
-			if (instance.shown() && instance.isVisible(this.worldScene.camera) && instance
-					.intersectRayWithCollision(gdxRayHeap, intersectionHeap, unit.isIntersectedOnMeshAlways(), false)) {
+			if (instance.shown() && instance.isVisible(this.worldScene.camera)
+					&& instance.intersectRayWithCollisionSimple(gdxRayHeap, intersectionHeap)) {
 				if (filter.call(unit.getSimulationWidget()) && (intersectionHeap.z > this.terrain
 						.getGroundHeight(intersectionHeap.x, intersectionHeap.y))) {
-					if ((entity == null) || (entity.getInstance().depth > instance.depth)) {
+					if (((entity == null) && !unit.isIntersectedOnMeshAlways())) {
 						entity = unit;
+					}
+					else {
+						if (instance.intersectRayWithMeshSlow(gdxRayHeap, intersectionHeap)
+								&& (intersectionHeap.z > this.terrain.getGroundHeight(intersectionHeap.x,
+										intersectionHeap.y))) {
+							this.worldScene.camera.worldToCamera(intersectionHeap, intersectionHeap);
+							if ((entity == null) || (intersectionHeap.z > intersectionHeap2.z)) {
+								entity = unit;
+								intersectionHeap2.set(intersectionHeap);
+							}
+						}
 					}
 				}
 			}

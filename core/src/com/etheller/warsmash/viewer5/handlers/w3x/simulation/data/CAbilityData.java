@@ -56,7 +56,7 @@ public class CAbilityData {
 	}
 
 	public CAbility createAbility(final String ability, final int handleId) {
-		final War3ID war3Id = War3ID.fromString(ability);
+		final War3ID war3Id = War3ID.fromString(ability.trim());
 		final CAbilityType<?> abilityType = getAbilityType(war3Id);
 		if (abilityType != null) {
 			return abilityType.createAbility(handleId);

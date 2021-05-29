@@ -26,7 +26,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNagaBuild;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNeutralBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNightElfBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
@@ -234,7 +233,7 @@ public class CUnitData {
 			case CRITTERS:
 			case DEMON:
 			case OTHER:
-				unit.add(simulation, new CAbilityNeutralBuild(handleIdAllocator.createId(), structuresBuilt));
+				unit.add(simulation, new CAbilityOrcBuild(handleIdAllocator.createId(), structuresBuilt));
 				break;
 			}
 		}
@@ -491,7 +490,7 @@ public class CUnitData {
 			final List<CUnitTypeRequirement> requirements = new ArrayList<>();
 			for (int i = 0; i < requirementsStringItems.length; i++) {
 				final String item = requirementsStringItems[i];
-				if (!item.isEmpty()) {
+				if (!item.isEmpty() && (item.length() == 4)) {
 					int level;
 					if (i < requirementsLevelsStringItems.length) {
 						if (requirementsLevelsStringItems[i].isEmpty()) {

@@ -589,6 +589,9 @@ public final class MutableObjectData {
 		public String getFieldAsString(final War3ID field, final int level) {
 			final Change matchingChange = getMatchingChange(field, level);
 			if (matchingChange != null) {
+				if (matchingChange.getVartype() == War3ObjectDataChangeset.VAR_TYPE_INT) {
+					return Integer.toString(matchingChange.getLongval());
+				}
 				if (matchingChange.getVartype() != War3ObjectDataChangeset.VAR_TYPE_STRING) {
 					throw new IllegalStateException(
 							"Requested string value of '" + field + "' from '" + this.parentWC3Object.getId()

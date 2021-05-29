@@ -38,6 +38,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	public boolean hd = false;
 	public SolverParams solverParams = new SolverParams();
 	public String name = "";
+	public long blendTime;
 	public List<Sequence> sequences = new ArrayList<>();
 	public List<Long> globalSequences = new ArrayList<>();
 	public List<Material> materials = new ArrayList<>();
@@ -104,6 +105,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 		this.reforged = reforged;
 		this.name = parser.getName();
+		this.blendTime = parser.getBlendTime();
 
 		// Initialize the bounds.
 		final MdlxExtent extent = parser.getExtent();

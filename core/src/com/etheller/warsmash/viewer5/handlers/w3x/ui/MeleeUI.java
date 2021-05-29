@@ -1562,26 +1562,29 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		public void setSelectedUnit(final RenderUnit unit) {
-			this.unit = unit;
-			if (unit == null) {
-				if (this.modelInstance != null) {
-					this.portraitScene.removeInstance(this.modelInstance);
-				}
-				this.modelInstance = null;
-				this.portraitCameraManager.setModelInstance(null, null);
-			}
-			else {
-				final MdxModel portraitModel = unit.portraitModel;
-				if (portraitModel != null) {
+			if (this.unit != unit) {
+				this.unit = unit;
+				if (unit == null) {
 					if (this.modelInstance != null) {
 						this.portraitScene.removeInstance(this.modelInstance);
 					}
-					this.modelInstance = (MdxComplexInstance) portraitModel.addInstance();
-					this.portraitCameraManager.setModelInstance(this.modelInstance, portraitModel);
-					this.modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
-					this.modelInstance.setScene(this.portraitScene);
-					this.modelInstance.setVertexColor(unit.instance.vertexColor);
-					this.modelInstance.setTeamColor(unit.playerIndex);
+					this.modelInstance = null;
+					this.portraitCameraManager.setModelInstance(null, null);
+				}
+				else {
+					final MdxModel portraitModel = unit.portraitModel;
+					if (portraitModel != null) {
+						if (this.modelInstance != null) {
+							this.portraitScene.removeInstance(this.modelInstance);
+						}
+						this.modelInstance = (MdxComplexInstance) portraitModel.addInstance();
+						this.portraitCameraManager.setModelInstance(this.modelInstance, portraitModel);
+						this.modelInstance.setBlendTime(portraitModel.blendTime);
+						this.modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+						this.modelInstance.setScene(this.portraitScene);
+						this.modelInstance.setVertexColor(unit.instance.vertexColor);
+						this.modelInstance.setTeamColor(unit.playerIndex);
+					}
 				}
 			}
 		}
@@ -2256,6 +2259,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public boolean keyDown(final int keycode) {
+		if (keycode == Input.Keys.Z) {
+			War3MapViewer.DEBUG_DEPTH++;
+		}
+		if (keycode == Input.Keys.X) {
+			War3MapViewer.DEBUG_DEPTH = 0;
+		}
 		return this.cameraManager.keyDown(keycode);
 	}
 

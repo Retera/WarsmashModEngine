@@ -6,12 +6,19 @@ sourceSets.main.java.srcDirs = [ "src/" ]
 project.ext.mainClassName = "com.etheller.warsmash.desktop.DesktopLauncher"
 project.ext.assetsDir = new File("../core/assets");
 
+if(project.hasProperty("args")) {
+    ext.cmdargs = project.getProperty("args")
+} else {
+    ext.cmdargs = ""
+}
+
 task run(dependsOn: classes, type: JavaExec) {
     main = project.mainClassName
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
     workingDir = project.assetsDir
     ignoreExitValue = true
+    args cmdargs.split()
 }
 
 task debug(dependsOn: classes, type: JavaExec) {

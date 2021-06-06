@@ -7,6 +7,7 @@ import com.etheller.warsmash.util.WorldEditStrings;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.SceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xScenePortraitLightManager;
 
 public class MdxViewer extends AbstractMdxModelViewer {
@@ -16,6 +17,7 @@ public class MdxViewer extends AbstractMdxModelViewer {
 
 	public MdxViewer(final DataSource dataSource, final CanvasProvider canvas, final Vector3 defaultLighting) {
 		super(dataSource, canvas);
+		MdxHandler.CURRENT_SHADER_TYPE = ShaderEnvironmentType.MENU;
 		this.defaultLighting = defaultLighting;
 		this.worldEditStrings = new WorldEditStrings(this.dataSource);
 	}

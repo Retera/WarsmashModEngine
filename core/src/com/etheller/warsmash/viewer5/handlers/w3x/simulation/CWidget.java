@@ -39,6 +39,8 @@ public abstract class CWidget implements AbilityTarget {
 		return this.life;
 	}
 
+	public abstract float getMaxLife();
+
 	protected void setX(final float x) {
 		this.x = x;
 	}
@@ -70,4 +72,6 @@ public abstract class CWidget implements AbilityTarget {
 		final double dy = Math.abs(target.getY() - getY());
 		return (dx * dx) + (dy * dy);
 	}
+
+	public abstract boolean isInvulnerable();
 }

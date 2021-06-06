@@ -12,6 +12,14 @@ import com.etheller.warsmash.viewer5.handlers.blp.DdsHandler;
 import com.etheller.warsmash.viewer5.handlers.tga.TgaHandler;
 
 public class MdxHandler extends ModelHandler {
+	public final Shaders shaders = new Shaders();
+
+	public static enum ShaderEnvironmentType {
+		MENU,
+		GAME
+	};
+
+	public static ShaderEnvironmentType CURRENT_SHADER_TYPE;
 
 	public MdxHandler() {
 		this.extensions = new ArrayList<>();
@@ -26,14 +34,14 @@ public class MdxHandler extends ModelHandler {
 		viewer.addHandler(new DdsHandler());
 		viewer.addHandler(new TgaHandler());
 
-		Shaders.complex = viewer.webGL.createShaderProgram(MdxShaders.vsComplex, MdxShaders.fsComplex);
-		Shaders.extended = viewer.webGL.createShaderProgram("#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex,
+		this.shaders.complex = viewer.webGL.createShaderProgram(MdxShaders.vsComplex(), MdxShaders.fsComplex);
+		this.shaders.extended = viewer.webGL.createShaderProgram("#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex(),
 				MdxShaders.fsComplex);
-		Shaders.complexShadowMap = viewer.webGL.createShaderProgram(MdxShaders.vsComplex,
+		this.shaders.complexShadowMap = viewer.webGL.createShaderProgram(MdxShaders.vsComplex(),
 				MdxShaders.fsComplexShadowMap);
-		Shaders.extendedShadowMap = viewer.webGL.createShaderProgram(
-				"#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex, MdxShaders.fsComplexShadowMap);
-		Shaders.particles = viewer.webGL.createShaderProgram(MdxShaders.vsParticles, MdxShaders.fsParticles);
+		this.shaders.extendedShadowMap = viewer.webGL.createShaderProgram(
+				"#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex(), MdxShaders.fsComplexShadowMap);
+		this.shaders.particles = viewer.webGL.createShaderProgram(MdxShaders.vsParticles(), MdxShaders.fsParticles);
 		// Shaders.simple = viewer.webGL.createShaderProgram(MdxShaders.vsSimple,
 		// MdxShaders.fsSimple);
 //		Shaders.hd = viewer.webGL.createShaderProgram(MdxShaders.vsHd, MdxShaders.fsHd);
@@ -41,7 +49,8 @@ public class MdxHandler extends ModelHandler {
 
 		// If a shader failed to compile, don't allow the handler to be registered, and
 		// send an error instead.
-		return Shaders.complex.isCompiled() && Shaders.extended.isCompiled() && Shaders.particles.isCompiled()
+		return this.shaders.complex.isCompiled() && this.shaders.extended.isCompiled()
+				&& this.shaders.particles.isCompiled()
 		/* && Shaders.simple.isCompiled() && Shaders.hd.isCompiled() */;
 	}
 
@@ -56,12 +65,12 @@ public class MdxHandler extends ModelHandler {
 
 		}
 
-		public static ShaderProgram complex;
-		public static ShaderProgram complexShadowMap;
-		public static ShaderProgram extended;
-		public static ShaderProgram extendedShadowMap;
-		public static ShaderProgram simple;
-		public static ShaderProgram particles;
-		public static ShaderProgram hd;
+		public ShaderProgram complex;
+		public ShaderProgram complexShadowMap;
+		public ShaderProgram extended;
+		public ShaderProgram extendedShadowMap;
+		public ShaderProgram simple;
+		public ShaderProgram particles;
+		public ShaderProgram hd;
 	}
 }

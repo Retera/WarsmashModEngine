@@ -24,9 +24,11 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	public Rectangle walkableBounds;
 	private final CDestructable simulationDestructable;
 	private SplatMover selectionCircle;
+	private SplatMover selectionPreviewHighlight;
 	private final UnitAnimationListenerImpl unitAnimationListenerImpl;
 	private boolean dead;
 	private BuildingShadow destructableShadow;
+	private final boolean selectable;
 
 	public RenderDestructable(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final com.etheller.warsmash.parsers.w3x.doo.Doodad doodad, final WorldEditorDataType type,
@@ -50,6 +52,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl((MdxComplexInstance) this.instance);
 		simulationDestructable.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		this.unitAnimationListenerImpl.playAnimation(true, getAnimation(), SequenceUtils.EMPTY, 1.0f, true);
+		this.selectable = row.readSLKTagBoolean("selectable");
 	}
 
 	@Override
@@ -85,6 +88,10 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 			if (this.selectionCircle != null) {
 				this.selectionCircle.destroy(Gdx.gl30, war3MapViewer.terrain.centerOffset);
 				this.selectionCircle = null;
+			}
+			if (this.selectionPreviewHighlight != null) {
+				this.selectionPreviewHighlight.destroy(Gdx.gl30, war3MapViewer.terrain.centerOffset);
+				this.selectionPreviewHighlight = null;
 			}
 		}
 		else if (!dead) {
@@ -140,6 +147,25 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	@Override
 	public void assignSelectionCircle(final SplatMover selectionCircle) {
 		this.selectionCircle = selectionCircle;
+	}
 
+	@Override
+	public void unassignSelectionPreviewHighlight() {
+		this.selectionPreviewHighlight = null;
+	}
+
+	@Override
+	public void assignSelectionPreviewHighlight(final SplatMover t) {
+		this.selectionPreviewHighlight = t;
+	}
+
+	@Override
+	public boolean isSelectable() {
+		return this.selectable;
+	}
+
+	@Override
+	public SplatMover getSelectionPreviewHighlight() {
+		return this.selectionPreviewHighlight;
 	}
 }

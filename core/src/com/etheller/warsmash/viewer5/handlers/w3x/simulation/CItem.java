@@ -73,6 +73,11 @@ public class CItem extends CWidget {
 		return this.hidden;
 	}
 
+	@Override
+	public float getMaxLife() {
+		return this.itemType.getHitPoints();
+	}
+
 	public void setPointAndCheckUnstuck(final float newX, final float newY, final CSimulation game) {
 		final CWorldCollision collision = game.getWorldCollision();
 		final PathingGrid pathingGrid = game.getPathingGrid();
@@ -98,6 +103,11 @@ public class CItem extends CWidget {
 		}
 		setX(outputX);
 		setY(outputY);
+	}
+
+	@Override
+	public boolean isInvulnerable() {
+		return false;
 	}
 
 }

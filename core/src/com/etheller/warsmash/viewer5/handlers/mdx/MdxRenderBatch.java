@@ -73,7 +73,7 @@ public class MdxRenderBatch extends RenderBatch {
 			final GL20 gl = viewer.gl;
 			final WebGL webGL = viewer.webGL;
 			final ANGLEInstancedArrays instancedArrays = webGL.instancedArrays;
-			final ShaderProgram shader = MdxHandler.Shaders.simple;
+			final ShaderProgram shader = model.handler.shaders.simple;
 			final int m0 = shader.getAttributeLocation("a_m0");
 			final int m1 = shader.getAttributeLocation("a_m1");
 			final int m2 = shader.getAttributeLocation("a_m2");

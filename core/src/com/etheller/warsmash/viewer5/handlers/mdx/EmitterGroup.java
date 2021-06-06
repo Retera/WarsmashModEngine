@@ -29,7 +29,7 @@ public class EmitterGroup extends GenericGroup {
 		final ModelViewer viewer = model.viewer;
 		final GL20 gl = viewer.gl;
 		final ANGLEInstancedArrays instancedArrays = viewer.webGL.instancedArrays;
-		final ShaderProgram shader = MdxHandler.Shaders.particles;
+		final ShaderProgram shader = ((MdxModel) model).handler.shaders.particles;
 
 		gl.glDepthMask(false);
 		gl.glEnable(GL20.GL_BLEND);

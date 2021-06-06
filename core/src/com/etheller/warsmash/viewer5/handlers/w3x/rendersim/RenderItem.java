@@ -27,6 +27,7 @@ public class RenderItem implements RenderWidget {
 	public final MdxModel portraitModel;
 	public SplatMover shadow;
 	public SplatMover selectionCircle;
+	public SplatMover selectionPreviewHighlight;
 	private boolean hidden;
 	private boolean dead;
 
@@ -175,5 +176,25 @@ public class RenderItem implements RenderWidget {
 	@Override
 	public void assignSelectionCircle(final SplatMover t) {
 		this.selectionCircle = t;
+	}
+
+	@Override
+	public void unassignSelectionPreviewHighlight() {
+		this.selectionPreviewHighlight = null;
+	}
+
+	@Override
+	public void assignSelectionPreviewHighlight(final SplatMover t) {
+		this.selectionPreviewHighlight = t;
+	}
+
+	@Override
+	public boolean isSelectable() {
+		return true;
+	}
+
+	@Override
+	public SplatMover getSelectionPreviewHighlight() {
+		return this.selectionPreviewHighlight;
 	}
 }

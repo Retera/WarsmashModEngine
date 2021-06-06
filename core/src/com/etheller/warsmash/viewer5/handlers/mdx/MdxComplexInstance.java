@@ -36,6 +36,7 @@ public class MdxComplexInstance extends ModelInstance {
 	private static final float[] colorHeap = new float[3];
 	private static final float[] alphaHeap = new float[1];
 	private static final long[] textureIdHeap = new long[1];
+	private static final Vector3 intersectionHeap = new Vector3();
 
 	public List<LightInstance> lights = new ArrayList<>();
 	public List<AttachmentInstance> attachments = new ArrayList<>();
@@ -778,13 +779,18 @@ public class MdxComplexInstance extends ModelInstance {
 	public boolean intersectRayWithCollisionSimple(final Ray ray, final Vector3 intersection) {
 		final MdxModel mdxModel = (MdxModel) this.model;
 		final List<CollisionShape> collisionShapes = mdxModel.collisionShapes;
+		boolean intersected = false;
+		ray.getEndPoint(intersection, 99999);
 		for (final CollisionShape collisionShape : collisionShapes) {
 			final MdxNode mdxNode = this.nodes[collisionShape.index];
-			if (collisionShape.checkIntersect(ray, mdxNode, intersection)) {
-				return true;
+			if (collisionShape.checkIntersect(ray, mdxNode, intersectionHeap)) {
+				if (intersectionHeap.dst2(ray.origin) < intersection.dst2(ray.origin)) {
+					intersection.set(intersectionHeap);
+				}
+				intersected = true;
 			}
 		}
-		return intersectRayBounds(ray, intersection);
+		return intersected || intersectRayBounds(ray, intersection);
 	}
 
 	/**
@@ -796,19 +802,24 @@ public class MdxComplexInstance extends ModelInstance {
 	 */
 	public boolean intersectRayWithMeshSlow(final Ray ray, final Vector3 intersection) {
 		final MdxModel mdxModel = (MdxModel) this.model;
+		boolean intersected = false;
+		ray.getEndPoint(intersection, 99999);
 		for (final Geoset geoset : mdxModel.geosets) {
 			if (!geoset.unselectable) {
 				geoset.getAlpha(alphaHeap, this.sequence, this.frame, this.counter);
 				if (alphaHeap[0] > 0) {
 					final MdlxGeoset mdlxGeoset = geoset.mdlxGeoset;
 					if (CollisionShape.intersectRayTriangles(ray, this, mdlxGeoset.getVertices(), mdlxGeoset.getFaces(),
-							3, intersection)) {
-						return true;
+							3, intersectionHeap)) {
+						if (intersectionHeap.dst2(ray.origin) < intersection.dst2(ray.origin)) {
+							intersection.set(intersectionHeap);
+						}
+						intersected = true;
 					}
 				}
 			}
 		}
-		return false;
+		return intersected;
 	}
 
 	/**

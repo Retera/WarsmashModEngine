@@ -37,6 +37,12 @@ public interface RenderWidget {
 
 	void assignSelectionCircle(SplatMover t);
 
+	void unassignSelectionPreviewHighlight();
+
+	void assignSelectionPreviewHighlight(SplatMover t);
+
+	boolean isSelectable();
+
 	public static final class UnitAnimationListenerImpl implements CUnitAnimationListener {
 		private final MdxComplexInstance instance;
 		protected final EnumSet<AnimationTokens.SecondaryTag> secondaryAnimationTags = EnumSet
@@ -159,4 +165,6 @@ public interface RenderWidget {
 			this.allowRarityVariations = allowRarityVariations;
 		}
 	}
+
+	SplatMover getSelectionPreviewHighlight();
 }

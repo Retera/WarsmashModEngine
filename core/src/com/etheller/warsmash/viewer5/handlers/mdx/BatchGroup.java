@@ -41,18 +41,18 @@ public class BatchGroup extends GenericGroup {
 
 		if (isExtended) {
 			if (DynamicShadowManager.IS_SHADOW_MAPPING) {
-				shader = MdxHandler.Shaders.extendedShadowMap;
+				shader = handler.shaders.extendedShadowMap;
 			}
 			else {
-				shader = MdxHandler.Shaders.extended;
+				shader = handler.shaders.extended;
 			}
 		}
 		else {
 			if (DynamicShadowManager.IS_SHADOW_MAPPING) {
-				shader = MdxHandler.Shaders.complexShadowMap;
+				shader = handler.shaders.complexShadowMap;
 			}
 			else {
-				shader = MdxHandler.Shaders.complex;
+				shader = handler.shaders.complex;
 			}
 		}
 

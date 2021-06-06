@@ -429,7 +429,10 @@ public class CPathfindingProcessor {
 				}
 				workIterations++;
 				this.totalIterations++;
-				if (workIterations >= 7500) {
+				if (this.totalIterations > 20000) {
+					break;
+				}
+				if (workIterations >= 500) {
 					// breaking jobs loop will implicitly exit without calling pathFound() below
 					break JobsLoop;
 				}

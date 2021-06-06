@@ -221,7 +221,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		}
 	}
 
-	public boolean hasSkinField(String file) {
+	public boolean hasSkinField(final String file) {
 		return (file != null) && this.skin.hasField(file);
 	}
 
@@ -329,7 +329,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						|| ((parentDefinitionIfAvailable != null)
 								&& parentDefinitionIfAvailable.has("DecorateFileNames"));
 				final SimpleStatusBarFrame simpleStatusBarFrame = new SimpleStatusBarFrame(frameDefinition.getName(),
-						parent, decorateFileNames);
+						parent, decorateFileNames, false, 0.0f);
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					simpleStatusBarFrame.add(inflate(childDefinition, simpleStatusBarFrame, frameDefinition,
 							inDecorateFileNames || childDefinition.has("DecorateFileNames")));

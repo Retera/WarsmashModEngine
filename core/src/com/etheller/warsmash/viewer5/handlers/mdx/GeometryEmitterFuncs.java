@@ -15,7 +15,9 @@ import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.gl.ANGLEInstancedArrays;
 import com.etheller.warsmash.viewer5.gl.ClientBuffer;
+import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 
 //The total storage that emitted objects can use.
 //This is enough to support all of the MDX geometry emitters.
@@ -191,6 +193,15 @@ public class GeometryEmitterFuncs {
 		shader.setUniformf("u_columns", emitterObject.columns);
 		shader.setUniformf("u_rows", emitterObject.rows);
 		shader.setUniformf("u_teamColored", emitterObject.teamColored);
+		shader.setUniformi("u_unshaded", emitterObject.emitterUsesMdlOrUnshaded != 0 ? 1 : 0);
+
+		final W3xSceneLightManager lightManager = (W3xSceneLightManager) scene.getLightManager();
+		final DataTexture unitLightsTexture = lightManager.getUnitLightsTexture();
+
+		unitLightsTexture.bind(14);
+		shader.setUniformi("u_lightTexture", 14);
+		shader.setUniformf("u_lightCount", lightManager.getUnitLightCount());
+		shader.setUniformf("u_lightTextureHeight", unitLightsTexture.getHeight());
 
 		shader.setUniform3fv("u_intervals[0]", intervals[0], 0, 3);
 		shader.setUniform3fv("u_intervals[1]", intervals[1], 0, 3);
@@ -210,9 +221,7 @@ public class GeometryEmitterFuncs {
 			shader.setUniform3fv("u_vertices[3]", asFloatArray(vectors[3]), 0, 3);
 		}
 
-		if (emitterObject.tail) {
-			shader.setUniform3fv("u_cameraZ", asFloatArray(camera.billboardedVectors[6]), 0, 3);
-		}
+		shader.setUniform3fv("u_cameraZ", asFloatArray(camera.billboardedVectors[6]), 0, 3);
 	}
 
 	public static void bindRibbonEmitterBuffer(final RibbonEmitter emitter, final ClientBuffer buffer) {

@@ -52,6 +52,7 @@ public class RenderUnit implements RenderWidget {
 	public SplatMover shadow;
 	private BuildingShadow buildingShadowInstance;
 	public SplatMover selectionCircle;
+	public SplatMover selectionPreviewHighlight;
 
 	private float facing;
 
@@ -161,6 +162,9 @@ public class RenderUnit implements RenderWidget {
 				if (this.selectionCircle != null) {
 					this.selectionCircle.hide();
 				}
+				if (this.selectionPreviewHighlight != null) {
+					this.selectionPreviewHighlight.hide();
+				}
 				if (this.shadow != null) {
 					this.shadow.hide();
 				}
@@ -173,6 +177,9 @@ public class RenderUnit implements RenderWidget {
 			if (wasHidden) {
 				if (this.selectionCircle != null) {
 					this.selectionCircle.show(map.terrain.centerOffset);
+				}
+				if (this.selectionPreviewHighlight != null) {
+					this.selectionPreviewHighlight.show(map.terrain.centerOffset);
 				}
 				if (this.shadow != null) {
 					this.shadow.show(map.terrain.centerOffset);
@@ -275,6 +282,10 @@ public class RenderUnit implements RenderWidget {
 			if (this.selectionCircle != null) {
 				this.selectionCircle.destroy(Gdx.gl30, map.terrain.centerOffset);
 				this.selectionCircle = null;
+			}
+			if (this.selectionPreviewHighlight != null) {
+				this.selectionPreviewHighlight.destroy(Gdx.gl30, map.terrain.centerOffset);
+				this.selectionPreviewHighlight = null;
 			}
 		}
 		if (boneCorpse && !this.boneCorpse) {
@@ -404,6 +415,13 @@ public class RenderUnit implements RenderWidget {
 							|| ((movementType == MovementType.FLY) || (movementType == MovementType.HOVER)),
 					selectionCircleHeight + map.imageWalkableZOffset);
 		}
+		if (this.selectionPreviewHighlight != null) {
+			this.selectionPreviewHighlight.move(dx, dy, map.terrain.centerOffset);
+			this.selectionPreviewHighlight.setHeightAbsolute(
+					(currentWalkableUnder != null)
+							|| ((movementType == MovementType.FLY) || (movementType == MovementType.HOVER)),
+					selectionCircleHeight + map.imageWalkableZOffset);
+		}
 		this.unitAnimationListenerImpl.update();
 		if (!dead && this.simulationUnit.isConstructing()) {
 			this.instance.setFrameByRatio(
@@ -447,6 +465,9 @@ public class RenderUnit implements RenderWidget {
 		if (this.selectionCircle != null) {
 			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
 		}
+		if (this.selectionPreviewHighlight != null) {
+			this.selectionPreviewHighlight.move(dx, dy, map.terrain.centerOffset);
+		}
 		this.location[0] = this.simulationUnit.getX();
 		this.location[1] = this.simulationUnit.getY();
 	}
@@ -463,7 +484,7 @@ public class RenderUnit implements RenderWidget {
 
 	@Override
 	public boolean isIntersectedOnMeshAlways() {
-		return this.simulationUnit.getUnitType().isBuilding();
+		return this.simulationUnit.isBuilding();
 	}
 
 	@Override
@@ -494,5 +515,25 @@ public class RenderUnit implements RenderWidget {
 	@Override
 	public void assignSelectionCircle(final SplatMover t) {
 		this.selectionCircle = t;
+	}
+
+	@Override
+	public void unassignSelectionPreviewHighlight() {
+		this.selectionPreviewHighlight = null;
+	}
+
+	@Override
+	public void assignSelectionPreviewHighlight(final SplatMover t) {
+		this.selectionPreviewHighlight = t;
+	}
+
+	@Override
+	public boolean isSelectable() {
+		return true; // later needs locust
+	}
+
+	@Override
+	public SplatMover getSelectionPreviewHighlight() {
+		return this.selectionPreviewHighlight;
 	}
 }

@@ -16,8 +16,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.test.CBeh
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiveAbility {
 
@@ -28,10 +30,12 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	private final float area;
 	private final EnumSet<CTargetType> targetsAllowed;
 	private CBehaviorCoupleInstant behaviorCoupleInstant;
+	private final int goldCost;
+	private final int lumberCost;
 
 	public CAbilityCoupleInstant(final int handleId, final War3ID alias, final War3ID resultingUnitType,
 			final War3ID partnerUnitType, final boolean moveToPartner, final float castRange, final float area,
-			final EnumSet<CTargetType> targetsAllowed) {
+			final EnumSet<CTargetType> targetsAllowed, final int goldCost, final int lumberCost) {
 		super(handleId, alias);
 		this.resultingUnitType = resultingUnitType;
 		this.partnerUnitType = partnerUnitType;
@@ -39,6 +43,8 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 		this.castRange = castRange;
 		this.area = area;
 		this.targetsAllowed = targetsAllowed;
+		this.goldCost = goldCost;
+		this.lumberCost = lumberCost;
 	}
 
 	@Override
@@ -123,7 +129,18 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		receiver.useOk();
+		final CPlayer player = game.getPlayer(unit.getPlayerIndex());
+		if (player.getGold() >= this.goldCost) {
+			if (player.getLumber() >= this.lumberCost) {
+				receiver.useOk();
+			}
+			else {
+				receiver.notEnoughResources(ResourceType.LUMBER);
+			}
+		}
+		else {
+			receiver.notEnoughResources(ResourceType.GOLD);
+		}
 	}
 
 	public float getCastRange() {
@@ -140,6 +157,14 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 
 	public War3ID getResultingUnitType() {
 		return this.resultingUnitType;
+	}
+
+	public int getGoldCost() {
+		return this.goldCost;
+	}
+
+	public int getLumberCost() {
+		return this.lumberCost;
 	}
 
 	private final class PossiblePairFinderEnum implements CUnitEnumFunction {
@@ -176,4 +201,13 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 		}
 	}
 
+	@Override
+	public int getUIGoldCost() {
+		return this.goldCost;
+	}
+
+	@Override
+	public int getUILumberCost() {
+		return this.lumberCost;
+	}
 }

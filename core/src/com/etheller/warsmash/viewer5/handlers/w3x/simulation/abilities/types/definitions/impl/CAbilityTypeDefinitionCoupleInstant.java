@@ -36,7 +36,7 @@ public class CAbilityTypeDefinitionCoupleInstant
 
 		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
 		return new CAbilityTypeCoupleInstantLevelData(targetsAllowedAtLevel, resultingUnitTypeId, partnerUnitTypeId,
-				moveToPartner, castRange, area);
+				moveToPartner, castRange, area, goldCost, lumberCost);
 	}
 
 	@Override

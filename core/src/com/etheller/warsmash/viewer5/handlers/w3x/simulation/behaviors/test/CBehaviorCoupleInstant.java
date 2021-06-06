@@ -54,13 +54,18 @@ public class CBehaviorCoupleInstant extends CAbstractRangedBehavior {
 		if (targetBehavior instanceof CBehaviorCoupleInstant) {
 			if (((CBehaviorCoupleInstant) targetBehavior).isWithinRange(simulation)) {
 				// we are both within range
-				final CUnit newUnit = simulation.createUnit(this.abilityCoupleInstant.getResultingUnitType(),
-						this.unit.getPlayerIndex(), this.unit.getX(), this.unit.getY(), this.unit.getFacing());
-				simulation.unitPreferredSelectionReplacement(this.unit, newUnit);
-				simulation.unitPreferredSelectionReplacement(((CUnit) this.target), newUnit);
-				simulation.removeUnit(this.unit);
-				simulation.removeUnit((CUnit) this.target);
-				simulation.unitSoundEffectEvent(newUnit, this.abilityCoupleInstant.getAlias());
+				final int goldCost = this.abilityCoupleInstant.getGoldCost();
+				final int lumberCost = this.abilityCoupleInstant.getLumberCost();
+				if (((goldCost == 0) && (lumberCost == 0))
+						|| simulation.getPlayer(this.unit.getPlayerIndex()).charge(goldCost, lumberCost)) {
+					final CUnit newUnit = simulation.createUnit(this.abilityCoupleInstant.getResultingUnitType(),
+							this.unit.getPlayerIndex(), this.unit.getX(), this.unit.getY(), this.unit.getFacing());
+					simulation.unitPreferredSelectionReplacement(this.unit, newUnit);
+					simulation.unitPreferredSelectionReplacement(((CUnit) this.target), newUnit);
+					simulation.removeUnit(this.unit);
+					simulation.removeUnit((CUnit) this.target);
+					simulation.unitSoundEffectEvent(newUnit, this.abilityCoupleInstant.getAlias());
+				}
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
 		}

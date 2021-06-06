@@ -121,6 +121,17 @@ public class CPlayer extends CBasePlayer {
 		this.stateNotifier.goldChanged();
 	}
 
+	public boolean charge(final int gold, final int lumber) {
+		if ((this.lumber >= lumber) && (this.gold >= gold)) {
+			this.lumber -= lumber;
+			this.gold -= gold;
+			this.stateNotifier.lumberChanged();
+			this.stateNotifier.goldChanged();
+			return true;
+		}
+		return false;
+	}
+
 	public void refundFor(final CUnitType unitType) {
 		this.lumber += unitType.getLumberCost();
 		this.gold += unitType.getGoldCost();

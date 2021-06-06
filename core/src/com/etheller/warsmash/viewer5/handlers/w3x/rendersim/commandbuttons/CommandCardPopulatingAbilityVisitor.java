@@ -117,7 +117,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			final AbilityUI ui = this.abilityDataUI.getUI(ability.getAlias());
 			addCommandButton(ability, ability.isToggleOn() ? ui.getOffIconUI() : ui.getOnIconUI(),
-					ability.getHandleId(), ability.getBaseOrderId(), 0, false, false);
+					ability.getHandleId(), ability.getBaseOrderId(), 0, false, false, ability.getUIGoldCost(),
+					ability.getUILumberCost(), 0);
 		}
 		return null;
 	}

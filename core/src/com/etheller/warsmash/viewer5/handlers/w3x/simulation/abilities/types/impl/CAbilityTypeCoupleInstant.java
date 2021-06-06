@@ -19,7 +19,7 @@ public class CAbilityTypeCoupleInstant extends CAbilityType<CAbilityTypeCoupleIn
 		final CAbilityTypeCoupleInstantLevelData levelData = getLevelData(0);
 		return new CAbilityCoupleInstant(handleId, getAlias(), levelData.getResultingUnitTypeId(),
 				levelData.getPartnerUnitTypeId(), levelData.isMoveToPartner(), levelData.getCastRange(),
-				levelData.getArea(), levelData.getTargetsAllowed());
+				levelData.getArea(), levelData.getTargetsAllowed(), levelData.getGoldCost(), levelData.getLumberCost());
 	}
 
 }

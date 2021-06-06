@@ -1038,7 +1038,8 @@ public class CUnit extends CWidget {
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
 			final EnumSet<CTargetType> targetsAllowed) {
-		if (targetsAllowed.containsAll(this.unitType.getTargetedAs())) {
+		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND)
+				&& (!targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR)))) {
 			final int sourcePlayerIndex = source.getPlayerIndex();
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
 			if (!targetsAllowed.contains(CTargetType.ENEMIES)
@@ -1565,5 +1566,10 @@ public class CUnit extends CWidget {
 
 	public boolean isBuilding() {
 		return this.unitType.isBuilding();
+	}
+
+	public void onRemove(final CSimulation simulation) {
+		setLife(simulation, 0);
+		simulation.getWorldCollision().removeUnit(this);
 	}
 }

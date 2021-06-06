@@ -8,4 +8,6 @@ public interface CommandErrorListener {
 	void showNoFoodError();
 
 	void showInventoryFullError();
+
+	void showUnableToFindCoupleTargetError();
 }

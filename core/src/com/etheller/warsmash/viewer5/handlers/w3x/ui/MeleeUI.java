@@ -1042,6 +1042,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
+	public void showUnableToFindCoupleTargetError() {
+		showCommandError(this.rootFrame.getErrorString("Cantfindcoupletarget"));
+		this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
+	}
+
+	@Override
 	public void showInventoryFullError() {
 		showCommandError(this.rootFrame.getErrorString("InventoryFull"));
 		this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("InventoryFullSound"))
@@ -2311,7 +2317,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	@Override
 	public void lifeChanged() {
 		if (this.selectedUnit.getSimulationUnit().isDead()) {
-			selectUnit(null);
+			final List<RenderWidget> newSelection = Arrays.asList(this.selectedUnit.getPreferredSelectionReplacement());
+			selectWidgets(newSelection);
+			this.war3MapViewer.doSelectUnit(newSelection);
 		}
 		else {
 			final float lifeRatioRemaining = this.selectedUnit.getSimulationUnit().getLife()

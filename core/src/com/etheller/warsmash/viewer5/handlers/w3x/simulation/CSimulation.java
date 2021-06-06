@@ -50,6 +50,7 @@ public class CSimulation implements CPlayerAPI {
 	private final CItemData itemData;
 	private final List<CUnit> units;
 	private final List<CUnit> newUnits;
+	private final List<CUnit> removedUnits;
 	private final List<CDestructable> destructables;
 	private final List<CItem> items;
 	private final List<CPlayer> players;
@@ -88,6 +89,7 @@ public class CSimulation implements CPlayerAPI {
 		this.itemData = new CItemData(parsedItemData);
 		this.units = new ArrayList<>();
 		this.newUnits = new ArrayList<>();
+		this.removedUnits = new ArrayList<>();
 		this.destructables = new ArrayList<>();
 		this.items = new ArrayList<>();
 		this.projectiles = new ArrayList<>();
@@ -166,7 +168,7 @@ public class CSimulation implements CPlayerAPI {
 		this.activeTimers.remove(time);
 	}
 
-	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
+	public CUnit internalCreateUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing, final BufferedImage buildingPathingPixelMap,
 			final RemovablePathingMapInstance pathingInstance) {
 		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
@@ -254,6 +256,7 @@ public class CSimulation implements CPlayerAPI {
 				this.handleIdToUnit.remove(unit.getHandleId());
 				this.simulationRenderController.removeUnit(unit);
 				this.playerHeroes[unit.getPlayerIndex()].remove(unit);
+				unit.onRemove(this);
 			}
 		}
 		finishAddingNewUnits();
@@ -278,9 +281,24 @@ public class CSimulation implements CPlayerAPI {
 
 	}
 
+	public void removeUnit(final CUnit unit) {
+		this.removedUnits.add(unit);
+	}
+
 	private void finishAddingNewUnits() {
 		this.units.addAll(this.newUnits);
 		this.newUnits.clear();
+		for (final CUnit unit : this.removedUnits) {
+			this.units.remove(unit);
+			for (final CAbility ability : unit.getAbilities()) {
+				this.handleIdToAbility.remove(ability.getHandleId());
+			}
+			this.handleIdToUnit.remove(unit.getHandleId());
+			this.simulationRenderController.removeUnit(unit);
+			this.playerHeroes[unit.getPlayerIndex()].remove(unit);
+			unit.onRemove(this);
+		}
+		this.removedUnits.clear();
 	}
 
 	public float getGameTimeOfDay() {
@@ -410,6 +428,14 @@ public class CSimulation implements CPlayerAPI {
 
 	public void createEffectOnUnit(final CUnit unit, final String effectPath) {
 		this.simulationRenderController.spawnEffectOnUnit(unit, effectPath);
+	}
+
+	public void unitSoundEffectEvent(final CUnit caster, final War3ID alias) {
+		this.simulationRenderController.spawnAbilitySoundEffect(caster, alias);
+	}
+
+	public void unitPreferredSelectionReplacement(final CUnit unit, final CUnit newUnit) {
+		this.simulationRenderController.unitPreferredSelectionReplacement(unit, newUnit);
 	}
 
 }

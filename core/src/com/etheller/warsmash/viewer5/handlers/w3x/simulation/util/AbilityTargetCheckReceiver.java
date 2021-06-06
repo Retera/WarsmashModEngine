@@ -33,4 +33,5 @@ public interface AbilityTargetCheckReceiver<TARGET_TYPE> {
 		UNIT_OR_POINT,
 		NO_TARGET
 	}
+
 }

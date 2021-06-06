@@ -686,7 +686,7 @@ public class MdxComplexInstance extends ModelInstance {
 				this.allowParticleSpawn = false;
 			}
 			else {
-				if ((this.blendTime > 0) && (lastSequence != this.sequence)) {
+				if ((this.blendTime > 0) && (lastSequence != this.sequence) && (lastSequence != -1)) {
 					this.blendTimeRemaining = this.blendTime;
 					for (int i = 0, l = this.sortedNodes.length; i < l; i++) {
 						final SkeletalNode node = this.sortedNodes[i];

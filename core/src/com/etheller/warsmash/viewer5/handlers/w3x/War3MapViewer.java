@@ -190,6 +190,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public int renderLighting = 1;
 
 	public List<SplatModel> selModels = new ArrayList<>();
+	private final Set<String> selectedSplatModelKeys = new HashSet<>();
 	public List<RenderWidget> selected = new ArrayList<>();
 	private final Set<String> mouseHighlightSplatModelKeys = new HashSet<>();
 	private final List<RenderWidget> mouseHighlightWidgets = new ArrayList<>();
@@ -384,6 +385,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			this.uiSoundsTable.readSLK(miscDataTxtStream);
 		}
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\AmbienceSounds.slk")) {
+			this.uiSoundsTable.readSLK(miscDataTxtStream);
+		}
+		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\AbilitySounds.slk")) {
 			this.uiSoundsTable.readSLK(miscDataTxtStream);
 		}
 	}
@@ -638,6 +642,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						War3MapViewer.this.widgets.remove(renderUnit);
 						War3MapViewer.this.units.remove(renderUnit);
 						War3MapViewer.this.worldScene.removeInstance(renderUnit.instance);
+						renderUnit.onRemove(War3MapViewer.this);
 					}
 
 					@Override
@@ -805,6 +810,25 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
 									renderPeer.getZ());
 						}
+					}
+
+					@Override
+					public void spawnAbilitySoundEffect(final CUnit caster, final War3ID alias) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
+						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
+						if (abilityUi.getEffectSound() != null) {
+							War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound()).play(
+									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+									renderPeer.getZ());
+						}
+					}
+
+					@Override
+					public void unitPreferredSelectionReplacement(final CUnit oldUnit, final CUnit newUnit) {
+						final RenderUnit oldRenderPeer = War3MapViewer.this.unitToRenderPeer.get(oldUnit);
+						final RenderUnit newRenderPeer = War3MapViewer.this.unitToRenderPeer.get(newUnit);
+						oldRenderPeer.setPreferredSelectionReplacement(newRenderPeer);
+
 					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, this.commandErrorListener);
 
@@ -1287,8 +1311,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 			if (type == WorldEditorDataType.UNITS) {
 				final float angle = (float) Math.toDegrees(unitAngle);
-				final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), playerIndex, unitX, unitY,
-						angle, buildingPathingPixelMap, pathingInstance);
+				final CUnit simulationUnit = this.simulation.internalCreateUnit(row.getAlias(), playerIndex, unitX,
+						unitY, angle, buildingPathingPixelMap, pathingInstance);
 				final RenderUnitTypeData typeData = getUnitTypeData(unitId, row);
 				if (!typeData.isAllowCustomTeamColor() || (customTeamColor == -1)) {
 					if (typeData.getTeamColor() != -1) {
@@ -1525,8 +1549,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public void deselect() {
 		if (!this.selModels.isEmpty()) {
-			for (final SplatModel model : this.selModels) {
-				this.terrain.removeSplatBatchModel("selection");
+			for (final String key : this.selectedSplatModelKeys) {
+				this.terrain.removeSplatBatchModel(key);
 			}
 			this.selModels.clear();
 			for (final RenderWidget unit : this.selected) {
@@ -1618,7 +1642,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				break;
 			}
 			this.selModels.add(model);
-			this.terrain.addSplatBatchModel("selection", model);
+			this.terrain.addSplatBatchModel("selection:" + path, model);
+			this.selectedSplatModelKeys.add("selection:" + path);
 		}
 	}
 

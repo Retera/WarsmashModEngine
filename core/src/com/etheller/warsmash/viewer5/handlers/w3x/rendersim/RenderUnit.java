@@ -71,6 +71,7 @@ public class RenderUnit implements RenderWidget {
 	public final MdxModel specialArtModel;
 	public SplatMover uberSplat;
 	private float selectionHeight;
+	private RenderUnit preferredSelectionReplacement;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
 			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
@@ -267,26 +268,7 @@ public class RenderUnit implements RenderWidget {
 		final boolean boneCorpse = this.simulationUnit.isBoneCorpse();
 		if (dead && !this.dead) {
 			this.unitAnimationListenerImpl.playAnimation(true, PrimaryTag.DEATH, SequenceUtils.EMPTY, 1.0f, true);
-			if (this.shadow != null) {
-				this.shadow.destroy(Gdx.gl30, map.terrain.centerOffset);
-				this.shadow = null;
-			}
-			if (this.buildingShadowInstance != null) {
-				this.buildingShadowInstance.remove();
-				this.buildingShadowInstance = null;
-			}
-			if (this.uberSplat != null) {
-				this.uberSplat.destroy(Gdx.gl30, map.terrain.centerOffset);
-				this.uberSplat = null;
-			}
-			if (this.selectionCircle != null) {
-				this.selectionCircle.destroy(Gdx.gl30, map.terrain.centerOffset);
-				this.selectionCircle = null;
-			}
-			if (this.selectionPreviewHighlight != null) {
-				this.selectionPreviewHighlight.destroy(Gdx.gl30, map.terrain.centerOffset);
-				this.selectionPreviewHighlight = null;
-			}
+			removeSplats(map);
 		}
 		if (boneCorpse && !this.boneCorpse) {
 			this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.BONE,
@@ -429,6 +411,29 @@ public class RenderUnit implements RenderWidget {
 		}
 	}
 
+	private void removeSplats(final War3MapViewer map) {
+		if (this.shadow != null) {
+			this.shadow.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.shadow = null;
+		}
+		if (this.buildingShadowInstance != null) {
+			this.buildingShadowInstance.remove();
+			this.buildingShadowInstance = null;
+		}
+		if (this.uberSplat != null) {
+			this.uberSplat.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.uberSplat = null;
+		}
+		if (this.selectionCircle != null) {
+			this.selectionCircle.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.selectionCircle = null;
+		}
+		if (this.selectionPreviewHighlight != null) {
+			this.selectionPreviewHighlight.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.selectionPreviewHighlight = null;
+		}
+	}
+
 	private float getGroundHeightSample(final float groundHeight, final MdxComplexInstance currentWalkableUnder,
 			final float sampleX, final float sampleY) {
 		final float sampleGroundHeight;
@@ -535,5 +540,17 @@ public class RenderUnit implements RenderWidget {
 	@Override
 	public SplatMover getSelectionPreviewHighlight() {
 		return this.selectionPreviewHighlight;
+	}
+
+	public void onRemove(final War3MapViewer map) {
+		removeSplats(map);
+	}
+
+	public void setPreferredSelectionReplacement(final RenderUnit preferredSelectionReplacement) {
+		this.preferredSelectionReplacement = preferredSelectionReplacement;
+	}
+
+	public RenderUnit getPreferredSelectionReplacement() {
+		return this.preferredSelectionReplacement;
 	}
 }

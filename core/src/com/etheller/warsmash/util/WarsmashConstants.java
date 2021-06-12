@@ -12,6 +12,7 @@ public class WarsmashConstants {
 	public static final int PORT_NUMBER = 6115;
 	public static final float BUILDING_CONSTRUCT_START_LIFE = 0.1f;
 	public static final int BUILD_QUEUE_SIZE = 7;
+	public static final int MAX_SELECTION_SIZE = 12;
 	// It looks like in Patch 1.22, "Particle" in video settings will change this
 	// factor:
 	// Low - unknown ?

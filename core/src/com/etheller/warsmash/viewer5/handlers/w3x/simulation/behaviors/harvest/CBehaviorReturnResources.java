@@ -49,7 +49,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 	}
 
 	@Override
-	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
+	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		this.simulation = simulation;
 		return this.target.visit(this);
 	}

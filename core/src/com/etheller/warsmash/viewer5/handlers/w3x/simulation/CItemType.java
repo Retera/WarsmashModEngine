@@ -17,7 +17,7 @@ public class CItemType {
 	private final int stockMax;
 	private final int stockReplenishInterval;
 	private final int stockStartDelay;
-	private final int hitPoints;
+	private final int maxLife;
 	private final String armorType;
 	private final int level;
 	private final int levelUnclassified;
@@ -30,12 +30,12 @@ public class CItemType {
 	private final boolean includeAsRandomChoice;
 
 	public CItemType(final List<War3ID> abilityList, final War3ID cooldownGroup, final boolean ignoreCooldown,
-			final int numberOfCharges, final boolean activelyUsed, final boolean perishable,
-			final boolean useAutomaticallyWhenAcquired, final int goldCost, final int lumberCost, final int stockMax,
-			final int stockReplenishInterval, final int stockStartDelay, final int hitPoints, final String armorType,
-			final int level, final int levelUnclassified, final int priority, final boolean sellable,
-			final boolean pawnable, final boolean droppedWhenCarrierDies, final boolean canBeDropped,
-			final boolean validTargetForTransformation, final boolean includeAsRandomChoice) {
+					 final int numberOfCharges, final boolean activelyUsed, final boolean perishable,
+					 final boolean useAutomaticallyWhenAcquired, final int goldCost, final int lumberCost, final int stockMax,
+					 final int stockReplenishInterval, final int stockStartDelay, final int maxLife, final String armorType,
+					 final int level, final int levelUnclassified, final int priority, final boolean sellable,
+					 final boolean pawnable, final boolean droppedWhenCarrierDies, final boolean canBeDropped,
+					 final boolean validTargetForTransformation, final boolean includeAsRandomChoice) {
 		this.abilityList = abilityList;
 		this.cooldownGroup = cooldownGroup;
 		this.ignoreCooldown = ignoreCooldown;
@@ -48,7 +48,7 @@ public class CItemType {
 		this.stockMax = stockMax;
 		this.stockReplenishInterval = stockReplenishInterval;
 		this.stockStartDelay = stockStartDelay;
-		this.hitPoints = hitPoints;
+		this.maxLife = maxLife;
 		this.armorType = armorType;
 		this.level = level;
 		this.levelUnclassified = levelUnclassified;
@@ -109,8 +109,8 @@ public class CItemType {
 		return this.stockStartDelay;
 	}
 
-	public int getHitPoints() {
-		return this.hitPoints;
+	public int getMaxLife() {
+		return this.maxLife;
 	}
 
 	public String getArmorType() {

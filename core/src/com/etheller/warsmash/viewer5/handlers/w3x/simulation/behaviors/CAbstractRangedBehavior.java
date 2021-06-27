@@ -36,7 +36,7 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 		return this;
 	}
 
-	protected abstract CBehavior update(CSimulation simulation, boolean withinRange);
+	protected abstract CBehavior update(CSimulation simulation, boolean withinFacingWindow);
 
 	protected abstract CBehavior updateOnInvalidTarget(CSimulation simulation);
 

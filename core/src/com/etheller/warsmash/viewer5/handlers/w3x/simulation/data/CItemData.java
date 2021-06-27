@@ -55,7 +55,7 @@ public class CItemData {
 		final MutableGameObject itemType = this.itemData.get(typeId);
 		final CItemType itemTypeInstance = getItemTypeInstance(typeId, itemType);
 
-		return new CItem(handleId, x, y, itemTypeInstance.getHitPoints(), typeId, itemTypeInstance);
+		return new CItem(handleId, x, y, itemTypeInstance.getMaxLife(), typeId, itemTypeInstance);
 	}
 
 	public CItemType getItemType(final War3ID typeId) {

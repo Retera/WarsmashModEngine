@@ -47,7 +47,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
-		return this.unit.canReach(this.target, this.unit.getUnitType().getCollisionSize());
+		return this.unit.canReach(this.target, abilityHarvest.getTreeAttack().getRange());
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 	}
 
 	@Override
-	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
+	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		this.simulation = simulation;
 		return this.target.visit(this);
 	}

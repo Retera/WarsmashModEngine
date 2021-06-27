@@ -64,8 +64,6 @@ public abstract class CWidget implements AbilityTarget {
 		return this.life <= 0;
 	}
 
-	public abstract float getMaxLife();
-
 	public abstract boolean canBeTargetedBy(CSimulation simulation, CUnit source,
 			final EnumSet<CTargetType> targetsAllowed);
 

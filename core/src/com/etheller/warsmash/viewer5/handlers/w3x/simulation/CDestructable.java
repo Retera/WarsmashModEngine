@@ -26,11 +26,6 @@ public class CDestructable extends CWidget {
 	}
 
 	@Override
-	public float getMaxLife() {
-		return destType.getMaxLife();
-	}
-
-	@Override
 	public float getFlyHeight() {
 		return 0;
 	}
@@ -89,7 +84,7 @@ public class CDestructable extends CWidget {
 
 	@Override
 	public float getMaxLife() {
-		return this.destType.getLife();
+		return this.destType.getMaxLife();
 	}
 
 	public void setInvulnerable(final boolean invulnerable) {

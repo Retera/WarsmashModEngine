@@ -30,6 +30,10 @@ public class CAbilityAttack extends AbstractCAbility {
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
 			final AbilityTargetCheckReceiver<CWidget> receiver) {
+		if (target == unit) {
+			receiver.mustTargetType(TargetType.UNIT);
+			return; // no attacking self ever
+		}
 		if (orderId == OrderIds.smart) {
 			if (target instanceof CUnit) {
 				if (game.getPlayer(unit.getPlayerIndex()).hasAlliance(((CUnit) target).getPlayerIndex(),
@@ -65,7 +69,8 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityTarget target) {
 		return true;
 	}
 

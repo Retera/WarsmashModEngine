@@ -48,7 +48,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 
 public class WarsmashGdxMapScreen implements InputProcessor, Screen {
@@ -75,12 +75,14 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	private Music currentMusic;
 	private final WarsmashGdxMultiScreenGame screenManager;
 	private final WarsmashGdxMenuScreen menuScreen;
+	private final CPlayerUnitOrderListener uiOrderListener;
 
 	public WarsmashGdxMapScreen(final War3MapViewer mapViewer, final WarsmashGdxMultiScreenGame screenManager,
-			final WarsmashGdxMenuScreen menuScreen) {
+			final WarsmashGdxMenuScreen menuScreen, final CPlayerUnitOrderListener uiOrderListener) {
 		this.viewer = mapViewer;
 		this.screenManager = screenManager;
 		this.menuScreen = menuScreen;
+		this.uiOrderListener = uiOrderListener;
 	}
 
 	/*
@@ -204,9 +206,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 							WarsmashGdxMapScreen.this.currentMusic = music;
 						}
 					}
-				}, new CPlayerUnitOrderExecutor(this.viewer.simulation, this.viewer.getLocalPlayerIndex(),
-						this.viewer.getCommandErrorListener()),
-				new Runnable() {
+				}, this.uiOrderListener, new Runnable() {
 					@Override
 					public void run() {
 						WarsmashGdxMapScreen.this.menuScreen.onReturnFromGame();

@@ -16,6 +16,7 @@ public class Trigger {
 	private boolean enabled = true;
 	// used for eval
 	private transient final TriggerExecutionScope triggerExecutionScope = new TriggerExecutionScope(this);
+	private boolean waitOnSleeps = true;
 
 	public int addAction(final JassFunction function) {
 		final int index = this.actions.size();
@@ -54,9 +55,9 @@ public class Trigger {
 		return true;
 	}
 
-	public void execute(final GlobalScope globalScope) {
+	public void execute(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
 		for (final JassFunction action : this.actions) {
-			action.call(Collections.emptyList(), globalScope, this.triggerExecutionScope);
+			action.call(Collections.emptyList(), globalScope, triggerScope);
 		}
 	}
 
@@ -71,4 +72,22 @@ public class Trigger {
 	public void destroy() {
 
 	}
+
+	public void reset() {
+		this.actions.clear();
+		this.conditions.clear();
+		this.evalCount = 0;
+		this.execCount = 0;
+		this.enabled = true;
+		this.waitOnSleeps = true;
+	}
+
+	public void setWaitOnSleeps(final boolean waitOnSleeps) {
+		this.waitOnSleeps = waitOnSleeps;
+	}
+
+	public boolean isWaitOnSleeps() {
+		return this.waitOnSleeps;
+	}
+
 }

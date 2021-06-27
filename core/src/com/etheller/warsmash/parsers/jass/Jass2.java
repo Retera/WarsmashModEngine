@@ -22,8 +22,10 @@ import com.etheller.interpreter.JassParser;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
+import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
+import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.HandleJassValue;
@@ -86,9 +88,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CStartLocPrio;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionTriggerEnter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CGameState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CUnitState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerNativeEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CAttackTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CBlendMode;
@@ -98,7 +102,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CGameSpeed;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CGameType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CLimitOp;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CMapDensity;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CMapDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPathingTypeJass;
@@ -399,165 +402,8 @@ public class Jass2 {
 					return new StringJassValue(JUIEnvironment.this.skin.getField(fieldName));
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("CreateTrigger", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					return new HandleJassValue(triggerType, new Trigger());
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DestroyTrigger", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					trigger.destroy();
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("EnableTrigger", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					trigger.setEnabled(true);
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DisableTrigger", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					trigger.setEnabled(false);
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("IsTriggerEnabled", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					return BooleanJassValue.of(trigger.isEnabled());
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("Condition", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final JassFunction func = arguments.get(0).visit(JassFunctionJassValueVisitor.getInstance());
-					return new HandleJassValue(conditionFuncType, new BoolExprCondition(func));
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("Filter", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final JassFunction func = arguments.get(0).visit(JassFunctionJassValueVisitor.getInstance());
-					return new HandleJassValue(filterType, new BoolExprFilter(func));
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DestroyCondition", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final BoolExprCondition trigger = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<BoolExprCondition>getInstance());
-					System.err.println(
-							"DestroyCondition called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DestroyFilter", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final BoolExprFilter trigger = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<BoolExprFilter>getInstance());
-					System.err.println(
-							"DestroyFilter called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DestroyBoolExpr", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final TriggerBooleanExpression trigger = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-					System.err.println(
-							"DestroyBoolExpr called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("And", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final TriggerBooleanExpression operandA = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-					final TriggerBooleanExpression operandB = arguments.get(1)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-					return new HandleJassValue(boolExprType, new BoolExprAnd(operandA, operandB));
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("Or", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final TriggerBooleanExpression operandA = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-					final TriggerBooleanExpression operandB = arguments.get(1)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-					return new HandleJassValue(boolExprType, new BoolExprOr(operandA, operandB));
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("Not", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final TriggerBooleanExpression operand = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-					return new HandleJassValue(boolExprType, new BoolExprNot(operand));
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("TriggerAddCondition", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					final TriggerBooleanExpression condition = arguments.get(1)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-					final int index = whichTrigger.addCondition(condition);
-					return new HandleJassValue(triggerConditionType,
-							new TriggerCondition(condition, whichTrigger, index));
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("TriggerRemoveCondition", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					final TriggerCondition condition = arguments.get(1)
-							.visit(ObjectJassValueVisitor.<TriggerCondition>getInstance());
-					if (condition.getTrigger() != whichTrigger) {
-						throw new IllegalArgumentException("Unable to remove condition, wrong trigger");
-					}
-					whichTrigger.removeConditionAtIndex(condition.getConditionIndex());
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("TriggerAddAction", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					final JassFunction actionFunc = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
-					final int actionIndex = whichTrigger.addAction(actionFunc);
-					return new HandleJassValue(triggerActionType,
-							new TriggerAction(whichTrigger, actionFunc, actionIndex));
-				}
-			});
+			setupTriggerAPI(jassProgramVisitor, triggerType, triggerActionType, triggerConditionType, boolExprType,
+					conditionFuncType, filterType);
 		}
 	}
 
@@ -2358,7 +2204,210 @@ public class Jass2 {
 							new Rectangle(worldMinX, worldMinY, worldMaxX - worldMinX, worldMaxY - worldMinY));
 				}
 			});
+			// ============================================================================
+			// Native trigger interface
+			//
+			setupTriggerAPI(jassProgramVisitor, triggerType, triggeractionType, triggerconditionType, boolexprType,
+					conditionfuncType, filterfuncType);
+			jassProgramVisitor.getJassNativeManager().createNative("GetFilterUnit", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(unitType, ((CommonTriggerExecutionScope) triggerScope).getFilterUnit());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetEnumUnit", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(unitType, ((CommonTriggerExecutionScope) triggerScope).getEnumUnit());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetFilterDestructable", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(destructableType,
+							((CommonTriggerExecutionScope) triggerScope).getFilterDestructable());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetEnumDestructable", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(destructableType,
+							((CommonTriggerExecutionScope) triggerScope).getEnumDestructable());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetFilterItem", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(itemType, ((CommonTriggerExecutionScope) triggerScope).getFilterItem());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetEnumItem", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(itemType, ((CommonTriggerExecutionScope) triggerScope).getEnumItem());
+				}
+			});
 
+			// ============================================================================
+			// Trigger Game Event API
+			// ============================================================================
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterVariableEvent", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+					final String varName = arguments.get(1).visit(ObjectJassValueVisitor.<String>getInstance());
+					final CLimitOp limitOp = arguments.get(2).visit(ObjectJassValueVisitor.<CLimitOp>getInstance());
+					final Double limitval = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+					final RemovableTriggerEvent event = globalScope.registerVariableEvent(trigger, varName, limitOp,
+							limitval.doubleValue());
+					return new HandleJassValue(eventType, event);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterTimerEvent", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+					final Double timeout = arguments.get(1).visit(RealJassValueVisitor.getInstance());
+					final Boolean periodic = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+					final CTimerNativeEvent timer = new CTimerNativeEvent(globalScope, trigger);
+					timer.setRepeats(periodic.booleanValue());
+					timer.setTimeoutTime(timeout.floatValue());
+					simulation.registerTimer(timer);
+					return new HandleJassValue(eventType, new RemovableTriggerEvent() {
+						@Override
+						public void remove() {
+							simulation.unregisterTimer(timer);
+						}
+					});
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterTimerExpireEvent",
+					new JassFunction() {
+						@Override
+						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+								final TriggerExecutionScope triggerScope) {
+							final Trigger trigger = arguments.get(0)
+									.visit(ObjectJassValueVisitor.<Trigger>getInstance());
+							final CTimerJass timer = arguments.get(0)
+									.visit(ObjectJassValueVisitor.<CTimerJass>getInstance());
+							timer.addEvent(trigger);
+							return new HandleJassValue(eventType, new RemovableTriggerEvent() {
+								@Override
+								public void remove() {
+									timer.removeEvent(trigger);
+								}
+							});
+						}
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterGameStateEvent", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+					final CGameState whichState = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<CGameState>getInstance());
+					final CLimitOp opcode = arguments.get(2).visit(ObjectJassValueVisitor.<CLimitOp>getInstance());
+					final Double limitval = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+					if (whichState != CGameState.TIME_OF_DAY) {
+						// TODO not yet impl
+						throw new UnsupportedOperationException("Not yet implemented: TriggerRegisterGameStateEvent");
+					}
+					return new HandleJassValue(eventType,
+							simulation.registerTimeOfDayEvent(globalScope, trigger, opcode, limitval.doubleValue()));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterDialogEvent", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("Not yet implemented: TriggerRegisterDialogEvent");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterDialogButtonEvent",
+					new JassFunction() {
+						@Override
+						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+								final TriggerExecutionScope triggerScope) {
+							throw new UnsupportedOperationException(
+									"Not yet implemented: TriggerRegisterDialogButtonEvent");
+						}
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetEventGameState", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("Not yet implemented: GetEventGameState");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterGameEvent", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("Not yet implemented: TriggerRegisterGameEvent");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetWinningPlayer", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("Not yet implemented: GetWinningPlayer");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterEnterRegion", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+					final CRegion region = arguments.get(1).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final TriggerBooleanExpression boolexpr = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					return new HandleJassValue(eventType,
+							region.add(new CRegionTriggerEnter(globalScope, trigger, boolexpr)));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTriggeringRegion", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(unitType,
+							((CommonTriggerExecutionScope) triggerScope).getEnteringUnit());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetEnteringUnit", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(unitType,
+							((CommonTriggerExecutionScope) triggerScope).getEnteringUnit());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterLeaveRegion", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+					final CRegion region = arguments.get(1).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+					final TriggerBooleanExpression boolexpr = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					return new HandleJassValue(eventType,
+							region.add(new CRegionTriggerEnter(globalScope, trigger, boolexpr)));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetLeavingUnit", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new HandleJassValue(unitType, ((CommonTriggerExecutionScope) triggerScope).getLeavingUnit());
+				}
+			});
 		}
 
 		private void registerConfigNatives(final JassProgramVisitor jassProgramVisitor, final War3MapConfig mapConfig,
@@ -2860,5 +2909,247 @@ public class Jass2 {
 				}
 			});
 		}
+	}
+
+	private static void setupTriggerAPI(final JassProgramVisitor jassProgramVisitor, final HandleJassType triggerType,
+			final HandleJassType triggeractionType, final HandleJassType triggerconditionType,
+			final HandleJassType boolexprType, final HandleJassType conditionfuncType,
+			final HandleJassType filterfuncType) {
+		// ============================================================================
+		// Native trigger interface
+		//
+		jassProgramVisitor.getJassNativeManager().createNative("CreateTrigger", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				return new HandleJassValue(triggerType, new Trigger());
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DestroyTrigger", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				trigger.destroy();
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("ResetTrigger", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				trigger.reset();
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("EnableTrigger", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				trigger.setEnabled(true);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DisableTrigger", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				trigger.setEnabled(false);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("IsTriggerEnabled", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				return BooleanJassValue.of(trigger.isEnabled());
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("TriggerWaitOnSleeps", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				final Boolean value = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+				trigger.setWaitOnSleeps(value.booleanValue());
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("IsTriggerWaitOnSleeps", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				return BooleanJassValue.of(trigger.isWaitOnSleeps());
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetTriggeringTrigger", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				return new HandleJassValue(triggerType, triggerScope.getTriggeringTrigger());
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetTriggerEventId", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				throw new UnsupportedOperationException("GetTriggerEventId not yet implemented ???");
+				// TODO I need to review what eventid is, I'm forgetting, sorry
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetTriggerEvalCount", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				return new IntegerJassValue(trigger.getEvalCount());
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetTriggerExecCount", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				return new IntegerJassValue(trigger.getExecCount());
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("ExecuteFunc", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final String funcName = arguments.get(0).visit(ObjectJassValueVisitor.<String>getInstance());
+				final JassFunction functionByName = globalScope.getFunctionByName(funcName);
+				if (functionByName != null) {
+					// TODO below TriggerExecutionScope.EMPTY is probably not correct
+					functionByName.call(Collections.emptyList(), globalScope, TriggerExecutionScope.EMPTY);
+				}
+				return null;
+			}
+		});
+
+		// ============================================================================
+		// Boolean Expr API ( for compositing trigger conditions and unit filter
+		// funcs...)
+		// ============================================================================
+		jassProgramVisitor.getJassNativeManager().createNative("And", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final TriggerBooleanExpression operandA = arguments.get(0)
+						.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+				final TriggerBooleanExpression operandB = arguments.get(1)
+						.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+				return new HandleJassValue(boolexprType, new BoolExprAnd(operandA, operandB));
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("Or", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final TriggerBooleanExpression operandA = arguments.get(0)
+						.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+				final TriggerBooleanExpression operandB = arguments.get(1)
+						.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+				return new HandleJassValue(boolexprType, new BoolExprOr(operandA, operandB));
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("Not", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final TriggerBooleanExpression operand = arguments.get(0)
+						.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+				return new HandleJassValue(boolexprType, new BoolExprNot(operand));
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("Condition", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final JassFunction func = arguments.get(0).visit(JassFunctionJassValueVisitor.getInstance());
+				return new HandleJassValue(conditionfuncType, new BoolExprCondition(func));
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DestroyCondition", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final BoolExprCondition condition = arguments.get(0)
+						.visit(ObjectJassValueVisitor.<BoolExprCondition>getInstance());
+				System.err.println(
+						"DestroyCondition called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("Filter", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final JassFunction func = arguments.get(0).visit(JassFunctionJassValueVisitor.getInstance());
+				return new HandleJassValue(filterfuncType, new BoolExprFilter(func));
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DestroyFilter", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final BoolExprFilter filter = arguments.get(0)
+						.visit(ObjectJassValueVisitor.<BoolExprFilter>getInstance());
+				System.err.println(
+						"DestroyFilter called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DestroyBoolExpr", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final TriggerBooleanExpression boolexpr = arguments.get(0)
+						.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+				System.err.println(
+						"DestroyBoolExpr called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("TriggerAddCondition", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				final TriggerBooleanExpression condition = arguments.get(1)
+						.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+				final int index = whichTrigger.addCondition(condition);
+				return new HandleJassValue(triggerconditionType, new TriggerCondition(condition, whichTrigger, index));
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("TriggerRemoveCondition", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				final TriggerCondition condition = arguments.get(1)
+						.visit(ObjectJassValueVisitor.<TriggerCondition>getInstance());
+				if (condition.getTrigger() != whichTrigger) {
+					throw new IllegalArgumentException("Unable to remove condition, wrong trigger");
+				}
+				whichTrigger.removeConditionAtIndex(condition.getConditionIndex());
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("TriggerAddAction", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+				final JassFunction actionFunc = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+				final int actionIndex = whichTrigger.addAction(actionFunc);
+				return new HandleJassValue(triggeractionType, new TriggerAction(whichTrigger, actionFunc, actionIndex));
+			}
+		});
 	}
 }

@@ -9,18 +9,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarg
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
 public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 	private final CSimulation game;
 	private final int playerIndex;
-	private final CommandErrorListener errorListener;
 
-	public CPlayerUnitOrderExecutor(final CSimulation game, final int playerIndex,
-			final CommandErrorListener errorListener) {
+	public CPlayerUnitOrderExecutor(final CSimulation game, final int playerIndex) {
 		this.game = game;
 		this.playerIndex = playerIndex;
-		this.errorListener = errorListener;
 	}
 
 	@Override

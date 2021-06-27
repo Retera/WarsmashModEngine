@@ -553,4 +553,10 @@ public class RenderUnit implements RenderWidget {
 	public RenderUnit getPreferredSelectionReplacement() {
 		return this.preferredSelectionReplacement;
 	}
+
+	@Override
+	public SplatMover getSelectionCircle() {
+		return this.selectionCircle;
+	}
+
 }

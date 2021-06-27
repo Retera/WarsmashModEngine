@@ -24,4 +24,6 @@ public class WarsmashConstants {
 	// I know this default string is from somewhere, maybe a language file? Didn't
 	// find it yet so I used this
 	public static final String DEFAULT_STRING = "Default string";
+
+	public static final boolean CATCH_CURSOR = false;
 }

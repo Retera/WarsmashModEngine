@@ -317,6 +317,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private boolean allowDrag;
 	private int currentlyDraggingPointer;
 	private final ShapeRenderer shapeRenderer = new ShapeRenderer();
+	private final List<MultiSelectUnitStateListener> multiSelectUnitStateListeners = new ArrayList<>();
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -934,7 +935,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 		this.cursorFrame.setSequence("Normal");
 		this.cursorFrame.setZDepth(-1.0f);
-		Gdx.input.setCursorCatched(true);
+		if (WarsmashConstants.CATCH_CURSOR) {
+			Gdx.input.setCursorCatched(true);
+		}
 
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
 
@@ -1088,16 +1091,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final int maxX = minX + this.uiViewport.getScreenWidth();
 		final int minY = this.uiViewport.getScreenY();
 		final int maxY = minY + this.uiViewport.getScreenHeight();
-		final boolean left = mouseX <= (minX + 3);
-		final boolean right = mouseX >= (maxX - 3);
-		final boolean up = mouseY <= (minY + 3);
-		final boolean down = mouseY >= (maxY - 3);
+		final boolean left = (mouseX <= (minX + 3)) && WarsmashConstants.CATCH_CURSOR;
+		final boolean right = (mouseX >= (maxX - 3)) && WarsmashConstants.CATCH_CURSOR;
+		final boolean up = (mouseY <= (minY + 3)) && WarsmashConstants.CATCH_CURSOR;
+		final boolean down = (mouseY >= (maxY - 3)) && WarsmashConstants.CATCH_CURSOR;
 		this.cameraManager.applyVelocity(deltaTime, up, down, left, right);
 
 		mouseX = Math.max(minX, Math.min(maxX, mouseX));
 		mouseY = Math.max(minY, Math.min(maxY, mouseY));
 		if (Gdx.input.isCursorCatched()) {
-			Gdx.input.setCursorPosition(mouseX, mouseY);
+			if (WarsmashConstants.CATCH_CURSOR) {
+				Gdx.input.setCursorPosition(mouseX, mouseY);
+			}
 		}
 		this.hpBarFrameIndex = 0;
 		if (this.currentlyDraggingPointer == -1) {
@@ -2028,6 +2033,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.selectWorkerInsideFrame.setVisible(false);
 		}
 		else if (multiSelect) {
+			for (int i = 0; i < this.queueIconFrames.length; i++) {
+				this.queueIconFrames[i].setVisible(false);
+			}
 			for (int i = 0; i < this.selectedUnitFrames.length; i++) {
 				final boolean useIcon = i < this.selectedUnits.size();
 				this.selectedUnitFrames[i].setVisible(useIcon);
@@ -2373,8 +2381,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void lifeChanged() {
 		if (this.selectedUnit.getSimulationUnit().isDead()) {
 			final RenderUnit preferredSelectionReplacement = this.selectedUnit.getPreferredSelectionReplacement();
-			final List<RenderWidget> newSelection = preferredSelectionReplacement == null ? Collections.emptyList()
-					: Arrays.asList(preferredSelectionReplacement);
+			final List<RenderWidget> newSelection;
+			newSelection = new ArrayList<>(this.selectedUnits);
+			newSelection.remove(this.selectedUnit);
+			if (preferredSelectionReplacement != null) {
+				newSelection.add(preferredSelectionReplacement);
+			}
 			selectWidgets(newSelection);
 			this.war3MapViewer.doSelectUnit(newSelection);
 		}
@@ -2781,7 +2793,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0, 0);
 			}
 			if (selectionChanged) {
+				for (final MultiSelectUnitStateListener listener : this.multiSelectUnitStateListeners) {
+					listener.dispose();
+				}
 				selectUnit(unit);
+				if (selectedUnits.size() > 1) {
+					for (final RenderUnit renderUnit : selectedUnits) {
+						final MultiSelectUnitStateListener multiSelectUnitStateListener = new MultiSelectUnitStateListener(
+								renderUnit);
+						renderUnit.getSimulationUnit().addStateListener(multiSelectUnitStateListener);
+						this.multiSelectUnitStateListeners.add(multiSelectUnitStateListener);
+					}
+				}
 			}
 			if (playedNewSound) {
 				portraitTalk();
@@ -2828,8 +2851,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				Collections.sort(selectedWidgets, new Comparator<RenderWidget>() {
 					@Override
 					public int compare(final RenderWidget widget1, final RenderWidget widget2) {
-						return ((RenderUnit) widget1).getSimulationUnit().getUnitType().getPriority()
-								- ((RenderUnit) widget2).getSimulationUnit().getUnitType().getPriority();
+						return ((RenderUnit) widget2).getSimulationUnit().getUnitType().getPriority()
+								- ((RenderUnit) widget1).getSimulationUnit().getUnitType().getPriority();
 					}
 				});
 
@@ -3051,6 +3074,59 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		@Override
 		public void openMenu(final int orderId) {
 			MeleeUI.this.openMenu(orderId);
+		}
+
+	}
+
+	private final class MultiSelectUnitStateListener implements CUnitStateListener {
+		private final RenderUnit sourceUnit;
+
+		public MultiSelectUnitStateListener(final RenderUnit sourceUnit) {
+			this.sourceUnit = sourceUnit;
+		}
+
+		public void dispose() {
+			this.sourceUnit.getSimulationUnit().removeStateListener(this);
+		}
+
+		@Override
+		public void lifeChanged() {
+			if (this.sourceUnit.getSimulationUnit().isDead()) {
+				MeleeUI.this.selectedUnits.remove(this.sourceUnit);
+				MeleeUI.this.war3MapViewer.doUnselectUnit(this.sourceUnit);
+				MeleeUI.this.multiSelectUnitStateListeners.remove(this);
+				dispose();
+			}
+		}
+
+		@Override
+		public void ordersChanged() {
+
+		}
+
+		@Override
+		public void queueChanged() {
+
+		}
+
+		@Override
+		public void rallyPointChanged() {
+
+		}
+
+		@Override
+		public void waypointsChanged() {
+
+		}
+
+		@Override
+		public void heroStatsChanged() {
+
+		}
+
+		@Override
+		public void inventoryChanged() {
+
 		}
 
 	}

@@ -1,4 +1,4 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes;
+package com.etheller.interpreter.ast.scope.variableevent;
 
 public enum CLimitOp {
 	LESS_THAN,

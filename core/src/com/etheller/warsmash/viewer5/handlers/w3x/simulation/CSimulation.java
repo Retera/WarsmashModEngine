@@ -12,6 +12,11 @@ import java.util.Map;
 import java.util.Random;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
+import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
+import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
@@ -73,6 +78,7 @@ public class CSimulation implements CPlayerAPI {
 	private final LinkedList<CTimer> activeTimers = new LinkedList<>();
 	private transient CommandErrorListener commandErrorListener;
 	private final CRegionManager regionManager;
+	private final List<TimeOfDayVariableEvent> timeOfDayVariableEvents = new ArrayList<>();
 
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
@@ -108,7 +114,7 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CPlayer newPlayer = new CPlayer(CRace.OTHER, new float[] { startLoc.getX(), startLoc.getY() },
+			final CPlayer newPlayer = new CPlayer(CRace.ORC, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
 			this.players.add(newPlayer);
 		}
@@ -273,10 +279,17 @@ public class CSimulation implements CPlayerAPI {
 			pathfindingProcessor.update(this);
 		}
 		this.gameTurnTick++;
+		final float timeOfDayBefore = getGameTimeOfDay();
 		this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
 				% this.gameplayConstants.getGameDayLength();
+		final float timeOfDayAfter = getGameTimeOfDay();
 		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
+		}
+		for (final TimeOfDayVariableEvent timeOfDayEvent : this.timeOfDayVariableEvents) {
+			if (!timeOfDayEvent.isMatching(timeOfDayBefore) && timeOfDayEvent.isMatching(timeOfDayAfter)) {
+				timeOfDayEvent.fire();
+			}
 		}
 
 	}
@@ -438,4 +451,30 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.unitPreferredSelectionReplacement(unit, newUnit);
 	}
 
+	public RemovableTriggerEvent registerTimeOfDayEvent(final GlobalScope globalScope, final Trigger trigger,
+			final CLimitOp opcode, final double doubleValue) {
+		final TimeOfDayVariableEvent timeOfDayVariableEvent = new TimeOfDayVariableEvent(trigger, opcode, doubleValue,
+				globalScope);
+		this.timeOfDayVariableEvents.add(timeOfDayVariableEvent);
+		return new RemovableTriggerEvent() {
+			@Override
+			public void remove() {
+				CSimulation.this.timeOfDayVariableEvents.remove(timeOfDayVariableEvent);
+			}
+		};
+	}
+
+	private static final class TimeOfDayVariableEvent extends VariableEvent {
+		private final GlobalScope globalScope;
+
+		public TimeOfDayVariableEvent(final Trigger trigger, final CLimitOp limitOp, final double doubleValue,
+				final GlobalScope globalScope) {
+			super(trigger, limitOp, doubleValue);
+			this.globalScope = globalScope;
+		}
+
+		public void fire() {
+			fire(this.globalScope);
+		}
+	}
 }

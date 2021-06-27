@@ -197,4 +197,9 @@ public class RenderItem implements RenderWidget {
 	public SplatMover getSelectionPreviewHighlight() {
 		return this.selectionPreviewHighlight;
 	}
+
+	@Override
+	public SplatMover getSelectionCircle() {
+		return this.selectionCircle;
+	}
 }

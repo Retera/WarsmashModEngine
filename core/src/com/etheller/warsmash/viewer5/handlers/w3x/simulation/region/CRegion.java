@@ -1,10 +1,16 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.region;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.math.Rectangle;
+import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 
 public class CRegion {
 	private Rectangle currentBounds;
 	private boolean complexRegion;
+	private final List<CRegionTriggerEnter> enterTriggers = new ArrayList<>();
+	private final List<CRegionTriggerLeave> leaveTriggers = new ArrayList<>();
 
 	public void addRect(final Rectangle rect, final CRegionManager regionManager) {
 		if (this.currentBounds == null) {
@@ -121,5 +127,33 @@ public class CRegion {
 			return regionManager.isPointInComplexRegion(this, x, y);
 		}
 		return this.currentBounds.contains(x, y);
+	}
+
+	public List<CRegionTriggerEnter> getEnterTriggers() {
+		return this.enterTriggers;
+	}
+
+	public List<CRegionTriggerLeave> getLeaveTriggers() {
+		return this.leaveTriggers;
+	}
+
+	public RemovableTriggerEvent add(final CRegionTriggerEnter triggerEnter) {
+		this.enterTriggers.add(triggerEnter);
+		return new RemovableTriggerEvent() {
+			@Override
+			public void remove() {
+				CRegion.this.enterTriggers.remove(triggerEnter);
+			}
+		};
+	}
+
+	public RemovableTriggerEvent add(final CRegionTriggerLeave leaveTrigger) {
+		this.leaveTriggers.add(leaveTrigger);
+		return new RemovableTriggerEvent() {
+			@Override
+			public void remove() {
+				CRegion.this.leaveTriggers.remove(leaveTrigger);
+			}
+		};
 	}
 }

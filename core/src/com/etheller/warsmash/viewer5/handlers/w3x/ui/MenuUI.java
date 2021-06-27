@@ -2,6 +2,8 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -16,6 +18,11 @@ import com.etheller.warsmash.WarsmashGdxMapScreen;
 import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.networking.GameTurnManager;
+import com.etheller.warsmash.networking.MultiplayerHack;
+import com.etheller.warsmash.networking.WarsmashClient;
+import com.etheller.warsmash.networking.WarsmashClientSendingOrderListener;
+import com.etheller.warsmash.networking.WarsmashClientWriter;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
@@ -41,6 +48,8 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
@@ -180,7 +189,7 @@ public class MenuUI {
 		else {
 			try (InputStream campaignStringStream = dataSource.getResourceAsStream("UI\\CampaignInfoClassic.txt")) {
 				this.campaignStrings.readTXT(campaignStringStream, true);
-				unifiedCampaignInfo = true;
+				this.unifiedCampaignInfo = true;
 			}
 			catch (final IOException e) {
 				throw new RuntimeException(e);
@@ -251,7 +260,9 @@ public class MenuUI {
 		this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 		this.cursorFrame.setSequence("Normal");
 		this.cursorFrame.setZDepth(-1.0f);
-		Gdx.input.setCursorCatched(true);
+		if (WarsmashConstants.CATCH_CURSOR) {
+			Gdx.input.setCursorCatched(true);
+		}
 
 		// Main Menu interactivity
 		this.singlePlayerButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("SinglePlayerButton", 0);
@@ -639,8 +650,15 @@ public class MenuUI {
 		this.loadingBar.setVisible(true);
 		this.loadingCustomPanel.setVisible(true);
 		final DataSource codebase = WarsmashGdxMapScreen.parseDataSources(this.warsmashIni);
+		final GameTurnManager turnManager;
+		if (MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR != null) {
+			turnManager = GameTurnManager.PAUSED;
+		}
+		else {
+			turnManager = GameTurnManager.LOCAL;
+		}
 		final War3MapViewer viewer = new War3MapViewer(codebase, this.screenManager,
-				new War3MapConfig(WarsmashConstants.MAX_PLAYERS));
+				new War3MapConfig(WarsmashConstants.MAX_PLAYERS), turnManager);
 
 		if (WarsmashGdxMapScreen.ENABLE_AUDIO) {
 			viewer.worldScene.enableAudio();
@@ -746,20 +764,48 @@ public class MenuUI {
 			return;
 		}
 		else if (this.loadingMap != null) {
+			final int localPlayerIndex = 0;
 			try {
-				this.loadingMap.viewer.loadMap(this.loadingMap.map, this.loadingMap.mapInfo, 0);
+				this.loadingMap.viewer.loadMap(this.loadingMap.map, this.loadingMap.mapInfo, localPlayerIndex);
 			}
 			catch (final IOException e) {
 				throw new RuntimeException(e);
 			}
 			// TODO not cast menu screen
+			CPlayerUnitOrderListener uiOrderListener;
+			final WarsmashClient warsmashClient;
+			if (MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR != null) {
+				try {
+					warsmashClient = new WarsmashClient(
+							InetAddress.getByName(MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR),
+							this.loadingMap.viewer);
+				}
+				catch (final UnknownHostException e) {
+					throw new RuntimeException(e);
+				}
+				catch (final IOException e) {
+					throw new RuntimeException(e);
+				}
+				final WarsmashClientWriter warsmashClientWriter = warsmashClient.getWriter();
+				warsmashClientWriter.joinGame();
+				warsmashClientWriter.send();
+				uiOrderListener = new WarsmashClientSendingOrderListener(warsmashClientWriter);
+			}
+			else {
+				uiOrderListener = new CPlayerUnitOrderExecutor(this.loadingMap.viewer.simulation, localPlayerIndex);
+				warsmashClient = null;
+			}
+
 			MenuUI.this.screenManager.setScreen(new WarsmashGdxMapScreen(this.loadingMap.viewer, this.screenManager,
-					(WarsmashGdxMenuScreen) this.menuScreen));
+					(WarsmashGdxMenuScreen) this.menuScreen, uiOrderListener));
 			this.loadingMap = null;
 
 			this.loadingBar.setVisible(false);
 			this.loadingFrame.setVisible(false);
 			this.loadingBackground.setVisible(false);
+			if (MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR != null) {
+				warsmashClient.startThread();
+			}
 			return;
 		}
 		if ((this.focusUIFrame != null) && !this.focusUIFrame.isVisibleOnScreen()) {
@@ -778,7 +824,9 @@ public class MenuUI {
 		mouseX = Math.max(minX, Math.min(maxX, mouseX));
 		mouseY = Math.max(minY, Math.min(maxY, mouseY));
 		if (Gdx.input.isCursorCatched()) {
-			Gdx.input.setCursorPosition(mouseX, mouseY);
+			if (WarsmashConstants.CATCH_CURSOR) {
+				Gdx.input.setCursorPosition(mouseX, mouseY);
+			}
 		}
 
 		screenCoordsVector.set(mouseX, mouseY);
@@ -1105,13 +1153,12 @@ public class MenuUI {
 	}
 
 	private String getCurrentBackgroundModel() {
-		String background = this.currentCampaign.getBackground();
-		String versionedBackground = background + "_V" + WarsmashConstants.GAME_VERSION;
-		if(this.rootFrame.hasSkinField(versionedBackground)) {
+		final String background = this.currentCampaign.getBackground();
+		final String versionedBackground = background + "_V" + WarsmashConstants.GAME_VERSION;
+		if (this.rootFrame.hasSkinField(versionedBackground)) {
 			return this.rootFrame.getSkinField(versionedBackground);
 		}
-		return this.rootFrame
-				.getSkinField(background );
+		return this.rootFrame.getSkinField(background);
 	}
 
 	private static final class LoadingMap {

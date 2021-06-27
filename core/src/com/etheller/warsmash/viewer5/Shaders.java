@@ -61,7 +61,6 @@ public class Shaders {
 
 	public static String lightSystem(final String normalName, final String positionName, final String lightTexture,
 			final String lightTextureHeight, final String lightCount, final boolean terrain) {
-		new RuntimeException("lightSystem").printStackTrace();
 		return "        vec3 lightFactor = vec3(0.0,0.0,0.0);\r\n" + //
 				"        for(float lightIndex = 0.5; lightIndex < " + lightCount + "; lightIndex += 1.0) {\r\n" + //
 				"          float rowPos = (lightIndex) / " + lightTextureHeight + ";\r\n" + //

@@ -5,6 +5,10 @@ import java.util.Map;
 
 import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
+import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
+import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
@@ -16,7 +20,7 @@ import com.etheller.interpreter.ast.value.visitor.HandleJassTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.HandleTypeSuperTypeLoadingVisitor;
 
 public final class GlobalScope {
-	private final Map<String, Assignable> globals = new HashMap<>();
+	private final Map<String, GlobalScopeAssignable> globals = new HashMap<>();
 	private final Map<String, JassFunction> functions = new HashMap<>();
 	private final Map<String, JassType> types = new HashMap<>();
 	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
@@ -54,23 +58,23 @@ public final class GlobalScope {
 	}
 
 	public void createGlobalArray(final String name, final JassType type) {
-		final Assignable assignable = new Assignable(type);
+		final GlobalScopeAssignable assignable = new GlobalScopeAssignable(type, this);
 		assignable.setValue(new ArrayJassValue((ArrayJassType) type)); // TODO less bad code
 		this.globals.put(name, assignable);
 	}
 
 	public void createGlobal(final String name, final JassType type) {
-		this.globals.put(name, new Assignable(type));
+		this.globals.put(name, new GlobalScopeAssignable(type, this));
 	}
 
 	public void createGlobal(final String name, final JassType type, final JassValue value) {
-		final Assignable assignable = new Assignable(type);
+		final GlobalScopeAssignable assignable = new GlobalScopeAssignable(type, this);
 		assignable.setValue(value);
 		this.globals.put(name, assignable);
 	}
 
 	public void setGlobal(final String name, final JassValue value) {
-		final Assignable assignable = this.globals.get(name);
+		final GlobalScopeAssignable assignable = this.globals.get(name);
 		if (assignable == null) {
 			throw new RuntimeException("Undefined global: " + name);
 		}
@@ -88,7 +92,7 @@ public final class GlobalScope {
 		return global.getValue();
 	}
 
-	public Assignable getAssignableGlobal(final String name) {
+	public GlobalScopeAssignable getAssignableGlobal(final String name) {
 		return this.globals.get(name);
 	}
 
@@ -141,5 +145,18 @@ public final class GlobalScope {
 		else {
 			throw new RuntimeException("type " + type + " cannot extend unknown type " + supertype);
 		}
+	}
+
+	public RemovableTriggerEvent registerVariableEvent(final Trigger trigger, final String varName,
+			final CLimitOp limitOp, final double doubleValue) {
+		final VariableEvent variableEvent = new VariableEvent(trigger, limitOp, doubleValue);
+		final GlobalScopeAssignable assignableGlobal = getAssignableGlobal(varName);
+		assignableGlobal.add(variableEvent);
+		return new RemovableTriggerEvent() {
+			@Override
+			public void remove() {
+				assignableGlobal.remove(variableEvent);
+			}
+		};
 	}
 }

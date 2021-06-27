@@ -38,6 +38,7 @@ import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.MpqDataSource;
 import com.etheller.warsmash.datasources.SubdirDataSource;
+import com.etheller.warsmash.networking.GameTurnManager;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.w3x.War3Map;
 import com.etheller.warsmash.parsers.w3x.doo.War3MapDoo;
@@ -238,8 +239,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private final War3MapConfig mapConfig;
 
-	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas, final War3MapConfig mapConfig) {
+	private GameTurnManager gameTurnManager;
+
+	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas, final War3MapConfig mapConfig,
+			final GameTurnManager gameTurnManager) {
 		super(dataSource, canvas);
+		this.gameTurnManager = gameTurnManager;
 		MdxHandler.CURRENT_SHADER_TYPE = ShaderEnvironmentType.GAME;
 		this.gameDataSource = dataSource;
 
@@ -1341,6 +1346,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				}
 				if (buildingUberSplat != null) {
 					buildingUberSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+
 						@Override
 						public void accept(final SplatMover t) {
 							renderUnit.uberSplat = t;
@@ -1353,6 +1359,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				return simulationUnit;
 			}
 			else {
+
 				final CItem simulationItem = this.simulation.createItem(row.getAlias(), unitX, unitY);
 				final RenderItem renderItem = new RenderItem(this, model, row, unitX, unitY, unitZ, unitAngle, soundset,
 						portraitModel, simulationItem);
@@ -1478,8 +1485,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final float rawDeltaTime = Gdx.graphics.getRawDeltaTime();
 			this.updateTime += rawDeltaTime;
 			while (this.updateTime >= WarsmashConstants.SIMULATION_STEP_TIME) {
-				this.updateTime -= WarsmashConstants.SIMULATION_STEP_TIME;
-				this.simulation.update();
+				if (this.gameTurnManager.getLatestCompletedTurn() >= this.simulation.getGameTurnTick()) {
+					this.updateTime -= WarsmashConstants.SIMULATION_STEP_TIME;
+					this.simulation.update();
+					this.gameTurnManager.turnCompleted(this.simulation.getGameTurnTick());
+				}
+				else {
+					break;
+				}
 			}
 			this.dncTerrain.setFrameByRatio(
 					this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
@@ -1558,6 +1571,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 		}
 		this.selected.clear();
+	}
+
+	public void doUnselectUnit(final RenderWidget widget) {
+		if (this.selected.remove(widget)) {
+			widget.getSelectionCircle();
+		}
 	}
 
 	public void doSelectUnit(final List<RenderWidget> units) {
@@ -2167,5 +2186,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public War3MapConfig getMapConfig() {
 		return this.mapConfig;
+	}
+
+	public void setLocalPlayerIndex(final int playerIndex) {
+		// TODO this is HACKY to not do this on INIT, but it is a cheese way to try to
+		// do the networking for now!!!
+		this.localPlayerIndex = playerIndex;
+	}
+
+	public void setGameTurnManager(final GameTurnManager gameTurnManager) {
+		this.gameTurnManager = gameTurnManager;
 	}
 }

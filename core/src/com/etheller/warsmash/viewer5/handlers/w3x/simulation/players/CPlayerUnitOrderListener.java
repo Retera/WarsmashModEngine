@@ -5,7 +5,6 @@ public interface CPlayerUnitOrderListener {
 
 	void issuePointOrder(int unitHandleId, int abilityHandleId, int orderId, float x, float y, boolean queue);
 
-	// Below: used for "DROP ITEM AT POINT"
 	void issueDropItemAtPointOrder(int unitHandleId, int abilityHandleId, int orderId, int targetHandleId, float x,
 			float y, final boolean queue);
 

@@ -168,4 +168,9 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	public SplatMover getSelectionPreviewHighlight() {
 		return this.selectionPreviewHighlight;
 	}
+
+	@Override
+	public SplatMover getSelectionCircle() {
+		return this.selectionCircle;
+	}
 }

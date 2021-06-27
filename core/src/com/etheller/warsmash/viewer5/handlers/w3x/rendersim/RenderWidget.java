@@ -41,6 +41,8 @@ public interface RenderWidget {
 
 	void assignSelectionPreviewHighlight(SplatMover t);
 
+	SplatMover getSelectionCircle();
+
 	boolean isSelectable();
 
 	public static final class UnitAnimationListenerImpl implements CUnitAnimationListener {

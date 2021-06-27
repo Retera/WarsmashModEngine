@@ -92,6 +92,8 @@ public class CUnit extends CWidget {
 	// questionable -- it already was -- but I meant for those to inform us
 	// which fields shouldn't be persisted if we do game state save later
 	private transient CUnitStateNotifier stateNotifier = new CUnitStateNotifier();
+	private transient List<CUnitStateListener> stateListenersNeedingAdd = new ArrayList<>();
+	private transient List<CUnitStateListener> stateListenersNeedingRemove = new ArrayList<>();
 	private final float acquisitionRange;
 	private transient static AutoAttackTargetFinderEnum autoAttackTargetFinderEnum = new AutoAttackTargetFinderEnum();
 
@@ -244,6 +246,14 @@ public class CUnit extends CWidget {
 	 * this unit from the game.
 	 */
 	public boolean update(final CSimulation game) {
+		for (final CUnitStateListener listener : this.stateListenersNeedingAdd) {
+			this.stateNotifier.subscribe(listener);
+		}
+		this.stateListenersNeedingAdd.clear();
+		for (final CUnitStateListener listener : this.stateListenersNeedingRemove) {
+			this.stateNotifier.unsubscribe(listener);
+		}
+		this.stateListenersNeedingRemove.clear();
 		if (isDead()) {
 			if (this.collisionRectangle != null) {
 				// Moved this here because doing it on "kill" was able to happen in some cases
@@ -704,20 +714,12 @@ public class CUnit extends CWidget {
 		this.priorContainingRegions = temp;
 		this.containingRegions.clear();
 		regionManager.checkRegions(this.collisionRectangle == null ? tempRect.set(this.getX(), this.getY(), 0, 0)
-				: this.collisionRectangle, regionCheckerImpl.reset(this));
+				: this.collisionRectangle, regionCheckerImpl.reset(this, regionManager));
 		for (final CRegion region : this.priorContainingRegions) {
 			if (!this.containingRegions.contains(region)) {
-				onLeaveRegion(region);
+				regionManager.onUnitLeaveRegion(this, region);
 			}
 		}
-	}
-
-	private void onEnterRegion(final CRegion region) {
-
-	}
-
-	private void onLeaveRegion(final CRegion region) {
-
 	}
 
 	public EnumSet<CUnitClassification> getClassifications() {
@@ -1020,11 +1022,11 @@ public class CUnit extends CWidget {
 	}
 
 	public void addStateListener(final CUnitStateListener listener) {
-		this.stateNotifier.subscribe(listener);
+		this.stateListenersNeedingAdd.add(listener);
 	}
 
 	public void removeStateListener(final CUnitStateListener listener) {
-		this.stateNotifier.unsubscribe(listener);
+		this.stateListenersNeedingRemove.add(listener);
 	}
 
 	public boolean isCorpse() {
@@ -1546,9 +1548,11 @@ public class CUnit extends CWidget {
 
 	private static final class RegionCheckerImpl implements CRegionEnumFunction {
 		private CUnit unit;
+		private CRegionManager regionManager;
 
-		public RegionCheckerImpl reset(final CUnit unit) {
+		public RegionCheckerImpl reset(final CUnit unit, final CRegionManager regionManager) {
 			this.unit = unit;
+			this.regionManager = regionManager;
 			return this;
 		}
 
@@ -1556,7 +1560,7 @@ public class CUnit extends CWidget {
 		public boolean call(final CRegion region) {
 			if (this.unit.containingRegions.add(region)) {
 				if (!this.unit.priorContainingRegions.contains(region)) {
-					this.unit.onEnterRegion(region);
+					this.regionManager.onUnitEnterRegion(this.unit, region);
 				}
 			}
 			return false;

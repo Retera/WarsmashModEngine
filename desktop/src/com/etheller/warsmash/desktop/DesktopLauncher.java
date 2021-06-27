@@ -24,6 +24,7 @@ import com.badlogic.gdx.backends.lwjgl.LwjglNativesLoader;
 import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.audio.OpenALSound;
+import com.etheller.warsmash.networking.MultiplayerHack;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.viewer5.AudioContext;
@@ -57,6 +58,10 @@ public class DesktopLauncher {
 			else if ((arg.length > (argIndex + 1)) && "-loadfile".equals(arg[argIndex])) {
 				argIndex++;
 				fileToLoad = arg[argIndex];
+			}
+			else if ((arg.length > (argIndex + 1)) && "-client".equals(arg[argIndex])) {
+				argIndex++;
+				MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR = arg[argIndex];
 			}
 		}
 		loadExtensions();

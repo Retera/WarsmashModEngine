@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.Quadtree;
 import com.etheller.warsmash.util.QuadtreeIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
 public class CRegionManager {
 	private static Rectangle tempRect = new Rectangle();
@@ -184,6 +185,18 @@ public class CRegionManager {
 			return list.contains(region);
 		}
 		return false;
+	}
+
+	public void onUnitEnterRegion(final CUnit unit, final CRegion region) {
+		for (final CRegionTriggerEnter enterTrigger : region.getEnterTriggers()) {
+			enterTrigger.fire(unit, region);
+		}
+	}
+
+	public void onUnitLeaveRegion(final CUnit unit, final CRegion region) {
+		for (final CRegionTriggerLeave leaveTrigger : region.getLeaveTriggers()) {
+			leaveTrigger.fire(unit, region);
+		}
 	}
 
 }

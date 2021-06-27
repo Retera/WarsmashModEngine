@@ -66,7 +66,12 @@ public final class UnitSound {
 				filePath = filePath.substring(0, lastDotIndex);
 			}
 			if (dataSource.has(filePath + ".wav") || dataSource.has(filePath + ".flac")) {
-				sound.sounds.add(Gdx.audio.newSound(new DataSourceFileHandle(dataSource, filePath + ".wav")));
+				try {
+					sound.sounds.add(Gdx.audio.newSound(new DataSourceFileHandle(dataSource, filePath + ".wav")));
+				}
+				catch (final Exception exc) {
+					exc.printStackTrace();
+				}
 			}
 		}
 		return sound;

@@ -21,7 +21,8 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractCAb
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityTarget target) {
 		return true;
 	}
 
@@ -87,6 +88,16 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractCAb
 	@Override
 	public War3ID getAlias() {
 		return this.alias;
+	}
+
+	@Override
+	public int getUIGoldCost() {
+		return 0;
+	}
+
+	@Override
+	public int getUILumberCost() {
+		return 0;
 	}
 
 }

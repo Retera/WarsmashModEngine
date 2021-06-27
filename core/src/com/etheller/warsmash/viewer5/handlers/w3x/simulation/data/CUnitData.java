@@ -26,7 +26,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNagaBuild;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNeutralBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNightElfBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
@@ -169,6 +168,7 @@ public class CUnitData {
 	private static final War3ID PRIMARY_ATTRIBUTE = War3ID.fromString("upra");
 
 	private static final War3ID CAN_FLEE = War3ID.fromString("ufle");
+	private static final War3ID PRIORITY = War3ID.fromString("upri");
 
 	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData unitData;
@@ -234,7 +234,7 @@ public class CUnitData {
 			case CRITTERS:
 			case DEMON:
 			case OTHER:
-				unit.add(simulation, new CAbilityNeutralBuild(handleIdAllocator.createId(), structuresBuilt));
+				unit.add(simulation, new CAbilityOrcBuild(handleIdAllocator.createId(), structuresBuilt));
 				break;
 			}
 		}
@@ -276,6 +276,7 @@ public class CUnitData {
 			final String abilityList = unitType.getFieldAsString(ABILITIES_NORMAL, 0);
 			final String heroAbilityListString = unitType.getFieldAsString(ABILITIES_HERO, 0);
 			final int unitLevel = unitType.getFieldAsInteger(UNIT_LEVEL, 0);
+			final int priority = unitType.getFieldAsInteger(PRIORITY, 0);
 
 			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
 			final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
@@ -491,7 +492,7 @@ public class CUnitData {
 			final List<CUnitTypeRequirement> requirements = new ArrayList<>();
 			for (int i = 0; i < requirementsStringItems.length; i++) {
 				final String item = requirementsStringItems[i];
-				if (!item.isEmpty()) {
+				if (!item.isEmpty() && (item.length() == 4)) {
 					int level;
 					if (i < requirementsLevelsStringItems.length) {
 						if (requirementsLevelsStringItems[i].isEmpty()) {
@@ -537,7 +538,7 @@ public class CUnitData {
 					goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes,
 					propWindow, turnRate, requirements, unitLevel, hero, strength, strPlus, agility, agiPlus,
 					intelligence, intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount,
-					canFlee);
+					canFlee, priority);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

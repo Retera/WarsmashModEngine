@@ -201,12 +201,12 @@ public class CUnit extends CWidget {
 		return this.mana;
 	}
 
-	public int getMaximumLife() {
-		return this.maximumLife;
-	}
-
 	public int getMaximumMana() {
 		return this.maximumMana;
+	}
+
+	public int getMaximumLife() {
+		return this.maximumLife;
 	}
 
 	public void setTypeId(final War3ID typeId) {
@@ -430,7 +430,7 @@ public class CUnit extends CWidget {
 	}
 
 	public float getEndingDecayTime(final CSimulation game) {
-		if (this.unitType.isBuilding()) {
+		if (this.isBuilding()) {
 			return game.getGameplayConstants().getStructureDecayTime();
 		}
 		return game.getGameplayConstants().getBoneDecayTime();
@@ -630,7 +630,7 @@ public class CUnit extends CWidget {
 
 	public void setX(final float newX, final CWorldCollision collision, final CRegionManager regionManager) {
 		final float prevX = getX();
-		if (!this.unitType.isBuilding()) {
+		if (!this.isBuilding()) {
 			setX(newX);
 			collision.translate(this, newX - prevX, 0);
 		}
@@ -639,7 +639,7 @@ public class CUnit extends CWidget {
 
 	public void setY(final float newY, final CWorldCollision collision, final CRegionManager regionManager) {
 		final float prevY = getY();
-		if (!this.unitType.isBuilding()) {
+		if (!this.isBuilding()) {
 			setY(newY);
 			collision.translate(this, 0, newY - prevY);
 		}
@@ -692,7 +692,7 @@ public class CUnit extends CWidget {
 		final float prevY = getY();
 		setX(newX);
 		setY(newY);
-		if (!this.unitType.isBuilding()) {
+		if (!this.isBuilding()) {
 			collision.translate(this, newX - prevX, newY - prevY);
 		}
 		checkRegionEvents(regionManager);
@@ -867,7 +867,7 @@ public class CUnit extends CWidget {
 			final CPlayer sourcePlayer = simulation.getPlayer(source.getPlayerIndex());
 			if (!sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
 				final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
-				if (gameplayConstants.isBuildingKillsGiveExp() || !source.getUnitType().isBuilding()) {
+				if (gameplayConstants.isBuildingKillsGiveExp() || !source.isBuilding()) {
 					final CUnit killedUnit = this;
 					final CAbilityHero killedUnitHeroData = getHeroData();
 					final boolean killedUnitIsAHero = killedUnitHeroData != null;
@@ -917,7 +917,7 @@ public class CUnit extends CWidget {
 		if (target instanceof CUnit) {
 			final CUnit targetUnit = (CUnit) target;
 			final CUnitType targetUnitType = targetUnit.getUnitType();
-			if (targetUnitType.isBuilding() && (targetUnitType.getBuildingPathingPixelMap() != null)) {
+			if (targetUnit.isBuilding() && (targetUnitType.getBuildingPathingPixelMap() != null)) {
 				final BufferedImage buildingPathingPixelMap = targetUnitType.getBuildingPathingPixelMap();
 				final float targetX = target.getX();
 				final float targetY = target.getY();
@@ -1038,7 +1038,8 @@ public class CUnit extends CWidget {
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
 			final EnumSet<CTargetType> targetsAllowed) {
-		if (targetsAllowed.containsAll(this.unitType.getTargetedAs())) {
+		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND)
+				&& (!targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR)))) {
 			final int sourcePlayerIndex = source.getPlayerIndex();
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
 			if (!targetsAllowed.contains(CTargetType.ENEMIES)
@@ -1061,7 +1062,7 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean isMovementDisabled() {
-		return this.unitType.isBuilding();
+		return this.isBuilding();
 	}
 
 	public float getAcquisitionRange() {
@@ -1205,6 +1206,7 @@ public class CUnit extends CWidget {
 		this.invulnerable = invulnerable;
 	}
 
+	@Override
 	public boolean isInvulnerable() {
 		return this.invulnerable;
 	}
@@ -1542,6 +1544,11 @@ public class CUnit extends CWidget {
 		return this.containingRegions.contains(region);
 	}
 
+	@Override
+	public float getMaxLife() {
+		return this.maximumLife;
+	}
+
 	private static final class RegionCheckerImpl implements CRegionEnumFunction {
 		private CUnit unit;
 
@@ -1560,5 +1567,14 @@ public class CUnit extends CWidget {
 			return false;
 		}
 
+	}
+
+	public boolean isBuilding() {
+		return this.unitType.isBuilding();
+	}
+
+	public void onRemove(final CSimulation simulation) {
+		setLife(simulation, 0);
+		simulation.getWorldCollision().removeUnit(this);
 	}
 }

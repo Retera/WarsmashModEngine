@@ -24,8 +24,11 @@ public class Bounds {
 		this.boundingBox = new BoundingBox(new Vector3(min), new Vector3(max));
 	}
 
-	public void intersectRay(final Ray ray, final Vector3 intersection) {
-		Intersector.intersectRayBounds(ray, this.boundingBox, intersection);
+	public boolean intersectRay(final Ray ray, final Vector3 intersection) {
+		if (this.boundingBox == null) {
+			return false;
+		}
+		return Intersector.intersectRayBounds(ray, this.boundingBox, intersection);
 	}
 
 	public boolean intersectRayFast(final Ray ray) {

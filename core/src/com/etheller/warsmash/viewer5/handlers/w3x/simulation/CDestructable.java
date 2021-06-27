@@ -14,6 +14,7 @@ public class CDestructable extends CWidget {
 	private final RemovablePathingMapInstance pathingInstance;
 	private final RemovablePathingMapInstance pathingInstanceDeath;
 	private UnitAnimationListenerImpl unitAnimationListenerImpl;
+	private boolean invulnerable;
 
 	public CDestructable(final int handleId, final float x, final float y, final float life,
 			final CDestructableType destTypeInstance, final RemovablePathingMapInstance pathingInstance,
@@ -84,5 +85,19 @@ public class CDestructable extends CWidget {
 
 	public void setUnitAnimationListener(final UnitAnimationListenerImpl unitAnimationListenerImpl) {
 		this.unitAnimationListenerImpl = unitAnimationListenerImpl;
+	}
+
+	@Override
+	public float getMaxLife() {
+		return this.destType.getLife();
+	}
+
+	public void setInvulnerable(final boolean invulnerable) {
+		this.invulnerable = invulnerable;
+	}
+
+	@Override
+	public boolean isInvulnerable() {
+		return this.invulnerable;
 	}
 }

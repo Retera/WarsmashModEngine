@@ -11,10 +11,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.imageio.ImageIO;
@@ -73,6 +75,7 @@ import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.Attachment;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxNode;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
@@ -107,7 +110,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
@@ -118,6 +123,8 @@ import mpq.MPQArchive;
 import mpq.MPQException;
 
 public class War3MapViewer extends AbstractMdxModelViewer {
+	public static int DEBUG_DEPTH = 9999;
+
 	private static final War3ID ABILITY_HERO_RAWCODE = War3ID.fromString("AHer");
 	private static final Color PLACEHOLDER_LUMBER_COLOR = new Color(0.0f, 200f / 255f, 80f / 255f, 1.0f);
 	private static final Color PLACEHOLDER_GOLD_COLOR = new Color(1.0f, 220f / 255f, 0f, 1.0f);
@@ -148,6 +155,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final Vector2 mousePosHeap = new Vector2();
 	private static final Vector3 normalHeap = new Vector3();
 	public static final Vector3 intersectionHeap = new Vector3();
+	public static final Vector3 intersectionHeap2 = new Vector3();
 	private static final Rectangle rectangleHeap = new Rectangle();
 	public static final StreamDataCallbackImplementation streamDataCallback = new StreamDataCallbackImplementation();
 	private static final boolean ENABLE_WORLDEDIT_AS_GAMEPLAY_DATA_HACK = true;
@@ -182,7 +190,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public int renderLighting = 1;
 
 	public List<SplatModel> selModels = new ArrayList<>();
+	private final Set<String> selectedSplatModelKeys = new HashSet<>();
 	public List<RenderWidget> selected = new ArrayList<>();
+	private final Set<String> mouseHighlightSplatModelKeys = new HashSet<>();
+	private final List<RenderWidget> mouseHighlightWidgets = new ArrayList<>();
 	private DataTable unitAckSoundsTable;
 	private DataTable unitCombatSoundsTable;
 	public DataTable miscData;
@@ -229,6 +240,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas, final War3MapConfig mapConfig) {
 		super(dataSource, canvas);
+		MdxHandler.CURRENT_SHADER_TYPE = ShaderEnvironmentType.GAME;
 		this.gameDataSource = dataSource;
 
 		final WebGL webGL = this.webGL;
@@ -364,6 +376,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 		this.selectionCircleScaleFactor = selectionCircleData.getFieldFloatValue("ScaleFactor");
 		this.imageWalkableZOffset = selectionCircleData.getFieldValue("ImageWalkableZOffset");
+		this.selectionCircleColorFriend = parseColor(selectionCircleData, "ColorFriend");
+		this.selectionCircleColorNeutral = parseColor(selectionCircleData, "ColorNeutral");
+		this.selectionCircleColorEnemy = parseColor(selectionCircleData, "ColorEnemy");
 
 		this.uiSoundsTable = new DataTable(worldEditStrings);
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\UISounds.slk")) {
@@ -372,6 +387,16 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\AmbienceSounds.slk")) {
 			this.uiSoundsTable.readSLK(miscDataTxtStream);
 		}
+		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\AbilitySounds.slk")) {
+			this.uiSoundsTable.readSLK(miscDataTxtStream);
+		}
+	}
+
+	private Color parseColor(final Element selectionCircleData, final String field) {
+		return new Color(selectionCircleData.getFieldFloatValue(field, 1) / 255f,
+				selectionCircleData.getFieldFloatValue(field, 2) / 255f,
+				selectionCircleData.getFieldFloatValue(field, 3) / 255f,
+				selectionCircleData.getFieldFloatValue(field, 0) / 255f);
 	}
 
 	public GenericResource loadMapGeneric(final String path, final FetchDataTypeName dataType,
@@ -617,6 +642,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						War3MapViewer.this.widgets.remove(renderUnit);
 						War3MapViewer.this.units.remove(renderUnit);
 						War3MapViewer.this.worldScene.removeInstance(renderUnit.instance);
+						renderUnit.onRemove(War3MapViewer.this);
 					}
 
 					@Override
@@ -784,6 +810,25 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
 									renderPeer.getZ());
 						}
+					}
+
+					@Override
+					public void spawnAbilitySoundEffect(final CUnit caster, final War3ID alias) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
+						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
+						if (abilityUi.getEffectSound() != null) {
+							War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound()).play(
+									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+									renderPeer.getZ());
+						}
+					}
+
+					@Override
+					public void unitPreferredSelectionReplacement(final CUnit oldUnit, final CUnit newUnit) {
+						final RenderUnit oldRenderPeer = War3MapViewer.this.unitToRenderPeer.get(oldUnit);
+						final RenderUnit newRenderPeer = War3MapViewer.this.unitToRenderPeer.get(newUnit);
+						oldRenderPeer.setPreferredSelectionReplacement(newRenderPeer);
+
 					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, this.commandErrorListener);
 
@@ -1270,8 +1315,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 			if (type == WorldEditorDataType.UNITS) {
 				final float angle = (float) Math.toDegrees(unitAngle);
-				final CUnit simulationUnit = this.simulation.createUnit(row.getAlias(), playerIndex, unitX, unitY,
-						angle, buildingPathingPixelMap, pathingInstance);
+				final CUnit simulationUnit = this.simulation.internalCreateUnit(row.getAlias(), playerIndex, unitX,
+						unitY, angle, buildingPathingPixelMap, pathingInstance);
 				final RenderUnitTypeData typeData = getUnitTypeData(unitId, row);
 				if (!typeData.isAllowCustomTeamColor() || (customTeamColor == -1)) {
 					if (typeData.getTeamColor() != -1) {
@@ -1376,7 +1421,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 					this.filePathToPathingMap.put(pathingTexture.toLowerCase(), buildingPathingPixelMap);
 				}
-				catch (final IOException exc) {
+				catch (final Exception exc) {
 					System.err.println("Failure to get pathing: " + exc.getClass() + ":" + exc.getMessage());
 				}
 			}
@@ -1461,21 +1506,41 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 			startFrame();
 			worldScene.startFrame();
-			worldScene.renderOpaque(this.dynamicShadowManager, this.webGL);
-			this.terrain.renderGround(this.dynamicShadowManager);
-			this.terrain.renderCliffs();
-			worldScene.renderOpaque();
-			this.terrain.renderUberSplats(false);
-			this.terrain.renderWater();
-			worldScene.renderTranslucent();
-			this.terrain.renderUberSplats(true);
+			if (DEBUG_DEPTH > 0) {
+				worldScene.renderOpaque(this.dynamicShadowManager, this.webGL);
+			}
+			if (DEBUG_DEPTH > 1) {
+				this.terrain.renderGround(this.dynamicShadowManager);
+			}
+			if (DEBUG_DEPTH > 2) {
+				this.terrain.renderCliffs();
+			}
+			if (DEBUG_DEPTH > 3) {
+				worldScene.renderOpaque();
+			}
+			if (DEBUG_DEPTH > 4) {
+				this.terrain.renderUberSplats(false);
+			}
+			if (DEBUG_DEPTH > 5) {
+				this.terrain.renderWater();
+			}
+			if (DEBUG_DEPTH > 6) {
+				worldScene.renderTranslucent();
+			}
+			if (DEBUG_DEPTH > 7) {
+				this.terrain.renderUberSplats(true);
+			}
 
 			final List<Scene> scenes = this.scenes;
 			for (final Scene scene : scenes) {
 				if (scene != worldScene) {
 					scene.startFrame();
-					scene.renderOpaque();
-					scene.renderTranslucent();
+					if (DEBUG_DEPTH > 8) {
+						scene.renderOpaque();
+					}
+					if (DEBUG_DEPTH > 9) {
+						scene.renderTranslucent();
+					}
 				}
 			}
 
@@ -1488,8 +1553,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public void deselect() {
 		if (!this.selModels.isEmpty()) {
-			for (final SplatModel model : this.selModels) {
-				this.terrain.removeSplatBatchModel("selection");
+			for (final String key : this.selectedSplatModelKeys) {
+				this.terrain.removeSplatBatchModel(key);
 			}
 			this.selModels.clear();
 			for (final RenderWidget unit : this.selected) {
@@ -1508,6 +1573,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final Map<String, Terrain.Splat> splats = new HashMap<String, Terrain.Splat>();
 		for (final RenderWidget unit : units) {
 			if (unit.getSelectionScale() > 0) {
+				String allyKey = "n:";
 				final float selectionSize = unit.getSelectionScale();
 				String path = null;
 				for (int i = 0; i < this.selectionCircleSizes.size(); i++) {
@@ -1520,6 +1586,17 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				if (!path.toLowerCase().endsWith(".blp")) {
 					path += ".blp";
 				}
+				if (unit instanceof RenderUnit) {
+					final int selectedUnitPlayerIndex = ((RenderUnit) unit).getSimulationUnit().getPlayerIndex();
+					final CPlayer localPlayer = this.simulation.getPlayer(this.localPlayerIndex);
+					if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
+						allyKey = "e:";
+					}
+					else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.HELP_REQUEST)) {
+						allyKey = "f:";
+					}
+				}
+				path = allyKey + path;
 				if (!splats.containsKey(path)) {
 					splats.put(path, new Splat());
 				}
@@ -1543,15 +1620,141 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.selModels.clear();
 		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
 			final String path = entry.getKey();
+			final String filePath = path.substring(2);
+			final String allyKey = path.substring(0, 2);
 			final Splat locations = entry.getValue();
-			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(path, PathSolver.DEFAULT, null),
+			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(filePath, PathSolver.DEFAULT, null),
 					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true);
-			model.color[0] = 0;
-			model.color[1] = 1;
-			model.color[2] = 0;
-			model.color[3] = 1;
+			switch (allyKey) {
+			case "e:":
+				model.color[0] = this.selectionCircleColorEnemy.r;
+				model.color[1] = this.selectionCircleColorEnemy.g;
+				model.color[2] = this.selectionCircleColorEnemy.b;
+				model.color[3] = this.selectionCircleColorEnemy.a;
+				break;
+			case "f:":
+				model.color[0] = this.selectionCircleColorFriend.r;
+				model.color[1] = this.selectionCircleColorFriend.g;
+				model.color[2] = this.selectionCircleColorFriend.b;
+				model.color[3] = this.selectionCircleColorFriend.a;
+				break;
+			default:
+				model.color[0] = this.selectionCircleColorNeutral.r;
+				model.color[1] = this.selectionCircleColorNeutral.g;
+				model.color[2] = this.selectionCircleColorNeutral.b;
+				model.color[3] = this.selectionCircleColorNeutral.a;
+				break;
+			}
 			this.selModels.add(model);
-			this.terrain.addSplatBatchModel("selection", model);
+			this.terrain.addSplatBatchModel("selection:" + path, model);
+			this.selectedSplatModelKeys.add("selection:" + path);
+		}
+	}
+
+	public void clearUnitMouseOverHighlight(final RenderWidget unit) {
+		this.mouseHighlightWidgets.remove(unit);
+		unit.getSelectionPreviewHighlight().destroy(Gdx.gl30, this.terrain.centerOffset);
+		unit.unassignSelectionPreviewHighlight();
+	}
+
+	public void clearUnitMouseOverHighlight() {
+		for (final String modelKey : this.mouseHighlightSplatModelKeys) {
+			this.terrain.removeSplatBatchModel(modelKey);
+		}
+		for (final RenderWidget widget : this.mouseHighlightWidgets) {
+			widget.unassignSelectionPreviewHighlight();
+		}
+		this.mouseHighlightSplatModelKeys.clear();
+		this.mouseHighlightWidgets.clear();
+	}
+
+	public void showUnitMouseOverHighlight(final RenderWidget unit) {
+		final Map<String, Terrain.Splat> splats = new HashMap<String, Terrain.Splat>();
+		if (unit.getSelectionScale() > 0) {
+			String allyKey = "n:";
+			final float selectionSize = unit.getSelectionScale();
+			String path = null;
+			for (int i = 0; i < this.selectionCircleSizes.size(); i++) {
+				final SelectionCircleSize selectionCircleSize = this.selectionCircleSizes.get(i);
+				if ((selectionSize < selectionCircleSize.size) || (i == (this.selectionCircleSizes.size() - 1))) {
+					path = selectionCircleSize.texture;
+					break;
+				}
+			}
+			if (!path.toLowerCase().endsWith(".blp")) {
+				path += ".blp";
+			}
+			if (unit instanceof RenderUnit) {
+				final int selectedUnitPlayerIndex = ((RenderUnit) unit).getSimulationUnit().getPlayerIndex();
+				final CPlayer localPlayer = this.simulation.getPlayer(this.localPlayerIndex);
+				if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
+					allyKey = "e:";
+				}
+				else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.HELP_REQUEST)) {
+					allyKey = "f:";
+				}
+			}
+			path = allyKey + path;
+			final SplatModel splatModel = this.terrain.getSplatModel("mouseover:" + path);
+			if (splatModel != null) {
+				final float x = unit.getX();
+				final float y = unit.getY();
+				final SplatMover splatInstance = splatModel.add(x - (selectionSize / 2), y - (selectionSize / 2),
+						x + (selectionSize / 2), y + (selectionSize / 2), 4, this.terrain.centerOffset);
+				unit.assignSelectionPreviewHighlight(splatInstance);
+				if (unit.getInstance().hidden()) {
+					splatInstance.hide();
+				}
+			}
+			else {
+				if (!splats.containsKey(path)) {
+					splats.put(path, new Splat());
+				}
+				final float x = unit.getX();
+				final float y = unit.getY();
+				splats.get(path).locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
+						x + (selectionSize / 2), y + (selectionSize / 2), 4 });
+				splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+					@Override
+					public void accept(final SplatMover t) {
+						unit.assignSelectionPreviewHighlight(t);
+						if (unit.getInstance().hidden()) {
+							t.hide();
+						}
+					}
+				});
+			}
+		}
+		this.mouseHighlightWidgets.add(unit);
+		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
+			final String path = entry.getKey();
+			final String filePath = path.substring(2);
+			final String allyKey = path.substring(0, 2);
+			final Splat locations = entry.getValue();
+			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(filePath, PathSolver.DEFAULT, null),
+					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true);
+			switch (allyKey) {
+			case "e:":
+				model.color[0] = this.selectionCircleColorEnemy.r;
+				model.color[1] = this.selectionCircleColorEnemy.g;
+				model.color[2] = this.selectionCircleColorEnemy.b;
+				model.color[3] = this.selectionCircleColorEnemy.a * 0.5f;
+				break;
+			case "f:":
+				model.color[0] = this.selectionCircleColorFriend.r;
+				model.color[1] = this.selectionCircleColorFriend.g;
+				model.color[2] = this.selectionCircleColorFriend.b;
+				model.color[3] = this.selectionCircleColorFriend.a * 0.5f;
+				break;
+			default:
+				model.color[0] = this.selectionCircleColorNeutral.r;
+				model.color[1] = this.selectionCircleColorNeutral.g;
+				model.color[2] = this.selectionCircleColorNeutral.b;
+				model.color[3] = this.selectionCircleColorNeutral.a * 0.5f;
+				break;
+			}
+			this.mouseHighlightSplatModelKeys.add("mouseover:" + path);
+			this.terrain.addSplatBatchModel("mouseover:" + path, model);
 		}
 	}
 
@@ -1622,14 +1825,29 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		gdxRayHeap.direction.nor();// needed for libgdx
 
 		RenderWidget entity = null;
+		intersectionHeap2.set(ray[3], ray[4], ray[5]);
 		for (final RenderWidget unit : this.widgets) {
 			final MdxComplexInstance instance = unit.getInstance();
-			if (instance.shown() && instance.isVisible(this.worldScene.camera) && instance
-					.intersectRayWithCollision(gdxRayHeap, intersectionHeap, unit.isIntersectedOnMeshAlways(), false)) {
-				if (filter.call(unit.getSimulationWidget()) && (intersectionHeap.z > this.terrain
-						.getGroundHeight(intersectionHeap.x, intersectionHeap.y))) {
-					if ((entity == null) || (entity.getInstance().depth > instance.depth)) {
-						entity = unit;
+			if (instance.shown() && instance.isVisible(this.worldScene.camera)
+					&& instance.intersectRayWithCollisionSimple(gdxRayHeap, intersectionHeap)) {
+				if (filter.call(unit.getSimulationWidget())) {
+					final float groundHeight = this.terrain.getGroundHeight(intersectionHeap.x, intersectionHeap.y);
+					if (intersectionHeap.z > groundHeight) {
+						if (((entity == null) && !unit.isIntersectedOnMeshAlways())) {
+							entity = unit;
+						}
+						else {
+							if (instance.intersectRayWithMeshSlow(gdxRayHeap, intersectionHeap)) {
+								if (intersectionHeap.z > this.terrain.getGroundHeight(intersectionHeap.x,
+										intersectionHeap.y)) {
+									this.worldScene.camera.worldToCamera(intersectionHeap, intersectionHeap);
+									if ((entity == null) || (intersectionHeap.z > intersectionHeap2.z)) {
+										entity = unit;
+										intersectionHeap2.set(intersectionHeap);
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -1709,6 +1927,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private Map<String, UnitSoundset> soundsetNameToSoundset;
 	public int imageWalkableZOffset;
 	private WTS preloadedWTS;
+
+	private Color selectionCircleColorFriend;
+
+	private Color selectionCircleColorNeutral;
+
+	private Color selectionCircleColorEnemy;
 
 	/**
 	 * Returns a power of two size for the given target capacity.
@@ -1858,7 +2082,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return this.itemToRenderPeer.get(item);
 	}
 
-	private RenderWidget getRenderPeer(final CWidget damagedDestructable) {
+	public RenderWidget getRenderPeer(final CWidget damagedDestructable) {
 		RenderWidget damagedWidget = War3MapViewer.this.unitToRenderPeer.get(damagedDestructable);
 		if (damagedWidget == null) {
 			damagedWidget = War3MapViewer.this.destructableToRenderPeer.get(damagedDestructable);

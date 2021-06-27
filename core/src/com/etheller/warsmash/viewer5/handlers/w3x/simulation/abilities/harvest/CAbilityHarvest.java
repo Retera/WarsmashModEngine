@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -37,6 +38,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	private ResourceType carriedResourceType;
 	private CUnitAttack treeAttack;
 	private CWidget lastHarvestTarget;
+	private CBehaviorAttack behaviorTreeAttack;
 
 	public CAbilityHarvest(final int handleId, final War3ID alias, final int damageToTree, final int goldCapacity,
 			final int lumberCapacity, final float castRange, final float duration) {
@@ -50,6 +52,8 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
+
+		this.behaviorTreeAttack = new CBehaviorAttack(unit);
 		this.behaviorHarvest = new CBehaviorHarvest(unit, this);
 		this.behaviorReturnResources = new CBehaviorReturnResources(unit, this);
 
@@ -223,6 +227,10 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 
 	@Override
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
+	public CBehaviorAttack getBehaviorTreeAttack() {
+		return this.behaviorTreeAttack;
 	}
 
 }

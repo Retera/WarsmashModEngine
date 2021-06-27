@@ -52,6 +52,7 @@ public class RenderUnit implements RenderWidget {
 	public SplatMover shadow;
 	private BuildingShadow buildingShadowInstance;
 	public SplatMover selectionCircle;
+	public SplatMover selectionPreviewHighlight;
 
 	private float facing;
 
@@ -70,6 +71,7 @@ public class RenderUnit implements RenderWidget {
 	public final MdxModel specialArtModel;
 	public SplatMover uberSplat;
 	private float selectionHeight;
+	private RenderUnit preferredSelectionReplacement;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
 			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
@@ -161,6 +163,9 @@ public class RenderUnit implements RenderWidget {
 				if (this.selectionCircle != null) {
 					this.selectionCircle.hide();
 				}
+				if (this.selectionPreviewHighlight != null) {
+					this.selectionPreviewHighlight.hide();
+				}
 				if (this.shadow != null) {
 					this.shadow.hide();
 				}
@@ -173,6 +178,9 @@ public class RenderUnit implements RenderWidget {
 			if (wasHidden) {
 				if (this.selectionCircle != null) {
 					this.selectionCircle.show(map.terrain.centerOffset);
+				}
+				if (this.selectionPreviewHighlight != null) {
+					this.selectionPreviewHighlight.show(map.terrain.centerOffset);
 				}
 				if (this.shadow != null) {
 					this.shadow.show(map.terrain.centerOffset);
@@ -260,22 +268,7 @@ public class RenderUnit implements RenderWidget {
 		final boolean boneCorpse = this.simulationUnit.isBoneCorpse();
 		if (dead && !this.dead) {
 			this.unitAnimationListenerImpl.playAnimation(true, PrimaryTag.DEATH, SequenceUtils.EMPTY, 1.0f, true);
-			if (this.shadow != null) {
-				this.shadow.destroy(Gdx.gl30, map.terrain.centerOffset);
-				this.shadow = null;
-			}
-			if (this.buildingShadowInstance != null) {
-				this.buildingShadowInstance.remove();
-				this.buildingShadowInstance = null;
-			}
-			if (this.uberSplat != null) {
-				this.uberSplat.destroy(Gdx.gl30, map.terrain.centerOffset);
-				this.uberSplat = null;
-			}
-			if (this.selectionCircle != null) {
-				this.selectionCircle.destroy(Gdx.gl30, map.terrain.centerOffset);
-				this.selectionCircle = null;
-			}
+			removeSplats(map);
 		}
 		if (boneCorpse && !this.boneCorpse) {
 			this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.BONE,
@@ -404,10 +397,40 @@ public class RenderUnit implements RenderWidget {
 							|| ((movementType == MovementType.FLY) || (movementType == MovementType.HOVER)),
 					selectionCircleHeight + map.imageWalkableZOffset);
 		}
+		if (this.selectionPreviewHighlight != null) {
+			this.selectionPreviewHighlight.move(dx, dy, map.terrain.centerOffset);
+			this.selectionPreviewHighlight.setHeightAbsolute(
+					(currentWalkableUnder != null)
+							|| ((movementType == MovementType.FLY) || (movementType == MovementType.HOVER)),
+					selectionCircleHeight + map.imageWalkableZOffset);
+		}
 		this.unitAnimationListenerImpl.update();
 		if (!dead && this.simulationUnit.isConstructing()) {
 			this.instance.setFrameByRatio(
 					this.simulationUnit.getConstructionProgress() / this.simulationUnit.getUnitType().getBuildTime());
+		}
+	}
+
+	private void removeSplats(final War3MapViewer map) {
+		if (this.shadow != null) {
+			this.shadow.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.shadow = null;
+		}
+		if (this.buildingShadowInstance != null) {
+			this.buildingShadowInstance.remove();
+			this.buildingShadowInstance = null;
+		}
+		if (this.uberSplat != null) {
+			this.uberSplat.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.uberSplat = null;
+		}
+		if (this.selectionCircle != null) {
+			this.selectionCircle.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.selectionCircle = null;
+		}
+		if (this.selectionPreviewHighlight != null) {
+			this.selectionPreviewHighlight.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.selectionPreviewHighlight = null;
 		}
 	}
 
@@ -447,6 +470,9 @@ public class RenderUnit implements RenderWidget {
 		if (this.selectionCircle != null) {
 			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
 		}
+		if (this.selectionPreviewHighlight != null) {
+			this.selectionPreviewHighlight.move(dx, dy, map.terrain.centerOffset);
+		}
 		this.location[0] = this.simulationUnit.getX();
 		this.location[1] = this.simulationUnit.getY();
 	}
@@ -463,7 +489,7 @@ public class RenderUnit implements RenderWidget {
 
 	@Override
 	public boolean isIntersectedOnMeshAlways() {
-		return this.simulationUnit.getUnitType().isBuilding();
+		return this.simulationUnit.isBuilding();
 	}
 
 	@Override
@@ -494,5 +520,37 @@ public class RenderUnit implements RenderWidget {
 	@Override
 	public void assignSelectionCircle(final SplatMover t) {
 		this.selectionCircle = t;
+	}
+
+	@Override
+	public void unassignSelectionPreviewHighlight() {
+		this.selectionPreviewHighlight = null;
+	}
+
+	@Override
+	public void assignSelectionPreviewHighlight(final SplatMover t) {
+		this.selectionPreviewHighlight = t;
+	}
+
+	@Override
+	public boolean isSelectable() {
+		return true; // later needs locust
+	}
+
+	@Override
+	public SplatMover getSelectionPreviewHighlight() {
+		return this.selectionPreviewHighlight;
+	}
+
+	public void onRemove(final War3MapViewer map) {
+		removeSplats(map);
+	}
+
+	public void setPreferredSelectionReplacement(final RenderUnit preferredSelectionReplacement) {
+		this.preferredSelectionReplacement = preferredSelectionReplacement;
+	}
+
+	public RenderUnit getPreferredSelectionReplacement() {
+		return this.preferredSelectionReplacement;
 	}
 }

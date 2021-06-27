@@ -10,76 +10,78 @@ public class TerrainShaders {
 		private Cliffs() {
 		}
 
-		public static final String vert = "#version 330 core\r\n" + //
-				"\r\n" + //
-				"in vec3 vPosition;\r\n" + //
-				"in vec2 vUV;\r\n" + //
-				"in vec3 vNormal;\r\n" + //
-				"in vec4 vOffset;\r\n" + //
-				"\r\n" + //
-				"uniform mat4 MVP;\r\n" + //
-				"\r\n" + //
-				"uniform sampler2D height_texture;\r\n" + //
-				"uniform sampler2D shadowMap;\r\n" + //
-				"uniform float centerOffsetX;\r\n" + //
-				"uniform float centerOffsetY;\r\n" + //
-				"uniform sampler2D lightTexture;\r\n" + //
-				"uniform float lightCount;\r\n" + //
-				"uniform float lightTextureHeight;\r\n" + //
-				"\r\n" + //
-				"out vec3 UV;\r\n" + //
-				"out vec3 Normal;\r\n" + //
-				"out vec2 pathing_map_uv;\r\n" + //
-				"out vec3 position;\r\n" + //
-				"out vec2 v_suv;\r\n" + //
-				"out vec3 shadeColor;\r\n" + //
-				"\r\n" + //
-				"void main() {\r\n" + //
-				"	pathing_map_uv = (vec2(vPosition.y, -vPosition.x) / 128 + vOffset.xy) * 4;\r\n" + //
-				" \r\n" + //
-				"	ivec2 size = textureSize(height_texture, 0);\r\n" + //
-				"   ivec2 shadowSize = textureSize(shadowMap, 0);\r\n" + //
-				"	v_suv = pathing_map_uv / shadowSize;\r\n" + //
-				"	float value = texture(height_texture, (vOffset.xy + vec2(vPosition.y + 64, -vPosition.x + 64) / 128.0) / vec2(size)).r;\r\n"
-				+ //
-				"\r\n" + //
-				"   position = (vec3(vPosition.y, -vPosition.x, vPosition.z) + vec3(vOffset.xy, vOffset.z + value) * 128 );\r\n"
-				+ //
-				"   vec4 myposition = vec4(position, 1);\r\n" + //
-				"   myposition.x += centerOffsetX;\r\n" + //
-				"   myposition.y += centerOffsetY;\r\n" + //
-				"   position.x /= (size.x * 128.0);\r\n" + //
-				"   position.y /= (size.y * 128.0);\r\n" + //
-				"	gl_Position = MVP * myposition;\r\n" + //
-				"	UV = vec3(vUV, vOffset.a);\r\n" + //
-				"\r\n" + //
-				"	ivec2 height_pos = ivec2(vOffset.xy + vec2(vPosition.y, -vPosition.x) / 128);\r\n" + //
-				"	ivec3 off = ivec3(1, 1, 0);\r\n" + //
-				"	float hL = texelFetch(height_texture, height_pos - off.xz, 0).r;\r\n" + //
-				"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
-				"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
-				"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
-				"	bool edgeX = (vPosition.y) == float((int(vPosition.y))/128*128);\r\n" + //
-				"	bool edgeY = (vPosition.x) == float((int(vPosition.x))/128*128);\r\n" + //
-				"	bool edgeZ = (vPosition.z) == float((int(vPosition.z))/128*128);\r\n" + //
-				"	vec3 terrain_normal = vec3(vNormal.y, -vNormal.x, vNormal.z);\r\n" + //
-				"	if(edgeX) {\r\n" + //
-				"	  terrain_normal.x = hL - hR;\r\n" + //
-				"	}\r\n" + //
-				"	if(edgeY) {\r\n" + //
-				"	  terrain_normal.y = hD - hU;\r\n" + //
-				"	}\r\n" + //
-				"	if(edgeZ) {\r\n" + //
-				"	  terrain_normal.z = 2.0;\r\n" + //
-				"	}\r\n" + //
-				"	terrain_normal = normalize(terrain_normal);\r\n" + //
-				"\r\n" + //
-				"	Normal = terrain_normal;\r\n" + //
-				Shaders.lightSystem("terrain_normal", "myposition.xyz", "lightTexture", "lightTextureHeight",
-						"lightCount", true)
-				+ "\r\n" + //
-				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
-				"}";
+		public static final String vert() {
+			return "#version 330 core\r\n" + //
+					"\r\n" + //
+					"in vec3 vPosition;\r\n" + //
+					"in vec2 vUV;\r\n" + //
+					"in vec3 vNormal;\r\n" + //
+					"in vec4 vOffset;\r\n" + //
+					"\r\n" + //
+					"uniform mat4 MVP;\r\n" + //
+					"\r\n" + //
+					"uniform sampler2D height_texture;\r\n" + //
+					"uniform sampler2D shadowMap;\r\n" + //
+					"uniform float centerOffsetX;\r\n" + //
+					"uniform float centerOffsetY;\r\n" + //
+					"uniform sampler2D lightTexture;\r\n" + //
+					"uniform float lightCount;\r\n" + //
+					"uniform float lightTextureHeight;\r\n" + //
+					"\r\n" + //
+					"out vec3 UV;\r\n" + //
+					"out vec3 Normal;\r\n" + //
+					"out vec2 pathing_map_uv;\r\n" + //
+					"out vec3 position;\r\n" + //
+					"out vec2 v_suv;\r\n" + //
+					"out vec3 shadeColor;\r\n" + //
+					"\r\n" + //
+					"void main() {\r\n" + //
+					"	pathing_map_uv = (vec2(vPosition.y, -vPosition.x) / 128 + vOffset.xy) * 4;\r\n" + //
+					" \r\n" + //
+					"	ivec2 size = textureSize(height_texture, 0);\r\n" + //
+					"   ivec2 shadowSize = textureSize(shadowMap, 0);\r\n" + //
+					"	v_suv = pathing_map_uv / shadowSize;\r\n" + //
+					"	float value = texture(height_texture, (vOffset.xy + vec2(vPosition.y + 64, -vPosition.x + 64) / 128.0) / vec2(size)).r;\r\n"
+					+ //
+					"\r\n" + //
+					"   position = (vec3(vPosition.y, -vPosition.x, vPosition.z) + vec3(vOffset.xy, vOffset.z + value) * 128 );\r\n"
+					+ //
+					"   vec4 myposition = vec4(position, 1);\r\n" + //
+					"   myposition.x += centerOffsetX;\r\n" + //
+					"   myposition.y += centerOffsetY;\r\n" + //
+					"   position.x /= (size.x * 128.0);\r\n" + //
+					"   position.y /= (size.y * 128.0);\r\n" + //
+					"	gl_Position = MVP * myposition;\r\n" + //
+					"	UV = vec3(vUV, vOffset.a);\r\n" + //
+					"\r\n" + //
+					"	ivec2 height_pos = ivec2(vOffset.xy + vec2(vPosition.y, -vPosition.x) / 128);\r\n" + //
+					"	ivec3 off = ivec3(1, 1, 0);\r\n" + //
+					"	float hL = texelFetch(height_texture, height_pos - off.xz, 0).r;\r\n" + //
+					"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
+					"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
+					"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
+					"	bool edgeX = (vPosition.y) == float((int(vPosition.y))/128*128);\r\n" + //
+					"	bool edgeY = (vPosition.x) == float((int(vPosition.x))/128*128);\r\n" + //
+					"	bool edgeZ = (vPosition.z) == float((int(vPosition.z))/128*128);\r\n" + //
+					"	vec3 terrain_normal = vec3(vNormal.y, -vNormal.x, vNormal.z);\r\n" + //
+					"	if(edgeX) {\r\n" + //
+					"	  terrain_normal.x = hL - hR;\r\n" + //
+					"	}\r\n" + //
+					"	if(edgeY) {\r\n" + //
+					"	  terrain_normal.y = hD - hU;\r\n" + //
+					"	}\r\n" + //
+					"	if(edgeZ) {\r\n" + //
+					"	  terrain_normal.z = 2.0;\r\n" + //
+					"	}\r\n" + //
+					"	terrain_normal = normalize(terrain_normal);\r\n" + //
+					"\r\n" + //
+					"	Normal = terrain_normal;\r\n" + //
+					Shaders.lightSystem("terrain_normal", "myposition.xyz", "lightTexture", "lightTextureHeight",
+							"lightCount", true)
+					+ "\r\n" + //
+					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
+					"}";
+		}
 
 		public static final String frag = "#version 330 core\r\n" + //
 				"\r\n" + //
@@ -113,62 +115,65 @@ public class TerrainShaders {
 		private Terrain() {
 		}
 
-		public static final String vert = "#version 330 core\r\n" + //
-				"\r\n" + //
-				"in vec2 vPosition;\r\n" + //
-				"uniform mat4 MVP;\r\n" + //
-				"uniform mat4 DepthBiasMVP;\r\n" + //
-				"\r\n" + //
-				"uniform sampler2D height_texture;\r\n" + //
-				"uniform sampler2D height_cliff_texture;\r\n" + //
-				"uniform usampler2D terrain_texture_list;\r\n" + //
-				"uniform float centerOffsetX;\r\n" + //
-				"uniform float centerOffsetY;\r\n" + //
-				"uniform sampler2D lightTexture;\r\n" + //
-				"uniform float lightCount;\r\n" + //
-				"uniform float lightTextureHeight;\r\n" + //
-				"\r\n" + //
-				"out vec2 UV;\r\n" + //
-				"flat out uvec4 texture_indices;\r\n" + //
-				"out vec2 pathing_map_uv;\r\n" + //
-				"out vec3 position;\r\n" + //
-				"out vec3 ShadowCoord;\r\n" + //
-				"out vec2 v_suv;\r\n" + //
-				"out vec3 shadeColor;\r\n" + //
-				"\r\n" + //
-				"void main() { \r\n" + //
-				"	ivec2 size = textureSize(terrain_texture_list, 0);\r\n" + //
-				"	ivec2 pos = ivec2(gl_InstanceID % size.x, gl_InstanceID / size.x);\r\n" + //
-				"\r\n" + //
-				"	ivec2 height_pos = ivec2(vPosition + pos);\r\n" + //
-				"	vec4 height = texelFetch(height_cliff_texture, height_pos, 0);\r\n" + //
-				"\r\n" + //
-				"	ivec3 off = ivec3(1, 1, 0);\r\n" + //
-				"	float hL = texelFetch(height_texture, height_pos - off.xz, 0).r;\r\n" + //
-				"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
-				"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
-				"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
-				"	vec3 normal = normalize(vec3(hL - hR, hD - hU, 2.0));\r\n" + //
-				"\r\n" + //
-				"	UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
-				"	texture_indices = texelFetch(terrain_texture_list, pos, 0);\r\n" + //
-				"	pathing_map_uv = (vPosition + pos) * 4;	\r\n" + //
-				"\r\n" + //
-				"	// Cliff culling\r\n" + //
-				"	vec3 positionWorld = vec3((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY, height.r*128.0);\r\n"
-				+ //
-				"	position = positionWorld;\r\n" + //
-				"	gl_Position = ((texture_indices.a & 32768u) == 0u) ? MVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
-				+ //
-				"	ShadowCoord = (((texture_indices.a & 32768u) == 0u) ? DepthBiasMVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0)).xyz;\r\n"
-				+ //
-				"   v_suv = (vPosition + pos) / size;\r\n" + //
-				"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
-				"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
-				Shaders.lightSystem("normal", "positionWorld", "lightTexture", "lightTextureHeight", "lightCount", true)
-				+ "\r\n" + //
-				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
-				"}";
+		public static final String vert() {
+			return "#version 330 core\r\n" + //
+					"\r\n" + //
+					"in vec2 vPosition;\r\n" + //
+					"uniform mat4 MVP;\r\n" + //
+					"uniform mat4 DepthBiasMVP;\r\n" + //
+					"\r\n" + //
+					"uniform sampler2D height_texture;\r\n" + //
+					"uniform sampler2D height_cliff_texture;\r\n" + //
+					"uniform usampler2D terrain_texture_list;\r\n" + //
+					"uniform float centerOffsetX;\r\n" + //
+					"uniform float centerOffsetY;\r\n" + //
+					"uniform sampler2D lightTexture;\r\n" + //
+					"uniform float lightCount;\r\n" + //
+					"uniform float lightTextureHeight;\r\n" + //
+					"\r\n" + //
+					"out vec2 UV;\r\n" + //
+					"flat out uvec4 texture_indices;\r\n" + //
+					"out vec2 pathing_map_uv;\r\n" + //
+					"out vec3 position;\r\n" + //
+					"out vec3 ShadowCoord;\r\n" + //
+					"out vec2 v_suv;\r\n" + //
+					"out vec3 shadeColor;\r\n" + //
+					"\r\n" + //
+					"void main() { \r\n" + //
+					"	ivec2 size = textureSize(terrain_texture_list, 0);\r\n" + //
+					"	ivec2 pos = ivec2(gl_InstanceID % size.x, gl_InstanceID / size.x);\r\n" + //
+					"\r\n" + //
+					"	ivec2 height_pos = ivec2(vPosition + pos);\r\n" + //
+					"	vec4 height = texelFetch(height_cliff_texture, height_pos, 0);\r\n" + //
+					"\r\n" + //
+					"	ivec3 off = ivec3(1, 1, 0);\r\n" + //
+					"	float hL = texelFetch(height_texture, height_pos - off.xz, 0).r;\r\n" + //
+					"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
+					"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
+					"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
+					"	vec3 normal = normalize(vec3(hL - hR, hD - hU, 2.0));\r\n" + //
+					"\r\n" + //
+					"	UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
+					"	texture_indices = texelFetch(terrain_texture_list, pos, 0);\r\n" + //
+					"	pathing_map_uv = (vPosition + pos) * 4;	\r\n" + //
+					"\r\n" + //
+					"	// Cliff culling\r\n" + //
+					"	vec3 positionWorld = vec3((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY, height.r*128.0);\r\n"
+					+ //
+					"	position = positionWorld;\r\n" + //
+					"	gl_Position = ((texture_indices.a & 32768u) == 0u) ? MVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
+					+ //
+					"	ShadowCoord = (((texture_indices.a & 32768u) == 0u) ? DepthBiasMVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0)).xyz;\r\n"
+					+ //
+					"   v_suv = (vPosition + pos) / size;\r\n" + //
+					"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
+					"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
+					Shaders.lightSystem("normal", "positionWorld", "lightTexture", "lightTextureHeight", "lightCount",
+							true)
+					+ "\r\n" + //
+					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
+					"}";
+		}
 
 		public static final String frag = "#version 330 core\r\n" + //
 				"\r\n" + //
@@ -291,68 +296,70 @@ public class TerrainShaders {
 		private Water() {
 		}
 
-		public static final String vert = "#version 330 core\r\n" + //
-				"\r\n" + //
-				"in vec2 vPosition;\r\n" + //
-				"\r\n" + //
-				"uniform sampler2D water_height_texture;\r\n" + //
-				"uniform sampler2D ground_height_texture;\r\n" + //
-				"uniform sampler2D water_exists_texture;\r\n" + //
-				"uniform float centerOffsetX;\r\n" + //
-				"uniform float centerOffsetY;\r\n" + //
-				"\r\n" + //
-				"uniform mat4 MVP;\r\n" + //
-				"uniform vec4 shallow_color_min;\r\n" + //
-				"uniform vec4 shallow_color_max;\r\n" + //
-				"uniform vec4 deep_color_min;\r\n" + //
-				"uniform vec4 deep_color_max;\r\n" + //
-				"uniform float water_offset;\r\n" + //
-				"uniform sampler2D lightTexture;\r\n" + //
-				"uniform float lightCount;\r\n" + //
-				"uniform float lightTextureHeight;\r\n" + //
-				"\r\n" + //
-				"out vec2 UV;\r\n" + //
-				"out vec4 Color;\r\n" + //
-				"out vec2 position;\r\n" + //
-				"out vec3 shadeColor;\r\n" + //
-				"\r\n" + //
-				"const float min_depth = 10.f / 128;\r\n" + //
-				"const float deeplevel = 64.f / 128;\r\n" + //
-				"const float maxdepth = 72.f / 128;\r\n" + //
-				"\r\n" + //
-				"void main() { \r\n" + //
-				"	ivec2 size = textureSize(water_height_texture, 0) - 1;\r\n" + //
-				"	ivec2 pos = ivec2(gl_InstanceID % size.x, gl_InstanceID / size.x);\r\n" + //
-				"	ivec2 height_pos = ivec2(vPosition + pos);\r\n" + //
-				"	float water_height = texelFetch(water_height_texture, height_pos, 0).r + water_offset;\r\n" + //
-				"\r\n" + //
-				"	bool is_water = texelFetch(water_exists_texture, pos, 0).r > 0\r\n" + //
-				"	 || texelFetch(water_exists_texture, pos + ivec2(1, 0), 0).r > 0\r\n" + //
-				"	 || texelFetch(water_exists_texture, pos + ivec2(1, 1), 0).r > 0\r\n" + //
-				"	 || texelFetch(water_exists_texture, pos + ivec2(0, 1), 0).r > 0;\r\n" + //
-				"\r\n" + //
-				"   position = vec2((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY);\r\n"
-				+ //
-				"   vec4 myposition = vec4(position.xy, water_height*128.0, 1);\r\n" + //
-				"   vec3 Normal = vec3(0,0,1);\r\n" + //
-				"	gl_Position = is_water ? MVP * myposition : vec4(2.0, 0.0, 0.0, 1.0);\r\n" + //
-				"\r\n" + //
-				"	UV = vec2((vPosition.x + pos.x%2)/2.0, (vPosition.y + pos.y%2)/2.0);\r\n" + //
-				"\r\n" + //
-				"	float ground_height = texelFetch(ground_height_texture, height_pos, 0).r;\r\n" + //
-				"	float value = clamp(water_height - ground_height, 0.f, 1.f);\r\n" + //
-				"	if (value <= deeplevel) {\r\n" + //
-				"		value = max(0.f, value - min_depth) / (deeplevel - min_depth);\r\n" + //
-				"		Color = shallow_color_min * (1.f - value) + shallow_color_max * value;\r\n" + //
-				"	} else {\r\n" + //
-				"		value = clamp(value - deeplevel, 0.f, maxdepth - deeplevel) / (maxdepth - deeplevel);\r\n" + //
-				"		Color = deep_color_min * (1.f - value) + deep_color_max * value;\r\n" + //
-				"	}\r\n" + //
-				Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
-						true)
-				+ "\r\n" + //
-				"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
-				" }";
+		public static final String vert() {
+			return "#version 330 core\r\n" + //
+					"\r\n" + //
+					"in vec2 vPosition;\r\n" + //
+					"\r\n" + //
+					"uniform sampler2D water_height_texture;\r\n" + //
+					"uniform sampler2D ground_height_texture;\r\n" + //
+					"uniform sampler2D water_exists_texture;\r\n" + //
+					"uniform float centerOffsetX;\r\n" + //
+					"uniform float centerOffsetY;\r\n" + //
+					"\r\n" + //
+					"uniform mat4 MVP;\r\n" + //
+					"uniform vec4 shallow_color_min;\r\n" + //
+					"uniform vec4 shallow_color_max;\r\n" + //
+					"uniform vec4 deep_color_min;\r\n" + //
+					"uniform vec4 deep_color_max;\r\n" + //
+					"uniform float water_offset;\r\n" + //
+					"uniform sampler2D lightTexture;\r\n" + //
+					"uniform float lightCount;\r\n" + //
+					"uniform float lightTextureHeight;\r\n" + //
+					"\r\n" + //
+					"out vec2 UV;\r\n" + //
+					"out vec4 Color;\r\n" + //
+					"out vec2 position;\r\n" + //
+					"out vec3 shadeColor;\r\n" + //
+					"\r\n" + //
+					"const float min_depth = 10.f / 128;\r\n" + //
+					"const float deeplevel = 64.f / 128;\r\n" + //
+					"const float maxdepth = 72.f / 128;\r\n" + //
+					"\r\n" + //
+					"void main() { \r\n" + //
+					"	ivec2 size = textureSize(water_height_texture, 0) - 1;\r\n" + //
+					"	ivec2 pos = ivec2(gl_InstanceID % size.x, gl_InstanceID / size.x);\r\n" + //
+					"	ivec2 height_pos = ivec2(vPosition + pos);\r\n" + //
+					"	float water_height = texelFetch(water_height_texture, height_pos, 0).r + water_offset;\r\n" + //
+					"\r\n" + //
+					"	bool is_water = texelFetch(water_exists_texture, pos, 0).r > 0\r\n" + //
+					"	 || texelFetch(water_exists_texture, pos + ivec2(1, 0), 0).r > 0\r\n" + //
+					"	 || texelFetch(water_exists_texture, pos + ivec2(1, 1), 0).r > 0\r\n" + //
+					"	 || texelFetch(water_exists_texture, pos + ivec2(0, 1), 0).r > 0;\r\n" + //
+					"\r\n" + //
+					"   position = vec2((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY);\r\n"
+					+ //
+					"   vec4 myposition = vec4(position.xy, water_height*128.0, 1);\r\n" + //
+					"   vec3 Normal = vec3(0,0,1);\r\n" + //
+					"	gl_Position = is_water ? MVP * myposition : vec4(2.0, 0.0, 0.0, 1.0);\r\n" + //
+					"\r\n" + //
+					"	UV = vec2((vPosition.x + pos.x%2)/2.0, (vPosition.y + pos.y%2)/2.0);\r\n" + //
+					"\r\n" + //
+					"	float ground_height = texelFetch(ground_height_texture, height_pos, 0).r;\r\n" + //
+					"	float value = clamp(water_height - ground_height, 0.f, 1.f);\r\n" + //
+					"	if (value <= deeplevel) {\r\n" + //
+					"		value = max(0.f, value - min_depth) / (deeplevel - min_depth);\r\n" + //
+					"		Color = shallow_color_min * (1.f - value) + shallow_color_max * value;\r\n" + //
+					"	} else {\r\n" + //
+					"		value = clamp(value - deeplevel, 0.f, maxdepth - deeplevel) / (maxdepth - deeplevel);\r\n" + //
+					"		Color = deep_color_min * (1.f - value) + deep_color_max * value;\r\n" + //
+					"	}\r\n" + //
+					Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
+							true)
+					+ "\r\n" + //
+					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
+					" }";
+		}
 
 		public static final String frag = "#version 330 core\r\n" + //
 				"\r\n" + //

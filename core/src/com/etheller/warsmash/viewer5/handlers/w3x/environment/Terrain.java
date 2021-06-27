@@ -391,11 +391,11 @@ public class Terrain {
 
 		updateGroundHeights(new Rectangle(0, 0, width - 1, height - 1));
 
-		this.groundShader = webGL.createShaderProgram(TerrainShaders.Terrain.vert, TerrainShaders.Terrain.frag);
-		this.cliffShader = webGL.createShaderProgram(TerrainShaders.Cliffs.vert, TerrainShaders.Cliffs.frag);
-		this.waterShader = webGL.createShaderProgram(TerrainShaders.Water.vert, TerrainShaders.Water.frag);
+		this.groundShader = webGL.createShaderProgram(TerrainShaders.Terrain.vert(), TerrainShaders.Terrain.frag);
+		this.cliffShader = webGL.createShaderProgram(TerrainShaders.Cliffs.vert(), TerrainShaders.Cliffs.frag);
+		this.waterShader = webGL.createShaderProgram(TerrainShaders.Water.vert(), TerrainShaders.Water.frag);
 
-		this.uberSplatShader = webGL.createShaderProgram(W3xShaders.UberSplat.vert, W3xShaders.UberSplat.frag);
+		this.uberSplatShader = webGL.createShaderProgram(W3xShaders.UberSplat.vert(), W3xShaders.UberSplat.frag);
 
 		// TODO collision bodies (?)
 
@@ -1441,6 +1441,10 @@ public class Terrain {
 		this.uberSplatModels.put(path, model);
 		this.uberSplatModelsList.add(model);
 		Collections.sort(this.uberSplatModelsList);
+	}
+
+	public SplatModel getSplatModel(final String pathKey) {
+		return this.uberSplatModels.get(pathKey);
 	}
 
 	public SplatMover addUberSplat(final String path, final float x, final float y, final float z, final float scale,

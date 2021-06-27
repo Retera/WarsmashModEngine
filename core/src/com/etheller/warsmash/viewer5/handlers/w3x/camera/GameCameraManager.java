@@ -1,13 +1,18 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.camera;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
 
 public final class GameCameraManager extends CameraManager {
+	private static final CameraRates INFINITE_CAMERA_RATES = new CameraRates(Float.POSITIVE_INFINITY,
+			Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
+			Float.POSITIVE_INFINITY);
 	private final CameraPreset[] presets;
 	private final CameraRates cameraRates;
 	public final CameraPanControls cameraPanControls;
 	private int currentPreset = 0;
+	private float fov;
 
 	public GameCameraManager(final CameraPreset[] presets, final CameraRates cameraRates) {
 		this.presets = presets;
@@ -17,14 +22,22 @@ public final class GameCameraManager extends CameraManager {
 
 	@Override
 	public void updateCamera() {
-		this.quatHeap2.idt();
 		final CameraPreset cameraPreset = this.presets[this.currentPreset];
+		final CameraRates cameraRate = this.cameraRates;
+		updateCamera(cameraPreset, cameraRate);
+	}
+
+	private void updateCamera(final CameraPreset cameraPreset, final CameraRates cameraRate) {
+		this.quatHeap2.idt();
 		this.quatHeap.idt();
-		this.horizontalAngle = (float) Math.toRadians(
-				cameraPreset.getRotation(this.cameraPanControls.insertDown, this.cameraPanControls.deleteDown) - 90);
+		this.horizontalAngle = applyAtRate(this.horizontalAngle, (float) Math.toRadians(
+				cameraPreset.getRotation(this.cameraPanControls.insertDown, this.cameraPanControls.deleteDown) - 90),
+				(float) Math.toRadians(cameraRate.rotation * 3));
 		this.quatHeap.setFromAxisRad(0, 0, 1, this.horizontalAngle);
-		this.distance = Math.max(1200, cameraPreset.getDistance());
-		this.verticalAngle = (float) Math.toRadians(Math.min(335, cameraPreset.getAoa()) - 270);
+		this.distance = applyAtRate(this.distance, Math.max(1200, cameraPreset.getDistance()), cameraRate.distance);
+		this.verticalAngle = applyAtRate(this.verticalAngle,
+				(float) Math.toRadians(Math.min(335, cameraPreset.getAoa()) - 270),
+				(float) Math.toRadians(cameraRate.aoa));
 		this.quatHeap2.setFromAxisRad(1, 0, 0, this.verticalAngle);
 		this.quatHeap.mul(this.quatHeap2);
 
@@ -33,10 +46,22 @@ public final class GameCameraManager extends CameraManager {
 		this.position.nor();
 		this.position.scl(this.distance);
 		this.position = this.position.add(this.target);
-		this.camera.perspective((float) Math.toRadians(cameraPreset.getFov() / 2), this.camera.getAspect(),
-				cameraPreset.getNearZ(), cameraPreset.getFarZ());
+		this.fov = applyAtRate(this.fov, (float) Math.toRadians(cameraPreset.getFov() / 2),
+				(float) Math.toRadians(cameraRate.fov));
+		this.camera.perspective(this.fov, this.camera.getAspect(), cameraPreset.getNearZ(), cameraPreset.getFarZ());
 
 		this.camera.moveToAndFace(this.position, this.target, this.worldUp);
+	}
+
+	private static float applyAtRate(final float oldValue, final float newValue, float rate) {
+		rate *= Gdx.graphics.getDeltaTime();
+		final float deltaDistance = newValue - oldValue;
+		if (Math.abs(deltaDistance) < rate) {
+			return newValue;
+		}
+		else {
+			return oldValue + (Math.signum(deltaDistance) * rate);
+		}
 	}
 
 	public void resize(final Rectangle viewport) {

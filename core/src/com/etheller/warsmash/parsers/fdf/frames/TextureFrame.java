@@ -46,6 +46,17 @@ public class TextureFrame extends AbstractRenderableFrame {
 		this.color = color;
 	}
 
+	public void setColor(final float r, final float g, final float b, final float a) {
+		if (this.color == null) {
+			this.color = new Color();
+		}
+		this.color.r = r;
+		this.color.g = g;
+		this.color.b = b;
+		this.color.a = a;
+
+	}
+
 	public void setTexture(String file, final GameUI gameUI) {
 		if (this.decorateFileNames) {
 			file = gameUI.trySkinField(file);

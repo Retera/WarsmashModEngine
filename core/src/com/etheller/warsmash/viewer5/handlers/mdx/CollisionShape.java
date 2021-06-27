@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.etheller.warsmash.viewer5.Bounds;
 import com.etheller.warsmash.viewer5.GenericNode;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionShape;
 
@@ -86,7 +87,10 @@ public class CollisionShape extends GenericObject {
 		public boolean checkIntersect(final Ray ray, final MdxNode mdxNode, final Vector3 intersection) {
 			intersectHeap.set(this.center);
 			intersectHeap.prj(mdxNode.worldMatrix);
-			return Intersector.intersectRaySphere(ray, intersectHeap, this.radius, intersection);
+			if (Intersector.intersectRaySphere(ray, intersectHeap, this.radius, intersection)) {
+				return true;
+			}
+			return false;
 		}
 	}
 
@@ -103,6 +107,24 @@ public class CollisionShape extends GenericObject {
 		intersectRayHeap.set(intersectHeap, intersectHeap2);
 		if (RenderMathUtils.intersectRayTriangles(intersectRayHeap, vertices, indices, vertexSize, intersection)) {
 			intersection.prj(mdxNode.worldMatrix);
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean intersectRayBounds(final Bounds bounds, final Matrix4 worldMatrix, final Ray ray,
+			final Vector3 intersection) {
+		intersectMatrixHeap.set(worldMatrix);
+		Matrix4.inv(intersectMatrixHeap.val);
+		intersectHeap.set(ray.origin);
+		intersectHeap2.set(ray.direction);
+		intersectHeap2.add(ray.origin);
+		intersectHeap.prj(intersectMatrixHeap);
+		intersectHeap2.prj(intersectMatrixHeap);
+		intersectHeap2.sub(intersectHeap);
+		intersectRayHeap.set(intersectHeap, intersectHeap2);
+		if (bounds.intersectRay(intersectRayHeap, intersection)) {
+			intersection.prj(worldMatrix);
 			return true;
 		}
 		return false;

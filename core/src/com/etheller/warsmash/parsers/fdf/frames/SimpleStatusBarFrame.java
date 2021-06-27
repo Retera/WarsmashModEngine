@@ -7,19 +7,28 @@ public class SimpleStatusBarFrame extends AbstractUIFrame {
 	private final boolean decorateFileNames;
 	private final TextureFrame barFrame;
 	private final TextureFrame borderFrame;
+	private final float barInset;
 
-	public SimpleStatusBarFrame(final String name, final UIFrame parent, final boolean decorateFileNames) {
+	public SimpleStatusBarFrame(final String name, final UIFrame parent, final boolean decorateFileNames,
+			final boolean borderBelow, final float barInset) {
 		super(name, parent);
 		this.decorateFileNames = decorateFileNames;
+		this.barInset = barInset;
 		this.barFrame = new TextureFrame(name + "Bar", this, decorateFileNames, new Vector4Definition(0, 1, 0, 1));
 		this.borderFrame = new TextureFrame(name + "Border", this, decorateFileNames,
 				new Vector4Definition(0, 1, 0, 1));
 		this.borderFrame.setSetAllPoints(true);
-		this.barFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT, 0, 0));
-		this.barFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMLEFT, this, FramePoint.BOTTOMLEFT, 0, 0));
-		this.barFrame.setSetAllPoints(true);
-		add(this.barFrame);
-		add(this.borderFrame);
+		this.barFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT, barInset, -barInset));
+		this.barFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMLEFT, this, FramePoint.BOTTOMLEFT, barInset, barInset));
+		this.barFrame.setSetAllPoints(true, barInset);
+		if (borderBelow) {
+			add(this.borderFrame);
+			add(this.barFrame);
+		}
+		else {
+			add(this.barFrame);
+			add(this.borderFrame);
+		}
 	}
 
 	public boolean isDecorateFileNames() {
@@ -28,7 +37,7 @@ public class SimpleStatusBarFrame extends AbstractUIFrame {
 
 	public void setValue(final float value) {
 		this.barFrame.setTexCoord(0, value, 0, 1);
-		this.barFrame.setWidth(this.renderBounds.width * value);
+		this.barFrame.setWidth(((this.renderBounds.width - (this.barInset * 2)) * value));
 	}
 
 	public TextureFrame getBarFrame() {

@@ -9,4 +9,8 @@ public interface GenericSingleIconActiveAbility extends CAbility {
 	int getBaseOrderId();
 
 	boolean isToggleOn();
+
+	int getUIGoldCost();
+
+	int getUILumberCost();
 }

@@ -35,6 +35,7 @@ public class CPathfindingProcessor {
 		this.worldCollision = worldCollision;
 		this.nodes = new Node[pathingGrid.getHeight()][pathingGrid.getWidth()];
 		this.cornerNodes = new Node[pathingGrid.getHeight() + 1][pathingGrid.getWidth() + 1];
+		System.out.println("pathing size: ");
 		for (int i = 0; i < this.nodes.length; i++) {
 			for (int j = 0; j < this.nodes[i].length; j++) {
 				this.nodes[i][j] = new Node(new Point2D.Float(pathingGrid.getWorldX(j), pathingGrid.getWorldY(i)));
@@ -428,7 +429,10 @@ public class CPathfindingProcessor {
 				}
 				workIterations++;
 				this.totalIterations++;
-				if (workIterations >= 7500) {
+				if (this.totalIterations > 20000) {
+					break;
+				}
+				if (workIterations >= 500) {
 					// breaking jobs loop will implicitly exit without calling pathFound() below
 					break JobsLoop;
 				}

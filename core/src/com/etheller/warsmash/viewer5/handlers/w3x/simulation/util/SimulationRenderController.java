@@ -55,4 +55,8 @@ public interface SimulationRenderController {
 	void spawnUIUnitGetItemSound(CUnit cUnit, CItem item);
 
 	void spawnUIUnitDropItemSound(CUnit cUnit, CItem item);
+
+	void spawnAbilitySoundEffect(CUnit caster, War3ID alias);
+
+	void unitPreferredSelectionReplacement(CUnit unit, CUnit newUnit);
 }

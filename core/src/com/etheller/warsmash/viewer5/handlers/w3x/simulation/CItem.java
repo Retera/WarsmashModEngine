@@ -105,4 +105,9 @@ public class CItem extends CWidget {
 		setY(outputY);
 	}
 
+	@Override
+	public boolean isInvulnerable() {
+		return false;
+	}
+
 }

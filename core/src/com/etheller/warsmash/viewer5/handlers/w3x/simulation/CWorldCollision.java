@@ -37,7 +37,7 @@ public class CWorldCollision {
 					collisionSize * 2);
 			unit.setCollisionRectangle(bounds);
 		}
-		if (unit.getUnitType().isBuilding()) {
+		if (unit.isBuilding()) {
 			// buildings are here so that we can include them when enumerating all units in
 			// a rect, but they don't really move dynamically, this is kind of pointless
 			this.buildingUnitCollision.add(unit, bounds);
@@ -73,7 +73,7 @@ public class CWorldCollision {
 	public void removeUnit(final CUnit unit) {
 		final Rectangle bounds = unit.getCollisionRectangle();
 		if (bounds != null) {
-			if (unit.getUnitType().isBuilding()) {
+			if (unit.isBuilding()) {
 				this.buildingUnitCollision.remove(unit, bounds);
 			}
 			else {
@@ -154,7 +154,7 @@ public class CWorldCollision {
 	}
 
 	public void translate(final CUnit unit, final float xShift, final float yShift) {
-		if (unit.getUnitType().isBuilding()) {
+		if (unit.isBuilding()) {
 			throw new IllegalArgumentException("Cannot add building to the CWorldCollision");
 		}
 		final MovementType movementType = unit.getUnitType().getMovementType();

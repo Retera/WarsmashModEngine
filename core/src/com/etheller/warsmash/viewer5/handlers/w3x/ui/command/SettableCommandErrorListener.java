@@ -26,4 +26,9 @@ public class SettableCommandErrorListener implements CommandErrorListener {
 	public void setDelegate(final CommandErrorListener delegate) {
 		this.delegate = delegate;
 	}
+
+	@Override
+	public void showUnableToFindCoupleTargetError() {
+		this.delegate.showUnableToFindCoupleTargetError();
+	}
 }

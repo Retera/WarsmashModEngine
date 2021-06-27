@@ -122,8 +122,8 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 	public CBehavior accept(final CDestructable target) {
 		if ((this.abilityHarvest.getCarriedResourceType() != ResourceType.LUMBER)
 				|| (this.abilityHarvest.getCarriedResourceAmount() < this.abilityHarvest.getLumberCapacity())) {
-			return this.unit.getAttackBehavior().reset(getHighlightOrderId(), this.abilityHarvest.getTreeAttack(),
-					target, false, this);
+			return this.abilityHarvest.getBehaviorTreeAttack().reset(getHighlightOrderId(),
+					this.abilityHarvest.getTreeAttack(), target, false, this);
 		}
 		else {
 			// we have some LUMBER and we can't carry any more, time to return resources

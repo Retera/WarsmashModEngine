@@ -31,6 +31,8 @@ public class AbilityDataUI {
 	private static final War3ID ABILITY_UN_UBER_TIP = War3ID.fromString("auu1");
 	private static final War3ID ABILITY_RESEARCH_TIP = War3ID.fromString("aret");
 	private static final War3ID ABILITY_RESEARCH_UBER_TIP = War3ID.fromString("arut");
+	private static final War3ID ABILITY_EFFECT_SOUND = War3ID.fromString("aefs");
+	private static final War3ID ABILITY_EFFECT_SOUND_LOOPED = War3ID.fromString("aefl");
 
 	private static final War3ID CASTER_ART = War3ID.fromString("acat");
 	private static final War3ID TARGET_ART = War3ID.fromString("atat");
@@ -117,6 +119,9 @@ public class AbilityDataUI {
 					.asList(abilityTypeData.getFieldAsString(AREA_EFFECT_ART, 0).split(","));
 			final List<String> missileArt = Arrays.asList(abilityTypeData.getFieldAsString(MISSILE_ART, 0).split(","));
 
+			final String effectSound = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND, 0);
+			final String effectSoundLooped = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND_LOOPED, 0);
+
 			this.rawcodeToUI.put(alias,
 					new AbilityUI(
 							new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY,
@@ -124,7 +129,8 @@ public class AbilityDataUI {
 							new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip, iconUberTip),
 							new IconUI(iconTurnOff, iconTurnOffDisabled, iconTurnOffX, iconTurnOffY, iconTurnOffTip,
 									iconTurnOffUberTip),
-							casterArt, targetArt, specialArt, effectArt, areaEffectArt, missileArt));
+							casterArt, targetArt, specialArt, effectArt, areaEffectArt, missileArt, effectSound,
+							effectSoundLooped));
 		}
 		for (final War3ID alias : unitData.keySet()) {
 			final MutableGameObject abilityTypeData = unitData.get(alias);

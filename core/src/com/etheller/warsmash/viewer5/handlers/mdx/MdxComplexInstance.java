@@ -36,6 +36,7 @@ public class MdxComplexInstance extends ModelInstance {
 	private static final float[] colorHeap = new float[3];
 	private static final float[] alphaHeap = new float[1];
 	private static final long[] textureIdHeap = new long[1];
+	private static final Vector3 intersectionHeap = new Vector3();
 
 	public List<LightInstance> lights = new ArrayList<>();
 	public List<AttachmentInstance> attachments = new ArrayList<>();
@@ -685,7 +686,7 @@ public class MdxComplexInstance extends ModelInstance {
 				this.allowParticleSpawn = false;
 			}
 			else {
-				if ((this.blendTime > 0) && (lastSequence != this.sequence)) {
+				if ((this.blendTime > 0) && (lastSequence != this.sequence) && (lastSequence != -1)) {
 					this.blendTimeRemaining = this.blendTime;
 					for (int i = 0, l = this.sortedNodes.length; i < l; i++) {
 						final SkeletalNode node = this.sortedNodes[i];
@@ -764,8 +765,61 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 	}
 
-	public void intersectRayBounds(final Ray ray, final Vector3 intersection) {
-		getBounds().intersectRay(ray, intersection);
+	public boolean intersectRayBounds(final Ray ray, final Vector3 intersection) {
+		return CollisionShape.intersectRayBounds(getBounds(), this.worldMatrix, ray, intersection);
+	}
+
+	/**
+	 * Intersects a world ray with the model's CollisionShapes. Only ever call this
+	 * function on the Gdx thread because it uses static variables to hold state
+	 * while processing.
+	 *
+	 * @param ray
+	 */
+	public boolean intersectRayWithCollisionSimple(final Ray ray, final Vector3 intersection) {
+		final MdxModel mdxModel = (MdxModel) this.model;
+		final List<CollisionShape> collisionShapes = mdxModel.collisionShapes;
+		boolean intersected = false;
+		ray.getEndPoint(intersection, 99999);
+		for (final CollisionShape collisionShape : collisionShapes) {
+			final MdxNode mdxNode = this.nodes[collisionShape.index];
+			if (collisionShape.checkIntersect(ray, mdxNode, intersectionHeap)) {
+				if (intersectionHeap.dst2(ray.origin) < intersection.dst2(ray.origin)) {
+					intersection.set(intersectionHeap);
+				}
+				intersected = true;
+			}
+		}
+		return intersected || intersectRayBounds(ray, intersection);
+	}
+
+	/**
+	 * Intersects a world ray with the model's geosets. Only ever call this function
+	 * on the Gdx thread because it uses static variables to hold state while
+	 * processing.
+	 *
+	 * @param ray
+	 */
+	public boolean intersectRayWithMeshSlow(final Ray ray, final Vector3 intersection) {
+		final MdxModel mdxModel = (MdxModel) this.model;
+		boolean intersected = false;
+		ray.getEndPoint(intersection, 99999);
+		for (final Geoset geoset : mdxModel.geosets) {
+			if (!geoset.unselectable) {
+				geoset.getAlpha(alphaHeap, this.sequence, this.frame, this.counter);
+				if (alphaHeap[0] > 0) {
+					final MdlxGeoset mdlxGeoset = geoset.mdlxGeoset;
+					if (CollisionShape.intersectRayTriangles(ray, this, mdlxGeoset.getVertices(), mdlxGeoset.getFaces(),
+							3, intersectionHeap)) {
+						if (intersectionHeap.dst2(ray.origin) < intersection.dst2(ray.origin)) {
+							intersection.set(intersectionHeap);
+						}
+						intersected = true;
+					}
+				}
+			}
+		}
+		return intersected;
 	}
 
 	/**

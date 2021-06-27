@@ -12,10 +12,13 @@ public class AbilityUI {
 	private final List<String> effectArt;
 	private final List<String> areaEffectArt;
 	private final List<String> missileArt;
+	private final String effectSound;
+	private final String effectSoundLooped;
 
 	public AbilityUI(final IconUI learnIconUI, final IconUI onIconUI, final IconUI offIconUI,
 			final List<String> casterArt, final List<String> targetArt, final List<String> specialArt,
-			final List<String> effectArt, final List<String> areaEffectArt, final List<String> missileArt) {
+			final List<String> effectArt, final List<String> areaEffectArt, final List<String> missileArt,
+			final String effectSound, final String effectSoundLooped) {
 		this.learnIconUI = learnIconUI;
 		this.onIconUI = onIconUI;
 		this.offIconUI = offIconUI;
@@ -25,6 +28,8 @@ public class AbilityUI {
 		this.effectArt = effectArt;
 		this.areaEffectArt = areaEffectArt;
 		this.missileArt = missileArt;
+		this.effectSound = effectSound;
+		this.effectSoundLooped = effectSoundLooped;
 	}
 
 	public IconUI getLearnIconUI() {
@@ -61,6 +66,14 @@ public class AbilityUI {
 
 	public String getMissileArt(final int index) {
 		return tryGet(this.missileArt, index);
+	}
+
+	public String getEffectSound() {
+		return this.effectSound;
+	}
+
+	public String getEffectSoundLooped() {
+		return this.effectSoundLooped;
 	}
 
 	private static String tryGet(final List<String> items, final int index) {

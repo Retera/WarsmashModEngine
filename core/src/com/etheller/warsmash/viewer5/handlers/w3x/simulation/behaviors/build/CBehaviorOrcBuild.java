@@ -45,7 +45,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	}
 
 	@Override
-	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
+	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		if (!this.unitCreated) {
 			this.unitCreated = true;
 			final CUnitType unitTypeToCreate = simulation.getUnitData().getUnitType(this.orderId);

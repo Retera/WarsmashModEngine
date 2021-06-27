@@ -192,7 +192,7 @@ public class CUnitData {
 		final int handleId = handleIdAllocator.createId();
 
 		final CUnitType unitTypeInstance = getUnitTypeInstance(typeId, buildingPathingPixelMap, unitType);
-		final int life = unitTypeInstance.getLife();
+		final int life = unitTypeInstance.getMaxLife();
 		final int manaInitial = unitTypeInstance.getManaInitial();
 		final int manaMaximum = unitTypeInstance.getManaMaximum();
 		final int speed = unitTypeInstance.getSpeed();

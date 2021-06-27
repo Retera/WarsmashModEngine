@@ -48,7 +48,7 @@ public class CBehaviorDropItem extends CAbstractRangedBehavior {
 	}
 
 	@Override
-	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
+	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		this.inventory.dropItem(simulation, this.unit, this.targetItem, this.target.getX(), this.target.getY(), true);
 		return this.unit.pollNextOrderBehavior(simulation);
 	}

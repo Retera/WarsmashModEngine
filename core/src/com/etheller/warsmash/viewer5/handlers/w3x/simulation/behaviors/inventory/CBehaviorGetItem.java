@@ -46,7 +46,7 @@ public class CBehaviorGetItem extends CAbstractRangedBehavior {
 	}
 
 	@Override
-	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
+	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		final CItem targetItem = this.target.visit(AbilityTargetItemVisitor.INSTANCE);
 		this.inventory.giveItem(simulation, this.unit, targetItem, true);
 		return this.unit.pollNextOrderBehavior(simulation);

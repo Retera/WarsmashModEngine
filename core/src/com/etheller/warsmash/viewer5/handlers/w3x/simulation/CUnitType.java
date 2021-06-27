@@ -22,7 +22,7 @@ public class CUnitType {
 	private final String name;
 	private final String legacyName;
 	private final War3ID typeId;
-	private final int life;
+	private final int maxLife;
 	private final int manaInitial;
 	private final int manaMaximum;
 	private final int speed;
@@ -76,7 +76,7 @@ public class CUnitType {
 	private final boolean canFlee;
 	private final int priority;
 
-	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int life,
+	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final int manaInitial, final int manaMaximum, final int speed, final int defense, final String abilityList,
 			final boolean isBldg, final MovementType movementType, final float defaultFlyingHeight,
 			final float collisionSize, final EnumSet<CUnitClassification> classifications,
@@ -96,7 +96,7 @@ public class CUnitType {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
-		this.life = life;
+		this.maxLife = maxLife;
 		this.manaInitial = manaInitial;
 		this.manaMaximum = manaMaximum;
 		this.speed = speed;
@@ -160,8 +160,8 @@ public class CUnitType {
 		return this.typeId;
 	}
 
-	public int getLife() {
-		return this.life;
+	public int getMaxLife() {
+		return this.maxLife;
 	}
 
 	public int getManaInitial() {

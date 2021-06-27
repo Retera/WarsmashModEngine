@@ -1226,6 +1226,11 @@ public class CUnit extends CWidget {
 	}
 
 	@Override
+	public float getMaxLife() {
+		return unitType.getMaxLife();
+	}
+
+	@Override
 	public void setLife(final CSimulation simulation, final float life) {
 		final boolean wasDead = isDead();
 		super.setLife(simulation, life);

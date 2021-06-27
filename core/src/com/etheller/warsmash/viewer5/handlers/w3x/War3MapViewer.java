@@ -1127,10 +1127,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final int playerIndex = unit.getPlayer();
 				final int customTeamColor = unit.getCustomTeamColor();
 				final float unitAngle = unit.getAngle();
+				int editorConfigHitPointPercent = unit.getHitpoints();
 
 				final CUnit unitCreated = createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex,
 						customTeamColor, unitAngle);
-				if (unitCreated != null) {
+				if(unitCreated != null) {
+					if (editorConfigHitPointPercent > 0) {
+						unitCreated.setLife(simulation, unitCreated.getMaximumLife() * (editorConfigHitPointPercent / 100f));
+					}
 					if (unit.getGoldAmount() != 0) {
 						unitCreated.setGold(unit.getGoldAmount());
 					}

@@ -71,10 +71,10 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	}
 
 	@Override
-	public CBehavior update(final CSimulation simulation, final boolean withinRange) {
+	public CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		final int cooldownEndTime = this.unit.getCooldownEndTime();
 		final int currentTurnTick = simulation.getGameTurnTick();
-		if (withinRange) {
+		if (withinFacingWindow) {
 			if (this.damagePointLaunchTime != 0) {
 				if (currentTurnTick >= this.damagePointLaunchTime) {
 					int minDamage = this.unitAttack.getMinDamage();

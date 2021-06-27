@@ -56,7 +56,7 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 	}
 
 	@Override
-	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
+	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		if (this.doneTick != 0) {
 			if (simulation.getGameTurnTick() > this.doneTick) {
 				return this.unit.pollNextOrderBehavior(simulation);

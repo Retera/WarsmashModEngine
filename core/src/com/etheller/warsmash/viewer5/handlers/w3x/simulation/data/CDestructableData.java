@@ -45,7 +45,7 @@ public class CDestructableData {
 
 		final CDestructableType unitTypeInstance = getUnitTypeInstance(typeId, unitType);
 
-		final float life = unitTypeInstance.getLife();
+		final float life = unitTypeInstance.getMaxLife();
 
 		final CDestructable destructable = new CDestructable(handleId, x, y, life, unitTypeInstance, pathingInstance,
 				pathingInstanceDeath);

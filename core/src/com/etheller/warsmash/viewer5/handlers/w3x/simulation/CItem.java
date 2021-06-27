@@ -75,7 +75,7 @@ public class CItem extends CWidget {
 
 	@Override
 	public float getMaxLife() {
-		return this.itemType.getHitPoints();
+		return itemType.getMaxLife();
 	}
 
 	public void setPointAndCheckUnstuck(final float newX, final float newY, final CSimulation game) {

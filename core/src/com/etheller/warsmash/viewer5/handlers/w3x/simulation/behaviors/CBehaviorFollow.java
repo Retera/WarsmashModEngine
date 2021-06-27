@@ -30,7 +30,7 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 	}
 
 	@Override
-	protected CBehavior update(final CSimulation simulation, final boolean withinRange) {
+	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, false);
 		return this;
 	}

@@ -2634,22 +2634,26 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							boolean rallied = false;
 							boolean attacked = false;
 							for (final RenderUnit unit : this.selectedUnits) {
+								CAbility abilityToUse = null;
+								CWidget targetToUse = null;
 								for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
 									ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(),
 											OrderIds.smart, rayPickUnit.getSimulationWidget(),
 											CWidgetAbilityTargetCheckReceiver.INSTANCE);
 									final CWidget targetWidget = CWidgetAbilityTargetCheckReceiver.INSTANCE.getTarget();
 									if (targetWidget != null) {
-										this.unitOrderListener.issueTargetOrder(unit.getSimulationUnit().getHandleId(),
-												ability.getHandleId(), OrderIds.smart, targetWidget.getHandleId(),
-												isShiftDown());
-										rallied |= ability instanceof CAbilityRally;
-										attacked |= ability instanceof CAbilityAttack;
-										ordered = true;
-										break;
+										abilityToUse = ability;
+										targetToUse = targetWidget;
 									}
 								}
-
+								if(abilityToUse != null) {
+									this.unitOrderListener.issueTargetOrder(unit.getSimulationUnit().getHandleId(),
+											abilityToUse.getHandleId(), OrderIds.smart, targetToUse.getHandleId(),
+											isShiftDown());
+									rallied |= abilityToUse instanceof CAbilityRally;
+									attacked |= abilityToUse instanceof CAbilityAttack;
+									ordered = true;
+								}
 							}
 							if (ordered) {
 								final UnitSound yesSound = attacked ? getSelectedUnit().soundset.yesAttack

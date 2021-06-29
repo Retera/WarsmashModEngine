@@ -53,7 +53,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 
 public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	public static final boolean ENABLE_AUDIO = true;
-	private static final boolean ENABLE_MUSIC = true;
+	private static final boolean ENABLE_MUSIC = false;
 	private final War3MapViewer viewer;
 	private final Rectangle tempRect = new Rectangle();
 

@@ -683,7 +683,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final UnitSound constructingBuilding = War3MapViewer.this.uiSounds
 								.getSound(War3MapViewer.this.gameUI.getSkinField("JobDoneSound"));
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(constructedStructure);
-						if (constructingBuilding != null) {
+						if ((constructingBuilding != null) && (renderUnit.getSimulationUnit()
+								.getPlayerIndex() == War3MapViewer.this.localPlayerIndex)) {
 							constructingBuilding.play(War3MapViewer.this.worldScene.audioContext,
 									constructedStructure.getX(), constructedStructure.getY(), renderUnit.getZ());
 						}
@@ -1127,13 +1128,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final int playerIndex = unit.getPlayer();
 				final int customTeamColor = unit.getCustomTeamColor();
 				final float unitAngle = unit.getAngle();
-				int editorConfigHitPointPercent = unit.getHitpoints();
+				final int editorConfigHitPointPercent = unit.getHitpoints();
 
 				final CUnit unitCreated = createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex,
 						customTeamColor, unitAngle);
-				if(unitCreated != null) {
+				if (unitCreated != null) {
 					if (editorConfigHitPointPercent > 0) {
-						unitCreated.setLife(simulation, unitCreated.getMaximumLife() * (editorConfigHitPointPercent / 100f));
+						unitCreated.setLife(this.simulation,
+								unitCreated.getMaximumLife() * (editorConfigHitPointPercent / 100f));
 					}
 					if (unit.getGoldAmount() != 0) {
 						unitCreated.setGold(unit.getGoldAmount());
@@ -1495,6 +1497,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					this.gameTurnManager.turnCompleted(this.simulation.getGameTurnTick());
 				}
 				else {
+					if (this.updateTime > (WarsmashConstants.SIMULATION_STEP_TIME * 3)) {
+						this.gameTurnManager.framesSkipped(this.updateTime / WarsmashConstants.SIMULATION_STEP_TIME);
+						this.updateTime = 0;
+					}
 					break;
 				}
 			}

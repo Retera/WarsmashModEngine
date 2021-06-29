@@ -7,13 +7,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
-import com.etheller.warsmash.networking.udp.UdpClient;
+import com.etheller.warsmash.networking.udp.OrderedUdpClient;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 
 public class WarsmashClient implements ServerToClientListener, GameTurnManager {
-	private final UdpClient udpClient;
+	private final OrderedUdpClient udpClient;
 	private final War3MapViewer game;
 	private final Map<Integer, CPlayerUnitOrderExecutor> indexToExecutor = new HashMap<>();
 	private int latestCompletedTurn = -1;
@@ -21,7 +21,8 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 
 	public WarsmashClient(final InetAddress serverAddress, final War3MapViewer game)
 			throws UnknownHostException, IOException {
-		this.udpClient = new UdpClient(serverAddress, WarsmashConstants.PORT_NUMBER, new WarsmashClientParser(this));
+		this.udpClient = new OrderedUdpClient(serverAddress, WarsmashConstants.PORT_NUMBER,
+				new WarsmashClientParser(this));
 		this.game = game;
 		this.writer = new WarsmashClientWriter(this.udpClient);
 	}
@@ -131,12 +132,14 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 	}
 
 	@Override
-	public int getLatestCompletedTurn() {
-		return this.latestCompletedTurn;
+	public void framesSkipped(final float skippedCount) {
+		this.writer.framesSkipped((int) skippedCount);
+		this.writer.send();
 	}
 
-	public UdpClient getUdpClient() {
-		return this.udpClient;
+	@Override
+	public int getLatestCompletedTurn() {
+		return this.latestCompletedTurn;
 	}
 
 	public WarsmashClientWriter getWriter() {

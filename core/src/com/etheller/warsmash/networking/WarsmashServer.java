@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
-import com.etheller.warsmash.networking.udp.UdpServer;
+import com.etheller.warsmash.networking.udp.OrderedUdpServer;
 import com.etheller.warsmash.util.WarsmashConstants;
 
 public class WarsmashServer implements ClientToServerListener {
-	private final UdpServer udpServer;
+	private final OrderedUdpServer udpServer;
 	private final Map<SocketAddress, Integer> socketAddressToPlayerIndex = new HashMap<>();
 	private final Set<SocketAddress> clientsAwaitingTurnFinished = new HashSet<>();
 	private final List<Runnable> turnActions = new ArrayList<>();
@@ -23,7 +23,7 @@ public class WarsmashServer implements ClientToServerListener {
 	private boolean gameStarted = false;
 
 	public WarsmashServer() throws IOException {
-		this.udpServer = new UdpServer(WarsmashConstants.PORT_NUMBER, new WarsmashServerParser(this));
+		this.udpServer = new OrderedUdpServer(WarsmashConstants.PORT_NUMBER, new WarsmashServerParser(this));
 		this.writer = new WarsmashServerWriter(this.udpServer, this.socketAddressToPlayerIndex.keySet());
 	}
 
@@ -139,7 +139,7 @@ public class WarsmashServer implements ClientToServerListener {
 
 	@Override
 	public void finishedTurn(final SocketAddress sourceAddress, final int gameTurnTick) {
-		System.out.println("finishedTurn(" + gameTurnTick + ") from " + sourceAddress);
+//		System.out.println("finishedTurn(" + gameTurnTick + ") from " + sourceAddress);
 		if (!this.gameStarted) {
 			throw new IllegalStateException(
 					"Client should not send us finishedTurn() message when game has not started!");
@@ -158,6 +158,11 @@ public class WarsmashServer implements ClientToServerListener {
 			System.err.println("received bad finishedTurn() with remote gameTurnTick=" + gameTurnTick
 					+ ", server local currenTurnTick=" + this.currentTurnTick);
 		}
+	}
+
+	@Override
+	public void framesSkipped(final int nFramesSkipped) {
+		// dont care for now
 	}
 
 	public static void main(final String[] args) {

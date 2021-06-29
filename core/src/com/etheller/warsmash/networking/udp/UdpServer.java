@@ -35,10 +35,6 @@ public class UdpServer implements Runnable {
 		this.channel.send(buffer, destination);
 	}
 
-	public void send(final ByteBuffer buffer) throws IOException {
-		this.channel.write(buffer);
-	}
-
 	@Override
 	public void run() {
 		this.running = true;

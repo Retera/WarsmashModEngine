@@ -5,6 +5,8 @@ public interface GameTurnManager {
 
 	void turnCompleted(int gameTurnTick);
 
+	void framesSkipped(float skippedCount);
+
 	GameTurnManager PAUSED = new GameTurnManager() {
 		@Override
 		public int getLatestCompletedTurn() {
@@ -14,6 +16,10 @@ public interface GameTurnManager {
 		@Override
 		public void turnCompleted(final int gameTurnTick) {
 			System.err.println("got turnCompleted(" + gameTurnTick + ") while paused !!");
+		}
+
+		@Override
+		public void framesSkipped(final float skippedCount) {
 		}
 	};
 
@@ -26,5 +32,10 @@ public interface GameTurnManager {
 		@Override
 		public void turnCompleted(final int gameTurnTick) {
 		}
+
+		@Override
+		public void framesSkipped(final float skippedCount) {
+		}
 	};
+
 }

@@ -6,14 +6,14 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Set;
 
-import com.etheller.warsmash.networking.udp.UdpServer;
+import com.etheller.warsmash.networking.udp.OrderedUdpServer;
 
 public class WarsmashServerWriter implements ServerToClientListener {
-	private final UdpServer server;
+	private final OrderedUdpServer server;
 	private final ByteBuffer sendBuffer = ByteBuffer.allocate(1024).order(ByteOrder.BIG_ENDIAN);
 	private final Set<SocketAddress> allKnownAddressesToSend;
 
-	public WarsmashServerWriter(final UdpServer server, final Set<SocketAddress> allKnownAddressesToSend) {
+	public WarsmashServerWriter(final OrderedUdpServer server, final Set<SocketAddress> allKnownAddressesToSend) {
 		this.server = server;
 		this.allKnownAddressesToSend = allKnownAddressesToSend;
 	}

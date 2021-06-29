@@ -12,7 +12,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 
 public class UdpClient implements Runnable {
 	private final DatagramChannel channel;
-	private final ByteBuffer buffer;
+	private final ByteBuffer readBuffer;
 	private boolean running;
 	private final UdpClientListener clientListener;
 
@@ -20,9 +20,9 @@ public class UdpClient implements Runnable {
 			throws UnknownHostException, IOException {
 		this.channel = DatagramChannel.open().connect(new InetSocketAddress(serverAddress, portNumber));
 		this.channel.configureBlocking(true);
-		this.buffer = ByteBuffer.allocate(1024);
+		this.readBuffer = ByteBuffer.allocate(1024);
 		this.clientListener = clientListener;
-		this.buffer.order(ByteOrder.BIG_ENDIAN);
+		this.readBuffer.order(ByteOrder.BIG_ENDIAN);
 	}
 
 	public void send(final ByteBuffer data) throws IOException {
@@ -38,10 +38,10 @@ public class UdpClient implements Runnable {
 		this.running = true;
 		while (this.running) {
 			try {
-				this.buffer.clear();
-				this.channel.receive(this.buffer);
-				this.buffer.flip();
-				this.clientListener.parse(this.buffer);
+				this.readBuffer.clear();
+				this.channel.receive(this.readBuffer);
+				this.readBuffer.flip();
+				this.clientListener.parse(this.readBuffer);
 			}
 			catch (final IOException e) {
 				System.err.println("Error reading from channel:");

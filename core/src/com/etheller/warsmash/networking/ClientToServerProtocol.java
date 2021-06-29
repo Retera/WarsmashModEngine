@@ -9,4 +9,5 @@ public class ClientToServerProtocol {
 	public static final int UNIT_CANCEL_TRAINING = 5;
 	public static final int FINISHED_TURN = 6;
 	public static final int JOIN_GAME = 7;
+	public static final int FRAMES_SKIPPED = 8;
 }

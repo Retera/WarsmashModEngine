@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import com.etheller.warsmash.networking.udp.UdpClient;
+import com.etheller.warsmash.networking.udp.OrderedUdpClient;
 
 public class WarsmashClientWriter {
-	private final UdpClient client;
+	private final OrderedUdpClient client;
 	private final ByteBuffer sendBuffer = ByteBuffer.allocate(1024).order(ByteOrder.BIG_ENDIAN);
 
-	public WarsmashClientWriter(final UdpClient client) {
+	public WarsmashClientWriter(final OrderedUdpClient client) {
 		this.client = client;
 	}
 
@@ -79,6 +79,13 @@ public class WarsmashClientWriter {
 		this.sendBuffer.putInt(gameTurnTick);
 	}
 
+	public void framesSkipped(final int skippedCount) {
+		this.sendBuffer.clear();
+		this.sendBuffer.putInt(4 + 4);
+		this.sendBuffer.putInt(ClientToServerProtocol.FRAMES_SKIPPED);
+		this.sendBuffer.putInt(skippedCount);
+	}
+
 	public void joinGame() {
 		this.sendBuffer.clear();
 		this.sendBuffer.putInt(4);
@@ -87,7 +94,6 @@ public class WarsmashClientWriter {
 
 	public void send() {
 		this.sendBuffer.flip();
-		System.out.println("CLIENT WRITER calling send() on " + this.sendBuffer.remaining() + " bytes");
 		try {
 			this.client.send(this.sendBuffer);
 		}

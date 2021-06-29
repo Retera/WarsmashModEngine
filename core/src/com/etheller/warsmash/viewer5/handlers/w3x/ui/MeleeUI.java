@@ -2646,6 +2646,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 										rallied |= ability instanceof CAbilityRally;
 										attacked |= ability instanceof CAbilityAttack;
 										ordered = true;
+										break;
 									}
 								}
 

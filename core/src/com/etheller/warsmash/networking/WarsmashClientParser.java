@@ -2,13 +2,18 @@ package com.etheller.warsmash.networking;
 
 import java.nio.ByteBuffer;
 
-import com.etheller.warsmash.networking.udp.UdpClientListener;
+import com.etheller.warsmash.networking.udp.OrderedUdpClientListener;
 
-public class WarsmashClientParser implements UdpClientListener {
+public class WarsmashClientParser implements OrderedUdpClientListener {
 	private final ServerToClientListener listener;
 
 	public WarsmashClientParser(final ServerToClientListener listener) {
 		this.listener = listener;
+	}
+
+	@Override
+	public void cantReplay(final int seqNo) {
+		throw new IllegalStateException("Cant replay seqNo=" + seqNo + " !");
 	}
 
 	@Override
@@ -18,8 +23,9 @@ public class WarsmashClientParser implements UdpClientListener {
 			while (buffer.hasRemaining()) {
 				final int length = buffer.getInt();
 				if (length > buffer.remaining()) {
-					throw new IllegalStateException(
-							"Got mismatched protocol length " + length + " > " + buffer.remaining() + "!!");
+					// this packet is junk to us, so we will skip and continue (drop system will
+					// handle it)
+					System.err.println("Got mismatched protocol length " + length + " > " + buffer.remaining() + "!!");
 				}
 				final int protocol = buffer.getInt();
 				switch (protocol) {

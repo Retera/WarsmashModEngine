@@ -21,4 +21,6 @@ public interface ClientToServerListener {
 
 	void finishedTurn(SocketAddress sourceAddress, int gameTurnTick);
 
+	void framesSkipped(int nFramesSkipped);
+
 }

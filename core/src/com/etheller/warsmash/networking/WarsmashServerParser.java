@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 
-import com.etheller.warsmash.networking.udp.UdpServerListener;
+import com.etheller.warsmash.networking.udp.OrderedUdpServerListener;
 
-public class WarsmashServerParser implements UdpServerListener {
+public class WarsmashServerParser implements OrderedUdpServerListener {
 
 	private final ClientToServerListener listener;
 
@@ -21,8 +21,10 @@ public class WarsmashServerParser implements UdpServerListener {
 			while (buffer.hasRemaining()) {
 				final int length = buffer.getInt();
 				if (length > buffer.remaining()) {
-					throw new IllegalStateException(
-							"Got mismatched protocol length " + length + " > " + buffer.remaining() + "!!");
+					// this packet is junk to us, so we will skip and continue (drop system will
+					// handle it)
+					System.err.println("Got mismatched protocol length " + length + " > " + buffer.remaining() + "!!");
+					break;
 				}
 				final int protocol = buffer.getInt();
 				switch (protocol) {
@@ -81,6 +83,11 @@ public class WarsmashServerParser implements UdpServerListener {
 					this.listener.joinGame(sourceAddress);
 					break;
 				}
+				case ClientToServerProtocol.FRAMES_SKIPPED: {
+					final int nFramesSkipped = buffer.getInt();
+					this.listener.framesSkipped(nFramesSkipped);
+					break;
+				}
 
 				default:
 					System.err.println("Got unknown protocol: " + protocol);
@@ -91,5 +98,10 @@ public class WarsmashServerParser implements UdpServerListener {
 		finally {
 			buffer.position(initialLimit);
 		}
+	}
+
+	@Override
+	public void cantReplay(final SocketAddress sourceAddress, final int seqNo) {
+		throw new IllegalStateException("Cant replay " + seqNo + " to " + sourceAddress + " !");
 	}
 }

@@ -139,7 +139,7 @@ public class WarsmashServer implements ClientToServerListener {
 
 	@Override
 	public void finishedTurn(final SocketAddress sourceAddress, final int gameTurnTick) {
-//		System.out.println("finishedTurn(" + gameTurnTick + ") from " + sourceAddress);
+		System.out.println("finishedTurn(" + gameTurnTick + ") from " + sourceAddress);
 		if (!this.gameStarted) {
 			throw new IllegalStateException(
 					"Client should not send us finishedTurn() message when game has not started!");

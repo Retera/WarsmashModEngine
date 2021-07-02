@@ -31,12 +31,12 @@ public class CAbilityTypeDefinitionCoupleInstant
 		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE, level);
 		final float area = abilityEditorData.getFieldAsFloat(AREA, level);
 
-		final int goldCost = abilityEditorData.getFieldAsInteger(GOLD_COST, level);
-		final int lumberCost = abilityEditorData.getFieldAsInteger(LUMBER_COST, level);
+//		final int goldCost = abilityEditorData.getFieldAsInteger(GOLD_COST, level);
+//		final int lumberCost = abilityEditorData.getFieldAsInteger(LUMBER_COST, level);
 
 		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
 		return new CAbilityTypeCoupleInstantLevelData(targetsAllowedAtLevel, resultingUnitTypeId, partnerUnitTypeId,
-				moveToPartner, castRange, area, goldCost, lumberCost);
+				moveToPartner, castRange, area, 0, 0);
 	}
 
 	@Override

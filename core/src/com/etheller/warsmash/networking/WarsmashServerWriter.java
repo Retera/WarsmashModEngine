@@ -95,6 +95,13 @@ public class WarsmashServerWriter implements ServerToClientListener {
 	}
 
 	@Override
+	public void heartbeat() {
+		this.sendBuffer.clear();
+		this.sendBuffer.putInt(4);
+		this.sendBuffer.putInt(ServerToClientProtocol.HEARTBEAT);
+	}
+
+	@Override
 	public void acceptJoin(final int playerIndex) {
 		this.sendBuffer.clear();
 		this.sendBuffer.putInt(4 + 4);

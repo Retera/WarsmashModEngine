@@ -36,7 +36,7 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 
     @Override
     protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target, AbilityTargetCheckReceiver<CWidget> receiver) {
-        if(target.canBeTargetedBy(game, unit, targetsAllowed)) {
+        if(target.canBeTargetedBy(game, unit, targetsAllowed) && target.getLife() < target.getMaxLife()) {
             receiver.targetOk(target);
         } else {
             receiver.orderIdNotAccepted();

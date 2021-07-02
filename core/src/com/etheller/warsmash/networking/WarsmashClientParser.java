@@ -94,6 +94,10 @@ public class WarsmashClientParser implements OrderedUdpClientListener {
 					this.listener.startGame();
 					break;
 				}
+				case ServerToClientProtocol.HEARTBEAT: {
+					this.listener.heartbeat();
+					break;
+				}
 
 				default:
 					System.err.println("Got unknown protocol: " + protocol);

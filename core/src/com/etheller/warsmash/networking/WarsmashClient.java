@@ -138,6 +138,13 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 	}
 
 	@Override
+	public void heartbeat() {
+		// Not doing anything here at the moment. The act of the server sending us that packet
+		// will let the middle layer UDP system know to re-request any lost packets based
+		// on the heartbeat seq no. But at app layer, here, we can ignore it.
+	}
+
+	@Override
 	public int getLatestCompletedTurn() {
 		return this.latestCompletedTurn;
 	}

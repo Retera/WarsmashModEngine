@@ -883,10 +883,25 @@ public class MdxComplexInstance extends ModelInstance {
 	public void setFrameByRatio(final float ratioOfAnimationCompleted) {
 		if (this.sequence != -1) {
 			final Sequence currentlyPlayingSequence = ((MdxModel) this.model).sequences.get(this.sequence);
-			this.floatingFrame = currentlyPlayingSequence.getInterval()[0]
-					+ ((currentlyPlayingSequence.getInterval()[1] - currentlyPlayingSequence.getInterval()[0])
-							* ratioOfAnimationCompleted);
+			long start = currentlyPlayingSequence.getInterval()[0];
+			final int lastIntegerFrame = this.frame;
+			float lastFloatingFrame = this.floatingFrame;
+			long sequenceLength = currentlyPlayingSequence.getInterval()[1] - start;
+			float newFloatingFrame = start
+					+ (sequenceLength
+					* ratioOfAnimationCompleted);
+			float frameTime = newFloatingFrame-lastFloatingFrame;
+			if(frameTime < 0) {
+				frameTime += sequenceLength;
+			}
+			this.floatingFrame = newFloatingFrame;
 			this.frame = (int) this.floatingFrame;
+			this.blendTimeRemaining -= frameTime;
+			int integerFrameTime = this.frame - lastIntegerFrame;
+			if(integerFrameTime < 0) {
+				integerFrameTime += sequenceLength;
+			}
+			this.counter += integerFrameTime;
 			for (final AttachmentInstance attachmentInstance : this.attachments) {
 				if (attachmentInstance.internalInstance != null) {
 					attachmentInstance.internalInstance.setFrameByRatio(ratioOfAnimationCompleted);

@@ -19,4 +19,6 @@ public interface ServerToClientListener {
 	void startGame();
 
 	void finishedTurn(int gameTurnTick);
+
+	void heartbeat();
 }

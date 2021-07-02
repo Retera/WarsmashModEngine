@@ -114,8 +114,15 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CPlayer newPlayer = new CPlayer(CRace.ORC, new float[] { startLoc.getX(), startLoc.getY() },
+			final CPlayer newPlayer = new CPlayer(CRace.UNDEAD, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
+			if(i < 3) {
+				for(int j = 0; j < 3; j++) {
+					if(j != i) {
+						newPlayer.setAlliance(j, CAllianceType.PASSIVE, true);
+					}
+				}
+			}
 			this.players.add(newPlayer);
 		}
 		this.players.get(this.players.size() - 4).setName(miscData.getLocalizedString("WESTRING_PLAYER_NA"));

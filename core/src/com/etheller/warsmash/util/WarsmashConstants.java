@@ -25,5 +25,5 @@ public class WarsmashConstants {
 	// find it yet so I used this
 	public static final String DEFAULT_STRING = "Default string";
 
-	public static final boolean CATCH_CURSOR = false;
+	public static final boolean CATCH_CURSOR = true;
 }

@@ -10,4 +10,5 @@ public class ServerToClientProtocol {
 	public static final int FINISHED_TURN = 6;
 	public static final int ACCEPT_JOIN = 7;
 	public static final int START_GAME = 8;
+	public static final int HEARTBEAT = 9;
 }

@@ -21,6 +21,7 @@ public class WarsmashServer implements ClientToServerListener {
 	private final WarsmashServerWriter writer;
 	private int currentTurnTick = 0;
 	private boolean gameStarted = false;
+	private long lastServerHeartbeatTime = 0;
 
 	public WarsmashServer() throws IOException {
 		this.udpServer = new OrderedUdpServer(WarsmashConstants.PORT_NUMBER, new WarsmashServerParser(this));
@@ -163,6 +164,14 @@ public class WarsmashServer implements ClientToServerListener {
 	@Override
 	public void framesSkipped(final int nFramesSkipped) {
 		// dont care for now
+		long currentTimeMillis = System.currentTimeMillis();
+		if(currentTimeMillis - lastServerHeartbeatTime > 3000) {
+			// 3 seconds of frame skipping, make sure we keep in contact with client
+
+			WarsmashServer.this.writer.heartbeat();
+			WarsmashServer.this.writer.send();
+			lastServerHeartbeatTime = currentTimeMillis;
+		}
 	}
 
 	public static void main(final String[] args) {

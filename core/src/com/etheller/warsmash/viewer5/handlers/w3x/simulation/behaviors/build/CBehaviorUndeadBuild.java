@@ -33,6 +33,7 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 		this.highlightOrderId = highlightOrderId;
 		this.orderId = new War3ID(orderId);
 		this.unitCreated = false;
+		this.doneTick = 0;
 		return innerReset(target);
 	}
 

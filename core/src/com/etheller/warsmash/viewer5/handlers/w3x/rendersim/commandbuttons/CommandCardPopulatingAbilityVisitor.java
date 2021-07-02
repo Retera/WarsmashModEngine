@@ -34,6 +34,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void> {
+	private static final boolean ENABLE_PLACEHOLDERS = false;
 	public static final CommandCardPopulatingAbilityVisitor INSTANCE = new CommandCardPopulatingAbilityVisitor();
 	private CSimulation game;
 	private CUnit unit;
@@ -100,13 +101,15 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityGeneric ability) {
-		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
-			final AbilityUI abilityUI = this.abilityDataUI.getUI(ability.getRawcode());
-			if (abilityUI != null) {
-				addCommandButton(ability, abilityUI.getOnIconUI(), ability.getHandleId(), 0, 0, false, false);
-			}
-			else {
-				addCommandButton(ability, this.abilityDataUI.getStopUI(), ability.getHandleId(), 0, 0, false, false);
+		if(ENABLE_PLACEHOLDERS) {
+			if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
+				final AbilityUI abilityUI = this.abilityDataUI.getUI(ability.getRawcode());
+				if (abilityUI != null) {
+					addCommandButton(ability, abilityUI.getOnIconUI(), ability.getHandleId(), 0, 0, false, false);
+				}
+				else {
+					addCommandButton(ability, this.abilityDataUI.getStopUI(), ability.getHandleId(), 0, 0, false, false);
+				}
 			}
 		}
 		return null;
@@ -257,11 +260,13 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							simulationUnitType.getFoodUsed());
 				}
 			}
-			for (final War3ID unitType : ability.getResearchesAvailable()) {
-				final CPlayer player = this.game.getPlayer(this.unit.getPlayerIndex());
-				final IconUI unitUI = this.abilityDataUI.getUpgradeUI(unitType, player.getTechtreeUnlocked(unitType));
-				if (unitUI != null) {
-					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false);
+			if(ENABLE_PLACEHOLDERS) {
+				for (final War3ID unitType : ability.getResearchesAvailable()) {
+					final CPlayer player = this.game.getPlayer(this.unit.getPlayerIndex());
+					final IconUI unitUI = this.abilityDataUI.getUpgradeUI(unitType, player.getTechtreeUnlocked(unitType));
+					if (unitUI != null) {
+						addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false);
+					}
 				}
 			}
 			if (this.unit.getBuildQueueTypes()[0] != null) {

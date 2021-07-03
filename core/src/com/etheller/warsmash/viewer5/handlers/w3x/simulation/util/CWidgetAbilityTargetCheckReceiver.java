@@ -7,6 +7,11 @@ public class CWidgetAbilityTargetCheckReceiver implements AbilityTargetCheckRece
 
 	private CWidget target;
 
+	public CWidgetAbilityTargetCheckReceiver reset() {
+		this.target = null;
+		return this;
+	}
+
 	@Override
 	public void targetOk(final CWidget target) {
 		this.target = target;

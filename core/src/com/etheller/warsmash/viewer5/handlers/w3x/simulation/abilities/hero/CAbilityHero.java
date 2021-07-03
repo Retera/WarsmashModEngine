@@ -28,6 +28,7 @@ public class CAbilityHero extends AbstractCAbility {
 	private HeroStatValue agility;
 	private HeroStatValue intelligence;
 	private String properName;
+	private boolean awaitingRevive;
 
 	public CAbilityHero(final int handleId, final List<War3ID> skillsAvailable) {
 		super(handleId);
@@ -168,6 +169,14 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.properName;
 	}
 
+	public void setAwaitingRevive(boolean awaitingRevive) {
+		this.awaitingRevive = awaitingRevive;
+	}
+
+	public boolean isAwaitingRevive() {
+		return awaitingRevive;
+	}
+
 	public void addXp(final CSimulation simulation, final CUnit unit, final int xp) {
 		this.xp += xp;
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
@@ -232,7 +241,7 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.setAgilityDefenseBonus(agilityDefenseBonus);
 	}
 
-	public static final class HeroStatValue {
+    public static final class HeroStatValue {
 		private final float perLevelFactor;
 		private int base;
 		private int bonus;

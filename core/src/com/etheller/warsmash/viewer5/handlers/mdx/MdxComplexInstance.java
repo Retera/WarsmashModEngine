@@ -293,6 +293,12 @@ public class MdxComplexInstance extends ModelInstance {
 		final MdxModel model = (MdxModel) this.model;
 		final List<GenericObject> sortedGenericObjects = model.sortedGenericObjects;
 		final Scene scene = this.scene;
+		if(scene == null) {
+			// too bad for this instance, this is not safe to update on null scene, got NPE from this during testing,
+			// so we are going to skip this cycle entirely!
+			// (Retera)
+			return;
+		}
 
 		// Update the nodes
 		for (int i = 0, l = sortedNodes.length; i < l; i++) {

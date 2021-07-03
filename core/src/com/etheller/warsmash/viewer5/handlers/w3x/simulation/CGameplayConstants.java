@@ -29,7 +29,35 @@ public class CGameplayConstants {
 
 	private final float defenseArmor;
 
+	private final int heroMaxReviveCostGold;
+	private final int heroMaxReviveCostLumber;
+	private final int heroMaxReviveTime;
+
+	private final int heroMaxAwakenCostGold;
+	private final int heroMaxAwakenCostLumber;
+
+	private final float heroReviveManaStart;
+	private final float heroReviveManaFactor;
+	private final float heroReviveLifeFactor;
+	private final float heroAwakenManaStart;
+	private final float heroAwakenManaFactor;
+	private final float heroAwakenLifeFactor;
+
 	private final int heroExpRange;
+
+	private final float reviveBaseFactor;
+	private final float reviveLevelFactor;
+	private final float reviveBaseLumberFactor;
+	private final float reviveLumberLevelFactor;
+	private final float reviveMaxFactor;
+	private final float reviveTimeFactor;
+	private final float reviveMaxTimeFactor;
+
+	private final float awakenBaseFactor;
+	private final float awakenLevelFactor;
+	private final float awakenBaseLumberFactor;
+	private final float awakenLumberLevelFactor;
+	private final float awakenMaxFactor;
 
 	private final int maxHeroLevel;
 	private final int maxUnitLevel;
@@ -123,7 +151,36 @@ public class CGameplayConstants {
 		this.maxLevelHeroesDrainExp = miscData.getFieldValue("MaxLevelHeroesDrainExp") != 0;
 		this.buildingKillsGiveExp = miscData.getFieldValue("BuildingKillsGiveExp") != 0;
 
+		this.heroMaxReviveCostGold = miscData.getFieldValue("HeroMaxReviveCostGold");
+		this.heroMaxReviveCostLumber = miscData.getFieldValue("HeroMaxReviveCostLumber");
+		this.heroMaxReviveTime = miscData.getFieldValue("HeroMaxReviveTime");
+
+		this.heroMaxAwakenCostGold = miscData.getFieldValue("HeroMaxAwakenCostGold");
+		this.heroMaxAwakenCostLumber = miscData.getFieldValue("HeroMaxAwakenCostLumber");
+
+		this.heroReviveManaStart = miscData.getFieldFloatValue("HeroReviveManaStart");
+		this.heroReviveManaFactor = miscData.getFieldFloatValue("HeroReviveManaFactor");
+		this.heroReviveLifeFactor = miscData.getFieldFloatValue("HeroReviveLifeFactor");
+		this.heroAwakenManaStart = miscData.getFieldFloatValue("HeroAwakenManaStart");
+		this.heroAwakenManaFactor = miscData.getFieldFloatValue("HeroAwakenManaFactor");
+		this.heroAwakenLifeFactor = miscData.getFieldFloatValue("HeroAwakenLifeFactor");
+
 		this.heroExpRange = miscData.getFieldValue("HeroExpRange");
+
+		this.reviveBaseFactor = miscData.getFieldFloatValue("ReviveBaseFactor");
+		this.reviveLevelFactor = miscData.getFieldFloatValue("ReviveLevelFactor");
+		this.reviveBaseLumberFactor = miscData.getFieldFloatValue("ReviveBaseLumberFactor");
+		this.reviveLumberLevelFactor = miscData.getFieldFloatValue("ReviveLumberLevelFactor");
+		this.reviveMaxFactor = miscData.getFieldFloatValue("ReviveMaxFactor");
+		this.reviveTimeFactor = miscData.getFieldFloatValue("ReviveTimeFactor");
+		this.reviveMaxTimeFactor = miscData.getFieldFloatValue("ReviveMaxTimeFactor");
+
+		this.awakenBaseFactor = miscData.getFieldFloatValue("AwakenBaseFactor");
+		this.awakenLevelFactor = miscData.getFieldFloatValue("AwakenLevelFactor");
+		this.awakenBaseLumberFactor = miscData.getFieldFloatValue("AwakenBaseLumberFactor");
+		this.awakenLumberLevelFactor = miscData.getFieldFloatValue("AwakenLumberLevelFactor");
+		this.awakenMaxFactor = miscData.getFieldFloatValue("AwakenMaxFactor");
+
 
 		this.maxHeroLevel = miscData.getFieldValue("MaxHeroLevel");
 		this.maxUnitLevel = miscData.getFieldValue("MaxUnitLevel");
@@ -362,6 +419,33 @@ public class CGameplayConstants {
 
 	public float getSpellCastRangeBuffer() {
 		return this.spellCastRangeBuffer;
+	}
+
+	public int getHeroReviveGoldCost(int originalCost, int level) {
+		int goldRevivalCost = (int)(originalCost * (reviveBaseFactor + (reviveLevelFactor * (level-1))));
+		return Math.min(goldRevivalCost, (int)(originalCost * reviveMaxFactor));
+	}
+
+	public int getHeroReviveLumberCost(int originalCost, int level) {
+		int lumberRevivalCost = (int)(originalCost * (reviveBaseLumberFactor + (reviveLumberLevelFactor * (level-1))));
+		return Math.min(lumberRevivalCost, (int)(originalCost * reviveMaxFactor));
+	}
+
+	public int getHeroReviveTime(int originalTime, int level) {
+		int revivalTime = (int)(originalTime * level * reviveTimeFactor);
+		return Math.min(revivalTime, (int)(originalTime * reviveMaxTimeFactor));
+	}
+
+	public float getHeroReviveLifeFactor() {
+		return heroReviveLifeFactor;
+	}
+
+	public float getHeroReviveManaFactor() {
+		return heroReviveManaFactor;
+	}
+
+	public float getHeroReviveManaStart() {
+		return heroReviveManaStart;
 	}
 
 	private static int getTableValue(final int[] table, int level) {

@@ -56,6 +56,7 @@ public interface RenderWidget {
 		private float currentSpeedRatio;
 		private boolean currentlyAllowingRarityVariations;
 		private final Queue<QueuedAnimation> animationQueue = new LinkedList<>();
+		private int lastWalkFrame = -1;
 
 		public UnitAnimationListenerImpl(final MdxComplexInstance instance) {
 			this.instance = instance;
@@ -98,8 +99,14 @@ public interface RenderWidget {
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);
 				this.instance.setAnimationSpeed(speedRatio);
+				if(animationName != PrimaryTag.WALK && currentAnimation == PrimaryTag.WALK) {
+					lastWalkFrame = instance.frame;
+				}
 				if (SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
 						allowRarityVariations) != null) {
+					if(lastWalkFrame != -1 && animationName == PrimaryTag.WALK && currentAnimation != PrimaryTag.WALK) {
+						instance.setFrame(lastWalkFrame);
+					}
 					this.currentAnimation = animationName;
 					this.currentAnimationSecondaryTags = secondaryAnimationTags;
 					this.currentlyAllowingRarityVariations = allowRarityVariations;
@@ -116,9 +123,15 @@ public interface RenderWidget {
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);
+				if(animationName != PrimaryTag.WALK && currentAnimation == PrimaryTag.WALK) {
+					lastWalkFrame = instance.frame;
+				}
 				final Sequence sequence = SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
 						allowRarityVariations);
 				if (sequence != null) {
+					if(lastWalkFrame != -1 && animationName == PrimaryTag.WALK && currentAnimation != PrimaryTag.WALK) {
+						instance.setFrame(lastWalkFrame);
+					}
 					this.currentAnimation = animationName;
 					this.currentAnimationSecondaryTags = secondaryAnimationTags;
 					this.currentlyAllowingRarityVariations = allowRarityVariations;

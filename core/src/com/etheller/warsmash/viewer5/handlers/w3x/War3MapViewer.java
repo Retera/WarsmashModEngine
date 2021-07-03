@@ -127,6 +127,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public static int DEBUG_DEPTH = 9999;
 
 	private static final War3ID ABILITY_HERO_RAWCODE = War3ID.fromString("AHer");
+	private static final War3ID ABILITY_REVIVE_RAWCODE = War3ID.fromString("Arev");
 	private static final Color PLACEHOLDER_LUMBER_COLOR = new Color(0.0f, 200f / 255f, 80f / 255f, 1.0f);
 	private static final Color PLACEHOLDER_GOLD_COLOR = new Color(1.0f, 220f / 255f, 0f, 1.0f);
 	private static final War3ID UNIT_FILE = War3ID.fromString("umdl");
@@ -718,34 +719,35 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final AbilityUI heroUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_HERO_RAWCODE);
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
 						final String heroLevelUpArt = heroUI.getCasterArt(0);
-						final MdxModel heroLevelUpModel = loadModel(heroLevelUpArt);
-						if (heroLevelUpModel != null) {
-							final MdxComplexInstance modelInstance = (MdxComplexInstance) heroLevelUpModel
-									.addInstance();
-							modelInstance.setTeamColor(source.getPlayerIndex());
+						spawnFxOnOrigin(renderUnit, heroLevelUpArt);
+					}
 
-							final MdxModel model = (MdxModel) renderUnit.instance.model;
-							int index = -1;
-							for (int i = 0; i < model.attachments.size(); i++) {
-								final Attachment attachment = model.attachments.get(i);
-								if (attachment.getName().startsWith("origin ref")) {
-									index = i;
-									break;
-								}
-							}
-							if (index != -1) {
-								final MdxNode attachment = renderUnit.instance.getAttachment(index);
-								modelInstance.setParent(attachment);
-							}
-							else {
-								modelInstance.setLocation(renderUnit.location);
-							}
+					@Override
+					public void heroRevived(CUnit source) {
+						final AbilityUI reviveUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_REVIVE_RAWCODE);
+						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
+						CPlayer player = simulation.getPlayer(source.getPlayerIndex());
+						final String heroReviveArt = reviveUI.getTargetArt(player.getRace().ordinal());
+						spawnFxOnOrigin(renderUnit, heroReviveArt);
+						MutableGameObject row = allObjectData.getUnits().get(source.getTypeId());
 
-							modelInstance.setScene(War3MapViewer.this.worldScene);
-							SequenceUtils.randomBirthSequence(modelInstance);
-							War3MapViewer.this.projectiles
-									.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
-											(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
+						// Recreate unit shadow.... is needed here
+
+						final String unitShadow = row.getFieldAsString(UNIT_SHADOW, 0);
+						float unitX = source.getX();
+						float unitY = source.getY();
+						if ((unitShadow != null) && !"_".equals(unitShadow)) {
+							final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
+							final float shadowX = row.getFieldAsFloat(UNIT_SHADOW_X, 0);
+							final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
+							final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
+							final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
+							if (mapMpq.has(texture)) {
+								final float x = unitX - shadowX;
+								final float y = unitY - shadowY;
+								renderUnit.shadow = terrain.addUnitShadowSplat(texture, x, y,
+										x + shadowWidth, y + shadowHeight, 3, 0.5f);
+							}
 						}
 					}
 
@@ -851,6 +853,37 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.terrain.createWaves();
 
 		loadLightsAndShading(tileset);
+	}
+
+	public void spawnFxOnOrigin(RenderUnit renderUnit, String heroLevelUpArt) {
+		final MdxModel heroLevelUpModel = loadModel(heroLevelUpArt);
+		if (heroLevelUpModel != null) {
+			final MdxComplexInstance modelInstance = (MdxComplexInstance) heroLevelUpModel
+					.addInstance();
+			modelInstance.setTeamColor(renderUnit.playerIndex);
+
+			final MdxModel model = (MdxModel) renderUnit.instance.model;
+			int index = -1;
+			for (int i = 0; i < model.attachments.size(); i++) {
+				final Attachment attachment = model.attachments.get(i);
+				if (attachment.getName().startsWith("origin ref")) {
+					index = i;
+					break;
+				}
+			}
+			if (index != -1) {
+				final MdxNode attachment = renderUnit.instance.getAttachment(index);
+				modelInstance.setParent(attachment);
+			} else {
+				modelInstance.setLocation(renderUnit.location);
+			}
+
+			modelInstance.setScene(War3MapViewer.this.worldScene);
+			SequenceUtils.randomBirthSequence(modelInstance);
+			War3MapViewer.this.projectiles
+					.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
+							(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
+		}
 	}
 
 	protected BufferedImage getDestructablePathingPixelMap(final MutableGameObject row) {

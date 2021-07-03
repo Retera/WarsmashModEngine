@@ -59,4 +59,6 @@ public interface SimulationRenderController {
 	void spawnAbilitySoundEffect(CUnit caster, War3ID alias);
 
 	void unitPreferredSelectionReplacement(CUnit unit, CUnit newUnit);
+
+    void heroRevived(CUnit trainedUnit);
 }

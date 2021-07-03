@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.G
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 
 public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisitor<Void> {
 	public static final AbilityDisableWhileUnderConstructionVisitor INSTANCE = new AbilityDisableWhileUnderConstructionVisitor();
@@ -100,6 +101,13 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 
 	@Override
 	public Void accept(final CAbilityQueue ability) {
+		ability.setDisabled(true);
+		ability.setIconShowing(false);
+		return null;
+	}
+
+	@Override
+	public Void accept(CAbilityReviveHero ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
 		return null;

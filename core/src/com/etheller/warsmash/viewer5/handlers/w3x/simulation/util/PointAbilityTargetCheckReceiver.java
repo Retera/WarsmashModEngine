@@ -7,6 +7,11 @@ public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiv
 
 	private AbilityPointTarget target;
 
+	public PointAbilityTargetCheckReceiver reset() {
+		this.target = null;
+		return this;
+	}
+
 	@Override
 	public void targetOk(final AbilityPointTarget target) {
 		this.target = target;

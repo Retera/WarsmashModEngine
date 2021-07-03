@@ -43,9 +43,9 @@ public class DesktopLauncher {
 		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
 		// config.samples = 16;
-		config.vSyncEnabled = false;
-		config.foregroundFPS = 0;
-		config.backgroundFPS = 0;
+//		config.vSyncEnabled = false;
+//		config.foregroundFPS = 0;
+//		config.backgroundFPS = 0;
 		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
 		config.width = desktopDisplayMode.width;
 		config.height = desktopDisplayMode.height;
@@ -62,6 +62,10 @@ public class DesktopLauncher {
 			else if ((arg.length > (argIndex + 1)) && "-client".equals(arg[argIndex])) {
 				argIndex++;
 				MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR = arg[argIndex];
+			}
+			else if ((arg.length > (argIndex + 1)) && "-lp".equals(arg[argIndex])) {
+				argIndex++;
+				MultiplayerHack.LP_VAL = Integer.parseInt(arg[argIndex]);
 			}
 		}
 		loadExtensions();

@@ -764,7 +764,7 @@ public class MenuUI {
 			return;
 		}
 		else if (this.loadingMap != null) {
-			final int localPlayerIndex = 0;
+			final int localPlayerIndex = MultiplayerHack.LP_VAL;
 			try {
 				this.loadingMap.viewer.loadMap(this.loadingMap.map, this.loadingMap.mapInfo, localPlayerIndex);
 			}

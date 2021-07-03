@@ -139,6 +139,13 @@ public class CPlayer extends CBasePlayer {
 		this.stateNotifier.goldChanged();
 	}
 
+	public void refund(int gold, int lumber) {
+		this.gold += gold;
+		this.lumber += lumber;
+		this.stateNotifier.lumberChanged();
+		this.stateNotifier.goldChanged();
+	}
+
 	public void setUnitFoodUsed(final CUnit unit, final int foodUsed) {
 		this.foodUsed += unit.setFoodUsed(foodUsed);
 		this.stateNotifier.foodChanged();
@@ -148,4 +155,8 @@ public class CPlayer extends CBasePlayer {
 		this.foodCap += unit.setFoodMade(foodMade);
 		this.stateNotifier.foodChanged();
 	}
+
+    public void onHeroDeath() {
+		stateNotifier.heroDeath();
+    }
 }

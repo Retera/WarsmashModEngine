@@ -147,9 +147,9 @@ public class RenderUnit implements RenderWidget {
 
 	public void populateCommandCard(final CSimulation game, final GameUI gameUI,
 			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
-			final int subMenuOrderId) {
+			final int subMenuOrderId, boolean multiSelect) {
 		final CommandCardPopulatingAbilityVisitor commandCardPopulatingVisitor = CommandCardPopulatingAbilityVisitor.INSTANCE
-				.reset(game, gameUI, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId);
+				.reset(game, gameUI, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId, multiSelect);
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
 			ability.visit(commandCardPopulatingVisitor);
 		}
@@ -271,8 +271,13 @@ public class RenderUnit implements RenderWidget {
 			removeSplats(map);
 		}
 		if (boneCorpse && !this.boneCorpse) {
-			this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.BONE,
-					this.simulationUnit.getEndingDecayTime(map.simulation), true);
+			if(simulationUnit.getUnitType().isHero()) {
+				this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DISSIPATE, SequenceUtils.EMPTY,
+						this.simulationUnit.getEndingDecayTime(map.simulation), true);
+			} else {
+				this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.BONE,
+						this.simulationUnit.getEndingDecayTime(map.simulation), true);
+			}
 		}
 		else if (corpse && !this.corpse) {
 			this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.FLESH,

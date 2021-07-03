@@ -45,6 +45,8 @@ public class AbilityDataUI {
 	private static final War3ID UNIT_ICON_NORMAL_Y = War3ID.fromString("ubpy");
 	private static final War3ID UNIT_ICON_NORMAL = War3ID.fromString("uico");
 	private static final War3ID UNIT_TIP = War3ID.fromString("utip");
+	private static final War3ID UNIT_REVIVE_TIP = War3ID.fromString("utpr");
+	private static final War3ID UNIT_AWAKEN_TIP = War3ID.fromString("uawt");
 	private static final War3ID UNIT_UBER_TIP = War3ID.fromString("utub");
 
 	private static final War3ID ITEM_ICON_NORMAL_X = War3ID.fromString("ubpx");
@@ -62,7 +64,7 @@ public class AbilityDataUI {
 	private static final War3ID UPGRADE_UBER_TIP = War3ID.fromString("gub1");
 
 	private final Map<War3ID, AbilityUI> rawcodeToUI = new HashMap<>();
-	private final Map<War3ID, IconUI> rawcodeToUnitUI = new HashMap<>();
+	private final Map<War3ID, UnitIconUI> rawcodeToUnitUI = new HashMap<>();
 	private final Map<War3ID, ItemUI> rawcodeToItemUI = new HashMap<>();
 	private final Map<War3ID, List<IconUI>> rawcodeToUpgradeUI = new HashMap<>();
 	private final IconUI moveUI;
@@ -138,11 +140,13 @@ public class AbilityDataUI {
 			final int iconNormalX = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_X, 0);
 			final int iconNormalY = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_Y, 0);
 			final String iconTip = abilityTypeData.getFieldAsString(UNIT_TIP, 0);
+			final String reviveTip = abilityTypeData.getFieldAsString(UNIT_REVIVE_TIP, 0);
+			final String awakenTip = abilityTypeData.getFieldAsString(UNIT_AWAKEN_TIP, 0);
 			final String iconUberTip = abilityTypeData.getFieldAsString(UNIT_UBER_TIP, 0);
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
 			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
 			this.rawcodeToUnitUI.put(alias,
-					new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip, iconUberTip));
+					new UnitIconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip, iconUberTip, reviveTip, awakenTip));
 		}
 		for (final War3ID alias : itemData.keySet()) {
 			final MutableGameObject abilityTypeData = itemData.get(alias);
@@ -212,7 +216,7 @@ public class AbilityDataUI {
 		return this.rawcodeToUI.get(rawcode);
 	}
 
-	public IconUI getUnitUI(final War3ID rawcode) {
+	public UnitIconUI getUnitUI(final War3ID rawcode) {
 		return this.rawcodeToUnitUI.get(rawcode);
 	}
 

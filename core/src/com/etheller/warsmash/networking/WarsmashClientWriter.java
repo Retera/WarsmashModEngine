@@ -66,7 +66,7 @@ public class WarsmashClientWriter {
 
 	public void unitCancelTrainingItem(final int unitHandleId, final int cancelIndex) {
 		this.sendBuffer.clear();
-		this.sendBuffer.putInt(4 + 4 + 4 + 4 + 1);
+		this.sendBuffer.putInt(4 + 4 + 4);
 		this.sendBuffer.putInt(ClientToServerProtocol.UNIT_CANCEL_TRAINING);
 		this.sendBuffer.putInt(unitHandleId);
 		this.sendBuffer.putInt(cancelIndex);

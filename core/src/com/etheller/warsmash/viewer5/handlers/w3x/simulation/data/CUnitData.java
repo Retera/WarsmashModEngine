@@ -33,6 +33,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -143,6 +144,7 @@ public class CUnitData {
 	private static final War3ID STRUCTURES_BUILT = War3ID.fromString("ubui");
 	private static final War3ID UNITS_TRAINED = War3ID.fromString("utra");
 	private static final War3ID RESEARCHES_AVAILABLE = War3ID.fromString("ures");
+	private static final War3ID REVIVES_HEROES = War3ID.fromString("urev");
 	private static final War3ID UNIT_RACE = War3ID.fromString("urac");
 
 	private static final War3ID REQUIRES = War3ID.fromString("ureq");
@@ -243,7 +245,10 @@ public class CUnitData {
 		if (!unitsTrained.isEmpty() || !researchesAvailable.isEmpty()) {
 			unit.add(simulation, new CAbilityQueue(handleIdAllocator.createId(), unitsTrained, researchesAvailable));
 		}
-		if (!unitsTrained.isEmpty()) {
+		if(unitTypeInstance.isRevivesHeroes()) {
+			unit.add(simulation, new CAbilityReviveHero(handleIdAllocator.createId()));
+		}
+		if (!unitsTrained.isEmpty() || unitTypeInstance.isRevivesHeroes()) {
 			unit.add(simulation, new CAbilityRally(handleIdAllocator.createId()));
 		}
 		if (unitTypeInstance.isHero()) {
@@ -450,6 +455,8 @@ public class CUnitData {
 			final int foodUsed = unitType.getFieldAsInteger(FOOD_USED, 0);
 			final int foodMade = unitType.getFieldAsInteger(FOOD_MADE, 0);
 
+			boolean revivesHeroes = unitType.getFieldAsBoolean(REVIVES_HEROES, 0);
+
 			final String unitsTrainedString = unitType.getFieldAsString(UNITS_TRAINED, 0);
 			final String[] unitsTrainedStringItems = unitsTrainedString.trim().split(",");
 			final List<War3ID> unitsTrained = new ArrayList<>();
@@ -538,7 +545,7 @@ public class CUnitData {
 					goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes,
 					propWindow, turnRate, requirements, unitLevel, hero, strength, strPlus, agility, agiPlus,
 					intelligence, intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount,
-					canFlee, priority);
+					canFlee, priority, revivesHeroes);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

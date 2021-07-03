@@ -11,7 +11,9 @@ public interface CPlayerStateListener {
 
 	void upkeepChanged();
 
-	public static final class CPlayerStateNotifier extends SubscriberSetNotifier<CPlayerStateListener>
+    void heroDeath();
+
+    public static final class CPlayerStateNotifier extends SubscriberSetNotifier<CPlayerStateListener>
 			implements CPlayerStateListener {
 		@Override
 		public void goldChanged() {
@@ -38,6 +40,13 @@ public interface CPlayerStateListener {
 		public void upkeepChanged() {
 			for (final CPlayerStateListener listener : set) {
 				listener.upkeepChanged();
+			}
+		}
+
+		@Override
+		public void heroDeath() {
+			for (final CPlayerStateListener listener : set) {
+				listener.heroDeath();
 			}
 		}
 	}

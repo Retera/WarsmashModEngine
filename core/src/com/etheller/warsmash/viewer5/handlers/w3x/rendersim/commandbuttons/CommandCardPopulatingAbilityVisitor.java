@@ -5,6 +5,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.UnitIconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
@@ -27,6 +28,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.G
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -42,20 +44,24 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	private CommandButtonListener commandButtonListener;
 	private AbilityDataUI abilityDataUI;
 	private int menuBaseOrderId;
+	private boolean multiSelect;
 	private boolean hasStop;
 	private final CommandCardActivationReceiverPreviewCallback previewCallback = new CommandCardActivationReceiverPreviewCallback();
 	private GameUI gameUI;
+	private boolean hasCancel ;
 
 	public CommandCardPopulatingAbilityVisitor reset(final CSimulation game, final GameUI gameUI, final CUnit unit,
 			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
-			final int menuBaseOrderId) {
+			final int menuBaseOrderId, boolean multiSelect) {
 		this.game = game;
 		this.gameUI = gameUI;
 		this.unit = unit;
 		this.commandButtonListener = commandButtonListener;
 		this.abilityDataUI = abilityDataUI;
 		this.menuBaseOrderId = menuBaseOrderId;
+		this.multiSelect = multiSelect;
 		this.hasStop = false;
+		hasCancel = false;
 		return this;
 	}
 
@@ -207,6 +213,9 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			}
 		}
 		else {
+			if(multiSelect) {
+				return;
+			}
 			addCommandButton(ability, buildUI, ability.getHandleId(), ability.getBaseOrderId(), 0, false, true);
 		}
 	}
@@ -217,8 +226,14 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	}
 
 	private void addCommandButton(final CAbility ability, final IconUI iconUI, final int handleId, final int orderId,
-			final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton, int goldCost,
-			int lumberCost, int foodCost) {
+								  final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton, int goldCost,
+								  int lumberCost, int foodCost) {
+		addCommandButton(ability, iconUI, iconUI.getToolTip(), iconUI.getButtonPositionX(), iconUI.getButtonPositionY(), handleId, orderId, autoCastOrderId, autoCastActive, menuButton, goldCost, lumberCost, foodCost);
+	}
+
+	private void addCommandButton(final CAbility ability, final IconUI iconUI, String toolTip, int buttonPosX, int buttonPosY, final int handleId, final int orderId,
+		final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton, int goldCost,
+		int lumberCost, int foodCost) {
 		ability.checkCanUse(this.game, this.unit, orderId, this.previewCallback.reset());
 		final boolean active = ((this.unit.getCurrentBehavior() != null)
 				&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId()));
@@ -235,7 +250,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		}
 		this.commandButtonListener.commandButton(iconUI.getButtonPositionX(), iconUI.getButtonPositionY(),
 				disabled ? iconUI.getIconDisabled() : iconUI.getIcon(), handleId, disabled ? 0 : orderId,
-				autoCastOrderId, active, autoCastActive, menuButton, iconUI.getToolTip(), uberTip, goldCost, lumberCost,
+				autoCastOrderId, active, autoCastActive, menuButton, toolTip, uberTip, goldCost, lumberCost,
 				foodCost);
 	}
 
@@ -244,6 +259,36 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		if (this.menuBaseOrderId == 0) {
 			addCommandButton(ability, this.abilityDataUI.getCancelBuildUI(), ability.getHandleId(), OrderIds.cancel, 0,
 					false, false);
+		}
+		return null;
+	}
+
+	@Override
+	public Void accept(CAbilityReviveHero ability) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
+			int heroIndex = 0;
+			for(CUnit playerHero: game.getPlayerHeroes(unit.getPlayerIndex())) {
+				CAbilityHero heroData = playerHero.getHeroData();
+				if(playerHero.isDead() && heroData != null && heroData.isAwaitingRevive()) {
+
+					UnitIconUI unitUI = this.abilityDataUI.getUnitUI(playerHero.getTypeId());
+					if (unitUI != null) {
+						final CUnitType simulationUnitType = playerHero.getUnitType();
+						int goldCost = game.getGameplayConstants().getHeroReviveGoldCost(simulationUnitType.getGoldCost(), heroData.getHeroLevel());
+						int lumberCost = game.getGameplayConstants().getHeroReviveLumberCost(simulationUnitType.getLumberCost(), heroData.getHeroLevel());
+						addCommandButton(ability, unitUI, unitUI.getReviveTip() + " - " + heroData.getProperName(), heroIndex++, 0, ability.getHandleId(), playerHero.getHandleId(), 0, false, false,
+								goldCost, lumberCost,
+								simulationUnitType.getFoodUsed());
+					}
+				}
+			}
+			if (this.unit.getBuildQueueTypes()[0] != null) {
+				if(!hasCancel) {
+					hasCancel = true;
+					addCommandButton(ability, this.abilityDataUI.getCancelTrainUI(), ability.getHandleId(), OrderIds.cancel,
+							0, false, false);
+				}
+			}
 		}
 		return null;
 	}
@@ -270,8 +315,11 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				}
 			}
 			if (this.unit.getBuildQueueTypes()[0] != null) {
-				addCommandButton(ability, this.abilityDataUI.getCancelTrainUI(), ability.getHandleId(), OrderIds.cancel,
-						0, false, false);
+				if(!hasCancel) {
+					hasCancel = true;
+					addCommandButton(ability, this.abilityDataUI.getCancelTrainUI(), ability.getHandleId(), OrderIds.cancel,
+							0, false, false);
+				}
 			}
 		}
 		return null;

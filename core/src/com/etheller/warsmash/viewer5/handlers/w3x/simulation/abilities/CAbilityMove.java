@@ -33,6 +33,7 @@ public class CAbilityMove extends AbstractCAbility {
 		switch (orderId) {
 		case OrderIds.smart:
 		case OrderIds.patrol:
+		case OrderIds.move:
 			if ((target instanceof CUnit) && (target != unit)) {
 				receiver.targetOk(target);
 			}
@@ -98,7 +99,9 @@ public class CAbilityMove extends AbstractCAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return caster.getFollowBehavior().reset(OrderIds.move, (CUnit) target);
+		CBehavior followBehavior = caster.getFollowBehavior().reset(orderId == OrderIds.smart ? OrderIds.move : orderId, (CUnit) target);
+		caster.setDefaultBehavior(followBehavior);
+		return followBehavior;
 	}
 
 	@Override

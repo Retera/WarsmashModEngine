@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 public class CBehaviorFollow extends CAbstractRangedBehavior {
 
 	private int higlightOrderId;
+	private boolean justAutoAttacked = false;
 
 	public CBehaviorFollow(final CUnit unit) {
 		super(unit);
@@ -26,27 +27,37 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
+		if(justAutoAttacked = this.unit.autoAcquireAttackTargets(simulation, false)) {
+			return true;
+		}
 		return this.unit.canReach(this.target, this.unit.getAcquisitionRange());
 	}
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
+
 		this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, false);
 		return this;
 	}
 
 	@Override
 	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
+		unit.setDefaultBehavior(unit.getStopBehavior());
 		return this.unit.pollNextOrderBehavior(simulation);
 	}
 
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
+		if (this.justAutoAttacked) {
+			this.justAutoAttacked = false;
+			this.unit.getMoveBehavior().reset(target, this, false);
+		}
 		return this.target.visit(AbilityTargetStillAliveVisitor.INSTANCE);
 	}
 
 	@Override
 	protected void resetBeforeMoving(final CSimulation simulation) {
+
 	}
 
 	@Override

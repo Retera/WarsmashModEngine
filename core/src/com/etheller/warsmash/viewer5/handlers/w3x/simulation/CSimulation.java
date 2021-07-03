@@ -114,7 +114,22 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CPlayer newPlayer = new CPlayer(CRace.UNDEAD, new float[] { startLoc.getX(), startLoc.getY() },
+			CRace defaultRace;
+			switch(i) {
+				case 0:
+					defaultRace = CRace.NIGHTELF;
+					break;
+				case 1:
+					defaultRace = CRace.UNDEAD;
+					break;
+				case 2:
+					defaultRace = CRace.HUMAN;
+					break;
+				default:
+					defaultRace = CRace.OTHER;
+					break;
+			}
+			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
 			if(i < 3) {
 				for(int j = 0; j < 3; j++) {
@@ -189,6 +204,9 @@ public class CSimulation implements CPlayerAPI {
 		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
 		this.worldCollision.addUnit(unit);
+		if(unit.getHeroData() != null) {
+			heroCreateEvent(unit);
+		}
 		return unit;
 	}
 
@@ -389,6 +407,10 @@ public class CSimulation implements CPlayerAPI {
 	public void unitTrainedEvent(final CUnit trainingUnit, final CUnit trainedUnit) {
 		this.simulationRenderController.spawnUnitReadySound(trainedUnit);
 	}
+	public void heroReviveEvent(final CUnit trainingUnit, final CUnit trainedUnit) {
+		this.simulationRenderController.heroRevived(trainedUnit);
+		this.simulationRenderController.spawnUnitReadySound(trainedUnit);
+	}
 
 	public void unitRepositioned(final CUnit cUnit) {
 		this.simulationRenderController.unitRepositioned(cUnit);
@@ -469,6 +491,10 @@ public class CSimulation implements CPlayerAPI {
 				CSimulation.this.timeOfDayVariableEvents.remove(timeOfDayVariableEvent);
 			}
 		};
+	}
+
+	public void heroDeathEvent(CUnit cUnit) {
+		getPlayer(cUnit.getPlayerIndex()).onHeroDeath();
 	}
 
 	private static final class TimeOfDayVariableEvent extends VariableEvent {

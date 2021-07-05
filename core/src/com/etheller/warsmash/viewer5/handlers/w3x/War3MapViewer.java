@@ -770,6 +770,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
+					public void spawnSpellEffectOnUnit(CUnit unit, War3ID alias) {
+						AbilityUI abilityUI = abilityDataUI.getUI(alias);
+						spawnEffectOnUnit(unit, abilityUI.getTargetArt(0));
+					}
+
+					@Override
 					public void spawnUnitReadySound(final CUnit trainedUnit) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(trainedUnit);
 						renderPeer.soundset.ready.playUnitResponse(War3MapViewer.this.worldScene.audioContext,

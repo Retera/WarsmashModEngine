@@ -153,6 +153,7 @@ public class CSimulation implements CPlayerAPI {
 		}
 
 		this.commandErrorListener = commandErrorListener;
+		currentGameDayTimeElapsed = gameplayConstants.getGameDayLength()/2;
 
 	}
 
@@ -241,6 +242,10 @@ public class CSimulation implements CPlayerAPI {
 
 	protected void onAbilityAddedToUnit(final CUnit unit, final CAbility ability) {
 		this.handleIdToAbility.put(ability.getHandleId(), ability);
+	}
+
+	protected void onAbilityRemovedFromUnit(final CUnit unit, final CAbility ability) {
+		this.handleIdToAbility.remove(ability.getHandleId());
 	}
 
 	public CAttackProjectile createProjectile(final CUnit source, final float launchX, final float launchY,
@@ -472,6 +477,10 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnEffectOnUnit(unit, effectPath);
 	}
 
+	public void createSpellEffectOnUnit(CUnit unit, War3ID alias) {
+		simulationRenderController.spawnSpellEffectOnUnit(unit, alias);
+	}
+
 	public void unitSoundEffectEvent(final CUnit caster, final War3ID alias) {
 		this.simulationRenderController.spawnAbilitySoundEffect(caster, alias);
 	}
@@ -497,7 +506,12 @@ public class CSimulation implements CPlayerAPI {
 		getPlayer(cUnit.getPlayerIndex()).onHeroDeath();
 	}
 
-	private static final class TimeOfDayVariableEvent extends VariableEvent {
+    public void removeItem(CItem cItem) {
+		cItem.setHidden(true); // TODO fix
+		cItem.setLife(this, 0);
+    }
+
+    private static final class TimeOfDayVariableEvent extends VariableEvent {
 		private final GlobalScope globalScope;
 
 		public TimeOfDayVariableEvent(final Trigger trigger, final CLimitOp limitOp, final double doubleValue,

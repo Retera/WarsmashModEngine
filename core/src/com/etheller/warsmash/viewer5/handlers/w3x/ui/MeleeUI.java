@@ -91,19 +91,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.UnitIconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CGameplayConstants;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItemType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit.QueueItemType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGeneric;
@@ -2299,7 +2288,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						}
 						this.recycleStringBuilder.append(uberTip);
 						inventoryIcon.setCommandButtonData(iconUI.getIcon(), 0,
-								activelyUsed ? itemType.getCooldownGroup().getValue() : 0, index + 1, activelyUsed,
+								activelyUsed ? (OrderIds.itemuse00+index) : 0, index + 1, activelyUsed,
 								false, false, itemUI.getName(), this.recycleStringBuilder.toString(),
 								itemType.getGoldCost(), itemType.getLumberCost(), 0);
 					}
@@ -3155,9 +3144,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private class ItemCommandCardCommandListener implements CommandCardCommandListener {
 		@Override
 		public void onClick(final int abilityHandleId, final int orderId, final boolean rightClick) {
+			final RenderUnit selectedUnit2 = MeleeUI.this.selectedUnit;
+			final CUnit simulationUnit = selectedUnit2.getSimulationUnit();
 			if (rightClick) {
-				final RenderUnit selectedUnit2 = MeleeUI.this.selectedUnit;
-				final CUnit simulationUnit = selectedUnit2.getSimulationUnit();
 				final CAbilityInventory inventoryData = simulationUnit.getInventoryData();
 				final int slot = orderId - 1;
 				final CItem itemInSlot = inventoryData.getItemInSlot(slot);
@@ -3175,6 +3164,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						setDraggingItem(itemInSlot);
 						MeleeUI.this.activeCommand = inventoryData;
 						MeleeUI.this.activeCommandUnit = selectedUnit2;
+					}
+				}
+			} else {
+				CSimulation game = war3MapViewer.simulation;
+				BooleanAbilityActivationReceiver receiver = BooleanAbilityActivationReceiver.INSTANCE;
+				CAbilityInventory inventoryData = simulationUnit.getInventoryData();
+				inventoryData.checkCanUse(game, simulationUnit, orderId, receiver);
+				if(receiver.isOk()) {
+					BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver.getInstance();
+					targetReceiver.reset();
+					inventoryData.checkCanTargetNoTarget(game, simulationUnit, orderId, targetReceiver);
+					if(targetReceiver.isTargetable()) {
+						MeleeUI.this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(), inventoryData.getHandleId(), orderId, isShiftDown());
 					}
 				}
 			}

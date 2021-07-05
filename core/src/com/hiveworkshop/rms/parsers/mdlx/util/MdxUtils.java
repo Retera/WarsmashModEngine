@@ -13,7 +13,6 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
 
 public class MdxUtils {
 	public static MdlxModel loadMdlx(final InputStream inputStream) throws IOException {
-
 		return new MdlxModel(ByteBuffer.wrap(IOUtils.toByteArray(inputStream)));
 	}
 

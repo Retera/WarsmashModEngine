@@ -4,10 +4,9 @@ import static org.lwjgl.openal.AL10.AL_ORIENTATION;
 import static org.lwjgl.openal.AL10.AL_POSITION;
 import static org.lwjgl.openal.AL10.alListener;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.FloatBuffer;
+import java.util.Date;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -38,6 +37,17 @@ import com.etheller.warsmash.viewer5.gl.WireframeExtension;
 
 public class DesktopLauncher {
 	public static void main(final String[] arg) {
+		new File("Logs").mkdir();
+		try {
+			System.setOut(new PrintStream(new FileOutputStream(new File("Logs/"+System.currentTimeMillis()+".out.log"))));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		try {
+			System.setErr(new PrintStream(new FileOutputStream(new File("Logs/"+System.currentTimeMillis()+".err.log"))));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.useGL30 = true;
 		config.gles30ContextMajorVersion = 3;

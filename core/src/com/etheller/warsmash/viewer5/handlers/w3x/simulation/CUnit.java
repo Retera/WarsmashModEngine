@@ -187,6 +187,12 @@ public class CUnit extends CWidget {
 		ability.onAdd(simulation, this);
 	}
 
+	public void remove(CSimulation simulation, CAbility ability) {
+		this.abilities.remove(ability);
+		simulation.onAbilityRemovedFromUnit(this, ability);
+		ability.onRemove(simulation, this);
+	}
+
 	public War3ID getTypeId() {
 		return this.typeId;
 	}
@@ -1131,6 +1137,10 @@ public class CUnit extends CWidget {
 
 	public float getAcquisitionRange() {
 		return this.acquisitionRange;
+	}
+
+	public void heal(CSimulation game, int lifeToRegain) {
+		setLife(game, Math.min(getLife() + lifeToRegain, getMaximumLife()));
 	}
 
 	private static final class AutoAttackTargetFinderEnum implements CUnitEnumFunction {

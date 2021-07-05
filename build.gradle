@@ -50,8 +50,8 @@ project(":desktop") {
         compile "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
         compile "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
         compile "com.google.guava:guava:23.5-jre"
+        compile "org.apache.commons:commons-compress:1.20"
 		compile "net.nikr:dds:1.0.0"
-  		implementation 'com.github.inwc3:wc3libs:-SNAPSHOT'
 		compile files(fileTree(dir:'../jars', includes: ['*.jar']))
              
     }
@@ -68,8 +68,8 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         compile "com.google.guava:guava:23.5-jre"
+        compile "org.apache.commons:commons-compress:1.20"
 		compile "net.nikr:dds:1.0.0"
-  		implementation 'com.github.inwc3:wc3libs:-SNAPSHOT'
 		compile files(fileTree(dir:'../jars', includes: ['*.jar']))
         
     }

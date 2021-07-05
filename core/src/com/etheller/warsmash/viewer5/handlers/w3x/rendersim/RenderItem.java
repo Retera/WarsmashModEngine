@@ -137,7 +137,7 @@ public class RenderItem implements RenderWidget {
 		this.location[2] = this.simulationItem.getFlyHeight() + groundHeight;
 
 		this.instance.moveTo(this.location);
-		if (this.shadow != null) {
+		if (this.shadow != null && !hidden) {
 			this.shadow.move(dx, dy, map.terrain.centerOffset);
 			this.shadow.setHeightAbsolute(currentWalkableUnder != null, groundHeight + map.imageWalkableZOffset);
 		}

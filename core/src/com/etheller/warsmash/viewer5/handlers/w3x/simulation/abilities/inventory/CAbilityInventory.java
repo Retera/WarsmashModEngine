@@ -6,7 +6,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -16,12 +18,16 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	private final boolean canDropItems;
 	private final boolean canGetItems;
 	private final boolean canUseItems;
 	private final boolean dropItemsOnDeath;
 	private final CItem[] itemsHeld;
+	private final List<CAbility>[] itemsHeldAbilities;
 	private CBehaviorGetItem behaviorGetItem;
 	private CBehaviorDropItem behaviorDropItem;
 
@@ -34,6 +40,10 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 		this.canUseItems = canUseItems;
 		this.dropItemsOnDeath = dropItemsOnDeath;
 		this.itemsHeld = new CItem[itemCapacity];
+		this.itemsHeldAbilities = new List[itemCapacity];
+		for(int i = 0 ;i < itemsHeldAbilities.length; i++) {
+			itemsHeldAbilities[i] = new ArrayList<>();
+		}
 	}
 
 	@Override
@@ -59,12 +69,22 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			for (int i = 0; i < this.itemsHeld.length; i++) {
 				if (this.itemsHeld[i] == target) {
 					final CItem temp = this.itemsHeld[i];
+					List<CAbility> swapList = itemsHeldAbilities[i];
 					final int dragDropDestinationIndex = orderId - OrderIds.itemdrag00;
 					this.itemsHeld[i] = this.itemsHeld[dragDropDestinationIndex];
+					itemsHeldAbilities[i] = itemsHeldAbilities[dragDropDestinationIndex];
 					this.itemsHeld[dragDropDestinationIndex] = temp;
+					itemsHeldAbilities[dragDropDestinationIndex] = swapList;
 					return false;
 				}
 			}
+		} else if (orderId >= OrderIds.itemuse00 && orderId <= OrderIds.itemuse05) {
+			CAbility cAbility = itemsHeldAbilities[orderId - OrderIds.itemuse00].get(0);
+			int forwardedOrderId = orderId;
+			if(cAbility instanceof GenericSingleIconActiveAbility) {
+				forwardedOrderId = ((GenericSingleIconActiveAbility)cAbility).getBaseOrderId();
+			}
+			cAbility.checkBeforeQueue(game, caster, forwardedOrderId, target);
 		}
 		return super.checkBeforeQueue(game, caster, orderId, target);
 	}
@@ -73,6 +93,8 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 
 	}
+
+
 
 	public int getItemCapacity() {
 		return this.itemsHeld.length;
@@ -108,8 +130,14 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
-		// TODO Auto-generated method stub
-		return null;
+		int slot = orderId - OrderIds.itemuse00;
+		CBehavior behavior = itemsHeldAbilities[slot].get(0).beginNoTarget(game, caster, orderId);
+		CItem cItem = itemsHeld[slot];
+		if(cItem.getItemType().isPerishable()) {
+			dropItem(game, caster, slot, caster.getX(), caster.getY(), false);
+			game.removeItem(cItem);
+		}
+		return behavior;
 	}
 
 	@Override
@@ -169,13 +197,26 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
-		receiver.orderIdNotAccepted();
+		if(orderId >= OrderIds.itemuse00 && orderId <= OrderIds.itemuse05) {
+			receiver.targetOk(null);
+		} else {
+			receiver.orderIdNotAccepted();
+		}
 	}
 
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		receiver.useOk();
+		if(orderId >= OrderIds.itemuse00 && orderId <= OrderIds.itemuse05){
+			int slot = orderId - OrderIds.itemuse00;
+			if(itemsHeldAbilities[slot].size() < 1) {
+				receiver.notAnActiveAbility();
+			} else {
+				itemsHeldAbilities[slot].get(0).checkCanUse(game, unit, orderId, receiver);
+			}
+		} else {
+			receiver.useOk();
+		}
 	}
 
 	/**
@@ -200,6 +241,12 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					if (this.itemsHeld[i] == null) {
 						this.itemsHeld[i] = item;
 						item.setHidden(true);
+						for(War3ID abilityId: item.getItemType().getAbilityList()) {
+							CAbility abilityFromItem = simulation.getAbilityData().getAbilityType(abilityId).createAbility(simulation.getHandleIdAllocator().createId());
+							abilityFromItem.setIconShowing(false);
+							hero.add(simulation, abilityFromItem);
+							itemsHeldAbilities[i].add(abilityFromItem);
+						}
 						hero.onPickUpItem(simulation, item, true);
 						return i;
 					}
@@ -215,8 +262,11 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	public void dropItem(final CSimulation simulation, final CUnit hero, final int slotIndex, final float x,
 			final float y, final boolean playUserUISounds) {
 		final CItem droppedItem = this.itemsHeld[slotIndex];
-		hero.onDropItem(simulation, droppedItem, true);
+		hero.onDropItem(simulation, droppedItem, playUserUISounds);
 		this.itemsHeld[slotIndex] = null;
+		for(CAbility ability: itemsHeldAbilities[slotIndex]) {
+			hero.remove(simulation, ability);
+		}
 		droppedItem.setHidden(false);
 		droppedItem.setPointAndCheckUnstuck(x, y, simulation);
 	}
@@ -224,15 +274,20 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	public void dropItem(final CSimulation simulation, final CUnit hero, final CItem itemToDrop, final float x,
 			final float y, final boolean playUserUISounds) {
 		boolean foundItem = false;
+		int index = -1;
 		for (int i = 0; i < this.itemsHeld.length; i++) {
 			if (this.itemsHeld[i] == itemToDrop) {
 				this.itemsHeld[i] = null;
+				index = i;
 				foundItem = true;
 			}
 		}
 		if (foundItem) {
-			hero.onDropItem(simulation, itemToDrop, true);
+			hero.onDropItem(simulation, itemToDrop, playUserUISounds);
 			itemToDrop.setHidden(false);
+			for(CAbility ability: itemsHeldAbilities[index]) {
+				hero.remove(simulation, ability);
+			}
 			itemToDrop.setPointAndCheckUnstuck(x, y, simulation);
 		}
 	}

@@ -1986,6 +1986,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private void reloadSelectedUnitUI(final RenderUnit unit) {
+		if(unit == null) {
+			return;
+		}
 		final CUnit simulationUnit = unit.getSimulationUnit();
 		final float lifeRatioRemaining = simulationUnit.getLife() / simulationUnit.getMaxLife();
 		this.rootFrame.setText(this.unitLifeText, FastNumberFormat.formatWholeNumber(simulationUnit.getLife()) + " / "
@@ -2419,6 +2422,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void lifeChanged() {
+		if(selectedUnit == null) {
+			return;
+		}
 		if (this.selectedUnit.getSimulationUnit().isDead()) {
 			final RenderUnit preferredSelectionReplacement = this.selectedUnit.getPreferredSelectionReplacement();
 			final List<RenderWidget> newSelection;

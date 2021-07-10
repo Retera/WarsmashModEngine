@@ -105,7 +105,7 @@ public interface RenderWidget {
 				if (SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
 						allowRarityVariations) != null) {
 					if(lastWalkFrame != -1 && animationName == PrimaryTag.WALK && currentAnimation != PrimaryTag.WALK) {
-						instance.setFrame(lastWalkFrame);
+						instance.setFrame(instance.clampFrame(lastWalkFrame));
 					}
 					this.currentAnimation = animationName;
 					this.currentAnimationSecondaryTags = secondaryAnimationTags;
@@ -130,7 +130,7 @@ public interface RenderWidget {
 						allowRarityVariations);
 				if (sequence != null) {
 					if(lastWalkFrame != -1 && animationName == PrimaryTag.WALK && currentAnimation != PrimaryTag.WALK) {
-						instance.setFrame(lastWalkFrame);
+						instance.setFrame(instance.clampFrame(lastWalkFrame));
 					}
 					this.currentAnimation = animationName;
 					this.currentAnimationSecondaryTags = secondaryAnimationTags;

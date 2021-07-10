@@ -8,7 +8,7 @@ public class WarsmashConstants {
 	 */
 	public static int GAME_VERSION = 1;
 	public static final int REPLACEABLE_TEXTURE_LIMIT = 64;
-	public static final float SIMULATION_STEP_TIME = 1 / 20f;
+	public static final float SIMULATION_STEP_TIME = 1 /20f;
 	public static final int PORT_NUMBER = 6115;
 	public static final float BUILDING_CONSTRUCT_START_LIFE = 0.1f;
 	public static final int BUILD_QUEUE_SIZE = 7;
@@ -26,4 +26,5 @@ public class WarsmashConstants {
 	public static final String DEFAULT_STRING = "Default string";
 
 	public static final boolean CATCH_CURSOR = true;
+	public static final boolean VERBOSE_LOGGING = true;
 }

@@ -299,6 +299,7 @@ public abstract class Node extends GenericNode {
 			this.wasDirty = false;
 		}
 
+
 		this.updateObject(dt, scene);
 		this.updateChildren(dt, scene);
 	}

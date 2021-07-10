@@ -14,12 +14,13 @@ import com.etheller.warsmash.networking.udp.OrderedUdpServer;
 import com.etheller.warsmash.util.WarsmashConstants;
 
 public class WarsmashServer implements ClientToServerListener {
+	private static final int MAGIC_DELAY_OFFSET = 4;
 	private final OrderedUdpServer udpServer;
 	private final Map<SocketAddress, Integer> socketAddressToPlayerIndex = new HashMap<>();
-	private final Set<SocketAddress> clientsAwaitingTurnFinished = new HashSet<>();
+	private final Map<SocketAddress, Integer> clientToTurnFinished = new HashMap<>();
 	private final List<Runnable> turnActions = new ArrayList<>();
 	private final WarsmashServerWriter writer;
-	private int currentTurnTick = 0;
+	private int currentTurnTick = MAGIC_DELAY_OFFSET;
 	private boolean gameStarted = false;
 	private long lastServerHeartbeatTime = 0;
 
@@ -40,7 +41,7 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	private void startTurn() {
-		this.clientsAwaitingTurnFinished.addAll(this.socketAddressToPlayerIndex.keySet());
+		System.out.println("sending finishedTurn " + this.currentTurnTick);
 		WarsmashServer.this.writer.finishedTurn(this.currentTurnTick);
 		WarsmashServer.this.writer.send();
 		this.currentTurnTick++;
@@ -139,25 +140,29 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	@Override
-	public void finishedTurn(final SocketAddress sourceAddress, final int gameTurnTick) {
-//		System.out.println("finishedTurn(" + gameTurnTick + ") from " + sourceAddress);
+	public void finishedTurn(final SocketAddress sourceAddress, final int clientGameTurnTick) {
+		int gameTurnTick = clientGameTurnTick + MAGIC_DELAY_OFFSET;
+		if(WarsmashConstants.VERBOSE_LOGGING) {
+			System.out.println("finishedTurn(" + gameTurnTick + ") from " + sourceAddress);
+		}
 		if (!this.gameStarted) {
 			throw new IllegalStateException(
 					"Client should not send us finishedTurn() message when game has not started!");
 		}
-		if (gameTurnTick == this.currentTurnTick) {
-			this.clientsAwaitingTurnFinished.remove(sourceAddress);
-			if (this.clientsAwaitingTurnFinished.isEmpty()) {
-				for (final Runnable turnAction : this.turnActions) {
-					turnAction.run();
-				}
-				this.turnActions.clear();
-				startTurn();
+		clientToTurnFinished.put(sourceAddress, clientGameTurnTick);
+		boolean allDone = true;
+		for(SocketAddress clientAddress: socketAddressToPlayerIndex.keySet()) {
+			Integer turnFinishedValue = clientToTurnFinished.get(clientAddress);
+			if(turnFinishedValue == null || turnFinishedValue < clientGameTurnTick) {
+				allDone = false;
 			}
 		}
-		else {
-			System.err.println("received bad finishedTurn() with remote gameTurnTick=" + gameTurnTick
-					+ ", server local currenTurnTick=" + this.currentTurnTick);
+		if (allDone) {
+			for (final Runnable turnAction : this.turnActions) {
+				turnAction.run();
+			}
+			this.turnActions.clear();
+			startTurn();
 		}
 	}
 
@@ -167,7 +172,7 @@ public class WarsmashServer implements ClientToServerListener {
 		long currentTimeMillis = System.currentTimeMillis();
 		if(currentTimeMillis - lastServerHeartbeatTime > 3000) {
 			// 3 seconds of frame skipping, make sure we keep in contact with client
-
+			System.out.println("sending server heartbeat()");
 			WarsmashServer.this.writer.heartbeat();
 			WarsmashServer.this.writer.send();
 			lastServerHeartbeatTime = currentTimeMillis;

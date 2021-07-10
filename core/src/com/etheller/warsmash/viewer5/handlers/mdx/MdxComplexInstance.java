@@ -293,12 +293,6 @@ public class MdxComplexInstance extends ModelInstance {
 		final MdxModel model = (MdxModel) this.model;
 		final List<GenericObject> sortedGenericObjects = model.sortedGenericObjects;
 		final Scene scene = this.scene;
-		if(scene == null) {
-			// too bad for this instance, this is not safe to update on null scene, got NPE from this during testing,
-			// so we are going to skip this cycle entirely!
-			// (Retera)
-			return;
-		}
 
 		// Update the nodes
 		for (int i = 0, l = sortedNodes.length; i < l; i++) {
@@ -915,4 +909,15 @@ public class MdxComplexInstance extends ModelInstance {
 			}
 		}
 	}
+
+    public int clampFrame(int frameToClamp) {
+		final MdxModel model = (MdxModel) this.model;
+		final int sequenceId = this.sequence;
+		if(sequenceId >= 0 && sequenceId < model.sequences.size()) {
+			final Sequence sequence = model.sequences.get(sequenceId);
+			final long[] interval = sequence.getInterval();
+			return (int)Math.max(interval[0], Math.min(interval[1], frameToClamp));
+		}
+		return frameToClamp;
+    }
 }

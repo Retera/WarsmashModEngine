@@ -91,8 +91,20 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.UnitIconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CGameplayConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItemType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit.QueueItemType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGeneric;
@@ -1000,25 +1012,26 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				abilityToUse.checkCanTargetNoTarget(this.war3MapViewer.simulation,
 						this.selectedUnit.getSimulationUnit(), orderId, noTargetReceiver);
 				if (noTargetReceiver.isTargetable()) {
-					boolean shiftDown = isShiftDown();
+					final boolean shiftDown = isShiftDown();
 					this.unitOrderListener.issueImmediateOrder(this.selectedUnit.getSimulationUnit().getHandleId(),
 							abilityHandleId, orderId, shiftDown);
-					if(selectedUnits.size() > 1){
-						for(RenderUnit otherSelectedUnit: selectedUnits) {
-							if(otherSelectedUnit != activeCommandUnit) {
+					if (this.selectedUnits.size() > 1) {
+						for (final RenderUnit otherSelectedUnit : this.selectedUnits) {
+							if (otherSelectedUnit != this.activeCommandUnit) {
 								abilityToUse = null;
-								for(CAbility ability: otherSelectedUnit.getSimulationUnit().getAbilities()) {
-									BooleanAbilityTargetCheckReceiver<Void> receiver = BooleanAbilityTargetCheckReceiver.<Void>getInstance().reset();
-									ability.checkCanTargetNoTarget(war3MapViewer.simulation, otherSelectedUnit.getSimulationUnit(), activeCommandOrderId, receiver);
-									if(receiver.isTargetable()) {
+								for (final CAbility ability : otherSelectedUnit.getSimulationUnit().getAbilities()) {
+									final BooleanAbilityTargetCheckReceiver<Void> receiver = BooleanAbilityTargetCheckReceiver
+											.<Void>getInstance().reset();
+									ability.checkCanTargetNoTarget(this.war3MapViewer.simulation,
+											otherSelectedUnit.getSimulationUnit(), this.activeCommandOrderId, receiver);
+									if (receiver.isTargetable()) {
 										abilityToUse = ability;
 									}
 								}
-								if(abilityToUse != null) {
+								if (abilityToUse != null) {
 									this.unitOrderListener.issueImmediateOrder(
 											otherSelectedUnit.getSimulationUnit().getHandleId(),
-											abilityToUse.getHandleId(), this.activeCommandOrderId,
-											shiftDown);
+											abilityToUse.getHandleId(), this.activeCommandOrderId, shiftDown);
 								}
 							}
 						}
@@ -1035,9 +1048,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		else {
 			this.unitOrderListener.issueImmediateOrder(this.selectedUnit.getSimulationUnit().getHandleId(),
 					abilityHandleId, orderId, isShiftDown());
-			if(selectedUnits.size() > 1) {
-				for (RenderUnit otherSelectedUnit : selectedUnits) {
-					if (otherSelectedUnit != activeCommandUnit) {
+			if (this.selectedUnits.size() > 1) {
+				for (final RenderUnit otherSelectedUnit : this.selectedUnits) {
+					if (otherSelectedUnit != this.activeCommandUnit) {
 						this.unitOrderListener.issueImmediateOrder(otherSelectedUnit.getSimulationUnit().getHandleId(),
 								abilityHandleId, orderId, isShiftDown());
 					}
@@ -1126,7 +1139,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 		this.hpBarFrameIndex = 0;
 		if (this.currentlyDraggingPointer == -1) {
-			if ((this.mouseOverUnit != null) && !this.mouseOverUnit.getSimulationWidget().isInvulnerable() && this.mouseOverUnit.isSelectable() && !this.mouseOverUnit.getSimulationWidget().isDead()) {
+			if ((this.mouseOverUnit != null) && !this.mouseOverUnit.getSimulationWidget().isInvulnerable()
+					&& this.mouseOverUnit.isSelectable() && !this.mouseOverUnit.getSimulationWidget().isDead()) {
 				final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
 				positionHealthBar(simpleStatusBarFrame, this.mouseOverUnit, 1.0f);
 			}
@@ -1285,7 +1299,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		simpleStatusBarFrame.getBarFrame().setColor(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
 				Math.min(1.0f, lifeRatioRemaining * 2), 0, alpha);
 		final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
-		simpleStatusBarFrame.setWidth(unit.getSelectionScale() * 1.5f * Gdx.graphics.getWidth() / 2560);
+		simpleStatusBarFrame.setWidth((unit.getSelectionScale() * 1.5f * Gdx.graphics.getWidth()) / 2560);
 		simpleStatusBarFrame.setHeight(16);
 		simpleStatusBarFrame.addSetPoint(
 				new SetPoint(FramePoint.CENTER, this.rootFrame, FramePoint.BOTTOMLEFT, unprojected.x, unprojected.y));
@@ -1471,7 +1485,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		@Override
-		public Void accept(CAbilityReviveHero ability) {
+		public Void accept(final CAbilityReviveHero ability) {
 			handleTargetCursor(ability);
 			return null;
 		}
@@ -1806,8 +1820,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					final CItem item = inventory.getItemInSlot(index);
 					if (item == null) {
 						if (index < inventory.getItemCapacity()) {
-							inventoryIcon.setCommandButtonData(null, 0, 0, index + 1, true, false, false, null, null, 0,
-									0, 0);
+							inventoryIcon.setCommandButtonData(null, 0, 0, index + 1, true, false, false, null, null,
+									'\0', 0, 0, 0);
 						}
 					}
 					index++;
@@ -1986,7 +2000,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private void reloadSelectedUnitUI(final RenderUnit unit) {
-		if(unit == null) {
+		if (unit == null) {
 			return;
 		}
 		final CUnit simulationUnit = unit.getSimulationUnit();
@@ -2029,14 +2043,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						this.queueIconFrames[i].setUberTip(upgradeUI.getUberTip());
 						break;
 					case HERO_REVIVE: {
-						War3ID handleIdEncoded = simulationUnit.getBuildQueue()[i];
-						CUnit hero = war3MapViewer.simulation.getUnit(handleIdEncoded.getValue());
-						final UnitIconUI unitUI = this.war3MapViewer.getAbilityDataUI()
-									.getUnitUI(hero.getTypeId());
-							this.queueIconFrames[i].setTexture(unitUI.getIcon());
-							this.queueIconFrames[i].setToolTip(unitUI.getReviveTip() + " - " + hero.getHeroData().getProperName());
-							this.queueIconFrames[i].setUberTip(unitUI.getUberTip());
-							break;
+						final War3ID handleIdEncoded = simulationUnit.getBuildQueue()[i];
+						final CUnit hero = this.war3MapViewer.simulation.getUnit(handleIdEncoded.getValue());
+						final UnitIconUI unitUI = this.war3MapViewer.getAbilityDataUI().getUnitUI(hero.getTypeId());
+						this.queueIconFrames[i].setTexture(unitUI.getIcon());
+						this.queueIconFrames[i]
+								.setToolTip(unitUI.getReviveTip() + " - " + hero.getHeroData().getProperName());
+						this.queueIconFrames[i].setUberTip(unitUI.getUberTip());
+						break;
 					}
 					case UNIT:
 					default: {
@@ -2061,7 +2075,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.UNIT) {
 				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
 						this.rootFrame.getTemplates().getDecoratedString("TRAINING"));
-			} else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.HERO_REVIVE) {
+			}
+			else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.HERO_REVIVE) {
 				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
 						this.rootFrame.getTemplates().getDecoratedString("REVIVING"));
 			}
@@ -2291,19 +2306,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						}
 						this.recycleStringBuilder.append(uberTip);
 						inventoryIcon.setCommandButtonData(iconUI.getIcon(), 0,
-								activelyUsed ? (OrderIds.itemuse00+index) : 0, index + 1, activelyUsed,
-								false, false, itemUI.getName(), this.recycleStringBuilder.toString(),
-								itemType.getGoldCost(), itemType.getLumberCost(), 0);
+								activelyUsed ? (OrderIds.itemuse00 + index) : 0, index + 1, activelyUsed, false, false,
+								itemUI.getName(), this.recycleStringBuilder.toString(), '\0', itemType.getGoldCost(),
+								itemType.getLumberCost(), 0);
 					}
 					else {
 						if (index >= inventory.getItemCapacity()) {
 							inventoryIcon.setCommandButtonData(this.consoleInventoryNoCapacityTexture, 0, 0, 0, false,
-									false, false, null, null, 0, 0, 0);
+									false, false, null, null, '\0', 0, 0, 0);
 						}
 						else {
 							if (this.draggingItem != null) {
 								inventoryIcon.setCommandButtonData(null, 0, 0, index + 1, true, false, false, null,
-										null, 0, 0, 0);
+										null, '\0', 0, 0, 0);
 							}
 							else {
 								inventoryIcon.clear();
@@ -2329,7 +2344,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void commandButton(final int buttonPositionX, final int buttonPositionY, final Texture icon,
 			final int abilityHandleId, final int orderId, final int autoCastId, final boolean active,
 			final boolean autoCastActive, final boolean menuButton, final String tip, final String uberTip,
-			final int goldCost, final int lumberCost, final int foodCost) {
+			final char hotkey, final int goldCost, final int lumberCost, final int foodCost) {
 		int x = Math.max(0, Math.min(COMMAND_CARD_WIDTH - 1, buttonPositionX));
 		int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
 		while ((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT) && this.commandCard[y][x].isVisible()) {
@@ -2341,7 +2356,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 		if ((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT)) {
 			this.commandCard[y][x].setCommandButtonData(icon, abilityHandleId, orderId, autoCastId, active,
-					autoCastActive, menuButton, tip, uberTip, goldCost, lumberCost, foodCost);
+					autoCastActive, menuButton, tip, uberTip, hotkey, goldCost, lumberCost, foodCost);
 		}
 	}
 
@@ -2422,7 +2437,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void lifeChanged() {
-		if(selectedUnit == null) {
+		if (this.selectedUnit == null) {
 			return;
 		}
 		if (this.selectedUnit.getSimulationUnit().isDead()) {
@@ -2478,8 +2493,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void heroDeath() {
-		if(this.selectedUnit!=null) {
-			if(this.selectedUnit.getSimulationUnit().getUnitType().isRevivesHeroes()) {
+		if (this.selectedUnit != null) {
+			if (this.selectedUnit.getSimulationUnit().getUnitType().isRevivesHeroes()) {
 				reloadSelectedUnitUI(this.selectedUnit);
 			}
 		}
@@ -2516,7 +2531,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if ((this.activeCommand != null) && (this.draggingItem == null)) {
 				final IconUI cancelUI = abilityDataUI.getCancelUI();
 				this.commandButton(cancelUI.getButtonPositionX(), cancelUI.getButtonPositionY(), cancelUI.getIcon(), 0,
-						menuOrderId, 0, false, false, true, cancelUI.getToolTip(), cancelUI.getUberTip(), 0, 0, 0);
+						menuOrderId, 0, false, false, true, cancelUI.getToolTip(), cancelUI.getUberTip(),
+						cancelUI.getHotkey(), 0, 0, 0);
 			}
 			else {
 				if (menuOrderId != 0) {
@@ -2525,11 +2541,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							: 0;
 					final IconUI cancelUI = abilityDataUI.getCancelUI();
 					this.commandButton(cancelUI.getButtonPositionX(), cancelUI.getButtonPositionY(), cancelUI.getIcon(),
-							0, exitOrderId, 0, false, false, true, cancelUI.getToolTip(), cancelUI.getUberTip(), 0, 0,
-							0);
+							0, exitOrderId, 0, false, false, true, cancelUI.getToolTip(), cancelUI.getUberTip(),
+							cancelUI.getHotkey(), 0, 0, 0);
 				}
 				this.selectedUnit.populateCommandCard(this.war3MapViewer.simulation, this.rootFrame, this,
-						abilityDataUI, menuOrderId, selectedUnits.size() > 1);
+						abilityDataUI, menuOrderId, this.selectedUnits.size() > 1);
 			}
 		}
 	}
@@ -2544,11 +2560,23 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public boolean keyDown(final int keycode) {
-		if (keycode == Input.Keys.Z) {
-			War3MapViewer.DEBUG_DEPTH++;
+		if (WarsmashConstants.ENABLE_DEBUG) {
+			if (keycode == Input.Keys.Z) {
+				War3MapViewer.DEBUG_DEPTH++;
+			}
+			if (keycode == Input.Keys.X) {
+				War3MapViewer.DEBUG_DEPTH = 0;
+			}
 		}
-		if (keycode == Input.Keys.X) {
-			War3MapViewer.DEBUG_DEPTH = 0;
+		final String keyString = Input.Keys.toString(keycode);
+		final char c = keyString.length() == 1 ? keyString.charAt(0) : ' ';
+		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
+			for (int i = 0; i < COMMAND_CARD_WIDTH; i++) {
+				if (this.commandCard[j][i].checkHotkey(c, keycode)) {
+					this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0,
+							0);
+				}
+			}
 		}
 		return this.cameraManager.keyDown(keycode);
 	}
@@ -2594,20 +2622,24 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 								this.activeCommandUnit.getSimulationUnit().getHandleId(),
 								this.activeCommand.getHandleId(), this.activeCommandOrderId,
 								rayPickUnit.getSimulationWidget().getHandleId(), shiftDown);
-						if(selectedUnits.size() > 1){
-							for(RenderUnit otherSelectedUnit: selectedUnits) {
-								if(otherSelectedUnit != activeCommandUnit) {
+						if (this.selectedUnits.size() > 1) {
+							for (final RenderUnit otherSelectedUnit : this.selectedUnits) {
+								if (otherSelectedUnit != this.activeCommandUnit) {
 									CAbility abilityToUse = null;
 									CWidget targetToUse = null;
-									for(CAbility ability: otherSelectedUnit.getSimulationUnit().getAbilities()) {
-										CWidgetAbilityTargetCheckReceiver receiver = CWidgetAbilityTargetCheckReceiver.INSTANCE.reset();
-										ability.checkCanTarget(war3MapViewer.simulation, otherSelectedUnit.getSimulationUnit(), activeCommandOrderId, rayPickUnit.getSimulationWidget(), receiver);
-										if(receiver.getTarget() != null) {
+									for (final CAbility ability : otherSelectedUnit.getSimulationUnit()
+											.getAbilities()) {
+										final CWidgetAbilityTargetCheckReceiver receiver = CWidgetAbilityTargetCheckReceiver.INSTANCE
+												.reset();
+										ability.checkCanTarget(this.war3MapViewer.simulation,
+												otherSelectedUnit.getSimulationUnit(), this.activeCommandOrderId,
+												rayPickUnit.getSimulationWidget(), receiver);
+										if (receiver.getTarget() != null) {
 											abilityToUse = ability;
 											targetToUse = receiver.getTarget();
 										}
 									}
-									if(abilityToUse != null) {
+									if (abilityToUse != null) {
 										this.unitOrderListener.issueTargetOrder(
 												otherSelectedUnit.getSimulationUnit().getHandleId(),
 												abilityToUse.getHandleId(), this.activeCommandOrderId,
@@ -2674,20 +2706,24 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 										this.activeCommandUnit.getSimulationUnit().getHandleId(),
 										this.activeCommand.getHandleId(), this.activeCommandOrderId,
 										clickLocationTemp2.x, clickLocationTemp2.y, shiftDown);
-								if(selectedUnits.size() > 1){
-									for(RenderUnit otherSelectedUnit: selectedUnits) {
-										if(otherSelectedUnit != activeCommandUnit) {
+								if (this.selectedUnits.size() > 1) {
+									for (final RenderUnit otherSelectedUnit : this.selectedUnits) {
+										if (otherSelectedUnit != this.activeCommandUnit) {
 											CAbility abilityToUse = null;
 											AbilityPointTarget targetToUse = null;
-											for(CAbility ability: otherSelectedUnit.getSimulationUnit().getAbilities()) {
-												PointAbilityTargetCheckReceiver receiver = PointAbilityTargetCheckReceiver.INSTANCE.reset();
-												ability.checkCanTarget(war3MapViewer.simulation, otherSelectedUnit.getSimulationUnit(), activeCommandOrderId, clickLocationTemp2, receiver);
-												if(receiver.getTarget() != null) {
+											for (final CAbility ability : otherSelectedUnit.getSimulationUnit()
+													.getAbilities()) {
+												final PointAbilityTargetCheckReceiver receiver = PointAbilityTargetCheckReceiver.INSTANCE
+														.reset();
+												ability.checkCanTarget(this.war3MapViewer.simulation,
+														otherSelectedUnit.getSimulationUnit(),
+														this.activeCommandOrderId, clickLocationTemp2, receiver);
+												if (receiver.getTarget() != null) {
 													abilityToUse = ability;
 													targetToUse = receiver.getTarget();
 												}
 											}
-											if(abilityToUse != null) {
+											if (abilityToUse != null) {
 												this.unitOrderListener.issuePointOrder(
 														otherSelectedUnit.getSimulationUnit().getHandleId(),
 														abilityToUse.getHandleId(), this.activeCommandOrderId,
@@ -2745,7 +2781,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 										targetToUse = targetWidget;
 									}
 								}
-								if(abilityToUse != null) {
+								if (abilityToUse != null) {
 									this.unitOrderListener.issueTargetOrder(unit.getSimulationUnit().getHandleId(),
 											abilityToUse.getHandleId(), OrderIds.smart, targetToUse.getHandleId(),
 											isShiftDown());
@@ -3172,17 +3208,20 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						MeleeUI.this.activeCommandUnit = selectedUnit2;
 					}
 				}
-			} else {
-				CSimulation game = war3MapViewer.simulation;
-				BooleanAbilityActivationReceiver receiver = BooleanAbilityActivationReceiver.INSTANCE;
-				CAbilityInventory inventoryData = simulationUnit.getInventoryData();
+			}
+			else {
+				final CSimulation game = MeleeUI.this.war3MapViewer.simulation;
+				final BooleanAbilityActivationReceiver receiver = BooleanAbilityActivationReceiver.INSTANCE;
+				final CAbilityInventory inventoryData = simulationUnit.getInventoryData();
 				inventoryData.checkCanUse(game, simulationUnit, orderId, receiver);
-				if(receiver.isOk()) {
-					BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver.getInstance();
+				if (receiver.isOk()) {
+					final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
+							.getInstance();
 					targetReceiver.reset();
 					inventoryData.checkCanTargetNoTarget(game, simulationUnit, orderId, targetReceiver);
-					if(targetReceiver.isTargetable()) {
-						MeleeUI.this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(), inventoryData.getHandleId(), orderId, isShiftDown());
+					if (targetReceiver.isTargetable()) {
+						MeleeUI.this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
+								inventoryData.getHandleId(), orderId, isShiftDown());
 					}
 				}
 			}

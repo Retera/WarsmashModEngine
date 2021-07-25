@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
@@ -111,6 +112,7 @@ public class CAbilityAttack extends AbstractCAbility {
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
 		unit.setAttackBehavior(new CBehaviorAttack(unit));
+		unit.setAttackMoveBehavior(new CBehaviorAttackMove(unit));
 	}
 
 	@Override
@@ -142,10 +144,11 @@ public class CAbilityAttack extends AbstractCAbility {
 			final AbilityPointTarget point) {
 		switch (orderId) {
 		case OrderIds.attack:
-			if (caster.getMoveBehavior() == null) {
+			if (caster.getAttackMoveBehavior() == null) {
 				return caster.pollNextOrderBehavior(game);
 			}
-			return caster.getMoveBehavior().reset(OrderIds.attack, point);
+			caster.setDefaultBehavior(caster.getAttackMoveBehavior());
+			return caster.getAttackMoveBehavior().reset(point);
 		case OrderIds.attackground:
 			CBehavior behavior = null;
 			for (final CUnitAttack attack : caster.getAttacks()) {

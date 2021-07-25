@@ -34,6 +34,7 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	private int tipGoldCost;
 	private int tipLumberCost;
 	private int tipFoodCost;
+	private char hotkey;
 
 	public CommandCardIcon(final String name, final UIFrame parent,
 			final CommandCardCommandListener commandCardCommandListener) {
@@ -59,12 +60,15 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 			this.autocastFrame.setVisible(false);
 		}
 		setVisible(false);
+		this.hotkey = '\0';
 	}
 
 	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId,
 			final int autoCastOrderId, final boolean active, final boolean autoCastActive, final boolean menuButton,
-			final String tip, final String uberTip, final int goldCost, final int lumberCost, final int foodCost) {
+			final String tip, final String uberTip, final char hotkey, final int goldCost, final int lumberCost,
+			final int foodCost) {
 		this.menuButton = menuButton;
+		this.hotkey = hotkey;
 		setVisible(true);
 		this.iconFrame.setVisible(true);
 		if (this.activeHighlightFrame != null) {
@@ -129,6 +133,15 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 			}
 		}
 		return super.touchDown(screenX, screenY, button);
+	}
+
+	public boolean checkHotkey(final char c, final int keycode) {
+		if ((c == this.hotkey) || (Character.toUpperCase(c) == this.hotkey)
+				|| ((this.hotkey == 0x7E) && (keycode == Input.Keys.ESCAPE))) {
+			onClick(Input.Buttons.LEFT);
+			return true;
+		}
+		return false;
 	}
 
 	@Override

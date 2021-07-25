@@ -36,5 +36,5 @@ public interface CommandButtonListener {
 //	int getOrderId();
 	void commandButton(int buttonPositionX, int buttonPositionY, Texture icon, int abilityHandleId, int orderId,
 			int autoCastOrderId, boolean active, boolean autoCastActive, boolean menuButton, String tip, String uberTip,
-			int goldCost, int lumberCost, int foodCost);
+			char hotkey, int goldCost, int lumberCost, int foodCost);
 }

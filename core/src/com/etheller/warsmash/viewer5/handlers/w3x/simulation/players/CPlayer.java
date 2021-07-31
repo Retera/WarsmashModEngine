@@ -1,14 +1,22 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
+import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener.CPlayerStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
 public class CPlayer extends CBasePlayer {
 	private final CRace race;
@@ -18,6 +26,9 @@ public class CPlayer extends CBasePlayer {
 	private int foodCap;
 	private int foodUsed;
 	private final Map<War3ID, Integer> rawcodeToTechtreeUnlocked = new HashMap<>();
+	private final List<CUnit> heroes = new ArrayList<>();
+	private final EnumMap<JassGameEventsWar3, List<CPlayerEvent>> eventTypeToEvents = new EnumMap<>(
+			JassGameEventsWar3.class);
 
 	// if you use triggers for this then the transient tag here becomes really
 	// questionable -- it already was -- but I meant for those to inform us
@@ -139,7 +150,7 @@ public class CPlayer extends CBasePlayer {
 		this.stateNotifier.goldChanged();
 	}
 
-	public void refund(int gold, int lumber) {
+	public void refund(final int gold, final int lumber) {
 		this.gold += gold;
 		this.lumber += lumber;
 		this.stateNotifier.lumberChanged();
@@ -156,7 +167,57 @@ public class CPlayer extends CBasePlayer {
 		this.stateNotifier.foodChanged();
 	}
 
-    public void onHeroDeath() {
-		stateNotifier.heroDeath();
-    }
+	public void onHeroDeath(final CUnit hero) {
+		this.stateNotifier.heroDeath();
+		firePlayerUnitEvents(hero, CommonTriggerExecutionScope.playerHeroRevivableScope(hero),
+				JassGameEventsWar3.EVENT_PLAYER_HERO_REVIVABLE);
+	}
+
+	private void firePlayerUnitEvents(final CUnit hero, final CommonTriggerExecutionScope eventScope,
+			final JassGameEventsWar3 eventType) {
+		final List<CPlayerEvent> eventList = getEventList(eventType);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(hero, eventScope);
+			}
+		}
+	}
+
+	public List<CUnit> getHeroes() {
+		return this.heroes;
+	}
+
+	public void fireHeroLevelEvents(final CUnit hero) {
+		firePlayerUnitEvents(hero, CommonTriggerExecutionScope.playerHeroRevivableScope(hero),
+				JassGameEventsWar3.EVENT_PLAYER_HERO_LEVEL);
+	}
+
+	private List<CPlayerEvent> getOrCreateEventList(final JassGameEventsWar3 eventType) {
+		List<CPlayerEvent> playerEvents = this.eventTypeToEvents.get(eventType);
+		if (playerEvents == null) {
+			playerEvents = new ArrayList<>();
+			this.eventTypeToEvents.put(eventType, playerEvents);
+		}
+		return playerEvents;
+	}
+
+	private List<CPlayerEvent> getEventList(final JassGameEventsWar3 eventType) {
+		return this.eventTypeToEvents.get(eventType);
+	}
+
+	@Override
+	public RemovableTriggerEvent addEvent(final GlobalScope globalScope, final Trigger whichTrigger,
+			final JassGameEventsWar3 eventType) {
+		final CPlayerEvent playerEvent = new CPlayerEvent(globalScope, this, whichTrigger, eventType);
+		getOrCreateEventList(eventType).add(playerEvent);
+		return playerEvent;
+	}
+
+	@Override
+	public void removeEvent(final CPlayerEvent playerEvent) {
+		final List<CPlayerEvent> eventList = getEventList(playerEvent.getEventType());
+		if (eventList != null) {
+			eventList.remove(playerEvent);
+		}
+	}
 }

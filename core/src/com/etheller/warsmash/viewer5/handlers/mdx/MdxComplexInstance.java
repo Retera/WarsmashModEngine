@@ -516,7 +516,7 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 
 		final int glGetError = Gdx.gl.glGetError();
-		if (glGetError != GL20.GL_NO_ERROR) {
+		if ((glGetError != GL20.GL_NO_ERROR) && WarsmashConstants.ENABLE_DEBUG) {
 			throw new IllegalStateException("GL ERROR: " + glGetError + " ON " + model.name + " (Opaque)");
 		}
 	}
@@ -532,7 +532,7 @@ public class MdxComplexInstance extends ModelInstance {
 			group.render(this, this.scene.camera.viewProjectionMatrix);
 
 			final int glGetError = Gdx.gl.glGetError();
-			if (glGetError != GL20.GL_NO_ERROR) {
+			if ((glGetError != GL20.GL_NO_ERROR) && WarsmashConstants.ENABLE_DEBUG) {
 				throw new IllegalStateException("GL ERROR: " + glGetError + " ON " + model.name + " (Translucent)");
 			}
 		}
@@ -883,22 +883,20 @@ public class MdxComplexInstance extends ModelInstance {
 	public void setFrameByRatio(final float ratioOfAnimationCompleted) {
 		if (this.sequence != -1) {
 			final Sequence currentlyPlayingSequence = ((MdxModel) this.model).sequences.get(this.sequence);
-			long start = currentlyPlayingSequence.getInterval()[0];
+			final long start = currentlyPlayingSequence.getInterval()[0];
 			final int lastIntegerFrame = this.frame;
-			float lastFloatingFrame = this.floatingFrame;
-			long sequenceLength = currentlyPlayingSequence.getInterval()[1] - start;
-			float newFloatingFrame = start
-					+ (sequenceLength
-					* ratioOfAnimationCompleted);
-			float frameTime = newFloatingFrame-lastFloatingFrame;
-			if(frameTime < 0) {
+			final float lastFloatingFrame = this.floatingFrame;
+			final long sequenceLength = currentlyPlayingSequence.getInterval()[1] - start;
+			final float newFloatingFrame = start + (sequenceLength * ratioOfAnimationCompleted);
+			float frameTime = newFloatingFrame - lastFloatingFrame;
+			if (frameTime < 0) {
 				frameTime += sequenceLength;
 			}
 			this.floatingFrame = newFloatingFrame;
 			this.frame = (int) this.floatingFrame;
 			this.blendTimeRemaining -= frameTime;
 			int integerFrameTime = this.frame - lastIntegerFrame;
-			if(integerFrameTime < 0) {
+			if (integerFrameTime < 0) {
 				integerFrameTime += sequenceLength;
 			}
 			this.counter += integerFrameTime;
@@ -910,14 +908,14 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 	}
 
-    public int clampFrame(int frameToClamp) {
+	public int clampFrame(final int frameToClamp) {
 		final MdxModel model = (MdxModel) this.model;
 		final int sequenceId = this.sequence;
-		if(sequenceId >= 0 && sequenceId < model.sequences.size()) {
+		if ((sequenceId >= 0) && (sequenceId < model.sequences.size())) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
-			return (int)Math.max(interval[0], Math.min(interval[1], frameToClamp));
+			return (int) Math.max(interval[0], Math.min(interval[1], frameToClamp));
 		}
 		return frameToClamp;
-    }
+	}
 }

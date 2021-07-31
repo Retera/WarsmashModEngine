@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerStat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 
-public class CBasePlayer implements CPlayerJass {
+public abstract class CBasePlayer implements CPlayerJass {
 	private final int id;
 	private String name;
 	private int team;
@@ -59,6 +59,7 @@ public class CBasePlayer implements CPlayerJass {
 		}
 	}
 
+	@Override
 	public int getId() {
 		return this.id;
 	}
@@ -138,6 +139,7 @@ public class CBasePlayer implements CPlayerJass {
 		}
 	}
 
+	@Override
 	public boolean hasAlliance(final int otherPlayerIndex, final CAllianceType allianceType) {
 		final EnumSet<CAllianceType> alliancesWithOtherPlayer = this.alliances[otherPlayerIndex];
 		return alliancesWithOtherPlayer.contains(allianceType);

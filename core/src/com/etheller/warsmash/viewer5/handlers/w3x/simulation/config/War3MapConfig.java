@@ -30,7 +30,7 @@ public class War3MapConfig implements CPlayerAPI {
 		this.players = new CBasePlayer[maxPlayers];
 		for (int i = 0; i < maxPlayers; i++) {
 			this.startLocations[i] = new War3MapConfigStartLoc();
-			this.players[i] = new CBasePlayer(i);
+			this.players[i] = new War3MapConfigPlayer(i);
 		}
 	}
 

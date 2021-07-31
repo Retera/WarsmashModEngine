@@ -364,6 +364,7 @@ public class Terrain {
 		final String fileName = waterInfo.getField("texFile");
 		final List<BufferedImage> waterTextures = new ArrayList<>();
 		boolean anyWaterTextureNeedsSRGB = false;
+		int waterImageDimension = 128;
 		for (int i = 0; i < this.waterTextureCount; i++) {
 			final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
 					fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt, "water texture");
@@ -371,13 +372,15 @@ public class Terrain {
 			if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
 				System.err
 						.println("Odd water texture size detected of " + image.getWidth() + " x " + image.getHeight());
+				waterImageDimension = image.getWidth();
 			}
 			anyWaterTextureNeedsSRGB |= imageInfo.isNeedsSRGBFix();
 			waterTextures.add(image);
 		}
 
 		gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, anyWaterTextureNeedsSRGB ? GL30.GL_SRGB8_ALPHA8 : GL30.GL_RGBA8,
-				128, 128, this.waterTextureCount, 0, GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
+				waterImageDimension, waterImageDimension, this.waterTextureCount, 0, GL30.GL_RGBA,
+				GL30.GL_UNSIGNED_BYTE, null);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_BASE_LEVEL, 0);

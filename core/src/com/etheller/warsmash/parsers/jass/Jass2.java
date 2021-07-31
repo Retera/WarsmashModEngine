@@ -2408,6 +2408,96 @@ public class Jass2 {
 					return new HandleJassValue(unitType, ((CommonTriggerExecutionScope) triggerScope).getLeavingUnit());
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterTrackableHitEvent",
+					new JassFunction() {
+						@Override
+						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+								final TriggerExecutionScope triggerScope) {
+							throw new UnsupportedOperationException(
+									"TriggerRegisterTrackableHitEvent not yet implemented ???");
+							// dont feel like implementing this atm, although it probably wouldnt be that
+							// hard to do
+						}
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterTrackableTrackEvent",
+					new JassFunction() {
+						@Override
+						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+								final TriggerExecutionScope triggerScope) {
+							throw new UnsupportedOperationException(
+									"TriggerRegisterTrackableTrackEvent not yet implemented ???");
+						}
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTriggeringTrackable", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("GetTriggeringTrackable not yet implemented ???");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetClickedButton", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("GetClickedButton not yet implemented ???");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetClickedDialog", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("GetClickedDialog not yet implemented ???");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTournamentFinishSoonTimeRemaining",
+					new JassFunction() {
+						@Override
+						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+								final TriggerExecutionScope triggerScope) {
+							throw new UnsupportedOperationException(
+									"GetTournamentFinishSoonTimeRemaining not yet implemented ???");
+						}
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTournamentFinishNowRule", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("GetTournamentFinishNowRule not yet implemented ???");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTournamentFinishNowPlayer", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("GetTournamentFinishNowPlayer not yet implemented ???");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTournamentScore", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("GetTournamentScore not yet implemented ???");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetSaveBasicFilename", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					throw new UnsupportedOperationException("GetSaveBasicFilename not yet implemented ???");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterPlayerEvent", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final CPlayerJass whichPlayer = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+					final JassGameEventsWar3 whichPlayerEvent = arguments.get(2)
+							.visit(ObjectJassValueVisitor.getInstance());
+					return new HandleJassValue(eventType,
+							whichPlayer.addEvent(globalScope, whichTrigger, whichPlayerEvent));
+				}
+			});
 		}
 
 		private void registerConfigNatives(final JassProgramVisitor jassProgramVisitor, final War3MapConfig mapConfig,

@@ -29,4 +29,11 @@ public class WarsmashConstants {
 	public static final boolean VERBOSE_LOGGING = true;
 	public static final boolean ENABLE_DEBUG = false;
 	public static final char SPECIAL_ESCAPE_KEYCODE = 0x7E;
+
+	// My tileset loader is "always on top", even for local files. This is different
+	// from some MPQ loader engines that would use
+	// load index as a numeric value and could be changed. For now, I have this
+	// workaround to fix it if you need the local files
+	// to take priority over built-ins for tilesets.
+	public static final boolean FIX_FLAT_FILES_TILESET_LOADING = false;
 }

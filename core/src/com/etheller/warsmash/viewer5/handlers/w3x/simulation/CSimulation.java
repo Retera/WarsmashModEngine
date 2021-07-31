@@ -41,6 +41,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
@@ -67,7 +68,6 @@ public class CSimulation implements CPlayerAPI {
 	private final PathingGrid pathingGrid;
 	private final CWorldCollision worldCollision;
 	private final CPathfindingProcessor[] pathfindingProcessors;
-	private final List<CUnit>[] playerHeroes;
 	private final CGameplayConstants gameplayConstants;
 	private final Random seededRandom;
 	private float currentGameDayTimeElapsed;
@@ -104,17 +104,15 @@ public class CSimulation implements CPlayerAPI {
 		this.worldCollision = new CWorldCollision(entireMapBounds, this.gameplayConstants.getMaxCollisionRadius());
 		this.regionManager = new CRegionManager(entireMapBounds, pathingGrid);
 		this.pathfindingProcessors = new CPathfindingProcessor[WarsmashConstants.MAX_PLAYERS];
-		this.playerHeroes = new ArrayList[WarsmashConstants.MAX_PLAYERS];
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			this.pathfindingProcessors[i] = new CPathfindingProcessor(pathingGrid, this.worldCollision);
-			this.playerHeroes[i] = new ArrayList<>();
 		}
 		this.seededRandom = seededRandom;
 		this.players = new ArrayList<>();
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			CRace defaultRace = CRace.ORC;
+			final CRace defaultRace = CRace.ORC;
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
 			this.players.add(newPlayer);
@@ -183,7 +181,7 @@ public class CSimulation implements CPlayerAPI {
 		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
 		this.worldCollision.addUnit(unit);
-		if(unit.getHeroData() != null) {
+		if (unit.getHeroData() != null) {
 			heroCreateEvent(unit);
 		}
 		return unit;
@@ -269,7 +267,7 @@ public class CSimulation implements CPlayerAPI {
 				}
 				this.handleIdToUnit.remove(unit.getHandleId());
 				this.simulationRenderController.removeUnit(unit);
-				this.playerHeroes[unit.getPlayerIndex()].remove(unit);
+				getPlayerHeroes(unit.getPlayerIndex()).remove(unit);
 				unit.onRemove(this);
 			}
 		}
@@ -316,7 +314,7 @@ public class CSimulation implements CPlayerAPI {
 			}
 			this.handleIdToUnit.remove(unit.getHandleId());
 			this.simulationRenderController.removeUnit(unit);
-			this.playerHeroes[unit.getPlayerIndex()].remove(unit);
+			getPlayerHeroes(unit.getPlayerIndex()).remove(unit);
 			unit.onRemove(this);
 		}
 		this.removedUnits.clear();
@@ -390,6 +388,7 @@ public class CSimulation implements CPlayerAPI {
 	public void unitTrainedEvent(final CUnit trainingUnit, final CUnit trainedUnit) {
 		this.simulationRenderController.spawnUnitReadySound(trainedUnit);
 	}
+
 	public void heroReviveEvent(final CUnit trainingUnit, final CUnit trainedUnit) {
 		this.simulationRenderController.heroRevived(trainedUnit);
 		this.simulationRenderController.spawnUnitReadySound(trainedUnit);
@@ -404,11 +403,12 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void unitGainLevelEvent(final CUnit unit) {
+		this.players.get(unit.getPlayerIndex()).fireHeroLevelEvents(unit);
 		this.simulationRenderController.spawnGainLevelEffect(unit);
 	}
 
 	public void heroCreateEvent(final CUnit hero) {
-		this.playerHeroes[hero.getPlayerIndex()].add(hero);
+		getPlayerHeroes(hero.getPlayerIndex()).add(hero);
 	}
 
 	public void unitPickUpItemEvent(final CUnit cUnit, final CItem item) {
@@ -420,7 +420,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public List<CUnit> getPlayerHeroes(final int playerIndex) {
-		return this.playerHeroes[playerIndex];
+		return this.players.get(playerIndex).getHeroes();
 	}
 
 	public void unitsLoaded() {
@@ -455,8 +455,8 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnEffectOnUnit(unit, effectPath);
 	}
 
-	public void createSpellEffectOnUnit(CUnit unit, War3ID alias) {
-		simulationRenderController.spawnSpellEffectOnUnit(unit, alias);
+	public void createSpellEffectOnUnit(final CUnit unit, final War3ID alias) {
+		this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias);
 	}
 
 	public void unitSoundEffectEvent(final CUnit caster, final War3ID alias) {
@@ -480,16 +480,16 @@ public class CSimulation implements CPlayerAPI {
 		};
 	}
 
-	public void heroDeathEvent(CUnit cUnit) {
-		getPlayer(cUnit.getPlayerIndex()).onHeroDeath();
+	public void heroDeathEvent(final CUnit cUnit) {
+		getPlayer(cUnit.getPlayerIndex()).onHeroDeath(cUnit);
 	}
 
-    public void removeItem(CItem cItem) {
+	public void removeItem(final CItem cItem) {
 		cItem.setHidden(true); // TODO fix
 		cItem.setLife(this, 0);
-    }
+	}
 
-    private static final class TimeOfDayVariableEvent extends VariableEvent {
+	private static final class TimeOfDayVariableEvent extends VariableEvent {
 		private final GlobalScope globalScope;
 
 		public TimeOfDayVariableEvent(final Trigger trigger, final CLimitOp limitOp, final double doubleValue,
@@ -501,5 +501,21 @@ public class CSimulation implements CPlayerAPI {
 		public void fire() {
 			fire(this.globalScope);
 		}
+	}
+
+	public RemovableTriggerEvent registerEventPlayerDefeat(final GlobalScope globalScope, final Trigger whichTrigger,
+			final CPlayerJass whichPlayer) {
+		if (true) {
+			throw new UnsupportedOperationException("registerEventPlayerDefeat is NYI");
+		}
+		return RemovableTriggerEvent.DO_NOTHING;
+	}
+
+	public RemovableTriggerEvent registerEventPlayerVictory(final GlobalScope globalScope, final Trigger whichTrigger,
+			final CPlayerJass whichPlayer) {
+		if (true) {
+			throw new UnsupportedOperationException("registerEventPlayerVictory is NYI");
+		}
+		return RemovableTriggerEvent.DO_NOTHING;
 	}
 }

@@ -1,5 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
+import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
+import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 
 public interface CPlayerJass {
@@ -46,4 +50,9 @@ public interface CPlayerJass {
 	boolean isRacePrefSet(CRacePreference pref);
 
 	String getName();
+
+	RemovableTriggerEvent addEvent(final GlobalScope globalScope, final Trigger whichTrigger,
+			final JassGameEventsWar3 eventType);
+
+	void removeEvent(CPlayerEvent playerEvent);
 }

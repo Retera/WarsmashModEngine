@@ -466,24 +466,30 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			// from either the map or the game, giving the map priority.
 			SeekableByteChannel sbc;
 			final CompoundDataSource compoundDataSource = war3Map.getCompoundDataSource();
-			try (InputStream mapStream = compoundDataSource.getResourceAsStream(tileset + ".mpq")) {
-				if (mapStream == null) {
+			if (WarsmashConstants.FIX_FLAT_FILES_TILESET_LOADING) {
+				tilesetSource = new CompoundDataSource(
+						Arrays.asList(compoundDataSource, new SubdirDataSource(compoundDataSource, tileset + ".mpq/")));
+			}
+			else {
+				try (InputStream mapStream = compoundDataSource.getResourceAsStream(tileset + ".mpq")) {
+					if (mapStream == null) {
+						tilesetSource = new CompoundDataSource(Arrays.asList(compoundDataSource,
+								new SubdirDataSource(compoundDataSource, tileset + ".mpq/"),
+								new SubdirDataSource(compoundDataSource, "_tilesets/" + tileset + ".w3mod/")));
+					}
+					else {
+						final byte[] mapData = IOUtils.toByteArray(mapStream);
+						sbc = new SeekableInMemoryByteChannel(mapData);
+						final DataSource internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
+						tilesetSource = new CompoundDataSource(
+								Arrays.asList(compoundDataSource, internalMpqContentsDataSource));
+					}
+				}
+				catch (final IOException exc) {
 					tilesetSource = new CompoundDataSource(Arrays.asList(compoundDataSource,
 							new SubdirDataSource(compoundDataSource, tileset + ".mpq/"),
 							new SubdirDataSource(compoundDataSource, "_tilesets/" + tileset + ".w3mod/")));
 				}
-				else {
-					final byte[] mapData = IOUtils.toByteArray(mapStream);
-					sbc = new SeekableInMemoryByteChannel(mapData);
-					final DataSource internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
-					tilesetSource = new CompoundDataSource(
-							Arrays.asList(compoundDataSource, internalMpqContentsDataSource));
-				}
-			}
-			catch (final IOException exc) {
-				tilesetSource = new CompoundDataSource(
-						Arrays.asList(compoundDataSource, new SubdirDataSource(compoundDataSource, tileset + ".mpq/"),
-								new SubdirDataSource(compoundDataSource, "_tilesets/" + tileset + ".w3mod/")));
 			}
 		}
 		catch (final MPQException e) {
@@ -723,29 +729,30 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public void heroRevived(CUnit source) {
+					public void heroRevived(final CUnit source) {
 						final AbilityUI reviveUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_REVIVE_RAWCODE);
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
-						CPlayer player = simulation.getPlayer(source.getPlayerIndex());
+						final CPlayer player = War3MapViewer.this.simulation.getPlayer(source.getPlayerIndex());
 						final String heroReviveArt = reviveUI.getTargetArt(player.getRace().ordinal());
 						spawnFxOnOrigin(renderUnit, heroReviveArt);
-						MutableGameObject row = allObjectData.getUnits().get(source.getTypeId());
+						final MutableGameObject row = War3MapViewer.this.allObjectData.getUnits()
+								.get(source.getTypeId());
 
 						// Recreate unit shadow.... is needed here
 
 						final String unitShadow = row.getFieldAsString(UNIT_SHADOW, 0);
-						float unitX = source.getX();
-						float unitY = source.getY();
+						final float unitX = source.getX();
+						final float unitY = source.getY();
 						if ((unitShadow != null) && !"_".equals(unitShadow)) {
 							final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
 							final float shadowX = row.getFieldAsFloat(UNIT_SHADOW_X, 0);
 							final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
 							final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
 							final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
-							if (mapMpq.has(texture)) {
+							if (War3MapViewer.this.mapMpq.has(texture)) {
 								final float x = unitX - shadowX;
 								final float y = unitY - shadowY;
-								renderUnit.shadow = terrain.addUnitShadowSplat(texture, x, y,
+								renderUnit.shadow = War3MapViewer.this.terrain.addUnitShadowSplat(texture, x, y,
 										x + shadowWidth, y + shadowHeight, 3, 0.5f);
 							}
 						}
@@ -770,8 +777,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public void spawnSpellEffectOnUnit(CUnit unit, War3ID alias) {
-						AbilityUI abilityUI = abilityDataUI.getUI(alias);
+					public void spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias) {
+						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
 						spawnEffectOnUnit(unit, abilityUI.getTargetArt(0));
 					}
 
@@ -861,11 +868,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		loadLightsAndShading(tileset);
 	}
 
-	public void spawnFxOnOrigin(RenderUnit renderUnit, String heroLevelUpArt) {
+	public void spawnFxOnOrigin(final RenderUnit renderUnit, final String heroLevelUpArt) {
 		final MdxModel heroLevelUpModel = loadModel(heroLevelUpArt);
 		if (heroLevelUpModel != null) {
-			final MdxComplexInstance modelInstance = (MdxComplexInstance) heroLevelUpModel
-					.addInstance();
+			final MdxComplexInstance modelInstance = (MdxComplexInstance) heroLevelUpModel.addInstance();
 			modelInstance.setTeamColor(renderUnit.playerIndex);
 
 			final MdxModel model = (MdxModel) renderUnit.instance.model;
@@ -880,15 +886,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			if (index != -1) {
 				final MdxNode attachment = renderUnit.instance.getAttachment(index);
 				modelInstance.setParent(attachment);
-			} else {
+			}
+			else {
 				modelInstance.setLocation(renderUnit.location);
 			}
 
 			modelInstance.setScene(War3MapViewer.this.worldScene);
 			SequenceUtils.randomBirthSequence(modelInstance);
-			War3MapViewer.this.projectiles
-					.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
-							(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
+			War3MapViewer.this.projectiles.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
+					(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
 		}
 	}
 

@@ -132,8 +132,23 @@ public class TgaFile {
 				}
 			}
 		}
+		else if ((header[17] >> 4) == 2) {
+			// flip horizontally and vertically
+
+			for (int y = 0; y < h; y++) {
+				final int w2 = w / 2;
+				for (int x = 0; x < w2; x++) {
+					final int a = (y * w) + x;
+					final int b = ((h - 1 - y) * w) + (w - 1 - x);
+					final int t = pixels[a];
+					pixels[a] = pixels[b];
+					pixels[b] = t;
+				}
+			}
+		}
 		else {
-			throw new UnsupportedOperationException("Error " + name);
+			final int headerval = header[17] >> 4;
+			throw new UnsupportedOperationException("Error " + name + " (" + headerval + ")");
 		}
 
 		return dst;

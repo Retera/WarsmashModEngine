@@ -153,7 +153,8 @@ public class TerrainShaders {
 					"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
 					"	vec3 normal = normalize(vec3(hL - hR, hD - hU, 2.0));\r\n" + //
 					"\r\n" + //
-					"	UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
+					// " UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
+					"	UV = vec2(vPosition.x==0?0.01:0.99, vPosition.y==0?0.99:0.01);\r\n" + //
 					"	texture_indices = texelFetch(terrain_texture_list, pos, 0);\r\n" + //
 					"	pathing_map_uv = (vPosition + pos) * 4;	\r\n" + //
 					"\r\n" + //

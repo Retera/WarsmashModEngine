@@ -66,7 +66,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityTarget target) {
-		if ((orderId >= OrderIds.itemdrag00) && (orderId <= OrderIds.itemdrag05)) {
+		if ((orderId >= OrderIds.itemdrag00) && (orderId <= OrderIds.itemdrag08)) {
 			for (int i = 0; i < this.itemsHeld.length; i++) {
 				if (this.itemsHeld[i] == target) {
 					final CItem temp = this.itemsHeld[i];
@@ -80,7 +80,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				}
 			}
 		}
-		else if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
+		else if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse08)) {
 			final CAbility cAbility = this.itemsHeldAbilities[orderId - OrderIds.itemuse00].get(0);
 			int forwardedOrderId = orderId;
 			if (cAbility instanceof GenericSingleIconActiveAbility) {
@@ -158,7 +158,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			}
 		}
 		else {
-			if ((orderId >= OrderIds.itemdrag00) && (orderId <= OrderIds.itemdrag05)) {
+			if ((orderId >= OrderIds.itemdrag00) && (orderId <= OrderIds.itemdrag08)) {
 				if (target instanceof CItem) {
 					final int slot = getSlot((CItem) target);
 					if (slot != -1) {
@@ -197,7 +197,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
-		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
+		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse08)) {
 			receiver.targetOk(null);
 		}
 		else {
@@ -208,7 +208,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
+		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse08)) {
 			final int slot = orderId - OrderIds.itemuse00;
 			if (this.itemsHeldAbilities[slot].size() < 1) {
 				receiver.notAnActiveAbility();

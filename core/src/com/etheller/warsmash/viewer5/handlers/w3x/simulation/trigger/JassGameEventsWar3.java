@@ -231,7 +231,7 @@ public enum JassGameEventsWar3 {
 	public static JassGameEventsWar3[] VALUES;
 	static {
 		final JassGameEventsWar3[] localValuesArray = values();
-		final JassGameEventsWar3 endValue = localValuesArray[localValuesArray.length];
+		final JassGameEventsWar3 endValue = localValuesArray[localValuesArray.length - 1];
 		VALUES = new JassGameEventsWar3[endValue.getEventId() + 1];
 		for (final JassGameEventsWar3 event : localValuesArray) {
 			VALUES[event.getEventId()] = event;

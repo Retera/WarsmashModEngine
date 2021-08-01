@@ -163,11 +163,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private static final long WORLD_FRAME_MESSAGE_FADE_DURATION = WORLD_FRAME_MESSAGE_EXPIRE_MILLIS
 			- WORLD_FRAME_MESSAGE_FADEOUT_MILLIS;
 	private static final String BUILDING_PATHING_PREVIEW_KEY = "buildingPathingPreview";
-	public static final float DEFAULT_COMMAND_CARD_ICON_WIDTH = 0.039f;
+	public static final float DEFAULT_COMMAND_CARD_ICON_WIDTH = 0.03254f;
 	public static final float DEFAULT_INVENTORY_ICON_WIDTH = 0.03125f;
-	private static final int COMMAND_CARD_WIDTH = 4;
-	private static final int COMMAND_CARD_HEIGHT = 3;
-	private static final int INVENTORY_WIDTH = 2;
+	private static final int COMMAND_CARD_WIDTH = 6;
+	private static final int COMMAND_CARD_HEIGHT = 2;
+	private static final int INVENTORY_WIDTH = 3;
 	private static final int INVENTORY_HEIGHT = 3;
 
 	private static final Vector2 screenCoordsVector = new Vector2();
@@ -357,9 +357,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private MeleeUIMinimap createMinimap(final War3MapViewer war3MapViewer) {
-		final Rectangle minimapDisplayArea = new Rectangle(18.75f * this.widthRatioCorrection,
-				13.75f * this.heightRatioCorrection, 278.75f * this.widthRatioCorrection,
-				276.25f * this.heightRatioCorrection);
+		screenCoordsVector.x = this.uiViewport.getScreenX();
+		screenCoordsVector.y = 0;
+		this.uiViewport.unproject(screenCoordsVector);
+		final float mapScale = 0.7f;
+		final Rectangle minimapDisplayArea = new Rectangle(
+				screenCoordsVector.x + (18.75f * this.widthRatioCorrection * mapScale),
+				13.75f * this.heightRatioCorrection * mapScale, 278.75f * this.widthRatioCorrection * mapScale,
+				276.25f * this.heightRatioCorrection * mapScale);
+		final Rectangle minimapBorderArea = new Rectangle(screenCoordsVector.x, 0,
+				512f * this.widthRatioCorrection * mapScale, 512f * this.heightRatioCorrection * mapScale);
 		Texture minimapTexture = null;
 		if (war3MapViewer.dataSource.has("war3mapMap.tga")) {
 			try {
@@ -374,13 +381,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		else if (war3MapViewer.dataSource.has("war3mapMap.blp")) {
 			minimapTexture = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource, "war3mapMap.blp");
 		}
+		final Texture mapBorder = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource,
+				"ui\\console\\nightelf\\nightelfuitilemapborder.blp");
 		final Texture[] teamColors = new Texture[WarsmashConstants.MAX_PLAYERS];
 		for (int i = 0; i < teamColors.length; i++) {
 			teamColors[i] = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource,
 					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
 		}
 		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();
-		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors);
+		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors, mapBorder,
+				minimapBorderArea);
 	}
 
 	/**
@@ -605,10 +615,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.unitManaText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitManaPointText", 0);
 
 		final float infoPanelUnitDetailWidth = GameUI.convertY(this.uiViewport, 0.180f);
-		final float infoPanelUnitDetailHeight = GameUI.convertY(this.uiViewport, 0.112f);
+		final float infoPanelUnitDetailHeight = GameUI.convertY(this.uiViewport, 0.072f);
 		this.smashSimpleInfoPanel = this.rootFrame.createSimpleFrame("SmashSimpleInfoPanel", this.rootFrame, 0);
-		this.smashSimpleInfoPanel
-				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, 0.0f)));
+		this.smashSimpleInfoPanel.addAnchor(new AnchorDefinition(FramePoint.BOTTOM,
+				GameUI.convertX(this.uiViewport, -0.1f), GameUI.convertY(this.uiViewport, 0.0f)));
 		this.smashSimpleInfoPanel.setWidth(infoPanelUnitDetailWidth);
 		this.smashSimpleInfoPanel.setHeight(infoPanelUnitDetailHeight);
 
@@ -666,9 +676,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		queueIconFrameBackdrop0
 				.addSetPoint(new SetPoint(FramePoint.CENTER, this.queueIconFrames[0], FramePoint.CENTER, 0, 0));
 		this.queueIconFrames[0].set(queueIconFrameBackdrop0);
-		this.queueIconFrames[0]
-				.addSetPoint(new SetPoint(FramePoint.CENTER, this.smashSimpleInfoPanel, FramePoint.BOTTOMLEFT,
-						(infoPanelUnitDetailWidth * (15 + 19f)) / 256, (infoPanelUnitDetailWidth * (66 + 19f)) / 256));
+		this.queueIconFrames[0].addSetPoint(new SetPoint(FramePoint.CENTER, this.smashSimpleInfoPanel,
+				FramePoint.BOTTOMLEFT, (infoPanelUnitDetailWidth * (15 + 19f)) / 256,
+				((infoPanelUnitDetailWidth * (66 + 19f)) / 256) - GameUI.convertY(this.uiViewport, 0.01f)));
 		final float frontQueueIconWidth = (infoPanelUnitDetailWidth * 38) / 256;
 		this.queueIconFrames[0].setWidth(frontQueueIconWidth);
 		this.queueIconFrames[0].setHeight(frontQueueIconWidth);
@@ -685,7 +695,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					.addSetPoint(new SetPoint(FramePoint.CENTER, this.queueIconFrames[i], FramePoint.CENTER, 0, 0));
 			this.queueIconFrames[i].addSetPoint(new SetPoint(FramePoint.CENTER, this.smashSimpleInfoPanel,
 					FramePoint.BOTTOMLEFT, (infoPanelUnitDetailWidth * (13 + 14.5f + (40 * (i - 1)))) / 256,
-					(infoPanelUnitDetailWidth * (24 + 14.5f)) / 256));
+					((infoPanelUnitDetailWidth * (24 + 14.5f)) / 256) - GameUI.convertY(this.uiViewport, 0.01f)));
 			final float queueIconWidth = (infoPanelUnitDetailWidth * 29) / 256;
 			this.queueIconFrames[i].setWidth(queueIconWidth);
 			this.queueIconFrames[i].setHeight(queueIconWidth);
@@ -732,9 +742,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.smashAttack1IconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconDamage",
 				this.simpleInfoPanelUnitDetail, 0);
 		this.smashAttack1IconWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
-				FramePoint.TOPLEFT, 0, GameUI.convertY(this.uiViewport, -0.032f)));
+				FramePoint.TOPLEFT, 0, GameUI.convertY(this.uiViewport, -0.022f)));
 		this.smashAttack1IconWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
-		this.smashAttack1IconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.030125f));
+		this.smashAttack1IconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.020125f));
 		this.attack1Icon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", this.smashAttack1IconWrapper,
 				0);
 		this.attack1IconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 0);
@@ -745,9 +755,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.simpleInfoPanelUnitDetail, 0);
 		this.smashAttack2IconWrapper
 				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-						GameUI.convertX(this.uiViewport, 0.1f), GameUI.convertY(this.uiViewport, -0.03125f)));
+						GameUI.convertX(this.uiViewport, 0.1f), GameUI.convertY(this.uiViewport, -0.02125f)));
 		this.smashAttack2IconWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
-		this.smashAttack2IconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.030125f));
+		this.smashAttack2IconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.020125f));
 		this.attack2Icon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", this.smashAttack2IconWrapper,
 				1);
 		this.attack2IconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 1);
@@ -757,9 +767,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.smashArmorIconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconArmor",
 				this.simpleInfoPanelUnitDetail, 0);
 		this.smashArmorIconWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
-				FramePoint.TOPLEFT, GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.0625f)));
+				FramePoint.TOPLEFT, GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.0425f)));
 		this.smashArmorIconWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
-		this.smashArmorIconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.030125f));
+		this.smashArmorIconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.020125f));
 		this.armorIcon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconArmor", this.smashArmorIconWrapper, 0);
 		this.armorIconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 0);
 		this.armorInfoPanelIconValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconValue", 0);
@@ -768,9 +778,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.smashHeroInfoPanelWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconHero",
 				this.simpleInfoPanelUnitDetail, 0);
 		this.smashHeroInfoPanelWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
-				FramePoint.TOPLEFT, GameUI.convertX(this.uiViewport, 0.1f), GameUI.convertY(this.uiViewport, -0.029f)));
+				FramePoint.TOPLEFT, GameUI.convertX(this.uiViewport, 0.1f), GameUI.convertY(this.uiViewport, -0.02f)));
 		this.smashHeroInfoPanelWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
-		this.smashHeroInfoPanelWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.0625f));
+		this.smashHeroInfoPanelWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.0325f));
 		this.heroInfoPanel = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconHero", this.smashHeroInfoPanelWrapper,
 				0);
 		this.primaryAttributeIcon = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconHeroIcon", 0);
@@ -780,10 +790,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		this.inventoryBarFrame = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInventoryBar",
 				this.rootFrame, 0);
-		this.inventoryBarFrame.setWidth(GameUI.convertX(this.uiViewport, 0.079f));
-		this.inventoryBarFrame.setHeight(GameUI.convertY(this.uiViewport, 0.115f));
-		this.inventoryBarFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, this.consoleUI, FramePoint.BOTTOMLEFT,
-				GameUI.convertX(this.uiViewport, 0.591f), GameUI.convertY(this.uiViewport, 0.0f)));
+		this.inventoryBarFrame.setWidth(GameUI.convertX(this.uiViewport, 0.115f));
+		this.inventoryBarFrame.setHeight(GameUI.convertY(this.uiViewport, 0.079f));
+		this.inventoryBarFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMLEFT, this.consoleUI, FramePoint.BOTTOMRIGHT,
+				GameUI.convertX(this.uiViewport, 0.15f - 0.256f),
+				GameUI.convertY(this.uiViewport, -0.006f + (DEFAULT_INVENTORY_ICON_WIDTH * 1.25f))));
 
 		if (GameUI.DEBUG) {
 			final FilterModeTextureFrame placeholderPreview = new FilterModeTextureFrame(null, this.inventoryBarFrame,
@@ -827,10 +838,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.inventoryTitleFrame = this.rootFrame.createStringFrame("SmashInventoryText", this.inventoryBarFrame,
 				new Color(0xFCDE12FF), TextJustify.CENTER, TextJustify.MIDDLE, 0.0109f);
 		this.rootFrame.setText(this.inventoryTitleFrame, this.rootFrame.getTemplates().getDecoratedString("INVENTORY"));
-		this.inventoryTitleFrame
-				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame, FramePoint.TOPLEFT,
-						GameUI.convertX(this.uiViewport, 0.004f), GameUI.convertY(this.uiViewport, 0.0165625f)));
-		this.inventoryTitleFrame.setWidth(GameUI.convertX(this.uiViewport, 0.071f));
+		this.inventoryTitleFrame.addSetPoint(new SetPoint(FramePoint.TOP, this.inventoryBarFrame, FramePoint.TOP,
+				GameUI.convertX(this.uiViewport, 0.000f), GameUI.convertY(this.uiViewport, 0.0165625f)));
+		this.inventoryTitleFrame.setWidth(GameUI.convertX(this.uiViewport, 0.10f));// 0.071f
 		this.inventoryTitleFrame.setHeight(GameUI.convertX(this.uiViewport, 0.01125f));
 		this.inventoryTitleFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
 		this.inventoryTitleFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
@@ -869,9 +879,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						"SmashCommandButton_" + (commandButtonIndex) + "_Cooldown", this.rootFrame, "", 0);
 				final SpriteFrame autocastFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
 						"SmashCommandButton_" + (commandButtonIndex) + "_Autocast", this.rootFrame, "", 0);
+				final int indexing = i + (j * COMMAND_CARD_WIDTH);
+				final int displayXIndex = i;// indexing % 6;
+				final int displayYIndex = j;// indexing / 6;
 				commandCardIcon.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
-						GameUI.convertX(this.uiViewport, 0.6175f + (0.0434f * i)),
-						GameUI.convertY(this.uiViewport, 0.095f - (0.044f * j))));
+						GameUI.convertX(this.uiViewport, 0.4155f + (0.03621f * displayXIndex)),
+						GameUI.convertY(this.uiViewport, 0.0375f - (0.03621f * displayYIndex))));
 				commandCardIcon.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
 				commandCardIcon.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
 				iconFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
@@ -1344,7 +1357,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		}
 
-		this.meleeUIMinimap.render(batch, this.war3MapViewer.units);
+		this.meleeUIMinimap.render(batch, this.war3MapViewer.units, this.uiViewport);
 		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
 		for (final TextTag textTag : this.war3MapViewer.textTags) {
@@ -2158,7 +2171,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 				this.smashArmorIconWrapper.addSetPoint(
 						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.0625f)));
+								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.0425f)));
 				this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
 				this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
 			}
@@ -2168,7 +2181,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 				this.smashArmorIconWrapper.addSetPoint(
 						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.032f)));
+								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.021f)));
 				this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
 				this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
 			}
@@ -2363,12 +2376,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void resize(final Rectangle viewport) {
 		this.cameraManager.resize(viewport);
 		positionPortrait();
+
+		screenCoordsVector.x = this.uiViewport.getScreenX();
+		screenCoordsVector.y = 0;
+		this.uiViewport.unproject(screenCoordsVector);
+		this.meleeUIMinimap.resizeNewX(screenCoordsVector.x);
 	}
 
 	public void positionPortrait() {
-		this.projectionTemp1.x = 422 * this.widthRatioCorrection;
+		this.projectionTemp1.x = 222 * this.widthRatioCorrection;
 		this.projectionTemp1.y = 57 * this.heightRatioCorrection;
-		this.projectionTemp2.x = (422 + 167) * this.widthRatioCorrection;
+		this.projectionTemp2.x = (222 + 167) * this.widthRatioCorrection;
 		this.projectionTemp2.y = (57 + 170) * this.heightRatioCorrection;
 		this.uiViewport.project(this.projectionTemp1);
 		this.uiViewport.project(this.projectionTemp2);

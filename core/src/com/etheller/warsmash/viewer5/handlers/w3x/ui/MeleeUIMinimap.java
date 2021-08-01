@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 
 public class MeleeUIMinimap {
@@ -12,13 +13,17 @@ public class MeleeUIMinimap {
 	private final Texture minimapTexture;
 	private final Rectangle playableMapArea;
 	private final Texture[] teamColors;
+	private final Texture mapBorder;
+	private final Rectangle minimapBorderArea;
 
 	public MeleeUIMinimap(final Rectangle displayArea, final Rectangle playableMapArea, final Texture minimapTexture,
-			final Texture[] teamColors) {
+			final Texture[] teamColors, final Texture mapBorder, final Rectangle minimapBorderArea) {
 		this.playableMapArea = playableMapArea;
 		this.minimapTexture = minimapTexture;
 		this.teamColors = teamColors;
 		this.minimap = displayArea;
+		this.mapBorder = mapBorder;
+		this.minimapBorderArea = minimapBorderArea;
 		final float worldWidth = playableMapArea.getWidth();
 		final float worldHeight = playableMapArea.getHeight();
 		final float worldSize = Math.max(worldWidth, worldHeight);
@@ -30,7 +35,9 @@ public class MeleeUIMinimap {
 				minimapFilledHeight);
 	}
 
-	public void render(final SpriteBatch batch, final Iterable<RenderUnit> units) {
+	public void render(final SpriteBatch batch, final Iterable<RenderUnit> units, final Viewport uiViewport) {
+		batch.draw(this.mapBorder, this.minimapBorderArea.x, this.minimapBorderArea.y, this.minimapBorderArea.width,
+				this.minimapBorderArea.height);
 		batch.draw(this.minimapTexture, this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
 
 		for (final RenderUnit unit : units) {
@@ -58,5 +65,12 @@ public class MeleeUIMinimap {
 
 	public boolean containsMouse(final float x, final float y) {
 		return this.minimapFilledArea.contains(x, y);
+	}
+
+	public void resizeNewX(final float x) {
+		final float dx = x - this.minimapBorderArea.x;
+		this.minimapBorderArea.x += dx;
+		this.minimap.x += dx;
+		this.minimapFilledArea.x += dx;
 	}
 }

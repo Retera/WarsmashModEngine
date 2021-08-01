@@ -2,14 +2,13 @@ Frame "SIMPLEFRAME" "SmashConsoleInventoryCover" {
 	DecorateFileNames,
 	SetAllPoints,
 
-    // The top of the UI console
-    Texture "SmashConsoleInventoryCoverTexture" {
-        File "ConsoleInventoryCoverTexture",
-        Width 0.128,
-        Height 0.176,
-        AlphaMode "ALPHAKEY",
-        TexCoord 0, 1, 0.3125, 1,
-        Anchor BOTTOMLEFT,0.472,0.0,
-    }
+    // Texture "SmashConsoleInventoryCoverTexture" {
+    //     File "ConsoleInventoryCoverTexture",
+    //     Width 0.128,
+    //     Height 0.176,
+    //     AlphaMode "ALPHAKEY",
+    //     TexCoord 0, 1, 0.3125, 1,
+    //     Anchor BOTTOMLEFT,0.472,0.0,
+    // }
     
 }

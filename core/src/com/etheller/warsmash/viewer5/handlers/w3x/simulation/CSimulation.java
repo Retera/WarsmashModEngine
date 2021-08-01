@@ -112,7 +112,7 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CRace defaultRace = CRace.ORC;
+			final CRace defaultRace = CRace.NIGHTELF;
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
 			this.players.add(newPlayer);

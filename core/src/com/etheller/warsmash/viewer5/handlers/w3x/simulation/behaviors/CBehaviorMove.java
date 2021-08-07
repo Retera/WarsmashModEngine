@@ -325,8 +325,8 @@ public class CBehaviorMove implements CBehavior {
 						return this;
 					}
 				}
-				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.WALK, SequenceUtils.EMPTY, 1.0f,
-						true);
+				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.WALK, SequenceUtils.FAST,
+						this.unit.getAnimationRunSpeedRatio(), true);
 				this.wasWithinPropWindow = true;
 			}
 			while (continueDistance > 0);

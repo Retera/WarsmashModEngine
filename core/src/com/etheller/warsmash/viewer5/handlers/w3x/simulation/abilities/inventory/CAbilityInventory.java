@@ -274,6 +274,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 		for (final CAbility ability : this.itemsHeldAbilities[slotIndex]) {
 			hero.remove(simulation, ability);
 		}
+		this.itemsHeldAbilities[slotIndex].clear();
 		droppedItem.setHidden(false);
 		droppedItem.setPointAndCheckUnstuck(x, y, simulation);
 	}
@@ -295,6 +296,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			for (final CAbility ability : this.itemsHeldAbilities[index]) {
 				hero.remove(simulation, ability);
 			}
+			this.itemsHeldAbilities[index].clear();
 			itemToDrop.setPointAndCheckUnstuck(x, y, simulation);
 		}
 	}

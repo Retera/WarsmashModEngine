@@ -1742,4 +1742,8 @@ public class CUnit extends CWidget {
 			return this.updateType;
 		}
 	}
+
+	public float getAnimationRunSpeedRatio() {
+		return this.unitType.getAnimationRunSpeed() / this.speed;
+	}
 }

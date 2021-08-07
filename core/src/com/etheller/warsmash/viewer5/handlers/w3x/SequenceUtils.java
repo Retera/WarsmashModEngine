@@ -20,6 +20,7 @@ public class SequenceUtils {
 	public static final EnumSet<SecondaryTag> HIT = EnumSet.of(SecondaryTag.HIT);
 	public static final EnumSet<SecondaryTag> SPELL = EnumSet.of(SecondaryTag.SPELL);
 	public static final EnumSet<SecondaryTag> WORK = EnumSet.of(SecondaryTag.WORK);
+	public static final EnumSet<SecondaryTag> FAST = EnumSet.of(SecondaryTag.FAST);
 
 	private static final StandSequenceComparator STAND_SEQUENCE_COMPARATOR = new StandSequenceComparator();
 	private static final SecondaryTagSequenceComparator SECONDARY_TAG_SEQUENCE_COMPARATOR = new SecondaryTagSequenceComparator(

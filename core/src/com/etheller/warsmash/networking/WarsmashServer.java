@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Set;
 
 import com.etheller.warsmash.networking.udp.OrderedUdpServer;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -141,19 +139,19 @@ public class WarsmashServer implements ClientToServerListener {
 
 	@Override
 	public void finishedTurn(final SocketAddress sourceAddress, final int clientGameTurnTick) {
-		int gameTurnTick = clientGameTurnTick + MAGIC_DELAY_OFFSET;
-		if(WarsmashConstants.VERBOSE_LOGGING) {
+		final int gameTurnTick = clientGameTurnTick + MAGIC_DELAY_OFFSET;
+		if (WarsmashConstants.VERBOSE_LOGGING) {
 			System.out.println("finishedTurn(" + gameTurnTick + ") from " + sourceAddress);
 		}
 		if (!this.gameStarted) {
 			throw new IllegalStateException(
 					"Client should not send us finishedTurn() message when game has not started!");
 		}
-		clientToTurnFinished.put(sourceAddress, clientGameTurnTick);
+		this.clientToTurnFinished.put(sourceAddress, clientGameTurnTick);
 		boolean allDone = true;
-		for(SocketAddress clientAddress: socketAddressToPlayerIndex.keySet()) {
-			Integer turnFinishedValue = clientToTurnFinished.get(clientAddress);
-			if(turnFinishedValue == null || turnFinishedValue < clientGameTurnTick) {
+		for (final SocketAddress clientAddress : this.socketAddressToPlayerIndex.keySet()) {
+			final Integer turnFinishedValue = this.clientToTurnFinished.get(clientAddress);
+			if ((turnFinishedValue == null) || (turnFinishedValue < clientGameTurnTick)) {
 				allDone = false;
 			}
 		}
@@ -169,13 +167,13 @@ public class WarsmashServer implements ClientToServerListener {
 	@Override
 	public void framesSkipped(final int nFramesSkipped) {
 		// dont care for now
-		long currentTimeMillis = System.currentTimeMillis();
-		if(currentTimeMillis - lastServerHeartbeatTime > 3000) {
+		final long currentTimeMillis = System.currentTimeMillis();
+		if ((currentTimeMillis - this.lastServerHeartbeatTime) > 3000) {
 			// 3 seconds of frame skipping, make sure we keep in contact with client
 			System.out.println("sending server heartbeat()");
 			WarsmashServer.this.writer.heartbeat();
 			WarsmashServer.this.writer.send();
-			lastServerHeartbeatTime = currentTimeMillis;
+			this.lastServerHeartbeatTime = currentTimeMillis;
 		}
 	}
 

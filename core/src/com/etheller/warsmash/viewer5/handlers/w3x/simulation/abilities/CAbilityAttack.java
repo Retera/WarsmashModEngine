@@ -112,7 +112,9 @@ public class CAbilityAttack extends AbstractCAbility {
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
 		unit.setAttackBehavior(new CBehaviorAttack(unit));
-		unit.setAttackMoveBehavior(new CBehaviorAttackMove(unit));
+		if (!unit.isMovementDisabled()) {
+			unit.setAttackMoveBehavior(new CBehaviorAttackMove(unit));
+		}
 	}
 
 	@Override

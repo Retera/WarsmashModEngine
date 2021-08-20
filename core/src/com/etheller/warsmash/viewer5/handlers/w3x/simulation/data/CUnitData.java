@@ -172,8 +172,6 @@ public class CUnitData {
 	private static final War3ID CAN_FLEE = War3ID.fromString("ufle");
 	private static final War3ID PRIORITY = War3ID.fromString("upri");
 
-	private static final War3ID ANIMATION_RUN_SPEED = War3ID.fromString("urun");
-
 	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
@@ -284,8 +282,6 @@ public class CUnitData {
 			final String heroAbilityListString = unitType.getFieldAsString(ABILITIES_HERO, 0);
 			final int unitLevel = unitType.getFieldAsInteger(UNIT_LEVEL, 0);
 			final int priority = unitType.getFieldAsInteger(PRIORITY, 0);
-
-			final float animationRunSpeed = unitType.getFieldAsFloat(ANIMATION_RUN_SPEED, 0);
 
 			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
 			final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
@@ -549,7 +545,7 @@ public class CUnitData {
 					goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes,
 					propWindow, turnRate, requirements, unitLevel, hero, strength, strPlus, agility, agiPlus,
 					intelligence, intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount,
-					canFlee, priority, revivesHeroes, animationRunSpeed);
+					canFlee, priority, revivesHeroes);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

@@ -25,74 +25,68 @@ public class OrderIds {
 	 * An item targeted order that move the target item to a certain inventory slot
 	 * of the ordered hero.
 	 */
-	public static final int itemdrag00 = 952002;
+	public static final int itemdrag00 = 852002;
 	/**
 	 * An item targeted order that move the target item to a certain inventory slot
 	 * of the ordered hero.
 	 */
-	public static final int itemdrag01 = 952003;
+	public static final int itemdrag01 = 852003;
 	/**
 	 * An item targeted order that move the target item to a certain inventory slot
 	 * of the ordered hero.
 	 */
-	public static final int itemdrag02 = 952004;
+	public static final int itemdrag02 = 852004;
 	/**
 	 * An item targeted order that move the target item to a certain inventory slot
 	 * of the ordered hero.
 	 */
-	public static final int itemdrag03 = 952005;
+	public static final int itemdrag03 = 852005;
 	/**
 	 * An item targeted order that move the target item to a certain inventory slot
 	 * of the ordered hero.
 	 */
-	public static final int itemdrag04 = 952006;
+	public static final int itemdrag04 = 852006;
 	/**
 	 * An item targeted order that move the target item to a certain inventory slot
 	 * of the ordered hero.
 	 */
-	public static final int itemdrag05 = 952007;
-	public static final int itemdrag06 = 952008;
-	public static final int itemdrag07 = 952009;
-	public static final int itemdrag08 = 952010;
+	public static final int itemdrag05 = 852007;
 	/**
 	 * An order that will make the ordered hero use the item in a certain inventory
 	 * slot. If it's an order with no target or object or point targeted depends on
 	 * the type of item.
 	 */
-	public static final int itemuse00 = 952011; // War3 852008 !! Smash 852011
+	public static final int itemuse00 = 852008;
 	/**
 	 * An order that will make the ordered hero use the item in a certain inventory
 	 * slot. If it's an order with no target or object or point targeted depends on
 	 * the type of item.
 	 */
-	public static final int itemuse01 = 952012;// War3 852009
+	public static final int itemuse01 = 852009;
 	/**
 	 * An order that will make the ordered hero use the item in a certain inventory
 	 * slot. If it's an order with no target or object or point targeted depends on
 	 * the type of item.
 	 */
-	public static final int itemuse02 = 952013;// War3 852010
+	public static final int itemuse02 = 852010;
 	/**
 	 * An order that will make the ordered hero use the item in a certain inventory
 	 * slot. If it's an order with no target or object or point targeted depends on
 	 * the type of item.
 	 */
-	public static final int itemuse03 = 952014;// War3 852011
+	public static final int itemuse03 = 852011;
 	/**
 	 * An order that will make the ordered hero use the item in a certain inventory
 	 * slot. If it's an order with no target or object or point targeted depends on
 	 * the type of item.
 	 */
-	public static final int itemuse04 = 952015;// War3 852012
+	public static final int itemuse04 = 852012;
 	/**
 	 * An order that will make the ordered hero use the item in a certain inventory
 	 * slot. If it's an order with no target or object or point targeted depends on
 	 * the type of item.
 	 */
-	public static final int itemuse05 = 952016;// War3 852013
-	public static final int itemuse06 = 952017;// War3 852013
-	public static final int itemuse07 = 952018;// War3 852013
-	public static final int itemuse08 = 952019;// War3 852013
+	public static final int itemuse05 = 852013;
 	/**
 	 * Order for AIaa ability, which blizzard made for tome of attack, but never
 	 * used it. But it can actually change caster's base attack!

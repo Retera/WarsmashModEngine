@@ -115,7 +115,11 @@ public class BatchGroup extends GenericGroup {
 				shader.setUniform2fv("u_uvRot", uvAnim, 2, 2);
 				shader.setUniform1fv("u_uvScale", uvAnim, 4, 1);
 
-				if (instance.vertexColor[3] < 1.0f) {
+				if (instance.additiveOverrideMeshMode) {
+					layer.bindBlended(shader);
+					gl.glBlendFunc(FilterMode.ADDITIVE_ALPHA[0], FilterMode.ADDITIVE_ALPHA[1]);
+				}
+				else if (instance.vertexColor[3] < 1.0f) {
 					layer.bindBlended(shader);
 				}
 				else {

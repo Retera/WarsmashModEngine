@@ -14,7 +14,7 @@ String "UnitPortraitTextTemplate" {
 
 Frame "SIMPLEFRAME" "UnitPortrait" {
 	DecorateFileNames,
-    SetPoint BOTTOMLEFT,"ConsoleUI",BOTTOMLEFT,0.111,0,
+    SetPoint BOTTOMLEFT,"ConsoleUI",BOTTOMLEFT,0.211,0,
 	Width 0.0835,
 	Height 0.114,
     

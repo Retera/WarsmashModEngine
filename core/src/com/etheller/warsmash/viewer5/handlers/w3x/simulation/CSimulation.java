@@ -112,7 +112,7 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CRace defaultRace = CRace.NIGHTELF;
+			final CRace defaultRace = CRace.UNDEAD;
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
 			this.players.add(newPlayer);
@@ -193,6 +193,7 @@ public class CSimulation implements CPlayerAPI {
 				pathingInstance, pathingInstanceDeath);
 		this.handleIdToDestructable.put(dest.getHandleId(), dest);
 		this.destructables.add(dest);
+		dest.setBlighted(dest.checkIsOnBlight(this));
 		return dest;
 	}
 
@@ -481,6 +482,10 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void heroDeathEvent(final CUnit cUnit) {
+		this.simulationRenderController.heroDeathEvent(cUnit);
+	}
+
+	public void heroDissipateEvent(final CUnit cUnit) {
 		getPlayer(cUnit.getPlayerIndex()).onHeroDeath(cUnit);
 	}
 

@@ -51,15 +51,47 @@ public interface RenderWidget {
 				.noneOf(AnimationTokens.SecondaryTag.class);
 		private final EnumSet<AnimationTokens.SecondaryTag> recycleSet = EnumSet
 				.noneOf(AnimationTokens.SecondaryTag.class);
+		private final EnumSet<AnimationTokens.SecondaryTag> recycleWalkFastSet = EnumSet
+				.noneOf(AnimationTokens.SecondaryTag.class);
 		private PrimaryTag currentAnimation;
 		private EnumSet<SecondaryTag> currentAnimationSecondaryTags = SequenceUtils.EMPTY;
 		private float currentSpeedRatio;
 		private boolean currentlyAllowingRarityVariations;
 		private final Queue<QueuedAnimation> animationQueue = new LinkedList<>();
 		private int lastWalkFrame = -1;
+		private final float animationWalkSpeed;
+		private final float animationRunSpeed;
 
-		public UnitAnimationListenerImpl(final MdxComplexInstance instance) {
+		public UnitAnimationListenerImpl(final MdxComplexInstance instance, final float animationWalkSpeed,
+				final float animationRunSpeed) {
 			this.instance = instance;
+			this.animationWalkSpeed = animationWalkSpeed;
+			this.animationRunSpeed = animationRunSpeed;
+		}
+
+		@Override
+		public void playWalkAnimation(final boolean force, final float currentMovementSpeed,
+				final boolean allowRarityVariations) {
+			EnumSet<SecondaryTag> secondaryWalkTags;
+			float animationMoveSpeed;
+			if (animationWalkSpeed < animationRunSpeed) {
+				final float midpoint = (animationWalkSpeed + animationRunSpeed) / 2;
+				if (currentMovementSpeed >= midpoint) {
+					secondaryWalkTags = SequenceUtils.FAST;
+					animationMoveSpeed = animationRunSpeed;
+				}
+				else {
+					secondaryWalkTags = SequenceUtils.EMPTY;
+					animationMoveSpeed = animationWalkSpeed;
+				}
+			}
+			else {
+				secondaryWalkTags = SequenceUtils.EMPTY;
+				animationMoveSpeed = animationWalkSpeed;
+			}
+			animationMoveSpeed *= instance.localScale.x;
+			final float speedRatio = (currentMovementSpeed) / animationMoveSpeed;
+			playAnimation(force, PrimaryTag.WALK, secondaryWalkTags, speedRatio, allowRarityVariations);
 		}
 
 		@Override
@@ -99,12 +131,13 @@ public interface RenderWidget {
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);
 				this.instance.setAnimationSpeed(speedRatio);
-				if(animationName != PrimaryTag.WALK && currentAnimation == PrimaryTag.WALK) {
+				if ((animationName != PrimaryTag.WALK) && (currentAnimation == PrimaryTag.WALK)) {
 					lastWalkFrame = instance.frame;
 				}
 				if (SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
 						allowRarityVariations) != null) {
-					if(lastWalkFrame != -1 && animationName == PrimaryTag.WALK && currentAnimation != PrimaryTag.WALK) {
+					if ((lastWalkFrame != -1) && (animationName == PrimaryTag.WALK)
+							&& (currentAnimation != PrimaryTag.WALK)) {
 						instance.setFrame(instance.clampFrame(lastWalkFrame));
 					}
 					this.currentAnimation = animationName;
@@ -123,13 +156,14 @@ public interface RenderWidget {
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);
-				if(animationName != PrimaryTag.WALK && currentAnimation == PrimaryTag.WALK) {
+				if ((animationName != PrimaryTag.WALK) && (currentAnimation == PrimaryTag.WALK)) {
 					lastWalkFrame = instance.frame;
 				}
 				final Sequence sequence = SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
 						allowRarityVariations);
 				if (sequence != null) {
-					if(lastWalkFrame != -1 && animationName == PrimaryTag.WALK && currentAnimation != PrimaryTag.WALK) {
+					if ((lastWalkFrame != -1) && (animationName == PrimaryTag.WALK)
+							&& (currentAnimation != PrimaryTag.WALK)) {
 						instance.setFrame(instance.clampFrame(lastWalkFrame));
 					}
 					this.currentAnimation = animationName;

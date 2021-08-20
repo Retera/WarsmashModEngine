@@ -33,7 +33,6 @@ public class RenderUnit implements RenderWidget {
 	private static final War3ID RED = War3ID.fromString("uclr");
 	private static final War3ID GREEN = War3ID.fromString("uclg");
 	private static final War3ID BLUE = War3ID.fromString("uclb");
-	private static final War3ID MODEL_SCALE = War3ID.fromString("usca");
 	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
 	private static final War3ID ORIENTATION_INTERPOLATION = War3ID.fromString("uori");
 	private static final War3ID ANIM_PROPS = War3ID.fromString("uani");
@@ -76,8 +75,8 @@ public class RenderUnit implements RenderWidget {
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
 			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
 			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
-			final MdxModel specialArtModel, final BuildingShadow buildingShadow,
-			final float selectionCircleScaleFactor) {
+			final MdxModel specialArtModel, final BuildingShadow buildingShadow, final float selectionCircleScaleFactor,
+			final float animationWalkSpeed, final float animationRunSpeed, final float scalingValue) {
 		this.portraitModel = portraitModel;
 		this.simulationUnit = simulationUnit;
 		this.typeData = typeData;
@@ -96,7 +95,7 @@ public class RenderUnit implements RenderWidget {
 		this.playerIndex = playerIndex & 0xFFFF;
 		instance.setTeamColor(this.playerIndex);
 		instance.setScene(map.worldScene);
-		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance);
+		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
 		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
@@ -117,14 +116,12 @@ public class RenderUnit implements RenderWidget {
 			War3ID red;
 			War3ID green;
 			War3ID blue;
-			War3ID scale;
-			scale = MODEL_SCALE;
 			red = RED;
 			green = GREEN;
 			blue = BLUE;
 			instance.setVertexColor(new float[] { (row.getFieldAsInteger(red, 0)) / 255f,
 					(row.getFieldAsInteger(green, 0)) / 255f, (row.getFieldAsInteger(blue, 0)) / 255f });
-			instance.uniformScale(row.getFieldAsFloat(scale, 0));
+			instance.uniformScale(scalingValue);
 
 			this.selectionScale = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0) * selectionCircleScaleFactor;
 			this.selectionHeight = row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
@@ -147,9 +144,10 @@ public class RenderUnit implements RenderWidget {
 
 	public void populateCommandCard(final CSimulation game, final GameUI gameUI,
 			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
-			final int subMenuOrderId, boolean multiSelect) {
+			final int subMenuOrderId, final boolean multiSelect) {
 		final CommandCardPopulatingAbilityVisitor commandCardPopulatingVisitor = CommandCardPopulatingAbilityVisitor.INSTANCE
-				.reset(game, gameUI, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId, multiSelect);
+				.reset(game, gameUI, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId,
+						multiSelect);
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
 			ability.visit(commandCardPopulatingVisitor);
 		}
@@ -271,10 +269,11 @@ public class RenderUnit implements RenderWidget {
 			removeSplats(map);
 		}
 		if (boneCorpse && !this.boneCorpse) {
-			if(simulationUnit.getUnitType().isHero()) {
-				this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DISSIPATE, SequenceUtils.EMPTY,
-						this.simulationUnit.getEndingDecayTime(map.simulation), true);
-			} else {
+			if (this.simulationUnit.getUnitType().isHero()) {
+				this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DISSIPATE,
+						SequenceUtils.EMPTY, this.simulationUnit.getEndingDecayTime(map.simulation), true);
+			}
+			else {
 				this.unitAnimationListenerImpl.playAnimationWithDuration(true, PrimaryTag.DECAY, SequenceUtils.BONE,
 						this.simulationUnit.getEndingDecayTime(map.simulation), true);
 			}

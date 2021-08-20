@@ -1,7 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue;
 
-import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
@@ -14,33 +15,30 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 public final class CAbilityReviveHero extends AbstractCAbility {
 
 	public CAbilityReviveHero(final int handleId) {
 		super(handleId);
 	}
 
-
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		CUnit deadHero = game.getUnit(orderId);
-		if (deadHero != null
-			&& deadHero.getPlayerIndex()==unit.getPlayerIndex()) {
-			CAbilityHero heroData = deadHero.getHeroData();
-			if( heroData != null && heroData.isAwaitingRevive()) {
+		final CUnit deadHero = game.getUnit(orderId);
+		if ((deadHero != null) && (deadHero.getPlayerIndex() == unit.getPlayerIndex())) {
+			final CAbilityHero heroData = deadHero.getHeroData();
+			if ((heroData != null) && heroData.isAwaitingRevive() && !heroData.isReviving()) {
 				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
-				int heroReviveGoldCost = game.getGameplayConstants().getHeroReviveGoldCost(deadHero.getUnitType().getGoldCost(), heroData.getHeroLevel());
-				int heroReviveLumberCost = game.getGameplayConstants().getHeroReviveLumberCost(deadHero.getUnitType().getGoldCost(), heroData.getHeroLevel());
+				final int heroReviveGoldCost = game.getGameplayConstants()
+						.getHeroReviveGoldCost(deadHero.getUnitType().getGoldCost(), heroData.getHeroLevel());
+				final int heroReviveLumberCost = game.getGameplayConstants()
+						.getHeroReviveLumberCost(deadHero.getUnitType().getGoldCost(), heroData.getHeroLevel());
 
 				if (player.getGold() >= heroReviveGoldCost) {
 					if (player.getLumber() >= heroReviveLumberCost) {
 						if ((deadHero.getUnitType().getFoodUsed() == 0)
-								|| ((player.getFoodUsed() + deadHero.getUnitType().getFoodUsed()) <= player.getFoodCap())) {
+								|| ((player.getFoodUsed() + deadHero.getUnitType().getFoodUsed()) <= player
+										.getFoodCap())) {
 							receiver.useOk();
 						}
 						else {
@@ -77,9 +75,8 @@ public final class CAbilityReviveHero extends AbstractCAbility {
 	@Override
 	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
-		CUnit deadHero = game.getUnit(orderId);
-		if (deadHero != null
-				&& deadHero.getPlayerIndex()==unit.getPlayerIndex()) {
+		final CUnit deadHero = game.getUnit(orderId);
+		if ((deadHero != null) && (deadHero.getPlayerIndex() == unit.getPlayerIndex())) {
 			receiver.targetOk(null);
 		}
 		else if (orderId == OrderIds.cancel) {
@@ -91,7 +88,8 @@ public final class CAbilityReviveHero extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityTarget target) {
 		return true;
 	}
 

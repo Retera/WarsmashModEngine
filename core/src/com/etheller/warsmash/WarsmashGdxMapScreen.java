@@ -127,7 +127,6 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
 
 		final Scene portraitScene = this.viewer.addSimpleScene();
-		portraitScene.alpha = true;
 		this.uiScene = this.viewer.addSimpleScene();
 		this.uiScene.alpha = true;
 		if (ENABLE_AUDIO) {
@@ -335,8 +334,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	private Rectangle setupWorldFrameViewport(final int width, final int height) {
 		this.tempRect.x = 0;
 		this.tempRect.width = width;
-		final float topHeight = 0;// 0.02666f * height;
-		final float bottomHeight = 0;// 0.21333f * height;
+		final float topHeight = 0.02666f * height;
+		final float bottomHeight = 0.21333f * height;
 		this.tempRect.y = (int) bottomHeight;
 		this.tempRect.height = height - (int) (topHeight + bottomHeight);
 		return this.tempRect;

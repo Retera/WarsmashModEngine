@@ -138,32 +138,26 @@ public class PathingGrid {
 		final float offsetY = ((pathingTextureTga.getHeight() % 2) == 1) ? 16f : 0f;
 		final Rectangle pathingMapRectangle = new Rectangle((positionX - (width / 2)) + offsetX,
 				(positionY - (height / 2)) + offsetY, width, height);
-		short anyPathingTypeWithUnit = 0;
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
 				MovementType.AMPHIBIOUS)) {
 			System.out.println("intersects amph unit");
 			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
-			anyPathingTypeWithUnit |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
 				MovementType.FLOAT)) {
 			System.out.println("intersects float unit");
 			anyPathingTypesInRegion |= PathingFlags.UNSWIMABLE;
-			anyPathingTypeWithUnit |= PathingFlags.UNSWIMABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
 				MovementType.FLY)) {
 			System.out.println("intersects fly unit");
 			anyPathingTypesInRegion |= PathingFlags.UNFLYABLE;
-			anyPathingTypeWithUnit |= PathingFlags.UNFLYABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
 				MovementType.FOOT)) {
 			System.out.println("intersects foot unit");
 			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE;
-			anyPathingTypeWithUnit |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE;
 		}
-		pathingTypesFillingRegion &= anyPathingTypeWithUnit;
 		for (final CBuildingPathingType pathingType : preventPathingTypes) {
 			if (PathingFlags.isPathingFlag(anyPathingTypesInRegion, pathingType)) {
 				return false;
@@ -328,7 +322,9 @@ public class PathingGrid {
 		public static int UNWALKABLE = 0x2;
 		public static int UNFLYABLE = 0x4;
 		public static int UNBUILDABLE = 0x8;
+		public static int BLIGHTED = 0x20;
 		public static int UNSWIMABLE = 0x40; // PROBABLY, didn't confirm this flag value is accurate
+		public static int BOUDNARY = 0xF0;
 
 		public static boolean isPathingFlag(final short pathingValue, final int flag) {
 			return (pathingValue & flag) != 0;
@@ -337,7 +333,7 @@ public class PathingGrid {
 		public static boolean isPathingFlag(final short pathingValue, final CBuildingPathingType pathingType) {
 			switch (pathingType) {
 			case BLIGHTED:
-				throw new IllegalArgumentException("Blight pathing check system is Not Yet Implemented");
+				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.BLIGHTED);
 			case UNAMPH:
 				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNWALKABLE)
 						&& PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNSWIMABLE);

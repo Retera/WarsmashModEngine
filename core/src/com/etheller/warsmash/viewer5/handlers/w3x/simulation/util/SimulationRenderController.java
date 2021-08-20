@@ -52,7 +52,7 @@ public interface SimulationRenderController {
 
 	void spawnEffectOnUnit(CUnit unit, String effectPath);
 
-    void spawnSpellEffectOnUnit(CUnit unit, War3ID alias);
+	void spawnSpellEffectOnUnit(CUnit unit, War3ID alias);
 
 	void spawnUIUnitGetItemSound(CUnit cUnit, CItem item);
 
@@ -62,6 +62,8 @@ public interface SimulationRenderController {
 
 	void unitPreferredSelectionReplacement(CUnit unit, CUnit newUnit);
 
-    void heroRevived(CUnit trainedUnit);
+	void heroRevived(CUnit trainedUnit);
+
+	void heroDeathEvent(CUnit cUnit);
 
 }

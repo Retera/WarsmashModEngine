@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
@@ -47,7 +48,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
-		return this.unit.canReach(this.target, abilityHarvest.getTreeAttack().getRange());
+		return this.unit.canReach(this.target, this.abilityHarvest.getTreeAttack().getRange());
 	}
 
 	@Override
@@ -140,6 +141,11 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 				Math.min(this.abilityHarvest.getCarriedResourceAmount() + this.abilityHarvest.getDamageToTree(),
 						this.abilityHarvest.getLumberCapacity()));
 		this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.LUMBER);
+		if (target instanceof CDestructable) {
+			if (this.unit.getUnitType().getClassifications().contains(CUnitClassification.UNDEAD)) {
+				((CDestructable) target).setBlighted(true);
+			}
+		}
 	}
 
 	@Override

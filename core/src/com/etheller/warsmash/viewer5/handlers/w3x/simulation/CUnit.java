@@ -279,18 +279,15 @@ public class CUnit extends CWidget {
 						this.boneCorpse = true;
 						// start final phase immediately for "cant raise" case
 					}
-					if (!this.unitType.isDecay()) {
-						// if we dont raise AND dont decay, then now that death anim is over
-						// we just delete the unit
-						if (this.unitType.isHero()) {
-							if (!getHeroData().isAwaitingRevive()) {
-								setHidden(true);
-								getHeroData().setAwaitingRevive(true);
-								game.heroDeathEvent(this);
-							}
-							return false;
+					if (!this.unitType.isHero()) {
+						if (!this.unitType.isDecay()) {
+							// if we dont raise AND dont decay, then now that death anim is over
+							// we just delete the unit
+							return true;
 						}
-						return true;
+					}
+					else {
+						game.heroDeathEvent(this);
 					}
 					this.deathTurnTick = gameTurnTick;
 				}
@@ -308,7 +305,7 @@ public class CUnit extends CWidget {
 					if (!getHeroData().isAwaitingRevive()) {
 						setHidden(true);
 						getHeroData().setAwaitingRevive(true);
-						game.heroDeathEvent(this);
+						game.heroDissipateEvent(this);
 					}
 					return false;
 				}
@@ -413,6 +410,8 @@ public class CUnit extends CWidget {
 						if (this.constructionProgress >= gameplayConstants.getHeroReviveTime(
 								trainedUnitType.getBuildTime(), revivingHero.getHeroData().getHeroLevel())) {
 							this.constructionProgress = 0;
+							revivingHero.getHeroData().setReviving(false);
+							revivingHero.getHeroData().setAwaitingRevive(false);
 							revivingHero.corpse = false;
 							revivingHero.boneCorpse = false;
 							revivingHero.deathTurnTick = 0;
@@ -516,6 +515,9 @@ public class CUnit extends CWidget {
 	public float getEndingDecayTime(final CSimulation game) {
 		if (this.isBuilding()) {
 			return game.getGameplayConstants().getStructureDecayTime();
+		}
+		if (this.unitType.isHero()) {
+			return game.getGameplayConstants().getDissipateTime();
 		}
 		return game.getGameplayConstants().getBoneDecayTime();
 	}
@@ -1399,7 +1401,7 @@ public class CUnit extends CWidget {
 					final CUnit hero = game.getUnit(this.buildQueue[cancelIndex].getValue());
 					final CUnitType unitType = hero.getUnitType();
 					final CAbilityHero heroData = hero.getHeroData();
-					heroData.setAwaitingRevive(true);
+					heroData.setReviving(false);
 					final CGameplayConstants gameplayConstants = game.getGameplayConstants();
 					player.refund(
 							gameplayConstants.getHeroReviveGoldCost(unitType.getGoldCost(), heroData.getHeroLevel()),
@@ -1466,7 +1468,7 @@ public class CUnit extends CWidget {
 
 	public void queueRevivingHero(final CSimulation game, final CUnit hero) {
 		if (queue(game, new War3ID(hero.getHandleId()), QueueItemType.HERO_REVIVE)) {
-			hero.getHeroData().setAwaitingRevive(false);
+			hero.getHeroData().setReviving(true);
 			final CPlayer player = game.getPlayer(this.playerIndex);
 			final int heroReviveGoldCost = game.getGameplayConstants()
 					.getHeroReviveGoldCost(hero.getUnitType().getGoldCost(), hero.getHeroData().getHeroLevel());
@@ -1741,9 +1743,5 @@ public class CUnit extends CWidget {
 		public StateListenerUpdateType getUpdateType() {
 			return this.updateType;
 		}
-	}
-
-	public float getAnimationRunSpeedRatio() {
-		return this.unitType.getAnimationRunSpeed() / this.speed;
 	}
 }

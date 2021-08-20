@@ -29,6 +29,9 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	private boolean dead;
 	private BuildingShadow destructableShadow;
 	private final boolean selectable;
+	private boolean blighted = false;
+	private final int replaceableTextureId;
+	private String replaceableTextureFile;
 
 	public RenderDestructable(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final com.etheller.warsmash.parsers.w3x.doo.Doodad doodad, final WorldEditorDataType type,
@@ -38,18 +41,21 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 		this.life = simulationDestructable.getLife();
 		this.destructableShadow = destructableShadow;
 		this.simulationDestructable = simulationDestructable;
-		String replaceableTextureFile = row.getFieldAsString(TEX_FILE, 0);
-		final int replaceableTextureId = row.getFieldAsInteger(TEX_ID, 0);
-		if ((replaceableTextureFile != null) && (replaceableTextureFile.length() > 1)) {
-			final int dotIndex = replaceableTextureFile.lastIndexOf('.');
+		this.replaceableTextureFile = row.getFieldAsString(TEX_FILE, 0);
+		this.replaceableTextureId = row.getFieldAsInteger(TEX_ID, 0);
+		if ((this.replaceableTextureFile != null) && (this.replaceableTextureFile.length() > 1)) {
+			final int dotIndex = this.replaceableTextureFile.lastIndexOf('.');
 			if (dotIndex != -1) {
-				replaceableTextureFile = replaceableTextureFile.substring(0, dotIndex);
+				this.replaceableTextureFile = this.replaceableTextureFile.substring(0, dotIndex);
 			}
-			replaceableTextureFile += ".blp";
-			this.instance.setReplaceableTexture(replaceableTextureId, replaceableTextureFile);
+			if (simulationDestructable.isBlighted()) {
+				this.blighted = true;
+				this.replaceableTextureFile += "Blight";
+			}
+			this.instance.setReplaceableTexture(this.replaceableTextureId, this.replaceableTextureFile + ".blp");
 		}
 		this.selectionScale *= row.getFieldAsFloat(SEL_CIRCLE_SIZE, 0);
-		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl((MdxComplexInstance) this.instance);
+		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl((MdxComplexInstance) this.instance, 0, 0);
 		simulationDestructable.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		this.unitAnimationListenerImpl.playAnimation(true, getAnimation(), SequenceUtils.EMPTY, 1.0f, true);
 		this.selectable = row.readSLKTagBoolean("selectable");
@@ -111,6 +117,14 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 			}
 		}
 		this.dead = dead;
+		final boolean blighted = this.simulationDestructable.isBlighted();
+		if (blighted && !this.blighted) {
+			this.blighted = blighted;
+			if (this.replaceableTextureFile != null) {
+				this.replaceableTextureFile += "Blight";
+			}
+			this.instance.setReplaceableTexture(this.replaceableTextureId, this.replaceableTextureFile + ".blp");
+		}
 		this.unitAnimationListenerImpl.update();
 	}
 

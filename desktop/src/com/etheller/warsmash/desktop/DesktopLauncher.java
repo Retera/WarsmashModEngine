@@ -4,9 +4,13 @@ import static org.lwjgl.openal.AL10.AL_ORIENTATION;
 import static org.lwjgl.openal.AL10.AL_POSITION;
 import static org.lwjgl.openal.AL10.alListener;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.FloatBuffer;
-import java.util.Date;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -37,17 +41,6 @@ import com.etheller.warsmash.viewer5.gl.WireframeExtension;
 
 public class DesktopLauncher {
 	public static void main(final String[] arg) {
-		new File("Logs").mkdir();
-		try {
-			System.setOut(new PrintStream(new FileOutputStream(new File("Logs/"+System.currentTimeMillis()+".out.log"))));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		try {
-			System.setErr(new PrintStream(new FileOutputStream(new File("Logs/"+System.currentTimeMillis()+".err.log"))));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
 		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.useGL30 = true;
 		config.gles30ContextMajorVersion = 3;
@@ -61,9 +54,13 @@ public class DesktopLauncher {
 		config.height = desktopDisplayMode.height;
 		String fileToLoad = null;
 		config.fullscreen = true;
+		boolean noLogs = false;
 		for (int argIndex = 0; argIndex < arg.length; argIndex++) {
 			if ("-windowed".equals(arg[argIndex])) {
 				config.fullscreen = false;
+			}
+			else if ("-nolog".equals(arg[argIndex])) {
+				noLogs = true;
 			}
 			else if ((arg.length > (argIndex + 1)) && "-loadfile".equals(arg[argIndex])) {
 				argIndex++;
@@ -76,6 +73,23 @@ public class DesktopLauncher {
 			else if ((arg.length > (argIndex + 1)) && "-lp".equals(arg[argIndex])) {
 				argIndex++;
 				MultiplayerHack.LP_VAL = Integer.parseInt(arg[argIndex]);
+			}
+		}
+		if (!noLogs) {
+			new File("Logs").mkdir();
+			try {
+				System.setOut(new PrintStream(
+						new FileOutputStream(new File("Logs/" + System.currentTimeMillis() + ".out.log"))));
+			}
+			catch (final FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			try {
+				System.setErr(new PrintStream(
+						new FileOutputStream(new File("Logs/" + System.currentTimeMillis() + ".err.log"))));
+			}
+			catch (final FileNotFoundException e) {
+				e.printStackTrace();
 			}
 		}
 		loadExtensions();

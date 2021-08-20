@@ -251,7 +251,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		if (this.previewCallback.isShowingRequirements()) {
 			uberTip = this.previewCallback.getRequirementsText() + "|r" + uberTip;
 		}
-		this.commandButtonListener.commandButton(iconUI.getButtonPositionX(), iconUI.getButtonPositionY(),
+		this.commandButtonListener.commandButton(buttonPosX, buttonPosY,
 				disabled ? iconUI.getIconDisabled() : iconUI.getIcon(), handleId, disabled ? 0 : orderId,
 				autoCastOrderId, active, autoCastActive, menuButton, toolTip, uberTip, iconUI.getHotkey(), goldCost,
 				lumberCost, foodCost);
@@ -272,7 +272,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			int heroIndex = 0;
 			for (final CUnit playerHero : this.game.getPlayerHeroes(this.unit.getPlayerIndex())) {
 				final CAbilityHero heroData = playerHero.getHeroData();
-				if (playerHero.isDead() && (heroData != null) && heroData.isAwaitingRevive()) {
+				if (playerHero.isDead() && (heroData != null) && heroData.isAwaitingRevive()
+						&& !heroData.isReviving()) {
 
 					final UnitIconUI unitUI = this.abilityDataUI.getUnitUI(playerHero.getTypeId());
 					if (unitUI != null) {

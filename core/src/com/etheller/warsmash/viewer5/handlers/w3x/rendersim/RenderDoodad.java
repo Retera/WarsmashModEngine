@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class RenderDoodad {
 	private static final int SAMPLE_RADIUS = 4;
+	private static final float[] VERTEX_COLOR_BLACK = { 0f, 0f, 0f, 1f };
 	public final ModelInstance instance;
 	private final MutableGameObject row;
 	private final float maxPitch;
@@ -49,6 +50,11 @@ public class RenderDoodad {
 		float pitch, roll;
 		this.x = doodad.getLocation()[0];
 		this.y = doodad.getLocation()[1];
+		{
+			if (!map.terrain.inPlayableArea(this.x, this.y)) {
+				((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+			}
+		}
 		final float pitchSampleForwardX = this.x + (SAMPLE_RADIUS * (float) Math.cos(facingRadians));
 		final float pitchSampleForwardY = this.y + (SAMPLE_RADIUS * (float) Math.sin(facingRadians));
 		final float pitchSampleBackwardX = this.x - (SAMPLE_RADIUS * (float) Math.cos(facingRadians));

@@ -9,7 +9,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -150,6 +149,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final War3ID ALLOW_CUSTOM_TEAM_COLOR = War3ID.fromString("utcc");
 	private static final War3ID TEAM_COLOR = War3ID.fromString("utco");
 	private static final War3ID MAX_ROLL = War3ID.fromString("umxr");
+	private static final War3ID ANIMATION_RUN_SPEED = War3ID.fromString("urun");
+	private static final War3ID ANIMATION_WALK_SPEED = War3ID.fromString("uwal");
+	private static final War3ID MODEL_SCALE = War3ID.fromString("usca");
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
 	private static final float[] rayHeap = new float[6];
@@ -191,7 +193,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public int renderPathing = 0;
 	public int renderLighting = 1;
 
-	public List<SplatModel> selModels = new ArrayList<>();
 	private final Set<String> selectedSplatModelKeys = new HashSet<>();
 	public List<RenderWidget> selected = new ArrayList<>();
 	private final Set<String> mouseHighlightSplatModelKeys = new HashSet<>();
@@ -732,6 +733,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public void heroRevived(final CUnit source) {
 						final AbilityUI reviveUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_REVIVE_RAWCODE);
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
+						renderUnit.instance.additiveOverrideMeshMode = false;
+						renderUnit.instance.setVertexAlpha(1.0f);
 						final CPlayer player = War3MapViewer.this.simulation.getPlayer(source.getPlayerIndex());
 						final String heroReviveArt = reviveUI.getTargetArt(player.getRace().ordinal());
 						spawnFxOnOrigin(renderUnit, heroReviveArt);
@@ -756,6 +759,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 										x + shadowWidth, y + shadowHeight, 3, 0.5f);
 							}
 						}
+					}
+
+					@Override
+					public void heroDeathEvent(final CUnit source) {
+						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
+						renderUnit.instance.additiveOverrideMeshMode = true;
 					}
 
 					@Override
@@ -1380,7 +1389,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				}
 				final RenderUnit renderUnit = new RenderUnit(this, model, row, unitX, unitY, unitZ, customTeamColor,
 						soundset, portraitModel, simulationUnit, typeData, specialArtModel, buildingShadowInstance,
-						this.selectionCircleScaleFactor);
+						this.selectionCircleScaleFactor, typeData.getAnimationWalkSpeed(),
+						typeData.getAnimationRunSpeed(), typeData.getScalingValue());
 				this.unitToRenderPeer.put(simulationUnit, renderUnit);
 				this.widgets.add(renderUnit);
 				this.units.add(renderUnit);
@@ -1488,7 +1498,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		if (unitTypeData == null) {
 			unitTypeData = new RenderUnitTypeData(row.getFieldAsFloat(MAX_PITCH, 0), row.getFieldAsFloat(MAX_ROLL, 0),
 					row.getFieldAsFloat(ELEVATION_SAMPLE_RADIUS, 0), row.getFieldAsBoolean(ALLOW_CUSTOM_TEAM_COLOR, 0),
-					row.getFieldAsInteger(TEAM_COLOR, 0));
+					row.getFieldAsInteger(TEAM_COLOR, 0), row.getFieldAsFloat(ANIMATION_RUN_SPEED, 0),
+					row.getFieldAsFloat(ANIMATION_WALK_SPEED, 0), row.getFieldAsFloat(MODEL_SCALE, 0));
 			this.unitIdToTypeData.put(key, unitTypeData);
 		}
 		return unitTypeData;
@@ -1616,15 +1627,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public void deselect() {
-		if (!this.selModels.isEmpty()) {
-			for (final String key : this.selectedSplatModelKeys) {
-				this.terrain.removeSplatBatchModel(key);
-			}
-			this.selModels.clear();
-			for (final RenderWidget unit : this.selected) {
-				unit.unassignSelectionCircle();
-			}
+		for (final String key : this.selectedSplatModelKeys) {
+			this.terrain.removeSplatBatchModel(key);
 		}
+		for (final RenderWidget unit : this.selected) {
+			unit.unassignSelectionCircle();
+		}
+		this.selectedSplatModelKeys.clear();
 		this.selected.clear();
 	}
 
@@ -1667,27 +1676,39 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 				}
 				path = allyKey + path;
-				if (!splats.containsKey(path)) {
-					splats.put(path, new Splat());
-				}
-				final float x = unit.getX();
-				final float y = unit.getY();
-				System.out.println("Selecting a unit at " + x + "," + y);
-				splats.get(path).locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
-						x + (selectionSize / 2), y + (selectionSize / 2), 5 });
-				splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
-					@Override
-					public void accept(final SplatMover t) {
-						unit.assignSelectionCircle(t);
-						if (unit.getInstance().hidden()) {
-							t.hide();
-						}
+				final SplatModel splatModel = this.terrain.getSplatModel("selection:" + path);
+				if (splatModel != null) {
+					final float x = unit.getX();
+					final float y = unit.getY();
+					final SplatMover splatInstance = splatModel.add(x - (selectionSize / 2), y - (selectionSize / 2),
+							x + (selectionSize / 2), y + (selectionSize / 2), 5, this.terrain.centerOffset);
+					unit.assignSelectionCircle(splatInstance);
+					if (unit.getInstance().hidden()) {
+						splatInstance.hide();
 					}
-				});
+				}
+				else {
+					if (!splats.containsKey(path)) {
+						splats.put(path, new Splat());
+					}
+					final float x = unit.getX();
+					final float y = unit.getY();
+					System.out.println("Selecting a unit at " + x + "," + y);
+					splats.get(path).locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
+							x + (selectionSize / 2), y + (selectionSize / 2), 5 });
+					splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+						@Override
+						public void accept(final SplatMover t) {
+							unit.assignSelectionCircle(t);
+							if (unit.getInstance().hidden()) {
+								t.hide();
+							}
+						}
+					});
+				}
 			}
 			this.selected.add(unit);
 		}
-		this.selModels.clear();
 		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
 			final String path = entry.getKey();
 			final String filePath = path.substring(2);
@@ -1715,7 +1736,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				model.color[3] = this.selectionCircleColorNeutral.a;
 				break;
 			}
-			this.selModels.add(model);
 			this.terrain.addSplatBatchModel("selection:" + path, model);
 			this.selectedSplatModelKeys.add("selection:" + path);
 		}
@@ -1855,32 +1875,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.confirmationInstance.vertexColor[0] = red;
 		this.confirmationInstance.vertexColor[1] = green;
 		this.confirmationInstance.vertexColor[2] = blue;
-	}
-
-	public List<RenderWidget> selectUnit(final float x, final float y, final boolean toggle) {
-		System.out.println("world: " + x + "," + y);
-		final RenderWidget entity = rayPickUnit(x, y, CWidgetFilterFunction.ACCEPT_ALL_LIVING);
-		List<RenderWidget> sel;
-		if (entity != null) {
-			if (toggle) {
-				sel = new ArrayList<>(this.selected);
-				final int idx = sel.indexOf(entity);
-				if (idx >= 0) {
-					sel.remove(idx);
-				}
-				else {
-					sel.add(entity);
-				}
-			}
-			else {
-				sel = Arrays.asList(entity);
-			}
-			this.doSelectUnit(sel);
-		}
-		else {
-			sel = Collections.emptyList();
-		}
-		return sel;
 	}
 
 	public RenderWidget rayPickUnit(final float x, final float y) {

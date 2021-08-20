@@ -54,6 +54,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class Terrain {
+	public static final float CELL_SIZE = 128f;
 	private static final String[] colorTags = { "R", "G", "B", "A" };
 	private static final float[] sizeHeap = new float[2];
 	private static final Vector3 normalHeap1 = new Vector3();

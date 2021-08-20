@@ -7,6 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget.UnitAni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 
 public class CDestructable extends CWidget {
 
@@ -15,6 +16,7 @@ public class CDestructable extends CWidget {
 	private final RemovablePathingMapInstance pathingInstanceDeath;
 	private UnitAnimationListenerImpl unitAnimationListenerImpl;
 	private boolean invulnerable;
+	private boolean blighted;
 
 	public CDestructable(final int handleId, final float x, final float y, final float life,
 			final CDestructableType destTypeInstance, final RemovablePathingMapInstance pathingInstance,
@@ -94,5 +96,19 @@ public class CDestructable extends CWidget {
 	@Override
 	public boolean isInvulnerable() {
 		return this.invulnerable;
+	}
+
+	public void setBlighted(final boolean blighted) {
+		this.blighted = blighted;
+	}
+
+	public boolean isBlighted() {
+		return this.blighted;
+	}
+
+	public boolean checkIsOnBlight(final CSimulation game) {
+		return !game.getPathingGrid().checkPathingTexture(getX(), getY(), 0, this.destType.getPathingPixelMap(),
+				EnumSet.of(CBuildingPathingType.BLIGHTED), EnumSet.noneOf(CBuildingPathingType.class),
+				game.getWorldCollision(), null);
 	}
 }

@@ -72,6 +72,7 @@ public class MdxComplexInstance extends ModelInstance {
 	private float animationSpeed = 1.0f;
 	private float blendTime;
 	private float blendTimeRemaining;
+	public boolean additiveOverrideMeshMode = false;
 
 	public MdxComplexInstance(final MdxModel model) {
 		super(model);
@@ -511,8 +512,10 @@ public class MdxComplexInstance extends ModelInstance {
 	public void renderOpaque(final Matrix4 mvp) {
 		final MdxModel model = (MdxModel) this.model;
 
-		for (final GenericGroup group : model.opaqueGroups) {
-			group.render(this, mvp);
+		if (!this.additiveOverrideMeshMode) {
+			for (final GenericGroup group : model.opaqueGroups) {
+				group.render(this, mvp);
+			}
 		}
 
 		final int glGetError = Gdx.gl.glGetError();
@@ -528,6 +531,9 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 		final MdxModel model = (MdxModel) this.model;
 
+		for (final GenericGroup group : model.opaqueGroups) {
+			group.render(this, this.scene.camera.viewProjectionMatrix);
+		}
 		for (final GenericGroup group : model.translucentGroups) {
 			group.render(this, this.scene.camera.viewProjectionMatrix);
 
@@ -555,6 +561,10 @@ public class MdxComplexInstance extends ModelInstance {
 			final int integerFrameTime = this.frame - lastIntegerFrame;
 			this.counter += integerFrameTime;
 			this.allowParticleSpawn = true;
+			if (this.additiveOverrideMeshMode) {
+				this.vertexColor[3] = Math.max(0,
+						this.vertexColor[3] - (integerFrameTime / (float) (interval[1] - interval[0])));
+			}
 
 			final long animEnd = interval[1] - 1;
 			if (this.floatingFrame >= animEnd) {
@@ -667,6 +677,12 @@ public class MdxComplexInstance extends ModelInstance {
 		return this;
 	}
 
+	public MdxComplexInstance setVertexAlpha(final float alpha) {
+		this.vertexColor[3] = alpha;
+
+		return this;
+	}
+
 	/**
 	 * Set the sequence of this instance.
 	 */
@@ -686,11 +702,13 @@ public class MdxComplexInstance extends ModelInstance {
 				this.allowParticleSpawn = false;
 			}
 			else {
-				if ((this.blendTime > 0) && (lastSequence != this.sequence) && (lastSequence != -1)) {
-					this.blendTimeRemaining = this.blendTime;
-					for (int i = 0, l = this.sortedNodes.length; i < l; i++) {
-						final SkeletalNode node = this.sortedNodes[i];
-						node.beginBlending();
+				if ((this.blendTime > 0) && (lastSequence != -1)) {
+					if ((this.blendTimeRemaining <= 0) && (this.counter > 0)) {
+						this.blendTimeRemaining = this.blendTime;
+						for (int i = 0, l = this.sortedNodes.length; i < l; i++) {
+							final SkeletalNode node = this.sortedNodes[i];
+							node.beginBlending();
+						}
 					}
 				}
 

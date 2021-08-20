@@ -17,6 +17,7 @@ public class CGameplayConstants {
 	private final float maxCollisionRadius;
 	private final float decayTime;
 	private final float boneDecayTime;
+	private final float dissipateTime;
 	private final float bulletDeathTime;
 	private final float closeEnoughRange;
 	private final float dawnTimeGameHours;
@@ -111,6 +112,7 @@ public class CGameplayConstants {
 		this.maxCollisionRadius = miscData.getFieldFloatValue("MaxCollisionRadius");
 		this.decayTime = miscData.getFieldFloatValue("DecayTime");
 		this.boneDecayTime = miscData.getFieldFloatValue("BoneDecayTime");
+		this.dissipateTime = miscData.getFieldFloatValue("DissipateTime");
 		this.structureDecayTime = miscData.getFieldFloatValue("StructureDecayTime");
 		this.bulletDeathTime = miscData.getFieldFloatValue("BulletDeathTime");
 		this.closeEnoughRange = miscData.getFieldFloatValue("CloseEnoughRange");
@@ -180,7 +182,6 @@ public class CGameplayConstants {
 		this.awakenBaseLumberFactor = miscData.getFieldFloatValue("AwakenBaseLumberFactor");
 		this.awakenLumberLevelFactor = miscData.getFieldFloatValue("AwakenLumberLevelFactor");
 		this.awakenMaxFactor = miscData.getFieldFloatValue("AwakenMaxFactor");
-
 
 		this.maxHeroLevel = miscData.getFieldValue("MaxHeroLevel");
 		this.maxUnitLevel = miscData.getFieldValue("MaxUnitLevel");
@@ -255,6 +256,10 @@ public class CGameplayConstants {
 
 	public float getBoneDecayTime() {
 		return this.boneDecayTime;
+	}
+
+	public float getDissipateTime() {
+		return this.dissipateTime;
 	}
 
 	public float getBulletDeathTime() {
@@ -421,31 +426,33 @@ public class CGameplayConstants {
 		return this.spellCastRangeBuffer;
 	}
 
-	public int getHeroReviveGoldCost(int originalCost, int level) {
-		int goldRevivalCost = (int)(originalCost * (reviveBaseFactor + (reviveLevelFactor * (level-1))));
-		return Math.min(goldRevivalCost, (int)(originalCost * reviveMaxFactor));
+	public int getHeroReviveGoldCost(final int originalCost, final int level) {
+		final int goldRevivalCost = (int) (originalCost
+				* (this.reviveBaseFactor + (this.reviveLevelFactor * (level - 1))));
+		return Math.min(goldRevivalCost, (int) (originalCost * this.reviveMaxFactor));
 	}
 
-	public int getHeroReviveLumberCost(int originalCost, int level) {
-		int lumberRevivalCost = (int)(originalCost * (reviveBaseLumberFactor + (reviveLumberLevelFactor * (level-1))));
-		return Math.min(lumberRevivalCost, (int)(originalCost * reviveMaxFactor));
+	public int getHeroReviveLumberCost(final int originalCost, final int level) {
+		final int lumberRevivalCost = (int) (originalCost
+				* (this.reviveBaseLumberFactor + (this.reviveLumberLevelFactor * (level - 1))));
+		return Math.min(lumberRevivalCost, (int) (originalCost * this.reviveMaxFactor));
 	}
 
-	public int getHeroReviveTime(int originalTime, int level) {
-		int revivalTime = (int)(originalTime * level * reviveTimeFactor);
-		return Math.min(revivalTime, (int)(originalTime * reviveMaxTimeFactor));
+	public int getHeroReviveTime(final int originalTime, final int level) {
+		final int revivalTime = (int) (originalTime * level * this.reviveTimeFactor);
+		return Math.min(revivalTime, (int) (originalTime * this.reviveMaxTimeFactor));
 	}
 
 	public float getHeroReviveLifeFactor() {
-		return heroReviveLifeFactor;
+		return this.heroReviveLifeFactor;
 	}
 
 	public float getHeroReviveManaFactor() {
-		return heroReviveManaFactor;
+		return this.heroReviveManaFactor;
 	}
 
 	public float getHeroReviveManaStart() {
-		return heroReviveManaStart;
+		return this.heroReviveManaStart;
 	}
 
 	private static int getTableValue(final int[] table, int level) {

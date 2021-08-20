@@ -8,7 +8,7 @@ public class FilterMode {
 	private static final int[] ERROR_DEFAULT = new int[] { 0, 0 };
 	private static final int[] MODULATE_2X = new int[] { GL20.GL_DST_COLOR, GL20.GL_SRC_COLOR };
 	private static final int[] MODULATE = new int[] { GL20.GL_ZERO, GL20.GL_SRC_COLOR };
-	private static final int[] ADDITIVE_ALPHA = new int[] { GL20.GL_SRC_ALPHA, GL20.GL_ONE };
+	public static final int[] ADDITIVE_ALPHA = new int[] { GL20.GL_SRC_ALPHA, GL20.GL_ONE };
 	private static final int[] BLEND = new int[] { GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA };
 
 	public static int[] layerFilterMode(final MdlxLayer.FilterMode filterMode) {

@@ -53,7 +53,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 
 public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	public static final boolean ENABLE_AUDIO = true;
-	private static final boolean ENABLE_MUSIC = false;
+	private static final boolean ENABLE_MUSIC = true;
 	private final War3MapViewer viewer;
 	private final Rectangle tempRect = new Rectangle();
 
@@ -150,8 +150,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		if (width < ((height * 4) / 3)) {
 			aspect3By4Width = width;
 			aspect3By4Height = (width * 3) / 4;
-		}
-		else {
+		} else {
 			aspect3By4Width = (height * 4) / 3;
 			aspect3By4Height = height;
 		}
@@ -225,8 +224,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 		try {
 			this.viewer.loadAfterUI();
-		}
-		catch (final IOException e) {
+		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
 	}

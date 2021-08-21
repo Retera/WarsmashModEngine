@@ -14,18 +14,22 @@ public class CWorldCollision {
 	private final Quadtree<CUnit> airUnitCollision;
 	private final Quadtree<CUnit> seaUnitCollision;
 	private final Quadtree<CUnit> buildingUnitCollision;
+	private final Quadtree<CDestructable> destructablesForEnum;
 	private final float maxCollisionRadius;
 	private final AnyUnitExceptTwoIntersector anyUnitExceptTwoIntersector;
 	private final EachUnitOnlyOnceIntersector eachUnitOnlyOnceIntersector;
+	private final DestructableEnumIntersector destructableEnumIntersector;
 
 	public CWorldCollision(final Rectangle entireMapBounds, final float maxCollisionRadius) {
 		this.groundUnitCollision = new Quadtree<>(entireMapBounds);
 		this.airUnitCollision = new Quadtree<>(entireMapBounds);
 		this.seaUnitCollision = new Quadtree<>(entireMapBounds);
 		this.buildingUnitCollision = new Quadtree<>(entireMapBounds);
+		this.destructablesForEnum = new Quadtree<>(entireMapBounds);
 		this.maxCollisionRadius = maxCollisionRadius;
 		this.anyUnitExceptTwoIntersector = new AnyUnitExceptTwoIntersector();
 		this.eachUnitOnlyOnceIntersector = new EachUnitOnlyOnceIntersector();
+		this.destructableEnumIntersector = new DestructableEnumIntersector();
 	}
 
 	public void addUnit(final CUnit unit) {
@@ -41,8 +45,7 @@ public class CWorldCollision {
 			// buildings are here so that we can include them when enumerating all units in
 			// a rect, but they don't really move dynamically, this is kind of pointless
 			this.buildingUnitCollision.add(unit, bounds);
-		}
-		else {
+		} else {
 			final MovementType movementType = unit.getUnitType().getMovementType();
 			if (movementType != null) {
 				switch (movementType) {
@@ -70,13 +73,22 @@ public class CWorldCollision {
 		}
 	}
 
+	public void addDestructable(final CDestructable dest) {
+		final Rectangle bounds = dest.getOrCreateRegisteredEnumRectangle();
+		this.destructablesForEnum.add(dest, bounds);
+	}
+
+	public void removeDestructable(final CDestructable dest) {
+		final Rectangle bounds = dest.getOrCreateRegisteredEnumRectangle();
+		this.destructablesForEnum.remove(dest, bounds);
+	}
+
 	public void removeUnit(final CUnit unit) {
 		final Rectangle bounds = unit.getCollisionRectangle();
 		if (bounds != null) {
 			if (unit.isBuilding()) {
 				this.buildingUnitCollision.remove(unit, bounds);
-			}
-			else {
+			} else {
 				final MovementType movementType = unit.getUnitType().getMovementType();
 				if (movementType != null) {
 					switch (movementType) {
@@ -114,9 +126,13 @@ public class CWorldCollision {
 		this.buildingUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
 	}
 
+	public void enumDestructablesInRect(final Rectangle rect, final CDestructableEnumFunction callback) {
+		this.destructablesForEnum.intersect(rect, this.destructableEnumIntersector.reset(callback));
+	}
+
 	public boolean intersectsAnythingOtherThan(final Rectangle newPossibleRectangle, final CUnit sourceUnitToIgnore,
 			final MovementType movementType) {
-		return intersectsAnythingOtherThan(newPossibleRectangle, sourceUnitToIgnore, null, movementType);
+		return this.intersectsAnythingOtherThan(newPossibleRectangle, sourceUnitToIgnore, null, movementType);
 	}
 
 	public boolean intersectsAnythingOtherThan(final Rectangle newPossibleRectangle, final CUnit sourceUnitToIgnore,
@@ -235,6 +251,23 @@ public class CWorldCollision {
 				return this.done;
 			}
 			return false;
+		}
+	}
+
+	private static final class DestructableEnumIntersector implements QuadtreeIntersector<CDestructable> {
+		private CDestructableEnumFunction consumerDelegate;
+
+		public DestructableEnumIntersector reset(final CDestructableEnumFunction consumerDelegate) {
+			this.consumerDelegate = consumerDelegate;
+			return this;
+		}
+
+		@Override
+		public boolean onIntersect(final CDestructable intersectingObject) {
+//			if (intersectingObject.isHidden()) { // at time of writing CDestructable did not have isHidden(), uncomment when available
+//				return false;
+//			}
+			return this.consumerDelegate.call(intersectingObject);
 		}
 	}
 }

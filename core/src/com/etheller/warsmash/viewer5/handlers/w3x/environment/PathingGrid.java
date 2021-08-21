@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 
 public class PathingGrid {
+	public static final BufferedImage BLANK_PATHING = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 	private static final Map<String, MovementType> movetpToMovementType = new HashMap<>();
 	static {
 		for (final MovementType movementType : MovementType.values()) {
@@ -91,9 +92,12 @@ public class PathingGrid {
 	}
 
 	public boolean checkPathingTexture(final float positionX, final float positionY, final int rotationInput,
-			final BufferedImage pathingTextureTga, final EnumSet<CBuildingPathingType> preventPathingTypes,
+			BufferedImage pathingTextureTga, final EnumSet<CBuildingPathingType> preventPathingTypes,
 			final EnumSet<CBuildingPathingType> requirePathingTypes, final CWorldCollision cWorldCollision,
 			final CUnit unitToExcludeFromCollisionChecks) {
+		if (pathingTextureTga == null) {
+			pathingTextureTga = BLANK_PATHING;
+		}
 		final int rotation = (rotationInput + 450) % 360;
 		final int divW = ((rotation % 180) != 0) ? pathingTextureTga.getHeight() : pathingTextureTga.getWidth();
 		final int divH = ((rotation % 180) != 0) ? pathingTextureTga.getWidth() : pathingTextureTga.getHeight();

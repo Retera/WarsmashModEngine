@@ -1,7 +1,10 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
+import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 
+import com.badlogic.gdx.math.Rectangle;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget.UnitAnimationListenerImpl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -17,6 +20,7 @@ public class CDestructable extends CWidget {
 	private UnitAnimationListenerImpl unitAnimationListenerImpl;
 	private boolean invulnerable;
 	private boolean blighted;
+	private Rectangle registeredEnumRectangle;
 
 	public CDestructable(final int handleId, final float x, final float y, final float life,
 			final CDestructableType destTypeInstance, final RemovablePathingMapInstance pathingInstance,
@@ -35,6 +39,23 @@ public class CDestructable extends CWidget {
 	@Override
 	public float getImpactZ() {
 		return 0; // TODO maybe from DestructableType
+	}
+
+	public Rectangle getOrCreateRegisteredEnumRectangle() {
+		if (this.registeredEnumRectangle == null) {
+			BufferedImage pathingPixelMap = this.destType.getPathingPixelMap();
+			BufferedImage pathingDeathPixelMap = this.destType.getPathingDeathPixelMap();
+			if (pathingPixelMap == null) {
+				pathingPixelMap = PathingGrid.BLANK_PATHING;
+			}
+			if (pathingDeathPixelMap == null) {
+				pathingDeathPixelMap = PathingGrid.BLANK_PATHING;
+			}
+			final float width = Math.max(pathingPixelMap.getWidth() * 16, pathingDeathPixelMap.getWidth() * 16);
+			final float height = Math.max(pathingPixelMap.getHeight() * 16, pathingDeathPixelMap.getHeight() * 16);
+			this.registeredEnumRectangle = new Rectangle(getX() - (width / 2), getY() - (height / 2), width, height);
+		}
+		return this.registeredEnumRectangle;
 	}
 
 	@Override
@@ -59,12 +80,10 @@ public class CDestructable extends CWidget {
 		if (targetsAllowed.containsAll(this.destType.getTargetedAs())) {
 			if (isDead()) {
 				return targetsAllowed.contains(CTargetType.DEAD);
-			}
-			else {
+			} else {
 				return !targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE);
 			}
-		}
-		else {
+		} else {
 			System.err.println("Not targeting because " + targetsAllowed + " does not contain all of "
 					+ this.destType.getTargetedAs());
 		}
@@ -110,5 +129,9 @@ public class CDestructable extends CWidget {
 		return !game.getPathingGrid().checkPathingTexture(getX(), getY(), 0, this.destType.getPathingPixelMap(),
 				EnumSet.of(CBuildingPathingType.BLIGHTED), EnumSet.noneOf(CBuildingPathingType.class),
 				game.getWorldCollision(), null);
+	}
+
+	public double distance(final float x, final float y) {
+		return StrictMath.sqrt(distanceSquaredNoCollision(x, y));
 	}
 }

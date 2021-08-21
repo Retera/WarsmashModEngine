@@ -182,7 +182,7 @@ public class CSimulation implements CPlayerAPI {
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
 		this.worldCollision.addUnit(unit);
 		if (unit.getHeroData() != null) {
-			heroCreateEvent(unit);
+			this.heroCreateEvent(unit);
 		}
 		return unit;
 	}
@@ -192,6 +192,7 @@ public class CSimulation implements CPlayerAPI {
 		final CDestructable dest = this.destructableData.create(this, typeId, x, y, this.handleIdAllocator,
 				pathingInstance, pathingInstanceDeath);
 		this.handleIdToDestructable.put(dest.getHandleId(), dest);
+		this.worldCollision.addDestructable(dest);
 		this.destructables.add(dest);
 		dest.setBlighted(dest.checkIsOnBlight(this));
 		return dest;
@@ -268,11 +269,11 @@ public class CSimulation implements CPlayerAPI {
 				}
 				this.handleIdToUnit.remove(unit.getHandleId());
 				this.simulationRenderController.removeUnit(unit);
-				getPlayerHeroes(unit.getPlayerIndex()).remove(unit);
+				this.getPlayerHeroes(unit.getPlayerIndex()).remove(unit);
 				unit.onRemove(this);
 			}
 		}
-		finishAddingNewUnits();
+		this.finishAddingNewUnits();
 		final Iterator<CAttackProjectile> projectileIterator = this.projectiles.iterator();
 		while (projectileIterator.hasNext()) {
 			final CAttackProjectile projectile = projectileIterator.next();
@@ -286,10 +287,10 @@ public class CSimulation implements CPlayerAPI {
 			pathfindingProcessor.update(this);
 		}
 		this.gameTurnTick++;
-		final float timeOfDayBefore = getGameTimeOfDay();
+		final float timeOfDayBefore = this.getGameTimeOfDay();
 		this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
 				% this.gameplayConstants.getGameDayLength();
-		final float timeOfDayAfter = getGameTimeOfDay();
+		final float timeOfDayAfter = this.getGameTimeOfDay();
 		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
 		}
@@ -315,7 +316,7 @@ public class CSimulation implements CPlayerAPI {
 			}
 			this.handleIdToUnit.remove(unit.getHandleId());
 			this.simulationRenderController.removeUnit(unit);
-			getPlayerHeroes(unit.getPlayerIndex()).remove(unit);
+			this.getPlayerHeroes(unit.getPlayerIndex()).remove(unit);
 			unit.onRemove(this);
 		}
 		this.removedUnits.clear();
@@ -373,7 +374,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void unitConstructFinishEvent(final CUnit constructedStructure) {
-		final CPlayer player = getPlayer(constructedStructure.getPlayerIndex());
+		final CPlayer player = this.getPlayer(constructedStructure.getPlayerIndex());
 		player.addTechtreeUnlocked(constructedStructure.getTypeId());
 		this.simulationRenderController.spawnUnitConstructionFinishSound(constructedStructure);
 	}
@@ -409,7 +410,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void heroCreateEvent(final CUnit hero) {
-		getPlayerHeroes(hero.getPlayerIndex()).add(hero);
+		this.getPlayerHeroes(hero.getPlayerIndex()).add(hero);
 	}
 
 	public void unitPickUpItemEvent(final CUnit cUnit, final CItem item) {
@@ -427,7 +428,7 @@ public class CSimulation implements CPlayerAPI {
 	public void unitsLoaded() {
 		// called on startup after the system loads the map's units layer, but not any
 		// custom scripts yet
-		finishAddingNewUnits();
+		this.finishAddingNewUnits();
 		for (final CUnit unit : this.units) {
 			final CPlayer player = this.players.get(unit.getPlayerIndex());
 			player.setUnitFoodUsed(unit, unit.getUnitType().getFoodUsed());
@@ -486,7 +487,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void heroDissipateEvent(final CUnit cUnit) {
-		getPlayer(cUnit.getPlayerIndex()).onHeroDeath(cUnit);
+		this.getPlayer(cUnit.getPlayerIndex()).onHeroDeath(cUnit);
 	}
 
 	public void removeItem(final CItem cItem) {
@@ -504,7 +505,7 @@ public class CSimulation implements CPlayerAPI {
 		}
 
 		public void fire() {
-			fire(this.globalScope);
+			this.fire(this.globalScope);
 		}
 	}
 

@@ -7,8 +7,12 @@ public interface JassType {
 
 	boolean isAssignableFrom(JassType value);
 
+	boolean isNullable();
+
+	JassValue getNullValue();
+
 	public static final PrimitiveJassType INTEGER = new PrimitiveJassType("integer");
-	public static final PrimitiveJassType STRING = new PrimitiveJassType("string");
+	public static final PrimitiveJassType STRING = new StringJassType("string");
 	public static final PrimitiveJassType CODE = new PrimitiveJassType("code");
 	public static final PrimitiveJassType REAL = new RealJassType("real");
 	public static final PrimitiveJassType BOOLEAN = new PrimitiveJassType("boolean");

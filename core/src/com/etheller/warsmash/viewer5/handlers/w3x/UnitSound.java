@@ -60,21 +60,30 @@ public final class UnitSound {
 		final UnitSound sound = new UnitSound(volume, pitch, pitchVariance, minDistance, maxDistance, distanceCutoff,
 				looping);
 		for (final String fileName : fileNames.split(",")) {
-			String filePath = directoryBase + fileName;
-			final int lastDotIndex = filePath.lastIndexOf('.');
-			if (lastDotIndex != -1) {
-				filePath = filePath.substring(0, lastDotIndex);
-			}
-			if (dataSource.has(filePath + ".wav") || dataSource.has(filePath + ".flac")) {
-				try {
-					sound.sounds.add(Gdx.audio.newSound(new DataSourceFileHandle(dataSource, filePath + ".wav")));
-				}
-				catch (final Exception exc) {
-					exc.printStackTrace();
-				}
+			final String filePath = directoryBase + fileName;
+			final Sound newSound = createSound(dataSource, filePath);
+			if (newSound != null) {
+				sound.sounds.add(newSound);
 			}
 		}
 		return sound;
+	}
+
+	public static Sound createSound(final DataSource dataSource, String filePath) {
+		final int lastDotIndex = filePath.lastIndexOf('.');
+		if (lastDotIndex != -1) {
+			filePath = filePath.substring(0, lastDotIndex);
+		}
+		Sound newSound = null;
+		if (dataSource.has(filePath + ".wav") || dataSource.has(filePath + ".flac")) {
+			try {
+				newSound = Gdx.audio.newSound(new DataSourceFileHandle(dataSource, filePath + ".wav"));
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+		}
+		return newSound;
 	}
 
 	public UnitSound(final float volume, final float pitch, final float pitchVariation, final float minDistance,

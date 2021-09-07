@@ -5,6 +5,7 @@ import java.util.List;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
+import com.etheller.interpreter.ast.statement.JassReturnNothingStatement;
 import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
@@ -32,7 +33,13 @@ public final class UserJassFunction extends AbstractJassFunction {
 			final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
 			if (returnValue != null) {
 				if (returnValue.visit(JassTypeGettingValueVisitor.getInstance()) != this.returnType) {
-					throw new RuntimeException("Invalid return type");
+					if ((this.returnType == JassType.NOTHING)
+							&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
+						return null;
+					}
+					else {
+						throw new RuntimeException("Invalid return type");
+					}
 				}
 				return returnValue;
 			}

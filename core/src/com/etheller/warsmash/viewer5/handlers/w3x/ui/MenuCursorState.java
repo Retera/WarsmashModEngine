@@ -10,6 +10,7 @@ public enum MenuCursorState {
 	SCROLL_DOWN_RIGHT("Scroll Down Right"),
 	SCROLL_UP_LEFT("Scroll Up Left"),
 	SCROLL_UP_RIGHT("Scroll Up Right"),
+	SELECT("Select"),
 	TARGET_CURSOR(null), // handled specially
 	HOLD_ITEM("HoldItem");
 	private String animationName;

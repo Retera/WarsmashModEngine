@@ -22,6 +22,9 @@ public class JassParameter {
 	}
 
 	public boolean matchesType(final JassValue value) {
+		if (value == null) {
+			return this.type.isNullable();
+		}
 		final JassType valueType = value.visit(JassTypeGettingValueVisitor.getInstance());
 		return this.type.isAssignableFrom(valueType);
 	}

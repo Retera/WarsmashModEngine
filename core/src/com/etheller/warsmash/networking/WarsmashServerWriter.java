@@ -64,6 +64,21 @@ public class WarsmashServerWriter implements ServerToClientListener {
 	}
 
 	@Override
+	public void issueDropItemAtTargetOrder(final int playerIndex, final int unitHandleId, final int abilityHandleId,
+			final int orderId, final int targetHandleId, final int targetHeroHandleId, final boolean queue) {
+		this.sendBuffer.clear();
+		this.sendBuffer.putInt(4 + 4 + 4 + 4 + 4 + 4 + 4 + 1);
+		this.sendBuffer.putInt(ServerToClientProtocol.ISSUE_DROP_ITEM_ON_TARGET_ORDER);
+		this.sendBuffer.putInt(playerIndex);
+		this.sendBuffer.putInt(unitHandleId);
+		this.sendBuffer.putInt(abilityHandleId);
+		this.sendBuffer.putInt(orderId);
+		this.sendBuffer.putInt(targetHandleId);
+		this.sendBuffer.putInt(targetHeroHandleId);
+		this.sendBuffer.put(queue ? (byte) 1 : (byte) 0);
+	}
+
+	@Override
 	public void issueImmediateOrder(final int playerIndex, final int unitHandleId, final int abilityHandleId,
 			final int orderId, final boolean queue) {
 		this.sendBuffer.clear();

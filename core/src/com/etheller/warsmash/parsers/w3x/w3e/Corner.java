@@ -107,6 +107,10 @@ public class Corner {
 		return this.blight;
 	}
 
+	public void setBlight(final boolean flag) {
+		this.blight = flag ? 0b00100000 : 0;
+	}
+
 	public int getWater() {
 		return this.water;
 	}

@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.camera;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 
 public final class GameCameraManager extends CameraManager {
 	private static final CameraRates INFINITE_CAMERA_RATES = new CameraRates(Float.POSITIVE_INFINITY,
@@ -11,13 +12,22 @@ public final class GameCameraManager extends CameraManager {
 	private final CameraPreset[] presets;
 	private final CameraRates cameraRates;
 	public final CameraPanControls cameraPanControls;
+	private Rectangle cameraBounds;
 	private int currentPreset = 0;
 	private float fov;
+	private RenderUnit targetControllerUnit;
+	private float targetControllerXOffset;
+	private float targetControllerYOffset;
+	private boolean targetControllerInheritOrientation;
 
 	public GameCameraManager(final CameraPreset[] presets, final CameraRates cameraRates) {
 		this.presets = presets;
 		this.cameraRates = cameraRates;
 		this.cameraPanControls = new CameraPanControls();
+	}
+
+	public void setCameraBounds(final Rectangle cameraBounds) {
+		this.cameraBounds = cameraBounds;
 	}
 
 	@Override
@@ -30,8 +40,16 @@ public final class GameCameraManager extends CameraManager {
 	private void updateCamera(final CameraPreset cameraPreset, final CameraRates cameraRate) {
 		this.quatHeap2.idt();
 		this.quatHeap.idt();
-		this.horizontalAngle = applyAtRate(this.horizontalAngle, (float) Math.toRadians(
-				cameraPreset.getRotation(this.cameraPanControls.insertDown, this.cameraPanControls.deleteDown) - 90),
+		final float newHorizontalAngle;
+		if (this.targetControllerInheritOrientation && (this.targetControllerUnit != null)) {
+			newHorizontalAngle = this.targetControllerUnit.getFacing();
+		}
+		else {
+			newHorizontalAngle = (float) Math.toRadians(
+					cameraPreset.getRotation(this.cameraPanControls.insertDown, this.cameraPanControls.deleteDown)
+							- 90);
+		}
+		this.horizontalAngle = applyAtRate(this.horizontalAngle, newHorizontalAngle,
 				(float) Math.toRadians(cameraRate.rotation * 3));
 		this.quatHeap.setFromAxisRad(0, 0, 1, this.horizontalAngle);
 		this.distance = applyAtRate(this.distance, Math.max(1200, cameraPreset.getDistance()), cameraRate.distance);
@@ -69,41 +87,61 @@ public final class GameCameraManager extends CameraManager {
 	}
 
 	public void applyVelocity(final float deltaTime, boolean up, boolean down, boolean left, boolean right) {
-		final float velocityX;
-		final float velocityY;
-		up |= this.cameraPanControls.up;
-		down |= this.cameraPanControls.down;
-		left |= this.cameraPanControls.left;
-		right |= this.cameraPanControls.right;
-		if (up) {
-			if (down) {
+		if (this.targetControllerUnit != null) {
+			this.target.x = this.targetControllerUnit.getX() + this.targetControllerXOffset;
+			this.target.y = this.targetControllerUnit.getY() + this.targetControllerYOffset;
+		}
+		else {
+			final float velocityX;
+			final float velocityY;
+			up |= this.cameraPanControls.up;
+			down |= this.cameraPanControls.down;
+			left |= this.cameraPanControls.left;
+			right |= this.cameraPanControls.right;
+			if (up) {
+				if (down) {
+					velocityY = 0;
+				}
+				else {
+					velocityY = this.cameraRates.forward;
+				}
+			}
+			else if (down) {
+				velocityY = -this.cameraRates.forward;
+			}
+			else {
 				velocityY = 0;
 			}
-			else {
-				velocityY = this.cameraRates.forward;
+			if (right) {
+				if (left) {
+					velocityX = 0;
+				}
+				else {
+					velocityX = this.cameraRates.strafe;
+				}
 			}
-		}
-		else if (down) {
-			velocityY = -this.cameraRates.forward;
-		}
-		else {
-			velocityY = 0;
-		}
-		if (right) {
-			if (left) {
+			else if (left) {
+				velocityX = -this.cameraRates.strafe;
+			}
+			else {
 				velocityX = 0;
 			}
-			else {
-				velocityX = this.cameraRates.strafe;
+			this.target.add(velocityX * deltaTime, velocityY * deltaTime, 0);
+		}
+		if (this.cameraBounds != null) {
+			if (this.target.x < this.cameraBounds.x) {
+				this.target.x = this.cameraBounds.x;
+			}
+			if (this.target.y < this.cameraBounds.y) {
+				this.target.y = this.cameraBounds.y;
+			}
+			if (this.target.x > (this.cameraBounds.x + this.cameraBounds.width)) {
+				this.target.x = this.cameraBounds.x + this.cameraBounds.width;
+			}
+			if (this.target.y > (this.cameraBounds.y + this.cameraBounds.height)) {
+				this.target.y = this.cameraBounds.y + this.cameraBounds.height;
 			}
 		}
-		else if (left) {
-			velocityX = -this.cameraRates.strafe;
-		}
-		else {
-			velocityX = 0;
-		}
-		this.target.add(velocityX * deltaTime, velocityY * deltaTime, 0);
 
 	}
 
@@ -175,5 +213,18 @@ public final class GameCameraManager extends CameraManager {
 			return true;
 		}
 		return false;
+	}
+
+	public Rectangle getCameraBounds() {
+		return this.cameraBounds;
+	}
+
+	public void setTargetController(final RenderUnit targetControllerUnit, final float xoffset, final float yoffset,
+			final boolean inheritOrientation) {
+		this.targetControllerUnit = targetControllerUnit;
+		this.targetControllerXOffset = xoffset;
+		this.targetControllerYOffset = yoffset;
+		this.targetControllerInheritOrientation = inheritOrientation;
+
 	}
 }

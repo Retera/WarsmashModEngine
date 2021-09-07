@@ -15,20 +15,29 @@ public class ArrayJassValue implements JassValue {
 		return visitor.accept(this);
 	}
 
-	public void set(final int index, final JassValue value) {
-		if (value.visit(JassTypeGettingValueVisitor.getInstance()) != type.getPrimitiveType()) {
-			throw new IllegalStateException(
-					"Illegal type for assignment to " + type.getPrimitiveType().getName() + " array");
+	public void set(final int index, JassValue value) {
+		final JassType primitiveType = this.type.getPrimitiveType();
+		if (value == null) {
+			if (primitiveType.isNullable()) {
+				value = primitiveType.getNullValue();
+			}
+			else {
+				throw new IllegalStateException(
+						"Attempted to set " + this.type.getName() + " to null in array at index " + index + "!");
+			}
 		}
-		data[index] = value;
+		if (value.visit(JassTypeGettingValueVisitor.getInstance()) != primitiveType) {
+			throw new IllegalStateException("Illegal type for assignment to " + primitiveType.getName() + " array");
+		}
+		this.data[index] = value;
 	}
 
 	public JassValue get(final int index) {
-		return data[index];
+		return this.data[index];
 	}
 
 	public ArrayJassType getType() {
-		return type;
+		return this.type;
 	}
 
 }

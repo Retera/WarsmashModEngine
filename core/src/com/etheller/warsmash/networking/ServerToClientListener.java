@@ -12,6 +12,9 @@ public interface ServerToClientListener {
 	void issueDropItemAtPointOrder(int playerIndex, int unitHandleId, int abilityHandleId, int orderId,
 			int targetHandleId, float x, float y, final boolean queue);
 
+	void issueDropItemAtTargetOrder(int playerIndex, int unitHandleId, int abilityHandleId, int orderId,
+			int targetHandleId, int targetHeroHandleId, final boolean queue);
+
 	void issueImmediateOrder(int playerIndex, int unitHandleId, int abilityHandleId, int orderId, boolean queue);
 
 	void unitCancelTrainingItem(int playerIndex, int unitHandleId, int cancelIndex);

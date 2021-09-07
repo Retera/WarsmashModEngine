@@ -53,6 +53,19 @@ public class WarsmashClientWriter {
 		this.sendBuffer.put(queue ? (byte) 1 : (byte) 0);
 	}
 
+	public void issueDropItemAtTargetOrder(final int unitHandleId, final int abilityHandleId, final int orderId,
+			final int targetHandleId, final int targetHeroHandleId, final boolean queue) {
+		this.sendBuffer.clear();
+		this.sendBuffer.putInt(4 + 4 + 4 + 4 + 4 + 4 + 1);
+		this.sendBuffer.putInt(ClientToServerProtocol.ISSUE_DROP_ITEM_ON_TARGET_ORDER);
+		this.sendBuffer.putInt(unitHandleId);
+		this.sendBuffer.putInt(abilityHandleId);
+		this.sendBuffer.putInt(orderId);
+		this.sendBuffer.putInt(targetHandleId);
+		this.sendBuffer.putInt(targetHeroHandleId);
+		this.sendBuffer.put(queue ? (byte) 1 : (byte) 0);
+	}
+
 	public void issueImmediateOrder(final int unitHandleId, final int abilityHandleId, final int orderId,
 			final boolean queue) {
 		this.sendBuffer.clear();

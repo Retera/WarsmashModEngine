@@ -3,18 +3,22 @@ package com.etheller.warsmash.parsers.w3x.objectdata;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.StandardObjectData;
 import com.etheller.warsmash.units.StandardObjectData.WarcraftData;
+import com.etheller.warsmash.units.custom.ObjectDataChangeEntry;
 import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.units.custom.WTSFile;
 import com.etheller.warsmash.units.custom.War3ObjectDataChangeset;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WorldEditStrings;
 import com.google.common.io.LittleEndianDataInputStream;
 
@@ -135,6 +139,27 @@ public final class Warcraft3MapObjectData {
 		if (dataSource.has("war3map.w3u")) {
 			unitChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3u")), wts,
 					inlineWTS);
+			// push unit changes to items.... as a Reign of Chaos support...
+			Iterator<Entry<War3ID, ObjectDataChangeEntry>> entryIterator = unitChangeset.getOriginal().iterator();
+			while (entryIterator.hasNext()) {
+				final Entry<War3ID, ObjectDataChangeEntry> entry = entryIterator.next();
+				final String rawcodeString = entry.toString();
+				final String oldIdString = entry.getValue().getOldId().toString();
+				if ((standardUnits.get(oldIdString) == null) && (standardItems.get(oldIdString) != null)) {
+					itemChangeset.getOriginal().put(entry.getKey(), entry.getValue());
+					entryIterator.remove();
+				}
+			}
+			entryIterator = unitChangeset.getCustom().iterator();
+			while (entryIterator.hasNext()) {
+				final Entry<War3ID, ObjectDataChangeEntry> entry = entryIterator.next();
+				final String rawcodeString = entry.toString();
+				final String oldIdString = entry.getValue().getOldId().toString();
+				if ((standardUnits.get(oldIdString) == null) && (standardItems.get(oldIdString) != null)) {
+					itemChangeset.getCustom().put(entry.getKey(), entry.getValue());
+					entryIterator.remove();
+				}
+			}
 		}
 		if (dataSource.has("war3map.w3t")) {
 			itemChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3t")), wts,

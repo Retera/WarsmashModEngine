@@ -109,6 +109,22 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	@Override
+	public void issueDropItemAtTargetOrder(final SocketAddress sourceAddress, final int unitHandleId,
+			final int abilityHandleId, final int orderId, final int targetHandleId, final int targetHeroHandleId,
+			final boolean queue) {
+		System.out.println("issueDropItemAtTargetOrder from " + sourceAddress);
+		final int playerIndex = getPlayerIndex(sourceAddress);
+		this.turnActions.add(new Runnable() {
+			@Override
+			public void run() {
+				WarsmashServer.this.writer.issueDropItemAtTargetOrder(playerIndex, unitHandleId, abilityHandleId,
+						orderId, targetHandleId, targetHeroHandleId, queue);
+				WarsmashServer.this.writer.send();
+			}
+		});
+	}
+
+	@Override
 	public void issueImmediateOrder(final SocketAddress sourceAddress, final int unitHandleId,
 			final int abilityHandleId, final int orderId, final boolean queue) {
 		System.out.println("issueImmediateOrder from " + sourceAddress);

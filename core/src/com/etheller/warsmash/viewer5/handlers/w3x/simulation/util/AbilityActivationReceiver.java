@@ -16,4 +16,6 @@ public interface AbilityActivationReceiver {
 	void cargoCapacityUnavailable();
 
 	void disabled();
+
+	void techtreeMaximumReached();
 }

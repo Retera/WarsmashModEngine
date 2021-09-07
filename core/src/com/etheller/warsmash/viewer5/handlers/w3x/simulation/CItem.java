@@ -13,6 +13,7 @@ public class CItem extends CWidget {
 	private final War3ID typeId;
 	private final CItemType itemType;
 	private boolean hidden;
+	private boolean invulnerable;
 
 	public CItem(final int handleId, final float x, final float y, final float life, final War3ID typeId,
 			final CItemType itemTypeInstance) {
@@ -34,8 +35,15 @@ public class CItem extends CWidget {
 	@Override
 	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
 			final String weaponType, final float damage) {
+		if (this.invulnerable) {
+			return;
+		}
+		final boolean wasDead = isDead();
 		this.life -= damage;
 		simulation.itemDamageEvent(this, weaponType, this.itemType.getArmorType());
+		if (isDead() && !wasDead) {
+			fireDeathEvents(simulation);
+		}
 	}
 
 	@Override
@@ -75,7 +83,7 @@ public class CItem extends CWidget {
 
 	@Override
 	public float getMaxLife() {
-		return itemType.getMaxLife();
+		return this.itemType.getMaxLife();
 	}
 
 	public void setPointAndCheckUnstuck(final float newX, final float newY, final CSimulation game) {
@@ -107,7 +115,11 @@ public class CItem extends CWidget {
 
 	@Override
 	public boolean isInvulnerable() {
-		return false;
+		return this.invulnerable;
+	}
+
+	public void setInvulernable(final boolean invulnerable) {
+		this.invulnerable = invulnerable;
 	}
 
 }

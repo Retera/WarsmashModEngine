@@ -19,6 +19,11 @@ public class BooleanJassValue implements JassValue {
 		return visitor.accept(this);
 	}
 
+	@Override
+	public String toString() {
+		return Boolean.toString(this.value);
+	}
+
 	public static BooleanJassValue inverse(final BooleanJassValue value) {
 		if (value.value) {
 			return FALSE;

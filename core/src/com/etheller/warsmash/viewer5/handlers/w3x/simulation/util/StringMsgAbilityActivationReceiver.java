@@ -41,6 +41,11 @@ public class StringMsgAbilityActivationReceiver implements AbilityActivationRece
 	}
 
 	@Override
+	public void techtreeMaximumReached() {
+		this.message = "NOTEXTERN: Techtree maximum reached.";
+	}
+
+	@Override
 	public void cargoCapacityUnavailable() {
 		this.message = "NOTEXTERN: Cargo capacity unavailable.";
 	}

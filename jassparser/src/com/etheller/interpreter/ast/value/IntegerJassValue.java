@@ -8,11 +8,16 @@ public class IntegerJassValue implements JassValue {
 	}
 
 	public int getValue() {
-		return value;
+		return this.value;
 	}
 
 	@Override
 	public <TYPE> TYPE visit(final JassValueVisitor<TYPE> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public String toString() {
+		return Integer.toString(this.value);
 	}
 }

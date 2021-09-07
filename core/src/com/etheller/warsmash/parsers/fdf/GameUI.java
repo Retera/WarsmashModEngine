@@ -1054,7 +1054,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public String getErrorString(final String key) {
-		String errorString = this.errorStrings.getField(key, this.racialCommandIndex);
+		final String errorString = this.errorStrings.getField(key, this.racialCommandIndex);
+		return getTrigStr(errorString);
+	}
+
+	public String getTrigStr(String errorString) {
 		if (errorString.startsWith("TRIGSTR_")) {
 			errorString = this.mapStrings.get(Integer.parseInt(errorString.substring(8)));
 		}

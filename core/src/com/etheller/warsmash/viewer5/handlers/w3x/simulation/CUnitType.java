@@ -50,6 +50,7 @@ public class CUnitType {
 	private final List<War3ID> structuresBuilt;
 	private final List<War3ID> unitsTrained;
 	private final List<War3ID> researchesAvailable;
+	private final List<War3ID> upgradesTo;
 	private final CUnitRace unitRace;
 	private final int goldCost;
 	private final int lumberCost;
@@ -85,8 +86,8 @@ public class CUnitType {
 			final CDefenseType defenseType, final float impactZ, final BufferedImage buildingPathingPixelMap,
 			final float deathTime, final EnumSet<CTargetType> targetedAs, final float defaultAcquisitionRange,
 			final float minimumAttackRange, final List<War3ID> structuresBuilt, final List<War3ID> unitsTrained,
-			final List<War3ID> researchesAvailable, final CUnitRace unitRace, final int goldCost, final int lumberCost,
-			final int foodUsed, final int foodMade, final int buildTime,
+			final List<War3ID> researchesAvailable, final List<War3ID> upgradesTo, final CUnitRace unitRace,
+			final int goldCost, final int lumberCost, final int foodUsed, final int foodMade, final int buildTime,
 			final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes, final float propWindow, final float turnRate,
 			final List<CUnitTypeRequirement> requirements, final int level, final boolean hero, final int strength,
@@ -122,6 +123,7 @@ public class CUnitType {
 		this.structuresBuilt = structuresBuilt;
 		this.unitsTrained = unitsTrained;
 		this.researchesAvailable = researchesAvailable;
+		this.upgradesTo = upgradesTo;
 		this.unitRace = unitRace;
 		this.goldCost = goldCost;
 		this.lumberCost = lumberCost;
@@ -260,6 +262,10 @@ public class CUnitType {
 
 	public List<War3ID> getResearchesAvailable() {
 		return this.researchesAvailable;
+	}
+
+	public List<War3ID> getUpgradesTo() {
+		return this.upgradesTo;
 	}
 
 	public CUnitRace getRace() {

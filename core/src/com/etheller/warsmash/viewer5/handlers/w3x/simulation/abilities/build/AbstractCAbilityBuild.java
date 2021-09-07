@@ -42,7 +42,8 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 			if (unitType != null) {
 				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 				final List<CUnitTypeRequirement> requirements = unitType.getRequirements();
-				boolean requirementsMet = true;
+				final boolean techtreeAllowedByMax = player.isTechtreeAllowedByMax(orderIdAsRawtype);
+				boolean requirementsMet = techtreeAllowedByMax;
 				for (final CUnitTypeRequirement requirement : requirements) {
 					if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
 						requirementsMet = false;
@@ -69,8 +70,13 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 					}
 				}
 				else {
-					for (final CUnitTypeRequirement requirement : requirements) {
-						receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+					if (techtreeAllowedByMax) {
+						for (final CUnitTypeRequirement requirement : requirements) {
+							receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+						}
+					}
+					else {
+						receiver.techtreeMaximumReached();
 					}
 				}
 			}
@@ -108,7 +114,8 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityTarget target) {
 		return true;
 	}
 

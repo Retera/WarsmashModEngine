@@ -69,7 +69,12 @@ public final class GlobalScope {
 
 	public void createGlobal(final String name, final JassType type, final JassValue value) {
 		final GlobalScopeAssignable assignable = new GlobalScopeAssignable(type, this);
-		assignable.setValue(value);
+		try {
+			assignable.setValue(value);
+		}
+		catch (final Exception exc) {
+			throw new RuntimeException("Global initialization failed for name: " + name, exc);
+		}
 		this.globals.put(name, assignable);
 	}
 

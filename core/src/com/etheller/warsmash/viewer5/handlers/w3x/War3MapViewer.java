@@ -91,6 +91,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDoodad;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderSpellEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitTypeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
@@ -701,8 +702,34 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public CUnit createUnit(final CSimulation simulation, final War3ID typeId, final int playerIndex,
 							final float x, final float y, final float facing) {
-						return createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, 0f, playerIndex,
+						return (CUnit) createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, 0f, playerIndex,
 								playerIndex, (float) Math.toRadians(facing));
+					}
+
+					@Override
+					public CDestructable createDestructable(final War3ID typeId, final float x, final float y,
+							final float facing, final float scale, final int variation) {
+						return createDestructableZ(typeId, x, y, Math.max(getWalkableRenderHeight(x, y),
+								War3MapViewer.this.terrain.getGroundHeight(x, y)), facing, scale, variation);
+					}
+
+					@Override
+					public CDestructable createDestructableZ(final War3ID typeId, final float x, final float y,
+							final float z, final float facing, final float scale, final int variation) {
+						final MutableGameObject row = War3MapViewer.this.allObjectData.getDestructibles().get(typeId);
+						final float[] location3d = { x, y, z };
+						final float[] scale3d = { scale, scale, scale };
+						final RenderDestructable newDestructable = createNewDestructable(typeId, row, variation,
+								location3d, (float) Math.toRadians(facing), (short) 100, scale3d);
+						return newDestructable.getSimulationDestructable();
+					}
+
+					@Override
+					public CItem createItem(final CSimulation simulation, final War3ID typeId, final float x,
+							final float y) {
+						return (CItem) createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, 0f, -1, -1,
+								(float) Math.toRadians(
+										War3MapViewer.this.simulation.getGameplayConstants().getBuildingAngle()));
 					}
 
 					@Override
@@ -777,10 +804,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							modelInstance.setTeamColor(unit.getPlayerIndex());
 							modelInstance.setLocation(renderUnit.location);
 							modelInstance.setScene(War3MapViewer.this.worldScene);
-							SequenceUtils.randomBirthSequence(modelInstance);
-							War3MapViewer.this.projectiles
-									.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
-											(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
+							final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance,
+									War3MapViewer.this,
+									(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing()),
+									RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
+							War3MapViewer.this.projectiles.add(renderAttackInstant);
 						}
 
 					}
@@ -873,8 +901,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		loadSounds();
 
 		this.terrain.createWaves();
-
-		loadLightsAndShading(tileset);
 	}
 
 	public void spawnFxOnOrigin(final RenderUnit renderUnit, final String heroLevelUpArt) {
@@ -941,16 +967,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.terrain.initShadows();
 	}
 
-	private void loadLightsAndShading(final char tileset) {
-		// TODO this should be set by the war3map.j actually, not by the tileset, so the
-		// call to set day night models is just for testing to make the test look pretty
-		final Element defaultTerrainLights = this.worldEditData.get("TerrainLights");
-		final Element defaultUnitLights = this.worldEditData.get("UnitLights");
-		setDayNightModels(defaultTerrainLights.getField(Character.toString(tileset)),
-				defaultUnitLights.getField(Character.toString(tileset)));
-
-	}
-
 	private void loadDoodadsAndDestructibles(final Warcraft3MapObjectData modifications) throws IOException {
 		this.applyModificationFile(this.doodadsData, this.doodadMetaData, modifications.getDoodads(),
 				WorldEditorDataType.DOODADS);
@@ -960,105 +976,17 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final War3MapDoo doo = this.mapMpq.readDoodads();
 
 		for (final com.etheller.warsmash.parsers.w3x.doo.Doodad doodad : doo.getDoodads()) {
-			WorldEditorDataType type = WorldEditorDataType.DOODADS;
-			MutableGameObject row = modifications.getDoodads().get(doodad.getId());
-			if (row == null) {
-				row = modifications.getDestructibles().get(doodad.getId());
-				type = WorldEditorDataType.DESTRUCTIBLES;
+			if ((doodad.getFlags() & 0x2) == 0) {
+				continue;
 			}
-			if (row != null) {
-				BuildingShadow destructableShadow = null;
-				RemovablePathingMapInstance destructablePathing = null;
-				RemovablePathingMapInstance destructablePathingDeath = null;
-				String file = row.readSLKTag("file");
-				final int numVar = row.readSLKTagInt("numVar");
-
-				if (file.endsWith(".mdx") || file.endsWith(".mdl")) {
-					file = file.substring(0, file.length() - 4);
-				}
-
-				String fileVar = file;
-
-				file += ".mdx";
-
-				if (numVar > 1) {
-					fileVar += Math.min(doodad.getVariation(), numVar - 1);
-				}
-
-				fileVar += ".mdx";
-
-				final float maxPitch = row.readSLKTagFloat("maxPitch");
-				final float maxRoll = row.readSLKTagFloat("maxRoll");
-				if (type == WorldEditorDataType.DESTRUCTIBLES) {
-					final String shadowString = row.readSLKTag("shadow");
-					if ((shadowString != null) && (shadowString.length() > 0) && !"_".equals(shadowString)) {
-						destructableShadow = this.terrain.addShadow(shadowString, doodad.getLocation()[0],
-								doodad.getLocation()[1]);
-					}
-
-					final BufferedImage destructablePathingPixelMap = getDestructablePathingPixelMap(row);
-					if (destructablePathingPixelMap != null) {
-						destructablePathing = this.terrain.pathingGrid.createRemovablePathingOverlayTexture(
-								doodad.getLocation()[0], doodad.getLocation()[1],
-								(int) Math.toDegrees(doodad.getAngle()), destructablePathingPixelMap);
-						if (doodad.getLife() > 0) {
-							destructablePathing.add();
-						}
-					}
-					final BufferedImage destructablePathingDeathPixelMap = getDestructablePathingDeathPixelMap(row);
-					if (destructablePathingDeathPixelMap != null) {
-						destructablePathingDeath = this.terrain.pathingGrid.createRemovablePathingOverlayTexture(
-								doodad.getLocation()[0], doodad.getLocation()[1],
-								(int) Math.toDegrees(doodad.getAngle()), destructablePathingDeathPixelMap);
-						if (doodad.getLife() <= 0) {
-							destructablePathingDeath.add();
-						}
-					}
-				}
-				// First see if the model is local.
-				// Doodads referring to local models may have invalid variations, so if the
-				// variation doesn't exist, try without a variation.
-
-				String path;
-				if (this.mapMpq.has(fileVar)) {
-					path = fileVar;
-				}
-				else {
-					path = file;
-				}
-				MdxModel model;
-				if (this.mapMpq.has(path)) {
-					model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
-				}
-				else {
-					model = (MdxModel) this.load(fileVar, this.mapPathSolver, this.solverParams);
-				}
-
-				if (type == WorldEditorDataType.DESTRUCTIBLES) {
-					final float x = doodad.getLocation()[0];
-					final float y = doodad.getLocation()[1];
-					final CDestructable simulationDestructable = this.simulation.createDestructable(row.getAlias(), x,
-							y, destructablePathing, destructablePathingDeath);
-					simulationDestructable.setLife(this.simulation,
-							simulationDestructable.getLife() * (doodad.getLife() / 100f));
-					final RenderDestructable renderDestructable = new RenderDestructable(this, model, row, doodad, type,
-							maxPitch, maxRoll, doodad.getLife(), destructableShadow, simulationDestructable);
-					if (row.readSLKTagBoolean("walkable")) {
-						final float angle = doodad.getAngle();
-						final BoundingBox boundingBox = model.bounds.getBoundingBox();
-						final Rectangle renderDestructableBounds = getRotatedBoundingBox(x, y, angle, boundingBox);
-						System.out.println("ROTATED BOUNDS TO: " + renderDestructableBounds);
-						this.walkableObjectsTree.add((MdxComplexInstance) renderDestructable.instance,
-								renderDestructableBounds);
-						renderDestructable.walkableBounds = renderDestructableBounds;
-					}
-					this.widgets.add(renderDestructable);
-					this.destructableToRenderPeer.put(simulationDestructable, renderDestructable);
-				}
-				else {
-					this.doodads.add(new RenderDoodad(this, model, row, doodad, type, maxPitch, maxRoll));
-				}
-			}
+			final War3ID doodadId = doodad.getId();
+			final int doodadVariation = doodad.getVariation();
+			final float[] location = doodad.getLocation();
+			final float facingRadians = doodad.getAngle();
+			final short lifePercent = doodad.getLife();
+			final float[] scale = doodad.getScale();
+			createDestructableOrDoodad(doodadId, modifications, doodadVariation, location, facingRadians, lifePercent,
+					scale);
 		}
 
 		// Cliff/Terrain doodads.
@@ -1124,6 +1052,125 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.anyReady = true;
 	}
 
+	private void createDoodad(final MutableGameObject row, final int doodadVariation, final float[] location,
+			final float facingRadians, final float[] scale) {
+		final MdxModel model = getDoodadModel(doodadVariation, row);
+		final float maxPitch = row.readSLKTagFloat("maxPitch");
+		final float maxRoll = row.readSLKTagFloat("maxRoll");
+		final float defScale = row.readSLKTagFloat("defScale");
+		final RenderDoodad renderDoodad = new RenderDoodad(this, model, row, location, scale, facingRadians, maxPitch,
+				maxRoll, defScale);
+		renderDoodad.instance.uniformScale(defScale);
+		this.doodads.add(renderDoodad);
+	}
+
+	private RenderDestructable createNewDestructable(final War3ID doodadId, final MutableGameObject row,
+			final int doodadVariation, final float[] location, final float facingRadians, final short lifePercent,
+			final float[] scale) {
+		BuildingShadow destructableShadow = null;
+		RemovablePathingMapInstance destructablePathing = null;
+		RemovablePathingMapInstance destructablePathingDeath = null;
+		final MdxModel model = getDoodadModel(doodadVariation, row);
+
+		final float maxPitch = row.readSLKTagFloat("maxPitch");
+		final float maxRoll = row.readSLKTagFloat("maxRoll");
+		final String shadowString = row.readSLKTag("shadow");
+		if ((shadowString != null) && (shadowString.length() > 0) && !"_".equals(shadowString)) {
+			destructableShadow = this.terrain.addShadow(shadowString, location[0], location[1]);
+		}
+
+		final BufferedImage destructablePathingPixelMap = getDestructablePathingPixelMap(row);
+		if (destructablePathingPixelMap != null) {
+			destructablePathing = this.terrain.pathingGrid.createRemovablePathingOverlayTexture(location[0],
+					location[1], (int) Math.toDegrees(facingRadians), destructablePathingPixelMap);
+			if (lifePercent > 0) {
+				destructablePathing.add();
+			}
+		}
+		final BufferedImage destructablePathingDeathPixelMap = getDestructablePathingDeathPixelMap(row);
+		if (destructablePathingDeathPixelMap != null) {
+			destructablePathingDeath = this.terrain.pathingGrid.createRemovablePathingOverlayTexture(location[0],
+					location[1], (int) Math.toDegrees(facingRadians), destructablePathingDeathPixelMap);
+			if (lifePercent <= 0) {
+				destructablePathingDeath.add();
+			}
+		}
+		final float x = location[0];
+		final float y = location[1];
+		final CDestructable simulationDestructable = this.simulation.internalCreateDestructable(row.getAlias(), x, y,
+				destructablePathing, destructablePathingDeath);
+		// Used to be this, but why: (float) Math.sqrt((scale[0]) * (scale[1]) *
+		// (scale[2]));
+		final float selectionScale = 1.0f;
+		simulationDestructable.setLife(this.simulation, simulationDestructable.getLife() * (lifePercent / 100f));
+		final RenderDestructable renderDestructable = new RenderDestructable(this, model, row, location, scale,
+				facingRadians, selectionScale, maxPitch, maxRoll, lifePercent, destructableShadow,
+				simulationDestructable);
+		if (row.readSLKTagBoolean("walkable")) {
+			final float angle = facingRadians;
+			final BoundingBox boundingBox = model.bounds.getBoundingBox();
+			final Rectangle renderDestructableBounds = getRotatedBoundingBox(x, y, angle, boundingBox);
+			this.walkableObjectsTree.add((MdxComplexInstance) renderDestructable.instance, renderDestructableBounds);
+			renderDestructable.walkableBounds = renderDestructableBounds;
+		}
+		this.widgets.add(renderDestructable);
+		this.destructableToRenderPeer.put(simulationDestructable, renderDestructable);
+		return renderDestructable;
+	}
+
+	private void createDestructableOrDoodad(final War3ID doodadId, final Warcraft3MapObjectData modifications,
+			final int doodadVariation, final float[] location, final float facingRadians, final short lifePercent,
+			final float[] scale) {
+		MutableGameObject row = modifications.getDoodads().get(doodadId);
+		if (row == null) {
+			row = modifications.getDestructibles().get(doodadId);
+			if (row != null) {
+				createNewDestructable(doodadId, row, doodadVariation, location, facingRadians, lifePercent, scale);
+			}
+		}
+		else {
+			createDoodad(row, doodadVariation, location, facingRadians, scale);
+		}
+	}
+
+	private MdxModel getDoodadModel(final int doodadVariation, final MutableGameObject row) {
+		String file = row.readSLKTag("file");
+		final int numVar = row.readSLKTagInt("numVar");
+
+		if (file.endsWith(".mdx") || file.endsWith(".mdl")) {
+			file = file.substring(0, file.length() - 4);
+		}
+
+		String fileVar = file;
+
+		file += ".mdx";
+
+		if (numVar > 1) {
+			fileVar += Math.min(doodadVariation, numVar - 1);
+		}
+
+		fileVar += ".mdx";
+		// First see if the model is local.
+		// Doodads referring to local models may have invalid variations, so if the
+		// variation doesn't exist, try without a variation.
+
+		String path;
+		if (this.mapMpq.has(fileVar)) {
+			path = fileVar;
+		}
+		else {
+			path = file;
+		}
+		MdxModel model;
+		if (this.mapMpq.has(path)) {
+			model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
+		}
+		else {
+			model = (MdxModel) this.load(fileVar, this.mapPathSolver, this.solverParams);
+		}
+		return model;
+	}
+
 	private Rectangle getRotatedBoundingBox(final float x, final float y, final float angle,
 			final BoundingBox boundingBox) {
 		final float x1 = boundingBox.min.x;
@@ -1170,7 +1217,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		this.soundsetNameToSoundset = new HashMap<>();
 
-		if (this.dataSource.has("war3mapUnits.doo")) {
+		if (this.dataSource.has("war3mapUnits.doo") && WarsmashConstants.LOAD_UNITS_FROM_WORLDEDIT_DATA) {
 			final War3MapUnitsDoo dooFile = mpq.readUnits();
 
 			// Collect the units and items data.
@@ -1184,9 +1231,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final float unitAngle = unit.getAngle();
 				final int editorConfigHitPointPercent = unit.getHitpoints();
 
-				final CUnit unitCreated = createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex,
+				final CWidget widgetCreated = createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex,
 						customTeamColor, unitAngle);
-				if (unitCreated != null) {
+				if (widgetCreated instanceof CUnit) {
+					final CUnit unitCreated = (CUnit) widgetCreated;
 					if (editorConfigHitPointPercent > 0) {
 						unitCreated.setLife(this.simulation,
 								unitCreated.getMaximumLife() * (editorConfigHitPointPercent / 100f));
@@ -1205,7 +1253,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.anyReady = true;
 	}
 
-	private CUnit createNewUnit(final Warcraft3MapObjectData modifications, final War3ID unitId, float unitX,
+	private CWidget createNewUnit(final Warcraft3MapObjectData modifications, final War3ID unitId, float unitX,
 			float unitY, final float unitZ, final int playerIndex, int customTeamColor, final float unitAngle) {
 		UnitSoundset soundset = null;
 		MutableGameObject row = null;
@@ -1215,7 +1263,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		Splat buildingUberSplat = null;
 		SplatMover buildingUberSplatDynamicIngame = null;
 		BufferedImage buildingPathingPixelMap = null;
-		final float unitVertexScale = 1.0f;
 		RemovablePathingMapInstance pathingInstance = null;
 		BuildingShadow buildingShadowInstance = null;
 
@@ -1421,7 +1468,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 			else {
 
-				final CItem simulationItem = this.simulation.createItem(row.getAlias(), unitX, unitY);
+				final CItem simulationItem = this.simulation.internalCreateItem(row.getAlias(), unitX, unitY);
 				final RenderItem renderItem = new RenderItem(this, model, row, unitX, unitY, unitZ, unitAngle, soundset,
 						portraitModel, simulationItem);
 				this.widgets.add(renderItem);
@@ -1438,6 +1485,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				if (unitShadowSplatDynamicIngame != null) {
 					renderItem.shadow = unitShadowSplatDynamicIngame;
 				}
+				return simulationItem;
 			}
 		}
 		else {
@@ -1671,7 +1719,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
 						allyKey = "e:";
 					}
-					else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.HELP_REQUEST)) {
+					else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
 						allyKey = "f:";
 					}
 				}
@@ -1780,7 +1828,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
 					allyKey = "e:";
 				}
-				else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.HELP_REQUEST)) {
+				else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
 					allyKey = "f:";
 				}
 			}
@@ -2245,5 +2293,33 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public void setGameTurnManager(final GameTurnManager gameTurnManager) {
 		this.gameTurnManager = gameTurnManager;
+	}
+
+	public RenderEffect addSpecialEffectTarget(final String modelName, final CWidget targetWidget,
+			final String attachPointName) {
+		if (targetWidget instanceof CUnit) {
+			final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(targetWidget);
+			final MdxModel spawnedEffectModel = (MdxModel) load(mdx(modelName), PathSolver.DEFAULT, null);
+			if (spawnedEffectModel != null) {
+				final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel.addInstance();
+				modelInstance.setTeamColor(renderUnit.playerIndex);
+				modelInstance.setLocation(renderUnit.location);
+				modelInstance.setScene(War3MapViewer.this.worldScene);
+				final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance, War3MapViewer.this,
+						(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing()),
+						RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
+				War3MapViewer.this.projectiles.add(renderAttackInstant);
+				return renderAttackInstant;
+			}
+		}
+		else if (targetWidget instanceof CItem) {
+			// TODO this is stupid api, who would do this?
+			throw new UnsupportedOperationException("API for addSpecialEffectTarget() on item is NYI");
+		}
+		else if (targetWidget instanceof CDestructable) {
+			// TODO this is stupid api, who would do this?
+			throw new UnsupportedOperationException("API for addSpecialEffectTarget() on destructable is NYI");
+		}
+		return null;
 	}
 }

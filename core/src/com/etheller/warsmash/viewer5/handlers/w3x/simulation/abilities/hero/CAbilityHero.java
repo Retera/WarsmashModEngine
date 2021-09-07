@@ -187,7 +187,7 @@ public class CAbilityHero extends AbstractCAbility {
 	}
 
 	public void addXp(final CSimulation simulation, final CUnit unit, final int xp) {
-		this.xp += xp;
+		this.xp += xp * simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP();
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
 		while ((this.heroLevel < gameplayConstants.getMaxHeroLevel())
 				&& (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {

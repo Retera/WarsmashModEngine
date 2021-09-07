@@ -34,6 +34,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPri
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -144,6 +145,7 @@ public class CUnitData {
 	private static final War3ID STRUCTURES_BUILT = War3ID.fromString("ubui");
 	private static final War3ID UNITS_TRAINED = War3ID.fromString("utra");
 	private static final War3ID RESEARCHES_AVAILABLE = War3ID.fromString("ures");
+	private static final War3ID UPGRADES_TO = War3ID.fromString("uupt");
 	private static final War3ID REVIVES_HEROES = War3ID.fromString("urev");
 	private static final War3ID UNIT_RACE = War3ID.fromString("urac");
 
@@ -242,8 +244,12 @@ public class CUnitData {
 		}
 		final List<War3ID> unitsTrained = unitTypeInstance.getUnitsTrained();
 		final List<War3ID> researchesAvailable = unitTypeInstance.getResearchesAvailable();
+		final List<War3ID> upgradesTo = unitTypeInstance.getUpgradesTo();
 		if (!unitsTrained.isEmpty() || !researchesAvailable.isEmpty()) {
 			unit.add(simulation, new CAbilityQueue(handleIdAllocator.createId(), unitsTrained, researchesAvailable));
+		}
+		if (!upgradesTo.isEmpty()) {
+			unit.add(simulation, new CAbilityUpgrade(handleIdAllocator.createId(), upgradesTo));
 		}
 		if (unitTypeInstance.isRevivesHeroes()) {
 			unit.add(simulation, new CAbilityReviveHero(handleIdAllocator.createId()));
@@ -466,6 +472,15 @@ public class CUnitData {
 				}
 			}
 
+			final String upgradesToString = unitType.getFieldAsString(UPGRADES_TO, 0);
+			final String[] upgradesToStringItems = upgradesToString.trim().split(",");
+			final List<War3ID> upgradesTo = new ArrayList<>();
+			for (final String upgradesToStringItem : upgradesToStringItems) {
+				if (upgradesToStringItem.length() == 4) {
+					upgradesTo.add(War3ID.fromString(upgradesToStringItem));
+				}
+			}
+
 			final String researchesAvailableString = unitType.getFieldAsString(RESEARCHES_AVAILABLE, 0);
 			final String[] researchesAvailableStringItems = researchesAvailableString.trim().split(",");
 			final List<War3ID> researchesAvailable = new ArrayList<>();
@@ -541,11 +556,11 @@ public class CUnitData {
 			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, manaInitial, manaMaximum, speed,
 					defense, abilityList, isBldg, movementType, moveHeight, collisionSize, classifications, attacks,
 					armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs,
-					acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, unitRace,
-					goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes,
-					propWindow, turnRate, requirements, unitLevel, hero, strength, strPlus, agility, agiPlus,
-					intelligence, intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount,
-					canFlee, priority, revivesHeroes);
+					acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable,
+					upgradesTo, unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes,
+					requiredPathingTypes, propWindow, turnRate, requirements, unitLevel, hero, strength, strPlus,
+					agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList, heroProperNames,
+					properNamesCount, canFlee, priority, revivesHeroes);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

@@ -1,5 +1,7 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 
@@ -8,6 +10,7 @@ public class SimpleStatusBarFrame extends AbstractUIFrame {
 	private final TextureFrame barFrame;
 	private final TextureFrame borderFrame;
 	private final float barInset;
+	private float lastValue = Float.NaN;
 
 	public SimpleStatusBarFrame(final String name, final UIFrame parent, final boolean decorateFileNames,
 			final boolean borderBelow, final float barInset) {
@@ -31,6 +34,14 @@ public class SimpleStatusBarFrame extends AbstractUIFrame {
 		}
 	}
 
+	@Override
+	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
+		if (!Float.isNaN(this.lastValue)) {
+			this.barFrame.setWidth(((this.renderBounds.width - (this.barInset * 2)) * this.lastValue));
+		}
+		super.innerPositionBounds(gameUI, viewport);
+	}
+
 	public boolean isDecorateFileNames() {
 		return this.decorateFileNames;
 	}
@@ -38,6 +49,7 @@ public class SimpleStatusBarFrame extends AbstractUIFrame {
 	public void setValue(final float value) {
 		this.barFrame.setTexCoord(0, value, 0, 1);
 		this.barFrame.setWidth(((this.renderBounds.width - (this.barInset * 2)) * value));
+		this.lastValue = value;
 	}
 
 	public TextureFrame getBarFrame() {

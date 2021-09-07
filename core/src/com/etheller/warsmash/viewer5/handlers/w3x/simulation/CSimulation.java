@@ -45,6 +45,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
@@ -79,6 +81,7 @@ public class CSimulation implements CPlayerAPI {
 	private transient CommandErrorListener commandErrorListener;
 	private final CRegionManager regionManager;
 	private final List<TimeOfDayVariableEvent> timeOfDayVariableEvents = new ArrayList<>();
+	private boolean timeOfDaySuspended;
 
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
@@ -115,6 +118,9 @@ public class CSimulation implements CPlayerAPI {
 			final CRace defaultRace = CRace.UNDEAD;
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
+			if (WarsmashConstants.LOCAL_TEMP_TEST_ALL_PLAYERS_PLAYING) {
+				newPlayer.setSlotState(CPlayerSlotState.PLAYING);
+			}
 			this.players.add(newPlayer);
 		}
 		this.players.get(this.players.size() - 4).setName(miscData.getLocalizedString("WESTRING_PLAYER_NA"));
@@ -164,6 +170,7 @@ public class CSimulation implements CPlayerAPI {
 			if (nextTimer.getEngineFireTick() > timer.getEngineFireTick()) {
 				listIterator.previous();
 				listIterator.add(timer);
+				break;
 			}
 		}
 		this.activeTimers.add(timer);
@@ -187,7 +194,7 @@ public class CSimulation implements CPlayerAPI {
 		return unit;
 	}
 
-	public CDestructable createDestructable(final War3ID typeId, final float x, final float y,
+	public CDestructable internalCreateDestructable(final War3ID typeId, final float x, final float y,
 			final RemovablePathingMapInstance pathingInstance, final RemovablePathingMapInstance pathingInstanceDeath) {
 		final CDestructable dest = this.destructableData.create(this, typeId, x, y, this.handleIdAllocator,
 				pathingInstance, pathingInstanceDeath);
@@ -198,16 +205,30 @@ public class CSimulation implements CPlayerAPI {
 		return dest;
 	}
 
-	public CItem createItem(final War3ID alias, final float unitX, final float unitY) {
+	public CItem internalCreateItem(final War3ID alias, final float unitX, final float unitY) {
 		final CItem item = this.itemData.create(this, alias, unitX, unitY, this.handleIdAllocator.createId());
 		this.handleIdToItem.put(item.getHandleId(), item);
 		this.items.add(item);
 		return item;
 	}
 
+	public CItem createItem(final War3ID alias, final float unitX, final float unitY) {
+		return this.simulationRenderController.createItem(this, alias, unitX, unitY);
+	}
+
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		return this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
+	}
+
+	public CDestructable createDestructable(final War3ID typeId, final float x, final float y, final float facing,
+			final float scale, final int variation) {
+		return this.simulationRenderController.createDestructable(typeId, x, y, facing, scale, variation);
+	}
+
+	public CDestructable createDestructableZ(final War3ID typeId, final float x, final float y, final float z,
+			final float facing, final float scale, final int variation) {
+		return this.simulationRenderController.createDestructableZ(typeId, x, y, z, facing, scale, variation);
 	}
 
 	public CUnit getUnit(final int handleId) {
@@ -288,8 +309,10 @@ public class CSimulation implements CPlayerAPI {
 		}
 		this.gameTurnTick++;
 		final float timeOfDayBefore = this.getGameTimeOfDay();
-		this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
-				% this.gameplayConstants.getGameDayLength();
+		if (!this.timeOfDaySuspended) {
+			this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
+					% this.gameplayConstants.getGameDayLength();
+		}
 		final float timeOfDayAfter = this.getGameTimeOfDay();
 		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
@@ -325,6 +348,11 @@ public class CSimulation implements CPlayerAPI {
 	public float getGameTimeOfDay() {
 		return (this.currentGameDayTimeElapsed / this.gameplayConstants.getGameDayLength())
 				* this.gameplayConstants.getGameDayHours();
+	}
+
+	public void setGameTimeOfDay(final float value) {
+		final float elapsed = value / this.gameplayConstants.getGameDayHours();
+		this.currentGameDayTimeElapsed = elapsed * this.gameplayConstants.getGameDayLength();
 	}
 
 	public int getGameTurnTick() {
@@ -482,6 +510,16 @@ public class CSimulation implements CPlayerAPI {
 		};
 	}
 
+	public RemovableTriggerEvent registerGameEvent(final GlobalScope globalScope, final Trigger trigger,
+			final JassGameEventsWar3 gameEvent) {
+		System.err.println("Game event not yet implemented: " + gameEvent);
+		return new RemovableTriggerEvent() {
+			@Override
+			public void remove() {
+			}
+		};
+	}
+
 	public void heroDeathEvent(final CUnit cUnit) {
 		this.simulationRenderController.heroDeathEvent(cUnit);
 	}
@@ -523,5 +561,20 @@ public class CSimulation implements CPlayerAPI {
 			throw new UnsupportedOperationException("registerEventPlayerVictory is NYI");
 		}
 		return RemovableTriggerEvent.DO_NOTHING;
+	}
+
+	public void setAllItemTypeSlots(final int slots) {
+		System.err.println(
+				"Ignoring call to set all item type slots to: " + slots + " (marketplace is not yet implemented)");
+	}
+
+	public void setAllUnitTypeSlots(final int slots) {
+		System.err.println(
+				"Ignoring call to set all unit type slots to: " + slots + " (marketplace is not yet implemented)");
+	}
+
+	public void setTimeOfDaySuspended(final boolean flag) {
+		this.timeOfDaySuspended = flag;
+
 	}
 }

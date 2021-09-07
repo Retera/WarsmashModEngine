@@ -2,7 +2,6 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
 import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
-import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
@@ -23,8 +22,8 @@ public class RenderDoodad {
 	protected float selectionScale;
 
 	public RenderDoodad(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
-			final com.etheller.warsmash.parsers.w3x.doo.Doodad doodad, final WorldEditorDataType type,
-			final float maxPitch, final float maxRoll) {
+			final float[] location3D, final float[] scale3D, final float facingRadians, final float maxPitch,
+			final float maxRoll, final float selectionScale) {
 		this.maxPitch = maxPitch;
 		this.maxRoll = maxRoll;
 		final boolean isSimple = row.readSLKTagBoolean("lightweight");
@@ -38,7 +37,7 @@ public class RenderDoodad {
 			((MdxComplexInstance) instance).setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
 		}
 
-		instance.move(doodad.getLocation());
+		instance.move(location3D);
 		// TODO: the following pitch/roll system is a heuristic, and we probably want to
 		// revisit it later.
 		// Specifically, I was pretty convinced that whichever is applied first
@@ -46,10 +45,9 @@ public class RenderDoodad {
 		// to find the angle used for the other of the two
 		// (instead of measuring down from an imaginary flat ground plane, as we do
 		// currently).
-		final float facingRadians = doodad.getAngle();
 		float pitch, roll;
-		this.x = doodad.getLocation()[0];
-		this.y = doodad.getLocation()[1];
+		this.x = location3D[0];
+		this.y = location3D[1];
 		{
 			if (!map.terrain.inPlayableArea(this.x, this.y)) {
 				((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
@@ -76,16 +74,8 @@ public class RenderDoodad {
 		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, -pitch));
 		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, roll));
 //		instance.rotate(new Quaternion().setEulerAnglesRad(facingRadians, 0, 0));
-		final float[] scale = doodad.getScale();
-		instance.scale(scale);
-		if (type == WorldEditorDataType.DOODADS) {
-			final float defScale = row.readSLKTagFloat("defScale");
-			instance.uniformScale(defScale);
-			this.selectionScale = defScale;
-		}
-		else {
-			this.selectionScale = (float) Math.sqrt((scale[0]) * (scale[1]) * (scale[2]));
-		}
+		instance.scale(scale3D);
+		this.selectionScale = selectionScale;
 		instance.setScene(map.worldScene);
 
 		this.instance = instance;

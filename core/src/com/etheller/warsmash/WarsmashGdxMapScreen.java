@@ -30,12 +30,12 @@ import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
 import com.etheller.warsmash.datasources.MpqDataSourceDescriptor;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.jass.Jass2;
+import com.etheller.warsmash.parsers.jass.Jass2.CommonEnvironment;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -53,7 +53,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 
 public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	public static final boolean ENABLE_AUDIO = true;
-	private static final boolean ENABLE_MUSIC = true;
 	private final War3MapViewer viewer;
 	private final Rectangle tempRect = new Rectangle();
 
@@ -76,6 +75,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	private final WarsmashGdxMultiScreenGame screenManager;
 	private final WarsmashGdxMenuScreen menuScreen;
 	private final CPlayerUnitOrderListener uiOrderListener;
+	private CommonEnvironment commonEnv;
 
 	public WarsmashGdxMapScreen(final War3MapViewer mapViewer, final WarsmashGdxMultiScreenGame screenManager,
 			final WarsmashGdxMenuScreen menuScreen, final CPlayerUnitOrderListener uiOrderListener) {
@@ -150,7 +150,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		if (width < ((height * 4) / 3)) {
 			aspect3By4Width = width;
 			aspect3By4Height = (width * 3) / 4;
-		} else {
+		}
+		else {
 			aspect3By4Width = (height * 4) / 3;
 			aspect3By4Height = height;
 		}
@@ -171,13 +172,6 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 		this.shapeRenderer = new ShapeRenderer();
 
-//		Jass2.loadJUI(this.codebase, this.uiViewport, fontGenerator, this.uiScene, this.viewer,
-//				new RootFrameListener() {
-//					@Override
-//					public void onCreate(final GameUI rootFrame) {
-//						WarsmashGdxMapGame.this.gameUI = rootFrame;
-//					}
-//				}, "Scripts\\common.jui", "Scripts\\melee.jui");
 		final Element cameraRatesElement = this.viewer.miscData.get("CameraRates");
 		final CameraRates cameraRates = new CameraRates(cameraRatesElement.getFieldFloatValue("AOA"),
 				cameraRatesElement.getFieldFloatValue("FOV"), cameraRatesElement.getFieldFloatValue("Rotation"),
@@ -188,22 +182,6 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 					@Override
 					public void onCreate(final GameUI rootFrame) {
 						WarsmashGdxMapScreen.this.viewer.setGameUI(rootFrame);
-
-						if (ENABLE_MUSIC) {
-							final String musicField = rootFrame
-									.getSkinField("Music_V" + WarsmashConstants.GAME_VERSION);
-							final String[] musics = musicField.split(";");
-							String musicPath = musics[(int) (Math.random() * musics.length)];
-							if (false) {
-								musicPath = "Sound\\Music\\mp3Music\\PH1.mp3";
-							}
-							final Music music = Gdx.audio.newMusic(
-									new DataSourceFileHandle(WarsmashGdxMapScreen.this.viewer.dataSource, musicPath));
-							music.setVolume(1.0f);
-							music.setLooping(true);
-							music.play();
-							WarsmashGdxMapScreen.this.currentMusic = music;
-						}
 					}
 				}, this.uiOrderListener, new Runnable() {
 					@Override
@@ -224,9 +202,12 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 		try {
 			this.viewer.loadAfterUI();
-		} catch (final IOException e) {
+		}
+		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+		this.commonEnv = Jass2.loadCommon(this.viewer.mapMpq, this.uiViewport, this.uiScene, this.viewer, this.meleeUI,
+				"Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j");
 	}
 
 	public static DataSource parseDataSources(final DataTable warsmashIni) {
@@ -508,8 +489,6 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 	@Override
 	public void hide() {
-		if (this.currentMusic != null) {
-			this.currentMusic.stop();
-		}
+		this.meleeUI.gameClosed();
 	}
 }

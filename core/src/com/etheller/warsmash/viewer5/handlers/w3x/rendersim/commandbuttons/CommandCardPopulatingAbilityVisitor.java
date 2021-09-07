@@ -29,6 +29,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -238,23 +239,25 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton, int goldCost,
 			int lumberCost, int foodCost) {
 		ability.checkCanUse(this.game, this.unit, orderId, this.previewCallback.reset());
-		final boolean active = ((this.unit.getCurrentBehavior() != null)
-				&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId()));
-		final boolean disabled = ((ability != null) && ability.isDisabled()) || this.previewCallback.disabled;
-		String uberTip = iconUI.getUberTip();
-		if (disabled) {
-			// dont show these on disabled
-			goldCost = 0;
-			lumberCost = 0;
-			foodCost = 0;
+		if (!this.previewCallback.techtreeMaxReached) {
+			final boolean active = ((this.unit.getCurrentBehavior() != null)
+					&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId()));
+			final boolean disabled = ((ability != null) && ability.isDisabled()) || this.previewCallback.disabled;
+			String uberTip = iconUI.getUberTip();
+			if (disabled) {
+				// dont show these on disabled
+				goldCost = 0;
+				lumberCost = 0;
+				foodCost = 0;
+			}
+			if (this.previewCallback.isShowingRequirements()) {
+				uberTip = this.previewCallback.getRequirementsText() + "|r" + uberTip;
+			}
+			this.commandButtonListener.commandButton(buttonPosX, buttonPosY,
+					disabled ? iconUI.getIconDisabled() : iconUI.getIcon(), handleId, disabled ? 0 : orderId,
+					autoCastOrderId, active, autoCastActive, menuButton, toolTip, uberTip, iconUI.getHotkey(), goldCost,
+					lumberCost, foodCost);
 		}
-		if (this.previewCallback.isShowingRequirements()) {
-			uberTip = this.previewCallback.getRequirementsText() + "|r" + uberTip;
-		}
-		this.commandButtonListener.commandButton(buttonPosX, buttonPosY,
-				disabled ? iconUI.getIconDisabled() : iconUI.getIcon(), handleId, disabled ? 0 : orderId,
-				autoCastOrderId, active, autoCastActive, menuButton, toolTip, uberTip, iconUI.getHotkey(), goldCost,
-				lumberCost, foodCost);
 	}
 
 	@Override
@@ -332,12 +335,37 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		return null;
 	}
 
+	@Override
+	public Void accept(final CAbilityUpgrade ability) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
+			for (final War3ID unitType : ability.getUpgradesTo()) {
+				final IconUI unitUI = this.abilityDataUI.getUnitUI(unitType);
+				if (unitUI != null) {
+					final CUnitType simulationUnitType = this.game.getUnitData().getUnitType(unitType);
+					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false,
+							simulationUnitType.getGoldCost(), simulationUnitType.getLumberCost(),
+							simulationUnitType.getFoodUsed());
+				}
+			}
+			if (this.unit.getBuildQueueTypes()[0] != null) {
+				if (!this.hasCancel) {
+					this.hasCancel = true;
+					addCommandButton(ability, this.abilityDataUI.getCancelTrainUI(), ability.getHandleId(),
+							OrderIds.cancel, 0, false, false);
+				}
+			}
+		}
+		return null;
+	}
+
 	private final class CommandCardActivationReceiverPreviewCallback implements AbilityActivationReceiver {
 		private boolean disabled;
+		private boolean techtreeMaxReached;
 		private final StringBuilder requirementsTextBuilder = new StringBuilder();
 
 		public CommandCardActivationReceiverPreviewCallback reset() {
 			this.disabled = false;
+			this.techtreeMaxReached = false;
 			this.requirementsTextBuilder.setLength(0);
 			return this;
 		}
@@ -372,6 +400,11 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			this.requirementsTextBuilder
 					.append(unitType == null ? "NOTEXTERN Unknown ('" + type + "')" : unitType.getName());
 			this.requirementsTextBuilder.append("|n");
+		}
+
+		@Override
+		public void techtreeMaximumReached() {
+			this.techtreeMaxReached = true;
 		}
 
 		@Override

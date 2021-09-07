@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
@@ -73,6 +74,7 @@ public class MdxComplexInstance extends ModelInstance {
 	private float blendTime;
 	private float blendTimeRemaining;
 	public boolean additiveOverrideMeshMode = false;
+	private boolean hasAnyUnselectableMesh = false;
 
 	public MdxComplexInstance(final MdxModel model) {
 		super(model);
@@ -85,6 +87,9 @@ public class MdxComplexInstance extends ModelInstance {
 		this.geosetColors = new float[model.geosets.size()][];
 		for (int i = 0, l = model.geosets.size(); i < l; i++) {
 			this.geosetColors[i] = new float[4];
+			if (model.geosets.get(i).unselectable) {
+				this.hasAnyUnselectableMesh = true;
+			}
 		}
 
 		this.layerAlphas = new float[model.layers.size()];
@@ -677,6 +682,17 @@ public class MdxComplexInstance extends ModelInstance {
 		return this;
 	}
 
+	/**
+	 * Set the vertex color of this instance.
+	 */
+	public MdxComplexInstance setVertexColor(final Color color) {
+		this.vertexColor[0] = color.r;
+		this.vertexColor[1] = color.g;
+		this.vertexColor[2] = color.b;
+		this.vertexColor[3] = color.a;
+		return this;
+	}
+
 	public MdxComplexInstance setVertexAlpha(final float alpha) {
 		this.vertexColor[3] = alpha;
 
@@ -808,7 +824,7 @@ public class MdxComplexInstance extends ModelInstance {
 				intersected = true;
 			}
 		}
-		return intersected || intersectRayBounds(ray, intersection);
+		return intersected || (!this.hasAnyUnselectableMesh && intersectRayBounds(ray, intersection));
 	}
 
 	/**

@@ -65,3 +65,25 @@ Frame "SIMPLEFRAME" "SmashToolTipIconResource" {
         Text "275",
     }
 }
+Frame "FRAME" "SmashHoverTip" {
+	Frame "BACKDROP" "SmashHoverTipBackdrop" {
+		SetAllPoints,
+		DecorateFileNames,
+	    BackdropTileBackground,
+	    BackdropBackground  "ToolTipBackground",
+	    BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+	    BackdropCornerSize  0.008,
+	    BackdropBackgroundSize  0.036,
+	    BackdropBackgroundInsets 0.0025 0.0025 0.0025 0.0025,
+	    BackdropEdgeFile  "ToolTipBorder",
+	    BackdropBlendAll,
+	}
+	Frame "TEXT" "SmashHoverTipText" {
+	    DecorateFileNames,
+	    FrameFont "MasterFont", 0.010, "",
+	    FontJustificationH JUSTIFYLEFT,
+	    FontJustificationV JUSTIFYTOP,
+	    FontFlags "FIXEDSIZE",
+	    FontColor 1.0 1.0 1.0 1.0,
+	}
+}

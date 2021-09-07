@@ -34,16 +34,73 @@ global :
 	|
 	CONSTANT? type ID assignTail newlines # DefinitionGlobal
 	;
+local : 
+	LOCAL type ID newlines # BasicLocal
+	|
+	LOCAL type ID assignTail newlines # DefinitionLocal
+	;
 	
 assignTail:
 	EQUALS expression;
 	
-expression:
+multDivExpression:
+	multDivExpression '*' baseExpression # MultiplicationExpression
+	|
+	multDivExpression '/' baseExpression # DivisionExpression
+	|
+	baseExpression # BaseMultiplicationExpression
+	;
+	
+simpleArithmeticExpression:
+	simpleArithmeticExpression '+' multDivExpression # AdditionExpression
+	|
+	simpleArithmeticExpression '-' multDivExpression # SubtrationExpression
+	|
+	multDivExpression # BaseAdditionExpression
+	;
+	
+boolComparisonExpression:
+	boolComparisonExpression '<' simpleArithmeticExpression # BooleanLessExpression
+	|
+	boolComparisonExpression '>' simpleArithmeticExpression # BooleanGreaterExpression
+	|
+	boolComparisonExpression '<=' simpleArithmeticExpression # BooleanLessOrEqualsExpression
+	|
+	boolComparisonExpression '>=' simpleArithmeticExpression # BooleanGreaterOrEqualsExpression
+	|
+	simpleArithmeticExpression # BaseBoolComparisonExpression
+	;
+	
+boolEqualityExpression:
+	boolEqualityExpression '==' boolComparisonExpression # EqualsExpression
+	|
+	boolEqualityExpression '!=' boolComparisonExpression # NotEqualsExpression
+	|
+	boolComparisonExpression # BaseBoolExpression
+	;
+	
+boolAndsExpression:
+	boolAndsExpression AND boolEqualityExpression # BooleanAndExpression
+	|
+	boolEqualityExpression # BaseBoolAndsExpression
+	;
+	
+boolExpression:
+	boolExpression OR boolAndsExpression # BooleanOrExpression
+	|
+	boolAndsExpression # BaseBoolOrsExpression
+	;
+	
+baseExpression:
 	ID # ReferenceExpression
 	|
 	STRING_LITERAL #StringLiteralExpression
 	|
 	INTEGER #IntegerLiteralExpression
+	|
+	RAWCODE #RawcodeLiteralExpression
+	|
+	REAL #RealLiteralExpression
 	|
 	FUNCTION ID #FunctionReferenceExpression
 	|
@@ -59,8 +116,13 @@ expression:
 	|
 	'(' expression ')' # ParentheticalExpression
 	|
-	NOT expression # NotExpression
+	NOT baseExpression # NotExpression
+	|
+	'-' baseExpression # NegateExpression
 	;
+	
+expression:
+	boolExpression;
 
 functionExpression:
 	ID '(' argsList ')'
@@ -72,6 +134,8 @@ argsList:
 	expression # SingleArgument
 	|
 	expression ',' argsList # ListArgument
+	|
+	# EmptyArgument
 	;
 
 //#booleanExpression:
@@ -86,6 +150,14 @@ statement:
 	SET ID '[' expression ']' EQUALS expression newlines # ArrayedAssignmentStatement
 	|
 	RETURN expression newlines # ReturnStatement
+	|
+	RETURN newlines # ReturnNothingStatement
+	|
+	EXITWHEN expression newlines # ExitWhenStatement
+	|
+	local # LocalStatement
+	|
+	LOOP newlines statements ENDLOOP newlines # LoopStatement
 	|
 	IF ifStatementPartial # IfStatement
 	;
@@ -182,16 +254,27 @@ ELSE : 'else';
 ENDIF : 'endif';
 ELSEIF : 'elseif';
 CONSTANT : 'constant';
+LOCAL : 'local';
+LOOP : 'loop';
+ENDLOOP : 'endloop';
+EXITWHEN : 'exitwhen';
 
 STRING_LITERAL : ('"'.*?'"');
 
+
 INTEGER : [0]|([1-9][0-9]*) ;
+
+RAWCODE : ('\''.*?'\'');
+
+REAL : (([0]|([1-9][0-9]*))'.'[0-9]*)|('.'([0]|([1-9][0-9]*))) ;
 
 NULL : 'null' ;
 TRUE : 'true' ;
 FALSE : 'false' ;
 
 NOT : 'not';
+OR : 'or';
+AND : 'and';
 
 ID : ([a-zA-Z_][a-zA-Z_0-9]*) ;             // match identifiers
 

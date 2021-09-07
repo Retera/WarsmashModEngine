@@ -28,6 +28,7 @@ public class StringFrame extends AbstractRenderableFrame {
 	private float alpha = 1.0f;
 	private final SimpleFrame internalFramesContainer;
 	private float predictedViewportHeight;
+	private float predictedViewportWidth;
 
 	static ShapeRenderer shapeRenderer = new ShapeRenderer();
 	private final Color fontHighlightColor;
@@ -425,6 +426,7 @@ public class StringFrame extends AbstractRenderableFrame {
 		this.internalFramesContainer.setWidth(usedWidthMax);
 		this.internalFramesContainer.setHeight(usedHeight);
 		this.predictedViewportHeight = (usedHeight - this.frameFont.getCapHeight()) + this.frameFont.getLineHeight();
+		this.predictedViewportWidth = usedWidthMax;
 
 		this.internalFramesContainer.clearFramePointAssignments();
 		switch (this.justifyH) {
@@ -488,6 +490,10 @@ public class StringFrame extends AbstractRenderableFrame {
 
 	public float getPredictedViewportHeight() {
 		return this.predictedViewportHeight;
+	}
+
+	public float getPredictedViewportWidth() {
+		return this.predictedViewportWidth;
 	}
 
 	public BitmapFont getFrameFont() {

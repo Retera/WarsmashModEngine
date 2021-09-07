@@ -64,13 +64,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private CDestructable orderTargetDestructable;
 	private CItem orderTargetItem;
 	private CUnit orderTargetUnit;
+	private CWidget triggerWidget;
 
 	public CommonTriggerExecutionScope(final Trigger triggeringTrigger) {
 		super(triggeringTrigger);
 	}
 
-	public CommonTriggerExecutionScope(final TriggerExecutionScope parentScope) {
-		super(parentScope.getTriggeringTrigger());
+	public CommonTriggerExecutionScope(final Trigger triggeringTrigger, final TriggerExecutionScope parentScope) {
+		super(triggeringTrigger);
 		if (parentScope instanceof CommonTriggerExecutionScope) {
 			copyFrom((CommonTriggerExecutionScope) parentScope);
 		}
@@ -134,6 +135,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		this.orderTargetDestructable = parentScope.orderTargetDestructable;
 		this.orderTargetItem = parentScope.orderTargetItem;
 		this.orderTargetUnit = parentScope.orderTargetUnit;
+		this.triggerWidget = parentScope.triggerWidget;
 	}
 
 	public CUnit getEnumUnit() {
@@ -142,6 +144,10 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 
 	public CUnit getTriggeringUnit() {
 		return this.triggeringUnit;
+	}
+
+	public CWidget getTriggerWidget() {
+		return this.triggerWidget;
 	}
 
 	public CUnit getFilterUnit() {
@@ -350,63 +356,121 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 
 	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
 			final CUnit filterUnit) {
-		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope);
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
+				parentScope);
 		scope.filterUnit = filterUnit;
 		return scope;
 	}
 
 	public static CommonTriggerExecutionScope enumScope(final TriggerExecutionScope parentScope, final CUnit enumUnit) {
-		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope);
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
+				parentScope);
 		scope.enumUnit = enumUnit;
 		return scope;
 	}
 
 	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
+			final CItem filterItem) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
+				parentScope);
+		scope.filterItem = filterItem;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope enumScope(final TriggerExecutionScope parentScope, final CItem enumItem) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
+				parentScope);
+		scope.enumItem = enumItem;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
+			final CDestructable filterDestructable) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
+				parentScope);
+		scope.filterDestructable = filterDestructable;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope enumScope(final TriggerExecutionScope parentScope,
+			final CDestructable enumDestructable) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
+				parentScope);
+		scope.enumDestructable = enumDestructable;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
 			final CPlayerJass filterPlayer) {
-		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope);
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
+				parentScope);
 		scope.filterPlayer = filterPlayer;
 		return scope;
 	}
 
 	public static CommonTriggerExecutionScope enumScope(final TriggerExecutionScope parentScope,
 			final CPlayerJass enumPlayer) {
-		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope);
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
+				parentScope);
 		scope.enumPlayer = enumPlayer;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope expiringTimer(final CTimerJass cTimerJass) {
-		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(TriggerExecutionScope.EMPTY);
+	public static CommonTriggerExecutionScope expiringTimer(final Trigger trigger, final CTimerJass cTimerJass) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.expiringTimer = cTimerJass;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope unitEnterRegionScope(final TriggerExecutionScope parentScope,
-			final CUnit enteringUnit, final CRegion triggeringRegion) {
-		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope);
+	public static CommonTriggerExecutionScope unitEnterRegionScope(final Trigger trigger,
+			final TriggerExecutionScope parentScope, final CUnit enteringUnit, final CRegion triggeringRegion) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, parentScope);
 		scope.enteringUnit = enteringUnit;
 		scope.triggeringRegion = triggeringRegion;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope unitLeaveRegionScope(final TriggerExecutionScope parentScope,
-			final CUnit leavingUnit, final CRegion triggeringRegion) {
-		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope);
+	public static CommonTriggerExecutionScope unitLeaveRegionScope(final Trigger trigger,
+			final TriggerExecutionScope parentScope, final CUnit leavingUnit, final CRegion triggeringRegion) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, parentScope);
 		scope.leavingUnit = leavingUnit;
 		scope.triggeringRegion = triggeringRegion;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope playerHeroLevelScope(final CUnit hero) {
-		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(TriggerExecutionScope.EMPTY);
+	public static CommonTriggerExecutionScope playerHeroLevelScope(final Trigger trigger, final CUnit hero) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.levelingUnit = hero;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope playerHeroRevivableScope(final CUnit hero) {
-		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(TriggerExecutionScope.EMPTY);
+	public static CommonTriggerExecutionScope playerHeroRevivableScope(final Trigger trigger, final CUnit hero) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.revivableUnit = hero;
 		return scope;
 	}
 
+	public static CommonTriggerExecutionScope playerUnitDeathScope(final Trigger trigger, final CUnit dyingUnit,
+			final CUnit killingUnit) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.dyingUnit = dyingUnit;
+		scope.triggerWidget = dyingUnit;
+		scope.triggeringUnit = dyingUnit;
+		scope.killingUnit = killingUnit;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope widgetTriggerScope(final Trigger trigger, final CWidget triggerWidget) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = triggerWidget;
+		return scope;
+	}
+
+	public static interface UnitEventScopeBuilder {
+		CommonTriggerExecutionScope create(Trigger trigger, CUnit unit);
+	}
+
+	public static interface WidgetEventScopeBuilder {
+		CommonTriggerExecutionScope create(Trigger trigger, CWidget unit);
+	}
 }

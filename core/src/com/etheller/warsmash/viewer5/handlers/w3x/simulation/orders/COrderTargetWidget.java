@@ -50,7 +50,7 @@ public class COrderTargetWidget implements COrder {
 		if (abilityActivationReceiver.isUseOk()) {
 			final CWidget target = game.getWidget(this.targetHandleId);
 			final StringMsgTargetCheckReceiver<CWidget> targetReceiver = (StringMsgTargetCheckReceiver<CWidget>) targetCheckReceiver;
-			ability.checkCanTarget(game, caster, this.orderId, target, targetReceiver);
+			ability.checkCanTarget(game, caster, this.orderId, target, targetReceiver.reset());
 			if (targetReceiver.getTarget() != null) {
 				return ability.begin(game, caster, this.orderId, targetReceiver.getTarget());
 			}

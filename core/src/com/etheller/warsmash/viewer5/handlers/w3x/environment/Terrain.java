@@ -406,6 +406,7 @@ public class Terrain {
 		this.centerOffset = w3eFile.getCenterOffset();
 		this.uberSplatModels = new LinkedHashMap<>();
 		this.uberSplatModelsList = new ArrayList<>();
+		this.defaultCameraBounds = w3iFile.getCameraBounds();
 		this.mapBounds = w3iFile.getCameraBoundsComplements();
 		this.shaderMapBounds = new float[] { (this.mapBounds[0] * 128.0f) + this.centerOffset[0],
 				(this.mapBounds[2] * 128.0f) + this.centerOffset[1],
@@ -724,7 +725,7 @@ public class Terrain {
 		System.out.println("cliff: " + this.corners[x][y].cliff);
 	}
 
-	private void updateGroundTextures(final Rectangle area) {
+	public void updateGroundTextures(final Rectangle area) {
 		final Rectangle adjusted = new Rectangle(area.x - 1, area.y - 1, area.width + 2, area.height + 2);
 		final Rectangle updateArea = new Rectangle();
 		Intersector.intersectRectangles(new Rectangle(0, 0, this.columns - 1, this.rows - 1), adjusted, updateArea);
@@ -1343,6 +1344,7 @@ public class Terrain {
 	public PathingGrid pathingGrid;
 	private final Rectangle shaderMapBoundsRectangle;
 	private final Rectangle entireMapRectangle;
+	private final float[] defaultCameraBounds;
 
 	private static final class UnloadedTexture {
 		private final int width;
@@ -1388,6 +1390,19 @@ public class Terrain {
 		}
 
 		return 0;
+	}
+
+	public RenderCorner getCorner(final float x, final float y) {
+		final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f;
+		final float userCellSpaceY = (y - this.centerOffset[1]) / 128.0f;
+		final int cellX = (int) userCellSpaceX;
+		final int cellY = (int) userCellSpaceY;
+
+		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
+			return this.corners[cellX][cellY];
+		}
+
+		return null;
 	}
 
 	public float getWaterHeight(final float x, final float y) {
@@ -1563,5 +1578,9 @@ public class Terrain {
 		else {
 			return (char) ('A' + layerHeightOffset);
 		}
+	}
+
+	public float[] getDefaultCameraBounds() {
+		return this.defaultCameraBounds;
 	}
 }

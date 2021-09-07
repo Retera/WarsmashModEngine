@@ -22,6 +22,13 @@ public interface SimulationRenderController {
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);
 
+	CItem createItem(CSimulation simulation, final War3ID typeId, final float x, final float y);
+
+	CDestructable createDestructable(War3ID typeId, float x, float y, float facing, float scale, int variation);
+
+	CDestructable createDestructableZ(War3ID typeId, float x, float y, float z, float facing, float scale,
+			int variation);
+
 	void createInstantAttackEffect(CSimulation cSimulation, CUnit source, CUnitAttackInstant attack, CWidget target);
 
 	void spawnDamageSound(CWidget damagedDestructable, String weaponSound, String armorType);

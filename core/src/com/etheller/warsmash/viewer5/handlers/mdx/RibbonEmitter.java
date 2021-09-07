@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
+import com.etheller.warsmash.util.WarsmashConstants;
+
 public class RibbonEmitter extends MdxEmitter<MdxComplexInstance, RibbonEmitterObject, Ribbon> {
 	public Ribbon first;
 	public Ribbon last;
@@ -16,7 +18,8 @@ public class RibbonEmitter extends MdxEmitter<MdxComplexInstance, RibbonEmitterO
 			final RibbonEmitterObject emitterObject = this.emitterObject;
 
 			// It doesn't make sense to emit more than 1 ribbon at the same time.
-			this.currentEmission = Math.min(this.currentEmission + (emitterObject.emissionRate * dt), 1);
+			this.currentEmission = Math.min(this.currentEmission
+					+ (emitterObject.emissionRate * dt * WarsmashConstants.MODEL_DETAIL_PARTICLE_FACTOR), 1);
 		}
 
 	}

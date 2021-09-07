@@ -14,6 +14,9 @@ public interface ClientToServerListener {
 	void issueDropItemAtPointOrder(SocketAddress sourceAddress, int unitHandleId, int abilityHandleId, int orderId,
 			int targetHandleId, float x, float y, final boolean queue);
 
+	void issueDropItemAtTargetOrder(SocketAddress sourceAddress, int unitHandleId, int abilityHandleId, int orderId,
+			int targetHandleId, int targetHeroHandleId, final boolean queue);
+
 	void issueImmediateOrder(SocketAddress sourceAddress, int unitHandleId, int abilityHandleId, int orderId,
 			boolean queue);
 

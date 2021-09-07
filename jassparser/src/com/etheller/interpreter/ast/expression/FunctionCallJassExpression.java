@@ -30,7 +30,12 @@ public class FunctionCallJassExpression implements JassExpression {
 			final JassValue evaluatedExpression = expr.evaluate(globalScope, localScope, triggerScope);
 			evaluatedExpressions.add(evaluatedExpression);
 		}
-		return functionByName.call(evaluatedExpressions, globalScope, triggerScope);
+		try {
+			return functionByName.call(evaluatedExpressions, globalScope, triggerScope);
+		}
+		catch (final Exception exc) {
+			throw new RuntimeException("Function call by name failed for name: " + this.functionName, exc);
+		}
 	}
 
 }

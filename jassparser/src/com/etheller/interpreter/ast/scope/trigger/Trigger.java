@@ -56,6 +56,9 @@ public class Trigger {
 	}
 
 	public void execute(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
+		if (!this.enabled) {
+			return;
+		}
 		for (final JassFunction action : this.actions) {
 			action.call(Collections.emptyList(), globalScope, triggerScope);
 		}

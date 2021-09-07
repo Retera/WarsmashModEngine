@@ -3,7 +3,10 @@ package com.etheller.warsmash.networking;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
 
 import com.badlogic.gdx.Gdx;
 import com.etheller.warsmash.networking.udp.OrderedUdpClient;
@@ -53,18 +56,21 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				int currentServerTurnInProgress = latestCompletedTurn + 1;
-				if(currentServerTurnInProgress > latestLocallyRequestedTurn) {
-					queuedMessages.add(new QueuedMessage(latestCompletedTurn) {
+				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
+				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
 						@Override
 						public void run() {
 							executor.issueTargetOrder(unitHandleId, abilityHandleId, orderId, targetHandleId, queue);
 						}
 					});
-				} else if(currentServerTurnInProgress == latestLocallyRequestedTurn) {
+				}
+				else if (currentServerTurnInProgress == WarsmashClient.this.latestLocallyRequestedTurn) {
 					executor.issueTargetOrder(unitHandleId, abilityHandleId, orderId, targetHandleId, queue);
-				} else {
-					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < " + latestLocallyRequestedTurn);
+				}
+				else {
+					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < "
+							+ WarsmashClient.this.latestLocallyRequestedTurn);
 				}
 			}
 		});
@@ -77,18 +83,22 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				int currentServerTurnInProgress = latestCompletedTurn + 1;
-				if(currentServerTurnInProgress > latestLocallyRequestedTurn) {
-					queuedMessages.add(new QueuedMessage(latestCompletedTurn) {
+				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
+				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
 						@Override
 						public void run() {
 							executor.issuePointOrder(unitHandleId, abilityHandleId, orderId, x, y, queue);
 						}
 					});
-				} else if(currentServerTurnInProgress == latestLocallyRequestedTurn) {
-					executor.issuePointOrder(unitHandleId, abilityHandleId, orderId, x, y, queue);;
-				} else {
-					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < " + latestLocallyRequestedTurn);
+				}
+				else if (currentServerTurnInProgress == WarsmashClient.this.latestLocallyRequestedTurn) {
+					executor.issuePointOrder(unitHandleId, abilityHandleId, orderId, x, y, queue);
+					;
+				}
+				else {
+					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < "
+							+ WarsmashClient.this.latestLocallyRequestedTurn);
 				}
 			}
 		});
@@ -102,18 +112,52 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				int currentServerTurnInProgress = latestCompletedTurn + 1;
-				if(currentServerTurnInProgress > latestLocallyRequestedTurn) {
-					queuedMessages.add(new QueuedMessage(latestCompletedTurn) {
+				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
+				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
 						@Override
 						public void run() {
-							executor.issueDropItemAtPointOrder(unitHandleId, abilityHandleId, orderId, targetHandleId, x, y, queue);
+							executor.issueDropItemAtPointOrder(unitHandleId, abilityHandleId, orderId, targetHandleId,
+									x, y, queue);
 						}
 					});
-				} else if(currentServerTurnInProgress == latestLocallyRequestedTurn) {
-					executor.issueDropItemAtPointOrder(unitHandleId, abilityHandleId, orderId, targetHandleId, x, y, queue);
-				} else {
-					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < " + latestLocallyRequestedTurn);
+				}
+				else if (currentServerTurnInProgress == WarsmashClient.this.latestLocallyRequestedTurn) {
+					executor.issueDropItemAtPointOrder(unitHandleId, abilityHandleId, orderId, targetHandleId, x, y,
+							queue);
+				}
+				else {
+					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < "
+							+ WarsmashClient.this.latestLocallyRequestedTurn);
+				}
+			}
+		});
+	}
+
+	@Override
+	public void issueDropItemAtTargetOrder(final int playerIndex, final int unitHandleId, final int abilityHandleId,
+			final int orderId, final int targetHandleId, final int targetHeroHandleId, final boolean queue) {
+		final CPlayerUnitOrderExecutor executor = getExecutor(playerIndex);
+		Gdx.app.postRunnable(new Runnable() {
+			@Override
+			public void run() {
+				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
+				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
+						@Override
+						public void run() {
+							executor.issueDropItemAtTargetOrder(unitHandleId, abilityHandleId, orderId, targetHandleId,
+									targetHeroHandleId, queue);
+						}
+					});
+				}
+				else if (currentServerTurnInProgress == WarsmashClient.this.latestLocallyRequestedTurn) {
+					executor.issueDropItemAtTargetOrder(unitHandleId, abilityHandleId, orderId, targetHandleId,
+							targetHeroHandleId, queue);
+				}
+				else {
+					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < "
+							+ WarsmashClient.this.latestLocallyRequestedTurn);
 				}
 			}
 		});
@@ -126,18 +170,21 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				int currentServerTurnInProgress = latestCompletedTurn + 1;
-				if(currentServerTurnInProgress > latestLocallyRequestedTurn) {
-					queuedMessages.add(new QueuedMessage(latestCompletedTurn) {
+				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
+				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
 						@Override
 						public void run() {
 							executor.issueImmediateOrder(unitHandleId, abilityHandleId, orderId, queue);
 						}
 					});
-				} else if(currentServerTurnInProgress == latestLocallyRequestedTurn) {
+				}
+				else if (currentServerTurnInProgress == WarsmashClient.this.latestLocallyRequestedTurn) {
 					executor.issueImmediateOrder(unitHandleId, abilityHandleId, orderId, queue);
-				} else {
-					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < " + latestLocallyRequestedTurn);
+				}
+				else {
+					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < "
+							+ WarsmashClient.this.latestLocallyRequestedTurn);
 				}
 			}
 		});
@@ -149,18 +196,21 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				int currentServerTurnInProgress = latestCompletedTurn + 1;
-				if(currentServerTurnInProgress > latestLocallyRequestedTurn) {
-					queuedMessages.add(new QueuedMessage(latestCompletedTurn) {
+				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
+				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
 						@Override
 						public void run() {
 							executor.unitCancelTrainingItem(unitHandleId, cancelIndex);
 						}
 					});
-				} else if(currentServerTurnInProgress == latestLocallyRequestedTurn) {
+				}
+				else if (currentServerTurnInProgress == WarsmashClient.this.latestLocallyRequestedTurn) {
 					executor.unitCancelTrainingItem(unitHandleId, cancelIndex);
-				} else {
-					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < " + latestLocallyRequestedTurn);
+				}
+				else {
+					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < "
+							+ WarsmashClient.this.latestLocallyRequestedTurn);
 				}
 			}
 		});
@@ -168,7 +218,7 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 
 	@Override
 	public void finishedTurn(final int gameTurnTick) {
-		if(WarsmashConstants.VERBOSE_LOGGING) {
+		if (WarsmashConstants.VERBOSE_LOGGING) {
 			System.out.println("finishedTurn " + gameTurnTick);
 		}
 		Gdx.app.postRunnable(new Runnable() {
@@ -183,9 +233,10 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 	public void turnCompleted(final int gameTurnTick) {
 		this.writer.finishedTurn(gameTurnTick);
 		this.writer.send();
-		latestLocallyRequestedTurn = gameTurnTick;
-		while(!queuedMessages.isEmpty() && queuedMessages.peek().messageTurnTick == latestLocallyRequestedTurn) {
-			queuedMessages.poll().run();
+		this.latestLocallyRequestedTurn = gameTurnTick;
+		while (!this.queuedMessages.isEmpty()
+				&& (this.queuedMessages.peek().messageTurnTick == this.latestLocallyRequestedTurn)) {
+			this.queuedMessages.poll().run();
 		}
 	}
 
@@ -207,8 +258,10 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 
 	@Override
 	public void heartbeat() {
-		// Not doing anything here at the moment. The act of the server sending us that packet
-		// will let the middle layer UDP system know to re-request any lost packets based
+		// Not doing anything here at the moment. The act of the server sending us that
+		// packet
+		// will let the middle layer UDP system know to re-request any lost packets
+		// based
 		// on the heartbeat seq no. But at app layer, here, we can ignore it.
 		System.out.println("got heartbeat() from server");
 	}
@@ -223,16 +276,17 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 	}
 
 	private static abstract class QueuedMessage implements Runnable {
-		private int messageTurnTick;
+		private final int messageTurnTick;
 
-		public QueuedMessage(int messageTurnTick) {
+		public QueuedMessage(final int messageTurnTick) {
 			this.messageTurnTick = messageTurnTick;
 		}
 
 		public final int getMessageTurnTick() {
-			return messageTurnTick;
+			return this.messageTurnTick;
 		}
 
+		@Override
 		public abstract void run();
 	}
 }

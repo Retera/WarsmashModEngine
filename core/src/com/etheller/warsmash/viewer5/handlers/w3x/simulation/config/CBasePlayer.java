@@ -176,6 +176,10 @@ public abstract class CBasePlayer implements CPlayerJass {
 		return this.slotState;
 	}
 
+	public void setSlotState(final CPlayerSlotState slotState) {
+		this.slotState = slotState;
+	}
+
 	@Override
 	public int getTaxRate(final int otherPlayerIndex, final CPlayerState whichResource) {
 		final Integer taxRate = this.taxRates[otherPlayerIndex].get(whichResource);

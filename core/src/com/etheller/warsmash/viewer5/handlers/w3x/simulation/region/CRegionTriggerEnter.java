@@ -20,10 +20,10 @@ public class CRegionTriggerEnter {
 	}
 
 	public void fire(final CUnit unit, final CRegion region) {
-		if (this.filter.evaluate(this.globalScope,
+		if ((this.filter == null) || this.filter.evaluate(this.globalScope,
 				CommonTriggerExecutionScope.filterScope(TriggerExecutionScope.EMPTY, unit))) {
 			final CommonTriggerExecutionScope eventScope = CommonTriggerExecutionScope
-					.unitEnterRegionScope(TriggerExecutionScope.EMPTY, unit, region);
+					.unitEnterRegionScope(this.trigger, TriggerExecutionScope.EMPTY, unit, region);
 			if (this.trigger.evaluate(this.globalScope, eventScope)) {
 				this.trigger.execute(this.globalScope, eventScope);
 			}

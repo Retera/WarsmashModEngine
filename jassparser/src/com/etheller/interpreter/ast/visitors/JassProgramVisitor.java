@@ -34,7 +34,8 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 	private final JassGlobalsVisitor jassGlobalsVisitor = new JassGlobalsVisitor(this.globals, this.jassTypeVisitor,
 			this.jassExpressionVisitor);
 	private final JassParametersVisitor jassParametersVisitor = new JassParametersVisitor(this.jassTypeVisitor);
-	private final JassStatementVisitor jassStatementVisitor = new JassStatementVisitor(this.argumentExpressionHandler);
+	private final JassStatementVisitor jassStatementVisitor = new JassStatementVisitor(this.argumentExpressionHandler,
+			this.jassTypeVisitor);
 
 	@Override
 	public Void visitBlock(final BlockContext ctx) {

@@ -13,6 +13,11 @@ public class PrimitiveJassType implements JassType {
 	}
 
 	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
 	public String getName() {
 		return this.name;
 	}
@@ -20,6 +25,11 @@ public class PrimitiveJassType implements JassType {
 	@Override
 	public <TYPE> TYPE visit(final JassTypeVisitor<TYPE> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public JassValue getNullValue() {
+		return null;
 	}
 
 }

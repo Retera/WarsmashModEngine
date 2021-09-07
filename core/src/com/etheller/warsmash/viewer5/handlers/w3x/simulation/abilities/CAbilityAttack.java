@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -42,6 +43,9 @@ public class CAbilityAttack extends AbstractCAbility {
 					receiver.orderIdNotAccepted();
 					return;
 				}
+			}
+			else if (target instanceof CDestructable) {
+				// fall thru to below
 			}
 			else {
 				receiver.orderIdNotAccepted();

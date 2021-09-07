@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderDropItemAtPoint;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderDropItemAtTargetWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
@@ -35,6 +36,16 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 		if (this.playerIndex == unit.getPlayerIndex()) {
 			unit.order(this.game, new COrderDropItemAtPoint(abilityHandleId, orderId, targetHandleId,
 					new AbilityPointTarget(x, y), queue), queue);
+		}
+	}
+
+	@Override
+	public void issueDropItemAtTargetOrder(final int unitHandleId, final int abilityHandleId, final int orderId,
+			final int targetItemHandleId, final int targetHeroHandleId, final boolean queue) {
+		final CUnit unit = this.game.getUnit(unitHandleId);
+		if (this.playerIndex == unit.getPlayerIndex()) {
+			unit.order(this.game, new COrderDropItemAtTargetWidget(abilityHandleId, orderId, targetItemHandleId,
+					targetHeroHandleId, queue), queue);
 		}
 	}
 

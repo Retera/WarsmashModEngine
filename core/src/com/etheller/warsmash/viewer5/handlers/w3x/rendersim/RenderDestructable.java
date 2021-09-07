@@ -1,13 +1,15 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
+import java.util.EnumSet;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
-import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
@@ -34,10 +36,10 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	private String replaceableTextureFile;
 
 	public RenderDestructable(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
-			final com.etheller.warsmash.parsers.w3x.doo.Doodad doodad, final WorldEditorDataType type,
+			final float[] location3D, final float[] scale3D, final float facingRadians, final float selectionScale,
 			final float maxPitch, final float maxRoll, final float life, final BuildingShadow destructableShadow,
 			final CDestructable simulationDestructable) {
-		super(map, model, row, doodad, type, maxPitch, maxRoll);
+		super(map, model, row, location3D, scale3D, facingRadians, maxPitch, maxRoll, selectionScale);
 		this.life = simulationDestructable.getLife();
 		this.destructableShadow = destructableShadow;
 		this.simulationDestructable = simulationDestructable;
@@ -186,5 +188,45 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	@Override
 	public SplatMover getSelectionCircle() {
 		return this.selectionCircle;
+	}
+
+	public CDestructable getSimulationDestructable() {
+		return this.simulationDestructable;
+	}
+
+	public UnitAnimationListenerImpl getUnitAnimationListenerImpl() {
+		return this.unitAnimationListenerImpl;
+	}
+
+	public void setAnimation(final String sequence) {
+		final EnumSet<PrimaryTag> primaryTags = EnumSet.noneOf(PrimaryTag.class);
+		PrimaryTag bestPrimaryTag = null;
+		final EnumSet<SecondaryTag> secondaryTags = EnumSet.noneOf(SecondaryTag.class);
+		TokenLoop: for (final String token : sequence.split("\\s+")) {
+			final String upperCaseToken = token.toUpperCase();
+			for (final PrimaryTag primaryTag : PrimaryTag.values()) {
+				if (upperCaseToken.equals(primaryTag.name())) {
+					primaryTags.add(primaryTag);
+					bestPrimaryTag = primaryTag;
+					continue TokenLoop;
+				}
+			}
+			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
+				if (upperCaseToken.equals(secondaryTag.name())) {
+					secondaryTags.add(secondaryTag);
+					continue TokenLoop;
+				}
+			}
+			break;
+		}
+		this.dead = this.simulationDestructable.isDead();
+		this.life = this.simulationDestructable.getLife();
+		this.unitAnimationListenerImpl.playAnimation(true, bestPrimaryTag, secondaryTags, 1.0f, true);
+	}
+
+	public void notifyLifeRestored() {
+		this.dead = this.simulationDestructable.isDead();
+		this.life = this.simulationDestructable.getLife();
+		this.unitAnimationListenerImpl.playAnimation(true, getAnimation(), SequenceUtils.EMPTY, 1.0f, true);
 	}
 }

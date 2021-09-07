@@ -1,11 +1,20 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.List;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
+import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
 
 public abstract class CWidget implements AbilityTarget {
 	protected static final Rectangle tempRect = new Rectangle();
@@ -13,6 +22,8 @@ public abstract class CWidget implements AbilityTarget {
 	private float x;
 	private float y;
 	protected float life;
+	private final EnumMap<JassGameEventsWar3, List<CWidgetEvent>> eventTypeToEvents = new EnumMap<>(
+			JassGameEventsWar3.class);
 
 	public CWidget(final int handleId, final float x, final float y, final float life) {
 		this.handleId = handleId;
@@ -78,4 +89,49 @@ public abstract class CWidget implements AbilityTarget {
 	}
 
 	public abstract boolean isInvulnerable();
+
+	public void fireDeathEvents(final CSimulation simulation) {
+		fireEvents(CommonTriggerExecutionScope::widgetTriggerScope, JassGameEventsWar3.EVENT_WIDGET_DEATH);
+	}
+
+	private List<CWidgetEvent> getOrCreateEventList(final JassGameEventsWar3 eventType) {
+		List<CWidgetEvent> playerEvents = this.eventTypeToEvents.get(eventType);
+		if (playerEvents == null) {
+			playerEvents = new ArrayList<>();
+			this.eventTypeToEvents.put(eventType, playerEvents);
+		}
+		return playerEvents;
+	}
+
+	private List<CWidgetEvent> getEventList(final JassGameEventsWar3 eventType) {
+		return this.eventTypeToEvents.get(eventType);
+	}
+
+	public RemovableTriggerEvent addEvent(final GlobalScope globalScope, final Trigger whichTrigger,
+			final JassGameEventsWar3 eventType) {
+		final CWidgetEvent playerEvent = new CWidgetEvent(globalScope, this, whichTrigger, eventType, null);
+		getOrCreateEventList(eventType).add(playerEvent);
+		return playerEvent;
+	}
+
+	public void removeEvent(final CWidgetEvent playerEvent) {
+		final List<CWidgetEvent> eventList = getEventList(playerEvent.getEventType());
+		if (eventList != null) {
+			eventList.remove(playerEvent);
+		}
+	}
+
+	private void fireEvents(final CommonTriggerExecutionScope.WidgetEventScopeBuilder eventScopeBuilder,
+			final JassGameEventsWar3 eventType) {
+		final List<CWidgetEvent> eventList = getEventList(eventType);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, eventScopeBuilder.create(event.getTrigger(), this));
+			}
+		}
+	}
+
+	public RemovableTriggerEvent addDeathEvent(final GlobalScope globalScope, final Trigger whichTrigger) {
+		return addEvent(globalScope, whichTrigger, JassGameEventsWar3.EVENT_WIDGET_DEATH);
+	}
 }

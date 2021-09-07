@@ -26,7 +26,8 @@ public enum CDamageType {
 	DEMOLITION,
 	SLOW_POISON,
 	SPIRIT_LINK,
-	SHADOW_STRIKE;
+	SHADOW_STRIKE,
+	UNIVERSAL;
 
 	public static CDamageType[] VALUES = values();
 }

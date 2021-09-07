@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 
 /**
  * A visitor for the lowest level inherent types of an ability. It's a bit of a
@@ -47,6 +48,8 @@ public interface CAbilityVisitor<T> {
 	T accept(CAbilityBuildInProgress ability);
 
 	T accept(CAbilityQueue ability);
+
+	T accept(CAbilityUpgrade ability);
 
 	T accept(CAbilityReviveHero ability);
 

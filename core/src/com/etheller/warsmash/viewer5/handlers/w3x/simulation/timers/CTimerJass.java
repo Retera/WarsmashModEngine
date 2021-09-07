@@ -24,9 +24,10 @@ public class CTimerJass extends CTimer {
 
 	@Override
 	public void onFire() {
-		final CommonTriggerExecutionScope executionScope = CommonTriggerExecutionScope.expiringTimer(this);
-		this.handlerFunc.call(Collections.emptyList(), this.jassGlobalScope, executionScope);
+		final CommonTriggerExecutionScope handlerScope = CommonTriggerExecutionScope.expiringTimer(null, this);
+		this.handlerFunc.call(Collections.emptyList(), this.jassGlobalScope, handlerScope);
 		for (final Trigger trigger : this.eventTriggers) {
+			final CommonTriggerExecutionScope executionScope = CommonTriggerExecutionScope.expiringTimer(trigger, this);
 			if (trigger.evaluate(this.jassGlobalScope, executionScope)) {
 				trigger.execute(this.jassGlobalScope, executionScope);
 			}

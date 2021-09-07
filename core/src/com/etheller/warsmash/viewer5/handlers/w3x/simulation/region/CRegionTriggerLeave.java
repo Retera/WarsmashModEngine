@@ -23,7 +23,7 @@ public class CRegionTriggerLeave {
 		if (this.filter.evaluate(this.globalScope,
 				CommonTriggerExecutionScope.filterScope(TriggerExecutionScope.EMPTY, unit))) {
 			final CommonTriggerExecutionScope eventScope = CommonTriggerExecutionScope
-					.unitLeaveRegionScope(TriggerExecutionScope.EMPTY, unit, region);
+					.unitLeaveRegionScope(this.trigger, TriggerExecutionScope.EMPTY, unit, region);
 			if (this.trigger.evaluate(this.globalScope, eventScope)) {
 				this.trigger.execute(this.globalScope, eventScope);
 			}

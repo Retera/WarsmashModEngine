@@ -8,11 +8,16 @@ public class RealJassValue implements JassValue {
 	}
 
 	public double getValue() {
-		return value;
+		return this.value;
 	}
 
 	@Override
 	public <TYPE> TYPE visit(final JassValueVisitor<TYPE> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public String toString() {
+		return Double.toString(this.value);
 	}
 }

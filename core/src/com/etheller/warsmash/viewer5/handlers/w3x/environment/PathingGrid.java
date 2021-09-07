@@ -252,6 +252,24 @@ public class PathingGrid {
 		return (short) (this.pathingGrid[index] | this.dynamicPathingOverlay[index]);
 	}
 
+	public void setCellPathing(final int cellX, final int cellY, final short pathingValue) {
+		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
+		this.pathingGrid[index] = pathingValue;
+	}
+
+	public void setCellBlighted(final int cellX, final int cellY, final boolean blighted) {
+		if (blighted) {
+			setCellPathing(cellX, cellY, (short) (getCellPathing(cellX, cellY) | (short) PathingFlags.BLIGHTED));
+		}
+		else {
+			setCellPathing(cellX, cellY, (short) (getCellPathing(cellX, cellY) & (short) ~PathingFlags.BLIGHTED));
+		}
+	}
+
+	public void setBlighted(final float x, final float y, final boolean blighted) {
+		setCellBlighted(getCellX(x), getCellY(y), blighted);
+	}
+
 	public boolean isPathable(final float x, final float y, final PathingType pathingType) {
 		return !PathingFlags.isPathingFlag(getPathing(x, y), pathingType.preventionFlag);
 	}

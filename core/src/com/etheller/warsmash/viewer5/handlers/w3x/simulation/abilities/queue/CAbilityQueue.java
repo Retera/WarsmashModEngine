@@ -48,7 +48,8 @@ public final class CAbilityQueue extends AbstractCAbility {
 			if (unitType != null) {
 				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 				final List<CUnitTypeRequirement> requirements = unitType.getRequirements();
-				boolean requirementsMet = true;
+				final boolean techtreeAllowedByMax = player.isTechtreeAllowedByMax(orderIdAsRawtype);
+				boolean requirementsMet = techtreeAllowedByMax;
 				for (final CUnitTypeRequirement requirement : requirements) {
 					if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
 						requirementsMet = false;
@@ -74,8 +75,13 @@ public final class CAbilityQueue extends AbstractCAbility {
 					}
 				}
 				else {
-					for (final CUnitTypeRequirement requirement : requirements) {
-						receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+					if (techtreeAllowedByMax) {
+						for (final CUnitTypeRequirement requirement : requirements) {
+							receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+						}
+					}
+					else {
+						receiver.techtreeMaximumReached();
 					}
 				}
 			}
@@ -116,7 +122,8 @@ public final class CAbilityQueue extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityTarget target) {
 		return true;
 	}
 

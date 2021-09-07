@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
 public enum CPlayerState {
+	GAME_RESULT,
 	// current resource levels
 	//
 	RESOURCE_GOLD,

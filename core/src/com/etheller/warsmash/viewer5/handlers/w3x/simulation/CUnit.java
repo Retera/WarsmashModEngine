@@ -38,6 +38,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
@@ -49,6 +50,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CUnitState;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
@@ -263,6 +266,7 @@ public class CUnit extends CWidget {
 				break;
 			}
 		}
+		this.stateListenersUpdates.clear();
 		if (isDead()) {
 			if (this.collisionRectangle != null) {
 				// Moved this here because doing it on "kill" was able to happen in some cases
@@ -988,6 +992,8 @@ public class CUnit extends CWidget {
 				}
 			}
 		}
+		fireDeathEvents(simulation);
+		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
 	}
 
 	public boolean canReach(final AbilityTarget target, final float range) {
@@ -1610,6 +1616,15 @@ public class CUnit extends CWidget {
 		this.defaultBehavior = defaultBehavior;
 	}
 
+	public CAbilityGoldMine getGoldMineData() {
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityGoldMine) {
+				return ((CAbilityGoldMine) ability);
+			}
+		}
+		return null;
+	}
+
 	public int getGold() {
 		for (final CAbility ability : this.abilities) {
 			if (ability instanceof CAbilityGoldMine) {
@@ -1743,5 +1758,142 @@ public class CUnit extends CWidget {
 		public StateListenerUpdateType getUpdateType() {
 			return this.updateType;
 		}
+	}
+
+	public void cancelUpgrade(final CSimulation game) {
+		throw new RuntimeException("NYI");
+	}
+
+	public void beginUpgrade(final CSimulation game, final War3ID rawcode) {
+
+	}
+
+	public void setUnitState(final CSimulation game, final CUnitState whichUnitState, final float value) {
+		switch (whichUnitState) {
+		case LIFE:
+			setLife(game, value);
+			break;
+		case MANA:
+			setMana(value);
+			break;
+		case MAX_LIFE:
+			setMaximumLife((int) value);
+			break;
+		case MAX_MANA:
+			setMaximumMana((int) value);
+			break;
+		}
+	}
+
+	public float getUnitState(final CSimulation game, final CUnitState whichUnitState) {
+		switch (whichUnitState) {
+		case LIFE:
+			return getLife();
+		case MANA:
+			return getMana();
+		case MAX_LIFE:
+			return getMaximumLife();
+		case MAX_MANA:
+			return getMaximumMana();
+		}
+		return 0;
+	}
+
+	public boolean isUnitType(final CUnitTypeJass whichUnitType) {
+		switch (whichUnitType) {
+		case HERO:
+			return getHeroData() != null;
+		case DEAD:
+			return isDead();
+		case STRUCTURE:
+			return isBuilding();
+
+		case FLYING:
+			return getUnitType().getTargetedAs().contains(CTargetType.AIR);
+		case GROUND:
+			return getUnitType().getTargetedAs().contains(CTargetType.GROUND);
+
+		case ATTACKS_FLYING:
+			for (final CUnitAttack attack : getAttacks()) {
+				if (attack.getTargetsAllowed().contains(CTargetType.AIR)) {
+					return true;
+				}
+			}
+			return false;
+		case ATTACKS_GROUND:
+			for (final CUnitAttack attack : getAttacks()) {
+				if (attack.getTargetsAllowed().contains(CTargetType.GROUND)) {
+					return true;
+				}
+			}
+			return false;
+
+		case MELEE_ATTACKER:
+			boolean hasAttacks = false;
+			for (final CUnitAttack attack : getAttacks()) {
+				if (attack.getWeaponType() != CWeaponType.NORMAL) {
+					return false;
+				}
+				hasAttacks = true;
+			}
+			return hasAttacks;
+
+		case RANGED_ATTACKER:
+			for (final CUnitAttack attack : getAttacks()) {
+				if (attack.getWeaponType() != CWeaponType.NORMAL) {
+					return true;
+				}
+			}
+			return false;
+
+		case GIANT:
+			return getUnitType().getClassifications().contains(CUnitClassification.GIANT);
+		case SUMMONED:
+			return getUnitType().getClassifications().contains(CUnitClassification.SUMMONED);
+		case STUNNED:
+			return getCurrentBehavior().getHighlightOrderId() == OrderIds.stunned;
+		case PLAGUED:
+			throw new UnsupportedOperationException(
+					"cannot ask engine if unit is plagued: plague is not yet implemented");
+		case SNARED:
+			throw new UnsupportedOperationException(
+					"cannot ask engine if unit is snared: snare is not yet implemented");
+
+		case UNDEAD:
+			return getUnitType().getClassifications().contains(CUnitClassification.UNDEAD);
+		case MECHANICAL:
+			return getUnitType().getClassifications().contains(CUnitClassification.MECHANICAL);
+		case PEON:
+			return getUnitType().getClassifications().contains(CUnitClassification.PEON);
+		case SAPPER:
+			return getUnitType().getClassifications().contains(CUnitClassification.SAPPER);
+		case TOWNHALL:
+			return getUnitType().getClassifications().contains(CUnitClassification.TOWNHALL);
+		case ANCIENT:
+			return this.unitType.getClassifications().contains(CUnitClassification.ANCIENT);
+
+		case TAUREN:
+			return getUnitType().getClassifications().contains(CUnitClassification.TAUREN);
+		case POISONED:
+			throw new UnsupportedOperationException(
+					"cannot ask engine if unit is poisoned: poison is not yet implemented");
+		case POLYMORPHED:
+			throw new UnsupportedOperationException(
+					"cannot ask engine if unit is POLYMORPHED: POLYMORPHED is not yet implemented");
+		case SLEEPING:
+			throw new UnsupportedOperationException(
+					"cannot ask engine if unit is SLEEPING: SLEEPING is not yet implemented");
+		case RESISTANT:
+			throw new UnsupportedOperationException(
+					"cannot ask engine if unit is RESISTANT: RESISTANT is not yet implemented");
+		case ETHEREAL:
+			throw new UnsupportedOperationException(
+					"cannot ask engine if unit is ETHEREAL: ETHEREAL is not yet implemented");
+		case MAGIC_IMMUNE:
+			throw new UnsupportedOperationException(
+					"cannot ask engine if unit is MAGIC_IMMUNE: MAGIC_IMMUNE is not yet implemented");
+
+		}
+		return false;
 	}
 }

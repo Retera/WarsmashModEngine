@@ -13,11 +13,19 @@ public class Assignable {
 	}
 
 	public void setValue(final JassValue value) {
-		final JassType valueType = value.visit(JassTypeGettingValueVisitor.getInstance());
-		if (!this.type.isAssignableFrom(valueType)) {
-			throw new RuntimeException("Incompatible types " + valueType.getName() + " != " + this.type.getName());
+		if (value == null) {
+			if (!this.type.isNullable()) {
+				throw new RuntimeException("Type " + this.type.getName() + " cannot be assigned to null!");
+			}
+			this.value = this.type.getNullValue();
 		}
-		this.value = value;
+		else {
+			final JassType valueType = value.visit(JassTypeGettingValueVisitor.getInstance());
+			if (!this.type.isAssignableFrom(valueType)) {
+				throw new RuntimeException("Incompatible types " + valueType.getName() + " != " + this.type.getName());
+			}
+			this.value = value;
+		}
 	}
 
 	public JassValue getValue() {

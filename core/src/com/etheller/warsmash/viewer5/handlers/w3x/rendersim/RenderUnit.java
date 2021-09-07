@@ -563,4 +563,17 @@ public class RenderUnit implements RenderWidget {
 		return this.selectionCircle;
 	}
 
+	public boolean groupsWith(final RenderUnit selectedUnit) {
+		return this.simulationUnit.getUnitType() == selectedUnit.getSimulationUnit().getUnitType();
+	}
+
+	public void setPlayerColor(final int ordinal) {
+		this.playerIndex = ordinal;
+		getInstance().setTeamColor(ordinal);
+	}
+
+	public float getFacing() {
+		return this.facing;
+	}
+
 }

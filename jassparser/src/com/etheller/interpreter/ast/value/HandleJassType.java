@@ -40,4 +40,14 @@ public class HandleJassType implements JassType {
 		return visitor.accept(this);
 	}
 
+	@Override
+	public boolean isNullable() {
+		return true;
+	}
+
+	@Override
+	public HandleJassValue getNullValue() {
+		return new HandleJassValue(this, null);
+	}
+
 }

@@ -78,11 +78,29 @@ public class AudioContext {
 	}
 
 	public AudioPanner createPanner() {
-		return new AudioPanner(this.listener) {
-			@Override
-			public void connect(final AudioDestination destination) {
-			}
-		};
+		return createPanner(true);
+	}
+
+	public AudioPanner createPanner(final boolean stopWhenOutOfRange) {
+		if (!stopWhenOutOfRange) {
+			return new AudioPanner(this.listener) {
+				@Override
+				public void connect(final AudioDestination destination) {
+				}
+
+				@Override
+				public boolean isWithinListenerDistance() {
+					return true;
+				}
+			};
+		}
+		else {
+			return new AudioPanner(this.listener) {
+				@Override
+				public void connect(final AudioDestination destination) {
+				}
+			};
+		}
 	}
 
 	public AudioBufferSource createBufferSource() {

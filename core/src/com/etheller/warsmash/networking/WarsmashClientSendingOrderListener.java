@@ -31,6 +31,14 @@ public class WarsmashClientSendingOrderListener implements CPlayerUnitOrderListe
 	}
 
 	@Override
+	public void issueDropItemAtTargetOrder(final int unitHandleId, final int abilityHandleId, final int orderId,
+			final int targetItemHandleId, final int targetHeroHandleId, final boolean queue) {
+		this.writer.issueDropItemAtTargetOrder(unitHandleId, abilityHandleId, orderId, targetItemHandleId,
+				targetHeroHandleId, queue);
+		this.writer.send();
+	}
+
+	@Override
 	public void issueImmediateOrder(final int unitHandleId, final int abilityHandleId, final int orderId,
 			final boolean queue) {
 		this.writer.issueImmediateOrder(unitHandleId, abilityHandleId, orderId, queue);

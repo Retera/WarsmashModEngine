@@ -28,6 +28,9 @@ public enum CDefenseType implements CodeKeyType {
 		if (upperCaseTypeString.equals("HEAVY")) {
 			return LARGE;
 		}
+		if (upperCaseTypeString.trim().isEmpty()) {
+			System.err.println("bad");
+		}
 		return valueOf(upperCaseTypeString);
 	}
 }

@@ -1,5 +1,6 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -133,6 +134,12 @@ public class SpriteFrame extends AbstractUIFrame {
 			this.instance.setReplaceableTexture(replaceableId, blpPath);
 		}
 
+	}
+
+	public void setVertexColor(final Color color) {
+		if (this.instance != null) {
+			this.instance.setVertexColor(color);
+		}
 	}
 
 }

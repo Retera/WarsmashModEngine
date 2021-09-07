@@ -27,4 +27,14 @@ public class ArrayJassType implements JassType {
 	public <TYPE> TYPE visit(final JassTypeVisitor<TYPE> visitor) {
 		return visitor.accept(this);
 	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public JassValue getNullValue() {
+		return null;
+	}
 }

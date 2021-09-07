@@ -61,17 +61,34 @@ public class CDestructable extends CWidget {
 	@Override
 	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
 			final String weaponType, final float damage) {
+		if (isInvulnerable()) {
+			return;
+		}
 		final boolean wasDead = isDead();
 		this.life -= damage;
-		if (!wasDead && isDead()) {
-			if (this.pathingInstance != null) {
-				this.pathingInstance.remove();
-			}
-			if (this.pathingInstanceDeath != null) {
-				this.pathingInstanceDeath.add();
-			}
-		}
 		simulation.destructableDamageEvent(this, weaponType, this.destType.getArmorType());
+		if (!wasDead && isDead()) {
+			kill(simulation);
+		}
+	}
+
+	private void kill(final CSimulation simulation) {
+		if (this.pathingInstance != null) {
+			this.pathingInstance.remove();
+		}
+		if (this.pathingInstanceDeath != null) {
+			this.pathingInstanceDeath.add();
+		}
+		fireDeathEvents(simulation);
+	}
+
+	@Override
+	public void setLife(final CSimulation simulation, final float life) {
+		final boolean wasDead = isDead();
+		super.setLife(simulation, life);
+		if (isDead() && !wasDead) {
+			kill(simulation);
+		}
 	}
 
 	@Override
@@ -80,10 +97,12 @@ public class CDestructable extends CWidget {
 		if (targetsAllowed.containsAll(this.destType.getTargetedAs())) {
 			if (isDead()) {
 				return targetsAllowed.contains(CTargetType.DEAD);
-			} else {
+			}
+			else {
 				return !targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE);
 			}
-		} else {
+		}
+		else {
 			System.err.println("Not targeting because " + targetsAllowed + " does not contain all of "
 					+ this.destType.getTargetedAs());
 		}

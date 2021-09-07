@@ -27,6 +27,11 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
+	public void techtreeMaximumReached() {
+		this.ok = false;
+	}
+
+	@Override
 	public void casterMovementDisabled() {
 		this.ok = false;
 	}

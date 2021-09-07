@@ -92,6 +92,7 @@ public class RenderItem implements RenderWidget {
 				this.instance.show();
 				if (this.shadow != null) {
 					this.shadow.show(map.terrain.centerOffset);
+					this.shadow.setLocation(this.location[0], this.location[1], map.terrain.centerOffset);
 				}
 			}
 		}
@@ -111,12 +112,10 @@ public class RenderItem implements RenderWidget {
 		final float prevY = this.location[1];
 		final float simulationX = this.simulationItem.getX();
 		final float simulationY = this.simulationItem.getY();
-		final float simDx = simulationX - this.location[0];
-		final float simDy = simulationY - this.location[1];
+		final float dx = simulationX - prevX;
+		final float dy = simulationY - prevY;
 		this.location[0] = simulationX;
 		this.location[1] = simulationY;
-		final float dx = this.location[0] - prevX;
-		final float dy = this.location[1] - prevY;
 		final float groundHeight;
 		// land units will have their feet pass under the surface of the water, so items
 		// here are in the same place
@@ -150,7 +149,7 @@ public class RenderItem implements RenderWidget {
 
 	@Override
 	public float getSelectionScale() {
-		return 1.0f;
+		return 64.0f;
 	}
 
 	@Override
@@ -201,5 +200,9 @@ public class RenderItem implements RenderWidget {
 	@Override
 	public SplatMover getSelectionCircle() {
 		return this.selectionCircle;
+	}
+
+	public CItem getSimulationItem() {
+		return this.simulationItem;
 	}
 }

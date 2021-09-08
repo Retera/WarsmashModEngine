@@ -78,6 +78,8 @@ public class CSimulation implements CPlayerAPI {
 	private final Map<Integer, CItem> handleIdToItem = new HashMap<>();
 	private final Map<Integer, CAbility> handleIdToAbility = new HashMap<>();
 	private final LinkedList<CTimer> activeTimers = new LinkedList<>();
+	private final List<CTimer> addedTimers = new ArrayList<>();
+	private final List<CTimer> removedTimers = new ArrayList<>();
 	private transient CommandErrorListener commandErrorListener;
 	private final CRegionManager regionManager;
 	private final List<TimeOfDayVariableEvent> timeOfDayVariableEvents = new ArrayList<>();
@@ -164,20 +166,28 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void registerTimer(final CTimer timer) {
+		this.addedTimers.add(timer);
+	}
+
+	public void unregisterTimer(final CTimer timer) {
+		this.removedTimers.add(timer);
+	}
+
+	private void internalRegisterTimer(final CTimer timer) {
 		final ListIterator<CTimer> listIterator = this.activeTimers.listIterator();
 		while (listIterator.hasNext()) {
 			final CTimer nextTimer = listIterator.next();
 			if (nextTimer.getEngineFireTick() > timer.getEngineFireTick()) {
 				listIterator.previous();
 				listIterator.add(timer);
-				break;
+				return;
 			}
 		}
-		this.activeTimers.add(timer);
+		this.activeTimers.addLast(timer);
 	}
 
-	public void unregisterTimer(final CTimer time) {
-		this.activeTimers.remove(time);
+	public void internalUnregisterTimer(final CTimer timer) {
+		this.activeTimers.remove(timer);
 	}
 
 	public CUnit internalCreateUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
@@ -314,9 +324,17 @@ public class CSimulation implements CPlayerAPI {
 					% this.gameplayConstants.getGameDayLength();
 		}
 		final float timeOfDayAfter = this.getGameTimeOfDay();
+		for (final CTimer timer : this.addedTimers) {
+			internalRegisterTimer(timer);
+		}
+		this.addedTimers.clear();
 		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
 		}
+		for (final CTimer timer : this.removedTimers) {
+			internalUnregisterTimer(timer);
+		}
+		this.removedTimers.clear();
 		for (final TimeOfDayVariableEvent timeOfDayEvent : this.timeOfDayVariableEvents) {
 			if (!timeOfDayEvent.isMatching(timeOfDayBefore) && timeOfDayEvent.isMatching(timeOfDayAfter)) {
 				timeOfDayEvent.fire();

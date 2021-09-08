@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
@@ -51,7 +52,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CUnitState;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
@@ -993,6 +996,12 @@ public class CUnit extends CWidget {
 			}
 		}
 		fireDeathEvents(simulation);
+		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, CommonTriggerExecutionScope.unitDeathScope(event.getTrigger(), this, source));
+			}
+		}
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
 	}
 

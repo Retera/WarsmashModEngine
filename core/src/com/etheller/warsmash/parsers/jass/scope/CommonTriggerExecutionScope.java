@@ -450,7 +450,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope playerUnitDeathScope(final Trigger trigger, final CUnit dyingUnit,
+	public static CommonTriggerExecutionScope unitDeathScope(final Trigger trigger, final CUnit dyingUnit,
 			final CUnit killingUnit) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.dyingUnit = dyingUnit;

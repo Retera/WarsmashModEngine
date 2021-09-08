@@ -103,7 +103,7 @@ public abstract class CWidget implements AbilityTarget {
 		return playerEvents;
 	}
 
-	private List<CWidgetEvent> getEventList(final JassGameEventsWar3 eventType) {
+	protected List<CWidgetEvent> getEventList(final JassGameEventsWar3 eventType) {
 		return this.eventTypeToEvents.get(eventType);
 	}
 

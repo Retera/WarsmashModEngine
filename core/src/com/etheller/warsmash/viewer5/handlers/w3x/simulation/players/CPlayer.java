@@ -248,7 +248,7 @@ public class CPlayer extends CBasePlayer {
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
 				event.fire(dyingUnit,
-						CommonTriggerExecutionScope.playerUnitDeathScope(event.getTrigger(), dyingUnit, killingUnit));
+						CommonTriggerExecutionScope.unitDeathScope(event.getTrigger(), dyingUnit, killingUnit));
 			}
 		}
 	}

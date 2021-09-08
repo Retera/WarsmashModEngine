@@ -199,6 +199,36 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.internalPublishHeroStatsChanged();
 	}
 
+	public void addStrengthBonus(final CSimulation game, final CUnit unit, final int strengthBonus) {
+		this.strength.setBonus(this.strength.getBonus() + strengthBonus);
+		calculateDerivatedFields(game, unit);
+	}
+
+	public void addAgilityBonus(final CSimulation game, final CUnit unit, final int agilityBonus) {
+		this.agility.setBonus(this.agility.getBonus() + agilityBonus);
+		calculateDerivatedFields(game, unit);
+	}
+
+	public void addIntelligenceBonus(final CSimulation game, final CUnit unit, final int intelligenceBonus) {
+		this.intelligence.setBonus(this.intelligence.getBonus() + intelligenceBonus);
+		calculateDerivatedFields(game, unit);
+	}
+
+	public void addStrengthBase(final CSimulation game, final CUnit unit, final int strengthBonus) {
+		this.strength.setBase(this.strength.getBase() + strengthBonus);
+		calculateDerivatedFields(game, unit);
+	}
+
+	public void addAgilityBase(final CSimulation game, final CUnit unit, final int agilityBonus) {
+		this.agility.setBase(this.agility.getBase() + agilityBonus);
+		calculateDerivatedFields(game, unit);
+	}
+
+	public void addIntelligenceBase(final CSimulation game, final CUnit unit, final int intelligenceBonus) {
+		this.intelligence.setBase(this.intelligence.getBase() + intelligenceBonus);
+		calculateDerivatedFields(game, unit);
+	}
+
 	private HeroStatValue getStat(final CPrimaryAttribute attribute) {
 		switch (attribute) {
 		case AGILITY:
@@ -273,6 +303,14 @@ public class CAbilityHero extends AbstractCAbility {
 
 		public void setBonus(final int bonus) {
 			this.bonus = bonus;
+		}
+
+		public int getBase() {
+			return this.base;
+		}
+
+		public int getBonus() {
+			return this.bonus;
 		}
 
 		public int getCurrent() {

@@ -32,8 +32,10 @@ public class JassIfStatement implements JassStatement {
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
 		globalScope.setLineNumber(this.lineNo);
-		if (this.condition.evaluate(globalScope, localScope, triggerScope)
-				.visit(BooleanJassValueVisitor.getInstance())) {
+		final JassValue evaluate = this.condition.evaluate(globalScope, localScope, triggerScope);
+		// TODO this null is here for simulations where we are missing natives, remove
+		// it on full release
+		if ((evaluate != null) && evaluate.visit(BooleanJassValueVisitor.getInstance())) {
 			for (final JassStatement statement : this.thenStatements) {
 				final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
 				if (returnValue != null) {

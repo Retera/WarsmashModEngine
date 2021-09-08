@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
@@ -11,6 +12,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.item.CItemTypeJass;
 
 public class CItemData {
 	private static final War3ID ABILITY_LIST = War3ID.fromString("iabi");
@@ -43,11 +45,19 @@ public class CItemData {
 	private static final War3ID VALID_TARGET_FOR_TRANSFORMATION = War3ID.fromString("imor");
 	private static final War3ID INCLUDE_AS_RANDOM_CHOICE = War3ID.fromString("iprn");
 
+	private final Map<Integer, RandomItemSet> levelToRandomChoices = new HashMap<>();
+	private static final War3ID CLASSIFICATION = War3ID.fromString("icla");
+
 	private final Map<War3ID, CItemType> itemIdToItemType = new HashMap<>();
 	private final MutableObjectData itemData;
 
 	public CItemData(final MutableObjectData itemData) {
 		this.itemData = itemData;
+		// TODO the below is a bit hacky, but needed to build the list of random choices
+		for (final War3ID key : this.itemData.keySet()) {
+			final MutableGameObject mutableGameObject = this.itemData.get(key);
+			getItemTypeInstance(key, mutableGameObject);
+		}
 	}
 
 	public CItem create(final CSimulation simulation, final War3ID typeId, final float x, final float y,
@@ -114,12 +124,67 @@ public class CItemData {
 			final boolean validTargetForTransformation = itemType.getFieldAsBoolean(VALID_TARGET_FOR_TRANSFORMATION, 0);
 			final boolean includeAsRandomChoice = itemType.getFieldAsBoolean(INCLUDE_AS_RANDOM_CHOICE, 0);
 
+			final String classificationString = itemType.getFieldAsString(CLASSIFICATION, 0);
+			CItemTypeJass itemClass = CItemTypeJass.UNKNOWN;
+			try {
+				itemClass = CItemTypeJass.valueOf(classificationString);
+			}
+			catch (final Exception exc) {
+				// do not bother to log this, means it didn't match constant (it's a user input)
+			}
+
 			itemTypeInstance = new CItemType(abilityList, cooldownGroup, ignoreCooldown, numberOfCharges, activelyUsed,
 					perishable, useAutomaticallyWhenAcquired, goldCost, lumberCost, stockMax, stockReplenishInterval,
 					stockStartDelay, hitPoints, armorType, level, levelUnclassified, priority, sellable, pawnable,
-					droppedWhenCarrierDies, canBeDropped, validTargetForTransformation, includeAsRandomChoice);
+					droppedWhenCarrierDies, canBeDropped, validTargetForTransformation, includeAsRandomChoice,
+					itemClass);
 			this.itemIdToItemType.put(typeId, itemTypeInstance);
+
+			if (includeAsRandomChoice) {
+				RandomItemSet levelRandomChoices = this.levelToRandomChoices.get(level);
+				if (levelRandomChoices == null) {
+					levelRandomChoices = new RandomItemSet();
+					this.levelToRandomChoices.put(level, levelRandomChoices);
+				}
+				List<War3ID> itemsOfClass = levelRandomChoices.classificationToItems.get(itemClass);
+				if (itemsOfClass == null) {
+					itemsOfClass = new ArrayList<>();
+					levelRandomChoices.classificationToItems.put(itemClass, itemsOfClass);
+				}
+				itemsOfClass.add(typeId);
+				RandomItemSet levelUnclassifiedRandomChoices = this.levelToRandomChoices.get(level);
+				if (levelUnclassifiedRandomChoices == null) {
+					levelUnclassifiedRandomChoices = new RandomItemSet();
+					this.levelToRandomChoices.put(level, levelUnclassifiedRandomChoices);
+				}
+				levelUnclassifiedRandomChoices.unclassifiedItems.add(typeId);
+			}
 		}
 		return itemTypeInstance;
+	}
+
+	public War3ID chooseRandomItem(final int level, final Random seededRandom) {
+		final RandomItemSet randomItemSet = this.levelToRandomChoices.get(level);
+		if (randomItemSet == null) {
+			return null;
+		}
+		return randomItemSet.unclassifiedItems.get(seededRandom.nextInt(randomItemSet.unclassifiedItems.size()));
+	}
+
+	public War3ID chooseRandomItem(final CItemTypeJass itemClass, final int level, final Random seededRandom) {
+		final RandomItemSet randomItemSet = this.levelToRandomChoices.get(level);
+		if (randomItemSet == null) {
+			return null;
+		}
+		final List<War3ID> itemsOfClass = randomItemSet.classificationToItems.get(itemClass);
+		if (itemsOfClass == null) {
+			return null;
+		}
+		return itemsOfClass.get(seededRandom.nextInt(itemsOfClass.size()));
+	}
+
+	private static final class RandomItemSet {
+		private final List<War3ID> unclassifiedItems = new ArrayList<>();
+		private final Map<CItemTypeJass, List<War3ID>> classificationToItems = new HashMap<>();
 	}
 }

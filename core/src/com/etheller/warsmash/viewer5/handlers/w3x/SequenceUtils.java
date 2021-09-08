@@ -158,10 +158,13 @@ public class SequenceUtils {
 		}
 
 		final int sequencesLeft = filtered.size() - i;
-		final int random = (int) (i + Math.floor(Math.random() * sequencesLeft));
 		if (sequencesLeft <= 0) {
+			if (filtered.size() > 0) {
+				return filtered.get((int) Math.floor(Math.random() * filtered.size()));
+			}
 			return null; // new IndexedSequence(null, 0);
 		}
+		final int random = (int) (i + Math.floor(Math.random() * sequencesLeft));
 		final IndexedSequence sequence = filtered.get(random);
 
 		return sequence;

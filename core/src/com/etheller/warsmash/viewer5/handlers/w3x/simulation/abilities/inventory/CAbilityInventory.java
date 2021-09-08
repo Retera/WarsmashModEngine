@@ -284,6 +284,16 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				if (itemType.isActivelyUsed()) {
 					item.setLife(simulation, 0);
 					// TODO when we give unit ability here, then use ability
+					for (final War3ID abilityId : item.getItemType().getAbilityList()) {
+						final CAbilityType<?> abilityType = simulation.getAbilityData().getAbilityType(abilityId);
+						if (abilityType != null) {
+							final CAbility abilityFromItem = abilityType
+									.createAbility(simulation.getHandleIdAllocator().createId());
+							abilityFromItem.setIconShowing(false);
+							hero.add(simulation, abilityFromItem);
+						}
+					}
+					hero.onPickUpItem(simulation, item, true);
 				}
 			}
 			else {

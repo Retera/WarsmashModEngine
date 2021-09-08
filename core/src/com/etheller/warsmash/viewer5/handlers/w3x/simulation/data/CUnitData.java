@@ -761,7 +761,7 @@ public class CUnitData {
 							+ jassLegacyName);
 			for (final War3ID key : this.unitData.keySet()) {
 				final MutableGameObject mutableGameObject = this.unitData.get(key);
-				if (jassLegacyName.equals(getLegacyName(mutableGameObject))) {
+				if (jassLegacyName.equals(getLegacyName(mutableGameObject).toLowerCase())) {
 					return getUnitType(mutableGameObject.getAlias());
 				}
 			}

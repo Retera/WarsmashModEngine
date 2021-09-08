@@ -82,6 +82,7 @@ public abstract class CTimer {
 		// its implied that we will have "unregisterTimer" happen automatically
 		// before this is called
 		this.running = false;
+		onFire();
 		if (this.repeats) {
 			start(simulation);
 		}

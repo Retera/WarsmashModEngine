@@ -2692,6 +2692,27 @@ public class Jass2 {
 							simulation.createItem(new War3ID(rawcode), (float) x, (float) y));
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("ChooseRandomItem", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final int level = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					final War3ID randomItemId = simulation.getItemData().chooseRandomItem(level,
+							simulation.getSeededRandom());
+					return new IntegerJassValue(randomItemId == null ? 0 : randomItemId.getValue());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("ChooseRandomItemEx", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CItemTypeJass whichType = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int level = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final War3ID randomItemId = simulation.getItemData().chooseRandomItem(whichType, level,
+							simulation.getSeededRandom());
+					return new IntegerJassValue(randomItemId == null ? 0 : randomItemId.getValue());
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateDestructable", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -2758,8 +2779,7 @@ public class Jass2 {
 						player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
 					}
 					// nudge unit
-					newUnit.setPoint((float) x, (float) y, simulation.getWorldCollision(),
-							simulation.getRegionManager());
+					newUnit.setPointAndCheckUnstuck((float) x, (float) y, simulation);
 					return new HandleJassValue(unitType, newUnit);
 				}
 			});
@@ -2781,8 +2801,7 @@ public class Jass2 {
 						player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
 					}
 					// nudge unit
-					newUnit.setPoint((float) whichLocation.x, (float) whichLocation.y, simulation.getWorldCollision(),
-							simulation.getRegionManager());
+					newUnit.setPointAndCheckUnstuck((float) whichLocation.x, (float) whichLocation.y, simulation);
 					return new HandleJassValue(unitType, newUnit);
 				}
 			});
@@ -3318,6 +3337,30 @@ public class Jass2 {
 					return null;
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupGetField", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					// TODO NYI
+					return new RealJassValue(0.0f);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("LeaderboardGetItemCount", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					// TODO NYI
+					return new IntegerJassValue(0);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("LeaderboardGetPlayerIndex", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					// TODO NYI
+					return new IntegerJassValue(0);
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitInvulnerable", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -3487,11 +3530,33 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final CItem whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-					if (whichUnit == null) {
+					final CItem whichItem = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					if (whichItem == null) {
 						return new IntegerJassValue(0);
 					}
-					return new IntegerJassValue(whichUnit.getTypeId().getValue());
+					return new IntegerJassValue(whichItem.getTypeId().getValue());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetItemType", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CItem whichItem = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					if (whichItem == null) {
+						return itemtypeType.getNullValue();
+					}
+					return new HandleJassValue(itemtypeType, whichItem.getItemType().getItemClass());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetItemLevel", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CItem whichItem = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					if (whichItem == null) {
+						return new IntegerJassValue(0);
+					}
+					return new IntegerJassValue(whichItem.getItemType().getLevel());
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetOwningPlayer", new JassFunction() {

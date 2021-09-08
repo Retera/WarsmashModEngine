@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.item.CItemTypeJass;
 
 public class CItemType {
 	private final List<War3ID> abilityList;
@@ -28,14 +29,16 @@ public class CItemType {
 	private final boolean canBeDropped;
 	private final boolean validTargetForTransformation;
 	private final boolean includeAsRandomChoice;
+	private final CItemTypeJass itemClass;
 
 	public CItemType(final List<War3ID> abilityList, final War3ID cooldownGroup, final boolean ignoreCooldown,
-					 final int numberOfCharges, final boolean activelyUsed, final boolean perishable,
-					 final boolean useAutomaticallyWhenAcquired, final int goldCost, final int lumberCost, final int stockMax,
-					 final int stockReplenishInterval, final int stockStartDelay, final int maxLife, final String armorType,
-					 final int level, final int levelUnclassified, final int priority, final boolean sellable,
-					 final boolean pawnable, final boolean droppedWhenCarrierDies, final boolean canBeDropped,
-					 final boolean validTargetForTransformation, final boolean includeAsRandomChoice) {
+			final int numberOfCharges, final boolean activelyUsed, final boolean perishable,
+			final boolean useAutomaticallyWhenAcquired, final int goldCost, final int lumberCost, final int stockMax,
+			final int stockReplenishInterval, final int stockStartDelay, final int maxLife, final String armorType,
+			final int level, final int levelUnclassified, final int priority, final boolean sellable,
+			final boolean pawnable, final boolean droppedWhenCarrierDies, final boolean canBeDropped,
+			final boolean validTargetForTransformation, final boolean includeAsRandomChoice,
+			final CItemTypeJass itemClass) {
 		this.abilityList = abilityList;
 		this.cooldownGroup = cooldownGroup;
 		this.ignoreCooldown = ignoreCooldown;
@@ -59,6 +62,7 @@ public class CItemType {
 		this.canBeDropped = canBeDropped;
 		this.validTargetForTransformation = validTargetForTransformation;
 		this.includeAsRandomChoice = includeAsRandomChoice;
+		this.itemClass = itemClass;
 	}
 
 	public List<War3ID> getAbilityList() {
@@ -153,4 +157,7 @@ public class CItemType {
 		return this.includeAsRandomChoice;
 	}
 
+	public CItemTypeJass getItemClass() {
+		return this.itemClass;
+	}
 }

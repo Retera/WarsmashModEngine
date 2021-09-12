@@ -30,7 +30,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
@@ -93,13 +92,13 @@ public class CUnit extends CWidget {
 	// questionable -- it already was -- but I meant for those to inform us
 	// which fields shouldn't be persisted if we do game state save later
 	private transient CUnitStateNotifier stateNotifier = new CUnitStateNotifier();
-	private transient List<StateListenerUpdate> stateListenersUpdates = new ArrayList<>();
+	private transient List<CUnitStateListener> stateListenersNeedingAdd = new ArrayList<>();
+	private transient List<CUnitStateListener> stateListenersNeedingRemove = new ArrayList<>();
 	private final float acquisitionRange;
 	private transient static AutoAttackTargetFinderEnum autoAttackTargetFinderEnum = new AutoAttackTargetFinderEnum();
 
 	private transient CBehaviorMove moveBehavior;
 	private transient CBehaviorAttack attackBehavior;
-	private transient CBehaviorAttackMove attackMoveBehavior;
 	private transient CBehaviorFollow followBehavior;
 	private transient CBehaviorPatrol patrolBehavior;
 	private transient CBehaviorStop stopBehavior;
@@ -189,12 +188,6 @@ public class CUnit extends CWidget {
 		ability.onAdd(simulation, this);
 	}
 
-	public void remove(final CSimulation simulation, final CAbility ability) {
-		this.abilities.remove(ability);
-		simulation.onAbilityRemovedFromUnit(this, ability);
-		ability.onRemove(simulation, this);
-	}
-
 	public War3ID getTypeId() {
 		return this.typeId;
 	}
@@ -253,16 +246,14 @@ public class CUnit extends CWidget {
 	 * this unit from the game.
 	 */
 	public boolean update(final CSimulation game) {
-		for (final StateListenerUpdate update : this.stateListenersUpdates) {
-			switch (update.getUpdateType()) {
-			case ADD:
-				this.stateNotifier.subscribe(update.listener);
-				break;
-			case REMOVE:
-				this.stateNotifier.unsubscribe(update.listener);
-				break;
-			}
+		for (final CUnitStateListener listener : this.stateListenersNeedingAdd) {
+			this.stateNotifier.subscribe(listener);
 		}
+		this.stateListenersNeedingAdd.clear();
+		for (final CUnitStateListener listener : this.stateListenersNeedingRemove) {
+			this.stateNotifier.unsubscribe(listener);
+		}
+		this.stateListenersNeedingRemove.clear();
 		if (isDead()) {
 			if (this.collisionRectangle != null) {
 				// Moved this here because doing it on "kill" was able to happen in some cases
@@ -279,15 +270,10 @@ public class CUnit extends CWidget {
 						this.boneCorpse = true;
 						// start final phase immediately for "cant raise" case
 					}
-					if (!this.unitType.isHero()) {
-						if (!this.unitType.isDecay()) {
-							// if we dont raise AND dont decay, then now that death anim is over
-							// we just delete the unit
-							return true;
-						}
-					}
-					else {
-						game.heroDeathEvent(this);
+					if (!this.unitType.isDecay()) {
+						// if we dont raise AND dont decay, then now that death anim is over
+						// we just delete the unit
+						return true;
 					}
 					this.deathTurnTick = gameTurnTick;
 				}
@@ -301,18 +287,13 @@ public class CUnit extends CWidget {
 			}
 			else if (game.getGameTurnTick() > (this.deathTurnTick
 					+ (int) (getEndingDecayTime(game) / WarsmashConstants.SIMULATION_STEP_TIME))) {
-				if (this.unitType.isHero()) {
-					if (!getHeroData().isAwaitingRevive()) {
-						setHidden(true);
-						getHeroData().setAwaitingRevive(true);
-						game.heroDissipateEvent(this);
-					}
-					return false;
-				}
 				return true;
 			}
 		}
 		else if (!this.paused) {
+
+			regenerateHitPoints();
+
 			if ((this.rallyPoint != this) && (this.rallyPoint instanceof CUnit) && ((CUnit) this.rallyPoint).isDead()) {
 				setRallyPoint(this);
 			}
@@ -362,15 +343,6 @@ public class CUnit extends CWidget {
 								this.queuedUnitFoodPaid = true;
 							}
 						}
-						else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
-							final CPlayer player = game.getPlayer(this.playerIndex);
-							final CUnitType trainedUnitType = game.getUnit(queuedRawcode.getValue()).getUnitType();
-							final int newFoodUsed = player.getFoodUsed() + trainedUnitType.getFoodUsed();
-							if (newFoodUsed <= player.getFoodCap()) {
-								player.setFoodUsed(newFoodUsed);
-								this.queuedUnitFoodPaid = true;
-							}
-						}
 						else {
 							this.queuedUnitFoodPaid = true;
 							System.err.println(
@@ -395,48 +367,6 @@ public class CUnit extends CWidget {
 								final int rallyOrderId = OrderIds.smart;
 								this.rallyPoint.visit(
 										UseAbilityOnTargetByIdVisitor.INSTANCE.reset(game, trainedUnit, rallyOrderId));
-							}
-							for (int i = 0; i < (this.buildQueue.length - 1); i++) {
-								setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
-							}
-							setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
-							this.stateNotifier.queueChanged();
-						}
-					}
-					else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
-						final CUnit revivingHero = game.getUnit(queuedRawcode.getValue());
-						final CUnitType trainedUnitType = revivingHero.getUnitType();
-						final CGameplayConstants gameplayConstants = game.getGameplayConstants();
-						if (this.constructionProgress >= gameplayConstants.getHeroReviveTime(
-								trainedUnitType.getBuildTime(), revivingHero.getHeroData().getHeroLevel())) {
-							this.constructionProgress = 0;
-							revivingHero.getHeroData().setReviving(false);
-							revivingHero.getHeroData().setAwaitingRevive(false);
-							revivingHero.corpse = false;
-							revivingHero.boneCorpse = false;
-							revivingHero.deathTurnTick = 0;
-							revivingHero.setX(getX());
-							revivingHero.setY(getY());
-							game.getWorldCollision().addUnit(revivingHero);
-							revivingHero.setPoint(getX(), getY(), game.getWorldCollision(), game.getRegionManager());
-							revivingHero.setHidden(false);
-							revivingHero.setLife(game,
-									revivingHero.getMaximumLife() * gameplayConstants.getHeroReviveLifeFactor());
-							revivingHero.setMana((revivingHero.getMaximumMana()
-									* gameplayConstants.getHeroReviveManaFactor())
-									+ (gameplayConstants.getHeroReviveManaStart() * trainedUnitType.getManaInitial()));
-							// dont add food cost to player 2x
-							revivingHero.setFoodUsed(trainedUnitType.getFoodUsed());
-							final CPlayer player = game.getPlayer(this.playerIndex);
-							player.setUnitFoodMade(revivingHero, trainedUnitType.getFoodMade());
-							player.addTechtreeUnlocked(queuedRawcode);
-							// nudge the trained unit out around us
-							revivingHero.nudgeAround(game, this);
-							game.heroReviveEvent(this, revivingHero);
-							if (this.rallyPoint != null) {
-								final int rallyOrderId = OrderIds.smart;
-								this.rallyPoint.visit(
-										UseAbilityOnTargetByIdVisitor.INSTANCE.reset(game, revivingHero, rallyOrderId));
 							}
 							for (int i = 0; i < (this.buildQueue.length - 1); i++) {
 								setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
@@ -515,9 +445,6 @@ public class CUnit extends CWidget {
 	public float getEndingDecayTime(final CSimulation game) {
 		if (this.isBuilding()) {
 			return game.getGameplayConstants().getStructureDecayTime();
-		}
-		if (this.unitType.isHero()) {
-			return game.getGameplayConstants().getDissipateTime();
 		}
 		return game.getGameplayConstants().getBoneDecayTime();
 	}
@@ -1098,11 +1025,11 @@ public class CUnit extends CWidget {
 	}
 
 	public void addStateListener(final CUnitStateListener listener) {
-		this.stateListenersUpdates.add(new StateListenerUpdate(listener, StateListenerUpdateType.ADD));
+		this.stateListenersNeedingAdd.add(listener);
 	}
 
 	public void removeStateListener(final CUnitStateListener listener) {
-		this.stateListenersUpdates.add(new StateListenerUpdate(listener, StateListenerUpdateType.REMOVE));
+		this.stateListenersNeedingRemove.add(listener);
 	}
 
 	public boolean isCorpse() {
@@ -1147,10 +1074,6 @@ public class CUnit extends CWidget {
 		return this.acquisitionRange;
 	}
 
-	public void heal(final CSimulation game, final int lifeToRegain) {
-		setLife(game, Math.min(getLife() + lifeToRegain, getMaximumLife()));
-	}
-
 	private static final class AutoAttackTargetFinderEnum implements CUnitEnumFunction {
 		private CSimulation game;
 		private CUnit source;
@@ -1169,7 +1092,7 @@ public class CUnit extends CWidget {
 		@Override
 		public boolean call(final CUnit unit) {
 			if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
-					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()) {
+					CAllianceType.PASSIVE)) {
 				for (final CUnitAttack attack : this.source.getAttacks()) {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
@@ -1203,14 +1126,6 @@ public class CUnit extends CWidget {
 
 	public void setAttackBehavior(final CBehaviorAttack attackBehavior) {
 		this.attackBehavior = attackBehavior;
-	}
-
-	public void setAttackMoveBehavior(final CBehaviorAttackMove attackMoveBehavior) {
-		this.attackMoveBehavior = attackMoveBehavior;
-	}
-
-	public CBehaviorAttackMove getAttackMoveBehavior() {
-		return this.attackMoveBehavior;
 	}
 
 	public CBehaviorStop getStopBehavior() {
@@ -1348,16 +1263,9 @@ public class CUnit extends CWidget {
 		switch (this.buildQueueTypes[0]) {
 		case RESEARCH:
 			return 999; // TODO
-		case UNIT: {
+		case UNIT:
 			final CUnitType trainedUnitType = simulation.getUnitData().getUnitType(this.buildQueue[0]);
 			return trainedUnitType.getBuildTime();
-		}
-		case HERO_REVIVE: {
-			final CUnit hero = simulation.getUnit(this.buildQueue[0].getValue());
-			final CUnitType trainedUnitType = hero.getUnitType();
-			return simulation.getGameplayConstants().getHeroReviveTime(trainedUnitType.getBuildTime(),
-					hero.getHeroData().getHeroLevel());
-		}
 		default:
 			return 0;
 		}
@@ -1373,42 +1281,21 @@ public class CUnit extends CWidget {
 					switch (cancelledType) {
 					case RESEARCH:
 						break;
-					case UNIT: {
+					case UNIT:
 						final CPlayer player = game.getPlayer(this.playerIndex);
 						final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
 						player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
 						break;
 					}
-					case HERO_REVIVE: {
-						final CPlayer player = game.getPlayer(this.playerIndex);
-						final CUnitType unitType = game.getUnit(this.buildQueue[cancelIndex].getValue()).getUnitType();
-						player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
-						break;
-					}
-					}
 				}
 				switch (cancelledType) {
 				case RESEARCH:
 					break;
-				case UNIT: {
+				case UNIT:
 					final CPlayer player = game.getPlayer(this.playerIndex);
 					final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
 					player.refundFor(unitType);
 					break;
-				}
-				case HERO_REVIVE: {
-					final CPlayer player = game.getPlayer(this.playerIndex);
-					final CUnit hero = game.getUnit(this.buildQueue[cancelIndex].getValue());
-					final CUnitType unitType = hero.getUnitType();
-					final CAbilityHero heroData = hero.getHeroData();
-					heroData.setReviving(false);
-					final CGameplayConstants gameplayConstants = game.getGameplayConstants();
-					player.refund(
-							gameplayConstants.getHeroReviveGoldCost(unitType.getGoldCost(), heroData.getHeroLevel()),
-							gameplayConstants.getHeroReviveLumberCost(unitType.getLumberCost(),
-									heroData.getHeroLevel()));
-					break;
-				}
 				}
 				for (int i = cancelIndex; i < (this.buildQueueTypes.length - 1); i++) {
 					setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
@@ -1425,33 +1312,17 @@ public class CUnit extends CWidget {
 		this.buildQueueTypes[index] = queueItemType;
 		if (index == 0) {
 			this.queuedUnitFoodPaid = true;
-			if (rawcode != null) {
-				if (queueItemType == QueueItemType.UNIT) {
-					final CPlayer player = game.getPlayer(this.playerIndex);
-					final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[index]);
-					if (unitType.getFoodUsed() != 0) {
-						final int newFoodUsed = player.getFoodUsed() + unitType.getFoodUsed();
-						if (newFoodUsed <= player.getFoodCap()) {
-							player.setFoodUsed(newFoodUsed);
-						}
-						else {
-							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener(this.playerIndex).showNoFoodError();
-						}
+			if ((rawcode != null) && (queueItemType == QueueItemType.UNIT)) {
+				final CPlayer player = game.getPlayer(this.playerIndex);
+				final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[index]);
+				if (unitType.getFoodUsed() != 0) {
+					final int newFoodUsed = player.getFoodUsed() + unitType.getFoodUsed();
+					if (newFoodUsed <= player.getFoodCap()) {
+						player.setFoodUsed(newFoodUsed);
 					}
-				}
-				else if (queueItemType == QueueItemType.HERO_REVIVE) {
-					final CPlayer player = game.getPlayer(this.playerIndex);
-					final CUnitType unitType = game.getUnit(this.buildQueue[index].getValue()).getUnitType();
-					if (unitType.getFoodUsed() != 0) {
-						final int newFoodUsed = player.getFoodUsed() + unitType.getFoodUsed();
-						if (newFoodUsed <= player.getFoodCap()) {
-							player.setFoodUsed(newFoodUsed);
-						}
-						else {
-							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener(this.playerIndex).showNoFoodError();
-						}
+					else {
+						this.queuedUnitFoodPaid = false;
+						game.getCommandErrorListener(this.playerIndex).showNoFoodError();
 					}
 				}
 			}
@@ -1466,26 +1337,13 @@ public class CUnit extends CWidget {
 		}
 	}
 
-	public void queueRevivingHero(final CSimulation game, final CUnit hero) {
-		if (queue(game, new War3ID(hero.getHandleId()), QueueItemType.HERO_REVIVE)) {
-			hero.getHeroData().setReviving(true);
-			final CPlayer player = game.getPlayer(this.playerIndex);
-			final int heroReviveGoldCost = game.getGameplayConstants()
-					.getHeroReviveGoldCost(hero.getUnitType().getGoldCost(), hero.getHeroData().getHeroLevel());
-			final int heroReviveLumberCost = game.getGameplayConstants()
-					.getHeroReviveLumberCost(hero.getUnitType().getGoldCost(), hero.getHeroData().getHeroLevel());
-			player.charge(heroReviveGoldCost, heroReviveLumberCost);
-		}
-	}
-
 	public void queueResearch(final CSimulation game, final War3ID rawcode) {
 		queue(game, rawcode, QueueItemType.RESEARCH);
 	}
 
 	public static enum QueueItemType {
 		UNIT,
-		RESEARCH,
-		HERO_REVIVE;
+		RESEARCH;
 	}
 
 	public void setRallyPoint(final AbilityTarget target) {
@@ -1722,26 +1580,15 @@ public class CUnit extends CWidget {
 		simulation.getWorldCollision().removeUnit(this);
 	}
 
-	private static enum StateListenerUpdateType {
-		ADD,
-		REMOVE;
-	}
-
-	private static final class StateListenerUpdate {
-		private final CUnitStateListener listener;
-		private final StateListenerUpdateType updateType;
-
-		public StateListenerUpdate(final CUnitStateListener listener, final StateListenerUpdateType updateType) {
-			this.listener = listener;
-			this.updateType = updateType;
-		}
-
-		public CUnitStateListener getListener() {
-			return this.listener;
-		}
-
-		public StateListenerUpdateType getUpdateType() {
-			return this.updateType;
+	/**
+	 * @Author MfromAzeroth
+	 * This method increases a unit's health according to its hit point regeneration
+	 * (If something with this is off it's probably my fault)
+	 */
+	private void regenerateHitPoints(){
+		if(this.life<this.getUnitType().getMaxLife()) {
+			this.life += (this.getUnitType().getLifeRegeneration() * WarsmashConstants.SIMULATION_STEP_TIME);
+			stateNotifier.lifeChanged();
 		}
 	}
 }

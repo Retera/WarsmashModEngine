@@ -23,6 +23,7 @@ public class CUnitType {
 	private final String legacyName;
 	private final War3ID typeId;
 	private final int maxLife;
+	private final float lifeRegeneration;
 	private final int manaInitial;
 	private final int manaMaximum;
 	private final int speed;
@@ -75,9 +76,8 @@ public class CUnitType {
 	private final int properNamesCount;
 	private final boolean canFlee;
 	private final int priority;
-	private final boolean revivesHeroes;
 
-	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
+	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife, final float lifeRegeneration,
 			final int manaInitial, final int manaMaximum, final int speed, final int defense, final String abilityList,
 			final boolean isBldg, final MovementType movementType, final float defaultFlyingHeight,
 			final float collisionSize, final EnumSet<CUnitClassification> classifications,
@@ -93,11 +93,12 @@ public class CUnitType {
 			final float strengthPerLevel, final int agility, final float agilityPerLevel, final int intelligence,
 			final float intelligencePerLevel, final CPrimaryAttribute primaryAttribute,
 			final List<War3ID> heroAbilityList, final List<String> heroProperNames, final int properNamesCount,
-			final boolean canFlee, final int priority, final boolean revivesHeroes) {
+			final boolean canFlee, final int priority) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
 		this.maxLife = maxLife;
+		this.lifeRegeneration = lifeRegeneration;
 		this.manaInitial = manaInitial;
 		this.manaMaximum = manaMaximum;
 		this.speed = speed;
@@ -147,7 +148,6 @@ public class CUnitType {
 		this.properNamesCount = properNamesCount;
 		this.canFlee = canFlee;
 		this.priority = priority;
-		this.revivesHeroes = revivesHeroes;
 	}
 
 	public String getName() {
@@ -164,6 +164,10 @@ public class CUnitType {
 
 	public int getMaxLife() {
 		return this.maxLife;
+	}
+
+	public float getLifeRegeneration() {
+		return this.lifeRegeneration;
 	}
 
 	public int getManaInitial() {
@@ -360,9 +364,5 @@ public class CUnitType {
 
 	public int getPriority() {
 		return this.priority;
-	}
-
-	public boolean isRevivesHeroes() {
-		return this.revivesHeroes;
 	}
 }

@@ -33,7 +33,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -52,6 +51,7 @@ public class CUnitData {
 	private static final War3ID MANA_INITIAL_AMOUNT = War3ID.fromString("umpi");
 	private static final War3ID MANA_MAXIMUM = War3ID.fromString("umpm");
 	private static final War3ID HIT_POINT_MAXIMUM = War3ID.fromString("uhpm");
+	private static final War3ID HIT_POINT_REGENERATION = War3ID.fromString("uhpr");
 	private static final War3ID MOVEMENT_SPEED_BASE = War3ID.fromString("umvs");
 	private static final War3ID PROPULSION_WINDOW = War3ID.fromString("uprw");
 	private static final War3ID TURN_RATE = War3ID.fromString("umvr");
@@ -144,7 +144,6 @@ public class CUnitData {
 	private static final War3ID STRUCTURES_BUILT = War3ID.fromString("ubui");
 	private static final War3ID UNITS_TRAINED = War3ID.fromString("utra");
 	private static final War3ID RESEARCHES_AVAILABLE = War3ID.fromString("ures");
-	private static final War3ID REVIVES_HEROES = War3ID.fromString("urev");
 	private static final War3ID UNIT_RACE = War3ID.fromString("urac");
 
 	private static final War3ID REQUIRES = War3ID.fromString("ureq");
@@ -245,10 +244,7 @@ public class CUnitData {
 		if (!unitsTrained.isEmpty() || !researchesAvailable.isEmpty()) {
 			unit.add(simulation, new CAbilityQueue(handleIdAllocator.createId(), unitsTrained, researchesAvailable));
 		}
-		if (unitTypeInstance.isRevivesHeroes()) {
-			unit.add(simulation, new CAbilityReviveHero(handleIdAllocator.createId()));
-		}
-		if (!unitsTrained.isEmpty() || unitTypeInstance.isRevivesHeroes()) {
+		if (!unitsTrained.isEmpty()) {
 			unit.add(simulation, new CAbilityRally(handleIdAllocator.createId()));
 		}
 		if (unitTypeInstance.isHero()) {
@@ -274,6 +270,7 @@ public class CUnitData {
 		if (unitTypeInstance == null) {
 			final String legacyName = getLegacyName(unitType);
 			final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
+			final float lifeRegeneration = unitType.getFieldAsFloat(HIT_POINT_REGENERATION,0);
 			final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
 			final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
 			final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
@@ -455,8 +452,6 @@ public class CUnitData {
 			final int foodUsed = unitType.getFieldAsInteger(FOOD_USED, 0);
 			final int foodMade = unitType.getFieldAsInteger(FOOD_MADE, 0);
 
-			final boolean revivesHeroes = unitType.getFieldAsBoolean(REVIVES_HEROES, 0);
-
 			final String unitsTrainedString = unitType.getFieldAsString(UNITS_TRAINED, 0);
 			final String[] unitsTrainedStringItems = unitsTrainedString.trim().split(",");
 			final List<War3ID> unitsTrained = new ArrayList<>();
@@ -538,14 +533,14 @@ public class CUnitData {
 
 			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
 
-			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, manaInitial, manaMaximum, speed,
+			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegeneration, manaInitial, manaMaximum, speed,
 					defense, abilityList, isBldg, movementType, moveHeight, collisionSize, classifications, attacks,
 					armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs,
 					acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, unitRace,
 					goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes,
 					propWindow, turnRate, requirements, unitLevel, hero, strength, strPlus, agility, agiPlus,
 					intelligence, intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount,
-					canFlee, priority, revivesHeroes);
+					canFlee, priority);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

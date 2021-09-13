@@ -17,6 +17,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -38,6 +39,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
@@ -65,14 +67,20 @@ public class CUnit extends CWidget {
 	private float facing; // degrees
 	private float mana;
 	private int maximumLife;
+	private final float lifeRegen;
+	private float lifeRegenStrengthBonus;
+	private float lifeRegenBonus;
 	private int maximumMana;
 	private int speed;
-	private int agilityDefenseBonus;
+	private int agilityDefensePermanentBonus;
+	private float agilityDefenseTemporaryBonus;
 	private int permanentDefenseBonus;
-	private int temporaryDefenseBonus;
+	private float temporaryDefenseBonus;
+	private float totalTemporaryDefenseBonus;
 
 	private int currentDefenseDisplay;
-	private int currentDefense;
+	private float currentDefense;
+	private float currentLifeRegenPerTick;
 
 	private int cooldownEndTime = 0;
 	private float flyHeight;
@@ -132,14 +140,16 @@ public class CUnit extends CWidget {
 	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
-			final War3ID typeId, final float facing, final float mana, final int maximumLife, final int maximumMana,
-			final int speed, final CUnitType unitType, final RemovablePathingMapInstance pathingInstance) {
+			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
+			final int maximumMana, final int speed, final CUnitType unitType,
+			final RemovablePathingMapInstance pathingInstance) {
 		super(handleId, x, y, life);
 		this.playerIndex = playerIndex;
 		this.typeId = typeId;
 		this.facing = facing;
 		this.mana = mana;
 		this.maximumLife = maximumLife;
+		this.lifeRegen = lifeRegen;
 		this.maximumMana = maximumMana;
 		this.speed = speed;
 		this.pathingInstance = pathingInstance;
@@ -150,15 +160,38 @@ public class CUnit extends CWidget {
 		this.stopBehavior = new CBehaviorStop(this);
 		this.defaultBehavior = this.stopBehavior;
 		this.currentBehavior = this.defaultBehavior;
+		computeDerivedFields();
+	}
+
+	public float getLifeRegenBonus() {
+		return this.lifeRegenBonus;
+	}
+
+	public void setLifeRegenStrengthBonus(final float lifeRegenStrengthBonus) {
+		this.lifeRegenStrengthBonus = lifeRegenStrengthBonus;
 	}
 
 	private void computeDerivedFields() {
-		this.currentDefenseDisplay = this.unitType.getDefense() + this.agilityDefenseBonus + this.permanentDefenseBonus;
-		this.currentDefense = this.currentDefenseDisplay + this.temporaryDefenseBonus;
+		this.currentDefenseDisplay = this.unitType.getDefense() + this.agilityDefensePermanentBonus
+				+ this.permanentDefenseBonus;
+		this.totalTemporaryDefenseBonus = this.temporaryDefenseBonus + this.agilityDefenseTemporaryBonus;
+		this.currentDefense = this.currentDefenseDisplay + this.totalTemporaryDefenseBonus;
+		this.currentLifeRegenPerTick = (this.lifeRegen + this.lifeRegenBonus + this.lifeRegenStrengthBonus)
+				* WarsmashConstants.SIMULATION_STEP_TIME;
 	}
 
-	public void setAgilityDefenseBonus(final int agilityDefenseBonus) {
-		this.agilityDefenseBonus = agilityDefenseBonus;
+	public void setLifeRegenBonus(final float lifeRegenBonus) {
+		this.lifeRegenBonus = lifeRegenBonus;
+		computeDerivedFields();
+	}
+
+	public void setAgilityDefensePermanentBonus(final int agilityDefensePermanentBonus) {
+		this.agilityDefensePermanentBonus = agilityDefensePermanentBonus;
+		computeDerivedFields();
+	}
+
+	public void setAgilityDefenseTemporaryBonus(final float agilityDefenseTemporaryBonus) {
+		this.agilityDefenseTemporaryBonus = agilityDefenseTemporaryBonus;
 		computeDerivedFields();
 	}
 
@@ -167,13 +200,17 @@ public class CUnit extends CWidget {
 		computeDerivedFields();
 	}
 
-	public void setTemporaryDefenseBonus(final int temporaryDefenseBonus) {
+	public void setTemporaryDefenseBonus(final float temporaryDefenseBonus) {
 		this.temporaryDefenseBonus = temporaryDefenseBonus;
 		computeDerivedFields();
 	}
 
-	public int getTemporaryDefenseBonus() {
+	public float getTemporaryDefenseBonus() {
 		return this.temporaryDefenseBonus;
+	}
+
+	public float getTotalTemporaryDefenseBonus() {
+		return this.totalTemporaryDefenseBonus;
 	}
 
 	public int getCurrentDefenseDisplay() {
@@ -462,6 +499,35 @@ public class CUnit extends CWidget {
 							setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
 							this.stateNotifier.queueChanged();
 						}
+					}
+				}
+				if (this.life < this.maximumLife) {
+					final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
+					boolean active = false;
+					switch (lifeRegenType) {
+					case ALWAYS:
+						active = true;
+						break;
+					case DAY:
+						active = game.isDay();
+						break;
+					case NIGHT:
+						active = game.isNight();
+						break;
+					case BLIGHT:
+						active = PathingFlags.isPathingFlag(game.getPathingGrid().getPathing(getX(), getY()),
+								PathingFlags.BLIGHTED);
+						break;
+					default:
+						active = false;
+					}
+					if (active) {
+						float lifePlusRegen = this.life + this.currentLifeRegenPerTick;
+						if (lifePlusRegen > this.maximumLife) {
+							lifePlusRegen = this.maximumLife;
+						}
+						this.life = lifePlusRegen;
+						this.stateNotifier.lifeChanged();
 					}
 				}
 				for (final CAbility ability : this.abilities) {
@@ -809,7 +875,7 @@ public class CUnit extends CWidget {
 		return this.classifications;
 	}
 
-	public int getDefense() {
+	public float getDefense() {
 		return this.currentDefense;
 	}
 
@@ -876,7 +942,7 @@ public class CUnit extends CWidget {
 			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
 					this.unitType.getDefenseType());
 			final float damageRatioFromDefense;
-			final int defense = this.currentDefense;
+			final float defense = this.currentDefense;
 			if (defense >= 0) {
 				damageRatioFromDefense = 1f - (((defense) * simulation.getGameplayConstants().getDefenseArmor())
 						/ (1 + (simulation.getGameplayConstants().getDefenseArmor() * defense)));

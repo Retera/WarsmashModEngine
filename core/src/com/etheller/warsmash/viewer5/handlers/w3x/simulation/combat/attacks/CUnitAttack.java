@@ -38,15 +38,17 @@ public abstract class CUnitAttack {
 	private String weaponSound;
 	private CWeaponType weaponType;
 
+	private int primaryAttributePermanentDamageBonus;
+	private int primaryAttributeTemporaryDamageBonus;
+	private int permanentDamageBonus;
+	private int temporaryDamageBonus;
+
 	// calculate
 	private int minDamage;
 	private int maxDamage;
 	private int minDamageDisplay;
 	private int maxDamageDisplay;
-
-	private int primaryAttributeDamageBonus;
-	private int permanentDamageBonus;
-	private int temporaryDamageBonus;
+	private int totalTemporaryDamageBonus;
 
 	public CUnitAttack(final float animationBackswingPoint, final float animationDamagePoint,
 			final CAttackType attackType, final float cooldownTime, final int damageBase, final int damageDice,
@@ -86,7 +88,8 @@ public abstract class CUnitAttack {
 		this.weaponSound = other.weaponSound;
 		this.weaponType = other.weaponType;
 
-		this.primaryAttributeDamageBonus = other.primaryAttributeDamageBonus;
+		this.primaryAttributePermanentDamageBonus = other.primaryAttributePermanentDamageBonus;
+		this.primaryAttributeTemporaryDamageBonus = other.primaryAttributeTemporaryDamageBonus;
 		this.permanentDamageBonus = other.permanentDamageBonus;
 		this.temporaryDamageBonus = other.temporaryDamageBonus;
 		computeDerivedFields();
@@ -95,7 +98,7 @@ public abstract class CUnitAttack {
 	public abstract CUnitAttack copy();
 
 	private void computeDerivedFields() {
-		final int baseDamage = this.damageBase + this.primaryAttributeDamageBonus + this.permanentDamageBonus;
+		final int baseDamage = this.damageBase + this.primaryAttributePermanentDamageBonus + this.permanentDamageBonus;
 		this.minDamageDisplay = baseDamage + this.damageDice;
 		this.maxDamageDisplay = baseDamage + (this.damageDice * this.damageSidesPerDie);
 		if (this.minDamageDisplay < 0) {
@@ -104,8 +107,9 @@ public abstract class CUnitAttack {
 		if (this.maxDamageDisplay < 0) {
 			this.maxDamageDisplay = 0;
 		}
-		this.minDamage = this.minDamageDisplay + this.temporaryDamageBonus;
-		this.maxDamage = this.maxDamageDisplay + this.temporaryDamageBonus;
+		this.totalTemporaryDamageBonus = this.primaryAttributeTemporaryDamageBonus + this.temporaryDamageBonus;
+		this.minDamage = this.minDamageDisplay + this.totalTemporaryDamageBonus;
+		this.maxDamage = this.maxDamageDisplay + this.totalTemporaryDamageBonus;
 	}
 
 	public float getAnimationBackswingPoint() {
@@ -239,8 +243,13 @@ public abstract class CUnitAttack {
 		return this.maxDamageDisplay;
 	}
 
-	public void setPrimaryAttributeDamageBonus(final int primaryAttributeDamageBonus) {
-		this.primaryAttributeDamageBonus = primaryAttributeDamageBonus;
+	public void setPrimaryAttributePermanentDamageBonus(final int primaryAttributeDamageBonus) {
+		this.primaryAttributePermanentDamageBonus = primaryAttributeDamageBonus;
+		computeDerivedFields();
+	}
+
+	public void setPrimaryAttributeTemporaryDamageBonus(final int primaryAttributeDamageBonus) {
+		this.primaryAttributeTemporaryDamageBonus = primaryAttributeDamageBonus;
 		computeDerivedFields();
 	}
 
@@ -254,8 +263,12 @@ public abstract class CUnitAttack {
 		computeDerivedFields();
 	}
 
-	public int getPrimaryAttributeDamageBonus() {
-		return this.primaryAttributeDamageBonus;
+	public int getPrimaryAttributePermanentDamageBonus() {
+		return this.primaryAttributePermanentDamageBonus;
+	}
+
+	public int getPrimaryAttributeTemporaryDamageBonus() {
+		return this.primaryAttributeTemporaryDamageBonus;
 	}
 
 	public int getPermanentDamageBonus() {
@@ -264,6 +277,10 @@ public abstract class CUnitAttack {
 
 	public int getTemporaryDamageBonus() {
 		return this.temporaryDamageBonus;
+	}
+
+	public int getTotalTemporaryDamageBonus() {
+		return this.totalTemporaryDamageBonus;
 	}
 
 	public abstract void launch(CSimulation simulation, CUnit unit, AbilityTarget target, float damage,

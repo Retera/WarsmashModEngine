@@ -84,6 +84,7 @@ public class CSimulation implements CPlayerAPI {
 	private final CRegionManager regionManager;
 	private final List<TimeOfDayVariableEvent> timeOfDayVariableEvents = new ArrayList<>();
 	private boolean timeOfDaySuspended;
+	private boolean daytime;
 
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
@@ -324,6 +325,8 @@ public class CSimulation implements CPlayerAPI {
 					% this.gameplayConstants.getGameDayLength();
 		}
 		final float timeOfDayAfter = this.getGameTimeOfDay();
+		this.daytime = (timeOfDayAfter >= this.gameplayConstants.getDawnTimeGameHours())
+				&& (timeOfDayAfter < this.gameplayConstants.getDuskTimeGameHours());
 		for (final CTimer timer : this.addedTimers) {
 			internalRegisterTimer(timer);
 		}
@@ -594,5 +597,13 @@ public class CSimulation implements CPlayerAPI {
 	public void setTimeOfDaySuspended(final boolean flag) {
 		this.timeOfDaySuspended = flag;
 
+	}
+
+	public boolean isDay() {
+		return this.daytime;
+	}
+
+	public boolean isNight() {
+		return !this.daytime;
 	}
 }

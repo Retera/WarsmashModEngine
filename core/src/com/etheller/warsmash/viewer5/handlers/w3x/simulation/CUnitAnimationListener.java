@@ -9,6 +9,10 @@ public interface CUnitAnimationListener {
 	void playAnimation(boolean force, final PrimaryTag animationName,
 			final EnumSet<SecondaryTag> secondaryAnimationTags, float speedRatio, boolean allowRarityVariations);
 
+	void playAnimationWithDuration(final boolean force, final PrimaryTag animationName,
+			final EnumSet<SecondaryTag> secondaryAnimationTags, final float duration,
+			final boolean allowRarityVariations);
+
 	void playWalkAnimation(boolean force, float currentMovementSpeed, boolean allowRarityVariations);
 
 	void queueAnimation(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryAnimationTags,

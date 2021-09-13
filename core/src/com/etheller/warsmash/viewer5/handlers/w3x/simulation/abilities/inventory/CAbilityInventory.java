@@ -203,7 +203,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				if (target instanceof CUnit) {
 					final CUnit hero = (CUnit) target;
 					if ((hero.getInventoryData() != null) && game.getPlayer(hero.getPlayerIndex())
-							.hasAlliance(unit.getPlayerIndex(), CAllianceType.PASSIVE)) {
+							.hasAlliance(unit.getPlayerIndex(), CAllianceType.PASSIVE) && (hero != unit)) {
 						receiver.targetOk(target);
 					}
 					else {

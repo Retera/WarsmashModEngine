@@ -249,14 +249,20 @@ public class CAbilityHero extends AbstractCAbility {
 		this.strength.calculate(this.heroLevel);
 		this.agility.calculate(this.heroLevel);
 		this.intelligence.calculate(this.heroLevel);
-		final int deltaStrength = this.strength.getCurrent() - prevStrength;
+		final int currentStrength = this.strength.getCurrent();
+		final int deltaStrength = currentStrength - prevStrength;
 		final int deltaIntelligence = this.intelligence.getCurrent() - prevIntelligence;
-		final int currentAgility = this.agility.getCurrent();
-		final int deltaAgility = currentAgility - prevAgility;
+		final int currentAgilityBase = this.agility.getBase();
+		final int currentAgilityBonus = this.agility.getBonus();
 
-		final int primaryAttribute = getStat(unit.getUnitType().getPrimaryAttribute()).getCurrent();
+		final HeroStatValue primaryAttributeStat = getStat(unit.getUnitType().getPrimaryAttribute());
+		final int primaryAttributeBase = primaryAttributeStat.getBase();
+		final int primaryAttributeBonus = primaryAttributeStat.getBonus();
 		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
-			attack.setPrimaryAttributeDamageBonus((int) (primaryAttribute * gameplayConstants.getStrAttackBonus()));
+			attack.setPrimaryAttributePermanentDamageBonus(
+					(int) (primaryAttributeBase * gameplayConstants.getStrAttackBonus()));
+			attack.setPrimaryAttributeTemporaryDamageBonus(
+					(int) (primaryAttributeBonus * gameplayConstants.getStrAttackBonus()));
 		}
 
 		final float hitPointIncrease = gameplayConstants.getStrHitPointBonus() * deltaStrength;
@@ -276,8 +282,10 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.setMana(newMana);
 
 		final int agilityDefenseBonus = Math.round(
-				gameplayConstants.getAgiDefenseBase() + (gameplayConstants.getAgiDefenseBonus() * currentAgility));
-		unit.setAgilityDefenseBonus(agilityDefenseBonus);
+				gameplayConstants.getAgiDefenseBase() + (gameplayConstants.getAgiDefenseBonus() * currentAgilityBase));
+		unit.setAgilityDefensePermanentBonus(agilityDefenseBonus);
+		unit.setAgilityDefenseTemporaryBonus(gameplayConstants.getAgiDefenseBonus() * currentAgilityBonus);
+		unit.setLifeRegenStrengthBonus(currentStrength * gameplayConstants.getStrRegenBonus());
 	}
 
 	public static final class HeroStatValue {
@@ -321,10 +329,10 @@ public class CAbilityHero extends AbstractCAbility {
 			String text = Integer.toString(this.currentBase);
 			if (this.bonus != 0) {
 				if (this.bonus > 0) {
-					text += "|cFF00FF00 (+" + this.bonus + ")";
+					text += "|cFF00FF00 +" + this.bonus + "";
 				}
 				else {
-					text += "|cFFFF0000 (+" + this.bonus + ")";
+					text += "|cFFFF0000 " + this.bonus + "";
 				}
 			}
 			return text;

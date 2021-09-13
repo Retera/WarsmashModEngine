@@ -92,7 +92,6 @@ public class RenderItem implements RenderWidget {
 				this.instance.show();
 				if (this.shadow != null) {
 					this.shadow.show(map.terrain.centerOffset);
-					this.shadow.setLocation(this.location[0], this.location[1], map.terrain.centerOffset);
 				}
 			}
 		}
@@ -136,7 +135,7 @@ public class RenderItem implements RenderWidget {
 		this.location[2] = this.simulationItem.getFlyHeight() + groundHeight;
 
 		this.instance.moveTo(this.location);
-		if ((this.shadow != null) && !hidden) {
+		if (this.shadow != null) {
 			this.shadow.move(dx, dy, map.terrain.centerOffset);
 			this.shadow.setHeightAbsolute(currentWalkableUnder != null, groundHeight + map.imageWalkableZOffset);
 		}

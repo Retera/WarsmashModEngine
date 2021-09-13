@@ -345,7 +345,9 @@ public class SplatModel implements Comparable<SplatModel> {
 			this.locs[2] += deltaX;
 			this.locs[1] += deltaY;
 			this.locs[3] += deltaY;
-			updateAfterMove(centerOffset);
+			if (!this.hidden) {
+				updateAfterMove(centerOffset);
+			}
 		}
 
 		public void setLocation(final float x, final float y, final float[] centerOffset) {

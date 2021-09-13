@@ -86,6 +86,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.camera.GameCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.PortraitCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingFlags;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
@@ -352,6 +353,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private int currentMusicIndex;
 	private boolean currentMusicRandomizeIndex;
 	private final List<CTimerDialog> timerDialogs = new ArrayList<>();
+	private final AnyClickableUnitFilter anyClickableUnitFilter;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -385,6 +387,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.localPlayer.addStateListener(this);
 
 		this.itemCommandCardCommandListener = new ItemCommandCardCommandListener();
+		this.anyClickableUnitFilter = new AnyClickableUnitFilter();
 	}
 
 	private MeleeUIMinimap createMinimap(final War3MapViewer war3MapViewer) {
@@ -1509,6 +1512,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					.getItemUI(renderItem.getSimulationItem().getTypeId());
 			return itemUI.getName();
 		}
+		else if (whichUnit instanceof RenderDestructable) {
+			final RenderDestructable renderDest = (RenderDestructable) whichUnit;
+			final String name = renderDest.getSimulationDestructable().getDestType().getName();
+			return name;
+		}
 		return null;
 	}
 
@@ -1626,6 +1634,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	public void portraitTalk() {
 		this.portrait.talk();
+	}
+
+	private final class AnyClickableUnitFilter implements CWidgetFilterFunction {
+		@Override
+		public boolean call(final CWidget unit) {
+			final RenderWidget renderPeer = MeleeUI.this.war3MapViewer.getRenderPeer(unit);
+			return !unit.isDead() && renderPeer.isSelectable();
+		}
 	}
 
 	private final class CursorTargetSetupVisitor implements CAbilityVisitor<Void> {
@@ -2413,10 +2429,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.attack1Icon.setVisible(attackOne.isShowUI());
 				this.attack1IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackOne.getAttackType()));
 				String attackOneDmgText = attackOne.getMinDamageDisplay() + " - " + attackOne.getMaxDamageDisplay();
-				final int attackOneTemporaryDamageBonus = attackOne.getTemporaryDamageBonus();
+				final int attackOneTemporaryDamageBonus = attackOne.getTotalTemporaryDamageBonus();
 				if (attackOneTemporaryDamageBonus != 0) {
-					attackOneDmgText += (attackOneTemporaryDamageBonus > 0 ? "|cFF00FF00 (+" : "|cFFFF0000 (+")
-							+ attackOneTemporaryDamageBonus + ")";
+					attackOneDmgText += (attackOneTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
+							+ attackOneTemporaryDamageBonus + "";
 				}
 				this.rootFrame.setText(this.attack1InfoPanelIconValue, attackOneDmgText);
 				if (simulationUnit.getAttacks().size() > 1) {
@@ -2424,10 +2440,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.attack2Icon.setVisible(attackTwo.isShowUI());
 					this.attack2IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackTwo.getAttackType()));
 					String attackTwoDmgText = attackTwo.getMinDamage() + " - " + attackTwo.getMaxDamage();
-					final int attackTwoTemporaryDamageBonus = attackTwo.getTemporaryDamageBonus();
+					final int attackTwoTemporaryDamageBonus = attackTwo.getTotalTemporaryDamageBonus();
 					if (attackTwoTemporaryDamageBonus != 0) {
-						attackTwoDmgText += (attackTwoTemporaryDamageBonus > 0 ? "|cFF00FF00 (+" : "|cFFFF0000 (+")
-								+ attackTwoTemporaryDamageBonus + ")";
+						attackTwoDmgText += (attackTwoTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
+								+ attackTwoTemporaryDamageBonus + "";
 					}
 					this.rootFrame.setText(this.attack2InfoPanelIconValue, attackTwoDmgText);
 				}
@@ -2541,13 +2557,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			else {
 				defenseDisplayString = Integer.toString(simulationUnit.getCurrentDefenseDisplay());
-				final int temporaryDefenseBonus = simulationUnit.getTemporaryDefenseBonus();
+				final float temporaryDefenseBonus = simulationUnit.getTotalTemporaryDefenseBonus();
 				if (temporaryDefenseBonus != 0) {
 					if (temporaryDefenseBonus > 0) {
-						defenseDisplayString += "|cFF00FF00 (+" + temporaryDefenseBonus + ")";
+						defenseDisplayString += "|cFF00FF00 +" + String.format("%.1f", temporaryDefenseBonus) + "";
 					}
 					else {
-						defenseDisplayString += "|cFFFF0000 (+" + temporaryDefenseBonus + ")";
+						defenseDisplayString += "|cFFFF0000 " + String.format("%.1f", temporaryDefenseBonus) + "";
 					}
 				}
 			}
@@ -2997,7 +3013,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				if (button == Input.Buttons.RIGHT) {
 					if ((getSelectedUnit() != null) && (getSelectedUnit().getSimulationUnit()
 							.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())) {
-						final RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY);
+						final RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
+								this.anyClickableUnitFilter);
 						if ((rayPickUnit != null) && !rayPickUnit.getSimulationWidget().isDead()) {
 							boolean ordered = false;
 							boolean rallied = false;
@@ -3492,13 +3509,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 		if (mousedUIFrame == null) {
 			final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-					new CWidgetFilterFunction() {
-						@Override
-						public boolean call(final CWidget unit) {
-							final RenderWidget renderPeer = MeleeUI.this.war3MapViewer.getRenderPeer(unit);
-							return !unit.isDead() && renderPeer.isSelectable();
-						}
-					});
+					this.anyClickableUnitFilter);
 			if (newMouseOverUnit != this.mouseOverUnit) {
 				this.war3MapViewer.clearUnitMouseOverHighlight();
 				this.dragSelectPreviewUnits.clear();

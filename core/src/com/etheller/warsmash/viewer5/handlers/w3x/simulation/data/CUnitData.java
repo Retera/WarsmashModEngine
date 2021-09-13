@@ -37,6 +37,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
@@ -53,6 +54,8 @@ public class CUnitData {
 	private static final War3ID MANA_INITIAL_AMOUNT = War3ID.fromString("umpi");
 	private static final War3ID MANA_MAXIMUM = War3ID.fromString("umpm");
 	private static final War3ID HIT_POINT_MAXIMUM = War3ID.fromString("uhpm");
+	private static final War3ID HIT_POINT_REGEN = War3ID.fromString("uhpr");
+	private static final War3ID HIT_POINT_REGEN_TYPE = War3ID.fromString("uhrt");
 	private static final War3ID MOVEMENT_SPEED_BASE = War3ID.fromString("umvs");
 	private static final War3ID PROPULSION_WINDOW = War3ID.fromString("uprw");
 	private static final War3ID TURN_RATE = War3ID.fromString("umvr");
@@ -197,12 +200,13 @@ public class CUnitData {
 
 		final CUnitType unitTypeInstance = getUnitTypeInstance(typeId, buildingPathingPixelMap, unitType);
 		final int life = unitTypeInstance.getMaxLife();
+		final float lifeRegen = unitTypeInstance.getLifeRegen();
 		final int manaInitial = unitTypeInstance.getManaInitial();
 		final int manaMaximum = unitTypeInstance.getManaMaximum();
 		final int speed = unitTypeInstance.getSpeed();
 
-		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, manaMaximum,
-				speed, unitTypeInstance, pathingInstance);
+		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, lifeRegen,
+				manaMaximum, speed, unitTypeInstance, pathingInstance);
 		if (speed > 0) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
@@ -280,6 +284,9 @@ public class CUnitData {
 		if (unitTypeInstance == null) {
 			final String legacyName = getLegacyName(unitType);
 			final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
+			final float lifeRegen = unitType.getFieldAsFloat(HIT_POINT_REGEN, 0);
+			final CRegenType lifeRegenType = CRegenType
+					.parseRegenType(unitType.getFieldAsString(HIT_POINT_REGEN_TYPE, 0));
 			final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
 			final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
 			final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
@@ -553,14 +560,14 @@ public class CUnitData {
 
 			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
 
-			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, manaInitial, manaMaximum, speed,
-					defense, abilityList, isBldg, movementType, moveHeight, collisionSize, classifications, attacks,
-					armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs,
-					acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable,
-					upgradesTo, unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes,
-					requiredPathingTypes, propWindow, turnRate, requirements, unitLevel, hero, strength, strPlus,
-					agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList, heroProperNames,
-					properNamesCount, canFlee, priority, revivesHeroes);
+			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, lifeRegenType, manaInitial,
+					manaMaximum, speed, defense, abilityList, isBldg, movementType, moveHeight, collisionSize,
+					classifications, attacks, armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap,
+					deathTime, targetedAs, acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained,
+					researchesAvailable, upgradesTo, unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime,
+					preventedPathingTypes, requiredPathingTypes, propWindow, turnRate, requirements, unitLevel, hero,
+					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
+					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

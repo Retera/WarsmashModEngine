@@ -702,7 +702,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public CUnit createUnit(final CSimulation simulation, final War3ID typeId, final int playerIndex,
 							final float x, final float y, final float facing) {
-						return (CUnit) createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, 0f, playerIndex,
+						return (CUnit) createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, playerIndex,
 								playerIndex, (float) Math.toRadians(facing));
 					}
 
@@ -727,7 +727,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public CItem createItem(final CSimulation simulation, final War3ID typeId, final float x,
 							final float y) {
-						return (CItem) createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, 0f, -1, -1,
+						return (CItem) createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, -1, -1,
 								(float) Math.toRadians(
 										War3MapViewer.this.simulation.getGameplayConstants().getBuildingAngle()));
 					}
@@ -918,7 +918,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					break;
 				}
 			}
-			if (index != -1) {
+			if ((index != -1) && false) {
 				final MdxNode attachment = renderUnit.instance.getAttachment(index);
 				modelInstance.setParent(attachment);
 			}
@@ -1231,7 +1231,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final float unitAngle = unit.getAngle();
 				final int editorConfigHitPointPercent = unit.getHitpoints();
 
-				final CWidget widgetCreated = createNewUnit(modifications, unitId, unitX, unitY, unitZ, playerIndex,
+				final CWidget widgetCreated = createNewUnit(modifications, unitId, unitX, unitY, playerIndex,
 						customTeamColor, unitAngle);
 				if (widgetCreated instanceof CUnit) {
 					final CUnit unitCreated = (CUnit) widgetCreated;
@@ -1254,7 +1254,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	private CWidget createNewUnit(final Warcraft3MapObjectData modifications, final War3ID unitId, float unitX,
-			float unitY, final float unitZ, final int playerIndex, int customTeamColor, final float unitAngle) {
+			float unitY, final int playerIndex, int customTeamColor, final float unitAngle) {
 		UnitSoundset soundset = null;
 		MutableGameObject row = null;
 		String path = null;
@@ -1297,16 +1297,22 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final float shadowY = itemShadowY;
 						final float shadowWidth = itemShadowWidth;
 						final float shadowHeight = itemShadowHeight;
-						if (!this.terrain.splats.containsKey(texture)) {
-							final Splat splat = new Splat();
-							splat.opacity = 0.5f;
-							this.terrain.splats.put(texture, splat);
-						}
 						final float x = unitX - shadowX;
 						final float y = unitY - shadowY;
-						this.terrain.splats.get(texture).locations
-								.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
-						unitShadowSplat = this.terrain.splats.get(texture);
+						if (this.unitsReady) {
+							unitShadowSplatDynamicIngame = this.terrain.addUnitShadowSplat(texture, x, y,
+									x + shadowWidth, y + shadowHeight, 3, 0.5f);
+						}
+						else {
+							if (!this.terrain.splats.containsKey(texture)) {
+								final Splat splat = new Splat();
+								splat.opacity = 0.5f;
+								this.terrain.splats.put(texture, splat);
+							}
+							this.terrain.splats.get(texture).locations
+									.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+							unitShadowSplat = this.terrain.splats.get(texture);
+						}
 					}
 
 					path += ".mdx";
@@ -1434,6 +1440,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						customTeamColor = playerIndex;
 					}
 				}
+				final float unitZ = Math.max(getWalkableRenderHeight(unitX, unitY),
+						War3MapViewer.this.terrain.getGroundHeight(unitX, unitY)) + simulationUnit.getFlyHeight();
 				final RenderUnit renderUnit = new RenderUnit(this, model, row, unitX, unitY, unitZ, customTeamColor,
 						soundset, portraitModel, simulationUnit, typeData, specialArtModel, buildingShadowInstance,
 						this.selectionCircleScaleFactor, typeData.getAnimationWalkSpeed(),
@@ -1469,6 +1477,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			else {
 
 				final CItem simulationItem = this.simulation.internalCreateItem(row.getAlias(), unitX, unitY);
+				final float unitZ = Math.max(getWalkableRenderHeight(unitX, unitY),
+						War3MapViewer.this.terrain.getGroundHeight(unitX, unitY));
 				final RenderItem renderItem = new RenderItem(this, model, row, unitX, unitY, unitZ, unitAngle, soundset,
 						portraitModel, simulationItem);
 				this.widgets.add(renderItem);

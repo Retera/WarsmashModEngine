@@ -2629,6 +2629,19 @@ public class Jass2 {
 					throw new IllegalArgumentException("Not a float game state: " + gameState);
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetIntegerGameState", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CGameState gameState = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					switch (gameState) {
+					case DISCONNECTED:
+					case DIVINE_INTERVENTION:
+						return new IntegerJassValue(0); // TODO
+					}
+					throw new IllegalArgumentException("Not an integer game state: " + gameState);
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetFloatGameState", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,

@@ -657,8 +657,8 @@ public class MenuUI {
 		else {
 			turnManager = GameTurnManager.LOCAL;
 		}
-		final War3MapViewer viewer = new War3MapViewer(codebase, this.screenManager,
-				new War3MapConfig(WarsmashConstants.MAX_PLAYERS), turnManager);
+		final War3MapConfig mapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+		final War3MapViewer viewer = new War3MapViewer(codebase, this.screenManager, mapConfig, turnManager);
 
 		if (WarsmashGdxMapScreen.ENABLE_AUDIO) {
 			viewer.worldScene.enableAudio();

@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes;
 
-public enum CDamageType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CDamageType implements CHandle {
 	UNKNOWN,
 	UNKNOWN_CODE_1,
 	UNKNOWN_CODE_2,
@@ -30,4 +32,9 @@ public enum CDamageType {
 	UNIVERSAL;
 
 	public static CDamageType[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

@@ -10,12 +10,10 @@ import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
 
 public class JassIfStatement implements JassStatement {
-	private final int lineNo;
 	private final JassExpression condition;
 	private final List<JassStatement> thenStatements;
 
-	public JassIfStatement(final int lineNo, final JassExpression condition, final List<JassStatement> thenStatements) {
-		this.lineNo = lineNo;
+	public JassIfStatement(final JassExpression condition, final List<JassStatement> thenStatements) {
 		this.condition = condition;
 		this.thenStatements = thenStatements;
 	}
@@ -31,7 +29,6 @@ public class JassIfStatement implements JassStatement {
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
-		globalScope.setLineNumber(this.lineNo);
 		final JassValue evaluate = this.condition.evaluate(globalScope, localScope, triggerScope);
 		// TODO this null is here for simulations where we are missing natives, remove
 		// it on full release

@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
-public enum CPlayerColor {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CPlayerColor implements CHandle {
 	RED,
 	BLUE,
 	CYAN,
@@ -21,5 +23,10 @@ public enum CPlayerColor {
 			return VALUES[index];
 		}
 		return null;
+	}
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
 	}
 }

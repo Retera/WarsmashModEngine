@@ -14,11 +14,9 @@ public class JassArrayedAssignmentStatement implements JassStatement {
 	private final String identifier;
 	private final JassExpression indexExpression;
 	private final JassExpression expression;
-	private final int lineNo;
 
-	public JassArrayedAssignmentStatement(final int lineNo, final String identifier,
-			final JassExpression indexExpression, final JassExpression expression) {
-		this.lineNo = lineNo;
+	public JassArrayedAssignmentStatement(final String identifier, final JassExpression indexExpression,
+			final JassExpression expression) {
 		this.identifier = identifier;
 		this.indexExpression = indexExpression;
 		this.expression = expression;
@@ -27,7 +25,6 @@ public class JassArrayedAssignmentStatement implements JassStatement {
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
-		globalScope.setLineNumber(this.lineNo);
 		Assignable variable = localScope.getAssignableLocal(this.identifier);
 		final JassValue index = this.indexExpression.evaluate(globalScope, localScope, triggerScope);
 		if (variable == null) {

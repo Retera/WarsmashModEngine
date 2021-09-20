@@ -35,6 +35,12 @@ public abstract class AbstractJassFunction implements JassFunction {
 			final JassParameter parameter = this.parameters.get(i);
 			final JassValue argument = arguments.get(i);
 			if (!parameter.matchesType(argument)) {
+				if ((parameter == null) || (argument == null)) {
+					System.err.println(
+							"Returning null because we called some Jass function with incorrect argument types, and the types were null!!!");
+					System.err.println("This is a temporary hack for tests and showcase programming solutions");
+					return null;
+				}
 				System.err.println(
 						parameter.getType() + " != " + argument.visit(JassTypeGettingValueVisitor.getInstance()));
 				throw new RuntimeException(

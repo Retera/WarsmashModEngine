@@ -17,6 +17,7 @@ import com.etheller.interpreter.JassParser.ReturnStatementContext;
 import com.etheller.interpreter.JassParser.SetStatementContext;
 import com.etheller.interpreter.JassParser.SimpleIfStatementContext;
 import com.etheller.interpreter.JassParser.StatementContext;
+import com.etheller.interpreter.ast.debug.DebuggingJassStatement;
 import com.etheller.interpreter.ast.statement.JassArrayedAssignmentStatement;
 import com.etheller.interpreter.ast.statement.JassCallStatement;
 import com.etheller.interpreter.ast.statement.JassExitWhenStatement;
@@ -30,10 +31,12 @@ import com.etheller.interpreter.ast.statement.JassReturnNothingStatement;
 import com.etheller.interpreter.ast.statement.JassReturnStatement;
 import com.etheller.interpreter.ast.statement.JassSetStatement;
 import com.etheller.interpreter.ast.statement.JassStatement;
+import com.etheller.interpreter.ast.util.JassSettings;
 
 public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 	private final ArgumentExpressionHandler argumentExpressionHandler;
 	private final JassTypeVisitor jassTypeVisitor;
+	private String jassFileName;
 
 	public JassStatementVisitor(final ArgumentExpressionHandler argumentExpressionHandler,
 			final JassTypeVisitor jassTypeVisitor) {
@@ -44,8 +47,8 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 	@Override
 	public JassStatement visitCallStatement(final CallStatementContext ctx) {
 		try {
-			return new JassCallStatement(ctx.getStart().getLine(), ctx.functionExpression().ID().getText(),
-					this.argumentExpressionHandler.argumentsVisitor.visit(ctx.functionExpression().argsList()));
+			return wrap(ctx.getStart().getLine(), new JassCallStatement(ctx.functionExpression().ID().getText(),
+					this.argumentExpressionHandler.argumentsVisitor.visit(ctx.functionExpression().argsList())));
 		}
 		catch (final Exception exc) {
 			throw new RuntimeException(ctx.getText(), exc);
@@ -54,25 +57,25 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 
 	@Override
 	public JassStatement visitSetStatement(final SetStatementContext ctx) {
-		return new JassSetStatement(ctx.getStart().getLine(), ctx.ID().getText(),
-				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression()));
+		return wrap(ctx.getStart().getLine(), new JassSetStatement(ctx.ID().getText(),
+				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression())));
 	}
 
 	@Override
 	public JassStatement visitReturnStatement(final ReturnStatementContext ctx) {
-		return new JassReturnStatement(ctx.getStart().getLine(),
-				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression()));
+		return wrap(ctx.getStart().getLine(),
+				new JassReturnStatement(this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression())));
 	}
 
 	@Override
 	public JassStatement visitReturnNothingStatement(final ReturnNothingStatementContext ctx) {
-		return new JassReturnNothingStatement(ctx.getStart().getLine());
+		return wrap(ctx.getStart().getLine(), new JassReturnNothingStatement());
 	}
 
 	@Override
 	public JassStatement visitExitWhenStatement(final ExitWhenStatementContext ctx) {
-		return new JassExitWhenStatement(ctx.getStart().getLine(),
-				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression()));
+		return wrap(ctx.getStart().getLine(),
+				new JassExitWhenStatement(this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression())));
 	}
 
 	@Override
@@ -82,8 +85,8 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 			thenStatements.add(visit(statementCtx));
 		}
 		final JassStatement elseIfTail = visit(ctx.ifStatementPartial());
-		return new JassIfElseIfStatement(ctx.getStart().getLine(),
-				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression()), thenStatements, elseIfTail);
+		return wrap(ctx.getStart().getLine(), new JassIfElseIfStatement(
+				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression()), thenStatements, elseIfTail));
 	}
 
 	@Override
@@ -96,9 +99,9 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 		for (final StatementContext statementCtx : ctx.statements(1).statement()) {
 			elseStatements.add(visit(statementCtx));
 		}
-		return new JassIfElseStatement(ctx.getStart().getLine(),
-				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression()), thenStatements,
-				elseStatements);
+		return wrap(ctx.getStart().getLine(),
+				new JassIfElseStatement(this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression()),
+						thenStatements, elseStatements));
 	}
 
 	@Override
@@ -107,7 +110,7 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 		for (final StatementContext statementCtx : ctx.statements().statement()) {
 			statements.add(visit(statementCtx));
 		}
-		return new JassLoopStatement(ctx.getStart().getLine(), statements);
+		return wrap(ctx.getStart().getLine(), new JassLoopStatement(statements));
 	}
 
 	@Override
@@ -116,27 +119,41 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 		for (final StatementContext statementCtx : ctx.statements().statement()) {
 			thenStatements.add(visit(statementCtx));
 		}
-		return new JassIfStatement(ctx.getStart().getLine(),
-				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression()), thenStatements);
+		return wrap(ctx.getStart().getLine(), new JassIfStatement(
+				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression()), thenStatements));
 	}
 
 	@Override
 	public JassStatement visitArrayedAssignmentStatement(final ArrayedAssignmentStatementContext ctx) {
-		return new JassArrayedAssignmentStatement(ctx.getStart().getLine(), ctx.ID().getText(),
-				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression(0)),
-				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression(1)));
+		return wrap(ctx.getStart().getLine(),
+				new JassArrayedAssignmentStatement(ctx.ID().getText(),
+						this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression(0)),
+						this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression(1))));
 	}
 
 	@Override
 	public JassStatement visitBasicLocal(final BasicLocalContext ctx) {
-		return new JassLocalStatement(ctx.getStart().getLine(), ctx.ID().getText(),
-				this.jassTypeVisitor.visit(ctx.type()));
+		return wrap(ctx.getStart().getLine(),
+				new JassLocalStatement(ctx.ID().getText(), this.jassTypeVisitor.visit(ctx.type())));
 	}
 
 	@Override
 	public JassStatement visitDefinitionLocal(final DefinitionLocalContext ctx) {
-		return new JassLocalDefinitionStatement(ctx.getStart().getLine(), ctx.ID().getText(),
-				this.jassTypeVisitor.visit(ctx.type()),
-				this.argumentExpressionHandler.expressionVisitor.visit(ctx.assignTail().expression()));
+		return wrap(ctx.getStart().getLine(),
+				new JassLocalDefinitionStatement(ctx.ID().getText(), this.jassTypeVisitor.visit(ctx.type()),
+						this.argumentExpressionHandler.expressionVisitor.visit(ctx.assignTail().expression())));
+	}
+
+	public void setCurrentFileName(final String jassFile) {
+		this.jassFileName = jassFile;
+	}
+
+	private static JassStatement wrap(final int lineNo, final JassStatement statement) {
+		if (JassSettings.DEBUG) {
+			return new DebuggingJassStatement(lineNo, statement);
+		}
+		else {
+			return statement;
+		}
 	}
 }

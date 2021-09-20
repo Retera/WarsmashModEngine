@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes;
 
-public enum CPathingTypeJass {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CPathingTypeJass implements CHandle {
 	ANY,
 	WALKABILITY,
 	FLYABILITY,
@@ -11,4 +13,9 @@ public enum CPathingTypeJass {
 	AMPHIBIOUSPATHING;
 
 	public static CPathingTypeJass[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

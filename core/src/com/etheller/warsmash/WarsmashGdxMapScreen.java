@@ -36,6 +36,7 @@ import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -208,6 +209,11 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		}
 		this.commonEnv = Jass2.loadCommon(this.viewer.mapMpq, this.uiViewport, this.uiScene, this.viewer, this.meleeUI,
 				"Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j");
+		this.commonEnv.config();
+		if (WarsmashConstants.LOCAL_TEMP_TEST_ALL_PLAYERS_PLAYING) {
+			this.viewer.simulation.updateIsPlaying(this.viewer.getMapConfig());
+		}
+		this.commonEnv.main();
 	}
 
 	public static DataSource parseDataSources(final DataTable warsmashIni) {

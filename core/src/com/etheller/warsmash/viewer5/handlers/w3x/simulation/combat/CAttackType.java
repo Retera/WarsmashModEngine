@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat;
 
-public enum CAttackType implements CodeKeyType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CAttackType implements CodeKeyType, CHandle {
 	UNKNOWN,
 	NORMAL,
 	PIERCE,
@@ -42,5 +44,10 @@ public enum CAttackType implements CodeKeyType {
 			return SIEGE;
 		}
 		return valueOf(upperCaseAttackType);
+	}
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
 	}
 }

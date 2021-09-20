@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes;
 
-public enum CWeaponSoundTypeJass {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CWeaponSoundTypeJass implements CHandle {
 	WHOKNOWS(null),
 	METAL_LIGHT_CHOP("MetalLightChop"),
 	METAL_MEDIUM_CHOP("MetalMediumChop"),
@@ -37,4 +39,9 @@ public enum CWeaponSoundTypeJass {
 	}
 
 	public static CWeaponSoundTypeJass[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

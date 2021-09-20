@@ -283,17 +283,17 @@ public enum ArithmeticSigns implements ArithmeticSign {
 
 		@Override
 		public BooleanJassValue apply(final String left, final String right) {
-			return BooleanJassValue.of(equals(left, right));
+			return BooleanJassValue.of(isEqual(left, right));
 		}
 
 		@Override
 		public BooleanJassValue apply(final HandleJassValue left, final HandleJassValue right) {
-			return BooleanJassValue.of(equals(left, right));
+			return BooleanJassValue.of(isEqual(left, right));
 		}
 
 		@Override
 		public BooleanJassValue apply(final CodeJassValue left, final CodeJassValue right) {
-			return BooleanJassValue.of(equals(left, right));
+			return BooleanJassValue.of(isEqual(left, right));
 		}
 	},
 	NOT_EQUALS() {
@@ -324,17 +324,17 @@ public enum ArithmeticSigns implements ArithmeticSign {
 
 		@Override
 		public JassValue apply(final String left, final String right) {
-			return BooleanJassValue.of(!equals(left, right));
+			return BooleanJassValue.of(!isEqual(left, right));
 		}
 
 		@Override
 		public JassValue apply(final HandleJassValue left, final HandleJassValue right) {
-			return BooleanJassValue.of(!equals(left, right));
+			return BooleanJassValue.of(!isEqual(left, right));
 		}
 
 		@Override
 		public BooleanJassValue apply(final CodeJassValue left, final CodeJassValue right) {
-			return BooleanJassValue.of(!equals(left, right));
+			return BooleanJassValue.of(!isEqual(left, right));
 		}
 	},
 	LESS() {
@@ -502,7 +502,7 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		}
 	};
 
-	private static boolean equals(final String left, final String right) {
+	private static boolean isEqual(final String left, final String right) {
 		boolean equals;
 		if (left == null) {
 			if (right == null) {
@@ -518,11 +518,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		return equals;
 	}
 
-	private static boolean equals(final HandleJassValue left, final HandleJassValue right) {
+	private static boolean isEqual(final HandleJassValue left, final HandleJassValue right) {
 		return (left.getJavaValue() == right.getJavaValue()) && (left.getType() == right.getType());
 	}
 
-	private static boolean equals(final CodeJassValue left, final CodeJassValue right) {
+	private static boolean isEqual(final CodeJassValue left, final CodeJassValue right) {
 		return (left.getValue() == right.getValue());
 	}
 }

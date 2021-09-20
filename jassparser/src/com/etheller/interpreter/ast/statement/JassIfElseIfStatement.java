@@ -10,14 +10,12 @@ import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
 
 public class JassIfElseIfStatement implements JassStatement {
-	private final int lineNo;
 	private final JassExpression condition;
 	private final List<JassStatement> thenStatements;
 	private final JassStatement elseifTail;
 
-	public JassIfElseIfStatement(final int lineNo, final JassExpression condition,
-			final List<JassStatement> thenStatements, final JassStatement elseifTail) {
-		this.lineNo = lineNo;
+	public JassIfElseIfStatement(final JassExpression condition, final List<JassStatement> thenStatements,
+			final JassStatement elseifTail) {
 		this.condition = condition;
 		this.thenStatements = thenStatements;
 		this.elseifTail = elseifTail;
@@ -26,7 +24,6 @@ public class JassIfElseIfStatement implements JassStatement {
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
-		globalScope.setLineNumber(this.lineNo);
 		if (this.condition.evaluate(globalScope, localScope, triggerScope)
 				.visit(BooleanJassValueVisitor.getInstance())) {
 			for (final JassStatement statement : this.thenStatements) {

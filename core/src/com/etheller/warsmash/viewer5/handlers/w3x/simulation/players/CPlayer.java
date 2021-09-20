@@ -54,6 +54,7 @@ public class CPlayer extends CBasePlayer {
 	// which fields shouldn't be persisted if we do game state save later
 	private transient CPlayerStateNotifier stateNotifier = new CPlayerStateNotifier();
 	private float handicapXP;
+	private float handicap = 0.9f;
 
 	public CPlayer(final CRace race, final float[] startLocation, final CBasePlayer configPlayer) {
 		super(configPlayer);
@@ -409,5 +410,13 @@ public class CPlayer extends CBasePlayer {
 
 	public float getHandicapXP() {
 		return this.handicapXP;
+	}
+
+	public void setHandicap(final float handicap) {
+		this.handicap = handicap;
+	}
+
+	public float getHandicap() {
+		return this.handicap;
 	}
 }

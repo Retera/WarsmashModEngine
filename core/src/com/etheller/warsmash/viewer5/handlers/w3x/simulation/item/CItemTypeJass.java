@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.item;
 
-public enum CItemTypeJass {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CItemTypeJass implements CHandle {
 	PERMANENT,
 	CHARGED,
 	POWERUP,
@@ -12,4 +14,9 @@ public enum CItemTypeJass {
 	ANY;
 
 	public static CItemTypeJass[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

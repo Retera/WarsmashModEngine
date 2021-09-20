@@ -11,12 +11,10 @@ import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class JassCallStatement implements JassStatement {
-	private final int lineNo;
 	private final String functionName;
 	private final List<JassExpression> arguments;
 
-	public JassCallStatement(final int lineNo, final String functionName, final List<JassExpression> arguments) {
-		this.lineNo = lineNo;
+	public JassCallStatement(final String functionName, final List<JassExpression> arguments) {
 		this.functionName = functionName;
 		this.arguments = arguments;
 	}
@@ -24,7 +22,6 @@ public class JassCallStatement implements JassStatement {
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
-		globalScope.setLineNumber(this.lineNo);
 		final JassFunction functionByName = globalScope.getFunctionByName(this.functionName);
 		if (functionByName == null) {
 			throw new RuntimeException("Undefined function: " + this.functionName);

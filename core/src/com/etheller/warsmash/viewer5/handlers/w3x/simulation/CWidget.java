@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -16,7 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
 
-public abstract class CWidget implements AbilityTarget {
+public abstract class CWidget implements AbilityTarget, CHandle {
 	protected static final Rectangle tempRect = new Rectangle();
 	private final int handleId;
 	private float x;
@@ -32,6 +33,7 @@ public abstract class CWidget implements AbilityTarget {
 		this.life = life;
 	}
 
+	@Override
 	public int getHandleId() {
 		return this.handleId;
 	}

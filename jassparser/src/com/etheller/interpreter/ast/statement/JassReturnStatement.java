@@ -7,18 +7,15 @@ import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class JassReturnStatement implements JassStatement {
-	private final int lineNo;
 	private final JassExpression expression;
 
-	public JassReturnStatement(final int lineNo, final JassExpression expression) {
-		this.lineNo = lineNo;
+	public JassReturnStatement(final JassExpression expression) {
 		this.expression = expression;
 	}
 
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
-		globalScope.setLineNumber(this.lineNo);
 		return this.expression.evaluate(globalScope, localScope, triggerScope);
 	}
 

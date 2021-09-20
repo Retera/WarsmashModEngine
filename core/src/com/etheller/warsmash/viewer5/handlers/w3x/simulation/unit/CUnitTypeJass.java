@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit;
 
-public enum CUnitTypeJass {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CUnitTypeJass implements CHandle {
 	HERO,
 	DEAD,
 	STRUCTURE,
@@ -36,4 +38,9 @@ public enum CUnitTypeJass {
 	MAGIC_IMMUNE;
 
 	public static CUnitTypeJass[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

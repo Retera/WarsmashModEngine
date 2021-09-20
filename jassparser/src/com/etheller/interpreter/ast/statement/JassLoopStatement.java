@@ -8,18 +8,15 @@ import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class JassLoopStatement implements JassStatement {
-	private final int lineNo;
 	private final List<JassStatement> statements;
 
-	public JassLoopStatement(final int lineNo, final List<JassStatement> statements) {
-		this.lineNo = lineNo;
+	public JassLoopStatement(final List<JassStatement> statements) {
 		this.statements = statements;
 	}
 
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
-		globalScope.setLineNumber(this.lineNo);
 		while (true) {
 			for (final JassStatement statement : this.statements) {
 				final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);

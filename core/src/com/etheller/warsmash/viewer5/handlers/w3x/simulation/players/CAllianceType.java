@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
-public enum CAllianceType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CAllianceType implements CHandle {
 	PASSIVE,
 	HELP_REQUEST,
 	HELP_RESPONSE,
@@ -13,4 +15,9 @@ public enum CAllianceType {
 	SHARED_VISION_FORCED;
 
 	public static CAllianceType[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

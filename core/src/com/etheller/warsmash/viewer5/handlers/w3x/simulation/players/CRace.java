@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
-public enum CRace {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CRace implements CHandle {
 	HUMAN(1),
 	ORC(2),
 	UNDEAD(3),
@@ -28,5 +30,10 @@ public enum CRace {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public int getHandleId() {
+		return getId();
 	}
 }

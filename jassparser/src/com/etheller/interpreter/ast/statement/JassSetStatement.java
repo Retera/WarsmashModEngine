@@ -8,12 +8,10 @@ import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class JassSetStatement implements JassStatement {
-	private final int lineNo;
 	private final String identifier;
 	private final JassExpression expression;
 
-	public JassSetStatement(final int lineNo, final String identifier, final JassExpression expression) {
-		this.lineNo = lineNo;
+	public JassSetStatement(final String identifier, final JassExpression expression) {
 		this.identifier = identifier;
 		this.expression = expression;
 	}
@@ -21,7 +19,6 @@ public class JassSetStatement implements JassStatement {
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
-		globalScope.setLineNumber(this.lineNo);
 		final Assignable local = localScope.getAssignableLocal(this.identifier);
 		if (local != null) {
 			local.setValue(this.expression.evaluate(globalScope, localScope, triggerScope));

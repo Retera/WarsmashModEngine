@@ -98,6 +98,8 @@ baseExpression:
 	|
 	INTEGER #IntegerLiteralExpression
 	|
+	HEX_CONSTANT #HexIntegerLiteralExpression
+	|
 	RAWCODE #RawcodeLiteralExpression
 	|
 	REAL #RealLiteralExpression
@@ -199,7 +201,7 @@ block:
 	;
 	
 functionBlock:
-	FUNCTION ID TAKES paramList RETURNS type newlines statements ENDFUNCTION newlines
+	CONSTANT? FUNCTION ID TAKES paramList RETURNS type newlines statements ENDFUNCTION newlines
 	;
 	
 statements:
@@ -259,14 +261,17 @@ LOOP : 'loop';
 ENDLOOP : 'endloop';
 EXITWHEN : 'exitwhen';
 
-STRING_LITERAL : ('"'.*?'"');
+fragment ESCAPED_QUOTE : '\\"';
+STRING_LITERAL :   '"' ( ESCAPED_QUOTE | ~('\n'|'\r') )*? '"';
 
-
+ 
 INTEGER : [0]|([1-9][0-9]*) ;
+
+HEX_CONSTANT : '0x'(([0-9]|[a-f])*) ;
 
 RAWCODE : ('\''.*?'\'');
 
-REAL : (([0]|([1-9][0-9]*))'.'[0-9]*)|('.'([0]|([1-9][0-9]*))) ;
+REAL : (([0]|([1-9][0-9]*))'.'[0-9]*)|('.'([0-9]*)) ;
 
 NULL : 'null' ;
 TRUE : 'true' ;

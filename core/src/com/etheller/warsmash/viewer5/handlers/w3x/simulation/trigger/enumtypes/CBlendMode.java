@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes;
 
-public enum CBlendMode {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CBlendMode implements CHandle {
 	NONE,
 	KEYALPHA,
 	BLEND,
@@ -9,4 +11,9 @@ public enum CBlendMode {
 	MODULATE_2X;
 
 	public static CBlendMode[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

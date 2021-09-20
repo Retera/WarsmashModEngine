@@ -1,14 +1,21 @@
 package com.etheller.interpreter.ast.scope;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.etheller.interpreter.ast.Assignable;
+import com.etheller.interpreter.ast.debug.DebuggingJassFunction;
+import com.etheller.interpreter.ast.debug.JassStackElement;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
+import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
@@ -27,7 +34,7 @@ public final class GlobalScope {
 
 	public final HandleJassType handleType;
 
-	private static int lineNumber;
+	private final ArrayDeque<JassStackElement> jassStack = new ArrayDeque<>();
 
 	public GlobalScope() {
 		this.handleType = registerHandleType("handle");// the handle type
@@ -39,12 +46,39 @@ public final class GlobalScope {
 		registerPrimitiveType(JassType.STRING);
 	}
 
-	public static void setLineNumber(final int lineNo) {
-		lineNumber = lineNo;
+	public Deque<JassStackElement> getJassStack() {
+		return this.jassStack;
 	}
 
-	public static int getLineNumber() {
-		return lineNumber;
+	public List<JassStackElement> copyJassStack() {
+		final List<JassStackElement> copiedStack = new ArrayList<>();
+		for (final JassStackElement stackElement : this.jassStack) {
+			copiedStack.add(new JassStackElement(stackElement));
+		}
+		return copiedStack;
+	}
+
+	public void pushJassStack(final JassStackElement element) {
+		this.jassStack.push(element);
+	}
+
+	public void popJassStack() {
+		this.jassStack.pop();
+	}
+
+	public void setLineNumber(final int lineNo) {
+		final JassStackElement top = this.jassStack.peekFirst();
+		if (top != null) {
+			top.setLineNumber(lineNo);
+		}
+	}
+
+	public int getLineNumber() {
+		final JassStackElement top = this.jassStack.peekFirst();
+		if (top != null) {
+			return top.getLineNumber();
+		}
+		return -1;
 	}
 
 	public HandleJassType registerHandleType(final String name) {
@@ -101,8 +135,14 @@ public final class GlobalScope {
 		return this.globals.get(name);
 	}
 
-	public void defineFunction(final String name, final JassFunction function) {
-		this.functions.put(name, function);
+	public void defineFunction(final int lineNo, final String sourceFile, final String name,
+			final JassFunction function) {
+		if (JassSettings.DEBUG) {
+			this.functions.put(name, new DebuggingJassFunction(lineNo, sourceFile, name, function));
+		}
+		else {
+			this.functions.put(name, function);
+		}
 	}
 
 	public JassFunction getFunctionByName(final String name) {

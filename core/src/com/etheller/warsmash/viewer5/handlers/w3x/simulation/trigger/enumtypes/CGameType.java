@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes;
 
-public enum CGameType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CGameType implements CHandle {
 	MELEE,
 	FFA,
 	USE_MAP_SETTINGS,
@@ -23,5 +25,10 @@ public enum CGameType {
 
 	public int getId() {
 		return 1 << ordinal();
+	}
+
+	@Override
+	public int getHandleId() {
+		return getId();
 	}
 }

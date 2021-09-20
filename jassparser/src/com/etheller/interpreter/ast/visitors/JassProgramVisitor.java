@@ -1,7 +1,6 @@
 package com.etheller.interpreter.ast.visitors;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import com.etheller.interpreter.JassBaseVisitor;
@@ -11,7 +10,6 @@ import com.etheller.interpreter.JassParser.GlobalContext;
 import com.etheller.interpreter.JassParser.ProgramContext;
 import com.etheller.interpreter.JassParser.StatementContext;
 import com.etheller.interpreter.JassParser.TypeDefinitionContext;
-import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.function.JassNativeManager;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
@@ -36,6 +34,7 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 	private final JassParametersVisitor jassParametersVisitor = new JassParametersVisitor(this.jassTypeVisitor);
 	private final JassStatementVisitor jassStatementVisitor = new JassStatementVisitor(this.argumentExpressionHandler,
 			this.jassTypeVisitor);
+	private String jassFileName;
 
 	@Override
 	public Void visitBlock(final BlockContext ctx) {
@@ -47,7 +46,7 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 		else if (ctx.nativeBlock() != null) {
 			final String text = ctx.nativeBlock().ID().getText();
 			System.out.println("Registering native: " + text);
-			this.jassNativeManager.registerNativeCode(text,
+			this.jassNativeManager.registerNativeCode(ctx.getStart().getLine(), this.jassFileName, text,
 					this.jassParametersVisitor.visit(ctx.nativeBlock().paramList()),
 					this.jassTypeVisitor.visit(ctx.nativeBlock().type()), this.globals);
 		}
@@ -62,7 +61,7 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 		}
 		final UserJassFunction userJassFunction = new UserJassFunction(statements,
 				this.jassParametersVisitor.visit(ctx.paramList()), this.jassTypeVisitor.visit(ctx.type()));
-		this.globals.defineFunction(ctx.ID().getText(), userJassFunction);
+		this.globals.defineFunction(ctx.getStart().getLine(), this.jassFileName, ctx.ID().getText(), userJassFunction);
 		return null;
 	}
 
@@ -83,16 +82,9 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 			final UserJassFunction userJassFunction = new UserJassFunction(statements,
 					this.jassParametersVisitor.visit(functionBlockContext.paramList()),
 					this.jassTypeVisitor.visit(functionBlockContext.type()));
-			this.globals.defineFunction(functionBlockContext.ID().getText(), userJassFunction);
-		}
-		final JassFunction mainFunction = this.globals.getFunctionByName("main");
-		if (mainFunction != null) {
-			try {
-				mainFunction.call(Collections.EMPTY_LIST, this.globals, EMPTY_TRIGGER_SCOPE);
-			}
-			catch (final Exception exc) {
-				throw new RuntimeException("Exception on Line " + GlobalScope.getLineNumber(), exc);
-			}
+			this.globals.defineFunction(ctx.getStart().getLine(), this.jassFileName,
+					functionBlockContext.ID().getText(), userJassFunction);
+			System.out.println("Defining jass user function: " + functionBlockContext.ID().getText());
 		}
 		return null;
 	}
@@ -103,5 +95,10 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 
 	public JassNativeManager getJassNativeManager() {
 		return this.jassNativeManager;
+	}
+
+	public void setCurrentFileName(final String jassFile) {
+		this.jassFileName = jassFile;
+		this.jassStatementVisitor.setCurrentFileName(jassFile);
 	}
 }

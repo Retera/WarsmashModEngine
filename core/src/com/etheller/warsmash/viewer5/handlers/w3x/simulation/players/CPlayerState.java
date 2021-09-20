@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
-public enum CPlayerState {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CPlayerState implements CHandle {
 	GAME_RESULT,
 	// current resource levels
 	//
@@ -40,4 +42,9 @@ public enum CPlayerState {
 	NO_CREEP_SLEEP;
 
 	public static CPlayerState[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

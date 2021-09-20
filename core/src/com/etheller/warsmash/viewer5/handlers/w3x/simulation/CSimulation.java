@@ -118,11 +118,13 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CRace defaultRace = CRace.UNDEAD;
+			final CRace defaultRace = CRace.ORC;
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
 			if (WarsmashConstants.LOCAL_TEMP_TEST_ALL_PLAYERS_PLAYING) {
-				newPlayer.setSlotState(CPlayerSlotState.PLAYING);
+				if (i < config.getPlayerCount()) {
+					newPlayer.setSlotState(CPlayerSlotState.PLAYING);
+				}
 			}
 			this.players.add(newPlayer);
 		}
@@ -606,4 +608,11 @@ public class CSimulation implements CPlayerAPI {
 	public boolean isNight() {
 		return !this.daytime;
 	}
+
+	public void updateIsPlaying(final War3MapConfig mapConfig) {
+		for (int i = 0; i < mapConfig.getPlayerCount(); i++) {
+			this.players.get(i).setSlotState(CPlayerSlotState.PLAYING);
+		}
+	}
+
 }

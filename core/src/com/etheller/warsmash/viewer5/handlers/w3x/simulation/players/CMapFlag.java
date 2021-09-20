@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
-public enum CMapFlag {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CMapFlag implements CHandle {
 	MAP_FOG_HIDE_TERRAIN,
 	MAP_FOG_MAP_EXPLORED,
 	MAP_FOG_ALWAYS_VISIBLE,
@@ -40,5 +42,10 @@ public enum CMapFlag {
 
 	public int getId() {
 		return 1 << ordinal();
+	}
+
+	@Override
+	public int getHandleId() {
+		return getId();
 	}
 }

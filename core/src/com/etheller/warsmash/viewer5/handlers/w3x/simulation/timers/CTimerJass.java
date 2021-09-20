@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
@@ -25,7 +26,12 @@ public class CTimerJass extends CTimer {
 	@Override
 	public void onFire() {
 		final CommonTriggerExecutionScope handlerScope = CommonTriggerExecutionScope.expiringTimer(null, this);
-		this.handlerFunc.call(Collections.emptyList(), this.jassGlobalScope, handlerScope);
+		try {
+			this.handlerFunc.call(Collections.emptyList(), this.jassGlobalScope, handlerScope);
+		}
+		catch (final Exception e) {
+			throw new JassException(this.jassGlobalScope, "Exception during jass time fire", e);
+		}
 		for (final Trigger trigger : this.eventTriggers) {
 			final CommonTriggerExecutionScope executionScope = CommonTriggerExecutionScope.expiringTimer(trigger, this);
 			if (trigger.evaluate(this.jassGlobalScope, executionScope)) {

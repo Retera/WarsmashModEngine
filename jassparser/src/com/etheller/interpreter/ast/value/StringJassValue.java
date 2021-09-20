@@ -1,6 +1,7 @@
 package com.etheller.interpreter.ast.value;
 
 public class StringJassValue implements JassValue {
+	public static final JassValue EMPTY_STRING = StringJassValue.of("");
 	private final String value;
 
 	public static StringJassValue of(final String value) {

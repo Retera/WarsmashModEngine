@@ -354,6 +354,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private boolean currentMusicRandomizeIndex;
 	private final List<CTimerDialog> timerDialogs = new ArrayList<>();
 	private final AnyClickableUnitFilter anyClickableUnitFilter;
+	private final AnyTargetableUnitFilter anyTargetableUnitFilter;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -388,6 +389,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		this.itemCommandCardCommandListener = new ItemCommandCardCommandListener();
 		this.anyClickableUnitFilter = new AnyClickableUnitFilter();
+		this.anyTargetableUnitFilter = new AnyTargetableUnitFilter();
 	}
 
 	private MeleeUIMinimap createMinimap(final War3MapViewer war3MapViewer) {
@@ -1641,6 +1643,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		public boolean call(final CWidget unit) {
 			final RenderWidget renderPeer = MeleeUI.this.war3MapViewer.getRenderPeer(unit);
 			return !unit.isDead() && renderPeer.isSelectable();
+		}
+	}
+
+	private final class AnyTargetableUnitFilter implements CWidgetFilterFunction {
+		@Override
+		public boolean call(final CWidget unit) {
+			return !unit.isDead();
 		}
 	}
 
@@ -3013,9 +3022,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				if (button == Input.Buttons.RIGHT) {
 					if ((getSelectedUnit() != null) && (getSelectedUnit().getSimulationUnit()
 							.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())) {
-						final RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
+						RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 								this.anyClickableUnitFilter);
-						if ((rayPickUnit != null) && !rayPickUnit.getSimulationWidget().isDead()) {
+						if (rayPickUnit == null) {
+							rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
+									this.anyTargetableUnitFilter);
+						}
+						if (rayPickUnit != null) {
 							boolean ordered = false;
 							boolean rallied = false;
 							boolean attacked = false;

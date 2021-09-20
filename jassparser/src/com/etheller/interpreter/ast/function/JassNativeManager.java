@@ -21,13 +21,14 @@ public class JassNativeManager {
 		this.nameToNativeCode.put(name, nativeCode);
 	}
 
-	public void registerNativeCode(final String name, final List<JassParameter> parameters, final JassType returnType,
-			final GlobalScope globals) {
+	public void registerNativeCode(final int lineNo, final String sourceFile, final String name,
+			final List<JassParameter> parameters, final JassType returnType, final GlobalScope globals) {
 		if (this.registeredNativeNames.contains(name)) {
 			throw new RuntimeException("Native already registered: " + name);
 		}
 		final JassFunction nativeCode = this.nameToNativeCode.remove(name);
-		globals.defineFunction(name, new NativeJassFunction(parameters, returnType, name, nativeCode));
+		globals.defineFunction(lineNo, sourceFile, name,
+				new NativeJassFunction(parameters, returnType, name, nativeCode));
 		this.registeredNativeNames.add(name);
 	}
 

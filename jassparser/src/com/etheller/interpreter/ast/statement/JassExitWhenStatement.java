@@ -10,18 +10,15 @@ import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
 
 public class JassExitWhenStatement implements JassStatement {
 	public static final StringJassValue LOOP_EXIT_NOTICE = new StringJassValue("EXIT");
-	private final int lineNo;
 	private final JassExpression expression;
 
-	public JassExitWhenStatement(final int lineNo, final JassExpression expression) {
-		this.lineNo = lineNo;
+	public JassExitWhenStatement(final JassExpression expression) {
 		this.expression = expression;
 	}
 
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
-		globalScope.setLineNumber(this.lineNo);
 		if (this.expression.evaluate(globalScope, localScope, triggerScope)
 				.visit(BooleanJassValueVisitor.getInstance())) {
 			return LOOP_EXIT_NOTICE;

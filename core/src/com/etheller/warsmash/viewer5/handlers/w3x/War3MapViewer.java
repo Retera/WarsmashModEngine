@@ -205,7 +205,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public DataTable uiSoundsTable;
 	private MdxComplexInstance confirmationInstance;
 	public MdxComplexInstance dncUnit;
-	public MdxComplexInstance dncUnitDay;
 	public MdxComplexInstance dncTerrain;
 	public MdxComplexInstance dncTarget;
 	public CSimulation simulation;
@@ -1618,17 +1617,22 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					break;
 				}
 			}
-			this.dncTerrain.setFrameByRatio(
-					this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
-			this.dncTerrain.update(rawDeltaTime, null);
-			this.dncUnit.setFrameByRatio(
-					this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
-			this.dncUnit.update(rawDeltaTime, null);
-			this.dncUnitDay.setFrameByRatio(0.5f);
-			this.dncUnitDay.update(rawDeltaTime, null);
-			this.dncTarget.setFrameByRatio(
-					this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
-			this.dncTarget.update(rawDeltaTime, null);
+			if (this.dncTerrain != null) {
+				this.dncTerrain.setFrameByRatio(
+						this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
+				this.dncTerrain.update(rawDeltaTime, null);
+			}
+			if (this.dncUnit != null) {
+				this.dncUnit.setFrameByRatio(
+						this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
+				this.dncUnit.update(rawDeltaTime, null);
+			}
+
+			if (this.dncTarget != null) {
+				this.dncTarget.setFrameByRatio(
+						this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
+				this.dncTarget.update(rawDeltaTime, null);
+			}
 		}
 	}
 
@@ -2095,9 +2099,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.dncUnit = (MdxComplexInstance) unitDNCModel.addInstance();
 		this.dncUnit.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		this.dncUnit.setSequence(0);
-		this.dncUnitDay = (MdxComplexInstance) unitDNCModel.addInstance();
-		this.dncUnitDay.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
-		this.dncUnitDay.setSequence(0);
 		final MdxModel targetDNCModel = (MdxModel) load(
 				mdx("Environment\\DNC\\DNCLordaeron\\DNCLordaeronTarget\\DNCLordaeronTarget.mdl"), PathSolver.DEFAULT,
 				null);

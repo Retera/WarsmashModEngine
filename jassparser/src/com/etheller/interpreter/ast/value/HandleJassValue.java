@@ -22,4 +22,9 @@ public class HandleJassValue implements JassValue {
 		return visitor.accept(this);
 	}
 
+	@Override
+	public String toString() {
+		return this.type.getName() + ":" + this.javaValue;
+	}
+
 }

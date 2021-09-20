@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
@@ -60,7 +61,12 @@ public class Trigger {
 			return;
 		}
 		for (final JassFunction action : this.actions) {
-			action.call(Collections.emptyList(), globalScope, triggerScope);
+			try {
+				action.call(Collections.emptyList(), globalScope, triggerScope);
+			}
+			catch (final Exception e) {
+				throw new JassException(globalScope, "Exception during Trigger action execute", e);
+			}
 		}
 	}
 

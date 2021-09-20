@@ -1,6 +1,7 @@
 package com.etheller.interpreter.ast.value;
 
 public class RealJassValue implements JassValue {
+	public static final JassValue ZERO = new RealJassValue(0);
 	private final double value;
 
 	public RealJassValue(final double value) {

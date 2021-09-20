@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes;
 
-public enum CFogState {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CFogState implements CHandle {
 	MASKED,
 	FOGGED,
 	VISIBLE;
@@ -18,5 +20,10 @@ public enum CFogState {
 
 	public int getId() {
 		return 1 << ordinal();
+	}
+
+	@Override
+	public int getHandleId() {
+		return getId();
 	}
 }

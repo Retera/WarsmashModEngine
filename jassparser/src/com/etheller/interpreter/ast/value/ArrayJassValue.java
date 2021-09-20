@@ -1,5 +1,7 @@
 package com.etheller.interpreter.ast.value;
 
+import java.util.Arrays;
+
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
 public class ArrayJassValue implements JassValue {
@@ -8,6 +10,21 @@ public class ArrayJassValue implements JassValue {
 
 	public ArrayJassValue(final ArrayJassType type) {
 		this.type = type;
+		final JassType primitiveType = this.type.getPrimitiveType();
+
+		// Some default values for primitives... in general seems like the user script
+		// should already do this, so maybe we could take it out for performance later,
+		// but at the moment it's only a cost when we create a new array (local array)
+		// which is rare. Anyway, preallocating arrays to size 8192 is very stupid.
+		if (primitiveType == JassType.INTEGER) {
+			Arrays.fill(this.data, IntegerJassValue.ZERO);
+		}
+		else if (primitiveType == JassType.REAL) {
+			Arrays.fill(this.data, RealJassValue.ZERO);
+		}
+		else if (primitiveType == JassType.BOOLEAN) {
+			Arrays.fill(this.data, BooleanJassValue.FALSE);
+		}
 	}
 
 	@Override

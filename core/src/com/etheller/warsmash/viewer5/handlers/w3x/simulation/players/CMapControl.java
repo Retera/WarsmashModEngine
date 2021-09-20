@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
-public enum CMapControl {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CMapControl implements CHandle {
 	USER,
 	COMPUTER,
 	RESCUABLE,
@@ -9,4 +11,9 @@ public enum CMapControl {
 	NONE;
 
 	public static CMapControl[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

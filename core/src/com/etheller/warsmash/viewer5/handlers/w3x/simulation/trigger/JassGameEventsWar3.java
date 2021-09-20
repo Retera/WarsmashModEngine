@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger;
 
+import com.etheller.interpreter.ast.util.CHandle;
+
 //===================================================
 //Game, Player and Unit Events
 //
@@ -15,7 +17,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger;
 //
 //===================================================
 
-public enum JassGameEventsWar3 {
+public enum JassGameEventsWar3 implements CHandle {
 	// ===================================================
 	// For use with TriggerRegisterGameEvent
 	// ===================================================
@@ -244,5 +246,10 @@ public enum JassGameEventsWar3 {
 			return (ordinal - TFT_CUTOFF) + 256;
 		}
 		return ordinal;
+	}
+
+	@Override
+	public int getHandleId() {
+		return getEventId();
 	}
 }

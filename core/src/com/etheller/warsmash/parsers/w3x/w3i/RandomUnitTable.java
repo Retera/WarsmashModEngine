@@ -1,6 +1,7 @@
 package com.etheller.warsmash.parsers.w3x.w3i;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.etheller.warsmash.util.ParseUtils;
@@ -12,7 +13,7 @@ public class RandomUnitTable {
 	private String name;
 	private int positions;
 	private int[] columnTypes;
-	private List<RandomUnit> units;
+	private final List<RandomUnit> units = new ArrayList<>();
 
 	public void load(final LittleEndianDataInputStream stream) throws IOException {
 		this.id = stream.readInt(); // TODO is this a War3ID?

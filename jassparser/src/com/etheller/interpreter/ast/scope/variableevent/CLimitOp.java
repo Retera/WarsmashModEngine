@@ -1,6 +1,8 @@
 package com.etheller.interpreter.ast.scope.variableevent;
 
-public enum CLimitOp {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CLimitOp implements CHandle {
 	LESS_THAN,
 	LESS_THAN_OR_EQUAL,
 	EQUAL,
@@ -9,4 +11,9 @@ public enum CLimitOp {
 	NOT_EQUAL;
 
 	public static CLimitOp[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
-public enum CRacePreference {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CRacePreference implements CHandle {
 	HUMAN,
 	ORC,
 	NIGHTELF,
@@ -22,5 +24,10 @@ public enum CRacePreference {
 
 	public int getId() {
 		return 1 << ordinal();
+	}
+
+	@Override
+	public int getHandleId() {
+		return getId();
 	}
 }

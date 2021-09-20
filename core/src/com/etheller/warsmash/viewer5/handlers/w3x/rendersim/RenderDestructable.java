@@ -105,6 +105,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 		else if (!dead) {
 			if (this.dead) {
 				this.unitAnimationListenerImpl.playAnimation(true, PrimaryTag.BIRTH, SequenceUtils.EMPTY, 1.0f, true);
+				this.unitAnimationListenerImpl.queueAnimation(PrimaryTag.STAND, SequenceUtils.EMPTY, true);
 				// TODO add back shadow here
 
 			}

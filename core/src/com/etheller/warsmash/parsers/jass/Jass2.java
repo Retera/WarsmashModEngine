@@ -98,6 +98,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerGame
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerScore;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CStartLocPrio;
@@ -132,7 +133,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CVersion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CHashtable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 
 public class Jass2 {
@@ -1368,11 +1371,11 @@ public class Jass2 {
 					final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
 					final CPlayerJass player = arguments.get(1)
 							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
-					final TriggerBooleanExpression filter = arguments.get(2)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					final TriggerBooleanExpression filter = nullable(arguments, 2,
+							ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 					for (final CUnit unit : simulation.getUnits()) {
 						if (unit.getPlayerIndex() == player.getId()) {
-							if (filter.evaluate(globalScope,
+							if ((filter == null) || filter.evaluate(globalScope,
 									CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
 								// TODO the trigger scope for evaluation here might need to be a clean one?
 								group.add(unit);
@@ -1380,6 +1383,38 @@ public class Jass2 {
 						}
 					}
 					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("IssuePointOrderLoc", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final String orderString = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+					final Point2D.Double whichLocation = arguments.get(2)
+							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+					final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = simulation
+							.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+					final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+					final int orderId = OrderIdUtils.getOrderId(orderString);
+					int abilityHandleId = 0;
+					AbilityPointTarget targetAsPoint = new AbilityPointTarget((float) whichLocation.x,
+							(float) whichLocation.y);
+					for (final CAbility ability : whichUnit.getAbilities()) {
+						ability.checkCanUse(simulation, whichUnit, orderId, activationReceiver);
+						if (activationReceiver.isOk()) {
+							final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
+							ability.checkCanTarget(simulation, whichUnit, orderId, targetAsPoint,
+									targetReceiver.reset());
+							if (targetReceiver.getTarget() != null) {
+								targetAsPoint = targetReceiver.getTarget();
+								abilityHandleId = ability.getHandleId();
+							}
+						}
+					}
+					defaultPlayerUnitOrderExecutor.issuePointOrder(whichUnit.getHandleId(), abilityHandleId, orderId,
+							targetAsPoint.x, targetAsPoint.y, false);
+					return BooleanJassValue.of(abilityHandleId != 0);
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsOfTypeCounted", new JassFunction() {
@@ -3225,7 +3260,7 @@ public class Jass2 {
 					final int lowBound = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 					final int highBound = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 					return new IntegerJassValue(
-							(simulation.getSeededRandom().nextInt((highBound - lowBound) + 1)) + lowBound);
+							simulation.getSeededRandom().nextInt((highBound - lowBound) + 1) + lowBound);
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetWidgetX", new JassFunction() {

@@ -42,6 +42,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindin
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
@@ -62,6 +63,7 @@ public class CSimulation implements CPlayerAPI {
 	private final List<CDestructable> destructables;
 	private final List<CItem> items;
 	private final List<CPlayer> players;
+	private final List<CPlayerUnitOrderExecutor> defaultPlayerUnitOrderExecutors;
 	private final List<CAttackProjectile> projectiles;
 	private final List<CAttackProjectile> newProjectiles;
 	private final HandleIdAllocator handleIdAllocator;
@@ -115,6 +117,7 @@ public class CSimulation implements CPlayerAPI {
 		}
 		this.seededRandom = seededRandom;
 		this.players = new ArrayList<>();
+		this.defaultPlayerUnitOrderExecutors = new ArrayList<>();
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
@@ -127,6 +130,7 @@ public class CSimulation implements CPlayerAPI {
 				}
 			}
 			this.players.add(newPlayer);
+			this.defaultPlayerUnitOrderExecutors.add(new CPlayerUnitOrderExecutor(this, i));
 		}
 		this.players.get(this.players.size() - 4).setName(miscData.getLocalizedString("WESTRING_PLAYER_NA"));
 		this.players.get(this.players.size() - 3).setName(miscData.getLocalizedString("WESTRING_PLAYER_NV"));
@@ -330,14 +334,14 @@ public class CSimulation implements CPlayerAPI {
 		this.daytime = (timeOfDayAfter >= this.gameplayConstants.getDawnTimeGameHours())
 				&& (timeOfDayAfter < this.gameplayConstants.getDuskTimeGameHours());
 		for (final CTimer timer : this.addedTimers) {
-			internalRegisterTimer(timer);
+			this.internalRegisterTimer(timer);
 		}
 		this.addedTimers.clear();
 		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
 		}
 		for (final CTimer timer : this.removedTimers) {
-			internalUnregisterTimer(timer);
+			this.internalUnregisterTimer(timer);
 		}
 		this.removedTimers.clear();
 		for (final TimeOfDayVariableEvent timeOfDayEvent : this.timeOfDayVariableEvents) {
@@ -418,6 +422,10 @@ public class CSimulation implements CPlayerAPI {
 	@Override
 	public CPlayer getPlayer(final int index) {
 		return this.players.get(index);
+	}
+
+	public CPlayerUnitOrderExecutor getDefaultPlayerUnitOrderExecutor(final int index) {
+		return this.defaultPlayerUnitOrderExecutors.get(index);
 	}
 
 	public CommandErrorListener getCommandErrorListener(final int playerIndex) {

@@ -7,6 +7,7 @@ import com.etheller.interpreter.JassBaseVisitor;
 import com.etheller.interpreter.JassParser.ArrayedAssignmentStatementContext;
 import com.etheller.interpreter.JassParser.BasicLocalContext;
 import com.etheller.interpreter.JassParser.CallStatementContext;
+import com.etheller.interpreter.JassParser.DebugStatementContext;
 import com.etheller.interpreter.JassParser.DefinitionLocalContext;
 import com.etheller.interpreter.JassParser.ExitWhenStatementContext;
 import com.etheller.interpreter.JassParser.IfElseIfStatementContext;
@@ -20,6 +21,7 @@ import com.etheller.interpreter.JassParser.StatementContext;
 import com.etheller.interpreter.ast.debug.DebuggingJassStatement;
 import com.etheller.interpreter.ast.statement.JassArrayedAssignmentStatement;
 import com.etheller.interpreter.ast.statement.JassCallStatement;
+import com.etheller.interpreter.ast.statement.JassDoNothingStatement;
 import com.etheller.interpreter.ast.statement.JassExitWhenStatement;
 import com.etheller.interpreter.ast.statement.JassIfElseIfStatement;
 import com.etheller.interpreter.ast.statement.JassIfElseStatement;
@@ -142,6 +144,18 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 		return wrap(ctx.getStart().getLine(),
 				new JassLocalDefinitionStatement(ctx.ID().getText(), this.jassTypeVisitor.visit(ctx.type()),
 						this.argumentExpressionHandler.expressionVisitor.visit(ctx.assignTail().expression())));
+	}
+
+	@Override
+	public JassStatement visitDebugStatement(final DebugStatementContext ctx) {
+		final JassStatement stmt = visit(ctx.statement());
+		if (JassSettings.DEBUG) {
+			return stmt;
+		}
+		// TODO this is not performant, and currently only implemented to support the
+		// functionality of the debug keyword.
+		// Eventually "JassDoNothingStatement" class should be deleted.
+		return new JassDoNothingStatement();
 	}
 
 	public void setCurrentFileName(final String jassFile) {

@@ -56,7 +56,7 @@ public class DesktopLauncher {
 		config.fullscreen = true;
 		boolean noLogs = false;
 		for (int argIndex = 0; argIndex < arg.length; argIndex++) {
-			if ("-windowed".equals(arg[argIndex])) {
+			if ("-window".equals(arg[argIndex])) {
 				config.fullscreen = false;
 			}
 			else if ("-nolog".equals(arg[argIndex])) {
@@ -94,6 +94,10 @@ public class DesktopLauncher {
 		}
 		loadExtensions();
 		final DataTable warsmashIni = loadWarsmashIni();
+
+		if (fileToLoad != null) {
+			System.out.println("About to run loading file: " + fileToLoad);
+		}
 		final WarsmashGdxMultiScreenGame warsmashGdxMultiScreenGame = new WarsmashGdxMultiScreenGame();
 		new LwjglApplication(warsmashGdxMultiScreenGame, config);
 		final String finalFileToLoad = fileToLoad;

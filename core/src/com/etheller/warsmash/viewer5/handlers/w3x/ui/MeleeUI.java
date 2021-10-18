@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,12 +54,14 @@ import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
+import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.FastNumberFormat;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Bounds;
@@ -86,6 +89,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.camera.GameCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.PortraitCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingFlags;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
@@ -355,6 +359,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final List<CTimerDialog> timerDialogs = new ArrayList<>();
 	private final AnyClickableUnitFilter anyClickableUnitFilter;
 	private final AnyTargetableUnitFilter anyTargetableUnitFilter;
+	private final DataTable musicSLK;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -390,6 +395,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.itemCommandCardCommandListener = new ItemCommandCardCommandListener();
 		this.anyClickableUnitFilter = new AnyClickableUnitFilter();
 		this.anyTargetableUnitFilter = new AnyTargetableUnitFilter();
+
+		this.musicSLK = new DataTable(StringBundle.EMPTY);
+		final String musicSLKPath = "UI\\SoundInfo\\Music.SLK";
+		if (war3MapViewer.dataSource.has(musicSLKPath)) {
+			try (InputStream miscDataTxtStream = war3MapViewer.dataSource.getResourceAsStream(musicSLKPath)) {
+				this.musicSLK.readSLK(miscDataTxtStream);
+			}
+			catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private MeleeUIMinimap createMinimap(final War3MapViewer war3MapViewer) {
@@ -2850,6 +2866,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (keycode == Input.Keys.X) {
 				War3MapViewer.DEBUG_DEPTH = 0;
 			}
+			if (keycode == Input.Keys.W) {
+				Terrain.WIREFRAME_TERRAIN = !Terrain.WIREFRAME_TERRAIN;
+			}
 		}
 		if (keycode == Input.Keys.TAB) {
 			if (this.selectedUnits.size() > 1) {
@@ -3752,9 +3771,25 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return this.cameraManager;
 	}
 
-	public Music playMusic(final String[] musics, final boolean random, int index) {
+	public Music playMusic(final String musicField, final boolean random, int index) {
 		if (WarsmashConstants.ENABLE_MUSIC) {
 			stopMusic();
+
+			final String[] semicolonMusics = musicField.split(";");
+			final List<String> musicPaths = new ArrayList<>();
+			for (String musicPath : semicolonMusics) {
+				// dumb support for comma as well as semicolon, I wonder if we can
+				// clean this up, simplify?
+				if (this.musicSLK.get(musicPath) != null) {
+					musicPath = this.musicSLK.get(musicPath).getField("FileNames");
+				}
+				final String[] moreSplitMusics = musicPath.split(",");
+				for (final String finalSplitPath : moreSplitMusics) {
+					musicPaths.add(finalSplitPath);
+				}
+			}
+			final String[] musics = musicPaths.toArray(new String[musicPaths.size()]);
+
 			if (random) {
 				index = (int) (Math.random() * musics.length);
 			}

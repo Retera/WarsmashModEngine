@@ -8,6 +8,7 @@ import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
+import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class JassCallStatement implements JassStatement {
@@ -24,7 +25,13 @@ public class JassCallStatement implements JassStatement {
 			final TriggerExecutionScope triggerScope) {
 		final JassFunction functionByName = globalScope.getFunctionByName(this.functionName);
 		if (functionByName == null) {
-			throw new RuntimeException("Undefined function: " + this.functionName);
+			if (JassSettings.CONTINUE_EXECUTING_ON_ERROR) {
+				System.err.println("Undefined function: " + this.functionName);
+			}
+			else {
+				throw new RuntimeException("Undefined function: " + this.functionName);
+			}
+			return null;
 		}
 		final List<JassValue> evaluatedExpressions = new ArrayList<>();
 		for (final JassExpression expr : this.arguments) {

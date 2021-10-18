@@ -9,7 +9,11 @@ public enum CCameraField implements CHandle {
 	FIELD_OF_VIEW,
 	ROLL,
 	ROTATION,
-	ZOFFSET;
+	ZOFFSET,
+	NEARZ, // 1.32
+	LOCAL_PITCH,
+	LOCAL_YAW,
+	LOCAL_ROLL;
 
 	public static CCameraField[] VALUES = values();
 

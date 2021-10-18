@@ -58,6 +58,14 @@ public class StandardObjectData {
 			if (unitSkin != null) {
 				profile.readTXT(unitSkin, true);
 			}
+			final InputStream unitWeaponsFunc = this.source.getResourceAsStream("Units\\UnitWeaponsFunc.txt");
+			if (unitWeaponsFunc != null) {
+				profile.readTXT(unitWeaponsFunc, true);
+			}
+			final InputStream unitWeaponsSkin = this.source.getResourceAsStream("Units\\UnitWeaponsSkin.txt");
+			if (unitWeaponsSkin != null) {
+				profile.readTXT(unitWeaponsSkin, true);
+			}
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);

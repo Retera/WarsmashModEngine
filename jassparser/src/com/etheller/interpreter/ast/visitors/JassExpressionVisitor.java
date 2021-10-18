@@ -14,6 +14,7 @@ import com.etheller.interpreter.JassParser.BooleanLessExpressionContext;
 import com.etheller.interpreter.JassParser.BooleanLessOrEqualsExpressionContext;
 import com.etheller.interpreter.JassParser.BooleanOrExpressionContext;
 import com.etheller.interpreter.JassParser.DivisionExpressionContext;
+import com.etheller.interpreter.JassParser.DollarHexIntegerLiteralExpressionContext;
 import com.etheller.interpreter.JassParser.EqualsExpressionContext;
 import com.etheller.interpreter.JassParser.FalseExpressionContext;
 import com.etheller.interpreter.JassParser.FunctionCallExpressionContext;
@@ -82,6 +83,12 @@ public class JassExpressionVisitor extends JassBaseVisitor<JassExpression> {
 	public JassExpression visitHexIntegerLiteralExpression(final HexIntegerLiteralExpressionContext ctx) {
 		return new LiteralJassExpression(
 				new IntegerJassValue(Integer.parseInt(ctx.HEX_CONSTANT().getText().substring(2), 16)));
+	}
+
+	@Override
+	public JassExpression visitDollarHexIntegerLiteralExpression(final DollarHexIntegerLiteralExpressionContext ctx) {
+		return new LiteralJassExpression(
+				new IntegerJassValue(Integer.parseInt(ctx.DOLLAR_HEX_CONSTANT().getText().substring(1), 16)));
 	}
 
 	@Override

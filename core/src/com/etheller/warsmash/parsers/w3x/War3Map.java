@@ -1,6 +1,7 @@
 package com.etheller.warsmash.parsers.w3x;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -42,6 +43,28 @@ public class War3Map implements DataSource {
 			// from either the map or the game, giving the map priority.
 			SeekableByteChannel sbc;
 			try (InputStream mapStream = dataSource.getResourceAsStream(mapFileName)) {
+				final byte[] mapData = IOUtils.toByteArray(mapStream);
+				sbc = new SeekableInMemoryByteChannel(mapData);
+				this.internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
+				this.dataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
+			}
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+		catch (final MPQException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public War3Map(final DataSource dataSource, final File mapFileName) {
+		try {
+			// Slightly complex. Here's the theory:
+			// 1.) Copy map into RAM
+			// 2.) Setup a Data Source that will read assets
+			// from either the map or the game, giving the map priority.
+			SeekableByteChannel sbc;
+			try (InputStream mapStream = new FileInputStream(mapFileName)) {
 				final byte[] mapData = IOUtils.toByteArray(mapStream);
 				sbc = new SeekableInMemoryByteChannel(mapData);
 				this.internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);

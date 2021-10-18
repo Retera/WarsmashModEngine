@@ -763,6 +763,9 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					if (i >= CPlayerColor.VALUES.length) {
+						return playercolorType.getNullValue();
+					}
 					return new HandleJassValue(playercolorType, CPlayerColor.VALUES[i]);
 				}
 			});
@@ -2709,8 +2712,7 @@ public class Jass2 {
 					else {
 						musicField = CommonEnvironment.this.gameUI.getSkinField(musicName);
 					}
-					final String[] musics = musicField.split(";");
-					meleeUI.playMusic(musics, random, index);
+					meleeUI.playMusic(musicField, random, index);
 					return null;
 				}
 			});
@@ -3346,6 +3348,48 @@ public class Jass2 {
 					return new IntegerJassValue(whichHandle.getHandleId());
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerNeutralAggressive", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 4);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetBJPlayerNeutralVictim", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 3);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetBJPlayerNeutralExtra", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 2);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerNeutralPassive", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 1);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetBJMaxPlayers", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 4);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetBJMaxPlayerSlots", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS);
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("AddSpecialEffectTarget", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -3901,6 +3945,20 @@ public class Jass2 {
 					}
 					return BooleanJassValue
 							.of(whichPlayer.hasAlliance(whichUnit.getPlayerIndex(), CAllianceType.PASSIVE));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("IsNoVictoryCheat", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return BooleanJassValue.FALSE;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("IsNoDefeatCheat", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return BooleanJassValue.FALSE;
 				}
 			});
 		}

@@ -61,7 +61,7 @@ public class Terrain {
 	private static final Vector3 normalHeap2 = new Vector3();
 	private static final float[] fourComponentHeap = new float[4];
 	private static final Matrix4 tempMatrix = new Matrix4();
-	private static final boolean WIREFRAME_TERRAIN = false;
+	public static boolean WIREFRAME_TERRAIN = false;
 	// In WC3 they didn't finish developing the height 3 ramps
 	// There are a couple of models for some of them but generally they are just bad
 	// voodoo. Enabling this setting should be coupled with creating

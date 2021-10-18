@@ -226,7 +226,55 @@ public enum JassGameEventsWar3 implements CHandle {
 	EVENT_UNIT_SPELL_EFFECT,
 	EVENT_UNIT_SPELL_FINISH,
 	EVENT_UNIT_SPELL_ENDCAST,
-	EVENT_UNIT_PAWN_ITEM,;
+	EVENT_UNIT_PAWN_ITEM,
+
+	// ===================================================
+	// ===================================================
+	// Below are for 1.32 emulation support
+	EVENT_UNKNOWN_RF_CODE_295,
+	EVENT_UNKNOWN_RF_CODE_296,
+	EVENT_UNKNOWN_RF_CODE_297,
+	EVENT_UNKNOWN_RF_CODE_298,
+	EVENT_UNKNOWN_RF_CODE_299,
+	EVENT_UNKNOWN_RF_CODE_300,
+	EVENT_UNKNOWN_RF_CODE_301,
+	EVENT_UNKNOWN_RF_CODE_302,
+	EVENT_UNKNOWN_RF_CODE_303,
+	EVENT_UNKNOWN_RF_CODE_304,
+
+	// use TriggerRegisterPlayerEvent
+	EVENT_PLAYER_MOUSE_DOWN,
+	EVENT_PLAYER_MOUSE_UP,
+	EVENT_PLAYER_MOUSE_MOVE,
+
+	// use TriggerRegisterPlayerUnitEvent
+	EVENT_PLAYER_UNIT_DAMAGED,
+
+	// use TriggerRegisterPlayerEvent
+	EVENT_PLAYER_SYNC_DATA,
+
+	// use TriggerRegisterGameEvent
+	EVENT_GAME_CUSTOM_UI_FRAME,
+
+	// use TriggerRegisterPlayerEvent
+	EVENT_PLAYER_KEY,
+	EVENT_PLAYER_KEY_DOWN,
+	EVENT_PLAYER_KEY_UP,
+
+	// use TriggerRegisterUnitEvent
+	EVENT_UNIT_DAMAGING,
+
+	// use TriggerRegisterPlayerUnitEvent
+	EVENT_PLAYER_UNIT_DAMAGING,
+
+	EVENT_UNKNOWN_RF_CODE_316,
+	EVENT_UNKNOWN_RF_CODE_317,
+
+	// use TriggerRegisterUnitEvent
+	EVENT_UNIT_STACK_ITEM,
+
+	// use TriggerRegisterPlayerUnitEvent
+	EVENT_PLAYER_UNIT_STACK_ITEM,;
 
 	private static final int TFT_CUTOFF = EVENT_GAME_LOADED.ordinal();
 

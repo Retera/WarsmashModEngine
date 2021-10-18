@@ -35,6 +35,7 @@ public final class GlobalScope {
 	public final HandleJassType handleType;
 
 	private final ArrayDeque<JassStackElement> jassStack = new ArrayDeque<>();
+	private boolean debug;
 
 	public GlobalScope() {
 		this.handleType = registerHandleType("handle");// the handle type
@@ -174,14 +175,19 @@ public final class GlobalScope {
 		if (superType != null) {
 			final HandleJassType handleSuperType = superType.visit(HandleJassTypeVisitor.getInstance());
 			if (handleSuperType != null) {
-				final JassType jassType = this.types.get(type);
-				if (jassType != null) {
-					jassType.visit(this.handleTypeSuperTypeLoadingVisitor.reset(handleSuperType));
+				JassType jassType = this.types.get(type);
+				if (jassType == null) {
+					if (JassSettings.CONTINUE_EXECUTING_ON_ERROR) {
+						System.err.println(
+								"Generating stub declaration for type " + type + " because it does not exist natively");
+						jassType = registerHandleType(type);
+					}
+					else {
+						throw new RuntimeException(
+								"unable to declare type " + type + " because it does not exist natively");
+					}
 				}
-				else {
-					throw new RuntimeException(
-							"unable to declare type " + type + " because it does not exist natively");
-				}
+				jassType.visit(this.handleTypeSuperTypeLoadingVisitor.reset(handleSuperType));
 			}
 			else {
 				throw new RuntimeException("type " + type + " cannot extend primitive type " + supertype);

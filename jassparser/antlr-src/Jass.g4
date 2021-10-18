@@ -100,6 +100,8 @@ baseExpression:
 	|
 	HEX_CONSTANT #HexIntegerLiteralExpression
 	|
+	DOLLAR_HEX_CONSTANT #DollarHexIntegerLiteralExpression
+	|
 	RAWCODE #RawcodeLiteralExpression
 	|
 	REAL #RealLiteralExpression
@@ -162,6 +164,8 @@ statement:
 	LOOP newlines statements ENDLOOP newlines # LoopStatement
 	|
 	IF ifStatementPartial # IfStatement
+	|
+	DEBUG statement # DebugStatement
 	;
 	 
 ifStatementPartial:
@@ -260,6 +264,7 @@ LOCAL : 'local';
 LOOP : 'loop';
 ENDLOOP : 'endloop';
 EXITWHEN : 'exitwhen';
+DEBUG : 'debug';
 
 fragment ESCAPED_QUOTE : '\\"';
 STRING_LITERAL :   '"' ( ESCAPED_QUOTE | ~('\n'|'\r') )*? '"';
@@ -268,6 +273,7 @@ STRING_LITERAL :   '"' ( ESCAPED_QUOTE | ~('\n'|'\r') )*? '"';
 INTEGER : [0]|([1-9][0-9]*) ;
 
 HEX_CONSTANT : '0x'(([0-9]|[a-f])*) ;
+DOLLAR_HEX_CONSTANT : '$'(([0-9]|[A-F])*) ;
 
 RAWCODE : ('\''.*?'\'');
 

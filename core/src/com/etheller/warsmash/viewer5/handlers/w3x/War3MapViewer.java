@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -417,6 +418,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public War3Map beginLoadingMap(final String mapFilePath) throws IOException {
+		if (!this.gameDataSource.has(mapFilePath)) {
+			final File mapFile = new File(mapFilePath);
+			if (mapFile.exists()) {
+				return new War3Map(this.gameDataSource, mapFile);
+			}
+			else {
+				throw new IllegalArgumentException("No such map file: " + mapFilePath);
+			}
+		}
 		return new War3Map(this.gameDataSource, mapFilePath);
 	}
 
@@ -783,6 +793,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								final float y = unitY - shadowY;
 								renderUnit.shadow = War3MapViewer.this.terrain.addUnitShadowSplat(texture, x, y,
 										x + shadowWidth, y + shadowHeight, 3, 0.5f);
+							}
+							else {
+								final String textureFallback = "ReplaceableTextures\\Shadows\\" + unitShadow + ".dds";
+								if (War3MapViewer.this.mapMpq.has(textureFallback)) {
+									final float x = unitX - shadowX;
+									final float y = unitY - shadowY;
+									renderUnit.shadow = War3MapViewer.this.terrain.addUnitShadowSplat(textureFallback,
+											x, y, x + shadowWidth, y + shadowHeight, 3, 0.5f);
+								}
 							}
 						}
 					}
@@ -1360,11 +1379,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 				final String unitShadow = row.getFieldAsString(UNIT_SHADOW, 0);
 				if ((unitShadow != null) && !"_".equals(unitShadow)) {
-					final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
+					String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
 					final float shadowX = row.getFieldAsFloat(UNIT_SHADOW_X, 0);
 					final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
 					final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
 					final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
+					if (!this.mapMpq.has(texture)) {
+						texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".dds"; // fallback
+					}
 					if (this.mapMpq.has(texture)) {
 						final float x = unitX - shadowX;
 						final float y = unitY - shadowY;

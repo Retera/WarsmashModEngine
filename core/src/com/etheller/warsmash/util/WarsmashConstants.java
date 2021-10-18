@@ -27,7 +27,7 @@ public class WarsmashConstants {
 
 	public static final boolean CATCH_CURSOR = false;
 	public static final boolean VERBOSE_LOGGING = true;
-	public static final boolean ENABLE_DEBUG = false;
+	public static final boolean ENABLE_DEBUG = true;
 	public static final char SPECIAL_ESCAPE_KEYCODE = 0x7E;
 
 	// My tileset loader is "always on top", even for local files. This is different

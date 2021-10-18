@@ -14,7 +14,19 @@ public enum CPlayerColor implements CHandle {
 	LIGHT_GRAY,
 	LIGHT_BLUE,
 	AQUA,
-	BROWN;
+	BROWN,
+	MAROON, // 1.32
+	NAVY,
+	TURQUOISE,
+	VIOLET,
+	WHEAT,
+	PEACH,
+	MINT,
+	LAVENDER,
+	COAL,
+	SNOW,
+	EMERALD,
+	PEANUT;
 
 	public static CPlayerColor[] VALUES = values();
 

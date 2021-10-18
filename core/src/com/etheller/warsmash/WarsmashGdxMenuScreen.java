@@ -205,7 +205,8 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 									musicPath = musicSLK.get(musicPath).getField("FileNames");
 								}
 								final String[] moreSplitMusics = musicPath.split(",");
-								final String finalMusicPath = moreSplitMusics[(int) (Math.random() * musics.length)];
+								final String finalMusicPath = moreSplitMusics[(int) (Math.random()
+										* moreSplitMusics.length)];
 								final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(
 										WarsmashGdxMenuScreen.this.viewer.dataSource, finalMusicPath));
 //							music.setVolume(0.2f);

@@ -267,8 +267,8 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 		final float yScale = worldHeight / getMinWorldHeight();
 		final float uiSceneWidth = 0.8f * xScale;
 		final float uiSceneHeight = 0.6f * yScale;
-		final float uiSceneX = ((0.8f - uiSceneWidth) / 2);
-		final float uiSceneY = ((0.6f - uiSceneHeight) / 2);
+		final float uiSceneX = (0.8f - uiSceneWidth) / 2;
+		final float uiSceneY = (0.6f - uiSceneHeight) / 2;
 		this.uiScene.camera.ortho(uiSceneX, uiSceneWidth + uiSceneX, uiSceneY, uiSceneHeight + uiSceneY, -1024f, 1024);
 	}
 
@@ -400,7 +400,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 			effectInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 			effectInstance.localLocation.x = (float) Math.cos(angle) * 256;
 			effectInstance.localLocation.y = (float) Math.sin(angle) * 256;
-			effectInstance.localRotation.setFromAxisRad(0, 0, 1, (float) (angle));
+			effectInstance.localRotation.setFromAxisRad(0, 0, 1, (float) angle);
 
 		}
 		final MdxModel mineModel = (MdxModel) this.viewer.load("buildings\\undead\\hauntedmine\\hauntedmine.mdx",
@@ -464,7 +464,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 			effectInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 			effectInstance.localLocation.x = (float) Math.cos(angle) * 256;
 			effectInstance.localLocation.y = (float) Math.sin(angle) * 256;
-			effectInstance.localRotation.setFromAxisRad(0, 0, 1, (float) (angle));
+			effectInstance.localRotation.setFromAxisRad(0, 0, 1, (float) angle);
 
 		}
 		final MdxModel mineModel = (MdxModel) this.viewer.load("units\\orc\\spiritwolf\\spiritwolf.mdx",
@@ -503,8 +503,8 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 	private void makeFourHundred(final Scene scene, final MdxModel model2) {
 		for (int i = 0; i < 400; i++) {
 			final MdxComplexInstance instance3 = (MdxComplexInstance) model2.addInstance(0);
-			instance3.localLocation.x = (((i % 20) - 10) * 128);
-			instance3.localLocation.y = (((i / 20) - 10) * 128);
+			instance3.localLocation.x = ((i % 20) - 10) * 128;
+			instance3.localLocation.y = ((i / 20) - 10) * 128;
 
 			instance3.setScene(scene);
 
@@ -519,8 +519,8 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 		final int n2 = n * n;
 		for (int i = 0; i < n2; i++) {
 			final MdxComplexInstance instance3 = (MdxComplexInstance) model2.addInstance(0);
-			instance3.localLocation.x = (((i % n) - (n / 2)) * 128);
-			instance3.localLocation.y = (((i / n) - (n / 2)) * 128);
+			instance3.localLocation.x = ((i % n) - (n / 2)) * 128;
+			instance3.localLocation.y = ((i / n) - (n / 2)) * 128;
 
 			instance3.setScene(scene);
 

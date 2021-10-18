@@ -6,7 +6,7 @@ public class WarsmashConstants {
 	 * With version, we use 0 for RoC, 1 for TFT emulation, and probably 2+ or
 	 * whatever for custom mods and other stuff
 	 */
-	public static int GAME_VERSION = 1;
+	public static int GAME_VERSION = 0;
 	public static final int REPLACEABLE_TEXTURE_LIMIT = 64;
 	public static final float SIMULATION_STEP_TIME = 1 / 20f;
 	public static final int PORT_NUMBER = 6115;
@@ -25,7 +25,7 @@ public class WarsmashConstants {
 	// find it yet so I used this
 	public static final String DEFAULT_STRING = "Default string";
 
-	public static final boolean CATCH_CURSOR = false;
+	public static final boolean CATCH_CURSOR = true;
 	public static final boolean VERBOSE_LOGGING = true;
 	public static final boolean ENABLE_DEBUG = true;
 	public static final char SPECIAL_ESCAPE_KEYCODE = 0x7E;

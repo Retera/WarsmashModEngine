@@ -202,6 +202,10 @@ public final class GlobalScope {
 			final CLimitOp limitOp, final double doubleValue) {
 		final VariableEvent variableEvent = new VariableEvent(trigger, limitOp, doubleValue);
 		final GlobalScopeAssignable assignableGlobal = getAssignableGlobal(varName);
+		if (assignableGlobal == null) {
+			throw new IllegalArgumentException(
+					"registerVariableEvent failed to find var with name: \"" + varName + "\"");
+		}
 		assignableGlobal.add(variableEvent);
 		return new RemovableTriggerEvent() {
 			@Override

@@ -25,7 +25,7 @@ public class NativeJassFunction extends AbstractJassFunction {
 		if (this.implementation == null) {
 			System.err.println(
 					"Call to native function that was declared but had no native implementation: " + this.name);
-			return null;
+			return this.returnType.getNullValue();
 //			throw new UnsupportedOperationException(
 //					"Call to native function that was declared but had no native implementation: " + this.name);
 		}

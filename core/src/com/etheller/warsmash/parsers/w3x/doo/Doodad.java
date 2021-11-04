@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.util.ParseUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -11,6 +12,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
 
 public class Doodad {
 	private War3ID id;
+	private War3ID skinId;
 	private int variation;
 	private final float[] location = new float[3];
 	private float angle;
@@ -22,12 +24,21 @@ public class Doodad {
 	private int editorId;
 	private final short[] u1 = new short[8]; // short to store unsigned byte, java problem
 
-	public void load(final LittleEndianDataInputStream stream, final int version) throws IOException {
+	public void load(final LittleEndianDataInputStream stream, final int version, final War3MapW3i mapInformation)
+			throws IOException {
 		this.id = ParseUtils.readWar3ID(stream);
 		this.variation = stream.readInt();
 		ParseUtils.readFloatArray(stream, this.location);
 		this.angle = stream.readFloat();
 		ParseUtils.readFloatArray(stream, this.scale);
+
+		if (((mapInformation.getGameVersionMajor() * 100) + mapInformation.getGameVersionMinor()) >= 132) {
+			this.skinId = ParseUtils.readWar3ID(stream);
+		}
+		else {
+			this.skinId = this.id;
+		}
+
 		this.flags = ParseUtils.readUInt8(stream);
 		this.life = ParseUtils.readUInt8(stream);
 

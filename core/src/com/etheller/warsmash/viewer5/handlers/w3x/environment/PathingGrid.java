@@ -281,6 +281,9 @@ public class PathingGrid {
 	public boolean isPathable(final float unitX, final float unitY, final MovementType pathingType,
 			final float collisionSize) {
 		if (collisionSize == 0f) {
+			if (!contains(unitX, unitY)) {
+				return false;
+			}
 			return pathingType.isPathable(getPathing(unitX, unitY));
 		}
 		for (int i = -1; i <= 1; i++) {

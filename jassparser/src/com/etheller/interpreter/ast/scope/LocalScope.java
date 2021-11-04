@@ -10,14 +10,14 @@ import com.etheller.interpreter.ast.value.JassValue;
 public final class LocalScope {
 	private final Map<String, Assignable> locals = new HashMap<>();
 
-	public void createLocal(final String name, final JassType type) {
-		this.locals.put(name, new Assignable(type));
+	public Assignable createLocal(final String name, final JassType type) {
+		final Assignable assignable = new Assignable(type);
+		this.locals.put(name, assignable);
+		return assignable;
 	}
 
 	public void createLocal(final String name, final JassType type, final JassValue value) {
-		final Assignable assignable = new Assignable(type);
-		assignable.setValue(value);
-		this.locals.put(name, assignable);
+		createLocal(name, type).setValue(value);
 	}
 
 	public void setLocal(final String name, final JassValue value) {

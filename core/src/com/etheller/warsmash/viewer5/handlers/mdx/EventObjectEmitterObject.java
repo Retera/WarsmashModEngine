@@ -55,6 +55,9 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 
 		@Override
 		public Object call(final InputStream data) {
+			if (data == null) {
+				return new MappedData();
+			}
 			final StringBuilder stringBuilder = new StringBuilder();
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(data, "utf-8"))) {
 				String line;

@@ -195,7 +195,7 @@ public final class War3ObjectDataChangeset {
 				this.kind = chid.asStringValue().charAt(0);
 				break;
 			default:
-				this.kind = 'a';
+				this.kind = this.expected;
 			}
 		}
 		return true;

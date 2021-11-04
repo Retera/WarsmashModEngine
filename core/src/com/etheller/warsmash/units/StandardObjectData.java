@@ -91,6 +91,10 @@ public class StandardObjectData {
 			profile.readTXT(this.source.getResourceAsStream("Units\\ItemFunc.txt"), true);
 			profile.readTXT(this.source.getResourceAsStream("Units\\ItemStrings.txt"), true);
 			itemData.readSLK(this.source.getResourceAsStream("Units\\ItemData.slk"));
+//			final InputStream itemSkin = this.source.getResourceAsStream("Units\\ItemSkin.txt");
+//			if (itemSkin != null) {
+//				profile.readTXT(itemSkin, true);
+//			}
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);

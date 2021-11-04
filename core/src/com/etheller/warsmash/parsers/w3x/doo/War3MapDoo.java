@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.util.ParseUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -20,13 +21,13 @@ public class War3MapDoo {
 	private final short[] u2 = new short[4];
 	private final List<TerrainDoodad> terrainDoodads = new ArrayList<>();
 
-	public War3MapDoo(final LittleEndianDataInputStream stream) throws IOException {
+	public War3MapDoo(final LittleEndianDataInputStream stream, final War3MapW3i mapInformation) throws IOException {
 		if (stream != null) {
-			this.load(stream);
+			this.load(stream, mapInformation);
 		}
 	}
 
-	private boolean load(final LittleEndianDataInputStream stream) throws IOException {
+	private boolean load(final LittleEndianDataInputStream stream, final War3MapW3i mapInformation) throws IOException {
 		final War3ID firstId = ParseUtils.readWar3ID(stream);
 		if (!MAGIC_NUMBER.equals(firstId)) {
 			return false;
@@ -38,7 +39,7 @@ public class War3MapDoo {
 		for (int i = 0, l = stream.readInt(); i < l; i++) {
 			final Doodad doodad = new Doodad();
 
-			doodad.load(stream, this.version);
+			doodad.load(stream, this.version, mapInformation);
 
 			this.doodads.add(doodad);
 		}

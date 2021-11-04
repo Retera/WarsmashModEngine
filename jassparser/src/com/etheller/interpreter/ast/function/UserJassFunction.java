@@ -32,10 +32,14 @@ public final class UserJassFunction extends AbstractJassFunction {
 		for (final JassStatement statement : this.statements) {
 			final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
 			if (returnValue != null) {
-				if (returnValue.visit(JassTypeGettingValueVisitor.getInstance()) != this.returnType) {
+				if (!this.returnType.isAssignableFrom(returnValue.visit(JassTypeGettingValueVisitor.getInstance()))) {
 					if ((this.returnType == JassType.NOTHING)
 							&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
 						return null;
+					}
+					else if ((this.returnType.isNullable())
+							&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
+						return this.returnType.getNullValue();
 					}
 					else {
 						throw new RuntimeException("Invalid return type");

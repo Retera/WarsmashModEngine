@@ -2,9 +2,11 @@ package com.etheller.interpreter.ast.value;
 
 public class PrimitiveJassType implements JassType {
 	private final String name;
+	private final JassValue nullValue;
 
-	public PrimitiveJassType(final String name) {
+	public PrimitiveJassType(final String name, final JassValue nullValue) {
 		this.name = name;
+		this.nullValue = nullValue;
 	}
 
 	@Override
@@ -29,7 +31,7 @@ public class PrimitiveJassType implements JassType {
 
 	@Override
 	public JassValue getNullValue() {
-		return null;
+		return this.nullValue;
 	}
 
 }

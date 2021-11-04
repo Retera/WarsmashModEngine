@@ -244,6 +244,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private GameTurnManager gameTurnManager;
 
+	private War3MapW3i lastLoadedMapInformation;
+
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas, final War3MapConfig mapConfig,
 			final GameTurnManager gameTurnManager) {
 		super(dataSource, canvas);
@@ -451,6 +453,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.localPlayerIndex = localPlayerIndex;
 
 		this.mapMpq = war3Map;
+		this.lastLoadedMapInformation = w3iFile;
 
 		final PathSolver wc3PathSolver = this.wc3PathSolver;
 
@@ -910,7 +913,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		this.walkableObjectsTree = new Quadtree<>(this.terrain.getEntireMap());
 		if (this.doodadsAndDestructiblesLoaded) {
-			this.loadDoodadsAndDestructibles(this.allObjectData);
+			this.loadDoodadsAndDestructibles(this.allObjectData, w3iFile);
 		}
 		else {
 			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
@@ -974,7 +977,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	 */
 	public void loadAfterUI() throws IOException {
 		if (this.unitsAndItemsLoaded) {
-			this.loadUnitsAndItems(this.allObjectData);
+			this.loadUnitsAndItems(this.allObjectData, this.lastLoadedMapInformation);
 		}
 		else {
 			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
@@ -985,13 +988,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.terrain.initShadows();
 	}
 
-	private void loadDoodadsAndDestructibles(final Warcraft3MapObjectData modifications) throws IOException {
+	private void loadDoodadsAndDestructibles(final Warcraft3MapObjectData modifications, final War3MapW3i w3iFile)
+			throws IOException {
 		this.applyModificationFile(this.doodadsData, this.doodadMetaData, modifications.getDoodads(),
 				WorldEditorDataType.DOODADS);
 		this.applyModificationFile(this.doodadsData, this.destructableMetaData, modifications.getDestructibles(),
 				WorldEditorDataType.DESTRUCTIBLES);
 
-		final War3MapDoo doo = this.mapMpq.readDoodads();
+		final War3MapDoo doo = this.mapMpq.readDoodads(w3iFile);
 
 		for (final com.etheller.warsmash.parsers.w3x.doo.Doodad doodad : doo.getDoodads()) {
 			if ((doodad.getFlags() & 0x2) == 0) {
@@ -1229,14 +1233,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	}
 
-	private void loadUnitsAndItems(final Warcraft3MapObjectData modifications) throws IOException {
+	private void loadUnitsAndItems(final Warcraft3MapObjectData modifications, final War3MapW3i mapInformation)
+			throws IOException {
 		final War3Map mpq = this.mapMpq;
 		this.unitsReady = false;
 
 		this.soundsetNameToSoundset = new HashMap<>();
 
 		if (this.dataSource.has("war3mapUnits.doo") && WarsmashConstants.LOAD_UNITS_FROM_WORLDEDIT_DATA) {
-			final War3MapUnitsDoo dooFile = mpq.readUnits();
+			final War3MapUnitsDoo dooFile = mpq.readUnits(mapInformation);
 
 			// Collect the units and items data.
 			for (final com.etheller.warsmash.parsers.w3x.unitsdoo.Unit unit : dooFile.getUnits()) {

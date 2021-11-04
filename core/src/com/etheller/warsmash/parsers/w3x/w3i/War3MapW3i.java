@@ -15,7 +15,10 @@ public class War3MapW3i {
 	private int version;
 	private int saves;
 	private int editorVersion;
-	private final short[] unknown1 = new short[16];
+	private int gameVersionMajor;
+	private int gameVersionMinor;
+	private int gameVersionPatch;
+	private int gameVersionBuild;
 	private String name;
 	private String author;
 	private String description;
@@ -63,7 +66,10 @@ public class War3MapW3i {
 		this.editorVersion = stream.readInt();
 
 		if (this.version > 27) {
-			ParseUtils.readUInt8Array(stream, this.unknown1);
+			this.gameVersionMajor = stream.readInt();
+			this.gameVersionMinor = stream.readInt();
+			this.gameVersionPatch = stream.readInt();
+			this.gameVersionBuild = stream.readInt();
 		}
 
 		this.name = ParseUtils.readUntilNull(stream);
@@ -182,7 +188,10 @@ public class War3MapW3i {
 		stream.writeInt(this.editorVersion);
 
 		if (this.version > 27) {
-			ParseUtils.writeUInt8Array(stream, this.unknown1);
+			stream.writeInt(this.gameVersionMajor);
+			stream.writeInt(this.gameVersionMinor);
+			stream.writeInt(this.gameVersionPatch);
+			stream.writeInt(this.gameVersionBuild);
 		}
 
 		ParseUtils.writeWithNullTerminator(stream, this.name);
@@ -312,10 +321,6 @@ public class War3MapW3i {
 
 	public int getEditorVersion() {
 		return this.editorVersion;
-	}
-
-	public short[] getUnknown1() {
-		return this.unknown1;
 	}
 
 	public String getName() {
@@ -452,5 +457,13 @@ public class War3MapW3i {
 
 	public List<RandomItemTable> getRandomItemTables() {
 		return this.randomItemTables;
+	}
+
+	public int getGameVersionMajor() {
+		return this.gameVersionMajor;
+	}
+
+	public int getGameVersionMinor() {
+		return this.gameVersionMinor;
 	}
 }

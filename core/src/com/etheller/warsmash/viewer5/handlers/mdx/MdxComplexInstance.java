@@ -705,10 +705,11 @@ public class MdxComplexInstance extends ModelInstance {
 	public MdxComplexInstance setSequence(final int id) {
 		final MdxModel model = (MdxModel) this.model;
 
-		final int lastSequence = this.sequence;
-		this.sequence = id;
-
 		if (model.ok) {
+
+			final int lastSequence = this.sequence;
+			this.sequence = id;
+
 			final List<Sequence> sequences = model.sequences;
 
 			if ((id < 0) || (id > (sequences.size() - 1))) {
@@ -789,6 +790,10 @@ public class MdxComplexInstance extends ModelInstance {
 			return this.model.bounds;
 		}
 		else {
+			if (((MdxModel) this.model).sequences.isEmpty()) {
+				System.err.println("Printing diagnostics for corrupted state MdxComplexInstance (about to crash)");
+				System.err.println("Model name: " + ((MdxModel) this.model).name);
+			}
 			final Bounds sequenceBounds = ((MdxModel) this.model).sequences.get(this.sequence).getBounds();
 			if (sequenceBounds.r == 0) {
 				return this.model.bounds;

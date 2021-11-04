@@ -31,6 +31,7 @@ public class JassArrayedAssignmentStatement implements JassStatement {
 			variable = globalScope.getAssignableGlobal(this.identifier);
 		}
 		if (variable.getValue() == null) {
+
 			throw new RuntimeException("Unable to assign uninitialized array");
 		}
 		final ArrayJassValue arrayValue = variable.getValue().visit(ArrayJassValueVisitor.getInstance());

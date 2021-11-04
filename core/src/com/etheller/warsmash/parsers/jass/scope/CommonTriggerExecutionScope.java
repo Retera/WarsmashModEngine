@@ -9,6 +9,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialogButton;
 
 public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private CUnit triggeringUnit;
@@ -65,6 +67,8 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private CItem orderTargetItem;
 	private CUnit orderTargetUnit;
 	private CWidget triggerWidget;
+	private CScriptDialog clickedDialog;
+	private CScriptDialogButton clickedButton;
 
 	public CommonTriggerExecutionScope(final Trigger triggeringTrigger) {
 		super(triggeringTrigger);
@@ -136,6 +140,8 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		this.orderTargetItem = parentScope.orderTargetItem;
 		this.orderTargetUnit = parentScope.orderTargetUnit;
 		this.triggerWidget = parentScope.triggerWidget;
+		this.clickedDialog = parentScope.clickedDialog;
+		this.clickedButton = parentScope.clickedButton;
 	}
 
 	public CUnit getEnumUnit() {
@@ -354,6 +360,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return this.orderTargetUnit;
 	}
 
+	public CScriptDialogButton getClickedButton() {
+		return this.clickedButton;
+	}
+
+	public CScriptDialog getClickedDialog() {
+		return this.clickedDialog;
+	}
+
 	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
 			final CUnit filterUnit) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
@@ -426,6 +440,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 			final TriggerExecutionScope parentScope, final CUnit enteringUnit, final CRegion triggeringRegion) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, parentScope);
 		scope.enteringUnit = enteringUnit;
+		scope.triggeringUnit = enteringUnit;
 		scope.triggeringRegion = triggeringRegion;
 		return scope;
 	}
@@ -434,18 +449,21 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 			final TriggerExecutionScope parentScope, final CUnit leavingUnit, final CRegion triggeringRegion) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, parentScope);
 		scope.leavingUnit = leavingUnit;
+		scope.triggeringUnit = leavingUnit;
 		scope.triggeringRegion = triggeringRegion;
 		return scope;
 	}
 
 	public static CommonTriggerExecutionScope playerHeroLevelScope(final Trigger trigger, final CUnit hero) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggeringUnit = hero;
 		scope.levelingUnit = hero;
 		return scope;
 	}
 
 	public static CommonTriggerExecutionScope playerHeroRevivableScope(final Trigger trigger, final CUnit hero) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggeringUnit = hero;
 		scope.revivableUnit = hero;
 		return scope;
 	}
@@ -463,6 +481,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	public static CommonTriggerExecutionScope widgetTriggerScope(final Trigger trigger, final CWidget triggerWidget) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.triggerWidget = triggerWidget;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope triggerDialogScope(final Trigger trigger,
+			final CScriptDialog clickedDialog, final CScriptDialogButton clickedButton) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.clickedDialog = clickedDialog;
+		scope.clickedButton = clickedButton;
 		return scope;
 	}
 

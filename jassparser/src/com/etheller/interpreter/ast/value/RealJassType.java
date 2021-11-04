@@ -2,8 +2,8 @@ package com.etheller.interpreter.ast.value;
 
 public class RealJassType extends PrimitiveJassType {
 
-	public RealJassType(final String name) {
-		super(name);
+	public RealJassType(final String name, final JassValue nullValue) {
+		super(name, nullValue);
 	}
 
 	@Override

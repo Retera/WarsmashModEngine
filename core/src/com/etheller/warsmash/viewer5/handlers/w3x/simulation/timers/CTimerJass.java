@@ -8,15 +8,18 @@ import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 
-public class CTimerJass extends CTimer {
+public class CTimerJass extends CTimer implements CHandle {
 	private JassFunction handlerFunc;
 	private final GlobalScope jassGlobalScope;
+	private final int handleId;
 	private final List<Trigger> eventTriggers = new ArrayList<>();
 
-	public CTimerJass(final GlobalScope jassGlobalScope) {
+	public CTimerJass(final GlobalScope jassGlobalScope, final int handleId) {
 		this.jassGlobalScope = jassGlobalScope;
+		this.handleId = handleId;
 	}
 
 	public void setHandlerFunc(final JassFunction handlerFunc) {
@@ -27,7 +30,9 @@ public class CTimerJass extends CTimer {
 	public void onFire() {
 		final CommonTriggerExecutionScope handlerScope = CommonTriggerExecutionScope.expiringTimer(null, this);
 		try {
-			this.handlerFunc.call(Collections.emptyList(), this.jassGlobalScope, handlerScope);
+			if (this.handlerFunc != null) {
+				this.handlerFunc.call(Collections.emptyList(), this.jassGlobalScope, handlerScope);
+			}
 		}
 		catch (final Exception e) {
 			throw new JassException(this.jassGlobalScope, "Exception during jass time fire", e);
@@ -46,5 +51,10 @@ public class CTimerJass extends CTimer {
 
 	public void removeEvent(final Trigger trigger) {
 		this.eventTriggers.remove(trigger);
+	}
+
+	@Override
+	public int getHandleId() {
+		return this.handleId;
 	}
 }

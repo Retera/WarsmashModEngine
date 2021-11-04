@@ -46,7 +46,8 @@ public class CAbilityHero extends AbstractCAbility {
 		this.intelligence = new HeroStatValue(unitType.getStartingIntelligence(), unitType.getIntelligencePerLevel());
 		calculateDerivatedFields(game, unit);
 
-		final int nameIndex = game.getSeededRandom().nextInt(unitType.getProperNamesCount());
+		final int properNamesCount = unitType.getProperNamesCount();
+		final int nameIndex = properNamesCount > 0 ? game.getSeededRandom().nextInt(properNamesCount) : 0;
 
 		String properName;
 		final List<String> heroProperNames = unitType.getHeroProperNames();

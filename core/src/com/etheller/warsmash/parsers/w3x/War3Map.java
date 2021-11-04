@@ -106,20 +106,20 @@ public class War3Map implements DataSource {
 		return pathingMap;
 	}
 
-	public War3MapDoo readDoodads() throws IOException {
+	public War3MapDoo readDoodads(final War3MapW3i war3MapW3i) throws IOException {
 		War3MapDoo doodadsFile;
 		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(
 				this.dataSource.getResourceAsStream("war3map.doo"))) {
-			doodadsFile = new War3MapDoo(stream);
+			doodadsFile = new War3MapDoo(stream, war3MapW3i);
 		}
 		return doodadsFile;
 	}
 
-	public War3MapUnitsDoo readUnits() throws IOException {
+	public War3MapUnitsDoo readUnits(final War3MapW3i war3MapW3i) throws IOException {
 		War3MapUnitsDoo unitsFile;
 		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(
 				this.dataSource.getResourceAsStream("war3mapUnits.doo"))) {
-			unitsFile = new War3MapUnitsDoo(stream);
+			unitsFile = new War3MapUnitsDoo(stream, war3MapW3i);
 		}
 		return unitsFile;
 	}

@@ -36,6 +36,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
@@ -168,6 +169,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandL
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.MultiSelectionIconListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.QueueIconListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialogButton;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CTimerDialog;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
@@ -3833,5 +3836,44 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	public void displayTimedText(final float x, final float y, final float duration, final String message) {
 		showGameMessage(message, duration); // TODO x y
+	}
+
+	public CScriptDialog createScriptDialog(final GlobalScope globalScope) {
+		final SimpleFrame scriptDialog = (SimpleFrame) this.rootFrame.createFrame("ScriptDialog", this.rootFrame, 0, 0);
+		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+		scriptDialog.setVisible(false);
+		final StringFrame scriptDialogTextFrame = (StringFrame) this.rootFrame.getFrameByName("ScriptDialogText", 0);
+		scriptDialog.positionBounds(this.rootFrame, this.uiViewport);
+		return new CScriptDialog(globalScope, scriptDialog, scriptDialogTextFrame);
+	}
+
+	public CScriptDialogButton createScriptDialogButton(final CScriptDialog scriptDialog, final String text,
+			final char hotkey) {
+		// TODO use hotkey
+		final GlueTextButtonFrame scriptDialogButton = (GlueTextButtonFrame) this.rootFrame
+				.createFrame("ScriptDialogButton", scriptDialog.getScriptDialogFrame(), 0, 0);
+		scriptDialogButton.setHeight(GameUI.convertY(this.uiViewport, 0.03f));
+		final StringFrame scriptDialogTextFrame = (StringFrame) this.rootFrame.getFrameByName("ScriptDialogButtonText",
+				0);
+		this.rootFrame.setText(scriptDialogTextFrame, text);
+		scriptDialogButton.addSetPoint(new SetPoint(FramePoint.TOP, scriptDialog.getLastAddedComponent(),
+				FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, -0.005f)));
+		final CScriptDialogButton newButton = new CScriptDialogButton(scriptDialogButton, scriptDialogTextFrame);
+		scriptDialog.addButton(this.rootFrame, this.uiViewport, newButton);
+		return newButton;
+	}
+
+	public void destroyDialog(final CScriptDialog dialog) {
+		this.rootFrame.remove(dialog.getScriptDialogFrame());
+	}
+
+	public void clearDialog(final CScriptDialog dialog) {
+		destroyDialog(dialog);
+		final SimpleFrame scriptDialog = (SimpleFrame) this.rootFrame.createFrame("ScriptDialog", this.rootFrame, 0, 0);
+		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+		scriptDialog.setVisible(false);
+		final StringFrame scriptDialogTextFrame = (StringFrame) this.rootFrame.getFrameByName("ScriptDialogText", 0);
+		scriptDialog.positionBounds(this.rootFrame, this.uiViewport);
+		dialog.reset(scriptDialog, scriptDialogTextFrame);
 	}
 }

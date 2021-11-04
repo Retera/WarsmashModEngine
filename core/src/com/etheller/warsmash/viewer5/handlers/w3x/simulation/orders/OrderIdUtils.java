@@ -29,7 +29,11 @@ public class OrderIdUtils {
 	}
 
 	public static int getOrderId(final String orderIdString) {
-		return stringToOrderId.get(orderIdString);
+		final Integer orderId = stringToOrderId.get(orderIdString.toLowerCase());
+		if (orderId == null) {
+			return 0;
+		}
+		return orderId;
 	}
 
 	public static String getStringFromOrderId(final Integer orderId) {

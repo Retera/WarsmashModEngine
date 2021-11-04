@@ -65,7 +65,13 @@ public class Trigger {
 				action.call(Collections.emptyList(), globalScope, triggerScope);
 			}
 			catch (final Exception e) {
-				throw new JassException(globalScope, "Exception during Trigger action execute", e);
+				if (e.getMessage().startsWith("Needs to sleep")) {
+					// TODO not good design
+					e.printStackTrace();
+				}
+				else {
+					throw new JassException(globalScope, "Exception during Trigger action execute", e);
+				}
 			}
 		}
 	}

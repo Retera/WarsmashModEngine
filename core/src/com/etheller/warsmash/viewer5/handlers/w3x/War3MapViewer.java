@@ -559,12 +559,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final War3ID typeId = source.getTypeId();
 						final int projectileSpeed = unitAttack.getProjectileSpeed();
 						final float projectileArc = unitAttack.getProjectileArc();
-						String missileArt = unitAttack.getProjectileArt();
+						final String missileArt = unitAttack.getProjectileArt();
 						final float projectileLaunchX = simulation.getUnitData().getProjectileLaunchX(typeId);
 						final float projectileLaunchY = simulation.getUnitData().getProjectileLaunchY(typeId);
 						final float projectileLaunchZ = simulation.getUnitData().getProjectileLaunchZ(typeId);
 
-						missileArt = mdx(missileArt);
 						final float facing = launchFacing;
 						final float sinFacing = (float) Math.sin(facing);
 						final float cosFacing = (float) Math.cos(facing);
@@ -576,8 +575,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final CAttackProjectile simulationAttackProjectile = new CAttackProjectile(x, y,
 								projectileSpeed, target, source, damage, unitAttack, bounceIndex, attackListener);
 
-						final MdxModel model = (MdxModel) load(missileArt, War3MapViewer.this.mapPathSolver,
-								War3MapViewer.this.solverParams);
+						final MdxModel model = loadModelMdx(missileArt);
 						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
 						modelInstance.setTeamColor(source.getPlayerIndex());
 						modelInstance.setScene(War3MapViewer.this.worldScene);
@@ -601,12 +599,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							final CUnitAttackInstant unitAttack, final CWidget target) {
 						final War3ID typeId = source.getTypeId();
 
-						String missileArt = unitAttack.getProjectileArt();
+						final String missileArt = unitAttack.getProjectileArt();
 						final float projectileLaunchX = War3MapViewer.this.simulation.getUnitData()
 								.getProjectileLaunchX(typeId);
 						final float projectileLaunchY = War3MapViewer.this.simulation.getUnitData()
 								.getProjectileLaunchY(typeId);
-						missileArt = mdx(missileArt);
 						final float facing = (float) Math.toRadians(source.getFacing());
 						final float sinFacing = (float) Math.sin(facing);
 						final float cosFacing = (float) Math.cos(facing);
@@ -622,8 +619,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final float height = War3MapViewer.this.terrain.getGroundHeight(targetX, targetY)
 								+ target.getFlyHeight() + target.getImpactZ();
 
-						final MdxModel model = (MdxModel) load(missileArt, War3MapViewer.this.mapPathSolver,
-								War3MapViewer.this.solverParams);
+						final MdxModel model = loadModelMdx(missileArt);
 						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
 						modelInstance.setTeamColor(source.getPlayerIndex());
 						SequenceUtils.randomBirthSequence(modelInstance);
@@ -818,7 +814,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void spawnEffectOnUnit(final CUnit unit, final String effectPath) {
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(unit);
-						final MdxModel spawnedEffectModel = (MdxModel) load(mdx(effectPath), PathSolver.DEFAULT, null);
+						final MdxModel spawnedEffectModel = loadModelMdx(effectPath);
 						if (spawnedEffectModel != null) {
 							final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel
 									.addInstance();
@@ -925,7 +921,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public void spawnFxOnOrigin(final RenderUnit renderUnit, final String heroLevelUpArt) {
-		final MdxModel heroLevelUpModel = loadModel(heroLevelUpArt);
+		final MdxModel heroLevelUpModel = loadModelMdx(heroLevelUpArt);
 		if (heroLevelUpModel != null) {
 			final MdxComplexInstance modelInstance = (MdxComplexInstance) heroLevelUpModel.addInstance();
 			modelInstance.setTeamColor(renderUnit.playerIndex);
@@ -1433,8 +1429,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			MdxModel specialArtModel;
 			if (unitSpecialArtPath != null) {
 				try {
-					specialArtModel = (MdxModel) this.load(mdx(unitSpecialArtPath), this.mapPathSolver,
-							this.solverParams);
+					specialArtModel = loadModelMdx(unitSpecialArtPath);
 				}
 				catch (final Exception exc) {
 					exc.printStackTrace();
@@ -1444,11 +1439,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			else {
 				specialArtModel = null;
 			}
-			final MdxModel model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
+			final MdxModel model = loadModelMdx(path);
 			MdxModel portraitModel;
 			final String portraitPath = path.substring(0, path.length() - 4) + "_portrait.mdx";
 			if (this.dataSource.has(portraitPath)) {
-				portraitModel = (MdxModel) this.load(portraitPath, this.mapPathSolver, this.solverParams);
+				portraitModel = loadModelMdx(portraitPath);
 			}
 			else {
 				portraitModel = model;
@@ -2118,17 +2113,16 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public void setDayNightModels(final String terrainDNCFile, final String unitDNCFile) {
-		final MdxModel terrainDNCModel = (MdxModel) load(mdx(terrainDNCFile), PathSolver.DEFAULT, null);
+		final MdxModel terrainDNCModel = loadModelMdx(terrainDNCFile);
 		this.dncTerrain = (MdxComplexInstance) terrainDNCModel.addInstance();
 		this.dncTerrain.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		this.dncTerrain.setSequence(0);
-		final MdxModel unitDNCModel = (MdxModel) load(mdx(unitDNCFile), PathSolver.DEFAULT, null);
+		final MdxModel unitDNCModel = loadModelMdx(unitDNCFile);
 		this.dncUnit = (MdxComplexInstance) unitDNCModel.addInstance();
 		this.dncUnit.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		this.dncUnit.setSequence(0);
-		final MdxModel targetDNCModel = (MdxModel) load(
-				mdx("Environment\\DNC\\DNCLordaeron\\DNCLordaeronTarget\\DNCLordaeronTarget.mdl"), PathSolver.DEFAULT,
-				null);
+		final MdxModel targetDNCModel = loadModelMdx(
+				"Environment\\DNC\\DNCLordaeron\\DNCLordaeronTarget\\DNCLordaeronTarget.mdl");
 		this.dncTarget = (MdxComplexInstance) targetDNCModel.addInstance();
 		this.dncTarget.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		this.dncTarget.setSequence(0);
@@ -2163,10 +2157,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			iconPath += ".blp";
 		}
 		return iconPath;
-	}
-
-	public MdxModel loadModel(final String path) {
-		return (MdxModel) load(mdx(path), PathSolver.DEFAULT, null);
 	}
 
 	@Override
@@ -2337,7 +2327,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final String attachPointName) {
 		if (targetWidget instanceof CUnit) {
 			final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(targetWidget);
-			final MdxModel spawnedEffectModel = (MdxModel) load(mdx(modelName), PathSolver.DEFAULT, null);
+			final MdxModel spawnedEffectModel = loadModelMdx(modelName);
 			if (spawnedEffectModel != null) {
 				final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel.addInstance();
 				modelInstance.setTeamColor(renderUnit.playerIndex);
@@ -2359,5 +2349,19 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			throw new UnsupportedOperationException("API for addSpecialEffectTarget() on destructable is NYI");
 		}
 		return null;
+	}
+
+	public MdxModel loadModelMdx(final String path) {
+		final String mdxPath = mdx(path);
+		if (this.dataSource.has(mdxPath)) {
+			return (MdxModel) load(mdxPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
+		}
+		else {
+			final String mdlPath = mdl(mdxPath);
+			if (this.dataSource.has(mdlPath)) {
+				return (MdxModel) load(mdlPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
+			}
+		}
+		return (MdxModel) load(mdxPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
 	}
 }

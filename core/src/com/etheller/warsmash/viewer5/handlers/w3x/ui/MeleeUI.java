@@ -1097,18 +1097,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))),
 				new AbilityActivationErrorHandler("", this.war3MapViewer.getUiSounds().getSound("InterfaceError")));
 
-		final MdxModel rallyModel = (MdxModel) this.war3MapViewer.load(
-				War3MapViewer.mdx(this.rootFrame.getSkinField("RallyIndicatorDst")), this.war3MapViewer.mapPathSolver,
-				this.war3MapViewer.solverParams);
+		final MdxModel rallyModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("RallyIndicatorDst"));
 		this.rallyPointInstance = (MdxComplexInstance) rallyModel.addInstance();
 		this.rallyPointInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
 				this.war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
 		this.rallyPointInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		SequenceUtils.randomStandSequence(this.rallyPointInstance);
 		this.rallyPointInstance.hide();
-		this.waypointModel = (MdxModel) this.war3MapViewer.load(
-				War3MapViewer.mdx(this.rootFrame.getSkinField("WaypointIndicator")), this.war3MapViewer.mapPathSolver,
-				this.war3MapViewer.solverParams);
+		this.waypointModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("WaypointIndicator"));
 
 		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
 		fontParam.size = (int) GameUI.convertY(this.uiViewport, 0.012f);
@@ -1823,7 +1819,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final War3ID buildingTypeId = new War3ID(MeleeUI.this.activeCommandOrderId);
 				MeleeUI.this.cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
 				final String unitModelPath = viewer.getUnitModelPath(unitData.get(buildingTypeId));
-				final MdxModel model = (MdxModel) viewer.load(unitModelPath, viewer.mapPathSolver, viewer.solverParams);
+				final MdxModel model = viewer.loadModelMdx(unitModelPath);
 				MeleeUI.this.cursorModelInstance = (MdxComplexInstance) model.addInstance();
 //				MeleeUI.this.cursorModelInstance.setVertexColor(new float[] { 1, 1, 1, 0.5f });
 				final int playerColorIndex = viewer.simulation

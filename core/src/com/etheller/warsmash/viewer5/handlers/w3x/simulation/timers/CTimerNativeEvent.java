@@ -16,9 +16,7 @@ public class CTimerNativeEvent extends CTimer {
 	@Override
 	public void onFire() {
 		final TriggerExecutionScope triggerScope = new TriggerExecutionScope(this.trigger);
-		if (this.trigger.evaluate(this.jassGlobalScope, triggerScope)) {
-			this.trigger.execute(this.jassGlobalScope, triggerScope);
-		}
+		this.jassGlobalScope.queueTrigger(null, null, this.trigger, triggerScope, triggerScope);
 	}
 
 }

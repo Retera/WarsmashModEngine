@@ -35,13 +35,11 @@ public class CTimerJass extends CTimer implements CHandle {
 			}
 		}
 		catch (final Exception e) {
-			throw new JassException(this.jassGlobalScope, "Exception during jass time fire", e);
+			throw new JassException(this.jassGlobalScope, "Exception during jass timer fire", e);
 		}
 		for (final Trigger trigger : this.eventTriggers) {
 			final CommonTriggerExecutionScope executionScope = CommonTriggerExecutionScope.expiringTimer(trigger, this);
-			if (trigger.evaluate(this.jassGlobalScope, executionScope)) {
-				trigger.execute(this.jassGlobalScope, executionScope);
-			}
+			this.jassGlobalScope.queueTrigger(null, null, trigger, executionScope, executionScope);
 		}
 	}
 

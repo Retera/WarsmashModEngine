@@ -135,6 +135,8 @@ public class CUnit extends CWidget {
 	private int foodMade;
 	private int foodUsed;
 
+	private int triggerEditorCustomValue;
+
 	private List<CUnitAttack> unitSpecificAttacks;
 	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
 	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
@@ -1065,7 +1067,8 @@ public class CUnit extends CWidget {
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {
-				event.fire(this, CommonTriggerExecutionScope.unitDeathScope(event.getTrigger(), this, source));
+				event.fire(this, CommonTriggerExecutionScope.unitDeathScope(JassGameEventsWar3.EVENT_UNIT_DEATH,
+						event.getTrigger(), this, source));
 			}
 		}
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
@@ -1979,4 +1982,11 @@ public class CUnit extends CWidget {
 		return false;
 	}
 
+	public int getTriggerEditorCustomValue() {
+		return this.triggerEditorCustomValue;
+	}
+
+	public void setTriggerEditorCustomValue(final int triggerEditorCustomValue) {
+		this.triggerEditorCustomValue = triggerEditorCustomValue;
+	}
 }

@@ -14,6 +14,7 @@ import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
 public class CScriptDialog {
 	private final GlobalScope globalScope;
@@ -69,11 +70,9 @@ public class CScriptDialog {
 	public void onButtonClick(final CScriptDialogButton cScriptDialogButton) {
 		this.scriptDialogFrame.setVisible(false);
 		for (final Trigger trigger : this.eventTriggers) {
-			final CommonTriggerExecutionScope scope = CommonTriggerExecutionScope.triggerDialogScope(trigger, this,
-					cScriptDialogButton);
-			if (trigger.evaluate(this.globalScope, scope)) {
-				trigger.execute(this.globalScope, scope);
-			}
+			final CommonTriggerExecutionScope scope = CommonTriggerExecutionScope
+					.triggerDialogScope(JassGameEventsWar3.EVENT_DIALOG_CLICK, trigger, this, cScriptDialogButton);
+			this.globalScope.queueTrigger(null, null, trigger, scope, scope);
 		}
 	}
 

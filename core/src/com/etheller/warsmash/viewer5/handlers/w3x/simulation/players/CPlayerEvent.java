@@ -39,13 +39,7 @@ public class CPlayerEvent implements RemovableTriggerEvent {
 	}
 
 	public void fire(final CUnit hero, final TriggerExecutionScope scope) {
-		if (this.filter != null) {
-			if (!this.filter.evaluate(this.globalScope, CommonTriggerExecutionScope.filterScope(scope, hero))) {
-				return;
-			}
-		}
-		if (this.trigger.evaluate(this.globalScope, scope)) {
-			this.trigger.execute(this.globalScope, scope);
-		}
+		this.globalScope.queueTrigger(this.filter, CommonTriggerExecutionScope.filterScope(scope, hero), this.trigger,
+				scope, scope);
 	}
 }

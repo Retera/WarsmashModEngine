@@ -1,6 +1,7 @@
 package com.etheller.interpreter.ast.statement;
 
 import com.etheller.interpreter.ast.Assignable;
+import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.expression.JassExpression;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
@@ -31,16 +32,22 @@ public class JassArrayedAssignmentStatement implements JassStatement {
 			variable = globalScope.getAssignableGlobal(this.identifier);
 		}
 		if (variable.getValue() == null) {
-
-			throw new RuntimeException("Unable to assign uninitialized array");
+			throw new JassException(globalScope, "Unable to assign uninitialized array", null);
 		}
 		final ArrayJassValue arrayValue = variable.getValue().visit(ArrayJassValueVisitor.getInstance());
 		if (arrayValue != null) {
-			arrayValue.set(index.visit(IntegerJassValueVisitor.getInstance()),
-					this.expression.evaluate(globalScope, localScope, triggerScope));
+			final Integer indexInt = index.visit(IntegerJassValueVisitor.getInstance());
+			if ((indexInt != null) && (indexInt >= 0)) {
+				arrayValue.set(indexInt, this.expression.evaluate(globalScope, localScope, triggerScope));
+			}
+			else {
+				throw new JassException(globalScope,
+						"Attempted to assign " + this.identifier + "[" + indexInt + "], which was an illegal index",
+						null);
+			}
 		}
 		else {
-			throw new RuntimeException("Not an array");
+			throw new JassException(globalScope, "Not an array", null);
 		}
 		return null;
 	}

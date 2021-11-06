@@ -2,6 +2,7 @@ package com.etheller.interpreter.ast.scope;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import com.etheller.interpreter.ast.debug.JassStackElement;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
 import com.etheller.interpreter.ast.util.JassSettings;
@@ -31,6 +33,7 @@ public final class GlobalScope {
 	private final Map<String, JassFunction> functions = new HashMap<>();
 	private final Map<String, JassType> types = new HashMap<>();
 	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
+	private final ArrayDeque<QueuedCallback> triggerQueue = new ArrayDeque<>();
 
 	public final HandleJassType handleType;
 
@@ -213,5 +216,71 @@ public final class GlobalScope {
 				assignableGlobal.remove(variableEvent);
 			}
 		};
+	}
+
+	public void queueTrigger(final TriggerBooleanExpression filter, final TriggerExecutionScope filterScope,
+			final Trigger trigger, final TriggerExecutionScope evaluateScope,
+			final TriggerExecutionScope executeScope) {
+		this.triggerQueue.add(new QueuedTrigger(filter, filterScope, trigger, evaluateScope, executeScope));
+	}
+
+	public void queueFunction(final JassFunction function, final TriggerExecutionScope scope) {
+		this.triggerQueue.add(new QueuedFunction(function, scope));
+	}
+
+	public void replayQueuedTriggers() {
+		for (final QueuedCallback trigger : this.triggerQueue) {
+			trigger.fire(this);
+		}
+		this.triggerQueue.clear();
+	}
+
+	private static interface QueuedCallback {
+		void fire(GlobalScope globalScope);
+	}
+
+	private static final class QueuedFunction implements QueuedCallback {
+		private final JassFunction function;
+		private final TriggerExecutionScope scope;
+
+		public QueuedFunction(final JassFunction function, final TriggerExecutionScope scope) {
+			this.function = function;
+			this.scope = scope;
+		}
+
+		@Override
+		public void fire(final GlobalScope globalScope) {
+			this.function.call(Collections.<JassValue>emptyList(), globalScope, this.scope);
+		}
+	}
+
+	private static final class QueuedTrigger implements QueuedCallback {
+		private final TriggerBooleanExpression filter;
+		private final TriggerExecutionScope filterScope;
+		private final Trigger trigger;
+		private final TriggerExecutionScope evaluateScope;
+		private final TriggerExecutionScope executeScope;
+
+		public QueuedTrigger(final TriggerBooleanExpression filter, final TriggerExecutionScope filterScope,
+				final Trigger trigger, final TriggerExecutionScope evaluateScope,
+				final TriggerExecutionScope executeScope) {
+			this.filter = filter;
+			this.filterScope = filterScope;
+			this.trigger = trigger;
+			this.evaluateScope = evaluateScope;
+			this.executeScope = executeScope;
+		}
+
+		@Override
+		public void fire(final GlobalScope globalScope) {
+			if (this.filter != null) {
+				if (!this.filter.evaluate(globalScope, this.filterScope)) {
+					return;
+				}
+			}
+			if (this.trigger.evaluate(globalScope, this.evaluateScope)) {
+				this.trigger.execute(globalScope, this.executeScope);
+			}
+		}
 	}
 }

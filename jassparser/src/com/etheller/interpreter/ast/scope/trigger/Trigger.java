@@ -39,6 +39,10 @@ public class Trigger {
 		this.conditions.remove(conditionIndex);
 	}
 
+	public void clearConditions() {
+		this.conditions.clear();
+	}
+
 	public int getEvalCount() {
 		return this.evalCount;
 	}

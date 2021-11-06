@@ -26,9 +26,12 @@ public class DebuggingJassFunction implements JassFunction {
 			final TriggerExecutionScope triggerScope) {
 		globalScope.pushJassStack(new JassStackElement(this.sourceFile, this.functionName, this.lineNo));
 		globalScope.setLineNumber(this.lineNo);
-		final JassValue returnValue = this.delegate.call(arguments, globalScope, triggerScope);
-		globalScope.popJassStack();
-		return returnValue;
+		try {
+			return this.delegate.call(arguments, globalScope, triggerScope);
+		}
+		finally {
+			globalScope.popJassStack();
+		}
 	}
 
 }

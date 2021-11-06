@@ -218,8 +218,15 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 							singleModelScene(WarsmashGdxMenuScreen.this.scene, War3MapViewer.mdx(rootFrame
 									.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION)),
 									"Stand");
-							WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras
-									.get(0);
+							if (!WarsmashGdxMenuScreen.this.mainModel.cameras.isEmpty()) {
+								WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras
+										.get(0);
+							}
+							else {
+								WarsmashGdxMenuScreen.this.mainInstance.detach();
+								WarsmashGdxMenuScreen.this.mainInstance.setLocation(0, 0, 0);
+								WarsmashGdxMenuScreen.this.mainInstance.setScene(WarsmashGdxMenuScreen.this.uiScene);
+							}
 						}
 					});
 
@@ -344,7 +351,14 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 		}
 		else {
 			singleModelScene(this.scene, War3MapViewer.mdx(path), "birth");
-			WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras.get(0);
+			if (!WarsmashGdxMenuScreen.this.mainModel.cameras.isEmpty()) {
+				WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras.get(0);
+			}
+			else {
+				WarsmashGdxMenuScreen.this.mainInstance.detach();
+				WarsmashGdxMenuScreen.this.mainInstance.setLocation(0, 0, 1024);
+				WarsmashGdxMenuScreen.this.mainInstance.setScene(WarsmashGdxMenuScreen.this.uiScene);
+			}
 			// this hack is because we only have the queued animation system in RenderWidget
 			// which is stupid and back and needs to get moved to the model instance
 			// itself... our model instance class is a

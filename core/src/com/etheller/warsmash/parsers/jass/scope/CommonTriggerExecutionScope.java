@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialogButton;
 
@@ -69,6 +70,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private CWidget triggerWidget;
 	private CScriptDialog clickedDialog;
 	private CScriptDialogButton clickedButton;
+	private JassGameEventsWar3 triggerEventId;
 
 	public CommonTriggerExecutionScope(final Trigger triggeringTrigger) {
 		super(triggeringTrigger);
@@ -142,6 +144,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		this.triggerWidget = parentScope.triggerWidget;
 		this.clickedDialog = parentScope.clickedDialog;
 		this.clickedButton = parentScope.clickedButton;
+		this.triggerEventId = parentScope.triggerEventId;
 	}
 
 	public CUnit getEnumUnit() {
@@ -368,6 +371,10 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return this.clickedDialog;
 	}
 
+	public JassGameEventsWar3 getTriggerEventId() {
+		return this.triggerEventId;
+	}
+
 	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
 			final CUnit filterUnit) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
@@ -436,67 +443,79 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope unitEnterRegionScope(final Trigger trigger,
-			final TriggerExecutionScope parentScope, final CUnit enteringUnit, final CRegion triggeringRegion) {
+	public static CommonTriggerExecutionScope unitEnterRegionScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final TriggerExecutionScope parentScope, final CUnit enteringUnit,
+			final CRegion triggeringRegion) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, parentScope);
 		scope.enteringUnit = enteringUnit;
 		scope.triggeringUnit = enteringUnit;
 		scope.triggeringRegion = triggeringRegion;
+		scope.triggerEventId = triggerEventId;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope unitLeaveRegionScope(final Trigger trigger,
-			final TriggerExecutionScope parentScope, final CUnit leavingUnit, final CRegion triggeringRegion) {
+	public static CommonTriggerExecutionScope unitLeaveRegionScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final TriggerExecutionScope parentScope, final CUnit leavingUnit,
+			final CRegion triggeringRegion) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, parentScope);
 		scope.leavingUnit = leavingUnit;
 		scope.triggeringUnit = leavingUnit;
 		scope.triggeringRegion = triggeringRegion;
+		scope.triggerEventId = triggerEventId;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope playerHeroLevelScope(final Trigger trigger, final CUnit hero) {
+	public static CommonTriggerExecutionScope playerHeroLevelScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit hero) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.triggeringUnit = hero;
 		scope.levelingUnit = hero;
+		scope.triggerEventId = triggerEventId;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope playerHeroRevivableScope(final Trigger trigger, final CUnit hero) {
+	public static CommonTriggerExecutionScope playerHeroRevivableScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit hero) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.triggeringUnit = hero;
 		scope.revivableUnit = hero;
+		scope.triggerEventId = triggerEventId;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope unitDeathScope(final Trigger trigger, final CUnit dyingUnit,
-			final CUnit killingUnit) {
+	public static CommonTriggerExecutionScope unitDeathScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit dyingUnit, final CUnit killingUnit) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.dyingUnit = dyingUnit;
 		scope.triggerWidget = dyingUnit;
 		scope.triggeringUnit = dyingUnit;
 		scope.killingUnit = killingUnit;
+		scope.triggerEventId = triggerEventId;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope widgetTriggerScope(final Trigger trigger, final CWidget triggerWidget) {
+	public static CommonTriggerExecutionScope widgetTriggerScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CWidget triggerWidget) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.triggerWidget = triggerWidget;
+		scope.triggerEventId = triggerEventId;
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope triggerDialogScope(final Trigger trigger,
-			final CScriptDialog clickedDialog, final CScriptDialogButton clickedButton) {
+	public static CommonTriggerExecutionScope triggerDialogScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CScriptDialog clickedDialog, final CScriptDialogButton clickedButton) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.clickedDialog = clickedDialog;
 		scope.clickedButton = clickedButton;
+		scope.triggerEventId = triggerEventId;
 		return scope;
 	}
 
 	public static interface UnitEventScopeBuilder {
-		CommonTriggerExecutionScope create(Trigger trigger, CUnit unit);
+		CommonTriggerExecutionScope create(JassGameEventsWar3 triggerEventId, Trigger trigger, CUnit unit);
 	}
 
 	public static interface WidgetEventScopeBuilder {
-		CommonTriggerExecutionScope create(Trigger trigger, CWidget unit);
+		CommonTriggerExecutionScope create(JassGameEventsWar3 triggerEventId, Trigger trigger, CWidget unit);
 	}
 }

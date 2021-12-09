@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collection;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -484,6 +485,7 @@ public class MenuUI {
 		// Create skirmish UI
 		this.skirmish = this.rootFrame.createFrame("Skirmish", this.rootFrame, 0, 0);
 		this.skirmish.setVisible(false);
+
 		this.mapInfoButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("MapInfoButton", 0);
 		this.advancedOptionsButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("AdvancedOptionsButton", 0);
 		this.mapInfoPanel = this.rootFrame.getFrameByName("MapInfoPanel", 0);
@@ -496,6 +498,42 @@ public class MenuUI {
 		this.skirmishAdvancedOptionsPane.setSetAllPoints(true);
 		advancedOptionsPaneContainer.add(this.skirmishAdvancedOptionsPane);
 		this.skirmishMapInfoPane = new MapInfoPane(this.rootFrame, mapInfoPaneContainer);
+
+		final GlueTextButtonFrame playGameButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("PlayGameButton",
+				0);
+		final SimpleFrame mapListContainer = (SimpleFrame) this.rootFrame.getFrameByName("MapListContainer", 0);
+		final ListBoxFrame mapListBox = (ListBoxFrame) this.rootFrame.createFrameByType("LISTBOX", "MapListBox",
+				mapListContainer, "WITHCHILDREN", 0);
+		mapListBox.setSetAllPoints(true);
+		mapListBox.setFrameFont(profileListText.getFrameFont());
+		final Collection<String> listfile = this.dataSource.getListfile();
+		for (final String file : listfile) {
+			if ((file.toLowerCase().endsWith(".w3x") || file.toLowerCase().endsWith(".w3m")) && !file.contains("/")
+					&& !file.contains("\\")) {
+				mapListBox.addItem(file, this.rootFrame, this.uiViewport);
+			}
+		}
+		mapListContainer.add(mapListBox);
+		playGameButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				final String selectedItem = mapListBox.getSelectedItem();
+				if (selectedItem != null) {
+					MenuUI.this.campaignMenu.setVisible(false);
+					MenuUI.this.campaignBackButton.setVisible(false);
+					MenuUI.this.missionSelectFrame.setVisible(false);
+					MenuUI.this.campaignSelectFrame.setVisible(false);
+					MenuUI.this.campaignWarcraftIIILogo.setVisible(false);
+					MenuUI.this.campaignRootMenuUI.setVisible(false);
+					MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
+					MenuUI.this.skirmish.setVisible(false);
+					MenuUI.this.glueSpriteLayerTopLeft.setSequence("SinglePlayerSkirmish Birth");
+					MenuUI.this.glueSpriteLayerTopRight.setSequence("SinglePlayerSkirmish Birth");
+					MenuUI.this.mapFilepathToStart = selectedItem;
+				}
+
+			}
+		});
 
 		this.skirmishCancelButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("CancelButton", 0);
 		this.skirmishCancelButton.setOnClick(new Runnable() {
@@ -1038,7 +1076,12 @@ public class MenuUI {
 	}
 
 	public boolean touchDragged(final int screenX, final int screenY, final float worldScreenY, final int pointer) {
-		mouseMoved(screenX, screenY, worldScreenY);
+		screenCoordsVector.set(screenX, screenY);
+		this.uiViewport.unproject(screenCoordsVector);
+		if (this.mouseDownUIFrame != null) {
+			this.mouseDownUIFrame.mouseDragged(this.rootFrame, this.uiViewport, screenCoordsVector.x,
+					screenCoordsVector.y);
+		}
 		return false;
 	}
 
@@ -1053,9 +1096,7 @@ public class MenuUI {
 			}
 			if (mousedUIFrame instanceof ClickableFrame) {
 				this.mouseOverUIFrame = (ClickableFrame) mousedUIFrame;
-				if (this.mouseOverUIFrame != null) {
-					this.mouseOverUIFrame.mouseEnter(this.rootFrame, this.uiViewport);
-				}
+				this.mouseOverUIFrame.mouseEnter(this.rootFrame, this.uiViewport);
 			}
 			else {
 				this.mouseOverUIFrame = null;

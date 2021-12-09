@@ -88,6 +88,11 @@ public class MultiSelectionIcon extends AbstractRenderableFrame implements Click
 	}
 
 	@Override
+	public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
+
+	}
+
+	@Override
 	public void setWidth(final float width) {
 		this.defaultWidth = width;
 		super.setWidth(width);

@@ -3511,6 +3511,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				this.lastMouseClickLocation.set(clickLocationTemp);
 			}
+			else {
+				if (this.mouseDownUIFrame != null) {
+					this.mouseDownUIFrame.mouseDragged(this.rootFrame, this.uiViewport, screenCoordsVector.x,
+							screenCoordsVector.y);
+				}
+			}
 		}
 		return false;
 	}

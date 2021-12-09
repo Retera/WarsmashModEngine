@@ -91,6 +91,11 @@ public class CampaignButtonUI extends AbstractUIFrame implements ClickableFrame 
 		this.buttonArt.onClick(button);
 	}
 
+	@Override
+	public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
+
+	}
+
 	public void setHeaderText(final StringFrame headerText) {
 		this.headerText = headerText;
 		this.defaultHeaderColor = headerText.getColor();

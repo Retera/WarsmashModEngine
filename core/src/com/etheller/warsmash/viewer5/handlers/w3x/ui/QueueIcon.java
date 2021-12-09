@@ -75,6 +75,11 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 	}
 
 	@Override
+	public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
+
+	}
+
+	@Override
 	public void setWidth(final float width) {
 		this.defaultWidth = width;
 		super.setWidth(width);

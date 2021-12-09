@@ -56,8 +56,8 @@ public class GenericObject extends AnimatedObject implements GenericIndexed {
 		final int flags = object.getFlags();
 
 		this.dontInheritTranslation = flags & 0x1;
-		this.dontInheritRotation = flags & 0x2;
-		this.dontInheritScaling = flags & 0x4;
+		this.dontInheritScaling = flags & 0x2;
+		this.dontInheritRotation = flags & 0x4;
 		this.billboarded = flags & 0x8;
 		this.billboardedX = flags & 0x10;
 		this.billboardedY = flags & 0x20;

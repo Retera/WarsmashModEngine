@@ -2,14 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.interpreter.ast.scope.GlobalScope;
@@ -49,6 +42,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
@@ -87,6 +81,7 @@ public class CSimulation implements CPlayerAPI {
 	private final List<TimeOfDayVariableEvent> timeOfDayVariableEvents = new ArrayList<>();
 	private boolean timeOfDaySuspended;
 	private boolean daytime;
+	private Set<CDestructable> ownedTreeSet = new HashSet<>();
 
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
@@ -121,7 +116,7 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CRace defaultRace = CRace.NIGHTELF;
+			final CRace defaultRace = CRace.ORC;
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
 			if (WarsmashConstants.LOCAL_TEMP_TEST_ALL_PLAYERS_PLAYING) {
@@ -524,6 +519,14 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnAbilitySoundEffect(caster, alias);
 	}
 
+	public void unitLoopSoundEffectEvent(final CUnit caster, final War3ID alias) {
+		this.simulationRenderController.loopAbilitySoundEffect(caster, alias);
+	}
+
+	public void unitStopSoundEffectEvent(final CUnit caster, final War3ID alias) {
+		this.simulationRenderController.stopAbilitySoundEffect(caster, alias);
+	}
+
 	public void unitPreferredSelectionReplacement(final CUnit unit, final CUnit newUnit) {
 		this.simulationRenderController.unitPreferredSelectionReplacement(unit, newUnit);
 	}
@@ -562,6 +565,22 @@ public class CSimulation implements CPlayerAPI {
 	public void removeItem(final CItem cItem) {
 		cItem.setHidden(true); // TODO fix
 		cItem.setLife(this, 0);
+	}
+
+	public SimulationRenderComponent createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias, float artAttachmentHeight) {
+		return simulationRenderController.createSpellEffectOverDestructable(source, target, alias, artAttachmentHeight);
+	}
+
+	public void tagTreeOwned(CDestructable target) {
+		ownedTreeSet.add(target);
+	}
+
+	public void untagTreeOwned(CDestructable target) {
+		ownedTreeSet.remove(target);
+	}
+
+	public boolean isTreeOwned(CDestructable tree) {
+		return ownedTreeSet.contains(tree);
 	}
 
 	private static final class TimeOfDayVariableEvent extends VariableEvent {

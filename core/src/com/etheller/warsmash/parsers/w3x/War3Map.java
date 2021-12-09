@@ -145,6 +145,11 @@ public class War3Map implements DataSource {
 	}
 
 	@Override
+	public File getDirectory(String filepath) throws IOException {
+		return this.dataSource.getDirectory(filepath);
+	}
+
+	@Override
 	public boolean has(final String filepath) {
 		return this.dataSource.has(filepath);
 	}

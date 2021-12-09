@@ -171,6 +171,11 @@ public class SimpleButtonFrame extends AbstractRenderableFrame implements Clicka
 	}
 
 	@Override
+	public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
+
+	}
+
+	@Override
 	public UIFrame touchUp(final float screenX, final float screenY, final int button) {
 		if (isVisible() && this.enabled && this.renderBounds.contains(screenX, screenY)) {
 			return this;

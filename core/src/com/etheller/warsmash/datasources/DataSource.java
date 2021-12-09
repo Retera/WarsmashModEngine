@@ -28,6 +28,15 @@ public interface DataSource {
 	 */
 	File getFile(String filepath) throws IOException;
 
+	/**
+	 * Returns a directory from a FolderDataSource, otherwise returns null
+	 *
+	 * @param filepath
+	 * @return
+	 * @throws IOException
+	 */
+	File getDirectory(String filepath) throws IOException;
+
 	ByteBuffer read(String path) throws IOException;
 
 	/**

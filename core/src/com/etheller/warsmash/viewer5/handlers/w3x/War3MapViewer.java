@@ -117,6 +117,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
@@ -255,11 +256,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		final WebGL webGL = this.webGL;
 
-		this.addHandler(new MdxHandler());
+		addHandler(new MdxHandler());
 
 		this.wc3PathSolver = PathSolver.DEFAULT;
 
-		this.worldScene = this.addWorldScene();
+		this.worldScene = addWorldScene();
 
 		if (!this.dynamicShadowManager.setup(webGL)) {
 			throw new IllegalStateException("FrameBuffer setup failed");
@@ -270,11 +271,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public void loadSLKs(final WorldEditStrings worldEditStrings) throws IOException {
-		final GenericResource terrain = this.loadMapGeneric("TerrainArt\\Terrain.slk", FetchDataTypeName.SLK,
+		final GenericResource terrain = loadMapGeneric("TerrainArt\\Terrain.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
-		final GenericResource cliffTypes = this.loadMapGeneric("TerrainArt\\CliffTypes.slk", FetchDataTypeName.SLK,
+		final GenericResource cliffTypes = loadMapGeneric("TerrainArt\\CliffTypes.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
-		final GenericResource water = this.loadMapGeneric("TerrainArt\\Water.slk", FetchDataTypeName.SLK,
+		final GenericResource water = loadMapGeneric("TerrainArt\\Water.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
 
 		// == when loaded, which is always in our system ==
@@ -283,13 +284,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.waterData.load(water.data.toString());
 		// emit terrain loaded??
 
-		final GenericResource doodads = this.loadMapGeneric("Doodads\\Doodads.slk", FetchDataTypeName.SLK,
+		final GenericResource doodads = loadMapGeneric("Doodads\\Doodads.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
-		final GenericResource doodadMetaData = this.loadMapGeneric("Doodads\\DoodadMetaData.slk", FetchDataTypeName.SLK,
+		final GenericResource doodadMetaData = loadMapGeneric("Doodads\\DoodadMetaData.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
-		final GenericResource destructableData = this.loadMapGeneric("Units\\DestructableData.slk",
+		final GenericResource destructableData = loadMapGeneric("Units\\DestructableData.slk",
 				FetchDataTypeName.SLK, stringDataCallback);
-		final GenericResource destructableMetaData = this.loadMapGeneric("Units\\DestructableMetaData.slk",
+		final GenericResource destructableMetaData = loadMapGeneric("Units\\DestructableMetaData.slk",
 				FetchDataTypeName.SLK, stringDataCallback);
 
 		// == when loaded, which is always in our system ==
@@ -300,13 +301,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.destructableMetaData.load(destructableData.data.toString());
 		// emit doodads loaded
 
-		final GenericResource unitData = this.loadMapGeneric("Units\\UnitData.slk", FetchDataTypeName.SLK,
+		final GenericResource unitData = loadMapGeneric("Units\\UnitData.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
-		final GenericResource unitUi = this.loadMapGeneric("Units\\unitUI.slk", FetchDataTypeName.SLK,
+		final GenericResource unitUi = loadMapGeneric("Units\\unitUI.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
-		final GenericResource itemData = this.loadMapGeneric("Units\\ItemData.slk", FetchDataTypeName.SLK,
+		final GenericResource itemData = loadMapGeneric("Units\\ItemData.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
-		final GenericResource unitMetaData = this.loadMapGeneric("Units\\UnitMetaData.slk", FetchDataTypeName.SLK,
+		final GenericResource unitMetaData = loadMapGeneric("Units\\UnitMetaData.slk", FetchDataTypeName.SLK,
 				stringDataCallback);
 
 		// == when loaded, which is always in our system ==
@@ -412,10 +413,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public GenericResource loadMapGeneric(final String path, final FetchDataTypeName dataType,
 			final LoadGenericCallback callback) {
 		if (this.mapMpq == null) {
-			return loadGeneric(path, dataType, callback);
+			return this.loadGeneric(path, dataType, callback);
 		}
 		else {
-			return loadGeneric(path, dataType, callback, this.dataSource);
+			return this.loadGeneric(path, dataType, callback, this.dataSource);
 		}
 	}
 
@@ -549,367 +550,419 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.simulation = new CSimulation(this.mapConfig, this.miscData, this.allObjectData.getUnits(),
 				this.allObjectData.getItems(), this.allObjectData.getDestructibles(), this.allObjectData.getAbilities(),
 				new SimulationRenderController() {
-					private final Map<String, UnitSound> keyToCombatSound = new HashMap<>();
+			private final Map<String, UnitSound> keyToCombatSound = new HashMap<>();
 
-					@Override
-					public CAttackProjectile createAttackProjectile(final CSimulation simulation, final float launchX,
-							final float launchY, final float launchFacing, final CUnit source,
-							final CUnitAttackMissile unitAttack, final AbilityTarget target, final float damage,
-							final int bounceIndex, final CUnitAttackListener attackListener) {
-						final War3ID typeId = source.getTypeId();
-						final int projectileSpeed = unitAttack.getProjectileSpeed();
-						final float projectileArc = unitAttack.getProjectileArc();
-						final String missileArt = unitAttack.getProjectileArt();
-						final float projectileLaunchX = simulation.getUnitData().getProjectileLaunchX(typeId);
-						final float projectileLaunchY = simulation.getUnitData().getProjectileLaunchY(typeId);
-						final float projectileLaunchZ = simulation.getUnitData().getProjectileLaunchZ(typeId);
+			@Override
+			public CAttackProjectile createAttackProjectile(final CSimulation simulation, final float launchX,
+					final float launchY, final float launchFacing, final CUnit source,
+					final CUnitAttackMissile unitAttack, final AbilityTarget target, final float damage,
+					final int bounceIndex, final CUnitAttackListener attackListener) {
+				final War3ID typeId = source.getTypeId();
+				final int projectileSpeed = unitAttack.getProjectileSpeed();
+				final float projectileArc = unitAttack.getProjectileArc();
+				final String missileArt = unitAttack.getProjectileArt();
+				final float projectileLaunchX = simulation.getUnitData().getProjectileLaunchX(typeId);
+				final float projectileLaunchY = simulation.getUnitData().getProjectileLaunchY(typeId);
+				final float projectileLaunchZ = simulation.getUnitData().getProjectileLaunchZ(typeId);
 
-						final float facing = launchFacing;
-						final float sinFacing = (float) Math.sin(facing);
-						final float cosFacing = (float) Math.cos(facing);
-						final float x = (launchX + (projectileLaunchY * cosFacing)) + (projectileLaunchX * sinFacing);
-						final float y = (launchY + (projectileLaunchY * sinFacing)) - (projectileLaunchX * cosFacing);
+				final float facing = launchFacing;
+				final float sinFacing = (float) Math.sin(facing);
+				final float cosFacing = (float) Math.cos(facing);
+				final float x = (launchX + (projectileLaunchY * cosFacing)) + (projectileLaunchX * sinFacing);
+				final float y = (launchY + (projectileLaunchY * sinFacing)) - (projectileLaunchX * cosFacing);
 
-						final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight()
-								+ projectileLaunchZ;
-						final CAttackProjectile simulationAttackProjectile = new CAttackProjectile(x, y,
-								projectileSpeed, target, source, damage, unitAttack, bounceIndex, attackListener);
+				final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight()
+				+ projectileLaunchZ;
+				final CAttackProjectile simulationAttackProjectile = new CAttackProjectile(x, y,
+						projectileSpeed, target, source, damage, unitAttack, bounceIndex, attackListener);
 
-						final MdxModel model = loadModelMdx(missileArt);
-						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
-						modelInstance.setTeamColor(source.getPlayerIndex());
-						modelInstance.setScene(War3MapViewer.this.worldScene);
-						if (bounceIndex == 0) {
-							SequenceUtils.randomBirthSequence(modelInstance);
-						}
-						else {
-							SequenceUtils.randomStandSequence(modelInstance);
-						}
-						modelInstance.setLocation(x, y, height);
-						final RenderAttackProjectile renderAttackProjectile = new RenderAttackProjectile(
-								simulationAttackProjectile, modelInstance, height, projectileArc, War3MapViewer.this);
+				final MdxModel model = loadModelMdx(missileArt);
+				final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
+				modelInstance.setTeamColor(source.getPlayerIndex());
+				modelInstance.setScene(War3MapViewer.this.worldScene);
+				if (bounceIndex == 0) {
+					SequenceUtils.randomBirthSequence(modelInstance);
+				}
+				else {
+					SequenceUtils.randomStandSequence(modelInstance);
+				}
+				modelInstance.setLocation(x, y, height);
+				final RenderAttackProjectile renderAttackProjectile = new RenderAttackProjectile(
+						simulationAttackProjectile, modelInstance, height, projectileArc, War3MapViewer.this);
 
-						War3MapViewer.this.projectiles.add(renderAttackProjectile);
+				War3MapViewer.this.projectiles.add(renderAttackProjectile);
 
-						return simulationAttackProjectile;
+				return simulationAttackProjectile;
+			}
+
+			@Override
+			public void createInstantAttackEffect(final CSimulation cSimulation, final CUnit source,
+					final CUnitAttackInstant unitAttack, final CWidget target) {
+				final War3ID typeId = source.getTypeId();
+
+				final String missileArt = unitAttack.getProjectileArt();
+				final float projectileLaunchX = War3MapViewer.this.simulation.getUnitData()
+						.getProjectileLaunchX(typeId);
+				final float projectileLaunchY = War3MapViewer.this.simulation.getUnitData()
+						.getProjectileLaunchY(typeId);
+				final float facing = (float) Math.toRadians(source.getFacing());
+				final float sinFacing = (float) Math.sin(facing);
+				final float cosFacing = (float) Math.cos(facing);
+				final float x = (source.getX() + (projectileLaunchY * cosFacing))
+						+ (projectileLaunchX * sinFacing);
+				final float y = (source.getY() + (projectileLaunchY * sinFacing))
+						- (projectileLaunchX * cosFacing);
+
+				final float targetX = target.getX();
+				final float targetY = target.getY();
+				final float angleToTarget = (float) Math.atan2(targetY - y, targetX - x);
+
+				final float height = War3MapViewer.this.terrain.getGroundHeight(targetX, targetY)
+						+ target.getFlyHeight() + target.getImpactZ();
+
+				final MdxModel model = loadModelMdx(missileArt);
+				final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
+				modelInstance.setTeamColor(source.getPlayerIndex());
+				SequenceUtils.randomBirthSequence(modelInstance);
+				modelInstance.setLocation(targetX, targetY, height);
+				modelInstance.setScene(War3MapViewer.this.worldScene);
+				War3MapViewer.this.projectiles
+				.add(new RenderAttackInstant(modelInstance, War3MapViewer.this, angleToTarget));
+			}
+
+			@Override
+			public void spawnDamageSound(final CWidget damagedDestructable, final String weaponSound,
+					final String armorType) {
+				final RenderWidget damagedWidget = War3MapViewer.this.getRenderPeer(damagedDestructable);
+				if (damagedWidget == null) {
+					return;
+				}
+				final String key = weaponSound + armorType;
+				UnitSound combatSound = this.keyToCombatSound.get(key);
+				if (combatSound == null) {
+					combatSound = UnitSound.create(War3MapViewer.this.dataSource,
+							War3MapViewer.this.unitCombatSoundsTable, weaponSound, armorType);
+					this.keyToCombatSound.put(key, combatSound);
+				}
+				combatSound.play(War3MapViewer.this.worldScene.audioContext, damagedDestructable.getX(),
+						damagedDestructable.getY(), damagedWidget.getZ());
+			}
+
+			@Override
+			public void spawnUnitConstructionSound(final CUnit constructingUnit,
+					final CUnit constructedStructure) {
+				final UnitSound constructingBuilding = War3MapViewer.this.uiSounds
+						.getSound(War3MapViewer.this.gameUI.getSkinField("ConstructingBuilding"));
+				if (constructingBuilding != null) {
+					constructingBuilding.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
+							War3MapViewer.this.unitToRenderPeer.get(constructedStructure));
+				}
+			}
+
+			@Override
+			public void removeUnit(final CUnit unit) {
+				final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.remove(unit);
+				War3MapViewer.this.widgets.remove(renderUnit);
+				War3MapViewer.this.units.remove(renderUnit);
+				War3MapViewer.this.worldScene.removeInstance(renderUnit.instance);
+				renderUnit.onRemove(War3MapViewer.this);
+			}
+
+			@Override
+			public void removeDestructable(final CDestructable dest) {
+				final RenderDestructable renderPeer = War3MapViewer.this.destructableToRenderPeer.remove(dest);
+				War3MapViewer.this.worldScene.removeInstance(renderPeer.instance);
+				if (renderPeer.walkableBounds != null) {
+					War3MapViewer.this.walkableObjectsTree.remove((MdxComplexInstance) renderPeer.instance,
+							renderPeer.walkableBounds);
+				}
+			}
+
+			@Override
+			public BufferedImage getBuildingPathingPixelMap(final War3ID rawcode) {
+				return War3MapViewer.this
+						.getBuildingPathingPixelMap(War3MapViewer.this.allObjectData.getUnits().get(rawcode));
+			}
+
+			@Override
+			public BufferedImage getDestructablePathingDeathPixelMap(final War3ID rawcode) {
+				return War3MapViewer.this.getDestructablePathingDeathPixelMap(
+						War3MapViewer.this.allObjectData.getDestructibles().get(rawcode));
+			}
+
+			@Override
+			public BufferedImage getDestructablePathingPixelMap(final War3ID rawcode) {
+				return War3MapViewer.this.getDestructablePathingPixelMap(
+						War3MapViewer.this.allObjectData.getDestructibles().get(rawcode));
+			}
+
+			@Override
+			public void spawnUnitConstructionFinishSound(final CUnit constructedStructure) {
+				final UnitSound constructingBuilding = War3MapViewer.this.uiSounds
+						.getSound(War3MapViewer.this.gameUI.getSkinField("JobDoneSound"));
+				final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(constructedStructure);
+				if ((constructingBuilding != null) && (renderUnit.getSimulationUnit()
+						.getPlayerIndex() == War3MapViewer.this.localPlayerIndex)) {
+					constructingBuilding.play(War3MapViewer.this.worldScene.audioContext,
+							constructedStructure.getX(), constructedStructure.getY(), renderUnit.getZ());
+				}
+			}
+
+			@Override
+			public CUnit createUnit(final CSimulation simulation, final War3ID typeId, final int playerIndex,
+					final float x, final float y, final float facing) {
+				return (CUnit) War3MapViewer.this.createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y,
+						playerIndex, playerIndex, (float) Math.toRadians(facing));
+			}
+
+			@Override
+			public CDestructable createDestructable(final War3ID typeId, final float x, final float y,
+					final float facing, final float scale, final int variation) {
+				return createDestructableZ(typeId, x, y,
+						Math.max(War3MapViewer.this.getWalkableRenderHeight(x, y),
+								War3MapViewer.this.terrain.getGroundHeight(x, y)),
+						facing, scale, variation);
+			}
+
+			@Override
+			public CDestructable createDestructableZ(final War3ID typeId, final float x, final float y,
+					final float z, final float facing, final float scale, final int variation) {
+				final MutableGameObject row = War3MapViewer.this.allObjectData.getDestructibles().get(typeId);
+				final float[] location3d = { x, y, z };
+				final float[] scale3d = { scale, scale, scale };
+				final RenderDestructable newDestructable = War3MapViewer.this.createNewDestructable(typeId, row,
+						variation, location3d, (float) Math.toRadians(facing), (short) 100, scale3d);
+				return newDestructable.getSimulationDestructable();
+			}
+
+			@Override
+			public CItem createItem(final CSimulation simulation, final War3ID typeId, final float x,
+					final float y) {
+				return (CItem) War3MapViewer.this.createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y,
+						-1, -1, (float) Math.toRadians(
+								War3MapViewer.this.simulation.getGameplayConstants().getBuildingAngle()));
+			}
+
+			@Override
+			public void spawnBuildingDeathEffect(final CUnit source) {
+				final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
+				if (renderUnit.specialArtModel != null) {
+					final MdxComplexInstance modelInstance = (MdxComplexInstance) renderUnit.specialArtModel
+							.addInstance();
+					modelInstance.setTeamColor(source.getPlayerIndex());
+					modelInstance.setLocation(renderUnit.location);
+					modelInstance.setScene(War3MapViewer.this.worldScene);
+					SequenceUtils.randomBirthSequence(modelInstance);
+					War3MapViewer.this.projectiles
+					.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
+							(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
+				}
+			}
+
+			@Override
+			public void spawnGainLevelEffect(final CUnit source) {
+				final AbilityUI heroUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_HERO_RAWCODE);
+				final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
+				final String heroLevelUpArt = heroUI.getCasterArt(0);
+				War3MapViewer.this.spawnFxOnOrigin(renderUnit, heroLevelUpArt);
+			}
+
+			@Override
+			public void heroRevived(final CUnit source) {
+				final AbilityUI reviveUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_REVIVE_RAWCODE);
+				final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
+				renderUnit.instance.additiveOverrideMeshMode = false;
+				renderUnit.instance.setVertexAlpha(1.0f);
+				final CPlayer player = War3MapViewer.this.simulation.getPlayer(source.getPlayerIndex());
+				final String heroReviveArt = reviveUI.getTargetArt(player.getRace().ordinal());
+				War3MapViewer.this.spawnFxOnOrigin(renderUnit, heroReviveArt);
+				final MutableGameObject row = War3MapViewer.this.allObjectData.getUnits()
+						.get(source.getTypeId());
+
+				// Recreate unit shadow.... is needed here
+
+				final String unitShadow = row.getFieldAsString(UNIT_SHADOW, 0);
+				final float unitX = source.getX();
+				final float unitY = source.getY();
+				if ((unitShadow != null) && !"_".equals(unitShadow)) {
+					final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
+					final float shadowX = row.getFieldAsFloat(UNIT_SHADOW_X, 0);
+					final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
+					final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
+					final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
+					if (War3MapViewer.this.mapMpq.has(texture)) {
+						final float x = unitX - shadowX;
+						final float y = unitY - shadowY;
+						renderUnit.shadow = War3MapViewer.this.terrain.addUnitShadowSplat(texture, x, y,
+								x + shadowWidth, y + shadowHeight, 3, 0.5f);
 					}
-
-					@Override
-					public void createInstantAttackEffect(final CSimulation cSimulation, final CUnit source,
-							final CUnitAttackInstant unitAttack, final CWidget target) {
-						final War3ID typeId = source.getTypeId();
-
-						final String missileArt = unitAttack.getProjectileArt();
-						final float projectileLaunchX = War3MapViewer.this.simulation.getUnitData()
-								.getProjectileLaunchX(typeId);
-						final float projectileLaunchY = War3MapViewer.this.simulation.getUnitData()
-								.getProjectileLaunchY(typeId);
-						final float facing = (float) Math.toRadians(source.getFacing());
-						final float sinFacing = (float) Math.sin(facing);
-						final float cosFacing = (float) Math.cos(facing);
-						final float x = (source.getX() + (projectileLaunchY * cosFacing))
-								+ (projectileLaunchX * sinFacing);
-						final float y = (source.getY() + (projectileLaunchY * sinFacing))
-								- (projectileLaunchX * cosFacing);
-
-						final float targetX = target.getX();
-						final float targetY = target.getY();
-						final float angleToTarget = (float) Math.atan2(targetY - y, targetX - x);
-
-						final float height = War3MapViewer.this.terrain.getGroundHeight(targetX, targetY)
-								+ target.getFlyHeight() + target.getImpactZ();
-
-						final MdxModel model = loadModelMdx(missileArt);
-						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
-						modelInstance.setTeamColor(source.getPlayerIndex());
-						SequenceUtils.randomBirthSequence(modelInstance);
-						modelInstance.setLocation(targetX, targetY, height);
-						modelInstance.setScene(War3MapViewer.this.worldScene);
-						War3MapViewer.this.projectiles
-								.add(new RenderAttackInstant(modelInstance, War3MapViewer.this, angleToTarget));
-					}
-
-					@Override
-					public void spawnDamageSound(final CWidget damagedDestructable, final String weaponSound,
-							final String armorType) {
-						final RenderWidget damagedWidget = getRenderPeer(damagedDestructable);
-						if (damagedWidget == null) {
-							return;
-						}
-						final String key = weaponSound + armorType;
-						UnitSound combatSound = this.keyToCombatSound.get(key);
-						if (combatSound == null) {
-							combatSound = UnitSound.create(War3MapViewer.this.dataSource,
-									War3MapViewer.this.unitCombatSoundsTable, weaponSound, armorType);
-							this.keyToCombatSound.put(key, combatSound);
-						}
-						combatSound.play(War3MapViewer.this.worldScene.audioContext, damagedDestructable.getX(),
-								damagedDestructable.getY(), damagedWidget.getZ());
-					}
-
-					@Override
-					public void spawnUnitConstructionSound(final CUnit constructingUnit,
-							final CUnit constructedStructure) {
-						final UnitSound constructingBuilding = War3MapViewer.this.uiSounds
-								.getSound(War3MapViewer.this.gameUI.getSkinField("ConstructingBuilding"));
-						if (constructingBuilding != null) {
-							constructingBuilding.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
-									War3MapViewer.this.unitToRenderPeer.get(constructedStructure));
-						}
-					}
-
-					@Override
-					public void removeUnit(final CUnit unit) {
-						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.remove(unit);
-						War3MapViewer.this.widgets.remove(renderUnit);
-						War3MapViewer.this.units.remove(renderUnit);
-						War3MapViewer.this.worldScene.removeInstance(renderUnit.instance);
-						renderUnit.onRemove(War3MapViewer.this);
-					}
-
-					@Override
-					public void removeDestructable(final CDestructable dest) {
-						final RenderDestructable renderPeer = War3MapViewer.this.destructableToRenderPeer.remove(dest);
-						War3MapViewer.this.worldScene.removeInstance(renderPeer.instance);
-						if (renderPeer.walkableBounds != null) {
-							War3MapViewer.this.walkableObjectsTree.remove((MdxComplexInstance) renderPeer.instance,
-									renderPeer.walkableBounds);
-						}
-					}
-
-					@Override
-					public BufferedImage getBuildingPathingPixelMap(final War3ID rawcode) {
-						return War3MapViewer.this
-								.getBuildingPathingPixelMap(War3MapViewer.this.allObjectData.getUnits().get(rawcode));
-					}
-
-					@Override
-					public BufferedImage getDestructablePathingDeathPixelMap(final War3ID rawcode) {
-						return War3MapViewer.this.getDestructablePathingDeathPixelMap(
-								War3MapViewer.this.allObjectData.getDestructibles().get(rawcode));
-					}
-
-					@Override
-					public BufferedImage getDestructablePathingPixelMap(final War3ID rawcode) {
-						return War3MapViewer.this.getDestructablePathingPixelMap(
-								War3MapViewer.this.allObjectData.getDestructibles().get(rawcode));
-					}
-
-					@Override
-					public void spawnUnitConstructionFinishSound(final CUnit constructedStructure) {
-						final UnitSound constructingBuilding = War3MapViewer.this.uiSounds
-								.getSound(War3MapViewer.this.gameUI.getSkinField("JobDoneSound"));
-						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(constructedStructure);
-						if ((constructingBuilding != null) && (renderUnit.getSimulationUnit()
-								.getPlayerIndex() == War3MapViewer.this.localPlayerIndex)) {
-							constructingBuilding.play(War3MapViewer.this.worldScene.audioContext,
-									constructedStructure.getX(), constructedStructure.getY(), renderUnit.getZ());
-						}
-					}
-
-					@Override
-					public CUnit createUnit(final CSimulation simulation, final War3ID typeId, final int playerIndex,
-							final float x, final float y, final float facing) {
-						return (CUnit) createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, playerIndex,
-								playerIndex, (float) Math.toRadians(facing));
-					}
-
-					@Override
-					public CDestructable createDestructable(final War3ID typeId, final float x, final float y,
-							final float facing, final float scale, final int variation) {
-						return createDestructableZ(typeId, x, y, Math.max(getWalkableRenderHeight(x, y),
-								War3MapViewer.this.terrain.getGroundHeight(x, y)), facing, scale, variation);
-					}
-
-					@Override
-					public CDestructable createDestructableZ(final War3ID typeId, final float x, final float y,
-							final float z, final float facing, final float scale, final int variation) {
-						final MutableGameObject row = War3MapViewer.this.allObjectData.getDestructibles().get(typeId);
-						final float[] location3d = { x, y, z };
-						final float[] scale3d = { scale, scale, scale };
-						final RenderDestructable newDestructable = createNewDestructable(typeId, row, variation,
-								location3d, (float) Math.toRadians(facing), (short) 100, scale3d);
-						return newDestructable.getSimulationDestructable();
-					}
-
-					@Override
-					public CItem createItem(final CSimulation simulation, final War3ID typeId, final float x,
-							final float y) {
-						return (CItem) createNewUnit(War3MapViewer.this.allObjectData, typeId, x, y, -1, -1,
-								(float) Math.toRadians(
-										War3MapViewer.this.simulation.getGameplayConstants().getBuildingAngle()));
-					}
-
-					@Override
-					public void spawnBuildingDeathEffect(final CUnit source) {
-						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
-						if (renderUnit.specialArtModel != null) {
-							final MdxComplexInstance modelInstance = (MdxComplexInstance) renderUnit.specialArtModel
-									.addInstance();
-							modelInstance.setTeamColor(source.getPlayerIndex());
-							modelInstance.setLocation(renderUnit.location);
-							modelInstance.setScene(War3MapViewer.this.worldScene);
-							SequenceUtils.randomBirthSequence(modelInstance);
-							War3MapViewer.this.projectiles
-									.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
-											(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
-						}
-					}
-
-					@Override
-					public void spawnGainLevelEffect(final CUnit source) {
-						final AbilityUI heroUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_HERO_RAWCODE);
-						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
-						final String heroLevelUpArt = heroUI.getCasterArt(0);
-						spawnFxOnOrigin(renderUnit, heroLevelUpArt);
-					}
-
-					@Override
-					public void heroRevived(final CUnit source) {
-						final AbilityUI reviveUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_REVIVE_RAWCODE);
-						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
-						renderUnit.instance.additiveOverrideMeshMode = false;
-						renderUnit.instance.setVertexAlpha(1.0f);
-						final CPlayer player = War3MapViewer.this.simulation.getPlayer(source.getPlayerIndex());
-						final String heroReviveArt = reviveUI.getTargetArt(player.getRace().ordinal());
-						spawnFxOnOrigin(renderUnit, heroReviveArt);
-						final MutableGameObject row = War3MapViewer.this.allObjectData.getUnits()
-								.get(source.getTypeId());
-
-						// Recreate unit shadow.... is needed here
-
-						final String unitShadow = row.getFieldAsString(UNIT_SHADOW, 0);
-						final float unitX = source.getX();
-						final float unitY = source.getY();
-						if ((unitShadow != null) && !"_".equals(unitShadow)) {
-							final String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
-							final float shadowX = row.getFieldAsFloat(UNIT_SHADOW_X, 0);
-							final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
-							final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
-							final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
-							if (War3MapViewer.this.mapMpq.has(texture)) {
-								final float x = unitX - shadowX;
-								final float y = unitY - shadowY;
-								renderUnit.shadow = War3MapViewer.this.terrain.addUnitShadowSplat(texture, x, y,
-										x + shadowWidth, y + shadowHeight, 3, 0.5f);
-							}
-							else {
-								final String textureFallback = "ReplaceableTextures\\Shadows\\" + unitShadow + ".dds";
-								if (War3MapViewer.this.mapMpq.has(textureFallback)) {
-									final float x = unitX - shadowX;
-									final float y = unitY - shadowY;
-									renderUnit.shadow = War3MapViewer.this.terrain.addUnitShadowSplat(textureFallback,
-											x, y, x + shadowWidth, y + shadowHeight, 3, 0.5f);
-								}
-							}
-						}
-					}
-
-					@Override
-					public void heroDeathEvent(final CUnit source) {
-						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
-						renderUnit.instance.additiveOverrideMeshMode = true;
-					}
-
-					@Override
-					public void spawnEffectOnUnit(final CUnit unit, final String effectPath) {
-						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(unit);
-						final MdxModel spawnedEffectModel = loadModelMdx(effectPath);
-						if (spawnedEffectModel != null) {
-							final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel
-									.addInstance();
-							modelInstance.setTeamColor(unit.getPlayerIndex());
-							modelInstance.setLocation(renderUnit.location);
-							modelInstance.setScene(War3MapViewer.this.worldScene);
-							final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance,
-									War3MapViewer.this,
-									(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing()),
-									RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
-							War3MapViewer.this.projectiles.add(renderAttackInstant);
-						}
-
-					}
-
-					@Override
-					public void spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias) {
-						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
-						spawnEffectOnUnit(unit, abilityUI.getTargetArt(0));
-					}
-
-					@Override
-					public void spawnUnitReadySound(final CUnit trainedUnit) {
-						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(trainedUnit);
-						renderPeer.soundset.ready.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
-								renderPeer);
-					}
-
-					@Override
-					public void unitRepositioned(final CUnit cUnit) {
-						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
-						renderPeer.repositioned(War3MapViewer.this);
-					}
-
-					@Override
-					public void spawnGainResourceTextTag(final CUnit gainingUnit, final ResourceType resourceType,
-							final int amount) {
-						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(gainingUnit);
-						switch (resourceType) {
-						case FOOD:
-							throw new IllegalArgumentException();
-						case GOLD:
-							War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), "+" + amount,
-									PLACEHOLDER_GOLD_COLOR));
-							break;
-						case LUMBER:
-							War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), "+" + amount,
-									PLACEHOLDER_LUMBER_COLOR));
-							break;
+					else {
+						final String textureFallback = "ReplaceableTextures\\Shadows\\" + unitShadow + ".dds";
+						if (War3MapViewer.this.mapMpq.has(textureFallback)) {
+							final float x = unitX - shadowX;
+							final float y = unitY - shadowY;
+							renderUnit.shadow = War3MapViewer.this.terrain.addUnitShadowSplat(textureFallback,
+									x, y, x + shadowWidth, y + shadowHeight, 3, 0.5f);
 						}
 					}
+				}
+			}
 
-					@Override
-					public void spawnUIUnitGetItemSound(final CUnit cUnit, final CItem item) {
-						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
-						if (localPlayerIndex == renderPeer.getSimulationUnit().getPlayerIndex()) {
-							War3MapViewer.this.uiSounds.getSound("ItemGet").play(
-									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
-									renderPeer.getZ());
+			@Override
+			public void heroDeathEvent(final CUnit source) {
+				final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
+				renderUnit.instance.additiveOverrideMeshMode = true;
+			}
+
+			@Override
+			public void spawnEffectOnUnit(final CUnit unit, final String effectPath) {
+				final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(unit);
+				final MdxModel spawnedEffectModel = loadModelMdx(effectPath);
+				if (spawnedEffectModel != null) {
+					final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel
+							.addInstance();
+					modelInstance.setTeamColor(unit.getPlayerIndex());
+					modelInstance.setLocation(renderUnit.location);
+					modelInstance.setScene(War3MapViewer.this.worldScene);
+					final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance,
+							War3MapViewer.this,
+							(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing()),
+							RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
+					War3MapViewer.this.projectiles.add(renderAttackInstant);
+				}
+
+			}
+
+			@Override
+			public void spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias) {
+				final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
+				spawnEffectOnUnit(unit, abilityUI.getTargetArt(0));
+			}
+
+			@Override
+			public SimulationRenderComponent createSpellEffectOverDestructable(final CUnit source, final CDestructable target, final War3ID alias, final float artAttachmentHeight) {
+				final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
+				final String effectPath = abilityUI.getTargetArt(0);
+				final RenderDestructable renderDestructable = War3MapViewer.this.destructableToRenderPeer.get(target);
+				final MdxModel spawnedEffectModel = loadModelMdx(effectPath);
+				if (spawnedEffectModel != null) {
+					final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel
+							.addInstance();
+					modelInstance.setTeamColor(War3MapViewer.this.simulation.getPlayer(source.getPlayerIndex()).getColor());
+					modelInstance.setLocation(renderDestructable.getX(), renderDestructable.getY(), renderDestructable.getZ() + artAttachmentHeight);
+					modelInstance.setScene(War3MapViewer.this.worldScene);
+					final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance,
+							War3MapViewer.this,
+							0,
+							RenderSpellEffect.STAND_ONLY);
+					renderAttackInstant.setAnimations(RenderSpellEffect.STAND_ONLY, false);
+					War3MapViewer.this.projectiles.add(renderAttackInstant);
+					return new SimulationRenderComponent() {
+						@Override
+						public void remove() {
+							renderAttackInstant.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
 						}
-					}
+					};
+				}
+				return null;
+			}
 
-					@Override
-					public void spawnUIUnitDropItemSound(final CUnit cUnit, final CItem item) {
-						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
-						if (localPlayerIndex == renderPeer.getSimulationUnit().getPlayerIndex()) {
-							War3MapViewer.this.uiSounds.getSound("ItemDrop").play(
-									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
-									renderPeer.getZ());
-						}
-					}
+			@Override
+			public void spawnUnitReadySound(final CUnit trainedUnit) {
+				final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(trainedUnit);
+				renderPeer.soundset.ready.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
+						renderPeer);
+			}
 
-					@Override
-					public void spawnAbilitySoundEffect(final CUnit caster, final War3ID alias) {
-						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
-						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
-						if (abilityUi.getEffectSound() != null) {
-							War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound()).play(
-									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
-									renderPeer.getZ());
-						}
-					}
+			@Override
+			public void unitRepositioned(final CUnit cUnit) {
+				final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
+				renderPeer.repositioned(War3MapViewer.this);
+			}
 
-					@Override
-					public void unitPreferredSelectionReplacement(final CUnit oldUnit, final CUnit newUnit) {
-						final RenderUnit oldRenderPeer = War3MapViewer.this.unitToRenderPeer.get(oldUnit);
-						final RenderUnit newRenderPeer = War3MapViewer.this.unitToRenderPeer.get(newUnit);
-						oldRenderPeer.setPreferredSelectionReplacement(newRenderPeer);
+			@Override
+			public void spawnGainResourceTextTag(final CUnit gainingUnit, final ResourceType resourceType,
+					final int amount) {
+				final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(gainingUnit);
+				switch (resourceType) {
+				case FOOD:
+					throw new IllegalArgumentException();
+				case GOLD:
+					War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), "+" + amount,
+							PLACEHOLDER_GOLD_COLOR));
+					break;
+				case LUMBER:
+					War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), "+" + amount,
+							PLACEHOLDER_LUMBER_COLOR));
+					break;
+				}
+			}
 
-					}
-				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, this.commandErrorListener);
+			@Override
+			public void spawnUIUnitGetItemSound(final CUnit cUnit, final CItem item) {
+				final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
+				if (localPlayerIndex == renderPeer.getSimulationUnit().getPlayerIndex()) {
+					War3MapViewer.this.uiSounds.getSound("ItemGet").play(
+							War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+							renderPeer.getZ());
+				}
+			}
+
+			@Override
+			public void spawnUIUnitDropItemSound(final CUnit cUnit, final CItem item) {
+				final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
+				if (localPlayerIndex == renderPeer.getSimulationUnit().getPlayerIndex()) {
+					War3MapViewer.this.uiSounds.getSound("ItemDrop").play(
+							War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+							renderPeer.getZ());
+				}
+			}
+
+			@Override
+			public void spawnAbilitySoundEffect(final CUnit caster, final War3ID alias) {
+				final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
+				final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
+				if (abilityUi.getEffectSound() != null) {
+					War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound()).play(
+							War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+							renderPeer.getZ());
+				}
+			}
+
+			@Override
+			public void loopAbilitySoundEffect(final CUnit caster, final War3ID alias) {
+				final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
+				final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
+				if (abilityUi.getEffectSoundLooped() != null) {
+					War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped()).play(
+							War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+							renderPeer.getZ());
+				}
+			}
+
+			@Override
+			public void stopAbilitySoundEffect(final CUnit caster, final War3ID alias) {
+				final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
+				final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
+				if (abilityUi.getEffectSoundLooped() != null) {
+					// TODO below this probably stops all instances of the sound, which is silly
+					// and busted. Would be better to keep a notion of sound instance
+					War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped()).stop();
+				}
+			}
+
+			@Override
+			public void unitPreferredSelectionReplacement(final CUnit oldUnit, final CUnit newUnit) {
+				final RenderUnit oldRenderPeer = War3MapViewer.this.unitToRenderPeer.get(oldUnit);
+				final RenderUnit newRenderPeer = War3MapViewer.this.unitToRenderPeer.get(newUnit);
+				oldRenderPeer.setPreferredSelectionReplacement(newRenderPeer);
+
+			}
+		}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, this.commandErrorListener);
 
 		this.walkableObjectsTree = new Quadtree<>(this.terrain.getEntireMap());
 		if (this.doodadsAndDestructiblesLoaded) {
-			this.loadDoodadsAndDestructibles(this.allObjectData, w3iFile);
+			loadDoodadsAndDestructibles(this.allObjectData, w3iFile);
 		}
 		else {
 			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
@@ -973,7 +1026,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	 */
 	public void loadAfterUI() throws IOException {
 		if (this.unitsAndItemsLoaded) {
-			this.loadUnitsAndItems(this.allObjectData, this.lastLoadedMapInformation);
+			loadUnitsAndItems(this.allObjectData, this.lastLoadedMapInformation);
 		}
 		else {
 			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
@@ -986,9 +1039,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private void loadDoodadsAndDestructibles(final Warcraft3MapObjectData modifications, final War3MapW3i w3iFile)
 			throws IOException {
-		this.applyModificationFile(this.doodadsData, this.doodadMetaData, modifications.getDoodads(),
+		applyModificationFile(this.doodadsData, this.doodadMetaData, modifications.getDoodads(),
 				WorldEditorDataType.DOODADS);
-		this.applyModificationFile(this.doodadsData, this.destructableMetaData, modifications.getDestructibles(),
+		applyModificationFile(this.doodadsData, this.destructableMetaData, modifications.getDestructibles(),
 				WorldEditorDataType.DESTRUCTIBLES);
 
 		final War3MapDoo doo = this.mapMpq.readDoodads(w3iFile);
@@ -1003,8 +1056,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final float facingRadians = doodad.getAngle();
 			final short lifePercent = doodad.getLife();
 			final float[] scale = doodad.getScale();
-			createDestructableOrDoodad(doodadId, modifications, doodadVariation, location, facingRadians, lifePercent,
-					scale);
+			createDestructableOrDoodad(doodadId, modifications, doodadVariation, location, facingRadians,
+					lifePercent, scale);
 		}
 
 		// Cliff/Terrain doodads.
@@ -1021,7 +1074,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			if (!file.toLowerCase().endsWith(".mdx")) {
 				file += ".mdx";
 			}
-			final MdxModel model = (MdxModel) this.load(file, this.mapPathSolver, this.solverParams);
+			final MdxModel model = (MdxModel) load(file, this.mapPathSolver, this.solverParams);
 
 			final String pathingTexture = row.readSLKTag("pathTex");
 			BufferedImage pathingTextureImage;
@@ -1181,10 +1234,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 		MdxModel model;
 		if (this.mapMpq.has(path)) {
-			model = (MdxModel) this.load(path, this.mapPathSolver, this.solverParams);
+			model = (MdxModel) load(path, this.mapPathSolver, this.solverParams);
 		}
 		else {
-			model = (MdxModel) this.load(fileVar, this.mapPathSolver, this.solverParams);
+			model = (MdxModel) load(fileVar, this.mapPathSolver, this.solverParams);
 		}
 		return model;
 	}
@@ -1288,7 +1341,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		// Hardcoded?
 		WorldEditorDataType type = null;
 		if (sloc.equals(unitId)) {
-//				path = "Objects\\StartLocation\\StartLocation.mdx";
+			//				path = "Objects\\StartLocation\\StartLocation.mdx";
 			type = null; /// ??????
 			this.startLocations[playerIndex] = new Vector2(unitX, unitY);
 		}
@@ -1329,7 +1382,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								this.terrain.splats.put(texture, splat);
 							}
 							this.terrain.splats.get(texture).locations
-									.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+							.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
 							unitShadowSplat = this.terrain.splats.get(texture);
 						}
 					}
@@ -1360,7 +1413,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					final Element uberSplatInfo = this.terrain.uberSplatTable.get(uberSplat);
 					if (uberSplatInfo != null) {
 						final String texturePath = uberSplatInfo.getField("Dir") + "\\" + uberSplatInfo.getField("file")
-								+ ".blp";
+						+ ".blp";
 						final float s = uberSplatInfo.getFieldFloatValue("Scale");
 						if (this.unitsReady) {
 							buildingUberSplatDynamicIngame = this.terrain.addUberSplat(texturePath, unitX, unitY, 1, s,
@@ -1402,7 +1455,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								this.terrain.splats.put(texture, splat);
 							}
 							this.terrain.splats.get(texture).locations
-									.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
+							.add(new float[] { x, y, x + shadowWidth, y + shadowHeight, 3 });
 							unitShadowSplat = this.terrain.splats.get(texture);
 						}
 					}
@@ -1427,7 +1480,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		if (path != null) {
 			final String unitSpecialArtPath = row.getFieldAsString(UNIT_SPECIAL, 0);
 			MdxModel specialArtModel;
-			if (unitSpecialArtPath != null) {
+			if ((unitSpecialArtPath != null) && !unitSpecialArtPath.isEmpty()) {
 				try {
 					specialArtModel = loadModelMdx(unitSpecialArtPath);
 				}
@@ -1962,7 +2015,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public RenderWidget rayPickUnit(final float x, final float y) {
-		return rayPickUnit(x, y, CWidgetFilterFunction.ACCEPT_ALL);
+		return this.rayPickUnit(x, y, CWidgetFilterFunction.ACCEPT_ALL);
 	}
 
 	public RenderWidget rayPickUnit(final float x, final float y, final CWidgetFilterFunction filter) {
@@ -2088,11 +2141,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final int pow2GreaterThan(final int capacity) {
 		int numElements = capacity - 1;
 		numElements |= numElements >>> 1;
-		numElements |= numElements >>> 2;
-		numElements |= numElements >>> 4;
-		numElements |= numElements >>> 8;
-		numElements |= numElements >>> 16;
-		return (numElements < 0) ? 1 : (numElements >= MAXIMUM_ACCEPTED) ? MAXIMUM_ACCEPTED : numElements + 1;
+	numElements |= numElements >>> 2;
+	numElements |= numElements >>> 4;
+	numElements |= numElements >>> 8;
+	numElements |= numElements >>> 16;
+	return (numElements < 0) ? 1 : (numElements >= MAXIMUM_ACCEPTED) ? MAXIMUM_ACCEPTED : numElements + 1;
 	}
 
 	public void standOnRepeat(final MdxComplexInstance instance) {
@@ -2234,7 +2287,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	private static final class QuadtreeIntersectorFindsWalkableRenderHeight
-			implements QuadtreeIntersector<MdxComplexInstance> {
+	implements QuadtreeIntersector<MdxComplexInstance> {
 		private float z;
 		private final Ray ray = new Ray();
 		private final Vector3 intersection = new Vector3();
@@ -2255,7 +2308,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	private static final class QuadtreeIntersectorFindsHighestWalkable
-			implements QuadtreeIntersector<MdxComplexInstance> {
+	implements QuadtreeIntersector<MdxComplexInstance> {
 		private float z;
 		private final Ray ray = new Ray();
 		private final Vector3 intersection = new Vector3();
@@ -2331,7 +2384,27 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			if (spawnedEffectModel != null) {
 				final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel.addInstance();
 				modelInstance.setTeamColor(renderUnit.playerIndex);
-				modelInstance.setLocation(renderUnit.location);
+				{
+					final MdxModel model = (MdxModel) renderUnit.instance.model;
+					int index = -1;
+					for (int i = 0; i < model.attachments.size(); i++) {
+						final Attachment attachment = model.attachments.get(i);
+						if (attachment.getName().startsWith(attachPointName)) {
+							index = i;
+							break;
+						}
+					}
+					if (index != -1) {
+						modelInstance.detach();
+						final MdxNode attachment = renderUnit.instance.getAttachment(index);
+						modelInstance.setParent(attachment);
+						modelInstance.setLocation(0, 0, 0);
+					}
+					else {
+						// TODO This is not consistent with War3, is it? Should look nice though.
+						modelInstance.setLocation(renderUnit.location);
+					}
+				}
 				modelInstance.setScene(War3MapViewer.this.worldScene);
 				final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance, War3MapViewer.this,
 						(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing()),

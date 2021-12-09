@@ -234,7 +234,7 @@ public class MdxComplexInstance extends ModelInstance {
 	}
 
 	private void initNode(final MdxNode[] nodes, final SkeletalNode node, final GenericObject genericObject) {
-		initNode(nodes, node, genericObject, null);
+		this.initNode(nodes, node, genericObject, null);
 	}
 
 	/**
@@ -251,7 +251,10 @@ public class MdxComplexInstance extends ModelInstance {
 			node.parent = nodes[genericObject.parentId];
 		}
 
-		/// TODO: single-axis billboarding
+		node.dontInheritTranslation = genericObject.dontInheritTranslation > 0;
+		node.dontInheritScaling = genericObject.dontInheritScaling > 0;
+		node.dontInheritRotation = genericObject.dontInheritRotation > 0;
+
 		if (genericObject.billboarded != 0) {
 			node.billboarded = true;
 		}
@@ -575,11 +578,13 @@ public class MdxComplexInstance extends ModelInstance {
 
 			final long animEnd = interval[1] - 1;
 			if (this.floatingFrame >= animEnd) {
+				boolean sequenceRestarted = false;
 				if ((this.sequenceLoopMode == SequenceLoopMode.ALWAYS_LOOP)
 						|| ((this.sequenceLoopMode == SequenceLoopMode.MODEL_LOOP) && (sequence.getFlags() == 0))) {
 					this.floatingFrame = this.frame = (int) interval[0]; // TODO not cast
 
 					this.resetEventEmitters();
+					sequenceRestarted = true;
 				}
 				else if (this.sequenceLoopMode == SequenceLoopMode.LOOP_TO_NEXT_ANIMATION) { // faux queued animation
 					// mode
@@ -592,6 +597,7 @@ public class MdxComplexInstance extends ModelInstance {
 					this.sequenceEnded = false;
 					this.resetEventEmitters();
 					this.forced = true;
+					sequenceRestarted = true;
 				}
 				else {
 					this.floatingFrame = this.frame = (int) animEnd; // TODO not cast
@@ -599,10 +605,10 @@ public class MdxComplexInstance extends ModelInstance {
 					this.allowParticleSpawn = false;
 				}
 				if (this.sequenceLoopMode == SequenceLoopMode.NEVER_LOOP_AND_HIDE_WHEN_DONE) {
-					hide();
+					this.hide();
 				}
 
-				this.sequenceEnded = true;
+				this.sequenceEnded = !sequenceRestarted;
 			}
 			else {
 				this.sequenceEnded = false;
@@ -807,7 +813,7 @@ public class MdxComplexInstance extends ModelInstance {
 	}
 
 	public boolean intersectRayBounds(final Ray ray, final Vector3 intersection) {
-		return CollisionShape.intersectRayBounds(getBounds(), this.worldMatrix, ray, intersection);
+		return CollisionShape.intersectRayBounds(this.getBounds(), this.worldMatrix, ray, intersection);
 	}
 
 	/**
@@ -831,7 +837,7 @@ public class MdxComplexInstance extends ModelInstance {
 				intersected = true;
 			}
 		}
-		return intersected || (!this.hasAnyUnselectableMesh && intersectRayBounds(ray, intersection));
+		return intersected || (!this.hasAnyUnselectableMesh && this.intersectRayBounds(ray, intersection));
 	}
 
 	/**

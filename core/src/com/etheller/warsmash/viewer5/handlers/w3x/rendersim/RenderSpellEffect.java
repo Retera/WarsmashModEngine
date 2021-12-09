@@ -24,17 +24,20 @@ public class RenderSpellEffect implements RenderEffect {
 		this.animationQueue = animationQueue;
 		final MdxModel model = (MdxModel) this.modelInstance.model;
 		this.sequences = model.getSequences();
-		this.modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+		this.modelInstance.setSequenceLoopMode(SequenceLoopMode.MODEL_LOOP);
 		this.modelInstance.localRotation.setFromAxisRad(0, 0, 1, yaw);
 		this.modelInstance.sequenceEnded = true;
-		playNextAnimation();
+		this.playNextAnimation();
 	}
 
 	@Override
 	public boolean updateAnimations(final War3MapViewer war3MapViewer, final float deltaTime) {
-		playNextAnimation();
+		this.playNextAnimation();
 		final boolean everythingDone = this.animationQueueIndex >= this.animationQueue.length;
 		if (everythingDone) {
+			if (this.modelInstance.parent != null) {
+				this.modelInstance.setParent(null);
+			}
 			war3MapViewer.worldScene.removeInstance(this.modelInstance);
 		}
 		return everythingDone;

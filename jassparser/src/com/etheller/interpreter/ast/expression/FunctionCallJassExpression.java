@@ -3,6 +3,7 @@ package com.etheller.interpreter.ast.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
@@ -23,7 +24,7 @@ public class FunctionCallJassExpression implements JassExpression {
 			final TriggerExecutionScope triggerScope) {
 		final JassFunction functionByName = globalScope.getFunctionByName(this.functionName);
 		if (functionByName == null) {
-			throw new RuntimeException("Undefined function: " + this.functionName);
+			throw new JassException(globalScope, "Undefined function: " + this.functionName, new RuntimeException());
 		}
 		final List<JassValue> evaluatedExpressions = new ArrayList<>();
 		for (final JassExpression expr : this.arguments) {
@@ -34,7 +35,7 @@ public class FunctionCallJassExpression implements JassExpression {
 			return functionByName.call(evaluatedExpressions, globalScope, triggerScope);
 		}
 		catch (final Exception exc) {
-			throw new RuntimeException("Function call by name failed for name: " + this.functionName, exc);
+			throw new JassException(globalScope, "Function call by name failed for name: " + this.functionName, exc);
 		}
 	}
 

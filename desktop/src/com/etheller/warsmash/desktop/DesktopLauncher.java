@@ -13,6 +13,7 @@ import java.io.PrintStream;
 import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.openal.AL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
@@ -24,6 +25,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglNativesLoader;
+import com.etheller.warsmash.WarsmashGdxFDFTestRenderScreen;
 import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.audio.OpenALSound;
@@ -104,11 +106,17 @@ public class DesktopLauncher {
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				final WarsmashGdxMenuScreen menuScreen = new WarsmashGdxMenuScreen(warsmashIni,
-						warsmashGdxMultiScreenGame);
-				warsmashGdxMultiScreenGame.setScreen(menuScreen);
-				if (finalFileToLoad != null) {
-					menuScreen.startMap(finalFileToLoad);
+				if ((finalFileToLoad != null) && finalFileToLoad.toLowerCase().endsWith(".toc")) {
+					warsmashGdxMultiScreenGame.setScreen(new WarsmashGdxFDFTestRenderScreen(warsmashIni,
+							warsmashGdxMultiScreenGame, finalFileToLoad));
+				}
+				else {
+					final WarsmashGdxMenuScreen menuScreen = new WarsmashGdxMenuScreen(warsmashIni,
+							warsmashGdxMultiScreenGame);
+					warsmashGdxMultiScreenGame.setScreen(menuScreen);
+					if (finalFileToLoad != null) {
+						menuScreen.startMap(finalFileToLoad);
+					}
 				}
 			}
 		});
@@ -188,7 +196,7 @@ public class DesktopLauncher {
 			@Override
 			public AudioContext createContext(final boolean world) {
 				Listener listener;
-				if (world) {
+				if (world && AL.isCreated()) {
 					listener = new Listener() {
 						private float x;
 						private float y;

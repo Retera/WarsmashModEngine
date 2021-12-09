@@ -16,7 +16,11 @@ public class JassReturnStatement implements JassStatement {
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
-		return this.expression.evaluate(globalScope, localScope, triggerScope);
+		final JassValue returnVal = this.expression.evaluate(globalScope, localScope, triggerScope);
+		if (returnVal == null) {
+			return JassReturnNothingStatement.RETURN_NOTHING_NOTICE;
+		}
+		return returnVal;
 	}
 
 }

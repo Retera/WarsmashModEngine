@@ -80,6 +80,7 @@ public class CUnitType {
 	private final boolean canFlee;
 	private final int priority;
 	private final boolean revivesHeroes;
+	private final int pointValue;
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final CRegenType lifeRegenType, final int manaInitial, final int manaMaximum,
@@ -97,7 +98,7 @@ public class CUnitType {
 			final float strengthPerLevel, final int agility, final float agilityPerLevel, final int intelligence,
 			final float intelligencePerLevel, final CPrimaryAttribute primaryAttribute,
 			final List<War3ID> heroAbilityList, final List<String> heroProperNames, final int properNamesCount,
-			final boolean canFlee, final int priority, final boolean revivesHeroes) {
+			final boolean canFlee, final int priority, final boolean revivesHeroes, final int pointValue) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
@@ -155,6 +156,7 @@ public class CUnitType {
 		this.canFlee = canFlee;
 		this.priority = priority;
 		this.revivesHeroes = revivesHeroes;
+		this.pointValue = pointValue;
 	}
 
 	public String getName() {
@@ -383,5 +385,9 @@ public class CUnitType {
 
 	public boolean isRevivesHeroes() {
 		return this.revivesHeroes;
+	}
+
+	public int getPointValue() {
+		return this.pointValue;
 	}
 }

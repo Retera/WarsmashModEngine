@@ -44,14 +44,8 @@ public class CWidgetEvent implements RemovableTriggerEvent {
 	}
 
 	public void fire(final CWidget triggerWidget, final TriggerExecutionScope scope) {
-		if (this.filter != null) {
-			if (!this.filter.evaluate(this.globalScope, triggerWidget.visit(ScopeBuilder.INSTANCE.reset(scope)))) {
-				return;
-			}
-		}
-		if (this.trigger.evaluate(this.globalScope, scope)) {
-			this.trigger.execute(this.globalScope, scope);
-		}
+		this.globalScope.queueTrigger(this.filter, triggerWidget.visit(ScopeBuilder.INSTANCE.reset(scope)),
+				this.trigger, scope, scope);
 	}
 
 	private static final class ScopeBuilder implements AbilityTargetVisitor<CommonTriggerExecutionScope> {

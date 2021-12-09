@@ -36,6 +36,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
@@ -168,6 +169,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandL
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.MultiSelectionIconListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.QueueIconListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialogButton;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CTimerDialog;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
@@ -1094,18 +1097,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))),
 				new AbilityActivationErrorHandler("", this.war3MapViewer.getUiSounds().getSound("InterfaceError")));
 
-		final MdxModel rallyModel = (MdxModel) this.war3MapViewer.load(
-				War3MapViewer.mdx(this.rootFrame.getSkinField("RallyIndicatorDst")), this.war3MapViewer.mapPathSolver,
-				this.war3MapViewer.solverParams);
+		final MdxModel rallyModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("RallyIndicatorDst"));
 		this.rallyPointInstance = (MdxComplexInstance) rallyModel.addInstance();
 		this.rallyPointInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
 				this.war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
 		this.rallyPointInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 		SequenceUtils.randomStandSequence(this.rallyPointInstance);
 		this.rallyPointInstance.hide();
-		this.waypointModel = (MdxModel) this.war3MapViewer.load(
-				War3MapViewer.mdx(this.rootFrame.getSkinField("WaypointIndicator")), this.war3MapViewer.mapPathSolver,
-				this.war3MapViewer.solverParams);
+		this.waypointModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("WaypointIndicator"));
 
 		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
 		fontParam.size = (int) GameUI.convertY(this.uiViewport, 0.012f);
@@ -1820,7 +1819,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final War3ID buildingTypeId = new War3ID(MeleeUI.this.activeCommandOrderId);
 				MeleeUI.this.cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
 				final String unitModelPath = viewer.getUnitModelPath(unitData.get(buildingTypeId));
-				final MdxModel model = (MdxModel) viewer.load(unitModelPath, viewer.mapPathSolver, viewer.solverParams);
+				final MdxModel model = viewer.loadModelMdx(unitModelPath);
 				MeleeUI.this.cursorModelInstance = (MdxComplexInstance) model.addInstance();
 //				MeleeUI.this.cursorModelInstance.setVertexColor(new float[] { 1, 1, 1, 0.5f });
 				final int playerColorIndex = viewer.simulation
@@ -3833,5 +3832,44 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	public void displayTimedText(final float x, final float y, final float duration, final String message) {
 		showGameMessage(message, duration); // TODO x y
+	}
+
+	public CScriptDialog createScriptDialog(final GlobalScope globalScope) {
+		final SimpleFrame scriptDialog = (SimpleFrame) this.rootFrame.createFrame("ScriptDialog", this.rootFrame, 0, 0);
+		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+		scriptDialog.setVisible(false);
+		final StringFrame scriptDialogTextFrame = (StringFrame) this.rootFrame.getFrameByName("ScriptDialogText", 0);
+		scriptDialog.positionBounds(this.rootFrame, this.uiViewport);
+		return new CScriptDialog(globalScope, scriptDialog, scriptDialogTextFrame);
+	}
+
+	public CScriptDialogButton createScriptDialogButton(final CScriptDialog scriptDialog, final String text,
+			final char hotkey) {
+		// TODO use hotkey
+		final GlueTextButtonFrame scriptDialogButton = (GlueTextButtonFrame) this.rootFrame
+				.createFrame("ScriptDialogButton", scriptDialog.getScriptDialogFrame(), 0, 0);
+		scriptDialogButton.setHeight(GameUI.convertY(this.uiViewport, 0.03f));
+		final StringFrame scriptDialogTextFrame = (StringFrame) this.rootFrame.getFrameByName("ScriptDialogButtonText",
+				0);
+		this.rootFrame.setText(scriptDialogTextFrame, text);
+		scriptDialogButton.addSetPoint(new SetPoint(FramePoint.TOP, scriptDialog.getLastAddedComponent(),
+				FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, -0.005f)));
+		final CScriptDialogButton newButton = new CScriptDialogButton(scriptDialogButton, scriptDialogTextFrame);
+		scriptDialog.addButton(this.rootFrame, this.uiViewport, newButton);
+		return newButton;
+	}
+
+	public void destroyDialog(final CScriptDialog dialog) {
+		this.rootFrame.remove(dialog.getScriptDialogFrame());
+	}
+
+	public void clearDialog(final CScriptDialog dialog) {
+		destroyDialog(dialog);
+		final SimpleFrame scriptDialog = (SimpleFrame) this.rootFrame.createFrame("ScriptDialog", this.rootFrame, 0, 0);
+		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+		scriptDialog.setVisible(false);
+		final StringFrame scriptDialogTextFrame = (StringFrame) this.rootFrame.getFrameByName("ScriptDialogText", 0);
+		scriptDialog.positionBounds(this.rootFrame, this.uiViewport);
+		dialog.reset(scriptDialog, scriptDialogTextFrame);
 	}
 }

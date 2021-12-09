@@ -177,6 +177,8 @@ public class CUnitData {
 	private static final War3ID CAN_FLEE = War3ID.fromString("ufle");
 	private static final War3ID PRIORITY = War3ID.fromString("upri");
 
+	private static final War3ID POINT_VALUE = War3ID.fromString("upoi");
+
 	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
@@ -324,7 +326,9 @@ public class CUnitData {
 			}
 			final String unitName = unitType.getFieldAsString(NAME, 0);
 			final float acquisitionRange = unitType.getFieldAsFloat(ACQUISITION_RANGE, 0);
-			final float minimumAttackRange = unitType.getFieldAsFloat(MINIMUM_ATTACK_RANGE, 0);
+			// note: uamn expected type int below, not exactly sure why that decision was
+			// made but I'll support it
+			final float minimumAttackRange = unitType.getFieldAsInteger(MINIMUM_ATTACK_RANGE, 0);
 			final EnumSet<CTargetType> targetedAs = CTargetType
 					.parseTargetTypeSet(unitType.getFieldAsString(TARGETED_AS, 0));
 			final String classificationString = unitType.getFieldAsString(CLASSIFICATION, 0);
@@ -468,6 +472,8 @@ public class CUnitData {
 			final int foodUsed = unitType.getFieldAsInteger(FOOD_USED, 0);
 			final int foodMade = unitType.getFieldAsInteger(FOOD_MADE, 0);
 
+			final int pointValue = unitType.getFieldAsInteger(POINT_VALUE, 0);
+
 			final boolean revivesHeroes = unitType.getFieldAsBoolean(REVIVES_HEROES, 0);
 
 			final String unitsTrainedString = unitType.getFieldAsString(UNITS_TRAINED, 0);
@@ -567,7 +573,7 @@ public class CUnitData {
 					researchesAvailable, upgradesTo, unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime,
 					preventedPathingTypes, requiredPathingTypes, propWindow, turnRate, requirements, unitLevel, hero,
 					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
-					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes);
+					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

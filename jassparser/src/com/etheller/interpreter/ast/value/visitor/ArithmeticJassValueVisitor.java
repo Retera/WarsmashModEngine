@@ -48,7 +48,10 @@ public class ArithmeticJassValueVisitor implements JassValueVisitor<JassValue> {
 
 	@Override
 	public JassValue accept(final CodeJassValue value) {
-		throw new UnsupportedOperationException("Cannot perform arithmetic on code");
+		if (this.rightHand == null) {
+			return this.sign.apply(value, null);
+		}
+		return this.rightHand.visit(ArithmeticLeftHandCodeJassValueVisitor.INSTANCE.reset(value, this.sign));
 	}
 
 	@Override

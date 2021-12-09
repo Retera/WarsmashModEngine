@@ -6,6 +6,7 @@ import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
 public class CRegionTriggerLeave {
 	private final GlobalScope globalScope;
@@ -20,13 +21,10 @@ public class CRegionTriggerLeave {
 	}
 
 	public void fire(final CUnit unit, final CRegion region) {
-		if ((this.filter == null) || this.filter.evaluate(this.globalScope,
-				CommonTriggerExecutionScope.filterScope(TriggerExecutionScope.EMPTY, unit))) {
-			final CommonTriggerExecutionScope eventScope = CommonTriggerExecutionScope
-					.unitLeaveRegionScope(this.trigger, TriggerExecutionScope.EMPTY, unit, region);
-			if (this.trigger.evaluate(this.globalScope, eventScope)) {
-				this.trigger.execute(this.globalScope, eventScope);
-			}
-		}
+		final CommonTriggerExecutionScope eventScope = CommonTriggerExecutionScope.unitLeaveRegionScope(
+				JassGameEventsWar3.EVENT_GAME_LEAVE_REGION, this.trigger, TriggerExecutionScope.EMPTY, unit, region);
+		this.globalScope.queueTrigger(this.filter,
+				CommonTriggerExecutionScope.filterScope(TriggerExecutionScope.EMPTY, unit), this.trigger, eventScope,
+				eventScope);
 	}
 }

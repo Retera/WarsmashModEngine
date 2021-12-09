@@ -48,8 +48,6 @@ public class VariableEvent {
 
 	public void fire(final GlobalScope globalScope) {
 		final TriggerExecutionScope triggerScope = new TriggerExecutionScope(this.trigger);
-		if (this.trigger.evaluate(globalScope, triggerScope)) {
-			this.trigger.execute(globalScope, triggerScope);
-		}
+		globalScope.queueTrigger(null, null, this.trigger, triggerScope, triggerScope);
 	}
 }

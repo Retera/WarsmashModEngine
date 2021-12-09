@@ -523,6 +523,21 @@ public enum ArithmeticSigns implements ArithmeticSign {
 	}
 
 	private static boolean isEqual(final CodeJassValue left, final CodeJassValue right) {
-		return (left.getValue() == right.getValue());
+		if (left == null) {
+			if (right == null) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			if (right == null) {
+				return false;
+			}
+			else {
+				return (left.getValue() == right.getValue());
+			}
+		}
 	}
 }

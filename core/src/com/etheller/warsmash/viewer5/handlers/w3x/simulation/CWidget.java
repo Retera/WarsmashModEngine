@@ -128,7 +128,7 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 		final List<CWidgetEvent> eventList = getEventList(eventType);
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {
-				event.fire(this, eventScopeBuilder.create(event.getTrigger(), this));
+				event.fire(this, eventScopeBuilder.create(eventType, event.getTrigger(), this));
 			}
 		}
 	}

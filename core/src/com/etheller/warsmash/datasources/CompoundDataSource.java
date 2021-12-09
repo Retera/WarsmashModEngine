@@ -48,6 +48,24 @@ public class CompoundDataSource implements DataSource {
 	}
 
 	@Override
+	public File getDirectory(String filepath) throws IOException {
+		try {
+			for (int i = this.mpqList.size() - 1; i >= 0; i--) {
+				final DataSource mpq = this.mpqList.get(i);
+				final File tempProduct = mpq.getDirectory(filepath);
+				if (tempProduct != null) {
+					return tempProduct;
+				}
+			}
+		}
+		catch (final IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	@Override
 	public ByteBuffer read(final String path) throws IOException {
 		try {
 			for (int i = this.mpqList.size() - 1; i >= 0; i--) {

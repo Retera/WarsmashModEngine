@@ -249,11 +249,17 @@ public class PathingGrid {
 
 	public short getCellPathing(final int cellX, final int cellY) {
 		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
+		if (index >= this.pathingGrid.length) {
+			return 0;
+		}
 		return (short) (this.pathingGrid[index] | this.dynamicPathingOverlay[index]);
 	}
 
 	public void setCellPathing(final int cellX, final int cellY, final short pathingValue) {
 		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
+		if (index >= this.pathingGrid.length) {
+			return;
+		}
 		this.pathingGrid[index] = pathingValue;
 	}
 
@@ -281,6 +287,9 @@ public class PathingGrid {
 	public boolean isPathable(final float unitX, final float unitY, final MovementType pathingType,
 			final float collisionSize) {
 		if (collisionSize == 0f) {
+			if (!contains(unitX, unitY)) {
+				return false;
+			}
 			return pathingType.isPathable(getPathing(unitX, unitY));
 		}
 		for (int i = -1; i <= 1; i++) {

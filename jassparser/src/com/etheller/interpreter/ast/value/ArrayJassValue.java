@@ -2,10 +2,11 @@ package com.etheller.interpreter.ast.value;
 
 import java.util.Arrays;
 
+import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
 public class ArrayJassValue implements JassValue {
-	private final JassValue[] data = new JassValue[8192]; // that's the array size in JASS
+	private final JassValue[] data = new JassValue[JassSettings.MAX_ARRAY_SIZE];
 	private final ArrayJassType type;
 
 	public ArrayJassValue(final ArrayJassType type) {
@@ -43,8 +44,10 @@ public class ArrayJassValue implements JassValue {
 						"Attempted to set " + this.type.getName() + " to null in array at index " + index + "!");
 			}
 		}
-		if (value.visit(JassTypeGettingValueVisitor.getInstance()) != primitiveType) {
-			throw new IllegalStateException("Illegal type for assignment to " + primitiveType.getName() + " array");
+		final JassType valueType = value.visit(JassTypeGettingValueVisitor.getInstance());
+		if (!primitiveType.isAssignableFrom(valueType)) {
+			throw new IllegalStateException("Illegal type for assignment to " + primitiveType.getName() + " array: "
+					+ (valueType == null ? "null" : valueType.getName()));
 		}
 		this.data[index] = value;
 	}

@@ -230,7 +230,7 @@ public class CPlayer extends CBasePlayer {
 		final List<CPlayerEvent> eventList = getEventList(eventType);
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
-				event.fire(hero, eventScopeBuilder.create(event.getTrigger(), hero));
+				event.fire(hero, eventScopeBuilder.create(eventType, event.getTrigger(), hero));
 			}
 		}
 	}
@@ -248,8 +248,8 @@ public class CPlayer extends CBasePlayer {
 		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_DEATH);
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
-				event.fire(dyingUnit,
-						CommonTriggerExecutionScope.unitDeathScope(event.getTrigger(), dyingUnit, killingUnit));
+				event.fire(dyingUnit, CommonTriggerExecutionScope.unitDeathScope(
+						JassGameEventsWar3.EVENT_PLAYER_UNIT_DEATH, event.getTrigger(), dyingUnit, killingUnit));
 			}
 		}
 	}

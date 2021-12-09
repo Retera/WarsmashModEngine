@@ -160,6 +160,11 @@ public class CascDataSource implements DataSource {
 		return internalGetFile(filepath);
 	}
 
+	@Override
+	public File getDirectory(String filepath) throws IOException {
+		return null;
+	}
+
 	private File internalGetFile(final String tempFilepath) {
 		try {
 			if (this.rootFileSystem.isFile(tempFilepath) && this.rootFileSystem.isFileAvailable(tempFilepath)) {

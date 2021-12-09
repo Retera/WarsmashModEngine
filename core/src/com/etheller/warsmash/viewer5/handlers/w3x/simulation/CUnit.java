@@ -108,7 +108,7 @@ public class CUnit extends CWidget {
 	// which fields shouldn't be persisted if we do game state save later
 	private transient CUnitStateNotifier stateNotifier = new CUnitStateNotifier();
 	private transient List<StateListenerUpdate> stateListenersUpdates = new ArrayList<>();
-	private final float acquisitionRange;
+	private float acquisitionRange;
 	private transient static AutoAttackTargetFinderEnum autoAttackTargetFinderEnum = new AutoAttackTargetFinderEnum();
 
 	private transient CBehaviorMove moveBehavior;
@@ -134,6 +134,8 @@ public class CUnit extends CWidget {
 
 	private int foodMade;
 	private int foodUsed;
+
+	private int triggerEditorCustomValue;
 
 	private List<CUnitAttack> unitSpecificAttacks;
 	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
@@ -1065,7 +1067,8 @@ public class CUnit extends CWidget {
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {
-				event.fire(this, CommonTriggerExecutionScope.unitDeathScope(event.getTrigger(), this, source));
+				event.fire(this, CommonTriggerExecutionScope.unitDeathScope(JassGameEventsWar3.EVENT_UNIT_DEATH,
+						event.getTrigger(), this, source));
 			}
 		}
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
@@ -1221,11 +1224,18 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean isMovementDisabled() {
-		return this.isBuilding();
+		return this.moveBehavior == null;
+		// TODO this used to directly return the state of whether our unit was a
+		// building. Will it be a problem that I changed it?
+		// I was trying to fix attack move on stationary units which was crashing
 	}
 
 	public float getAcquisitionRange() {
 		return this.acquisitionRange;
+	}
+
+	public void setAcquisitionRange(final float acquisitionRange) {
+		this.acquisitionRange = acquisitionRange;
 	}
 
 	public void heal(final CSimulation game, final int lifeToRegain) {
@@ -1970,5 +1980,13 @@ public class CUnit extends CWidget {
 
 		}
 		return false;
+	}
+
+	public int getTriggerEditorCustomValue() {
+		return this.triggerEditorCustomValue;
+	}
+
+	public void setTriggerEditorCustomValue(final int triggerEditorCustomValue) {
+		this.triggerEditorCustomValue = triggerEditorCustomValue;
 	}
 }

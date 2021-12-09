@@ -53,6 +53,16 @@ public class FolderDataSource implements DataSource {
 	}
 
 	@Override
+	public File getDirectory(String filepath) throws IOException {
+		filepath = fixFilepath(filepath);
+		File file = new File(this.folderPath.toString() + File.separatorChar + filepath);
+		if(!file.exists() || !file.isDirectory()) {
+			return null;
+		}
+		return file;
+	}
+
+	@Override
 	public ByteBuffer read(String path) throws IOException {
 		path = fixFilepath(path);
 		if (!has(path)) {

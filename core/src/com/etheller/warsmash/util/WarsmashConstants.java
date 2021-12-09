@@ -6,7 +6,7 @@ public class WarsmashConstants {
 	 * With version, we use 0 for RoC, 1 for TFT emulation, and probably 2+ or
 	 * whatever for custom mods and other stuff
 	 */
-	public static int GAME_VERSION = 0;
+	public static int GAME_VERSION = 1;
 	public static final int REPLACEABLE_TEXTURE_LIMIT = 64;
 	public static final float SIMULATION_STEP_TIME = 1 / 20f;
 	public static final int PORT_NUMBER = 6115;
@@ -36,7 +36,8 @@ public class WarsmashConstants {
 	// workaround to fix it if you need the local files
 	// to take priority over built-ins for tilesets.
 	public static final boolean FIX_FLAT_FILES_TILESET_LOADING = false;
-	public static final boolean ENABLE_MUSIC = true;
+	public static final boolean ENABLE_MUSIC = false;
 	public static final boolean LOAD_UNITS_FROM_WORLDEDIT_DATA = false;
 	public static final boolean LOCAL_TEMP_TEST_ALL_PLAYERS_PLAYING = true;
+	public static final boolean CRASH_ON_INCOMPATIBLE_132_FEATURES = false;
 }

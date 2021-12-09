@@ -15,6 +15,7 @@ import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.statement.JassStatement;
+import com.etheller.interpreter.ast.util.JassSettings;
 
 public class JassProgramVisitor extends JassBaseVisitor<Void> {
 	public static final TriggerExecutionScope EMPTY_TRIGGER_SCOPE = new TriggerExecutionScope(null);
@@ -45,7 +46,9 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 		}
 		else if (ctx.nativeBlock() != null) {
 			final String text = ctx.nativeBlock().ID().getText();
-			System.out.println("Registering native: " + text);
+			if (JassSettings.LOG_FUNCTION_DEFINITIONS) {
+				System.out.println("Registering native: " + text);
+			}
 			this.jassNativeManager.registerNativeCode(ctx.getStart().getLine(), this.jassFileName, text,
 					this.jassParametersVisitor.visit(ctx.nativeBlock().paramList()),
 					this.jassTypeVisitor.visit(ctx.nativeBlock().type()), this.globals);
@@ -84,7 +87,9 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 					this.jassTypeVisitor.visit(functionBlockContext.type()));
 			this.globals.defineFunction(ctx.getStart().getLine(), this.jassFileName,
 					functionBlockContext.ID().getText(), userJassFunction);
-			System.out.println("Defining jass user function: " + functionBlockContext.ID().getText());
+			if (JassSettings.LOG_FUNCTION_DEFINITIONS) {
+				System.out.println("Defining jass user function: " + functionBlockContext.ID().getText());
+			}
 		}
 		return null;
 	}

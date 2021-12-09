@@ -67,10 +67,15 @@ public interface SimulationRenderController {
 
 	void spawnAbilitySoundEffect(CUnit caster, War3ID alias);
 
+	void loopAbilitySoundEffect(CUnit caster, War3ID alias);
+
+	void stopAbilitySoundEffect(CUnit caster, War3ID alias);
+
 	void unitPreferredSelectionReplacement(CUnit unit, CUnit newUnit);
 
 	void heroRevived(CUnit trainedUnit);
 
 	void heroDeathEvent(CUnit cUnit);
 
+	SimulationRenderComponent createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias, float artAttachmentHeight);
 }

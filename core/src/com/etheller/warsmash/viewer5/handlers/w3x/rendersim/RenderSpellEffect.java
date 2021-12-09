@@ -13,10 +13,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class RenderSpellEffect implements RenderEffect {
 	public static final PrimaryTag[] DEFAULT_ANIMATION_QUEUE = { PrimaryTag.BIRTH, PrimaryTag.STAND, PrimaryTag.DEATH };
+	public static final PrimaryTag[] STAND_ONLY = { PrimaryTag.STAND };
+	public static final PrimaryTag[] DEATH_ONLY = { PrimaryTag.DEATH };
 	private final MdxComplexInstance modelInstance;
-	private final PrimaryTag[] animationQueue;
+	private PrimaryTag[] animationQueue;
 	private int animationQueueIndex;
 	private final List<Sequence> sequences;
+	private boolean killWhenDone = true;
 
 	public RenderSpellEffect(final MdxComplexInstance modelInstance, final War3MapViewer war3MapViewer, final float yaw,
 			final PrimaryTag[] animationQueue) {
@@ -33,11 +36,17 @@ public class RenderSpellEffect implements RenderEffect {
 	@Override
 	public boolean updateAnimations(final War3MapViewer war3MapViewer, final float deltaTime) {
 		playNextAnimation();
-		final boolean everythingDone = this.animationQueueIndex >= this.animationQueue.length;
-		if (everythingDone) {
-			war3MapViewer.worldScene.removeInstance(this.modelInstance);
+		if(killWhenDone) {
+			final boolean everythingDone = this.animationQueueIndex >= this.animationQueue.length;
+			if (everythingDone) {
+				war3MapViewer.worldScene.removeInstance(this.modelInstance);
+			}
+			return everythingDone;
+		} else {
+			animationQueueIndex = 0;
+			playNextAnimation();;
+			return false;
 		}
-		return everythingDone;
 	}
 
 	private void playNextAnimation() {
@@ -49,5 +58,11 @@ public class RenderSpellEffect implements RenderEffect {
 			}
 			this.animationQueueIndex++;
 		}
+	}
+
+	public void setAnimations(PrimaryTag[] animations, boolean killWhenDone) {
+		animationQueue = animations;
+		animationQueueIndex = 0;
+		this.killWhenDone = killWhenDone;
 	}
 }

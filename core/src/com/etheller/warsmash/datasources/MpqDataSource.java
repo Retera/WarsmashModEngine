@@ -113,6 +113,11 @@ public class MpqDataSource implements DataSource {
 	}
 
 	@Override
+	public File getDirectory(String filepath) throws IOException {
+		return null;
+	}
+
+	@Override
 	public boolean has(final String filepath) {
 		try {
 			this.archive.lookupPath(filepath);

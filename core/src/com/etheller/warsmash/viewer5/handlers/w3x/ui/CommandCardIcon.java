@@ -172,6 +172,11 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	}
 
 	@Override
+	public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
+
+	}
+
+	@Override
 	public void mouseDown(final GameUI gameUI, final Viewport uiViewport) {
 		this.iconFrame.setWidth(this.defaultWidth * 0.95f);
 		this.iconFrame.setHeight(this.defaultHeight * 0.95f);

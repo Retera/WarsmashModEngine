@@ -23,6 +23,11 @@ public class SubdirDataSource implements DataSource {
 	}
 
 	@Override
+	public File getDirectory(String filepath) throws IOException {
+		return this.dataSource.getDirectory(this.subdir + filepath);
+	}
+
+	@Override
 	public ByteBuffer read(final String path) throws IOException {
 		return this.dataSource.read(this.subdir + path);
 	}

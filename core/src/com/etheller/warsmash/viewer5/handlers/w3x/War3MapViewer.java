@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 
 import javax.imageio.ImageIO;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 
@@ -837,6 +838,34 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
+					public SimulationRenderComponent createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias, float artAttachmentHeight) {
+						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
+						String effectPath = abilityUI.getTargetArt(0);
+						RenderDestructable renderDestructable = War3MapViewer.this.destructableToRenderPeer.get(target);
+						final MdxModel spawnedEffectModel = loadModelMdx(effectPath);
+						if (spawnedEffectModel != null) {
+							final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel
+									.addInstance();
+							modelInstance.setTeamColor(simulation.getPlayer(source.getPlayerIndex()).getColor());
+							modelInstance.setLocation(renderDestructable.getX(), renderDestructable.getY(), renderDestructable.getZ() + artAttachmentHeight);
+							modelInstance.setScene(War3MapViewer.this.worldScene);
+							final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance,
+									War3MapViewer.this,
+									0,
+									RenderSpellEffect.STAND_ONLY);
+							renderAttackInstant.setAnimations(RenderSpellEffect.STAND_ONLY, false);
+							War3MapViewer.this.projectiles.add(renderAttackInstant);
+							return new SimulationRenderComponent() {
+								@Override
+								public void remove() {
+									renderAttackInstant.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
+								}
+							};
+						}
+						return null;
+					}
+
+					@Override
 					public void spawnUnitReadySound(final CUnit trainedUnit) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(trainedUnit);
 						renderPeer.soundset.ready.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
@@ -895,6 +924,28 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound()).play(
 									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
 									renderPeer.getZ());
+						}
+					}
+
+					@Override
+					public void loopAbilitySoundEffect(CUnit caster, War3ID alias) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
+						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
+						if (abilityUi.getEffectSoundLooped() != null) {
+							War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped()).play(
+									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+									renderPeer.getZ());
+						}
+					}
+
+					@Override
+					public void stopAbilitySoundEffect(CUnit caster, War3ID alias) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
+						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
+						if (abilityUi.getEffectSoundLooped() != null) {
+							// TODO below this probably stops all instances of the sound, which is silly
+							// and busted. Would be better to keep a notion of sound instance
+							War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped()).stop();
 						}
 					}
 

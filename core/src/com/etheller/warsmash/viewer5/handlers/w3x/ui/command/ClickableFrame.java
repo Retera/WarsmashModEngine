@@ -14,4 +14,6 @@ public interface ClickableFrame extends UIFrame {
 	void mouseExit(final GameUI gameUI, final Viewport uiViewport);
 
 	void onClick(int button);
+
+	void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y);
 }

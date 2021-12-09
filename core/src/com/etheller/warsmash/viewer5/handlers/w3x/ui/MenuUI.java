@@ -1,9 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collection;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -25,15 +27,7 @@ import com.etheller.warsmash.networking.WarsmashClientSendingOrderListener;
 import com.etheller.warsmash.networking.WarsmashClientWriter;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
-import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
-import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
-import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
-import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame;
-import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
-import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
-import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
-import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
-import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.parsers.fdf.frames.*;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.parsers.w3x.War3Map;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
@@ -57,6 +51,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuData;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMission;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
+import javafx.scene.control.ScrollBar;
 
 public class MenuUI {
 	private static final Vector2 screenCoordsVector = new Vector2();
@@ -475,6 +470,39 @@ public class MenuUI {
 		// Create skirmish UI
 		this.skirmish = this.rootFrame.createFrame("Skirmish", this.rootFrame, 0, 0);
 		this.skirmish.setVisible(false);
+		GlueTextButtonFrame playGameButton = (GlueTextButtonFrame)this.rootFrame.getFrameByName("PlayGameButton", 0);
+		SimpleFrame mapListContainer = (SimpleFrame)this.rootFrame.getFrameByName("MapListContainer", 0);
+		final ListBoxFrame mapListBox = (ListBoxFrame) this.rootFrame.createFrameByType("LISTBOX", "MapListBox",
+				mapListContainer, "WITHCHILDREN", 0);
+		mapListBox.setSetAllPoints(true);
+		mapListBox.setFrameFont(profileListText.getFrameFont());
+		Collection<String> listfile = dataSource.getListfile();
+		for(String file: listfile) {
+			if((file.toLowerCase().endsWith(".w3x") || file.toLowerCase().endsWith(".w3m")) && !file.contains("/") && !file.contains("\\")) {
+				mapListBox.addItem(file, this.rootFrame, this.uiViewport);
+			}
+		}
+		mapListContainer.add(mapListBox);
+		playGameButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				String selectedItem = mapListBox.getSelectedItem();
+				if(selectedItem!=null) {
+					MenuUI.this.campaignMenu.setVisible(false);
+					MenuUI.this.campaignBackButton.setVisible(false);
+					MenuUI.this.missionSelectFrame.setVisible(false);
+					MenuUI.this.campaignSelectFrame.setVisible(false);
+					MenuUI.this.campaignWarcraftIIILogo.setVisible(false);
+					MenuUI.this.campaignRootMenuUI.setVisible(false);
+					MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
+					MenuUI.this.skirmish.setVisible(false);
+					MenuUI.this.glueSpriteLayerTopLeft.setSequence("SinglePlayerSkirmish Birth");
+					MenuUI.this.glueSpriteLayerTopRight.setSequence("SinglePlayerSkirmish Birth");
+					MenuUI.this.mapFilepathToStart = selectedItem;
+				}
+
+			}
+		});
 
 		this.skirmishCancelButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("CancelButton", 0);
 		this.skirmishCancelButton.setOnClick(new Runnable() {
@@ -1015,7 +1043,11 @@ public class MenuUI {
 	}
 
 	public boolean touchDragged(final int screenX, final int screenY, final float worldScreenY, final int pointer) {
-		mouseMoved(screenX, screenY, worldScreenY);
+		screenCoordsVector.set(screenX, screenY);
+		this.uiViewport.unproject(screenCoordsVector);
+		if(this.mouseDownUIFrame != null) {
+			this.mouseDownUIFrame.mouseDragged(this.rootFrame, this.uiViewport, screenCoordsVector.x, screenCoordsVector.y);
+		}
 		return false;
 	}
 
@@ -1030,9 +1062,7 @@ public class MenuUI {
 			}
 			if (mousedUIFrame instanceof ClickableFrame) {
 				this.mouseOverUIFrame = (ClickableFrame) mousedUIFrame;
-				if (this.mouseOverUIFrame != null) {
-					this.mouseOverUIFrame.mouseEnter(this.rootFrame, this.uiViewport);
-				}
+				this.mouseOverUIFrame.mouseEnter(this.rootFrame, this.uiViewport);
 			}
 			else {
 				this.mouseOverUIFrame = null;

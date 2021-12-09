@@ -3300,7 +3300,8 @@ public class Jass2 {
 					if (whichTrigger == null) {
 						return BooleanJassValue.FALSE;
 					}
-					return BooleanJassValue.of(whichTrigger.evaluate(globalScope, triggerScope));
+					return BooleanJassValue.of(whichTrigger.evaluate(globalScope,
+							new CommonTriggerExecutionScope(whichTrigger, triggerScope)));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerExecute", new JassFunction() {
@@ -3308,7 +3309,7 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-					whichTrigger.execute(globalScope, triggerScope);
+					whichTrigger.execute(globalScope, new CommonTriggerExecutionScope(whichTrigger, triggerScope));
 					return null;
 				}
 			});
@@ -3622,7 +3623,7 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final double time = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-					throw new IllegalStateException("Needs to sleep " + time);
+					throw new JassException(globalScope, "Needs to sleep " + time, null);
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerNeutralAggressive", new JassFunction() {

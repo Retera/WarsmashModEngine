@@ -1079,7 +1079,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				"", 0);
 		this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 		this.cursorFrame.setSequence("Normal");
-		this.cursorFrame.setZDepth(-1.0f);
+		this.cursorFrame.setZDepth(1.0f);
 		if (WarsmashConstants.CATCH_CURSOR) {
 			Gdx.input.setCursorCatched(true);
 		}

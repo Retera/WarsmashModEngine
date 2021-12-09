@@ -318,7 +318,7 @@ public abstract class Scene {
 	private static final class InstanceDepthComparator implements Comparator<ModelInstance> {
 		@Override
 		public int compare(final ModelInstance o1, final ModelInstance o2) {
-			return -Float.compare(o2.depth, o1.depth);
+			return Float.compare(o2.depth, o1.depth);
 		}
 	}
 

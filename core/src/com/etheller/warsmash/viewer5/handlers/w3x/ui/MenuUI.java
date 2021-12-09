@@ -25,6 +25,7 @@ import com.etheller.warsmash.networking.WarsmashClientSendingOrderListener;
 import com.etheller.warsmash.networking.WarsmashClientWriter;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
@@ -53,6 +54,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnit
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapinfo.MapInfoPane;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuData;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMission;
@@ -103,7 +105,13 @@ public class MenuUI {
 	private UIFrame singlePlayerMenu;
 	private UIFrame singlePlayerMainPanel;
 
+	// single player skirmish menu ("Custom Game")
 	private UIFrame skirmish;
+	private UIFrame mapInfoPanel;
+	private UIFrame advancedOptionsPanel;
+	private GlueTextButtonFrame mapInfoButton;
+	private GlueTextButtonFrame advancedOptionsButton;
+	private UIFrame skirmishAdvancedOptionsPane;
 
 	private UIFrame profilePanel;
 	private EditBoxFrame newProfileEditBox;
@@ -159,6 +167,7 @@ public class MenuUI {
 	private LoadingMap loadingMap;
 	private SpriteFrame loadingBackground;
 	private boolean unifiedCampaignInfo = false;
+	private MapInfoPane skirmishMapInfoPane;
 
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
 			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
@@ -259,7 +268,7 @@ public class MenuUI {
 				"", 0);
 		this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 		this.cursorFrame.setSequence("Normal");
-		this.cursorFrame.setZDepth(-1.0f);
+		this.cursorFrame.setZDepth(1.0f);
 		if (WarsmashConstants.CATCH_CURSOR) {
 			Gdx.input.setCursorCatched(true);
 		}
@@ -475,6 +484,18 @@ public class MenuUI {
 		// Create skirmish UI
 		this.skirmish = this.rootFrame.createFrame("Skirmish", this.rootFrame, 0, 0);
 		this.skirmish.setVisible(false);
+		this.mapInfoButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("MapInfoButton", 0);
+		this.advancedOptionsButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("AdvancedOptionsButton", 0);
+		this.mapInfoPanel = this.rootFrame.getFrameByName("MapInfoPanel", 0);
+		this.advancedOptionsPanel = this.rootFrame.getFrameByName("AdvancedOptionsPanel", 0);
+		final SimpleFrame mapInfoPaneContainer = (SimpleFrame) this.rootFrame.getFrameByName("MapInfoPaneContainer", 0);
+		final SimpleFrame advancedOptionsPaneContainer = (SimpleFrame) this.rootFrame
+				.getFrameByName("AdvancedOptionsPaneContainer", 0);
+		this.skirmishAdvancedOptionsPane = this.rootFrame.createFrame("AdvancedOptionsPane",
+				advancedOptionsPaneContainer, 0, 0);
+		this.skirmishAdvancedOptionsPane.setSetAllPoints(true);
+		advancedOptionsPaneContainer.add(this.skirmishAdvancedOptionsPane);
+		this.skirmishMapInfoPane = new MapInfoPane(this.rootFrame, mapInfoPaneContainer);
 
 		this.skirmishCancelButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("CancelButton", 0);
 		this.skirmishCancelButton.setOnClick(new Runnable() {
@@ -522,11 +543,10 @@ public class MenuUI {
 		this.campaignBackButton.setOnClick(new Runnable() {
 			@Override
 			public void run() {
-				if (MenuUI.this.currentMissionSelectMenuUI != null) {
+				if (MenuUI.this.menuState == MenuState.MISSION_SELECT) {
 					MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
 					MenuUI.this.missionSelectFrame.setVisible(false);
 					MenuUI.this.menuState = MenuState.CAMPAIGN;
-					MenuUI.this.currentMissionSelectMenuUI = null;
 				}
 				else {
 					MenuUI.this.campaignMenu.setVisible(false);
@@ -684,9 +704,10 @@ public class MenuUI {
 			this.rootFrame.setSpriteFrameModel(this.loadingBar, this.rootFrame.getSkinField("LoadingProgressBar"));
 			this.loadingBar.setSequence(0);
 			this.loadingBar.setFrameByRatio(0.5f);
-			this.loadingBar.setZDepth(1.0f);
+			this.loadingBar.setZDepth(0.25f);
 			this.rootFrame.setText(this.loadingTitleText, getStringWithWTS(wts, mapInfo.getLoadingScreenTitle()));
 			this.rootFrame.setText(this.loadingSubtitleText, getStringWithWTS(wts, mapInfo.getLoadingScreenSubtitle()));
+			this.loadingText.setJustifyV(TextJustify.TOP);
 			this.rootFrame.setText(this.loadingText, getStringWithWTS(wts, mapInfo.getLoadingScreenText()));
 			this.loadingMap = new LoadingMap(viewer, map, mapInfo);
 
@@ -881,6 +902,8 @@ public class MenuUI {
 				break;
 			case SINGLE_PLAYER_SKIRMISH:
 				this.skirmish.setVisible(true);
+				this.mapInfoPanel.setVisible(true);
+				this.advancedOptionsPanel.setVisible(false);
 				this.glueSpriteLayerTopLeft.setSequence("SinglePlayerSkirmish Stand");
 				this.glueSpriteLayerTopRight.setSequence("SinglePlayerSkirmish Stand");
 				break;
@@ -901,7 +924,7 @@ public class MenuUI {
 				this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
 				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
 				final DataTable skinData = this.rootFrame.getSkinData();
-				final String cursorSkin = CRace.VALUES[this.currentCampaign.getCursor()].name();
+				final String cursorSkin = getRaceNameByCursorID(this.currentCampaign.getCursor());
 				this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
 
 				this.campaignFade.setSequence("Death");
@@ -924,7 +947,7 @@ public class MenuUI {
 				this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
 				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
 				final DataTable skinData = this.rootFrame.getSkinData();
-				final String cursorSkin = CRace.VALUES[this.currentCampaign.getCursor()].name();
+				final String cursorSkin = getRaceNameByCursorID(this.currentCampaign.getCursor());
 				this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
 
 				this.campaignFade.setSequence("Death");
@@ -1143,13 +1166,26 @@ public class MenuUI {
 			this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
 			this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
 			final DataTable skinData = this.rootFrame.getSkinData();
-			final String cursorSkin = CRace.VALUES[this.currentCampaign.getCursor()].name();
+			final String cursorSkin = getRaceNameByCursorID(this.currentCampaign.getCursor());
 			this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
 			break;
 		}
 //		MenuUI.this.campaignFade.setSequence("Death");
 //		this.campaignFade.setVisible(true);
 //		this.menuState = MenuState.MISSION_SELECT;
+	}
+
+	private String getRaceNameByCursorID(final int cursorId) {
+		return getRaceByCursorID(cursorId).name();
+	}
+
+	private CRace getRaceByCursorID(final int cursorId) {
+		final CRace race;
+		final int raceId = cursorId + 1;
+		if ((raceId >= CRace.VALUES.length) || ((race = CRace.VALUES[raceId]) == null)) {
+			return CRace.HUMAN; // when in doubt, default to human
+		}
+		return race;
 	}
 
 	private String getCurrentBackgroundModel() {

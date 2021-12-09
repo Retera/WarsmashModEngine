@@ -49,7 +49,7 @@ Frame "SIMPLEFRAME" "SmashToolTipIconResource" {
 
     // --- icon -------------------------------------------------------------
     Texture "SmashToolTipIconResourceBackdrop" {
-    	Anchor LEFT, 0.0, 0.0
+    	Anchor LEFT, 0.0, 0.0,
 	    Width 0.008,
 	    Height 0.008,
         File "ToolTipStonesIcon",

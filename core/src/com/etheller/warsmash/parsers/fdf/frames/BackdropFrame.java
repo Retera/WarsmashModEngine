@@ -78,13 +78,13 @@ public class BackdropFrame extends AbstractUIFrame {
 					batch.draw(this.background, backgroundX + (i * this.backgroundSize),
 							backgroundY + (backgroundVerticalFloorRepeatCount * this.backgroundSize),
 							this.backgroundSize, backgroundHeightRemainder, 0, 1.0f, 1.0f,
-							backgroundHeightRemainderRatio);
+							1.0f - backgroundHeightRemainderRatio);
 				}
 				batch.draw(this.background,
 						backgroundX + ((backgroundHorizontalFloorRepeatCount) * this.backgroundSize),
 						backgroundY + (backgroundVerticalFloorRepeatCount * this.backgroundSize),
 						backgroundWidthRemainder, backgroundHeightRemainder, 0, 1.0f, backgroundWidthRemainderRatio,
-						backgroundHeightRemainderRatio);
+						1.0f - backgroundHeightRemainderRatio);
 			}
 			else {
 				if (this.mirrored) {

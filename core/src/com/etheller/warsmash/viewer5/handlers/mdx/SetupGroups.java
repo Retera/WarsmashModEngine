@@ -35,6 +35,33 @@ public class SetupGroups {
 		}
 	}
 
+	public static int getBackupPrio(final Batch object) {
+		return object.layer.filterMode;
+	}
+
+	public static int getBackupPrio(final ParticleEmitter2Object object) {
+		return object.filterModeForSort;
+	}
+
+	public static int getBackupPrio(final RibbonEmitterObject object) {
+		return object.layer.filterMode;
+	}
+
+	public static int getBackupPrio(final Object object) {
+		if (object instanceof Batch) {
+			return getBackupPrio((Batch) object);
+		}
+		else if (object instanceof RibbonEmitterObject) {
+			return getBackupPrio((RibbonEmitterObject) object);
+		}
+		else if (object instanceof ParticleEmitter2Object) {
+			return getBackupPrio((ParticleEmitter2Object) object);
+		}
+		else {
+			throw new IllegalArgumentException(object.getClass().getName());
+		}
+	}
+
 	public static boolean matchingGroup(final Object group, final Object object) {
 		if (group instanceof BatchGroup) {
 			return (object instanceof Batch) && (((Batch) object).isExtended == ((BatchGroup) group).isExtended);
@@ -95,7 +122,11 @@ public class SetupGroups {
 		Collections.sort(sorted, new Comparator<Object>() {
 			@Override
 			public int compare(final Object o1, final Object o2) {
-				return getPrio(o1) - getPrio(o2);
+				final int priorityDifference = getPrio(o1) - getPrio(o2);
+				if (priorityDifference == 0) {
+					return getBackupPrio(o1) - getBackupPrio(o2);
+				}
+				return priorityDifference;
 			}
 		});
 

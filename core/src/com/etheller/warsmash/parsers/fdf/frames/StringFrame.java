@@ -20,7 +20,7 @@ public class StringFrame extends AbstractRenderableFrame {
 	private Color color;
 	private String text = "Default string";
 	private final TextJustify justifyH;
-	private final TextJustify justifyV;
+	private TextJustify justifyV;
 	private final BitmapFont frameFont;
 	private Color fontShadowColor;
 	private float fontShadowOffsetX;
@@ -48,6 +48,10 @@ public class StringFrame extends AbstractRenderableFrame {
 		this.fontHighlightColor = fontHighlightColor;
 		this.fontDisabledColor = fontDisabledColor;
 		this.internalFramesContainer = new SimpleFrame(null, this);
+	}
+
+	public void setJustifyV(final TextJustify justifyV) {
+		this.justifyV = justifyV;
 	}
 
 	public String getText() {
@@ -132,6 +136,9 @@ public class StringFrame extends AbstractRenderableFrame {
 		if (this.renderBounds.height == 0) {
 			this.renderBounds.height = getPredictedViewportHeight();
 		}
+		if (this.renderBounds.width == 0) {
+			this.renderBounds.width = getPredictedViewportWidth();
+		}
 		super.positionBounds(gameUI, viewport);
 	}
 
@@ -152,7 +159,7 @@ public class StringFrame extends AbstractRenderableFrame {
 		final float usedWidth = 0;
 		float usedHeight = 0;
 		float usedWidthMax = 0;
-		final float startingBoundsWidth = this.renderBounds.width;
+		final float startingBoundsWidth = getAssignedWidth();
 		final boolean firstInLine = false;
 		Color currentColor = this.color;
 		for (int i = 0; i < this.text.length(); i++) {

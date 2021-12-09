@@ -34,6 +34,7 @@ public final class GlobalScope {
 	private final Map<String, JassType> types = new HashMap<>();
 	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
 	private final ArrayDeque<QueuedCallback> triggerQueue = new ArrayDeque<>();
+	private final ArrayDeque<QueuedCallback> runningTriggerQueue = new ArrayDeque<>();
 
 	public final HandleJassType handleType;
 
@@ -229,7 +230,9 @@ public final class GlobalScope {
 	}
 
 	public void replayQueuedTriggers() {
-		for (final QueuedCallback trigger : this.triggerQueue) {
+		this.runningTriggerQueue.clear();
+		this.runningTriggerQueue.addAll(this.triggerQueue);
+		for (final QueuedCallback trigger : this.runningTriggerQueue) {
 			trigger.fire(this);
 		}
 		this.triggerQueue.clear();

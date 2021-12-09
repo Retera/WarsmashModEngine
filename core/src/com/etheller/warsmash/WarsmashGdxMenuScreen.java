@@ -232,7 +232,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 			final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 					PathSolver.DEFAULT, "").addInstance();
-			libgdxContentInstance.setLocation(0f, 0f, -0.5f);
+			libgdxContentInstance.setLocation(0f, 0f, 0.5f);
 			libgdxContentInstance.setScene(this.uiScene);
 			this.menuUI.main();
 

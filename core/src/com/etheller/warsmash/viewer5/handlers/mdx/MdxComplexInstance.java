@@ -536,8 +536,10 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 		final MdxModel model = (MdxModel) this.model;
 
-		for (final GenericGroup group : model.opaqueGroups) {
-			group.render(this, this.scene.camera.viewProjectionMatrix);
+		if (this.additiveOverrideMeshMode) {
+			for (final GenericGroup group : model.opaqueGroups) {
+				group.render(this, this.scene.camera.viewProjectionMatrix);
+			}
 		}
 		for (final GenericGroup group : model.translucentGroups) {
 			group.render(this, this.scene.camera.viewProjectionMatrix);

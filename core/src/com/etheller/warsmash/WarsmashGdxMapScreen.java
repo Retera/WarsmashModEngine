@@ -194,6 +194,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 				this.viewer.mapPathSolver, "").addInstance();
+		libgdxContentInstance.setLocation(0f, 0f, 0.5f);
 		libgdxContentInstance.setScene(this.uiScene);
 		this.meleeUI.main();
 

@@ -18,6 +18,10 @@ public class GlueTextButtonFrame extends GlueButtonFrame {
 		this.buttonText = buttonText;
 	}
 
+	public UIFrame getButtonText() {
+		return this.buttonText;
+	}
+
 	@Override
 	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
 		super.innerPositionBounds(gameUI, viewport);

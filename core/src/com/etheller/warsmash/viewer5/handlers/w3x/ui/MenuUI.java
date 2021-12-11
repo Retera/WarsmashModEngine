@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -31,13 +34,16 @@ import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame;
+import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame.ListBoxSelelectionListener;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.parsers.jass.Jass2;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.parsers.w3x.War3Map;
+import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
@@ -55,7 +61,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnit
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
-import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapinfo.MapInfoPane;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapInfoPane;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.TeamSetupPane;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuData;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMission;
@@ -407,12 +414,10 @@ public class MenuUI {
 			}
 
 		});
-		profileListBox.setOnSelect(new Runnable() {
+		profileListBox.setSelectionListener(new ListBoxSelelectionListener() {
 			@Override
-			public void run() {
-				final int selectedIndex = profileListBox.getSelectedIndex();
-				final boolean validSelect = (selectedIndex >= 0)
-						&& (selectedIndex < MenuUI.this.profileManager.getProfiles().size());
+			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
+				final boolean validSelect = newSelectedItem != null;
 				MenuUI.this.selectProfileButton.setEnabled(validSelect);
 				MenuUI.this.deleteProfileButton.setEnabled(validSelect);
 			}
@@ -497,7 +502,10 @@ public class MenuUI {
 				advancedOptionsPaneContainer, 0, 0);
 		this.skirmishAdvancedOptionsPane.setSetAllPoints(true);
 		advancedOptionsPaneContainer.add(this.skirmishAdvancedOptionsPane);
-		this.skirmishMapInfoPane = new MapInfoPane(this.rootFrame, mapInfoPaneContainer);
+		this.skirmishMapInfoPane = new MapInfoPane(this.rootFrame, this.uiViewport, mapInfoPaneContainer);
+
+		final SimpleFrame teamSetupContainer = (SimpleFrame) this.rootFrame.getFrameByName("TeamSetupContainer", 0);
+		final TeamSetupPane teamSetupPane = new TeamSetupPane(this.rootFrame, this.uiViewport, teamSetupContainer);
 
 		final GlueTextButtonFrame playGameButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("PlayGameButton",
 				0);
@@ -507,12 +515,38 @@ public class MenuUI {
 		mapListBox.setSetAllPoints(true);
 		mapListBox.setFrameFont(profileListText.getFrameFont());
 		final Collection<String> listfile = this.dataSource.getListfile();
+		final List<String> displayItemPaths = new ArrayList<>();
 		for (final String file : listfile) {
 			if ((file.toLowerCase().endsWith(".w3x") || file.toLowerCase().endsWith(".w3m")) && !file.contains("/")
 					&& !file.contains("\\")) {
-				mapListBox.addItem(file, this.rootFrame, this.uiViewport);
+				displayItemPaths.add(file);
 			}
 		}
+		Collections.sort(displayItemPaths);
+		for (final String displayItemPath : displayItemPaths) {
+			mapListBox.addItem(displayItemPath, this.rootFrame, this.uiViewport);
+		}
+		mapListBox.setSelectionListener(new ListBoxSelelectionListener() {
+			@Override
+			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
+				War3Map map;
+				try {
+					map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
+					final War3MapW3i mapInfo = map.readMapInformation();
+					final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
+					MenuUI.this.rootFrame.setMapStrings(wtsFile);
+					final War3MapConfig war3MapConfig = new War3MapConfig(mapInfo.getPlayers().size());
+					Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame,
+							war3MapConfig, "Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j").config();
+					MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map, mapInfo,
+							war3MapConfig);
+					teamSetupPane.setMap(map, MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig);
+				}
+				catch (final IOException e) {
+					e.printStackTrace();
+				}
+			}
+		});
 		mapListContainer.add(mapListBox);
 		playGameButton.setOnClick(new Runnable() {
 			@Override
@@ -527,9 +561,10 @@ public class MenuUI {
 					MenuUI.this.campaignRootMenuUI.setVisible(false);
 					MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
 					MenuUI.this.skirmish.setVisible(false);
-					MenuUI.this.glueSpriteLayerTopLeft.setSequence("SinglePlayerSkirmish Birth");
-					MenuUI.this.glueSpriteLayerTopRight.setSequence("SinglePlayerSkirmish Birth");
+					MenuUI.this.glueSpriteLayerTopLeft.setSequence("Death");
+					MenuUI.this.glueSpriteLayerTopRight.setSequence("Death");
 					MenuUI.this.mapFilepathToStart = selectedItem;
+					MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 				}
 
 			}
@@ -723,7 +758,7 @@ public class MenuUI {
 			viewer.enableAudio();
 		}
 		try {
-			final War3Map map = viewer.beginLoadingMap(mapFilename);
+			final War3Map map = War3MapViewer.beginLoadingMap(codebase, mapFilename);
 			final War3MapW3i mapInfo = map.readMapInformation();
 			final DataTable worldEditData = viewer.loadWorldEditData(map);
 			final WTS wts = viewer.preloadWTS(map);
@@ -816,7 +851,7 @@ public class MenuUI {
 	}
 
 	public void update(final float deltaTime) {
-		if (this.mapFilepathToStart != null) {
+		if ((this.mapFilepathToStart != null) && (this.menuState != MenuState.GOING_TO_MAP)) {
 			this.campaignFade.setVisible(false);
 			internalStartMap(this.mapFilepathToStart);
 			this.mapFilepathToStart = null;
@@ -910,6 +945,9 @@ public class MenuUI {
 			case GOING_TO_SINGLE_PLAYER:
 				this.glueSpriteLayerTopLeft.setSequence("SinglePlayer Birth");
 				this.glueSpriteLayerTopRight.setSequence("SinglePlayer Birth");
+				this.menuState = MenuState.SINGLE_PLAYER;
+				break;
+			case GOING_TO_MAP:
 				this.menuState = MenuState.SINGLE_PLAYER;
 				break;
 			case LEAVING_CAMPAIGN:
@@ -1135,6 +1173,7 @@ public class MenuUI {
 		SINGLE_PLAYER,
 		GOING_TO_SINGLE_PLAYER_SKIRMISH,
 		SINGLE_PLAYER_SKIRMISH,
+		GOING_TO_MAP,
 		GOING_TO_CAMPAIGN,
 		GOING_TO_CAMPAIGN_PART2,
 		GOING_TO_MISSION_SELECT,

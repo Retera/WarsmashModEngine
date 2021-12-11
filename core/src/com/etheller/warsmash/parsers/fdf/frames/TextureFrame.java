@@ -11,6 +11,7 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 
 public class TextureFrame extends AbstractRenderableFrame {
+	public static final Vector4Definition DEFAULT_TEX_COORDS = new Vector4Definition(0, 1, 0, 1);
 	private TextureRegion texture;
 	private final boolean decorateFileNames;
 	private final Vector4Definition texCoord;

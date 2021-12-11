@@ -12,7 +12,7 @@ import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 public class BackdropFrame extends AbstractUIFrame {
 	private final boolean decorateFileNames;
 	private final boolean tileBackground;
-	private final Texture background;
+	private Texture background;
 	private final EnumSet<BackdropCornerFlags> cornerFlags;
 	private final float cornerSize;
 	private float backgroundSize;
@@ -97,6 +97,10 @@ public class BackdropFrame extends AbstractUIFrame {
 			}
 		}
 		if (this.edgeFile != null) {
+			float widthNeedingEdge = this.renderBounds.width;
+			float heightNeedingEdge = this.renderBounds.height;
+			float xNeedingEdge = this.renderBounds.x;
+			float yNeedingEdge = this.renderBounds.y;
 			if (this.cornerFlags.contains(BackdropCornerFlags.BL)) {
 				batch.draw(this.edgeFile, this.renderBounds.x, this.renderBounds.y, this.cornerSize, this.cornerSize,
 						this.edgeUVWidth * 6, this.edgeUVHeight, this.edgeUVWidth * 7, 0);
@@ -116,51 +120,78 @@ public class BackdropFrame extends AbstractUIFrame {
 						this.renderBounds.y + (this.renderBounds.height - this.cornerSize), this.cornerSize,
 						this.cornerSize, this.edgeUVWidth * 5, this.edgeUVHeight, this.edgeUVWidth * 6, 0);
 			}
-			final float borderVerticalRepeatCount = (this.renderBounds.height / this.cornerSize);
-			final float heightRemainder = this.renderBounds.height % this.cornerSize;
-			final float heightRemainderRatio = heightRemainder / this.cornerSize;
-			final int borderVerticalRepeatCountLessOne = (int) (borderVerticalRepeatCount - 1);
+			if (this.cornerFlags.contains(BackdropCornerFlags.BL)
+					|| this.cornerFlags.contains(BackdropCornerFlags.BR)) {
+				yNeedingEdge += this.cornerSize;
+				heightNeedingEdge -= this.cornerSize;
+			}
+			if (this.cornerFlags.contains(BackdropCornerFlags.UL)
+					|| this.cornerFlags.contains(BackdropCornerFlags.BL)) {
+				xNeedingEdge += this.cornerSize;
+				widthNeedingEdge -= this.cornerSize;
+			}
+			if (this.cornerFlags.contains(BackdropCornerFlags.UR)
+					|| this.cornerFlags.contains(BackdropCornerFlags.BR)) {
+				widthNeedingEdge -= this.cornerSize;
+			}
+			if (this.cornerFlags.contains(BackdropCornerFlags.UR)
+					|| this.cornerFlags.contains(BackdropCornerFlags.UL)) {
+				heightNeedingEdge -= this.cornerSize;
+			}
+			if (heightNeedingEdge < 0) {
+				heightNeedingEdge = 0;
+			}
+			if (widthNeedingEdge < 0) {
+				widthNeedingEdge = 0;
+			}
+			final float borderVerticalRepeatCount = (heightNeedingEdge / this.cornerSize);
+			final float heightRemainder = (heightNeedingEdge % this.cornerSize) / this.cornerSize;
+			final int heightRemainderByHeight = (int) (heightRemainder * this.edgeFileHeight);
+			final int heightRemainderByCornerSize = (int) (heightRemainder * this.cornerSize);
+			final int borderVerticalRepeatCountFloored = (int) Math.floor(borderVerticalRepeatCount);
 			if (this.cornerFlags.contains(BackdropCornerFlags.L)) {
-				for (int i = 1; i < borderVerticalRepeatCountLessOne; i++) {
-					batch.draw(this.edgeFile, this.renderBounds.x, this.renderBounds.y + (this.cornerSize * i),
+				for (int i = 0; i < borderVerticalRepeatCountFloored; i++) {
+					batch.draw(this.edgeFile, this.renderBounds.x, yNeedingEdge + (this.cornerSize * i),
 							this.cornerSize, this.cornerSize, this.edgeUVWidth * 0, this.edgeUVHeight,
 							this.edgeUVWidth * 1, 0);
 				}
-				if (borderVerticalRepeatCountLessOne > 0) {
+				if (borderVerticalRepeatCount > borderVerticalRepeatCountFloored) {
 					batch.draw(this.edgeFile, this.renderBounds.x,
-							this.renderBounds.y + (this.cornerSize * borderVerticalRepeatCountLessOne), this.cornerSize,
-							heightRemainder, this.edgeUVWidth * 0, heightRemainderRatio, this.edgeUVWidth * 1, 0);
+							yNeedingEdge + (this.cornerSize * borderVerticalRepeatCountFloored), this.cornerSize,
+							heightRemainderByCornerSize, this.edgeUVWidth * 0, heightRemainderByHeight,
+							this.edgeUVWidth * 1, 0);
 				}
 			}
 			if (this.cornerFlags.contains(BackdropCornerFlags.R)) {
-				for (int i = 1; i < borderVerticalRepeatCountLessOne; i++) {
+				for (int i = 0; i < borderVerticalRepeatCountFloored; i++) {
 					batch.draw(this.edgeFile, (this.renderBounds.x + this.renderBounds.width) - this.cornerSize,
-							this.renderBounds.y + (this.cornerSize * i), this.cornerSize, this.cornerSize,
+							yNeedingEdge + (this.cornerSize * i), this.cornerSize, this.cornerSize,
 							this.edgeUVWidth * 1, this.edgeUVHeight, this.edgeUVWidth * 2, 0);
 				}
-				if (borderVerticalRepeatCountLessOne > 0) {
+				if (borderVerticalRepeatCount > borderVerticalRepeatCountFloored) {
 					batch.draw(this.edgeFile, (this.renderBounds.x + this.renderBounds.width) - this.cornerSize,
-							this.renderBounds.y + (this.cornerSize * borderVerticalRepeatCountLessOne), this.cornerSize,
-							heightRemainder, this.edgeUVWidth * 1, heightRemainderRatio, this.edgeUVWidth * 2, 0);
+							yNeedingEdge + (this.cornerSize * borderVerticalRepeatCountFloored), this.cornerSize,
+							heightRemainderByCornerSize, this.edgeUVWidth * 1, heightRemainderByHeight,
+							this.edgeUVWidth * 2, 0);
 				}
 			}
 
-			final float borderHorizontalRepeatCount = this.renderBounds.width / this.cornerSize;
-			final float widthRemainder = (this.renderBounds.width % this.cornerSize) / this.cornerSize;
+			final float borderHorizontalRepeatCount = widthNeedingEdge / this.cornerSize;
+			final float widthRemainder = (widthNeedingEdge % this.cornerSize) / this.cornerSize;
 			final int widthRemainderByHeight = (int) (widthRemainder * this.edgeFileHeight);
 			final int widthRemainderByCornerSize = (int) (widthRemainder * this.cornerSize);
-			final int borderHorizontalRepeatCountLessOne = (int) (borderHorizontalRepeatCount - 1);
+			final int borderHorizontalRepeatCountFloored = (int) Math.floor(borderHorizontalRepeatCount);
 			final float halfPi = 270;
 			if (this.cornerFlags.contains(BackdropCornerFlags.B)) {
-				for (int i = 1; i < borderHorizontalRepeatCountLessOne; i++) {
-					batch.draw(this.edgeFile, this.renderBounds.x + (this.cornerSize * i), this.renderBounds.y,
+				for (int i = 0; i < borderHorizontalRepeatCountFloored; i++) {
+					batch.draw(this.edgeFile, xNeedingEdge + (this.cornerSize * i), this.renderBounds.y,
 							this.cornerSize / 2, this.cornerSize / 2, this.cornerSize, this.cornerSize, 1.0f, 1.0f,
 							halfPi, (int) ((this.edgeFileWidth * 3f) / 8f), 0, (int) (this.edgeFileWidth / 8),
 							(int) this.edgeFileHeight, false, false);
 				}
-				if (borderHorizontalRepeatCountLessOne > 0) {
+				if (borderHorizontalRepeatCount > borderHorizontalRepeatCountFloored) {
 					batch.draw(this.edgeFile,
-							(this.renderBounds.x + (this.cornerSize * borderHorizontalRepeatCountLessOne))
+							(xNeedingEdge + (this.cornerSize * borderHorizontalRepeatCountFloored))
 									- ((this.cornerSize - widthRemainderByCornerSize) / 2),
 							this.renderBounds.y + ((this.cornerSize - widthRemainderByCornerSize) / 2),
 							this.cornerSize / 2, widthRemainderByCornerSize / 2, this.cornerSize,
@@ -169,16 +200,16 @@ public class BackdropFrame extends AbstractUIFrame {
 				}
 			}
 			if (this.cornerFlags.contains(BackdropCornerFlags.T)) {
-				for (int i = 1; i < borderHorizontalRepeatCountLessOne; i++) {
-					batch.draw(this.edgeFile, this.renderBounds.x + (this.cornerSize * i),
+				for (int i = 0; i < borderHorizontalRepeatCountFloored; i++) {
+					batch.draw(this.edgeFile, xNeedingEdge + (this.cornerSize * i),
 							this.renderBounds.y + (this.renderBounds.height - this.cornerSize), this.cornerSize / 2,
 							this.cornerSize / 2, this.cornerSize, this.cornerSize, 1.0f, 1.0f, halfPi,
 							(int) ((this.edgeFileWidth * 2f) / 8f), 0, (int) (this.edgeFileWidth / 8),
 							(int) this.edgeFileHeight, false, false);
 				}
-				if (borderHorizontalRepeatCountLessOne > 0) {
+				if (borderHorizontalRepeatCount > borderHorizontalRepeatCountFloored) {
 					batch.draw(this.edgeFile,
-							(this.renderBounds.x + (this.cornerSize * borderHorizontalRepeatCountLessOne))
+							(xNeedingEdge + (this.cornerSize * borderHorizontalRepeatCountFloored))
 									- ((this.cornerSize - widthRemainderByCornerSize) / 2),
 							this.renderBounds.y
 									+ (this.renderBounds.height - ((this.cornerSize + widthRemainderByCornerSize) / 2)),
@@ -193,5 +224,9 @@ public class BackdropFrame extends AbstractUIFrame {
 
 	public float getCornerSize() {
 		return this.cornerSize;
+	}
+
+	public void setBackground(final Texture background) {
+		this.background = background;
 	}
 }

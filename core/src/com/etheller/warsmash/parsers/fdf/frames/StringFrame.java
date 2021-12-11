@@ -133,10 +133,10 @@ public class StringFrame extends AbstractRenderableFrame {
 	@Override
 	public void positionBounds(final GameUI gameUI, final Viewport viewport) {
 		createInternalFrames(gameUI.getGlyphLayout());
-		if (this.renderBounds.height == 0) {
+		if (getAssignedHeight() == 0) {
 			this.renderBounds.height = getPredictedViewportHeight();
 		}
-		if (this.renderBounds.width == 0) {
+		if (getAssignedWidth() == 0) {
 			this.renderBounds.width = getPredictedViewportWidth();
 		}
 		super.positionBounds(gameUI, viewport);

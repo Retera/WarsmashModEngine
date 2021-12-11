@@ -2,6 +2,7 @@ package com.etheller.interpreter.ast.function;
 
 import java.util.List;
 
+import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
@@ -42,14 +43,14 @@ public final class UserJassFunction extends AbstractJassFunction {
 						return this.returnType.getNullValue();
 					}
 					else {
-						throw new RuntimeException("Invalid return type");
+						throw new JassException(globalScope, "Invalid return type", null);
 					}
 				}
 				return returnValue;
 			}
 		}
 		if (JassType.NOTHING != this.returnType) {
-			throw new RuntimeException("Invalid return type");
+			throw new JassException(globalScope, "Invalid return type", null);
 		}
 		return null;
 	}

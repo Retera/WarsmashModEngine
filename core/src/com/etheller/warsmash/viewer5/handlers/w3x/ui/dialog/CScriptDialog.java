@@ -88,4 +88,8 @@ public class CScriptDialog {
 		this.scriptDialogFrame.positionBounds(rootFrame, uiViewport);
 		scriptDialogButton.setupEvents(this);
 	}
+
+	public GlobalScope getGlobalScope() {
+		return this.globalScope;
+	}
 }

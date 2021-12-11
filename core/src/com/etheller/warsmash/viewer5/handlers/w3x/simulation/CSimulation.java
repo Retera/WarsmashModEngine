@@ -2,7 +2,16 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.interpreter.ast.scope.GlobalScope;
@@ -81,7 +90,7 @@ public class CSimulation implements CPlayerAPI {
 	private final List<TimeOfDayVariableEvent> timeOfDayVariableEvents = new ArrayList<>();
 	private boolean timeOfDaySuspended;
 	private boolean daytime;
-	private Set<CDestructable> ownedTreeSet = new HashSet<>();
+	private final Set<CDestructable> ownedTreeSet = new HashSet<>();
 
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
@@ -116,7 +125,7 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CRace defaultRace = CRace.ORC;
+			final CRace defaultRace = CRace.HUMAN;
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
 			if (WarsmashConstants.LOCAL_TEMP_TEST_ALL_PLAYERS_PLAYING) {
@@ -567,20 +576,22 @@ public class CSimulation implements CPlayerAPI {
 		cItem.setLife(this, 0);
 	}
 
-	public SimulationRenderComponent createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias, float artAttachmentHeight) {
-		return simulationRenderController.createSpellEffectOverDestructable(source, target, alias, artAttachmentHeight);
+	public SimulationRenderComponent createSpellEffectOverDestructable(final CUnit source, final CDestructable target,
+			final War3ID alias, final float artAttachmentHeight) {
+		return this.simulationRenderController.createSpellEffectOverDestructable(source, target, alias,
+				artAttachmentHeight);
 	}
 
-	public void tagTreeOwned(CDestructable target) {
-		ownedTreeSet.add(target);
+	public void tagTreeOwned(final CDestructable target) {
+		this.ownedTreeSet.add(target);
 	}
 
-	public void untagTreeOwned(CDestructable target) {
-		ownedTreeSet.remove(target);
+	public void untagTreeOwned(final CDestructable target) {
+		this.ownedTreeSet.remove(target);
 	}
 
-	public boolean isTreeOwned(CDestructable tree) {
-		return ownedTreeSet.contains(tree);
+	public boolean isTreeOwned(final CDestructable tree) {
+		return this.ownedTreeSet.contains(tree);
 	}
 
 	private static final class TimeOfDayVariableEvent extends VariableEvent {

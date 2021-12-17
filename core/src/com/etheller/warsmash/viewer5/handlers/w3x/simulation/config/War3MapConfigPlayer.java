@@ -25,5 +25,4 @@ public class War3MapConfigPlayer extends CBasePlayer {
 	@Override
 	public void removeEvent(final CPlayerEvent playerEvent) {
 	}
-
 }

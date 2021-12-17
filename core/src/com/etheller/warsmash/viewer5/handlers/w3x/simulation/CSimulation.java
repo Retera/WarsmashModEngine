@@ -46,6 +46,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
@@ -125,14 +126,28 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CRace defaultRace = CRace.HUMAN;
+			final CRace defaultRace;
+			if (configPlayer.isRacePrefSet(CRacePreference.RANDOM)) {
+				defaultRace = CRace.VALUES[1 + seededRandom.nextInt(4)];
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.HUMAN)) {
+				defaultRace = CRace.HUMAN;
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.ORC)) {
+				defaultRace = CRace.ORC;
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.UNDEAD)) {
+				defaultRace = CRace.UNDEAD;
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.NIGHTELF)) {
+				defaultRace = CRace.NIGHTELF;
+			}
+			else {
+				defaultRace = CRace.OTHER;
+			}
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);
-			if (WarsmashConstants.LOCAL_TEMP_TEST_ALL_PLAYERS_PLAYING) {
-				if (i < config.getPlayerCount()) {
-					newPlayer.setSlotState(CPlayerSlotState.PLAYING);
-				}
-			}
+			newPlayer.setAIDifficulty(configPlayer.getAIDifficulty());
 			this.players.add(newPlayer);
 			this.defaultPlayerUnitOrderExecutors.add(new CPlayerUnitOrderExecutor(this, i));
 		}

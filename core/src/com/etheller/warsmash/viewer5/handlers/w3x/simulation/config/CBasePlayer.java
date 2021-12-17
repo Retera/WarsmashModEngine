@@ -4,6 +4,7 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
@@ -25,6 +26,7 @@ public abstract class CBasePlayer implements CPlayerJass {
 	private boolean raceSelectable;
 	private CMapControl mapControl = CMapControl.NEUTRAL;
 	private CPlayerSlotState slotState = CPlayerSlotState.EMPTY;
+	private AIDifficulty aiDifficulty = null;
 
 	public CBasePlayer(final CBasePlayer other) {
 		this.id = other.id;
@@ -125,6 +127,9 @@ public abstract class CBasePlayer implements CPlayerJass {
 
 	@Override
 	public void setRacePref(final CRacePreference racePref) {
+		// TODO should this clear? there's a case to be made for keeping old value
+		// perhaps
+		this.racePrefs.clear();
 		this.racePrefs.add(racePref);
 	}
 
@@ -176,8 +181,19 @@ public abstract class CBasePlayer implements CPlayerJass {
 		return this.slotState;
 	}
 
+	@Override
 	public void setSlotState(final CPlayerSlotState slotState) {
 		this.slotState = slotState;
+	}
+
+	@Override
+	public AIDifficulty getAIDifficulty() {
+		return this.aiDifficulty;
+	}
+
+	@Override
+	public void setAIDifficulty(final AIDifficulty aiDifficulty) {
+		this.aiDifficulty = aiDifficulty;
 	}
 
 	@Override

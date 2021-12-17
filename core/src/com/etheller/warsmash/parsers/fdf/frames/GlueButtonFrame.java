@@ -67,7 +67,7 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 		this.onClick = onClick;
 	}
 
-	public void setButtonListener(ButtonListener buttonListener) {
+	public void setButtonListener(final ButtonListener buttonListener) {
 		this.buttonListener = buttonListener;
 	}
 
@@ -99,27 +99,29 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 			this.activeChild.render(batch, baseFont, glyphLayout);
 		}
 		if (this.mouseOver) {
-			this.controlMouseOverHighlight.render(batch, baseFont, glyphLayout);
+			if (this.controlMouseOverHighlight != null) {
+				this.controlMouseOverHighlight.render(batch, baseFont, glyphLayout);
+			}
 		}
 	}
 
 	@Override
 	public void mouseDown(final GameUI gameUI, final Viewport uiViewport) {
 		if (this.enabled) {
-			if(this.controlPushedBackdrop != null) {
+			if (this.controlPushedBackdrop != null) {
 				this.activeChild = this.controlPushedBackdrop;
 			}
-			buttonListener.mouseDown(gameUI, uiViewport);
+			this.buttonListener.mouseDown(gameUI, uiViewport);
 		}
 	}
 
 	@Override
 	public void mouseUp(final GameUI gameUI, final Viewport uiViewport) {
 		if (this.enabled) {
-			if(this.controlBackdrop != null) {
+			if (this.controlBackdrop != null) {
 				this.activeChild = this.controlBackdrop;
 			}
-			buttonListener.mouseUp(gameUI, uiViewport);
+			this.buttonListener.mouseUp(gameUI, uiViewport);
 		}
 	}
 
@@ -151,8 +153,8 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 	}
 
 	@Override
-	public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
-		buttonListener.mouseDragged(rootFrame, uiViewport, x,y);
+	public void mouseDragged(final GameUI rootFrame, final Viewport uiViewport, final float x, final float y) {
+		this.buttonListener.mouseDragged(rootFrame, uiViewport, x, y);
 	}
 
 	@Override
@@ -181,18 +183,23 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 
 	public interface ButtonListener {
 		void mouseDown(GameUI gameUI, Viewport uiViewport);
+
 		void mouseUp(GameUI gameUI, Viewport uiViewport);
+
 		void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y);
 
 		ButtonListener DO_NOTHING = new ButtonListener() {
 			@Override
-			public void mouseDown(GameUI gameUI, Viewport uiViewport) {}
+			public void mouseDown(final GameUI gameUI, final Viewport uiViewport) {
+			}
 
 			@Override
-			public void mouseUp(GameUI gameUI, Viewport uiViewport) {}
+			public void mouseUp(final GameUI gameUI, final Viewport uiViewport) {
+			}
 
 			@Override
-			public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {}
+			public void mouseDragged(final GameUI rootFrame, final Viewport uiViewport, final float x, final float y) {
+			}
 		};
 
 	}

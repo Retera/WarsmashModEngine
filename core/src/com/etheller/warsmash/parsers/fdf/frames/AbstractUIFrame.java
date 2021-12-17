@@ -2,6 +2,7 @@ package com.etheller.warsmash.parsers.fdf.frames;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -52,7 +53,12 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 	@Override
 	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
 		if (isVisible()) {
-			for (final UIFrame childFrame : this.childFrames) {
+			// we render from front to back, then back is showing as top. So we iterate back
+			// to front, so that we mouse interact with something corresponding to its
+			// order.
+			final ListIterator<UIFrame> reverseIterator = this.childFrames.listIterator(this.childFrames.size());
+			while (reverseIterator.hasPrevious()) {
+				final UIFrame childFrame = reverseIterator.previous();
 				final UIFrame clickedChild = childFrame.touchDown(screenX, screenY, button);
 				if (clickedChild != null) {
 					return clickedChild;
@@ -65,7 +71,12 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 	@Override
 	public UIFrame touchUp(final float screenX, final float screenY, final int button) {
 		if (isVisible()) {
-			for (final UIFrame childFrame : this.childFrames) {
+			// we render from front to back, then back is showing as top. So we iterate back
+			// to front, so that we mouse interact with something corresponding to its
+			// order.
+			final ListIterator<UIFrame> reverseIterator = this.childFrames.listIterator(this.childFrames.size());
+			while (reverseIterator.hasPrevious()) {
+				final UIFrame childFrame = reverseIterator.previous();
 				final UIFrame clickedChild = childFrame.touchUp(screenX, screenY, button);
 				if (clickedChild != null) {
 					return clickedChild;
@@ -78,7 +89,12 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 	@Override
 	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
 		if (isVisible()) {
-			for (final UIFrame childFrame : this.childFrames) {
+			// we render from front to back, then back is showing as top. So we iterate back
+			// to front, so that we mouse interact with something corresponding to its
+			// order.
+			final ListIterator<UIFrame> reverseIterator = this.childFrames.listIterator(this.childFrames.size());
+			while (reverseIterator.hasPrevious()) {
+				final UIFrame childFrame = reverseIterator.previous();
 				final UIFrame clickedChild = childFrame.getFrameChildUnderMouse(screenX, screenY);
 				if (clickedChild != null) {
 					return clickedChild;

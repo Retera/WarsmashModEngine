@@ -1392,6 +1392,26 @@ public class Terrain {
 		return 0;
 	}
 
+	public int get128CellX(final float x) {
+		final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f;
+		final int cellX = (int) userCellSpaceX;
+		return cellX;
+	}
+
+	public float get128WorldCoordinateFromCellX(final int cellX) {
+		return (cellX * 128.0f) + this.centerOffset[0];
+	}
+
+	public int get128CellY(final float y) {
+		final float userCellSpaceY = (y - this.centerOffset[1]) / 128.0f;
+		final int cellY = (int) userCellSpaceY;
+		return cellY;
+	}
+
+	public float get128WorldCoordinateFromCellY(final int cellY) {
+		return (cellY * 128.0f) + this.centerOffset[1];
+	}
+
 	public RenderCorner getCorner(final float x, final float y) {
 		final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f;
 		final float userCellSpaceY = (y - this.centerOffset[1]) / 128.0f;

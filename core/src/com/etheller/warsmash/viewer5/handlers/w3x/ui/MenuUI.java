@@ -55,10 +55,13 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapInfoPane;
@@ -176,6 +179,7 @@ public class MenuUI {
 	private SpriteFrame loadingBackground;
 	private boolean unifiedCampaignInfo = false;
 	private MapInfoPane skirmishMapInfoPane;
+	private War3MapConfig currentMapConfig;
 
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
 			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
@@ -535,12 +539,26 @@ public class MenuUI {
 					final War3MapW3i mapInfo = map.readMapInformation();
 					final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
 					MenuUI.this.rootFrame.setMapStrings(wtsFile);
-					final War3MapConfig war3MapConfig = new War3MapConfig(mapInfo.getPlayers().size());
+					final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+					for (int i = 0; (i < war3MapConfig.getPlayerCount()) && (i < mapInfo.getPlayers().size()); i++) {
+						final CBasePlayer player = war3MapConfig.getPlayer(i);
+						player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
+					}
 					Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame,
 							war3MapConfig, "Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j").config();
+					for (int i = 0; i < war3MapConfig.getPlayerCount(); i++) {
+						final CBasePlayer player = war3MapConfig.getPlayer(i);
+						if (player.getController() == CMapControl.USER) {
+							player.setSlotState(CPlayerSlotState.PLAYING);
+							player.setName(MenuUI.this.profileManager.getCurrentProfile());
+							break;
+						}
+					}
 					MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map, mapInfo,
 							war3MapConfig);
-					teamSetupPane.setMap(map, MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig);
+					teamSetupPane.setMap(map, MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig,
+							mapInfo.getPlayers().size());
+					MenuUI.this.currentMapConfig = war3MapConfig;
 				}
 				catch (final IOException e) {
 					e.printStackTrace();
@@ -750,8 +768,8 @@ public class MenuUI {
 		else {
 			turnManager = GameTurnManager.LOCAL;
 		}
-		final War3MapConfig mapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
-		final War3MapViewer viewer = new War3MapViewer(codebase, this.screenManager, mapConfig, turnManager);
+		final War3MapViewer viewer = new War3MapViewer(codebase, this.screenManager, this.currentMapConfig,
+				turnManager);
 
 		if (WarsmashGdxMapScreen.ENABLE_AUDIO) {
 			viewer.worldScene.enableAudio();

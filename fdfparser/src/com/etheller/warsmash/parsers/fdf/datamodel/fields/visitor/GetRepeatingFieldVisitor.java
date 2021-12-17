@@ -1,8 +1,10 @@
 package com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor;
 
-import com.etheller.warsmash.parsers.fdf.datamodel.Vector2Definition;
+import java.util.List;
+
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FloatFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FontFrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.FrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FrameDefinitionFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.MenuItemFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.RepeatingFrameDefinitionField;
@@ -13,56 +15,56 @@ import com.etheller.warsmash.parsers.fdf.datamodel.fields.Vector2FrameDefinition
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.Vector3FrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.Vector4FrameDefinitionField;
 
-public class GetVector2FieldVisitor implements FrameDefinitionFieldVisitor<Vector2Definition> {
-	public static GetVector2FieldVisitor INSTANCE = new GetVector2FieldVisitor();
+public class GetRepeatingFieldVisitor implements FrameDefinitionFieldVisitor<List<FrameDefinitionField>> {
+	public static GetRepeatingFieldVisitor INSTANCE = new GetRepeatingFieldVisitor();
 
 	@Override
-	public Vector2Definition accept(final RepeatingFrameDefinitionField field) {
+	public List<FrameDefinitionField> accept(final RepeatingFrameDefinitionField field) {
+		return field.getFields();
+	}
+
+	@Override
+	public List<FrameDefinitionField> accept(final StringFrameDefinitionField field) {
 		return null;
 	}
 
 	@Override
-	public Vector2Definition accept(final StringFrameDefinitionField field) {
+	public List<FrameDefinitionField> accept(final StringPairFrameDefinitionField field) {
 		return null;
 	}
 
 	@Override
-	public Vector2Definition accept(final StringPairFrameDefinitionField field) {
+	public List<FrameDefinitionField> accept(final FloatFrameDefinitionField field) {
 		return null;
 	}
 
 	@Override
-	public Vector2Definition accept(final FloatFrameDefinitionField field) {
+	public List<FrameDefinitionField> accept(final Vector3FrameDefinitionField field) {
 		return null;
 	}
 
 	@Override
-	public Vector2Definition accept(final Vector3FrameDefinitionField field) {
+	public List<FrameDefinitionField> accept(final Vector4FrameDefinitionField field) {
 		return null;
 	}
 
 	@Override
-	public Vector2Definition accept(final Vector2FrameDefinitionField field) {
-		return field.getValue();
-	}
-
-	@Override
-	public Vector2Definition accept(final Vector4FrameDefinitionField field) {
+	public List<FrameDefinitionField> accept(final Vector2FrameDefinitionField field) {
 		return null;
 	}
 
 	@Override
-	public Vector2Definition accept(final FontFrameDefinitionField field) {
+	public List<FrameDefinitionField> accept(final FontFrameDefinitionField field) {
 		return null;
 	}
 
 	@Override
-	public Vector2Definition accept(final TextJustifyFrameDefinitionField field) {
+	public List<FrameDefinitionField> accept(final TextJustifyFrameDefinitionField field) {
 		return null;
 	}
 
 	@Override
-	public Vector2Definition accept(final MenuItemFrameDefinitionField field) {
+	public List<FrameDefinitionField> accept(final MenuItemFrameDefinitionField field) {
 		return null;
 	}
 

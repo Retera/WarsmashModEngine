@@ -21,12 +21,12 @@ public class TeamSetupPane {
 	}
 
 	public void setMap(final DataSource dataSource, final GameUI rootFrame, final Viewport uiViewport,
-			final War3MapConfig config) {
+			final War3MapConfig config, final int playerCount) {
 		for (final PlayerSlotPane playerSlotPane : this.playerSlots) {
 			this.container.remove(playerSlotPane.getPlayerSlotFrame());
 		}
 		this.playerSlots.clear();
-		for (int i = 0; i < config.getPlayerCount(); i++) {
+		for (int i = 0; i < playerCount; i++) {
 			final CBasePlayer player = config.getPlayer(i);
 			final PlayerSlotPane playerSlotPane = new PlayerSlotPane(rootFrame, uiViewport, this.container, i);
 			this.playerSlots.add(playerSlotPane);

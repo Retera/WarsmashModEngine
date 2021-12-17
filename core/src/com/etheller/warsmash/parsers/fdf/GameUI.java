@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.badlogic.gdx.graphics.Color;
@@ -29,11 +31,14 @@ import com.etheller.warsmash.parsers.fdf.datamodel.FrameClass;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameTemplateEnvironment;
+import com.etheller.warsmash.parsers.fdf.datamodel.MenuItem;
 import com.etheller.warsmash.parsers.fdf.datamodel.SetPointDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector2Definition;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.FrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringPairFrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetMenuItemFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
 import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ControlFrame;
@@ -42,6 +47,8 @@ import com.etheller.warsmash.parsers.fdf.frames.FilterModeTextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame;
+import com.etheller.warsmash.parsers.fdf.frames.MenuFrame;
+import com.etheller.warsmash.parsers.fdf.frames.MenuFrame.MenuClickListener;
 import com.etheller.warsmash.parsers.fdf.frames.PopupMenuFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ScrollBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
@@ -624,7 +631,19 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					else if (childDefinition.getName().equals(popupMenuFrameKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
 								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
-						inflatedChild.setSetAllPoints(true);
+						add(inflatedChild);
+						inflatedChild.addSetPoint(
+								new SetPoint(FramePoint.TOPLEFT, glueButtonFrame, FramePoint.BOTTOMLEFT, 0, 0));
+						inflatedChild.addSetPoint(
+								new SetPoint(FramePoint.TOPRIGHT, glueButtonFrame, FramePoint.BOTTOMRIGHT, 0, 0));
+						if (inflatedChild instanceof MenuFrame) {
+							((MenuFrame) inflatedChild).setOnClick(new MenuClickListener() {
+								@Override
+								public void onClick(final int button, final int menuItemIndex) {
+									glueButtonFrame.onClickItem(button, menuItemIndex);
+								}
+							});
+						}
 						glueButtonFrame.setPopupMenuFrame(inflatedChild);
 					}
 				}
@@ -950,7 +969,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 			else if ("MENU".equals(frameDefinition.getFrameType())) {
 				// TODO advanced components here
-				final ControlFrame controlFrame = new ControlFrame(frameDefinition.getName(), parent);
+				final MenuFrame controlFrame = new MenuFrame(frameDefinition.getName(), parent);
 				// TODO: we should not need to put ourselves in this map 2x, but we do
 				// since there are nested inflate calls happening before the general case
 				// mapping
@@ -963,6 +982,68 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						inflatedChild.setSetAllPoints(true);
 						controlFrame.setControlBackdrop(inflatedChild);
 					}
+				}
+				final List<FrameDefinitionField> fields = frameDefinition.getFields("MenuItem");
+				FontDefinition font = frameDefinition.getFont("FrameFont");
+				if ((font == null) && (parentDefinitionIfAvailable != null)) {
+					font = parentDefinitionIfAvailable.getFont("FrameFont");
+				}
+				final Float height = frameDefinition.getFloat("Height");
+				this.fontParam.size = (int) convertY(viewport2,
+						(font == null ? (height == null ? 0.06f : height) : font.getFontSize()));
+				if (this.fontParam.size == 0) {
+					this.fontParam.size = 24;
+				}
+				frameFont = this.dynamicFontGeneratorHolder.getFontGenerator(font.getFontName())
+						.generateFont(this.fontParam);
+				controlFrame.setFrameFont(frameFont);
+
+				Color fontHighlightColor;
+				final Vector4Definition fontHighlightColorDefinition = frameDefinition
+						.getVector4("MenuTextHighlightColor");
+				if (fontHighlightColorDefinition == null) {
+					fontHighlightColor = null;
+				}
+				else {
+					fontHighlightColor = new Color(fontHighlightColorDefinition.getX(),
+							fontHighlightColorDefinition.getY(), fontHighlightColorDefinition.getZ(),
+							fontHighlightColorDefinition.getW());
+				}
+
+				Color fontDisabledColor;
+				// TODO the key "MenuTextDisabledColor" was not observed in any sample; I made
+				// it up to fulfill the argument to my function call
+				final Vector4Definition fontDisabledColorDefinition = frameDefinition
+						.getVector4("MenuTextDisabledColor");
+				if (fontDisabledColorDefinition == null) {
+					fontDisabledColor = null;
+				}
+				else {
+					fontDisabledColor = new Color(fontDisabledColorDefinition.getX(),
+							fontDisabledColorDefinition.getY(), fontDisabledColorDefinition.getZ(),
+							fontDisabledColorDefinition.getW());
+				}
+
+				controlFrame.setFontHighlightColor(fontHighlightColor);
+				controlFrame.setFontDisabledColor(fontDisabledColor);
+
+				final Float menuItemHeight = frameDefinition.getFloat("MenuItemHeight");
+				if (menuItemHeight != null) {
+					controlFrame.setItemHeight(convertY(viewport2, menuItemHeight.floatValue()));
+				}
+				final Float menuBorder = frameDefinition.getFloat("MenuBorder");
+				if (menuBorder != null) {
+					controlFrame.setBorder(convertY(viewport2, menuBorder));
+				}
+
+				if (fields != null) {
+					final List<MenuItem> menuItems = new ArrayList<>();
+					for (final FrameDefinitionField field : fields) {
+						final MenuItem menuItem = field.visit(GetMenuItemFieldVisitor.INSTANCE);
+						menuItems.add(new MenuItem(getTemplates().getDecoratedString(menuItem.getText()),
+								menuItem.getNumericValue()));
+					}
+					controlFrame.setItems(viewport2, menuItems);
 				}
 				inflatedFrame = controlFrame;
 			}

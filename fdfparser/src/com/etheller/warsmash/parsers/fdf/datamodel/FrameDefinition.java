@@ -8,9 +8,11 @@ import java.util.Map;
 import java.util.Set;
 
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.RepeatingFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringPairFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetFloatFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetFontFieldVisitor;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetRepeatingFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetStringFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetStringPairFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetTextJustifyFieldVisitor;
@@ -48,6 +50,20 @@ public class FrameDefinition {
 
 	public void set(final String fieldName, final FrameDefinitionField value) {
 		this.nameToField.put(fieldName, value);
+	}
+
+	public void add(final String fieldName, final FrameDefinitionField value) {
+		final FrameDefinitionField field = this.nameToField.get(fieldName);
+		List<FrameDefinitionField> fields;
+		if (field == null) {
+			final RepeatingFrameDefinitionField repeatingFrameDefinitionField = new RepeatingFrameDefinitionField();
+			this.nameToField.put(fieldName, repeatingFrameDefinitionField);
+			fields = repeatingFrameDefinitionField.getFields();
+		}
+		else {
+			fields = field.visit(GetRepeatingFieldVisitor.INSTANCE);
+		}
+		fields.add(value);
 	}
 
 	public void add(final FrameDefinition childDefition) {
@@ -149,6 +165,14 @@ public class FrameDefinition {
 		final FrameDefinitionField frameDefinitionField = this.nameToField.get(id);
 		if (frameDefinitionField != null) {
 			return frameDefinitionField.visit(GetFontFieldVisitor.INSTANCE);
+		}
+		return null;
+	}
+
+	public List<FrameDefinitionField> getFields(final String fieldName) {
+		final FrameDefinitionField field = this.nameToField.get(fieldName);
+		if (field != null) {
+			return field.visit(GetRepeatingFieldVisitor.INSTANCE);
 		}
 		return null;
 	}

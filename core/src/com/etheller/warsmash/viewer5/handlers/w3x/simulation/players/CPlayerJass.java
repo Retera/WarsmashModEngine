@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 
@@ -29,6 +30,10 @@ public interface CPlayerJass {
 
 	void setController(CMapControl mapControl);
 
+	void setSlotState(CPlayerSlotState slotState);
+
+	void setAIDifficulty(AIDifficulty aiDifficulty);
+
 	void setName(String name);
 
 	void setOnScoreScreen(boolean flag);
@@ -44,6 +49,8 @@ public interface CPlayerJass {
 	CMapControl getController();
 
 	CPlayerSlotState getSlotState();
+
+	AIDifficulty getAIDifficulty();
 
 	int getTaxRate(int otherPlayerIndex, CPlayerState whichResource);
 

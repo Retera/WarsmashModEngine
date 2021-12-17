@@ -67,6 +67,8 @@ frame_element:
 	ID text_justify COMMA # TextJustifyElement
 	|
 	ID STRING_LITERAL COMMA FLOAT COMMA # SimpleFontElement
+	|
+	MENUITEM STRING_LITERAL COMMA FLOAT COMMA # MenuItemElement
 	;
 	
 text_justify:
@@ -119,6 +121,7 @@ WITHCHILDREN : 'WITHCHILDREN' ;
 
 SETPOINT : 'SetPoint';
 ANCHOR : 'Anchor';
+MENUITEM : 'MenuItem' ;
 
 JUSTIFYTOP : 'JUSTIFYTOP';
 JUSTIFYMIDDLE : 'JUSTIFYMIDDLE';

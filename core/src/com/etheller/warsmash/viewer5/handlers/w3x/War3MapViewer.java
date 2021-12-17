@@ -45,7 +45,6 @@ import com.etheller.warsmash.parsers.w3x.doo.War3MapDoo;
 import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
-import com.etheller.warsmash.parsers.w3x.w3i.Player;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
@@ -110,12 +109,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
@@ -165,7 +161,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public static final Vector3 intersectionHeap2 = new Vector3();
 	private static final Rectangle rectangleHeap = new Rectangle();
 	public static final StreamDataCallbackImplementation streamDataCallback = new StreamDataCallbackImplementation();
-	private static final boolean ENABLE_WORLDEDIT_AS_GAMEPLAY_DATA_HACK = true;
 
 	public WorldScene worldScene;
 	public boolean anyReady;
@@ -459,17 +454,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final PathSolver wc3PathSolver = this.wc3PathSolver;
 
 		char tileset = 'A';
-
-		if (ENABLE_WORLDEDIT_AS_GAMEPLAY_DATA_HACK) {
-			int playerIndex = 0;
-			for (final Player player : w3iFile.getPlayers()) {
-				final CBasePlayer cfgPlayer = this.mapConfig.getPlayer(playerIndex);
-				cfgPlayer.setName(player.getName());
-				cfgPlayer.setRacePref(CRacePreference.VALUES[player.getRace()]);
-				cfgPlayer.setController(CMapControl.VALUES[player.getType()]);
-				playerIndex++;
-			}
-		}
 
 		tileset = w3iFile.getTileset();
 

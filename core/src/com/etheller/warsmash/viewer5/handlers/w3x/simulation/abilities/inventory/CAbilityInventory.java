@@ -255,7 +255,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
+		if (this.canUseItems && (orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
 			if (this.itemsHeldAbilities[slot].size() < 1) {
 				receiver.notAnActiveAbility();
@@ -280,7 +280,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			final boolean playUserUISounds) {
 		if ((item != null) && !item.isDead() && !item.isHidden()) {
 			final CItemType itemType = item.getItemType();
-			if (itemType.isUseAutomaticallyWhenAcquired()) {
+			if (this.canUseItems && itemType.isUseAutomaticallyWhenAcquired()) {
 				if (itemType.isActivelyUsed()) {
 					item.setLife(simulation, 0);
 					// TODO when we give unit ability here, then use ability
@@ -301,14 +301,17 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					if (this.itemsHeld[i] == null) {
 						this.itemsHeld[i] = item;
 						item.setHidden(true);
-						for (final War3ID abilityId : item.getItemType().getAbilityList()) {
-							final CAbilityType<?> abilityType = simulation.getAbilityData().getAbilityType(abilityId);
-							if (abilityType != null) {
-								final CAbility abilityFromItem = abilityType
-										.createAbility(simulation.getHandleIdAllocator().createId());
-								abilityFromItem.setIconShowing(false);
-								hero.add(simulation, abilityFromItem);
-								this.itemsHeldAbilities[i].add(abilityFromItem);
+						if (this.canUseItems) {
+							for (final War3ID abilityId : item.getItemType().getAbilityList()) {
+								final CAbilityType<?> abilityType = simulation.getAbilityData()
+										.getAbilityType(abilityId);
+								if (abilityType != null) {
+									final CAbility abilityFromItem = abilityType
+											.createAbility(simulation.getHandleIdAllocator().createId());
+									abilityFromItem.setIconShowing(false);
+									hero.add(simulation, abilityFromItem);
+									this.itemsHeldAbilities[i].add(abilityFromItem);
+								}
 							}
 						}
 						hero.onPickUpItem(simulation, item, true);

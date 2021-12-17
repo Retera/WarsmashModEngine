@@ -5,6 +5,7 @@ import com.etheller.warsmash.fdfparser.FDFParser.FlagElementContext;
 import com.etheller.warsmash.fdfparser.FDFParser.FloatElementContext;
 import com.etheller.warsmash.fdfparser.FDFParser.FontElementContext;
 import com.etheller.warsmash.fdfparser.FDFParser.FrameFrameElementContext;
+import com.etheller.warsmash.fdfparser.FDFParser.MenuItemElementContext;
 import com.etheller.warsmash.fdfparser.FDFParser.SetPointElementContext;
 import com.etheller.warsmash.fdfparser.FDFParser.SimpleFontElementContext;
 import com.etheller.warsmash.fdfparser.FDFParser.StringElementContext;
@@ -18,12 +19,14 @@ import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FontDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.datamodel.MenuItem;
 import com.etheller.warsmash.parsers.fdf.datamodel.SetPointDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector2Definition;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FloatFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FontFrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.MenuItemFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringPairFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.TextJustifyFrameDefinitionField;
@@ -148,6 +151,15 @@ public class FrameDefinitionFieldVisitor extends FDFBaseVisitor<Void> {
 		text = text.substring(1, text.length() - 1);
 		this.frameDefinition.set(ctx.ID().getText(),
 				new FontFrameDefinitionField(new FontDefinition(text, Float.parseFloat(ctx.FLOAT().getText()), null)));
+		return null;
+	}
+
+	@Override
+	public Void visitMenuItemElement(final MenuItemElementContext ctx) {
+		String text = ctx.STRING_LITERAL().getText();
+		text = text.substring(1, text.length() - 1);
+		this.frameDefinition.add(ctx.MENUITEM().getText(),
+				new MenuItemFrameDefinitionField(new MenuItem(text, (int) Float.parseFloat(ctx.FLOAT().getText()))));
 		return null;
 	}
 

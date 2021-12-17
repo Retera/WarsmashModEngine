@@ -38,6 +38,5 @@ public class WarsmashConstants {
 	public static final boolean FIX_FLAT_FILES_TILESET_LOADING = false;
 	public static final boolean ENABLE_MUSIC = true;
 	public static final boolean LOAD_UNITS_FROM_WORLDEDIT_DATA = false;
-	public static final boolean LOCAL_TEMP_TEST_ALL_PLAYERS_PLAYING = true;
 	public static final boolean CRASH_ON_INCOMPATIBLE_132_FEATURES = false;
 }

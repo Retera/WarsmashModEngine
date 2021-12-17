@@ -1385,12 +1385,12 @@ public class Jass2 {
 							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
 					final CPlayerJass player = arguments.get(1)
 							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
-					final TriggerBooleanExpression filter = arguments.get(2)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					final TriggerBooleanExpression filter = nullable(arguments, 2,
+							ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 					for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 						final CPlayerJass jassPlayer = CommonEnvironment.this.simulation.getPlayer(i);
 						if (player.hasAlliance(i, CAllianceType.PASSIVE)) {
-							if (filter.evaluate(globalScope,
+							if ((filter == null) || filter.evaluate(globalScope,
 									CommonTriggerExecutionScope.filterScope(triggerScope, jassPlayer))) {
 								force.add(jassPlayer);
 							}
@@ -2866,6 +2866,16 @@ public class Jass2 {
 					return BooleanJassValue.of(unit.isHidden());
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("PauseUnit", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit unit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final boolean flag = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+					unit.setPaused(flag);
+					return null;
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetPlayerHandicapXP", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -3062,7 +3072,15 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final double time = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-					throw new JassException(globalScope, "Needs to sleep " + time, null);
+					new CTimer((float) time) {
+						@Override
+						public void onFire() {
+							globalScope.queueTrigger(null, null, triggerScope.getTriggeringTrigger(), null,
+									triggerScope);
+						}
+					}.start(CommonEnvironment.this.simulation);
+					// throw new JassException(globalScope, "Needs to sleep " + time, null);
+					return JassValue.I_AM_SLEEP;
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerNeutralAggressive", new JassFunction() {
@@ -3497,15 +3515,21 @@ public class Jass2 {
 					final Point2D.Double whichLocation = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 					final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
 					final boolean addBlight = arguments.get(3).visit(BooleanJassValueVisitor.getInstance());
-					final Rectangle blightRectangle = new Rectangle((float) (whichLocation.x - radius),
-							(float) (whichLocation.y - radius), radius * 2, radius * 2);
+					float whichLocationX = (float) whichLocation.x;
+					float whichLocationY = (float) whichLocation.y;
+					final int cellX = war3MapViewer.terrain.get128CellX(whichLocationX);
+					final int cellY = war3MapViewer.terrain.get128CellY(whichLocationY);
+					whichLocationX = war3MapViewer.terrain.get128WorldCoordinateFromCellX(cellX);
+					whichLocationY = war3MapViewer.terrain.get128WorldCoordinateFromCellY(cellY);
+					final Rectangle blightRectangle = new Rectangle(whichLocationX - radius, whichLocationY - radius,
+							radius * 2, radius * 2);
 					final float blightRectangleMaxX = blightRectangle.x + blightRectangle.width;
 					final float blightRectangleMaxY = blightRectangle.y + blightRectangle.height;
 					final float rSquared = radius * radius;
 					for (float x = blightRectangle.x; x < blightRectangleMaxX; x += 128.0f) {
 						for (float y = blightRectangle.y; y < blightRectangleMaxY; y += 128.0f) {
-							final float dx = x - (float) whichLocation.x;
-							final float dy = y - (float) whichLocation.y;
+							final float dx = x - whichLocationX;
+							final float dy = y - whichLocationY;
 							final float distSquared = (dx * dx) + (dy * dy);
 							if (distSquared <= rSquared) {
 								for (float pathX = -64; pathX < 64; pathX += 32f) {
@@ -3526,7 +3550,13 @@ public class Jass2 {
 							}
 						}
 					}
-					war3MapViewer.terrain.updateGroundTextures(blightRectangle);
+					final int cellMinX = war3MapViewer.terrain.get128CellX(blightRectangle.x);
+					final int cellMinY = war3MapViewer.terrain.get128CellY(blightRectangle.y);
+					final int cellMaxX = war3MapViewer.terrain.get128CellX(blightRectangleMaxX);
+					final int cellMaxY = war3MapViewer.terrain.get128CellY(blightRectangleMaxY);
+					final Rectangle blightRectangleCellUnits = new Rectangle(cellMinX, cellMinY, cellMaxX - cellMinX,
+							cellMaxY - cellMinY);
+					war3MapViewer.terrain.updateGroundTextures(blightRectangleCellUnits);
 					return null;
 				}
 			});
@@ -4002,7 +4032,7 @@ public class Jass2 {
 				System.out.println("ExecuteFunc (\"" + funcName + "\")");
 				if (functionByName != null) {
 					// TODO below TriggerExecutionScope.EMPTY is probably not correct
-					functionByName.call(Collections.emptyList(), globalScope, TriggerExecutionScope.EMPTY);
+					functionByName.call(Collections.emptyList(), globalScope, TriggerExecutionScope.createEmptyStack());
 				}
 				return null;
 			}

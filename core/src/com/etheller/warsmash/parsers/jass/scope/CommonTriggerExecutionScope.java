@@ -2,10 +2,12 @@ package com.etheller.warsmash.parsers.jass.scope;
 
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJass;
@@ -70,6 +72,10 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private CWidget triggerWidget;
 	private CScriptDialog clickedDialog;
 	private CScriptDialogButton clickedButton;
+	private CUnit spellAbilityUnit;
+	private CUnit spellTargetUnit;
+	private AbilityPointTarget spellTargetPoint;
+	private War3ID spellAbilityId;
 	private JassGameEventsWar3 triggerEventId;
 
 	public CommonTriggerExecutionScope(final Trigger triggeringTrigger) {
@@ -375,6 +381,22 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return this.triggerEventId;
 	}
 
+	public CUnit getSpellAbilityUnit() {
+		return this.spellAbilityUnit;
+	}
+
+	public CUnit getSpellTargetUnit() {
+		return this.spellTargetUnit;
+	}
+
+	public AbilityPointTarget getSpellTargetPoint() {
+		return this.spellTargetPoint;
+	}
+
+	public War3ID getSpellAbilityId() {
+		return this.spellAbilityId;
+	}
+
 	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
 			final CUnit filterUnit) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
@@ -507,6 +529,29 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.clickedDialog = clickedDialog;
 		scope.clickedButton = clickedButton;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitSpellEffectTargetScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit spellAbilityUnit, final CUnit targetUnit, final War3ID spellAbilityId) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.spellAbilityUnit = spellAbilityUnit;
+		scope.triggeringUnit = spellAbilityUnit;
+		scope.spellTargetUnit = targetUnit;
+		scope.spellAbilityId = spellAbilityId;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitSpellEffectPointScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit spellAbilityUnit, final AbilityPointTarget targetPoint,
+			final War3ID spellAbilityId) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.spellAbilityUnit = spellAbilityUnit;
+		scope.triggeringUnit = spellAbilityUnit;
+		scope.spellTargetPoint = targetPoint;
+		scope.spellAbilityId = spellAbilityId;
 		scope.triggerEventId = triggerEventId;
 		return scope;
 	}

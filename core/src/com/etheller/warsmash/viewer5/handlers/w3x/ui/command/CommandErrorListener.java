@@ -1,13 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui.command;
 
 public interface CommandErrorListener {
-	void showCommandError(String message);
+	void showCommandError(int playerIndex, String message);
 
-	void showCantPlaceError();
+	void showCantPlaceError(int playerIndex);
 
-	void showNoFoodError();
+	void showNoFoodError(int playerIndex);
 
-	void showInventoryFullError();
+	void showInventoryFullError(int playerIndex);
 
-	void showUnableToFindCoupleTargetError();
+	void showUnableToFindCoupleTargetError(int playerIndex);
 }

@@ -50,7 +50,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePrefer
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
@@ -447,13 +446,11 @@ public class CSimulation implements CPlayerAPI {
 		return this.defaultPlayerUnitOrderExecutors.get(index);
 	}
 
-	public CommandErrorListener getCommandErrorListener(final int playerIndex) {
+	public CommandErrorListener getCommandErrorListener() {
 		return this.commandErrorListener;
 	}
 
 	public void unitConstructFinishEvent(final CUnit constructedStructure) {
-		final CPlayer player = this.getPlayer(constructedStructure.getPlayerIndex());
-		player.addTechtreeUnlocked(constructedStructure.getTypeId());
 		this.simulationRenderController.spawnUnitConstructionFinishSound(constructedStructure);
 	}
 
@@ -660,12 +657,6 @@ public class CSimulation implements CPlayerAPI {
 
 	public boolean isNight() {
 		return !this.daytime;
-	}
-
-	public void updateIsPlaying(final War3MapConfig mapConfig) {
-		for (int i = 0; i < mapConfig.getPlayerCount(); i++) {
-			this.players.get(i).setSlotState(CPlayerSlotState.PLAYING);
-		}
 	}
 
 }

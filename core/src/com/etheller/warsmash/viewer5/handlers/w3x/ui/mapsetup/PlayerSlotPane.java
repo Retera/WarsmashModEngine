@@ -37,7 +37,8 @@ public class PlayerSlotPane {
 	public PlayerSlotPane(final GameUI rootFrame, final Viewport uiViewport, final SimpleFrame container,
 			final int index) {
 		this.index = index;
-		this.playerSlotFrame = (SimpleFrame) rootFrame.createFrame("PlayerSlot", container, 0, index);
+		this.playerSlotFrame = (SimpleFrame) rootFrame.createFrameByType("SIMPLEFRAME", "PlayerSlot", container,
+				"WITHCHILDREN", index);
 		container.add(this.playerSlotFrame);
 
 		this.downloadValue = (StringFrame) rootFrame.getFrameByName("DownloadValue", index);

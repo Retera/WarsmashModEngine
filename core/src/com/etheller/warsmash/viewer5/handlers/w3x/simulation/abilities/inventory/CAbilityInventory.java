@@ -319,7 +319,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					}
 				}
 				if (playUserUISounds) {
-					simulation.getCommandErrorListener(hero.getPlayerIndex()).showInventoryFullError();
+					simulation.getCommandErrorListener().showInventoryFullError(hero.getPlayerIndex());
 				}
 			}
 		}

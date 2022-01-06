@@ -104,7 +104,7 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 			else {
 				final CPlayer player = simulation.getPlayer(playerIndex);
 				refund(player, unitTypeToCreate);
-				simulation.getCommandErrorListener(playerIndex).showCantPlaceError();
+				simulation.getCommandErrorListener().showCantPlaceError(playerIndex);
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
 		}

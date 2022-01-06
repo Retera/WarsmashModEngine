@@ -54,8 +54,8 @@ public class COrderDropItemAtTargetWidget implements COrder {
 			return ability.beginDropItem(game, caster, this.orderId, itemToDrop, targetHero);
 		}
 		else {
-			game.getCommandErrorListener(caster.getPlayerIndex())
-					.showCommandError(this.abilityActivationReceiver.getMessage());
+			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
+					this.abilityActivationReceiver.getMessage());
 			return caster.pollNextOrderBehavior(game);
 		}
 	}

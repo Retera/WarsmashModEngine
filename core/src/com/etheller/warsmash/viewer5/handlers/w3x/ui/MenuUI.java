@@ -533,20 +533,19 @@ public class MenuUI {
 		mapListBox.setSelectionListener(new ListBoxSelelectionListener() {
 			@Override
 			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
-				War3Map map;
 				try {
-					map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
+					final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
 					final War3MapW3i mapInfo = map.readMapInformation();
 					final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
 					MenuUI.this.rootFrame.setMapStrings(wtsFile);
 					final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
-					for (int i = 0; (i < war3MapConfig.getPlayerCount()) && (i < mapInfo.getPlayers().size()); i++) {
+					for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
 						final CBasePlayer player = war3MapConfig.getPlayer(i);
 						player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
 					}
 					Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame,
 							war3MapConfig, "Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j").config();
-					for (int i = 0; i < war3MapConfig.getPlayerCount(); i++) {
+					for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 						final CBasePlayer player = war3MapConfig.getPlayer(i);
 						if (player.getController() == CMapControl.USER) {
 							player.setSlotState(CPlayerSlotState.PLAYING);
@@ -817,6 +816,33 @@ public class MenuUI {
 
 	public void startMap(final String mapFilename) {
 		this.mainMenuFrame.setVisible(false);
+
+		try {
+			final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, mapFilename);
+			final War3MapW3i mapInfo = map.readMapInformation();
+			final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
+			MenuUI.this.rootFrame.setMapStrings(wtsFile);
+			final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+			for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
+				final CBasePlayer player = war3MapConfig.getPlayer(i);
+				player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
+			}
+			Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame, war3MapConfig,
+					"Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j").config();
+			for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+				final CBasePlayer player = war3MapConfig.getPlayer(i);
+				if (player.getController() == CMapControl.USER) {
+					player.setSlotState(CPlayerSlotState.PLAYING);
+//					player.setName(MenuUI.this.profileManager.getCurrentProfile());
+//					break;
+				}
+			}
+			MenuUI.this.currentMapConfig = war3MapConfig;
+		}
+		catch (final IOException e) {
+			e.printStackTrace();
+		}
+
 		internalStartMap(mapFilename);
 	}
 

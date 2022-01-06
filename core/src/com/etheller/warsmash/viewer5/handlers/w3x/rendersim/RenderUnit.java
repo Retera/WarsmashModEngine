@@ -333,8 +333,8 @@ public class RenderUnit implements RenderWidget {
 		this.instance.setLocalRotation(tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z, this.facing));
 
 		final float facingRadians = (float) Math.toRadians(this.facing);
-		final float maxPitch = this.typeData.getMaxPitch();
-		final float maxRoll = this.typeData.getMaxRoll();
+		final float maxPitch = (float) Math.toRadians(this.typeData.getMaxPitch());
+		final float maxRoll = (float) Math.toRadians(this.typeData.getMaxRoll());
 		final float sampleRadius = this.typeData.getElevationSampleRadius();
 		float pitch, roll;
 		final float pitchSampleForwardX = this.location[0] + (sampleRadius * (float) Math.cos(facingRadians));

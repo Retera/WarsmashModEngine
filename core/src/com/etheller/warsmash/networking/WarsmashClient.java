@@ -58,7 +58,7 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 			public void run() {
 				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
 				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
-					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(currentServerTurnInProgress) {
 						@Override
 						public void run() {
 							executor.issueTargetOrder(unitHandleId, abilityHandleId, orderId, targetHandleId, queue);
@@ -85,7 +85,7 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 			public void run() {
 				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
 				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
-					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(currentServerTurnInProgress) {
 						@Override
 						public void run() {
 							executor.issuePointOrder(unitHandleId, abilityHandleId, orderId, x, y, queue);
@@ -114,7 +114,7 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 			public void run() {
 				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
 				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
-					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(currentServerTurnInProgress) {
 						@Override
 						public void run() {
 							executor.issueDropItemAtPointOrder(unitHandleId, abilityHandleId, orderId, targetHandleId,
@@ -143,7 +143,7 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 			public void run() {
 				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
 				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
-					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(currentServerTurnInProgress) {
 						@Override
 						public void run() {
 							executor.issueDropItemAtTargetOrder(unitHandleId, abilityHandleId, orderId, targetHandleId,
@@ -172,7 +172,7 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 			public void run() {
 				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
 				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
-					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(currentServerTurnInProgress) {
 						@Override
 						public void run() {
 							executor.issueImmediateOrder(unitHandleId, abilityHandleId, orderId, queue);
@@ -198,7 +198,7 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 			public void run() {
 				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
 				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
-					WarsmashClient.this.queuedMessages.add(new QueuedMessage(WarsmashClient.this.latestCompletedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(currentServerTurnInProgress) {
 						@Override
 						public void run() {
 							executor.unitCancelTrainingItem(unitHandleId, cancelIndex);
@@ -237,6 +237,10 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 		while (!this.queuedMessages.isEmpty()
 				&& (this.queuedMessages.peek().messageTurnTick == this.latestLocallyRequestedTurn)) {
 			this.queuedMessages.poll().run();
+		}
+		if (!this.queuedMessages.isEmpty()) {
+			System.out.println("stopped with " + this.queuedMessages.peek().messageTurnTick + " != "
+					+ this.latestLocallyRequestedTurn);
 		}
 	}
 

@@ -49,6 +49,12 @@ public class WarsmashServer implements ClientToServerListener {
 		Integer playerIndex = this.socketAddressToPlayerIndex.get(sourceAddress);
 		if (playerIndex == null) {
 			playerIndex = this.socketAddressToPlayerIndex.size();
+			if (playerIndex == 2) {
+				playerIndex = 5;
+			}
+			else if (playerIndex == 3) {
+				playerIndex = 6;
+			}
 			this.socketAddressToPlayerIndex.put(sourceAddress, playerIndex);
 		}
 		return playerIndex;

@@ -1089,13 +1089,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				createMinimap(this.war3MapViewer);
 
 		this.meleeUIAbilityActivationReceiver = new MeleeUIAbilityActivationReceiver(
-				new AbilityActivationErrorHandler(this.rootFrame.getErrorString("NoGold"),
+				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
+						this.rootFrame.getErrorString("NoGold"),
 						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoGoldSound"))),
-				new AbilityActivationErrorHandler(this.rootFrame.getErrorString("NoLumber"),
+				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
+						this.rootFrame.getErrorString("NoLumber"),
 						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoLumberSound"))),
-				new AbilityActivationErrorHandler(this.rootFrame.getErrorString("NoFood"),
+				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
+						this.rootFrame.getErrorString("NoFood"),
 						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))),
-				new AbilityActivationErrorHandler("", this.war3MapViewer.getUiSounds().getSound("InterfaceError")));
+				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(), "",
+						this.war3MapViewer.getUiSounds().getSound("InterfaceError")));
 
 		final MdxModel rallyModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("RallyIndicatorDst"));
 		this.rallyPointInstance = (MdxComplexInstance) rallyModel.addInstance();
@@ -1217,13 +1221,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void showCommandError(final String message) {
-		this.rootFrame.setText(this.errorMessageFrame, message);
-		this.errorMessageFrame.setVisible(true);
-		final long millis = TimeUtils.millis();
-		this.lastErrorMessageExpireTime = millis + WORLD_FRAME_MESSAGE_EXPIRE_MILLIS;
-		this.lastErrorMessageFadeTime = millis + WORLD_FRAME_MESSAGE_FADEOUT_MILLIS;
-		this.errorMessageFrame.setAlpha(1.0f);
+	public void showCommandError(final int playerIndex, final String message) {
+		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
+			this.rootFrame.setText(this.errorMessageFrame, message);
+			this.errorMessageFrame.setVisible(true);
+			final long millis = TimeUtils.millis();
+			this.lastErrorMessageExpireTime = millis + WORLD_FRAME_MESSAGE_EXPIRE_MILLIS;
+			this.lastErrorMessageFadeTime = millis + WORLD_FRAME_MESSAGE_FADEOUT_MILLIS;
+			this.errorMessageFrame.setAlpha(1.0f);
+		}
 	}
 
 	public void showGameMessage(final String message, final float expireTime) {
@@ -1237,30 +1243,38 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void showCantPlaceError() {
-		showCommandError(this.rootFrame.getErrorString("Cantplace"));
-		this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("CantPlaceSound"))
-				.play(this.uiScene.audioContext, 0, 0, 0);
+	public void showCantPlaceError(final int playerIndex) {
+		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, this.rootFrame.getErrorString("Cantplace"));
+			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("CantPlaceSound"))
+					.play(this.uiScene.audioContext, 0, 0, 0);
+		}
 	}
 
 	@Override
-	public void showNoFoodError() {
-		showCommandError(this.rootFrame.getErrorString("NoFood"));
-		this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))
-				.play(this.uiScene.audioContext, 0, 0, 0);
+	public void showNoFoodError(final int playerIndex) {
+		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, this.rootFrame.getErrorString("NoFood"));
+			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))
+					.play(this.uiScene.audioContext, 0, 0, 0);
+		}
 	}
 
 	@Override
-	public void showUnableToFindCoupleTargetError() {
-		showCommandError(this.rootFrame.getErrorString("Cantfindcoupletarget"));
-		this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
+	public void showUnableToFindCoupleTargetError(final int playerIndex) {
+		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, this.rootFrame.getErrorString("Cantfindcoupletarget"));
+			this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
+		}
 	}
 
 	@Override
-	public void showInventoryFullError() {
-		showCommandError(this.rootFrame.getErrorString("InventoryFull"));
-		this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("InventoryFullSound"))
-				.play(this.uiScene.audioContext, 0, 0, 0);
+	public void showInventoryFullError(final int playerIndex) {
+		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, this.rootFrame.getErrorString("InventoryFull"));
+			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("InventoryFullSound"))
+					.play(this.uiScene.audioContext, 0, 0, 0);
+		}
 	}
 
 	public void update(final float deltaTime) {

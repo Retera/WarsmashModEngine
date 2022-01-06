@@ -69,7 +69,7 @@ public final class StringMsgTargetCheckReceiver<TARGET_TYPE> implements AbilityT
 	}
 
 	@Override
-	public void targetOutsideRange(final double howMuch) {
+	public void targetOutsideRange() {
 		this.message = "NOTEXTERN: Target is outside range.";
 	}
 

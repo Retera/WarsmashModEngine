@@ -9,7 +9,7 @@ public interface AbilityTargetCheckReceiver<TARGET_TYPE> {
 
 	void mustTargetResources();
 
-	void targetOutsideRange(double howMuch);
+	void targetOutsideRange();
 
 	void notAnActiveAbility();
 

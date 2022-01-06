@@ -100,7 +100,7 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 				possiblePairFinder);
 		final CUnit coupleTarget = possiblePairFinder.pairMatchFound;
 		if (coupleTarget == null) {
-			game.getCommandErrorListener(caster.getPlayerIndex()).showUnableToFindCoupleTargetError();
+			game.getCommandErrorListener().showUnableToFindCoupleTargetError(caster.getPlayerIndex());
 			return caster.pollNextOrderBehavior(game);
 		}
 		coupleTarget.order(game, new COrderTargetWidget(possiblePairFinder.pairMatchAbility.getHandleId(),

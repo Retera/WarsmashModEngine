@@ -383,10 +383,12 @@ public class CUnit extends CWidget {
 							ability.setIconShowing(true);
 						}
 					}
+					final CPlayer player = game.getPlayer(this.playerIndex);
 					if (this.unitType.getFoodMade() != 0) {
-						final CPlayer player = game.getPlayer(this.playerIndex);
 						player.setFoodCap(player.getFoodCap() + this.unitType.getFoodMade());
 					}
+					player.removeTechtreeInProgress(this.unitType.getTypeId());
+					player.addTechtreeUnlocked(this.unitType.getTypeId());
 					game.unitConstructFinishEvent(this);
 					this.stateNotifier.ordersChanged();
 				}
@@ -402,9 +404,16 @@ public class CUnit extends CWidget {
 						if (this.buildQueueTypes[0] == QueueItemType.UNIT) {
 							final CPlayer player = game.getPlayer(this.playerIndex);
 							final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
-							final int newFoodUsed = player.getFoodUsed() + trainedUnitType.getFoodUsed();
-							if (newFoodUsed <= player.getFoodCap()) {
-								player.setFoodUsed(newFoodUsed);
+							if (trainedUnitType.getFoodUsed() != 0) {
+								final int newFoodUsed = player.getFoodUsed() + trainedUnitType.getFoodUsed();
+								if (newFoodUsed <= player.getFoodCap()) {
+									player.setFoodUsed(newFoodUsed);
+									player.addTechtreeInProgress(queuedRawcode);
+									this.queuedUnitFoodPaid = true;
+								}
+							}
+							else {
+								player.addTechtreeInProgress(queuedRawcode);
 								this.queuedUnitFoodPaid = true;
 							}
 						}
@@ -433,6 +442,7 @@ public class CUnit extends CWidget {
 							trainedUnit.setFoodUsed(trainedUnitType.getFoodUsed());
 							final CPlayer player = game.getPlayer(this.playerIndex);
 							player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
+							player.removeTechtreeInProgress(queuedRawcode);
 							player.addTechtreeUnlocked(queuedRawcode);
 							// nudge the trained unit out around us
 							trainedUnit.nudgeAround(game, this);
@@ -478,6 +488,7 @@ public class CUnit extends CWidget {
 							player.addTechtreeUnlocked(queuedRawcode);
 							// nudge the trained unit out around us
 							revivingHero.nudgeAround(game, this);
+							game.unitRepositioned(revivingHero); // dont blend animation
 							game.heroReviveEvent(this, revivingHero);
 							if (this.rallyPoint != null) {
 								final int rallyOrderId = OrderIds.smart;
@@ -1014,6 +1025,16 @@ public class CUnit extends CWidget {
 		if (this.foodUsed != 0) {
 			player.setUnitFoodUsed(this, 0);
 		}
+		if (getHeroData() == null) {
+			if (this.constructing) {
+				player.removeTechtreeInProgress(this.unitType.getTypeId());
+			}
+			else {
+				player.removeTechtreeUnlocked(this.unitType.getTypeId());
+			}
+		}
+		// else its a hero and techtree "remains unlocked" which is currently meaning
+		// the "limit of 1" remains limited
 
 		// Award hero experience
 		if (source != null) {
@@ -1468,6 +1489,7 @@ public class CUnit extends CWidget {
 						final CPlayer player = game.getPlayer(this.playerIndex);
 						final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
 						player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
+						player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
 						break;
 					}
 					case HERO_REVIVE: {
@@ -1524,11 +1546,15 @@ public class CUnit extends CWidget {
 						final int newFoodUsed = player.getFoodUsed() + unitType.getFoodUsed();
 						if (newFoodUsed <= player.getFoodCap()) {
 							player.setFoodUsed(newFoodUsed);
+							player.addTechtreeInProgress(rawcode);
 						}
 						else {
 							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener(this.playerIndex).showNoFoodError();
+							game.getCommandErrorListener().showNoFoodError(this.playerIndex);
 						}
+					}
+					else {
+						player.addTechtreeInProgress(rawcode);
 					}
 				}
 				else if (queueItemType == QueueItemType.HERO_REVIVE) {
@@ -1541,7 +1567,7 @@ public class CUnit extends CWidget {
 						}
 						else {
 							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener(this.playerIndex).showNoFoodError();
+							game.getCommandErrorListener().showNoFoodError(this.playerIndex);
 						}
 					}
 				}
@@ -1818,7 +1844,21 @@ public class CUnit extends CWidget {
 	}
 
 	public void onRemove(final CSimulation simulation) {
-		setLife(simulation, 0);
+		final CPlayer player = simulation.getPlayer(this.playerIndex);
+		if (WarsmashConstants.FIRE_DEATH_EVENTS_ON_REMOVEUNIT) {
+			// Firing userspace triggers here causes items to appear around the player bases
+			// in melee games.
+			// (See "Remove creeps and critters from used start locations" implementation)
+			setLife(simulation, 0);
+		}
+		else {
+			if (this.constructing) {
+				player.removeTechtreeInProgress(this.unitType.getTypeId());
+			}
+			else {
+				player.removeTechtreeUnlocked(this.unitType.getTypeId());
+			}
+		}
 		simulation.getWorldCollision().removeUnit(this);
 	}
 
@@ -1988,5 +2028,12 @@ public class CUnit extends CWidget {
 
 	public void setTriggerEditorCustomValue(final int triggerEditorCustomValue) {
 		this.triggerEditorCustomValue = triggerEditorCustomValue;
+	}
+
+	public static String maybeMeaningfulName(final CUnit unit) {
+		if (unit == null) {
+			return "null";
+		}
+		return unit.getUnitType().getName();
 	}
 }

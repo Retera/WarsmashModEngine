@@ -29,6 +29,7 @@ public class CPathfindingProcessor {
 	private int pathfindJobId = 0;
 	private int totalIterations = 0;
 	private int totalJobLoops = 0;
+	private final int pathingGridCellCount;
 
 	public CPathfindingProcessor(final PathingGrid pathingGrid, final CWorldCollision worldCollision) {
 		this.pathingGrid = pathingGrid;
@@ -46,6 +47,7 @@ public class CPathfindingProcessor {
 						new Point2D.Float(pathingGrid.getWorldXFromCorner(j), pathingGrid.getWorldYFromCorner(i)));
 			}
 		}
+		this.pathingGridCellCount = pathingGrid.getWidth() * pathingGrid.getHeight();
 	}
 
 	/**
@@ -365,6 +367,7 @@ public class CPathfindingProcessor {
 					}
 					lastCameFromDirection = current.cameFromDirection;
 					Node lastNode = null;
+					int stepsBackward = 0;
 					while (current.cameFrom != null) {
 						lastNode = current;
 						current = current.cameFrom;
@@ -387,6 +390,16 @@ public class CPathfindingProcessor {
 								lastCameFromDirection = current.cameFromDirection;
 							}
 						}
+						if (stepsBackward > this.pathingGridCellCount) {
+							throw new IllegalStateException(
+									"PATHING SYSTEM ERROR: The path finding algorithm hit an infinite cycle at or near pt: "
+											+ current.cameFrom.point
+											+ ".\nThis means the A* search algorithm heuristic 'admissable' constraint was probably violated.\n\nUnit1:"
+											+ CUnit.maybeMeaningfulName(job.ignoreIntersectionsWithThisUnit)
+											+ "\nUnit2:"
+											+ CUnit.maybeMeaningfulName(job.ignoreIntersectionsWithThisSecondUnit));
+						}
+						stepsBackward++;
 					}
 					job.queueItem.pathFound(totalPath, simulation);
 					this.moveQueue.poll();

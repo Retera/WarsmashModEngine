@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListene
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
@@ -30,6 +31,7 @@ public class CPlayer extends CBasePlayer {
 	private int foodUsed;
 	private int foodCapCeiling = 101; // TODO should not have a default, I put 101 to make it stand out
 	private final Map<War3ID, Integer> rawcodeToTechtreeUnlocked = new HashMap<>();
+	private final Map<War3ID, Integer> rawcodeToTechtreeInProgress = new HashMap<>();
 	private final Map<War3ID, Integer> rawcodeToTechtreeMaxAllowed = new HashMap<>();
 	private final List<CUnit> heroes = new ArrayList<>();
 	private final EnumMap<JassGameEventsWar3, List<CPlayerEvent>> eventTypeToEvents = new EnumMap<>(
@@ -53,7 +55,7 @@ public class CPlayer extends CBasePlayer {
 	// questionable -- it already was -- but I meant for those to inform us
 	// which fields shouldn't be persisted if we do game state save later
 	private transient CPlayerStateNotifier stateNotifier = new CPlayerStateNotifier();
-	private float handicapXP;
+	private float handicapXP = 1.0f;
 	private float handicap = 0.9f;
 
 	public CPlayer(final CRace race, final float[] startLocation, final CBasePlayer configPlayer) {
@@ -136,6 +138,18 @@ public class CPlayer extends CBasePlayer {
 		return techtreeUnlocked;
 	}
 
+	public int getTechtreeInProgress(final War3ID rawcode) {
+		final Integer techtreeInProgress = this.rawcodeToTechtreeInProgress.get(rawcode);
+		if (techtreeInProgress == null) {
+			return 0;
+		}
+		return techtreeInProgress;
+	}
+
+	public int getTechtreeUnlockedOrInProgress(final War3ID rawcode) {
+		return getTechtreeUnlocked(rawcode) + getTechtreeInProgress(rawcode);
+	}
+
 	public void addTechtreeUnlocked(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
@@ -153,6 +167,26 @@ public class CPlayer extends CBasePlayer {
 		}
 		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked - 1);
+		}
+	}
+
+	public void addTechtreeInProgress(final War3ID rawcode) {
+		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
+		if (techtreeUnlocked == null) {
+			this.rawcodeToTechtreeInProgress.put(rawcode, 1);
+		}
+		else {
+			this.rawcodeToTechtreeInProgress.put(rawcode, techtreeUnlocked + 1);
+		}
+	}
+
+	public void removeTechtreeInProgress(final War3ID rawcode) {
+		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
+		if (techtreeUnlocked == null) {
+			this.rawcodeToTechtreeInProgress.put(rawcode, -1);
+		}
+		else {
+			this.rawcodeToTechtreeInProgress.put(rawcode, techtreeUnlocked - 1);
 		}
 	}
 
@@ -397,7 +431,7 @@ public class CPlayer extends CBasePlayer {
 	public boolean isTechtreeAllowedByMax(final War3ID techtree) {
 		final int techtreeMaxAllowed = getTechtreeMaxAllowed(techtree);
 		if (techtreeMaxAllowed > 0) {
-			if (getTechtreeUnlocked(techtree) >= techtreeMaxAllowed) {
+			if (getTechtreeUnlockedOrInProgress(techtree) >= techtreeMaxAllowed) {
 				return false;
 			}
 		}
@@ -418,5 +452,31 @@ public class CPlayer extends CBasePlayer {
 
 	public float getHandicap() {
 		return this.handicap;
+	}
+
+	public void fireAbilityEffectEventsTarget(final CUnit spellAbilityUnit, final CUnit spellTargetUnit,
+			final War3ID alias) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(spellAbilityUnit,
+						CommonTriggerExecutionScope.unitSpellEffectTargetScope(
+								JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT, event.getTrigger(), spellAbilityUnit,
+								spellTargetUnit, alias));
+			}
+		}
+	}
+
+	public void fireAbilityEffectEventsPoint(final CUnit spellAbilityUnit, final AbilityPointTarget abilityPointTarget,
+			final War3ID alias) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(spellAbilityUnit,
+						CommonTriggerExecutionScope.unitSpellEffectPointScope(
+								JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT, event.getTrigger(), spellAbilityUnit,
+								abilityPointTarget, alias));
+			}
+		}
 	}
 }

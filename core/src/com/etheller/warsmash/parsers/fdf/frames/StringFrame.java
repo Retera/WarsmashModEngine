@@ -231,7 +231,8 @@ public class StringFrame extends AbstractRenderableFrame {
 								this.internalFrames.add(singleStringFrame);
 								currentXCoordForFrames = currentXCoordForWord;
 
-								currentColor = new Color((colorInt << 8) | (colorInt >>> 24));
+								currentColor = new Color((colorInt << 8) | (colorInt >>> 24)
+										| 0xFF /* always show, hacky setting alpha=1 */);
 							}
 						}
 						break;

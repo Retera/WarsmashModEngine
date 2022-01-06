@@ -4,23 +4,23 @@ public class SettableCommandErrorListener implements CommandErrorListener {
 	private CommandErrorListener delegate;
 
 	@Override
-	public void showCommandError(final String message) {
-		this.delegate.showCommandError(message);
+	public void showCommandError(final int playerIndex, final String message) {
+		this.delegate.showCommandError(playerIndex, message);
 	}
 
 	@Override
-	public void showCantPlaceError() {
-		this.delegate.showCantPlaceError();
+	public void showCantPlaceError(final int playerIndex) {
+		this.delegate.showCantPlaceError(playerIndex);
 	}
 
 	@Override
-	public void showNoFoodError() {
-		this.delegate.showNoFoodError();
+	public void showNoFoodError(final int playerIndex) {
+		this.delegate.showNoFoodError(playerIndex);
 	}
 
 	@Override
-	public void showInventoryFullError() {
-		this.delegate.showInventoryFullError();
+	public void showInventoryFullError(final int playerIndex) {
+		this.delegate.showInventoryFullError(playerIndex);
 	}
 
 	public void setDelegate(final CommandErrorListener delegate) {
@@ -28,7 +28,7 @@ public class SettableCommandErrorListener implements CommandErrorListener {
 	}
 
 	@Override
-	public void showUnableToFindCoupleTargetError() {
-		this.delegate.showUnableToFindCoupleTargetError();
+	public void showUnableToFindCoupleTargetError(final int playerIndex) {
+		this.delegate.showUnableToFindCoupleTargetError(playerIndex);
 	}
 }

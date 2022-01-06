@@ -64,6 +64,18 @@ public class WarsmashClientParser implements OrderedUdpClientListener {
 							targetHandleId, x, y, queue);
 					break;
 				}
+				case ServerToClientProtocol.ISSUE_DROP_ITEM_ON_TARGET_ORDER: {
+					final int playerIndex = buffer.getInt();
+					final int unitHandleId = buffer.getInt();
+					final int abilityHandleId = buffer.getInt();
+					final int orderId = buffer.getInt();
+					final int targetHandleId = buffer.getInt();
+					final int targetHeroHandleId = buffer.getInt();
+					final boolean queue = buffer.get() == 1;
+					this.listener.issueDropItemAtTargetOrder(playerIndex, unitHandleId, abilityHandleId, orderId,
+							targetHandleId, targetHeroHandleId, queue);
+					break;
+				}
 				case ServerToClientProtocol.ISSUE_IMMEDIATE_ORDER: {
 					final int playerIndex = buffer.getInt();
 					final int unitHandleId = buffer.getInt();

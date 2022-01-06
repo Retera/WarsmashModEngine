@@ -2367,6 +2367,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final String attachPointName) {
 		if (targetWidget instanceof CUnit) {
 			final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(targetWidget);
+			if (renderUnit == null) {
+				throw new NullPointerException(
+						"renderUnit is null! targetWidget is \"" + ((CUnit) targetWidget).getUnitType().getName()
+								+ "\", attachPointName=\"" + attachPointName + "\"");
+			}
 			final MdxModel spawnedEffectModel = loadModelMdx(modelName);
 			if (spawnedEffectModel != null) {
 				final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel.addInstance();

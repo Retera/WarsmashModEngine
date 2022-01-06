@@ -39,7 +39,7 @@ public final class BooleanAbilityTargetCheckReceiver<TARGET_TYPE> implements Abi
 	}
 
 	@Override
-	public void targetOutsideRange(final double howMuch) {
+	public void targetOutsideRange() {
 		this.targetable = false;
 	}
 

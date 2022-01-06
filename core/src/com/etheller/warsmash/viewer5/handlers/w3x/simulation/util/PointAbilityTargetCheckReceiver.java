@@ -33,7 +33,7 @@ public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiv
 	}
 
 	@Override
-	public void targetOutsideRange(final double howMuch) {
+	public void targetOutsideRange() {
 		this.target = null;
 	}
 

@@ -232,10 +232,10 @@ public final class GlobalScope {
 	public void replayQueuedTriggers() {
 		this.runningTriggerQueue.clear();
 		this.runningTriggerQueue.addAll(this.triggerQueue);
+		this.triggerQueue.clear();
 		for (final QueuedCallback trigger : this.runningTriggerQueue) {
 			trigger.fire(this);
 		}
-		this.triggerQueue.clear();
 	}
 
 	private static interface QueuedCallback {

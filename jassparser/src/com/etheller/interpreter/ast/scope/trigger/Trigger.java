@@ -69,7 +69,7 @@ public class Trigger {
 				action.call(Collections.emptyList(), globalScope, triggerScope);
 			}
 			catch (final Exception e) {
-				if (e.getMessage().startsWith("Needs to sleep")) {
+				if ((e.getMessage() != null) && e.getMessage().startsWith("Needs to sleep")) {
 					// TODO not good design
 					e.printStackTrace();
 				}

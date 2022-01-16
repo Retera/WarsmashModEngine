@@ -17,9 +17,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPa
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
 public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
-	private int highlightOrderId;
-	private War3ID orderId;
-	private boolean unitCreated = false;
+	protected int highlightOrderId;
+	protected War3ID orderId;
+	protected boolean unitCreated = false;
 
 	public CBehaviorOrcBuild(final CUnit unit) {
 		super(unit);
@@ -118,7 +118,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 		}
 	}
 
-	private void refund(final CPlayer player, final CUnitType unitTypeToCreate) {
+	protected void refund(final CPlayer player, final CUnitType unitTypeToCreate) {
 		player.setFoodUsed(player.getFoodUsed() - unitTypeToCreate.getFoodUsed());
 		player.refundFor(unitTypeToCreate);
 	}

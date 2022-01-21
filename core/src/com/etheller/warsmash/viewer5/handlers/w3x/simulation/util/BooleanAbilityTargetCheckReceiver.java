@@ -49,6 +49,21 @@ public final class BooleanAbilityTargetCheckReceiver<TARGET_TYPE> implements Abi
 	}
 
 	@Override
+	public void notHolyBoltTarget() {
+		this.targetable = false;
+	}
+
+	@Override
+	public void alreadyFullHealth() {
+		this.targetable = false;
+	}
+
+	@Override
+	public void notDeathCoilTarget() {
+		this.targetable = false;
+	}
+
+	@Override
 	public void targetNotVisible() {
 		this.targetable = false;
 	}

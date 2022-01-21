@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -12,7 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityRally extends AbstractCAbility {
+public class CAbilityRally extends AbstractCAbility implements CLevelingAbility {
 
 	public CAbilityRally(final int handleId) {
 		super(handleId);
@@ -73,7 +74,8 @@ public class CAbilityRally extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityTarget target) {
 		return true;
 	}
 
@@ -106,6 +108,15 @@ public class CAbilityRally extends AbstractCAbility {
 
 	@Override
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
+	@Override
+	public int getLevel() {
+		return 1; // TODO maybe less hacky solution
+	}
+
+	@Override
+	public void setLevel(final int level) {
 	}
 
 }

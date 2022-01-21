@@ -56,9 +56,10 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 			if ((time % 500) > 250) {
 				final BitmapFont frameFont = this.editTextFrame.getFrameFont();
 				frameFont.setColor(this.editCursorColor);
-				final int cursorRenderPosition = Math.min(this.cursorIndex, this.editTextFrame.getText().length());
+				final int cursorRenderPosition = Math.min(this.cursorIndex,
+						this.editTextFrame.getDisplayText().length());
 				this.cursorIndex = cursorRenderPosition;
-				glyphLayout.setText(frameFont, this.editTextFrame.getText().substring(0, cursorRenderPosition));
+				glyphLayout.setText(frameFont, this.editTextFrame.getDisplayText().substring(0, cursorRenderPosition));
 				final float cursorXOffset = glyphLayout.width;
 				glyphLayout.setText(frameFont, "|");
 				frameFont.draw(batch, "|",
@@ -125,7 +126,7 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 
 	@Override
 	public boolean keyTyped(final char character) {
-		if (Character.isAlphabetic(character) || Character.isDigit(character)) {
+		if (Character.isAlphabetic(character) || Character.isDigit(character) || (character == ' ')) {
 			final String prevText = this.editTextFrame.getText();
 			final int prevTextLength = prevText.length();
 			final int cursorIndex = Math.min(this.cursorIndex, prevTextLength);

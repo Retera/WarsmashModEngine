@@ -75,7 +75,7 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 	}
 
 	@Override
-	public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
+	public void mouseDragged(final GameUI rootFrame, final Viewport uiViewport, final float x, final float y) {
 
 	}
 
@@ -151,6 +151,11 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 
 	@Override
 	public int getToolTipLumberCost() {
+		return 0;
+	}
+
+	@Override
+	public int getToolTipManaCost() {
 		return 0;
 	}
 }

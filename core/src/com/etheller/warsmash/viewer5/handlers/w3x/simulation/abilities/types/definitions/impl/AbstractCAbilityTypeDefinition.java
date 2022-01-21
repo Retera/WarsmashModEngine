@@ -16,6 +16,8 @@ public abstract class AbstractCAbilityTypeDefinition<TYPE_LEVEL_DATA extends CAb
 	protected static final War3ID CAST_RANGE = War3ID.fromString("aran");
 	protected static final War3ID DURATION = War3ID.fromString("adur");
 	protected static final War3ID AREA = War3ID.fromString("aare");
+	protected static final War3ID MANA_COST = War3ID.fromString("amcs");
+	protected static final War3ID COOLDOWN = War3ID.fromString("acdn");
 
 	@Override
 	public CAbilityType<?> createAbilityType(final War3ID alias, final MutableGameObject abilityEditorData) {

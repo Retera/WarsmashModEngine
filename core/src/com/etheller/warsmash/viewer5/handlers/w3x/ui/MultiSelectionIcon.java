@@ -88,7 +88,7 @@ public class MultiSelectionIcon extends AbstractRenderableFrame implements Click
 	}
 
 	@Override
-	public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
+	public void mouseDragged(final GameUI rootFrame, final Viewport uiViewport, final float x, final float y) {
 
 	}
 
@@ -201,6 +201,11 @@ public class MultiSelectionIcon extends AbstractRenderableFrame implements Click
 
 	@Override
 	public int getToolTipLumberCost() {
+		return 0;
+	}
+
+	@Override
+	public int getToolTipManaCost() {
 		return 0;
 	}
 

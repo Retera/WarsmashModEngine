@@ -27,6 +27,7 @@ import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.BackdropCornerFlags;
 import com.etheller.warsmash.parsers.fdf.datamodel.ControlStyle;
 import com.etheller.warsmash.parsers.fdf.datamodel.FontDefinition;
+import com.etheller.warsmash.parsers.fdf.datamodel.FontFlags;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameClass;
 import com.etheller.warsmash.parsers.fdf.datamodel.FrameDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
@@ -65,6 +66,7 @@ import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.StringBundle;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -235,18 +237,36 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public String getSkinField(String file) {
-		if ((file != null) && this.skin.hasField(file)) {
+		if (file == null) {
+			throw new NullPointerException("file is null");
+		}
+		if (this.skin.hasField(file)) {
 			file = this.skin.getField(file);
 		}
 		else {
-			throw new IllegalStateException("Decorated file name lookup not available: " + file);
+			final String fieldVersioned = file + "_V" + WarsmashConstants.GAME_VERSION;
+			if (this.skin.hasField(fieldVersioned)) {
+				file = this.skin.getField(fieldVersioned);
+			}
+			else {
+				throw new IllegalStateException("Decorated file name lookup not available: " + file);
+			}
 		}
 		return file;
 	}
 
 	public String trySkinField(String file) {
-		if ((file != null) && this.skin.hasField(file)) {
+		if (file == null) {
+			throw new NullPointerException("file is null");
+		}
+		if (this.skin.hasField(file)) {
 			file = this.skin.getField(file);
+		}
+		else {
+			final String fieldVersioned = file + "_V" + WarsmashConstants.GAME_VERSION;
+			if (this.skin.hasField(fieldVersioned)) {
+				file = this.skin.getField(fieldVersioned);
+			}
 		}
 		return file;
 	}
@@ -447,6 +467,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					}
 				}
 
+				String fontFlagsString = frameDefinition.getString("FontFlags");
+				if (fontFlagsString == null) {
+					fontFlagsString = "";
+				}
+				final EnumSet<FontFlags> fontFlags = FontFlags.parseFontFlags(fontFlagsString);
+
 				Color fontColor;
 				final Vector4Definition fontColorDefinition = frameDefinition.getVector4("FontColor");
 				if (fontColorDefinition == null) {
@@ -511,6 +537,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				final StringFrame stringFrame = new StringFrame(frameDefinition.getName(), parent, fontColor, justifyH,
 						justifyV, frameFont, textString, fontHighlightColor, fontDisabledColor);
+				if (fontFlags.contains(FontFlags.PASSWORDFIELD)) {
+					stringFrame.setPasswordField(true);
+				}
 				if (fontShadowColor != null) {
 					final Vector2Definition shadowOffset = frameDefinition.getVector2("FontShadowOffset");
 					stringFrame.setFontShadowColor(fontShadowColor);

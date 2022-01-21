@@ -22,13 +22,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Remova
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
@@ -38,6 +42,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUnderConstructionVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -67,9 +72,12 @@ public class CUnit extends CWidget {
 	private float facing; // degrees
 	private float mana;
 	private int maximumLife;
-	private final float lifeRegen;
+	private float lifeRegen;
 	private float lifeRegenStrengthBonus;
 	private float lifeRegenBonus;
+	private float manaRegen;
+	private float manaRegenIntelligenceBonus;
+	private float manaRegenBonus;
 	private int maximumMana;
 	private int speed;
 	private int agilityDefensePermanentBonus;
@@ -81,6 +89,7 @@ public class CUnit extends CWidget {
 	private int currentDefenseDisplay;
 	private float currentDefense;
 	private float currentLifeRegenPerTick;
+	private float currentManaRegenPerTick;
 
 	private int cooldownEndTime = 0;
 	private float flyHeight;
@@ -90,7 +99,7 @@ public class CUnit extends CWidget {
 
 	private CBehavior currentBehavior;
 	private final Queue<COrder> orderQueue = new LinkedList<>();
-	private final CUnitType unitType;
+	private CUnitType unitType;
 
 	private Rectangle collisionRectangle;
 	private RemovablePathingMapInstance pathingInstance;
@@ -119,6 +128,8 @@ public class CUnit extends CWidget {
 	private transient CBehaviorStop stopBehavior;
 	private transient CBehaviorHoldPosition holdPositionBehavior;
 	private boolean constructing = false;
+	private boolean constructingPaused = false;
+	private War3ID upgradeIdType = null;
 	private float constructionProgress;
 	private boolean hidden = false;
 	private boolean paused = false;
@@ -152,6 +163,7 @@ public class CUnit extends CWidget {
 		this.mana = mana;
 		this.maximumLife = maximumLife;
 		this.lifeRegen = lifeRegen;
+		this.manaRegen = unitType.getManaRegen();
 		this.maximumMana = maximumMana;
 		this.speed = speed;
 		this.pathingInstance = pathingInstance;
@@ -171,6 +183,7 @@ public class CUnit extends CWidget {
 
 	public void setLifeRegenStrengthBonus(final float lifeRegenStrengthBonus) {
 		this.lifeRegenStrengthBonus = lifeRegenStrengthBonus;
+		computeDerivedFields();
 	}
 
 	private void computeDerivedFields() {
@@ -180,10 +193,22 @@ public class CUnit extends CWidget {
 		this.currentDefense = this.currentDefenseDisplay + this.totalTemporaryDefenseBonus;
 		this.currentLifeRegenPerTick = (this.lifeRegen + this.lifeRegenBonus + this.lifeRegenStrengthBonus)
 				* WarsmashConstants.SIMULATION_STEP_TIME;
+		this.currentManaRegenPerTick = (this.manaRegen + this.manaRegenBonus + this.manaRegenIntelligenceBonus)
+				* WarsmashConstants.SIMULATION_STEP_TIME;
+	}
+
+	public void setManaRegenIntelligenceBonus(final float manaRegenIntelligenceBonus) {
+		this.manaRegenIntelligenceBonus = manaRegenIntelligenceBonus;
+		computeDerivedFields();
 	}
 
 	public void setLifeRegenBonus(final float lifeRegenBonus) {
 		this.lifeRegenBonus = lifeRegenBonus;
+		computeDerivedFields();
+	}
+
+	public void setManaRegenBonus(final float manaRegenBonus) {
+		this.manaRegenBonus = manaRegenBonus;
 		computeDerivedFields();
 	}
 
@@ -263,8 +288,40 @@ public class CUnit extends CWidget {
 		return this.maximumLife;
 	}
 
-	public void setTypeId(final War3ID typeId) {
+	public void setTypeId(final CSimulation game, final War3ID typeId) {
 		this.typeId = typeId;
+		final float lifeRatio = this.maximumLife == 0 ? 1 : (this.life / this.maximumLife);
+		final float manaRatio = this.maximumMana == 0 ? Float.NaN : (this.mana / this.maximumMana);
+		this.unitType = game.getUnitData().getUnitType(typeId);
+		if (Float.isNaN(manaRatio)) {
+			this.mana = this.unitType.getManaInitial();
+		}
+		else {
+			this.maximumMana = this.unitType.getManaMaximum();
+			this.mana = manaRatio * this.maximumMana;
+		}
+		this.maximumLife = this.unitType.getMaxLife();
+		this.life = lifeRatio * this.maximumLife;
+		this.lifeRegen = this.unitType.getLifeRegen();
+		this.manaRegen = this.unitType.getManaRegen();
+		this.flyHeight = this.unitType.getDefaultFlyingHeight();
+		this.classifications.clear();
+		this.classifications.addAll(this.unitType.getClassifications());
+		this.acquisitionRange = this.unitType.getDefaultAcquisitionRange();
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityQueue) {
+				((CAbilityQueue) ability).onSetUnitType(this.unitType);
+			}
+			else if (ability instanceof CAbilityUpgrade) {
+				((CAbilityUpgrade) ability).onSetUnitType(this.unitType);
+			}
+			else {
+				// refresh abilities...
+				ability.onRemove(game, this);
+				ability.onAdd(game, this);
+			}
+		}
+		computeDerivedFields();
 	}
 
 	public void setFacing(final float facing) {
@@ -363,13 +420,25 @@ public class CUnit extends CWidget {
 				setRallyPoint(this);
 			}
 			if (this.constructing) {
-				this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
-				final int buildTime = this.unitType.getBuildTime();
-				final float healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / buildTime)
-						* (this.maximumLife * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
-				setLife(game, Math.min(this.life + healthGain, this.maximumLife));
+				if (!this.constructingPaused) {
+					this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
+				}
+				final int buildTime;
+				final boolean upgrading = isUpgrading();
+				if (!upgrading) {
+					buildTime = this.unitType.getBuildTime();
+					if (!this.constructingPaused) {
+						final float healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / buildTime)
+								* (this.maximumLife * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
+						setLife(game, Math.min(this.life + healthGain, this.maximumLife));
+					}
+				}
+				else {
+					buildTime = game.getUnitData().getUnitType(this.upgradeIdType).getBuildTime();
+				}
 				if (this.constructionProgress >= buildTime) {
 					this.constructing = false;
+					this.constructingPaused = false;
 					this.constructionProgress = 0;
 					popoutWorker(game);
 					final Iterator<CAbility> abilityIterator = this.abilities.iterator();
@@ -384,12 +453,24 @@ public class CUnit extends CWidget {
 						}
 					}
 					final CPlayer player = game.getPlayer(this.playerIndex);
+					if (upgrading) {
+						if (this.unitType.getFoodMade() != 0) {
+							player.setFoodCap(player.getFoodCap() - this.unitType.getFoodMade());
+						}
+						setTypeId(game, this.upgradeIdType);
+						this.upgradeIdType = null;
+					}
 					if (this.unitType.getFoodMade() != 0) {
 						player.setFoodCap(player.getFoodCap() + this.unitType.getFoodMade());
 					}
 					player.removeTechtreeInProgress(this.unitType.getTypeId());
 					player.addTechtreeUnlocked(this.unitType.getTypeId());
 					game.unitConstructFinishEvent(this);
+					if (upgrading) {
+						// TODO shouldnt need to play stand here, probably
+						getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
+								true);
+					}
 					this.stateNotifier.ordersChanged();
 				}
 			}
@@ -542,6 +623,14 @@ public class CUnit extends CWidget {
 						this.life = lifePlusRegen;
 						this.stateNotifier.lifeChanged();
 					}
+				}
+				if (this.mana < this.maximumMana) {
+					float manaPlusRegen = this.mana + this.currentManaRegenPerTick;
+					if (manaPlusRegen > this.maximumMana) {
+						manaPlusRegen = this.maximumMana;
+					}
+					this.mana = manaPlusRegen;
+					this.stateNotifier.manaChanged();
 				}
 				for (final CAbility ability : this.abilities) {
 					ability.onTick(game, this);
@@ -964,7 +1053,14 @@ public class CUnit extends CWidget {
 				damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -defense);
 			}
 			final float trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * damage;
+			final boolean wasAboveMax = this.life > this.maximumLife;
 			this.life -= trueDamage;
+			if ((damage < 0) && !wasAboveMax && (this.life > this.maximumLife)) {
+				// NOTE wasAboveMax is for that weird life drain power to drain above max... to
+				// be honest that's a crazy mechanic anyway so I didn't test whether it works
+				// yet
+				this.life = this.maximumLife;
+			}
 			this.stateNotifier.lifeChanged();
 		}
 		simulation.unitDamageEvent(this, weaponType, this.unitType.getArmorType());
@@ -1221,6 +1317,10 @@ public class CUnit extends CWidget {
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
 			final EnumSet<CTargetType> targetsAllowed) {
+		if ((this == source) && targetsAllowed.contains(CTargetType.NOTSELF)
+				&& !targetsAllowed.contains(CTargetType.SELF)) {
+			return false;
+		}
 		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND)
 				&& (!targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR)))) {
 			final int sourcePlayerIndex = source.getPlayerIndex();
@@ -1376,11 +1476,27 @@ public class CUnit extends CWidget {
 		}
 	}
 
+	public void setConstructingPaused(final boolean constructingPaused) {
+		this.constructingPaused = constructingPaused;
+	}
+
 	public void setConstructionProgress(final float constructionProgress) {
 		this.constructionProgress = constructionProgress;
 	}
 
 	public boolean isConstructing() {
+		return this.constructing && (this.upgradeIdType == null);
+	}
+
+	public boolean isUpgrading() {
+		return this.constructing && (this.upgradeIdType != null);
+	}
+
+	public War3ID getUpgradeIdType() {
+		return this.upgradeIdType;
+	}
+
+	public boolean isConstructingOrUpgrading() {
 		return this.constructing;
 	}
 
@@ -1579,7 +1695,13 @@ public class CUnit extends CWidget {
 		if (queue(game, rawcode, QueueItemType.UNIT)) {
 			final CPlayer player = game.getPlayer(this.playerIndex);
 			final CUnitType unitType = game.getUnitData().getUnitType(rawcode);
-			player.chargeFor(unitType);
+			final boolean isHeroType = unitType.isHero();
+			if (isHeroType && (player.getHeroTokens() > 0)) {
+				player.setHeroTokens(player.getHeroTokens() - 1);
+			}
+			else {
+				player.chargeFor(unitType);
+			}
 		}
 	}
 
@@ -1886,11 +2008,65 @@ public class CUnit extends CWidget {
 	}
 
 	public void cancelUpgrade(final CSimulation game) {
-		throw new RuntimeException("NYI");
+		final CPlayer player = game.getPlayer(this.playerIndex);
+		player.setUnitFoodUsed(this, this.unitType.getFoodUsed());
+		int goldCost, lumberCost;
+		final CUnitType newUpgradeUnitType = game.getUnitData().getUnitType(this.upgradeIdType);
+		if (game.getGameplayConstants().isRelativeUpgradeCosts()) {
+			goldCost = newUpgradeUnitType.getGoldCost() - this.unitType.getGoldCost();
+			lumberCost = newUpgradeUnitType.getLumberCost() - this.unitType.getLumberCost();
+		}
+		else {
+			goldCost = newUpgradeUnitType.getGoldCost();
+			lumberCost = newUpgradeUnitType.getLumberCost();
+		}
+		player.refund(goldCost, lumberCost);
+
+		final Iterator<CAbility> abilityIterator = this.abilities.iterator();
+		while (abilityIterator.hasNext()) {
+			final CAbility ability = abilityIterator.next();
+			if (ability instanceof CAbilityBuildInProgress) {
+				abilityIterator.remove();
+			}
+			else {
+				ability.setDisabled(false);
+				ability.setIconShowing(true);
+			}
+		}
+
+		game.unitCancelUpgradingEvent(this, this.upgradeIdType);
+		this.upgradeIdType = null;
+		this.constructing = false;
+		this.constructionProgress = 0;
+		this.unitAnimationListener.playAnimation(true, PrimaryTag.STAND, SequenceUtils.EMPTY, 0.0f, true);
 	}
 
 	public void beginUpgrade(final CSimulation game, final War3ID rawcode) {
+		this.upgradeIdType = rawcode;
+		this.constructing = true;
+		this.constructionProgress = 0;
 
+		final CPlayer player = game.getPlayer(this.playerIndex);
+		final CUnitType newUpgradeUnitType = game.getUnitData().getUnitType(rawcode);
+		player.setUnitFoodUsed(this, newUpgradeUnitType.getFoodUsed());
+		int goldCost, lumberCost;
+		if (game.getGameplayConstants().isRelativeUpgradeCosts()) {
+			goldCost = newUpgradeUnitType.getGoldCost() - this.unitType.getGoldCost();
+			lumberCost = newUpgradeUnitType.getLumberCost() - this.unitType.getLumberCost();
+		}
+		else {
+			goldCost = newUpgradeUnitType.getGoldCost();
+			lumberCost = newUpgradeUnitType.getLumberCost();
+		}
+		player.charge(goldCost, lumberCost);
+		add(game, new CAbilityBuildInProgress(game.getHandleIdAllocator().createId()));
+		for (final CAbility ability : getAbilities()) {
+			ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
+		}
+		player.addTechtreeInProgress(rawcode);
+
+		game.unitUpgradingEvent(this, rawcode);
+		this.unitAnimationListener.playAnimation(true, PrimaryTag.BIRTH, SequenceUtils.EMPTY, 0.0f, true);
 	}
 
 	public void setUnitState(final CSimulation game, final CUnitState whichUnitState, final float value) {
@@ -2035,5 +2211,19 @@ public class CUnit extends CWidget {
 			return "null";
 		}
 		return unit.getUnitType().getName();
+	}
+
+	public void fireCooldownsChangedEvent() {
+		this.stateNotifier.ordersChanged();
+	}
+
+	public int getAbilityLevel(final War3ID abilityId) {
+		final CLevelingAbility ability = getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(abilityId));
+		if (ability == null) {
+			return 0;
+		}
+		else {
+			return ability.getLevel();
+		}
 	}
 }

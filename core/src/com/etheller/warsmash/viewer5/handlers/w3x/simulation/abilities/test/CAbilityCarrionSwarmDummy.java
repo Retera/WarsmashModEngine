@@ -17,8 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartActiveAbility {
 
-	private final float castRange;
-	private final EnumSet<CTargetType> targetsAllowed;
+	private float castRange;
+	private EnumSet<CTargetType> targetsAllowed;
 	private CBehaviorCarrionSwarmDummy behaviorCarrionSwarmDummy;
 
 	public CAbilityCarrionSwarmDummy(final int handleId, final War3ID alias, final float castRange,
@@ -114,5 +114,13 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 
 	public EnumSet<CTargetType> getTargetsAllowed() {
 		return this.targetsAllowed;
+	}
+
+	public void setCastRange(final float castRange) {
+		this.castRange = castRange;
+	}
+
+	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
+		this.targetsAllowed = targetsAllowed;
 	}
 }

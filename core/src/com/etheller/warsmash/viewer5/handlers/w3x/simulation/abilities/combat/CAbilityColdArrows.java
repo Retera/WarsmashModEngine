@@ -4,8 +4,8 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericAliasedAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -18,13 +18,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 /**
  * Represents an ability from the object data
  */
-public class CAbilityColdArrows extends AbstractCAbility {
-	private final War3ID rawcode;
+public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	private boolean autoCastActive;
 
 	public CAbilityColdArrows(final War3ID rawcode, final int handleId) {
-		super(handleId);
-		this.rawcode = rawcode;
+		super(handleId, rawcode);
 	}
 
 	@Override
@@ -66,10 +64,6 @@ public class CAbilityColdArrows extends AbstractCAbility {
 		}
 	}
 
-	public War3ID getRawcode() {
-		return this.rawcode;
-	}
-
 	public boolean isAutoCastActive() {
 		return this.autoCastActive;
 	}
@@ -92,7 +86,8 @@ public class CAbilityColdArrows extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityTarget target) {
 		switch (orderId) {
 		case OrderIds.coldarrows:
 		case OrderIds.uncoldarrows:

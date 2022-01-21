@@ -437,6 +437,14 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnUnitConstructionSound(constructingUnit, constructedStructure);
 	}
 
+	public void unitUpgradingEvent(final CUnit cUnit, final War3ID upgradeIdType) {
+		this.simulationRenderController.unitUpgradingEvent(cUnit, upgradeIdType);
+	}
+
+	public void unitCancelUpgradingEvent(final CUnit cUnit, final War3ID upgradeIdType) {
+		this.simulationRenderController.unitCancelUpgradingEvent(cUnit, upgradeIdType);
+	}
+
 	@Override
 	public CPlayer getPlayer(final int index) {
 		return this.players.get(index);

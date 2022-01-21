@@ -105,6 +105,8 @@ public class CGameplayConstants {
 	private final float followItemRange;
 	private final float spellCastRangeBuffer;
 
+	private final boolean relativeUpgradeCosts;
+
 	public CGameplayConstants(final DataTable parsedDataTable) {
 		final Element miscData = parsedDataTable.get("Misc");
 		// TODO use radians for half angle
@@ -236,6 +238,8 @@ public class CGameplayConstants {
 		this.followItemRange = miscData.getFieldFloatValue("FollowItemRange");
 
 		this.spellCastRangeBuffer = miscData.getFieldFloatValue("SpellCastRangeBuffer");
+
+		this.relativeUpgradeCosts = miscData.getFieldValue("RelativeUpgradeCost") == 0;
 	}
 
 	public float getAttackHalfAngle() {
@@ -453,6 +457,10 @@ public class CGameplayConstants {
 
 	public float getHeroReviveManaStart() {
 		return this.heroReviveManaStart;
+	}
+
+	public boolean isRelativeUpgradeCosts() {
+		return this.relativeUpgradeCosts;
 	}
 
 	private static int getTableValue(final int[] table, int level) {

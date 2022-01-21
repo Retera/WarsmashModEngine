@@ -22,4 +22,6 @@ public interface ClickableActionFrame extends ClickableFrame {
 	int getToolTipLumberCost();
 
 	int getToolTipFoodCost();
+
+	int getToolTipManaCost();
 }

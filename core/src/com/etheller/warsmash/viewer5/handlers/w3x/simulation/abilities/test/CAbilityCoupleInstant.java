@@ -23,15 +23,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiveAbility {
 
-	private final War3ID resultingUnitType;
-	private final War3ID partnerUnitType;
-	private final boolean moveToPartner;
-	private final float castRange;
-	private final float area;
-	private final EnumSet<CTargetType> targetsAllowed;
+	private War3ID resultingUnitType;
+	private War3ID partnerUnitType;
+	private boolean moveToPartner;
+	private float castRange;
+	private float area;
+	private EnumSet<CTargetType> targetsAllowed;
 	private CBehaviorCoupleInstant behaviorCoupleInstant;
-	private final int goldCost;
-	private final int lumberCost;
+	private int goldCost;
+	private int lumberCost;
 
 	public CAbilityCoupleInstant(final int handleId, final War3ID alias, final War3ID resultingUnitType,
 			final War3ID partnerUnitType, final boolean moveToPartner, final float castRange, final float area,
@@ -209,5 +209,37 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	@Override
 	public int getUILumberCost() {
 		return this.lumberCost;
+	}
+
+	public void setResultingUnitType(final War3ID resultingUnitType) {
+		this.resultingUnitType = resultingUnitType;
+	}
+
+	public void setPartnerUnitType(final War3ID partnerUnitType) {
+		this.partnerUnitType = partnerUnitType;
+	}
+
+	public void setMoveToPartner(final boolean moveToPartner) {
+		this.moveToPartner = moveToPartner;
+	}
+
+	public void setCastRange(final float castRange) {
+		this.castRange = castRange;
+	}
+
+	public void setArea(final float area) {
+		this.area = area;
+	}
+
+	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
+		this.targetsAllowed = targetsAllowed;
+	}
+
+	public void setGoldCost(final int goldCost) {
+		this.goldCost = goldCost;
+	}
+
+	public void setLumberCost(final int lumberCost) {
+		this.lumberCost = lumberCost;
 	}
 }

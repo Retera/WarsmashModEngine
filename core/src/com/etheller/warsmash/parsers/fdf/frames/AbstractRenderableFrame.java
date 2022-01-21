@@ -359,6 +359,11 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	}
 
 	@Override
+	public void setParent(final UIFrame parent) {
+		this.parent = parent;
+	}
+
+	@Override
 	public boolean isVisibleOnScreen() {
 		boolean visibleOnScreen = this.visible;
 		UIFrame ancestor = this.parent;

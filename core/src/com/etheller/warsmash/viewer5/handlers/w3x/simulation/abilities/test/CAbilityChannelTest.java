@@ -14,7 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public class CAbilityChannelTest extends AbstractGenericSingleIconNoSmartActiveAbility {
 	private CBehaviorChannelTest behaviorChannelTest;
-	private final float artDuration;
+	private float artDuration;
 
 	public CAbilityChannelTest(final int handleId, final War3ID alias, final float artDuration) {
 		super(handleId, alias);
@@ -88,4 +88,7 @@ public class CAbilityChannelTest extends AbstractGenericSingleIconNoSmartActiveA
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
+	public void setArtDuration(final float artDuration) {
+		this.artDuration = artDuration;
+	}
 }

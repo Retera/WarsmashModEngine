@@ -7,7 +7,10 @@ public interface CommandErrorListener {
 
 	void showNoFoodError(int playerIndex);
 
+	void showNoManaError(int playerIndex);
+
 	void showInventoryFullError(int playerIndex);
 
 	void showUnableToFindCoupleTargetError(int playerIndex);
+
 }

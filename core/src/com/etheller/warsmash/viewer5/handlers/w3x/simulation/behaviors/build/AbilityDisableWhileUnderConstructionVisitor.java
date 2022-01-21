@@ -1,7 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGeneric;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGenericDoNothing;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -66,7 +67,7 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 	}
 
 	@Override
-	public Void accept(final CAbilityGeneric ability) {
+	public Void accept(final CAbilityGenericDoNothing ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
 		return null;
@@ -139,6 +140,11 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 	public Void accept(final GenericNoIconAbility ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
+		return null;
+	}
+
+	@Override
+	public Void accept(final CAbilityReturnResources ability) {
 		return null;
 	}
 

@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -10,19 +12,24 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 public class CAbilityHero extends AbstractCAbility {
-	private final List<War3ID> skillsAvailable;
+	private final Set<War3ID> skillsAvailable;
 	private int xp;
 	private int heroLevel;
-	private int skillPoints;
+	private int skillPoints = 1;
 
 	private HeroStatValue strength;
 	private HeroStatValue agility;
@@ -33,7 +40,7 @@ public class CAbilityHero extends AbstractCAbility {
 
 	public CAbilityHero(final int handleId, final List<War3ID> skillsAvailable) {
 		super(handleId);
-		this.skillsAvailable = skillsAvailable;
+		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
 	}
 
 	@Override
@@ -83,7 +90,25 @@ public class CAbilityHero extends AbstractCAbility {
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityTarget target) {
-		return true;
+		final War3ID orderIdAsRawtype = new War3ID(orderId);
+		final CAbilityType<?> abilityType = game.getAbilityData().getAbilityType(orderIdAsRawtype);
+		if (abilityType != null) {
+			this.skillPoints--;
+			final CLevelingAbility existingAbility = caster
+					.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(orderIdAsRawtype));
+			if (existingAbility == null) {
+				final CAbility newAbility = abilityType.createAbility(game.getHandleIdAllocator().createId());
+				caster.add(game, newAbility);
+			}
+			else {
+				abilityType.setLevel(game, existingAbility, existingAbility.getLevel() + 1);
+			}
+		}
+		else {
+			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
+					"NOTEXTERN: Ability is not yet programmed, unable to learn!");
+		}
+		return false;
 	}
 
 	@Override
@@ -117,7 +142,13 @@ public class CAbilityHero extends AbstractCAbility {
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
-		receiver.orderIdNotAccepted();
+		final War3ID orderIdAsRawtype = new War3ID(orderId);
+		if (this.skillsAvailable.contains(orderIdAsRawtype)) {
+			receiver.targetOk(null);
+		}
+		else {
+			receiver.orderIdNotAccepted();
+		}
 	}
 
 	@Override
@@ -128,7 +159,28 @@ public class CAbilityHero extends AbstractCAbility {
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		receiver.useOk();
+		final War3ID orderIdAsRawtype = new War3ID(orderId);
+		if (this.skillsAvailable.contains(orderIdAsRawtype)) {
+			if (this.skillPoints > 0) {
+				final CAbilityData abilityData = game.getAbilityData();
+				final int priorLevel = unit.getAbilityLevel(orderIdAsRawtype);
+				final int heroRequiredLevel = abilityData.getHeroRequiredLevel(game, orderIdAsRawtype, priorLevel);
+				final CAbilityType<?> abilityType = abilityData.getAbilityType(orderIdAsRawtype);
+				// TODO check abilityType.getRequiredLevel() which api doesn't currently offer!!
+				if (this.heroLevel >= heroRequiredLevel) {
+					receiver.useOk();
+				}
+				else {
+					receiver.missingHeroLevelRequirement(heroRequiredLevel);
+				}
+			}
+			else {
+				receiver.noHeroSkillPointsAvailable();
+			}
+		}
+		else {
+			receiver.useOk();
+		}
 	}
 
 	public int getSkillPoints() {
@@ -252,7 +304,8 @@ public class CAbilityHero extends AbstractCAbility {
 		this.intelligence.calculate(this.heroLevel);
 		final int currentStrength = this.strength.getCurrent();
 		final int deltaStrength = currentStrength - prevStrength;
-		final int deltaIntelligence = this.intelligence.getCurrent() - prevIntelligence;
+		final int currentIntelligence = this.intelligence.getCurrent();
+		final int deltaIntelligence = currentIntelligence - prevIntelligence;
 		final int currentAgilityBase = this.agility.getBase();
 		final int currentAgilityBonus = this.agility.getBonus();
 
@@ -287,6 +340,7 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.setAgilityDefensePermanentBonus(agilityDefenseBonus);
 		unit.setAgilityDefenseTemporaryBonus(gameplayConstants.getAgiDefenseBonus() * currentAgilityBonus);
 		unit.setLifeRegenStrengthBonus(currentStrength * gameplayConstants.getStrRegenBonus());
+		unit.setManaRegenIntelligenceBonus(currentIntelligence * gameplayConstants.getIntRegenBonus());
 	}
 
 	public static final class HeroStatValue {
@@ -338,5 +392,9 @@ public class CAbilityHero extends AbstractCAbility {
 			}
 			return text;
 		}
+	}
+
+	public Set<War3ID> getSkillsAvailable() {
+		return this.skillsAvailable;
 	}
 }

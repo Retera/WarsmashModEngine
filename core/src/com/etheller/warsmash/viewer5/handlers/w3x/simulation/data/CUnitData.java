@@ -53,6 +53,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRend
 public class CUnitData {
 	private static final War3ID MANA_INITIAL_AMOUNT = War3ID.fromString("umpi");
 	private static final War3ID MANA_MAXIMUM = War3ID.fromString("umpm");
+	private static final War3ID MANA_REGEN = War3ID.fromString("umpr");
 	private static final War3ID HIT_POINT_MAXIMUM = War3ID.fromString("uhpm");
 	private static final War3ID HIT_POINT_REGEN = War3ID.fromString("uhpr");
 	private static final War3ID HIT_POINT_REGEN_TYPE = War3ID.fromString("uhrt");
@@ -125,6 +126,9 @@ public class CUnitData {
 	private static final War3ID ATTACK2_WEAPON_SOUND = War3ID.fromString("ucs2");
 	private static final War3ID ATTACK2_WEAPON_TYPE = War3ID.fromString("ua2w");
 
+	private static final War3ID CAST_BACKSWING_POINT = War3ID.fromString("ucbs");
+	private static final War3ID CAST_POINT = War3ID.fromString("ucpt");
+
 	private static final War3ID ACQUISITION_RANGE = War3ID.fromString("uacq");
 	private static final War3ID MINIMUM_ATTACK_RANGE = War3ID.fromString("uamn");
 
@@ -153,7 +157,11 @@ public class CUnitData {
 	private static final War3ID UNIT_RACE = War3ID.fromString("urac");
 
 	private static final War3ID REQUIRES = War3ID.fromString("ureq");
-	private static final War3ID REQUIRES_AMOUNT = War3ID.fromString("urqc");
+	private static final War3ID REQUIRES_AMOUNT = War3ID.fromString("urqa");
+	private static final War3ID REQUIRES_TIER_COUNT = War3ID.fromString("urqc");
+	private static final War3ID[] REQUIRES_TIER_X = { War3ID.fromString("urq1"), War3ID.fromString("urq2"),
+			War3ID.fromString("urq3"), War3ID.fromString("urq4"), War3ID.fromString("urq5"), War3ID.fromString("urq6"),
+			War3ID.fromString("urq7"), War3ID.fromString("urq8"), War3ID.fromString("urq9") };
 
 	private static final War3ID GOLD_COST = War3ID.fromString("ugol");
 	private static final War3ID LUMBER_COST = War3ID.fromString("ulum");
@@ -291,6 +299,7 @@ public class CUnitData {
 					.parseRegenType(unitType.getFieldAsString(HIT_POINT_REGEN_TYPE, 0));
 			final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
 			final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
+			final float manaRegen = unitType.getFieldAsFloat(MANA_REGEN, 0);
 			final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
 			final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
 			final String abilityList = unitType.getFieldAsString(ABILITIES_NORMAL, 0);
@@ -472,6 +481,9 @@ public class CUnitData {
 			final int foodUsed = unitType.getFieldAsInteger(FOOD_USED, 0);
 			final int foodMade = unitType.getFieldAsInteger(FOOD_MADE, 0);
 
+			final float castBackswingPoint = unitType.getFieldAsFloat(CAST_BACKSWING_POINT, 0);
+			final float castPoint = unitType.getFieldAsFloat(CAST_POINT, 0);
+
 			final int pointValue = unitType.getFieldAsInteger(POINT_VALUE, 0);
 
 			final boolean revivesHeroes = unitType.getFieldAsBoolean(REVIVES_HEROES, 0);
@@ -522,36 +534,14 @@ public class CUnitData {
 
 			final String requirementsString = unitType.getFieldAsString(REQUIRES, 0);
 			final String requirementsLevelsString = unitType.getFieldAsString(REQUIRES_AMOUNT, 0);
-			final String[] requirementsStringItems = requirementsString.split(",");
-			final String[] requirementsLevelsStringItems = requirementsLevelsString.split(",");
-			final List<CUnitTypeRequirement> requirements = new ArrayList<>();
-			for (int i = 0; i < requirementsStringItems.length; i++) {
-				final String item = requirementsStringItems[i];
-				if (!item.isEmpty() && (item.length() == 4)) {
-					int level;
-					if (i < requirementsLevelsStringItems.length) {
-						if (requirementsLevelsStringItems[i].isEmpty()) {
-							level = 1;
-						}
-						else {
-							level = Integer.parseInt(requirementsLevelsStringItems[i]);
-						}
-					}
-					else if (requirementsLevelsStringItems.length > 0) {
-						final String requirementLevel = requirementsLevelsStringItems[requirementsLevelsStringItems.length
-								- 1];
-						if (requirementLevel.isEmpty()) {
-							level = 1;
-						}
-						else {
-							level = Integer.parseInt(requirementLevel);
-						}
-					}
-					else {
-						level = 1;
-					}
-					requirements.add(new CUnitTypeRequirement(War3ID.fromString(item), level));
-				}
+			final List<CUnitTypeRequirement> requirements = parseRequirements(requirementsString,
+					requirementsLevelsString);
+			final int requirementsTiersCount = unitType.getFieldAsInteger(REQUIRES_TIER_COUNT, 0);
+			final List<List<CUnitTypeRequirement>> requirementTiers = new ArrayList<>();
+			for (int i = 1; i <= requirementsTiersCount; i++) {
+				final String requirementsTierString = unitType.getFieldAsString(REQUIRES_TIER_X[i - 1], 0);
+				final List<CUnitTypeRequirement> tierRequirements = parseRequirements(requirementsTierString, "");
+				requirementTiers.add(tierRequirements);
 			}
 
 			final EnumSet<CBuildingPathingType> preventedPathingTypes = CBuildingPathingType
@@ -566,31 +556,59 @@ public class CUnitData {
 
 			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
 
-			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, lifeRegenType, manaInitial,
-					manaMaximum, speed, defense, abilityList, isBldg, movementType, moveHeight, collisionSize,
-					classifications, attacks, armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap,
-					deathTime, targetedAs, acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained,
-					researchesAvailable, upgradesTo, unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime,
-					preventedPathingTypes, requiredPathingTypes, propWindow, turnRate, requirements, unitLevel, hero,
-					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
-					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue);
+			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, manaRegen, lifeRegenType,
+					manaInitial, manaMaximum, speed, defense, abilityList, isBldg, movementType, moveHeight,
+					collisionSize, classifications, attacks, armorType, raise, decay, defenseType, impactZ,
+					buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange, minimumAttackRange,
+					structuresBuilt, unitsTrained, researchesAvailable, upgradesTo, unitRace, goldCost, lumberCost,
+					foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow, turnRate,
+					requirements, requirementTiers, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence,
+					intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount, canFlee, priority,
+					revivesHeroes, pointValue, castBackswingPoint, castPoint);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}
 		return unitTypeInstance;
 	}
 
+	public List<CUnitTypeRequirement> parseRequirements(final String requirementsString,
+			final String requirementsLevelsString) {
+		final String[] requirementsStringItems = requirementsString.split(",");
+		final String[] requirementsLevelsStringItems = requirementsLevelsString.split(",");
+		final List<CUnitTypeRequirement> requirements = new ArrayList<>();
+		for (int i = 0; i < requirementsStringItems.length; i++) {
+			final String item = requirementsStringItems[i];
+			if (!item.isEmpty() && (item.length() == 4)) {
+				int level;
+				if (i < requirementsLevelsStringItems.length) {
+					if (requirementsLevelsStringItems[i].isEmpty()) {
+						level = 1;
+					}
+					else {
+						level = Integer.parseInt(requirementsLevelsStringItems[i]);
+					}
+				}
+				else if (requirementsLevelsStringItems.length > 0) {
+					final String requirementLevel = requirementsLevelsStringItems[requirementsLevelsStringItems.length
+							- 1];
+					if (requirementLevel.isEmpty()) {
+						level = 1;
+					}
+					else {
+						level = Integer.parseInt(requirementLevel);
+					}
+				}
+				else {
+					level = 1;
+				}
+				requirements.add(new CUnitTypeRequirement(War3ID.fromString(item), level));
+			}
+		}
+		return requirements;
+	}
+
 	private String getLegacyName(final MutableGameObject unitType) {
-		String legacyName;
-		if (unitType.isCustom()) {
-			legacyName = "custom_" + unitType.getAlias();
-		}
-		else {
-			// ?? this might be correct here, not sure, legacy name is mostly only used
-			// for spawning hidden units in campaign secrets
-			legacyName = unitType.readSLKTag("name");
-		}
-		return legacyName;
+		return unitType.getLegacyName();
 	}
 
 	private static int[] populateHeroStatTable(final int maxHeroLevel, final float statPerLevel) {

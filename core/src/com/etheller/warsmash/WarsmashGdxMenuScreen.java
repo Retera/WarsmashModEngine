@@ -5,11 +5,11 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.EnumSet;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -27,7 +27,6 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
-import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -48,6 +47,8 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MenuUI;
@@ -71,9 +72,9 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 	private Texture solidGreenTexture;
 	private MenuUI menuUI;
 	private final WarsmashGdxMultiScreenGame game;
-	private Music currentMusic;
 	private boolean hasPlayedStandHack = false;
 	private boolean loaded = false;
+	private EnumSet<SecondaryTag> tags = SequenceUtils.EMPTY;
 
 	public WarsmashGdxMenuScreen(final DataTable warsmashIni, final WarsmashGdxMultiScreenGame game) {
 		this.warsmashIni = warsmashIni;
@@ -196,25 +197,6 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 						public void onCreate(final GameUI rootFrame) {
 //						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
 
-							if (WarsmashConstants.ENABLE_MUSIC) {
-								final String musicField = rootFrame
-										.getSkinField("GlueMusic_V" + WarsmashConstants.GAME_VERSION);
-								final String[] musics = musicField.split(";");
-								String musicPath = musics[(int) (Math.random() * musics.length)];
-								if (musicSLK.get(musicPath) != null) {
-									musicPath = musicSLK.get(musicPath).getField("FileNames");
-								}
-								final String[] moreSplitMusics = musicPath.split(",");
-								final String finalMusicPath = moreSplitMusics[(int) (Math.random()
-										* moreSplitMusics.length)];
-								final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(
-										WarsmashGdxMenuScreen.this.viewer.dataSource, finalMusicPath));
-//							music.setVolume(0.2f);
-								music.setLooping(true);
-								music.play();
-								WarsmashGdxMenuScreen.this.currentMusic = music;
-							}
-
 							singleModelScene(WarsmashGdxMenuScreen.this.scene, War3MapViewer.mdx(rootFrame
 									.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION)),
 									"Stand");
@@ -242,9 +224,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 		}
 
 		Gdx.input.setInputProcessor(this);
-		if (this.currentMusic != null) {
-			this.currentMusic.play();
-		}
+		this.menuUI.show();
 
 	}
 
@@ -367,6 +347,24 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 			this.hasPlayedStandHack = false;
 		}
 
+	}
+
+	@Override
+	public void alternateModelToBattlenet() {
+		if (this.mainInstance != null) {
+			SequenceUtils.randomSequence(this.mainInstance, PrimaryTag.STAND, SequenceUtils.ALTERNATE, true);
+			this.tags = SequenceUtils.ALTERNATE;
+			this.hasPlayedStandHack = false;
+		}
+	}
+
+	@Override
+	public void unAlternateModelBackToNormal() {
+		if (this.mainInstance != null) {
+			SequenceUtils.randomSequence(this.mainInstance, PrimaryTag.MORPH, SequenceUtils.ALTERNATE, true);
+			this.tags = SequenceUtils.EMPTY;
+			this.hasPlayedStandHack = false;
+		}
 	}
 
 	private void acolytesHarvestingScene(final Scene scene) {
@@ -569,7 +567,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 		if ((this.mainInstance != null) && this.mainInstance.sequenceEnded
 				&& (((this.mainModel.getSequences().get(this.mainInstance.sequence).getFlags() & 0x1) == 0)
 						|| !this.hasPlayedStandHack)) {
-			SequenceUtils.randomStandSequence(this.mainInstance);
+			SequenceUtils.randomSequence(this.mainInstance, PrimaryTag.STAND, this.tags, true);
 			this.hasPlayedStandHack = true;
 		}
 		this.viewer.updateAndRender();
@@ -784,6 +782,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 	private void renderLibGDXContent() {
 
+		Gdx.gl30.glClear(GL30.GL_DEPTH_BUFFER_BIT);
 		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
 
 		Gdx.gl30.glDisable(GL30.GL_CULL_FACE);
@@ -889,9 +888,6 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 	@Override
 	public void hide() {
-		if (this.currentMusic != null) {
-			this.currentMusic.stop();
-		}
 		this.menuUI.hide();
 	}
 

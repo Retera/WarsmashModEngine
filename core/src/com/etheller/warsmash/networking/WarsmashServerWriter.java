@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Set;
 
-import com.etheller.warsmash.networking.udp.OrderedUdpServer;
+import net.warsmash.networking.udp.OrderedUdpServer;
 
 public class WarsmashServerWriter implements ServerToClientListener {
 	private final OrderedUdpServer server;

@@ -50,8 +50,8 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 					}
 				}
 				if (requirementsMet) {
-					if (player.getGold() >= unitType.getGoldCost()) {
-						if (player.getLumber() >= unitType.getLumberCost()) {
+					if ((player.getGold() >= unitType.getGoldCost())) {
+						if ((player.getLumber() >= unitType.getLumberCost())) {
 							if ((unitType.getFoodUsed() == 0)
 									|| ((player.getFoodUsed() + unitType.getFoodUsed()) <= player.getFoodCap())) {
 

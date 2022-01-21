@@ -9,10 +9,11 @@ import java.util.Map;
 import java.util.Queue;
 
 import com.badlogic.gdx.Gdx;
-import com.etheller.warsmash.networking.udp.OrderedUdpClient;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
+
+import net.warsmash.networking.udp.OrderedUdpClient;
 
 public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 	private final OrderedUdpClient udpClient;

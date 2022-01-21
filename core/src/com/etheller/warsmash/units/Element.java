@@ -183,6 +183,11 @@ public class Element extends HashedGameObject {
 		return name;
 	}
 
+	@Override
+	public String getLegacyName() {
+		return null;
+	}
+
 	public void addParent(final String parentId) {
 		String parentField = getField("Parents");
 		if (!parentField.contains(parentId)) {

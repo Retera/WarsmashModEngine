@@ -9,7 +9,9 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 	private final AbilityActivationErrorHandler noGoldError;
 	private final AbilityActivationErrorHandler noLumberError;
 	private final AbilityActivationErrorHandler noFoodError;
+	private final AbilityActivationErrorHandler noManaError;
 	private final AbilityActivationErrorHandler genericError;
+	private final AbilityActivationErrorHandler cooldownError;
 
 	private boolean ok = false;
 	private CommandErrorListener commandErrorListener;
@@ -18,11 +20,14 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 
 	public MeleeUIAbilityActivationReceiver(final AbilityActivationErrorHandler noGoldError,
 			final AbilityActivationErrorHandler noLumberError, final AbilityActivationErrorHandler noFoodError,
-			final AbilityActivationErrorHandler genericError) {
+			final AbilityActivationErrorHandler noManaError, final AbilityActivationErrorHandler genericError,
+			final AbilityActivationErrorHandler cooldownError) {
 		this.noGoldError = noGoldError;
 		this.noLumberError = noLumberError;
 		this.noFoodError = noFoodError;
+		this.noManaError = noManaError;
 		this.genericError = genericError;
+		this.cooldownError = cooldownError;
 	}
 
 	public MeleeUIAbilityActivationReceiver reset(final CommandErrorListener commandErrorListener,
@@ -51,7 +56,15 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 		case FOOD:
 			this.noFoodError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
 			break;
+		case MANA:
+			this.noManaError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
+			break;
 		}
+	}
+
+	@Override
+	public void cooldownNotYetReady(final float cooldownRemaining, final float cooldown) {
+		this.cooldownError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
 	}
 
 	@Override
@@ -61,6 +74,16 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 
 	@Override
 	public void missingRequirement(final War3ID type, final int level) {
+		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
+	}
+
+	@Override
+	public void missingHeroLevelRequirement(final int level) {
+		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
+	}
+
+	@Override
+	public void noHeroSkillPointsAvailable() {
 		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
 	}
 

@@ -391,13 +391,16 @@ public class CPathfindingProcessor {
 							}
 						}
 						if (stepsBackward > this.pathingGridCellCount) {
-							throw new IllegalStateException(
+							new IllegalStateException(
 									"PATHING SYSTEM ERROR: The path finding algorithm hit an infinite cycle at or near pt: "
 											+ current.cameFrom.point
 											+ ".\nThis means the A* search algorithm heuristic 'admissable' constraint was probably violated.\n\nUnit1:"
 											+ CUnit.maybeMeaningfulName(job.ignoreIntersectionsWithThisUnit)
 											+ "\nUnit2:"
-											+ CUnit.maybeMeaningfulName(job.ignoreIntersectionsWithThisSecondUnit));
+											+ CUnit.maybeMeaningfulName(job.ignoreIntersectionsWithThisSecondUnit))
+													.printStackTrace();
+							totalPath.clear();
+							break;
 						}
 						stepsBackward++;
 					}

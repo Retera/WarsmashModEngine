@@ -1,4 +1,4 @@
-package com.etheller.warsmash.networking.udp;
+package net.warsmash.networking.udp;
 
 import java.io.IOException;
 import java.net.SocketAddress;

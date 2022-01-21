@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractRenderableFrame;
+import com.etheller.warsmash.parsers.fdf.frames.SingleStringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
@@ -21,12 +22,15 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	private TextureFrame activeHighlightFrame;
 	private SpriteFrame cooldownFrame;
 	private SpriteFrame autocastFrame;
+	private TextureFrame numberOverlayFrame;
+	private SingleStringFrame numberOverlayStringFrame;
 	private float defaultWidth;
 	private float defaultHeight;
 	private int abilityHandleId;
 	private int orderId;
 	private int autoCastOrderId;
 	private boolean autoCastActive;
+	private boolean cooldownActive;
 	private final CommandCardCommandListener commandCardCommandListener;
 	private boolean menuButton;
 	private String tip;
@@ -34,6 +38,7 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	private int tipGoldCost;
 	private int tipLumberCost;
 	private int tipFoodCost;
+	private int tipManaCost;
 	private char hotkey;
 
 	public CommandCardIcon(final String name, final UIFrame parent,
@@ -43,11 +48,14 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	}
 
 	public void set(final TextureFrame iconFrame, final TextureFrame activeHighlightFrame,
-			final SpriteFrame cooldownFrame, final SpriteFrame autocastFrame) {
+			final SpriteFrame cooldownFrame, final SpriteFrame autocastFrame, final TextureFrame numberOverlayFrame,
+			final SingleStringFrame numberOverlayStringFrame) {
 		this.iconFrame = iconFrame;
 		this.activeHighlightFrame = activeHighlightFrame;
 		this.cooldownFrame = cooldownFrame;
 		this.autocastFrame = autocastFrame;
+		this.numberOverlayFrame = numberOverlayFrame;
+		this.numberOverlayStringFrame = numberOverlayStringFrame;
 	}
 
 	public void clear() {
@@ -59,6 +67,10 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 		if (this.autocastFrame != null) {
 			this.autocastFrame.setVisible(false);
 		}
+		if (this.numberOverlayFrame != null) {
+			this.numberOverlayFrame.setVisible(false);
+			this.numberOverlayStringFrame.setVisible(false);
+		}
 		setVisible(false);
 		this.hotkey = '\0';
 	}
@@ -66,7 +78,8 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId,
 			final int autoCastOrderId, final boolean active, final boolean autoCastActive, final boolean menuButton,
 			final String tip, final String uberTip, final char hotkey, final int goldCost, final int lumberCost,
-			final int foodCost) {
+			final int foodCost, final int manaCost, final boolean notEnoughMana, final float cooldownRemaining,
+			final float cooldownMax, final int numberOverlay) {
 		this.menuButton = menuButton;
 		this.hotkey = hotkey;
 		setVisible(true);
@@ -74,7 +87,12 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 		if (this.activeHighlightFrame != null) {
 			this.activeHighlightFrame.setVisible(active);
 		}
-		this.cooldownFrame.setVisible(false);
+		if (this.numberOverlayFrame != null) {
+			final boolean useNumberOverlay = numberOverlay != -1;
+			this.numberOverlayFrame.setVisible(useNumberOverlay);
+			this.numberOverlayStringFrame.setVisible(useNumberOverlay);
+			this.numberOverlayStringFrame.setText(Integer.toString(numberOverlay));
+		}
 		if (this.autocastFrame != null) {
 			this.autocastFrame.setVisible(autoCastOrderId != 0);
 			if (autoCastOrderId != 0) {
@@ -89,6 +107,17 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 				this.autoCastActive = autoCastActive;
 			}
 		}
+		if (cooldownRemaining > 0) {
+			this.cooldownFrame.setVisible(true);
+			this.cooldownFrame.setAnimationSpeed(1.0f / cooldownMax);
+			this.cooldownFrame.setSequence(PrimaryTag.STAND);
+			this.cooldownFrame.setFrameByRatio(1.0f - (cooldownRemaining / cooldownMax));
+			this.cooldownActive = true;
+		}
+		else {
+			this.cooldownFrame.setVisible(false);
+			this.cooldownActive = false;
+		}
 		this.iconFrame.setTexture(texture);
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
@@ -98,11 +127,24 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 		this.tipGoldCost = goldCost;
 		this.tipLumberCost = lumberCost;
 		this.tipFoodCost = foodCost;
+		this.tipManaCost = manaCost;
+		if (notEnoughMana) {
+			this.iconFrame.setColor(0.3f, 0.5f, 1f, 1f);
+		}
+		else {
+			this.iconFrame.setColor(1f, 1f, 1f, 1f);
+		}
 	}
 
 	@Override
 	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
 		this.iconFrame.positionBounds(gameUI, viewport);
+		if (this.numberOverlayFrame != null) {
+			this.numberOverlayFrame.positionBounds(gameUI, viewport);
+		}
+		if (this.numberOverlayStringFrame != null) {
+			this.numberOverlayStringFrame.positionBounds(gameUI, viewport);
+		}
 		if (this.activeHighlightFrame != null) {
 			this.activeHighlightFrame.positionBounds(gameUI, viewport);
 		}
@@ -115,10 +157,21 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		this.iconFrame.render(batch, baseFont, glyphLayout);
+		if (this.numberOverlayFrame != null) {
+			this.numberOverlayFrame.render(batch, baseFont, glyphLayout);
+		}
+		if (this.numberOverlayStringFrame != null) {
+			this.numberOverlayStringFrame.render(batch, baseFont, glyphLayout);
+		}
 		if (this.activeHighlightFrame != null) {
 			this.activeHighlightFrame.render(batch, baseFont, glyphLayout);
 		}
 		this.cooldownFrame.render(batch, baseFont, glyphLayout);
+		if (this.cooldownFrame.isVisible() && this.cooldownFrame.isSequenceEnded() && this.cooldownActive) {
+			this.cooldownFrame.setAnimationSpeed(1.0f);
+			this.cooldownFrame.setSequence(PrimaryTag.DEATH);
+			this.cooldownActive = false;
+		}
 		if (this.autocastFrame != null) {
 			this.autocastFrame.render(batch, baseFont, glyphLayout);
 		}
@@ -172,7 +225,7 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	}
 
 	@Override
-	public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
+	public void mouseDragged(final GameUI rootFrame, final Viewport uiViewport, final float x, final float y) {
 
 	}
 
@@ -241,5 +294,10 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	@Override
 	public int getToolTipFoodCost() {
 		return this.tipFoodCost;
+	}
+
+	@Override
+	public int getToolTipManaCost() {
+		return this.tipManaCost;
 	}
 }

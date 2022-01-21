@@ -80,6 +80,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxNode;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
@@ -640,6 +641,70 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						if (constructingBuilding != null) {
 							constructingBuilding.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
 									War3MapViewer.this.unitToRenderPeer.get(constructedStructure));
+						}
+					}
+
+					@Override
+					public void unitUpgradingEvent(final CUnit unit, final War3ID upgradeIdType) {
+//						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(unit);
+						final MutableGameObject upgrade = War3MapViewer.this.allObjectData.getUnits()
+								.get(upgradeIdType);
+
+						// TODO this should be behind some auto lookup so it isn't copied from
+						// RenderUnit class:
+						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
+								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
+							final String upperCaseToken = animationName.toUpperCase();
+							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
+								if (upperCaseToken.equals(secondaryTag.name())) {
+									unit.getUnitAnimationListener().removeSecondaryTag(secondaryTag);
+									continue TokenLoop;
+								}
+							}
+						}
+						// TODO this should be behind some auto lookup so it isn't copied from
+						// RenderUnit class:
+						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+							final String upperCaseToken = animationName.toUpperCase();
+							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
+								if (upperCaseToken.equals(secondaryTag.name())) {
+									unit.getUnitAnimationListener().addSecondaryTag(secondaryTag);
+									continue TokenLoop;
+								}
+							}
+						}
+					}
+
+					@Override
+					public void unitCancelUpgradingEvent(final CUnit unit, final War3ID upgradeIdType) {
+						final MutableGameObject upgrade = War3MapViewer.this.allObjectData.getUnits()
+								.get(upgradeIdType);
+
+						// TODO this should be behind some auto lookup so it isn't copied from
+						// RenderUnit class:
+						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+							final String upperCaseToken = animationName.toUpperCase();
+							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
+								if (upperCaseToken.equals(secondaryTag.name())) {
+									unit.getUnitAnimationListener().removeSecondaryTag(secondaryTag);
+									continue TokenLoop;
+								}
+							}
+						}
+
+						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
+								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
+							final String upperCaseToken = animationName.toUpperCase();
+							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
+								if (upperCaseToken.equals(secondaryTag.name())) {
+									unit.getUnitAnimationListener().addSecondaryTag(secondaryTag);
+									continue TokenLoop;
+								}
+							}
 						}
 					}
 
@@ -1665,7 +1730,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 			final float rawDeltaTime = Gdx.graphics.getRawDeltaTime();
 			this.updateTime += rawDeltaTime;
-			while (this.updateTime >= WarsmashConstants.SIMULATION_STEP_TIME) {
+			while (this.updateTime >= (WarsmashConstants.SIMULATION_STEP_TIME)) {
 				if (this.gameTurnManager.getLatestCompletedTurn() >= this.simulation.getGameTurnTick()) {
 					this.updateTime -= WarsmashConstants.SIMULATION_STEP_TIME;
 					this.simulation.update();

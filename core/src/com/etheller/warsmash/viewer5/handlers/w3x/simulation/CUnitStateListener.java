@@ -5,6 +5,8 @@ import com.etheller.warsmash.util.SubscriberSetNotifier;
 public interface CUnitStateListener {
 	void lifeChanged(); // hp (current) changes
 
+	void manaChanged();
+
 	void ordersChanged();
 
 	void queueChanged();
@@ -23,6 +25,13 @@ public interface CUnitStateListener {
 		public void lifeChanged() {
 			for (final CUnitStateListener listener : set) {
 				listener.lifeChanged();
+			}
+		}
+
+		@Override
+		public void manaChanged() {
+			for (final CUnitStateListener listener : set) {
+				listener.manaChanged();
 			}
 		}
 

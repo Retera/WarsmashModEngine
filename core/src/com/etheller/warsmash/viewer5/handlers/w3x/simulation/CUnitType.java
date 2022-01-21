@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
 import java.awt.image.BufferedImage;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class CUnitType {
 	private final War3ID typeId;
 	private final int maxLife;
 	private final float lifeRegen;
+	private final float manaRegen;
 	private final CRegenType lifeRegenType;
 	private final int manaInitial;
 	private final int manaMaximum;
@@ -81,10 +83,13 @@ public class CUnitType {
 	private final int priority;
 	private final boolean revivesHeroes;
 	private final int pointValue;
+	private final List<List<CUnitTypeRequirement>> requirementTiers;
+	private final float castBackswingPoint;
+	private final float castPoint;
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
-			final float lifeRegen, final CRegenType lifeRegenType, final int manaInitial, final int manaMaximum,
-			final int speed, final int defense, final String abilityList, final boolean isBldg,
+			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
+			final int manaMaximum, final int speed, final int defense, final String abilityList, final boolean isBldg,
 			final MovementType movementType, final float defaultFlyingHeight, final float collisionSize,
 			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks, final String armorType,
 			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ,
@@ -94,16 +99,18 @@ public class CUnitType {
 			final CUnitRace unitRace, final int goldCost, final int lumberCost, final int foodUsed, final int foodMade,
 			final int buildTime, final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes, final float propWindow, final float turnRate,
-			final List<CUnitTypeRequirement> requirements, final int level, final boolean hero, final int strength,
-			final float strengthPerLevel, final int agility, final float agilityPerLevel, final int intelligence,
-			final float intelligencePerLevel, final CPrimaryAttribute primaryAttribute,
-			final List<War3ID> heroAbilityList, final List<String> heroProperNames, final int properNamesCount,
-			final boolean canFlee, final int priority, final boolean revivesHeroes, final int pointValue) {
+			final List<CUnitTypeRequirement> requirements, final List<List<CUnitTypeRequirement>> requirementTiers,
+			final int level, final boolean hero, final int strength, final float strengthPerLevel, final int agility,
+			final float agilityPerLevel, final int intelligence, final float intelligencePerLevel,
+			final CPrimaryAttribute primaryAttribute, final List<War3ID> heroAbilityList,
+			final List<String> heroProperNames, final int properNamesCount, final boolean canFlee, final int priority,
+			final boolean revivesHeroes, final int pointValue, final float castBackswingPoint, final float castPoint) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
 		this.maxLife = maxLife;
 		this.lifeRegen = lifeRegen;
+		this.manaRegen = manaRegen;
 		this.lifeRegenType = lifeRegenType;
 		this.manaInitial = manaInitial;
 		this.manaMaximum = manaMaximum;
@@ -141,6 +148,7 @@ public class CUnitType {
 		this.propWindow = propWindow;
 		this.turnRate = turnRate;
 		this.requirements = requirements;
+		this.requirementTiers = requirementTiers;
 		this.level = level;
 		this.hero = hero;
 		this.startingStrength = strength;
@@ -157,6 +165,8 @@ public class CUnitType {
 		this.priority = priority;
 		this.revivesHeroes = revivesHeroes;
 		this.pointValue = pointValue;
+		this.castBackswingPoint = castBackswingPoint;
+		this.castPoint = castPoint;
 	}
 
 	public String getName() {
@@ -177,6 +187,10 @@ public class CUnitType {
 
 	public float getLifeRegen() {
 		return this.lifeRegen;
+	}
+
+	public float getManaRegen() {
+		return this.manaRegen;
 	}
 
 	public CRegenType getLifeRegenType() {
@@ -327,6 +341,16 @@ public class CUnitType {
 		return this.requirements;
 	}
 
+	public List<CUnitTypeRequirement> getRequirementsTier(final int tier) {
+		final int index = tier - 1;
+		if ((index >= 0) && (index < this.requirementTiers.size())) {
+			return this.requirementTiers.get(index);
+		}
+		else {
+			return Collections.emptyList();
+		}
+	}
+
 	public int getLevel() {
 		return this.level;
 	}
@@ -389,5 +413,13 @@ public class CUnitType {
 
 	public int getPointValue() {
 		return this.pointValue;
+	}
+
+	public float getCastBackswingPoint() {
+		return this.castBackswingPoint;
+	}
+
+	public float getCastPoint() {
+		return this.castPoint;
 	}
 }

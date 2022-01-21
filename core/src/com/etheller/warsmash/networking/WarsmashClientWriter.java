@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import com.etheller.warsmash.networking.udp.OrderedUdpClient;
+import net.warsmash.networking.udp.OrderedUdpClient;
 
 public class WarsmashClientWriter {
 	private final OrderedUdpClient client;

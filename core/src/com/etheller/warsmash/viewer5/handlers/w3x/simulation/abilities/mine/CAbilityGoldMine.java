@@ -17,8 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 	private int gold;
-	private final float miningDuration;
-	private final int miningCapacity;
+	private float miningDuration;
+	private int miningCapacity;
 	private final List<CBehaviorHarvest> activeMiners;
 	private boolean wasEmpty;
 
@@ -137,4 +137,11 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 		return this.miningDuration;
 	}
 
+	public void setMiningCapacity(final int miningCapacity) {
+		this.miningCapacity = miningCapacity;
+	}
+
+	public void setMiningDuration(final float miningDuration) {
+		this.miningDuration = miningDuration;
+	}
 }

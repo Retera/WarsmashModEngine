@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -37,7 +38,7 @@ public interface CAbilityVisitor<T> {
 
 	T accept(CAbilityNightElfBuild ability);
 
-	T accept(CAbilityGeneric ability);
+	T accept(CAbilityGenericDoNothing ability);
 
 	T accept(CAbilityColdArrows ability);
 
@@ -52,6 +53,8 @@ public interface CAbilityVisitor<T> {
 	T accept(CAbilityUpgrade ability);
 
 	T accept(CAbilityReviveHero ability);
+
+	T accept(CAbilityReturnResources ability);
 
 	T accept(GenericSingleIconActiveAbility ability);
 

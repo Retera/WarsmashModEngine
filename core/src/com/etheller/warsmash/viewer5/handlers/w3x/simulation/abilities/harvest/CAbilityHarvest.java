@@ -27,11 +27,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
-	private final int damageToTree;
-	private final int goldCapacity;
-	private final int lumberCapacity;
-	private final float castRange;
-	private final float duration;
+	private int damageToTree;
+	private int goldCapacity;
+	private int lumberCapacity;
+	private float castRange;
+	private float duration;
 	private CBehaviorHarvest behaviorHarvest;
 	private CBehaviorReturnResources behaviorReturnResources;
 	private int carriedResourceAmount;
@@ -233,4 +233,23 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 		return this.behaviorTreeAttack;
 	}
 
+	public void setDamageToTree(final int damageToTree) {
+		this.damageToTree = damageToTree;
+	}
+
+	public void setGoldCapacity(final int goldCapacity) {
+		this.goldCapacity = goldCapacity;
+	}
+
+	public void setLumberCapacity(final int lumberCapacity) {
+		this.lumberCapacity = lumberCapacity;
+	}
+
+	public void setCastRange(final float castRange) {
+		this.castRange = castRange;
+	}
+
+	public void setDuration(final float duration) {
+		this.duration = duration;
+	}
 }

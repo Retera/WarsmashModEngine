@@ -36,6 +36,10 @@ public final class CAbilityUpgrade extends AbstractCAbility {
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
+		if (unit.getBuildQueueTypes()[0] != null) {
+			receiver.disabled();
+			return;
+		}
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		if (this.upgradesTo.contains(orderIdAsRawtype) && (unit.getBuildQueue()[0] == null)) {
 			final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
@@ -50,10 +54,21 @@ public final class CAbilityUpgrade extends AbstractCAbility {
 					}
 				}
 				if (requirementsMet) {
-					if (player.getGold() >= unitType.getGoldCost()) {
-						if (player.getLumber() >= unitType.getLumberCost()) {
-							if ((unitType.getFoodUsed() == 0)
-									|| ((player.getFoodUsed() + unitType.getFoodUsed()) <= player.getFoodCap())) {
+					int relativeOffsetGold;
+					int relativeOffsetLumber;
+					final CUnitType existingUnitType = unit.getUnitType();
+					if (game.getGameplayConstants().isRelativeUpgradeCosts()) {
+						relativeOffsetGold = existingUnitType.getGoldCost();
+						relativeOffsetLumber = existingUnitType.getLumberCost();
+					}
+					else {
+						relativeOffsetGold = 0;
+						relativeOffsetLumber = 0;
+					}
+					if ((player.getGold() + relativeOffsetGold) >= unitType.getGoldCost()) {
+						if ((player.getLumber() + relativeOffsetLumber) >= unitType.getLumberCost()) {
+							final int foodNeeded = unitType.getFoodUsed() - existingUnitType.getFoodUsed();
+							if ((foodNeeded == 0) || ((player.getFoodUsed() + foodNeeded) <= player.getFoodCap())) {
 								receiver.useOk();
 							}
 							else {
@@ -167,5 +182,10 @@ public final class CAbilityUpgrade extends AbstractCAbility {
 
 	@Override
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
+	public void onSetUnitType(final CUnitType unitType) {
+		this.upgradesTo.clear();
+		this.upgradesTo.addAll(unitType.getUpgradesTo());
 	}
 }

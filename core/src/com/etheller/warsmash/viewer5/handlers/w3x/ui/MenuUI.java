@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -48,11 +49,13 @@ import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.custom.WTS;
+import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WorldEditStrings;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
@@ -60,12 +63,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListenerDelaying;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapInfoPane;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.TeamSetupPane;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.BattleNetUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.BattleNetUIActionListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuData;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMission;
@@ -94,6 +100,7 @@ public class MenuUI {
 	private SpriteFrame glueSpriteLayerTopRight;
 
 	private SpriteFrame glueSpriteLayerTopLeft;
+	private SpriteFrame glueSpriteLayerCenter;
 
 	private WorldEditStrings worldEditStrings;
 
@@ -151,13 +158,17 @@ public class MenuUI {
 	private GlueTextButtonFrame campaignBackButton;
 	private UIFrame missionSelectFrame;
 	private UIFrame campaignSelectFrame;
-	private final DataTable campaignStrings;
+	private DataTable campaignStrings;
 	private SpriteFrame campaignWarcraftIIILogo;
 	private final SingleModelScreen menuScreen;
 
 	private CampaignMenuData currentCampaign;
 	private String[] campaignList;
 	private CampaignMenuData[] campaignDatas;
+
+	// BattleNet
+	private BattleNetUI battleNetUI;
+
 	private UnitSound mainMenuGlueScreenLoop;
 	private GlueTextButtonFrame addProfileButton;
 	private GlueTextButtonFrame deleteProfileButton;
@@ -180,6 +191,10 @@ public class MenuUI {
 	private boolean unifiedCampaignInfo = false;
 	private MapInfoPane skirmishMapInfoPane;
 	private War3MapConfig currentMapConfig;
+	private final DataTable musicSLK;
+	private Music[] currentMusics;
+	private int currentMusicIndex;
+	private boolean currentMusicRandomizeIndex;
 
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
 			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
@@ -196,28 +211,18 @@ public class MenuUI {
 		this.widthRatioCorrection = getMinWorldWidth() / 1600f;
 		this.heightRatioCorrection = getMinWorldHeight() / 1200f;
 
-		this.campaignStrings = new DataTable(StringBundle.EMPTY);
-		final String campaignStringPath = "UI\\CampaignStrings" + (WarsmashConstants.GAME_VERSION == 1 ? "_exp" : "")
-				+ ".txt";
-		if (dataSource.has(campaignStringPath)) {
-			try (InputStream campaignStringStream = dataSource.getResourceAsStream(campaignStringPath)) {
-				this.campaignStrings.readTXT(campaignStringStream, true);
-			}
-			catch (final IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		else {
-			try (InputStream campaignStringStream = dataSource.getResourceAsStream("UI\\CampaignInfoClassic.txt")) {
-				this.campaignStrings.readTXT(campaignStringStream, true);
-				this.unifiedCampaignInfo = true;
-			}
-			catch (final IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
 		this.profileManager = PlayerProfileManager.loadFromGdx();
+
+		this.musicSLK = new DataTable(StringBundle.EMPTY);
+		final String musicSLKPath = "UI\\SoundInfo\\Music.SLK";
+		if (viewer.dataSource.has(musicSLKPath)) {
+			try (InputStream miscDataTxtStream = viewer.dataSource.getResourceAsStream(musicSLKPath)) {
+				this.musicSLK.readSLK(miscDataTxtStream);
+			}
+			catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public float getHeightRatioCorrection() {
@@ -249,12 +254,32 @@ public class MenuUI {
 			throw new IllegalStateException("Unable to load SmashFrameDef.toc", exc);
 		}
 
+		this.campaignStrings = new DataTable(StringBundle.EMPTY);
+		final String campaignStringPath = this.rootFrame.trySkinField("CampaignFile");
+		if (this.dataSource.has(campaignStringPath)) {
+			try (InputStream campaignStringStream = this.dataSource.getResourceAsStream(campaignStringPath)) {
+				this.campaignStrings.readTXT(campaignStringStream, true);
+			}
+			catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		else {
+			try (InputStream campaignStringStream = this.dataSource
+					.getResourceAsStream("UI\\CampaignInfoClassic.txt")) {
+				this.campaignStrings.readTXT(campaignStringStream, true);
+				this.unifiedCampaignInfo = true;
+			}
+			catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
 		// Create main menu
 		this.mainMenuFrame = this.rootFrame.createFrame("MainMenuFrame", this.rootFrame, 0, 0);
 
 		this.warcraftIIILogo = (SpriteFrame) this.rootFrame.getFrameByName("WarCraftIIILogo", 0);
-		this.rootFrame.setSpriteFrameModel(this.warcraftIIILogo,
-				this.rootFrame.getSkinField("MainMenuLogo_V" + WarsmashConstants.GAME_VERSION));
+		this.rootFrame.setSpriteFrameModel(this.warcraftIIILogo, this.rootFrame.getSkinField("MainMenuLogo"));
 		this.warcraftIIILogo.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.mainMenuFrame, FramePoint.TOPLEFT,
 				GameUI.convertX(this.uiViewport, 0.13f), GameUI.convertY(this.uiViewport, -0.08f)));
 		setMainMenuVisible(false);
@@ -263,24 +288,29 @@ public class MenuUI {
 		this.glueSpriteLayerTopRight = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
 				"SmashGlueSpriteLayerTopRight", this.rootFrame, "", 0);
 		this.glueSpriteLayerTopRight.setSetAllPoints(true);
-		final String topRightModel = this.rootFrame
-				.getSkinField("GlueSpriteLayerTopRight_V" + WarsmashConstants.GAME_VERSION);
+		final String topRightModel = this.rootFrame.getSkinField("GlueSpriteLayerTopRight");
 		this.rootFrame.setSpriteFrameModel(this.glueSpriteLayerTopRight, topRightModel);
 		this.glueSpriteLayerTopRight.setSequence("MainMenu Birth");
 
 		this.glueSpriteLayerTopLeft = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
 				"SmashGlueSpriteLayerTopLeft", this.rootFrame, "", 0);
 		this.glueSpriteLayerTopLeft.setSetAllPoints(true);
-		final String topLeftModel = this.rootFrame
-				.getSkinField("GlueSpriteLayerTopLeft_V" + WarsmashConstants.GAME_VERSION);
+		final String topLeftModel = this.rootFrame.getSkinField("GlueSpriteLayerTopLeft");
 		this.rootFrame.setSpriteFrameModel(this.glueSpriteLayerTopLeft, topLeftModel);
 		this.glueSpriteLayerTopLeft.setSequence("MainMenu Birth");
+
+		this.glueSpriteLayerCenter = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
+				"SmashGlueSpriteLayerCenter", this.rootFrame, "", 0);
+		this.glueSpriteLayerCenter.setSetAllPoints(true);
+		final String centerModel = this.rootFrame.getSkinField("GlueSpriteLayerCenter");
+		this.rootFrame.setSpriteFrameModel(this.glueSpriteLayerCenter, centerModel);
+		this.glueSpriteLayerCenter.setVisible(false);
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashCursorFrame", this.rootFrame,
 				"", 0);
 		this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 		this.cursorFrame.setSequence("Normal");
-		this.cursorFrame.setZDepth(1.0f);
+		this.cursorFrame.setZDepth(1024.0f);
 		if (WarsmashConstants.CATCH_CURSOR) {
 			Gdx.input.setCursorCatched(true);
 		}
@@ -308,8 +338,6 @@ public class MenuUI {
 			});
 		}
 
-		this.battleNetButton.setEnabled(false);
-		this.realmButton.setEnabled(false);
 		this.localAreaNetworkButton.setEnabled(false);
 		this.optionsButton.setEnabled(false);
 		this.creditsButton.setEnabled(false);
@@ -331,6 +359,22 @@ public class MenuUI {
 				MenuUI.this.glueSpriteLayerTopRight.setSequence("MainMenu Death");
 				setMainMenuVisible(false);
 				MenuUI.this.menuState = MenuState.GOING_TO_SINGLE_PLAYER;
+			}
+		});
+
+		this.battleNetButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("MainMenu Death");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("MainMenu Death");
+				setMainMenuVisible(false);
+				MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_LOGIN;
+			}
+		});
+		this.realmButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+
 			}
 		});
 
@@ -533,34 +577,36 @@ public class MenuUI {
 		mapListBox.setSelectionListener(new ListBoxSelelectionListener() {
 			@Override
 			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
-				try {
-					final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
-					final War3MapW3i mapInfo = map.readMapInformation();
-					final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
-					MenuUI.this.rootFrame.setMapStrings(wtsFile);
-					final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
-					for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
-						final CBasePlayer player = war3MapConfig.getPlayer(i);
-						player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
-					}
-					Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame,
-							war3MapConfig, "Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j").config();
-					for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-						final CBasePlayer player = war3MapConfig.getPlayer(i);
-						if (player.getController() == CMapControl.USER) {
-							player.setSlotState(CPlayerSlotState.PLAYING);
-							player.setName(MenuUI.this.profileManager.getCurrentProfile());
-							break;
+				if (newSelectedItem != null) {
+					try {
+						final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
+						final War3MapW3i mapInfo = map.readMapInformation();
+						final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
+						MenuUI.this.rootFrame.setMapStrings(wtsFile);
+						final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+						for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
+							final CBasePlayer player = war3MapConfig.getPlayer(i);
+							player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
 						}
+						Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame,
+								war3MapConfig, "Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j").config();
+						for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+							final CBasePlayer player = war3MapConfig.getPlayer(i);
+							if (player.getController() == CMapControl.USER) {
+								player.setSlotState(CPlayerSlotState.PLAYING);
+								player.setName(MenuUI.this.profileManager.getCurrentProfile());
+								break;
+							}
+						}
+						MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map,
+								mapInfo, war3MapConfig);
+						teamSetupPane.setMap(map, MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig,
+								mapInfo.getPlayers().size());
+						MenuUI.this.currentMapConfig = war3MapConfig;
 					}
-					MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map, mapInfo,
-							war3MapConfig);
-					teamSetupPane.setMap(map, MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig,
-							mapInfo.getPlayers().size());
-					MenuUI.this.currentMapConfig = war3MapConfig;
-				}
-				catch (final IOException e) {
-					e.printStackTrace();
+					catch (final IOException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		});
@@ -616,8 +662,7 @@ public class MenuUI {
 		this.campaignSelectFrame.setVisible(false);
 
 		this.campaignWarcraftIIILogo = (SpriteFrame) this.rootFrame.getFrameByName("WarCraftIIILogo", 0);
-		this.rootFrame.setSpriteFrameModel(this.campaignWarcraftIIILogo,
-				this.rootFrame.getSkinField("MainMenuLogo_V" + WarsmashConstants.GAME_VERSION));
+		this.rootFrame.setSpriteFrameModel(this.campaignWarcraftIIILogo, this.rootFrame.getSkinField("MainMenuLogo"));
 		this.campaignWarcraftIIILogo.setVisible(false);
 		this.campaignWarcraftIIILogo
 				.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, this.campaignMenu, FramePoint.TOPRIGHT,
@@ -742,6 +787,69 @@ public class MenuUI {
 		this.loadingMeleePanel = this.rootFrame.getFrameByName("LoadingMeleePanel", 0);
 		this.loadingMeleePanel.setVisible(false);
 
+		this.battleNetUI = new BattleNetUI(this.rootFrame, this.uiViewport, new BattleNetUIActionListener() {
+			@Override
+			public void cancelLoginPrompt() {
+				MenuUI.this.battleNetUI.hide();
+				MenuUI.this.battleNetUI.getDoors().setSequence(PrimaryTag.DEATH);
+				MenuUI.this.menuScreen.unAlternateModelBackToNormal();
+				MenuUI.this.menuState = MenuState.LEAVING_BATTLE_NET;
+			}
+
+			@Override
+			public void recoverPassword(final String text) {
+
+			}
+
+			@Override
+			public void logon(final String accountName, final String password) {
+				// TODO: connection
+				MenuUI.this.battleNetUI.loginAccepted();
+				MenuUI.this.battleNetUI.getDoors().setSequence(PrimaryTag.DEATH);
+				MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_WELCOME;
+			}
+
+			@Override
+			public void quitBattleNet() {
+				MenuUI.this.battleNetUI.hide();
+				playCurrentBattleNetGlueSpriteDeath();
+				MenuUI.this.glueSpriteLayerCenter.setSequence("Death");
+				MenuUI.this.menuState = MenuState.LEAVING_BATTLE_NET_FROM_LOGGED_IN;
+			}
+
+			public void playCurrentBattleNetGlueSpriteDeath() {
+				switch (MenuUI.this.menuState) {
+				case BATTLE_NET_CHAT_CHANNEL:
+				case GOING_TO_BATTLE_NET_CHAT_CHANNEL:
+					MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetChatRoom Death");
+					MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetChatRoom Death");
+					break;
+				default:
+				case BATTLE_NET_WELCOME:
+				case GOING_TO_BATTLE_NET_WELCOME:
+					MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetWelcome Death");
+					MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetWelcome Death");
+					break;
+				}
+			}
+
+			@Override
+			public void openCustomGameMenu() {
+				MenuUI.this.battleNetUI.hideCurrentScreen();
+				playCurrentBattleNetGlueSpriteDeath();
+				MenuUI.this.glueSpriteLayerCenter.setSequence("Death");
+				MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU;
+			}
+
+			@Override
+			public void enterDefaultChat() {
+				MenuUI.this.battleNetUI.hideWelcomeScreen();
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetWelcome Death");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetWelcome Death");
+				MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CHAT_CHANNEL;
+			}
+		});
+
 		// position all
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 
@@ -749,9 +857,14 @@ public class MenuUI {
 
 		loadSounds();
 
-		final String glueLoopField = this.rootFrame.getSkinField("GlueScreenLoop_V" + WarsmashConstants.GAME_VERSION);
+		final String glueLoopField = this.rootFrame.getSkinField("GlueScreenLoop");
 		this.mainMenuGlueScreenLoop = this.uiSounds.getSound(glueLoopField);
 		this.glueScreenLoop = this.mainMenuGlueScreenLoop;
+		this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
+	}
+
+	public void show() {
+		playMusic(this.rootFrame.trySkinField("GlueMusic"), true, 0);
 		this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
 	}
 
@@ -761,12 +874,7 @@ public class MenuUI {
 		this.loadingCustomPanel.setVisible(true);
 		final DataSource codebase = WarsmashGdxMapScreen.parseDataSources(this.warsmashIni);
 		final GameTurnManager turnManager;
-		if (MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR != null) {
-			turnManager = GameTurnManager.PAUSED;
-		}
-		else {
-			turnManager = GameTurnManager.LOCAL;
-		}
+		turnManager = GameTurnManager.PAUSED;
 		final War3MapViewer viewer = new War3MapViewer(codebase, this.screenManager, this.currentMapConfig,
 				turnManager);
 
@@ -930,8 +1038,29 @@ public class MenuUI {
 				uiOrderListener = new WarsmashClientSendingOrderListener(warsmashClientWriter);
 			}
 			else {
-				uiOrderListener = new CPlayerUnitOrderExecutor(this.loadingMap.viewer.simulation, localPlayerIndex);
+				final CPlayerUnitOrderExecutor executor = new CPlayerUnitOrderExecutor(
+						this.loadingMap.viewer.simulation, localPlayerIndex);
+				final CPlayerUnitOrderListenerDelaying delayingListener = new CPlayerUnitOrderListenerDelaying(
+						executor);
+				uiOrderListener = delayingListener;
 				warsmashClient = null;
+				final War3MapViewer mapViewer = this.loadingMap.viewer;
+				mapViewer.setGameTurnManager(new GameTurnManager() {
+					@Override
+					public void turnCompleted(final int gameTurnTick) {
+						delayingListener.publishDelayedActions();
+					}
+
+					@Override
+					public int getLatestCompletedTurn() {
+						return Integer.MAX_VALUE;
+					}
+
+					@Override
+					public void framesSkipped(final float skippedCount) {
+
+					}
+				});
 			}
 
 			MenuUI.this.screenManager.setScreen(new WarsmashGdxMapScreen(this.loadingMap.viewer, this.screenManager,
@@ -974,17 +1103,81 @@ public class MenuUI {
 		this.cursorFrame.setSequence("Normal");
 
 		if (this.glueSpriteLayerTopRight.isSequenceEnded() && this.glueSpriteLayerTopLeft.isSequenceEnded()
-				&& (!this.campaignFade.isVisible() || this.campaignFade.isSequenceEnded())) {
+				&& (!this.campaignFade.isVisible() || this.campaignFade.isSequenceEnded())
+				&& (!this.battleNetUI.getDoors().isVisible() || this.battleNetUI.getDoors().isSequenceEnded())) {
 			switch (this.menuState) {
 			case GOING_TO_MAIN_MENU:
 				this.glueSpriteLayerTopLeft.setSequence("MainMenu Birth");
 				this.glueSpriteLayerTopRight.setSequence("MainMenu Birth");
+				if (this.battleNetUI.getDoors().isVisible()) {
+					this.battleNetUI.getDoors().setVisible(false);
+					this.battleNetUI.setVisible(false);
+				}
 				this.menuState = MenuState.MAIN_MENU;
 				break;
 			case MAIN_MENU:
 				setMainMenuVisible(true);
 				this.glueSpriteLayerTopLeft.setSequence("MainMenu Stand");
 				this.glueSpriteLayerTopRight.setSequence("MainMenu Stand");
+				break;
+			case GOING_TO_BATTLE_NET_LOGIN:
+				this.glueSpriteLayerTopLeft.setSequence("Death");
+				this.glueSpriteLayerTopRight.setSequence("Death");
+				MenuUI.this.battleNetUI.setVisible(true);
+				final SpriteFrame doors = MenuUI.this.battleNetUI.getDoors();
+				doors.setVisible(true);
+				doors.setSequence(PrimaryTag.BIRTH);
+				this.menuState = MenuState.GOING_TO_BATTLE_NET_LOGIN_PART2;
+				break;
+			case GOING_TO_BATTLE_NET_LOGIN_PART2:
+				MenuUI.this.menuScreen.alternateModelToBattlenet();
+				this.battleNetUI.showLoginPrompt("<NYI>");
+				this.menuState = MenuState.BATTLE_NET_LOGIN;
+				break;
+			case LEAVING_BATTLE_NET_FROM_LOGGED_IN:
+				MenuUI.this.menuScreen.unAlternateModelBackToNormal();
+				this.glueSpriteLayerCenter.setVisible(false);
+				playMusic(this.rootFrame.trySkinField("GlueMusic"), true, 0);
+				// no break
+			case LEAVING_BATTLE_NET:
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("Birth");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("Birth");
+				this.menuState = MenuState.GOING_TO_MAIN_MENU;
+				break;
+			case GOING_TO_BATTLE_NET_WELCOME:
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetWelcome Birth");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetWelcome Birth");
+				this.glueSpriteLayerCenter.setVisible(true);
+				this.glueSpriteLayerCenter.setSequence("Birth");
+				this.menuState = MenuState.BATTLE_NET_WELCOME;
+				playMusic(this.rootFrame.trySkinField("ChatMusic"), true, 0);
+				break;
+			case BATTLE_NET_WELCOME:
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetWelcome Stand");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetWelcome Stand");
+				this.battleNetUI.showWelcomeScreen();
+				this.glueSpriteLayerCenter.setSequence("Stand");
+				this.menuState = MenuState.BATTLE_NET_WELCOME;
+				break;
+			case GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU:
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetCustom Birth");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetCustom Birth");
+				this.menuState = MenuState.BATTLE_NET_CUSTOM_GAME_MENU;
+				break;
+			case BATTLE_NET_CUSTOM_GAME_MENU:
+				this.battleNetUI.showCustomGameMenu();
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetCustom Stand");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetCustom Stand");
+				break;
+			case GOING_TO_BATTLE_NET_CHAT_CHANNEL:
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetChatRoom Birth");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetChatRoom Birth");
+				this.menuState = MenuState.BATTLE_NET_CHAT_CHANNEL;
+				break;
+			case BATTLE_NET_CHAT_CHANNEL:
+				this.battleNetUI.showChatChannel();
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetChatRoom Stand");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetChatRoom Stand");
 				break;
 			case GOING_TO_SINGLE_PLAYER:
 				this.glueSpriteLayerTopLeft.setSequence("SinglePlayer Birth");
@@ -1003,8 +1196,7 @@ public class MenuUI {
 				this.glueScreenLoop.stop();
 				this.glueScreenLoop = this.mainMenuGlueScreenLoop;
 				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
-				this.menuScreen.setModel(
-						this.rootFrame.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION));
+				this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"));
 				this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 				this.menuState = MenuState.GOING_TO_SINGLE_PLAYER;
 				break;
@@ -1212,6 +1404,15 @@ public class MenuUI {
 	private static enum MenuState {
 		GOING_TO_MAIN_MENU,
 		MAIN_MENU,
+		GOING_TO_BATTLE_NET_LOGIN,
+		GOING_TO_BATTLE_NET_LOGIN_PART2,
+		BATTLE_NET_LOGIN,
+		LEAVING_BATTLE_NET,
+		LEAVING_BATTLE_NET_FROM_LOGGED_IN,
+		GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU,
+		BATTLE_NET_CUSTOM_GAME_MENU,
+		GOING_TO_BATTLE_NET_WELCOME,
+		BATTLE_NET_WELCOME,
 		GOING_TO_SINGLE_PLAYER,
 		LEAVING_CAMPAIGN,
 		SINGLE_PLAYER,
@@ -1227,11 +1428,14 @@ public class MenuUI {
 		SINGLE_PLAYER_PROFILE,
 		GOING_TO_LOADING_SCREEN,
 		QUITTING,
-		RESTARTING;
+		RESTARTING,
+		GOING_TO_BATTLE_NET_CHAT_CHANNEL,
+		BATTLE_NET_CHAT_CHANNEL;
 	}
 
 	public void hide() {
 		this.glueScreenLoop.stop();
+		stopMusic();
 	}
 
 	public void dispose() {
@@ -1276,8 +1480,7 @@ public class MenuUI {
 			this.glueScreenLoop.stop();
 			this.glueScreenLoop = this.mainMenuGlueScreenLoop;
 			this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
-			this.menuScreen.setModel(
-					this.rootFrame.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION));
+			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"));
 			this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 			break;
 		case CAMPAIGN:
@@ -1314,7 +1517,7 @@ public class MenuUI {
 
 	private String getCurrentBackgroundModel() {
 		final String background = this.currentCampaign.getBackground();
-		final String versionedBackground = background + "_V" + WarsmashConstants.GAME_VERSION;
+		final String versionedBackground = background;
 		if (this.rootFrame.hasSkinField(versionedBackground)) {
 			return this.rootFrame.getSkinField(versionedBackground);
 		}
@@ -1333,5 +1536,49 @@ public class MenuUI {
 			this.mapInfo = mapInfo;
 		}
 
+	}
+
+	private void stopMusic() {
+		if (this.currentMusics != null) {
+			for (final Music music : this.currentMusics) {
+				music.stop();
+			}
+			this.currentMusics = null;
+		}
+	}
+
+	public Music playMusic(final String musicField, final boolean random, int index) {
+		if (WarsmashConstants.ENABLE_MUSIC) {
+			stopMusic();
+
+			final String[] semicolonMusics = musicField.split(";");
+			final List<String> musicPaths = new ArrayList<>();
+			for (String musicPath : semicolonMusics) {
+				// dumb support for comma as well as semicolon, I wonder if we can
+				// clean this up, simplify?
+				if (this.musicSLK.get(musicPath) != null) {
+					musicPath = this.musicSLK.get(musicPath).getField("FileNames");
+				}
+				final String[] moreSplitMusics = musicPath.split(",");
+				for (final String finalSplitPath : moreSplitMusics) {
+					musicPaths.add(finalSplitPath);
+				}
+			}
+			final String[] musics = musicPaths.toArray(new String[musicPaths.size()]);
+
+			if (random) {
+				index = (int) (Math.random() * musics.length);
+			}
+			this.currentMusics = new Music[musics.length];
+			for (int i = 0; i < musics.length; i++) {
+				final Music newMusic = Gdx.audio.newMusic(new DataSourceFileHandle(this.viewer.dataSource, musics[i]));
+				newMusic.setVolume(1.0f);
+				this.currentMusics[i] = newMusic;
+			}
+			this.currentMusicIndex = index;
+			this.currentMusicRandomizeIndex = random;
+			this.currentMusics[index].play();
+		}
+		return null;
 	}
 }

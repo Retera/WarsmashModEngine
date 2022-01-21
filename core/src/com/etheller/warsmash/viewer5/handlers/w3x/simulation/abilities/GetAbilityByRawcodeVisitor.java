@@ -9,15 +9,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 
-public class GetAbilityByRawcodeVisitor implements CAbilityVisitor<CAbility> {
+public class GetAbilityByRawcodeVisitor implements CAbilityVisitor<CLevelingAbility> {
 	private static final GetAbilityByRawcodeVisitor INSTANCE = new GetAbilityByRawcodeVisitor();
 
 	public static GetAbilityByRawcodeVisitor getInstance() {
@@ -33,83 +35,37 @@ public class GetAbilityByRawcodeVisitor implements CAbilityVisitor<CAbility> {
 	}
 
 	@Override
-	public CAbility accept(final CAbilityAttack ability) {
+	public CLevelingAbility accept(final CAbilityAttack ability) {
 		return null;
 	}
 
 	@Override
-	public CAbility accept(final CAbilityMove ability) {
+	public CLevelingAbility accept(final CAbilityMove ability) {
 		return null;
 	}
 
 	@Override
-	public CAbility accept(final CAbilityOrcBuild ability) {
+	public CLevelingAbility accept(final CAbilityOrcBuild ability) {
 		return null;
 	}
 
 	@Override
-	public CAbility accept(final CAbilityHumanBuild ability) {
+	public CLevelingAbility accept(final CAbilityHumanBuild ability) {
 		return null;
 	}
 
 	@Override
-	public CAbility accept(final CAbilityUndeadBuild ability) {
+	public CLevelingAbility accept(final CAbilityUndeadBuild ability) {
 		return null;
 	}
 
 	@Override
-	public CAbility accept(final CAbilityNightElfBuild ability) {
+	public CLevelingAbility accept(final CAbilityNightElfBuild ability) {
 		return null;
 	}
 
 	@Override
-	public CAbility accept(final CAbilityGeneric ability) {
-		if (this.rawcode.equals(ability.getRawcode())) {
-			return ability;
-		}
-		return null;
-	}
-
-	@Override
-	public CAbility accept(final CAbilityColdArrows ability) {
-		if (this.rawcode.equals(ability.getRawcode())) {
-			return ability;
-		}
-		return null;
-	}
-
-	@Override
-	public CAbility accept(final CAbilityNagaBuild ability) {
-		return null;
-	}
-
-	@Override
-	public CAbility accept(final CAbilityNeutralBuild ability) {
-		return null;
-	}
-
-	@Override
-	public CAbility accept(final CAbilityBuildInProgress ability) {
-		return null;
-	}
-
-	@Override
-	public CAbility accept(final CAbilityQueue ability) {
-		return null;
-	}
-
-	@Override
-	public CAbility accept(final CAbilityUpgrade ability) {
-		return null;
-	}
-
-	@Override
-	public CAbility accept(final CAbilityReviveHero ability) {
-		return null;
-	}
-
-	@Override
-	public CAbility accept(final GenericSingleIconActiveAbility ability) {
+	public CLevelingAbility accept(final CAbilityGenericDoNothing ability) {
 		if (this.rawcode.equals(ability.getAlias())) {
 			return ability;
 		}
@@ -117,7 +73,53 @@ public class GetAbilityByRawcodeVisitor implements CAbilityVisitor<CAbility> {
 	}
 
 	@Override
-	public CAbility accept(final CAbilityRally ability) {
+	public CLevelingAbility accept(final CAbilityColdArrows ability) {
+		if (this.rawcode.equals(ability.getAlias())) {
+			return ability;
+		}
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final CAbilityNagaBuild ability) {
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final CAbilityNeutralBuild ability) {
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final CAbilityBuildInProgress ability) {
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final CAbilityQueue ability) {
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final CAbilityUpgrade ability) {
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final CAbilityReviveHero ability) {
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final GenericSingleIconActiveAbility ability) {
+		if (this.rawcode.equals(ability.getAlias())) {
+			return ability;
+		}
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final CAbilityRally ability) {
 		if (this.rawcode.equals(RALLY_RAWCODE)) {
 			return ability;
 		}
@@ -125,7 +127,7 @@ public class GetAbilityByRawcodeVisitor implements CAbilityVisitor<CAbility> {
 	}
 
 	@Override
-	public CAbility accept(final GenericNoIconAbility ability) {
+	public CLevelingAbility accept(final GenericNoIconAbility ability) {
 		if (this.rawcode.equals(ability.getAlias())) {
 			return ability;
 		}
@@ -133,7 +135,15 @@ public class GetAbilityByRawcodeVisitor implements CAbilityVisitor<CAbility> {
 	}
 
 	@Override
-	public CAbility accept(final CAbilityHero ability) {
+	public CLevelingAbility accept(final CAbilityReturnResources ability) {
+		if (this.rawcode.equals(ability.getAlias())) {
+			return ability;
+		}
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final CAbilityHero ability) {
 		return null;
 	}
 

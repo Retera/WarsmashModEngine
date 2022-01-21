@@ -77,5 +77,10 @@ public interface SimulationRenderController {
 
 	void heroDeathEvent(CUnit cUnit);
 
-	SimulationRenderComponent createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias, float artAttachmentHeight);
+	SimulationRenderComponent createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias,
+			float artAttachmentHeight);
+
+	void unitUpgradingEvent(CUnit unit, War3ID upgradeIdType);
+
+	void unitCancelUpgradingEvent(CUnit unit, War3ID upgradeIdType);
 }

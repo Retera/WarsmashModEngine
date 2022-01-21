@@ -1,4 +1,4 @@
-package com.etheller.warsmash.networking.udp;
+package net.warsmash.networking.udp;
 
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;

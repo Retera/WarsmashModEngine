@@ -240,6 +240,9 @@ public abstract class Scene {
 			gl.glDepthMask(true);
 			gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 		}
+		else {
+			Gdx.gl30.glClear(GL30.GL_DEPTH_BUFFER_BIT);
+		}
 		this.lightManager.update();
 	}
 

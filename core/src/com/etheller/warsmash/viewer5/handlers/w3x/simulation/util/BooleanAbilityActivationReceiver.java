@@ -27,6 +27,16 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
+	public void missingHeroLevelRequirement(final int level) {
+		this.ok = false;
+	}
+
+	@Override
+	public void noHeroSkillPointsAvailable() {
+		this.ok = false;
+	}
+
+	@Override
 	public void techtreeMaximumReached() {
 		this.ok = false;
 	}
@@ -43,6 +53,11 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 
 	@Override
 	public void disabled() {
+		this.ok = false;
+	}
+
+	@Override
+	public void cooldownNotYetReady(final float cooldownRemaining, final float cooldownMax) {
 		this.ok = false;
 	}
 

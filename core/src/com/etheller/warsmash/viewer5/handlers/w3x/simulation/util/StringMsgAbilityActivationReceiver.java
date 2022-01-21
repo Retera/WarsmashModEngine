@@ -41,6 +41,21 @@ public class StringMsgAbilityActivationReceiver implements AbilityActivationRece
 	}
 
 	@Override
+	public void missingHeroLevelRequirement(final int level) {
+		this.message = "NOTEXTERN: Requires Level " + level;
+	}
+
+	@Override
+	public void noHeroSkillPointsAvailable() {
+		this.message = "NOTEXTERN: No hero skill points available.";
+	}
+
+	@Override
+	public void cooldownNotYetReady(final float cooldownRemaining, final float cooldown) {
+		this.message = "NOTEXTERN: Spell is not ready yet.";
+	}
+
+	@Override
 	public void techtreeMaximumReached() {
 		this.message = "NOTEXTERN: Techtree maximum reached.";
 	}

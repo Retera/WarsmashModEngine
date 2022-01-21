@@ -55,9 +55,20 @@ public final class CAbilityQueue extends AbstractCAbility {
 						requirementsMet = false;
 					}
 				}
+				final boolean isHeroType = unitType.isHero();
+				if (isHeroType) {
+					final int heroCount = player.getHeroCount(game, true);
+					final List<CUnitTypeRequirement> requirementsTier = unitType.getRequirementsTier(heroCount);
+					for (final CUnitTypeRequirement requirement : requirementsTier) {
+						if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
+							requirementsMet = false;
+						}
+					}
+				}
+				final boolean skipGoldLumberCost = isHeroType && (player.getHeroTokens() > 0);
 				if (requirementsMet) {
-					if (player.getGold() >= unitType.getGoldCost()) {
-						if (player.getLumber() >= unitType.getLumberCost()) {
+					if ((player.getGold() >= unitType.getGoldCost()) || skipGoldLumberCost) {
+						if ((player.getLumber() >= unitType.getLumberCost()) || skipGoldLumberCost) {
 							if ((unitType.getFoodUsed() == 0)
 									|| ((player.getFoodUsed() + unitType.getFoodUsed()) <= player.getFoodCap())) {
 								receiver.useOk();
@@ -78,6 +89,17 @@ public final class CAbilityQueue extends AbstractCAbility {
 					if (techtreeAllowedByMax) {
 						for (final CUnitTypeRequirement requirement : requirements) {
 							receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+						}
+						if (isHeroType) {
+							final int heroCount = player.getHeroCount(game, true);
+							final List<CUnitTypeRequirement> requirementsTier = unitType.getRequirementsTier(heroCount);
+							for (final CUnitTypeRequirement requirement : requirementsTier) {
+								if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement
+										.getRequiredLevel()) {
+									receiver.missingRequirement(requirement.getRequirement(),
+											requirement.getRequiredLevel());
+								}
+							}
 						}
 					}
 					else {
@@ -176,5 +198,12 @@ public final class CAbilityQueue extends AbstractCAbility {
 
 	@Override
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
+	public void onSetUnitType(final CUnitType unitType) {
+		this.unitsTrained.clear();
+		this.researchesAvailable.clear();
+		this.unitsTrained.addAll(unitType.getUnitsTrained());
+		this.researchesAvailable.addAll(unitType.getResearchesAvailable());
 	}
 }

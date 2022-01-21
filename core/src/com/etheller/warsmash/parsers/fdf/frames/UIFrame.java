@@ -41,6 +41,8 @@ public interface UIFrame {
 
 	UIFrame getParent();
 
+	void setParent(UIFrame parent);
+
 	boolean isVisible();
 
 	boolean isVisibleOnScreen();

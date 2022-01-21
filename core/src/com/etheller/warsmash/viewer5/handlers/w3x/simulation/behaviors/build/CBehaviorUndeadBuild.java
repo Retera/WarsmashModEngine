@@ -94,10 +94,11 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 				final float deltaX = this.unit.getX() - this.target.getX();
 				final float deltaY = this.unit.getY() - this.target.getY();
 				final float delta = (float) Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
-				this.unit.setPoint(this.target.getX() + ((deltaX / delta) * unitTypeToCreate.getCollisionSize()),
-						this.target.getY() + ((deltaY / delta) * unitTypeToCreate.getCollisionSize()),
-						simulation.getWorldCollision(), simulation.getRegionManager());
+				this.unit.setPointAndCheckUnstuck(
+						this.target.getX() + ((deltaX / delta) * unitTypeToCreate.getCollisionSize()),
+						this.target.getY() + ((deltaY / delta) * unitTypeToCreate.getCollisionSize()), simulation);
 				simulation.unitRepositioned(this.unit);
+				simulation.getPlayer(playerIndex).addTechtreeInProgress(this.orderId);
 				simulation.unitConstructedEvent(this.unit, constructedStructure);
 				this.doneTick = simulation.getGameTurnTick() + delayAnimationTicks;
 			}

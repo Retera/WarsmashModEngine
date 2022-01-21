@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 
-import com.etheller.warsmash.networking.udp.OrderedUdpServerListener;
+import net.warsmash.networking.udp.OrderedUdpServerListener;
 
 public class WarsmashServerParser implements OrderedUdpServerListener {
 

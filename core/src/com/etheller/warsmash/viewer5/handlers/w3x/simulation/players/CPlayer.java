@@ -273,6 +273,21 @@ public class CPlayer extends CBasePlayer {
 		return this.heroes;
 	}
 
+	public int getHeroCount(final CSimulation game, final boolean includeInProgress) {
+		if (!includeInProgress) {
+			return this.heroes.size();
+		}
+		else {
+			int heroInProgressCount = 0;
+			for (final Map.Entry<War3ID, Integer> entry : this.rawcodeToTechtreeInProgress.entrySet()) {
+				if (game.getUnitData().getUnitType(entry.getKey()).isHero()) {
+					heroInProgressCount += entry.getValue();
+				}
+			}
+			return this.heroes.size() + heroInProgressCount;
+		}
+	}
+
 	public void fireHeroLevelEvents(final CUnit hero) {
 		firePlayerUnitEvents(hero, CommonTriggerExecutionScope::playerHeroRevivableScope,
 				JassGameEventsWar3.EVENT_PLAYER_HERO_LEVEL);

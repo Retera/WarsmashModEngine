@@ -865,4 +865,16 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 	@Override
 	public void resume() {
 	}
+
+	@Override
+	public void alternateModelToBattlenet() {
+		System.err.println(
+				"alternateModelToBattlenet() on background not supported for FDF test render screen... TODO write better code here");
+	}
+
+	@Override
+	public void unAlternateModelBackToNormal() {
+		System.err.println(
+				"alternateModelToBattlenet() on background not supported for FDF test render screen... TODO write better code here");
+	}
 }

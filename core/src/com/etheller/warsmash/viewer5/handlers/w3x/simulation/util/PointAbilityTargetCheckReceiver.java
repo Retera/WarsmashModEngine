@@ -33,6 +33,21 @@ public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiv
 	}
 
 	@Override
+	public void notHolyBoltTarget() {
+		this.target = null;
+	}
+
+	@Override
+	public void alreadyFullHealth() {
+		this.target = null;
+	}
+
+	@Override
+	public void notDeathCoilTarget() {
+		this.target = null;
+	}
+
+	@Override
 	public void targetOutsideRange() {
 		this.target = null;
 	}

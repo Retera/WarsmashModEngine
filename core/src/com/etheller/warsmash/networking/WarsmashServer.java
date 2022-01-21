@@ -8,8 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import com.etheller.warsmash.networking.udp.OrderedUdpServer;
 import com.etheller.warsmash.util.WarsmashConstants;
+
+import net.warsmash.networking.udp.OrderedUdpServer;
 
 public class WarsmashServer implements ClientToServerListener {
 	private static final int MAGIC_DELAY_OFFSET = 4;

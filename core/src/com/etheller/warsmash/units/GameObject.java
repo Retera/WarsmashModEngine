@@ -30,6 +30,8 @@ public interface GameObject {
 
 	public String getName();
 
+	public String getLegacyName();
+
 	public Set<String> keySet();
 
 	GameObject EMPTY = new GameObject() {
@@ -95,6 +97,11 @@ public interface GameObject {
 		@Override
 		public String getField(final String field) {
 			return "";
+		}
+
+		@Override
+		public String getLegacyName() {
+			return "custom_0000";
 		}
 	};
 

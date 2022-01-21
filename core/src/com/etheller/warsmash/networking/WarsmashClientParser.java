@@ -2,7 +2,7 @@ package com.etheller.warsmash.networking;
 
 import java.nio.ByteBuffer;
 
-import com.etheller.warsmash.networking.udp.OrderedUdpClientListener;
+import net.warsmash.networking.udp.OrderedUdpClientListener;
 
 public class WarsmashClientParser implements OrderedUdpClientListener {
 	private final ServerToClientListener listener;

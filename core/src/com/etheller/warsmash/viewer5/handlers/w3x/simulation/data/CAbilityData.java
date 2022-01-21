@@ -6,8 +6,9 @@ import java.util.Map;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGeneric;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGenericDoNothing;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionCarrionSwarmDummy;
@@ -17,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionHarvestLumber;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionHolyLight;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionHumanRepair;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionInvulnerable;
@@ -30,6 +32,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionWispHarvest;
 
 public class CAbilityData {
+	private static final War3ID REQUIRED_LEVEL = War3ID.fromString("arlv");
+	private static final War3ID REQUIRED_LEVEL_SKIP = War3ID.fromString("alsk");
 
 	private final MutableObjectData abilityData;
 	private Map<War3ID, CAbilityType<?>> aliasToAbilityType = new HashMap<>();
@@ -42,7 +46,11 @@ public class CAbilityData {
 	}
 
 	private void registerCodes() {
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ACcw"), new CAbilityTypeDefinitionColdArrows());
+		// ----Human----
+		// Paladin:
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHhb"), new CAbilityTypeDefinitionHolyLight());
+
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHca"), new CAbilityTypeDefinitionColdArrows());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Agld"), new CAbilityTypeDefinitionGoldMine());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Artn"), new CAbilityTypeDefinitionReturnResources());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Ahar"), new CAbilityTypeDefinitionHarvest());
@@ -87,12 +95,26 @@ public class CAbilityData {
 		return abilityType;
 	}
 
+	public int getHeroRequiredLevel(final CSimulation game, final War3ID alias, final int currentLevelOfAbility) {
+		// TODO maybe use CAbilityType for this to avoid hashtable lookups and just do
+		// fast symbol table resolution.
+		// (i.e. like all other fields of CAbilityType). For now I didn't bother because
+		// I wanted to just have this working.
+		final MutableGameObject mutableGameObject = this.abilityData.get(alias);
+		int levelSkip = mutableGameObject.getFieldAsInteger(REQUIRED_LEVEL_SKIP, 0);
+		if (levelSkip == 0) {
+			levelSkip = game.getGameplayConstants().getHeroAbilityLevelSkip();
+		}
+		final int baseRequiredLevel = mutableGameObject.getFieldAsInteger(REQUIRED_LEVEL, 0);
+		return baseRequiredLevel + (currentLevelOfAbility * levelSkip);
+	}
+
 	public CAbility createAbility(final String ability, final int handleId) {
 		final War3ID war3Id = War3ID.fromString(ability.trim());
 		final CAbilityType<?> abilityType = getAbilityType(war3Id);
 		if (abilityType != null) {
 			return abilityType.createAbility(handleId);
 		}
-		return new CAbilityGeneric(war3Id, handleId);
+		return new CAbilityGenericDoNothing(war3Id, handleId);
 	}
 }

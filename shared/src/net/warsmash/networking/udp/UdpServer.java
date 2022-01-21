@@ -1,4 +1,4 @@
-package com.etheller.warsmash.networking.udp;
+package net.warsmash.networking.udp;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -11,8 +11,6 @@ import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.etheller.warsmash.util.WarsmashConstants;
-
 public class UdpServer implements Runnable {
 
 	private final Selector selector;
@@ -20,6 +18,7 @@ public class UdpServer implements Runnable {
 	private final SelectionKey key;
 	private final ByteBuffer readBuffer;
 	private final UdpServerListener serverListener;
+	private final DatagramChannel channel;
 
 	public UdpServer(final int portNumber, final UdpServerListener serverListener) throws IOException {
 		this.serverListener = serverListener;
@@ -70,39 +69,6 @@ public class UdpServer implements Runnable {
 
 	public void setRunning(final boolean running) {
 		this.running = running;
-	}
-
-	static UdpServer warsmashGameServer;
-	private final DatagramChannel channel;
-
-	public static void main(final String[] args) {
-		try {
-			warsmashGameServer = new UdpServer(WarsmashConstants.PORT_NUMBER, new UdpServerListener() {
-				int n = 0;
-				ByteBuffer sendBuffer = ByteBuffer.allocate(1024);
-
-				@Override
-				public void parse(final SocketAddress sourceAddress, final ByteBuffer buffer) {
-					System.out.println("Got packet from: " + sourceAddress);
-					while (buffer.hasRemaining()) {
-						System.out.println("Received: " + buffer.get());
-					}
-					try {
-						this.sendBuffer.clear();
-						this.sendBuffer.putInt(this.n++);
-						this.sendBuffer.flip();
-						warsmashGameServer.send(sourceAddress, this.sendBuffer);
-					}
-					catch (final IOException e) {
-						e.printStackTrace();
-					}
-				}
-			});
-			new Thread(warsmashGameServer).start();
-		}
-		catch (final IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 }

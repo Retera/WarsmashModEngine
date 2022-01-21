@@ -64,6 +64,21 @@ public final class StringMsgTargetCheckReceiver<TARGET_TYPE> implements AbilityT
 	}
 
 	@Override
+	public void notHolyBoltTarget() {
+		this.message = "NOTEXTERN: Holybolttarget=Must target friendly living units or enemy Undead units.";
+	}
+
+	@Override
+	public void alreadyFullHealth() {
+		this.message = "NOTEXTERN: Target is already full health!";
+	}
+
+	@Override
+	public void notDeathCoilTarget() {
+		this.message = "NOTEXTERN: Deathcoiltarget=Must target enemy living units or friendly Undead units.";
+	}
+
+	@Override
 	public void mustTargetResources() {
 		this.message = "NOTEXTERN: Must target resources.";
 	}

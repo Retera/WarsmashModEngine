@@ -4,20 +4,17 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public abstract class AbstractGenericSingleIconActiveAbility extends AbstractCAbility
+public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGenericAliasedAbility
 		implements GenericSingleIconActiveAbility {
-	private final War3ID alias;
 
 	public AbstractGenericSingleIconActiveAbility(final int handleId, final War3ID alias) {
-		super(handleId);
-		this.alias = alias;
+		super(handleId, alias);
 	}
 
 	@Override
@@ -86,17 +83,17 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractCAb
 	}
 
 	@Override
-	public War3ID getAlias() {
-		return this.alias;
-	}
-
-	@Override
 	public int getUIGoldCost() {
 		return 0;
 	}
 
 	@Override
 	public int getUILumberCost() {
+		return 0;
+	}
+
+	@Override
+	public int getUIManaCost() {
 		return 0;
 	}
 

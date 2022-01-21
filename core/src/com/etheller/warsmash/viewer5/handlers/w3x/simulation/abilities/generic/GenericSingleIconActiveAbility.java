@@ -1,9 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic;
 
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
-public interface GenericSingleIconActiveAbility extends CAbility {
+public interface GenericSingleIconActiveAbility extends CLevelingAbility {
 	War3ID getAlias();
 
 	int getBaseOrderId();
@@ -13,4 +12,6 @@ public interface GenericSingleIconActiveAbility extends CAbility {
 	int getUIGoldCost();
 
 	int getUILumberCost();
+
+	int getUIManaCost();
 }

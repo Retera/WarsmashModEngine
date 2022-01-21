@@ -562,6 +562,21 @@ public class StandardObjectData {
 			return this.dataSource;
 		}
 
+		@Override
+		public String getLegacyName() {
+			final DataTable dataTable = this.dataSource.tableMap.get(new StringKey("UnitUI"));
+			if (dataTable != null) {
+				final Element element = dataTable.get(this.id);
+				if (element != null) {
+					return element.getField("name");
+				}
+				else {
+					return null;
+				}
+			}
+			return null;
+		}
+
 		// @Override
 		// public String getName() {
 		// return dataSource.profile.get(id).getName();

@@ -745,6 +745,16 @@ public final class MutableObjectData {
 			return name;
 		}
 
+		public String getLegacyName() {
+			if (!isCustom()) {
+				final String legacyNameIfAvailable = this.parentWC3Object.getLegacyName();
+				if (legacyNameIfAvailable != null) {
+					return legacyNameIfAvailable;
+				}
+			}
+			return "custom_" + getAlias().toString();
+		}
+
 		private String getFieldStringFromSLKs(final War3ID field, final int level) {
 			final GameObject metaData = MutableObjectData.this.sourceSLKMetaData.get(field.asStringValue());
 			if (metaData == null) {

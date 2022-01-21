@@ -316,19 +316,7 @@ public abstract class ModelViewer {
 	public void render() {
 		for (final Scene scene : this.scenes) {
 			scene.startFrame();
-		}
-		this.renderOpaque();
-		this.renderTranslucent();
-	}
-
-	private void renderOpaque() {
-		for (final Scene scene : this.scenes) {
 			scene.renderOpaque();
-		}
-	}
-
-	private void renderTranslucent() {
-		for (final Scene scene : this.scenes) {
 			scene.renderTranslucent();
 		}
 	}

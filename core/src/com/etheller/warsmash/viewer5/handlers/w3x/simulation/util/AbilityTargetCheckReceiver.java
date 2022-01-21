@@ -13,6 +13,12 @@ public interface AbilityTargetCheckReceiver<TARGET_TYPE> {
 
 	void notAnActiveAbility();
 
+	void notHolyBoltTarget();
+
+	void alreadyFullHealth();
+
+	void notDeathCoilTarget();
+
 	void targetNotVisible();
 
 	void targetTooComplicated();

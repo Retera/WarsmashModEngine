@@ -35,7 +35,7 @@ public class RenderUnit implements RenderWidget {
 	private static final War3ID BLUE = War3ID.fromString("uclb");
 	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
 	private static final War3ID ORIENTATION_INTERPOLATION = War3ID.fromString("uori");
-	private static final War3ID ANIM_PROPS = War3ID.fromString("uani");
+	public static final War3ID ANIM_PROPS = War3ID.fromString("uani");
 	private static final War3ID BLEND_TIME = War3ID.fromString("uble");
 	private static final War3ID BUILD_SOUND_LABEL = War3ID.fromString("ubsl");
 	private static final War3ID UNIT_SELECT_HEIGHT = War3ID.fromString("uslz");
@@ -409,7 +409,7 @@ public class RenderUnit implements RenderWidget {
 					selectionCircleHeight + map.imageWalkableZOffset);
 		}
 		this.unitAnimationListenerImpl.update();
-		if (!dead && this.simulationUnit.isConstructing()) {
+		if (!dead && this.simulationUnit.isConstructingOrUpgrading()) {
 			this.instance.setFrameByRatio(
 					this.simulationUnit.getConstructionProgress() / this.simulationUnit.getUnitType().getBuildTime());
 		}

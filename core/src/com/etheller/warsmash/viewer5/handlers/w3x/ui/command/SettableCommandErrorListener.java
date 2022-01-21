@@ -19,6 +19,11 @@ public class SettableCommandErrorListener implements CommandErrorListener {
 	}
 
 	@Override
+	public void showNoManaError(final int playerIndex) {
+		this.delegate.showNoManaError(playerIndex);
+	}
+
+	@Override
 	public void showInventoryFullError(final int playerIndex) {
 		this.delegate.showInventoryFullError(playerIndex);
 	}

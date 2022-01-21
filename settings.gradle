@@ -1,1 +1,1 @@
-include 'desktop', 'core', 'fdfparser', 'jassparser'
+include 'desktop', 'core', 'server', 'shared', 'fdfparser', 'jassparser'

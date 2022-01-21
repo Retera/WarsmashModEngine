@@ -39,6 +39,15 @@ allprojects {
     }
 }
 
+project(":server") {
+    apply plugin: "java"
+
+
+    dependencies {
+        compile project(":shared")
+    }
+}
+
 project(":desktop") {
     apply plugin: "java"
 
@@ -62,6 +71,7 @@ project(":core") {
 
 
     dependencies {
+        compile project(":shared")
         compile project(":fdfparser")
         compile project(":jassparser")
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
@@ -72,6 +82,14 @@ project(":core") {
 		compile "net.nikr:dds:1.0.0"
 		compile files(fileTree(dir:'../jars', includes: ['*.jar']))
         
+    }
+}
+
+project(":shared") {
+    apply plugin: "java"
+
+
+    dependencies {
     }
 }
 

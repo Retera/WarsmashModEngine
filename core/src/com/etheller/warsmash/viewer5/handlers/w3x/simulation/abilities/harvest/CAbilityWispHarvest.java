@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest;
 
+import java.util.EnumSet;
+
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
@@ -15,8 +17,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-import java.util.EnumSet;
-
 public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility {
 	public static final EnumSet<CTargetType> TREE_ALIVE_TYPE_ONLY = EnumSet.of(CTargetType.TREE, CTargetType.ALIVE);
 
@@ -27,15 +27,14 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 	private int periodicIntervalLengthTicks;
 	private CBehaviorWispHarvest behaviorWispHarvest;
 
-
-	public CAbilityWispHarvest(final int handleId, final War3ID alias, final int lumberPerInterval, float artAttachmentHeight,
-                               float castRange, final float periodicIntervalLength) {
+	public CAbilityWispHarvest(final int handleId, final War3ID alias, final int lumberPerInterval,
+			final float artAttachmentHeight, final float castRange, final float periodicIntervalLength) {
 		super(handleId, alias);
 		this.lumberPerInterval = lumberPerInterval;
 		this.artAttachmentHeight = artAttachmentHeight;
 		this.castRange = castRange;
 		this.periodicIntervalLength = periodicIntervalLength;
-		this.periodicIntervalLengthTicks = (int)(periodicIntervalLength / WarsmashConstants.SIMULATION_STEP_TIME);
+		this.periodicIntervalLengthTicks = (int) (periodicIntervalLength / WarsmashConstants.SIMULATION_STEP_TIME);
 	}
 
 	@Override
@@ -129,27 +128,44 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 	}
 
 	public float getArtAttachmentHeight() {
-		return artAttachmentHeight;
+		return this.artAttachmentHeight;
 	}
 
 	public float getPeriodicIntervalLength() {
-		return periodicIntervalLength;
+		return this.periodicIntervalLength;
 	}
 
 	public int getPeriodicIntervalLengthTicks() {
-		return periodicIntervalLengthTicks;
+		return this.periodicIntervalLengthTicks;
 	}
 
 	public int getLumberPerInterval() {
-		return lumberPerInterval;
+		return this.lumberPerInterval;
 	}
 
 	public float getCastRange() {
-		return castRange;
+		return this.castRange;
 	}
 
 	@Override
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
+	public void setLumberPerInterval(final int lumberPerInterval) {
+		this.lumberPerInterval = lumberPerInterval;
+	}
+
+	public void setArtAttachmentHeight(final float artAttachmentHeight) {
+		this.artAttachmentHeight = artAttachmentHeight;
+	}
+
+	public void setCastRange(final float castRange) {
+		this.castRange = castRange;
+	}
+
+	public void setPeriodicIntervalLength(final float periodicIntervalLength) {
+		this.periodicIntervalLength = periodicIntervalLength;
+		this.periodicIntervalLengthTicks = (int) (periodicIntervalLength / WarsmashConstants.SIMULATION_STEP_TIME);
 	}
 
 }

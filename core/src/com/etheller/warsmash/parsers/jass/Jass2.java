@@ -2342,22 +2342,7 @@ public class Jass2 {
 					final boolean random = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
 					final int index = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
 
-					String musicField;
-					if (!CommonEnvironment.this.gameUI.hasSkinField(musicName)) {
-						// TODO this versioning system should probably be more general case than this,
-						// maybe at the level
-						// of skin field lookup???
-						final String versionedMusic = "Music_V" + WarsmashConstants.GAME_VERSION;
-						if (!CommonEnvironment.this.gameUI.hasSkinField(versionedMusic)) {
-							musicField = musicName;
-						}
-						else {
-							musicField = CommonEnvironment.this.gameUI.getSkinField(versionedMusic);
-						}
-					}
-					else {
-						musicField = CommonEnvironment.this.gameUI.getSkinField(musicName);
-					}
+					final String musicField = CommonEnvironment.this.gameUI.trySkinField(musicName);
 					meleeUI.playMusic(musicField, random, index);
 					return null;
 				}
@@ -2368,22 +2353,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final String musicName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 
-					String musicField;
-					if (!CommonEnvironment.this.gameUI.hasSkinField(musicName)) {
-						// TODO this versioning system should probably be more general case than this,
-						// maybe at the level
-						// of skin field lookup???
-						final String versionedMusic = "Music_V" + WarsmashConstants.GAME_VERSION;
-						if (!CommonEnvironment.this.gameUI.hasSkinField(versionedMusic)) {
-							musicField = musicName;
-						}
-						else {
-							musicField = CommonEnvironment.this.gameUI.getSkinField(versionedMusic);
-						}
-					}
-					else {
-						musicField = CommonEnvironment.this.gameUI.getSkinField(musicName);
-					}
+					final String musicField = CommonEnvironment.this.gameUI.trySkinField(musicName);
 					meleeUI.playMusic(musicField, true, 0);
 					return null;
 				}
@@ -2489,8 +2459,9 @@ public class Jass2 {
 					final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
 					final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 					final double facing = arguments.get(4).visit(RealJassValueVisitor.getInstance());
-					final CUnit newUnit = CommonEnvironment.this.simulation.createUnit(new War3ID(rawcode),
-							player.getId(), (float) x, (float) y, (float) facing);
+					final War3ID rawcodeId = new War3ID(rawcode);
+					final CUnit newUnit = CommonEnvironment.this.simulation.createUnit(rawcodeId, player.getId(),
+							(float) x, (float) y, (float) facing);
 					final CUnitType newUnitType = newUnit.getUnitType();
 					final int foodUsed = newUnitType.getFoodUsed();
 					newUnit.setFoodUsed(foodUsed);
@@ -2498,6 +2469,7 @@ public class Jass2 {
 					if (newUnitType.getFoodMade() != 0) {
 						player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
 					}
+					player.addTechtreeUnlocked(rawcodeId);
 					// nudge unit
 					newUnit.setPointAndCheckUnstuck((float) x, (float) y, CommonEnvironment.this.simulation);
 					return new HandleJassValue(unitType, newUnit);
@@ -2513,8 +2485,9 @@ public class Jass2 {
 					final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 					final double facing = arguments.get(4).visit(RealJassValueVisitor.getInstance());
 					final int skinId = arguments.get(5).visit(IntegerJassValueVisitor.getInstance());
-					final CUnit newUnit = CommonEnvironment.this.simulation.createUnit(new War3ID(rawcode),
-							player.getId(), (float) x, (float) y, (float) facing);
+					final War3ID rawcodeId = new War3ID(rawcode);
+					final CUnit newUnit = CommonEnvironment.this.simulation.createUnit(rawcodeId, player.getId(),
+							(float) x, (float) y, (float) facing);
 					final CUnitType newUnitType = newUnit.getUnitType();
 					final int foodUsed = newUnitType.getFoodUsed();
 					newUnit.setFoodUsed(foodUsed);
@@ -2522,6 +2495,7 @@ public class Jass2 {
 					if (newUnitType.getFoodMade() != 0) {
 						player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
 					}
+					player.addTechtreeUnlocked(rawcodeId);
 					// nudge unit
 					newUnit.setPointAndCheckUnstuck((float) x, (float) y, CommonEnvironment.this.simulation);
 					if (skinId != rawcode) {
@@ -2540,8 +2514,9 @@ public class Jass2 {
 					final int rawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 					final Point2D.Double whichLocation = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
 					final float facing = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
-					final CUnit newUnit = CommonEnvironment.this.simulation.createUnit(new War3ID(rawcode),
-							player.getId(), (float) whichLocation.x, (float) whichLocation.y, facing);
+					final War3ID rawcodeId = new War3ID(rawcode);
+					final CUnit newUnit = CommonEnvironment.this.simulation.createUnit(rawcodeId, player.getId(),
+							(float) whichLocation.x, (float) whichLocation.y, facing);
 					final CUnitType newUnitType = newUnit.getUnitType();
 					final int foodUsed = newUnitType.getFoodUsed();
 					newUnit.setFoodUsed(foodUsed);
@@ -2549,6 +2524,7 @@ public class Jass2 {
 					if (newUnitType.getFoodMade() != 0) {
 						player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
 					}
+					player.addTechtreeUnlocked(rawcodeId);
 					// nudge unit
 					newUnit.setPointAndCheckUnstuck((float) whichLocation.x, (float) whichLocation.y,
 							CommonEnvironment.this.simulation);
@@ -2560,12 +2536,14 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					// TODO this needs to setup a non-blighted mine underneath!!!
-					final CPlayerJass player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final double x = arguments.get(1).visit(RealJassValueVisitor.getInstance());
 					final double y = arguments.get(2).visit(RealJassValueVisitor.getInstance());
 					final double facing = arguments.get(3).visit(RealJassValueVisitor.getInstance());
-					return new HandleJassValue(unitType, CommonEnvironment.this.simulation.createUnit(
-							War3ID.fromString("ugol"), player.getId(), (float) x, (float) y, (float) facing));
+					final War3ID blightedMineRawcode = War3ID.fromString("ugol");
+					player.addTechtreeUnlocked(blightedMineRawcode);
+					return new HandleJassValue(unitType, CommonEnvironment.this.simulation
+							.createUnit(blightedMineRawcode, player.getId(), (float) x, (float) y, (float) facing));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitColor", new JassFunction() {
@@ -3796,7 +3774,10 @@ public class Jass2 {
 					for (final CUnit unit : units) {
 						if (unit.getPlayerIndex() == whichPlayer.getId()) {
 							if (legacySystemUnitTypeName.equals(unit.getUnitType().getLegacyName())) {
-								if (includeIncomplete || !unit.isConstructing()) {
+								if ((includeIncomplete || !unit.isConstructing())
+										&& (includeUpgrades || !unit.isUpgrading())) {
+									// TODO this might not actually be what includeUpgrades means, it probably means
+									// to include higher tier of hall when asked for lower tier type ID
 									count++;
 								}
 							}
@@ -4722,6 +4703,18 @@ public class Jass2 {
 				final Boolean value = arguments.get(3).visit(BooleanJassValueVisitor.getInstance());
 				player.setAlliance(otherPlayer.getId(), whichAllianceSetting, value);
 				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerAlliance", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final CPlayerJass player = arguments.get(0).visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+				final CPlayerJass otherPlayer = arguments.get(1)
+						.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+				final CAllianceType whichAllianceSetting = arguments.get(2)
+						.visit(ObjectJassValueVisitor.<CAllianceType>getInstance());
+				return BooleanJassValue.of(player.hasAlliance(otherPlayer.getId(), whichAllianceSetting));
 			}
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("SetPlayerTaxRate", new JassFunction() {

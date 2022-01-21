@@ -19,6 +19,7 @@ public class StringFrame extends AbstractRenderableFrame {
 	private final List<SingleStringFrame> internalFrames = new ArrayList<>();
 	private Color color;
 	private String text = "Default string";
+	private String displayText = this.text;
 	private final TextJustify justifyH;
 	private TextJustify justifyV;
 	private final BitmapFont frameFont;
@@ -34,6 +35,7 @@ public class StringFrame extends AbstractRenderableFrame {
 	private final Color fontHighlightColor;
 	private final Color fontDisabledColor;
 	private final Color fontColor;
+	private boolean passwordField;
 
 	public StringFrame(final String name, final UIFrame parent, final Color color, final TextJustify justifyH,
 			final TextJustify justifyV, final BitmapFont frameFont, final String text, final Color fontHighlightColor,
@@ -45,6 +47,7 @@ public class StringFrame extends AbstractRenderableFrame {
 		this.justifyV = justifyV;
 		this.frameFont = frameFont;
 		this.text = text;
+		this.displayText = text;
 		this.fontHighlightColor = fontHighlightColor;
 		this.fontDisabledColor = fontDisabledColor;
 		this.internalFramesContainer = new SimpleFrame(null, this);
@@ -58,11 +61,25 @@ public class StringFrame extends AbstractRenderableFrame {
 		return this.text;
 	}
 
+	public String getDisplayText() {
+		return this.displayText;
+	}
+
 	public void setText(final String text, final GameUI gameUI, final Viewport viewport) {
 		if (text == null) {
 			throw new IllegalArgumentException();
 		}
 		this.text = text;
+		if (this.passwordField) {
+			final StringBuilder displayTextBuilder = new StringBuilder();
+			for (int i = 0; i < text.length(); i++) {
+				displayTextBuilder.append('*');
+			}
+			this.displayText = displayTextBuilder.toString();
+		}
+		else {
+			this.displayText = text;
+		}
 		positionBounds(gameUI, viewport);
 	}
 
@@ -162,20 +179,21 @@ public class StringFrame extends AbstractRenderableFrame {
 		final float startingBoundsWidth = getAssignedWidth();
 		final boolean firstInLine = false;
 		Color currentColor = this.color;
-		for (int i = 0; i < this.text.length(); i++) {
-			final char c = this.text.charAt(i);
+		final String displayTextToUse = this.displayText;
+		for (int i = 0; i < displayTextToUse.length(); i++) {
+			final char c = displayTextToUse.charAt(i);
 			switch (c) {
 			case '|': {
 				// special control character
-				if ((i + 1) < this.text.length()) {
-					final char escapedCharacter = this.text.charAt(i + 1);
+				if ((i + 1) < displayTextToUse.length()) {
+					final char escapedCharacter = displayTextToUse.charAt(i + 1);
 					switch (escapedCharacter) {
 					case 'c':
 					case 'C':
-						if ((i + 9) < this.text.length()) {
+						if ((i + 9) < displayTextToUse.length()) {
 							int colorInt;
 							try {
-								final String upperCase = this.text.substring(i + 2, i + 10).toUpperCase();
+								final String upperCase = displayTextToUse.substring(i + 2, i + 10).toUpperCase();
 								colorInt = (int) Long.parseLong(upperCase, 16);
 							}
 							catch (final NumberFormatException exc) {
@@ -506,5 +524,9 @@ public class StringFrame extends AbstractRenderableFrame {
 
 	public BitmapFont getFrameFont() {
 		return this.frameFont;
+	}
+
+	public void setPasswordField(final boolean passwordField) {
+		this.passwordField = passwordField;
 	}
 }

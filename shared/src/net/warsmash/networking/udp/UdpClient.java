@@ -1,4 +1,4 @@
-package com.etheller.warsmash.networking.udp;
+package net.warsmash.networking.udp;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -7,8 +7,6 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.DatagramChannel;
-
-import com.etheller.warsmash.util.WarsmashConstants;
 
 public class UdpClient implements Runnable {
 	private final DatagramChannel channel;
@@ -47,46 +45,6 @@ public class UdpClient implements Runnable {
 				System.err.println("Error reading from channel:");
 				e.printStackTrace();
 			}
-		}
-	}
-
-	static UdpClient warsmashUdpClient;
-
-	public static void main(final String[] args) {
-		try {
-			warsmashUdpClient = new UdpClient(InetAddress.getLocalHost(), WarsmashConstants.PORT_NUMBER,
-					new UdpClientListener() {
-						@Override
-						public void parse(final ByteBuffer buffer) {
-							System.out.println("got " + buffer.remaining() + " bytes, pos=" + buffer.position()
-									+ ", lim=" + buffer.limit());
-							System.out.println("got from server: " + buffer.getInt());
-						}
-					});
-			new Thread(warsmashUdpClient).start();
-
-			final ByteBuffer sendBuffer = ByteBuffer.allocate(1024);
-			for (int i = 0; i < 10; i++) {
-				sendBuffer.clear();
-				sendBuffer.put((byte) (1 + i));
-				sendBuffer.put((byte) 3);
-				sendBuffer.put((byte) 5);
-				sendBuffer.put((byte) 7);
-				sendBuffer.flip();
-				warsmashUdpClient.send(sendBuffer);
-				try {
-					Thread.sleep(1000);
-				}
-				catch (final InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		catch (final UnknownHostException e) {
-			e.printStackTrace();
-		}
-		catch (final IOException e) {
-			e.printStackTrace();
 		}
 	}
 

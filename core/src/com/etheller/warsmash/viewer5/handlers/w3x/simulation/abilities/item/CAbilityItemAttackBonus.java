@@ -81,4 +81,8 @@ public class CAbilityItemAttackBonus extends AbstractGenericNoIconAbility {
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
 }

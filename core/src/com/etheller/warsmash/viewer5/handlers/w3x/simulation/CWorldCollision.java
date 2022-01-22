@@ -45,7 +45,8 @@ public class CWorldCollision {
 			// buildings are here so that we can include them when enumerating all units in
 			// a rect, but they don't really move dynamically, this is kind of pointless
 			this.buildingUnitCollision.add(unit, bounds);
-		} else {
+		}
+		else {
 			final MovementType movementType = unit.getUnitType().getMovementType();
 			if (movementType != null) {
 				switch (movementType) {
@@ -88,7 +89,8 @@ public class CWorldCollision {
 		if (bounds != null) {
 			if (unit.isBuilding()) {
 				this.buildingUnitCollision.remove(unit, bounds);
-			} else {
+			}
+			else {
 				final MovementType movementType = unit.getUnitType().getMovementType();
 				if (movementType != null) {
 					switch (movementType) {
@@ -124,6 +126,14 @@ public class CWorldCollision {
 		this.airUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
 		this.seaUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
 		this.buildingUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
+	}
+
+	public void enumBuildingsInRect(final Rectangle rect, final QuadtreeIntersector<CUnit> callback) {
+		this.buildingUnitCollision.intersect(rect, callback);
+	}
+
+	public void enumBuildingsAtPoint(final float x, final float y, final QuadtreeIntersector<CUnit> callback) {
+		this.buildingUnitCollision.intersect(x, y, callback);
 	}
 
 	public void enumDestructablesInRect(final Rectangle rect, final CDestructableEnumFunction callback) {

@@ -69,7 +69,6 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.environment.RenderCorner;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
@@ -84,6 +83,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
@@ -1027,7 +1027,7 @@ public class Jass2 {
 					final TriggerBooleanExpression filter = nullable(arguments, 3,
 							ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 					CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
-							tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
+							tempRect.set(x - radius, y - radius, radius * 2, radius * 2), new CUnitEnumFunction() {
 
 								@Override
 								public boolean call(final CUnit unit) {
@@ -1262,7 +1262,7 @@ public class Jass2 {
 					final JassFunction callback = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
 					try {
 						for (final CUnit unit : group) {
-							globalScope.queueFunction(callback,
+							callback.call(Collections.emptyList(), globalScope,
 									CommonTriggerExecutionScope.enumScope(triggerScope, unit));
 						}
 					}
@@ -2541,9 +2541,19 @@ public class Jass2 {
 					final double y = arguments.get(2).visit(RealJassValueVisitor.getInstance());
 					final double facing = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 					final War3ID blightedMineRawcode = War3ID.fromString("ugol");
+					final War3ID goldMineRawcode = War3ID.fromString("ngol");
 					player.addTechtreeUnlocked(blightedMineRawcode);
-					return new HandleJassValue(unitType, CommonEnvironment.this.simulation
-							.createUnit(blightedMineRawcode, player.getId(), (float) x, (float) y, (float) facing));
+					final CUnit blightedMine = CommonEnvironment.this.simulation.createUnit(blightedMineRawcode,
+							player.getId(), (float) x, (float) y, (float) facing);
+					final CUnit goldMine = CommonEnvironment.this.simulation.createUnit(goldMineRawcode,
+							WarsmashConstants.MAX_PLAYERS - 1, (float) x, (float) y, (float) facing);
+					goldMine.setHidden(true);
+					for (final CAbility ability : blightedMine.getAbilities()) {
+						if (ability instanceof CAbilityBlightedGoldMine) {
+							((CAbilityBlightedGoldMine) ability).setParentMine(goldMine, goldMine.getGoldMineData());
+						}
+					}
+					return new HandleJassValue(unitType, blightedMine);
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitColor", new JassFunction() {
@@ -2565,6 +2575,14 @@ public class Jass2 {
 					final int resourceAmount = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 					whichUnit.setGold(resourceAmount);
 					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetResourceAmount", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					return new IntegerJassValue(whichUnit.getGold());
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitState", new JassFunction() {
@@ -3432,7 +3450,7 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 					if (whichUnit == null) {
 						return new IntegerJassValue(0);
 					}
@@ -3589,48 +3607,9 @@ public class Jass2 {
 					final Point2D.Double whichLocation = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 					final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
 					final boolean addBlight = arguments.get(3).visit(BooleanJassValueVisitor.getInstance());
-					float whichLocationX = (float) whichLocation.x;
-					float whichLocationY = (float) whichLocation.y;
-					final int cellX = war3MapViewer.terrain.get128CellX(whichLocationX);
-					final int cellY = war3MapViewer.terrain.get128CellY(whichLocationY);
-					whichLocationX = war3MapViewer.terrain.get128WorldCoordinateFromCellX(cellX);
-					whichLocationY = war3MapViewer.terrain.get128WorldCoordinateFromCellY(cellY);
-					final Rectangle blightRectangle = new Rectangle(whichLocationX - radius, whichLocationY - radius,
-							radius * 2, radius * 2);
-					final float blightRectangleMaxX = blightRectangle.x + blightRectangle.width;
-					final float blightRectangleMaxY = blightRectangle.y + blightRectangle.height;
-					final float rSquared = radius * radius;
-					for (float x = blightRectangle.x; x < blightRectangleMaxX; x += 128.0f) {
-						for (float y = blightRectangle.y; y < blightRectangleMaxY; y += 128.0f) {
-							final float dx = x - whichLocationX;
-							final float dy = y - whichLocationY;
-							final float distSquared = (dx * dx) + (dy * dy);
-							if (distSquared <= rSquared) {
-								for (float pathX = -64; pathX < 64; pathX += 32f) {
-									for (float pathY = -64; pathY < 64; pathY += 32f) {
-										final float blightX = x + pathX + 16;
-										final float blightY = y + pathY + 16;
-										if (CommonEnvironment.this.simulation.getPathingGrid().contains(blightX,
-												blightY)) {
-											CommonEnvironment.this.simulation.getPathingGrid().setBlighted(blightX,
-													blightY, addBlight);
-										}
-									}
-								}
-								final RenderCorner corner = war3MapViewer.terrain.getCorner(x, y);
-								if (corner != null) {
-									corner.setBlight(true);
-								}
-							}
-						}
-					}
-					final int cellMinX = war3MapViewer.terrain.get128CellX(blightRectangle.x);
-					final int cellMinY = war3MapViewer.terrain.get128CellY(blightRectangle.y);
-					final int cellMaxX = war3MapViewer.terrain.get128CellX(blightRectangleMaxX);
-					final int cellMaxY = war3MapViewer.terrain.get128CellY(blightRectangleMaxY);
-					final Rectangle blightRectangleCellUnits = new Rectangle(cellMinX, cellMinY, cellMaxX - cellMinX,
-							cellMaxY - cellMinY);
-					war3MapViewer.terrain.updateGroundTextures(blightRectangleCellUnits);
+					final float whichLocationX = (float) whichLocation.x;
+					final float whichLocationY = (float) whichLocation.y;
+					war3MapViewer.setBlight(whichLocationX, whichLocationY, radius, addBlight);
 					return null;
 				}
 			});

@@ -36,4 +36,9 @@ public class SettableCommandErrorListener implements CommandErrorListener {
 	public void showUnableToFindCoupleTargetError(final int playerIndex) {
 		this.delegate.showUnableToFindCoupleTargetError(playerIndex);
 	}
+
+	@Override
+	public void showBlightRingFullError(final int playerIndex) {
+		this.delegate.showBlightRingFullError(playerIndex);
+	}
 }

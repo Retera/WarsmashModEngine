@@ -83,4 +83,6 @@ public interface SimulationRenderController {
 	void unitUpgradingEvent(CUnit unit, War3ID upgradeIdType);
 
 	void unitCancelUpgradingEvent(CUnit unit, War3ID upgradeIdType);
+
+	void setBlight(float x, float y, float radius, boolean blighted);
 }

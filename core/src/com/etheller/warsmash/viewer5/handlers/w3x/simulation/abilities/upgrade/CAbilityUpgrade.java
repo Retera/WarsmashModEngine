@@ -188,4 +188,8 @@ public final class CAbilityUpgrade extends AbstractCAbility {
 		this.upgradesTo.clear();
 		this.upgradesTo.addAll(unitType.getUpgradesTo());
 	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
 }

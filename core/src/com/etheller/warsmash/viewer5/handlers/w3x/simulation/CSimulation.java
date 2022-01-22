@@ -667,4 +667,8 @@ public class CSimulation implements CPlayerAPI {
 		return !this.daytime;
 	}
 
+	public void setBlight(final float x, final float y, final float radius, final boolean blighted) {
+		this.simulationRenderController.setBlight(x, y, radius, blighted);
+	}
+
 }

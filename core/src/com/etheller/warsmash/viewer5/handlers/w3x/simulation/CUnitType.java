@@ -86,6 +86,8 @@ public class CUnitType {
 	private final List<List<CUnitTypeRequirement>> requirementTiers;
 	private final float castBackswingPoint;
 	private final float castPoint;
+	private final boolean canBeBuiltOnThem;
+	private final boolean canBuildOnMe;
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
@@ -104,7 +106,8 @@ public class CUnitType {
 			final float agilityPerLevel, final int intelligence, final float intelligencePerLevel,
 			final CPrimaryAttribute primaryAttribute, final List<War3ID> heroAbilityList,
 			final List<String> heroProperNames, final int properNamesCount, final boolean canFlee, final int priority,
-			final boolean revivesHeroes, final int pointValue, final float castBackswingPoint, final float castPoint) {
+			final boolean revivesHeroes, final int pointValue, final float castBackswingPoint, final float castPoint,
+			final boolean canBeBuiltOnThem, final boolean canBuildOnMe) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
@@ -167,6 +170,8 @@ public class CUnitType {
 		this.pointValue = pointValue;
 		this.castBackswingPoint = castBackswingPoint;
 		this.castPoint = castPoint;
+		this.canBeBuiltOnThem = canBeBuiltOnThem;
+		this.canBuildOnMe = canBuildOnMe;
 	}
 
 	public String getName() {
@@ -421,5 +426,14 @@ public class CUnitType {
 
 	public float getCastPoint() {
 		return this.castPoint;
+	}
+
+	// "isCan" - these method names are computer generated, cut me some slack
+	public boolean isCanBeBuiltOnThem() {
+		return this.canBeBuiltOnThem;
+	}
+
+	public boolean isCanBuildOnMe() {
+		return this.canBuildOnMe;
 	}
 }

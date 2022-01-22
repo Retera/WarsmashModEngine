@@ -137,4 +137,12 @@ public final class CAbilityReviveHero extends AbstractCAbility {
 	@Override
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+		// refund stuff when building dies
+		while (cUnit.getBuildQueueTypes()[0] != null) {
+			cUnit.cancelBuildQueueItem(game, 0);
+		}
+	}
 }

@@ -361,4 +361,15 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 		}
 	}
 
+	@Override
+	public void onDeath(final CSimulation game, final CUnit hero) {
+		if (this.dropItemsOnDeath) {
+			for (int i = 0; i < this.itemsHeld.length; i++) {
+				if (this.itemsHeld[i] != null) {
+					dropItem(game, hero, i, hero.getX(), hero.getY(), false);
+				}
+			}
+		}
+	}
+
 }

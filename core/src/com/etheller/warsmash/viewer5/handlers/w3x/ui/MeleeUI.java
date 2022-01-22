@@ -158,6 +158,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildingIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationErrorHandler;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
@@ -365,6 +366,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final AnyClickableUnitFilter anyClickableUnitFilter;
 	private final AnyTargetableUnitFilter anyTargetableUnitFilter;
 	private final DataTable musicSLK;
+
+	private final BuildOnBuildingIntersector buildOnBuildingIntersector = new BuildOnBuildingIntersector();
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -1313,6 +1316,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
+	@Override
+	public void showBlightRingFullError(final int playerIndex) {
+		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, this.rootFrame.getErrorString("Blightringfull"));
+			this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
+		}
+	}
+
 	public void update(final float deltaTime) {
 		this.portrait.update();
 
@@ -1932,6 +1943,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						|| (cellY > (pathingGrid.getHeight() - halfCursorHeightCells))) {
 					blockAll = true;
 				}
+				final boolean canBeBuiltOnThem = MeleeUI.this.cursorBuildingUnitType.isCanBeBuiltOnThem();
+				if (canBeBuiltOnThem) {
+					viewer.simulation.getWorldCollision().enumBuildingsAtPoint(clickLocationTemp.x, clickLocationTemp.y,
+							MeleeUI.this.buildOnBuildingIntersector.reset(clickLocationTemp.x, clickLocationTemp.y));
+					blockAll = (MeleeUI.this.buildOnBuildingIntersector.getUnitToBuildOn() == null);
+				}
 				if (blockAll) {
 					for (int i = 0; i < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
 						for (int j = 0; j < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
@@ -1941,7 +1958,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						}
 					}
 				}
-				else {
+				else if (!canBeBuiltOnThem) {
 					for (int i = 0; i < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
 						for (int j = 0; j < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
 							boolean blocked = false;
@@ -1963,6 +1980,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							final int color = blocked ? Color.rgba8888(1, 0, 0, 1.0f) : Color.rgba8888(0, 1, 0, 1.0f);
 							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
 									MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j, color);
+						}
+					}
+				}
+				else {
+					for (int i = 0; i < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
+						for (int j = 0; j < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
+							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
+									MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j,
+									Color.rgba8888(0, 1, 0, 1.0f));
 						}
 					}
 				}

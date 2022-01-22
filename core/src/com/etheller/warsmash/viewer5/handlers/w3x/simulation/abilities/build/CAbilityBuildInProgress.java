@@ -43,12 +43,23 @@ public class CAbilityBuildInProgress extends AbstractCAbility {
 			caster.cancelUpgrade(game);
 		}
 		else {
-			final CUnitType unitType = caster.getUnitType();
-			player.refundFor(unitType);
-			player.removeTechtreeInProgress(unitType.getTypeId());
 			caster.setLife(game, 0);
 		}
 		return false;
+	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit caster) {
+		final CPlayer player = game.getPlayer(caster.getPlayerIndex());
+		if (caster.isUpgrading()) {
+			player.removeTechtreeInProgress(caster.getUpgradeIdType());
+			caster.cancelUpgrade(game);
+		}
+		else {
+			final CUnitType unitType = caster.getUnitType();
+			player.refundFor(unitType);
+			player.removeTechtreeInProgress(unitType.getTypeId());
+		}
 	}
 
 	@Override

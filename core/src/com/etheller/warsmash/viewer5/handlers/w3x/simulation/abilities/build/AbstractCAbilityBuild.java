@@ -135,4 +135,8 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 	@Override
 	public void onTick(final CSimulation game, final CUnit unit) {
 	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
 }

@@ -397,4 +397,8 @@ public class CAbilityHero extends AbstractCAbility {
 	public Set<War3ID> getSkillsAvailable() {
 		return this.skillsAvailable;
 	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
 }

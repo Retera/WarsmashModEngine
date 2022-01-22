@@ -1,9 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl;
 
+import java.util.EnumSet;
+
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityTypeLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
-
-import java.util.EnumSet;
 
 public class CAbilityTypeWispHarvestLevelData extends CAbilityTypeLevelData {
 	private final int lumberPerInterval;
@@ -12,7 +12,7 @@ public class CAbilityTypeWispHarvestLevelData extends CAbilityTypeLevelData {
 	private final float duration;
 
 	public CAbilityTypeWispHarvestLevelData(final EnumSet<CTargetType> targetsAllowed, final int lumberPerInterval,
-                                            float artAttachmentHeight, final float castRange, final float duration) {
+			final float artAttachmentHeight, final float castRange, final float duration) {
 		super(targetsAllowed);
 		this.lumberPerInterval = lumberPerInterval;
 		this.artAttachmentHeight = artAttachmentHeight;
@@ -21,11 +21,11 @@ public class CAbilityTypeWispHarvestLevelData extends CAbilityTypeLevelData {
 	}
 
 	public int getLumberPerInterval() {
-		return lumberPerInterval;
+		return this.lumberPerInterval;
 	}
 
 	public float getArtAttachmentHeight() {
-		return artAttachmentHeight;
+		return this.artAttachmentHeight;
 	}
 
 	public float getCastRange() {

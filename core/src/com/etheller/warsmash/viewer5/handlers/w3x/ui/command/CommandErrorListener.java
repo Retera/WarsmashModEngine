@@ -13,4 +13,6 @@ public interface CommandErrorListener {
 
 	void showUnableToFindCoupleTargetError(int playerIndex);
 
+	void showBlightRingFullError(int playerIndex);
+
 }

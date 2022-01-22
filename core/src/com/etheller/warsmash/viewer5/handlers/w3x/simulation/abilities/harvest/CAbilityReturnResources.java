@@ -99,4 +99,8 @@ public class CAbilityReturnResources extends AbstractGenericAliasedAbility {
 	public void setAcceptedResourceTypes(final EnumSet<ResourceType> acceptedResourceTypes) {
 		this.acceptedResourceTypes = acceptedResourceTypes;
 	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
 }

@@ -187,6 +187,9 @@ public class CUnitData {
 
 	private static final War3ID POINT_VALUE = War3ID.fromString("upoi");
 
+	private static final War3ID CAN_BE_BUILT_ON_THEM = War3ID.fromString("uibo");
+	private static final War3ID CAN_BUILD_ON_ME = War3ID.fromString("ucbo");
+
 	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
@@ -314,6 +317,9 @@ public class CUnitData {
 			final float turnRate = unitType.getFieldAsFloat(TURN_RATE, 0);
 
 			final boolean canFlee = unitType.getFieldAsBoolean(CAN_FLEE, 0);
+
+			final boolean canBeBuiltOnThem = unitType.getFieldAsBoolean(CAN_BE_BUILT_ON_THEM, 0);
+			final boolean canBuildOnMe = unitType.getFieldAsBoolean(CAN_BUILD_ON_ME, 0);
 
 			final float strPlus = unitType.getFieldAsFloat(STR_PLUS, 0);
 			final float agiPlus = unitType.getFieldAsFloat(AGI_PLUS, 0);
@@ -564,7 +570,7 @@ public class CUnitData {
 					foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow, turnRate,
 					requirements, requirementTiers, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence,
 					intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount, canFlee, priority,
-					revivesHeroes, pointValue, castBackswingPoint, castPoint);
+					revivesHeroes, pointValue, castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

@@ -125,7 +125,8 @@ public interface RenderWidget {
 				final boolean allowRarityVariations) {
 			this.animationQueue.clear();
 			if (force || (animationName != this.currentAnimation)
-					|| !secondaryAnimationTags.equals(this.currentAnimationSecondaryTags)) {
+					|| !secondaryAnimationTags.equals(this.currentAnimationSecondaryTags)
+					|| this.instance.sequenceEnded) {
 				this.currentSpeedRatio = speedRatio;
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.secondaryAnimationTags);
@@ -147,6 +148,7 @@ public interface RenderWidget {
 			}
 		}
 
+		@Override
 		public void playAnimationWithDuration(final boolean force, final PrimaryTag animationName,
 				final EnumSet<SecondaryTag> secondaryAnimationTags, final float duration,
 				final boolean allowRarityVariations) {

@@ -39,7 +39,8 @@ public final class AbilityTargetStillAliveAndTargetableVisitor implements Abilit
 
 	@Override
 	public Boolean accept(final CItem target) {
-		return !target.isDead() && target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed);
+		return !target.isDead() && !target.isHidden()
+				&& target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed);
 	}
 
 }

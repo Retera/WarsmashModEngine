@@ -1,21 +1,32 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine;
 
+import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorAcolyteHarvest;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
-	private int gold;
-	private final int goldPerInterval;
-	private final float intervalDuration;
-	private final int maxNumberOfMiners;
-	private final float radiusOfMiningRing;
+	public static final int NO_MINER = -1;
+	private CUnit parentGoldMineUnit;
+	private CAbilityGoldMine parentGoldMineAbility;
+	private int goldPerInterval;
+	private float intervalDuration;
+	private int maxNumberOfMiners;
+	private float radiusOfMiningRing;
+	private final CBehaviorAcolyteHarvest[] activeMiners;
+	private final Vector2[] minerLocs;
+	private int currentActiveMinerCount;
+	private int lastIncomeTick;
 
 	public CAbilityBlightedGoldMine(final int handleId, final War3ID alias, final int goldPerInterval,
 			final float intervalDuration, final int maxNumberOfMiners, final float radiusOfMiningRing) {
@@ -24,11 +35,26 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 		this.intervalDuration = intervalDuration;
 		this.maxNumberOfMiners = maxNumberOfMiners;
 		this.radiusOfMiningRing = radiusOfMiningRing;
+		this.activeMiners = new CBehaviorAcolyteHarvest[maxNumberOfMiners];
+		this.minerLocs = new Vector2[maxNumberOfMiners];
+	}
+
+	public void setParentMine(final CUnit parentGoldMineUnit, final CAbilityGoldMine parentGoldMineAbility) {
+		this.parentGoldMineUnit = parentGoldMineUnit;
+		this.parentGoldMineAbility = parentGoldMineAbility;
 	}
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-
+		for (int i = 0; i < this.minerLocs.length; i++) {
+			final double angleSize = (StrictMath.PI * 2) / this.maxNumberOfMiners;
+			final double thisMinerAngle = (angleSize * i) + (StrictMath.PI / 2);
+			final float harvestStandX = unit.getX()
+					+ (float) (StrictMath.cos(thisMinerAngle) * this.radiusOfMiningRing);
+			final float harvestStandY = unit.getY()
+					+ (float) (StrictMath.sin(thisMinerAngle) * this.radiusOfMiningRing);
+			this.minerLocs[i] = new Vector2(harvestStandX, harvestStandY);
+		}
 	}
 
 	@Override
@@ -38,6 +64,21 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void onTick(final CSimulation game, final CUnit unit) {
+		if (this.currentActiveMinerCount > 0) {
+			final float currentInterval = this.intervalDuration
+					* (this.maxNumberOfMiners / this.currentActiveMinerCount);
+			final int nextIncomeTick = this.lastIncomeTick
+					+ (int) (currentInterval / WarsmashConstants.SIMULATION_STEP_TIME);
+			final int currentTurnTick = game.getGameTurnTick();
+			if ((currentTurnTick >= nextIncomeTick) && (this.parentGoldMineAbility != null)
+					&& (this.parentGoldMineAbility.getGold() > 0)) {
+				this.lastIncomeTick = currentTurnTick;
+				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
+				player.setGold(player.getGold() + this.goldPerInterval);
+				this.parentGoldMineAbility.setGold(this.parentGoldMineAbility.getGold() - this.goldPerInterval);
+				game.unitGainResourceEvent(unit, ResourceType.GOLD, this.goldPerInterval);
+			}
+		}
 //		final boolean empty = this.activeMiners.isEmpty();
 //		if (empty != this.wasEmpty) {
 //			if (empty) {
@@ -107,12 +148,86 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
-	public int getGold() {
-		return this.gold;
+	public int tryAddMiner(final CUnit acolyte, final CBehaviorAcolyteHarvest behaviorAcolyteHarvest) {
+		if (behaviorAcolyteHarvest == null) {
+			throw new NullPointerException();
+		}
+		int minerIndex = NO_MINER;
+		double minerDistSq = Float.MAX_VALUE;
+		for (int i = 0; i < this.activeMiners.length; i++) {
+			if (this.activeMiners[i] == null) {
+				final double thisMineDistSq = acolyte.distanceSquaredNoCollision(this.minerLocs[i].x,
+						this.minerLocs[i].y);
+				if (minerDistSq > thisMineDistSq) {
+					minerIndex = i;
+					minerDistSq = thisMineDistSq;
+				}
+			}
+		}
+		if (minerIndex != NO_MINER) {
+			this.activeMiners[minerIndex] = behaviorAcolyteHarvest;
+			this.currentActiveMinerCount++;
+		}
+		return minerIndex;
+	}
+
+	public void removeMiner(final CBehaviorAcolyteHarvest behaviorAcolyteHarvest) {
+		if (behaviorAcolyteHarvest == null) {
+			throw new NullPointerException();
+		}
+		for (int i = 0; i < this.activeMiners.length; i++) {
+			if (this.activeMiners[i] == behaviorAcolyteHarvest) {
+				this.activeMiners[i] = null;
+				this.currentActiveMinerCount--;
+			}
+		}
+	}
+
+	public int getMaxNumberOfMiners() {
+		return this.maxNumberOfMiners;
+	}
+
+	public float getRadiusOfMiningRing() {
+		return this.radiusOfMiningRing;
+	}
+
+	public void setGoldPerInterval(final int goldPerInterval) {
+		this.goldPerInterval = goldPerInterval;
+	}
+
+	public void setIntervalDuration(final float intervalDuration) {
+		this.intervalDuration = intervalDuration;
+	}
+
+	public void setMaxNumberOfMiners(final int maxNumberOfMiners) {
+		this.maxNumberOfMiners = maxNumberOfMiners;
+	}
+
+	public void setRadiusOfMiningRing(final float radiusOfMiningRing) {
+		this.radiusOfMiningRing = radiusOfMiningRing;
+	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+		if (this.parentGoldMineUnit != null) {
+			this.parentGoldMineUnit.setHidden(false);
+		}
+	}
+
+	public Vector2 getMinerLoc(final int index) {
+		return this.minerLocs[index];
 	}
 
 	public void setGold(final int gold) {
-		this.gold = gold;
+		if (this.parentGoldMineAbility != null) {
+			this.parentGoldMineAbility.setGold(gold);
+		}
 	}
 
+	public int getGold() {
+		if (this.parentGoldMineAbility != null) {
+			return this.parentGoldMineAbility.getGold();
+		}
+		return 0;
+	}
 }

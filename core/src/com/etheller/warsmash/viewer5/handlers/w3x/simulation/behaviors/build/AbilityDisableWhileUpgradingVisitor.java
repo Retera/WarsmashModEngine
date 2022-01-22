@@ -21,8 +21,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 
-public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisitor<Void> {
-	public static final AbilityDisableWhileUnderConstructionVisitor INSTANCE = new AbilityDisableWhileUnderConstructionVisitor();
+public class AbilityDisableWhileUpgradingVisitor implements CAbilityVisitor<Void> {
+	public static final AbilityDisableWhileUpgradingVisitor INSTANCE = new AbilityDisableWhileUpgradingVisitor();
 
 	@Override
 	public Void accept(final CAbilityAttack ability) {
@@ -145,8 +145,7 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 
 	@Override
 	public Void accept(final CAbilityReturnResources ability) {
-		ability.setDisabled(true);
-		ability.setIconShowing(false);
+		// NOTE: while upgrading, this ability is not disabled!
 		return null;
 	}
 

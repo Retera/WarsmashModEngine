@@ -12,21 +12,27 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildingIntersector;
 
 public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
+
 	private static int delayAnimationTicks = (int) (2.267f / WarsmashConstants.SIMULATION_STEP_TIME);
 	private int highlightOrderId;
 	private War3ID orderId;
 	private boolean unitCreated = false;
 	private int doneTick = 0;
+	private final BuildOnBuildingIntersector buildOnBuildingIntersector;
 
 	public CBehaviorUndeadBuild(final CUnit unit) {
 		super(unit);
+		this.buildOnBuildingIntersector = new BuildOnBuildingIntersector();
 	}
 
 	public CBehavior reset(final AbilityPointTarget target, final int orderId, final int highlightOrderId) {
@@ -68,10 +74,15 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 			final CUnitType unitTypeToCreate = simulation.getUnitData().getUnitType(this.orderId);
 			final BufferedImage buildingPathingPixelMap = unitTypeToCreate.getBuildingPathingPixelMap();
 			boolean buildLocationObstructed = false;
-			if (buildingPathingPixelMap != null) {
+			final boolean canBeBuiltOnThem = unitTypeToCreate.isCanBeBuiltOnThem();
+			if (canBeBuiltOnThem) {
+				simulation.getWorldCollision().enumBuildingsAtPoint(this.target.getX(), this.target.getY(),
+						this.buildOnBuildingIntersector.reset(this.target.getX(), this.target.getY()));
+				buildLocationObstructed = (this.buildOnBuildingIntersector.getUnitToBuildOn() == null);
+			}
+			else if (buildingPathingPixelMap != null) {
 				final EnumSet<CBuildingPathingType> preventedPathingTypes = unitTypeToCreate.getPreventedPathingTypes();
 				final EnumSet<CBuildingPathingType> requiredPathingTypes = unitTypeToCreate.getRequiredPathingTypes();
-
 				if (!simulation.getPathingGrid().checkPathingTexture(this.target.getX(), this.target.getY(),
 						(int) simulation.getGameplayConstants().getBuildingAngle(), buildingPathingPixelMap,
 						preventedPathingTypes, requiredPathingTypes, simulation.getWorldCollision(), this.unit)) {
@@ -82,6 +93,25 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 			if (!buildLocationObstructed) {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX(),
 						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
+				if (canBeBuiltOnThem) {
+					CAbilityGoldMine abilityGoldMine = null;
+					if (this.buildOnBuildingIntersector.getUnitToBuildOn() != null) {
+						for (final CAbility ability : this.buildOnBuildingIntersector.getUnitToBuildOn()
+								.getAbilities()) {
+							if ((ability instanceof CAbilityGoldMine) && !ability.isDisabled()) {
+								abilityGoldMine = (CAbilityGoldMine) ability;
+							}
+						}
+					}
+					for (final CAbility ability : constructedStructure.getAbilities()) {
+						if (ability instanceof CAbilityBlightedGoldMine) {
+							final CAbilityBlightedGoldMine blightedGoldMine = (CAbilityBlightedGoldMine) ability;
+							blightedGoldMine.setParentMine(this.buildOnBuildingIntersector.getUnitToBuildOn(),
+									abilityGoldMine);
+							this.buildOnBuildingIntersector.getUnitToBuildOn().setHidden(true);
+						}
+					}
+				}
 				constructedStructure.setConstructing(true);
 				constructedStructure.setLife(simulation,
 						constructedStructure.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
@@ -155,5 +185,4 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 			refund(player, unitTypeToCreate);
 		}
 	}
-
 }

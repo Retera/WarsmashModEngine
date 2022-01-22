@@ -58,14 +58,20 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 			final CBehaviorHarvest activeMiner = this.activeMiners.get(i);
 			if (game.getGameTurnTick() >= activeMiner.getPopoutFromMineTurnTick()) {
 
-				final int goldMined = Math.min(this.gold, activeMiner.getGoldCapacity());
-				this.gold -= goldMined;
-				if (this.gold <= 0) {
-					unit.setLife(game, 0);
+				int goldMined;
+				if (this.gold > 0) {
+					goldMined = Math.min(this.gold, activeMiner.getGoldCapacity());
+					this.gold -= goldMined;
+				}
+				else {
+					goldMined = 0;
 				}
 				activeMiner.popoutFromMine(goldMined);
 				this.activeMiners.remove(i);
 			}
+		}
+		if (this.gold <= 0) {
+			unit.setLife(game, 0);
 		}
 	}
 
@@ -143,5 +149,9 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 
 	public void setMiningDuration(final float miningDuration) {
 		this.miningDuration = miningDuration;
+	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
 }

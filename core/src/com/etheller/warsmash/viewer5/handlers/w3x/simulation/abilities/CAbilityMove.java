@@ -93,13 +93,15 @@ public class CAbilityMove extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityTarget target) {
 		return true;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		CBehavior followBehavior = caster.getFollowBehavior().reset(orderId == OrderIds.smart ? OrderIds.move : orderId, (CUnit) target);
+		final CBehavior followBehavior = caster.getFollowBehavior()
+				.reset(orderId == OrderIds.smart ? OrderIds.move : orderId, (CUnit) target);
 		caster.setDefaultBehavior(followBehavior);
 		return followBehavior;
 	}
@@ -132,6 +134,10 @@ public class CAbilityMove extends AbstractCAbility {
 
 	@Override
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
 
 }

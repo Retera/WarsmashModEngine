@@ -27,6 +27,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -42,7 +43,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUnderConstructionVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUpgradingVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -1180,6 +1181,11 @@ public class CUnit extends CWidget {
 				}
 			}
 		}
+		for (int i = this.abilities.size() - 1; i >= 0; i--) {
+			// okay if it removes self from this during onDeath() because of reverse
+			// iteration order
+			this.abilities.get(i).onDeath(simulation, this);
+		}
 		fireDeathEvents(simulation);
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
 		if (eventList != null) {
@@ -1863,6 +1869,9 @@ public class CUnit extends CWidget {
 			if (ability instanceof CAbilityGoldMine) {
 				return ((CAbilityGoldMine) ability).getGold();
 			}
+			if (ability instanceof CAbilityBlightedGoldMine) {
+				return ((CAbilityBlightedGoldMine) ability).getGold();
+			}
 		}
 		return 0;
 	}
@@ -1871,6 +1880,9 @@ public class CUnit extends CWidget {
 		for (final CAbility ability : this.abilities) {
 			if (ability instanceof CAbilityGoldMine) {
 				((CAbilityGoldMine) ability).setGold(goldAmount);
+			}
+			if (ability instanceof CAbilityBlightedGoldMine) {
+				((CAbilityBlightedGoldMine) ability).setGold(goldAmount);
 			}
 		}
 	}
@@ -1980,6 +1992,9 @@ public class CUnit extends CWidget {
 			else {
 				player.removeTechtreeUnlocked(this.unitType.getTypeId());
 			}
+			setHidden(true);
+			// setting hidden to let things that refer to this before it gets garbage
+			// collected see it as basically worthless
 		}
 		simulation.getWorldCollision().removeUnit(this);
 	}
@@ -2061,7 +2076,7 @@ public class CUnit extends CWidget {
 		player.charge(goldCost, lumberCost);
 		add(game, new CAbilityBuildInProgress(game.getHandleIdAllocator().createId()));
 		for (final CAbility ability : getAbilities()) {
-			ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
+			ability.visit(AbilityDisableWhileUpgradingVisitor.INSTANCE);
 		}
 		player.addTechtreeInProgress(rawcode);
 

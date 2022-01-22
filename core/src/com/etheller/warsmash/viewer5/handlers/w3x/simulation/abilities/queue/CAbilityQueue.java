@@ -206,4 +206,12 @@ public final class CAbilityQueue extends AbstractCAbility {
 		this.unitsTrained.addAll(unitType.getUnitsTrained());
 		this.researchesAvailable.addAll(unitType.getResearchesAvailable());
 	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+		// refund stuff when building dies
+		while (cUnit.getBuildQueueTypes()[0] != null) {
+			cUnit.cancelBuildQueueItem(game, 0);
+		}
+	}
 }

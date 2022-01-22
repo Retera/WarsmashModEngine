@@ -1,47 +1,68 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.blight;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityItemStatBonus extends AbstractGenericNoIconAbility {
-	private final int strength;
-	private final int agility;
-	private final int intelligence;
+public class CAbilityBlight extends AbstractGenericNoIconAbility {
 
-	public CAbilityItemStatBonus(final int handleId, final War3ID alias, final int strength, final int agility,
-			final int intelligence) {
+	private boolean createsBlight;
+	private float expansionAmount;
+	private float areaOfEffect;
+	private int ticksPerBlightExpansion;
+
+	private float currentArea;
+	private int lastExpansionTick;
+
+	public CAbilityBlight(final int handleId, final War3ID alias, final boolean createsBlight,
+			final float expansionAmount, final float areaOfEffect, final float gameSecondsPerBlightExpansion) {
 		super(handleId, alias);
-		this.strength = strength;
-		this.agility = agility;
-		this.intelligence = intelligence;
+		this.createsBlight = createsBlight;
+		this.expansionAmount = expansionAmount;
+		this.areaOfEffect = areaOfEffect;
+		setGameSecondsPerBlightExpansion(gameSecondsPerBlightExpansion);
+	}
+
+	public void setGameSecondsPerBlightExpansion(final float gameSecondsPerBlightExpansion) {
+		this.ticksPerBlightExpansion = (int) StrictMath
+				.ceil(gameSecondsPerBlightExpansion / WarsmashConstants.SIMULATION_STEP_TIME);
 	}
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		final CAbilityHero heroData = unit.getHeroData();
-		heroData.addStrengthBonus(game, unit, this.strength);
-		heroData.addAgilityBonus(game, unit, this.agility);
-		heroData.addIntelligenceBonus(game, unit, this.intelligence);
 	}
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-		final CAbilityHero heroData = unit.getHeroData();
-		heroData.addStrengthBonus(game, unit, -this.strength);
-		heroData.addAgilityBonus(game, unit, -this.agility);
-		heroData.addIntelligenceBonus(game, unit, -this.intelligence);
 	}
 
 	@Override
 	public void onTick(final CSimulation game, final CUnit unit) {
+		if (!isDisabled()) {
+			final int currentTick = game.getGameTurnTick();
+			if ((currentTick - this.lastExpansionTick) >= this.ticksPerBlightExpansion) {
+				if (this.currentArea < this.areaOfEffect) {
+					this.currentArea = Math.min(this.areaOfEffect, this.currentArea + this.expansionAmount);
+					game.setBlight(unit.getX(), unit.getY(), this.currentArea, this.createsBlight);
+				}
+				this.lastExpansionTick = currentTick;
+			}
+		}
+	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
 	@Override
@@ -84,12 +105,16 @@ public class CAbilityItemStatBonus extends AbstractGenericNoIconAbility {
 		receiver.notAnActiveAbility();
 	}
 
-	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void setCreatesBlight(final boolean createsBlight) {
+		this.createsBlight = createsBlight;
 	}
 
-	@Override
-	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	public void setExpansionAmount(final float expansionAmount) {
+		this.expansionAmount = expansionAmount;
+	}
+
+	public void setAreaOfEffect(final float areaOfEffect) {
+		this.areaOfEffect = areaOfEffect;
 	}
 
 }

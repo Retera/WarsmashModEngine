@@ -84,6 +84,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.RenderCorner;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain.Splat;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderAttackInstant;
@@ -1009,6 +1010,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final RenderUnit newRenderPeer = War3MapViewer.this.unitToRenderPeer.get(newUnit);
 						oldRenderPeer.setPreferredSelectionReplacement(newRenderPeer);
 
+					}
+
+					@Override
+					public void setBlight(final float x, final float y, final float radius, final boolean blighted) {
+						War3MapViewer.this.setBlight(x, y, radius, blighted);
 					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, this.commandErrorListener);
 
@@ -2494,5 +2500,46 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 		}
 		return (MdxModel) load(mdxPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
+	}
+
+	public void setBlight(float whichLocationX, float whichLocationY, final float radius, final boolean blighted) {
+		final int cellX = this.terrain.get128CellX(whichLocationX);
+		final int cellY = this.terrain.get128CellY(whichLocationY);
+		whichLocationX = this.terrain.get128WorldCoordinateFromCellX(cellX);
+		whichLocationY = this.terrain.get128WorldCoordinateFromCellY(cellY);
+		final Rectangle blightRectangle = new Rectangle(whichLocationX - radius, whichLocationY - radius, radius * 2,
+				radius * 2);
+		final float blightRectangleMaxX = blightRectangle.x + blightRectangle.width;
+		final float blightRectangleMaxY = blightRectangle.y + blightRectangle.height;
+		final float rSquared = radius * radius;
+		for (float x = blightRectangle.x; x < blightRectangleMaxX; x += 128.0f) {
+			for (float y = blightRectangle.y; y < blightRectangleMaxY; y += 128.0f) {
+				final float dx = x - whichLocationX;
+				final float dy = y - whichLocationY;
+				final float distSquared = (dx * dx) + (dy * dy);
+				if (distSquared <= rSquared) {
+					for (float pathX = -64; pathX < 64; pathX += 32f) {
+						for (float pathY = -64; pathY < 64; pathY += 32f) {
+							final float blightX = x + pathX + 16;
+							final float blightY = y + pathY + 16;
+							if (this.simulation.getPathingGrid().contains(blightX, blightY)) {
+								this.simulation.getPathingGrid().setBlighted(blightX, blightY, blighted);
+							}
+						}
+					}
+					final RenderCorner corner = this.terrain.getCorner(x, y);
+					if (corner != null) {
+						corner.setBlight(blighted);
+					}
+				}
+			}
+		}
+		final int cellMinX = this.terrain.get128CellX(blightRectangle.x);
+		final int cellMinY = this.terrain.get128CellY(blightRectangle.y);
+		final int cellMaxX = this.terrain.get128CellX(blightRectangleMaxX);
+		final int cellMaxY = this.terrain.get128CellY(blightRectangleMaxY);
+		final Rectangle blightRectangleCellUnits = new Rectangle(cellMinX, cellMinY, cellMaxX - cellMinX,
+				cellMaxY - cellMinY);
+		this.terrain.updateGroundTextures(blightRectangleCellUnits);
 	}
 }

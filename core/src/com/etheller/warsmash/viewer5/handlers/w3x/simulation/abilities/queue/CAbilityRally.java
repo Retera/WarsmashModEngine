@@ -119,4 +119,8 @@ public class CAbilityRally extends AbstractCAbility implements CLevelingAbility 
 	public void setLevel(final int level) {
 	}
 
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
 }

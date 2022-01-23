@@ -82,9 +82,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -3203,6 +3205,34 @@ public class Jass2 {
 						inventoryData.giveItem(CommonEnvironment.this.simulation, whichUnit, whichItem, false);
 					}
 					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitAddAbility", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int abilityId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final War3ID rawcode = new War3ID(abilityId);
+
+					final CAbilityType<?> abilityType = CommonEnvironment.this.simulation.getAbilityData()
+							.getAbilityType(rawcode);
+					if (abilityType == null) {
+						System.err.println(
+								"UnitAddAbility: The requested ability has not been programmed yet: " + rawcode);
+						return BooleanJassValue.FALSE;
+					}
+
+					final CLevelingAbility existingAbility = whichUnit
+							.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
+					if (existingAbility != null) {
+						return BooleanJassValue.FALSE;
+					}
+					final CAbility ability = abilityType
+							.createAbility(CommonEnvironment.this.simulation.getHandleIdAllocator().createId());
+					whichUnit.add(CommonEnvironment.this.simulation, ability);
+
+					return BooleanJassValue.TRUE;
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitItemInSlot", new JassFunction() {

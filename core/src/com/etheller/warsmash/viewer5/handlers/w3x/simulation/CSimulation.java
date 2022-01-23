@@ -602,6 +602,11 @@ public class CSimulation implements CPlayerAPI {
 				artAttachmentHeight);
 	}
 
+	public void createSpellEffectFacing(final War3ID alias, final float harvestStandX, final float harvestStandY,
+			final float angle) {
+		this.simulationRenderController.createSpellEffectFacing(alias, harvestStandX, harvestStandY, angle);
+	}
+
 	public void tagTreeOwned(final CDestructable target) {
 		this.ownedTreeSet.add(target);
 	}

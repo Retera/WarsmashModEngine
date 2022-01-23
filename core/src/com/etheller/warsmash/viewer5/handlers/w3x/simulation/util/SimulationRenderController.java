@@ -85,4 +85,6 @@ public interface SimulationRenderController {
 	void unitCancelUpgradingEvent(CUnit unit, War3ID upgradeIdType);
 
 	void setBlight(float x, float y, float radius, boolean blighted);
+
+	void createSpellEffectFacing(War3ID alias, float harvestStandX, float harvestStandY, float angle);
 }

@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest;
 
+import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -66,11 +67,9 @@ public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 					return HarvestStartResult.DENIED;
 				}
 
-				final double angleSize = (StrictMath.PI * 2) / abilityBlightedGoldMine.getMaxNumberOfMiners();
-				final float radiusOfMiningRing = abilityBlightedGoldMine.getRadiusOfMiningRing();
-				final double thisMinerAngle = angleSize * newIndex;
-				this.harvestStandX = targetUnit.getX() + (float) (StrictMath.cos(thisMinerAngle) * radiusOfMiningRing);
-				this.harvestStandY = targetUnit.getY() + (float) (StrictMath.sin(thisMinerAngle) * radiusOfMiningRing);
+				final Vector2 minerLoc = abilityBlightedGoldMine.getMinerLoc(newIndex);
+				this.harvestStandX = minerLoc.x;
+				this.harvestStandY = minerLoc.y;
 				simulation.unitSoundEffectEvent(this.unit, this.abilityAcolyteHarvest.getAlias());
 				return HarvestStartResult.ACCEPTED;
 			}

@@ -29,11 +29,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
@@ -310,18 +308,12 @@ public class CUnit extends CWidget {
 		this.classifications.addAll(this.unitType.getClassifications());
 		this.acquisitionRange = this.unitType.getDefaultAcquisitionRange();
 		for (final CAbility ability : this.abilities) {
-			if (ability instanceof CAbilityQueue) {
-				((CAbilityQueue) ability).onSetUnitType(this.unitType);
-			}
-			else if (ability instanceof CAbilityUpgrade) {
-				((CAbilityUpgrade) ability).onSetUnitType(this.unitType);
-			}
-			else {
-				// refresh abilities...
-				ability.onRemove(game, this);
-				ability.onAdd(game, this);
-			}
+			ability.onRemove(game, this);
+			game.onAbilityRemovedFromUnit(this, ability);
 		}
+		this.abilities.clear();
+		game.getUnitData().addDefaultAbilitiesToUnit(game, game.getHandleIdAllocator(), this.unitType, false, -1,
+				this.speed, this);
 		computeDerivedFields();
 	}
 

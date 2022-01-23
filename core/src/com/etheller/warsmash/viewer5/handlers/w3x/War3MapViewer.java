@@ -100,6 +100,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructableEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -918,6 +919,25 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							};
 						}
 						return null;
+					}
+
+					@Override
+					public void createSpellEffectFacing(final War3ID alias, final float harvestStandX,
+							final float harvestStandY, final float angle) {
+						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
+						final String effectPath = abilityUI.getEffectArt(0);
+						final MdxModel spawnedEffectModel = loadModelMdx(effectPath);
+						if (spawnedEffectModel != null) {
+							final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel
+									.addInstance();
+							modelInstance.setLocation(harvestStandX, harvestStandY,
+									War3MapViewer.this.terrain.getGroundHeight(harvestStandX, harvestStandY));
+							modelInstance.setScene(War3MapViewer.this.worldScene);
+							final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance,
+									War3MapViewer.this, angle, RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
+							renderAttackInstant.setAnimations(RenderSpellEffect.STAND_ONLY, false);
+							War3MapViewer.this.projectiles.add(renderAttackInstant);
+						}
 					}
 
 					@Override
@@ -2541,5 +2561,20 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final Rectangle blightRectangleCellUnits = new Rectangle(cellMinX, cellMinY, cellMaxX - cellMinX,
 				cellMaxY - cellMinY);
 		this.terrain.updateGroundTextures(blightRectangleCellUnits);
+
+		if (blighted) {
+			this.simulation.getWorldCollision().enumDestructablesInRect(blightRectangle,
+					new CDestructableEnumFunction() {
+						@Override
+						public boolean call(final CDestructable destructable) {
+							final boolean checkIsOnBlight = destructable.checkIsOnBlight(War3MapViewer.this.simulation);
+							if (checkIsOnBlight) {
+								// no mechanic to unblight so this is intentionally one-way
+								destructable.setBlighted(true);
+							}
+							return false;
+						}
+					});
+		}
 	}
 }

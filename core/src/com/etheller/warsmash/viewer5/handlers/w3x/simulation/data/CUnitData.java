@@ -220,6 +220,13 @@ public class CUnitData {
 
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, lifeRegen,
 				manaMaximum, speed, unitTypeInstance, pathingInstance);
+		addDefaultAbilitiesToUnit(simulation, handleIdAllocator, unitTypeInstance, true, manaInitial, speed, unit);
+		return unit;
+	}
+
+	public void addDefaultAbilitiesToUnit(final CSimulation simulation, final HandleIdAllocator handleIdAllocator,
+			final CUnitType unitTypeInstance, final boolean resetMana, final int manaInitial, final int speed,
+			final CUnit unit) {
 		if (speed > 0) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
@@ -288,7 +295,6 @@ public class CUnitData {
 				}
 			}
 		}
-		return unit;
 	}
 
 	private CUnitType getUnitTypeInstance(final War3ID typeId, final BufferedImage buildingPathingPixelMap,

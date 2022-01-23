@@ -36,7 +36,7 @@ public class WarsmashConstants {
 	// workaround to fix it if you need the local files
 	// to take priority over built-ins for tilesets.
 	public static final boolean FIX_FLAT_FILES_TILESET_LOADING = false;
-	public static final boolean ENABLE_MUSIC = true;
+	public static final boolean ENABLE_MUSIC = false;
 	public static final boolean LOAD_UNITS_FROM_WORLDEDIT_DATA = false;
 	public static final boolean CRASH_ON_INCOMPATIBLE_132_FEATURES = false;
 	public static final boolean FIRE_DEATH_EVENTS_ON_REMOVEUNIT = false;

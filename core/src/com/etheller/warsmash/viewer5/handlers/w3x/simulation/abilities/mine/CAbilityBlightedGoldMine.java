@@ -54,6 +54,7 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 			final float harvestStandY = unit.getY()
 					+ (float) (StrictMath.sin(thisMinerAngle) * this.radiusOfMiningRing);
 			this.minerLocs[i] = new Vector2(harvestStandX, harvestStandY);
+			game.createSpellEffectFacing(getAlias(), harvestStandX, harvestStandY, (float) (thisMinerAngle));
 		}
 	}
 
@@ -158,7 +159,7 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 			if (this.activeMiners[i] == null) {
 				final double thisMineDistSq = acolyte.distanceSquaredNoCollision(this.minerLocs[i].x,
 						this.minerLocs[i].y);
-				if (minerDistSq > thisMineDistSq) {
+				if (thisMineDistSq < minerDistSq) {
 					minerIndex = i;
 					minerDistSq = thisMineDistSq;
 				}

@@ -39,6 +39,10 @@ com_crashlytics_export_strings.xml
 /android/bin/
 /core/bin/
 /desktop/bin/
+/fdfparser/bin/
+/jassparser/bin/
+/server/bin/
+/shared/bin/
 /html/bin/
 /ios/bin/
 /ios-moe/bin/
@@ -105,6 +109,10 @@ gradle-app.setting
 /android/build/
 /core/build/
 /desktop/build/
+/fdfparser/build/
+/jassparser/build/
+/server/build/
+/shared/build/
 /html/build/
 /ios/build/
 /ios-moe/build/

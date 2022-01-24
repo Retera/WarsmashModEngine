@@ -10,13 +10,18 @@ public class CAbilityTypeHumanRepairLevelData extends CAbilityTypeLevelData {
 	private final float navalRangeBonus;
 	private final float repairCostRatio;
 	private final float repairTimeRatio;
+	private final float powerbuildCostRatio;
+	private final float powerbuildTimeRatio;
 	private final float castRange;
 
-	public CAbilityTypeHumanRepairLevelData(EnumSet<CTargetType> targetsAllowed, float navalRangeBonus, float repairCostRatio, float repairTimeRatio, float castRange) {
+	public CAbilityTypeHumanRepairLevelData(EnumSet<CTargetType> targetsAllowed, float navalRangeBonus, float repairCostRatio,
+											float repairTimeRatio, float castRange, float powerBuildCostRatio, float powerBuildTimeRatio) {
 		super(targetsAllowed);
 		this.navalRangeBonus = navalRangeBonus;
 		this.repairCostRatio = repairCostRatio;
 		this.repairTimeRatio = repairTimeRatio;
+		this.powerbuildCostRatio = powerBuildCostRatio;
+		this.powerbuildTimeRatio = powerBuildTimeRatio;
 		this.castRange = castRange;
 	}
 
@@ -35,4 +40,8 @@ public class CAbilityTypeHumanRepairLevelData extends CAbilityTypeLevelData {
 	public float getRepairTimeRatio() {
 		return repairTimeRatio;
 	}
+
+	public float getPowerbuildCostRatio(){ return powerbuildCostRatio; };
+
+	public float getPowerbuildTimeRatio() { return powerbuildTimeRatio; }
 }

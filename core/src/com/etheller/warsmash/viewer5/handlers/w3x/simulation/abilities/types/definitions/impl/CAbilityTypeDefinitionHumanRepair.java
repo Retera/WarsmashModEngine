@@ -15,6 +15,8 @@ public class CAbilityTypeDefinitionHumanRepair extends AbstractCAbilityTypeDefin
 		implements CAbilityTypeDefinition {
 	protected static final War3ID COST_RATIO = War3ID.fromString("Rep1");
 	protected static final War3ID TIME_RATIO = War3ID.fromString("Rep2");
+	protected static final War3ID POWER_COST_RATIO = War3ID.fromString("Rep3");
+	protected static final War3ID POWER_TIME_RATIO = War3ID.fromString("Rep4");
 	protected static final War3ID NAVAL_RANGE_BONUS = War3ID.fromString("Rep5");
 
 	@Override
@@ -23,9 +25,11 @@ public class CAbilityTypeDefinitionHumanRepair extends AbstractCAbilityTypeDefin
 		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
 		final float costRatio = abilityEditorData.getFieldAsFloat(COST_RATIO, level);
 		final float timeRatio = abilityEditorData.getFieldAsFloat(TIME_RATIO, level);
+		final float powerBuildCostRatio = abilityEditorData.getFieldAsFloat(POWER_COST_RATIO,level);
+		final float powerBuildTimeRatio = abilityEditorData.getFieldAsFloat(POWER_TIME_RATIO,level);
 		final float navalRangeBonus = abilityEditorData.getFieldAsFloat(NAVAL_RANGE_BONUS, level);
 		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE, level);
-		return new CAbilityTypeHumanRepairLevelData(targetsAllowedAtLevel, navalRangeBonus, costRatio, timeRatio, castRange);
+		return new CAbilityTypeHumanRepairLevelData(targetsAllowedAtLevel, navalRangeBonus, costRatio, timeRatio, castRange, powerBuildCostRatio, powerBuildTimeRatio);
 	}
 
 	@Override

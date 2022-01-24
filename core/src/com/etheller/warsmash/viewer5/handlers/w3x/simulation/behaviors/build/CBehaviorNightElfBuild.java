@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
@@ -52,7 +53,9 @@ public class CBehaviorNightElfBuild extends CBehaviorOrcBuild{
                 this.unit.setHidden(true);
                 this.unit.setPaused(true);
                 this.unit.setInvulnerable(true);
-                constructedStructure.setConstuctionProcessType(ConstructionFlag.CONSUME_WORKER);
+                if(constructedStructure.getUnitType().getClassifications().contains(CUnitClassification.ANCIENT)) {
+                    constructedStructure.setConstuctionProcessType(ConstructionFlag.CONSUME_WORKER);
+                }
                 simulation.unitConstructedEvent(this.unit, constructedStructure);
             }
             else {

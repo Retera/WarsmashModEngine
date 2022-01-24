@@ -112,6 +112,7 @@ public class CUnit extends CWidget {
 	private float constructionProgress;
 	//added by MfromAz - if it's bad that's on me
 	private ConstructionFlag constuctionProcessType;
+	private boolean constructionPowerBuild = false;
 	private boolean hidden = false;
 	private boolean paused = false;
 	private boolean acceptingOrders = true;
@@ -268,6 +269,10 @@ public class CUnit extends CWidget {
 
 	public void setConstuctionProcessType(ConstructionFlag flag) {this.constuctionProcessType = flag;}
 
+	public void setConstructionPowerBuild(boolean constructionPowerBuild){this.constructionPowerBuild= constructionPowerBuild;}
+
+	public boolean isConstructionPowerBuilding(){return constructionPowerBuild;}
+
 	/**
 	 * Updates one tick of simulation logic and return true if it's time to remove
 	 * this unit from the game.
@@ -340,12 +345,19 @@ public class CUnit extends CWidget {
 				setRallyPoint(this);
 			}
 			if (this.constructing) {
-				this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
+
+
 				final int buildTime = this.unitType.getBuildTime();
 				//ignore this for human build (MFROMAZ)
-				final float healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / buildTime)
-						* (this.maximumLife * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
-				setLife(game, Math.min(this.life + healthGain, this.maximumLife));
+				if(this.constuctionProcessType==null||this.constuctionProcessType!=ConstructionFlag.REQURIE_REPAIR) {
+					this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
+					final float healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / buildTime)
+							* (this.maximumLife * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
+					setLife(game, Math.min(this.life + healthGain, this.maximumLife));
+				}else{
+					this.constructionPowerBuild = false;
+					//resetting here every frame so that workers can set it to true on the next one again
+				}
 				if (this.constructionProgress >= buildTime) {
 					this.constructing = false;
 					this.constructionProgress = 0;
@@ -359,6 +371,7 @@ public class CUnit extends CWidget {
 					}
 
 					//create Blight here (MFROMAZ)
+
 					final Iterator<CAbility> abilityIterator = this.abilities.iterator();
 					while (abilityIterator.hasNext()) {
 						final CAbility ability = abilityIterator.next();

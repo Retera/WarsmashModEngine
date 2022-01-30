@@ -54,8 +54,9 @@ public class DesktopLauncher {
 		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
 		config.width = desktopDisplayMode.width;
 		config.height = desktopDisplayMode.height;
-		String fileToLoad = null;
 		config.fullscreen = true;
+		String fileToLoad = null;
+		String iniPath = null;
 		boolean noLogs = false;
 		for (int argIndex = 0; argIndex < arg.length; argIndex++) {
 			if ("-window".equals(arg[argIndex])) {
@@ -76,6 +77,10 @@ public class DesktopLauncher {
 				argIndex++;
 				MultiplayerHack.LP_VAL = Integer.parseInt(arg[argIndex]);
 			}
+			else if((arg.length > (argIndex + 1)) && "-ini".equals(arg[argIndex])) {
+				argIndex++;
+				iniPath = arg[argIndex];
+			}
 		}
 		if (!noLogs) {
 			new File("Logs").mkdir();
@@ -95,7 +100,7 @@ public class DesktopLauncher {
 			}
 		}
 		loadExtensions();
-		final DataTable warsmashIni = loadWarsmashIni();
+		final DataTable warsmashIni = loadWarsmashIni(iniPath);
 
 		if (fileToLoad != null) {
 			System.out.println("About to run loading file: " + fileToLoad);
@@ -122,9 +127,9 @@ public class DesktopLauncher {
 		});
 	}
 
-	public static DataTable loadWarsmashIni() {
+	public static DataTable loadWarsmashIni(String iniPath) {
 		final DataTable warsmashIni = new DataTable(StringBundle.EMPTY);
-		try (FileInputStream warsmashIniInputStream = new FileInputStream("warsmash.ini")) {
+		try (FileInputStream warsmashIniInputStream = new FileInputStream(iniPath!=null?iniPath:"warsmash.ini")) {
 			warsmashIni.readTXT(warsmashIniInputStream, true);
 		}
 		catch (final FileNotFoundException e) {
@@ -134,6 +139,9 @@ public class DesktopLauncher {
 			throw new RuntimeException(e);
 		}
 		return warsmashIni;
+	}
+	public static DataTable loadWarsmashIni(){
+		return loadWarsmashIni(null);
 	}
 
 	public static void loadExtensions() {

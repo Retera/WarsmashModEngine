@@ -1,10 +1,9 @@
-apply plugin: "java"
-
-sourceCompatibility = 1.7
 sourceSets.main.java.srcDirs = [ "src/" ]
 
 project.ext.mainClassName = "com.etheller.warsmash.desktop.DesktopLauncher"
 project.ext.assetsDir = new File("../core/assets");
+
+import org.gradle.internal.os.OperatingSystem
 
 if(project.hasProperty("args")) {
     ext.cmdargs = project.getProperty("args")
@@ -19,6 +18,10 @@ task run(dependsOn: classes, type: JavaExec) {
     workingDir = project.assetsDir
     ignoreExitValue = true
     args cmdargs.split()
+    if (OperatingSystem.current() == OperatingSystem.MAC_OS) {
+        // Required to run on macOS
+        jvmArgs += "-XstartOnFirstThread"
+    }
 }
 
 task debug(dependsOn: classes, type: JavaExec) {
@@ -31,14 +34,18 @@ task debug(dependsOn: classes, type: JavaExec) {
 }
 
 task dist(type: Jar) {
-    from files(sourceSets.main.output.classesDir)
-    from files(sourceSets.main.output.resourcesDir)
-    from {configurations.compile.collect {zipTree(it)}}
-    from files(project.assetsDir);
- 
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     manifest {
         attributes 'Main-Class': project.mainClassName
     }
+    dependsOn configurations.runtimeClasspath
+
+    from files(sourceSets.main.output.classesDirs)
+    from files(sourceSets.main.output.resourcesDir)
+    from {configurations.runtimeClasspath.collect {zipTree(it)}}
+    from files(project.assetsDir)
+
+    with jar
 }
 
 dist.dependsOn classes

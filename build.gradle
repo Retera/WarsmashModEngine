@@ -5,10 +5,9 @@ buildscript {
 			dirs "$rootProject.projectDir/jars"
 		}
         mavenCentral()
-        maven { url "https://plugins.gradle.org/m2/" }
+        gradlePluginPortal()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://maven.nikr.net/" }
-        jcenter()
         google()
     }
 }
@@ -21,73 +20,64 @@ allprojects {
     ext {
         appName = "warsmash"
         gdxVersion = '1.9.8'
-        roboVMVersion = '2.3.5'
-        box2DLightsVersion = '1.4'
-        ashleyVersion = '1.7.0'
-        aiVersion = '1.8.0'
-		antlrVersion = '4.7'
+        antlrVersion = '4.7'
     }
 
     repositories {
         mavenLocal()
         mavenCentral()
         google()
+        gradlePluginPortal()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
         maven { url "https://maven.nikr.net/" }
-   	 	maven { url 'https://jitpack.io' }
+        maven { url "https://jitpack.io" }
     }
 }
 
 project(":server") {
-    apply plugin: "java"
+    apply plugin: "java-library"
 
 
     dependencies {
-        compile project(":shared")
+        implementation project(":shared")
     }
 }
 
 project(":desktop") {
-    apply plugin: "java"
-
+    apply plugin: "java-library"
 
     dependencies {
-        compile project(":core")
-        compile "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
-        compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-        compile "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
-        compile "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
-        compile "com.google.guava:guava:23.5-jre"
-        compile "org.apache.commons:commons-compress:1.20"
-		compile "net.nikr:dds:1.0.0"
-		compile files(fileTree(dir:'../jars', includes: ['*.jar']))
-             
+        implementation project(":core")
+        api "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+        api "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+        api "com.google.guava:guava:23.5-jre"
+        api "org.apache.commons:commons-compress:1.20"
+        api "net.nikr:dds:1.0.0"
     }
 }
 
 project(":core") {
-    apply plugin: "java"
-
+    apply plugin: "java-library"
 
     dependencies {
-        compile project(":shared")
-        compile project(":fdfparser")
-        compile project(":jassparser")
-        compile "com.badlogicgames.gdx:gdx:$gdxVersion"
-        compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-        compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
-        compile "com.google.guava:guava:23.5-jre"
-        compile "org.apache.commons:commons-compress:1.20"
-		compile "net.nikr:dds:1.0.0"
-		compile files(fileTree(dir:'../jars', includes: ['*.jar']))
-        
+        implementation project(":shared")
+        implementation project(":fdfparser")
+        implementation project(":jassparser")
+        api "com.badlogicgames.gdx:gdx:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+        api "com.google.guava:guava:23.5-jre"
+        api "org.apache.commons:commons-compress:1.20"
+        api "net.nikr:dds:1.0.0"
+        api files(fileTree(dir:'../jars', includes: ['*.jar']))
     }
 }
 
 project(":shared") {
-    apply plugin: "java"
-
+    apply plugin: "java-library"
 
     dependencies {
     }

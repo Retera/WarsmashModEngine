@@ -225,5 +225,7 @@ public abstract class ModelInstance extends Node {
 
 	public abstract void setReplaceableTexture(int replaceableTextureId, String replaceableTextureFile);
 
+	public abstract void setReplaceableTextureHD(int replaceableTextureId, String replaceableTextureFile);
+
 	protected abstract void removeLights(Scene scene2);
 }

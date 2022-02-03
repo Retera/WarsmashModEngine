@@ -43,7 +43,7 @@ public class SetupSimpleGroups {
 			GenericGroup simpleGroup;
 
 			if (group instanceof BatchGroup) {
-				simpleGroup = new BatchGroup(model, ((BatchGroup) group).isExtended);
+				simpleGroup = new BatchGroup(model, ((BatchGroup) group).skinningType, ((BatchGroup) group).hd);
 			}
 			else {
 				throw new IllegalStateException("reforged?"); // TODO

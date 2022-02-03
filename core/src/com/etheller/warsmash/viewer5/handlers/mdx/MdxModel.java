@@ -144,9 +144,9 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 				this.layers.add(vLayer);
 			}
 
-			this.materials.add(new Material(this, "" /* material.shader */, layers));
+			this.materials.add(new Material(this, material.shader, layers));
 
-			if (false /* !"".equals(material.shader) */) {
+			if (!"".equals(material.shader)) {
 				this.hd = true;
 			}
 		}

@@ -452,6 +452,12 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 		}
 
+		@Override
+		public void setReplaceableTextureHD(final int replaceableTextureId, final String replaceableTextureFile) {
+			// TODO Auto-generated method stub
+
+		}
+
 	}
 
 	private class LibGDXContentLayerModel extends Model {

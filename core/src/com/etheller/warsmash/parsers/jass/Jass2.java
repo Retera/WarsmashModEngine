@@ -3112,48 +3112,6 @@ public class Jass2 {
 					throw new JassException(globalScope, "Needs to sleep " + time, null);
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerNeutralAggressive", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 4);
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetBJPlayerNeutralVictim", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 3);
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetBJPlayerNeutralExtra", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 2);
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerNeutralPassive", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 1);
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetBJMaxPlayers", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 4);
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetBJMaxPlayerSlots", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS);
-				}
-			});
 			jassProgramVisitor.getJassNativeManager().createNative("AddSpecialEffectTarget", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -4888,6 +4846,49 @@ public class Jass2 {
 					return new IntegerJassValue(-1);
 				}
 				return new IntegerJassValue(whichPlayer.getId());
+			}
+		});
+
+		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerNeutralAggressive", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 4);
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetBJPlayerNeutralVictim", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 3);
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetBJPlayerNeutralExtra", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 2);
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerNeutralPassive", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 1);
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetBJMaxPlayers", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS - 4);
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetBJMaxPlayerSlots", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				return new IntegerJassValue(WarsmashConstants.MAX_PLAYERS);
 			}
 		});
 	}

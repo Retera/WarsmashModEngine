@@ -70,6 +70,9 @@ public class MdxComplexInstance extends ModelInstance {
 	public FloatBuffer worldMatricesCopyHeap;
 	public DataTexture boneTexture;
 	public Texture[] replaceableTextures = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
+	public Texture[] replaceableTextures_diffuse = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
+	public Texture[] replaceableTextures_normal = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
+	public Texture[] replaceableTextures_orm = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
 	private float animationSpeed = 1.0f;
 	private float blendTime;
 	private float blendTimeRemaining;
@@ -679,6 +682,16 @@ public class MdxComplexInstance extends ModelInstance {
 	public void setReplaceableTexture(final int replaceableTextureId, final String replaceableTextureFile) {
 		this.replaceableTextures[replaceableTextureId] = (Texture) this.model.viewer.load(replaceableTextureFile,
 				PathSolver.DEFAULT, null);
+	}
+
+	@Override
+	public void setReplaceableTextureHD(final int replaceableTextureId, final String replaceableTextureFile) {
+		this.replaceableTextures_diffuse[replaceableTextureId] = (Texture) this.model.viewer
+				.load(replaceableTextureFile + "_diffuse.dds", PathSolver.DEFAULT, null);
+		this.replaceableTextures_normal[replaceableTextureId] = (Texture) this.model.viewer
+				.load(replaceableTextureFile + "_normal.dds", PathSolver.DEFAULT, null);
+		this.replaceableTextures_orm[replaceableTextureId] = (Texture) this.model.viewer
+				.load(replaceableTextureFile + "_orm.dds", PathSolver.DEFAULT, null);
 	}
 
 	/**

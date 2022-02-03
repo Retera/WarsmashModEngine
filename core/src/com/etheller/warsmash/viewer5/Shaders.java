@@ -22,6 +22,63 @@ public class Shaders {
 			"                  texture2D(u_boneMap, vec2(column + u_vectorSize * 2.0, row)),\r\n" + //
 			"                  texture2D(u_boneMap, vec2(column + u_vectorSize * 3.0, row)));\r\n" + //
 			"    }";
+	public static final String transforms = "#ifdef SKIN\r\n" + //
+			"attribute vec4 a_bones;\r\n" + //
+			"attribute vec4 a_weights;\r\n" + //
+			"void transformSkin(inout vec3 position, inout vec3 normal, inout vec3 tangent, inout vec3 binormal) {\r\n"
+			+ //
+			"  mat4 bone = mat4(0);\r\n" + //
+			"  bone += fetchMatrix(a_bones[0], 0.0) * a_weights[0];\r\n" + //
+			"  bone += fetchMatrix(a_bones[1], 0.0) * a_weights[1];\r\n" + //
+			"  bone += fetchMatrix(a_bones[2], 0.0) * a_weights[2];\r\n" + //
+			"  bone += fetchMatrix(a_bones[3], 0.0) * a_weights[3];\r\n" + //
+			"  mat3 rotation = mat3(bone);\r\n" + //
+			"  position = vec3(bone * vec4(position, 1.0));\r\n" + //
+			"  normal = rotation * normal;\r\n" + //
+			"  tangent = rotation * tangent;\r\n" + //
+			"  binormal = rotation * binormal;\r\n" + //
+			"}\r\n" + //
+			"#else\r\n" + //
+			"attribute vec4 a_bones;\r\n" + //
+			"#ifdef EXTENDED_BONES\r\n" + //
+			"attribute vec4 a_extendedBones;\r\n" + //
+			"#endif\r\n" + //
+			"attribute float a_boneNumber;\r\n" + //
+			"mat4 getVertexGroupMatrix() {\r\n" + //
+			"  mat4 bone;\r\n" + //
+			"  // For the broken models out there, since the game supports this.\r\n" + //
+			"  if (a_boneNumber > 0.0) {\r\n" + //
+			"    for (int i = 0; i < 4; i++) {\r\n" + //
+			"      if (a_bones[i] > 0.0) {\r\n" + //
+			"        bone += fetchMatrix(a_bones[i] - 1.0, 0.0);\r\n" + //
+			"      }\r\n" + //
+			"    }\r\n" + //
+			"    #ifdef EXTENDED_BONES\r\n" + //
+			"      for (int i = 0; i < 4; i++) {\r\n" + //
+			"        if (a_extendedBones[i] > 0.0) {\r\n" + //
+			"          bone += fetchMatrix(a_extendedBones[i] - 1.0, 0.0);\r\n" + //
+			"        }\r\n" + //
+			"      }\r\n" + //
+			"    #endif\r\n" + //
+			"  }\r\n" + //
+			"  return bone / a_boneNumber;\r\n" + //
+			"}\r\n" + //
+			"void transformVertexGroups(inout vec3 position, inout vec3 normal) {\r\n" + //
+			"  mat4 bone = getVertexGroupMatrix();\r\n" + //
+			"  mat3 rotation = mat3(bone);\r\n" + //
+			"  position = vec3(bone * vec4(position, 1.0));\r\n" + //
+			"  normal = normalize(rotation * normal);\r\n" + //
+			"}\r\n" + //
+			"void transformVertexGroupsHD(inout vec3 position, inout vec3 normal, inout vec3 tangent, inout vec3 binormal) {\r\n"
+			+ //
+			"  mat4 bone = getVertexGroupMatrix();\r\n" + //
+			"  mat3 rotation = mat3(bone);\r\n" + //
+			"  position = vec3(bone * vec4(position, 1.0));\r\n" + //
+			"  normal = normalize(rotation * normal);\r\n" + //
+			"  tangent = normalize(rotation * tangent);\r\n" + //
+			"  binormal = normalize(rotation * binormal);\r\n" + //
+			"}\r\n" + //
+			"#endif";
 
 	public static final String decodeFloat = "\r\n" + //
 			"    vec2 decodeFloat2(float f) {\r\n" + //

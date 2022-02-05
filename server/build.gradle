@@ -1,10 +1,7 @@
-apply plugin: "java"
-
-sourceCompatibility = 1.7
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = [ "src/" ]
 
-project.ext.mainClassName = "com.etheller.warsmash.bigserver.GamingNetworkServerMain"
+project.ext.mainClassName = "com.etheller.warsmash.networking.WarsmashServer"
 
 task run(dependsOn: classes, type: JavaExec) {
     main = project.mainClassName
@@ -14,7 +11,7 @@ task run(dependsOn: classes, type: JavaExec) {
 }
 
 task dist(type: Jar) {
-    from files(sourceSets.main.output.classesDir)
+    from files(sourceSets.main.output.classesDirs)
     from files(sourceSets.main.output.resourcesDir)
     from {configurations.compile.collect {zipTree(it)}}
  

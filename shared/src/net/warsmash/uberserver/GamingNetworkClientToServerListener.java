@@ -5,15 +5,15 @@ import net.warsmash.nio.util.DisconnectListener;
 public interface GamingNetworkClientToServerListener extends DisconnectListener {
 	void handshake(String gameId, int version);
 
-	void createAccount(String username, String password);
+	void createAccount(String username, char[] passwordHash);
 
-	void login(String username, String password);
+	void login(String username, char[] passwordHash);
 
-	void joinChannel(String channelName);
+	void joinChannel(long sessionToken, String channelName);
 
-	void chatMessage(String text);
+	void chatMessage(long sessionToken, String text);
 
-	void emoteMessage(String text);
+	void emoteMessage(long sessionToken, String text);
 
 	class Protocol {
 		public static final int HANDSHAKE = 1;

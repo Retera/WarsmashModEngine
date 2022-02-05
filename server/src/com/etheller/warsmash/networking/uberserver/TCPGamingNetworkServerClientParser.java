@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import com.etheller.warsmash.util.War3ID;
 
 import net.warsmash.nio.channels.tcp.TCPClientParser;
+import net.warsmash.uberserver.GamingNetwork;
 import net.warsmash.uberserver.GamingNetworkClientToServerListener;
 
 public class TCPGamingNetworkServerClientParser implements TCPClientParser {
@@ -29,30 +30,33 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 					break;
 				}
 				case GamingNetworkClientToServerListener.Protocol.CREATE_ACCOUNT: {
-					final String username = readString(64, data);
-					final String password = readString(1024, data);
+					final String username = readString(GamingNetwork.USERNAME_MAX_LENGTH, data);
+					final char[] password = readChars(GamingNetwork.PASSWORD_DATA_MAX_LENGTH, data);
 					this.listener.createAccount(username, password);
 					break;
 				}
 				case GamingNetworkClientToServerListener.Protocol.LOGIN: {
-					final String username = readString(64, data);
-					final String password = readString(1024, data);
+					final String username = readString(GamingNetwork.USERNAME_MAX_LENGTH, data);
+					final char[] password = readChars(GamingNetwork.PASSWORD_DATA_MAX_LENGTH, data);
 					this.listener.login(username, password);
 					break;
 				}
 				case GamingNetworkClientToServerListener.Protocol.JOIN_CHANNEL: {
-					final String channelName = readString(256, data);
-					this.listener.joinChannel(channelName);
+					final long sessionToken = data.getLong();
+					final String channelName = readString(GamingNetwork.MESSAGE_MAX_LENGTH, data);
+					this.listener.joinChannel(sessionToken, channelName);
 					break;
 				}
 				case GamingNetworkClientToServerListener.Protocol.CHAT_MESSAGE: {
-					final String text = readString(256, data);
-					this.listener.chatMessage(text);
+					final long sessionToken = data.getLong();
+					final String text = readString(GamingNetwork.MESSAGE_MAX_LENGTH, data);
+					this.listener.chatMessage(sessionToken, text);
 					break;
 				}
 				case GamingNetworkClientToServerListener.Protocol.EMOTE_MESSAGE: {
-					final String text = readString(256, data);
-					this.listener.emoteMessage(text);
+					final long sessionToken = data.getLong();
+					final String text = readString(GamingNetwork.MESSAGE_MAX_LENGTH, data);
+					this.listener.emoteMessage(sessionToken, text);
 					break;
 				}
 				}
@@ -66,6 +70,15 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 		data.get(usernameStringBytes);
 		final String username = new String(usernameStringBytes);
 		return username;
+	}
+
+	public char[] readChars(final int maxLength, final ByteBuffer data) {
+		final int usernameStringLength = Math.min(maxLength, data.getInt());
+		final char[] charArray = new char[usernameStringLength];
+		for (int i = 0; i < usernameStringLength; i++) {
+			charArray[i] = data.getChar();
+		}
+		return charArray;
 	}
 
 	@Override

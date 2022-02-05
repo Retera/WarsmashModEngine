@@ -1,6 +1,8 @@
 package net.warsmash.uberserver;
 
-public interface GamingNetworkServerToClientListener {
+import net.warsmash.nio.util.DisconnectListener;
+
+public interface GamingNetworkServerToClientListener extends DisconnectListener {
 	void handshakeAccepted();
 
 	void handshakeDenied(HandshakeDeniedReason reason);
@@ -9,9 +11,17 @@ public interface GamingNetworkServerToClientListener {
 
 	void accountCreationFailed(AccountCreationFailureReason reason);
 
-	void loginOk(String welcomeMessage);
+	void loginOk(long sessionToken, String welcomeMessage);
+
+	void loginFailed(LoginFailureReason loginFailureReason);
 
 	void joinedChannel(String channelName);
+
+	void badSession();
+
+	void channelMessage(String userName, String message);
+
+	void channelEmote(String userName, String message);
 
 	class Protocol {
 		public static final int HANDSHAKE_ACCEPTED = 1;
@@ -19,6 +29,10 @@ public interface GamingNetworkServerToClientListener {
 		public static final int ACCOUNT_CREATION_OK = 3;
 		public static final int ACCOUNT_CREATION_FAILED = 4;
 		public static final int LOGIN_OK = 5;
-		public static final int JOINED_CHANNEL = 6;
+		public static final int LOGIN_FAILED = 6;
+		public static final int JOINED_CHANNEL = 7;
+		public static final int BAD_SESSION = 8;
+		public static final int CHANNEL_MESSAGE = 9;
+		public static final int CHANNEL_EMOTE = 10;
 	}
 }

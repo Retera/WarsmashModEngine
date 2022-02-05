@@ -69,7 +69,6 @@ public class TCPClientKeyAttachment implements KeyAttachment, WritableOutput {
 			}
 			this.writeBuffer.compact();
 		}
-		// TODO if isWritable
 	}
 
 	@Override

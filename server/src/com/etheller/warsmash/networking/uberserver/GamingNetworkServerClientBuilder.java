@@ -1,8 +1,8 @@
 package com.etheller.warsmash.networking.uberserver;
 
 import net.warsmash.nio.channels.WritableOutput;
-import net.warsmash.uberserver.GamingNetworkServerToClientListener;
+import net.warsmash.uberserver.GamingNetworkClientToServerListener;
 
 public interface GamingNetworkServerClientBuilder {
-	GamingNetworkServerToClientListener createClient(WritableOutput output);
+	GamingNetworkClientToServerListener createClient(WritableOutput output);
 }

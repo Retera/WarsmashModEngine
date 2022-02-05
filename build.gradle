@@ -21,6 +21,7 @@ allprojects {
         appName = "warsmash"
         gdxVersion = '1.9.8'
         antlrVersion = '4.7'
+        xstreamVersion = '1.4.9'
     }
 
     repositories {
@@ -41,6 +42,8 @@ project(":server") {
 
     dependencies {
         implementation project(":shared")
+        api "com.thoughtworks.xstream:xstream:$xstreamVersion"
+        api "commons-codec:commons-codec:1.9"
     }
 }
 
@@ -94,9 +97,11 @@ project(":fdfparser") {
 
 project(":jassparser") {
     apply plugin: "antlr"
+    apply plugin: "java-library"
 
 
     dependencies {
+        implementation project(":shared")
         antlr "org.antlr:antlr4:$antlrVersion" // use antlr version 4
     }
 }

@@ -38,7 +38,7 @@ public class Camera {
 	/**
 	 * World -> View.
 	 */
-	private final Matrix4 viewMatrix;
+	public final Matrix4 viewMatrix;
 	/**
 	 * View -> Clip.
 	 */

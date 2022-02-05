@@ -1,59 +1,353 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import com.etheller.warsmash.viewer5.Shaders;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
 
 public class MdxShaders {
-	public static final String vsHd = Shaders.boneTexture + "\r\n" + //
-			"    uniform mat4 u_mvp;\r\n" + //
+	public static final String vsHd = "#version 120\r\n" + Shaders.boneTexture + "\r\n" + //
+			"    uniform mat4 u_VP;\r\n" + //
+			"    uniform mat4 u_MV;\r\n" + //
+			"    uniform vec3 u_eyePos;\r\n" + //
+			"    uniform sampler2D u_lightTexture;\r\n" + //
+			"    uniform float u_lightTextureHeight;\r\n" + //
 			"    uniform float u_layerAlpha;\r\n" + //
+			"    uniform bool u_hasBones;\r\n" + //
+			"    " + //
 			"    attribute vec3 a_position;\r\n" + //
 			"    attribute vec3 a_normal;\r\n" + //
 			"    attribute vec2 a_uv;\r\n" + //
-			"    attribute vec4 a_bones;\r\n" + //
-			"    attribute vec4 a_weights;\r\n" + //
-			"    varying vec3 v_normal;\r\n" + //
+			"    attribute vec4 a_tangent;\r\n" + //
+			// TODO ONLY_TANGENTS
+			"    \r\n" + //
+			"    \r\n" + //
+			"#define SKIN\r\n" + // TODO make this conditional
+			Shaders.transforms + //
+			"    \r\n" + //
+			"    \r\n" + //
+			"vec3 TBN(vec3 vector, vec3 tangent, vec3 binormal, vec3 normal) {\r\n" + //
+			"  return vec3(dot(vector, tangent), dot(vector, binormal), dot(vector, normal));\r\n" + //
+			"}\r\n" + //
+			"    \r\n" + //
+			"    \r\n" + //
 			"    varying vec2 v_uv;\r\n" + //
 			"    varying float v_layerAlpha;\r\n" + //
-			"    void transform(inout vec3 position, inout vec3 normal) {\r\n" + //
-			"      mat4 bone;\r\n" + //
-			"      bone += fetchMatrix(a_bones[0], 0.0) * a_weights[0];\r\n" + //
-			"      bone += fetchMatrix(a_bones[1], 0.0) * a_weights[1];\r\n" + //
-			"      bone += fetchMatrix(a_bones[2], 0.0) * a_weights[2];\r\n" + //
-			"      bone += fetchMatrix(a_bones[3], 0.0) * a_weights[3];\r\n" + //
-			"      position = vec3(bone * vec4(position, 1.0));\r\n" + //
-			"      normal = mat3(bone) * normal;\r\n" + //
-			"    }\r\n" + //
+			"    varying vec3 v_lightDir;\r\n" + //
+			"    varying vec3 v_eyeVec;\r\n" + //
+			"    varying vec3 v_normal;\r\n" + //
+			"    \r\n" + //
+			"    \r\n" + //
 			"    void main() {\r\n" + //
 			"      vec3 position = a_position;\r\n" + //
 			"      vec3 normal = a_normal;\r\n" + //
-			"      transform(position, normal);\r\n" + //
-			"      v_normal = normal;\r\n" + //
+			"      vec3 tangent = a_tangent.xyz;\r\n" + //
+			"      \r\n" + //
+			// Re-orthogonalize the tangent in case it wasnt normalized.
+			// See "One last thing" at
+			// https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+			"      \r\n" + //
+			"      tangent = normalize(tangent - dot(tangent, normal) * normal);\r\n" + //
+			"      \r\n" + //
+			"      vec3 binormal = cross(normal, tangent) * a_tangent.w;\r\n" + //
+			"      \r\n" + //
+			"      if (u_hasBones) {\r\n" + //
+			"        #ifdef SKIN\r\n" + //
+			"          transformSkin(position, normal, tangent, binormal);\r\n" + //
+			"        #else\r\n" + //
+			"          transformVertexGroupsHD(position, normal, tangent, binormal);\r\n" + //
+			"        #endif\r\n" + //
+			"      }\r\n" + //
+			"      \r\n" + //
+			"      vec3 position_mv = vec3(u_MV * vec4(position, 1));\r\n" + //
+			"      \r\n" + //
+			"      mat3 mv = mat3(u_MV);\r\n" + //
+			"      vec3 t = normalize(mv * tangent);\r\n" + //
+			"      vec3 b = normalize(mv * binormal);\r\n" + //
+			"      vec3 n = normalize(mv * normal);\r\n" + //
+			"      \r\n" + //
+			"      v_eyeVec = normalize(u_eyePos - position_mv);\r\n" + //
+			"      \r\n" + //
+			// TODO fix giant hack on lighting
+			"      float rowPos = (0.5) / u_lightTextureHeight;\r\n" + //
+			"      vec4 lightPosition = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
+			"      vec3 u_lightPos = lightPosition.xyz;\r\n" + //
+			"      vec3 lightDir = normalize(u_lightPos - position_mv);\r\n" + //
+			"      v_lightDir = normalize(TBN(lightDir, t, b, n));\r\n" + //
+			"      \r\n" + //
 			"      v_uv = a_uv;\r\n" + //
 			"      v_layerAlpha = u_layerAlpha;\r\n" + //
-			"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
+			"      \r\n" + //
+			"      v_normal = normal;\r\n" + //
+			"      // v_lightDirWorld = normalize(lightDir);\r\n" + //
+			"      \r\n" + //
+			// TODO ONLY_TANGENTS
+			"      gl_Position = u_VP * vec4(position, 1.0);\r\n" + //
 			"    }";
 
-	public static final String fsHd = "\r\n" + //
-			"    uniform sampler2D u_diffuseMap;\r\n" + //
-			"    uniform sampler2D u_ormMap;\r\n" + //
-			"    uniform sampler2D u_teamColorMap;\r\n" + //
-			"    uniform float u_filterMode;\r\n" + //
-			"    varying vec3 v_normal;\r\n" + //
-			"    varying vec2 v_uv;\r\n" + //
-			"    varying float v_layerAlpha;\r\n" + //
-			"    void main() {\r\n" + //
-			"      vec4 texel = texture2D(u_diffuseMap, v_uv);\r\n" + //
-			"      vec4 color = vec4(texel.rgb, texel.a * v_layerAlpha);\r\n" + //
-			"      vec4 orma = texture2D(u_ormMap, v_uv);\r\n" + //
-			"      if (orma.a > 0.1) {\r\n" + //
-			"        color *= texture2D(u_teamColorMap, v_uv) * orma.a;\r\n" + //
-			"      }\r\n" + //
-			"      // 1bit Alpha\r\n" + //
-			"      if (u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
-			"        discard;\r\n" + //
-			"      }\r\n" + //
-			"      gl_FragColor = color;\r\n" + //
-			"    }";
+	public static final String fsHd() {
+		return "#version 120\r\n" + //
+				"\r\n" + //
+				"\r\n" + //
+				"\r\n" + //
+				"uniform sampler2D u_diffuseMap;\r\n" + //
+				"uniform sampler2D u_normalsMap;\r\n" + //
+				"uniform sampler2D u_ormMap;\r\n" + //
+				"uniform sampler2D u_emissiveMap;\r\n" + //
+				"uniform sampler2D u_teamColorMap;\r\n" + //
+				"uniform sampler2D u_environmentMap;\r\n" + //
+				"uniform float u_filterMode;\r\n" + //
+				"// uniform sampler2D u_lutMap;\r\n" + //
+				"// uniform sampler2D u_envDiffuseMap;\r\n" + //
+				"// uniform sampler2D u_envSpecularMap;\r\n" + //
+				"varying vec2 v_uv;\r\n" + //
+				"varying float v_layerAlpha;\r\n" + //
+				"varying vec3 v_lightDir;\r\n" + //
+				"varying vec3 v_eyeVec;\r\n" + //
+				"varying vec3 v_normal;\r\n" + //
+				"// varying vec3 v_lightDirWorld;\r\n" + //
+				"#if defined(ONLY_TANGENTS)\r\n" + //
+				"varying vec3 v_tangent;\r\n" + //
+				"#endif\r\n" + //
+				"vec3 decodeNormal() {\r\n" + //
+				"  vec2 xy = texture2D(u_normalsMap, v_uv).xy * 2.0 - 1.0;\r\n" + //
+				"  \r\n" + //
+				"  return vec3(xy, sqrt(1.0 - dot(xy, xy)));\r\n" + //
+				"}\r\n" + //
+				"const vec2 invAtan = vec2(0.1591, 0.3183);\r\n" + //
+				"vec2 sampleEnvironmentMap(vec3 normal) {\r\n" + //
+				"  vec2 uv = vec2(atan(normal.x, normal.y), -asin(normal.z));\r\n" + //
+				"  uv *= invAtan;\r\n" + //
+				"  uv += 0.5;\r\n" + //
+				"  return uv;\r\n" + //
+				"}\r\n" + //
+				"vec4 getDiffuseColor() {\r\n" + //
+				"  vec4 color = texture2D(u_diffuseMap, v_uv);\r\n" + //
+				"  // 1bit Alpha\r\n" + //
+				"  if (u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
+				"    discard;\r\n" + //
+				"  }\r\n" + //
+				"  return color;\r\n" + //
+				"}\r\n" + //
+				"vec4 getOrmColor() {\r\n" + //
+				"  return texture2D(u_ormMap, v_uv);\r\n" + //
+				"}\r\n" + //
+				"vec3 getEmissiveColor() {\r\n" + //
+				"  return texture2D(u_emissiveMap, v_uv).rgb;\r\n" + //
+				"}\r\n" + //
+				"vec3 getTeamColor() {\r\n" + //
+				"  return texture2D(u_teamColorMap, v_uv).rgb;\r\n" + //
+				"}\r\n" + //
+				"// const float PI = 3.14159265359;\r\n" + //
+				"// const float RECIPROCAL_PI = 0.31830988618;\r\n" + //
+				"// const float RECIPROCAL_PI2 = 0.15915494;\r\n" + //
+				"// const float LN2 = 0.6931472;\r\n" + //
+				"// const float ENV_LODS = 6.0;\r\n" + //
+				"// vec4 SRGBtoLinear(vec4 srgb) {\r\n" + //
+				"//     vec3 linOut = pow(srgb.xyz, vec3(2.2));\r\n" + //
+				"//     return vec4(linOut, srgb.w);;\r\n" + //
+				"// }\r\n" + //
+				"// vec4 RGBMToLinear(in vec4 value) {\r\n" + //
+				"//     float maxRange = 6.0;\r\n" + //
+				"//     return vec4(value.xyz * value.w * maxRange, 1.0);\r\n" + //
+				"// }\r\n" + //
+				"// vec3 linearToSRGB(vec3 color) {\r\n" + //
+				"//     return pow(color, vec3(1.0 / 2.2));\r\n" + //
+				"// }\r\n" + //
+				"// // vec3 getNormal() {\r\n" + //
+				"// //     vec3 pos_dx = dFdx(vMPos.xyz);\r\n" + //
+				"// //     vec3 pos_dy = dFdy(vMPos.xyz);\r\n" + //
+				"// //     vec2 tex_dx = dFdx(vUv);\r\n" + //
+				"// //     vec2 tex_dy = dFdy(vUv);\r\n" + //
+				"// //     vec3 t = normalize(pos_dx * tex_dy.t - pos_dy * tex_dx.t);\r\n" + //
+				"// //     vec3 b = normalize(-pos_dx * tex_dy.s + pos_dy * tex_dx.s);\r\n" + //
+				"// //     mat3 tbn = mat3(t, b, normalize(vNormal));\r\n" + //
+				"// //     vec3 n = texture2D(tNormal, vUv * uNormalUVScale).rgb * 2.0 - 1.0;\r\n" + //
+				"// //     n.xy *= uNormalScale;\r\n" + //
+				"// //     vec3 normal = normalize(tbn * n);\r\n" + //
+				"// //     // Get world normal from view normal (normalMatrix * normal)\r\n" + //
+				"// //     return normalize((vec4(normal, 0.0) * viewMatrix).xyz);\r\n" + //
+				"// // }\r\n" + //
+				"// vec3 specularReflection(vec3 specularEnvR0, vec3 specularEnvR90, float VdH) {\r\n" + //
+				"//     return specularEnvR0 + (specularEnvR90 - specularEnvR0) * pow(clamp(1.0 - VdH, 0.0, 1.0), 5.0);\r\n"
+				+ //
+				"// }\r\n" + //
+				"// float geometricOcclusion(float NdL, float NdV, float roughness) {\r\n" + //
+				"//     float r = roughness;\r\n" + //
+				"//     float attenuationL = 2.0 * NdL / (NdL + sqrt(r * r + (1.0 - r * r) * (NdL * NdL)));\r\n" + //
+				"//     float attenuationV = 2.0 * NdV / (NdV + sqrt(r * r + (1.0 - r * r) * (NdV * NdV)));\r\n" + //
+				"//     return attenuationL * attenuationV;\r\n" + //
+				"// }\r\n" + //
+				"// float microfacetDistribution(float roughness, float NdH) {\r\n" + //
+				"//     float roughnessSq = roughness * roughness;\r\n" + //
+				"//     float f = (NdH * roughnessSq - NdH) * NdH + 1.0;\r\n" + //
+				"//     return roughnessSq / (PI * f * f);\r\n" + //
+				"// }\r\n" + //
+				"// vec2 cartesianToPolar(vec3 n) {\r\n" + //
+				"//     vec2 uv;\r\n" + //
+				"//     uv.x = atan(n.z, n.x) * RECIPROCAL_PI2 + 0.5;\r\n" + //
+				"//     uv.y = asin(n.y) * RECIPROCAL_PI + 0.5;\r\n" + //
+				"//     return uv;\r\n" + //
+				"// }\r\n" + //
+				"// void getIBLContribution(inout vec3 diffuse, inout vec3 specular, float NdV, float roughness, vec3 n, vec3 reflection, vec3 diffuseColor, vec3 specularColor) {\r\n"
+				+ //
+				"//   vec3 brdf = SRGBtoLinear(texture2D(u_lutMap, vec2(NdV, roughness))).rgb;\r\n" + //
+				"//   vec3 diffuseLight = RGBMToLinear(texture2D(u_envDiffuseMap, sampleEnvironmentMap(n))).rgb;\r\n" + //
+				"//   // Sample 2 levels and mix between to get smoother degradation\r\n" + //
+				"//   float blend = roughness * ENV_LODS;\r\n" + //
+				"//   float level0 = floor(blend);\r\n" + //
+				"//   float level1 = min(ENV_LODS, level0 + 1.0);\r\n" + //
+				"//   blend -= level0;\r\n" + //
+				"  \r\n" + //
+				"//   // Sample the specular env map atlas depending on the roughness value\r\n" + //
+				"//   vec2 uvSpec = sampleEnvironmentMap(reflection);\r\n" + //
+				"//   uvSpec.y /= 2.0;\r\n" + //
+				"//   vec2 uv0 = uvSpec;\r\n" + //
+				"//   vec2 uv1 = uvSpec;\r\n" + //
+				"//   uv0 /= pow(2.0, level0);\r\n" + //
+				"//   uv0.y += 1.0 - exp(-LN2 * level0);\r\n" + //
+				"//   uv1 /= pow(2.0, level1);\r\n" + //
+				"//   uv1.y += 1.0 - exp(-LN2 * level1);\r\n" + //
+				"//   vec3 specular0 = RGBMToLinear(texture2D(u_envSpecularMap, uv0)).rgb;\r\n" + //
+				"//   vec3 specular1 = RGBMToLinear(texture2D(u_envSpecularMap, uv1)).rgb;\r\n" + //
+				"//   vec3 specularLight = mix(specular0, specular1, blend);\r\n" + //
+				"//   diffuse = diffuseLight * diffuseColor;\r\n" + //
+				"  \r\n" + //
+				"//   // Bit of extra reflection for smooth materials\r\n" + //
+				"//   float reflectivity = pow((1.0 - roughness), 2.0) * 0.05;\r\n" + //
+				"//   specular = specularLight * (specularColor * brdf.x + brdf.y + reflectivity);\r\n" + //
+				"//   // specular *= uEnvSpecular;\r\n" + //
+				"// }\r\n" + //
+				"// void PBR() {\r\n" + //
+				"//   vec4 baseDiffuseColor = getDiffuseColor();\r\n" + //
+				"//   vec3 baseColor = baseDiffuseColor.rgb;\r\n" + //
+				"//   vec4 orm = getOrmColor();\r\n" + //
+				"//   vec3 tc = getTeamColor();\r\n" + //
+				"//   float tcFactor = getOrmColor().a;\r\n" + //
+				"//   if (tcFactor > 0.1) {\r\n" + //
+				"//     baseColor *= tc * tcFactor;\r\n" + //
+				"//   }\r\n" + //
+				"//   float roughness = clamp(orm.g, 0.04, 1.0);\r\n" + //
+				"//   float metallic = clamp(orm.b, 0.04, 1.0);\r\n" + //
+				"//   vec3 f0 = vec3(0.04);\r\n" + //
+				"//   vec3 diffuseColor = baseColor * (vec3(1.0) - f0) * (1.0 - metallic);\r\n" + //
+				"//   vec3 specularColor = mix(f0, baseColor, metallic);\r\n" + //
+				"//   vec3 specularEnvR0 = specularColor;\r\n" + //
+				"//   vec3 specularEnvR90 = vec3(clamp(max(max(specularColor.r, specularColor.g), specularColor.b) * 25.0, 0.0, 1.0));\r\n"
+				+ //
+				"//   vec3 N = v_normal;\r\n" + //
+				"//   vec3 V = normalize(v_eyeVec);\r\n" + //
+				"//   vec3 L = normalize(v_lightDirWorld);\r\n" + //
+				"//   vec3 H = normalize(L + V);\r\n" + //
+				"//   vec3 reflection = normalize(reflect(-V, N));\r\n" + //
+				"//   float NdL = clamp(dot(N, L), 0.001, 1.0);\r\n" + //
+				"//   float NdV = clamp(abs(dot(N, V)), 0.001, 1.0);\r\n" + //
+				"//   float NdH = clamp(dot(N, H), 0.0, 1.0);\r\n" + //
+				"//   float LdH = clamp(dot(L, H), 0.0, 1.0);\r\n" + //
+				"//   float VdH = clamp(dot(V, H), 0.0, 1.0);\r\n" + //
+				"//   vec3 F = specularReflection(specularEnvR0, specularEnvR90, VdH);\r\n" + //
+				"//   float G = geometricOcclusion(NdL, NdV, roughness);\r\n" + //
+				"//   float D = microfacetDistribution(roughness, NdH);\r\n" + //
+				"//   vec3 diffuseContrib = (1.0 - F) * (diffuseColor / PI);\r\n" + //
+				"//   vec3 specContrib = F * G * D / (4.0 * NdL * NdV);\r\n" + //
+				"  \r\n" + //
+				"//   // Shading based off lights\r\n" + //
+				"//   // vec3 color = NdL * uLightColor * (diffuseContrib + specContrib);\r\n" + //
+				"//   vec3 color = NdL * (diffuseContrib + specContrib);\r\n" + //
+				"//   // Calculate IBL lighting\r\n" + //
+				"//   vec3 diffuseIBL;\r\n" + //
+				"//   vec3 specularIBL;\r\n" + //
+				"//   getIBLContribution(diffuseIBL, specularIBL, NdV, roughness, N, reflection, diffuseColor, specularColor);\r\n"
+				+ //
+				"//   // Add IBL on top of color\r\n" + //
+				"//   color +=  specularIBL;\r\n" + //
+				"//   color *= orm.r;\r\n" + //
+				"//   color += getEmissiveColor();\r\n" + //
+				"//   // Convert to sRGB to display\r\n" + //
+				"//   gl_FragColor.rgb = color;\r\n" + //
+				"//   gl_FragColor.a = baseDiffuseColor.a;\r\n" + //
+				"// }\r\n" + //
+				"void onlyDiffuse() {\r\n" + //
+				"  vec4 baseColor = getDiffuseColor();\r\n" + //
+				"  vec3 tc = getTeamColor();\r\n" + //
+				"  float tcFactor = getOrmColor().a;\r\n" + //
+				"  if (tcFactor > 0.1) {\r\n" + //
+				"    baseColor.rgb *= tc * tcFactor;\r\n" + //
+				"  }\r\n" + //
+				"  gl_FragColor = baseColor;\r\n" + //
+				"}\r\n" + //
+				"void onlyNormalMap() {\r\n" + //
+				"  gl_FragColor = vec4(decodeNormal(), 1.0);\r\n" + //
+				"}\r\n" + //
+				"void onlyOcclusion() {\r\n" + //
+				"  gl_FragColor = vec4(getOrmColor().rrr, 1.0);\r\n" + //
+				"}\r\n" + //
+				"void onlyRoughness() {\r\n" + //
+				"  gl_FragColor = vec4(getOrmColor().ggg, 1.0);\r\n" + //
+				"}\r\n" + //
+				"void onlyMetallic() {\r\n" + //
+				"  gl_FragColor = vec4(getOrmColor().bbb, 1.0);\r\n" + //
+				"}\r\n" + //
+				"void onlyTeamColorFactor() {\r\n" + //
+				"  gl_FragColor = vec4(getOrmColor().aaa, 1.0);\r\n" + //
+				"}\r\n" + //
+				"void onlyEmissiveMap() {\r\n" + //
+				"  gl_FragColor = vec4(getEmissiveColor(), 1.0);\r\n" + //
+				"}\r\n" + //
+				"void onlyTexCoords() {\r\n" + //
+				"  gl_FragColor = vec4(v_uv, 0.0, 1.0);\r\n" + //
+				"}\r\n" + //
+				"void onlyNormals() {\r\n" + //
+				"  gl_FragColor = vec4(v_normal, 1.0);\r\n" + //
+				"}\r\n" + //
+				"#if defined(ONLY_TANGENTS)\r\n" + //
+				"void onlyTangents() {\r\n" + //
+				"  gl_FragColor = vec4(v_tangent, 1.0);\r\n" + //
+				"}\r\n" + //
+				"#endif\r\n" + //
+				"void lambert() {\r\n" + //
+				"  vec4 baseColor = getDiffuseColor();\r\n" + //
+				"  vec3 normal = decodeNormal();\r\n" + //
+				"  vec4 orm = getOrmColor();\r\n" + //
+				"  vec3 emissive = getEmissiveColor();\r\n" + //
+				"  vec3 tc = getTeamColor();\r\n" + //
+				"  float aoFactor = orm.r;\r\n" + //
+				"  float tcFactor = orm.a;\r\n" + //
+				"  float lambertFactor = clamp(dot(normal, v_lightDir), 0.0, 1.0);\r\n" + //
+				"  vec3 color = baseColor.rgb;\r\n" + //
+				(MdxHandler.CURRENT_SHADER_TYPE != ShaderEnvironmentType.MENU ? "  if (tcFactor > 0.1) {\r\n" + //
+						"    color = color * (1.0 - tcFactor) + color * tc * tcFactor;\r\n" + //
+						"  }\r\n" : "\r\n")
+				+ //
+				"  \r\n" + //
+				"  color *= clamp(lambertFactor * aoFactor + 0.1, 0.0, 1.0);\r\n" + //
+				"  color += emissive;\r\n" + //
+				"  gl_FragColor = vec4(color, baseColor.a);\r\n" + //
+				"}\r\n" + //
+				"void main() {\r\n" + //
+				"  #if defined(ONLY_DIFFUSE)\r\n" + //
+				"  onlyDiffuse();\r\n" + //
+				"  #elif defined(ONLY_NORMAL_MAP)\r\n" + //
+				"  onlyNormalMap();\r\n" + //
+				"  #elif defined(ONLY_OCCLUSION)\r\n" + //
+				"  onlyOcclusion();\r\n" + //
+				"  #elif defined(ONLY_ROUGHNESS)\r\n" + //
+				"  onlyRoughness();\r\n" + //
+				"  #elif defined(ONLY_METALLIC)\r\n" + //
+				"  onlyMetallic();\r\n" + //
+				"  #elif defined(ONLY_TC_FACTOR)\r\n" + //
+				"  onlyTeamColorFactor();\r\n" + //
+				"  #elif defined(ONLY_EMISSIVE)\r\n" + //
+				"  onlyEmissiveMap();\r\n" + //
+				"  #elif defined(ONLY_TEXCOORDS)\r\n" + //
+				"  onlyTexCoords();\r\n" + //
+				"  #elif defined(ONLY_NORMALS)\r\n" + //
+				"  onlyNormals();\r\n" + //
+				"  #elif defined(ONLY_TANGENTS)\r\n" + //
+				"  onlyTangents();\r\n" + //
+				"  #else\r\n" + //
+				"  lambert();\r\n" + //
+				"  #endif\r\n" + //
+				"}";
+	}
 
 	public static final String vsSimple = "\r\n" + //
 			"    uniform mat4 u_VP;\r\n" + //

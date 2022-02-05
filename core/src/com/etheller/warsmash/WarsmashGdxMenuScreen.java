@@ -857,6 +857,12 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 		}
 
+		@Override
+		public void setReplaceableTextureHD(final int replaceableTextureId, final String replaceableTextureFile) {
+			// TODO Auto-generated method stub
+
+		}
+
 	}
 
 	private class LibGDXContentLayerModel extends Model {

@@ -13,6 +13,7 @@ public class Geoset {
 	public int positionOffset;
 	public int normalOffset;
 	public int uvOffset;
+	public final int tangentOffset;
 	public int skinOffset;
 	public int faceOffset;
 	public int vertices;
@@ -29,14 +30,15 @@ public class Geoset {
 	public final MdlxGeoset mdlxGeoset;
 
 	public Geoset(final MdxModel model, final int index, final int positionOffset, final int normalOffset,
-			final int uvOffset, final int skinOffset, final int faceOffset, final int vertices, final int elements,
-			final int openGLSkinType, final int skinStride, final int boneCountOffsetBytes, final boolean unselectable,
-			final MdlxGeoset mdlxGeoset) {
+			final int uvOffset, final int tangentOffset, final int skinOffset, final int faceOffset, final int vertices,
+			final int elements, final int openGLSkinType, final int skinStride, final int boneCountOffsetBytes,
+			final boolean unselectable, final MdlxGeoset mdlxGeoset) {
 		this.model = model;
 		this.index = index;
 		this.positionOffset = positionOffset;
 		this.normalOffset = normalOffset;
 		this.uvOffset = uvOffset;
+		this.tangentOffset = tangentOffset;
 		this.skinOffset = skinOffset;
 		this.faceOffset = faceOffset;
 		this.vertices = vertices;
@@ -143,12 +145,16 @@ public class Geoset {
 				this.faceOffset, instances);
 	}
 
-	public void bindHd(final ShaderProgram shader, final int coordId) {
+	public void bindHd(final ShaderProgram shader, final SkinningType skinningType, final int coordId) {
 		shader.setVertexAttribute("a_position", 3, GL20.GL_FLOAT, false, 0, this.positionOffset);
-		shader.setVertexAttribute("a_normal", 3, GL20.GL_FLOAT, false, 0, this.positionOffset);
+		shader.setVertexAttribute("a_normal", 3, GL20.GL_FLOAT, false, 0, this.normalOffset);
 		shader.setVertexAttribute("a_uv", 2, GL20.GL_FLOAT, false, 0, this.uvOffset + (coordId * this.vertices * 8));
+
+		shader.setVertexAttribute("a_tangent", 4, GL20.GL_FLOAT, false, 0, this.tangentOffset);
+
+		// TODO ghostwolf splits here and allows HD with non-skin, or SD with skin
 		shader.setVertexAttribute("a_bones", 4, GL20.GL_UNSIGNED_BYTE, false, 8, this.skinOffset);
-		shader.setVertexAttribute("a_weights", 4, GL20.GL_UNSIGNED_BYTE, false, 8, this.skinOffset + 4);
+		shader.setVertexAttribute("a_weights", 4, GL20.GL_UNSIGNED_BYTE, true, 8, this.skinOffset + 4);
 	}
 
 	private static final class Variants {

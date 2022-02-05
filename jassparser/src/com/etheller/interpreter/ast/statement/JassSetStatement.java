@@ -1,7 +1,6 @@
 package com.etheller.interpreter.ast.statement;
 
 import com.etheller.interpreter.ast.Assignable;
-import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.expression.JassExpression;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
@@ -11,7 +10,6 @@ import com.etheller.interpreter.ast.value.JassValue;
 public class JassSetStatement implements JassStatement {
 	private final String identifier;
 	private final JassExpression expression;
-	private static JassException zeroGuy = null;
 
 	public JassSetStatement(final String identifier, final JassExpression expression) {
 		this.identifier = identifier;

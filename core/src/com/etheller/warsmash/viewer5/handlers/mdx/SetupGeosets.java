@@ -9,9 +9,6 @@ import com.etheller.warsmash.util.RenderMathUtils;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
 
 public class SetupGeosets {
-	private static final int NORMAL_BATCH = 0;
-	private static final int EXTENDED_BATCH = 1;
-	private static final int REFORGED_BATCH = 2;
 
 	public static void setupGeosets(final MdxModel model, final List<MdlxGeoset> geosets, final boolean bigNodeSpace) {
 		if (geosets.size() > 0) {
@@ -19,9 +16,10 @@ public class SetupGeosets {
 			int positionBytes = 0;
 			int normalBytes = 0;
 			int uvBytes = 0;
+			int tangentBytes = 0;
 			int skinBytes = 0;
 			int faceBytes = 0;
-			final int[] batchTypes = new int[geosets.size()];
+			final SkinningType[] batchTypes = new SkinningType[geosets.size()];
 
 			final int extendedBatchStride = bigNodeSpace ? 36 : 9;
 			final int normalBatchStride = bigNodeSpace ? 20 : 5;
@@ -32,17 +30,21 @@ public class SetupGeosets {
 			for (int i = 0, l = geosets.size(); i < l; i++) {
 				final MdlxGeoset geoset = geosets.get(i);
 
-				if (true /* geoset.getLod() == 0 */) {
+				if ((geoset.lod == 0) || (geoset.lod == -1)) {
 					final int vertices = geoset.getVertices().length / 3;
 
 					positionBytes += vertices * 12;
 					normalBytes += vertices * 12;
 					uvBytes += geoset.getUvSets().length * vertices * 8;
 
-					if (false /* geoset.skin.length */) {
+					if (geoset.tangents != null) {
+						tangentBytes += vertices * 16;
+					}
+
+					if (geoset.skin != null) {
 						skinBytes += vertices * 8;
 
-						batchTypes[i] = REFORGED_BATCH;
+						batchTypes[i] = SkinningType.Skin;
 					}
 					else {
 						long biggestGroup = 0;
@@ -56,12 +58,12 @@ public class SetupGeosets {
 						if (biggestGroup > 4) {
 							skinBytes += vertices * extendedBatchStride;
 
-							batchTypes[i] = EXTENDED_BATCH;
+							batchTypes[i] = SkinningType.ExtendedVertexGroups;
 						}
 						else {
 							skinBytes += vertices * normalBatchStride;
 
-							batchTypes[i] = NORMAL_BATCH;
+							batchTypes[i] = SkinningType.VertexGroups;
 						}
 					}
 
@@ -72,7 +74,8 @@ public class SetupGeosets {
 			int positionOffset = 0;
 			int normalOffset = positionOffset + positionBytes;
 			int uvOffset = normalOffset + normalBytes;
-			int skinOffset = uvOffset + uvBytes;
+			int tangentOffset = uvOffset + uvBytes;
+			int skinOffset = tangentOffset + tangentBytes;
 			int faceOffset = 0;
 
 			model.arrayBuffer = gl.glGenBuffer();
@@ -86,11 +89,12 @@ public class SetupGeosets {
 			for (int i = 0, l = geosets.size(); i < l; i++) {
 				final MdlxGeoset geoset = geosets.get(i);
 
-				final int batchType = batchTypes[i];
-				if (true /* geoset.lod == 0 */) {
+				final SkinningType batchType = batchTypes[i];
+				if ((geoset.lod == 0) || (geoset.lod == -1)) {
 					final float[] positions = geoset.getVertices();
 					final float[] normals = geoset.getNormals();
 					final float[][] uvSets = geoset.getUvSets();
+					final float[] tangents = geoset.getTangents();
 					final int[] faces = geoset.getFaces();
 					int[] skin = null;
 					final int vertices = geoset.getVertices().length / 3;
@@ -98,7 +102,7 @@ public class SetupGeosets {
 					int maxBones;
 					int skinStride;
 					int boneCountOffsetBytes;
-					if (batchType == EXTENDED_BATCH) {
+					if (batchType == SkinningType.ExtendedVertexGroups) {
 						maxBones = 8;
 						skinStride = extendedBatchStride;
 						boneCountOffsetBytes = extendedBatchBoneCountOffsetBytes;
@@ -109,8 +113,11 @@ public class SetupGeosets {
 						boneCountOffsetBytes = normalBatchBoneCountOffsetBytes;
 					}
 
-					if (batchType == REFORGED_BATCH) {
-						// skin = geoset.skin; // THIS IS NOT IMPLEMENTED
+					if (batchType == SkinningType.Skin) {
+						skin = new int[geoset.skin.length];
+						for (int j = 0; j < geoset.skin.length; j++) {
+							skin[j] = geoset.skin[j];
+						}
 					}
 					else {
 						final long[] matrixIndices = geoset.getMatrixIndices();
@@ -157,20 +164,20 @@ public class SetupGeosets {
 
 					final boolean unselectable = geoset.getSelectionFlags() == 4;
 					final Geoset vGeoset = new Geoset(model, model.getGeosets().size(), positionOffset, normalOffset,
-							uvOffset, skinOffset, faceOffset, vertices, faces.length, openGLSkinType, skinStride,
-							boneCountOffsetBytes, unselectable, geoset);
+							uvOffset, tangentOffset, skinOffset, faceOffset, vertices, faces.length, openGLSkinType,
+							skinStride, boneCountOffsetBytes, unselectable, geoset);
 
 					model.getGeosets().add(vGeoset);
 
-					if (batchType == REFORGED_BATCH) {
-						throw new UnsupportedOperationException("NYI");
-//						model.batches.add(new Reforged)
+					final Material material = model.materials.get((int) geoset.getMaterialId());
+					final boolean isHd = "Shader_HD_DefaultUnit".equals(material.shader);
+
+					if (isHd) {
+						model.batches.add(new Batch(model.batches.size(), vGeoset, material, batchType));
 					}
 					else {
-						final boolean isExtended = batchType == EXTENDED_BATCH;
-
 						for (final Layer layer : model.getMaterials().get((int) geoset.getMaterialId()).layers) {
-							model.batches.add(new Batch(model.batches.size(), vGeoset, layer, isExtended));
+							model.batches.add(new Batch(model.batches.size(), vGeoset, layer, batchType));
 						}
 					}
 
@@ -188,6 +195,12 @@ public class SetupGeosets {
 					for (final float[] uvSet : uvSets) {
 						gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, uvOffset, uvSet.length, RenderMathUtils.wrap(uvSet));
 						uvOffset += uvSet.length * 4;
+					}
+
+					if (tangents != null) {
+						gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, tangentOffset, tangents.length,
+								RenderMathUtils.wrap(tangents));
+						tangentOffset += tangents.length * 4;
 					}
 
 					// Skin.

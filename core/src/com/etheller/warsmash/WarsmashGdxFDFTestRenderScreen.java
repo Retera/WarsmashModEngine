@@ -821,6 +821,12 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 
 		}
 
+		@Override
+		public void setReplaceableTextureHD(final int replaceableTextureId, final String replaceableTextureFile) {
+			// TODO Auto-generated method stub
+
+		}
+
 	}
 
 	private class LibGDXContentLayerModel extends Model {

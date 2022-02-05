@@ -38,7 +38,7 @@ public class JassArrayedAssignmentStatement implements JassStatement {
 		if (arrayValue != null) {
 			final Integer indexInt = index.visit(IntegerJassValueVisitor.getInstance());
 			if ((indexInt != null) && (indexInt >= 0)) {
-				arrayValue.set(indexInt, this.expression.evaluate(globalScope, localScope, triggerScope));
+				arrayValue.set(globalScope, indexInt, this.expression.evaluate(globalScope, localScope, triggerScope));
 			}
 			else {
 				throw new JassException(globalScope,

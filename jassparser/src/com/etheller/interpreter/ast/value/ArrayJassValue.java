@@ -2,6 +2,8 @@ package com.etheller.interpreter.ast.value;
 
 import java.util.Arrays;
 
+import com.etheller.interpreter.ast.debug.JassException;
+import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
@@ -33,7 +35,7 @@ public class ArrayJassValue implements JassValue {
 		return visitor.accept(this);
 	}
 
-	public void set(final int index, JassValue value) {
+	public void set(final GlobalScope globalScope, final int index, JassValue value) {
 		final JassType primitiveType = this.type.getPrimitiveType();
 		if (value == null) {
 			if (primitiveType.isNullable()) {
@@ -48,6 +50,10 @@ public class ArrayJassValue implements JassValue {
 		if (!primitiveType.isAssignableFrom(valueType)) {
 			throw new IllegalStateException("Illegal type for assignment to " + primitiveType.getName() + " array: "
 					+ (valueType == null ? "null" : valueType.getName()));
+		}
+		if (index >= this.data.length) {
+			throw new JassException(globalScope, "Max jass array size exceeded",
+					new ArrayIndexOutOfBoundsException(index));
 		}
 		this.data[index] = value;
 	}

@@ -64,7 +64,8 @@ public class SetupGroups {
 
 	public static boolean matchingGroup(final Object group, final Object object) {
 		if (group instanceof BatchGroup) {
-			return (object instanceof Batch) && (((Batch) object).isExtended == ((BatchGroup) group).isExtended);
+			return (object instanceof Batch) && (((Batch) object).skinningType == ((BatchGroup) group).skinningType)
+					&& (((Batch) object).hd == ((BatchGroup) group).hd);
 //		} else if(group instanceof ReforgedBatch) { TODO
 //		    return (object instanceof ReforgedBatch) && (object.material.shader === group.shader);
 		}
@@ -76,7 +77,7 @@ public class SetupGroups {
 
 	public static GenericGroup createMatchingGroup(final MdxModel model, final Object object) {
 		if (object instanceof Batch) {
-			return new BatchGroup(model, ((Batch) object).isExtended);
+			return new BatchGroup(model, ((Batch) object).skinningType, ((Batch) object).hd);
 //		} else if(object instanceof ReforgedBatch) { TODO
 //			return new ReforgedBatchGroup(model, ((ReforgedBatch)object).material.shader);
 		}

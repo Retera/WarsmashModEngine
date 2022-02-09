@@ -61,8 +61,8 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
                 unit.getUnitAnimationListener().playAnimation(false, AnimationTokens.PrimaryTag.STAND,
                         SequenceUtils.WORK, 1.0f, true);
 
-                float healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / targetUnit.getUnitType().getBuildTime())
-                        * (targetUnit.getMaxLife() * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE)) * (ability.getRepairTimeRatio());
+                float healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / targetUnit.getUnitType().getBuildTime())* (ability.getRepairTimeRatio()
+                        * (targetUnit.getMaxLife() * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE)) );
 
                 if (targetUnit.getConstuctionProcessType() != null
                         && targetUnit.getConstuctionProcessType().equals(ConstructionFlag.REQURIE_REPAIR)
@@ -85,6 +85,7 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
                         targetUnit.setConstructionPowerBuild(true);
                     }
                     if(costs_gold > player.getGold() || costs_lumber > player.getLumber()) {
+
                         return unit.pollNextOrderBehavior(simulation);
                     }
                     targetUnit.setConstructionProgress(targetUnit.getConstructionProgress() +constructionProgressGain);
@@ -92,18 +93,23 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 
                 newLifeValue = Math.min(targetUnit.getLife() + healthGain, targetUnit.getMaximumLife());
                 if(costs_gold > player.getGold() || costs_lumber > player.getLumber()){
+
                     return unit.pollNextOrderBehavior(simulation);
                 }
-                boolean done = (newLifeValue >= targetWidget.getMaxLife());
+                boolean done = (newLifeValue >= ((CUnit) targetWidget).getUnitType().getMaxLife());
                 if (done) {
                     newLifeValue = targetWidget.getMaxLife();
                 }
-                player.charge(costs_gold,costs_lumber);
-                targetWidget.setLife(simulation, newLifeValue);
-                if (done && (targetUnit.getConstructionProgress()>= targetUnit.getUnitType().getBuildTime())||!targetUnit.isConstructing()) {
+                if(player.charge(costs_gold,costs_lumber)) {
+                    targetWidget.setLife(simulation, newLifeValue);
+                }else{
+                    return unit.pollNextOrderBehavior(simulation);
+                }
+                if (done && ((targetUnit.getConstructionProgress()>= targetUnit.getUnitType().getBuildTime())||!targetUnit.isConstructing())) {
                     return unit.pollNextOrderBehavior(simulation);
                 }
             }else{
+
                 return unit.pollNextOrderBehavior(simulation);
             }
         }

@@ -124,6 +124,7 @@ public class CUnit extends CWidget {
 	private final QueueItemType[] buildQueueTypes = new QueueItemType[WarsmashConstants.BUILD_QUEUE_SIZE];
 	private boolean queuedUnitFoodPaid = false;
 	private AbilityTarget rallyPoint;
+	private boolean constructionCanceled = false;
 
 	private int foodMade;
 	private int foodUsed;
@@ -273,6 +274,11 @@ public class CUnit extends CWidget {
 
 	public boolean isConstructionPowerBuilding(){return constructionPowerBuild;}
 
+	public void setConstructionCanceled(boolean constructionCanceled){this.constructionCanceled= constructionCanceled;}
+
+	public boolean isConstructionCanceled(){return constructionCanceled;}
+
+
 	/**
 	 * Updates one tick of simulation logic and return true if it's time to remove
 	 * this unit from the game.
@@ -289,6 +295,9 @@ public class CUnit extends CWidget {
 			}
 		}
 		if(isConsumed()){
+			//Food is subtracted when building process starts
+			int resetFoodWithUsageAddedBack = game.getPlayer(this.getPlayerIndex()).getFoodUsed()+this.getFoodUsed();
+			game.getPlayer(this.getPlayerIndex()).setFoodUsed(resetFoodWithUsageAddedBack);
 			return true;
 		}
 		if (isDead()) {
@@ -345,8 +354,6 @@ public class CUnit extends CWidget {
 				setRallyPoint(this);
 			}
 			if (this.constructing) {
-
-
 				final int buildTime = this.unitType.getBuildTime();
 				//ignore this for human build (MFROMAZ)
 				if(this.constuctionProcessType==null||this.constuctionProcessType!=ConstructionFlag.REQURIE_REPAIR) {
@@ -977,7 +984,20 @@ public class CUnit extends CWidget {
 			this.pathingInstance.remove();
 			this.pathingInstance = null;
 		}
-		popoutWorker(simulation);
+		if(!(this.getConstuctionProcessType()!=null&&this.getConstuctionProcessType()==ConstructionFlag.CONSUME_WORKER)){
+			popoutWorker(simulation);
+		}else{
+			if(workerInside!=null) {
+				if (this.isConstructionCanceled()) {
+					int resetFoodWithUsageAddedBack = simulation.getPlayer(this.getPlayerIndex()).getFoodUsed() + workerInside.getFoodUsed();
+					popoutWorker(simulation);
+					simulation.getPlayer(this.getPlayerIndex()).setFoodUsed(resetFoodWithUsageAddedBack);
+				} else {
+					workerInside.setConsumed(true);
+				}
+			}
+		}
+
 		final CPlayer player = simulation.getPlayer(this.playerIndex);
 		if (this.foodMade != 0) {
 			player.setUnitFoodMade(this, 0);

@@ -15,6 +15,8 @@ import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 
 public class CBehaviorNightElfBuild extends CBehaviorOrcBuild{
+    private CUnit constructedStructure;
+
     public CBehaviorNightElfBuild(CUnit unit) {
         super(unit);
     }
@@ -55,7 +57,9 @@ public class CBehaviorNightElfBuild extends CBehaviorOrcBuild{
                 this.unit.setInvulnerable(true);
                 if(constructedStructure.getUnitType().getClassifications().contains(CUnitClassification.ANCIENT)) {
                     constructedStructure.setConstuctionProcessType(ConstructionFlag.CONSUME_WORKER);
+                    simulation.getPlayer(playerIndex).setFoodUsed(simulation.getPlayer(playerIndex).getFoodUsed()-this.unit.getFoodUsed());
                 }
+                this.constructedStructure = constructedStructure;
                 simulation.unitConstructedEvent(this.unit, constructedStructure);
             }
             else {
@@ -66,4 +70,20 @@ public class CBehaviorNightElfBuild extends CBehaviorOrcBuild{
         }
         return this.unit.pollNextOrderBehavior(simulation);
     }
+
+    /*@Override
+    public void end(CSimulation game, boolean interrupted) {
+        if(this.constructedStructure!=null) {
+            this.constructedStructure.setConstructionCanceled(true);
+        }
+        super.end(game, interrupted);
+    }
+
+    @Override
+    public void endMove(CSimulation game, boolean interrupted){
+        if(this.constructedStructure!=null) {
+            this.constructedStructure.setConstructionCanceled(true);
+        }
+        super.end(game, interrupted);
+    }*/
 }

@@ -75,4 +75,9 @@ public class CAbilityNightElfBuild extends AbstractCAbilityBuild {
 	public int getBaseOrderId() {
 		return OrderIds.nightelfbuild;
 	}
+
+	@Override
+	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
+		super.onCancelFromQueue(game, unit, orderId);
+	}
 }

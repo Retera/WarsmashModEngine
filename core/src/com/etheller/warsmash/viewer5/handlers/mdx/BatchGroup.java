@@ -191,6 +191,8 @@ public class BatchGroup extends GenericGroup {
 					webGL.bindTexture(teamColorTexture, 4);
 					webGL.bindTexture(environmentMapTexture, 5);
 
+					diffuseLayer.bind(shader);
+
 					geoset.bindHd(shader, batch.skinningType, diffuseLayer.coordId);
 					geoset.render();
 				}

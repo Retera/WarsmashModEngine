@@ -1,5 +1,8 @@
 package net.warsmash.uberserver;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.warsmash.nio.util.DisconnectListener;
 
 public interface GamingNetworkServerToClientListener extends DisconnectListener {
@@ -34,5 +37,91 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 		public static final int BAD_SESSION = 8;
 		public static final int CHANNEL_MESSAGE = 9;
 		public static final int CHANNEL_EMOTE = 10;
+	}
+
+	public static final class GamingNetworkServerToClientNotifier implements GamingNetworkServerToClientListener {
+		private final List<GamingNetworkServerToClientListener> listeners = new ArrayList<>();
+
+		public void addSubscriber(final GamingNetworkServerToClientListener listener) {
+			this.listeners.add(listener);
+		}
+
+		@Override
+		public void disconnected() {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.disconnected();
+			}
+		}
+
+		@Override
+		public void handshakeAccepted() {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.handshakeAccepted();
+			}
+		}
+
+		@Override
+		public void handshakeDenied(final HandshakeDeniedReason reason) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.handshakeDenied(reason);
+			}
+		}
+
+		@Override
+		public void accountCreationOk() {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.accountCreationOk();
+			}
+		}
+
+		@Override
+		public void accountCreationFailed(final AccountCreationFailureReason reason) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.accountCreationFailed(reason);
+			}
+		}
+
+		@Override
+		public void loginOk(final long sessionToken, final String welcomeMessage) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.loginOk(sessionToken, welcomeMessage);
+			}
+		}
+
+		@Override
+		public void loginFailed(final LoginFailureReason loginFailureReason) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.loginFailed(loginFailureReason);
+			}
+		}
+
+		@Override
+		public void joinedChannel(final String channelName) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.joinedChannel(channelName);
+			}
+		}
+
+		@Override
+		public void badSession() {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.badSession();
+			}
+		}
+
+		@Override
+		public void channelMessage(final String userName, final String message) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.channelMessage(userName, message);
+			}
+		}
+
+		@Override
+		public void channelEmote(final String userName, final String message) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.channelEmote(userName, message);
+			}
+		}
+
 	}
 }

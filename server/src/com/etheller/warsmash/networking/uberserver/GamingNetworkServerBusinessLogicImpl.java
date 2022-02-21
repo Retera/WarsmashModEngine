@@ -39,7 +39,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 			final GamingNetworkServerToClientListener connectionContext) {
 		if (this.acceptedGames.contains(new AcceptedGameListKey(gameId, version))) {
 			connectionContext.handshakeAccepted();
-		} else {
+		}
+		else {
 			connectionContext.handshakeDenied(HandshakeDeniedReason.BAD_GAME_VERSION);
 		}
 	}
@@ -49,7 +50,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 		final User user = this.userManager.createUser(username, passwordHash);
 		if (user == null) {
 			connectionContext.accountCreationFailed(AccountCreationFailureReason.USERNAME_ALREADY_EXISTS);
-		} else {
+		}
+		else {
 			connectionContext.accountCreationOk();
 		}
 	}
@@ -68,10 +70,12 @@ public class GamingNetworkServerBusinessLogicImpl {
 				this.tokenToSession.put(session.getToken(), session);
 				this.userIdToCurrentSession.put(user.getId(), session);
 				connectionContext.loginOk(session.getToken(), GamingNetworkServerBusinessLogicImpl.this.welcomeMessage);
-			} else {
+			}
+			else {
 				connectionContext.loginFailed(LoginFailureReason.INVALID_CREDENTIALS);
 			}
-		} else {
+		}
+		else {
 			connectionContext.loginFailed(LoginFailureReason.UNKNOWN_USER);
 		}
 	}
@@ -95,8 +99,10 @@ public class GamingNetworkServerBusinessLogicImpl {
 				this.nameLowerCaseToChannel.put(channelKey, chatChannel);
 			}
 			chatChannel.addUser(session);
+			session.currentChatChannel = channelKey;
 			connectionContext.joinedChannel(channelName);
-		} else {
+		}
+		else {
 			connectionContext.badSession();
 		}
 	}
@@ -122,7 +128,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 			if (chatChannel != null) {
 				chatChannel.sendMessage(session.getUser().getUsername(), text);
 			}
-		} else {
+		}
+		else {
 			connectionContext.badSession();
 		}
 	}
@@ -136,7 +143,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 			if (chatChannel != null) {
 				chatChannel.sendEmote(session.getUser().getUsername(), text);
 			}
-		} else {
+		}
+		else {
 			connectionContext.badSession();
 		}
 	}
@@ -148,7 +156,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 			if (session.getLastActiveTime() < (System.currentTimeMillis() - (60 * 60 * 1000))) {
 				killSession(session);
 				return null;
-			} else {
+			}
+			else {
 				session.notifyUsed(mostRecentConnectionContext);
 				return session;
 			}
@@ -222,7 +231,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 			for (final SessionImpl session : this.userSessions) {
 				try {
 					session.mostRecentConnectionContext.channelMessage(sourceUserName, message);
-				} catch (final Exception exc) {
+				}
+				catch (final Exception exc) {
 					exc.printStackTrace();
 				}
 			}
@@ -232,7 +242,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 			for (final SessionImpl session : this.userSessions) {
 				try {
 					session.mostRecentConnectionContext.channelEmote(sourceUserName, message);
-				} catch (final Exception exc) {
+				}
+				catch (final Exception exc) {
 					exc.printStackTrace();
 				}
 			}

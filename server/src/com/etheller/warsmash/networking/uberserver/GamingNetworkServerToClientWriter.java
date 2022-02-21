@@ -114,4 +114,9 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 		this.writeBuffer.put(messageBytes);
 		send();
 	}
+
+	@Override
+	public void disconnected() {
+		throw new UnsupportedOperationException();
+	}
 }

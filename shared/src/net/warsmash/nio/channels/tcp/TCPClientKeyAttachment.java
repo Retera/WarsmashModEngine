@@ -3,6 +3,7 @@ package net.warsmash.nio.channels.tcp;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
 import net.warsmash.nio.channels.ChannelListener;
@@ -12,6 +13,7 @@ import net.warsmash.nio.util.ExceptionListener;
 
 public class TCPClientKeyAttachment implements KeyAttachment, WritableOutput {
 	private TCPClientParser parser;
+	private final Selector selector;
 	private final SocketChannel channel;
 	private final ExceptionListener exceptionListener;
 	private final ChannelListener channelListener;
@@ -19,8 +21,10 @@ public class TCPClientKeyAttachment implements KeyAttachment, WritableOutput {
 	private final ByteBuffer writeBuffer;
 	private SelectionKey key;
 
-	public TCPClientKeyAttachment(final SocketChannel channel, final ExceptionListener exceptionListener,
-			final ChannelListener channelListener, final ByteBuffer readBuffer, final ByteBuffer writeBuffer) {
+	public TCPClientKeyAttachment(final Selector selector, final SocketChannel channel,
+			final ExceptionListener exceptionListener, final ChannelListener channelListener,
+			final ByteBuffer readBuffer, final ByteBuffer writeBuffer) {
+		this.selector = selector;
 		this.channel = channel;
 		this.exceptionListener = exceptionListener;
 		this.channelListener = channelListener;
@@ -48,24 +52,30 @@ public class TCPClientKeyAttachment implements KeyAttachment, WritableOutput {
 				}
 				else if (nRead == -1) {
 					this.parser.disconnected();
-					this.channel.close();
-					this.channelListener.channelClosed();
+					close();
+					return;
 				}
 				else {
 					throw new IOException("Did not read bytes");
 				}
 			}
 			catch (final IOException e) {
+				close();
 				this.exceptionListener.caught(e);
+				return;
 			}
 		}
 		if (this.key.isWritable()) {
 			this.writeBuffer.flip();
-			try {
-				this.channel.write(this.writeBuffer);
-			}
-			catch (final IOException e) {
-				this.exceptionListener.caught(e);
+			if (this.writeBuffer.remaining() > 0) {
+				try {
+					this.channel.write(this.writeBuffer);
+				}
+				catch (final IOException e) {
+					close();
+					this.exceptionListener.caught(e);
+					return;
+				}
 			}
 			this.writeBuffer.compact();
 		}
@@ -74,6 +84,13 @@ public class TCPClientKeyAttachment implements KeyAttachment, WritableOutput {
 	@Override
 	public void close() {
 		try {
+			if (this.key != null) {
+				this.key.cancel();
+			}
+			else {
+				throw new IllegalStateException("close() called multiple times on TCPClientKeyAttachment");
+			}
+			this.key = null;
 			this.channel.close();
 			this.channelListener.channelClosed();
 		}

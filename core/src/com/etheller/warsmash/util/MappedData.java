@@ -19,7 +19,7 @@ public class MappedData {
 
 	public MappedData(final String buffer) {
 		if (buffer != null) {
-			this.load(buffer);
+			load(buffer);
 		}
 	}
 
@@ -33,11 +33,18 @@ public class MappedData {
 			final SlkFile file = new SlkFile(buffer);
 			final List<List<Object>> rows = file.rows;
 			final List<Object> header = rows.get(0);
+			int keyColumn = 0;
+			for (int i = 1; i < header.size(); i++) {
+				final Object headerColumnName = header.get(i);
+				if ("AnimationEventCode".equals(headerColumnName)) {
+					keyColumn = i;
+				}
+			}
 
 			for (int i = 1, l = rows.size(); i < l; i++) {
 				final List<Object> row = rows.get(i);
 				if (row != null) {
-					String name = (String) row.get(0);
+					String name = (String) row.get(keyColumn);
 
 					if (name != null) {
 						name = name.toLowerCase();

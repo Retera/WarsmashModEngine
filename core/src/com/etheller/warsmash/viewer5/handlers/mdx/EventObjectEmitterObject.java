@@ -163,9 +163,13 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 			if (!model.reforged) {
 				tables.add(viewer.loadGeneric(pathSolver.solve("UI\\SoundInfo\\AnimLookups.slk", solverParams).finalSrc,
 						FetchDataTypeName.SLK, mappedDataCallback));
+				tables.add(viewer.loadGeneric(pathSolver.solve("UI\\SoundInfo\\AnimSounds.slk", solverParams).finalSrc,
+						FetchDataTypeName.SLK, mappedDataCallback));
 			}
-			tables.add(viewer.loadGeneric(pathSolver.solve("UI\\SoundInfo\\AnimSounds.slk", solverParams).finalSrc,
-					FetchDataTypeName.SLK, mappedDataCallback));
+			else {
+				tables.add(viewer.loadGeneric(pathSolver.solve("UI\\SoundInfo\\AnimSounds.slk", solverParams).finalSrc,
+						FetchDataTypeName.SLK, mappedDataCallback));
+			}
 		}
 		else {
 			// Units\Critters\BlackStagMale\BlackStagMale.mdx has an event object named
@@ -175,7 +179,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 
 		// TODO I am scrapping some async stuff with promises here from the JS and
 		// calling load
-		this.load(tables);
+		load(tables);
 	}
 
 	private float getFloat(final MappedDataRow row, final String name) {
@@ -272,9 +276,15 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 				// This is mostly to save on bandwidth and loading time, especially when loading
 				// full maps.
 				if (viewer.audioEnabled) {
-					final MappedData animSounds = (MappedData) tables.get(1).data;
 
-					final MappedDataRow animSoundsRow = animSounds.getRow((String) row.get("SoundLabel"));
+					final MappedDataRow animSoundsRow;
+					if (model.reforged) {
+						animSoundsRow = row;
+					}
+					else {
+						final MappedData animSounds = (MappedData) tables.get(1).data;
+						animSoundsRow = animSounds.getRow((String) row.get("SoundLabel"));
+					}
 
 					if (animSoundsRow != null) {
 						this.distanceCutoff = getFloat(animSoundsRow, "DistanceCutoff");
@@ -287,7 +297,14 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 						final String[] fileNames = ((String) animSoundsRow.get("FileNames")).split(",");
 						final GenericResource[] resources = new GenericResource[fileNames.length];
 						for (int i = 0; i < fileNames.length; i++) {
-							final String path = ((String) animSoundsRow.get("DirectoryBase")) + fileNames[i];
+							final String directoryBase = (String) animSoundsRow.get("DirectoryBase");
+							String path;
+							if (directoryBase != null) {
+								path = (directoryBase) + fileNames[i];
+							}
+							else {
+								path = fileNames[i];
+							}
 							try {
 								final String pathString = pathSolver.solve(path, model.solverParams).finalSrc;
 								final GenericResource genericResource = viewer.loadGeneric(pathString,
@@ -325,12 +342,12 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 	public int getValue(final long[] out, final MdxComplexInstance instance) {
 		if (this.globalSequence != -1) {
 
-			return this.getValueAtTime(out, instance.counter % this.globalSequence, 0, this.globalSequence);
+			return getValueAtTime(out, instance.counter % this.globalSequence, 0, this.globalSequence);
 		}
 		else if (instance.sequence != -1) {
 			final long[] interval = this.model.getSequences().get(instance.sequence).getInterval();
 
-			return this.getValueAtTime(out, instance.frame, interval[0], interval[1]);
+			return getValueAtTime(out, instance.frame, interval[0], interval[1]);
 		}
 		else {
 			out[0] = this.defval[0];

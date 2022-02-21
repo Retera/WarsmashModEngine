@@ -13,6 +13,7 @@ import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
+import com.etheller.warsmash.parsers.fdf.frames.TextAreaFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 
 public class BattleNetUI {
@@ -67,6 +68,14 @@ public class BattleNetUI {
 	private final GlueButtonFrame welcomeEnterChatButton;
 	private final SimpleFrame welcomeQuitBattleNetButtonContainer;
 	private final SimpleFrame chatQuitBattleNetButtonContainer;
+	private long gamingNetworkSessionToken;
+	private String gamingNetworkMessageOfTheDay;
+	private final EditBoxFrame naAccountName;
+	private final EditBoxFrame naPassword;
+	private final EditBoxFrame naRepeatPassword;
+	private final GlueButtonFrame okButton;
+	private final StringFrame chatChannelNameLabel;
+	private final TextAreaFrame chatTextArea;
 
 	public BattleNetUI(final GameUI rootFrame, final Viewport uiViewport,
 			final BattleNetUIActionListener actionListener) {
@@ -100,11 +109,17 @@ public class BattleNetUI {
 
 		this.battleNetNewAccountPanel = rootFrame.getFrameByName("NewAccountPanel", 0);
 		this.battleNetNewAccountPanel.setVisible(false);
+
+		this.naAccountName = (EditBoxFrame) rootFrame.getFrameByName("NAAccountName", 0);
+		this.naPassword = (EditBoxFrame) rootFrame.getFrameByName("NAPassword", 0);
+		this.naRepeatPassword = (EditBoxFrame) rootFrame.getFrameByName("NARepeatPassword", 0);
+
 		this.battleNetCancelBackdrop = rootFrame.getFrameByName("CancelBackdrop", 0);
 		this.battleNetCancelBackdrop.setVisible(false);
 		this.cancelButton = (GlueButtonFrame) rootFrame.getFrameByName("CancelButton", 0);
 		this.battleNetOKBackdrop = rootFrame.getFrameByName("OKBackdrop", 0);
 		this.battleNetOKBackdrop.setVisible(false);
+		this.okButton = (GlueButtonFrame) rootFrame.getFrameByName("OKButton", 0);
 
 		// *******************************************
 		// *
@@ -116,7 +131,16 @@ public class BattleNetUI {
 		this.battleNetLoginPanel.setVisible(false);
 
 		this.accountNameEditBox = (EditBoxFrame) rootFrame.getFrameByName("AccountName", 0);
+		final Runnable logonRunnable = new Runnable() {
+			@Override
+			public void run() {
+				actionListener.logon(BattleNetUI.this.accountNameEditBox.getText(),
+						BattleNetUI.this.passwordEditBox.getText());
+			}
+		};
+		this.accountNameEditBox.setOnEnter(logonRunnable);
 		this.passwordEditBox = (EditBoxFrame) rootFrame.getFrameByName("Password", 0);
+		this.passwordEditBox.setOnEnter(logonRunnable);
 		this.passwordRecoveryButton = (GlueButtonFrame) rootFrame.getFrameByName("PasswordRecoveryButton", 0);
 		this.passwordRecoveryButton.setOnClick(new Runnable() {
 			@Override
@@ -129,6 +153,27 @@ public class BattleNetUI {
 		this.changeEmailButton.setEnabled(false);
 		this.changePasswordButton = (GlueButtonFrame) rootFrame.getFrameByName("ChangePasswordButton", 0);
 		this.newAccountButton = (GlueButtonFrame) rootFrame.getFrameByName("NewAccountButton", 0);
+		this.newAccountButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				BattleNetUI.this.battleNetLoginPanel.setVisible(false);
+				BattleNetUI.this.battleNetNewAccountPanel.setVisible(true);
+				BattleNetUI.this.battleNetOKBackdrop.setVisible(true);
+				BattleNetUI.this.okButton.setOnClick(new Runnable() {
+					@Override
+					public void run() {
+						actionListener.createAccount(BattleNetUI.this.naAccountName.getText(),
+								BattleNetUI.this.naPassword.getText(), BattleNetUI.this.naRepeatPassword.getText());
+					}
+				});
+				BattleNetUI.this.cancelButton.setOnClick(new Runnable() {
+					@Override
+					public void run() {
+						leaveNewAccountPanel();
+					}
+				});
+			}
+		});
 		this.tosButton = (GlueButtonFrame) rootFrame.getFrameByName("TOSButton", 0);
 		this.tosButton.setOnClick(new Runnable() {
 			@Override
@@ -159,13 +204,7 @@ public class BattleNetUI {
 		};
 
 		this.logonButton = (GlueButtonFrame) rootFrame.getFrameByName("LogonButton", 0);
-		this.logonButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				actionListener.logon(BattleNetUI.this.accountNameEditBox.getText(),
-						BattleNetUI.this.passwordEditBox.getText());
-			}
-		});
+		this.logonButton.setOnClick(logonRunnable);
 
 		this.battleNetChatPanel = rootFrame.createFrame("BattleNetChatPanel", rootFrame, 0, 0);
 		this.battleNetChatPanel.setVisible(false);
@@ -205,6 +244,17 @@ public class BattleNetUI {
 		this.battleNetChatTopButtons.add(this.profileButton);
 		this.chatPanel = rootFrame.getFrameByName("ChatPanel", 0);
 		this.chatPanel.setVisible(false);
+		this.chatChannelNameLabel = (StringFrame) rootFrame.getFrameByName("ChatChannelNameLabel", 0);
+		this.chatTextArea = (TextAreaFrame) rootFrame.getFrameByName("ChatTextArea", 0);
+		final EditBoxFrame chatEditBox = (EditBoxFrame) rootFrame.getFrameByName("BattleNetChatEditBox", 0);
+		chatEditBox.setFilterAllowAny();
+		chatEditBox.setOnEnter(new Runnable() {
+			@Override
+			public void run() {
+				actionListener.submitChatText(chatEditBox.getText());
+				chatEditBox.setText("", rootFrame, uiViewport);
+			}
+		});
 		this.chatQuitBattleNetButtonContainer = (SimpleFrame) rootFrame
 				.getFrameByName("ChatQuitBattleNetButtonContainer", 0);
 
@@ -223,8 +273,6 @@ public class BattleNetUI {
 		rootFrame.setText(this.welcomeNewItemCount, "(0)");
 		this.welcomeNewsBoxContainer = (SimpleFrame) rootFrame.getFrameByName("NewsBoxContainer", 0);
 		this.welcomeMOTDText = (StringFrame) rootFrame.getFrameByName("WelcomeMOTDText", 0);
-		rootFrame.setText(this.welcomeMOTDText,
-				"This MOTD is set from source code and is not an externalized string. |cffdd00ffWarsmash|r engine is producing this message locally.|n|n |cff00ff00TODO:|r Modify the |cffdd00ffWarsmash|r engine sourcecode to download a message from the server to put here that admins can customize!");
 		this.welcomeUpcomingTournamentPanel = rootFrame.getFrameByName("UpcomingTournamentPanel", 0);
 		this.welcomeUpcomingTournamentPanel.setVisible(false);
 		this.welcomeEnterChatButton = (GlueButtonFrame) rootFrame.getFrameByName("EnterChatButton", 0);
@@ -247,6 +295,16 @@ public class BattleNetUI {
 				actionListener.quitBattleNet();
 			}
 		});
+
+		// *******************************************
+		// *
+		// * New Account Panel NCS (Patch 1.31ish)
+		// *
+		// ******
+		final UIFrame newAccountPanelNCS = rootFrame.getFrameByName("NewAccountPanelNCS", 0);
+		if (newAccountPanelNCS != null) {
+			newAccountPanelNCS.setVisible(false);
+		}
 	}
 
 	public void setTopButtonsVisible(final boolean flag) {
@@ -277,9 +335,11 @@ public class BattleNetUI {
 		hideCurrentScreen();
 	}
 
-	public void loginAccepted() {
+	public void loginAccepted(final long sessionToken, final String welcomeMessage) {
 		this.battleNetLoginPanel.setVisible(false);
 		this.battleNetCancelBackdrop.setVisible(false);
+		this.gamingNetworkSessionToken = sessionToken;
+		this.rootFrame.setText(this.welcomeMOTDText, welcomeMessage);
 	}
 
 	public void showWelcomeScreen() {
@@ -322,5 +382,37 @@ public class BattleNetUI {
 		this.quitBattleNetButton.clearFramePointAssignments();
 		this.quitBattleNetButton.setSetAllPoints(true);
 		this.quitBattleNetButton.positionBounds(this.rootFrame, this.uiViewport);
+	}
+
+	public void accountCreatedOk() {
+		leaveNewAccountPanel();
+	}
+
+	private void leaveNewAccountPanel() {
+		BattleNetUI.this.battleNetLoginPanel.setVisible(true);
+		BattleNetUI.this.battleNetNewAccountPanel.setVisible(false);
+		BattleNetUI.this.battleNetOKBackdrop.setVisible(false);
+		BattleNetUI.this.cancelButton.setOnClick(BattleNetUI.this.exitLoginRunnable);
+	}
+
+	public long getGamingNetworkSessionToken() {
+		return this.gamingNetworkSessionToken;
+	}
+
+	public void joinedChannel(final String channelName) {
+		this.rootFrame.setText(this.chatChannelNameLabel, channelName);
+	}
+
+	public void channelMessage(final String userName, final String message) {
+		final String messageText = String.format(this.rootFrame.getTemplates().getDecoratedString("CHATEVENT_ID_TALK"),
+				this.rootFrame.getTemplates().getDecoratedString("CHATCOLOR_TALK_USER"), userName,
+				this.rootFrame.getTemplates().getDecoratedString("CHATCOLOR_TALK_MESSAGE"), message);
+		this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+	}
+
+	public void channelEmote(final String userName, final String message) {
+		final String messageText = String.format(this.rootFrame.getTemplates().getDecoratedString("CHATEVENT_ID_EMOTE"),
+				this.rootFrame.getTemplates().getDecoratedString("CHATCOLOR_EMOTE_MESSAGE"), userName, message);
+		this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
 	}
 }

@@ -87,12 +87,12 @@ public class SelectableChannelOpener implements ChannelOpener {
 			channel.configureBlocking(false);
 			final ByteBuffer readBuffer = ByteBuffer.allocate(bufferSize).order(byteOrder);
 			final ByteBuffer writeBuffer = ByteBuffer.allocate(bufferSize).order(byteOrder);
-			final TCPClientKeyAttachment keyAttachment = new TCPClientKeyAttachment(channel, exceptionListener,
-					this.channelListener, readBuffer, writeBuffer);
+			final TCPClientKeyAttachment keyAttachment = new TCPClientKeyAttachment(this.selector, channel,
+					exceptionListener, this.channelListener, readBuffer, writeBuffer);
 			keyAttachment.setParser(tcpClientParser);
 			if (connected) {
-				final SelectionKey key = channel.register(this.selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE,
-						keyAttachment);
+				final SelectionKey key = channel.register(this.selector,
+						SelectionKey.OP_READ/* | SelectionKey.OP_WRITE */, keyAttachment);
 				keyAttachment.setKey(key);
 			}
 			else {
@@ -116,7 +116,9 @@ public class SelectableChannelOpener implements ChannelOpener {
 
 				while (keyIterator.hasNext()) {
 					final SelectionKey key = keyIterator.next();
-					((KeyAttachment) key.attachment()).selected();
+					if (key.isValid()) {
+						((KeyAttachment) key.attachment()).selected();
+					}
 					keyIterator.remove();
 				}
 			}

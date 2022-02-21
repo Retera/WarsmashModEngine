@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -29,6 +30,7 @@ import com.etheller.warsmash.networking.WarsmashClient;
 import com.etheller.warsmash.networking.WarsmashClientSendingOrderListener;
 import com.etheller.warsmash.networking.WarsmashClientWriter;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
@@ -68,6 +70,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.DialogWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapInfoPane;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.TeamSetupPane;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.BattleNetUI;
@@ -76,6 +79,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuData;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMission;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
+
+import net.warsmash.uberserver.AccountCreationFailureReason;
+import net.warsmash.uberserver.GamingNetwork;
+import net.warsmash.uberserver.GamingNetworkConnection;
+import net.warsmash.uberserver.GamingNetworkServerToClientListener;
+import net.warsmash.uberserver.HandshakeDeniedReason;
+import net.warsmash.uberserver.LoginFailureReason;
 
 public class MenuUI {
 	private static final Vector2 screenCoordsVector = new Vector2();
@@ -195,10 +205,16 @@ public class MenuUI {
 	private Music[] currentMusics;
 	private int currentMusicIndex;
 	private boolean currentMusicRandomizeIndex;
+	private final GamingNetworkConnection gamingNetworkConnection;
+	private UIFrame battleNetConnectDialog;
+	private StringFrame battleNetConnectInfoText;
+	private GlueTextButtonFrame battleNetConnectCancelButton;
+	private DialogWar3 dialog;
 
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
 			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
-			final DataTable warsmashIni, final RootFrameListener rootFrameListener) {
+			final DataTable warsmashIni, final RootFrameListener rootFrameListener,
+			final GamingNetworkConnection gamingNetworkConnection) {
 		this.dataSource = dataSource;
 		this.uiViewport = uiViewport;
 		this.uiScene = uiScene;
@@ -207,6 +223,7 @@ public class MenuUI {
 		this.menuScreen = menuScreen;
 		this.warsmashIni = warsmashIni;
 		this.rootFrameListener = rootFrameListener;
+		this.gamingNetworkConnection = gamingNetworkConnection;
 
 		this.widthRatioCorrection = getMinWorldWidth() / 1600f;
 		this.heightRatioCorrection = getMinWorldHeight() / 1200f;
@@ -223,6 +240,131 @@ public class MenuUI {
 				e.printStackTrace();
 			}
 		}
+
+		gamingNetworkConnection.addListener(new GamingNetworkServerToClientListener() {
+
+			@Override
+			public void disconnected() {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						System.err.println("Disconnected from server...");
+						MenuUI.this.battleNetConnectDialog.setVisible(false);
+						setMainMenuButtonsEnabled(true);
+						MenuUI.this.dialog.showError("ERROR_ID_DISCONNECT", null);
+//						MenuUI.this.battleNetUI.hide();
+//						playCurrentBattleNetGlueSpriteDeath();
+//						MenuUI.this.glueSpriteLayerCenter.setSequence("Death");
+//						MenuUI.this.menuState = MenuState.LEAVING_BATTLE_NET_FROM_LOGGED_IN;
+					}
+				});
+			}
+
+			@Override
+			public void loginOk(final long sessionToken, final String welcomeMessage) {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						MenuUI.this.battleNetUI.loginAccepted(sessionToken, welcomeMessage);
+						MenuUI.this.battleNetUI.getDoors().setSequence(PrimaryTag.DEATH);
+						MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_WELCOME;
+					}
+				});
+			}
+
+			@Override
+			public void loginFailed(final LoginFailureReason loginFailureReason) {
+				String msg;
+				switch (loginFailureReason) {
+				case INVALID_CREDENTIALS:
+					msg = "ERROR_ID_BADPASSWORD";
+					break;
+				case UNKNOWN_USER:
+					msg = "ERROR_ID_UNKNOWNACCOUNT";
+					break;
+				default:
+					msg = "ERROR_ID_INVALIDPARAMS";
+					break;
+				}
+				MenuUI.this.dialog.showError(msg, null);
+			}
+
+			@Override
+			public void joinedChannel(final String channelName) {
+				MenuUI.this.battleNetUI.joinedChannel(channelName);
+				MenuUI.this.battleNetUI.hideWelcomeScreen();
+				MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetWelcome Death");
+				MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetWelcome Death");
+				MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CHAT_CHANNEL;
+			}
+
+			@Override
+			public void handshakeDenied(final HandshakeDeniedReason reason) {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						MenuUI.this.battleNetConnectDialog.setVisible(true);
+						MenuUI.this.rootFrame.setDecoratedText(MenuUI.this.battleNetConnectInfoText,
+								"NETERROR_DEFAULTERROR");
+					}
+				});
+			}
+
+			@Override
+			public void handshakeAccepted() {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						MenuUI.this.battleNetConnectDialog.setVisible(false);
+						MenuUI.this.glueSpriteLayerTopLeft.setSequence("MainMenu Death");
+						MenuUI.this.glueSpriteLayerTopRight.setSequence("MainMenu Death");
+						setMainMenuButtonsEnabled(true);
+						setMainMenuVisible(false);
+						MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_LOGIN;
+					}
+				});
+			}
+
+			@Override
+			public void channelMessage(final String userName, final String message) {
+				MenuUI.this.battleNetUI.channelMessage(userName, message);
+			}
+
+			@Override
+			public void channelEmote(final String userName, final String message) {
+				MenuUI.this.battleNetUI.channelEmote(userName, message);
+			}
+
+			@Override
+			public void badSession() {
+				MenuUI.this.dialog.showError("ERROR_ID_NOTLOGGEDON", null);
+			}
+
+			@Override
+			public void accountCreationOk() {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						MenuUI.this.battleNetUI.accountCreatedOk();
+					}
+				});
+			}
+
+			@Override
+			public void accountCreationFailed(final AccountCreationFailureReason reason) {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						switch (reason) {
+						default:
+						case USERNAME_ALREADY_EXISTS:
+							MenuUI.this.dialog.showError("ERROR_ID_NAMEUSED", null);
+							break;
+						}
+					}
+				});
+			}
+		});
 	}
 
 	public float getHeightRatioCorrection() {
@@ -315,6 +457,20 @@ public class MenuUI {
 			Gdx.input.setCursorCatched(true);
 		}
 
+		this.battleNetConnectDialog = this.rootFrame.createFrame("BattleNetConnectDialog", this.rootFrame, 0, 0);
+		this.battleNetConnectDialog.setVisible(false);
+		this.battleNetConnectDialog.addAnchor(new AnchorDefinition(FramePoint.CENTER, 0, 0));
+		this.battleNetConnectInfoText = (StringFrame) this.rootFrame.getFrameByName("ConnectInfoText", 0);
+		this.battleNetConnectCancelButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("ConnectButton", 0);
+		this.battleNetConnectCancelButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				MenuUI.this.gamingNetworkConnection.userRequestDisconnect();
+				MenuUI.this.battleNetConnectDialog.setVisible(false);
+				setMainMenuButtonsEnabled(true);
+			}
+		});
+
 		// Main Menu interactivity
 		this.singlePlayerButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("SinglePlayerButton", 0);
 		this.battleNetButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("BattleNetButton", 0);
@@ -365,16 +521,30 @@ public class MenuUI {
 		this.battleNetButton.setOnClick(new Runnable() {
 			@Override
 			public void run() {
-				MenuUI.this.glueSpriteLayerTopLeft.setSequence("MainMenu Death");
-				MenuUI.this.glueSpriteLayerTopRight.setSequence("MainMenu Death");
-				setMainMenuVisible(false);
-				MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_LOGIN;
+				setMainMenuButtonsEnabled(false);
+				MenuUI.this.rootFrame.setDecoratedText(MenuUI.this.battleNetConnectInfoText, "BNET_CONNECT_INIT");
+				MenuUI.this.battleNetConnectDialog.positionBounds(MenuUI.this.rootFrame, MenuUI.this.uiViewport);
+				MenuUI.this.battleNetConnectDialog.setVisible(true);
+				if (MenuUI.this.gamingNetworkConnection.userRequestConnect()) {
+					MenuUI.this.gamingNetworkConnection.handshake(WarsmashConstants.getGameId(),
+							GamingNetwork.GAME_VERSION_DATA);
+				}
+				else {
+					MenuUI.this.battleNetConnectDialog.setVisible(false);
+					setMainMenuButtonsEnabled(true);
+					MenuUI.this.dialog.showError("ERROR_ID_CANTCONNECT", new Runnable() {
+						@Override
+						public void run() {
+
+						}
+					});
+				}
 			}
 		});
 		this.realmButton.setOnClick(new Runnable() {
 			@Override
 			public void run() {
-
+				MenuUI.this.battleNetConnectDialog.setVisible(true);
 			}
 		});
 
@@ -794,6 +964,7 @@ public class MenuUI {
 				MenuUI.this.battleNetUI.getDoors().setSequence(PrimaryTag.DEATH);
 				MenuUI.this.menuScreen.unAlternateModelBackToNormal();
 				MenuUI.this.menuState = MenuState.LEAVING_BATTLE_NET;
+				MenuUI.this.gamingNetworkConnection.userRequestDisconnect();
 			}
 
 			@Override
@@ -803,10 +974,23 @@ public class MenuUI {
 
 			@Override
 			public void logon(final String accountName, final String password) {
-				// TODO: connection
-				MenuUI.this.battleNetUI.loginAccepted();
-				MenuUI.this.battleNetUI.getDoors().setSequence(PrimaryTag.DEATH);
-				MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_WELCOME;
+				if (accountName.isEmpty()) {
+					MenuUI.this.dialog.showError("ERROR_ID_NAMEBLANK", null);
+				}
+				else if (password.isEmpty()) {
+					MenuUI.this.dialog.showError("NETERROR_NOPASSWORD", null);
+				}
+				else {
+					final char[] passwordData = getPasswordData(password);
+					MenuUI.this.gamingNetworkConnection.login(accountName, passwordData);
+				}
+			}
+
+			private char[] getPasswordData(final String password) {
+				final int nPasswordChars = password.length();
+				final char[] passwordData = new char[nPasswordChars];
+				password.getChars(0, nPasswordChars, passwordData, 0);
+				return passwordData;
 			}
 
 			@Override
@@ -815,22 +999,7 @@ public class MenuUI {
 				playCurrentBattleNetGlueSpriteDeath();
 				MenuUI.this.glueSpriteLayerCenter.setSequence("Death");
 				MenuUI.this.menuState = MenuState.LEAVING_BATTLE_NET_FROM_LOGGED_IN;
-			}
-
-			public void playCurrentBattleNetGlueSpriteDeath() {
-				switch (MenuUI.this.menuState) {
-				case BATTLE_NET_CHAT_CHANNEL:
-				case GOING_TO_BATTLE_NET_CHAT_CHANNEL:
-					MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetChatRoom Death");
-					MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetChatRoom Death");
-					break;
-				default:
-				case BATTLE_NET_WELCOME:
-				case GOING_TO_BATTLE_NET_WELCOME:
-					MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetWelcome Death");
-					MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetWelcome Death");
-					break;
-				}
+				MenuUI.this.gamingNetworkConnection.userRequestDisconnect();
 			}
 
 			@Override
@@ -843,12 +1012,48 @@ public class MenuUI {
 
 			@Override
 			public void enterDefaultChat() {
-				MenuUI.this.battleNetUI.hideWelcomeScreen();
-				MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetWelcome Death");
-				MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetWelcome Death");
-				MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CHAT_CHANNEL;
+				MenuUI.this.gamingNetworkConnection.joinChannel(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(),
+						"Frozen Throne USA-1"); // TODO maybe not hardcode this
+			}
+
+			@Override
+			public void createAccount(final String username, final String password, final String repeatPassword) {
+				if (!password.equals(repeatPassword)) {
+					MenuUI.this.dialog.showError("NETERROR_PASSWORDMISMATCH", null);
+				}
+				else if (username.isEmpty()) {
+					MenuUI.this.dialog.showError("ERROR_ID_NAMEBLANK", null);
+				}
+				else if (password.isEmpty()) {
+					MenuUI.this.dialog.showError("NETERROR_NOPASSWORD", null);
+				}
+				else if (username.length() < 3) {
+					// TODO checks like this should be server side!!!
+					MenuUI.this.dialog.showError("NETERROR_USERNAMETOOSHORT", null);
+				}
+				else if (password.length() < 3) {
+					MenuUI.this.dialog.showError("NETERROR_PASSWORDTOOSHORT", null);
+				}
+				else {
+					final char[] passwordData = getPasswordData(password);
+					MenuUI.this.gamingNetworkConnection.createAccount(username, passwordData);
+				}
+			}
+
+			@Override
+			public void submitChatText(final String text) {
+				if (text.startsWith("/me ")) {
+					MenuUI.this.gamingNetworkConnection
+							.emoteMessage(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text.substring(4));
+				}
+				else {
+					MenuUI.this.gamingNetworkConnection
+							.chatMessage(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text);
+				}
 			}
 		});
+
+		this.dialog = new DialogWar3(this.rootFrame, this.uiViewport);
 
 		// position all
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
@@ -967,6 +1172,19 @@ public class MenuUI {
 		this.customCampaignButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
 		this.skirmishButton.setEnabled(b);
 		this.singlePlayerCancelButton.setEnabled(b);
+	}
+
+	private void setMainMenuButtonsEnabled(final boolean b) {
+		this.singlePlayerButton.setEnabled(b);
+		this.battleNetButton.setEnabled(b);
+		this.realmButton.setEnabled(b);
+		this.localAreaNetworkButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
+		this.optionsButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
+		this.creditsButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
+		this.exitButton.setEnabled(b);
+		if (this.editionButton != null) {
+			this.editionButton.setEnabled(b);
+		}
 	}
 
 	private void setMainMenuVisible(final boolean visible) {
@@ -1131,7 +1349,7 @@ public class MenuUI {
 				break;
 			case GOING_TO_BATTLE_NET_LOGIN_PART2:
 				MenuUI.this.menuScreen.alternateModelToBattlenet();
-				this.battleNetUI.showLoginPrompt("<NYI>");
+				this.battleNetUI.showLoginPrompt(this.gamingNetworkConnection.getGatewayString());
 				this.menuState = MenuState.BATTLE_NET_LOGIN;
 				break;
 			case LEAVING_BATTLE_NET_FROM_LOGGED_IN:
@@ -1402,35 +1620,13 @@ public class MenuUI {
 	}
 
 	private static enum MenuState {
-		GOING_TO_MAIN_MENU,
-		MAIN_MENU,
-		GOING_TO_BATTLE_NET_LOGIN,
-		GOING_TO_BATTLE_NET_LOGIN_PART2,
-		BATTLE_NET_LOGIN,
-		LEAVING_BATTLE_NET,
-		LEAVING_BATTLE_NET_FROM_LOGGED_IN,
-		GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU,
-		BATTLE_NET_CUSTOM_GAME_MENU,
-		GOING_TO_BATTLE_NET_WELCOME,
-		BATTLE_NET_WELCOME,
-		GOING_TO_SINGLE_PLAYER,
-		LEAVING_CAMPAIGN,
-		SINGLE_PLAYER,
-		GOING_TO_SINGLE_PLAYER_SKIRMISH,
-		SINGLE_PLAYER_SKIRMISH,
-		GOING_TO_MAP,
-		GOING_TO_CAMPAIGN,
-		GOING_TO_CAMPAIGN_PART2,
-		GOING_TO_MISSION_SELECT,
-		MISSION_SELECT,
-		CAMPAIGN,
-		GOING_TO_SINGLE_PLAYER_PROFILE,
-		SINGLE_PLAYER_PROFILE,
-		GOING_TO_LOADING_SCREEN,
-		QUITTING,
-		RESTARTING,
-		GOING_TO_BATTLE_NET_CHAT_CHANNEL,
-		BATTLE_NET_CHAT_CHANNEL;
+		GOING_TO_MAIN_MENU, MAIN_MENU, GOING_TO_BATTLE_NET_LOGIN, GOING_TO_BATTLE_NET_LOGIN_PART2, BATTLE_NET_LOGIN,
+		LEAVING_BATTLE_NET, LEAVING_BATTLE_NET_FROM_LOGGED_IN, GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU,
+		BATTLE_NET_CUSTOM_GAME_MENU, GOING_TO_BATTLE_NET_WELCOME, BATTLE_NET_WELCOME, GOING_TO_SINGLE_PLAYER,
+		LEAVING_CAMPAIGN, SINGLE_PLAYER, GOING_TO_SINGLE_PLAYER_SKIRMISH, SINGLE_PLAYER_SKIRMISH, GOING_TO_MAP,
+		GOING_TO_CAMPAIGN, GOING_TO_CAMPAIGN_PART2, GOING_TO_MISSION_SELECT, MISSION_SELECT, CAMPAIGN,
+		GOING_TO_SINGLE_PLAYER_PROFILE, SINGLE_PLAYER_PROFILE, GOING_TO_LOADING_SCREEN, QUITTING, RESTARTING,
+		GOING_TO_BATTLE_NET_CHAT_CHANNEL, BATTLE_NET_CHAT_CHANNEL;
 	}
 
 	public void hide() {
@@ -1452,8 +1648,22 @@ public class MenuUI {
 	}
 
 	public boolean keyUp(final int keycode) {
-		if (this.focusUIFrame != null) {
-			this.focusUIFrame.keyUp(keycode);
+		if (keycode == Input.Keys.TAB) {
+			// accessibility tab focus ui
+			final List<FocusableFrame> focusableFrames = this.rootFrame.getFocusableFrames();
+			final int indexOf = focusableFrames.indexOf(this.focusUIFrame) + 1;
+			for (int i = indexOf; i < focusableFrames.size(); i++) {
+				final FocusableFrame focusableFrame = focusableFrames.get(i);
+				if (focusableFrame.isVisibleOnScreen() && focusableFrame.isFocusable()) {
+					setFocusFrame(focusableFrame);
+					break;
+				}
+			}
+		}
+		else {
+			if (this.focusUIFrame != null) {
+				this.focusUIFrame.keyUp(keycode);
+			}
 		}
 		return false;
 	}
@@ -1580,5 +1790,21 @@ public class MenuUI {
 			this.currentMusics[index].play();
 		}
 		return null;
+	}
+
+	public void playCurrentBattleNetGlueSpriteDeath() {
+		switch (MenuUI.this.menuState) {
+		case BATTLE_NET_CHAT_CHANNEL:
+		case GOING_TO_BATTLE_NET_CHAT_CHANNEL:
+			MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetChatRoom Death");
+			MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetChatRoom Death");
+			break;
+		default:
+		case BATTLE_NET_WELCOME:
+		case GOING_TO_BATTLE_NET_WELCOME:
+			MenuUI.this.glueSpriteLayerTopLeft.setSequence("BattleNetWelcome Death");
+			MenuUI.this.glueSpriteLayerTopRight.setSequence("BattleNetWelcome Death");
+			break;
+		}
 	}
 }

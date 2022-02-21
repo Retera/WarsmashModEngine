@@ -26,6 +26,8 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 	private Viewport viewport;
 	private GlyphLayout glyphLayout;
 	private Runnable onChange;
+	private Runnable onEnter;
+	private CharacterFilter filter = CharacterFilter.DEFAULT;
 
 	public EditBoxFrame(final String name, final UIFrame parent, final float editBorderSize,
 			final Color editCursorColor) {
@@ -115,6 +117,12 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 			}
 			break;
 		}
+		case Input.Keys.ENTER: {
+			if (this.onEnter != null) {
+				this.onEnter.run();
+			}
+			break;
+		}
 		}
 		return false;
 	}
@@ -126,7 +134,7 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 
 	@Override
 	public boolean keyTyped(final char character) {
-		if (Character.isAlphabetic(character) || Character.isDigit(character) || (character == ' ')) {
+		if (this.filter.allow(character)) {
 			final String prevText = this.editTextFrame.getText();
 			final int prevTextLength = prevText.length();
 			final int cursorIndex = Math.min(this.cursorIndex, prevTextLength);
@@ -173,8 +181,47 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 		return this.editTextFrame.getText();
 	}
 
+	public void setText(final String text, final GameUI gameUI, final Viewport uiViewport) {
+		this.editTextFrame.setText(text, gameUI, uiViewport);
+	}
+
 	public void setOnChange(final Runnable onChange) {
 		this.onChange = onChange;
 	}
 
+	public void setOnEnter(final Runnable onEnter) {
+		this.onEnter = onEnter;
+	}
+
+	public void setFilter(final CharacterFilter filter) {
+		this.filter = filter;
+	}
+
+	public void setFilterAllowAny() {
+		this.filter = new CharacterFilter() {
+			@Override
+			public boolean allow(final char character) {
+				return EditBoxFrame.this.editTextFrame.getFrameFont().getData().hasGlyph(character)
+						&& (character >= 32);
+			}
+		};
+	}
+
+	public static interface CharacterFilter {
+		boolean allow(char character);
+
+		CharacterFilter DEFAULT = new CharacterFilter() {
+			@Override
+			public boolean allow(final char character) {
+				return Character.isAlphabetic(character) || Character.isDigit(character) || (character == ' ');
+			}
+		};
+
+		CharacterFilter ACCOUNT = new CharacterFilter() {
+			@Override
+			public boolean allow(final char character) {
+				return Character.isAlphabetic(character) || Character.isDigit(character);
+			}
+		};
+	}
 }

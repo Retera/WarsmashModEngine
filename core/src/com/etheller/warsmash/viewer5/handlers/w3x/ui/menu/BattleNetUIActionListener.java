@@ -12,4 +12,8 @@ public interface BattleNetUIActionListener {
 	void openCustomGameMenu();
 
 	void enterDefaultChat();
+
+	void createAccount(String username, String password, String repeatPassword);
+
+	void submitChatText(String text);
 }

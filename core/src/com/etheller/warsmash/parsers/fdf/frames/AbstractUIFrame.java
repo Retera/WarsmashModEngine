@@ -20,6 +20,13 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 		this.childFrames.add(childFrame);
 	}
 
+	public void add(final int index, final UIFrame childFrame) {
+		if (childFrame == null) {
+			return;
+		}
+		this.childFrames.add(index, childFrame);
+	}
+
 	public void remove(final UIFrame childFrame) {
 		if (childFrame == null) {
 			return;

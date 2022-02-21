@@ -21,7 +21,7 @@ allprojects {
         appName = "warsmash"
         gdxVersion = '1.9.8'
         antlrVersion = '4.7'
-        xstreamVersion = '1.4.9'
+        xstreamVersion = '1.4.19'
     }
 
     repositories {

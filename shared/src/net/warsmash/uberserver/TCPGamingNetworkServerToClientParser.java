@@ -13,7 +13,7 @@ public class TCPGamingNetworkServerToClientParser implements TCPClientParser {
 
 	@Override
 	public void parse(final ByteBuffer data) {
-		while (data.remaining() > 8) {
+		while (data.remaining() >= 8) {
 			final int protocolMessageId = data.getInt(data.position() + 0);
 			final int length = data.getInt(data.position() + 4);
 			if (data.remaining() >= length) {
@@ -91,6 +91,9 @@ public class TCPGamingNetworkServerToClientParser implements TCPClientParser {
 					break;
 				}
 				}
+			}
+			else {
+				break;
 			}
 		}
 	}

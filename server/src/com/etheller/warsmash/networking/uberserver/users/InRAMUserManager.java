@@ -17,10 +17,13 @@ public class InRAMUserManager implements UserManager {
 	private final transient XStream xstream = new XStream();
 
 	public InRAMUserManager() {
+		this.xstream
+				.allowTypesByWildcard(new String[] { "com.etheller.warsmash.networking.uberserver.users.UserImpl" });
 		final File usersFile = new File("users.db");
 		if (!usersFile.exists()) {
 			this.users = new ArrayList<>();
-		} else {
+		}
+		else {
 			this.users = (List<UserImpl>) this.xstream.fromXML(usersFile);
 			for (final UserImpl user : this.users) {
 				user.resumeTransientFields(this);
@@ -60,7 +63,8 @@ public class InRAMUserManager implements UserManager {
 		synchronized (this.users) {
 			try (PrintWriter writer = new PrintWriter("users.db")) {
 				writer.print(usersXml);
-			} catch (final FileNotFoundException e) {
+			}
+			catch (final FileNotFoundException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -74,10 +78,12 @@ public class InRAMUserManager implements UserManager {
 			if (PasswordAuthentication.authenticate(password, user.getPasswordHash())) {
 				user.setPasswordHash(this.passwordAuthentication.hash(newPassword));
 				authenticationListener.resetOk();
-			} else {
+			}
+			else {
 				authenticationListener.resetFailed(PasswordResetFailureReason.INVALID_CREDENTIALS);
 			}
-		} else {
+		}
+		else {
 			authenticationListener.resetFailed(PasswordResetFailureReason.UNKNOWN_USER);
 		}
 	}

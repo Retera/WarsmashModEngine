@@ -42,6 +42,7 @@ import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringPairFrameDefinit
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetMenuItemFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
 import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
+import com.etheller.warsmash.parsers.fdf.frames.ClickConsumingTextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ControlFrame;
 import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.FilterModeTextureFrame;
@@ -58,6 +59,7 @@ import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
+import com.etheller.warsmash.parsers.fdf.frames.TextAreaFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
@@ -74,6 +76,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
 public final class GameUI extends AbstractUIFrame implements UIFrame {
+	private static final boolean SHOW_BLACKNESS_BEHIND_DIALOGS = false;
 	public static final boolean DEBUG = false;
 	private static final boolean PIN_FAIL_IS_FATAL = false;
 	private final DataSource dataSource;
@@ -96,6 +99,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final BitmapFont font;
 	private final BitmapFont font20;
 	private final DynamicFontGeneratorHolder dynamicFontGeneratorHolder;
+	private final List<FocusableFrame> focusableFrames = new ArrayList<>();
 
 	public GameUI(final DataSource dataSource, final GameSkin skin, final Viewport viewport, final Scene uiScene,
 			final AbstractMdxModelViewer modelViewer, final int racialCommandIndex, final WTS mapStrings) {
@@ -436,8 +440,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				inflatedFrame = spriteFrame;
 			}
-			else if ("FRAME".equals(frameDefinition.getFrameType())
-					|| "DIALOG".equals(frameDefinition.getFrameType())) {
+			else if ("FRAME".equals(frameDefinition.getFrameType())) {
 				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinition.getName(), parent);
 				// TODO: we should not need to put ourselves in this map 2x, but we do
 				// since there are nested inflate calls happening before the general case
@@ -446,6 +449,36 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition,
 							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+				}
+				inflatedFrame = simpleFrame;
+			}
+			else if ("DIALOG".equals(frameDefinition.getFrameType())) {
+				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinition.getName(), parent);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				final String dialogBackdropKey = frameDefinition.getString("DialogBackdrop");
+				this.nameToFrame.put(frameDefinition.getName(), simpleFrame);
+
+				if (SHOW_BLACKNESS_BEHIND_DIALOGS) {
+					final TextureFrame modalDialogBlacknessScreenCover = new ClickConsumingTextureFrame(null, parent,
+							false, null);
+					modalDialogBlacknessScreenCover.setTexture("Textures\\Black32.blp", this);
+					modalDialogBlacknessScreenCover.setColor(1.0f, 1.0f, 1.0f, 0.5f);
+					modalDialogBlacknessScreenCover.setSetAllPoints(true);
+					simpleFrame.add(modalDialogBlacknessScreenCover);
+				}
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					if (childDefinition.getName().equals(dialogBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, simpleFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						simpleFrame.add(inflatedChild);
+					}
+					else {
+						simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+					}
 				}
 				inflatedFrame = simpleFrame;
 			}
@@ -996,6 +1029,71 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				inflatedFrame = controlFrame;
 			}
+			else if (false && "TEXTAREA".equals(frameDefinition.getFrameType())) {
+				// TODO advanced components here
+				final TextAreaFrame controlFrame = new TextAreaFrame(frameDefinition.getName(), parent, viewport2);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinition.getName(), controlFrame);
+				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
+				final String listBoxScrollBarKey = frameDefinition.getString("TextAreaScrollBar");
+				final Float textAreaLineHeight = frameDefinition.getFloat("TextAreaLineHeight");
+				if (textAreaLineHeight != null) {
+					controlFrame.setLineHeight(convertY(viewport2, textAreaLineHeight));
+				}
+				final Float textAreaLineGap = frameDefinition.getFloat("TextAreaLineGap");
+				if (textAreaLineGap != null) {
+					controlFrame.setLineGap(convertY(viewport2, textAreaLineGap));
+				}
+				final Float textAreaInset = frameDefinition.getFloat("TextAreaInset");
+				if (textAreaInset != null) {
+					controlFrame.setInset(convertY(viewport2, textAreaInset));
+				}
+				final Float textAreaMaxLines = frameDefinition.getFloat("TextAreaMaxLines");
+				if (textAreaMaxLines != null) {
+					controlFrame.setMaxLines(textAreaMaxLines.intValue());
+				}
+
+				FontDefinition font = frameDefinition.getFont("FrameFont");
+				if ((font == null) && (parentDefinitionIfAvailable != null)) {
+					font = parentDefinitionIfAvailable.getFont("FrameFont");
+				}
+				this.fontParam.size = (int) convertY(viewport2,
+						(font == null ? (textAreaLineHeight == null ? 0.06f : textAreaLineHeight)
+								: font.getFontSize()));
+				if (this.fontParam.size == 0) {
+					this.fontParam.size = 24;
+				}
+				frameFont = this.dynamicFontGeneratorHolder
+						.getFontGenerator(font == null ? "MasterFont" : font.getFontName())
+						.generateFont(this.fontParam);
+				controlFrame.setFrameFont(frameFont);
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					if (childDefinition.getName().equals(controlBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						controlFrame.setControlBackdrop(inflatedChild);
+					}
+					else if (childDefinition.getName().equals(listBoxScrollBarKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						controlFrame.setScrollBarFrame((ScrollBarFrame) inflatedChild);
+					}
+				}
+				if (controlFrame.getScrollBarFrame() == null) {
+					// TODO this is probably not how this should work
+					for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+						if (childDefinition.getFrameType().equals("SCROLLBAR")) {
+							final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
+									inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+							controlFrame.setScrollBarFrame((ScrollBarFrame) inflatedChild);
+						}
+					}
+				}
+				inflatedFrame = controlFrame;
+			}
 			else if ("MENU".equals(frameDefinition.getFrameType())) {
 				// TODO advanced components here
 				final MenuFrame controlFrame = new MenuFrame(frameDefinition.getName(), parent);
@@ -1216,6 +1314,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			if (frameDefinition.has("SetAllPoints")) {
 				inflatedFrame.setSetAllPoints(true);
 			}
+			if ((inflatedFrame instanceof FocusableFrame) && (frameDefinition.get("TabFocusNext") != null)) {
+				this.focusableFrames.add((FocusableFrame) inflatedFrame);
+			}
 			Float width = frameDefinition.getFloat("Width");
 			if (width != null) {
 				inflatedFrame.setWidth(convertX(viewport2, width));
@@ -1411,5 +1512,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	public void setMapStrings(final WTS mapStrings) {
 		this.mapStrings = mapStrings;
+	}
+
+	public List<FocusableFrame> getFocusableFrames() {
+		return this.focusableFrames;
 	}
 }

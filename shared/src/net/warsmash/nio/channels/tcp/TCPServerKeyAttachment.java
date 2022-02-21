@@ -50,13 +50,13 @@ public class TCPServerKeyAttachment implements KeyAttachment, OpenedChannel {
 				readBuffer.order(this.byteOrder);
 				final ByteBuffer writeBuffer = ByteBuffer.allocate(this.bufferSize);
 				writeBuffer.order(this.byteOrder);
-				final TCPClientKeyAttachment tcpServerClientKeyAttachment = new TCPClientKeyAttachment(socketChannel,
-						this.exceptionListener, this.channelListener, readBuffer, writeBuffer);
+				final TCPClientKeyAttachment tcpServerClientKeyAttachment = new TCPClientKeyAttachment(this.selector,
+						socketChannel, this.exceptionListener, this.channelListener, readBuffer, writeBuffer);
 				final TCPClientParser parser = this.callback.onConnect(tcpServerClientKeyAttachment,
 						socketChannel.getRemoteAddress());
 				tcpServerClientKeyAttachment.setParser(parser);
 				tcpServerClientKeyAttachment.setKey(socketChannel.register(this.selector,
-						SelectionKey.OP_READ | SelectionKey.OP_WRITE, tcpServerClientKeyAttachment));
+						SelectionKey.OP_READ/* | SelectionKey.OP_WRITE */, tcpServerClientKeyAttachment));
 				this.channelListener.channelOpened();
 			}
 			catch (final IOException e) {

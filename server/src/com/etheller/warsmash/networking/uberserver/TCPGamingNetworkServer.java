@@ -30,7 +30,12 @@ public class TCPGamingNetworkServer {
 						TCPGamingNetworkServer.this.gamingNetworkServerClientBuilder
 								.createClient(writableOpenedChannel));
 			}
-		}, ExceptionListener.THROW_RUNTIME, 8 * 1024 * 1024, ByteOrder.BIG_ENDIAN);
+		}, new ExceptionListener() {
+			@Override
+			public void caught(final Exception e) {
+				e.printStackTrace();
+			}
+		}, 8 * 1024 * 1024, ByteOrder.LITTLE_ENDIAN);
 	}
 
 }

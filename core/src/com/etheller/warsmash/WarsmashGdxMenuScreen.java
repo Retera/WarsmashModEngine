@@ -24,6 +24,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.networking.uberserver.GamingNetworkConnectionImpl;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
@@ -210,7 +211,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 								WarsmashGdxMenuScreen.this.mainInstance.setScene(WarsmashGdxMenuScreen.this.uiScene);
 							}
 						}
-					});
+					}, new GamingNetworkConnectionImpl("localhost"));
 
 			final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 					PathSolver.DEFAULT, "").addInstance();

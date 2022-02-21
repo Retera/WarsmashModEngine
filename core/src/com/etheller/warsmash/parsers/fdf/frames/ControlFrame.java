@@ -24,12 +24,16 @@ public class ControlFrame extends AbstractRenderableFrame {
 
 	@Override
 	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
-		this.controlBackdrop.positionBounds(gameUI, viewport);
+		if (this.controlBackdrop != null) {
+			this.controlBackdrop.positionBounds(gameUI, viewport);
+		}
 	}
 
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
-		this.controlBackdrop.render(batch, baseFont, glyphLayout);
+		if (this.controlBackdrop != null) {
+			this.controlBackdrop.render(batch, baseFont, glyphLayout);
+		}
 	}
 
 }

@@ -220,7 +220,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				}
 			}
 		}
-		else {
+		else if (this.menuBaseOrderId == 0) {
 			if (this.multiSelect) {
 				return;
 			}

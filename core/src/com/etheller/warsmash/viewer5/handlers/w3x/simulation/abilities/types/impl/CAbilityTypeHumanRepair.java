@@ -17,9 +17,10 @@ public class CAbilityTypeHumanRepair extends CAbilityType<CAbilityTypeHumanRepai
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeHumanRepairLevelData levelData = getLevelData(0);
+		//System.out.println("Time: "+levelData.getPowerbuildTimeRatio() + " Cost: " + levelData.getPowerbuildCostRatio() );
 		return new CAbilityHumanRepair(handleId, getAlias(), levelData.getTargetsAllowed(),
 				levelData.getNavalRangeBonus(), levelData.getRepairCostRatio(), levelData.getRepairTimeRatio(),
-				levelData.getCastRange());
+				levelData.getCastRange(), levelData.getPowerbuildCostRatio(), levelData.getPowerbuildTimeRatio());
 	}
 
 }

@@ -37,6 +37,7 @@ public class CAbilityBuildInProgress extends AbstractCAbility {
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, AbilityTarget target) {
 		final CPlayer player = game.getPlayer(caster.getPlayerIndex());
 		player.refundFor(caster.getUnitType());
+		caster.setConstructionCanceled(true);
 		caster.setLife(game, 0);
 		return false;
 	}

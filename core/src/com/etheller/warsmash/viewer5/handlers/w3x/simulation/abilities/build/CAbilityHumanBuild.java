@@ -1,21 +1,26 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 
+import java.awt.image.BufferedImage;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.CBehaviorHumanBuild;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.CBehaviorNightElfBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
 public class CAbilityHumanBuild extends AbstractCAbilityBuild {
+	private CBehaviorHumanBuild buildBehavior;
 
 	public CAbilityHumanBuild(final int handleId, final List<War3ID> structuresBuilt) {
 		super(handleId, structuresBuilt);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -25,8 +30,7 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		// TODO Auto-generated method stub
-
+		this.buildBehavior = new CBehaviorHumanBuild(unit);
 	}
 
 	@Override
@@ -37,21 +41,37 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		// TODO Auto-generated method stub
-		return null;
+		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
 //		caster.getMoveBehavior().reset(point.x, point.y, )
-		return null;
+		final War3ID orderIdAsRawtype = new War3ID(orderId);
+		final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
+		final BufferedImage buildingPathingPixelMap = unitType.getBuildingPathingPixelMap();
+		if (buildingPathingPixelMap != null) {
+			point.x = (float) Math.floor(point.x / 64f) * 64f;
+			point.y = (float) Math.floor(point.y / 64f) * 64f;
+			if (((buildingPathingPixelMap.getWidth() / 2) % 2) == 1) {
+				point.x += 32f;
+			}
+			if (((buildingPathingPixelMap.getHeight() / 2) % 2) == 1) {
+				point.y += 32f;
+			}
+		}
+		final CPlayer player = game.getPlayer(caster.getPlayerIndex());
+		player.chargeFor(unitType);
+		if (unitType.getFoodUsed() != 0) {
+			player.setFoodUsed(player.getFoodUsed() + unitType.getFoodUsed());
+		}
+		return this.buildBehavior.reset(point, orderId, getBaseOrderId());
 	}
 
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
-		// TODO Auto-generated method stub
-		return null;
+		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override

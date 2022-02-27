@@ -21,8 +21,12 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
     private final float repairCostRatio;
     private final float repairTimeRatio;
     private final float castRange;
+    private final float powerBuildCostRatio;
+    private final float powerBuildTimeRatio;
     private CBehaviorHumanRepair behaviorRepair;
 
+    /*
+    //old version left in for compatibility
     public CAbilityHumanRepair(int handleId, War3ID alias, EnumSet<CTargetType> targetsAllowed,
                                float navalRangeBonus, float repairCostRatio, float repairTimeRatio,
                                float castRange) {
@@ -32,6 +36,21 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
         this.repairCostRatio = repairCostRatio;
         this.repairTimeRatio = repairTimeRatio;
         this.castRange = castRange;
+        this.powerBuildCostRatio = 0;
+        this.powerBuildTimeRatio = 0;
+    }*/
+
+    public CAbilityHumanRepair(int handleId, War3ID alias, EnumSet<CTargetType> targetsAllowed,
+                               float navalRangeBonus, float repairCostRatio, float repairTimeRatio,
+                               float castRange, float powerBuildCostRatio, float powerBuildTimeRatio) {
+        super(handleId, alias);
+        this.targetsAllowed = targetsAllowed;
+        this.navalRangeBonus = navalRangeBonus;
+        this.repairCostRatio = repairCostRatio;
+        this.repairTimeRatio = repairTimeRatio;
+        this.castRange = castRange;
+        this.powerBuildCostRatio = powerBuildCostRatio;
+        this.powerBuildTimeRatio = powerBuildTimeRatio;
     }
 
     @Override
@@ -132,4 +151,8 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
     public float getCastRange() {
         return castRange;
     }
+
+    public float getPowerBuildCostRatio() { return powerBuildCostRatio; }
+
+    public float getPowerBuildTimeRatio() { return powerBuildTimeRatio; }
 }

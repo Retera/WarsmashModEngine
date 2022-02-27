@@ -29,6 +29,8 @@ public class CPlayer extends CBasePlayer {
 	private final List<CUnit> heroes = new ArrayList<>();
 	private final EnumMap<JassGameEventsWar3, List<CPlayerEvent>> eventTypeToEvents = new EnumMap<>(
 			JassGameEventsWar3.class);
+	private float accumulatedLumberCost = 0.0f;
+	private float accumulatedGoldCost = 0.0f;
 
 	// if you use triggers for this then the transient tag here becomes really
 	// questionable -- it already was -- but I meant for those to inform us
@@ -138,6 +140,19 @@ public class CPlayer extends CBasePlayer {
 			this.gold -= gold;
 			this.stateNotifier.lumberChanged();
 			this.stateNotifier.goldChanged();
+			return true;
+		}
+		return false;
+	}
+
+	public boolean charge(final float gold, final float lumber){
+		this.accumulatedLumberCost += lumber;
+		this.accumulatedGoldCost += gold;
+		int newGoldCost = (int)accumulatedGoldCost;
+		int newLumberCost = (int)accumulatedLumberCost;
+		if(this.charge(newGoldCost,newLumberCost)) {
+			this.accumulatedLumberCost -= newLumberCost;
+			this.accumulatedGoldCost -= newGoldCost;
 			return true;
 		}
 		return false;

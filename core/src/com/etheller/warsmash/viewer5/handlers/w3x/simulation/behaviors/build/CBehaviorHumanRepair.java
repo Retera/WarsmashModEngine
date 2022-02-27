@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build;
 
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
@@ -12,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstract
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
 public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
     private final CAbilityHumanRepair ability;
@@ -42,17 +44,72 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 
     @Override
     protected CBehavior update(CSimulation simulation, boolean withinFacingWindow) {
-        unit.getUnitAnimationListener().playAnimation(false, AnimationTokens.PrimaryTag.STAND,
-                SequenceUtils.WORK, 1.0f, true);
         if(this.target instanceof CWidget) {
             CWidget targetWidget = (CWidget) this.target;
-            float newLifeValue = targetWidget.getLife() + 1;
-            boolean done = newLifeValue > targetWidget.getMaxLife();
-            if(done) {
-                newLifeValue = targetWidget.getMaxLife();
-            }
-            targetWidget.setLife(simulation, newLifeValue);
-            if(done) {
+            //progress construction here (MFROMAZ)
+            if(targetWidget.getClass()==CUnit.class) {
+                CUnit targetUnit = ((CUnit) targetWidget);
+                final CPlayer player = simulation.getPlayer(unit.getPlayerIndex());
+                float newLifeValue = targetWidget.getLife() +
+                        ((WarsmashConstants.SIMULATION_STEP_TIME / (targetUnit.getUnitType().getBuildTime()*this.ability.getRepairTimeRatio()))
+                                * (targetUnit.getMaxLife()));
+                float costs_gold = ((WarsmashConstants.SIMULATION_STEP_TIME / (targetUnit.getUnitType().getBuildTime()*this.ability.getRepairTimeRatio()))
+                        * (targetUnit.getUnitType().getGoldCost()*this.ability.getRepairCostRatio()));
+                float costs_lumber = ((WarsmashConstants.SIMULATION_STEP_TIME / (targetUnit.getUnitType().getBuildTime()*this.ability.getRepairTimeRatio()))
+                        * (targetUnit.getUnitType().getLumberCost()*this.ability.getRepairCostRatio()));
+
+                unit.getUnitAnimationListener().playAnimation(false, AnimationTokens.PrimaryTag.STAND,
+                        SequenceUtils.WORK, 1.0f, true);
+
+                float healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / targetUnit.getUnitType().getBuildTime())* (ability.getRepairTimeRatio()
+                        * (targetUnit.getMaxLife() * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE)) );
+
+                if (targetUnit.getConstuctionProcessType() != null
+                        && targetUnit.getConstuctionProcessType().equals(ConstructionFlag.REQURIE_REPAIR)
+                        && targetUnit.isConstructing()
+                        && targetUnit.getConstructionProgress() < targetUnit.getUnitType().getBuildTime()  /*targetUnit.getClassifications().contains(CUnitClassification.BUILDING) &&*/) {
+                    float constructionProgressGain =  WarsmashConstants.SIMULATION_STEP_TIME;
+                    healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / targetUnit.getUnitType().getBuildTime())
+                            * (targetUnit.getMaxLife() * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
+                    if(targetUnit.isConstructionPowerBuilding()){
+                        costs_gold = ((WarsmashConstants.SIMULATION_STEP_TIME / (targetUnit.getUnitType().getBuildTime()*this.ability.getPowerBuildTimeRatio()))
+                                * (targetUnit.getUnitType().getGoldCost()*this.ability.getPowerBuildCostRatio()));
+                        costs_lumber = ((WarsmashConstants.SIMULATION_STEP_TIME / (targetUnit.getUnitType().getBuildTime()*this.ability.getPowerBuildTimeRatio()))
+                                * (targetUnit.getUnitType().getLumberCost()*this.ability.getPowerBuildCostRatio()));
+                        constructionProgressGain =  WarsmashConstants.SIMULATION_STEP_TIME * this.ability.getPowerBuildTimeRatio();
+                        healthGain = (WarsmashConstants.SIMULATION_STEP_TIME* ability.getPowerBuildTimeRatio() / targetUnit.getUnitType().getBuildTime())
+                                * (targetUnit.getMaxLife() * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
+                    }else{
+                        costs_gold = 0.0f;
+                        costs_lumber = 0.0f;
+                        targetUnit.setConstructionPowerBuild(true);
+                    }
+                    if(costs_gold > player.getGold() || costs_lumber > player.getLumber()) {
+
+                        return unit.pollNextOrderBehavior(simulation);
+                    }
+                    targetUnit.setConstructionProgress(targetUnit.getConstructionProgress() +constructionProgressGain);
+                }
+
+                newLifeValue = Math.min(targetUnit.getLife() + healthGain, targetUnit.getMaximumLife());
+                if(costs_gold > player.getGold() || costs_lumber > player.getLumber()){
+
+                    return unit.pollNextOrderBehavior(simulation);
+                }
+                boolean done = (newLifeValue >= ((CUnit) targetWidget).getUnitType().getMaxLife());
+                if (done) {
+                    newLifeValue = targetWidget.getMaxLife();
+                }
+                if(player.charge(costs_gold,costs_lumber)) {
+                    targetWidget.setLife(simulation, newLifeValue);
+                }else{
+                    return unit.pollNextOrderBehavior(simulation);
+                }
+                if (done && ((targetUnit.getConstructionProgress()>= targetUnit.getUnitType().getBuildTime())||!targetUnit.isConstructing())) {
+                    return unit.pollNextOrderBehavior(simulation);
+                }
+            }else{
+
                 return unit.pollNextOrderBehavior(simulation);
             }
         }

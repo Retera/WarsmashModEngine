@@ -1,5 +1,7 @@
 package net.warsmash.uberserver;
 
+import java.nio.charset.Charset;
+
 import com.etheller.warsmash.util.War3ID;
 
 import net.warsmash.networking.util.AbstractWriter;
@@ -42,7 +44,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 		if (channelName.length() > GamingNetwork.CHANNEL_NAME_MAX_LENGTH) {
 			channelName = channelName.substring(0, GamingNetwork.CHANNEL_NAME_MAX_LENGTH);
 		}
-		final byte[] channelNameBytes = channelName.getBytes();
+		final byte[] channelNameBytes = channelName.getBytes(Charset.forName("utf-8"));
 		beginMessage(Protocol.JOIN_CHANNEL, 8 + 4 + channelNameBytes.length);
 		this.writeBuffer.putLong(sessionToken);
 		this.writeBuffer.putInt(channelNameBytes.length);
@@ -55,7 +57,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 		if (text.length() > GamingNetwork.MESSAGE_MAX_LENGTH) {
 			text = text.substring(0, GamingNetwork.MESSAGE_MAX_LENGTH);
 		}
-		final byte[] bytes = text.getBytes();
+		final byte[] bytes = text.getBytes(Charset.forName("utf-8"));
 		beginMessage(Protocol.EMOTE_MESSAGE, 8 + 4 + bytes.length);
 		this.writeBuffer.putLong(sessionToken);
 		this.writeBuffer.putInt(bytes.length);
@@ -68,7 +70,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 		if (text.length() > GamingNetwork.MESSAGE_MAX_LENGTH) {
 			text = text.substring(0, GamingNetwork.MESSAGE_MAX_LENGTH);
 		}
-		final byte[] bytes = text.getBytes();
+		final byte[] bytes = text.getBytes(Charset.forName("utf-8"));
 		beginMessage(Protocol.CHAT_MESSAGE, 8 + 4 + bytes.length);
 		this.writeBuffer.putLong(sessionToken);
 		this.writeBuffer.putInt(bytes.length);

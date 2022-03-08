@@ -28,6 +28,7 @@ import com.etheller.warsmash.networking.uberserver.GamingNetworkConnectionImpl;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -192,6 +193,14 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 				}
 			}
 
+			String server;
+			final Element gamingNetworkSettings = this.warsmashIni.get("GamingNetwork");
+			if (gamingNetworkSettings != null) {
+				server = gamingNetworkSettings.getField("Server");
+			}
+			else {
+				server = "localhost";
+			}
 			this.menuUI = new MenuUI(this.viewer.dataSource, this.uiViewport, this.uiScene, this.viewer, this.game,
 					this, this.warsmashIni, new RootFrameListener() {
 						@Override
@@ -211,7 +220,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 								WarsmashGdxMenuScreen.this.mainInstance.setScene(WarsmashGdxMenuScreen.this.uiScene);
 							}
 						}
-					}, new GamingNetworkConnectionImpl("localhost"));
+					}, new GamingNetworkConnectionImpl(server));
 
 			final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 					PathSolver.DEFAULT, "").addInstance();

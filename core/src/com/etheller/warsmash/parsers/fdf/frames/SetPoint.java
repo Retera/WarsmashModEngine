@@ -42,6 +42,9 @@ public class SetPoint implements FramePointAssignment {
 
 	@Override
 	public float getX(final GameUI gameUI, final Viewport uiViewport) {
+		if (this.other == null) {
+			throw new NullPointerException();
+		}
 		return this.other.getFramePointX(this.otherPoint) + this.x;
 	}
 

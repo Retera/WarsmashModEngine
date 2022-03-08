@@ -1,6 +1,7 @@
 package net.warsmash.uberserver;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 import net.warsmash.nio.channels.tcp.TCPClientParser;
 
@@ -48,7 +49,7 @@ public class TCPGamingNetworkServerToClientParser implements TCPClientParser {
 					else {
 						reason = null;
 					}
-					this.listener.accountCreationFailed(null);
+					this.listener.accountCreationFailed(reason);
 					break;
 				}
 				case GamingNetworkServerToClientListener.Protocol.LOGIN_OK: {
@@ -102,7 +103,7 @@ public class TCPGamingNetworkServerToClientParser implements TCPClientParser {
 		final int usernameStringLength = Math.min(maxLength, data.getInt());
 		final byte[] usernameStringBytes = new byte[usernameStringLength];
 		data.get(usernameStringBytes);
-		final String username = new String(usernameStringBytes);
+		final String username = new String(usernameStringBytes, Charset.forName("utf-8"));
 		return username;
 	}
 

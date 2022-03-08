@@ -29,7 +29,7 @@ public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
 
 	public void start() {
 		this.tcpChannel = this.selectableChannelOpener.openTCPClientChannel(
-				new InetSocketAddress("localhost", GamingNetwork.PORT),
+				new InetSocketAddress(this.gateway, GamingNetwork.PORT),
 				new TCPGamingNetworkServerToClientParser(this.notifier), ExceptionListener.THROW_RUNTIME,
 				8 * 1024 * 1024, ByteOrder.LITTLE_ENDIAN);
 		this.gamingNetworkClientToServerWriter = new GamingNetworkClientToServerWriter(this.tcpChannel);

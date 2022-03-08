@@ -10,6 +10,7 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
 import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
+import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
@@ -76,6 +77,10 @@ public class BattleNetUI {
 	private final GlueButtonFrame okButton;
 	private final StringFrame chatChannelNameLabel;
 	private final TextAreaFrame chatTextArea;
+	private final GlueTextButtonFrame chatChannelButton;
+	private final GlueButtonFrame channelPanelBackButton;
+	private final EditBoxFrame channelNameField;
+	private final GlueButtonFrame channelPanelJoinChannelButton;
 
 	public BattleNetUI(final GameUI rootFrame, final Viewport uiViewport,
 			final BattleNetUIActionListener actionListener) {
@@ -245,6 +250,13 @@ public class BattleNetUI {
 		this.chatPanel = rootFrame.getFrameByName("ChatPanel", 0);
 		this.chatPanel.setVisible(false);
 		this.chatChannelNameLabel = (StringFrame) rootFrame.getFrameByName("ChatChannelNameLabel", 0);
+		this.chatChannelButton = (GlueTextButtonFrame) rootFrame.getFrameByName("ChatChannelButton", 0);
+		this.chatChannelButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				actionListener.showChannelChooserPanel();
+			}
+		});
 		this.chatTextArea = (TextAreaFrame) rootFrame.getFrameByName("ChatTextArea", 0);
 		final EditBoxFrame chatEditBox = (EditBoxFrame) rootFrame.getFrameByName("BattleNetChatEditBox", 0);
 		chatEditBox.setFilterAllowAny();
@@ -263,6 +275,24 @@ public class BattleNetUI {
 		// ********************************
 		this.channelPanel = rootFrame.getFrameByName("ChannelPanel", 0);
 		this.channelPanel.setVisible(false);
+
+		this.channelPanelBackButton = (GlueButtonFrame) rootFrame.getFrameByName("BackButton", 0);
+		this.channelPanelBackButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				actionListener.returnToChat();
+			}
+		});
+		this.channelNameField = (EditBoxFrame) rootFrame.getFrameByName("ChannelNameField", 0);
+		this.channelPanelJoinChannelButton = (GlueButtonFrame) rootFrame.getFrameByName("JoinChannelButton", 0);
+		final Runnable onJoinChannelClick = new Runnable() {
+			@Override
+			public void run() {
+				actionListener.requestJoinChannel(BattleNetUI.this.channelNameField.getText());
+			}
+		};
+		this.channelNameField.setOnEnter(onJoinChannelClick);
+		this.channelPanelJoinChannelButton.setOnClick(onJoinChannelClick);
 
 		// ********************************
 		// * The welcome panel
@@ -367,6 +397,7 @@ public class BattleNetUI {
 	public void hideCurrentScreen() {
 		this.welcomePanel.setVisible(false);
 		this.chatPanel.setVisible(false);
+		this.channelPanel.setVisible(false);
 		this.welcomePanel.setVisible(false);
 		this.quitBattleNetButton.setVisible(false);
 		setTopButtonsVisible(false);
@@ -401,6 +432,9 @@ public class BattleNetUI {
 
 	public void joinedChannel(final String channelName) {
 		this.rootFrame.setText(this.chatChannelNameLabel, channelName);
+		final String messageText = String.format(this.rootFrame.getTemplates().getDecoratedString("BNET_JOIN_CHANNEL"),
+				channelName);
+		this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
 	}
 
 	public void channelMessage(final String userName, final String message) {
@@ -414,5 +448,9 @@ public class BattleNetUI {
 		final String messageText = String.format(this.rootFrame.getTemplates().getDecoratedString("CHATEVENT_ID_EMOTE"),
 				this.rootFrame.getTemplates().getDecoratedString("CHATCOLOR_EMOTE_MESSAGE"), userName, message);
 		this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+	}
+
+	public void showChannelMenu() {
+		this.channelPanel.setVisible(true);
 	}
 }

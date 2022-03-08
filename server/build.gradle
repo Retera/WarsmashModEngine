@@ -1,13 +1,23 @@
+plugins {
+    id 'org.beryx.runtime' version '1.12.5'
+}
+
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = [ "src/" ]
 
 project.ext.mainClassName = "com.etheller.warsmash.networking.WarsmashServer"
 
-task run(dependsOn: classes, type: JavaExec) {
-    main = project.mainClassName
-    classpath = sourceSets.main.runtimeClasspath
-    standardInput = System.in
-    ignoreExitValue = true
+
+if(project.hasProperty("args")) {
+    ext.cmdargs = project.getProperty("args")
+} else {
+    ext.cmdargs = ""
+}
+
+application {
+	mainClass = project.ext.mainClassName
+	applicationName = 'warsmashgn'
+	applicationDefaultJvmArgs = []
 }
 
 task dist(type: Jar) {

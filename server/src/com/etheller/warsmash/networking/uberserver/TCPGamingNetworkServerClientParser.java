@@ -1,6 +1,7 @@
 package com.etheller.warsmash.networking.uberserver;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 import com.etheller.warsmash.util.War3ID;
 
@@ -71,7 +72,7 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 		final int usernameStringLength = Math.min(maxLength, data.getInt());
 		final byte[] usernameStringBytes = new byte[usernameStringLength];
 		data.get(usernameStringBytes);
-		final String username = new String(usernameStringBytes);
+		final String username = new String(usernameStringBytes, Charset.forName("utf-8"));
 		return username;
 	}
 

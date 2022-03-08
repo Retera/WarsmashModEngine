@@ -1,5 +1,6 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -120,6 +121,15 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 		case Input.Keys.ENTER: {
 			if (this.onEnter != null) {
 				this.onEnter.run();
+			}
+			break;
+		}
+		case Input.Keys.V: {
+			if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT)) {
+				final String contents = Gdx.app.getClipboard().getContents();
+				for (int i = 0; i < contents.length(); i++) {
+					keyTyped(contents.charAt(i));
+				}
 			}
 			break;
 		}

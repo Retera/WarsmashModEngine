@@ -16,4 +16,10 @@ public interface BattleNetUIActionListener {
 	void createAccount(String username, String password, String repeatPassword);
 
 	void submitChatText(String text);
+
+	void showChannelChooserPanel();
+
+	void returnToChat();
+
+	void requestJoinChannel(String text);
 }

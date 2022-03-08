@@ -1029,7 +1029,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				inflatedFrame = controlFrame;
 			}
-			else if (false && "TEXTAREA".equals(frameDefinition.getFrameType())) {
+			else if ("TEXTAREA".equals(frameDefinition.getFrameType())) {
 				// TODO advanced components here
 				final TextAreaFrame controlFrame = new TextAreaFrame(frameDefinition.getName(), parent, viewport2);
 				// TODO: we should not need to put ourselves in this map 2x, but we do

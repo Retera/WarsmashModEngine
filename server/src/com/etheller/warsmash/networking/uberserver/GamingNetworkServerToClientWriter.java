@@ -1,5 +1,7 @@
 package com.etheller.warsmash.networking.uberserver;
 
+import java.nio.charset.Charset;
+
 import net.warsmash.networking.util.AbstractWriter;
 import net.warsmash.nio.channels.WritableOutput;
 import net.warsmash.uberserver.AccountCreationFailureReason;
@@ -66,7 +68,7 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 		if (channelName.length() > GamingNetwork.CHANNEL_NAME_MAX_LENGTH) {
 			channelName = channelName.substring(0, GamingNetwork.CHANNEL_NAME_MAX_LENGTH);
 		}
-		final byte[] bytes = channelName.getBytes();
+		final byte[] bytes = channelName.getBytes(Charset.forName("utf-8"));
 		beginMessage(Protocol.JOINED_CHANNEL, 4 + bytes.length);
 		this.writeBuffer.putInt(bytes.length);
 		this.writeBuffer.put(bytes);
@@ -88,7 +90,7 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 			message = message.substring(0, GamingNetwork.MESSAGE_MAX_LENGTH);
 		}
 		final byte[] userNameBytes = userName.getBytes();
-		final byte[] messageBytes = message.getBytes();
+		final byte[] messageBytes = message.getBytes(Charset.forName("utf-8"));
 		beginMessage(Protocol.CHANNEL_MESSAGE, 4 + userNameBytes.length + 4 + messageBytes.length);
 		this.writeBuffer.putInt(userNameBytes.length);
 		this.writeBuffer.put(userNameBytes);
@@ -106,7 +108,7 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 			message = message.substring(0, GamingNetwork.MESSAGE_MAX_LENGTH);
 		}
 		final byte[] userNameBytes = userName.getBytes();
-		final byte[] messageBytes = message.getBytes();
+		final byte[] messageBytes = message.getBytes(Charset.forName("utf-8"));
 		beginMessage(Protocol.CHANNEL_EMOTE, 4 + userNameBytes.length + 4 + messageBytes.length);
 		this.writeBuffer.putInt(userNameBytes.length);
 		this.writeBuffer.put(userNameBytes);

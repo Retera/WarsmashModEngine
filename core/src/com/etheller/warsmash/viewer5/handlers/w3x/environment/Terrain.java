@@ -446,7 +446,8 @@ public class Terrain {
 
 				float rampHeight = 0f;
 				// Check if in one of the configurations the bottom_left is a ramp
-				XLoop: for (int xOffset = -1; xOffset <= 0; xOffset++) {
+				XLoop:
+				for (int xOffset = -1; xOffset <= 0; xOffset++) {
 					for (int yOffset = -1; yOffset <= 0; yOffset++) {
 						if (((i + xOffset) >= 0) && ((i + xOffset) < (this.columns - 1)) && ((j + yOffset) >= 0)
 								&& ((j + yOffset) < (this.rows - 1))) {
@@ -588,7 +589,25 @@ public class Terrain {
 
 					int bottomLeftCliffTex = bottomLeft.getCliffTexture();
 					if (bottomLeftCliffTex == 15) {
-						bottomLeftCliffTex -= 14;
+						final int topLeftCliffTex = topLeft.getCliffTexture();
+						if (topLeftCliffTex == 15) {
+							final int topRightCliffTex = topRight.getCliffTexture();
+							if (topRightCliffTex == 15) {
+								final int bottomRightCliffTex = bottomRight.getCliffTexture();
+								if (bottomRightCliffTex == 15) {
+									bottomLeftCliffTex -= 14;
+								}
+								else {
+									bottomLeftCliffTex = bottomRightCliffTex;
+								}
+							}
+							else {
+								bottomLeftCliffTex = topRightCliffTex;
+							}
+						}
+						else {
+							bottomLeftCliffTex = topLeftCliffTex;
+						}
 					}
 					if (!(facingDown && (j == 0)) && !(!facingDown && (j >= (this.rows - 2)))
 							&& !(facingLeft && (i == 0)) && !(!facingLeft && (i >= (this.columns - 2)))) {
@@ -817,7 +836,8 @@ public class Terrain {
 	}
 
 	private int realTileTexture(final int x, final int y) {
-		ILoop: for (int i = -1; i < 1; i++) {
+		ILoop:
+		for (int i = -1; i < 1; i++) {
 			for (int j = -1; j < 1; j++) {
 				if (((x + i) >= 0) && ((x + i) < this.columns) && ((y + j) >= 0) && ((y + j) < this.rows)) {
 					if (this.corners[x + i][y + j].cliff) {
@@ -1468,7 +1488,7 @@ public class Terrain {
 					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset,
 					splat.unitMapping.isEmpty() ? null : splat.unitMapping, false, false, false);
 			splatModel.color[3] = splat.opacity;
-			this.addSplatBatchModel(path, splatModel);
+			addSplatBatchModel(path, splatModel);
 		}
 	}
 
@@ -1492,7 +1512,7 @@ public class Terrain {
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null),
 					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest, highPriority);
-			this.addSplatBatchModel(path, splatModel);
+			addSplatBatchModel(path, splatModel);
 		}
 		return splatModel.add(x - scale, y - scale, x + scale, y + scale, z, this.centerOffset);
 	}
@@ -1504,7 +1524,7 @@ public class Terrain {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(texture, PathSolver.DEFAULT, null),
 					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false, false, false);
 			splatModel.color[3] = opacity;
-			this.addSplatBatchModel(texture, splatModel);
+			addSplatBatchModel(texture, splatModel);
 		}
 		return splatModel.add(x, y, x2, y2, zDepthUpward, this.centerOffset);
 	}

@@ -155,7 +155,12 @@ public class Jass2 {
 		final JassProgramVisitor jassProgramVisitor = new JassProgramVisitor();
 		final CommonEnvironment environment = new CommonEnvironment(jassProgramVisitor, dataSource, uiViewport, uiScene,
 				war3MapViewer, meleeUI);
-		for (final String jassFile : files) {
+		for (String jassFilePath : files) {
+			if (!dataSource.has(jassFilePath)) {
+				jassFilePath = jassFilePath
+						.substring(Math.max(jassFilePath.lastIndexOf('/'), jassFilePath.lastIndexOf('\\')) + 1);
+			}
+			final String jassFile = jassFilePath;
 			try {
 				JassLexer lexer;
 				try {
@@ -698,10 +703,13 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final CTimerJass timer = arguments.get(0).visit(ObjectJassValueVisitor.<CTimerJass>getInstance());
+					final CTimerJass timer = nullable(arguments, 0, ObjectJassValueVisitor.<CTimerJass>getInstance());
 					final Double timeout = arguments.get(1).visit(RealJassValueVisitor.getInstance());
 					final boolean periodic = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
 					final JassFunction handlerFunc = nullable(arguments, 3, JassFunctionJassValueVisitor.getInstance());
+					if (timer == null) {
+						return null;
+					}
 					if (!timer.isRunning()) {
 						timer.setTimeoutTime(timeout.floatValue());
 						timer.setRepeats(periodic);

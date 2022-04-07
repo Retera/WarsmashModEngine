@@ -208,7 +208,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 			throw new RuntimeException(e);
 		}
 		this.commonEnv = Jass2.loadCommon(this.viewer.mapMpq, this.uiViewport, this.uiScene, this.viewer, this.meleeUI,
-				"Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j");
+				"Scripts\\common.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j");
 		this.commonEnv.main();
 	}
 

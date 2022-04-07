@@ -160,8 +160,7 @@ public class Jass2 {
 				JassLexer lexer;
 				try {
 					lexer = new JassLexer(CharStreams.fromStream(dataSource.getResourceAsStream(jassFile)));
-				}
-				catch (final IOException e) {
+				} catch (final IOException e) {
 					throw new RuntimeException(e);
 				}
 				final JassParser parser = new JassParser(new CommonTokenStream(lexer));
@@ -184,8 +183,7 @@ public class Jass2 {
 				});
 				jassProgramVisitor.setCurrentFileName(jassFile);
 				jassProgramVisitor.visit(parser.program());
-			}
-			catch (final Exception e) {
+			} catch (final Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -204,8 +202,7 @@ public class Jass2 {
 				JassLexer lexer;
 				try {
 					lexer = new JassLexer(CharStreams.fromStream(dataSource.getResourceAsStream(jassFile)));
-				}
-				catch (final IOException e) {
+				} catch (final IOException e) {
 					throw new RuntimeException(e);
 				}
 				final JassParser parser = new JassParser(new CommonTokenStream(lexer));
@@ -228,8 +225,7 @@ public class Jass2 {
 				});
 				jassProgramVisitor.setCurrentFileName(jassFile);
 				jassProgramVisitor.visit(parser.program());
-			}
-			catch (final Exception e) {
+			} catch (final Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -248,8 +244,7 @@ public class Jass2 {
 				JassLexer lexer;
 				try {
 					lexer = new JassLexer(CharStreams.fromStream(dataSource.getResourceAsStream(jassFile)));
-				}
-				catch (final IOException e) {
+				} catch (final IOException e) {
 					throw new RuntimeException(e);
 				}
 				final JassParser parser = new JassParser(new CommonTokenStream(lexer));
@@ -269,8 +264,7 @@ public class Jass2 {
 					}
 				});
 				jassProgramVisitor.visit(parser.program());
-			}
-			catch (final Exception e) {
+			} catch (final Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -337,8 +331,7 @@ public class Jass2 {
 					final String tocFileName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 					try {
 						JUIEnvironment.this.gameUI.loadTOCFile(tocFileName);
-					}
-					catch (final IOException e) {
+					} catch (final IOException e) {
 						throw new RuntimeException(e);
 					}
 					return BooleanJassValue.TRUE;
@@ -698,11 +691,11 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final CTimerJass timer = arguments.get(0).visit(ObjectJassValueVisitor.<CTimerJass>getInstance());
+					final CTimerJass timer = nullable(arguments, 0, ObjectJassValueVisitor.<CTimerJass>getInstance());
 					final Double timeout = arguments.get(1).visit(RealJassValueVisitor.getInstance());
 					final boolean periodic = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
 					final JassFunction handlerFunc = nullable(arguments, 3, JassFunctionJassValueVisitor.getInstance());
-					if (!timer.isRunning()) {
+					if ((timer != null) && !timer.isRunning()) {
 						timer.setTimeoutTime(timeout.floatValue());
 						timer.setRepeats(periodic);
 						timer.setHandlerFunc(handlerFunc);
@@ -720,6 +713,7 @@ public class Jass2 {
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("TimerGetRemaining", new JassFunction() {
+
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -1267,8 +1261,7 @@ public class Jass2 {
 							callback.call(Collections.emptyList(), globalScope,
 									CommonTriggerExecutionScope.enumScope(triggerScope, unit));
 						}
-					}
-					catch (final Exception e) {
+					} catch (final Exception e) {
 						throw new JassException(globalScope, "Exception during ForGroup", e);
 					}
 					return null;
@@ -1435,8 +1428,7 @@ public class Jass2 {
 							callback.call(Collections.<JassValue>emptyList(), globalScope,
 									CommonTriggerExecutionScope.enumScope(triggerScope, player));
 						}
-					}
-					catch (final Exception e) {
+					} catch (final Exception e) {
 						throw new JassException(globalScope, "Exception during ForForce", e);
 					}
 					return null;
@@ -2630,6 +2622,16 @@ public class Jass2 {
 					return null;
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerState", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final CPlayerState whichPlayerState = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+					return new IntegerJassValue(
+							player.getPlayerState(CommonEnvironment.this.simulation, whichPlayerState));
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerTechResearched", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -3078,8 +3080,7 @@ public class Jass2 {
 										CommonEnvironment.this.simulation.getHandleIdAllocator().createId()));
 						// TODO below code is very stupid!!
 						return new IntegerJassValue(1);
-					}
-					else {
+					} else {
 						// TODO below code is very stupid!!
 						return new IntegerJassValue(1);
 					}
@@ -3799,8 +3800,7 @@ public class Jass2 {
 			try {
 				this.jassProgramVisitor.getGlobals().getFunctionByName("config").call(Collections.emptyList(),
 						this.jassProgramVisitor.getGlobals(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
-			}
-			catch (final Exception exc) {
+			} catch (final Exception exc) {
 				throw new JassException(this.jassProgramVisitor.getGlobals(),
 						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc);
 			}
@@ -3819,8 +3819,7 @@ public class Jass2 {
 			try {
 				this.jassProgramVisitor.getGlobals().getFunctionByName("main").call(Collections.emptyList(),
 						this.jassProgramVisitor.getGlobals(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
-			}
-			catch (final Exception exc) {
+			} catch (final Exception exc) {
 				throw new JassException(this.jassProgramVisitor.getGlobals(),
 						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc);
 			}
@@ -3951,8 +3950,7 @@ public class Jass2 {
 			try {
 				this.jassProgramVisitor.getGlobals().getFunctionByName("config").call(Collections.emptyList(),
 						this.jassProgramVisitor.getGlobals(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
-			}
-			catch (final Exception exc) {
+			} catch (final Exception exc) {
 				throw new JassException(this.jassProgramVisitor.getGlobals(),
 						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc);
 			}
@@ -4254,8 +4252,7 @@ public class Jass2 {
 			JassLexer lexer;
 			try {
 				lexer = new JassLexer(CharStreams.fromStream(dataSource.getResourceAsStream(filename)));
-			}
-			catch (final IOException e) {
+			} catch (final IOException e) {
 				throw new RuntimeException(e);
 			}
 			final JassParser parser = new JassParser(new CommonTokenStream(lexer));
@@ -4275,8 +4272,7 @@ public class Jass2 {
 				}
 			});
 			jassProgramVisitor.visit(parser.program());
-		}
-		catch (final Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -5449,8 +5445,7 @@ public class Jass2 {
 				try {
 					final int intValue = Integer.parseInt(s);
 					return new IntegerJassValue(intValue);
-				}
-				catch (final Exception exc) {
+				} catch (final Exception exc) {
 					return new IntegerJassValue(0);
 				}
 			}
@@ -5463,8 +5458,7 @@ public class Jass2 {
 				try {
 					final double parsedValue = Double.parseDouble(s);
 					return new RealJassValue(parsedValue);
-				}
-				catch (final Exception exc) {
+				} catch (final Exception exc) {
 					return new RealJassValue(0);
 				}
 			}

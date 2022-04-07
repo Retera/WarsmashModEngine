@@ -707,10 +707,7 @@ public class Jass2 {
 					final Double timeout = arguments.get(1).visit(RealJassValueVisitor.getInstance());
 					final boolean periodic = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
 					final JassFunction handlerFunc = nullable(arguments, 3, JassFunctionJassValueVisitor.getInstance());
-					if (timer == null) {
-						return null;
-					}
-					if (!timer.isRunning()) {
+					if ((timer != null) && !timer.isRunning()) {
 						timer.setTimeoutTime(timeout.floatValue());
 						timer.setRepeats(periodic);
 						timer.setHandlerFunc(handlerFunc);
@@ -728,6 +725,7 @@ public class Jass2 {
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("TimerGetRemaining", new JassFunction() {
+
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -2636,6 +2634,16 @@ public class Jass2 {
 					final int value = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
 					player.setPlayerState(CommonEnvironment.this.simulation, whichPlayerState, value);
 					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerState", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final CPlayerState whichPlayerState = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+					return new IntegerJassValue(
+							player.getPlayerState(CommonEnvironment.this.simulation, whichPlayerState));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerTechResearched", new JassFunction() {

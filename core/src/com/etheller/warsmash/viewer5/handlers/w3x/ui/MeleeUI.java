@@ -11,6 +11,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -2053,7 +2054,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			int index = -1;
 			for (int i = 0; i < model.attachments.size(); i++) {
 				final Attachment attachment = model.attachments.get(i);
-				if (attachment.getName().startsWith("sprite")) {
+				if (attachment.getName().toLowerCase(Locale.US).startsWith("sprite rally")) {
 					index = i;
 					break;
 				}
@@ -2061,7 +2062,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (index == -1) {
 				for (int i = 0; i < model.attachments.size(); i++) {
 					final Attachment attachment = model.attachments.get(i);
-					if (attachment.getName().startsWith("overhead ref")) {
+					if (attachment.getName().toLowerCase(Locale.US).startsWith("sprite")) {
+						index = i;
+						break;
+					}
+				}
+			}
+			if (index == -1) {
+				for (int i = 0; i < model.attachments.size(); i++) {
+					final Attachment attachment = model.attachments.get(i);
+					if (attachment.getName().toLowerCase(Locale.US).startsWith("overhead ref")) {
 						index = i;
 					}
 				}

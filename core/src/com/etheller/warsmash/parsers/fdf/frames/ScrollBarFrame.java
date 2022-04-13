@@ -9,15 +9,20 @@ import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 
 public class ScrollBarFrame extends AbstractRenderableFrame implements ClickableFrame {
+	private final boolean vertical;
 	private UIFrame controlBackdrop;
 	private UIFrame incButtonFrame;
 	private UIFrame decButtonFrame;
 	private UIFrame thumbButtonFrame;
 	private int scrollValuePercent = 50;
 	private ScrollBarChangeListener changeListener = ScrollBarChangeListener.DO_NOTHING;
+	private int minValue = 0;
+	private int maxValue = 100;
+	private int stepSize = 10;
 
 	public ScrollBarFrame(final String name, final UIFrame parent, final boolean vertical) {
 		super(name, parent);
+		this.vertical = vertical;
 	}
 
 	public void setControlBackdrop(final UIFrame controlBackdrop) {
@@ -34,7 +39,7 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 
 			@Override
 			public void mouseUp(final GameUI gameUI, final Viewport uiViewport) {
-				setValue(gameUI, uiViewport, ScrollBarFrame.this.scrollValuePercent + 10);
+				setValue(gameUI, uiViewport, ScrollBarFrame.this.scrollValuePercent + ScrollBarFrame.this.stepSize);
 			}
 
 			@Override
@@ -54,7 +59,7 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 
 			@Override
 			public void mouseUp(final GameUI gameUI, final Viewport uiViewport) {
-				setValue(gameUI, uiViewport, ScrollBarFrame.this.scrollValuePercent - 10);
+				setValue(gameUI, uiViewport, ScrollBarFrame.this.scrollValuePercent - ScrollBarFrame.this.stepSize);
 			}
 
 			@Override
@@ -89,15 +94,37 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 		}
 	}
 
+	public void setMinValue(final int minValue) {
+		this.minValue = minValue;
+	}
+
+	public void setMaxValue(final int maxValue) {
+		this.maxValue = maxValue;
+	}
+
+	public void setStepSize(final int stepSize) {
+		this.stepSize = stepSize;
+	}
+
 	private float getMaxThumbButtonTravelDistance() {
-		final float incButtonFrameHeight = this.incButtonFrame == null ? 0 : this.incButtonFrame.getAssignedHeight();
-		final float decButtonFrameHeight = this.decButtonFrame == null ? 0 : this.decButtonFrame.getAssignedHeight();
-		return this.renderBounds.height - this.thumbButtonFrame.getAssignedHeight() - incButtonFrameHeight
-				- decButtonFrameHeight;
+		if (this.vertical) {
+			final float incButtonFrameHeight = this.incButtonFrame == null ? 0
+					: this.incButtonFrame.getAssignedHeight();
+			final float decButtonFrameHeight = this.decButtonFrame == null ? 0
+					: this.decButtonFrame.getAssignedHeight();
+			return this.renderBounds.height - this.thumbButtonFrame.getAssignedHeight() - incButtonFrameHeight
+					- decButtonFrameHeight;
+		}
+		else {
+			final float incButtonFrameWidth = this.incButtonFrame == null ? 0 : this.incButtonFrame.getAssignedWidth();
+			final float decButtonFrameWidth = this.decButtonFrame == null ? 0 : this.decButtonFrame.getAssignedWidth();
+			return this.renderBounds.width - this.thumbButtonFrame.getAssignedWidth() - incButtonFrameWidth
+					- decButtonFrameWidth;
+		}
 	}
 
 	public void setValue(final GameUI gameUI, final Viewport uiViewport, final int percent) {
-		this.scrollValuePercent = Math.min(100, Math.max(0, percent));
+		this.scrollValuePercent = Math.min(this.maxValue, Math.max(this.minValue, percent));
 		updateThumbButtonPoint();
 		this.changeListener.onChange(gameUI, uiViewport, this.scrollValuePercent);
 		positionBounds(gameUI, uiViewport);
@@ -108,13 +135,28 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 	}
 
 	public void updateThumbButtonPoint() {
-		final float newYValue = (this.scrollValuePercent / 100f) * getMaxThumbButtonTravelDistance();
-		if (this.decButtonFrame != null) {
-			this.thumbButtonFrame
-					.addSetPoint(new SetPoint(FramePoint.BOTTOM, this.decButtonFrame, FramePoint.TOP, 0, newYValue));
+		if (this.vertical) {
+			final float newYValue = (this.scrollValuePercent / (float) this.maxValue)
+					* getMaxThumbButtonTravelDistance();
+			if (this.decButtonFrame != null) {
+				this.thumbButtonFrame.addSetPoint(
+						new SetPoint(FramePoint.BOTTOM, this.decButtonFrame, FramePoint.TOP, 0, newYValue));
+			}
+			else {
+				this.thumbButtonFrame
+						.addSetPoint(new SetPoint(FramePoint.BOTTOM, this, FramePoint.BOTTOM, 0, newYValue));
+			}
 		}
 		else {
-			this.thumbButtonFrame.addSetPoint(new SetPoint(FramePoint.BOTTOM, this, FramePoint.BOTTOM, 0, newYValue));
+			final float newXValue = (this.scrollValuePercent / (float) this.maxValue)
+					* getMaxThumbButtonTravelDistance();
+			if (this.decButtonFrame != null) {
+				this.thumbButtonFrame.addSetPoint(
+						new SetPoint(FramePoint.LEFT, this.decButtonFrame, FramePoint.RIGHT, 0, newXValue));
+			}
+			else {
+				this.thumbButtonFrame.addSetPoint(new SetPoint(FramePoint.LEFT, this, FramePoint.LEFT, newXValue, 0));
+			}
 		}
 	}
 
@@ -174,11 +216,20 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 	@Override
 	public void mouseDragged(final GameUI rootFrame, final Viewport uiViewport, final float x, final float y) {
 		final float maxThumbButtonTravelDistance = getMaxThumbButtonTravelDistance();
-		final int newScrollValuePercent = Math.min(100,
-				Math.max(0,
-						(int) (((y - this.renderBounds.y - this.decButtonFrame.getAssignedHeight()
-								- (this.thumbButtonFrame.getAssignedHeight() / 2)) / maxThumbButtonTravelDistance)
-								* 100)));
+		final int newScrollValuePercent;
+		if (this.vertical) {
+			final float decFrameHeight = this.decButtonFrame == null ? 0 : this.decButtonFrame.getAssignedHeight();
+			newScrollValuePercent = Math.min(this.maxValue, Math.max(this.minValue, Math
+					.round(((y - this.renderBounds.y - decFrameHeight - (this.thumbButtonFrame.getAssignedHeight() / 2))
+							/ maxThumbButtonTravelDistance) * this.maxValue)));
+		}
+		else {
+			final float decFrameWidth = this.decButtonFrame == null ? 0 : this.decButtonFrame.getAssignedWidth();
+			newScrollValuePercent = Math.min(this.maxValue,
+					Math.max(this.minValue, Math.round(
+							((x - this.renderBounds.x - decFrameWidth - (this.thumbButtonFrame.getAssignedWidth() / 2))
+									/ maxThumbButtonTravelDistance) * this.maxValue)));
+		}
 		if (newScrollValuePercent != this.scrollValuePercent) {
 			setValue(rootFrame, uiViewport, newScrollValuePercent);
 			positionBounds(rootFrame, uiViewport);
@@ -193,17 +244,23 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 			if (frameChildUnderMouse != null) {
 				return frameChildUnderMouse;
 			}
-			frameChildUnderMouse = this.incButtonFrame.touchUp(screenX, screenY, button);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			if (this.incButtonFrame != null) {
+				frameChildUnderMouse = this.incButtonFrame.touchUp(screenX, screenY, button);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
-			frameChildUnderMouse = this.decButtonFrame.touchUp(screenX, screenY, button);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			if (this.decButtonFrame != null) {
+				frameChildUnderMouse = this.decButtonFrame.touchUp(screenX, screenY, button);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
-			frameChildUnderMouse = this.controlBackdrop.touchUp(screenX, screenY, button);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			if (this.controlBackdrop != null) {
+				frameChildUnderMouse = this.controlBackdrop.touchUp(screenX, screenY, button);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
 			return this;
 		}
@@ -217,17 +274,23 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 			if (frameChildUnderMouse != null) {
 				return frameChildUnderMouse;
 			}
-			frameChildUnderMouse = this.incButtonFrame.touchDown(screenX, screenY, button);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			if (this.incButtonFrame != null) {
+				frameChildUnderMouse = this.incButtonFrame.touchDown(screenX, screenY, button);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
-			frameChildUnderMouse = this.decButtonFrame.touchDown(screenX, screenY, button);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			if (this.decButtonFrame != null) {
+				frameChildUnderMouse = this.decButtonFrame.touchDown(screenX, screenY, button);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
-			frameChildUnderMouse = this.controlBackdrop.touchDown(screenX, screenY, button);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			if (this.controlBackdrop != null) {
+				frameChildUnderMouse = this.controlBackdrop.touchDown(screenX, screenY, button);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
 			return this;
 		}
@@ -241,17 +304,23 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 			if (frameChildUnderMouse != null) {
 				return frameChildUnderMouse;
 			}
-			frameChildUnderMouse = this.incButtonFrame.getFrameChildUnderMouse(screenX, screenY);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			if (this.incButtonFrame != null) {
+				frameChildUnderMouse = this.incButtonFrame.getFrameChildUnderMouse(screenX, screenY);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
-			frameChildUnderMouse = this.decButtonFrame.getFrameChildUnderMouse(screenX, screenY);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			if (this.decButtonFrame != null) {
+				frameChildUnderMouse = this.decButtonFrame.getFrameChildUnderMouse(screenX, screenY);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
-			frameChildUnderMouse = this.controlBackdrop.getFrameChildUnderMouse(screenX, screenY);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			if (this.controlBackdrop != null) {
+				frameChildUnderMouse = this.controlBackdrop.getFrameChildUnderMouse(screenX, screenY);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
 			return this;
 		}

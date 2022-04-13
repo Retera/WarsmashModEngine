@@ -77,7 +77,7 @@ public class DesktopLauncher {
 				argIndex++;
 				MultiplayerHack.LP_VAL = Integer.parseInt(arg[argIndex]);
 			}
-			else if((arg.length > (argIndex + 1)) && "-ini".equals(arg[argIndex])) {
+			else if ((arg.length > (argIndex + 1)) && "-ini".equals(arg[argIndex])) {
 				argIndex++;
 				iniPath = arg[argIndex];
 			}
@@ -127,9 +127,9 @@ public class DesktopLauncher {
 		});
 	}
 
-	public static DataTable loadWarsmashIni(String iniPath) {
+	public static DataTable loadWarsmashIni(final String iniPath) {
 		final DataTable warsmashIni = new DataTable(StringBundle.EMPTY);
-		try (FileInputStream warsmashIniInputStream = new FileInputStream(iniPath!=null?iniPath:"warsmash.ini")) {
+		try (FileInputStream warsmashIniInputStream = new FileInputStream(iniPath != null ? iniPath : "warsmash.ini")) {
 			warsmashIni.readTXT(warsmashIniInputStream, true);
 		}
 		catch (final FileNotFoundException e) {
@@ -140,7 +140,8 @@ public class DesktopLauncher {
 		}
 		return warsmashIni;
 	}
-	public static DataTable loadWarsmashIni(){
+
+	public static DataTable loadWarsmashIni() {
 		return loadWarsmashIni(null);
 	}
 
@@ -183,8 +184,8 @@ public class DesktopLauncher {
 			}
 		};
 		Extensions.audio = new AudioExtension() {
-			final FloatBuffer orientation = (FloatBuffer) BufferUtils.createFloatBuffer(6).clear();
-			final FloatBuffer position = (FloatBuffer) BufferUtils.createFloatBuffer(3).clear();
+			final FloatBuffer orientation = BufferUtils.createFloatBuffer(6).clear();
+			final FloatBuffer position = BufferUtils.createFloatBuffer(3).clear();
 
 			@Override
 			public float getDuration(final Sound sound) {

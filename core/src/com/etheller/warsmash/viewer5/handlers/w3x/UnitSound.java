@@ -106,7 +106,7 @@ public final class UnitSound {
 		if (millisTime < unit.lastUnitResponseEndTimeMillis) {
 			return false;
 		}
-		if (play(audioContext, unit.location[0], unit.location[1], unit.location[2])) {
+		if (play(audioContext, unit.location[0], unit.location[1], unit.location[2], index)) {
 			final float duration = Extensions.audio.getDuration(this.lastPlayedSound);
 			unit.lastUnitResponseEndTimeMillis = millisTime + (long) (1000 * duration);
 			return true;

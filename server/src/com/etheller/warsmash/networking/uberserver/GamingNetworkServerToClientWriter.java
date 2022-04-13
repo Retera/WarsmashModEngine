@@ -8,6 +8,7 @@ import net.warsmash.uberserver.AccountCreationFailureReason;
 import net.warsmash.uberserver.GamingNetwork;
 import net.warsmash.uberserver.GamingNetworkServerToClientListener;
 import net.warsmash.uberserver.HandshakeDeniedReason;
+import net.warsmash.uberserver.JoinGameFailureReason;
 import net.warsmash.uberserver.LoginFailureReason;
 
 public class GamingNetworkServerToClientWriter extends AbstractWriter implements GamingNetworkServerToClientListener {
@@ -114,6 +115,51 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 		this.writeBuffer.put(userNameBytes);
 		this.writeBuffer.putInt(messageBytes.length);
 		this.writeBuffer.put(messageBytes);
+		send();
+	}
+
+	@Override
+	public void beginGamesList() {
+		beginMessage(Protocol.BEGIN_GAMES_LIST, 0);
+		send();
+	}
+
+	@Override
+	public void gamesListItem(String gameName, final int openSlots, final int totalSlots) {
+		if (gameName.length() > GamingNetwork.CHANNEL_NAME_MAX_LENGTH) {
+			gameName = gameName.substring(0, GamingNetwork.CHANNEL_NAME_MAX_LENGTH);
+		}
+		final byte[] gameNameBytes = gameName.getBytes();
+		beginMessage(Protocol.GAMES_LIST_ITEM, 4 + gameNameBytes.length + 4 + 4);
+		this.writeBuffer.putInt(gameNameBytes.length);
+		this.writeBuffer.put(gameNameBytes);
+		this.writeBuffer.putInt(openSlots);
+		this.writeBuffer.putInt(totalSlots);
+		send();
+	}
+
+	@Override
+	public void endGamesList() {
+		beginMessage(Protocol.END_GAMES_LIST, 0);
+		send();
+	}
+
+	@Override
+	public void joinedGame(String gameName) {
+		if (gameName.length() > GamingNetwork.CHANNEL_NAME_MAX_LENGTH) {
+			gameName = gameName.substring(0, GamingNetwork.CHANNEL_NAME_MAX_LENGTH);
+		}
+		final byte[] bytes = gameName.getBytes(Charset.forName("utf-8"));
+		beginMessage(Protocol.JOINED_GAME, 4 + bytes.length);
+		this.writeBuffer.putInt(bytes.length);
+		this.writeBuffer.put(bytes);
+		send();
+	}
+
+	@Override
+	public void joinGameFailed(final JoinGameFailureReason joinGameFailureReason) {
+		beginMessage(Protocol.JOIN_GAME_FAILED, 4);
+		this.writeBuffer.putInt(joinGameFailureReason.ordinal());
 		send();
 	}
 

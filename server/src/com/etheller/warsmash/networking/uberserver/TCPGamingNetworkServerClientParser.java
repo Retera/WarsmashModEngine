@@ -19,10 +19,11 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 	@Override
 	public void parse(final ByteBuffer data) {
 		while (data.remaining() >= 8) {
-			final int protocolMessageId = data.getInt(data.position() + 0);
-			final int length = data.getInt(data.position() + 4);
+			final int position = data.position();
+			final int protocolMessageId = data.getInt(position + 0);
+			final int length = data.getInt(position + 4);
 			if (data.remaining() >= length) {
-				data.position(data.position() + 8);
+				data.position(position + 8);
 				switch (protocolMessageId) {
 				case GamingNetworkClientToServerListener.Protocol.HANDSHAKE: {
 					final int gameIdInt = data.getInt();
@@ -60,7 +61,10 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 					this.listener.emoteMessage(sessionToken, text);
 					break;
 				}
+				default:
+					break;
 				}
+				data.position(position + length);
 			}
 			else {
 				break;

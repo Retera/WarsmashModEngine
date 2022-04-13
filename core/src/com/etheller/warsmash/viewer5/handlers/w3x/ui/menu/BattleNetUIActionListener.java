@@ -22,4 +22,10 @@ public interface BattleNetUIActionListener {
 	void returnToChat();
 
 	void requestJoinChannel(String text);
+
+	void requestJoinGame(String text);
+
+	void showError(String errorKey);
+
+	void showCreateGameMenu();
 }

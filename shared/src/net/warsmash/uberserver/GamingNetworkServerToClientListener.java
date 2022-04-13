@@ -26,6 +26,16 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 
 	void channelEmote(String userName, String message);
 
+	void beginGamesList();
+
+	void gamesListItem(String gameName, int openSlots, int totalSlots);
+
+	void endGamesList();
+
+	void joinedGame(String gameName);
+
+	void joinGameFailed(JoinGameFailureReason joinGameFailureReason);
+
 	class Protocol {
 		public static final int HANDSHAKE_ACCEPTED = 1;
 		public static final int HANDSHAKE_DENIED = 2;
@@ -37,6 +47,11 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 		public static final int BAD_SESSION = 8;
 		public static final int CHANNEL_MESSAGE = 9;
 		public static final int CHANNEL_EMOTE = 10;
+		public static final int BEGIN_GAMES_LIST = 11;
+		public static final int GAMES_LIST_ITEM = 12;
+		public static final int END_GAMES_LIST = 13;
+		public static final int JOINED_GAME = 14;
+		public static final int JOIN_GAME_FAILED = 15;
 	}
 
 	public static final class GamingNetworkServerToClientNotifier implements GamingNetworkServerToClientListener {
@@ -120,6 +135,41 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 		public void channelEmote(final String userName, final String message) {
 			for (final GamingNetworkServerToClientListener listener : this.listeners) {
 				listener.channelEmote(userName, message);
+			}
+		}
+
+		@Override
+		public void beginGamesList() {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.beginGamesList();
+			}
+		}
+
+		@Override
+		public void gamesListItem(final String gameName, final int openSlots, final int totalSlots) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gamesListItem(gameName, openSlots, totalSlots);
+			}
+		}
+
+		@Override
+		public void endGamesList() {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.endGamesList();
+			}
+		}
+
+		@Override
+		public void joinedGame(final String gameName) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.joinedGame(gameName);
+			}
+		}
+
+		@Override
+		public void joinGameFailed(final JoinGameFailureReason joinGameFailureReason) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.joinGameFailed(joinGameFailureReason);
 			}
 		}
 

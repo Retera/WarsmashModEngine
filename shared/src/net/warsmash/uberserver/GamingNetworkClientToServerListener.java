@@ -15,6 +15,15 @@ public interface GamingNetworkClientToServerListener extends DisconnectListener 
 
 	void emoteMessage(long sessionToken, String text);
 
+	void queryGamesList(long sessionToken);
+
+	void queryGameInfo(long sessionToken, String gameName);
+
+	void joinGame(long sessionToken, String gameName);
+
+	void createGame(long sessionToken, String gameName, String mapName, int totalSlots, LobbyGameSpeed gameSpeed,
+			long gameCreationTimeMillis);
+
 	class Protocol {
 		public static final int HANDSHAKE = 1;
 		public static final int CREATE_ACCOUNT = 2;
@@ -22,5 +31,9 @@ public interface GamingNetworkClientToServerListener extends DisconnectListener 
 		public static final int JOIN_CHANNEL = 4;
 		public static final int CHAT_MESSAGE = 5;
 		public static final int EMOTE_MESSAGE = 6;
+		public static final int QUERY_GAMES_LIST = 7;
+		public static final int QUERY_GAME_INFO = 8;
+		public static final int JOIN_GAME = 9;
+		public static final int CREATE_GAME = 10;
 	}
 }

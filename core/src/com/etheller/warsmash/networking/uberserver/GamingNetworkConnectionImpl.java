@@ -11,6 +11,7 @@ import net.warsmash.uberserver.GamingNetworkClientToServerWriter;
 import net.warsmash.uberserver.GamingNetworkConnection;
 import net.warsmash.uberserver.GamingNetworkServerToClientListener;
 import net.warsmash.uberserver.GamingNetworkServerToClientListener.GamingNetworkServerToClientNotifier;
+import net.warsmash.uberserver.LobbyGameSpeed;
 import net.warsmash.uberserver.TCPGamingNetworkServerToClientParser;
 
 public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
@@ -84,6 +85,28 @@ public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
 	@Override
 	public void emoteMessage(final long sessionToken, final String text) {
 		this.gamingNetworkClientToServerWriter.emoteMessage(sessionToken, text);
+	}
+
+	@Override
+	public void queryGamesList(final long sessionToken) {
+		this.gamingNetworkClientToServerWriter.queryGamesList(sessionToken);
+	}
+
+	@Override
+	public void queryGameInfo(final long sessionToken, final String gameName) {
+		this.gamingNetworkClientToServerWriter.queryGameInfo(sessionToken, gameName);
+	}
+
+	@Override
+	public void joinGame(final long sessionToken, final String gameName) {
+		this.gamingNetworkClientToServerWriter.joinGame(sessionToken, gameName);
+	}
+
+	@Override
+	public void createGame(final long sessionToken, final String gameName, final String mapName, final int totalSlots,
+			final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis) {
+		this.gamingNetworkClientToServerWriter.createGame(sessionToken, gameName, mapName, totalSlots, gameSpeed,
+				gameCreationTimeMillis);
 	}
 
 	@Override

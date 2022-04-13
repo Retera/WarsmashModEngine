@@ -204,7 +204,12 @@ public class Jass2 {
 		final JassProgramVisitor jassProgramVisitor = new JassProgramVisitor();
 		final ConfigEnvironment environment = new ConfigEnvironment(jassProgramVisitor, dataSource, uiViewport, uiScene,
 				gameUI, mapConfig);
-		for (final String jassFile : files) {
+		for (String jassFilePath : files) {
+			if (!dataSource.has(jassFilePath)) {
+				jassFilePath = jassFilePath
+						.substring(Math.max(jassFilePath.lastIndexOf('/'), jassFilePath.lastIndexOf('\\')) + 1);
+			}
+			final String jassFile = jassFilePath;
 			try {
 				JassLexer lexer;
 				try {

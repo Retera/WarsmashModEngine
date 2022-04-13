@@ -42,6 +42,7 @@ import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringPairFrameDefinit
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetMenuItemFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
 import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
+import com.etheller.warsmash.parsers.fdf.frames.CheckBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ClickConsumingTextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ControlFrame;
 import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
@@ -384,6 +385,19 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 								&& parentDefinitionIfAvailable.has("DecorateFileNames"));
 				final ScrollBarFrame scrollBarFrame = new ScrollBarFrame(frameDefinition.getName(), parent, vertical);
 
+				final Float sliderMinValue = frameDefinition.getFloat("SliderMinValue");
+				if (sliderMinValue != null) {
+					scrollBarFrame.setMinValue(sliderMinValue.intValue());
+				}
+				final Float sliderMaxValue = frameDefinition.getFloat("SliderMaxValue");
+				if (sliderMaxValue != null) {
+					scrollBarFrame.setMaxValue(sliderMaxValue.intValue());
+				}
+				final Float sliderStepSize = frameDefinition.getFloat("SliderStepSize");
+				if (sliderStepSize != null) {
+					scrollBarFrame.setStepSize(sliderStepSize.intValue());
+				}
+
 				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
 				final String incButtonFrameKey = frameDefinition.getString("ScrollBarIncButtonFrame");
 				final String decButtonFrameKey = frameDefinition.getString("ScrollBarDecButtonFrame");
@@ -414,6 +428,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						scrollBarFrame.setThumbButtonFrame(inflatedChild);
 						scrollBarFrame.setValue(this, viewport2, 50);
 					}
+				}
+				final Float sliderInitialValue = frameDefinition.getFloat("SliderInitialValue");
+				if (sliderInitialValue != null) {
+					scrollBarFrame.setValue(this, viewport2, sliderInitialValue.intValue());
 				}
 				inflatedFrame = scrollBarFrame;
 			}
@@ -885,6 +903,54 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				inflatedFrame = glueButtonFrame;
 			}
+			else if ("CHECKBOX".equals(frameDefinition.getFrameType())
+					|| "GLUECHECKBOX".equals(frameDefinition.getFrameType())) {
+				// ButtonText & ControlBackdrop
+				final CheckBoxFrame glueButtonFrame = new CheckBoxFrame(frameDefinition.getName(), parent);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinition.getName(), glueButtonFrame);
+				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
+				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
+				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
+				final String checkBoxCheckHighlightKey = frameDefinition.getString("CheckBoxCheckHighlight");
+				final String checkBoxDisabledCheckHighlightKey = frameDefinition
+						.getString("CheckBoxDisabledCheckHighlight");
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					if (childDefinition.getName().equals(controlBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						glueButtonFrame.setControlBackdrop(inflatedChild);
+					}
+					else if (childDefinition.getName().equals(controlPushedBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						glueButtonFrame.setControlPushedBackdrop(inflatedChild);
+					}
+					else if (childDefinition.getName().equals(controlDisabledBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						glueButtonFrame.setControlDisabledBackdrop(inflatedChild);
+					}
+					else if (childDefinition.getName().equals(checkBoxCheckHighlightKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						glueButtonFrame.setCheckBoxCheckHighlight(inflatedChild);
+					}
+					else if (childDefinition.getName().equals(checkBoxDisabledCheckHighlightKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						glueButtonFrame.setCheckBoxDisabledCheckHighlight(inflatedChild);
+					}
+				}
+				inflatedFrame = glueButtonFrame;
+			}
 			else if ("TEXTBUTTON".equals(frameDefinition.getFrameType())) {
 				// ButtonText & ControlBackdrop
 				final TextButtonFrame glueButtonFrame = new TextButtonFrame(frameDefinition.getName(), parent);
@@ -1187,6 +1253,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				textureFrame.setTexture(highlightAlphaFile, this);
 				if ("ADD".equals(highlightAlphaMode)) {
 					textureFrame.setFilterMode(FilterMode.ADDALPHA);
+				}
+				else if ("BLEND".equals(highlightAlphaMode)) {
+					textureFrame.setFilterMode(FilterMode.BLEND);
 				}
 				return textureFrame;
 			}

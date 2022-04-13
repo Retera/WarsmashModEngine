@@ -15,6 +15,7 @@ import com.etheller.warsmash.networking.uberserver.users.UserManager;
 import net.warsmash.uberserver.AccountCreationFailureReason;
 import net.warsmash.uberserver.GamingNetworkServerToClientListener;
 import net.warsmash.uberserver.HandshakeDeniedReason;
+import net.warsmash.uberserver.JoinGameFailureReason;
 import net.warsmash.uberserver.LoginFailureReason;
 
 public class GamingNetworkServerBusinessLogicImpl {
@@ -24,6 +25,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 	private final Map<Integer, SessionImpl> userIdToCurrentSession = new HashMap<>();
 	private final Map<Long, SessionImpl> tokenToSession;
 	private final Map<String, ChatChannel> nameLowerCaseToChannel = new HashMap<>();
+	private final Map<String, HostedGame> nameLowerCaseToGame = new HashMap<>();
 	private final Random random;
 
 	public GamingNetworkServerBusinessLogicImpl(final Set<AcceptedGameListKey> acceptedGames,
@@ -107,6 +109,26 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
+	public void joinGame(final long sessionToken, final String gameName,
+			final GamingNetworkServerToClientListener connectionContext) {
+		final SessionImpl session = getSession(sessionToken, connectionContext);
+		if (session != null) {
+			removeSessionFromCurrentChannel(session);
+
+			final String gameKey = gameName.toLowerCase(Locale.US);
+			final HostedGame game = this.nameLowerCaseToGame.get(gameName);
+			if (game == null) {
+				connectionContext.joinGameFailed(JoinGameFailureReason.NO_SUCH_GAME);
+			}
+			game.addUser(session);
+			session.currentGameName = gameKey;
+			connectionContext.joinedGame(gameName);
+		}
+		else {
+			connectionContext.badSession();
+		}
+	}
+
 	private void removeSessionFromCurrentChannel(final SessionImpl session) {
 		final String previousChatChannel = session.currentChatChannel;
 		if (previousChatChannel != null) {
@@ -143,6 +165,31 @@ public class GamingNetworkServerBusinessLogicImpl {
 			if (chatChannel != null) {
 				chatChannel.sendEmote(session.getUser().getUsername(), text);
 			}
+		}
+		else {
+			connectionContext.badSession();
+		}
+	}
+
+	public void queryGamesList(final long sessionToken, final GamingNetworkServerToClientListener connectionContext) {
+		final SessionImpl session = getSession(sessionToken, connectionContext);
+		if (session != null) {
+			connectionContext.beginGamesList();
+			for (final Map.Entry<String, HostedGame> nameAndGame : this.nameLowerCaseToGame.entrySet()) {
+				final HostedGame game = nameAndGame.getValue();
+				connectionContext.gamesListItem(nameAndGame.getKey(), game.getUsedSlots(), game.getTotalSlots());
+			}
+			connectionContext.endGamesList();
+		}
+		else {
+			connectionContext.badSession();
+		}
+	}
+
+	public void queryGameInfo(final long sessionToken, final GamingNetworkServerToClientWriter connectionContext) {
+		final SessionImpl session = getSession(sessionToken, connectionContext);
+		if (session != null) {
+			// TODO
 		}
 		else {
 			connectionContext.badSession();
@@ -249,4 +296,58 @@ public class GamingNetworkServerBusinessLogicImpl {
 			}
 		}
 	}
+
+	private static final class HostedGame {
+		private final String gameName;
+		private final List<SessionImpl> userSessions = new ArrayList<>();
+		private final int totalSlots;
+
+		public HostedGame(final String gameName, final int totalSlots) {
+			this.gameName = gameName;
+			this.totalSlots = totalSlots;
+		}
+
+		public void removeUser(final SessionImpl session) {
+			this.userSessions.remove(session);
+		}
+
+		public void addUser(final SessionImpl session) {
+			this.userSessions.add(session);
+		}
+
+		public boolean isEmpty() {
+			return this.userSessions.isEmpty();
+		}
+
+		public int getUsedSlots() {
+			return this.userSessions.size();
+		}
+
+		public int getTotalSlots() {
+			return this.totalSlots;
+		}
+
+		public void sendMessage(final String sourceUserName, final String message) {
+			for (final SessionImpl session : this.userSessions) {
+				try {
+					session.mostRecentConnectionContext.channelMessage(sourceUserName, message);
+				}
+				catch (final Exception exc) {
+					exc.printStackTrace();
+				}
+			}
+		}
+
+		public void sendEmote(final String sourceUserName, final String message) {
+			for (final SessionImpl session : this.userSessions) {
+				try {
+					session.mostRecentConnectionContext.channelEmote(sourceUserName, message);
+				}
+				catch (final Exception exc) {
+					exc.printStackTrace();
+				}
+			}
+		}
+	}
+
 }

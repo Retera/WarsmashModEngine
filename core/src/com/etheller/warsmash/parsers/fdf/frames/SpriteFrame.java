@@ -1,5 +1,7 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import java.util.EnumSet;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -12,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 
 public class SpriteFrame extends AbstractUIFrame {
@@ -91,6 +94,12 @@ public class SpriteFrame extends AbstractUIFrame {
 	public void setSequence(final PrimaryTag animationName) {
 		if (this.instance != null) {
 			SequenceUtils.randomSequence(this.instance, animationName);
+		}
+	}
+
+	public void setSequence(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryTags) {
+		if (this.instance != null) {
+			SequenceUtils.randomSequence(this.instance, animationName, secondaryTags, true);
 		}
 	}
 

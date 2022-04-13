@@ -2,6 +2,7 @@ package com.etheller.warsmash.networking.uberserver;
 
 import net.warsmash.nio.channels.WritableOutput;
 import net.warsmash.uberserver.GamingNetworkClientToServerListener;
+import net.warsmash.uberserver.LobbyGameSpeed;
 
 public class DefaultGamingNetworkServerClientBuilder implements GamingNetworkServerClientBuilder {
 	private final GamingNetworkServerBusinessLogicImpl businessLogicImpl;
@@ -36,6 +37,11 @@ public class DefaultGamingNetworkServerClientBuilder implements GamingNetworkSer
 			}
 
 			@Override
+			public void joinGame(final long sessionToken, final String gameName) {
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.joinGame(sessionToken, gameName, writer);
+			}
+
+			@Override
 			public void emoteMessage(final long sessionToken, final String text) {
 				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.emoteMessage(sessionToken, text, writer);
 			}
@@ -49,6 +55,22 @@ public class DefaultGamingNetworkServerClientBuilder implements GamingNetworkSer
 			@Override
 			public void chatMessage(final long sessionToken, final String text) {
 				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.chatMessage(sessionToken, text, writer);
+			}
+
+			@Override
+			public void queryGamesList(final long sessionToken) {
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.queryGamesList(sessionToken, writer);
+			}
+
+			@Override
+			public void queryGameInfo(final long sessionToken, final String gameName) {
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.queryGameInfo(sessionToken, writer);
+			}
+
+			@Override
+			public void createGame(final long sessionToken, final String gameName, final String mapName,
+					final int totalSlots, final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis) {
+				throw new UnsupportedOperationException();
 			}
 		};
 	}

@@ -6,16 +6,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
+import com.etheller.warsmash.parsers.fdf.frames.CheckBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
+import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame;
+import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame.ListBoxSelelectionListener;
+import com.etheller.warsmash.parsers.fdf.frames.ScrollBarFrame;
+import com.etheller.warsmash.parsers.fdf.frames.ScrollBarFrame.ScrollBarChangeListener;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextAreaFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapListContainer;
+
+import net.warsmash.uberserver.LobbyGameSpeed;
 
 public class BattleNetUI {
 	private final GameUI rootFrame;
@@ -81,8 +90,21 @@ public class BattleNetUI {
 	private final GlueButtonFrame channelPanelBackButton;
 	private final EditBoxFrame channelNameField;
 	private final GlueButtonFrame channelPanelJoinChannelButton;
+	private final UIFrame battleNetCustomJoinPanel;
+	private final GlueButtonFrame customJoinPanelBackButton;
+	private String currentChannel;
+	private final EditBoxFrame joinGameEditBox;
+	private final GlueButtonFrame joinGameButton;
+	private final GlueButtonFrame customJoinPanelCreateGameButton;
+	private final GlueButtonFrame customJoinPanelLoadGameButton;
+	private final UIFrame battleNetCustomCreatePanel;
+	private final GlueButtonFrame customCreatePanelBackButton;
+	private final ScrollBarFrame createGameSpeedSlider;
+	private final StringFrame createGameSpeedValue;
+	private final CheckBoxFrame publicGameRadio;
+	private final CheckBoxFrame privateGameRadio;
 
-	public BattleNetUI(final GameUI rootFrame, final Viewport uiViewport,
+	public BattleNetUI(final GameUI rootFrame, final Viewport uiViewport, final DataSource dataSource,
 			final BattleNetUIActionListener actionListener) {
 		this.rootFrame = rootFrame;
 		this.uiViewport = uiViewport;
@@ -335,6 +357,138 @@ public class BattleNetUI {
 		if (newAccountPanelNCS != null) {
 			newAccountPanelNCS.setVisible(false);
 		}
+
+		// *******************************************
+		// *
+		// * Battle Net Custom Join Panel
+		// *
+		// ******
+
+		this.battleNetCustomJoinPanel = rootFrame.createFrame("BattleNetCustomJoinPanel", rootFrame, 0, 0);
+		this.battleNetCustomJoinPanel.setVisible(false);
+
+		this.customJoinPanelBackButton = (GlueButtonFrame) rootFrame.getFrameByName("CancelButton", 0);
+		this.customJoinPanelBackButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				actionListener.returnToChat();
+			}
+		});
+
+		this.customJoinPanelCreateGameButton = (GlueButtonFrame) rootFrame.getFrameByName("CreateGameButton", 0);
+		this.customJoinPanelCreateGameButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				actionListener.showCreateGameMenu();
+			}
+		});
+
+		this.customJoinPanelLoadGameButton = (GlueButtonFrame) rootFrame.getFrameByName("LoadGameButton", 0);
+		this.customJoinPanelLoadGameButton.setEnabled(false);
+
+		final SimpleFrame joinGameListContainer = (SimpleFrame) this.rootFrame.getFrameByName("JoinGameListContainer",
+				0);
+		final ListBoxFrame joinGameListBox = (ListBoxFrame) this.rootFrame.createFrameByType("LISTBOX", "MapListBox",
+				joinGameListContainer, "WITHCHILDREN", 0);
+		joinGameListBox.setSetAllPoints(true);
+		final StringFrame joinGameListLabel = (StringFrame) this.rootFrame.getFrameByName("JoinGameListLabel", 0);
+		joinGameListBox.setFrameFont(joinGameListLabel.getFrameFont());
+
+		this.joinGameEditBox = (EditBoxFrame) this.rootFrame.getFrameByName("JoinGameNameEditBox", 0);
+
+		final List<String> testItems = new ArrayList<>();
+		testItems.add("Retera???'s game (1/4)");
+		for (final String displayItemPath : testItems) {
+			joinGameListBox.addItem(displayItemPath, this.rootFrame, this.uiViewport);
+		}
+		joinGameListBox.setSelectionListener(new ListBoxSelelectionListener() {
+			@Override
+			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
+				if (newSelectedItem != null) {
+					BattleNetUI.this.joinGameEditBox.setText(newSelectedItem, rootFrame, uiViewport);
+				}
+			}
+		});
+		joinGameListContainer.add(joinGameListBox);
+		this.joinGameButton = (GlueButtonFrame) this.rootFrame.getFrameByName("JoinGameButton", 0);
+		this.joinGameButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				final String text = BattleNetUI.this.joinGameEditBox.getText();
+				if (text.isEmpty()) {
+					actionListener.showError("NETERROR_NOGAMESPECIFIED");
+				}
+				else {
+					actionListener.requestJoinGame(text);
+				}
+
+			}
+		});
+
+		// *******************************************
+		// *
+		// * Battle Net Custom Create Panel
+		// *
+		// ******
+		this.battleNetCustomCreatePanel = rootFrame.createFrame("BattleNetCustomCreatePanel", rootFrame, 0, 0);
+		this.battleNetCustomCreatePanel.setVisible(false);
+
+		this.customCreatePanelBackButton = (GlueButtonFrame) rootFrame.getFrameByName("CancelButton", 0);
+		this.customCreatePanelBackButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				actionListener.openCustomGameMenu();
+			}
+		});
+
+		final StringFrame mapListLabel = (StringFrame) this.rootFrame.getFrameByName("MapListLabel", 0);
+		final MapListContainer mapListContainer = new MapListContainer(this.rootFrame, this.uiViewport,
+				"MapListContainer", dataSource, mapListLabel.getFrameFont());
+		mapListContainer.addSelectionListener(new ListBoxSelelectionListener() {
+			@Override
+			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
+				if (newSelectedItem != null) {
+				}
+			}
+		});
+
+		this.createGameSpeedValue = (StringFrame) this.rootFrame.getFrameByName("CreateGameSpeedValue", 0);
+
+		this.createGameSpeedSlider = (ScrollBarFrame) this.rootFrame.getFrameByName("CreateGameSpeedSlider", 0);
+		this.createGameSpeedSlider.setChangeListener(new ScrollBarChangeListener() {
+			@Override
+			public void onChange(final GameUI gameUI, final Viewport uiViewport, final int newValue) {
+				if ((newValue >= 0) && (newValue < LobbyGameSpeed.VALUES.length)) {
+					gameUI.setDecoratedText(BattleNetUI.this.createGameSpeedValue,
+							LobbyGameSpeed.VALUES[newValue].name());
+				}
+			}
+		});
+		this.createGameSpeedSlider.setValue(rootFrame, uiViewport, LobbyGameSpeed.NORMAL.ordinal());
+
+		this.publicGameRadio = (CheckBoxFrame) this.rootFrame.getFrameByName("PublicGameRadio", 0);
+		this.privateGameRadio = (CheckBoxFrame) this.rootFrame.getFrameByName("PrivateGameRadio", 0);
+
+		this.publicGameRadio.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				if (BattleNetUI.this.privateGameRadio.isEnabled()) {
+					BattleNetUI.this.privateGameRadio.setChecked(!BattleNetUI.this.publicGameRadio.isChecked());
+				}
+				else {
+					BattleNetUI.this.publicGameRadio.setChecked(true);
+				}
+			}
+		});
+		this.privateGameRadio.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				BattleNetUI.this.publicGameRadio.setChecked(!BattleNetUI.this.privateGameRadio.isChecked());
+			}
+		});
+		this.publicGameRadio.setChecked(true);
+		this.privateGameRadio.setEnabled(false);
+
 	}
 
 	public void setTopButtonsVisible(final boolean flag) {
@@ -386,7 +540,11 @@ public class BattleNetUI {
 	}
 
 	public void showCustomGameMenu() {
+		this.battleNetCustomJoinPanel.setVisible(true);
+	}
 
+	public void showCustomGameCreateMenu() {
+		this.battleNetCustomCreatePanel.setVisible(true);
 	}
 
 	public void hideWelcomeScreen() {
@@ -400,6 +558,8 @@ public class BattleNetUI {
 		this.channelPanel.setVisible(false);
 		this.welcomePanel.setVisible(false);
 		this.quitBattleNetButton.setVisible(false);
+		this.battleNetCustomJoinPanel.setVisible(false);
+		this.battleNetCustomCreatePanel.setVisible(false);
 		setTopButtonsVisible(false);
 	}
 
@@ -431,6 +591,7 @@ public class BattleNetUI {
 	}
 
 	public void joinedChannel(final String channelName) {
+		this.currentChannel = channelName;
 		this.rootFrame.setText(this.chatChannelNameLabel, channelName);
 		final String messageText = String.format(this.rootFrame.getTemplates().getDecoratedString("BNET_JOIN_CHANNEL"),
 				channelName);
@@ -452,5 +613,9 @@ public class BattleNetUI {
 
 	public void showChannelMenu() {
 		this.channelPanel.setVisible(true);
+	}
+
+	public String getCurrentChannel() {
+		return this.currentChannel;
 	}
 }

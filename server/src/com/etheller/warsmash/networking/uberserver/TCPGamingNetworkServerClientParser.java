@@ -8,6 +8,8 @@ import com.etheller.warsmash.util.War3ID;
 import net.warsmash.nio.channels.tcp.TCPClientParser;
 import net.warsmash.uberserver.GamingNetwork;
 import net.warsmash.uberserver.GamingNetworkClientToServerListener;
+import net.warsmash.uberserver.HostedGameVisibility;
+import net.warsmash.uberserver.LobbyGameSpeed;
 
 public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 	private final GamingNetworkClientToServerListener listener;
@@ -60,6 +62,31 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 					final String text = readString(GamingNetwork.MESSAGE_MAX_LENGTH, data);
 					this.listener.emoteMessage(sessionToken, text);
 					break;
+				}
+				case GamingNetworkClientToServerListener.Protocol.QUERY_GAMES_LIST: {
+					final long sessionToken = data.getLong();
+					this.listener.queryGamesList(sessionToken);
+				}
+				case GamingNetworkClientToServerListener.Protocol.QUERY_GAME_INFO: {
+					final long sessionToken = data.getLong();
+					final String gameName = readString(GamingNetwork.CHANNEL_NAME_MAX_LENGTH, data);
+					this.listener.queryGameInfo(sessionToken, gameName);
+				}
+				case GamingNetworkClientToServerListener.Protocol.JOIN_GAME: {
+					final long sessionToken = data.getLong();
+					final String gameName = readString(GamingNetwork.CHANNEL_NAME_MAX_LENGTH, data);
+					this.listener.joinGame(sessionToken, gameName);
+				}
+				case GamingNetworkClientToServerListener.Protocol.CREATE_GAME: {
+					final long sessionToken = data.getLong();
+					final String gameName = readString(GamingNetwork.CHANNEL_NAME_MAX_LENGTH, data);
+					final String mapName = readString(GamingNetwork.MAP_NAME_MAX_LENGTH, data);
+					final int totalSlots = data.getInt();
+					final LobbyGameSpeed gameSpeed = LobbyGameSpeed.VALUES[data.getInt()];
+					final long gameCreationTimeMillis = data.getLong();
+					final HostedGameVisibility visibility = HostedGameVisibility.VALUES[data.getInt()];
+					this.listener.createGame(sessionToken, gameName, mapName, totalSlots, gameSpeed,
+							gameCreationTimeMillis, visibility);
 				}
 				default:
 					break;

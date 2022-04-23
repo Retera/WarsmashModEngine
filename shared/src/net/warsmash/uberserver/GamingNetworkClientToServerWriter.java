@@ -97,7 +97,8 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 
 	@Override
 	public void queryGamesList(final long sessionToken) {
-		beginMessage(Protocol.QUERY_GAMES_LIST, 0);
+		beginMessage(Protocol.QUERY_GAMES_LIST, 8);
+		this.writeBuffer.putLong(sessionToken);
 		send();
 	}
 
@@ -129,7 +130,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 
 	@Override
 	public void createGame(final long sessionToken, String gameName, String mapName, final int totalSlots,
-			final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis) {
+			final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis, final HostedGameVisibility visibility) {
 		if (gameName.length() > GamingNetwork.CHANNEL_NAME_MAX_LENGTH) {
 			gameName = gameName.substring(0, GamingNetwork.CHANNEL_NAME_MAX_LENGTH);
 		}
@@ -138,7 +139,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 			mapName = mapName.substring(0, GamingNetwork.MAP_NAME_MAX_LENGTH);
 		}
 		final byte[] mapNameBytes = mapName.getBytes(Charset.forName("utf-8"));
-		beginMessage(Protocol.CREATE_GAME, 8 + 4 + channelNameBytes.length + 4 + mapNameBytes.length + 4 + 4 + 8);
+		beginMessage(Protocol.CREATE_GAME, 8 + 4 + channelNameBytes.length + 4 + mapNameBytes.length + 4 + 4 + 8 + 4);
 		this.writeBuffer.putLong(sessionToken);
 		this.writeBuffer.putInt(channelNameBytes.length);
 		this.writeBuffer.put(channelNameBytes);
@@ -147,6 +148,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 		this.writeBuffer.putInt(totalSlots);
 		this.writeBuffer.putInt(gameSpeed.ordinal());
 		this.writeBuffer.putLong(gameCreationTimeMillis);
+		this.writeBuffer.putInt(visibility.ordinal());
 		send();
 	}
 

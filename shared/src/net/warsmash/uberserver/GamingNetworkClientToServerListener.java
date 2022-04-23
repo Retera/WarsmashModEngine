@@ -21,8 +21,8 @@ public interface GamingNetworkClientToServerListener extends DisconnectListener 
 
 	void joinGame(long sessionToken, String gameName);
 
-	void createGame(long sessionToken, String gameName, String mapName, int totalSlots, LobbyGameSpeed gameSpeed,
-			long gameCreationTimeMillis);
+	void createGame(final long sessionToken, final String gameName, final String mapName, final int totalSlots,
+			final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis, HostedGameVisibility visibility);
 
 	class Protocol {
 		public static final int HANDSHAKE = 1;

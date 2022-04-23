@@ -2,6 +2,7 @@ package com.etheller.warsmash.networking.uberserver;
 
 import net.warsmash.nio.channels.WritableOutput;
 import net.warsmash.uberserver.GamingNetworkClientToServerListener;
+import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.LobbyGameSpeed;
 
 public class DefaultGamingNetworkServerClientBuilder implements GamingNetworkServerClientBuilder {
@@ -69,7 +70,8 @@ public class DefaultGamingNetworkServerClientBuilder implements GamingNetworkSer
 
 			@Override
 			public void createGame(final long sessionToken, final String gameName, final String mapName,
-					final int totalSlots, final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis) {
+					final int totalSlots, final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis,
+					final HostedGameVisibility visibility) {
 				throw new UnsupportedOperationException();
 			}
 		};

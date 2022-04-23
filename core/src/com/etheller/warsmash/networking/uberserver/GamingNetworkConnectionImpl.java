@@ -11,6 +11,7 @@ import net.warsmash.uberserver.GamingNetworkClientToServerWriter;
 import net.warsmash.uberserver.GamingNetworkConnection;
 import net.warsmash.uberserver.GamingNetworkServerToClientListener;
 import net.warsmash.uberserver.GamingNetworkServerToClientListener.GamingNetworkServerToClientNotifier;
+import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.LobbyGameSpeed;
 import net.warsmash.uberserver.TCPGamingNetworkServerToClientParser;
 
@@ -104,9 +105,9 @@ public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
 
 	@Override
 	public void createGame(final long sessionToken, final String gameName, final String mapName, final int totalSlots,
-			final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis) {
+			final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis, final HostedGameVisibility visibility) {
 		this.gamingNetworkClientToServerWriter.createGame(sessionToken, gameName, mapName, totalSlots, gameSpeed,
-				gameCreationTimeMillis);
+				gameCreationTimeMillis, visibility);
 	}
 
 	@Override

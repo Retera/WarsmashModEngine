@@ -3445,6 +3445,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				if (selectedUnits.size() > 1) {
 					int index = 0;
 					for (final RenderUnit renderUnit : selectedUnits) {
+						if (index >= 12) {
+							break; // TODO handle >12 unit selections
+						}
 						final MultiSelectUnitStateListener multiSelectUnitStateListener = new MultiSelectUnitStateListener(
 								renderUnit, index++);
 						renderUnit.getSimulationUnit().addStateListener(multiSelectUnitStateListener);
@@ -3826,6 +3829,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final class MultiSelectUnitStateListener implements CUnitStateListener {
 		private final RenderUnit sourceUnit;
 		private int index;
+		private boolean disposed = false;
 
 		public MultiSelectUnitStateListener(final RenderUnit sourceUnit, final int index) {
 			this.sourceUnit = sourceUnit;
@@ -3834,10 +3838,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		public void dispose() {
 			this.sourceUnit.getSimulationUnit().removeStateListener(this);
+			this.disposed = true;
 		}
 
 		@Override
 		public void lifeChanged() {
+			if (this.disposed) {
+				return;
+			}
 			if (this.sourceUnit.getSimulationUnit().isDead()) {
 				MeleeUI.this.selectedUnits.remove(this.sourceUnit);
 				MeleeUI.this.war3MapViewer.doUnselectUnit(this.sourceUnit);
@@ -3857,6 +3865,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void manaChanged() {
+			if (this.disposed) {
+				return;
+			}
 			MeleeUI.this.selectedUnitFrames[this.index]
 					.setManaRatioRemaining(this.sourceUnit.getSimulationUnit().getMana()
 							/ this.sourceUnit.getSimulationUnit().getMaximumMana());
@@ -3864,31 +3875,49 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void ordersChanged() {
+			if (this.disposed) {
+				return;
+			}
 
 		}
 
 		@Override
 		public void queueChanged() {
+			if (this.disposed) {
+				return;
+			}
 
 		}
 
 		@Override
 		public void rallyPointChanged() {
+			if (this.disposed) {
+				return;
+			}
 
 		}
 
 		@Override
 		public void waypointsChanged() {
+			if (this.disposed) {
+				return;
+			}
 
 		}
 
 		@Override
 		public void heroStatsChanged() {
+			if (this.disposed) {
+				return;
+			}
 
 		}
 
 		@Override
 		public void inventoryChanged() {
+			if (this.disposed) {
+				return;
+			}
 
 		}
 

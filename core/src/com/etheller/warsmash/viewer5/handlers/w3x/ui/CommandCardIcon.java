@@ -189,12 +189,7 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	}
 
 	public boolean checkHotkey(final char c, final int keycode) {
-		if ((c == this.hotkey) || (Character.toUpperCase(c) == this.hotkey)
-				|| ((this.hotkey == 0x7E) && (keycode == Input.Keys.ESCAPE))) {
-			onClick(Input.Buttons.LEFT);
-			return true;
-		}
-		return false;
+		return (c == this.hotkey) || (Character.toUpperCase(c) == this.hotkey) || ((this.hotkey == 0x7E) && (keycode == Input.Keys.ESCAPE));
 	}
 
 	@Override

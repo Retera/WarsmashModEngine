@@ -42,6 +42,7 @@ public class WarsmashConstants {
 	public static final boolean LOAD_UNITS_FROM_WORLDEDIT_DATA = false;
 	public static final boolean CRASH_ON_INCOMPATIBLE_132_FEATURES = false;
 	public static final boolean FIRE_DEATH_EVENTS_ON_REMOVEUNIT = false;
+	public static final int INPUT_HOTKEY_MODE = 1;
 
 	public static final String getGameId() {
 		return (GAME_VERSION == 0) ? GamingNetwork.GAME_ID_BASE : GamingNetwork.GAME_ID_XPAC;

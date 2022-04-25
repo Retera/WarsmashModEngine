@@ -370,6 +370,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	private final BuildOnBuildingIntersector buildOnBuildingIntersector = new BuildOnBuildingIntersector();
 
+	public int[][] commandCardGridHotkeys ={{Input.Keys.Q,Input.Keys.W,Input.Keys.E,Input.Keys.R},
+											{Input.Keys.A,Input.Keys.S,Input.Keys.D,Input.Keys.F},
+											{Input.Keys.Z,Input.Keys.X,Input.Keys.C,Input.Keys.V}};
+
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
 			final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener,
@@ -2988,9 +2992,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final char c = keyString.length() == 1 ? keyString.charAt(0) : ' ';
 		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
 			for (int i = 0; i < COMMAND_CARD_WIDTH; i++) {
-				if (this.commandCard[j][i].checkHotkey(c, keycode)) {
-					this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0,
-							0);
+				boolean match = false;
+				switch (WarsmashConstants.INPUT_HOTKEY_MODE){
+					case 0:
+						if (this.commandCard[j][i].checkHotkey(c, keycode)) match = true;
+						break;
+					case 1:
+
+						if(keycode == this.commandCardGridHotkeys[j][i]) match = true;
+						break;
+				}
+				if(match){
+					this.commandCard[j][i].onClick(Input.Buttons.LEFT);
+					this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0,0);
 				}
 			}
 		}

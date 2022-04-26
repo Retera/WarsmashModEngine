@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 
 import org.apache.commons.compress.utils.IOUtils;
 
@@ -25,7 +26,7 @@ public class MdxUtils {
 	}
 
 	public static void saveMdl(final MdlxModel model, final File file) throws IOException {
-		saveMdl(model, new FileOutputStream(file));
+		saveMdl(model, Files.newOutputStream(file.toPath()));
 	}
 
 }

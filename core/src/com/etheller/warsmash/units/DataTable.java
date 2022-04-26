@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -57,7 +58,7 @@ public class DataTable implements ObjectData {
 
 	public void readTXT(final File f, final boolean canProduce) {
 		try {
-			readTXT(new FileInputStream(f), canProduce);
+			readTXT(Files.newInputStream(f.toPath()), canProduce);
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -66,7 +67,7 @@ public class DataTable implements ObjectData {
 
 	public void readSLK(final File f) {
 		try {
-			readSLK(new FileInputStream(f));
+			readSLK(Files.newInputStream(f.toPath()));
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);

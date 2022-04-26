@@ -26,6 +26,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import io.nayuki.flac.common.StreamInfo;
 import io.nayuki.flac.decode.DataFormatException;
@@ -89,7 +90,7 @@ public final class DecodeFlacToWav {
 		// Start writing WAV output file
 		int bytesPerSample = streamInfo.sampleDepth / 8;
 		try (DataOutputStream out = new DataOutputStream(
-				new BufferedOutputStream(new FileOutputStream(outFile)))) {
+				new BufferedOutputStream(Files.newOutputStream(outFile.toPath())))) {
 			DecodeFlacToWav.out = out;
 			
 			// Header chunk

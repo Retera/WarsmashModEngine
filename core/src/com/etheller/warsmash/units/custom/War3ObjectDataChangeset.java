@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -663,7 +664,7 @@ public final class War3ObjectDataChangeset {
 	}
 
 	public boolean load(final File file, final WTS wts, final boolean inlineWTS) throws IOException {
-		try (LittleEndianDataInputStream inputStream = new LittleEndianDataInputStream(new FileInputStream(file))) {
+		try (LittleEndianDataInputStream inputStream = new LittleEndianDataInputStream(Files.newInputStream(file.toPath()))) {
 			final boolean result = load(inputStream, wts, inlineWTS);
 			return result;
 		}

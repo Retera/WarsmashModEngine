@@ -133,7 +133,7 @@ public class FrameDefinitionVisitor extends FDFBaseVisitor<FrameDefinition> {
 		final FrameDefinition inheritParent = this.templates.getFrame(parent);
 		if (inheritParent == null) {
 			throw new IllegalStateException(
-					"" + frameClass + " cannot inherit from \"" + parent + "\" because it does not exist!");
+					frameClass + " cannot inherit from \"" + parent + "\" because it does not exist!");
 		}
 		frameDefinition.inheritFrom(inheritParent, false);
 
@@ -154,7 +154,7 @@ public class FrameDefinitionVisitor extends FDFBaseVisitor<FrameDefinition> {
 		final FrameDefinition inheritParent = this.templates.getFrame(parent);
 		if (inheritParent == null) {
 			throw new IllegalStateException(
-					"" + frameClass + " cannot inherit from \"" + parent + "\" because it does not exist!");
+					frameClass + " cannot inherit from \"" + parent + "\" because it does not exist!");
 		}
 		frameDefinition.inheritFrom(inheritParent, true);
 

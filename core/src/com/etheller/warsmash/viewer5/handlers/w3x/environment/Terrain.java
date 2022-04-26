@@ -648,10 +648,7 @@ public class Terrain {
 								}
 							}
 							if (!invalidRamp) {
-								String fileName = "" + getRampLetter(topLeftHeight, topLeft.isRamp())
-										+ getRampLetter(topRightHeight, topRight.isRamp())
-										+ getRampLetter(bottomRightHeight, bottomRight.isRamp())
-										+ getRampLetter(bottomLeftHeight, bottomLeft.isRamp());
+								String fileName = String.valueOf(getRampLetter(topLeftHeight, topLeft.isRamp())) + getRampLetter(topRightHeight, topRight.isRamp()) + getRampLetter(bottomRightHeight, bottomRight.isRamp()) + getRampLetter(bottomLeftHeight, bottomLeft.isRamp());
 
 								final String rampModelDir = this.cliffTextures.get(bottomLeftCliffTex).rampModelDir;
 								fileName = "Doodads\\Terrain\\" + rampModelDir + "\\" + rampModelDir + fileName
@@ -705,10 +702,7 @@ public class Terrain {
 
 					// Cliff model path
 
-					String fileName = "" + (char) (('A' + topLeft.getLayerHeight()) - base)
-							+ (char) (('A' + topRight.getLayerHeight()) - base)
-							+ (char) (('A' + bottomRight.getLayerHeight()) - base)
-							+ (char) (('A' + bottomLeft.getLayerHeight()) - base);
+					String fileName = String.valueOf((char) (('A' + topLeft.getLayerHeight()) - base)) + (char) (('A' + topRight.getLayerHeight()) - base) + (char) (('A' + bottomRight.getLayerHeight()) - base) + (char) (('A' + bottomLeft.getLayerHeight()) - base);
 
 					if ("AAAA".equals(fileName)) {
 						continue;

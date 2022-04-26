@@ -31,12 +31,12 @@ public class MdlTokenOutputStream {
 	}
 
 	public void startBlock(final String name, final int blockSize) {
-		writeLine(name + " " + blockSize + " {" + "");
+		writeLine(name + " " + blockSize + " {");
 		this.ident += 1;
 	}
 
 	public void startBlock(final String name) {
-		writeLine(name + " {" + "");
+		writeLine(name + " {");
 		this.ident += 1;
 	}
 
@@ -120,7 +120,7 @@ public class MdlTokenOutputStream {
 	}
 
 	public void startBlock(final String tokenFaces, final int sizeNumberProbably, final int length) {
-		writeLine(tokenFaces + " " + sizeNumberProbably + " " + length + " {" + "");
+		writeLine(tokenFaces + " " + sizeNumberProbably + " " + length + " {");
 		this.ident += 1;
 	}
 

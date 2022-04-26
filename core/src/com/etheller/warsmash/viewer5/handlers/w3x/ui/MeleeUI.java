@@ -2550,8 +2550,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				String attackOneDmgText = attackOne.getMinDamageDisplay() + " - " + attackOne.getMaxDamageDisplay();
 				final int attackOneTemporaryDamageBonus = attackOne.getTotalTemporaryDamageBonus();
 				if (attackOneTemporaryDamageBonus != 0) {
-					attackOneDmgText += (attackOneTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
-							+ attackOneTemporaryDamageBonus + "";
+					attackOneDmgText += (attackOneTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ") + attackOneTemporaryDamageBonus;
 				}
 				this.rootFrame.setText(this.attack1InfoPanelIconValue, attackOneDmgText);
 				if (simulationUnit.getAttacks().size() > 1) {
@@ -2561,8 +2560,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					String attackTwoDmgText = attackTwo.getMinDamage() + " - " + attackTwo.getMaxDamage();
 					final int attackTwoTemporaryDamageBonus = attackTwo.getTotalTemporaryDamageBonus();
 					if (attackTwoTemporaryDamageBonus != 0) {
-						attackTwoDmgText += (attackTwoTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
-								+ attackTwoTemporaryDamageBonus + "";
+						attackTwoDmgText += (attackTwoTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ") + attackTwoTemporaryDamageBonus;
 					}
 					this.rootFrame.setText(this.attack2InfoPanelIconValue, attackTwoDmgText);
 				}
@@ -2684,10 +2682,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final float temporaryDefenseBonus = simulationUnit.getTotalTemporaryDefenseBonus();
 				if (temporaryDefenseBonus != 0) {
 					if (temporaryDefenseBonus > 0) {
-						defenseDisplayString += "|cFF00FF00 +" + String.format("%.1f", temporaryDefenseBonus) + "";
+						defenseDisplayString += "|cFF00FF00 +" + String.format("%.1f", temporaryDefenseBonus);
 					}
 					else {
-						defenseDisplayString += "|cFFFF0000 " + String.format("%.1f", temporaryDefenseBonus) + "";
+						defenseDisplayString += "|cFFFF0000 " + String.format("%.1f", temporaryDefenseBonus);
 					}
 				}
 			}

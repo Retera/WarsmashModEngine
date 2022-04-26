@@ -83,7 +83,7 @@ public class Element extends HashedGameObject {
 	}
 
 	public void setTechTier(final int i) {
-		setField("Custom Field: TechTier", i + "");
+		setField("Custom Field: TechTier", String.valueOf(i));
 	}
 
 	public int getTechDepth() {
@@ -95,7 +95,7 @@ public class Element extends HashedGameObject {
 	}
 
 	public void setTechDepth(final int i) {
-		setField("Custom Field: TechDepth", i + "");
+		setField("Custom Field: TechDepth", String.valueOf(i));
 	}
 
 	public String getIconPath() {

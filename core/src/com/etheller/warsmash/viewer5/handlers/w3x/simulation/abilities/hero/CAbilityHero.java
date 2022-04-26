@@ -384,10 +384,10 @@ public class CAbilityHero extends AbstractCAbility {
 			String text = Integer.toString(this.currentBase);
 			if (this.bonus != 0) {
 				if (this.bonus > 0) {
-					text += "|cFF00FF00 +" + this.bonus + "";
+					text += "|cFF00FF00 +" + this.bonus;
 				}
 				else {
-					text += "|cFFFF0000 " + this.bonus + "";
+					text += "|cFFFF0000 " + this.bonus;
 				}
 			}
 			return text;

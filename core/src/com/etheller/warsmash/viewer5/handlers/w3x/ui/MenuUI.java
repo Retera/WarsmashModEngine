@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
@@ -1937,9 +1938,7 @@ public class MenuUI {
 					musicPath = this.musicSLK.get(musicPath).getField("FileNames");
 				}
 				final String[] moreSplitMusics = musicPath.split(",");
-				for (final String finalSplitPath : moreSplitMusics) {
-					musicPaths.add(finalSplitPath);
-				}
+				Collections.addAll(musicPaths, moreSplitMusics);
 			}
 			final String[] musics = musicPaths.toArray(new String[musicPaths.size()]);
 

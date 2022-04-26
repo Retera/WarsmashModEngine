@@ -33,7 +33,7 @@ public class RenderAttackProjectile implements RenderEffect {
 	private float yaw;
 
 	private float pitch;
-	private boolean done = false;
+	private boolean done;
 	private float deathTimeElapsed;
 
 	public RenderAttackProjectile(final CAttackProjectile simulationProjectile, final MdxComplexInstance modelInstance,

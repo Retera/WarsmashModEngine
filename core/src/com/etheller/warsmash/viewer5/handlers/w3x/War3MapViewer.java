@@ -191,7 +191,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private final DataSource gameDataSource;
 
 	public Terrain terrain;
-	public int renderPathing = 0;
+	public int renderPathing;
 	public int renderLighting = 1;
 
 	private final Set<String> selectedSplatModelKeys = new HashSet<>();

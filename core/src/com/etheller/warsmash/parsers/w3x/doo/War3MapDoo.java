@@ -15,7 +15,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
  */
 public class War3MapDoo {
 	private static final War3ID MAGIC_NUMBER = War3ID.fromString("W3do");
-	private int version = 0;
+	private int version;
 	private final short[] u1 = new short[4];
 	private final List<Doodad> doodads = new ArrayList<>();
 	private final short[] u2 = new short[4];

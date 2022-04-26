@@ -169,7 +169,7 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 
 	private final class PossiblePairFinderEnum implements CUnitEnumFunction {
 		private final CUnit unit;
-		private CUnit pairMatchFound = null;
+		private CUnit pairMatchFound;
 		private CAbilityCoupleInstant pairMatchAbility;
 
 		private PossiblePairFinderEnum(final CUnit unit) {

@@ -19,7 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	private int highlightOrderId;
 	private War3ID orderId;
-	private boolean unitCreated = false;
+	private boolean unitCreated;
 
 	public CBehaviorOrcBuild(final CUnit unit) {
 		super(unit);

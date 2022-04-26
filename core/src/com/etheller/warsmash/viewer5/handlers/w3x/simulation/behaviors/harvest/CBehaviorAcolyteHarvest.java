@@ -16,7 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 	private final CAbilityAcolyteHarvest abilityAcolyteHarvest;
-	private boolean harvesting = false;
+	private boolean harvesting;
 	private float harvestStandX, harvestStandY;
 
 	public CBehaviorAcolyteHarvest(final CUnit unit, final CAbilityAcolyteHarvest abilityWispHarvest) {

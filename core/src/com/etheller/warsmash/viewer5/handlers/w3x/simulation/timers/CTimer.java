@@ -8,7 +8,7 @@ public abstract class CTimer {
 	private int scheduleTick;
 	private float timeoutTime;
 	private float remainingTimeAfterPause;
-	private boolean running = false;
+	private boolean running;
 	private boolean repeats;
 
 	public void setTimeoutTime(final float timeoutTime) {

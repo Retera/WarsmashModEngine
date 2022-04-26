@@ -61,7 +61,7 @@ public class CRegionManager {
 
 	private static final class RegionChecker implements QuadtreeIntersector<CRegion> {
 		private CRegionEnumFunction delegate;
-		private boolean includesComplex = false;
+		private boolean includesComplex;
 
 		public RegionChecker reset(final CRegionEnumFunction delegate) {
 			this.delegate = delegate;

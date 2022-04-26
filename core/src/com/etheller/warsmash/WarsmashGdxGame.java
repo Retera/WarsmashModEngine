@@ -361,7 +361,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		Gdx.gl30.glBindVertexArray(VAO);
 	}
 
-	private int frame = 0;
+	private int frame;
 	private MdxComplexInstance mainInstance;
 	private MdxModel mainModel;
 	private com.etheller.warsmash.viewer5.handlers.mdx.Camera modelCamera;

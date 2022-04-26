@@ -34,8 +34,8 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture.WrapMode;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxTextureAnimation;
 
 public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
-	public boolean reforged = false;
-	public boolean hd = false;
+	public boolean reforged;
+	public boolean hd;
 	public SolverParams solverParams = new SolverParams();
 	public String name = "";
 	public long blendTime;
@@ -59,8 +59,8 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	public List<Camera> cameras = new ArrayList<>();
 	public List<EventObjectEmitterObject> eventObjects = new ArrayList<>();
 	public List<CollisionShape> collisionShapes = new ArrayList<>();
-	public boolean hasLayerAnims = false;
-	public boolean hasGeosetAnims = false;
+	public boolean hasLayerAnims;
+	public boolean hasGeosetAnims;
 	public List<Batch> batches = new ArrayList<>();
 	public List<GenericObject> genericObjects = new ArrayList<>();
 	public List<GenericObject> sortedGenericObjects = new ArrayList<>();

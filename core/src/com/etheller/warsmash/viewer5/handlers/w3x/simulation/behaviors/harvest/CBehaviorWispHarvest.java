@@ -17,7 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRend
 public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
     private int lastIncomeTick;
     private final CAbilityWispHarvest abilityWispHarvest;
-    private boolean harvesting = false;
+    private boolean harvesting;
     private SimulationRenderComponent spellEffectOverDestructable;
 
     public CBehaviorWispHarvest(CUnit unit, CAbilityWispHarvest abilityWispHarvest) {

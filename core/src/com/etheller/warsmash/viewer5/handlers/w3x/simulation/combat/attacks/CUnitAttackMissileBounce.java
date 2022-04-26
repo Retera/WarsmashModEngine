@@ -89,7 +89,7 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 		private float damage;
 		private int bounceIndex;
 		private CUnitAttackListener attackListener;
-		private boolean launched = false;
+		private boolean launched;
 
 		public void nextBounce(final CSimulation simulation, final CUnit source, final CWidget target,
 				final CUnitAttackMissileBounce attack, final float x, final float y, final float damage,

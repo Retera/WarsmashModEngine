@@ -21,7 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 
 public class CBehaviorMove implements CBehavior {
-	private static boolean ALWAYS_INTERRUPT_MOVE = false;
+	private static boolean ALWAYS_INTERRUPT_MOVE;
 
 	private static final Rectangle tempRect = new Rectangle();
 	private final CUnit unit;
@@ -33,17 +33,17 @@ public class CBehaviorMove implements CBehavior {
 		this.targetVisitingResetter = new TargetVisitingResetter();
 	}
 
-	private boolean wasWithinPropWindow = false;
-	private List<Point2D.Float> path = null;
+	private boolean wasWithinPropWindow;
+	private List<Point2D.Float> path;
 	private CPathfindingProcessor.GridMapping gridMapping;
 	private Point2D.Float target;
-	private int searchCycles = 0;
+	private int searchCycles;
 	private CUnit followUnit;
 	private CRangedBehavior rangedBehavior;
 	private boolean firstUpdate = true;
-	private boolean disableCollision = false;
-	private boolean pathfindingActive = false;
-	private boolean firstPathfindJob = false;
+	private boolean disableCollision;
+	private boolean pathfindingActive;
+	private boolean firstPathfindJob;
 	private boolean pathfindingFailedGiveUp;
 	private int giveUpUntilTurnTick;
 

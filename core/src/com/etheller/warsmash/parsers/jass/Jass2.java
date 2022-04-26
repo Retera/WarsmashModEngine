@@ -980,7 +980,7 @@ public class Jass2 {
 					final Integer countLimit = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
 					CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(rect,
 							new CUnitEnumFunction() {
-								int count = 0;
+								int count;
 
 								@Override
 								public boolean call(final CUnit unit) {
@@ -1068,7 +1068,7 @@ public class Jass2 {
 					final Integer countLimit = arguments.get(5).visit(IntegerJassValueVisitor.getInstance());
 					CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
 							tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
-								int count = 0;
+								int count;
 
 								@Override
 								public boolean call(final CUnit unit) {
@@ -1105,7 +1105,7 @@ public class Jass2 {
 							final Integer countLimit = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
 							CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
 									tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
-										int count = 0;
+										int count;
 
 										@Override
 										public boolean call(final CUnit unit) {

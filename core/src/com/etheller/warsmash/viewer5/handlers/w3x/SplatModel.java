@@ -320,9 +320,9 @@ public class SplatModel implements Comparable<SplatModel> {
 		private int indicesStartOffset;
 		private int index;
 		private final SplatModel splatModel;
-		private boolean hidden = false;
-		private boolean heightIsAbsolute = false;
-		private float absoluteHeightValue = 0.0f;
+		private boolean hidden;
+		private boolean heightIsAbsolute;
+		private float absoluteHeightValue;
 
 		private SplatMover(final SplatModel splatModel) {
 			this.splatModel = splatModel;

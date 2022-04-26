@@ -20,8 +20,8 @@ public class WarsmashServer implements ClientToServerListener {
 	private final List<Runnable> turnActions = new ArrayList<>();
 	private final WarsmashServerWriter writer;
 	private int currentTurnTick = MAGIC_DELAY_OFFSET;
-	private boolean gameStarted = false;
-	private long lastServerHeartbeatTime = 0;
+	private boolean gameStarted;
+	private long lastServerHeartbeatTime;
 
 	public WarsmashServer() throws IOException {
 		this.udpServer = new OrderedUdpServer(WarsmashConstants.PORT_NUMBER, new WarsmashServerParser(this));

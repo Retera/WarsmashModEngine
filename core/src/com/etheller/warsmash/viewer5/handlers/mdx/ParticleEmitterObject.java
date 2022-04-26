@@ -21,7 +21,7 @@ public class ParticleEmitterObject extends GenericObject implements EmitterObjec
 	 * Such instances won't actually render, and who knows if the model will ever
 	 * load?
 	 */
-	public boolean ok = false;
+	public boolean ok;
 
 	public ParticleEmitterObject(final MdxModel model, final MdlxParticleEmitter emitter, final int index) {
 		super(model, emitter, index);

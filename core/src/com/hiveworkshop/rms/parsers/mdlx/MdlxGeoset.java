@@ -33,13 +33,13 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 	public short[] vertexGroups; // unsigned byte[]
 	public long[] matrixGroups; // unsigned int[]
 	public long[] matrixIndices; // unsigned int[]
-	public long materialId = 0;
-	public long selectionGroup = 0;
-	public long selectionFlags = 0;
+	public long materialId;
+	public long selectionGroup;
+	public long selectionFlags;
 	/**
 	 * @since 900
 	 */
-	public int lod = 0;
+	public int lod;
 	/**
 	 * @since 900
 	 */

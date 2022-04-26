@@ -25,7 +25,7 @@ public class Unit {
 	/**
 	 * @since 8
 	 */
-	private int droppedItemTable = 0;
+	private int droppedItemTable;
 	private final List<DroppedItemSet> droppedItemSets = new ArrayList<>();
 	private int goldAmount;
 	private float targetAcquisition;

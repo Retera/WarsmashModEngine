@@ -24,7 +24,7 @@ public class ArchivedFile implements Serializable {
 	public final int flags;
 	public final long fileOffset;
 	public final int[] blockOffsets;
-	public int[] blockChecksums = null;
+	public int[] blockChecksums;
 	public final int key;
 	public final byte compression;
 	

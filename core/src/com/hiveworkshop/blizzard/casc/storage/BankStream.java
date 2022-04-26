@@ -19,7 +19,7 @@ public class BankStream {
 	private final StorageContainer container;
 	private final BLTEContent[] content;
 	private final ByteBuffer streamBuffer;
-	private int bank = 0;
+	private int bank;
 	private boolean hasBanks;
 
 	/**

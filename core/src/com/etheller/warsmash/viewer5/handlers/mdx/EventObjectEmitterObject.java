@@ -107,7 +107,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 	 * <p>
 	 * The particles will simply be black.
 	 */
-	private boolean ok = false;
+	private boolean ok;
 
 	public EventObjectEmitterObject(final MdxModel model, final MdlxEventObject eventObject, final int index) {
 		super(model, eventObject, index);

@@ -10,7 +10,7 @@ public class CBehaviorPatrol implements CRangedBehavior {
 	private final CUnit unit;
 	private AbilityPointTarget target;
 	private AbilityPointTarget startPoint;
-	private boolean justAutoAttacked = false;
+	private boolean justAutoAttacked;
 
 	public CBehaviorPatrol(final CUnit unit) {
 		this.unit = unit;

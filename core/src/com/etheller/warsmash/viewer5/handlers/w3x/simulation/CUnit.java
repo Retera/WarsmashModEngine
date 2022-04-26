@@ -90,7 +90,7 @@ public class CUnit extends CWidget {
 	private float currentLifeRegenPerTick;
 	private float currentManaRegenPerTick;
 
-	private int cooldownEndTime = 0;
+	private int cooldownEndTime;
 	private float flyHeight;
 	private int playerIndex;
 
@@ -126,20 +126,20 @@ public class CUnit extends CWidget {
 	private transient CBehaviorPatrol patrolBehavior;
 	private transient CBehaviorStop stopBehavior;
 	private transient CBehaviorHoldPosition holdPositionBehavior;
-	private boolean constructing = false;
-	private boolean constructingPaused = false;
-	private War3ID upgradeIdType = null;
+	private boolean constructing;
+	private boolean constructingPaused;
+	private War3ID upgradeIdType;
 	private float constructionProgress;
-	private boolean hidden = false;
-	private boolean paused = false;
+	private boolean hidden;
+	private boolean paused;
 	private boolean acceptingOrders = true;
-	private boolean invulnerable = false;
+	private boolean invulnerable;
 	private CBehavior defaultBehavior;
-	private COrder lastStartedOrder = null;
+	private COrder lastStartedOrder;
 	private CUnit workerInside;
 	private final War3ID[] buildQueue = new War3ID[WarsmashConstants.BUILD_QUEUE_SIZE];
 	private final QueueItemType[] buildQueueTypes = new QueueItemType[WarsmashConstants.BUILD_QUEUE_SIZE];
-	private boolean queuedUnitFoodPaid = false;
+	private boolean queuedUnitFoodPaid;
 	private AbilityTarget rallyPoint;
 
 	private int foodMade;

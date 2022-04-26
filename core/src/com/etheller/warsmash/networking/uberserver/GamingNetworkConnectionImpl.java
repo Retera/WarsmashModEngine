@@ -16,7 +16,7 @@ import net.warsmash.uberserver.LobbyGameSpeed;
 import net.warsmash.uberserver.TCPGamingNetworkServerToClientParser;
 
 public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
-	private WritableOutput tcpChannel = null;
+	private WritableOutput tcpChannel;
 	private final SelectableChannelOpener selectableChannelOpener;
 	private Thread networkThread;
 	private final GamingNetworkServerToClientNotifier notifier;

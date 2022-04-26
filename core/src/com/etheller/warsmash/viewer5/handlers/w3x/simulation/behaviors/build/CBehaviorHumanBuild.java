@@ -23,7 +23,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbility
 public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 	private int highlightOrderId;
 	private War3ID orderId;
-	private boolean unitCreated = false;
+	private boolean unitCreated;
 
 	public CBehaviorHumanBuild(final CUnit unit) {
 		super(unit);

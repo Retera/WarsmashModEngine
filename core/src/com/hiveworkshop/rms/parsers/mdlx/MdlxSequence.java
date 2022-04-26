@@ -9,10 +9,10 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 public class MdlxSequence implements MdlxBlock {
 	public String name = "";
 	public long[] interval = new long[2];
-	public float moveSpeed = 0;
-	public int flags = 0;
-	public float rarity = 0;
-	public long syncPoint = 0;
+	public float moveSpeed;
+	public int flags;
+	public float rarity;
+	public long syncPoint;
 	public MdlxExtent extent = new MdlxExtent();
 
 	@Override

@@ -53,10 +53,10 @@ public class MdlxLayer extends MdlxAnimatedObject {
 	}
 
 	public FilterMode filterMode = FilterMode.NONE;
-	public int flags = 0;
+	public int flags;
 	public int textureId = -1;
 	public int textureAnimationId = -1;
-	public long coordId = 0;
+	public long coordId;
 	public float alpha = 1;
 	/**
 	 * @since 900
@@ -69,11 +69,11 @@ public class MdlxLayer extends MdlxAnimatedObject {
 	/**
 	 * @since 1000
 	 */
-	public float fresnelOpacity = 0;
+	public float fresnelOpacity;
 	/**
 	 * @since 1000
 	 */
-	public float fresnelTeamColor = 0;
+	public float fresnelTeamColor;
 
 	@Override
 	public void readMdx(final BinaryReader reader, final int version) {

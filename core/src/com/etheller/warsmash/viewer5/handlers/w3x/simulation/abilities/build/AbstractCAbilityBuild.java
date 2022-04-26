@@ -21,7 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public abstract class AbstractCAbilityBuild extends AbstractCAbility implements CAbilityMenu {
-	private static boolean REFUND_ON_ORDER_CANCEL = false;
+	private static boolean REFUND_ON_ORDER_CANCEL;
 	private final Set<War3ID> structuresBuilt;
 
 	public AbstractCAbilityBuild(final int handleId, final List<War3ID> structuresBuilt) {

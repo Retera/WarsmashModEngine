@@ -71,11 +71,11 @@ public abstract class OpenALMusic implements Music {
 	private int format, sampleRate;
 	private boolean isLooping, isPlaying;
 	private float volume = 1;
-	private float pan = 0;
+	private float pan;
 	private float renderedSeconds, maxSecondsPerBuffer;
 
 	protected final FileHandle file;
-	protected int bufferOverhead = 0;
+	protected int bufferOverhead;
 
 	private OnCompletionListener onCompletionListener;
 

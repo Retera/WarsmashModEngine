@@ -77,13 +77,13 @@ public class OggInputStream extends InputStream {
 	/** Temporary scratch buffer */
 	byte[] buffer;
 	/** The number of bytes read */
-	int bytes = 0;
+	int bytes;
 	/** The true if we should be reading big endian */
 	boolean bigEndian = ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN);
 	/** True if we're reached the end of the current bit stream */
 	boolean endOfBitStream = true;
 	/** True if we're initialise the OGG info block */
-	boolean inited = false;
+	boolean inited;
 
 	/** The index into the byte array we currently read from */
 	private int readIndex;

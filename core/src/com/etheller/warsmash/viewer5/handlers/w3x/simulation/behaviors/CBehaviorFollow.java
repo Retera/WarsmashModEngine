@@ -9,7 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 public class CBehaviorFollow extends CAbstractRangedBehavior {
 
 	private int higlightOrderId;
-	private boolean justAutoAttacked = false;
+	private boolean justAutoAttacked;
 
 	public CBehaviorFollow(final CUnit unit) {
 		super(unit);

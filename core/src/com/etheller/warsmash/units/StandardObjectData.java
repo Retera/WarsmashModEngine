@@ -652,8 +652,8 @@ public class StandardObjectData {
 			return name;
 		}
 
-		BufferedImage storedImage = null;
-		String storedImagePath = null;
+		BufferedImage storedImage;
+		String storedImagePath;
 
 		@Override
 		public Set<String> keySet() {

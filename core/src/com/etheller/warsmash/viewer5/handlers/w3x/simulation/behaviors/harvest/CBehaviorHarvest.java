@@ -28,7 +28,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		implements AbilityTargetVisitor<CBehavior>, CBehaviorAttackListener {
 	private final CAbilityHarvest abilityHarvest;
 	private CSimulation simulation;
-	private int popoutFromMineTurnTick = 0;
+	private int popoutFromMineTurnTick;
 
 	public CBehaviorHarvest(final CUnit unit, final CAbilityHarvest abilityHarvest) {
 		super(unit);

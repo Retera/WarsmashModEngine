@@ -144,7 +144,7 @@ public class MdlTokenInputStream {
 		read(); // {
 		return () -> new Iterator<String>() {
 			String current;
-			private boolean hasLoaded = false;
+			private boolean hasLoaded;
 
 			@Override
 			public String next() {

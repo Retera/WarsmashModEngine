@@ -16,8 +16,8 @@ public class SimpleButtonFrame extends AbstractRenderableFrame implements Clicka
 
 	private boolean enabled = true;
 	private boolean highlightOnMouseOver;
-	private boolean mouseOver = false;
-	private boolean pushed = false;
+	private boolean mouseOver;
+	private boolean pushed;
 
 	private UIFrame activeChild;
 	private UIFrame activeTextChild;

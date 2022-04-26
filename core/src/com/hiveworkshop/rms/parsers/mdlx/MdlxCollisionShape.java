@@ -36,7 +36,7 @@ public class MdlxCollisionShape extends MdlxGenericObject {
 
 	public MdlxCollisionShape.Type type = Type.SPHERE;
 	public final float[][] vertices = { new float[3], new float[3] };
-	public float boundsRadius = 0;
+	public float boundsRadius;
 
 	public MdlxCollisionShape() {
 		super(0x2000);

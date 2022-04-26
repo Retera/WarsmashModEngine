@@ -9,27 +9,27 @@ public class StorageReference {
 	/**
 	 * Logical offset of this chunk.
 	 */
-	private long offset = 0;
+	private long offset;
 
 	/**
 	 * Logical size of this chunk.
 	 */
-	private long size = 0;
+	private long size;
 
 	/**
 	 * Encoding key of chunk.
 	 */
-	private Key encodingKey = null;
+	private Key encodingKey;
 
 	/**
 	 * Physical size of stored data.
 	 */
-	private long physicalSize = 0;
+	private long physicalSize;
 
 	/**
 	 * Total size of all decompressed data banks.
 	 */
-	private long actualSize = 0;
+	private long actualSize;
 
 	public StorageReference(final long offset, final long size, final Key encodingKey, final int physicalSize,
 			final int actualSize) {

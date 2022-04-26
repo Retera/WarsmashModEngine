@@ -21,7 +21,7 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 	public float timeMiddle;
 	public long columns;
 	public long rows;
-	public int teamColored = 0;
+	public int teamColored;
 	public Texture internalTexture;
 	public long replaceableId;
 	public boolean head;

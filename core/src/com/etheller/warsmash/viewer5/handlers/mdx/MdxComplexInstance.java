@@ -47,17 +47,17 @@ public class MdxComplexInstance extends ModelInstance {
 	public List<EventObjectEmitter<?, ?>> eventObjectEmitters = new ArrayList<>();
 	public MdxNode[] nodes;
 	public SkeletalNode[] sortedNodes;
-	public int frame = 0;
-	public float floatingFrame = 0;
+	public int frame;
+	public float floatingFrame;
 	// Global sequences
-	public int counter = 0;
+	public int counter;
 	public int sequence = -1;
 	public SequenceLoopMode sequenceLoopMode = SequenceLoopMode.NEVER_LOOP;
-	public boolean sequenceEnded = false;
+	public boolean sequenceEnded;
 	public float[] vertexColor = { 1, 1, 1, 1 };
 	// Particles do not spawn when the sequence is -1, or when the sequence finished
 	// and it's not repeating
-	public boolean allowParticleSpawn = false;
+	public boolean allowParticleSpawn;
 	// If forced is true, everything will update regardless of variancy.
 	// Any later non-forced update can then use variancy to skip updating things.
 	// It is set to true every time the sequence is set with setSequence().
@@ -76,8 +76,8 @@ public class MdxComplexInstance extends ModelInstance {
 	private float animationSpeed = 1.0f;
 	private float blendTime;
 	private float blendTimeRemaining;
-	public boolean additiveOverrideMeshMode = false;
-	private boolean hasAnyUnselectableMesh = false;
+	public boolean additiveOverrideMeshMode;
+	private boolean hasAnyUnselectableMesh;
 
 	public MdxComplexInstance(final MdxModel model) {
 		super(model);

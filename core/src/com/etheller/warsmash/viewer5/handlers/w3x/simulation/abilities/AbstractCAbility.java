@@ -6,7 +6,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 
 public abstract class AbstractCAbility implements CAbility {
 	private final int handleId;
-	private boolean disabled = false;
+	private boolean disabled;
 	private boolean iconShowing = true;
 
 	public AbstractCAbility(final int handleId) {

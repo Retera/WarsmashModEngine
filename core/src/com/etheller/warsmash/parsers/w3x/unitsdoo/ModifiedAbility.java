@@ -9,7 +9,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
 
 public class ModifiedAbility {
 	private War3ID id;
-	private int activeForAutocast = 0;
+	private int activeForAutocast;
 	private int heroLevel = 1;
 
 	public void load(final LittleEndianDataInputStream stream) throws IOException {

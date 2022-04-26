@@ -2,7 +2,7 @@ package com.hiveworkshop.rms.parsers.mdlx.mdl;
 
 public class MdlTokenOutputStream {
 	public final StringBuilder buffer = new StringBuilder();
-	public int ident = 0;
+	public int ident;
 	public int fractionDigits = 6;
 
 	public void writeKeyframe(final String prefix, final long uInt32Value) {

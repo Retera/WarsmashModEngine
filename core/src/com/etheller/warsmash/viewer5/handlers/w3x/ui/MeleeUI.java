@@ -294,18 +294,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private CAbilityView activeCommand;
 	private int activeCommandOrderId;
 	private RenderUnit activeCommandUnit;
-	private MdxComplexInstance cursorModelInstance = null;
-	private MdxComplexInstance rallyPointInstance = null;
+	private MdxComplexInstance cursorModelInstance;
+	private MdxComplexInstance rallyPointInstance;
 	private BufferedImage cursorModelPathing;
 	private Pixmap cursorModelUnderneathPathingRedGreenPixmap;
 	private Texture cursorModelUnderneathPathingRedGreenPixmapTexture;
 	private PixmapTextureData cursorModelUnderneathPathingRedGreenPixmapTextureData;
 	private SplatModel cursorModelUnderneathPathingRedGreenSplatModel;
 	private CUnitType cursorBuildingUnitType;
-	private SplatMover placementCursor = null;
+	private SplatMover placementCursor;
 	private final CursorTargetSetupVisitor cursorTargetSetupVisitor;
 
-	private int selectedSoundCount = 0;
+	private int selectedSoundCount;
 	private final ActiveCommandUnitTargetFilter activeCommandUnitTargetFilter;
 
 	// TODO these corrections are used for old hardcoded UI stuff, we should
@@ -350,12 +350,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final Vector3 lastMouseClickLocation = new Vector3();
 
 	private final List<SimpleStatusBarFrame> hpBarFrames = new ArrayList<>();
-	private int hpBarFrameIndex = 0;
+	private int hpBarFrameIndex;
 	private boolean allowDrag;
 	private int currentlyDraggingPointer = -1;
 	private final ShapeRenderer shapeRenderer = new ShapeRenderer();
 	private final List<MultiSelectUnitStateListener> multiSelectUnitStateListeners = new ArrayList<>();
-	private long lastUnitClickTime = 0;
+	private long lastUnitClickTime;
 	private RenderWidget lastClickUnit;
 	private MultiSelectionIconListener multiSelectClickListener;
 	private float frontQueueIconWidth;
@@ -2032,7 +2032,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private final class RallyPositioningVisitor implements AbilityTargetVisitor<Void> {
-		private MdxComplexInstance rallyPointInstance = null;
+		private MdxComplexInstance rallyPointInstance;
 
 		public RallyPositioningVisitor reset(final MdxComplexInstance rallyPointInstance) {
 			this.rallyPointInstance = rallyPointInstance;
@@ -3837,7 +3837,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final class MultiSelectUnitStateListener implements CUnitStateListener {
 		private final RenderUnit sourceUnit;
 		private int index;
-		private boolean disposed = false;
+		private boolean disposed;
 
 		public MultiSelectUnitStateListener(final RenderUnit sourceUnit, final int index) {
 			this.sourceUnit = sourceUnit;

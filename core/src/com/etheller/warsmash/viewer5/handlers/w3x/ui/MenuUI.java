@@ -90,7 +90,7 @@ import net.warsmash.uberserver.LoginFailureReason;
 
 public class MenuUI {
 	private static final Vector2 screenCoordsVector = new Vector2();
-	private static boolean ENABLE_NOT_YET_IMPLEMENTED_BUTTONS = false;
+	private static boolean ENABLE_NOT_YET_IMPLEMENTED_BUTTONS;
 
 	private final DataSource dataSource;
 	private final Scene uiScene;
@@ -199,7 +199,7 @@ public class MenuUI {
 	private String mapFilepathToStart;
 	private LoadingMap loadingMap;
 	private SpriteFrame loadingBackground;
-	private boolean unifiedCampaignInfo = false;
+	private boolean unifiedCampaignInfo;
 	private MapInfoPane skirmishMapInfoPane;
 	private War3MapConfig currentMapConfig;
 	private final DataTable musicSLK;

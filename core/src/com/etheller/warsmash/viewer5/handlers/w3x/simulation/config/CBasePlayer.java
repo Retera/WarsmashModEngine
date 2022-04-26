@@ -26,7 +26,7 @@ public abstract class CBasePlayer implements CPlayerJass {
 	private boolean raceSelectable;
 	private CMapControl mapControl = CMapControl.NEUTRAL;
 	private CPlayerSlotState slotState = CPlayerSlotState.EMPTY;
-	private AIDifficulty aiDifficulty = null;
+	private AIDifficulty aiDifficulty;
 
 	public CBasePlayer(final CBasePlayer other) {
 		this.id = other.id;

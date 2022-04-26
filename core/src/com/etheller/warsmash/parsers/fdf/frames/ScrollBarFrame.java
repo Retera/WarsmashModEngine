@@ -16,7 +16,7 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 	private UIFrame thumbButtonFrame;
 	private int scrollValuePercent = 50;
 	private ScrollBarChangeListener changeListener = ScrollBarChangeListener.DO_NOTHING;
-	private int minValue = 0;
+	private int minValue;
 	private int maxValue = 100;
 	private int stepSize = 10;
 

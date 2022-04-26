@@ -31,9 +31,9 @@ public class MdlxLight extends MdlxGenericObject {
 	public Type type = Type.OMNIDIRECTIONAL;
 	public float[] attenuation = new float[2];
 	public float[] color = new float[3];
-	public float intensity = 0;
+	public float intensity;
 	public float[] ambientColor = new float[3];
-	public float ambientIntensity = 0;
+	public float ambientIntensity;
 
 	public MdlxLight() {
 		super(0x200);

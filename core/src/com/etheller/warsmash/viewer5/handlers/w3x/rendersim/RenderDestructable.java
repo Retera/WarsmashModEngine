@@ -31,7 +31,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	private boolean dead;
 	private BuildingShadow destructableShadow;
 	private final boolean selectable;
-	private boolean blighted = false;
+	private boolean blighted;
 	private final int replaceableTextureId;
 	private String replaceableTextureFile;
 

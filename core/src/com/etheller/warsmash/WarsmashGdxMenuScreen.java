@@ -74,8 +74,8 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 	private Texture solidGreenTexture;
 	private MenuUI menuUI;
 	private final WarsmashGdxMultiScreenGame game;
-	private boolean hasPlayedStandHack = false;
-	private boolean loaded = false;
+	private boolean hasPlayedStandHack;
+	private boolean loaded;
 	private EnumSet<SecondaryTag> tags = SequenceUtils.EMPTY;
 
 	public WarsmashGdxMenuScreen(final DataTable warsmashIni, final WarsmashGdxMultiScreenGame game) {

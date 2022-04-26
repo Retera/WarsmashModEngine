@@ -71,7 +71,7 @@ public class CSimulation implements CPlayerAPI {
 	private final List<CAttackProjectile> newProjectiles;
 	private final HandleIdAllocator handleIdAllocator;
 	private final transient SimulationRenderController simulationRenderController;
-	private int gameTurnTick = 0;
+	private int gameTurnTick;
 	private final PathingGrid pathingGrid;
 	private final CWorldCollision worldCollision;
 	private final CPathfindingProcessor[] pathfindingProcessors;

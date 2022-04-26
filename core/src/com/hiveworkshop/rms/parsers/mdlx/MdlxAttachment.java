@@ -8,7 +8,7 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxAttachment extends MdlxGenericObject {
 	public String path = "";
-	public int attachmentId = 0;
+	public int attachmentId;
 
 	public MdlxAttachment() {
 		super(0x800);

@@ -18,7 +18,7 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 	private final float editBorderSize;
 	private final Color editCursorColor;
 	private StringFrame editTextFrame;
-	private boolean focused = false;
+	private boolean focused;
 	private int cursorIndex;
 
 	// TODO design in such a way that references to these are not held !! very bad

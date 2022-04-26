@@ -17,7 +17,7 @@ import java.util.Set;
 import com.etheller.warsmash.util.StringBundle;
 
 public class DataTable implements ObjectData {
-	public static boolean DEBUG = false;
+	public static boolean DEBUG;
 
 	Map<StringKey, Element> dataTable = new LinkedHashMap<>();
 

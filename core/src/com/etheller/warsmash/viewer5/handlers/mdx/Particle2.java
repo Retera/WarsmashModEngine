@@ -7,8 +7,8 @@ import com.etheller.warsmash.viewer5.EmittedObject;
 
 public class Particle2 extends EmittedObject<MdxComplexInstance, ParticleEmitter2> {
 	private static final Quaternion HALF_PI_Z = new Quaternion().setFromAxisRad(0, 0, 1, (float) (Math.PI / 2));
-	public int tail = 0;
-	private float gravity = 0;
+	public int tail;
+	private float gravity;
 	public final Vector3 location = new Vector3();
 	public final Vector3 velocity = new Vector3();
 	public final Vector3 scale = new Vector3(1, 1, 1);

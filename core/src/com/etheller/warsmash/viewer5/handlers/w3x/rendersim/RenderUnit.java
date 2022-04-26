@@ -58,11 +58,11 @@ public class RenderUnit implements RenderWidget {
 	private boolean swimming;
 	private boolean working;
 
-	private boolean dead = false;
+	private boolean dead;
 
 	private final UnitAnimationListenerImpl unitAnimationListenerImpl;
 	private OrientationInterpolation orientationInterpolation;
-	private float currentTurnVelocity = 0;
+	private float currentTurnVelocity;
 	public long lastUnitResponseEndTimeMillis;
 	private boolean corpse;
 	private boolean boneCorpse;

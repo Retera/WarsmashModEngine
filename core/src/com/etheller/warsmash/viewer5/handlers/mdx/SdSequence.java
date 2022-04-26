@@ -8,7 +8,7 @@ import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
 import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxTimeline;
 
 public final class SdSequence<TYPE> {
-	private static boolean INJECT_FRAMES_GHOSTWOLF_STYLE = false;
+	private static boolean INJECT_FRAMES_GHOSTWOLF_STYLE;
 
 	private final Sd<TYPE> sd;
 	public final long start; // UInt32

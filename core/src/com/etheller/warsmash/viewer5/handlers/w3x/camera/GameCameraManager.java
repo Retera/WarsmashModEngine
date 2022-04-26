@@ -13,7 +13,7 @@ public final class GameCameraManager extends CameraManager {
 	private final CameraRates cameraRates;
 	public final CameraPanControls cameraPanControls;
 	private Rectangle cameraBounds;
-	private int currentPreset = 0;
+	private int currentPreset;
 	private float fov;
 	private RenderUnit targetControllerUnit;
 	private float targetControllerXOffset;

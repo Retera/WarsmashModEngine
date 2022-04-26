@@ -38,8 +38,8 @@ public class CPlayer extends CBasePlayer {
 			JassGameEventsWar3.class);
 
 	// Player state data
-	private boolean givesBounty = false;
-	private boolean alliedVictory = false;
+	private boolean givesBounty;
+	private boolean alliedVictory;
 	private int gameResult;
 	private int placed;
 	private boolean observerOnDeath;

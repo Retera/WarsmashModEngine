@@ -12,7 +12,7 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxMaterial implements MdlxBlock, MdlxChunk {
 	public static final War3ID LAYS = War3ID.fromString("LAYS");
-	public int priorityPlane = 0;
+	public int priorityPlane;
 	public int flags;
 	/**
 	 * @since 900

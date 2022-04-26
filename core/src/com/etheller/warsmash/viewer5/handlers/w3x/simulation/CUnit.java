@@ -117,7 +117,7 @@ public class CUnit extends CWidget {
 	private transient CUnitStateNotifier stateNotifier = new CUnitStateNotifier();
 	private transient List<StateListenerUpdate> stateListenersUpdates = new ArrayList<>();
 	private float acquisitionRange;
-	private transient static AutoAttackTargetFinderEnum autoAttackTargetFinderEnum = new AutoAttackTargetFinderEnum();
+	private static transient AutoAttackTargetFinderEnum autoAttackTargetFinderEnum = new AutoAttackTargetFinderEnum();
 
 	private transient CBehaviorMove moveBehavior;
 	private transient CBehaviorAttack attackBehavior;

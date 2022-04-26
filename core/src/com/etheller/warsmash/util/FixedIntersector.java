@@ -9,9 +9,9 @@ import com.badlogic.gdx.math.collision.Ray;
 
 public class FixedIntersector {
 
-	private final static Vector3 v0 = new Vector3();
-	private final static Vector3 v1 = new Vector3();
-	private final static Vector3 v2 = new Vector3();
+	private static final Vector3 v0 = new Vector3();
+	private static final Vector3 v1 = new Vector3();
+	private static final Vector3 v2 = new Vector3();
 
 	private static final Plane p = new Plane(new Vector3(), 0);
 	private static final Vector3 i = new Vector3();

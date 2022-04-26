@@ -44,7 +44,7 @@ import com.jcraft.jorbis.Info;
  * @author kevin
  */
 public class OggInputStream extends InputStream {
-	private final static int BUFFER_SIZE = 512;
+	private static final int BUFFER_SIZE = 512;
 
 	/** The conversion buffer size */
 	private int convsize = BUFFER_SIZE * 4;

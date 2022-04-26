@@ -86,14 +86,14 @@ public class DesktopLauncher {
 			new File("Logs").mkdir();
 			try {
 				System.setOut(new PrintStream(
-						new FileOutputStream(new File("Logs/" + System.currentTimeMillis() + ".out.log"))));
+						new FileOutputStream("Logs/" + System.currentTimeMillis() + ".out.log")));
 			}
 			catch (final FileNotFoundException e) {
 				e.printStackTrace();
 			}
 			try {
 				System.setErr(new PrintStream(
-						new FileOutputStream(new File("Logs/" + System.currentTimeMillis() + ".err.log"))));
+						new FileOutputStream("Logs/" + System.currentTimeMillis() + ".err.log")));
 			}
 			catch (final FileNotFoundException e) {
 				e.printStackTrace();

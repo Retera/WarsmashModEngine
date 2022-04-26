@@ -26,7 +26,7 @@ public class ModelExport {
 		try (InputStream modelStream = dataSource
 				.getResourceAsStream("UI\\Glues\\MainMenu\\MainMenu3D\\MainMenu3D.mdx")) {
 			final MdlxModel model = new MdlxModel(dataSource.read("UI\\Glues\\MainMenu\\MainMenu3D\\MainMenu3D.mdx"));
-			try (FileOutputStream fos = new FileOutputStream(new File("C:\\Temp\\MainMenu3D.mdl"))) {
+			try (FileOutputStream fos = new FileOutputStream("C:\\Temp\\MainMenu3D.mdl")) {
 				MdxUtils.saveMdl(model, fos);
 			}
 		}

@@ -96,15 +96,11 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 			if (this.abilityHarvest.getCarriedResourceAmount() == 0) {
 				return this.unit.pollNextOrderBehavior(this.simulation);
 			}
-			else {
-				return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
-			}
-		}
-		else {
-			// we have some GOLD and we're not in a mine (?) lets do a return resources
-			// order
 			return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
 		}
+		// we have some GOLD and we're not in a mine (?) lets do a return resources
+		// order
+		return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
 	}
 
 	public void popoutFromMine(final int goldMined) {
@@ -126,10 +122,8 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 			return this.abilityHarvest.getBehaviorTreeAttack().reset(getHighlightOrderId(),
 					this.abilityHarvest.getTreeAttack(), target, false, this);
 		}
-		else {
-			// we have some LUMBER and we can't carry any more, time to return resources
-			return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
-		}
+		// we have some LUMBER and we can't carry any more, time to return resources
+		return this.abilityHarvest.getBehaviorReturnResources().reset(this.simulation);
 	}
 
 	@Override

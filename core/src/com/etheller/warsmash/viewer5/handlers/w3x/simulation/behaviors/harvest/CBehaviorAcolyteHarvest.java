@@ -37,7 +37,7 @@ public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 				simulation.getCommandErrorListener().showBlightRingFullError(this.unit.getPlayerIndex());
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
-			else if (result == HarvestStartResult.ACCEPTED) {
+			if (result == HarvestStartResult.ACCEPTED) {
 				this.harvesting = true;
 			}
 			else {

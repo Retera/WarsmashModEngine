@@ -570,9 +570,7 @@ public class StandardObjectData {
 				if (element != null) {
 					return element.getField("name");
 				}
-				else {
-					return null;
-				}
+				return null;
 			}
 			return null;
 		}

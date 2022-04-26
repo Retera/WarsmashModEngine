@@ -171,18 +171,16 @@ public class RenderUnit implements RenderWidget {
 			this.instance.hide();
 			return;
 		}
-		else {
-			this.instance.show();
-			if (wasHidden) {
-				if (this.selectionCircle != null) {
-					this.selectionCircle.show(map.terrain.centerOffset);
-				}
-				if (this.selectionPreviewHighlight != null) {
-					this.selectionPreviewHighlight.show(map.terrain.centerOffset);
-				}
-				if (this.shadow != null) {
-					this.shadow.show(map.terrain.centerOffset);
-				}
+		this.instance.show();
+		if (wasHidden) {
+			if (this.selectionCircle != null) {
+				this.selectionCircle.show(map.terrain.centerOffset);
+			}
+			if (this.selectionPreviewHighlight != null) {
+				this.selectionPreviewHighlight.show(map.terrain.centerOffset);
+			}
+			if (this.shadow != null) {
+				this.shadow.show(map.terrain.centerOffset);
 			}
 		}
 		final float prevX = this.location[0];

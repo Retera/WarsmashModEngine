@@ -2229,8 +2229,6 @@ public class CUnit extends CWidget {
 		if (ability == null) {
 			return 0;
 		}
-		else {
-			return ability.getLevel();
-		}
+		return ability.getLevel();
 	}
 }

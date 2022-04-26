@@ -277,15 +277,13 @@ public class CPlayer extends CBasePlayer {
 		if (!includeInProgress) {
 			return this.heroes.size();
 		}
-		else {
-			int heroInProgressCount = 0;
-			for (final Map.Entry<War3ID, Integer> entry : this.rawcodeToTechtreeInProgress.entrySet()) {
-				if (game.getUnitData().getUnitType(entry.getKey()).isHero()) {
-					heroInProgressCount += entry.getValue();
-				}
+		int heroInProgressCount = 0;
+		for (final Map.Entry<War3ID, Integer> entry : this.rawcodeToTechtreeInProgress.entrySet()) {
+			if (game.getUnitData().getUnitType(entry.getKey()).isHero()) {
+				heroInProgressCount += entry.getValue();
 			}
-			return this.heroes.size() + heroInProgressCount;
 		}
+		return this.heroes.size() + heroInProgressCount;
 	}
 
 	public void fireHeroLevelEvents(final CUnit hero) {

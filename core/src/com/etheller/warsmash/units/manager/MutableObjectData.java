@@ -762,13 +762,13 @@ public final class MutableObjectData {
 					if (ROC_SUPPORT_URAC.equals(field)) {
 						return this.parentWC3Object.getField("race");
 					}
-					else if (ROC_SUPPORT_UCAM.equals(field)) {
+					if (ROC_SUPPORT_UCAM.equals(field)) {
 						return "0";
 					}
-					else if (ROC_SUPPORT_USPE.equals(field)) {
+					if (ROC_SUPPORT_USPE.equals(field)) {
 						return this.parentWC3Object.getField("special");
 					}
-					else if (ROC_SUPPORT_UBDG.equals(field)) {
+					if (ROC_SUPPORT_UBDG.equals(field)) {
 						return this.parentWC3Object.getField("isbldg");
 					}
 				}
@@ -824,11 +824,9 @@ public final class MutableObjectData {
 					if (matchingChange.getVartype() == War3ObjectDataChangeset.VAR_TYPE_INT) {
 						return matchingChange.getLongval() == 1;
 					}
-					else {
-						throw new IllegalStateException(
-								"Requested boolean value of '" + field + "' from '" + this.parentWC3Object.getId()
-										+ "', but this field was not a bool! vartype=" + matchingChange.getVartype());
-					}
+					throw new IllegalStateException(
+							"Requested boolean value of '" + field + "' from '" + this.parentWC3Object.getId()
+									+ "', but this field was not a bool! vartype=" + matchingChange.getVartype());
 				}
 				return matchingChange.isBoolval();
 			}
@@ -877,18 +875,14 @@ public final class MutableObjectData {
 						|| (MutableObjectData.this.worldEditorDataType == WorldEditorDataType.BUFFS_EFFECTS)) {
 					return War3ID.fromString(this.parentWC3Object.getField("code"));
 				}
-				else {
-					return War3ID.fromString(this.parentWC3Object.getId());
-				}
+				return War3ID.fromString(this.parentWC3Object.getId());
 			}
 			if (War3ID.NONE.equals(this.customUnitData.getNewId())) {
 				if ((MutableObjectData.this.worldEditorDataType == WorldEditorDataType.ABILITIES)
 						|| (MutableObjectData.this.worldEditorDataType == WorldEditorDataType.BUFFS_EFFECTS)) {
 					return War3ID.fromString(this.parentWC3Object.getField("code"));
 				}
-				else {
-					return this.customUnitData.getOldId();
-				}
+				return this.customUnitData.getOldId();
 			}
 			return this.customUnitData.getOldId();
 		}

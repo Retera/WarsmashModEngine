@@ -81,9 +81,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		if (type == 1) {
 			return new MdxSimpleInstance(this);
 		}
-		else {
-			return new MdxComplexInstance(this);
-		}
+		return new MdxComplexInstance(this);
 	}
 
 	public void load(final Object bufferOrParser) throws IOException {

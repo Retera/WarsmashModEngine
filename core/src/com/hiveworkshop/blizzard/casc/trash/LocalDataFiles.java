@@ -134,7 +134,8 @@ public class LocalDataFiles implements Closeable {
 
 			if (headerBodySize > Integer.MAX_VALUE) {
 				throw new MalformedCASCStructureException("BLTE header too large to process");
-			} else if (blteOffset + headerBodySize > blteLimit) {
+			}
+			if (blteOffset + headerBodySize > blteLimit) {
 				throw new MalformedCASCStructureException("BLTE header extends beyond file limits");
 			}
 
@@ -160,7 +161,8 @@ public class LocalDataFiles implements Closeable {
 			final int chunkCount = blteHeaderBody.getInt();
 			if (chunkCount < 0) {
 				throw new MalformedCASCStructureException("BLTE chunk count too large to process");
-			} else if (chunkCount == 0) {
+			}
+			if (chunkCount == 0) {
 				throw new MalformedCASCStructureException("invalid BLTE chunk count");
 			}
 
@@ -260,7 +262,8 @@ public class LocalDataFiles implements Closeable {
 				}
 				if (resultSize != chunk.decompressedSize) {
 					throw new MalformedCASCStructureException("not enough bytes generated: " + resultSize + "B");
-				} else if (!zlib.finished()) {
+				}
+				if (!zlib.finished()) {
 					throw new MalformedCASCStructureException("unfinished inflate operation");
 				}
 				break;

@@ -38,13 +38,11 @@ public final class UserJassFunction extends AbstractJassFunction {
 							&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
 						return null;
 					}
-					else if ((this.returnType.isNullable())
+					if ((this.returnType.isNullable())
 							&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
 						return this.returnType.getNullValue();
 					}
-					else {
-						throw new JassException(globalScope, "Invalid return type", null);
-					}
+					throw new JassException(globalScope, "Invalid return type", null);
 				}
 				return returnValue;
 			}

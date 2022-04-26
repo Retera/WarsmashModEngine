@@ -77,9 +77,7 @@ public final class GameCameraManager extends CameraManager {
 		if (Math.abs(deltaDistance) < rate) {
 			return newValue;
 		}
-		else {
-			return oldValue + (Math.signum(deltaDistance) * rate);
-		}
+		return oldValue + (Math.signum(deltaDistance) * rate);
 	}
 
 	public void resize(final Rectangle viewport) {
@@ -164,23 +162,23 @@ public final class GameCameraManager extends CameraManager {
 			this.cameraPanControls.left = true;
 			return true;
 		}
-		else if (keycode == Input.Keys.RIGHT) {
+		if (keycode == Input.Keys.RIGHT) {
 			this.cameraPanControls.right = true;
 			return true;
 		}
-		else if (keycode == Input.Keys.DOWN) {
+		if (keycode == Input.Keys.DOWN) {
 			this.cameraPanControls.down = true;
 			return true;
 		}
-		else if (keycode == Input.Keys.UP) {
+		if (keycode == Input.Keys.UP) {
 			this.cameraPanControls.up = true;
 			return true;
 		}
-		else if (keycode == Input.Keys.INSERT) {
+		if (keycode == Input.Keys.INSERT) {
 			this.cameraPanControls.insertDown = true;
 			return true;
 		}
-		else if (keycode == Input.Keys.FORWARD_DEL) {
+		if (keycode == Input.Keys.FORWARD_DEL) {
 			this.cameraPanControls.deleteDown = true;
 			return true;
 		}
@@ -192,23 +190,23 @@ public final class GameCameraManager extends CameraManager {
 			this.cameraPanControls.left = false;
 			return true;
 		}
-		else if (keycode == Input.Keys.RIGHT) {
+		if (keycode == Input.Keys.RIGHT) {
 			this.cameraPanControls.right = false;
 			return true;
 		}
-		else if (keycode == Input.Keys.DOWN) {
+		if (keycode == Input.Keys.DOWN) {
 			this.cameraPanControls.down = false;
 			return true;
 		}
-		else if (keycode == Input.Keys.UP) {
+		if (keycode == Input.Keys.UP) {
 			this.cameraPanControls.up = false;
 			return true;
 		}
-		else if (keycode == Input.Keys.INSERT) {
+		if (keycode == Input.Keys.INSERT) {
 			this.cameraPanControls.insertDown = false;
 			return true;
 		}
-		else if (keycode == Input.Keys.FORWARD_DEL) {
+		if (keycode == Input.Keys.FORWARD_DEL) {
 			this.cameraPanControls.deleteDown = false;
 			return true;
 		}

@@ -174,7 +174,7 @@ public final class War3ObjectDataChangeset {
 			this.kind = 'u';
 			return false;
 		}
-		else if (ABILITY_ID_SET.contains(chid)) {
+		if (ABILITY_ID_SET.contains(chid)) {
 			this.kind = 'a';
 		}
 		else {
@@ -470,10 +470,10 @@ public final class War3ObjectDataChangeset {
 		if ("int".equals(name) || "bool".equals(name)) {
 			return 0;
 		}
-		else if ("real".equals(name)) {
+		if ("real".equals(name)) {
 			return 1;
 		}
-		else if ("unreal".equals(name)) {
+		if ("unreal".equals(name)) {
 			return 2;
 		}
 		return 3; // string

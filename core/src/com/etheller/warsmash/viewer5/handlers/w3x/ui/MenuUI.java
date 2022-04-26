@@ -1349,7 +1349,7 @@ public class MenuUI {
 			this.mapFilepathToStart = null;
 			return;
 		}
-		else if (this.loadingMap != null) {
+		if (this.loadingMap != null) {
 			int localPlayerIndex = MultiplayerHack.LP_VAL;
 			try {
 				this.loadingMap.viewer.loadMap(this.loadingMap.map, this.loadingMap.mapInfo, localPlayerIndex);

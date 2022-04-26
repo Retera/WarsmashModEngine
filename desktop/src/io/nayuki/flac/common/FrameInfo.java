@@ -196,20 +196,18 @@ public final class FrameInfo {
 		assert 0 <= n && n <= 8;
 		if (n == 0)
 			return head;
-		else if (n == 1 || n == 8)
+		if (n == 1 || n == 8)
 			throw new DataFormatException("Invalid UTF-8 coded number");
-		else {
-			long result = head & (0x7F >>> n);
-			for (int i = 0; i < n - 1; i++) {
-				int temp = in.readUint(8);
-				if ((temp & 0xC0) != 0x80)
-					throw new DataFormatException("Invalid UTF-8 coded number");
-				result = (result << 6) | (temp & 0x3F);
-			}
-			if ((result >>> 36) != 0)
-				throw new AssertionError();
-			return result;
+		long result = head & (0x7F >>> n);
+		for (int i = 0; i < n - 1; i++) {
+			int temp = in.readUint(8);
+			if ((temp & 0xC0) != 0x80)
+				throw new DataFormatException("Invalid UTF-8 coded number");
+			result = (result << 6) | (temp & 0x3F);
 		}
+		if ((result >>> 36) != 0)
+			throw new AssertionError();
+		return result;
 	}
 	
 	
@@ -255,16 +253,15 @@ public final class FrameInfo {
 	private static int decodeSampleDepth(int code) {
 		if ((code >>> 3) != 0)
 			throw new IllegalArgumentException();
-		else if (code == 0)
+		if (code == 0)
 			return -1;  // Caller should obtain value from stream info metadata block
-		else {
-			int result = searchSecond(SAMPLE_DEPTH_CODES, code);
-			if (result == -1)
-				throw new DataFormatException("Reserved bit depth");
-			if (result < 1 || result > 32)
-				throw new AssertionError();
-			return result;
-		}
+
+		int result = searchSecond(SAMPLE_DEPTH_CODES, code);
+		if (result == -1)
+			throw new DataFormatException("Reserved bit depth");
+		if (result < 1 || result > 32)
+			throw new AssertionError();
+		return result;
 	}
 	
 	

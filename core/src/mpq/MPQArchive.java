@@ -41,18 +41,18 @@ public class MPQArchive {
 			// check header validity
 			if( header.getIdentifierInt() == FileHeader.ARCHIVE_IDENTIFIER_INT ) break;
 			// if user data header is found, extract archive header offset and continue
-			else if( header.getIdentifierInt() == FileHeader.USERDATA_IDENTIFIER_INT ){
+			if( header.getIdentifierInt() == FileHeader.USERDATA_IDENTIFIER_INT ){
 				ByteBuffer temp = ByteBuffer.allocate(header.getHeaderSize());
 				UserDataHeader udheader = new UserDataHeader(temp);
-				
+
 				while( temp.hasRemaining() )
 					if( in.read(temp) == -1 )
 						break;
-				
+
 				archiveOffset+= udheader.getArchiveOffset();
 				continue;
 			}
-			
+
 			// prepare buffer for next operation and skip to next 512 bytes
 			archiveOffset+= 512;
 		}
@@ -98,9 +98,10 @@ public class MPQArchive {
 			hashTable = null;
 			return;
 		// hashtable size not power of 2
-		}else if( (htsize & htsize - 1) != 0 )
+		}
+		if( (htsize & htsize - 1) != 0 )
 			throw new MPQException("hashtable was not power of two ( was " + htsize + " )");
-		
+
 		// *** read MPQ archive hashtable
 		ByteBuffer buffer = ByteBuffer.allocate(rsize);
 		buffer.limit(csize);
@@ -169,11 +170,12 @@ public class MPQArchive {
 			blockTable = null;
 			return;
 		// blocktable size clamp
-		}else if( btsize > 1 << 20 || btsize < 0 ){
+		}
+		if( btsize > 1 << 20 || btsize < 0 ){
 			System.err.println("blocktable is stupidly large ( " + btsize + " ) so was clamped to " + (1 << 20));
 			btsize = 1 << 20;
 		}
-		
+
 		// *** read MPQ archive blocktable
 		ByteBuffer buffer = ByteBuffer.allocate(rsize);
 		buffer.limit(csize);

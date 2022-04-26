@@ -115,12 +115,10 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 			return this.renderBounds.height - this.thumbButtonFrame.getAssignedHeight() - incButtonFrameHeight
 					- decButtonFrameHeight;
 		}
-		else {
-			final float incButtonFrameWidth = this.incButtonFrame == null ? 0 : this.incButtonFrame.getAssignedWidth();
-			final float decButtonFrameWidth = this.decButtonFrame == null ? 0 : this.decButtonFrame.getAssignedWidth();
-			return this.renderBounds.width - this.thumbButtonFrame.getAssignedWidth() - incButtonFrameWidth
-					- decButtonFrameWidth;
-		}
+		final float incButtonFrameWidth = this.incButtonFrame == null ? 0 : this.incButtonFrame.getAssignedWidth();
+		final float decButtonFrameWidth = this.decButtonFrame == null ? 0 : this.decButtonFrame.getAssignedWidth();
+		return this.renderBounds.width - this.thumbButtonFrame.getAssignedWidth() - incButtonFrameWidth
+				- decButtonFrameWidth;
 	}
 
 	public void setValue(final GameUI gameUI, final Viewport uiViewport, final int percent) {

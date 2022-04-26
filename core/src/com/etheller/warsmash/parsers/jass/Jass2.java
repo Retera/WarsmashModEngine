@@ -3094,10 +3094,8 @@ public class Jass2 {
 						// TODO below code is very stupid!!
 						return new IntegerJassValue(1);
 					}
-					else {
-						// TODO below code is very stupid!!
-						return new IntegerJassValue(1);
-					}
+					// TODO below code is very stupid!!
+					return new IntegerJassValue(1);
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerHandicap", new JassFunction() {

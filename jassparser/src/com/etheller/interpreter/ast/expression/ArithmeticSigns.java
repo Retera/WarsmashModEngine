@@ -521,13 +521,9 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		if (left == null) {
 			return right == null;
 		}
-		else {
-			if (right == null) {
-				return false;
-			}
-			else {
-				return (left.getValue() == right.getValue());
-			}
+		if (right == null) {
+			return false;
 		}
+		return (left.getValue() == right.getValue());
 	}
 }

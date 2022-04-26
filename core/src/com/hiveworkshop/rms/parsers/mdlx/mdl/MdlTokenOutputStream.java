@@ -146,9 +146,7 @@ public class MdlTokenOutputStream {
 		if (s.length() > f.length()) {
 			return f;
 		}
-		else {
-			return s;
-		}
+		return s;
 	}
 
 	private String formatFloatArray(final float[] value) {

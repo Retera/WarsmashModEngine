@@ -270,9 +270,7 @@ public class AbilityDataUI {
 			if (level < upgradeUI.size()) {
 				return upgradeUI.get(level);
 			}
-			else {
-				return upgradeUI.get(upgradeUI.size() - 1);
-			}
+			return upgradeUI.get(upgradeUI.size() - 1);
 		}
 		return null;
 	}

@@ -24,15 +24,13 @@ public class SetupGroups {
 		if (object instanceof Batch) {
 			return getPrio((Batch) object);
 		}
-		else if (object instanceof RibbonEmitterObject) {
+		if (object instanceof RibbonEmitterObject) {
 			return getPrio((RibbonEmitterObject) object);
 		}
-		else if (object instanceof ParticleEmitter2Object) {
+		if (object instanceof ParticleEmitter2Object) {
 			return getPrio((ParticleEmitter2Object) object);
 		}
-		else {
-			throw new IllegalArgumentException(object.getClass().getName());
-		}
+		throw new IllegalArgumentException(object.getClass().getName());
 	}
 
 	public static int getBackupPrio(final Batch object) {
@@ -51,15 +49,13 @@ public class SetupGroups {
 		if (object instanceof Batch) {
 			return getBackupPrio((Batch) object);
 		}
-		else if (object instanceof RibbonEmitterObject) {
+		if (object instanceof RibbonEmitterObject) {
 			return getBackupPrio((RibbonEmitterObject) object);
 		}
-		else if (object instanceof ParticleEmitter2Object) {
+		if (object instanceof ParticleEmitter2Object) {
 			return getBackupPrio((ParticleEmitter2Object) object);
 		}
-		else {
-			throw new IllegalArgumentException(object.getClass().getName());
-		}
+		throw new IllegalArgumentException(object.getClass().getName());
 	}
 
 	public static boolean matchingGroup(final Object group, final Object object) {
@@ -69,10 +65,8 @@ public class SetupGroups {
 //		} else if(group instanceof ReforgedBatch) { TODO
 //		    return (object instanceof ReforgedBatch) && (object.material.shader === group.shader);
 		}
-		else {
-			// All of the emitter objects are generic objects.
-			return (object instanceof GenericObject);
-		}
+		// All of the emitter objects are generic objects.
+		return (object instanceof GenericObject);
 	}
 
 	public static GenericGroup createMatchingGroup(final MdxModel model, final Object object) {
@@ -81,9 +75,7 @@ public class SetupGroups {
 //		} else if(object instanceof ReforgedBatch) { TODO
 //			return new ReforgedBatchGroup(model, ((ReforgedBatch)object).material.shader);
 		}
-		else {
-			return new EmitterGroup(model);
-		}
+		return new EmitterGroup(model);
 	}
 
 	public static void setupGroups(final MdxModel model) {

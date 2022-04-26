@@ -529,17 +529,11 @@ public class SplatModel implements Comparable<SplatModel> {
 			if (other.locations.isEmpty()) {
 				return 0;
 			}
-			else {
-				return 1;
-			}
+			return 1;
 		}
-		else {
-			if (other.locations.isEmpty()) {
-				return -1;
-			}
-			else {
-				return Float.compare(this.locations.get(0)[4], other.locations.get(0)[4]);
-			}
+		if (other.locations.isEmpty()) {
+			return -1;
 		}
+		return Float.compare(this.locations.get(0)[4], other.locations.get(0)[4]);
 	}
 }

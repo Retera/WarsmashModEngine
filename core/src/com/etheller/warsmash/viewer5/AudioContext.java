@@ -94,13 +94,11 @@ public class AudioContext {
 				}
 			};
 		}
-		else {
-			return new AudioPanner(this.listener) {
-				@Override
-				public void connect(final AudioDestination destination) {
-				}
-			};
-		}
+		return new AudioPanner(this.listener) {
+			@Override
+			public void connect(final AudioDestination destination) {
+			}
+		};
 	}
 
 	public AudioBufferSource createBufferSource() {

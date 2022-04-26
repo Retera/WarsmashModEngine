@@ -44,6 +44,6 @@ public final class StringKey {
 		if (this.string == null) {
 			return other.string == null;
 		}
-		else return this.string.equalsIgnoreCase(other.string);
+		return this.string.equalsIgnoreCase(other.string);
 	}
 }

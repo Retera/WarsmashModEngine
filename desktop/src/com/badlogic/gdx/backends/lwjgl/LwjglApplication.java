@@ -145,9 +145,7 @@ public class LwjglApplication implements Application {
 					if (t instanceof RuntimeException) {
 						throw (RuntimeException) t;
 					}
-					else {
-						throw new GdxRuntimeException(t);
-					}
+					throw new GdxRuntimeException(t);
 				}
 			}
 		};
@@ -378,12 +376,10 @@ public class LwjglApplication implements Application {
 		if (this.preferences.containsKey(name)) {
 			return this.preferences.get(name);
 		}
-		else {
-			final Preferences prefs = new LwjglPreferences(
-					new LwjglFileHandle(new File(this.preferencesdir, name), this.preferencesFileType));
-			this.preferences.put(name, prefs);
-			return prefs;
-		}
+		final Preferences prefs = new LwjglPreferences(
+				new LwjglFileHandle(new File(this.preferencesdir, name), this.preferencesFileType));
+		this.preferences.put(name, prefs);
+		return prefs;
 	}
 
 	@Override

@@ -504,12 +504,10 @@ public enum RenderMathUtils {
 		if (hit == false) {
 			return false;
 		}
-		else {
-			if (intersection != null) {
-				intersection.set(best);
-			}
-			return true;
+		if (intersection != null) {
+			intersection.set(best);
 		}
+		return true;
 	}
 
 	/**
@@ -568,12 +566,10 @@ public enum RenderMathUtils {
 		if (hit == false) {
 			return false;
 		}
-		else {
-			if (intersection != null) {
-				intersection.set(best);
-			}
-			return true;
+		if (intersection != null) {
+			intersection.set(best);
 		}
+		return true;
 	}
 
 	// ==== All of the following "wrap" calls are horribly inefficient. Eventually

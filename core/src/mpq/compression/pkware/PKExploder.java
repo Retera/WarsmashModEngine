@@ -96,8 +96,8 @@ public class PKExploder {
 		            	WasteBits(extra_length_bits);
 		            }catch( BufferUnderflowException e ){
 		            	if( (length_code + (extra_length & 0xFF)) == 0x10E ) return;
-		            	else throw e;
-		            }
+						throw e;
+					}
 		            length_code = (short) (LEN_BASE[length_code] + (extra_length & 0xFF));
 
 		        }

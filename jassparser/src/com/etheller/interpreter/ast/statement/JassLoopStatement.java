@@ -24,9 +24,7 @@ public class JassLoopStatement implements JassStatement {
 					if (returnValue == JassExitWhenStatement.LOOP_EXIT_NOTICE) {
 						return null;
 					}
-					else {
-						return returnValue;
-					}
+					return returnValue;
 				}
 			}
 		}

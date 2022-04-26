@@ -51,27 +51,25 @@ public class Quadtree<T> {
 			}
 			return false;
 		}
-		else {
-			if (this.northeast.bounds.overlaps(bounds)) {
-				if (this.northeast.intersect(bounds, intersector)) {
-					return true;
-				}
+		if (this.northeast.bounds.overlaps(bounds)) {
+			if (this.northeast.intersect(bounds, intersector)) {
+				return true;
 			}
-			if (this.northwest.bounds.overlaps(bounds)) {
-				if (this.northwest.intersect(bounds, intersector)) {
-					return true;
-				}
-			}
-			if (this.southwest.bounds.overlaps(bounds)) {
-				if (this.southwest.intersect(bounds, intersector)) {
-					return true;
-				}
-			}
-			if (this.southeast.bounds.overlaps(bounds)) {
-				return this.southeast.intersect(bounds, intersector);
-			}
-			return false;
 		}
+		if (this.northwest.bounds.overlaps(bounds)) {
+			if (this.northwest.intersect(bounds, intersector)) {
+				return true;
+			}
+		}
+		if (this.southwest.bounds.overlaps(bounds)) {
+			if (this.southwest.intersect(bounds, intersector)) {
+				return true;
+			}
+		}
+		if (this.southeast.bounds.overlaps(bounds)) {
+			return this.southeast.intersect(bounds, intersector);
+		}
+		return false;
 	}
 
 	public boolean intersect(final float x, final float y, final QuadtreeIntersector<T> intersector) {
@@ -86,27 +84,25 @@ public class Quadtree<T> {
 			}
 			return false;
 		}
-		else {
-			if (this.northeast.bounds.contains(x, y)) {
-				if (this.northeast.intersect(x, y, intersector)) {
-					return true;
-				}
+		if (this.northeast.bounds.contains(x, y)) {
+			if (this.northeast.intersect(x, y, intersector)) {
+				return true;
 			}
-			if (this.northwest.bounds.contains(x, y)) {
-				if (this.northwest.intersect(x, y, intersector)) {
-					return true;
-				}
-			}
-			if (this.southwest.bounds.contains(x, y)) {
-				if (this.southwest.intersect(x, y, intersector)) {
-					return true;
-				}
-			}
-			if (this.southeast.bounds.contains(x, y)) {
-				return this.southeast.intersect(x, y, intersector);
-			}
-			return false;
 		}
+		if (this.northwest.bounds.contains(x, y)) {
+			if (this.northwest.intersect(x, y, intersector)) {
+				return true;
+			}
+		}
+		if (this.southwest.bounds.contains(x, y)) {
+			if (this.southwest.intersect(x, y, intersector)) {
+				return true;
+			}
+		}
+		if (this.southeast.bounds.contains(x, y)) {
+			return this.southeast.intersect(x, y, intersector);
+		}
+		return false;
 	}
 
 	private void add(final Node<T> node, final int depth) {

@@ -1570,23 +1570,21 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
 				return heroData.getProperName() + "|n" + level + " " + heroData.getHeroLevel();
 			}
-			else {
-				final boolean neutralHostile = simulationUnit.getPlayerIndex() == (WarsmashConstants.MAX_PLAYERS - 4);
-				final boolean neutralPassive = simulationUnit.getPlayerIndex() == (WarsmashConstants.MAX_PLAYERS - 1);
-				if ((neutralPassive && simulationUnit.isBuilding()) || neutralHostile) {
-					String returnValue = simulationUnit.getUnitType().getName();
-					final CAbilityGoldMine goldMineData = simulationUnit.getGoldMineData();
-					if (goldMineData != null) {
-						final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
-						returnValue += "|n" + colonGold + " " + goldMineData.getGold();
-					}
-					final int creepLevel = simulationUnit.getUnitType().getLevel();
-					if (neutralHostile && (creepLevel > 0)) {
-						final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
-						returnValue += "|n" + level + " " + creepLevel;
-					}
-					return returnValue;
+			final boolean neutralHostile = simulationUnit.getPlayerIndex() == (WarsmashConstants.MAX_PLAYERS - 4);
+			final boolean neutralPassive = simulationUnit.getPlayerIndex() == (WarsmashConstants.MAX_PLAYERS - 1);
+			if ((neutralPassive && simulationUnit.isBuilding()) || neutralHostile) {
+				String returnValue = simulationUnit.getUnitType().getName();
+				final CAbilityGoldMine goldMineData = simulationUnit.getGoldMineData();
+				if (goldMineData != null) {
+					final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
+					returnValue += "|n" + colonGold + " " + goldMineData.getGold();
 				}
+				final int creepLevel = simulationUnit.getUnitType().getLevel();
+				if (neutralHostile && (creepLevel > 0)) {
+					final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
+					returnValue += "|n" + level + " " + creepLevel;
+				}
+				return returnValue;
 			}
 		}
 		else if (whichUnit instanceof RenderItem) {
@@ -3029,7 +3027,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			return false;
 		}
-		else if (button == Input.Buttons.BACK) {
+		if (button == Input.Buttons.BACK) {
 			if (this.selectedUnits.size() > 1) {
 				advanceSelectedSubGroupReverse();
 				this.war3MapViewer.getUiSounds().getSound("SubGroupSelectionChange").play(this.uiScene.audioContext, 0,
@@ -3382,13 +3380,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					if (levelSort == 0) {
 						return unitType1.getTypeId().getValue() - unitType2.getTypeId().getValue();
 					}
-					else {
-						return levelSort;
-					}
+					return levelSort;
 				}
-				else {
-					return prioSort;
-				}
+				return prioSort;
 			}
 		});
 		for (final RenderWidget widget : selectedUnits) {
@@ -3482,7 +3476,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (button == Input.Buttons.FORWARD) {
 			return false;
 		}
-		else if (button == Input.Buttons.BACK) {
+		if (button == Input.Buttons.BACK) {
 			return false;
 		}
 		this.currentlyDraggingPointer = -1;

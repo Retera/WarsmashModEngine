@@ -44,10 +44,8 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 			if (data != null) {
 				return Gdx.audio.newSound(temp);
 			}
-			else {
-				System.err.println("Warning: missing sound file: " + this.filename);
-				return null;
-			}
+			System.err.println("Warning: missing sound file: " + this.filename);
+			return null;
 		}
 	}
 
@@ -187,9 +185,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 		if (x == null) {
 			return Float.NaN;
 		}
-		else {
-			return x.floatValue();
-		}
+		return x.floatValue();
 	}
 
 	private int getInt(final MappedDataRow row, final String name) {
@@ -201,9 +197,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 		if (x == null) {
 			return defaultValue;
 		}
-		else {
-			return x.intValue();
-		}
+		return x.intValue();
 	}
 
 	private void load(final List<GenericResource> tables) {
@@ -344,16 +338,14 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 
 			return getValueAtTime(out, instance.counter % this.globalSequence, 0, this.globalSequence);
 		}
-		else if (instance.sequence != -1) {
+		if (instance.sequence != -1) {
 			final long[] interval = this.model.getSequences().get(instance.sequence).getInterval();
 
 			return getValueAtTime(out, instance.frame, interval[0], interval[1]);
 		}
-		else {
-			out[0] = this.defval[0];
+		out[0] = this.defval[0];
 
-			return -1;
-		}
+		return -1;
 	}
 
 	public int getValueAtTime(final long[] out, final long frame, final long start, final long end) {
@@ -364,7 +356,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 
 					return -1;
 				}
-				else if (this.keyFrames[i] <= frame) {
+				if (this.keyFrames[i] <= frame) {
 					out[0] = 1;
 
 					return i;

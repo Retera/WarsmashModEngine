@@ -54,8 +54,7 @@ final class SizeEstimate<E> {
 		Objects.requireNonNull(other);
 		if (sizeEstimate <= other.sizeEstimate)
 			return this;
-		else
-			return other;
+		return other;
 	}
 	
 }

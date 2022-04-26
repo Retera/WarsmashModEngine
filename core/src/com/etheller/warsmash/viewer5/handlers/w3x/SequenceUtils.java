@@ -272,9 +272,7 @@ public class SequenceUtils {
 			target.setSequence(sequence.index);
 			return sequence.sequence;
 		}
-		else {
-			return null;
-		}
+		return null;
 	}
 
 	public static Sequence randomSequence(final MdxComplexInstance target, final PrimaryTag animationName,
@@ -288,15 +286,11 @@ public class SequenceUtils {
 			target.setSequence(sequence.index);
 			return sequence.sequence;
 		}
-		else {
-			if ((animationName == null) || (secondaryAnimationTags.size() != 1)
-					|| !secondaryAnimationTags.contains(SecondaryTag.SPELL)) {
-				return null;
-			}
-			else {
-				return randomSequence(target, null, secondaryAnimationTags, allowRarityVariations);
-			}
+		if ((animationName == null) || (secondaryAnimationTags.size() != 1)
+				|| !secondaryAnimationTags.contains(SecondaryTag.SPELL)) {
+			return null;
 		}
+		return randomSequence(target, null, secondaryAnimationTags, allowRarityVariations);
 	}
 
 	public static Sequence randomSequence(final MdxComplexInstance target, final PrimaryTag animationName) {

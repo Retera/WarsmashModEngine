@@ -51,16 +51,12 @@ public class COrderTargetPoint implements COrder {
 			if (targetReceiver.getTarget() != null) {
 				return ability.begin(game, caster, this.orderId, this.target);
 			}
-			else {
-				game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(), targetReceiver.getMessage());
-				return caster.pollNextOrderBehavior(game);
-			}
-		}
-		else {
-			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
-					this.abilityActivationReceiver.getMessage());
+			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(), targetReceiver.getMessage());
 			return caster.pollNextOrderBehavior(game);
 		}
+		game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
+				this.abilityActivationReceiver.getMessage());
+		return caster.pollNextOrderBehavior(game);
 
 	}
 
@@ -99,7 +95,7 @@ public class COrderTargetPoint implements COrder {
 		if (this.target == null) {
 			return other.target == null;
 		}
-		else return this.target.equals(other.target);
+		return this.target.equals(other.target);
 	}
 
 }

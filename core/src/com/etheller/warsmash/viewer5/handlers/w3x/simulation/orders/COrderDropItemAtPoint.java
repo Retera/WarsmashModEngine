@@ -53,11 +53,9 @@ public class COrderDropItemAtPoint implements COrder {
 			final CItem itemToDrop = (CItem) game.getWidget(this.itemHandleId);
 			return ability.beginDropItem(game, caster, this.orderId, itemToDrop, this.target);
 		}
-		else {
-			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
-					this.abilityActivationReceiver.getMessage());
-			return caster.pollNextOrderBehavior(game);
-		}
+		game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
+				this.abilityActivationReceiver.getMessage());
+		return caster.pollNextOrderBehavior(game);
 
 	}
 
@@ -100,7 +98,7 @@ public class COrderDropItemAtPoint implements COrder {
 		if (this.target == null) {
 			return other.target == null;
 		}
-		else return this.target.equals(other.target);
+		return this.target.equals(other.target);
 	}
 
 }

@@ -904,21 +904,15 @@ public class Terrain {
 			if (variation <= 15) {
 				return (short) (16 + variation);
 			}
-			else if (variation == 16) {
+			if (variation == 16) {
 				return 15;
 			}
-			else {
-				return 0;
-			}
+			return 0;
 		}
-		else {
-			if (variation == 0) {
-				return 0;
-			}
-			else {
-				return 15;
-			}
+		if (variation == 0) {
+			return 0;
 		}
+		return 15;
 	}
 
 	public void update(final float deltaTime) {
@@ -1615,9 +1609,7 @@ public class Terrain {
 				throw new IllegalArgumentException("Invalid ramp");
 			}
 		}
-		else {
-			return (char) ('A' + layerHeightOffset);
-		}
+		return (char) ('A' + layerHeightOffset);
 	}
 
 	public float[] getDefaultCameraBounds() {

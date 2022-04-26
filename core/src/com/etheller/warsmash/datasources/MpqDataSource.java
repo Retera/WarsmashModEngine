@@ -49,9 +49,7 @@ public class MpqDataSource implements DataSource {
 			if (exc.getMessage().equals("lookup not found")) {
 				return null;
 			}
-			else {
-				throw new IOException(exc);
-			}
+			throw new IOException(exc);
 		}
 		final ArchivedFileStream stream = new ArchivedFileStream(this.inputChannel, this.extractor, file);
 		final InputStream newInputStream = Channels.newInputStream(stream);
@@ -68,9 +66,7 @@ public class MpqDataSource implements DataSource {
 			if (exc.getMessage().equals("lookup not found")) {
 				return null;
 			}
-			else {
-				throw new IOException(exc);
-			}
+			throw new IOException(exc);
 		}
 		try (final ArchivedFileStream stream = new ArchivedFileStream(this.inputChannel, this.extractor, file)) {
 			final long size = stream.size();
@@ -93,9 +89,7 @@ public class MpqDataSource implements DataSource {
 			if (exc.getMessage().equals("lookup not found")) {
 				return null;
 			}
-			else {
-				throw new IOException(exc);
-			}
+			throw new IOException(exc);
 		}
 		final ArchivedFileStream stream = new ArchivedFileStream(this.inputChannel, this.extractor, file);
 		final InputStream newInputStream = Channels.newInputStream(stream);
@@ -127,9 +121,7 @@ public class MpqDataSource implements DataSource {
 			if (exc.getMessage().equals("lookup not found")) {
 				return false;
 			}
-			else {
-				throw new RuntimeException(exc);
-			}
+			throw new RuntimeException(exc);
 		}
 	}
 
@@ -157,9 +149,7 @@ public class MpqDataSource implements DataSource {
 			if (exc.getMessage().equals("lookup not found")) {
 				return null;
 			}
-			else {
-				throw new RuntimeException(exc);
-			}
+			throw new RuntimeException(exc);
 		}
 	}
 

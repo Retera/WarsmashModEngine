@@ -202,14 +202,10 @@ public abstract class ModelViewer {
 
 				return resource;
 			}
-			else {
-				throw new IllegalStateException("Missing handler for: " + finalSrc);
-			}
+			throw new IllegalStateException("Missing handler for: " + finalSrc);
 		}
-		else {
-			throw new IllegalStateException(
-					"Could not resolve " + finalSrc + ". Did you forget to pass a path solver?");
-		}
+		throw new IllegalStateException(
+				"Could not resolve " + finalSrc + ". Did you forget to pass a path solver?");
 
 	}
 

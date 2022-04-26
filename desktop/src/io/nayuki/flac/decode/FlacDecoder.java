@@ -168,9 +168,7 @@ public final class FlacDecoder implements AutoCloseable {
 		if (frame == null) {
 			return 0;
 		}
-		else {
-			return frame.blockSize; // In the range [1, 65536]
-		}
+		return frame.blockSize; // In the range [1, 65536]
 	}
 
 	// Seeks to the given sample position and reads audio samples into the given
@@ -281,7 +279,7 @@ public final class FlacDecoder implements AutoCloseable {
 				if (b == -1) {
 					return null;
 				}
-				else if (b == 0xFF) {
+				if (b == 0xFF) {
 					state = 1;
 				}
 				else if ((state == 1) && ((b & 0xFE) == 0xF8)) {
@@ -313,12 +311,10 @@ public final class FlacDecoder implements AutoCloseable {
 		if (frame.sampleOffset != -1) {
 			return frame.sampleOffset;
 		}
-		else if (frame.frameIndex != -1) {
+		if (frame.frameIndex != -1) {
 			return frame.frameIndex * this.streamInfo.maxBlockSize;
 		}
-		else {
-			throw new AssertionError();
-		}
+		throw new AssertionError();
 	}
 
 	// Closes the underlying input streams and discards object data.

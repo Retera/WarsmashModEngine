@@ -242,39 +242,37 @@ public class DataTable implements ObjectData {
 					lastFieldId = fieldId;
 					continue;
 				}
-				else {
-					int eIndex = kInput.indexOf("K");
-					if ((eIndex == -1) || (kInput.charAt(eIndex - 1) != ';')) {
-						continue;
-					}
-					final int fieldId;
-					if (subXIndex < 0) {
-						if (lastFieldId == 0) {
-							rowStartCount++;
-						}
-						fieldId = lastFieldId + 1;
-					}
-					else {
-						if (flipMode && input.contains("Y") && (input == kInput)) {
-							eIndex = Math.min(subYIndex, eIndex);
-						}
-						final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
-						fieldId = Integer.parseInt(input.substring(subXIndex + 1, fieldIdEndIndex));
-					}
-
-					final int quotationIndex = kInput.indexOf("\"");
-					if ((fieldId - 1) >= dataNames.length) {
-						dataNames = Arrays.copyOf(dataNames, fieldId);
-					}
-					if (quotationIndex == -1) {
-						dataNames[fieldId - 1] = kInput.substring(eIndex + 1, kInput.length());
-					}
-					else {
-						dataNames[fieldId - 1] = kInput.substring(quotationIndex + 1, kInput.lastIndexOf("\""));
-					}
-					lastFieldId = fieldId;
+				int eIndex = kInput.indexOf("K");
+				if ((eIndex == -1) || (kInput.charAt(eIndex - 1) != ';')) {
 					continue;
 				}
+				final int fieldId;
+				if (subXIndex < 0) {
+					if (lastFieldId == 0) {
+						rowStartCount++;
+					}
+					fieldId = lastFieldId + 1;
+				}
+				else {
+					if (flipMode && input.contains("Y") && (input == kInput)) {
+						eIndex = Math.min(subYIndex, eIndex);
+					}
+					final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
+					fieldId = Integer.parseInt(input.substring(subXIndex + 1, fieldIdEndIndex));
+				}
+
+				final int quotationIndex = kInput.indexOf("\"");
+				if ((fieldId - 1) >= dataNames.length) {
+					dataNames = Arrays.copyOf(dataNames, fieldId);
+				}
+				if (quotationIndex == -1) {
+					dataNames[fieldId - 1] = kInput.substring(eIndex + 1, kInput.length());
+				}
+				else {
+					dataNames[fieldId - 1] = kInput.substring(quotationIndex + 1, kInput.lastIndexOf("\""));
+				}
+				lastFieldId = fieldId;
+				continue;
 			}
 			if (input.contains("X1;") || ((input != kInput) && input.endsWith("X1"))) {
 				final int start = kInput.indexOf("\"") + 1;

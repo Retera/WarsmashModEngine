@@ -45,9 +45,11 @@ public class BankStream {
 
 		if (storageSizeDiff < 0) {
 			throw new MalformedCASCStructureException("container buffer smaller than container");
-		} else if ((encodingKey != null) && (storageSizeDiff != 0)) {
+		}
+		if ((encodingKey != null) && (storageSizeDiff != 0)) {
 			throw new MalformedCASCStructureException("container buffer size mismatch");
-		} else if (storageSizeDiff > 0) {
+		}
+		if (storageSizeDiff > 0) {
 			// resize buffer to match file
 			final int streamPos = streamBuffer.position();
 			streamBuffer.limit(storageSize);
@@ -106,7 +108,8 @@ public class BankStream {
 
 			if (streamBuffer.remaining() < encodedSize) {
 				throw new MalformedCASCStructureException("encoded data beyond end of file");
-			} else if (bankBuffer == null) {
+			}
+			if (bankBuffer == null) {
 				if (decodedSize > Integer.MAX_VALUE) {
 					throw new MalformedCASCStructureException("bank too large for Java to manipulate");
 				}
@@ -143,7 +146,8 @@ public class BankStream {
 				}
 				if (resultSize != decodedSize) {
 					throw new MalformedCASCStructureException("not enough bytes generated: " + resultSize + "B");
-				} else if (!zlib.finished()) {
+				}
+				if (!zlib.finished()) {
 					throw new MalformedCASCStructureException("unfinished inflate operation");
 				}
 				break;

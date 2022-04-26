@@ -105,7 +105,7 @@ public class ArchivedFile implements Serializable {
 		// validate offsets in case of corruption
 		if( blockOffsets[0] >= 0 && blockOffsets[0] < blockOffsets.length * 4 ||
 				blockOffsets[0] < 0 && blockOffsets[blockOffsets.length - 1] > 0 ) throw new MPQException("block sector intersects sector offset table");
-		else if( blockOffsets[0] < 0 || blockOffsets[0] > blockOffsets.length * 4 ) 
+		if( blockOffsets[0] < 0 || blockOffsets[0] > blockOffsets.length * 4 )
 			System.err.printf("block at %X has detached sectors starting at %X (%d bytes from end of sector table)%n",
 					fileOffset, fileOffset + blockOffsets[0], blockOffsets[0] - blockOffsets.length * 4);
 		if( fileOffset + blockOffsets[0] < 0 || fileOffset + blockOffsets[blockOffsets.length - 1] > in.size() )

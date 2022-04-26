@@ -810,19 +810,15 @@ public class MdxComplexInstance extends ModelInstance {
 		if (this.sequence == -1) {
 			return this.model.bounds;
 		}
-		else {
-			if (((MdxModel) this.model).sequences.isEmpty()) {
-				System.err.println("Printing diagnostics for corrupted state MdxComplexInstance (about to crash)");
-				System.err.println("Model name: " + ((MdxModel) this.model).name);
-			}
-			final Bounds sequenceBounds = ((MdxModel) this.model).sequences.get(this.sequence).getBounds();
-			if (sequenceBounds.r == 0) {
-				return this.model.bounds;
-			}
-			else {
-				return sequenceBounds;
-			}
+		if (((MdxModel) this.model).sequences.isEmpty()) {
+			System.err.println("Printing diagnostics for corrupted state MdxComplexInstance (about to crash)");
+			System.err.println("Model name: " + ((MdxModel) this.model).name);
 		}
+		final Bounds sequenceBounds = ((MdxModel) this.model).sequences.get(this.sequence).getBounds();
+		if (sequenceBounds.r == 0) {
+			return this.model.bounds;
+		}
+		return sequenceBounds;
 	}
 
 	public boolean intersectRayBounds(final Ray ray, final Vector3 intersection) {

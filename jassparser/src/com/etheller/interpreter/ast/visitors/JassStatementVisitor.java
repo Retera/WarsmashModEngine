@@ -166,8 +166,6 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 		if (JassSettings.DEBUG) {
 			return new DebuggingJassStatement(lineNo, statement);
 		}
-		else {
-			return statement;
-		}
+		return statement;
 	}
 }

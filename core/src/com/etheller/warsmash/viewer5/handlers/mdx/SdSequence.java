@@ -174,49 +174,47 @@ public final class SdSequence<TYPE> {
 
 			return -1;
 		}
-		else {
-			int startFrameIndex = -1;
-			int endFrameIndex = -1;
-			final int lengthLessOne = length - 1;
-			if ((frame < this.frames[0]) || (frame >= this.frames[lengthLessOne])) {
-				startFrameIndex = lengthLessOne;
-				endFrameIndex = 0;
-			}
-			else {
-				for (int i = 1; i < length; i++) {
-					if (this.frames[i] > frame) {
-						startFrameIndex = i - 1;
-						endFrameIndex = i;
-						break;
-					}
-				}
-			}
-			long startFrame = this.frames[startFrameIndex];
-			final long endFrame = this.frames[endFrameIndex];
-			long timeBetweenFrames = endFrame - startFrame;
-			if (timeBetweenFrames < 0) {
-				timeBetweenFrames += (this.end - this.start);
-				if (frame < startFrame) {
-					startFrame = endFrame;
-				}
-			}
-			final float t = ((timeBetweenFrames) == 0 ? 0 : ((frame - startFrame) / (float) (timeBetweenFrames)));
-			this.sd.interpolate(out, this.values, this.inTans, this.outTans, startFrameIndex, endFrameIndex, t);
-			return startFrameIndex;
+		int startFrameIndex = -1;
+		int endFrameIndex = -1;
+		final int lengthLessOne = length - 1;
+		if ((frame < this.frames[0]) || (frame >= this.frames[lengthLessOne])) {
+			startFrameIndex = lengthLessOne;
+			endFrameIndex = 0;
 		}
+		else {
+			for (int i = 1; i < length; i++) {
+				if (this.frames[i] > frame) {
+					startFrameIndex = i - 1;
+					endFrameIndex = i;
+					break;
+				}
+			}
+		}
+		long startFrame = this.frames[startFrameIndex];
+		final long endFrame = this.frames[endFrameIndex];
+		long timeBetweenFrames = endFrame - startFrame;
+		if (timeBetweenFrames < 0) {
+			timeBetweenFrames += (this.end - this.start);
+			if (frame < startFrame) {
+				startFrame = endFrame;
+			}
+		}
+		final float t = ((timeBetweenFrames) == 0 ? 0 : ((frame - startFrame) / (float) (timeBetweenFrames)));
+		this.sd.interpolate(out, this.values, this.inTans, this.outTans, startFrameIndex, endFrameIndex, t);
+		return startFrameIndex;
 	}
 
 	protected final boolean equals(final TYPE a, final TYPE b) {
 		if ((a instanceof Float) && (b instanceof Float)) {
 			return a.equals(b);
 		}
-		else if ((a instanceof Long) && (b instanceof Long)) {
+		if ((a instanceof Long) && (b instanceof Long)) {
 			return a.equals(b);
 		}
-		else if ((a instanceof float[]) && (b instanceof float[])) {
+		if ((a instanceof float[]) && (b instanceof float[])) {
 			return Arrays.equals(((float[]) a), (float[]) b);
 		}
-		else if ((a instanceof long[]) && (b instanceof long[])) {
+		if ((a instanceof long[]) && (b instanceof long[])) {
 			return Arrays.equals(((long[]) a), (long[]) b);
 		}
 		return false;

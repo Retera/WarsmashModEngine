@@ -116,7 +116,8 @@ public class WarcraftIIICASC implements AutoCloseable {
 
 			if (!resolveResult.isFile()) {
 				throw new FileNotFoundException("the specified file path does not resolve to a file");
-			} else if (!resolveResult.existsInStorage()) {
+			}
+			if (!resolveResult.existsInStorage()) {
 				throw new FileNotFoundException("the specified file is not in local storage");
 			}
 

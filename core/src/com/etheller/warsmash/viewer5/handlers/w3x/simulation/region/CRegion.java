@@ -76,15 +76,13 @@ public class CRegion {
 		if (this.currentBounds == null) {
 			return;
 		}
-		else {
-			regionManager.removeRectForRegion(this, this.currentBounds);
-			if (!this.complexRegion) {
-				regionManager.addComplexRegionCells(this, this.currentBounds);
-				this.complexRegion = true;
-			}
-			regionManager.clearComplexRegionCell(this, x, y, this.currentBounds);
-			regionManager.addRectForRegion(this, this.currentBounds);
+		regionManager.removeRectForRegion(this, this.currentBounds);
+		if (!this.complexRegion) {
+			regionManager.addComplexRegionCells(this, this.currentBounds);
+			this.complexRegion = true;
 		}
+		regionManager.clearComplexRegionCell(this, x, y, this.currentBounds);
+		regionManager.addRectForRegion(this, this.currentBounds);
 	}
 
 	private void complexRegionAddRect(final Rectangle rect, final CRegionManager regionManager) {

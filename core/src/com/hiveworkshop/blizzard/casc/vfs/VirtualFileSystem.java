@@ -314,7 +314,8 @@ public final class VirtualFileSystem {
 		if ((nodeFragmentCount == 1) && (node.getFragment(0).length == 0)) {
 			// node with termination fragment
 			return fragmentOffset == pathFragments[fragmentIndex].length;
-		} else if (pathFragments.length < (fragmentIndex + nodeFragmentCount)) {
+		}
+		if (pathFragments.length < (fragmentIndex + nodeFragmentCount)) {
 			// fragment too short
 			return false;
 		}
@@ -577,7 +578,8 @@ public final class VirtualFileSystem {
 				if (result == 0) {
 					// possible match
 					return recursiveResolvePathFragments(pathFragments, fragmentIndex, fragmentOffset, searchNode);
-				} else if (result < 0) {
+				}
+				if (result < 0) {
 					high = middle - 1;
 				} else {
 					low = middle + 1;
@@ -591,7 +593,8 @@ public final class VirtualFileSystem {
 					&& (fragmentOffset == pathFragments[pathFragments.length - 1].length)) {
 				// file found
 				return fileNode;
-			} else if (fragmentOffset == pathFragments[fragmentIndex].length) {
+			}
+			if (fragmentOffset == pathFragments[fragmentIndex].length) {
 				// nested TVFS file
 				final int fileReferenceCount = fileNode.getFileReferenceCount();
 				if (fileReferenceCount == 1) {

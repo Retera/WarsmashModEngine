@@ -32,9 +32,7 @@ public class MdlTokenInputStream {
 				if (c == '"') {
 					return token.toString();
 				}
-				else {
-					token.append(c);
-				}
+				token.append(c);
 			}
 			else if ((c == ' ') || (c == ',') || (c == '\t') || (c == '\n') || (c == ':') || (c == '\r')) {
 				if (token.length() > 0) {
@@ -46,27 +44,21 @@ public class MdlTokenInputStream {
 					this.index--;
 					return token.toString();
 				}
-				else {
-					return Character.toString(c);
-				}
+				return Character.toString(c);
 			}
 			else if ((c == '/') && (this.buffer.get(this.buffer.position() + this.index) == '/')) {
 				if (token.length() > 0) {
 					this.index--;
 					return token.toString();
 				}
-				else {
-					inComment = true;
-				}
+				inComment = true;
 			}
 			else if (c == '"') {
 				if (token.length() > 0) {
 					this.index--;
 					return token.toString();
 				}
-				else {
-					inString = true;
-				}
+				inString = true;
 			}
 			else {
 				token.append(c);

@@ -405,11 +405,9 @@ public class OggInputStream extends InputStream {
 										throw new GdxRuntimeException("Ogg block too big to be buffered: "
 												+ bytesToWrite + ", " + (this.outBuffer.length - this.outIndex));
 									}
-									else {
-										System.arraycopy(this.convbuffer, 0, this.outBuffer, this.outIndex,
-												bytesToWrite);
-										this.outIndex += bytesToWrite;
-									}
+									System.arraycopy(this.convbuffer, 0, this.outBuffer, this.outIndex,
+											bytesToWrite);
+									this.outIndex += bytesToWrite;
 
 									wrote = true;
 									this.dspState.synthesis_read(bout); // tell libvorbis how

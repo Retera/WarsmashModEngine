@@ -351,9 +351,7 @@ public class CUnitType {
 		if ((index >= 0) && (index < this.requirementTiers.size())) {
 			return this.requirementTiers.get(index);
 		}
-		else {
-			return Collections.emptyList();
-		}
+		return Collections.emptyList();
 	}
 
 	public int getLevel() {

@@ -505,12 +505,7 @@ public enum ArithmeticSigns implements ArithmeticSign {
 	private static boolean isEqual(final String left, final String right) {
 		boolean equals;
 		if (left == null) {
-			if (right == null) {
-				equals = true;
-			}
-			else {
-				equals = false;
-			}
+			equals = right == null;
 		}
 		else {
 			equals = left.equals(right);
@@ -524,12 +519,7 @@ public enum ArithmeticSigns implements ArithmeticSign {
 
 	private static boolean isEqual(final CodeJassValue left, final CodeJassValue right) {
 		if (left == null) {
-			if (right == null) {
-				return true;
-			}
-			else {
-				return false;
-			}
+			return right == null;
 		}
 		else {
 			if (right == null) {

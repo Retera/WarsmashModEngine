@@ -62,14 +62,9 @@ public class MpqDataSourceDescriptor implements DataSourceDescriptor {
 		}
 		final MpqDataSourceDescriptor other = (MpqDataSourceDescriptor) obj;
 		if (this.mpqFilePath == null) {
-			if (other.mpqFilePath != null) {
-				return false;
-			}
+			return other.mpqFilePath == null;
 		}
-		else if (!this.mpqFilePath.equals(other.mpqFilePath)) {
-			return false;
-		}
-		return true;
+		else return this.mpqFilePath.equals(other.mpqFilePath);
 	}
 
 	public String getMpqFilePath() {

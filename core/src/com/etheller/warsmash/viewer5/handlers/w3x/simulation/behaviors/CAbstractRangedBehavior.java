@@ -92,14 +92,9 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 				facing += angleToAdd;
 				this.unit.setFacing(facing);
 			}
-			if (absDelta < propulsionWindow) {
-				this.wasWithinPropWindow = true;
-			}
-			else {
-				// If this happens, the unit is facing the wrong way, and has to turn before
-				// moving.
-				this.wasWithinPropWindow = false;
-			}
+			// If this happens, the unit is facing the wrong way, and has to turn before
+			// moving.
+			this.wasWithinPropWindow = absDelta < propulsionWindow;
 		}
 		else {
 			this.wasWithinPropWindow = true;

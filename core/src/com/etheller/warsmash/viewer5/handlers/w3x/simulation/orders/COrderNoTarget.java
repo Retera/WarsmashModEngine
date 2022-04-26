@@ -88,10 +88,7 @@ public class COrderNoTarget implements COrder {
 		if (this.orderId != other.orderId) {
 			return false;
 		}
-		if (this.queued != other.queued) {
-			return false;
-		}
-		return true;
+		return this.queued == other.queued;
 	}
 
 }

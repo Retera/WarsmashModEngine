@@ -96,10 +96,7 @@ public class COrderDropItemAtTargetWidget implements COrder {
 		if (this.queued != other.queued) {
 			return false;
 		}
-		if (this.targetHeroHandleId != other.targetHeroHandleId) {
-			return false;
-		}
-		return true;
+		return this.targetHeroHandleId == other.targetHeroHandleId;
 	}
 
 }

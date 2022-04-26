@@ -68,9 +68,7 @@ public class Quadtree<T> {
 				}
 			}
 			if (this.southeast.bounds.overlaps(bounds)) {
-				if (this.southeast.intersect(bounds, intersector)) {
-					return true;
-				}
+				return this.southeast.intersect(bounds, intersector);
 			}
 			return false;
 		}
@@ -105,9 +103,7 @@ public class Quadtree<T> {
 				}
 			}
 			if (this.southeast.bounds.contains(x, y)) {
-				if (this.southeast.intersect(x, y, intersector)) {
-					return true;
-				}
+				return this.southeast.intersect(x, y, intersector);
 			}
 			return false;
 		}

@@ -499,10 +499,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 		if (NumberUtils.floatToIntBits(this.z) != NumberUtils.floatToIntBits(other.z)) {
 			return false;
 		}
-		if (NumberUtils.floatToIntBits(this.w) != NumberUtils.floatToIntBits(other.w)) {
-			return false;
-		}
-		return true;
+		return NumberUtils.floatToIntBits(this.w) == NumberUtils.floatToIntBits(other.w);
 	}
 
 	@Override
@@ -519,10 +516,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 		if (Math.abs(other.z - this.z) > epsilon) {
 			return false;
 		}
-		if (Math.abs(other.w - this.w) > epsilon) {
-			return false;
-		}
-		return true;
+		return !(Math.abs(other.w - this.w) > epsilon);
 	}
 
 	/**
@@ -541,10 +535,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 		if (Math.abs(z - this.z) > epsilon) {
 			return false;
 		}
-		if (Math.abs(w - this.w) > epsilon) {
-			return false;
-		}
-		return true;
+		return !(Math.abs(w - this.w) > epsilon);
 	}
 
 	@Override

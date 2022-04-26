@@ -5,11 +5,7 @@ public class ReteraCASCUtils {
 	public static boolean arraysEquals(final byte[] a, final int aFromIndex, final int aToIndex, final byte[] b,
 			final int bFromIndex, final int bToIndex) {
 		if (a == null) {
-			if (b == null) {
-				return true;
-			} else {
-				return false;
-			}
+			return b == null;
 		}
 		if (b == null) {
 			return false;

@@ -154,12 +154,9 @@ public class CWorldCollision {
 						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore))) {
 					return true;
 				}
-				if (this.groundUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore))) {
-					return true;
-				}
-				return false;
-			case FLOAT:
+				return this.groundUnitCollision.intersect(newPossibleRectangle,
+						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
+				case FLOAT:
 				return this.seaUnitCollision.intersect(newPossibleRectangle,
 						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
 			case FLY:

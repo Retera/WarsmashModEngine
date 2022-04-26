@@ -42,13 +42,8 @@ public final class StringKey {
 		}
 		final StringKey other = (StringKey) obj;
 		if (this.string == null) {
-			if (other.string != null) {
-				return false;
-			}
+			return other.string == null;
 		}
-		else if (!this.string.equalsIgnoreCase(other.string)) {
-			return false;
-		}
-		return true;
+		else return this.string.equalsIgnoreCase(other.string);
 	}
 }

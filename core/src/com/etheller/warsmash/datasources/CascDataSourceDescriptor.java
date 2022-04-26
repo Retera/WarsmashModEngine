@@ -84,13 +84,8 @@ public class CascDataSourceDescriptor implements DataSourceDescriptor {
 			return false;
 		}
 		if (this.prefixes == null) {
-			if (other.prefixes != null) {
-				return false;
-			}
+			return other.prefixes == null;
 		}
-		else if (!this.prefixes.equals(other.prefixes)) {
-			return false;
-		}
-		return true;
+		else return this.prefixes.equals(other.prefixes);
 	}
 }

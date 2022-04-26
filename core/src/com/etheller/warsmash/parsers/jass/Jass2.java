@@ -989,9 +989,7 @@ public class Jass2 {
 										// TODO the trigger scope for evaluation here might need to be a clean one?
 										group.add(unit);
 										this.count++;
-										if (this.count >= countLimit) {
-											return true;
-										}
+                                        return this.count >= countLimit;
 									}
 									return false;
 								}
@@ -1080,9 +1078,7 @@ public class Jass2 {
 											// TODO the trigger scope for evaluation here might need to be a clean one?
 											group.add(unit);
 											this.count++;
-											if (this.count >= countLimit) {
-												return true;
-											}
+                                            return this.count >= countLimit;
 										}
 									}
 									return false;
@@ -1120,9 +1116,7 @@ public class Jass2 {
 													// clean one?
 													group.add(unit);
 													this.count++;
-													if (this.count >= countLimit) {
-														return true;
-													}
+                                                    return this.count >= countLimit;
 												}
 											}
 											return false;

@@ -98,9 +98,6 @@ public class COrderTargetWidget implements COrder {
 		if (this.queued != other.queued) {
 			return false;
 		}
-		if (this.targetHandleId != other.targetHandleId) {
-			return false;
-		}
-		return true;
+		return this.targetHandleId == other.targetHandleId;
 	}
 }

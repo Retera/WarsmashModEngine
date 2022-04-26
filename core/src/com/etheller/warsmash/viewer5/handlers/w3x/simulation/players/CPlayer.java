@@ -446,9 +446,7 @@ public class CPlayer extends CBasePlayer {
 	public boolean isTechtreeAllowedByMax(final War3ID techtree) {
 		final int techtreeMaxAllowed = getTechtreeMaxAllowed(techtree);
 		if (techtreeMaxAllowed > 0) {
-			if (getTechtreeUnlockedOrInProgress(techtree) >= techtreeMaxAllowed) {
-				return false;
-			}
+			return getTechtreeUnlockedOrInProgress(techtree) < techtreeMaxAllowed;
 		}
 		return true;
 	}

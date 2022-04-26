@@ -530,10 +530,7 @@ public class CSimulation implements CPlayerAPI {
 			return destructable;
 		}
 		final CItem item = this.handleIdToItem.get(handleId);
-		if (item != null) {
-			return item;
-		}
-		return null;
+		return item;
 	}
 
 	public void createEffectOnUnit(final CUnit unit, final String effectPath) {

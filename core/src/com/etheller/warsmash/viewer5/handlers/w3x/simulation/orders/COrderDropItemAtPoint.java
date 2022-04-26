@@ -98,14 +98,9 @@ public class COrderDropItemAtPoint implements COrder {
 			return false;
 		}
 		if (this.target == null) {
-			if (other.target != null) {
-				return false;
-			}
+			return other.target == null;
 		}
-		else if (!this.target.equals(other.target)) {
-			return false;
-		}
-		return true;
+		else return this.target.equals(other.target);
 	}
 
 }

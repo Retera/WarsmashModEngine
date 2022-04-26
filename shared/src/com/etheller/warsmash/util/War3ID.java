@@ -70,10 +70,7 @@ public final class War3ID implements Comparable<War3ID> {
 			return false;
 		}
 		final War3ID other = (War3ID) obj;
-		if (this.value != other.value) {
-			return false;
-		}
-		return true;
+		return this.value == other.value;
 	}
 
 	@Override

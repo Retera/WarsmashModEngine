@@ -131,11 +131,11 @@ public class SplatModel implements Comparable<SplatModel> {
 				final float y = (iy * 128.0f) + centerOffsetY;
 				for (int ix = ix0; ix <= ix1; ++ix) {
 					final float x = (ix * 128.0f) + centerOffsetX;
-					final float[] vertex = new float[] { x, y, zoffs };
+					final float[] vertex = { x, y, zoffs };
 					vertices.add(vertex);
-					final float[] uv = new float[] { (x - x0) / uvXScale, 1.0f - ((y - y0) / uvYScale) };
+					final float[] uv = { (x - x0) / uvXScale, 1.0f - ((y - y0) / uvYScale) };
 					uvs.add(uv);
-					final float[] absHeight = new float[] { NO_ABS_HEIGHT };
+					final float[] absHeight = { NO_ABS_HEIGHT };
 					absoluteHeights.add(absHeight);
 					if (splatMover != null) {
 						splatMover.vertices.add(vertex);
@@ -156,11 +156,11 @@ public class SplatModel implements Comparable<SplatModel> {
 				final float y = (iy1 * 128.0f) + centerOffsetY;
 				final float x = (ix1 * 128.0f) + centerOffsetX;
 				while (splatMover.vertices.size() < maxPossibleVerts) {
-					final float[] vertex = new float[] { x, y, zoffs };
+					final float[] vertex = { x, y, zoffs };
 					vertices.add(vertex);
-					final float[] uv = new float[] { (x - x0) / uvXScale, 1.0f - ((y - y0) / uvYScale) };
+					final float[] uv = { (x - x0) / uvXScale, 1.0f - ((y - y0) / uvYScale) };
 					uvs.add(uv);
-					final float[] absHeight = new float[] { NO_ABS_HEIGHT };
+					final float[] absHeight = { NO_ABS_HEIGHT };
 					absoluteHeights.add(absHeight);
 					splatMover.vertices.add(vertex);
 					splatMover.uvs.add(uv);
@@ -170,7 +170,7 @@ public class SplatModel implements Comparable<SplatModel> {
 			for (int i = 0; i < (iy1 - iy0); ++i) {
 				for (int j = 0; j < (ix1 - ix0); ++j) {
 					final int i0 = start + (i * step) + j;
-					final int[] indexArray = new int[] { i0, i0 + 1, i0 + step, i0 + 1, i0 + step + 1, i0 + step };
+					final int[] indexArray = { i0, i0 + 1, i0 + step, i0 + 1, i0 + step + 1, i0 + step };
 					indices.add(indexArray);
 					if (splatMover != null) {
 						splatMover.indices.add(indexArray);
@@ -182,7 +182,7 @@ public class SplatModel implements Comparable<SplatModel> {
 
 				while (splatMover.indices.size() < maxPossibleFaces) {
 					final int i0 = start;
-					final int[] indexArray = new int[] { i0, i0, i0, i0, i0, i0 };
+					final int[] indexArray = { i0, i0, i0, i0, i0, i0 };
 					indices.add(indexArray);
 					splatMover.indices.add(indexArray);
 				}

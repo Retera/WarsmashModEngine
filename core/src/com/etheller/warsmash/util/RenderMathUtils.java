@@ -24,9 +24,9 @@ public enum RenderMathUtils {
 	public static final Vector3 VEC3_UNIT_X = new Vector3(1, 0, 0);
 	public static final Vector3 VEC3_UNIT_Y = new Vector3(0, 1, 0);
 	public static final Vector3 VEC3_UNIT_Z = new Vector3(0, 0, 1);
-	public static final float[] FLOAT_VEC3_ZERO = new float[] { 0, 0, 0 };
-	public static final float[] FLOAT_QUAT_DEFAULT = new float[] { 0, 0, 0, 1 };
-	public static final float[] FLOAT_VEC3_ONE = new float[] { 1, 1, 1 };
+	public static final float[] FLOAT_VEC3_ZERO = { 0, 0, 0 };
+	public static final float[] FLOAT_QUAT_DEFAULT = { 0, 0, 0, 1 };
+	public static final float[] FLOAT_VEC3_ONE = { 1, 1, 1 };
 	public static final float HALF_PI = (float) (Math.PI / 2.0);
 
 	// copied from ghostwolf and

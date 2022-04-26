@@ -1177,7 +1177,7 @@ public class Terrain {
 			this.shadowTextures.put(file, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null));
 		}
 		final List<float[]> shadowList = this.shadows.get(file);
-		final float[] shadowPositionArray = new float[] { shadowX, shadowY };
+		final float[] shadowPositionArray = { shadowX, shadowY };
 		shadowList.add(shadowPositionArray);
 		if (this.initShadowsFinished) {
 			final Texture texture = this.shadowTextures.get(file);

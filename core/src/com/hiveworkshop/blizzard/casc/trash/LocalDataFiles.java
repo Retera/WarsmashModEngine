@@ -26,7 +26,7 @@ public class LocalDataFiles implements Closeable {
 
 	private static final int FILE_ENTRY_HEADER_SIZE = 30;
 
-	private static final byte[] BLTE_MIME = new byte[] { 'B', 'L', 'T', 'E' };
+	private static final byte[] BLTE_MIME = { 'B', 'L', 'T', 'E' };
 
 	private final HashMap<Integer, FileChannel> dataFiles = new HashMap<Integer, FileChannel>();
 

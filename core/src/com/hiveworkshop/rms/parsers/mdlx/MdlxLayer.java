@@ -65,7 +65,7 @@ public class MdlxLayer extends MdlxAnimatedObject {
 	/**
 	 * @since 1000
 	 */
-	public float[] fresnelColor = new float[] { 1, 1, 1 };
+	public float[] fresnelColor = { 1, 1, 1 };
 	/**
 	 * @since 1000
 	 */

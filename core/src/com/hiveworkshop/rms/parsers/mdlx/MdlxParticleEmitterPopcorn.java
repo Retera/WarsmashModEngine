@@ -10,7 +10,7 @@ public class MdlxParticleEmitterPopcorn extends MdlxGenericObject {
 	public float lifeSpan = 0;
 	public float emissionRate = 0;
 	public float speed = 0;
-	public float[] color = new float[] { 1, 1, 1 };
+	public float[] color = { 1, 1, 1 };
 	public float alpha = 0;
 	public int replaceableId = 0;
 	public String path = "";

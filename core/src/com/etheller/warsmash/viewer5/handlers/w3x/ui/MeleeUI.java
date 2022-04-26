@@ -2538,7 +2538,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.simpleInfoPanelUnitDetail.setVisible(!multiSelect);
 			final String unitTypeName = simulationUnit.getUnitType().getName();
 
-			final boolean anyAttacks = simulationUnit.getAttacks().size() > 0;
+			final boolean anyAttacks = !simulationUnit.getAttacks().isEmpty();
 			final boolean constructing = simulationUnit.isConstructingOrUpgrading();
 			final UIFrame localArmorIcon = this.armorIcon;
 			final TextureFrame localArmorIconBackdrop = this.armorIconBackdrop;

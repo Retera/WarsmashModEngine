@@ -45,7 +45,7 @@ public final class PortraitCameraManager extends CameraManager {
 		if (modelInstance == null) {
 			this.modelCamera = null;
 		}
-		else if ((portraitModel != null) && (portraitModel.getCameras().size() > 0)) {
+		else if ((portraitModel != null) && (!portraitModel.getCameras().isEmpty())) {
 			this.modelCamera = portraitModel.getCameras().get(0);
 		}
 	}

@@ -69,7 +69,7 @@ public final class MutableObjectData {
 					final String[] names = name.split(" ");
 					name = "";
 					for (final String subName : names) {
-						if (name.length() > 0) {
+						if (!name.isEmpty()) {
 							name += " ";
 						}
 						if (subName.startsWith("WESTRING")) {
@@ -715,7 +715,7 @@ public final class MutableObjectData {
 					final String[] names = name.split(" ");
 					name = "";
 					for (final String subName : names) {
-						if (name.length() > 0) {
+						if (!name.isEmpty()) {
 							name += " ";
 						}
 						// if (subName.startsWith("WESTRING")) {
@@ -733,7 +733,7 @@ public final class MutableObjectData {
 				name = MutableObjectData.this.worldEditStrings.getString("WESTRING_UNKNOWN") + " '"
 						+ getAlias().toString() + "'";
 			}
-			if ((suf.length() > 0) && !suf.equals("_")) {
+			if ((!suf.isEmpty()) && !suf.equals("_")) {
 				// if (suf.startsWith("WESTRING")) {
 				// suf = WEString.getString(suf);
 				// }

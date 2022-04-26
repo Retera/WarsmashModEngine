@@ -614,7 +614,7 @@ public class StandardObjectData {
 					final String[] names = name.split(" ");
 					name = "";
 					for (final String subName : names) {
-						if (name.length() > 0) {
+						if (!name.isEmpty()) {
 							name += " ";
 						}
 						if (subName.startsWith("WESTRING")) {
@@ -640,7 +640,7 @@ public class StandardObjectData {
 				}
 			}
 			String suf = getField("EditorSuffix");
-			if ((suf.length() > 0) && !suf.equals("_")) {
+			if ((!suf.isEmpty()) && !suf.equals("_")) {
 				if (suf.startsWith("WESTRING")) {
 					suf = this.dataSource.getLocalizedString(suf);
 				}

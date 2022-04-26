@@ -189,7 +189,7 @@ public class SplatModel implements Comparable<SplatModel> {
 			}
 
 		}
-		if (indices.size() > 0) {
+		if (!indices.isEmpty()) {
 			this.addBatch(gl, vertices, uvs, absoluteHeights, indices, batchRenderUnits);
 		}
 		if (this.splatInstances != null) {

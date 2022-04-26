@@ -72,7 +72,7 @@ public class MdlxAttachment extends MdlxGenericObject {
 		// in MDL output.
 		stream.writeAttrib(MdlUtils.TOKEN_ATTACHMENT_ID, this.attachmentId);
 
-		if ((this.path != null) && (this.path.length() > 0)) {
+		if ((this.path != null) && (!this.path.isEmpty())) {
 			stream.writeStringAttrib(MdlUtils.TOKEN_PATH, this.path);
 		}
 

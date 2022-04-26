@@ -414,7 +414,7 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 		if (version > 800) {
 			stream.writeAttrib("LevelOfDetail", this.lod);
 
-			if (this.lodName.length() > 0) {
+			if (!this.lodName.isEmpty()) {
 				stream.writeStringAttrib("Name", this.lodName);
 			}
 		}

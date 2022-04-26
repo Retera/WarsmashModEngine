@@ -145,7 +145,7 @@ public class Element extends HashedGameObject {
 				final String[] names = name.split(" ");
 				name = "";
 				for (final String subName : names) {
-					if (name.length() > 0) {
+					if (!name.isEmpty()) {
 						name += " ";
 					}
 					if (subName.startsWith("WESTRING")) {
@@ -171,7 +171,7 @@ public class Element extends HashedGameObject {
 			}
 		}
 		String suf = getField("EditorSuffix");
-		if ((suf.length() > 0) && !suf.equals("_")) {
+		if ((!suf.isEmpty()) && !suf.equals("_")) {
 			if (suf.startsWith("WESTRING")) {
 				suf = this.parentTable.getLocalizedString(suf);
 			}

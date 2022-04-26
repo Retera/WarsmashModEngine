@@ -134,7 +134,7 @@ public abstract class HashedGameObject implements GameObject {
 				if (list.size() > index) {
 					value = list.get(index);
 				}
-				else if (list.size() > 0) {
+				else if (!list.isEmpty()) {
 					value = list.get(list.size() - 1);
 				}
 			}
@@ -216,7 +216,7 @@ public abstract class HashedGameObject implements GameObject {
 				final String[] names = name.split(" ");
 				name = "";
 				for (final String subName : names) {
-					if (name.length() > 0) {
+					if (!name.isEmpty()) {
 						name += " ";
 					}
 					if (subName.startsWith("WESTRING")) {
@@ -242,7 +242,7 @@ public abstract class HashedGameObject implements GameObject {
 			}
 		}
 		String suf = getField("EditorSuffix");
-		if ((suf.length() > 0) && !suf.equals("_")) {
+		if ((!suf.isEmpty()) && !suf.equals("_")) {
 			if (suf.startsWith("WESTRING")) {
 				suf = this.parentTable.getLocalizedString(suf);
 			}

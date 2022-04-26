@@ -34,7 +34,7 @@ public class IniFile {
 			// In addition, Warcraft 3 files have empty lines.
 			// Therefore, ignore any line matching any of these conditions.
 
-			if ((line.length() != 0) && !line.startsWith("//") && !line.startsWith(";")) {
+			if ((!line.isEmpty()) && !line.startsWith("//") && !line.startsWith(";")) {
 				final Matcher matcher = NAME_PATTERN.matcher(line);
 
 				if (matcher.matches()) {

@@ -1152,7 +1152,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 			final String pathingTexture = row.readSLKTag("pathTex");
 			BufferedImage pathingTextureImage;
-			if ((pathingTexture != null) && (pathingTexture.length() > 0) && !"_".equals(pathingTexture)) {
+			if ((pathingTexture != null) && (!pathingTexture.isEmpty()) && !"_".equals(pathingTexture)) {
 
 				pathingTextureImage = this.filePathToPathingMap.get(pathingTexture.toLowerCase());
 				if (pathingTextureImage == null) {
@@ -1220,7 +1220,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final float maxPitch = row.readSLKTagFloat("maxPitch");
 		final float maxRoll = row.readSLKTagFloat("maxRoll");
 		final String shadowString = row.readSLKTag("shadow");
-		if ((shadowString != null) && (shadowString.length() > 0) && !"_".equals(shadowString)) {
+		if ((shadowString != null) && (!shadowString.isEmpty()) && !"_".equals(shadowString)) {
 			destructableShadow = this.terrain.addShadow(shadowString, location[0], location[1]);
 		}
 
@@ -1671,7 +1671,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private BufferedImage loadPathingTexture(final String pathingTexture) {
 		BufferedImage buildingPathingPixelMap = null;
-		if ((pathingTexture != null) && (pathingTexture.length() > 0) && !"_".equals(pathingTexture)) {
+		if ((pathingTexture != null) && (!pathingTexture.isEmpty()) && !"_".equals(pathingTexture)) {
 			buildingPathingPixelMap = this.filePathToPathingMap.get(pathingTexture.toLowerCase());
 			if (buildingPathingPixelMap == null) {
 				try {

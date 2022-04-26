@@ -136,7 +136,7 @@ public class CGameplayConstants {
 			final String damageBonus = miscData.getField("DamageBonus" + attackType.getDamageKey());
 			final String[] damageComponents = damageBonus.split(",");
 			for (int j = 0; j < damageComponents.length; j++) {
-				if (damageComponents[j].length() > 0) {
+				if (!damageComponents[j].isEmpty()) {
 					final CDefenseType defenseType = defenseTypeOrder[j];
 					try {
 						this.damageBonusTable[i][defenseType.ordinal()] = Float.parseFloat(damageComponents[j]);

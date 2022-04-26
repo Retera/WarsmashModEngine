@@ -161,11 +161,11 @@ public class MdlxParticleEmitterPopcorn extends MdlxGenericObject {
 			stream.writeAttrib("ReplaceableId", this.replaceableId);
 		}
 
-		if (this.path.length() != 0) {
+		if (!this.path.isEmpty()) {
 			stream.writeStringAttrib("Path", this.path);
 		}
 
-		if (this.animationVisiblityGuide.length() != 0) {
+		if (!this.animationVisiblityGuide.isEmpty()) {
 			stream.writeStringAttrib("AnimVisibilityGuide", this.animationVisiblityGuide);
 		}
 

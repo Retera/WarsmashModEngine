@@ -102,7 +102,7 @@ public abstract class Sd<TYPE> {
 		// type.
 		this.interpolationType = forcedInterp != null ? forcedInterp : timeline.getInterpolationType().ordinal();
 
-		if ((globalSequenceId != -1) && (globalSequences.size() > 0)) {
+		if ((globalSequenceId != -1) && (!globalSequences.isEmpty())) {
 			this.globalSequence = new SdSequence<TYPE>(this, 0, globalSequences.get(globalSequenceId).longValue(),
 					timeline, true, arrayDescriptor);
 		}

@@ -345,7 +345,7 @@ public class MdlxModel {
 	}
 
 	private void savePivotPointChunk(final BinaryWriter writer) {
-		if (this.pivotPoints.size() > 0) {
+		if (!this.pivotPoints.isEmpty()) {
 			writer.writeTag(PIVT);
 			writer.writeUInt32(this.pivotPoints.size() * 12);
 
@@ -356,7 +356,7 @@ public class MdlxModel {
 	}
 
 	private void saveBindPoseChunk(final BinaryWriter writer) {
-		if (this.bindPose.size() > 0) {
+		if (!this.bindPose.isEmpty()) {
 			writer.writeTag(BPOS);
 			writer.writeUInt32(4 + (this.bindPose.size() * 48));
 			writer.writeUInt32(this.bindPose.size());
@@ -742,7 +742,7 @@ public class MdlxModel {
 	}
 
 	private long getBindPoseChunkByteLength() {
-		if (this.bindPose.size() > 0) {
+		if (!this.bindPose.isEmpty()) {
 			return 12 + (this.bindPose.size() * 48);
 		}
 

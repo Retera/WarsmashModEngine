@@ -209,7 +209,7 @@ public class MdxComplexInstance extends ModelInstance {
 		// the model loaded.
 		this.setSequence(this.sequence);
 
-		if (model.bones.size() != 0) {
+		if (!model.bones.isEmpty()) {
 			this.boneTexture = new DataTexture(model.viewer.gl, 4, model.bones.size() * 4, 1);
 		}
 	}
@@ -562,7 +562,7 @@ public class MdxComplexInstance extends ModelInstance {
 		final MdxModel model = (MdxModel) this.model;
 		final int sequenceId = this.sequence;
 
-		if ((sequenceId != -1) && (model.sequences.size() != 0)) {
+		if ((sequenceId != -1) && (!model.sequences.isEmpty())) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
 			final float frameTime = (dt * 1000 * this.animationSpeed);

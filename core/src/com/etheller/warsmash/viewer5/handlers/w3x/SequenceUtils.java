@@ -160,7 +160,7 @@ public class SequenceUtils {
 
 		final int sequencesLeft = filtered.size() - i;
 		if (sequencesLeft <= 0) {
-			if (filtered.size() > 0) {
+			if (!filtered.isEmpty()) {
 				return filtered.get((int) Math.floor(Math.random() * filtered.size()));
 			}
 			return null; // new IndexedSequence(null, 0);

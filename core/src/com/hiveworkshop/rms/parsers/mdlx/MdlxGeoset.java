@@ -384,7 +384,7 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 			}
 			facesBuffer.append(faceValue);
 		}
-		stream.writeLine("{ " + facesBuffer.toString() + " },");
+		stream.writeLine("{ " + facesBuffer + " },");
 		stream.endBlock();
 		stream.endBlock();
 

@@ -772,7 +772,7 @@ public final class MutableObjectData {
 						return this.parentWC3Object.getField("isbldg");
 					}
 				}
-				throw new IllegalStateException("Program requested " + field.toString() + " from "
+				throw new IllegalStateException("Program requested " + field + " from "
 						+ MutableObjectData.this.worldEditorDataType);
 			}
 			if (this.parentWC3Object == null) {

@@ -74,7 +74,7 @@ public class FolderDataSource implements DataSource {
 	@Override
 	public boolean has(String filepath) {
 		filepath = fixFilepath(filepath);
-		if ("".equals(filepath)) {
+		if (filepath.isEmpty()) {
 			return false; // special case for folder data source, dont do this
 		}
 		final Path resolvedPath = this.folderPath.resolve(filepath);

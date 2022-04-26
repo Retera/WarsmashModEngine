@@ -1138,7 +1138,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		for (final com.etheller.warsmash.parsers.w3x.doo.TerrainDoodad doodad : doo.getTerrainDoodads()) {
 			final MutableGameObject row = modifications.getDoodads().get(doodad.getId());
 			String file = row.readSLKTag("file");//
-			if ("".equals(file)) {
+			if (file != null && file.isEmpty()) {
 				final String blaBla = row.readSLKTag("file");
 				System.out.println("bla");
 			}

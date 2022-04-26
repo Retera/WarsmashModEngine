@@ -177,7 +177,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 			if (reforged && !path.endsWith(".dds")) {
 				path = path.substring(0, path.length() - 4) + ".dds";
 			}
-			else if ("".equals(path)) {
+			else if (path != null && path.isEmpty()) {
 				path = "Textures\\white.blp";
 			}
 

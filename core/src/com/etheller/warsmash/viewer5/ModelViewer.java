@@ -278,7 +278,7 @@ public abstract class ModelViewer {
 	public boolean unload(final Resource resource) {
 		// TODO Auto-generated method stub
 		final String fetchUrl = resource.fetchUrl;
-		if (!"".equals(fetchUrl)) {
+		if (fetchUrl == null || !fetchUrl.isEmpty()) {
 			this.fetchCache.remove(fetchUrl);
 		}
 		return this.resources.remove(resource);

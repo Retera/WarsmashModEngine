@@ -15,7 +15,7 @@ public enum BackdropCornerFlags {
 	public static EnumSet<BackdropCornerFlags> parseCornerFlags(final String cornerFlags) {
 		final EnumSet<BackdropCornerFlags> set = EnumSet.noneOf(BackdropCornerFlags.class);
 		for (final String flag : cornerFlags.split("\\|")) {
-			if (!"".equals(flag)) {
+			if (flag == null || !flag.isEmpty()) {
 				set.add(BackdropCornerFlags.valueOf(flag));
 			}
 		}

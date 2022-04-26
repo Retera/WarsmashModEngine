@@ -24,7 +24,7 @@ public class Element extends HashedGameObject {
 		final String stringList = getField("Requiresamount");
 		final String[] listAsArray = stringList.split(",");
 		final LinkedList<Integer> output = new LinkedList<>();
-		if ((listAsArray != null) && (listAsArray.length > 0) && !listAsArray[0].equals("")) {
+		if ((listAsArray != null) && (listAsArray.length > 0) && !listAsArray[0].isEmpty()) {
 			for (final String levelString : listAsArray) {
 				final Integer level = Integer.parseInt(levelString);
 				if (level != null) {

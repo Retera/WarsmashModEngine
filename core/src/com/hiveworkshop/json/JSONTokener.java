@@ -453,7 +453,7 @@ public class JSONTokener {
         }
 
         string = sb.toString().trim();
-        if ("".equals(string)) {
+        if (string.isEmpty()) {
             throw this.syntaxError("Missing value");
         }
         return JSONObject.stringToValue(string);

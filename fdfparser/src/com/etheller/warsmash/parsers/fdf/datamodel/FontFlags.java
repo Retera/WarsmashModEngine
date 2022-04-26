@@ -9,7 +9,7 @@ public enum FontFlags {
 	public static EnumSet<FontFlags> parseFontFlags(final String cornerFlags) {
 		final EnumSet<FontFlags> set = EnumSet.noneOf(FontFlags.class);
 		for (final String flag : cornerFlags.split("\\|")) {
-			if (!"".equals(flag)) {
+			if (flag == null || !flag.isEmpty()) {
 				set.add(FontFlags.valueOf(flag));
 			}
 		}

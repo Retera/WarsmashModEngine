@@ -894,12 +894,12 @@ public final class MutableObjectData {
 			return 0;
 		}
 		return text == null ? 0
-				: "".equals(text) ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Integer.parseInt(text);
+				: text.isEmpty() ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Integer.parseInt(text);
 	}
 
 	private static float asFloat(final String text) {
 		return text == null ? 0
-				: "".equals(text) ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Float.parseFloat(text);
+				: text.isEmpty() ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Float.parseFloat(text);
 	}
 
 	public enum WorldEditorDataType {

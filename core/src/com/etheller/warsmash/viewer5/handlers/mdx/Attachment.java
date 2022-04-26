@@ -20,7 +20,7 @@ public class Attachment extends GenericObject {
 		this.internalModel = null;
 
 		// Second condition is against custom resources using arbitrary paths
-		if (!path.equals("") && (path.indexOf(".mdx") != -1)) {
+		if (!path.isEmpty() && (path.indexOf(".mdx") != -1)) {
 			this.internalModel = (MdxModel) model.viewer.load(path, model.pathSolver, model.solverParams);
 		}
 	}

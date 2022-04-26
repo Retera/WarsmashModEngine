@@ -11,7 +11,7 @@ public enum CBuildingPathingType {
 	UNFLOAT;
 
 	public static CBuildingPathingType parsePathingType(final String typeString) {
-		if ("_".equals(typeString) || "".equals(typeString)) {
+		if ("_".equals(typeString) || typeString != null && typeString.isEmpty()) {
 			return null;
 		}
 		return valueOf(typeString.toUpperCase());

@@ -10,7 +10,7 @@ public enum ControlStyle {
 	public static EnumSet<ControlStyle> parseControlStyle(final String controlStyles) {
 		final EnumSet<ControlStyle> set = EnumSet.noneOf(ControlStyle.class);
 		for (final String flag : controlStyles.split("\\|")) {
-			if (!"".equals(flag)) {
+			if (flag == null || !flag.isEmpty()) {
 				set.add(ControlStyle.valueOf(flag));
 			}
 		}

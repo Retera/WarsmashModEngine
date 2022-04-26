@@ -2146,7 +2146,7 @@ public class JSONObject {
     // Changes to this method must be copied to the corresponding method in
     // the XML class to keep full support for Android
     public static Object stringToValue(String string) {
-        if ("".equals(string)) {
+        if (string != null && string.isEmpty()) {
             return string;
         }
 

@@ -390,7 +390,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 		this.frame++;
 		if ((this.frame % 1000) == 0) {
-			System.out.println(Integer.toString(Gdx.graphics.getFramesPerSecond()));
+			System.out.println(Gdx.graphics.getFramesPerSecond());
 		}
 
 		if (ADVANCE_ANIMS && this.mainInstance.sequenceEnded) {

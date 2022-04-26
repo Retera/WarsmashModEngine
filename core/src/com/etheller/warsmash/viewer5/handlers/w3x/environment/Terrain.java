@@ -368,7 +368,7 @@ public class Terrain {
 		int waterImageDimension = 128;
 		for (int i = 0; i < this.waterTextureCount; i++) {
 			final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
-					fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt, "water texture");
+					fileName + (i < 10 ? "0" : "") + i + texturesExt, "water texture");
 			final BufferedImage image = imageInfo.getImageData();
 			if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
 				System.err

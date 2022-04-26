@@ -104,7 +104,7 @@ public class WarsmashPreviewApplication extends ApplicationAdapter implements Ca
 
 		this.frame++;
 		if ((this.frame % 1000) == 0) {
-			System.out.println(Integer.toString(Gdx.graphics.getFramesPerSecond()));
+			System.out.println(Gdx.graphics.getFramesPerSecond());
 		}
 
 	}

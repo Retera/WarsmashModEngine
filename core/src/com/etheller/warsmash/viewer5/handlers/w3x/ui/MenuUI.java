@@ -1219,7 +1219,7 @@ public class MenuUI {
 			System.out.println("LOADING SCREEN INT: " + loadingScreen);
 			final int campaignBackground = mapInfo.getCampaignBackground();
 			final Element loadingScreens = worldEditData.get("LoadingScreens");
-			final String key = String.format("%2s", Integer.toString(campaignBackground)).replace(' ', '0');
+			final String key = String.format("%2s", campaignBackground).replace(' ', '0');
 			final int animationSequenceIndex = loadingScreens.getFieldValue(key, 2);
 			final String campaignScreenModel = loadingScreens.getField(key, 3);
 

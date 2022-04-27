@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class IniFile {
-	private static final Pattern NAME_PATTERN = Pattern.compile("^\\[(.+?)].*");
+	private static final Pattern NAME_PATTERN = Pattern.compile("^\\[(.+?)\\].*");
 	private static final Pattern DATA_PATTERN = Pattern.compile("^(.+?)=(.*?)$");
 	public final Map<String, String> properties = new HashMap<>();
 	public final Map<String, Map<String, String>> sections = new HashMap<>();

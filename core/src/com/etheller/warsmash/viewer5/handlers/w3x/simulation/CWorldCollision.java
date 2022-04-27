@@ -21,22 +21,22 @@ public class CWorldCollision {
 	private final DestructableEnumIntersector destructableEnumIntersector;
 
 	public CWorldCollision(final Rectangle entireMapBounds, final float maxCollisionRadius) {
-		this.groundUnitCollision = new Quadtree<>(entireMapBounds);
-		this.airUnitCollision = new Quadtree<>(entireMapBounds);
-		this.seaUnitCollision = new Quadtree<>(entireMapBounds);
-		this.buildingUnitCollision = new Quadtree<>(entireMapBounds);
-		this.destructablesForEnum = new Quadtree<>(entireMapBounds);
+		groundUnitCollision = new Quadtree<>(entireMapBounds);
+		airUnitCollision = new Quadtree<>(entireMapBounds);
+		seaUnitCollision = new Quadtree<>(entireMapBounds);
+		buildingUnitCollision = new Quadtree<>(entireMapBounds);
+		destructablesForEnum = new Quadtree<>(entireMapBounds);
+		anyUnitExceptTwoIntersector = new AnyUnitExceptTwoIntersector();
+		eachUnitOnlyOnceIntersector = new EachUnitOnlyOnceIntersector();
+		destructableEnumIntersector = new DestructableEnumIntersector();
 		this.maxCollisionRadius = maxCollisionRadius;
-		this.anyUnitExceptTwoIntersector = new AnyUnitExceptTwoIntersector();
-		this.eachUnitOnlyOnceIntersector = new EachUnitOnlyOnceIntersector();
-		this.destructableEnumIntersector = new DestructableEnumIntersector();
 	}
 
 	public void addUnit(final CUnit unit) {
 		Rectangle bounds = unit.getCollisionRectangle();
 		if (bounds == null) {
 			final float collisionSize = Math.max(MINIMUM_COLLISION_SIZE,
-					Math.min(this.maxCollisionRadius, unit.getUnitType().getCollisionSize()));
+					Math.min(maxCollisionRadius, unit.getUnitType().getCollisionSize()));
 			bounds = new Rectangle(unit.getX() - collisionSize, unit.getY() - collisionSize, collisionSize * 2,
 					collisionSize * 2);
 			unit.setCollisionRectangle(bounds);
@@ -44,30 +44,30 @@ public class CWorldCollision {
 		if (unit.isBuilding()) {
 			// buildings are here so that we can include them when enumerating all units in
 			// a rect, but they don't really move dynamically, this is kind of pointless
-			this.buildingUnitCollision.add(unit, bounds);
+			buildingUnitCollision.add(unit, bounds);
 		}
 		else {
 			final MovementType movementType = unit.getUnitType().getMovementType();
 			if (movementType != null) {
 				switch (movementType) {
 				case AMPHIBIOUS:
-					this.seaUnitCollision.add(unit, bounds);
-					this.groundUnitCollision.add(unit, bounds);
+					seaUnitCollision.add(unit, bounds);
+					groundUnitCollision.add(unit, bounds);
 					break;
 				case FLOAT:
-					this.seaUnitCollision.add(unit, bounds);
+					seaUnitCollision.add(unit, bounds);
 					break;
 				case FLY:
-					this.airUnitCollision.add(unit, bounds);
+					airUnitCollision.add(unit, bounds);
 					break;
 				case DISABLED:
 					break;
-				default:
 				case FOOT:
 				case FOOT_NO_COLLISION:
 				case HORSE:
 				case HOVER:
-					this.groundUnitCollision.add(unit, bounds);
+				default:
+					groundUnitCollision.add(unit, bounds);
 					break;
 				}
 			}
@@ -76,42 +76,42 @@ public class CWorldCollision {
 
 	public void addDestructable(final CDestructable dest) {
 		final Rectangle bounds = dest.getOrCreateRegisteredEnumRectangle();
-		this.destructablesForEnum.add(dest, bounds);
+		destructablesForEnum.add(dest, bounds);
 	}
 
 	public void removeDestructable(final CDestructable dest) {
 		final Rectangle bounds = dest.getOrCreateRegisteredEnumRectangle();
-		this.destructablesForEnum.remove(dest, bounds);
+		destructablesForEnum.remove(dest, bounds);
 	}
 
 	public void removeUnit(final CUnit unit) {
 		final Rectangle bounds = unit.getCollisionRectangle();
 		if (bounds != null) {
 			if (unit.isBuilding()) {
-				this.buildingUnitCollision.remove(unit, bounds);
+				buildingUnitCollision.remove(unit, bounds);
 			}
 			else {
 				final MovementType movementType = unit.getUnitType().getMovementType();
 				if (movementType != null) {
 					switch (movementType) {
 					case AMPHIBIOUS:
-						this.seaUnitCollision.remove(unit, bounds);
-						this.groundUnitCollision.remove(unit, bounds);
+						seaUnitCollision.remove(unit, bounds);
+						groundUnitCollision.remove(unit, bounds);
 						break;
 					case FLOAT:
-						this.seaUnitCollision.remove(unit, bounds);
+						seaUnitCollision.remove(unit, bounds);
 						break;
 					case FLY:
-						this.airUnitCollision.remove(unit, bounds);
+						airUnitCollision.remove(unit, bounds);
 						break;
 					case DISABLED:
 						break;
-					default:
 					case FOOT:
 					case FOOT_NO_COLLISION:
 					case HORSE:
 					case HOVER:
-						this.groundUnitCollision.remove(unit, bounds);
+					default:
+						groundUnitCollision.remove(unit, bounds);
 						break;
 					}
 				}
@@ -121,28 +121,28 @@ public class CWorldCollision {
 	}
 
 	public void enumUnitsInRect(final Rectangle rect, final CUnitEnumFunction callback) {
-		this.eachUnitOnlyOnceIntersector.reset(callback);
-		this.groundUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
-		this.airUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
-		this.seaUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
-		this.buildingUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
+		eachUnitOnlyOnceIntersector.reset(callback);
+		groundUnitCollision.intersect(rect, eachUnitOnlyOnceIntersector);
+		airUnitCollision.intersect(rect, eachUnitOnlyOnceIntersector);
+		seaUnitCollision.intersect(rect, eachUnitOnlyOnceIntersector);
+		buildingUnitCollision.intersect(rect, eachUnitOnlyOnceIntersector);
 	}
 
 	public void enumBuildingsInRect(final Rectangle rect, final QuadtreeIntersector<CUnit> callback) {
-		this.buildingUnitCollision.intersect(rect, callback);
+		buildingUnitCollision.intersect(rect, callback);
 	}
 
 	public void enumBuildingsAtPoint(final float x, final float y, final QuadtreeIntersector<CUnit> callback) {
-		this.buildingUnitCollision.intersect(x, y, callback);
+		buildingUnitCollision.intersect(x, y, callback);
 	}
 
 	public void enumDestructablesInRect(final Rectangle rect, final CDestructableEnumFunction callback) {
-		this.destructablesForEnum.intersect(rect, this.destructableEnumIntersector.reset(callback));
+		destructablesForEnum.intersect(rect, destructableEnumIntersector.reset(callback));
 	}
 
 	public boolean intersectsAnythingOtherThan(final Rectangle newPossibleRectangle, final CUnit sourceUnitToIgnore,
 			final MovementType movementType) {
-		return this.intersectsAnythingOtherThan(newPossibleRectangle, sourceUnitToIgnore, null, movementType);
+		return intersectsAnythingOtherThan(newPossibleRectangle, sourceUnitToIgnore, null, movementType);
 	}
 
 	public boolean intersectsAnythingOtherThan(final Rectangle newPossibleRectangle, final CUnit sourceUnitToIgnore,
@@ -150,36 +150,34 @@ public class CWorldCollision {
 		if (movementType != null) {
 			switch (movementType) {
 			case AMPHIBIOUS:
-				if (this.seaUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore))) {
+				if (seaUnitCollision.intersect(newPossibleRectangle,
+						anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore))) {
 					return true;
 				}
-				return this.groundUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
-				case FLOAT:
-				return this.seaUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
+				return groundUnitCollision.intersect(newPossibleRectangle,
+						anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
+			case FLOAT:
+				return seaUnitCollision.intersect(newPossibleRectangle,
+						anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
 			case FLY:
-				return this.airUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
+				return airUnitCollision.intersect(newPossibleRectangle,
+						anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
 			case DISABLED:
 			case FOOT_NO_COLLISION:
 				return false;
-			default:
 			case FOOT:
 			case HORSE:
 			case HOVER:
-				return this.groundUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
+			default:
+				return groundUnitCollision.intersect(newPossibleRectangle,
+						anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
 			}
 		}
 		return false;
 	}
 
 	public void translate(final CUnit unit, final float xShift, final float yShift) {
-		if (unit.isBuilding()) {
-			throw new IllegalArgumentException("Cannot add building to the CWorldCollision");
-		}
+		assert !unit.isBuilding() : "Cannot add building to the CWorldCollision";
 		final MovementType movementType = unit.getUnitType().getMovementType();
 		final Rectangle bounds = unit.getCollisionRectangle();
 		if (movementType != null) {
@@ -187,25 +185,25 @@ public class CWorldCollision {
 			case AMPHIBIOUS:
 				final float oldX = bounds.x;
 				final float oldY = bounds.y;
-				this.seaUnitCollision.translate(unit, bounds, xShift, yShift);
+				seaUnitCollision.translate(unit, bounds, xShift, yShift);
 				bounds.x = oldX;
 				bounds.y = oldY;
-				this.groundUnitCollision.translate(unit, bounds, xShift, yShift);
+				groundUnitCollision.translate(unit, bounds, xShift, yShift);
 				break;
 			case FLOAT:
-				this.seaUnitCollision.translate(unit, bounds, xShift, yShift);
+				seaUnitCollision.translate(unit, bounds, xShift, yShift);
 				break;
 			case FLY:
-				this.airUnitCollision.translate(unit, bounds, xShift, yShift);
+				airUnitCollision.translate(unit, bounds, xShift, yShift);
 				break;
 			case DISABLED:
 				break;
-			default:
 			case FOOT:
 			case FOOT_NO_COLLISION:
 			case HORSE:
 			case HOVER:
-				this.groundUnitCollision.translate(unit, bounds, xShift, yShift);
+			default:
+				groundUnitCollision.translate(unit, bounds, xShift, yShift);
 				break;
 			}
 		}
@@ -226,7 +224,7 @@ public class CWorldCollision {
 			if (intersectingObject.isHidden()) {
 				return false;
 			}
-			return (intersectingObject != this.firstUnit) && (intersectingObject != this.secondUnit);
+			return (!intersectingObject.equals(firstUnit)) && (!intersectingObject.equals(secondUnit));
 		}
 	}
 
@@ -237,8 +235,8 @@ public class CWorldCollision {
 
 		public EachUnitOnlyOnceIntersector reset(final CUnitEnumFunction consumerDelegate) {
 			this.consumerDelegate = consumerDelegate;
-			this.intersectedUnits.clear();
-			this.done = false;
+			intersectedUnits.clear();
+			done = false;
 			return this;
 		}
 
@@ -247,15 +245,15 @@ public class CWorldCollision {
 			if (intersectingObject.isHidden()) {
 				return false;
 			}
-			if (this.done) {
+			if (done) {
 				// This check is because we may use the intersector for multiple intersect
 				// calls, see "enumUnitsInRect" and how it uses this intersector first on the
 				// ground unit layer, then the flying unit layer, without recycling
 				return true;
 			}
-			if (this.intersectedUnits.add(intersectingObject)) {
-				this.done = this.consumerDelegate.call(intersectingObject);
-				return this.done;
+			if (intersectedUnits.add(intersectingObject)) {
+				done = consumerDelegate.call(intersectingObject);
+				return done;
 			}
 			return false;
 		}
@@ -274,7 +272,7 @@ public class CWorldCollision {
 //			if (intersectingObject.isHidden()) { // at time of writing CDestructable did not have isHidden(), uncomment when available
 //				return false;
 //			}
-			return this.consumerDelegate.call(intersectingObject);
+			return consumerDelegate.call(intersectingObject);
 		}
 	}
 }

@@ -1,6 +1,10 @@
 package com.etheller.warsmash.util;
 
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
@@ -23,8 +27,12 @@ public class Quadtree<T> {
 		this.bounds = bounds;
 	}
 
+	public Rectangle getBounds() {
+		return bounds;
+	}
+
 	public void add(final T object, final Rectangle bounds) {
-		final Node<T> node = new Node<T>(object, bounds);
+		final Node<T> node = new Node<>(object, bounds);
 		add(node, 0);
 	}
 
@@ -40,175 +48,142 @@ public class Quadtree<T> {
 	}
 
 	public boolean intersect(final Rectangle bounds, final QuadtreeIntersector<T> intersector) {
-		if (this.leaf) {
-			for (int i = 0; i < this.nodes.size; i++) {
-				final Node<T> node = this.nodes.get(i);
-				if (node.bounds.overlaps(bounds)) {
-					if (intersector.onIntersect(node.object)) {
-						return true;
-					}
-				}
-			}
-			return false;
+		if (leaf) {
+			return IntStream.range(0, nodes.size)
+					.mapToObj(nodes::get)
+					.filter(node -> node.getBounds().overlaps(bounds))
+					.anyMatch(node -> intersector.onIntersect(node.getObject()));
 		}
-		if (this.northeast.bounds.overlaps(bounds)) {
-			if (this.northeast.intersect(bounds, intersector)) {
-				return true;
-			}
-		}
-		if (this.northwest.bounds.overlaps(bounds)) {
-			if (this.northwest.intersect(bounds, intersector)) {
-				return true;
-			}
-		}
-		if (this.southwest.bounds.overlaps(bounds)) {
-			if (this.southwest.intersect(bounds, intersector)) {
-				return true;
-			}
-		}
-		if (this.southeast.bounds.overlaps(bounds)) {
-			return this.southeast.intersect(bounds, intersector);
-		}
-		return false;
+
+		return Stream.of(northeast, northwest, southwest, southeast)
+				.map(quadTree -> northeast.getBounds().overlaps(bounds) && northeast.intersect(bounds, intersector))
+				.reduce((previous, current) -> previous || current)
+				.orElse(false);
+
 	}
 
 	public boolean intersect(final float x, final float y, final QuadtreeIntersector<T> intersector) {
-		if (this.leaf) {
-			for (int i = 0; i < this.nodes.size; i++) {
-				final Node<T> node = this.nodes.get(i);
-				if (node.bounds.contains(x, y)) {
-					if (intersector.onIntersect(node.object)) {
-						return true;
-					}
-				}
-			}
-			return false;
+		if (leaf) {
+			return IntStream.range(0, nodes.size)
+					.mapToObj(nodes::get)
+					.filter(node -> node.bounds.contains(x, y))
+					.anyMatch(node -> intersector.onIntersect(node.getObject()));
 		}
-		if (this.northeast.bounds.contains(x, y)) {
-			if (this.northeast.intersect(x, y, intersector)) {
-				return true;
-			}
-		}
-		if (this.northwest.bounds.contains(x, y)) {
-			if (this.northwest.intersect(x, y, intersector)) {
-				return true;
-			}
-		}
-		if (this.southwest.bounds.contains(x, y)) {
-			if (this.southwest.intersect(x, y, intersector)) {
-				return true;
-			}
-		}
-		if (this.southeast.bounds.contains(x, y)) {
-			return this.southeast.intersect(x, y, intersector);
-		}
-		return false;
+
+		return Stream.of(northeast, northwest, southwest, southeast)
+				.map(quadTree -> quadTree.getBounds().contains(x, y) && quadTree.intersect(x, y, intersector))
+				.reduce((previous, current) -> previous || current)
+				.orElse(false);
 	}
 
+
+
 	private void add(final Node<T> node, final int depth) {
-		if (this.leaf) {
-			if ((this.nodes.size >= SPLIT_THRESHOLD) && (depth < MAX_DEPTH)) {
+		if (leaf) {
+			if ((nodes.size >= SPLIT_THRESHOLD) && (depth < MAX_DEPTH)) {
 				split(depth);
 				// then dont return and add as a nonleaf
 			}
 			else {
-				this.nodes.add(node);
+				nodes.add(node);
 				return;
 			}
 		}
-		boolean overlapsAny = false;
-		if (this.northeast.bounds.overlaps(node.bounds)) {
-			this.northeast.add(node, depth + 1);
-			overlapsAny = true;
-		}
-		if (this.northwest.bounds.overlaps(node.bounds)) {
-			this.northwest.add(node, depth + 1);
-			overlapsAny = true;
-		}
-		if (this.southwest.bounds.overlaps(node.bounds)) {
-			this.southwest.add(node, depth + 1);
-			overlapsAny = true;
-		}
-		if (this.southeast.bounds.overlaps(node.bounds)) {
-			this.southeast.add(node, depth + 1);
-			overlapsAny = true;
-		}
-		if (!overlapsAny) {
-			throw new IllegalStateException("Does not overlap anything!");
-		}
+
+		boolean overlapsAny = addIfOverlaps(node, depth, northeast, northwest, southwest, southeast);
+
+		assert overlapsAny : "Does not overlap anything!";
+	}
+
+	@SafeVarargs
+	public final boolean addIfOverlaps(Node<T> node, int currentDepth, Quadtree<T>... quadTrees) {
+		return Arrays.stream(quadTrees)
+				.filter(quadTree -> quadTree.getBounds().overlaps(node.getBounds()))
+				.map(quadTree -> {
+					quadTree.add(node, currentDepth + 1);
+					return true;
+				})
+				.anyMatch(overlaps -> true);
 	}
 
 	private void split(final int depth) {
-		final int splitDepth = depth + 1;
-		final float halfWidth = this.bounds.width / 2;
-		final float x = this.bounds.x;
+		final float halfWidth = bounds.width / 2;
+		final float x = bounds.x;
 		final float xMidpoint = x + halfWidth;
-		final float halfHeight = this.bounds.height / 2;
-		final float y = this.bounds.y;
+		final float halfHeight = bounds.height / 2;
+		final float y = bounds.y;
 		final float yMidpoint = y + halfHeight;
-		this.northeast = new Quadtree<>(new Rectangle(xMidpoint, yMidpoint, halfWidth, halfHeight));
-		this.northwest = new Quadtree<>(new Rectangle(x, yMidpoint, halfWidth, halfHeight));
-		this.southwest = new Quadtree<>(new Rectangle(x, y, halfWidth, halfHeight));
-		this.southeast = new Quadtree<>(new Rectangle(xMidpoint, y, halfWidth, halfHeight));
-		this.leaf = false;
-		this.nodes.forEach(this.nodeAdder.reset(splitDepth));
-		this.nodes.clear();
+		northeast = new Quadtree<>(new Rectangle(xMidpoint, yMidpoint, halfWidth, halfHeight));
+		northwest = new Quadtree<>(new Rectangle(x, yMidpoint, halfWidth, halfHeight));
+		southwest = new Quadtree<>(new Rectangle(x, y, halfWidth, halfHeight));
+		southeast = new Quadtree<>(new Rectangle(xMidpoint, y, halfWidth, halfHeight));
+		leaf = false;
+		final int splitDepth = depth + 1;
+		nodes.forEach(nodeAdder.reset(splitDepth));
+		nodes.clear();
 	}
 
 	private Node<T> remove(final T object, final Rectangle bounds, final Quadtree<T> parent) {
 		Node<T> returnValue = null;
-		if (this.leaf) {
-			for (int i = 0; i < this.nodes.size; i++) {
-				if (this.nodes.get(i).object == object) {
-					returnValue = this.nodes.removeIndex(i);
+		if (leaf) {
+			for (int i = 0; i < nodes.size; i++) {
+				if (Objects.equals(nodes.get(i).getObject(), object)) {
+					returnValue = nodes.removeIndex(i);
 					break;
 				}
 			}
 		}
 		else {
-			if (this.northeast.bounds.overlaps(bounds)) {
-				returnValue = this.northeast.remove(object, bounds, this);
-			}
-			if (this.northwest.bounds.overlaps(bounds)) {
-				returnValue = this.northwest.remove(object, bounds, this);
-			}
-			if (this.southwest.bounds.overlaps(bounds)) {
-				returnValue = this.southwest.remove(object, bounds, this);
-			}
-			if (this.southeast.bounds.overlaps(bounds)) {
-				returnValue = this.southeast.remove(object, bounds, this);
-			}
+			returnValue = removeIfOverlap(object, bounds, northeast, northwest, southwest, southeast);
+
 			mergeIfNecessary();
 		}
 		return returnValue;
 	}
 
+	@SafeVarargs
+	private final Quadtree.Node<T> removeIfOverlap(T object, Rectangle bounds, Quadtree<T>... quadTrees) {
+		return Arrays.stream(quadTrees)
+				.filter(quadTree -> quadTree.getBounds().overlaps(bounds))
+				.map(quadTree -> quadTree.remove(object, bounds, this))
+				.reduce((previous, current) -> current)
+				.orElse(null);
+	}
+
 	private void mergeIfNecessary() {
-		if (this.northeast.leaf && this.northwest.leaf && this.southwest.leaf && this.southeast.leaf) {
-			final int children = this.northeast.nodes.size + this.northwest.nodes.size + this.southwest.nodes.size
-					+ this.southeast.nodes.size; // might include duplicates
+		if (northeast.leaf && northwest.leaf && southwest.leaf && southeast.leaf) {
+			final int children = northeast.nodes.size + northwest.nodes.size + southwest.nodes.size
+					+ southeast.nodes.size; // might include duplicates
 			if (children <= SPLIT_THRESHOLD) {
-				this.leaf = true;
-				addAllUnique(this.northeast.nodes);
-				addAllUnique(this.northwest.nodes);
-				addAllUnique(this.southwest.nodes);
-				addAllUnique(this.southeast.nodes);
-				this.northeast = this.northwest = this.southwest = this.southeast = null;
+				leaf = true;
+				addAllUnique(northeast.nodes);
+				addAllUnique(northwest.nodes);
+				addAllUnique(southwest.nodes);
+				addAllUnique(southeast.nodes);
+				northeast = northwest = southwest = southeast = null;
 			}
 		}
 	}
 
 	private void addAllUnique(final Array<Node<T>> nodes) {
-		nodes.forEach(this.uniqueNodeAdder);
+		nodes.forEach(uniqueNodeAdder);
 	}
 
 	private static final class Node<T> {
 		private final T object;
 		private final Rectangle bounds;
 
-		public Node(final T object, final Rectangle bounds) {
+		private Node(final T object, final Rectangle bounds) {
 			this.object = object;
 			this.bounds = bounds;
+		}
+
+		public Rectangle getBounds() {
+			return bounds;
+		}
+
+		public T getObject() {
+			return object;
 		}
 	}
 
@@ -222,7 +197,7 @@ public class Quadtree<T> {
 
 		@Override
 		public void accept(final Node<T> node) {
-			add(node, this.splitDepth);
+			add(node, splitDepth);
 		}
 	}
 
@@ -234,12 +209,12 @@ public class Quadtree<T> {
 
 		@Override
 		public void accept(final Node<T> node) {
-			for (int i = 0; i < Quadtree.this.nodes.size; i++) {
-				if (Quadtree.this.nodes.get(i) == node) {
+			for (int i = 0; i < nodes.size; i++) {
+				if (nodes.get(i) == node) {
 					return;
 				}
 			}
-			Quadtree.this.nodes.add(node);
+			nodes.add(node);
 		}
 	}
 }

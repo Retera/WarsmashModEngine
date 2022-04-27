@@ -16,6 +16,10 @@ import com.badlogic.gdx.utils.NumberUtils;
  */
 public class Vector4 implements Serializable, Vector<Vector4> {
 
+	private static final char COMMA = ',';
+	private static final char SPACE = ' ';
+	private static final String OPENING_SQUARE_BRACKET = "[";
+	private static final char CLOSING_SQUARE_BRACKET = ']';
 	/** the x-component of this vector **/
 	public float x;
 	/** the y-component of this vector **/
@@ -46,7 +50,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @param w The w-component
 	 */
 	public Vector4(final float x, final float y, final float z, final float w) {
-		this.set(x, y, z, w);
+		set(x, y, z, w);
 	}
 
 	/**
@@ -55,7 +59,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @param vector The vector
 	 */
 	public Vector4(final Vector4 vector) {
-		this.set(vector);
+		set(vector);
 	}
 
 	/**
@@ -65,7 +69,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @param values The array
 	 */
 	public Vector4(final float[] values) {
-		this.set(values[0], values[1], values[2], values[3]);
+		set(values[0], values[1], values[2], values[3]);
 	}
 
 	/**
@@ -87,7 +91,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public Vector4 set(final Vector4 vector) {
-		return this.set(vector.x, vector.y, vector.z, vector.w);
+		return set(vector.x, vector.y, vector.z, vector.w);
 	}
 
 	/**
@@ -97,7 +101,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @return this vector for chaining
 	 */
 	public Vector4 set(final float[] values) {
-		return this.set(values[0], values[1], values[2], values[3]);
+		return set(values[0], values[1], values[2], values[3]);
 	}
 
 	@Override
@@ -107,7 +111,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public Vector4 add(final Vector4 vector) {
-		return this.add(vector.x, vector.y, vector.z, vector.w);
+		return add(vector.x, vector.y, vector.z, vector.w);
 	}
 
 	/**
@@ -120,7 +124,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @return This vector for chaining.
 	 */
 	public Vector4 add(final float x, final float y, final float z, final float w) {
-		return this.set(this.x + x, this.y + y, this.z + z, this.w + w);
+		return set(this.x + x, this.y + y, this.z + z, this.w + w);
 	}
 
 	/**
@@ -130,12 +134,12 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @return This vector for chaining
 	 */
 	public Vector4 add(final float values) {
-		return this.set(this.x + values, this.y + values, this.z + values, this.w + values);
+		return set(x + values, y + values, z + values, w + values);
 	}
 
 	@Override
 	public Vector4 sub(final Vector4 a_vec) {
-		return this.sub(a_vec.x, a_vec.y, a_vec.z, a_vec.w);
+		return sub(a_vec.x, a_vec.y, a_vec.z, a_vec.w);
 	}
 
 	/**
@@ -148,7 +152,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @return This vector for chaining
 	 */
 	public Vector4 sub(final float x, final float y, final float z, final float w) {
-		return this.set(this.x - x, this.y - y, this.z - z, this.w - w);
+		return set(this.x - x, this.y - y, this.z - z, this.w - w);
 	}
 
 	/**
@@ -158,17 +162,17 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @return This vector for chaining
 	 */
 	public Vector4 sub(final float value) {
-		return this.set(this.x - value, this.y - value, this.z - value, this.w - value);
+		return set(x - value, y - value, z - value, w - value);
 	}
 
 	@Override
 	public Vector4 scl(final float scalar) {
-		return this.set(this.x * scalar, this.y * scalar, this.z * scalar, this.w * scalar);
+		return set(x * scalar, y * scalar, z * scalar, w * scalar);
 	}
 
 	@Override
 	public Vector4 scl(final Vector4 other) {
-		return this.set(this.x * other.x, this.y * other.y, this.z * other.z, this.w * other.w);
+		return set(x * other.x, y * other.y, z * other.z, w * other.w);
 	}
 
 	/**
@@ -181,24 +185,24 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @return This vector for chaining
 	 */
 	public Vector4 scl(final float vx, final float vy, final float vz, final float vw) {
-		return this.set(this.x * vx, this.y * vy, this.z * vz, this.z * vw);
+		return set(x * vx, y * vy, z * vz, z * vw);
 	}
 
 	@Override
 	public Vector4 mulAdd(final Vector4 vec, final float scalar) {
-		this.x += vec.x * scalar;
-		this.y += vec.y * scalar;
-		this.z += vec.z * scalar;
-		this.w += vec.w * scalar;
+		x += vec.x * scalar;
+		y += vec.y * scalar;
+		z += vec.z * scalar;
+		w += vec.w * scalar;
 		return this;
 	}
 
 	@Override
 	public Vector4 mulAdd(final Vector4 vec, final Vector4 mulVec) {
-		this.x += vec.x * mulVec.x;
-		this.y += vec.y * mulVec.y;
-		this.z += vec.z * mulVec.z;
-		this.w += vec.w * mulVec.w;
+		x += vec.x * mulVec.x;
+		y += vec.y * mulVec.y;
+		z += vec.z * mulVec.z;
+		w += vec.w * mulVec.w;
 		return this;
 	}
 
@@ -209,7 +213,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public float len() {
-		return (float) Math.sqrt((this.x * this.x) + (this.y * this.y) + (this.z * this.z) + (this.w * this.w));
+		return (float) Math.sqrt((x * x) + (y * y) + (z * z) + (w * w));
 	}
 
 	/** @return The squared euclidian length */
@@ -219,7 +223,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public float len2() {
-		return (this.x * this.x) + (this.y * this.y) + (this.z * this.z) + (this.w * this.w);
+		return (x * x) + (y * y) + (z * z) + (w * w);
 	}
 
 	/**
@@ -227,7 +231,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 * @return Whether this and the other vector are equal
 	 */
 	public boolean idt(final Vector4 vector) {
-		return (this.x == vector.x) && (this.y == vector.y) && (this.z == vector.z) && (this.w == vector.w);
+		return (x == vector.x) && (y == vector.y) && (z == vector.z) && (w == vector.w);
 	}
 
 	/** @return The euclidian distance between the two specified vectors */
@@ -242,10 +246,10 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public float dst(final Vector4 vector) {
-		final float a = vector.x - this.x;
-		final float b = vector.y - this.y;
-		final float c = vector.z - this.z;
-		final float d = vector.w - this.w;
+		final float a = vector.x - x;
+		final float b = vector.y - y;
+		final float c = vector.z - z;
+		final float d = vector.w - w;
 		return (float) Math.sqrt((a * a) + (b * b) + (c * c) + (d * d));
 	}
 
@@ -270,10 +274,10 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public float dst2(final Vector4 point) {
-		final float a = point.x - this.x;
-		final float b = point.y - this.y;
-		final float c = point.z - this.z;
-		final float d = point.w - this.w;
+		final float a = point.x - x;
+		final float b = point.y - y;
+		final float c = point.z - z;
+		final float d = point.w - w;
 		return (a * a) + (b * b) + (c * c) + (d * d);
 	}
 
@@ -296,11 +300,11 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public Vector4 nor() {
-		final float len2 = this.len2();
+		final float len2 = len2();
 		if ((len2 == 0f) || (len2 == 1f)) {
 			return this;
 		}
-		return this.scl(1f / (float) Math.sqrt(len2));
+		return scl(1f / (float) Math.sqrt(len2));
 	}
 
 	/** @return The dot product between the two vectors */
@@ -311,7 +315,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public float dot(final Vector4 vector) {
-		return (this.x * vector.x) + (this.y * vector.y) + (this.z * vector.z) + (this.w * vector.w);
+		return (x * vector.x) + (y * vector.y) + (z * vector.z) + (w * vector.w);
 	}
 
 	/**
@@ -339,7 +343,7 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public boolean isZero() {
-		return (this.x == 0) && (this.y == 0) && (this.z == 0);
+		return (x == 0) && (y == 0) && (z == 0);
 	}
 
 	@Override
@@ -406,9 +410,9 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	@Override
 	public Vector4 lerp(final Vector4 target, final float alpha) {
 		// TODO
-		this.x += alpha * (target.x - this.x);
-		this.y += alpha * (target.y - this.y);
-		this.z += alpha * (target.z - this.z);
+		x += alpha * (target.x - x);
+		y += alpha * (target.y - y);
+		z += alpha * (target.z - z);
 		return this;
 	}
 
@@ -420,7 +424,11 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 
 	@Override
 	public String toString() {
-		return "[" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + "]";
+		return OPENING_SQUARE_BRACKET +
+				x + COMMA + SPACE +
+				y + COMMA + SPACE +
+				z + COMMA + SPACE +
+				w + CLOSING_SQUARE_BRACKET;
 	}
 
 	@Override
@@ -471,10 +479,10 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = (prime * result) + NumberUtils.floatToIntBits(this.x);
-		result = (prime * result) + NumberUtils.floatToIntBits(this.y);
-		result = (prime * result) + NumberUtils.floatToIntBits(this.z);
-		result = (prime * result) + NumberUtils.floatToIntBits(this.w);
+		result = (prime * result) + NumberUtils.floatToIntBits(x);
+		result = (prime * result) + NumberUtils.floatToIntBits(y);
+		result = (prime * result) + NumberUtils.floatToIntBits(z);
+		result = (prime * result) + NumberUtils.floatToIntBits(w);
 		return result;
 	}
 
@@ -490,33 +498,20 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 			return false;
 		}
 		final Vector4 other = (Vector4) obj;
-		if (NumberUtils.floatToIntBits(this.x) != NumberUtils.floatToIntBits(other.x)) {
-			return false;
-		}
-		if (NumberUtils.floatToIntBits(this.y) != NumberUtils.floatToIntBits(other.y)) {
-			return false;
-		}
-		if (NumberUtils.floatToIntBits(this.z) != NumberUtils.floatToIntBits(other.z)) {
-			return false;
-		}
-		return NumberUtils.floatToIntBits(this.w) == NumberUtils.floatToIntBits(other.w);
+
+		return floatToIntBitsEquals(x, other.x)
+				&& floatToIntBitsEquals(y, other.y)
+				&& floatToIntBitsEquals(z, other.z)
+				&& floatToIntBitsEquals(w, other.w);
+	}
+
+	private static boolean floatToIntBitsEquals(float a, float b) {
+		return NumberUtils.floatToIntBits(a) == NumberUtils.floatToIntBits(b);
 	}
 
 	@Override
 	public boolean epsilonEquals(final Vector4 other, final float epsilon) {
-		if (other == null) {
-			return false;
-		}
-		if (Math.abs(other.x - this.x) > epsilon) {
-			return false;
-		}
-		if (Math.abs(other.y - this.y) > epsilon) {
-			return false;
-		}
-		if (Math.abs(other.z - this.z) > epsilon) {
-			return false;
-		}
-		return !(Math.abs(other.w - this.w) > epsilon);
+		return other != null && epsilonEquals(other.x, other.y, other.z, other.w, epsilon);
 	}
 
 	/**
@@ -525,25 +520,24 @@ public class Vector4 implements Serializable, Vector<Vector4> {
 	 *
 	 * @return whether the vectors are the same.
 	 */
-	public boolean epsilonEquals(final float x, final float y, final float z, final float w, final float epsilon) {
-		if (Math.abs(x - this.x) > epsilon) {
-			return false;
-		}
-		if (Math.abs(y - this.y) > epsilon) {
-			return false;
-		}
-		if (Math.abs(z - this.z) > epsilon) {
-			return false;
-		}
-		return !(Math.abs(w - this.w) > epsilon);
+	private boolean epsilonEquals(final float x, final float y, final float z, final float w, final float epsilon) {
+
+		return epsilonEquals(x, this.x, epsilon)
+				&& epsilonEquals(y, this.y, epsilon)
+				&& epsilonEquals(z, this.z, epsilon)
+				&& epsilonEquals(w, this.w, epsilon);
+	}
+
+	private static boolean epsilonEquals(float a, float b, float epsilon) {
+		return Math.abs(a - b) < epsilon;
 	}
 
 	@Override
 	public Vector4 setZero() {
-		this.x = 0;
-		this.y = 0;
-		this.z = 0;
-		this.w = 0;
+		x = 0;
+		y = 0;
+		z = 0;
+		w = 0;
 		return this;
 	}
 

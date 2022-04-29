@@ -184,8 +184,8 @@ public class DesktopLauncher {
 			}
 		};
 		Extensions.audio = new AudioExtension() {
-			final FloatBuffer orientation = BufferUtils.createFloatBuffer(6).clear();
-			final FloatBuffer position = BufferUtils.createFloatBuffer(3).clear();
+			final FloatBuffer orientation = (FloatBuffer)BufferUtils.createFloatBuffer(6).clear();
+			final FloatBuffer position = (FloatBuffer)BufferUtils.createFloatBuffer(3).clear();
 
 			@Override
 			public float getDuration(final Sound sound) {

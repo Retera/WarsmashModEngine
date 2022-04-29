@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.config;
 
 import java.util.EnumMap;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapFlag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapPlacement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CGameSpeed;
@@ -26,11 +27,16 @@ public class War3MapConfig implements CPlayerAPI {
 	private CGameType gameTypeSelected;
 
 	public War3MapConfig(final int maxPlayers) {
+		// TODO should this be WarsmashConstants.MAX_PLAYERS instead of local
+		// constructor arg?
 		this.startLocations = new War3MapConfigStartLoc[maxPlayers];
 		this.players = new CBasePlayer[maxPlayers];
 		for (int i = 0; i < maxPlayers; i++) {
 			this.startLocations[i] = new War3MapConfigStartLoc();
 			this.players[i] = new War3MapConfigPlayer(i);
+			if (i >= (maxPlayers - 4)) {
+				this.players[i].setController(CMapControl.NEUTRAL);
+			}
 		}
 	}
 

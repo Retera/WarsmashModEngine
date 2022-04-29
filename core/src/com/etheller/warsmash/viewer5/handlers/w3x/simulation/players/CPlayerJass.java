@@ -44,7 +44,7 @@ public interface CPlayerJass {
 
 	int getColor();
 
-	boolean isSelectable();
+	boolean isRaceSelectable();
 
 	CMapControl getController();
 

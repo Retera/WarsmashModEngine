@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
@@ -13,11 +14,15 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.w3x.War3Map;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3iFlags;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.StandardObjectData;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 
 public class MapInfoPane {
 	private final UIFrame mapInfoPaneFrame;
@@ -29,13 +34,14 @@ public class MapInfoPane {
 	private final StringFrame mapSizeValue;
 	private final StringFrame mapDescValue;
 	private final StringFrame mapTilesetValue;
+	private final BackdropFrame maxPlayersIcon;
 
 	public MapInfoPane(final GameUI rootFrame, final Viewport uiViewport, final SimpleFrame container) {
 		this.mapInfoPaneFrame = rootFrame.createFrame("MapInfoPane", container, 0, 0);
 		this.mapInfoPaneFrame.setSetAllPoints(true);
 		container.add(this.mapInfoPaneFrame);
 
-		final UIFrame maxPlayersIcon = rootFrame.getFrameByName("MaxPlayersIcon", 0);
+		this.maxPlayersIcon = (BackdropFrame) rootFrame.getFrameByName("MaxPlayersIcon", 0);
 		this.maxPlayersValue = (StringFrame) rootFrame.getFrameByName("MaxPlayersValue", 0);
 		this.suggestedPlayersValue = (StringFrame) rootFrame.getFrameByName("SuggestedPlayersValue", 0);
 		this.mapSizeValue = (StringFrame) rootFrame.getFrameByName("MapSizeValue", 0);
@@ -57,9 +63,10 @@ public class MapInfoPane {
 
 		// TODO there might be some kind of layout manager system that is supposed to do
 		// the below anchoring automatically but I don't have that atm
-		maxPlayersIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.mapInfoPaneFrame, FramePoint.TOPLEFT, 0, 0));
+		this.maxPlayersIcon
+				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.mapInfoPaneFrame, FramePoint.TOPLEFT, 0, 0));
 
-		minimapImageFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, maxPlayersIcon, FramePoint.BOTTOMLEFT, 0,
+		minimapImageFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.maxPlayersIcon, FramePoint.BOTTOMLEFT, 0,
 				GameUI.convertY(uiViewport, -0.01f)));
 		suggestedPlayersLabel.addSetPoint(new SetPoint(FramePoint.TOPLEFT, minimapImageFrame, FramePoint.BOTTOMLEFT, 0,
 				GameUI.convertY(uiViewport, -0.01f)));
@@ -80,10 +87,23 @@ public class MapInfoPane {
 	public void setMap(final GameUI rootFrame, final Viewport uiViewport, final War3Map map, final War3MapW3i mapInfo,
 			final War3MapConfig war3MapConfig) throws IOException {
 		rootFrame.setText(this.mapNameValue, rootFrame.getTrigStr(war3MapConfig.getMapName()));
-		rootFrame.setText(this.maxPlayersValue, Integer.toString(mapInfo.getPlayers().size()));
+		int usedPlayerCount = 0;
+		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+			final CBasePlayer player = war3MapConfig.getPlayer(i);
+			if (player.getController() == CMapControl.USER) {
+				usedPlayerCount++;
+			}
+		}
+		rootFrame.setText(this.maxPlayersValue, Integer.toString(usedPlayerCount));
 		rootFrame.setText(this.suggestedPlayersValue, rootFrame.getTrigStr(mapInfo.getRecommendedPlayers()));
 		rootFrame.setText(this.mapDescValue, rootFrame.getTrigStr(war3MapConfig.getMapDescription()));
 		rootFrame.setText(this.mapSizeValue, rootFrame.getTrigStr(Integer.toString(mapInfo.getPlayableSize()[0])));
+		if (mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP)) {
+			this.maxPlayersIcon.setBackground(rootFrame.loadTexture("ui\\widgets\\glues\\icon-file-melee.blp"));
+		}
+		else {
+			this.maxPlayersIcon.setBackground(rootFrame.loadTexture("ui\\widgets\\glues\\icon-file-ums.blp"));
+		}
 
 		final StandardObjectData standardObjectData = new StandardObjectData(map);
 		final DataTable worldEditData = standardObjectData.getWorldEditData();
@@ -93,11 +113,16 @@ public class MapInfoPane {
 		rootFrame.setText(this.mapTilesetValue, rootFrame.getTrigStr(tileSetNameString));
 
 		Texture minimapTexture;
-		try {
-			minimapTexture = ImageUtils.getAnyExtensionTexture(map, "war3mapPreview.blp");
+		if (mapInfo.hasFlag(War3MapW3iFlags.HIDE_MINIMAP_IN_PREVIEW_SCREENS)) {
+			minimapTexture = ImageUtils.getAnyExtensionTexture(map, "ui\\widgets\\glues\\minimap-unknown.blp");
 		}
-		catch (final Exception exc) {
-			minimapTexture = ImageUtils.getAnyExtensionTexture(map, "war3mapMap.blp");
+		else {
+			try {
+				minimapTexture = ImageUtils.getAnyExtensionTexture(map, "war3mapPreview.blp");
+			}
+			catch (final Exception exc) {
+				minimapTexture = ImageUtils.getAnyExtensionTexture(map, "war3mapMap.blp");
+			}
 		}
 		this.minimapImageTextureFrame.setTexture(minimapTexture);
 

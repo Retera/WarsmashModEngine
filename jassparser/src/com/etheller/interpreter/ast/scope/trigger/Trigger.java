@@ -8,8 +8,11 @@ import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
+import com.etheller.interpreter.ast.util.CHandle;
 
-public class Trigger {
+public class Trigger implements CHandle {
+	private static int STUPID_STATIC_TRIGGER_COUNT_DELETE_THIS_LATER = 452354453;
+	private final int handleId = STUPID_STATIC_TRIGGER_COUNT_DELETE_THIS_LATER++;
 	private final List<TriggerBooleanExpression> conditions = new ArrayList<>();
 	private final List<JassFunction> actions = new ArrayList<>();
 	private int evalCount;
@@ -107,6 +110,11 @@ public class Trigger {
 
 	public boolean isWaitOnSleeps() {
 		return this.waitOnSleeps;
+	}
+
+	@Override
+	public int getHandleId() {
+		return this.handleId;
 	}
 
 }

@@ -23,7 +23,27 @@ public class Force {
 		ParseUtils.writeWithNullTerminator(stream, this.name);
 	}
 
+	public long getFlags() {
+		return this.flags;
+	}
+
+	public long getPlayerMasks() {
+		return this.playerMasks;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
 	public int getByteLength() {
 		return 9 + this.name.length();
+	}
+
+	public static final class Flag {
+		public static final int ALLIED = 0x0001;
+		public static final int ALLIED_VICTORY = 0x0002;
+		public static final int SHARE_VISION = 0x0008;
+		public static final int SHARE_UNIT_CONTROL = 0x0010;
+		public static final int SHARE_ADV_UNIT_CONTROL = 0x0020;
 	}
 }

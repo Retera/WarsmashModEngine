@@ -40,12 +40,12 @@ public class RenderUnit implements RenderWidget {
 	private static final War3ID BUILD_SOUND_LABEL = War3ID.fromString("ubsl");
 	private static final War3ID UNIT_SELECT_HEIGHT = War3ID.fromString("uslz");
 	private static final float[] heapZ = new float[3];
-	public final MdxComplexInstance instance;
-	public final MutableGameObject row;
+	public MdxComplexInstance instance;
+	public MutableGameObject row;
 	public final float[] location = new float[3];
 	public float selectionScale;
 	public UnitSoundset soundset;
-	public final MdxModel portraitModel;
+	public MdxModel portraitModel;
 	public int playerIndex;
 	private final CUnit simulationUnit;
 	public SplatMover shadow;
@@ -60,14 +60,14 @@ public class RenderUnit implements RenderWidget {
 
 	private boolean dead = false;
 
-	private final UnitAnimationListenerImpl unitAnimationListenerImpl;
+	private UnitAnimationListenerImpl unitAnimationListenerImpl;
 	private OrientationInterpolation orientationInterpolation;
 	private float currentTurnVelocity = 0;
 	public long lastUnitResponseEndTimeMillis;
 	private boolean corpse;
 	private boolean boneCorpse;
-	private final RenderUnitTypeData typeData;
-	public final MdxModel specialArtModel;
+	private RenderUnitTypeData typeData;
+	public MdxModel specialArtModel;
 	public SplatMover uberSplat;
 	private float selectionHeight;
 	private RenderUnit preferredSelectionReplacement;
@@ -77,11 +77,28 @@ public class RenderUnit implements RenderWidget {
 			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
 			final MdxModel specialArtModel, final BuildingShadow buildingShadow, final float selectionCircleScaleFactor,
 			final float animationWalkSpeed, final float animationRunSpeed, final float scalingValue) {
-		this.portraitModel = portraitModel;
 		this.simulationUnit = simulationUnit;
+		resetRenderUnit(map, model, row, x, y, z, playerIndex, soundset, portraitModel, simulationUnit, typeData,
+				specialArtModel, buildingShadow, selectionCircleScaleFactor, animationWalkSpeed, animationRunSpeed,
+				scalingValue);
+
+	}
+
+	public void resetRenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
+			final float x, final float y, final float z, final int playerIndex, final UnitSoundset soundset,
+			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
+			final MdxModel specialArtModel, final BuildingShadow buildingShadow, final float selectionCircleScaleFactor,
+			final float animationWalkSpeed, final float animationRunSpeed, final float scalingValue) {
+		this.portraitModel = portraitModel;
 		this.typeData = typeData;
 		this.specialArtModel = specialArtModel;
+		if (this.buildingShadowInstance != null) {
+			this.buildingShadowInstance.remove();
+		}
 		this.buildingShadowInstance = buildingShadow;
+		if (this.instance != null) {
+			this.instance.detach();
+		}
 		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
 
 		this.location[0] = x;
@@ -98,7 +115,8 @@ public class RenderUnit implements RenderWidget {
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
-		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+		TokenLoop:
+		for (final String animationName : requiredAnimationNames.split(",")) {
 			final String upperCaseToken = animationName.toUpperCase();
 			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 				if (upperCaseToken.equals(secondaryTag.name())) {
@@ -139,7 +157,6 @@ public class RenderUnit implements RenderWidget {
 		this.instance = instance;
 		this.row = row;
 		this.soundset = soundset;
-
 	}
 
 	public void populateCommandCard(final CSimulation game, final GameUI gameUI,

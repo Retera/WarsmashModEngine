@@ -2602,10 +2602,16 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 					final CUnitState whichUnitState = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 					final float value = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
-					whichUnit.setUnitState(CommonEnvironment.this.simulation, whichUnitState, value);
+					if (whichUnit != null) {
+						whichUnit.setUnitState(CommonEnvironment.this.simulation, whichUnitState, value);
+					}
+					else {
+						System.err.println("got SetUnitState(null," + whichUnitState + "," + value
+								+ ")  call (skipping because unit is null)");
+					}
 					return null;
 				}
 			});
@@ -2976,8 +2982,11 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final int lowBound = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					int lowBound = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 					final int highBound = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					if (lowBound > highBound) {
+						lowBound = highBound;
+					}
 					return new IntegerJassValue(
 							CommonEnvironment.this.simulation.getSeededRandom().nextInt((highBound - lowBound) + 1)
 									+ lowBound);
@@ -4800,7 +4809,7 @@ public class Jass2 {
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
 				final CPlayerJass player = arguments.get(0).visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
-				return BooleanJassValue.of(player.isSelectable());
+				return BooleanJassValue.of(player.isRaceSelectable());
 			}
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerController", new JassFunction() {
@@ -5495,8 +5504,20 @@ public class Jass2 {
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
 				final String s = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-				final int start = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-				final int end = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+				int start = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+				int end = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+				if (start > s.length()) {
+					start = s.length();
+				}
+				if (start < 0) {
+					start = 0;
+				}
+				if (end > s.length()) {
+					end = s.length();
+				}
+				if (end < start) {
+					end = start;
+				}
 				return new StringJassValue(s.substring(start, end));
 			}
 		});

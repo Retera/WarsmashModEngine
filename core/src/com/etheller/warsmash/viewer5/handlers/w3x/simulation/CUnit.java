@@ -24,6 +24,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityCargoHold;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
@@ -288,6 +289,7 @@ public class CUnit extends CWidget {
 	}
 
 	public void setTypeId(final CSimulation game, final War3ID typeId) {
+		game.getWorldCollision().removeUnit(this);
 		this.typeId = typeId;
 		final float lifeRatio = this.maximumLife == 0 ? 1 : (this.life / this.maximumLife);
 		final float manaRatio = this.maximumMana == 0 ? Float.NaN : (this.mana / this.maximumMana);
@@ -304,6 +306,7 @@ public class CUnit extends CWidget {
 		this.lifeRegen = this.unitType.getLifeRegen();
 		this.manaRegen = this.unitType.getManaRegen();
 		this.flyHeight = this.unitType.getDefaultFlyingHeight();
+		this.speed = this.unitType.getSpeed();
 		this.classifications.clear();
 		this.classifications.addAll(this.unitType.getClassifications());
 		this.acquisitionRange = this.unitType.getDefaultAcquisitionRange();
@@ -315,6 +318,8 @@ public class CUnit extends CWidget {
 		game.getUnitData().addDefaultAbilitiesToUnit(game, game.getHandleIdAllocator(), this.unitType, false, -1,
 				this.speed, this);
 		computeDerivedFields();
+		game.getWorldCollision().addUnit(this);
+		game.unitUpdatedType(this, typeId);
 	}
 
 	public void setFacing(final float facing) {
@@ -661,12 +666,12 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean autoAcquireAttackTargets(final CSimulation game, final boolean disableMove) {
-		if (!this.getAttacks().isEmpty() && !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
+		if (!getAttacks().isEmpty() && !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 			if (this.collisionRectangle != null) {
 				tempRect.set(this.collisionRectangle);
 			}
 			else {
-				tempRect.set(this.getX(), this.getY(), 0, 0);
+				tempRect.set(getX(), getY(), 0, 0);
 			}
 			final float halfSize = this.acquisitionRange;
 			tempRect.x -= halfSize;
@@ -681,7 +686,7 @@ public class CUnit extends CWidget {
 	}
 
 	public float getEndingDecayTime(final CSimulation game) {
-		if (this.isBuilding()) {
+		if (isBuilding()) {
 			return game.getGameplayConstants().getStructureDecayTime();
 		}
 		if (this.unitType.isHero()) {
@@ -884,7 +889,7 @@ public class CUnit extends CWidget {
 
 	public void setX(final float newX, final CWorldCollision collision, final CRegionManager regionManager) {
 		final float prevX = getX();
-		if (!this.isBuilding()) {
+		if (!isBuilding()) {
 			setX(newX);
 			collision.translate(this, newX - prevX, 0);
 		}
@@ -893,7 +898,7 @@ public class CUnit extends CWidget {
 
 	public void setY(final float newY, final CWorldCollision collision, final CRegionManager regionManager) {
 		final float prevY = getY();
-		if (!this.isBuilding()) {
+		if (!isBuilding()) {
 			setY(newY);
 			collision.translate(this, 0, newY - prevY);
 		}
@@ -946,7 +951,7 @@ public class CUnit extends CWidget {
 		final float prevY = getY();
 		setX(newX);
 		setY(newY);
-		if (!this.isBuilding()) {
+		if (!isBuilding()) {
 			collision.translate(this, newX - prevX, newY - prevY);
 		}
 		checkRegionEvents(regionManager);
@@ -957,8 +962,9 @@ public class CUnit extends CWidget {
 		this.containingRegions = this.priorContainingRegions;
 		this.priorContainingRegions = temp;
 		this.containingRegions.clear();
-		regionManager.checkRegions(this.collisionRectangle == null ? tempRect.set(this.getX(), this.getY(), 0, 0)
-				: this.collisionRectangle, regionCheckerImpl.reset(this, regionManager));
+		regionManager.checkRegions(
+				this.collisionRectangle == null ? tempRect.set(getX(), getY(), 0, 0) : this.collisionRectangle,
+				regionCheckerImpl.reset(this, regionManager));
 		for (final CRegion region : this.priorContainingRegions) {
 			if (!this.containingRegions.contains(region)) {
 				regionManager.onUnitLeaveRegion(this, region);
@@ -1067,7 +1073,7 @@ public class CUnit extends CWidget {
 				boolean foundMatchingReturnFireAttack = false;
 				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(), CAllianceType.PASSIVE)
 						&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
-					for (final CUnitAttack attack : this.getAttacks()) {
+					for (final CUnitAttack attack : getAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
 							this.currentBehavior = getAttackBehavior().reset(OrderIds.attack, attack, source, false,
 									CBehaviorAttackListener.DO_NOTHING);
@@ -1143,8 +1149,8 @@ public class CUnit extends CWidget {
 					}
 					final List<CUnit> xpReceivingHeroes = new ArrayList<>();
 					final int heroExpRange = gameplayConstants.getHeroExpRange();
-					simulation.getWorldCollision().enumUnitsInRect(new Rectangle(this.getX() - heroExpRange,
-							this.getY() - heroExpRange, heroExpRange * 2, heroExpRange * 2), new CUnitEnumFunction() {
+					simulation.getWorldCollision().enumUnitsInRect(new Rectangle(getX() - heroExpRange,
+							getY() - heroExpRange, heroExpRange * 2, heroExpRange * 2), new CUnitEnumFunction() {
 								@Override
 								public boolean call(final CUnit unit) {
 									if ((unit.distance(killedUnit) <= heroExpRange)
@@ -1720,9 +1726,7 @@ public class CUnit extends CWidget {
 	}
 
 	public static enum QueueItemType {
-		UNIT,
-		RESEARCH,
-		HERO_REVIVE;
+		UNIT, RESEARCH, HERO_REVIVE;
 	}
 
 	public void setRallyPoint(final AbilityTarget target) {
@@ -1905,6 +1909,15 @@ public class CUnit extends CWidget {
 		return null;
 	}
 
+	public CAbilityCargoHold getCargoData() {
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityCargoHold) {
+				return (CAbilityCargoHold) ability;
+			}
+		}
+		return null;
+	}
+
 	public void setUnitSpecificAttacks(final List<CUnitAttack> unitSpecificAttacks) {
 		this.unitSpecificAttacks = unitSpecificAttacks;
 	}
@@ -1992,8 +2005,7 @@ public class CUnit extends CWidget {
 	}
 
 	private static enum StateListenerUpdateType {
-		ADD,
-		REMOVE;
+		ADD, REMOVE;
 	}
 
 	private static final class StateListenerUpdate {

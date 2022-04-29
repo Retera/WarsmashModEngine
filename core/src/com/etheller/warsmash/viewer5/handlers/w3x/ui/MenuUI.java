@@ -835,7 +835,7 @@ public class MenuUI {
 						MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map,
 								mapInfo, war3MapConfig);
 						teamSetupPane.setMap(map, MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig,
-								mapInfo.getPlayers().size());
+								mapInfo.getPlayers().size(), mapInfo);
 						MenuUI.this.currentMapConfig = war3MapConfig;
 					}
 					catch (final IOException e) {

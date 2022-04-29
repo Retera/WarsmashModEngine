@@ -130,6 +130,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNightElfBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityCargoHold;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
@@ -246,6 +247,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private QueueIcon selectWorkerInsideFrame;
 	private final UIFrame[] selectedUnitHighlightBackdrop = new UIFrame[WarsmashConstants.MAX_SELECTION_SIZE];
 	private final MultiSelectionIcon[] selectedUnitFrames = new MultiSelectionIcon[WarsmashConstants.MAX_SELECTION_SIZE];
+	private final UIFrame[] cargoBackdrop = new UIFrame[WarsmashConstants.MAX_SELECTION_SIZE];
+	private final MultiSelectionIcon[] cargoUnitFrames = new MultiSelectionIcon[WarsmashConstants.MAX_SELECTION_SIZE];
 
 	private UIFrame attack1Icon;
 	private TextureFrame attack1IconBackdrop;
@@ -358,6 +361,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private long lastUnitClickTime = 0;
 	private RenderWidget lastClickUnit;
 	private MultiSelectionIconListener multiSelectClickListener;
+	private MultiSelectionIconListener cargoClickListener;
 	private float frontQueueIconWidth;
 	private int draggingMouseButton;
 	private Music[] currentMusics;
@@ -770,23 +774,58 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		final int halfSelectionMaxSize = this.selectedUnitFrames.length / 2;
 		for (int i = 0; i < this.selectedUnitFrames.length; i++) {
-			final FilterModeTextureFrame selectedSubgroupHighlightBackdrop = new FilterModeTextureFrame(
-					"SmashMultiSelectUnitIconHighlightBackdrop", this.smashSimpleInfoPanel, true,
-					new Vector4Definition(0, 1, 0, 1));
-			selectedSubgroupHighlightBackdrop.setFilterMode(FilterMode.ADDITIVE);
-			this.selectedUnitHighlightBackdrop[i] = selectedSubgroupHighlightBackdrop;
-			selectedSubgroupHighlightBackdrop.setTexture("SelectedSubgroupHighlight", this.rootFrame);
-			selectedSubgroupHighlightBackdrop.setWidth(this.frontQueueIconWidth * 1.37f);
-			selectedSubgroupHighlightBackdrop.setHeight(this.frontQueueIconWidth * 1.75f);
-			selectedSubgroupHighlightBackdrop.setColor(1.0f, 1.0f, 0.0f, 1.0f);
-			this.rootFrame.add(selectedSubgroupHighlightBackdrop);
-			selectedSubgroupHighlightBackdrop
-					.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
-							((-this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * .10f)
-									+ (this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
-							(((this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * -.75f))
-									- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			{
+				final FilterModeTextureFrame selectedSubgroupHighlightBackdrop = new FilterModeTextureFrame(
+						"SmashMultiSelectUnitIconHighlightBackdrop", this.smashSimpleInfoPanel, true,
+						new Vector4Definition(0, 1, 0, 1));
+				selectedSubgroupHighlightBackdrop.setFilterMode(FilterMode.ADDITIVE);
+				this.selectedUnitHighlightBackdrop[i] = selectedSubgroupHighlightBackdrop;
+				selectedSubgroupHighlightBackdrop.setTexture("SelectedSubgroupHighlight", this.rootFrame);
+				selectedSubgroupHighlightBackdrop.setWidth(this.frontQueueIconWidth * 1.37f);
+				selectedSubgroupHighlightBackdrop.setHeight(this.frontQueueIconWidth * 1.75f);
+				selectedSubgroupHighlightBackdrop.setColor(1.0f, 1.0f, 0.0f, 1.0f);
+				this.rootFrame.add(selectedSubgroupHighlightBackdrop);
+				selectedSubgroupHighlightBackdrop
+						.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
+								((-this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * .10f)
+										+ (this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
+								(((this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * -.75f))
+										- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			}
+			{
+				final TextureFrame cargoBackdrop = new TextureFrame("SmashCargoBackdrop", this.smashSimpleInfoPanel,
+						true, new Vector4Definition(0, 1, 0, 1));
+				cargoBackdrop.setVisible(false);
+				this.cargoBackdrop[i] = cargoBackdrop;
+				cargoBackdrop.setTexture("CargoBackdrop", this.rootFrame);
+				cargoBackdrop.setWidth(this.frontQueueIconWidth * 1.37f);
+				cargoBackdrop.setHeight(this.frontQueueIconWidth * 1.75f);
+				cargoBackdrop.setColor(1.0f, 1.0f, 0.0f, 1.0f);
+				this.rootFrame.add(cargoBackdrop);
+				cargoBackdrop
+						.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
+								((-this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * .10f)
+										+ (this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
+								(((this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * -.75f))
+										- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			}
 		}
+		this.cargoClickListener = new MultiSelectionIconListener() {
+			@Override
+			public void multiSelectIconRelease(final int index) {
+
+			}
+
+			@Override
+			public void multiSelectIconPress(final int index) {
+
+			}
+
+			@Override
+			public void multiSelectIconClicked(final int index) {
+
+			}
+		};
 		this.multiSelectClickListener = new MultiSelectionIconListener() {
 			@Override
 			public void multiSelectIconClicked(final int index) {
@@ -855,6 +894,49 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.rootFrame.add(this.selectedUnitFrames[i]);
 
 			this.selectedUnitFrames[i].setVisible(false);
+		}
+		for (int i = 0; i < this.cargoUnitFrames.length; i++) {
+			this.cargoUnitFrames[i] = new MultiSelectionIcon("SmashMultiSelectUnitIcon", this.smashSimpleInfoPanel,
+					this.cargoClickListener, i);
+			this.cargoUnitFrames[i].setVisible(false);
+			final TextureFrame cargoUnitIconFrameBackdrop = new TextureFrame("SmashCargoUnitIconBackdrop",
+					this.cargoUnitFrames[i], false, new Vector4Definition(0, 1, 0, 1));
+
+			final SimpleStatusBarFrame hpBarFrame = new SimpleStatusBarFrame(
+					"SmashMultiSelectHpBar" + this.hpBarFrameIndex, this.rootFrame, true, true, 3.0f);
+			hpBarFrame.getBarFrame().setTexture("SimpleHpBarConsole", this.rootFrame);
+			hpBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
+			hpBarFrame.setWidth(this.frontQueueIconWidth);
+			hpBarFrame.setHeight(this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_HEIGHT_RATIO);
+			hpBarFrame.addSetPoint(new SetPoint(FramePoint.TOP, cargoUnitIconFrameBackdrop, FramePoint.BOTTOM, 0,
+					-this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
+
+			final SimpleStatusBarFrame manaBarFrame = new SimpleStatusBarFrame(
+					"SmashMultiSelectManaBar" + this.hpBarFrameIndex, this.rootFrame, true, true, 3.0f);
+			manaBarFrame.getBarFrame().setTexture("SimpleManaBarConsole", this.rootFrame);
+			manaBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
+			manaBarFrame.setWidth(this.frontQueueIconWidth);
+			manaBarFrame.setHeight(this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_HEIGHT_RATIO);
+			manaBarFrame.addSetPoint(new SetPoint(FramePoint.TOP, hpBarFrame, FramePoint.BOTTOM, 0,
+					-this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
+			manaBarFrame.getBarFrame().setColor(0f, 0f, 1f, 1f);
+
+			this.cargoUnitFrames[i].set(cargoUnitIconFrameBackdrop, hpBarFrame, manaBarFrame);
+			cargoUnitIconFrameBackdrop
+					.addSetPoint(new SetPoint(FramePoint.CENTER, this.cargoUnitFrames[i], FramePoint.CENTER, 0, 0));
+			this.cargoUnitFrames[i]
+					.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
+							(this.frontQueueIconWidth * .10f)
+									+ (this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
+							(this.frontQueueIconWidth * -.75f)
+									- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			this.cargoUnitFrames[i].setWidth(this.frontQueueIconWidth);
+			this.cargoUnitFrames[i].setHeight(this.frontQueueIconWidth);
+			cargoUnitIconFrameBackdrop.setWidth(this.frontQueueIconWidth);
+			cargoUnitIconFrameBackdrop.setHeight(this.frontQueueIconWidth);
+			this.rootFrame.add(this.cargoUnitFrames[i]);
+
+			this.cargoUnitFrames[i].setVisible(false);
 		}
 
 		this.smashAttack1IconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconDamage",
@@ -2529,167 +2611,174 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.selectWorkerInsideFrame.setVisible(false);
 		}
 		else {
-			for (final QueueIcon queueIconFrame : this.queueIconFrames) {
-				queueIconFrame.setVisible(false);
-			}
-			this.simpleInfoPanelBuildingDetail.setVisible(false);
-			this.simpleInfoPanelUnitDetail.setVisible(!multiSelect);
-			final String unitTypeName = simulationUnit.getUnitType().getName();
+			final CAbilityCargoHold cargoData = simulationUnit.getCargoData();
+			if (cargoData != null) {
 
-			final boolean anyAttacks = simulationUnit.getAttacks().size() > 0;
-			final boolean constructing = simulationUnit.isConstructingOrUpgrading();
-			final UIFrame localArmorIcon = this.armorIcon;
-			final TextureFrame localArmorIconBackdrop = this.armorIconBackdrop;
-			final StringFrame localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
-			if (anyAttacks && !constructing) {
-				final CUnitAttack attackOne = simulationUnit.getAttacks().get(0);
-				this.attack1Icon.setVisible(attackOne.isShowUI());
-				this.attack1IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackOne.getAttackType()));
-				String attackOneDmgText = attackOne.getMinDamageDisplay() + " - " + attackOne.getMaxDamageDisplay();
-				final int attackOneTemporaryDamageBonus = attackOne.getTotalTemporaryDamageBonus();
-				if (attackOneTemporaryDamageBonus != 0) {
-					attackOneDmgText += (attackOneTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
-							+ attackOneTemporaryDamageBonus + "";
+			}
+			else {
+				for (final QueueIcon queueIconFrame : this.queueIconFrames) {
+					queueIconFrame.setVisible(false);
 				}
-				this.rootFrame.setText(this.attack1InfoPanelIconValue, attackOneDmgText);
-				if (simulationUnit.getAttacks().size() > 1) {
-					final CUnitAttack attackTwo = simulationUnit.getAttacks().get(1);
-					this.attack2Icon.setVisible(attackTwo.isShowUI());
-					this.attack2IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackTwo.getAttackType()));
-					String attackTwoDmgText = attackTwo.getMinDamage() + " - " + attackTwo.getMaxDamage();
-					final int attackTwoTemporaryDamageBonus = attackTwo.getTotalTemporaryDamageBonus();
-					if (attackTwoTemporaryDamageBonus != 0) {
-						attackTwoDmgText += (attackTwoTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
-								+ attackTwoTemporaryDamageBonus + "";
+				this.simpleInfoPanelBuildingDetail.setVisible(false);
+				this.simpleInfoPanelUnitDetail.setVisible(!multiSelect);
+				final String unitTypeName = simulationUnit.getUnitType().getName();
+
+				final boolean anyAttacks = simulationUnit.getAttacks().size() > 0;
+				final boolean constructing = simulationUnit.isConstructingOrUpgrading();
+				final UIFrame localArmorIcon = this.armorIcon;
+				final TextureFrame localArmorIconBackdrop = this.armorIconBackdrop;
+				final StringFrame localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
+				if (anyAttacks && !constructing) {
+					final CUnitAttack attackOne = simulationUnit.getAttacks().get(0);
+					this.attack1Icon.setVisible(attackOne.isShowUI());
+					this.attack1IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackOne.getAttackType()));
+					String attackOneDmgText = attackOne.getMinDamageDisplay() + " - " + attackOne.getMaxDamageDisplay();
+					final int attackOneTemporaryDamageBonus = attackOne.getTotalTemporaryDamageBonus();
+					if (attackOneTemporaryDamageBonus != 0) {
+						attackOneDmgText += (attackOneTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
+								+ attackOneTemporaryDamageBonus + "";
 					}
-					this.rootFrame.setText(this.attack2InfoPanelIconValue, attackTwoDmgText);
-				}
-				else {
-					this.attack2Icon.setVisible(false);
-				}
-
-				this.smashArmorIconWrapper.addSetPoint(
-						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.0705f)));
-				this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
-				this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
-			}
-			else {
-				this.attack1Icon.setVisible(false);
-				this.attack2Icon.setVisible(false);
-
-				this.smashArmorIconWrapper.addSetPoint(
-						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.040f)));
-				this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
-				this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
-			}
-
-			final CAbilityHero heroData = simulationUnit.getHeroData();
-			final boolean hero = heroData != null;
-			this.heroInfoPanel.setVisible(hero);
-			if (hero) {
-				final CPrimaryAttribute primaryAttribute = simulationUnit.getUnitType().getPrimaryAttribute();
-				String iconKey;
-				switch (primaryAttribute) {
-				case AGILITY:
-					iconKey = "InfoPanelIconHeroIconAGI";
-					break;
-				case INTELLIGENCE:
-					iconKey = "InfoPanelIconHeroIconINT";
-					break;
-				default:
-				case STRENGTH:
-					iconKey = "InfoPanelIconHeroIconSTR";
-					break;
-				}
-				this.primaryAttributeIcon.setTexture(iconKey, this.rootFrame);
-
-				this.rootFrame.setText(this.strengthValue, heroData.getStrength().getDisplayText());
-				this.rootFrame.setText(this.agilityValue, heroData.getAgility().getDisplayText());
-				this.rootFrame.setText(this.intelligenceValue, heroData.getIntelligence().getDisplayText());
-				final String infopanelLevelClass = this.rootFrame.getTemplates()
-						.getDecoratedString("INFOPANEL_LEVEL_CLASS").replace("%u", "%d"); // :(
-				final int heroLevel = heroData.getHeroLevel();
-				this.simpleClassValue.setVisible(true);
-				this.rootFrame.setText(this.simpleClassValue,
-						String.format(infopanelLevelClass, heroLevel, unitTypeName));
-				this.rootFrame.setText(this.simpleNameValue, heroData.getProperName());
-				this.simpleHeroLevelBar.setVisible(true);
-				final CGameplayConstants gameplayConstants = this.war3MapViewer.simulation.getGameplayConstants();
-				this.simpleHeroLevelBar.setValue((heroData.getXp() - gameplayConstants.getNeedHeroXPSum(heroLevel - 1))
-						/ (float) gameplayConstants.getNeedHeroXP(heroLevel));
-			}
-			else {
-				this.simpleClassValue.setVisible(!simulationUnit.isBuilding());
-				this.rootFrame.setText(this.simpleNameValue, unitTypeName);
-				String classText = null;
-				for (final CUnitClassification classification : simulationUnit.getClassifications()) {
-					if (classification.getDisplayName() != null) {
-						classText = classification.getDisplayName();
-					}
-				}
-				if (classText != null) {
-					this.rootFrame.setText(this.simpleClassValue, classText);
-				}
-				else {
-					this.rootFrame.setText(this.simpleClassValue, "");
-				}
-				this.simpleHeroLevelBar.setVisible(false);
-			}
-
-			localArmorIcon.setVisible(!constructing);
-			this.simpleBuildTimeIndicator.setVisible(constructing);
-			this.simpleBuildingBuildTimeIndicator.setVisible(false);
-			if (constructing) {
-				War3ID constructingTypeId = simulationUnit.getTypeId();
-				if (simulationUnit.isUpgrading()) {
-					constructingTypeId = simulationUnit.getUpgradeIdType();
-				}
-
-				this.rootFrame.setText(this.simpleBuildingActionLabel,
-						this.rootFrame.getTemplates().getDecoratedString("CONSTRUCTING"));
-				this.queueIconFrames[0].setVisible(true);
-				this.queueIconFrames[0]
-						.setTexture(this.war3MapViewer.getAbilityDataUI().getUnitUI(constructingTypeId).getIcon());
-
-				if (simulationUnit.getWorkerInside() != null) {
-					this.selectWorkerInsideFrame.setVisible(true);
-					this.selectWorkerInsideFrame.setTexture(this.war3MapViewer.getAbilityDataUI()
-							.getUnitUI(simulationUnit.getWorkerInside().getTypeId()).getIcon());
-				}
-				else {
-					this.selectWorkerInsideFrame.setVisible(false);
-				}
-			}
-			else {
-				this.rootFrame.setText(this.simpleBuildingActionLabel, "");
-				this.selectWorkerInsideFrame.setVisible(false);
-			}
-			final Texture defenseTexture = this.defenseBackdrops
-					.getTexture(simulationUnit.getUnitType().getDefenseType());
-			if (defenseTexture == null) {
-				throw new RuntimeException(simulationUnit.getUnitType().getDefenseType() + " can't find texture!");
-			}
-			localArmorIconBackdrop.setTexture(defenseTexture);
-
-			String defenseDisplayString;
-			if (simulationUnit.isInvulnerable()) {
-				defenseDisplayString = this.rootFrame.getTemplates().getDecoratedString("INVULNERABLE");
-			}
-			else {
-				defenseDisplayString = Integer.toString(simulationUnit.getCurrentDefenseDisplay());
-				final float temporaryDefenseBonus = simulationUnit.getTotalTemporaryDefenseBonus();
-				if (temporaryDefenseBonus != 0) {
-					if (temporaryDefenseBonus > 0) {
-						defenseDisplayString += "|cFF00FF00 +" + String.format("%.1f", temporaryDefenseBonus) + "";
+					this.rootFrame.setText(this.attack1InfoPanelIconValue, attackOneDmgText);
+					if (simulationUnit.getAttacks().size() > 1) {
+						final CUnitAttack attackTwo = simulationUnit.getAttacks().get(1);
+						this.attack2Icon.setVisible(attackTwo.isShowUI());
+						this.attack2IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackTwo.getAttackType()));
+						String attackTwoDmgText = attackTwo.getMinDamage() + " - " + attackTwo.getMaxDamage();
+						final int attackTwoTemporaryDamageBonus = attackTwo.getTotalTemporaryDamageBonus();
+						if (attackTwoTemporaryDamageBonus != 0) {
+							attackTwoDmgText += (attackTwoTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
+									+ attackTwoTemporaryDamageBonus + "";
+						}
+						this.rootFrame.setText(this.attack2InfoPanelIconValue, attackTwoDmgText);
 					}
 					else {
-						defenseDisplayString += "|cFFFF0000 " + String.format("%.1f", temporaryDefenseBonus) + "";
+						this.attack2Icon.setVisible(false);
+					}
+
+					this.smashArmorIconWrapper.addSetPoint(
+							new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
+									GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.0705f)));
+					this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
+					this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
+				}
+				else {
+					this.attack1Icon.setVisible(false);
+					this.attack2Icon.setVisible(false);
+
+					this.smashArmorIconWrapper.addSetPoint(
+							new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
+									GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.040f)));
+					this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
+					this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
+				}
+
+				final CAbilityHero heroData = simulationUnit.getHeroData();
+				final boolean hero = heroData != null;
+				this.heroInfoPanel.setVisible(hero);
+				if (hero) {
+					final CPrimaryAttribute primaryAttribute = simulationUnit.getUnitType().getPrimaryAttribute();
+					String iconKey;
+					switch (primaryAttribute) {
+					case AGILITY:
+						iconKey = "InfoPanelIconHeroIconAGI";
+						break;
+					case INTELLIGENCE:
+						iconKey = "InfoPanelIconHeroIconINT";
+						break;
+					default:
+					case STRENGTH:
+						iconKey = "InfoPanelIconHeroIconSTR";
+						break;
+					}
+					this.primaryAttributeIcon.setTexture(iconKey, this.rootFrame);
+
+					this.rootFrame.setText(this.strengthValue, heroData.getStrength().getDisplayText());
+					this.rootFrame.setText(this.agilityValue, heroData.getAgility().getDisplayText());
+					this.rootFrame.setText(this.intelligenceValue, heroData.getIntelligence().getDisplayText());
+					final String infopanelLevelClass = this.rootFrame.getTemplates()
+							.getDecoratedString("INFOPANEL_LEVEL_CLASS").replace("%u", "%d"); // :(
+					final int heroLevel = heroData.getHeroLevel();
+					this.simpleClassValue.setVisible(true);
+					this.rootFrame.setText(this.simpleClassValue,
+							String.format(infopanelLevelClass, heroLevel, unitTypeName));
+					this.rootFrame.setText(this.simpleNameValue, heroData.getProperName());
+					this.simpleHeroLevelBar.setVisible(true);
+					final CGameplayConstants gameplayConstants = this.war3MapViewer.simulation.getGameplayConstants();
+					this.simpleHeroLevelBar
+							.setValue((heroData.getXp() - gameplayConstants.getNeedHeroXPSum(heroLevel - 1))
+									/ (float) gameplayConstants.getNeedHeroXP(heroLevel));
+				}
+				else {
+					this.simpleClassValue.setVisible(!simulationUnit.isBuilding());
+					this.rootFrame.setText(this.simpleNameValue, unitTypeName);
+					String classText = null;
+					for (final CUnitClassification classification : simulationUnit.getClassifications()) {
+						if (classification.getDisplayName() != null) {
+							classText = classification.getDisplayName();
+						}
+					}
+					if (classText != null) {
+						this.rootFrame.setText(this.simpleClassValue, classText);
+					}
+					else {
+						this.rootFrame.setText(this.simpleClassValue, "");
+					}
+					this.simpleHeroLevelBar.setVisible(false);
+				}
+
+				localArmorIcon.setVisible(!constructing);
+				this.simpleBuildTimeIndicator.setVisible(constructing);
+				this.simpleBuildingBuildTimeIndicator.setVisible(false);
+				if (constructing) {
+					War3ID constructingTypeId = simulationUnit.getTypeId();
+					if (simulationUnit.isUpgrading()) {
+						constructingTypeId = simulationUnit.getUpgradeIdType();
+					}
+
+					this.rootFrame.setText(this.simpleBuildingActionLabel,
+							this.rootFrame.getTemplates().getDecoratedString("CONSTRUCTING"));
+					this.queueIconFrames[0].setVisible(true);
+					this.queueIconFrames[0]
+							.setTexture(this.war3MapViewer.getAbilityDataUI().getUnitUI(constructingTypeId).getIcon());
+
+					if (simulationUnit.getWorkerInside() != null) {
+						this.selectWorkerInsideFrame.setVisible(true);
+						this.selectWorkerInsideFrame.setTexture(this.war3MapViewer.getAbilityDataUI()
+								.getUnitUI(simulationUnit.getWorkerInside().getTypeId()).getIcon());
+					}
+					else {
+						this.selectWorkerInsideFrame.setVisible(false);
 					}
 				}
+				else {
+					this.rootFrame.setText(this.simpleBuildingActionLabel, "");
+					this.selectWorkerInsideFrame.setVisible(false);
+				}
+				final Texture defenseTexture = this.defenseBackdrops
+						.getTexture(simulationUnit.getUnitType().getDefenseType());
+				if (defenseTexture == null) {
+					throw new RuntimeException(simulationUnit.getUnitType().getDefenseType() + " can't find texture!");
+				}
+				localArmorIconBackdrop.setTexture(defenseTexture);
+
+				String defenseDisplayString;
+				if (simulationUnit.isInvulnerable()) {
+					defenseDisplayString = this.rootFrame.getTemplates().getDecoratedString("INVULNERABLE");
+				}
+				else {
+					defenseDisplayString = Integer.toString(simulationUnit.getCurrentDefenseDisplay());
+					final float temporaryDefenseBonus = simulationUnit.getTotalTemporaryDefenseBonus();
+					if (temporaryDefenseBonus != 0) {
+						if (temporaryDefenseBonus > 0) {
+							defenseDisplayString += "|cFF00FF00 +" + String.format("%.1f", temporaryDefenseBonus) + "";
+						}
+						else {
+							defenseDisplayString += "|cFFFF0000 " + String.format("%.1f", temporaryDefenseBonus) + "";
+						}
+					}
+				}
+				this.rootFrame.setText(localArmorInfoPanelIconValue, defenseDisplayString);
 			}
-			this.rootFrame.setText(localArmorInfoPanelIconValue, defenseDisplayString);
 		}
 		final CAbilityInventory inventory = simulationUnit.getInventoryData();
 		this.inventoryCover.setVisible(inventory == null);

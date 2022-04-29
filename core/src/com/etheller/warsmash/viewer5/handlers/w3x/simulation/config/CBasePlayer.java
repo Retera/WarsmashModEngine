@@ -24,7 +24,7 @@ public abstract class CBasePlayer implements CPlayerJass {
 	private final EnumMap<CPlayerState, Integer>[] taxRates;
 	private boolean onScoreScreen;
 	private boolean raceSelectable;
-	private CMapControl mapControl = CMapControl.NEUTRAL;
+	private CMapControl mapControl = CMapControl.NONE;
 	private CPlayerSlotState slotState = CPlayerSlotState.EMPTY;
 	private AIDifficulty aiDifficulty = null;
 
@@ -167,7 +167,7 @@ public abstract class CBasePlayer implements CPlayerJass {
 	}
 
 	@Override
-	public boolean isSelectable() {
+	public boolean isRaceSelectable() {
 		return this.raceSelectable;
 	}
 

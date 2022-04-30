@@ -3,18 +3,10 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -111,7 +103,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit.QueueItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -130,6 +121,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNightElfBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityCargoHold;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
@@ -246,6 +238,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private QueueIcon selectWorkerInsideFrame;
 	private final UIFrame[] selectedUnitHighlightBackdrop = new UIFrame[WarsmashConstants.MAX_SELECTION_SIZE];
 	private final MultiSelectionIcon[] selectedUnitFrames = new MultiSelectionIcon[WarsmashConstants.MAX_SELECTION_SIZE];
+	private final UIFrame[] cargoBackdrop = new UIFrame[WarsmashConstants.MAX_SELECTION_SIZE];
+	private final MultiSelectionIcon[] cargoUnitFrames = new MultiSelectionIcon[WarsmashConstants.MAX_SELECTION_SIZE];
 
 	private UIFrame attack1Icon;
 	private TextureFrame attack1IconBackdrop;
@@ -358,6 +352,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private long lastUnitClickTime;
 	private RenderWidget lastClickUnit;
 	private MultiSelectionIconListener multiSelectClickListener;
+	private MultiSelectionIconListener cargoClickListener;
 	private float frontQueueIconWidth;
 	private int draggingMouseButton;
 	private Music[] currentMusics;
@@ -387,33 +382,33 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.unitOrderListener = unitOrderListener;
 		this.exitGameRunnable = exitGameRunnable;
 
-		this.cameraManager = new GameCameraManager(cameraPresets, cameraRates);
+		cameraManager = new GameCameraManager(cameraPresets, cameraRates);
 
-		this.cameraManager.setupCamera(war3MapViewer.worldScene);
-		this.localPlayer = this.war3MapViewer.simulation.getPlayer(war3MapViewer.getLocalPlayerIndex());
-		final float[] startLocation = this.localPlayer.getStartLocation();
-		this.cameraManager.target.x = startLocation[0];
-		this.cameraManager.target.y = startLocation[1];
+		cameraManager.setupCamera(war3MapViewer.worldScene);
+		localPlayer = this.war3MapViewer.simulation.getPlayer(war3MapViewer.getLocalPlayerIndex());
+		final float[] startLocation = localPlayer.getStartLocation();
+		cameraManager.target.x = startLocation[0];
+		cameraManager.target.y = startLocation[1];
 
-		this.activeButtonTexture = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
+		activeButtonTexture = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
 				"UI\\Widgets\\Console\\Human\\CommandButton\\human-activebutton.blp");
-		this.activeCommandUnitTargetFilter = new ActiveCommandUnitTargetFilter();
-		this.widthRatioCorrection = this.uiViewport.getMinWorldWidth() / 1600f;
-		this.heightRatioCorrection = this.uiViewport.getMinWorldHeight() / 1200f;
-		this.rallyPositioningVisitor = new RallyPositioningVisitor();
-		this.cursorTargetSetupVisitor = new CursorTargetSetupVisitor();
+		activeCommandUnitTargetFilter = new ActiveCommandUnitTargetFilter();
+		widthRatioCorrection = this.uiViewport.getMinWorldWidth() / 1600f;
+		heightRatioCorrection = this.uiViewport.getMinWorldHeight() / 1200f;
+		rallyPositioningVisitor = new RallyPositioningVisitor();
+		cursorTargetSetupVisitor = new CursorTargetSetupVisitor();
 
-		this.localPlayer.addStateListener(this);
+		localPlayer.addStateListener(this);
 
-		this.itemCommandCardCommandListener = new ItemCommandCardCommandListener();
-		this.anyClickableUnitFilter = new AnyClickableUnitFilter();
-		this.anyTargetableUnitFilter = new AnyTargetableUnitFilter();
+		itemCommandCardCommandListener = new ItemCommandCardCommandListener();
+		anyClickableUnitFilter = new AnyClickableUnitFilter();
+		anyTargetableUnitFilter = new AnyTargetableUnitFilter();
 
-		this.musicSLK = new DataTable(StringBundle.EMPTY);
+		musicSLK = new DataTable(StringBundle.EMPTY);
 		final String musicSLKPath = "UI\\SoundInfo\\Music.SLK";
 		if (war3MapViewer.dataSource.has(musicSLKPath)) {
 			try (InputStream miscDataTxtStream = war3MapViewer.dataSource.getResourceAsStream(musicSLKPath)) {
-				this.musicSLK.readSLK(miscDataTxtStream);
+				musicSLK.readSLK(miscDataTxtStream);
 			}
 			catch (final IOException e) {
 				e.printStackTrace();
@@ -422,9 +417,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private MeleeUIMinimap createMinimap(final War3MapViewer war3MapViewer) {
-		final Rectangle minimapDisplayArea = new Rectangle(18.75f * this.widthRatioCorrection,
-				13.75f * this.heightRatioCorrection, 278.75f * this.widthRatioCorrection,
-				276.25f * this.heightRatioCorrection);
+		final Rectangle minimapDisplayArea = new Rectangle(18.75f * widthRatioCorrection,
+				13.75f * heightRatioCorrection, 278.75f * widthRatioCorrection,
+				276.25f * heightRatioCorrection);
 		Texture minimapTexture = null;
 		if (war3MapViewer.dataSource.has("war3mapMap.tga")) {
 			try {
@@ -439,11 +434,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		else if (war3MapViewer.dataSource.has("war3mapMap.blp")) {
 			minimapTexture = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource, "war3mapMap.blp");
 		}
-		final Texture[] teamColors = new Texture[WarsmashConstants.MAX_PLAYERS];
-		for (int i = 0; i < teamColors.length; i++) {
-			teamColors[i] = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource,
-					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
-		}
+		final Texture[] teamColors = IntStream.range(0, WarsmashConstants.MAX_PLAYERS)
+				.mapToObj(i -> ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource,
+				"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp"))
+				.toArray(Texture[]::new);
 		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();
 		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors);
 	}
@@ -456,7 +450,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		// =================================
 		// Load skins and templates
 		// =================================
-		final CRace race = this.localPlayer.getRace();
+		final CRace race = localPlayer.getRace();
 		final String racialSkinKey;
 		int racialCommandIndex;
 		if (race == null) {
@@ -465,344 +459,350 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 		else {
 			switch (race) {
-			case HUMAN:
-				racialSkinKey = "Human";
-				racialCommandIndex = 0;
-				break;
-			case ORC:
-				racialSkinKey = "Orc";
-				racialCommandIndex = 1;
-				break;
-			case NIGHTELF:
-				racialSkinKey = "NightElf";
-				racialCommandIndex = 3;
-				break;
-			case UNDEAD:
-				racialSkinKey = "Undead";
-				racialCommandIndex = 2;
-				break;
-			case DEMON:
-			case OTHER:
-			default:
-				racialSkinKey = "Human";
-				racialCommandIndex = 0;
-				break;
+				case ORC:
+					racialSkinKey = "Orc";
+					racialCommandIndex = 1;
+					break;
+				case NIGHTELF:
+					racialSkinKey = "NightElf";
+					racialCommandIndex = 3;
+					break;
+				case UNDEAD:
+					racialSkinKey = "Undead";
+					racialCommandIndex = 2;
+					break;
+				case DEMON:
+				case OTHER:
+				case HUMAN:
+				default:
+					racialSkinKey = "Human";
+					racialCommandIndex = 0;
+					break;
 			}
 		}
-		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, racialSkinKey), this.uiViewport,
-				this.uiScene, this.war3MapViewer, racialCommandIndex, this.war3MapViewer.getAllObjectData().getWts());
-		this.rootFrameListener.onCreate(this.rootFrame);
+		rootFrame = new GameUI(dataSource, GameUI.loadSkin(dataSource, racialSkinKey), uiViewport,
+				uiScene, war3MapViewer, racialCommandIndex, war3MapViewer.getAllObjectData().getWts());
+		rootFrameListener.onCreate(rootFrame);
 		try {
-			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
+			rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
 		}
 		catch (final IOException exc) {
 			throw new IllegalStateException("Unable to load FrameDef.toc", exc);
 		}
 		try {
-			this.rootFrame.loadTOCFile("UI\\FrameDef\\SmashFrameDef.toc");
+			rootFrame.loadTOCFile("UI\\FrameDef\\SmashFrameDef.toc");
 		}
 		catch (final IOException exc) {
 			throw new IllegalStateException("Unable to load SmashFrameDef.toc", exc);
 		}
-		this.damageBackdrops = new InfoPanelIconBackdrops(CAttackType.values(), this.rootFrame, "Damage", "Neutral");
-		this.defenseBackdrops = new InfoPanelIconBackdrops(CDefenseType.values(), this.rootFrame, "Armor", "Neutral");
+		damageBackdrops = new InfoPanelIconBackdrops(CAttackType.values(), rootFrame, "Damage", "Neutral");
+		defenseBackdrops = new InfoPanelIconBackdrops(CDefenseType.values(), rootFrame, "Armor", "Neutral");
 
 		// =================================
 		// Load major UI components
 		// =================================
 		// Console UI is the background with the racial theme
-		this.consoleUI = this.rootFrame.createSimpleFrame("ConsoleUI", this.rootFrame, 0);
-		this.consoleUI.setSetAllPoints(true);
+		consoleUI = rootFrame.createSimpleFrame("ConsoleUI", rootFrame, 0);
+		consoleUI.setSetAllPoints(true);
 
 		// Resource bar is a 3 part bar with Gold, Lumber, and Food.
 		// Its template does not specify where to put it, so we must
 		// put it in the "TOPRIGHT" corner.
-		this.resourceBar = this.rootFrame.createSimpleFrame("ResourceBarFrame", this.consoleUI, 0);
-		this.resourceBar.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, this.consoleUI, FramePoint.TOPRIGHT, 0, 0));
-		this.resourceBarGoldText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarGoldText", 0);
+		resourceBar = rootFrame.createSimpleFrame("ResourceBarFrame", consoleUI, 0);
+		resourceBar.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, consoleUI, FramePoint.TOPRIGHT, 0, 0));
+		resourceBarGoldText = (StringFrame) rootFrame.getFrameByName("ResourceBarGoldText", 0);
 		goldChanged();
-		this.resourceBarLumberText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarLumberText", 0);
+		resourceBarLumberText = (StringFrame) rootFrame.getFrameByName("ResourceBarLumberText", 0);
 		lumberChanged();
-		this.resourceBarSupplyText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarSupplyText", 0);
+		resourceBarSupplyText = (StringFrame) rootFrame.getFrameByName("ResourceBarSupplyText", 0);
 		foodChanged();
-		this.resourceBarUpkeepText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarUpkeepText", 0);
+		resourceBarUpkeepText = (StringFrame) rootFrame.getFrameByName("ResourceBarUpkeepText", 0);
 		upkeepChanged();
 
-		final UIFrame upperButtonBar = this.rootFrame.createSimpleFrame("UpperButtonBarFrame", this.consoleUI, 0);
-		upperButtonBar.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.consoleUI, FramePoint.TOPLEFT, 0, 0));
+		final UIFrame upperButtonBar = rootFrame.createSimpleFrame("UpperButtonBarFrame", consoleUI, 0);
+		upperButtonBar.addSetPoint(new SetPoint(FramePoint.TOPLEFT, consoleUI, FramePoint.TOPLEFT, 0, 0));
 
-		this.questsButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarQuestsButton", 0);
-		this.questsButton.setEnabled(false);
-		this.menuButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarMenuButton", 0);
-		this.alliesButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarAlliesButton", 0);
-		this.alliesButton.setEnabled(false);
-		this.chatButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarChatButton", 0);
-		this.chatButton.setEnabled(false);
+		questsButton = (SimpleButtonFrame) rootFrame.getFrameByName("UpperButtonBarQuestsButton", 0);
+		questsButton.setEnabled(false);
+		menuButton = (SimpleButtonFrame) rootFrame.getFrameByName("UpperButtonBarMenuButton", 0);
+		alliesButton = (SimpleButtonFrame) rootFrame.getFrameByName("UpperButtonBarAlliesButton", 0);
+		alliesButton.setEnabled(false);
+		chatButton = (SimpleButtonFrame) rootFrame.getFrameByName("UpperButtonBarChatButton", 0);
+		chatButton.setEnabled(false);
 
-		this.smashEscMenu = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashEscMenu", this.rootFrame, 0);
-		this.smashEscMenu.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
-		final UIFrame escMenuBackdrop = this.rootFrame.createFrame("EscMenuBackdrop", this.smashEscMenu, 0, 0);
+		smashEscMenu = (SimpleFrame) rootFrame.createSimpleFrame("SmashEscMenu", rootFrame, 0);
+		smashEscMenu.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(uiViewport, -0.05f)));
+		final UIFrame escMenuBackdrop = rootFrame.createFrame("EscMenuBackdrop", smashEscMenu, 0, 0);
 		escMenuBackdrop.setVisible(false);
-		final UIFrame escMenuMainPanel = this.rootFrame.createFrame("EscMenuMainPanel", this.smashEscMenu, 0, 0);
+		final UIFrame escMenuMainPanel = rootFrame.createFrame("EscMenuMainPanel", smashEscMenu, 0, 0);
 		escMenuMainPanel.setVisible(false);
-		this.smashEscMenu.add(escMenuBackdrop);
-		this.smashEscMenu.add(escMenuMainPanel);
+		smashEscMenu.add(escMenuBackdrop);
+		smashEscMenu.add(escMenuMainPanel);
 
-		final UIFrame escMenuInnerMainPanel = this.rootFrame.getFrameByName("MainPanel", 0);
-		final GlueTextButtonFrame pauseButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("PauseButton", 0);
+		final UIFrame escMenuInnerMainPanel = rootFrame.getFrameByName("MainPanel", 0);
+		final GlueTextButtonFrame pauseButton = (GlueTextButtonFrame) rootFrame.getFrameByName("PauseButton", 0);
 		pauseButton.setEnabled(false);
-		final GlueTextButtonFrame saveGameButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("SaveGameButton",
+		final GlueTextButtonFrame saveGameButton = (GlueTextButtonFrame) rootFrame.getFrameByName("SaveGameButton",
 				0);
 		saveGameButton.setEnabled(false);
-		final GlueTextButtonFrame loadGameButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("LoadGameButton",
+		final GlueTextButtonFrame loadGameButton = (GlueTextButtonFrame) rootFrame.getFrameByName("LoadGameButton",
 				0);
 		loadGameButton.setEnabled(false);
-		final GlueTextButtonFrame optionsButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("OptionsButton",
+		final GlueTextButtonFrame optionsButton = (GlueTextButtonFrame) rootFrame.getFrameByName("OptionsButton",
 				0);
 		optionsButton.setEnabled(false);
-		final GlueTextButtonFrame helpButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("HelpButton", 0);
+		final GlueTextButtonFrame helpButton = (GlueTextButtonFrame) rootFrame.getFrameByName("HelpButton", 0);
 		helpButton.setEnabled(false);
-		final GlueTextButtonFrame tipsButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("TipsButton", 0);
+		final GlueTextButtonFrame tipsButton = (GlueTextButtonFrame) rootFrame.getFrameByName("TipsButton", 0);
 		tipsButton.setEnabled(false);
-		final GlueTextButtonFrame endGameButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("EndGameButton",
+		final GlueTextButtonFrame endGameButton = (GlueTextButtonFrame) rootFrame.getFrameByName("EndGameButton",
 				0);
-		final GlueTextButtonFrame returnButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("ReturnButton", 0);
+		final GlueTextButtonFrame returnButton = (GlueTextButtonFrame) rootFrame.getFrameByName("ReturnButton", 0);
 
-		final UIFrame escMenuInnerEndGamePanel = this.rootFrame.getFrameByName("EndGamePanel", 0);
-		final GlueTextButtonFrame endGamePreviousButton = (GlueTextButtonFrame) this.rootFrame
+		final UIFrame escMenuInnerEndGamePanel = rootFrame.getFrameByName("EndGamePanel", 0);
+		final GlueTextButtonFrame endGamePreviousButton = (GlueTextButtonFrame) rootFrame
 				.getFrameByName("PreviousButton", 0);
-		final GlueTextButtonFrame endGameQuitButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("QuitButton",
+		final GlueTextButtonFrame endGameQuitButton = (GlueTextButtonFrame) rootFrame.getFrameByName("QuitButton",
 				0);
-		final GlueTextButtonFrame endGameRestartButton = (GlueTextButtonFrame) this.rootFrame
+		final GlueTextButtonFrame endGameRestartButton = (GlueTextButtonFrame) rootFrame
 				.getFrameByName("RestartButton", 0);
 		endGameRestartButton.setEnabled(false);
-		final GlueTextButtonFrame endGameExitButton = (GlueTextButtonFrame) this.rootFrame.getFrameByName("ExitButton",
+		final GlueTextButtonFrame endGameExitButton = (GlueTextButtonFrame) rootFrame.getFrameByName("ExitButton",
 				0);
 
-		final UIFrame escMenuInnerConfirmQuitPanel = this.rootFrame.getFrameByName("ConfirmQuitPanel", 0);
-		final GlueTextButtonFrame confirmQuitCancelButton = (GlueTextButtonFrame) this.rootFrame
+		final UIFrame escMenuInnerConfirmQuitPanel = rootFrame.getFrameByName("ConfirmQuitPanel", 0);
+		final GlueTextButtonFrame confirmQuitCancelButton = (GlueTextButtonFrame) rootFrame
 				.getFrameByName("ConfirmQuitCancelButton", 0);
-		final GlueTextButtonFrame confirmQuitQuitButton = (GlueTextButtonFrame) this.rootFrame
+		final GlueTextButtonFrame confirmQuitQuitButton = (GlueTextButtonFrame) rootFrame
 				.getFrameByName("ConfirmQuitQuitButton", 0);
-		final UIFrame escMenuInnerHelpPanel = this.rootFrame.getFrameByName("HelpPanel", 0);
-		final UIFrame escMenuInnerTipsPanel = this.rootFrame.getFrameByName("TipsPanel", 0);
+		final UIFrame escMenuInnerHelpPanel = rootFrame.getFrameByName("HelpPanel", 0);
+		final UIFrame escMenuInnerTipsPanel = rootFrame.getFrameByName("TipsPanel", 0);
 		escMenuInnerMainPanel.setVisible(false);
 		escMenuInnerEndGamePanel.setVisible(false);
 		escMenuInnerConfirmQuitPanel.setVisible(false);
 		escMenuInnerHelpPanel.setVisible(false);
 		escMenuInnerTipsPanel.setVisible(false);
 
-		this.menuButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				escMenuBackdrop.setVisible(true);
-				escMenuMainPanel.setVisible(true);
-				MeleeUI.this.smashEscMenu.setVisible(true);
-				escMenuInnerMainPanel.setVisible(true);
-				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerMainPanel);
-			}
+		menuButton.setOnClick(() -> {
+			escMenuBackdrop.setVisible(true);
+			escMenuMainPanel.setVisible(true);
+			smashEscMenu.setVisible(true);
+			escMenuInnerMainPanel.setVisible(true);
+			updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerMainPanel);
 		});
-		returnButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				escMenuBackdrop.setVisible(false);
-				escMenuMainPanel.setVisible(false);
-				MeleeUI.this.smashEscMenu.setVisible(false);
-				escMenuInnerMainPanel.setVisible(false);
-			}
+		returnButton.setOnClick(() -> {
+			escMenuBackdrop.setVisible(false);
+			escMenuMainPanel.setVisible(false);
+			smashEscMenu.setVisible(false);
+			escMenuInnerMainPanel.setVisible(false);
 		});
-		endGameButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				escMenuInnerMainPanel.setVisible(false);
-				escMenuInnerEndGamePanel.setVisible(true);
-				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerEndGamePanel);
-			}
+		endGameButton.setOnClick(() -> {
+			escMenuInnerMainPanel.setVisible(false);
+			escMenuInnerEndGamePanel.setVisible(true);
+			updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerEndGamePanel);
 		});
-		endGamePreviousButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				escMenuInnerEndGamePanel.setVisible(false);
-				escMenuInnerMainPanel.setVisible(true);
-				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerMainPanel);
-			}
+		endGamePreviousButton.setOnClick(() -> {
+			escMenuInnerEndGamePanel.setVisible(false);
+			escMenuInnerMainPanel.setVisible(true);
+			updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerMainPanel);
 		});
-		endGameQuitButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				escMenuInnerEndGamePanel.setVisible(false);
-				MeleeUI.this.exitGameRunnable.run();
-			}
+		endGameQuitButton.setOnClick(() -> {
+			escMenuInnerEndGamePanel.setVisible(false);
+			exitGameRunnable.run();
 		});
-		endGameExitButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				escMenuInnerEndGamePanel.setVisible(false);
-				escMenuInnerConfirmQuitPanel.setVisible(true);
-				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerConfirmQuitPanel);
-			}
+		endGameExitButton.setOnClick(() -> {
+			escMenuInnerEndGamePanel.setVisible(false);
+			escMenuInnerConfirmQuitPanel.setVisible(true);
+			updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerConfirmQuitPanel);
 		});
-		confirmQuitCancelButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				escMenuInnerEndGamePanel.setVisible(true);
-				escMenuInnerConfirmQuitPanel.setVisible(false);
-				updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerEndGamePanel);
-			}
+		confirmQuitCancelButton.setOnClick(() -> {
+			escMenuInnerEndGamePanel.setVisible(true);
+			escMenuInnerConfirmQuitPanel.setVisible(false);
+			updateEscMenuCurrentPanel(escMenuBackdrop, escMenuMainPanel, escMenuInnerEndGamePanel);
 		});
-		confirmQuitQuitButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				Gdx.app.exit();
-			}
-		});
+		confirmQuitQuitButton.setOnClick(() -> Gdx.app.exit());
 
 		// Create the Time Indicator (clock)
-		this.timeIndicator = (SpriteFrame) this.rootFrame.createFrame("TimeOfDayIndicator", this.rootFrame, 0, 0);
-		this.timeIndicator.setSequence(0); // play the stand
-		this.timeIndicator.setAnimationSpeed(0.0f); // do not advance automatically
+		timeIndicator = (SpriteFrame) rootFrame.createFrame("TimeOfDayIndicator", rootFrame, 0, 0);
+		timeIndicator.setSequence(0); // play the stand
+		timeIndicator.setAnimationSpeed(0.0f); // do not advance automatically
 
 		// Create the unit portrait stuff
-		this.portrait = new Portrait(this.war3MapViewer, this.portraitScene);
+		portrait = new Portrait(war3MapViewer, portraitScene);
 		positionPortrait();
-		this.unitPortrait = this.rootFrame.createSimpleFrame("UnitPortrait", this.consoleUI, 0);
-		this.unitLifeText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitHitPointText", 0);
-		this.unitManaText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitManaPointText", 0);
+		unitPortrait = rootFrame.createSimpleFrame("UnitPortrait", consoleUI, 0);
+		unitLifeText = (StringFrame) rootFrame.getFrameByName("UnitPortraitHitPointText", 0);
+		unitManaText = (StringFrame) rootFrame.getFrameByName("UnitPortraitManaPointText", 0);
 
-		final float infoPanelUnitDetailWidth = GameUI.convertY(this.uiViewport, 0.180f);
-		final float infoPanelUnitDetailHeight = GameUI.convertY(this.uiViewport, 0.120f);
-		this.smashSimpleInfoPanel = this.rootFrame.createSimpleFrame("SmashSimpleInfoPanel", this.rootFrame, 0);
-		this.smashSimpleInfoPanel
-				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, 0.0f)));
-		this.smashSimpleInfoPanel.setWidth(infoPanelUnitDetailWidth);
-		this.smashSimpleInfoPanel.setHeight(infoPanelUnitDetailHeight);
+		final float infoPanelUnitDetailWidth = GameUI.convertY(uiViewport, 0.180f);
+		final float infoPanelUnitDetailHeight = GameUI.convertY(uiViewport, 0.120f);
+		smashSimpleInfoPanel = rootFrame.createSimpleFrame("SmashSimpleInfoPanel", rootFrame, 0);
+		smashSimpleInfoPanel
+				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(uiViewport, 0.0f)));
+		smashSimpleInfoPanel.setWidth(infoPanelUnitDetailWidth);
+		smashSimpleInfoPanel.setHeight(infoPanelUnitDetailHeight);
 
 		// Create Simple Info Unit Detail
-		this.simpleInfoPanelUnitDetail = this.rootFrame.createSimpleFrame("SimpleInfoPanelUnitDetail",
-				this.smashSimpleInfoPanel, 0);
-		this.simpleNameValue = (StringFrame) this.rootFrame.getFrameByName("SimpleNameValue", 0);
-		this.simpleClassValue = (StringFrame) this.rootFrame.getFrameByName("SimpleClassValue", 0);
-		this.simpleBuildingActionLabel = (StringFrame) this.rootFrame.getFrameByName("SimpleBuildingActionLabel", 0);
-		this.simpleBuildTimeIndicator = (SimpleStatusBarFrame) this.rootFrame.getFrameByName("SimpleBuildTimeIndicator",
+		simpleInfoPanelUnitDetail = rootFrame.createSimpleFrame("SimpleInfoPanelUnitDetail",
+				smashSimpleInfoPanel, 0);
+		simpleNameValue = (StringFrame) rootFrame.getFrameByName("SimpleNameValue", 0);
+		simpleClassValue = (StringFrame) rootFrame.getFrameByName("SimpleClassValue", 0);
+		simpleBuildingActionLabel = (StringFrame) rootFrame.getFrameByName("SimpleBuildingActionLabel", 0);
+		simpleBuildTimeIndicator = (SimpleStatusBarFrame) rootFrame.getFrameByName("SimpleBuildTimeIndicator",
 				0);
-		final TextureFrame simpleBuildTimeIndicatorBar = this.simpleBuildTimeIndicator.getBarFrame();
-		simpleBuildTimeIndicatorBar.setTexture("SimpleBuildTimeIndicator", this.rootFrame);
-		final TextureFrame simpleBuildTimeIndicatorBorder = this.simpleBuildTimeIndicator.getBorderFrame();
-		simpleBuildTimeIndicatorBorder.setTexture("SimpleBuildTimeIndicatorBorder", this.rootFrame);
-		final float buildTimeIndicatorWidth = GameUI.convertX(this.uiViewport, 0.10538f);
-		final float buildTimeIndicatorHeight = GameUI.convertY(this.uiViewport, 0.0103f);
-		this.simpleBuildTimeIndicator.setWidth(buildTimeIndicatorWidth);
-		this.simpleBuildTimeIndicator.setHeight(buildTimeIndicatorHeight);
+		final TextureFrame simpleBuildTimeIndicatorBar = simpleBuildTimeIndicator.getBarFrame();
+		simpleBuildTimeIndicatorBar.setTexture("SimpleBuildTimeIndicator", rootFrame);
+		final TextureFrame simpleBuildTimeIndicatorBorder = simpleBuildTimeIndicator.getBorderFrame();
+		simpleBuildTimeIndicatorBorder.setTexture("SimpleBuildTimeIndicatorBorder", rootFrame);
+		final float buildTimeIndicatorWidth = GameUI.convertX(uiViewport, 0.10538f);
+		final float buildTimeIndicatorHeight = GameUI.convertY(uiViewport, 0.0103f);
+		simpleBuildTimeIndicator.setWidth(buildTimeIndicatorWidth);
+		simpleBuildTimeIndicator.setHeight(buildTimeIndicatorHeight);
 
-		this.simpleHeroLevelBar = (SimpleStatusBarFrame) this.rootFrame.getFrameByName("SimpleHeroLevelBar", 0);
-		final TextureFrame simpleHeroLevelBarBar = this.simpleHeroLevelBar.getBarFrame();
-		simpleHeroLevelBarBar.setTexture("SimpleXpBarConsole", this.rootFrame);
+		simpleHeroLevelBar = (SimpleStatusBarFrame) rootFrame.getFrameByName("SimpleHeroLevelBar", 0);
+		final TextureFrame simpleHeroLevelBarBar = simpleHeroLevelBar.getBarFrame();
+		simpleHeroLevelBarBar.setTexture("SimpleXpBarConsole", rootFrame);
 		simpleHeroLevelBarBar.setColor(new Color(138f / 255f, 0, 131f / 255f, 1f));
-		final TextureFrame simpleHeroLevelBarBorder = this.simpleHeroLevelBar.getBorderFrame();
-		simpleHeroLevelBarBorder.setTexture("SimpleXpBarBorder", this.rootFrame);
-		this.simpleHeroLevelBar.setWidth(infoPanelUnitDetailWidth);
+		final TextureFrame simpleHeroLevelBarBorder = simpleHeroLevelBar.getBorderFrame();
+		simpleHeroLevelBarBorder.setTexture("SimpleXpBarBorder", rootFrame);
+		simpleHeroLevelBar.setWidth(infoPanelUnitDetailWidth);
 
 		// Create Simple Info Panel Building Detail
-		this.simpleInfoPanelBuildingDetail = this.rootFrame.createSimpleFrame("SimpleInfoPanelBuildingDetail",
-				this.smashSimpleInfoPanel, 0);
-		this.simpleBuildingNameValue = (StringFrame) this.rootFrame.getFrameByName("SimpleBuildingNameValue", 0);
-		this.simpleBuildingDescriptionValue = (StringFrame) this.rootFrame
+		simpleInfoPanelBuildingDetail = rootFrame.createSimpleFrame("SimpleInfoPanelBuildingDetail",
+				smashSimpleInfoPanel, 0);
+		simpleBuildingNameValue = (StringFrame) rootFrame.getFrameByName("SimpleBuildingNameValue", 0);
+		simpleBuildingDescriptionValue = (StringFrame) rootFrame
 				.getFrameByName("SimpleBuildingDescriptionValue", 0);
-		this.simpleBuildingBuildingActionLabel = (StringFrame) this.rootFrame
+		simpleBuildingBuildingActionLabel = (StringFrame) rootFrame
 				.getFrameByName("SimpleBuildingActionLabel", 0);
-		this.simpleBuildingBuildTimeIndicator = (SimpleStatusBarFrame) this.rootFrame
+		simpleBuildingBuildTimeIndicator = (SimpleStatusBarFrame) rootFrame
 				.getFrameByName("SimpleBuildTimeIndicator", 0);
-		final TextureFrame simpleBuildingBuildTimeIndicatorBar = this.simpleBuildingBuildTimeIndicator.getBarFrame();
-		simpleBuildingBuildTimeIndicatorBar.setTexture("SimpleBuildTimeIndicator", this.rootFrame);
-		final TextureFrame simpleBuildingBuildTimeIndicatorBorder = this.simpleBuildingBuildTimeIndicator
+		final TextureFrame simpleBuildingBuildTimeIndicatorBar = simpleBuildingBuildTimeIndicator.getBarFrame();
+		simpleBuildingBuildTimeIndicatorBar.setTexture("SimpleBuildTimeIndicator", rootFrame);
+		final TextureFrame simpleBuildingBuildTimeIndicatorBorder = simpleBuildingBuildTimeIndicator
 				.getBorderFrame();
-		simpleBuildingBuildTimeIndicatorBorder.setTexture("SimpleBuildTimeIndicatorBorder", this.rootFrame);
-		this.simpleBuildingBuildTimeIndicator.setWidth(buildTimeIndicatorWidth);
-		this.simpleBuildingBuildTimeIndicator.setHeight(buildTimeIndicatorHeight);
-		this.simpleInfoPanelBuildingDetail.setVisible(false);
-		final TextureFrame simpleBuildQueueBackdrop = (TextureFrame) this.rootFrame
+		simpleBuildingBuildTimeIndicatorBorder.setTexture("SimpleBuildTimeIndicatorBorder", rootFrame);
+		simpleBuildingBuildTimeIndicator.setWidth(buildTimeIndicatorWidth);
+		simpleBuildingBuildTimeIndicator.setHeight(buildTimeIndicatorHeight);
+		simpleInfoPanelBuildingDetail.setVisible(false);
+		final TextureFrame simpleBuildQueueBackdrop = (TextureFrame) rootFrame
 				.getFrameByName("SimpleBuildQueueBackdrop", 0);
 		simpleBuildQueueBackdrop.setWidth(infoPanelUnitDetailWidth);
 		simpleBuildQueueBackdrop.setHeight(infoPanelUnitDetailWidth * 0.5f);
 
-		this.queueIconFrames[0] = new QueueIcon("SmashBuildQueueIcon0", this.smashSimpleInfoPanel, this, 0);
+		queueIconFrames[0] = new QueueIcon("SmashBuildQueueIcon0", smashSimpleInfoPanel, this, 0);
 		final TextureFrame queueIconFrameBackdrop0 = new TextureFrame("SmashBuildQueueIcon0Backdrop",
-				this.queueIconFrames[0], false, new Vector4Definition(0, 1, 0, 1));
+				queueIconFrames[0], false, new Vector4Definition(0, 1, 0, 1));
 		queueIconFrameBackdrop0
-				.addSetPoint(new SetPoint(FramePoint.CENTER, this.queueIconFrames[0], FramePoint.CENTER, 0, 0));
-		this.queueIconFrames[0].set(queueIconFrameBackdrop0);
-		this.queueIconFrames[0]
-				.addSetPoint(new SetPoint(FramePoint.CENTER, this.smashSimpleInfoPanel, FramePoint.BOTTOMLEFT,
+				.addSetPoint(new SetPoint(FramePoint.CENTER, queueIconFrames[0], FramePoint.CENTER, 0, 0));
+		queueIconFrames[0].set(queueIconFrameBackdrop0);
+		queueIconFrames[0]
+				.addSetPoint(new SetPoint(FramePoint.CENTER, smashSimpleInfoPanel, FramePoint.BOTTOMLEFT,
 						(infoPanelUnitDetailWidth * (15 + 19f)) / 256, (infoPanelUnitDetailWidth * (66 + 19f)) / 256));
-		this.frontQueueIconWidth = (infoPanelUnitDetailWidth * 38) / 256;
-		this.queueIconFrames[0].setWidth(this.frontQueueIconWidth);
-		this.queueIconFrames[0].setHeight(this.frontQueueIconWidth);
-		queueIconFrameBackdrop0.setWidth(this.frontQueueIconWidth);
-		queueIconFrameBackdrop0.setHeight(this.frontQueueIconWidth);
-		this.rootFrame.add(this.queueIconFrames[0]);
+		frontQueueIconWidth = (infoPanelUnitDetailWidth * 38) / 256;
+		queueIconFrames[0].setWidth(frontQueueIconWidth);
+		queueIconFrames[0].setHeight(frontQueueIconWidth);
+		queueIconFrameBackdrop0.setWidth(frontQueueIconWidth);
+		queueIconFrameBackdrop0.setHeight(frontQueueIconWidth);
+		rootFrame.add(queueIconFrames[0]);
 
-		for (int i = 1; i < this.queueIconFrames.length; i++) {
-			this.queueIconFrames[i] = new QueueIcon("SmashBuildQueueIcon" + i, this.smashSimpleInfoPanel, this, i);
+		for (int i = 1; i < queueIconFrames.length; i++) {
+			queueIconFrames[i] = new QueueIcon("SmashBuildQueueIcon" + i, smashSimpleInfoPanel, this, i);
 			final TextureFrame queueIconFrameBackdrop = new TextureFrame("SmashBuildQueueIcon" + i + "Backdrop",
-					this.queueIconFrames[i], false, new Vector4Definition(0, 1, 0, 1));
-			this.queueIconFrames[i].set(queueIconFrameBackdrop);
+					queueIconFrames[i], false, new Vector4Definition(0, 1, 0, 1));
+			queueIconFrames[i].set(queueIconFrameBackdrop);
 			queueIconFrameBackdrop
-					.addSetPoint(new SetPoint(FramePoint.CENTER, this.queueIconFrames[i], FramePoint.CENTER, 0, 0));
-			this.queueIconFrames[i].addSetPoint(new SetPoint(FramePoint.CENTER, this.smashSimpleInfoPanel,
+					.addSetPoint(new SetPoint(FramePoint.CENTER, queueIconFrames[i], FramePoint.CENTER, 0, 0));
+			queueIconFrames[i].addSetPoint(new SetPoint(FramePoint.CENTER, smashSimpleInfoPanel,
 					FramePoint.BOTTOMLEFT, (infoPanelUnitDetailWidth * (13 + 14.5f + (40 * (i - 1)))) / 256,
 					(infoPanelUnitDetailWidth * (24 + 14.5f)) / 256));
 			final float queueIconWidth = (infoPanelUnitDetailWidth * 29) / 256;
-			this.queueIconFrames[i].setWidth(queueIconWidth);
-			this.queueIconFrames[i].setHeight(queueIconWidth);
+			queueIconFrames[i].setWidth(queueIconWidth);
+			queueIconFrames[i].setHeight(queueIconWidth);
 			queueIconFrameBackdrop.setWidth(queueIconWidth);
 			queueIconFrameBackdrop.setHeight(queueIconWidth);
-			this.rootFrame.add(this.queueIconFrames[i]);
+			rootFrame.add(queueIconFrames[i]);
 		}
-		this.selectWorkerInsideFrame = new QueueIcon("SmashBuildQueueWorkerIcon", this.smashSimpleInfoPanel, this, 1);
+		selectWorkerInsideFrame = new QueueIcon("SmashBuildQueueWorkerIcon", smashSimpleInfoPanel, this, 1);
 		final TextureFrame selectWorkerInsideIconFrameBackdrop = new TextureFrame("SmashBuildQueueWorkerIconBackdrop",
-				this.selectWorkerInsideFrame, false, new Vector4Definition(0, 1, 0, 1));
-		this.selectWorkerInsideFrame.set(selectWorkerInsideIconFrameBackdrop);
+				selectWorkerInsideFrame, false, new Vector4Definition(0, 1, 0, 1));
+		selectWorkerInsideFrame.set(selectWorkerInsideIconFrameBackdrop);
 		selectWorkerInsideIconFrameBackdrop
-				.addSetPoint(new SetPoint(FramePoint.CENTER, this.selectWorkerInsideFrame, FramePoint.CENTER, 0, 0));
-		this.selectWorkerInsideFrame
-				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.queueIconFrames[1], FramePoint.TOPLEFT, 0, 0));
-		this.selectWorkerInsideFrame.setWidth(this.frontQueueIconWidth);
-		this.selectWorkerInsideFrame.setHeight(this.frontQueueIconWidth);
-		selectWorkerInsideIconFrameBackdrop.setWidth(this.frontQueueIconWidth);
-		selectWorkerInsideIconFrameBackdrop.setHeight(this.frontQueueIconWidth);
-		this.rootFrame.add(this.selectWorkerInsideFrame);
+				.addSetPoint(new SetPoint(FramePoint.CENTER, selectWorkerInsideFrame, FramePoint.CENTER, 0, 0));
+		selectWorkerInsideFrame
+				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, queueIconFrames[1], FramePoint.TOPLEFT, 0, 0));
+		selectWorkerInsideFrame.setWidth(frontQueueIconWidth);
+		selectWorkerInsideFrame.setHeight(frontQueueIconWidth);
+		selectWorkerInsideIconFrameBackdrop.setWidth(frontQueueIconWidth);
+		selectWorkerInsideIconFrameBackdrop.setHeight(frontQueueIconWidth);
+		rootFrame.add(selectWorkerInsideFrame);
 
-		final int halfSelectionMaxSize = this.selectedUnitFrames.length / 2;
-		for (int i = 0; i < this.selectedUnitFrames.length; i++) {
-			final FilterModeTextureFrame selectedSubgroupHighlightBackdrop = new FilterModeTextureFrame(
-					"SmashMultiSelectUnitIconHighlightBackdrop", this.smashSimpleInfoPanel, true,
-					new Vector4Definition(0, 1, 0, 1));
-			selectedSubgroupHighlightBackdrop.setFilterMode(FilterMode.ADDITIVE);
-			this.selectedUnitHighlightBackdrop[i] = selectedSubgroupHighlightBackdrop;
-			selectedSubgroupHighlightBackdrop.setTexture("SelectedSubgroupHighlight", this.rootFrame);
-			selectedSubgroupHighlightBackdrop.setWidth(this.frontQueueIconWidth * 1.37f);
-			selectedSubgroupHighlightBackdrop.setHeight(this.frontQueueIconWidth * 1.75f);
-			selectedSubgroupHighlightBackdrop.setColor(1.0f, 1.0f, 0.0f, 1.0f);
-			this.rootFrame.add(selectedSubgroupHighlightBackdrop);
-			selectedSubgroupHighlightBackdrop
-					.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
-							((-this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * .10f)
-									+ (this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
-							(((this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * -.75f))
-									- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+		final int halfSelectionMaxSize = selectedUnitFrames.length / 2;
+		for (int i = 0; i < selectedUnitFrames.length; i++) {
+			{
+				final FilterModeTextureFrame selectedSubgroupHighlightBackdrop = new FilterModeTextureFrame(
+						"SmashMultiSelectUnitIconHighlightBackdrop", smashSimpleInfoPanel, true,
+						new Vector4Definition(0, 1, 0, 1));
+				selectedSubgroupHighlightBackdrop.setFilterMode(FilterMode.ADDITIVE);
+				selectedUnitHighlightBackdrop[i] = selectedSubgroupHighlightBackdrop;
+				selectedSubgroupHighlightBackdrop.setTexture("SelectedSubgroupHighlight", rootFrame);
+				selectedSubgroupHighlightBackdrop.setWidth(frontQueueIconWidth * 1.37f);
+				selectedSubgroupHighlightBackdrop.setHeight(frontQueueIconWidth * 1.75f);
+				selectedSubgroupHighlightBackdrop.setColor(1.0f, 1.0f, 0.0f, 1.0f);
+				rootFrame.add(selectedSubgroupHighlightBackdrop);
+				selectedSubgroupHighlightBackdrop
+						.addSetPoint(new SetPoint(FramePoint.TOPLEFT, smashSimpleInfoPanel, FramePoint.TOPLEFT,
+								((-frontQueueIconWidth * .37f) / 2) + (frontQueueIconWidth * .10f)
+										+ (frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
+								(((frontQueueIconWidth * .37f) / 2) + (frontQueueIconWidth * -.75f))
+										- (frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			}
+			{
+				final TextureFrame cargoBackdrop = new TextureFrame("SmashCargoBackdrop", smashSimpleInfoPanel,
+						true, new Vector4Definition(0, 1, 0, 1));
+				cargoBackdrop.setVisible(false);
+				this.cargoBackdrop[i] = cargoBackdrop;
+				cargoBackdrop.setTexture("CargoBackdrop", rootFrame);
+				cargoBackdrop.setWidth(frontQueueIconWidth * 1.37f);
+				cargoBackdrop.setHeight(frontQueueIconWidth * 1.75f);
+				cargoBackdrop.setColor(1.0f, 1.0f, 0.0f, 1.0f);
+				rootFrame.add(cargoBackdrop);
+				cargoBackdrop
+						.addSetPoint(new SetPoint(FramePoint.TOPLEFT, smashSimpleInfoPanel, FramePoint.TOPLEFT,
+								((-frontQueueIconWidth * .37f) / 2) + (frontQueueIconWidth * .10f)
+										+ (frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
+								(((frontQueueIconWidth * .37f) / 2) + (frontQueueIconWidth * -.75f))
+										- (frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			}
 		}
-		this.multiSelectClickListener = new MultiSelectionIconListener() {
+		cargoClickListener = new MultiSelectionIconListener() {
+			@Override
+			public void multiSelectIconRelease(final int index) {
+
+			}
+
+			@Override
+			public void multiSelectIconPress(final int index) {
+
+			}
+
 			@Override
 			public void multiSelectIconClicked(final int index) {
-				if (index < MeleeUI.this.selectedUnits.size()) {
-					final RenderUnit clickUnit = MeleeUI.this.selectedUnits.get(index);
-					if (MeleeUI.this.activeCommand != null) {
+
+			}
+		};
+		multiSelectClickListener = new MultiSelectionIconListener() {
+			@Override
+			public void multiSelectIconClicked(final int index) {
+				if (index < selectedUnits.size()) {
+					final RenderUnit clickUnit = selectedUnits.get(index);
+					if (activeCommand != null) {
 						useActiveCommandOnUnit(isShiftDown(), clickUnit);
 					}
-					else if (clickUnit == MeleeUI.this.selectedUnit) {
-						final List<RenderWidget> newSelection = Arrays.asList(MeleeUI.this.selectedUnit);
+					else if (Objects.equals(clickUnit, selectedUnit)) {
+						final List<RenderWidget> newSelection = Collections.singletonList(selectedUnit);
 						selectWidgets(newSelection);
-						MeleeUI.this.war3MapViewer.doSelectUnit(newSelection);
+						war3MapViewer.doSelectUnit(newSelection);
 					}
 					else {
 						selectUnit(clickUnit);
@@ -818,331 +818,374 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			public void multiSelectIconRelease(final int index) {
 			}
 		};
-		for (int i = 0; i < this.selectedUnitFrames.length; i++) {
-			this.selectedUnitFrames[i] = new MultiSelectionIcon("SmashMultiSelectUnitIcon", this.smashSimpleInfoPanel,
-					this.multiSelectClickListener, i);
+		for (int i = 0; i < selectedUnitFrames.length; i++) {
+			selectedUnitFrames[i] = new MultiSelectionIcon("SmashMultiSelectUnitIcon", smashSimpleInfoPanel,
+					multiSelectClickListener, i);
 			final TextureFrame multiSelectUnitIconFrameBackdrop = new TextureFrame("SmashMultiSelectUnitIconBackdrop",
-					this.selectedUnitFrames[i], false, new Vector4Definition(0, 1, 0, 1));
+					selectedUnitFrames[i], false, new Vector4Definition(0, 1, 0, 1));
 
 			final SimpleStatusBarFrame hpBarFrame = new SimpleStatusBarFrame(
-					"SmashMultiSelectHpBar" + this.hpBarFrameIndex, this.rootFrame, true, true, 3.0f);
-			hpBarFrame.getBarFrame().setTexture("SimpleHpBarConsole", this.rootFrame);
-			hpBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
-			hpBarFrame.setWidth(this.frontQueueIconWidth);
-			hpBarFrame.setHeight(this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_HEIGHT_RATIO);
+					"SmashMultiSelectHpBar" + hpBarFrameIndex, rootFrame, true, true, 3.0f);
+			hpBarFrame.getBarFrame().setTexture("SimpleHpBarConsole", rootFrame);
+			hpBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", rootFrame);
+			hpBarFrame.setWidth(frontQueueIconWidth);
+			hpBarFrame.setHeight(frontQueueIconWidth * MultiSelectionIcon.HP_BAR_HEIGHT_RATIO);
 			hpBarFrame.addSetPoint(new SetPoint(FramePoint.TOP, multiSelectUnitIconFrameBackdrop, FramePoint.BOTTOM, 0,
-					-this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
+					-frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
 
 			final SimpleStatusBarFrame manaBarFrame = new SimpleStatusBarFrame(
-					"SmashMultiSelectManaBar" + this.hpBarFrameIndex, this.rootFrame, true, true, 3.0f);
-			manaBarFrame.getBarFrame().setTexture("SimpleManaBarConsole", this.rootFrame);
-			manaBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
-			manaBarFrame.setWidth(this.frontQueueIconWidth);
-			manaBarFrame.setHeight(this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_HEIGHT_RATIO);
+					"SmashMultiSelectManaBar" + hpBarFrameIndex, rootFrame, true, true, 3.0f);
+			manaBarFrame.getBarFrame().setTexture("SimpleManaBarConsole", rootFrame);
+			manaBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", rootFrame);
+			manaBarFrame.setWidth(frontQueueIconWidth);
+			manaBarFrame.setHeight(frontQueueIconWidth * MultiSelectionIcon.HP_BAR_HEIGHT_RATIO);
 			manaBarFrame.addSetPoint(new SetPoint(FramePoint.TOP, hpBarFrame, FramePoint.BOTTOM, 0,
-					-this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
+					-frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
 			manaBarFrame.getBarFrame().setColor(0f, 0f, 1f, 1f);
 
-			this.selectedUnitFrames[i].set(multiSelectUnitIconFrameBackdrop, hpBarFrame, manaBarFrame);
+			selectedUnitFrames[i].set(multiSelectUnitIconFrameBackdrop, hpBarFrame, manaBarFrame);
 			multiSelectUnitIconFrameBackdrop
-					.addSetPoint(new SetPoint(FramePoint.CENTER, this.selectedUnitFrames[i], FramePoint.CENTER, 0, 0));
-			this.selectedUnitFrames[i]
-					.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
-							(this.frontQueueIconWidth * .10f)
-									+ (this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
-							(this.frontQueueIconWidth * -.75f)
-									- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
-			this.selectedUnitFrames[i].setWidth(this.frontQueueIconWidth);
-			this.selectedUnitFrames[i].setHeight(this.frontQueueIconWidth);
-			multiSelectUnitIconFrameBackdrop.setWidth(this.frontQueueIconWidth);
-			multiSelectUnitIconFrameBackdrop.setHeight(this.frontQueueIconWidth);
-			this.rootFrame.add(this.selectedUnitFrames[i]);
+					.addSetPoint(new SetPoint(FramePoint.CENTER, selectedUnitFrames[i], FramePoint.CENTER, 0, 0));
+			selectedUnitFrames[i]
+					.addSetPoint(new SetPoint(FramePoint.TOPLEFT, smashSimpleInfoPanel, FramePoint.TOPLEFT,
+							(frontQueueIconWidth * .10f)
+									+ (frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
+							(frontQueueIconWidth * -.75f)
+									- (frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			selectedUnitFrames[i].setWidth(frontQueueIconWidth);
+			selectedUnitFrames[i].setHeight(frontQueueIconWidth);
+			multiSelectUnitIconFrameBackdrop.setWidth(frontQueueIconWidth);
+			multiSelectUnitIconFrameBackdrop.setHeight(frontQueueIconWidth);
+			rootFrame.add(selectedUnitFrames[i]);
 
-			this.selectedUnitFrames[i].setVisible(false);
+			selectedUnitFrames[i].setVisible(false);
+		}
+		for (int i = 0; i < cargoUnitFrames.length; i++) {
+			cargoUnitFrames[i] = new MultiSelectionIcon("SmashMultiSelectUnitIcon", smashSimpleInfoPanel,
+					cargoClickListener, i);
+			cargoUnitFrames[i].setVisible(false);
+			final TextureFrame cargoUnitIconFrameBackdrop = new TextureFrame("SmashCargoUnitIconBackdrop",
+					cargoUnitFrames[i], false, new Vector4Definition(0, 1, 0, 1));
+
+			final SimpleStatusBarFrame hpBarFrame = new SimpleStatusBarFrame(
+					"SmashMultiSelectHpBar" + hpBarFrameIndex, rootFrame, true, true, 3.0f);
+			hpBarFrame.getBarFrame().setTexture("SimpleHpBarConsole", rootFrame);
+			hpBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", rootFrame);
+			hpBarFrame.setWidth(frontQueueIconWidth);
+			hpBarFrame.setHeight(frontQueueIconWidth * MultiSelectionIcon.HP_BAR_HEIGHT_RATIO);
+			hpBarFrame.addSetPoint(new SetPoint(FramePoint.TOP, cargoUnitIconFrameBackdrop, FramePoint.BOTTOM, 0,
+					-frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
+
+			final SimpleStatusBarFrame manaBarFrame = new SimpleStatusBarFrame(
+					"SmashMultiSelectManaBar" + hpBarFrameIndex, rootFrame, true, true, 3.0f);
+			manaBarFrame.getBarFrame().setTexture("SimpleManaBarConsole", rootFrame);
+			manaBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", rootFrame);
+			manaBarFrame.setWidth(frontQueueIconWidth);
+			manaBarFrame.setHeight(frontQueueIconWidth * MultiSelectionIcon.HP_BAR_HEIGHT_RATIO);
+			manaBarFrame.addSetPoint(new SetPoint(FramePoint.TOP, hpBarFrame, FramePoint.BOTTOM, 0,
+					-frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
+			manaBarFrame.getBarFrame().setColor(0f, 0f, 1f, 1f);
+
+			cargoUnitFrames[i].set(cargoUnitIconFrameBackdrop, hpBarFrame, manaBarFrame);
+			cargoUnitIconFrameBackdrop
+					.addSetPoint(new SetPoint(FramePoint.CENTER, cargoUnitFrames[i], FramePoint.CENTER, 0, 0));
+			cargoUnitFrames[i]
+					.addSetPoint(new SetPoint(FramePoint.TOPLEFT, smashSimpleInfoPanel, FramePoint.TOPLEFT,
+							(frontQueueIconWidth * .10f)
+									+ (frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
+							(frontQueueIconWidth * -.75f)
+									- (frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			cargoUnitFrames[i].setWidth(frontQueueIconWidth);
+			cargoUnitFrames[i].setHeight(frontQueueIconWidth);
+			cargoUnitIconFrameBackdrop.setWidth(frontQueueIconWidth);
+			cargoUnitIconFrameBackdrop.setHeight(frontQueueIconWidth);
+			rootFrame.add(cargoUnitFrames[i]);
+
+			cargoUnitFrames[i].setVisible(false);
 		}
 
-		this.smashAttack1IconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconDamage",
-				this.simpleInfoPanelUnitDetail, 0);
-		this.smashAttack1IconWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
-				FramePoint.TOPLEFT, 0, GameUI.convertY(this.uiViewport, -0.040f)));
-		this.smashAttack1IconWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
-		this.smashAttack1IconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.030125f));
-		this.attack1Icon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", this.smashAttack1IconWrapper,
+		smashAttack1IconWrapper = (SimpleFrame) rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconDamage",
+				simpleInfoPanelUnitDetail, 0);
+		smashAttack1IconWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, simpleInfoPanelUnitDetail,
+				FramePoint.TOPLEFT, 0, GameUI.convertY(uiViewport, -0.040f)));
+		smashAttack1IconWrapper.setWidth(GameUI.convertX(uiViewport, 0.1f));
+		smashAttack1IconWrapper.setHeight(GameUI.convertY(uiViewport, 0.030125f));
+		attack1Icon = rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", smashAttack1IconWrapper,
 				0);
-		this.attack1IconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 0);
-		this.attack1InfoPanelIconValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconValue", 0);
-		this.attack1InfoPanelIconLevel = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconLevel", 0);
+		attack1IconBackdrop = (TextureFrame) rootFrame.getFrameByName("InfoPanelIconBackdrop", 0);
+		attack1InfoPanelIconValue = (StringFrame) rootFrame.getFrameByName("InfoPanelIconValue", 0);
+		attack1InfoPanelIconLevel = (StringFrame) rootFrame.getFrameByName("InfoPanelIconLevel", 0);
 
-		this.smashAttack2IconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconDamage",
-				this.simpleInfoPanelUnitDetail, 0);
-		this.smashAttack2IconWrapper
-				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-						GameUI.convertX(this.uiViewport, 0.1f), GameUI.convertY(this.uiViewport, -0.03925f)));
-		this.smashAttack2IconWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
-		this.smashAttack2IconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.030125f));
-		this.attack2Icon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", this.smashAttack2IconWrapper,
+		smashAttack2IconWrapper = (SimpleFrame) rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconDamage",
+				simpleInfoPanelUnitDetail, 0);
+		smashAttack2IconWrapper
+				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
+						GameUI.convertX(uiViewport, 0.1f), GameUI.convertY(uiViewport, -0.03925f)));
+		smashAttack2IconWrapper.setWidth(GameUI.convertX(uiViewport, 0.1f));
+		smashAttack2IconWrapper.setHeight(GameUI.convertY(uiViewport, 0.030125f));
+		attack2Icon = rootFrame.createSimpleFrame("SimpleInfoPanelIconDamage", smashAttack2IconWrapper,
 				1);
-		this.attack2IconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 1);
-		this.attack2InfoPanelIconValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconValue", 1);
-		this.attack2InfoPanelIconLevel = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconLevel", 1);
+		attack2IconBackdrop = (TextureFrame) rootFrame.getFrameByName("InfoPanelIconBackdrop", 1);
+		attack2InfoPanelIconValue = (StringFrame) rootFrame.getFrameByName("InfoPanelIconValue", 1);
+		attack2InfoPanelIconLevel = (StringFrame) rootFrame.getFrameByName("InfoPanelIconLevel", 1);
 
-		this.smashArmorIconWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconArmor",
-				this.simpleInfoPanelUnitDetail, 0);
-		this.smashArmorIconWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
-				FramePoint.TOPLEFT, GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.0705f)));
-		this.smashArmorIconWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
-		this.smashArmorIconWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.030125f));
-		this.armorIcon = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconArmor", this.smashArmorIconWrapper, 0);
-		this.armorIconBackdrop = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconBackdrop", 0);
-		this.armorInfoPanelIconValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconValue", 0);
-		this.armorInfoPanelIconLevel = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconLevel", 0);
+		smashArmorIconWrapper = (SimpleFrame) rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconArmor",
+				simpleInfoPanelUnitDetail, 0);
+		smashArmorIconWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, simpleInfoPanelUnitDetail,
+				FramePoint.TOPLEFT, GameUI.convertX(uiViewport, 0f), GameUI.convertY(uiViewport, -0.0705f)));
+		smashArmorIconWrapper.setWidth(GameUI.convertX(uiViewport, 0.1f));
+		smashArmorIconWrapper.setHeight(GameUI.convertY(uiViewport, 0.030125f));
+		armorIcon = rootFrame.createSimpleFrame("SimpleInfoPanelIconArmor", smashArmorIconWrapper, 0);
+		armorIconBackdrop = (TextureFrame) rootFrame.getFrameByName("InfoPanelIconBackdrop", 0);
+		armorInfoPanelIconValue = (StringFrame) rootFrame.getFrameByName("InfoPanelIconValue", 0);
+		armorInfoPanelIconLevel = (StringFrame) rootFrame.getFrameByName("InfoPanelIconLevel", 0);
 
-		this.smashHeroInfoPanelWrapper = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconHero",
-				this.simpleInfoPanelUnitDetail, 0);
-		this.smashHeroInfoPanelWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail,
-				FramePoint.TOPLEFT, GameUI.convertX(this.uiViewport, 0.1f), GameUI.convertY(this.uiViewport, -0.037f)));
-		this.smashHeroInfoPanelWrapper.setWidth(GameUI.convertX(this.uiViewport, 0.1f));
-		this.smashHeroInfoPanelWrapper.setHeight(GameUI.convertY(this.uiViewport, 0.0625f));
-		this.heroInfoPanel = this.rootFrame.createSimpleFrame("SimpleInfoPanelIconHero", this.smashHeroInfoPanelWrapper,
+		smashHeroInfoPanelWrapper = (SimpleFrame) rootFrame.createSimpleFrame("SmashSimpleInfoPanelIconHero",
+				simpleInfoPanelUnitDetail, 0);
+		smashHeroInfoPanelWrapper.addSetPoint(new SetPoint(FramePoint.TOPLEFT, simpleInfoPanelUnitDetail,
+				FramePoint.TOPLEFT, GameUI.convertX(uiViewport, 0.1f), GameUI.convertY(uiViewport, -0.037f)));
+		smashHeroInfoPanelWrapper.setWidth(GameUI.convertX(uiViewport, 0.1f));
+		smashHeroInfoPanelWrapper.setHeight(GameUI.convertY(uiViewport, 0.0625f));
+		heroInfoPanel = rootFrame.createSimpleFrame("SimpleInfoPanelIconHero", smashHeroInfoPanelWrapper,
 				0);
-		this.primaryAttributeIcon = (TextureFrame) this.rootFrame.getFrameByName("InfoPanelIconHeroIcon", 0);
-		this.strengthValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconHeroStrengthValue", 0);
-		this.agilityValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconHeroAgilityValue", 0);
-		this.intelligenceValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconHeroIntellectValue", 0);
+		primaryAttributeIcon = (TextureFrame) rootFrame.getFrameByName("InfoPanelIconHeroIcon", 0);
+		strengthValue = (StringFrame) rootFrame.getFrameByName("InfoPanelIconHeroStrengthValue", 0);
+		agilityValue = (StringFrame) rootFrame.getFrameByName("InfoPanelIconHeroAgilityValue", 0);
+		intelligenceValue = (StringFrame) rootFrame.getFrameByName("InfoPanelIconHeroIntellectValue", 0);
 
-		this.inventoryBarFrame = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInventoryBar",
-				this.rootFrame, 0);
-		this.inventoryBarFrame.setWidth(GameUI.convertX(this.uiViewport, 0.079f));
-		this.inventoryBarFrame.setHeight(GameUI.convertY(this.uiViewport, 0.115f));
-		this.inventoryBarFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, this.consoleUI, FramePoint.BOTTOMLEFT,
-				GameUI.convertX(this.uiViewport, 0.591f), GameUI.convertY(this.uiViewport, 0.0f)));
+		inventoryBarFrame = (SimpleFrame) rootFrame.createSimpleFrame("SmashSimpleInventoryBar",
+				rootFrame, 0);
+		inventoryBarFrame.setWidth(GameUI.convertX(uiViewport, 0.079f));
+		inventoryBarFrame.setHeight(GameUI.convertY(uiViewport, 0.115f));
+		inventoryBarFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, consoleUI, FramePoint.BOTTOMLEFT,
+				GameUI.convertX(uiViewport, 0.591f), GameUI.convertY(uiViewport, 0.0f)));
 
 		if (GameUI.DEBUG) {
-			final FilterModeTextureFrame placeholderPreview = new FilterModeTextureFrame(null, this.inventoryBarFrame,
+			final FilterModeTextureFrame placeholderPreview = new FilterModeTextureFrame(null, inventoryBarFrame,
 					false, null);
 			placeholderPreview.setFilterMode(FilterMode.ADDALPHA);
-			placeholderPreview.setTexture("ReplaceableTextures\\TeamColor\\TeamColor06.blp", this.rootFrame);
+			placeholderPreview.setTexture("ReplaceableTextures\\TeamColor\\TeamColor06.blp", rootFrame);
 			placeholderPreview.setSetAllPoints(true);
-			this.inventoryBarFrame.add(placeholderPreview);
+			inventoryBarFrame.add(placeholderPreview);
 		}
 
 		int commandButtonIndex = 0;
 		for (int j = 0; j < INVENTORY_HEIGHT; j++) {
 			for (int i = 0; i < INVENTORY_WIDTH; i++) {
 				final CommandCardIcon commandCardIcon = new CommandCardIcon(
-						"SmashInventoryButton_" + commandButtonIndex, this.inventoryBarFrame,
-						this.itemCommandCardCommandListener);
-				this.inventoryBarFrame.add(commandCardIcon);
+						"SmashInventoryButton_" + commandButtonIndex, inventoryBarFrame,
+						itemCommandCardCommandListener);
+				inventoryBarFrame.add(commandCardIcon);
 				final TextureFrame iconFrame = new TextureFrame(
-						"SmashInventoryButton_" + (commandButtonIndex) + "_Icon", this.rootFrame, false, null);
-				final SpriteFrame cooldownFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
-						"SmashInventoryButton_" + (commandButtonIndex) + "_Cooldown", this.rootFrame, "", 0);
-				commandCardIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame, FramePoint.TOPLEFT,
-						GameUI.convertX(this.uiViewport, 0.0037f + (0.04f * i)),
-						GameUI.convertY(this.uiViewport, -0.0021f - (0.03815f * j))));
-				commandCardIcon.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
-				commandCardIcon.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
+						"SmashInventoryButton_" + (commandButtonIndex) + "_Icon", rootFrame, false, null);
+				final SpriteFrame cooldownFrame = (SpriteFrame) rootFrame.createFrameByType("SPRITE",
+						"SmashInventoryButton_" + (commandButtonIndex) + "_Cooldown", rootFrame, "", 0);
+				commandCardIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, inventoryBarFrame, FramePoint.TOPLEFT,
+						GameUI.convertX(uiViewport, 0.0037f + (0.04f * i)),
+						GameUI.convertY(uiViewport, -0.0021f - (0.03815f * j))));
+				commandCardIcon.setWidth(GameUI.convertX(uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
+				commandCardIcon.setHeight(GameUI.convertY(uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
 				iconFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
-				iconFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
-				iconFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
-				iconFrame.setTexture(ImageUtils.DEFAULT_ICON_PATH, this.rootFrame);
+				iconFrame.setWidth(GameUI.convertX(uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
+				iconFrame.setHeight(GameUI.convertY(uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
+				iconFrame.setTexture(ImageUtils.DEFAULT_ICON_PATH, rootFrame);
 				cooldownFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
-				this.rootFrame.setSpriteFrameModel(cooldownFrame, this.rootFrame.getSkinField("CommandButtonCooldown"));
-				cooldownFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
-				cooldownFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
+				rootFrame.setSpriteFrameModel(cooldownFrame, rootFrame.getSkinField("CommandButtonCooldown"));
+				cooldownFrame.setWidth(GameUI.convertX(uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
+				cooldownFrame.setHeight(GameUI.convertY(uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
 				commandCardIcon.set(iconFrame, null, cooldownFrame, null, null, null);
-				this.inventoryIcons[j][i] = commandCardIcon;
+				inventoryIcons[j][i] = commandCardIcon;
 				commandCardIcon.clear();
 				commandButtonIndex++;
 			}
 		}
-		this.inventoryTitleFrame = this.rootFrame.createStringFrame("SmashInventoryText", this.inventoryBarFrame,
+		inventoryTitleFrame = rootFrame.createStringFrame("SmashInventoryText", inventoryBarFrame,
 				new Color(0xFCDE12FF), TextJustify.CENTER, TextJustify.MIDDLE, 0.0109f);
-		this.rootFrame.setText(this.inventoryTitleFrame, this.rootFrame.getTemplates().getDecoratedString("INVENTORY"));
-		this.inventoryTitleFrame
-				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame, FramePoint.TOPLEFT,
-						GameUI.convertX(this.uiViewport, 0.004f), GameUI.convertY(this.uiViewport, 0.0165625f)));
-		this.inventoryTitleFrame.setWidth(GameUI.convertX(this.uiViewport, 0.071f));
-		this.inventoryTitleFrame.setHeight(GameUI.convertX(this.uiViewport, 0.01125f));
-		this.inventoryTitleFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
-		this.inventoryTitleFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
-		this.inventoryTitleFrame.setFontShadowOffsetY(GameUI.convertY(this.uiViewport, -0.001f));
-		this.consoleInventoryNoCapacityTexture = ImageUtils.getAnyExtensionTexture(this.dataSource,
-				this.rootFrame.getSkinField("ConsoleInventoryNoCapacity"));
+		rootFrame.setText(inventoryTitleFrame, rootFrame.getTemplates().getDecoratedString("INVENTORY"));
+		inventoryTitleFrame
+				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, inventoryBarFrame, FramePoint.TOPLEFT,
+						GameUI.convertX(uiViewport, 0.004f), GameUI.convertY(uiViewport, 0.0165625f)));
+		inventoryTitleFrame.setWidth(GameUI.convertX(uiViewport, 0.071f));
+		inventoryTitleFrame.setHeight(GameUI.convertX(uiViewport, 0.01125f));
+		inventoryTitleFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
+		inventoryTitleFrame.setFontShadowOffsetX(GameUI.convertX(uiViewport, 0.001f));
+		inventoryTitleFrame.setFontShadowOffsetY(GameUI.convertY(uiViewport, -0.001f));
+		consoleInventoryNoCapacityTexture = ImageUtils.getAnyExtensionTexture(dataSource,
+				rootFrame.getSkinField("ConsoleInventoryNoCapacity"));
 
-		this.inventoryCover = this.rootFrame.createSimpleFrame("SmashConsoleInventoryCover", this.rootFrame, 0);
+		inventoryCover = rootFrame.createSimpleFrame("SmashConsoleInventoryCover", rootFrame, 0);
 
-		final Element fontHeights = this.war3MapViewer.miscData.get("FontHeights");
+		final Element fontHeights = war3MapViewer.miscData.get("FontHeights");
 		final float worldFrameMessageFontHeight = fontHeights.getFieldFloatValue("WorldFrameMessage");
-		this.errorMessageFrame = this.rootFrame.createStringFrame("SmashErrorMessageFrame", this.rootFrame,
+		errorMessageFrame = rootFrame.createStringFrame("SmashErrorMessageFrame", rootFrame,
 				new Color(0xFFCC00FF), TextJustify.LEFT, TextJustify.MIDDLE, worldFrameMessageFontHeight);
-		this.errorMessageFrame.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
-				GameUI.convertX(this.uiViewport, 0.212f), GameUI.convertY(this.uiViewport, 0.182f)));
-		this.errorMessageFrame.setWidth(GameUI.convertX(this.uiViewport, 0.35f));
-		this.errorMessageFrame.setHeight(GameUI.convertY(this.uiViewport, worldFrameMessageFontHeight));
+		errorMessageFrame.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
+				GameUI.convertX(uiViewport, 0.212f), GameUI.convertY(uiViewport, 0.182f)));
+		errorMessageFrame.setWidth(GameUI.convertX(uiViewport, 0.35f));
+		errorMessageFrame.setHeight(GameUI.convertY(uiViewport, worldFrameMessageFontHeight));
 
-		this.errorMessageFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
-		this.errorMessageFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
-		this.errorMessageFrame.setFontShadowOffsetY(GameUI.convertY(this.uiViewport, -0.001f));
-		this.errorMessageFrame.setVisible(false);
+		errorMessageFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
+		errorMessageFrame.setFontShadowOffsetX(GameUI.convertX(uiViewport, 0.001f));
+		errorMessageFrame.setFontShadowOffsetY(GameUI.convertY(uiViewport, -0.001f));
+		errorMessageFrame.setVisible(false);
 
 		final float worldFrameUnitMessageFontHeight = fontHeights.getFieldFloatValue("WorldFrameUnitMessage");
-		this.gameMessagesFrame = this.rootFrame.createStringFrame("SmashUnitMessageFrame", this.rootFrame, Color.WHITE,
+		gameMessagesFrame = rootFrame.createStringFrame("SmashUnitMessageFrame", rootFrame, Color.WHITE,
 				TextJustify.LEFT, TextJustify.MIDDLE, worldFrameUnitMessageFontHeight);
-		this.gameMessagesFrame.addAnchor(new AnchorDefinition(FramePoint.LEFT, 0, 0));
-		this.gameMessagesFrame.setWidth(GameUI.convertX(this.uiViewport, 0.35f));
-		this.gameMessagesFrame.setHeight(GameUI.convertY(this.uiViewport, worldFrameUnitMessageFontHeight));
+		gameMessagesFrame.addAnchor(new AnchorDefinition(FramePoint.LEFT, 0, 0));
+		gameMessagesFrame.setWidth(GameUI.convertX(uiViewport, 0.35f));
+		gameMessagesFrame.setHeight(GameUI.convertY(uiViewport, worldFrameUnitMessageFontHeight));
 
-		this.gameMessagesFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
-		this.gameMessagesFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
-		this.gameMessagesFrame.setFontShadowOffsetY(GameUI.convertY(this.uiViewport, -0.001f));
-		this.gameMessagesFrame.setVisible(true);
+		gameMessagesFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
+		gameMessagesFrame.setFontShadowOffsetX(GameUI.convertX(uiViewport, 0.001f));
+		gameMessagesFrame.setFontShadowOffsetY(GameUI.convertY(uiViewport, -0.001f));
+		gameMessagesFrame.setVisible(true);
 
 		commandButtonIndex = 0;
 		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
 			for (int i = 0; i < COMMAND_CARD_WIDTH; i++) {
 				final CommandCardIcon commandCardIcon = new CommandCardIcon("SmashCommandButton_" + commandButtonIndex,
-						this.rootFrame, this);
-				this.rootFrame.add(commandCardIcon);
+						rootFrame, this);
+				rootFrame.add(commandCardIcon);
 				final TextureFrame iconFrame = new TextureFrame("SmashCommandButton_" + (commandButtonIndex) + "_Icon",
-						this.rootFrame, false, null);
+						rootFrame, false, null);
 				final FilterModeTextureFrame activeHighlightFrame = new FilterModeTextureFrame(
-						"SmashCommandButton_" + (commandButtonIndex) + "_ActiveHighlight", this.rootFrame, true, null);
+						"SmashCommandButton_" + (commandButtonIndex) + "_ActiveHighlight", rootFrame, true, null);
 				activeHighlightFrame.setFilterMode(FilterMode.ADDALPHA);
 				final TextureFrame numberOverlayFrame = new TextureFrame(
-						"SmashCommandButton_" + (commandButtonIndex) + "_NumberOverlay", this.rootFrame, true, null);
-				final SpriteFrame cooldownFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
-						"SmashCommandButton_" + (commandButtonIndex) + "_Cooldown", this.rootFrame, "", 0);
-				final SpriteFrame autocastFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
-						"SmashCommandButton_" + (commandButtonIndex) + "_Autocast", this.rootFrame, "", 0);
+						"SmashCommandButton_" + (commandButtonIndex) + "_NumberOverlay", rootFrame, true, null);
+				final SpriteFrame cooldownFrame = (SpriteFrame) rootFrame.createFrameByType("SPRITE",
+						"SmashCommandButton_" + (commandButtonIndex) + "_Cooldown", rootFrame, "", 0);
+				final SpriteFrame autocastFrame = (SpriteFrame) rootFrame.createFrameByType("SPRITE",
+						"SmashCommandButton_" + (commandButtonIndex) + "_Autocast", rootFrame, "", 0);
 				commandCardIcon.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
-						GameUI.convertX(this.uiViewport, 0.6175f + (0.0434f * i)),
-						GameUI.convertY(this.uiViewport, 0.095f - (0.044f * j))));
-				commandCardIcon.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
-				commandCardIcon.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+						GameUI.convertX(uiViewport, 0.6175f + (0.0434f * i)),
+						GameUI.convertY(uiViewport, 0.095f - (0.044f * j))));
+				commandCardIcon.setWidth(GameUI.convertX(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+				commandCardIcon.setHeight(GameUI.convertY(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
 				iconFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
-				iconFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
-				iconFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
-				iconFrame.setTexture(ImageUtils.DEFAULT_ICON_PATH, this.rootFrame);
+				iconFrame.setWidth(GameUI.convertX(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+				iconFrame.setHeight(GameUI.convertY(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+				iconFrame.setTexture(ImageUtils.DEFAULT_ICON_PATH, rootFrame);
 				activeHighlightFrame
 						.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
-				activeHighlightFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
-				activeHighlightFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
-				activeHighlightFrame.setTexture("CommandButtonActiveHighlight", this.rootFrame);
+				activeHighlightFrame.setWidth(GameUI.convertX(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+				activeHighlightFrame.setHeight(GameUI.convertY(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+				activeHighlightFrame.setTexture("CommandButtonActiveHighlight", rootFrame);
 
 				numberOverlayFrame.addSetPoint(
 						new SetPoint(FramePoint.BOTTOMRIGHT, commandCardIcon, FramePoint.BOTTOMRIGHT, 0, 0));
-				numberOverlayFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH) * 0.4f);
-				numberOverlayFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH) * 0.4f);
-				numberOverlayFrame.setTexture("CommandButtonNumberOverlay", this.rootFrame);
+				numberOverlayFrame.setWidth(GameUI.convertX(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH) * 0.4f);
+				numberOverlayFrame.setHeight(GameUI.convertY(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH) * 0.4f);
+				numberOverlayFrame.setTexture("CommandButtonNumberOverlay", rootFrame);
 				final SingleStringFrame numberOverlayStringFrame = new SingleStringFrame(
 						"SmashCommandButton_NumberOverlayText", numberOverlayFrame, Color.WHITE, TextJustify.CENTER,
-						TextJustify.BOTTOM, this.rootFrame.getFont());
+						TextJustify.BOTTOM, rootFrame.getFont());
 //				numberOverlayStringFrame.addAnchor(new AnchorDefinition(FramePoint.CENTER, 0, 0));
 				numberOverlayStringFrame.setSetAllPoints(true);
 				cooldownFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
-				this.rootFrame.setSpriteFrameModel(cooldownFrame, this.rootFrame.getSkinField("CommandButtonCooldown"));
-				cooldownFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
-				cooldownFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+				rootFrame.setSpriteFrameModel(cooldownFrame, rootFrame.getSkinField("CommandButtonCooldown"));
+				cooldownFrame.setWidth(GameUI.convertX(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+				cooldownFrame.setHeight(GameUI.convertY(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
 				autocastFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
-				this.rootFrame.setSpriteFrameModel(autocastFrame, this.rootFrame.getSkinField("CommandButtonAutocast"));
-				autocastFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
-				autocastFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+				rootFrame.setSpriteFrameModel(autocastFrame, rootFrame.getSkinField("CommandButtonAutocast"));
+				autocastFrame.setWidth(GameUI.convertX(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
+				autocastFrame.setHeight(GameUI.convertY(uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
 				commandCardIcon.set(iconFrame, activeHighlightFrame, cooldownFrame, autocastFrame, numberOverlayFrame,
 						numberOverlayStringFrame);
-				this.commandCard[j][i] = commandCardIcon;
+				commandCard[j][i] = commandCardIcon;
 				commandCardIcon.clear();
 				commandButtonIndex++;
 			}
 		}
 
-		this.tooltipFrame = this.rootFrame.createFrame("SmashToolTip", this.rootFrame, 0, 0);
-		this.tooltipFrame.addAnchor(new AnchorDefinition(FramePoint.BOTTOMRIGHT, GameUI.convertX(this.uiViewport, 0.f),
-				GameUI.convertY(this.uiViewport, 0.176f)));
-		this.tooltipFrame.setWidth(GameUI.convertX(this.uiViewport, 0.280f));
-		this.tooltipText = (StringFrame) this.rootFrame.getFrameByName("SmashToolTipText", 0);
-		this.tooltipText.setWidth(GameUI.convertX(this.uiViewport, 0.274f));
-		this.tooltipText.addAnchor(new AnchorDefinition(FramePoint.TOPLEFT, GameUI.convertX(this.uiViewport, 0.003f),
-				GameUI.convertY(this.uiViewport, -0.003f)));
-		this.tooltipFrame.setVisible(false);
+		tooltipFrame = rootFrame.createFrame("SmashToolTip", rootFrame, 0, 0);
+		tooltipFrame.addAnchor(new AnchorDefinition(FramePoint.BOTTOMRIGHT, GameUI.convertX(uiViewport, 0.f),
+				GameUI.convertY(uiViewport, 0.176f)));
+		tooltipFrame.setWidth(GameUI.convertX(uiViewport, 0.280f));
+		tooltipText = (StringFrame) rootFrame.getFrameByName("SmashToolTipText", 0);
+		tooltipText.setWidth(GameUI.convertX(uiViewport, 0.274f));
+		tooltipText.addAnchor(new AnchorDefinition(FramePoint.TOPLEFT, GameUI.convertX(uiViewport, 0.003f),
+				GameUI.convertY(uiViewport, -0.003f)));
+		tooltipFrame.setVisible(false);
 
-		this.hovertipFrame = this.rootFrame.createFrame("SmashHoverTip", this.rootFrame, 0, 0);
-		this.hovertipText = (StringFrame) this.rootFrame.getFrameByName("SmashHoverTipText", 0);
-		this.hovertipText.setWidth(GameUI.convertX(this.uiViewport, 0.274f));
-		this.hovertipText.addAnchor(new AnchorDefinition(FramePoint.TOPLEFT, GameUI.convertX(this.uiViewport, 0.006f),
-				GameUI.convertY(this.uiViewport, -0.006f)));
-		this.hovertipFrame.setVisible(false);
+		hovertipFrame = rootFrame.createFrame("SmashHoverTip", rootFrame, 0, 0);
+		hovertipText = (StringFrame) rootFrame.getFrameByName("SmashHoverTipText", 0);
+		hovertipText.setWidth(GameUI.convertX(uiViewport, 0.274f));
+		hovertipText.addAnchor(new AnchorDefinition(FramePoint.TOPLEFT, GameUI.convertX(uiViewport, 0.006f),
+				GameUI.convertY(uiViewport, -0.006f)));
+		hovertipFrame.setVisible(false);
 
-		this.tooltipUberTipText = (StringFrame) this.rootFrame.getFrameByName("SmashUberTipText", 0);
-		this.tooltipUberTipText.setWidth(GameUI.convertX(this.uiViewport, 0.274f));
-		this.uberTipNoResourcesSetPoint = new SetPoint(FramePoint.TOPLEFT, this.tooltipText, FramePoint.BOTTOMLEFT, 0,
-				GameUI.convertY(this.uiViewport, -0.004f));
-		this.uberTipWithResourcesSetPoint = new SetPoint(FramePoint.TOPLEFT, this.tooltipText, FramePoint.BOTTOMLEFT, 0,
-				GameUI.convertY(this.uiViewport, -0.014f));
-		this.tooltipUberTipText.addSetPoint(this.uberTipNoResourcesSetPoint);
-		this.tooltipResourceFrames = new UIFrame[ResourceType.VALUES.length];
-		this.tooltipResourceIconFrames = new TextureFrame[ResourceType.VALUES.length];
-		this.tooltipResourceTextFrames = new StringFrame[ResourceType.VALUES.length];
-		for (int i = 0; i < this.tooltipResourceFrames.length; i++) {
-			this.tooltipResourceFrames[i] = this.rootFrame.createFrame("SmashToolTipIconResource", this.tooltipFrame, 0,
+		tooltipUberTipText = (StringFrame) rootFrame.getFrameByName("SmashUberTipText", 0);
+		tooltipUberTipText.setWidth(GameUI.convertX(uiViewport, 0.274f));
+		uberTipNoResourcesSetPoint = new SetPoint(FramePoint.TOPLEFT, tooltipText, FramePoint.BOTTOMLEFT, 0,
+				GameUI.convertY(uiViewport, -0.004f));
+		uberTipWithResourcesSetPoint = new SetPoint(FramePoint.TOPLEFT, tooltipText, FramePoint.BOTTOMLEFT, 0,
+				GameUI.convertY(uiViewport, -0.014f));
+		tooltipUberTipText.addSetPoint(uberTipNoResourcesSetPoint);
+		tooltipResourceFrames = new UIFrame[ResourceType.VALUES.length];
+		tooltipResourceIconFrames = new TextureFrame[ResourceType.VALUES.length];
+		tooltipResourceTextFrames = new StringFrame[ResourceType.VALUES.length];
+		for (int i = 0; i < tooltipResourceFrames.length; i++) {
+			tooltipResourceFrames[i] = rootFrame.createFrame("SmashToolTipIconResource", tooltipFrame, 0,
 					i);
-			this.tooltipResourceIconFrames[i] = (TextureFrame) this.rootFrame
+			tooltipResourceIconFrames[i] = (TextureFrame) rootFrame
 					.getFrameByName("SmashToolTipIconResourceBackdrop", i);
-			this.tooltipResourceTextFrames[i] = (StringFrame) this.rootFrame
+			tooltipResourceTextFrames[i] = (StringFrame) rootFrame
 					.getFrameByName("SmashToolTipIconResourceLabel", i);
-			this.tooltipResourceFrames[i].addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.tooltipText,
-					FramePoint.BOTTOMLEFT, GameUI.convertX(this.uiViewport, 0.004f + (0.032f * i)),
-					GameUI.convertY(this.uiViewport, -0.001f)));
+			tooltipResourceFrames[i].addSetPoint(new SetPoint(FramePoint.TOPLEFT, tooltipText,
+					FramePoint.BOTTOMLEFT, GameUI.convertX(uiViewport, 0.004f + (0.032f * i)),
+					GameUI.convertY(uiViewport, -0.001f)));
 			// have we really no better API than the below???
-			((AbstractUIFrame) this.tooltipFrame).add(this.tooltipResourceFrames[i]);
-			this.rootFrame.remove(this.tooltipResourceFrames[i]);
+			((AbstractUIFrame) tooltipFrame).add(tooltipResourceFrames[i]);
+			rootFrame.remove(tooltipResourceFrames[i]);
 		}
 //		this.tooltipFrame = this.rootFrame.createFrameByType("BACKDROP", "SmashToolTipBackdrop", this.rootFrame, "", 0);
 
-		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashCursorFrame", this.rootFrame,
+		cursorFrame = (SpriteFrame) rootFrame.createFrameByType("SPRITE", "SmashCursorFrame", rootFrame,
 				"", 0);
-		this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
-		this.cursorFrame.setSequence("Normal");
-		this.cursorFrame.setZDepth(1.0f);
+		rootFrame.setSpriteFrameModel(cursorFrame, rootFrame.getSkinField("Cursor"));
+		cursorFrame.setSequence("Normal");
+		cursorFrame.setZDepth(1.0f);
 		if (WarsmashConstants.CATCH_CURSOR) {
 			Gdx.input.setCursorCatched(true);
 		}
 
-		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
+		meleeUIMinimap = createMinimap(war3MapViewer);
 
-		this.meleeUIAbilityActivationReceiver = new MeleeUIAbilityActivationReceiver(
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("NoGold"),
-						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoGoldSound"))),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("NoLumber"),
-						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoLumberSound"))),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("NoFood"),
-						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("Nomana"),
-						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoManaSound"))),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(), "",
-						this.war3MapViewer.getUiSounds().getSound("InterfaceError")),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("Cooldown"),
-						this.war3MapViewer.getUiSounds().getSound("InterfaceError")));
+		meleeUIAbilityActivationReceiver = new MeleeUIAbilityActivationReceiver(
+				new AbilityActivationErrorHandler(war3MapViewer.getLocalPlayerIndex(),
+						rootFrame.getErrorString("NoGold"),
+						war3MapViewer.getUiSounds().getSound(rootFrame.getSkinField("NoGoldSound"))),
+				new AbilityActivationErrorHandler(war3MapViewer.getLocalPlayerIndex(),
+						rootFrame.getErrorString("NoLumber"),
+						war3MapViewer.getUiSounds().getSound(rootFrame.getSkinField("NoLumberSound"))),
+				new AbilityActivationErrorHandler(war3MapViewer.getLocalPlayerIndex(),
+						rootFrame.getErrorString("NoFood"),
+						war3MapViewer.getUiSounds().getSound(rootFrame.getSkinField("NoFoodSound"))),
+				new AbilityActivationErrorHandler(war3MapViewer.getLocalPlayerIndex(),
+						rootFrame.getErrorString("Nomana"),
+						war3MapViewer.getUiSounds().getSound(rootFrame.getSkinField("NoManaSound"))),
+				new AbilityActivationErrorHandler(war3MapViewer.getLocalPlayerIndex(), "",
+						war3MapViewer.getUiSounds().getSound("InterfaceError")),
+				new AbilityActivationErrorHandler(war3MapViewer.getLocalPlayerIndex(),
+						rootFrame.getErrorString("Cooldown"),
+						war3MapViewer.getUiSounds().getSound("InterfaceError")));
 
-		final MdxModel rallyModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("RallyIndicatorDst"));
-		this.rallyPointInstance = (MdxComplexInstance) rallyModel.addInstance();
-		this.rallyPointInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
-				this.war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
-		this.rallyPointInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
-		SequenceUtils.randomStandSequence(this.rallyPointInstance);
-		this.rallyPointInstance.hide();
-		this.waypointModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("WaypointIndicator"));
+		final MdxModel rallyModel = war3MapViewer.loadModelMdx(rootFrame.getSkinField("RallyIndicatorDst"));
+		rallyPointInstance = (MdxComplexInstance) rallyModel.addInstance();
+		rallyPointInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
+				war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
+		rallyPointInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+		SequenceUtils.randomStandSequence(rallyPointInstance);
+		rallyPointInstance.hide();
+		waypointModel = war3MapViewer.loadModelMdx(rootFrame.getSkinField("WaypointIndicator"));
 
 		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
-		fontParam.size = (int) GameUI.convertY(this.uiViewport, 0.012f);
-		this.textTagFont = this.rootFrame.getFontGenerator().generateFont(fontParam);
+		fontParam.size = (int) GameUI.convertY(uiViewport, 0.012f);
+		textTagFont = rootFrame.getFontGenerator().generateFont(fontParam);
 
-		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
+		rootFrame.positionBounds(rootFrame, uiViewport);
 
 		selectUnit(null);
 
@@ -1150,42 +1193,41 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	private void updateEscMenuCurrentPanel(final UIFrame escMenuBackdrop, final UIFrame escMenuMainPanel,
 			final UIFrame escMenuInnerMainPanel) {
-		this.smashEscMenu.setWidth(escMenuInnerMainPanel.getAssignedWidth());
-		this.smashEscMenu.setHeight(escMenuInnerMainPanel.getAssignedHeight());
+		smashEscMenu.setWidth(escMenuInnerMainPanel.getAssignedWidth());
+		smashEscMenu.setHeight(escMenuInnerMainPanel.getAssignedHeight());
 		escMenuBackdrop.setWidth(escMenuInnerMainPanel.getAssignedWidth());
 		escMenuBackdrop.setHeight(escMenuInnerMainPanel.getAssignedHeight());
-		this.smashEscMenu.positionBounds(this.rootFrame, this.uiViewport);
+		smashEscMenu.positionBounds(rootFrame, uiViewport);
 
 	}
 
 	@Override
 	public void onClick(final int abilityHandleId, final int orderId, final boolean rightClick) {
-		if (this.selectedUnit == null) {
+		if (selectedUnit == null) {
 			return;
 		}
 		if (orderId == 0) {
 			return;
 		}
 		// TODO not O(N)
-		CAbilityView abilityToUse = null;
-		for (final CAbility ability : this.selectedUnit.getSimulationUnit().getAbilities()) {
-			if (ability.getHandleId() == abilityHandleId) {
-				abilityToUse = ability;
-				break;
-			}
-		}
+		CAbilityView abilityToUse = selectedUnit.getSimulationUnit()
+				.getAbilities()
+				.stream()
+				.filter(ability -> ability.getHandleId() == abilityHandleId)
+				.findFirst()
+				.orElse(null);
 		if (abilityToUse != null) {
-			abilityToUse.checkCanUse(this.war3MapViewer.simulation, this.selectedUnit.getSimulationUnit(), orderId,
-					this.meleeUIAbilityActivationReceiver.reset(this, this.war3MapViewer.worldScene.audioContext,
-							this.selectedUnit));
-			if (this.meleeUIAbilityActivationReceiver.isUseOk()) {
+			abilityToUse.checkCanUse(war3MapViewer.simulation, selectedUnit.getSimulationUnit(), orderId,
+					meleeUIAbilityActivationReceiver.reset(this, war3MapViewer.worldScene.audioContext,
+							selectedUnit));
+			if (meleeUIAbilityActivationReceiver.isUseOk()) {
 				final BooleanAbilityTargetCheckReceiver<Void> noTargetReceiver = BooleanAbilityTargetCheckReceiver
 						.<Void>getInstance().reset();
-				abilityToUse.checkCanTargetNoTarget(this.war3MapViewer.simulation,
-						this.selectedUnit.getSimulationUnit(), orderId, noTargetReceiver);
+				abilityToUse.checkCanTargetNoTarget(war3MapViewer.simulation,
+						selectedUnit.getSimulationUnit(), orderId, noTargetReceiver);
 				if (noTargetReceiver.isTargetable()) {
 					final boolean shiftDown = isShiftDown();
-					this.unitOrderListener.issueImmediateOrder(this.selectedUnit.getSimulationUnit().getHandleId(),
+					unitOrderListener.issueImmediateOrder(selectedUnit.getSimulationUnit().getHandleId(),
 							abilityHandleId, orderId, shiftDown);
 					if (abilityToUse instanceof CAbilityHero) {
 						if ((((CAbilityHero) abilityToUse).getSkillPoints() <= 1) && (orderId != OrderIds.skillmenu)) {
@@ -1194,157 +1236,157 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							openMenu(0);
 						}
 					}
-					if (this.selectedUnits.size() > 1) {
-						for (final RenderUnit otherSelectedUnit : this.selectedUnits) {
-							if (otherSelectedUnit != this.activeCommandUnit) {
+					if (selectedUnits.size() > 1) {
+						for (final RenderUnit otherSelectedUnit : selectedUnits) {
+							if (!Objects.equals(otherSelectedUnit, activeCommandUnit)) {
 								abilityToUse = null;
 								for (final CAbility ability : otherSelectedUnit.getSimulationUnit().getAbilities()) {
 									final BooleanAbilityTargetCheckReceiver<Void> receiver = BooleanAbilityTargetCheckReceiver
 											.<Void>getInstance().reset();
-									ability.checkCanTargetNoTarget(this.war3MapViewer.simulation,
-											otherSelectedUnit.getSimulationUnit(), this.activeCommandOrderId, receiver);
+									ability.checkCanTargetNoTarget(war3MapViewer.simulation,
+											otherSelectedUnit.getSimulationUnit(), activeCommandOrderId, receiver);
 									if (receiver.isTargetable()) {
 										abilityToUse = ability;
 									}
 								}
 								if (abilityToUse != null) {
-									this.unitOrderListener.issueImmediateOrder(
+									unitOrderListener.issueImmediateOrder(
 											otherSelectedUnit.getSimulationUnit().getHandleId(),
-											abilityToUse.getHandleId(), this.activeCommandOrderId, shiftDown);
+											abilityToUse.getHandleId(), activeCommandOrderId, shiftDown);
 								}
 							}
 						}
 					}
 				}
 				else {
-					this.activeCommand = abilityToUse;
-					this.activeCommandOrderId = orderId;
-					this.activeCommandUnit = this.selectedUnit;
+					activeCommand = abilityToUse;
+					activeCommandOrderId = orderId;
+					activeCommandUnit = selectedUnit;
 					clearAndRepopulateCommandCard();
 				}
 			}
 		}
 		else {
-			this.unitOrderListener.issueImmediateOrder(this.selectedUnit.getSimulationUnit().getHandleId(),
+			unitOrderListener.issueImmediateOrder(selectedUnit.getSimulationUnit().getHandleId(),
 					abilityHandleId, orderId, isShiftDown());
-			if (this.selectedUnits.size() > 1) {
-				for (final RenderUnit otherSelectedUnit : this.selectedUnits) {
-					if (otherSelectedUnit != this.activeCommandUnit) {
-						this.unitOrderListener.issueImmediateOrder(otherSelectedUnit.getSimulationUnit().getHandleId(),
+			if (selectedUnits.size() > 1) {
+				for (final RenderUnit otherSelectedUnit : selectedUnits) {
+					if (!Objects.equals(otherSelectedUnit, activeCommandUnit)) {
+						unitOrderListener.issueImmediateOrder(otherSelectedUnit.getSimulationUnit().getHandleId(),
 								abilityHandleId, orderId, isShiftDown());
 					}
 				}
 			}
 		}
 		if (rightClick) {
-			this.war3MapViewer.getUiSounds().getSound("AutoCastButtonClick").play(this.uiScene.audioContext, 0, 0, 0);
+			war3MapViewer.getUiSounds().getSound("AutoCastButtonClick").play(uiScene.audioContext, 0, 0, 0);
 		}
 	}
 
 	@Override
 	public void openMenu(final int orderId) {
 		if (orderId == 0) {
-			this.subMenuOrderIdStack.clear();
-			this.activeCommandUnit = null;
-			this.activeCommand = null;
-			this.activeCommandOrderId = -1;
+			subMenuOrderIdStack.clear();
+			activeCommandUnit = null;
+			activeCommand = null;
+			activeCommandOrderId = -1;
 		}
 		else {
-			this.subMenuOrderIdStack.add(orderId);
+			subMenuOrderIdStack.add(orderId);
 		}
 		clearAndRepopulateCommandCard();
 	}
 
 	@Override
 	public void showCommandError(final int playerIndex, final String message) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			this.rootFrame.setText(this.errorMessageFrame, message);
-			this.errorMessageFrame.setVisible(true);
+		if (playerIndex == war3MapViewer.getLocalPlayerIndex()) {
+			rootFrame.setText(errorMessageFrame, message);
+			errorMessageFrame.setVisible(true);
 			final long millis = TimeUtils.millis();
-			this.lastErrorMessageExpireTime = millis + WORLD_FRAME_MESSAGE_EXPIRE_MILLIS;
-			this.lastErrorMessageFadeTime = millis + WORLD_FRAME_MESSAGE_FADEOUT_MILLIS;
-			this.errorMessageFrame.setAlpha(1.0f);
+			lastErrorMessageExpireTime = millis + WORLD_FRAME_MESSAGE_EXPIRE_MILLIS;
+			lastErrorMessageFadeTime = millis + WORLD_FRAME_MESSAGE_FADEOUT_MILLIS;
+			errorMessageFrame.setAlpha(1.0f);
 		}
 	}
 
 	public void showGameMessage(final String message, final float expireTime) {
-		this.rootFrame.setText(this.gameMessagesFrame, message);
-		this.gameMessagesFrame.setVisible(true);
+		rootFrame.setText(gameMessagesFrame, message);
+		gameMessagesFrame.setVisible(true);
 		final long millis = TimeUtils.millis();
 
-		this.lastGameMessageExpireTime = millis + (long) (expireTime * 1000);
-		this.lastGameMessageFadeTime = millis + (long) (expireTime * 900);
-		this.gameMessagesFrame.setAlpha(1.0f);
+		lastGameMessageExpireTime = millis + (long) (expireTime * 1000);
+		lastGameMessageFadeTime = millis + (long) (expireTime * 900);
+		gameMessagesFrame.setAlpha(1.0f);
 	}
 
 	@Override
 	public void showCantPlaceError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("Cantplace"));
-			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("CantPlaceSound"))
-					.play(this.uiScene.audioContext, 0, 0, 0);
+		if (playerIndex == war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, rootFrame.getErrorString("Cantplace"));
+			war3MapViewer.getUiSounds().getSound(rootFrame.getSkinField("CantPlaceSound"))
+					.play(uiScene.audioContext, 0, 0, 0);
 		}
 	}
 
 	@Override
 	public void showNoFoodError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("NoFood"));
-			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))
-					.play(this.uiScene.audioContext, 0, 0, 0);
+		if (playerIndex == war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, rootFrame.getErrorString("NoFood"));
+			war3MapViewer.getUiSounds().getSound(rootFrame.getSkinField("NoFoodSound"))
+					.play(uiScene.audioContext, 0, 0, 0);
 		}
 	}
 
 	@Override
 	public void showNoManaError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("Nomana"));
-			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoManaSound"))
-					.play(this.uiScene.audioContext, 0, 0, 0);
+		if (playerIndex == war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, rootFrame.getErrorString("Nomana"));
+			war3MapViewer.getUiSounds().getSound(rootFrame.getSkinField("NoManaSound"))
+					.play(uiScene.audioContext, 0, 0, 0);
 		}
 	}
 
 	@Override
 	public void showUnableToFindCoupleTargetError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("Cantfindcoupletarget"));
-			this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
+		if (playerIndex == war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, rootFrame.getErrorString("Cantfindcoupletarget"));
+			war3MapViewer.getUiSounds().getSound("InterfaceError").play(uiScene.audioContext, 0, 0, 0);
 		}
 	}
 
 	@Override
 	public void showInventoryFullError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("InventoryFull"));
-			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("InventoryFullSound"))
-					.play(this.uiScene.audioContext, 0, 0, 0);
+		if (playerIndex == war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, rootFrame.getErrorString("InventoryFull"));
+			war3MapViewer.getUiSounds().getSound(rootFrame.getSkinField("InventoryFullSound"))
+					.play(uiScene.audioContext, 0, 0, 0);
 		}
 	}
 
 	@Override
 	public void showBlightRingFullError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("Blightringfull"));
-			this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
+		if (playerIndex == war3MapViewer.getLocalPlayerIndex()) {
+			showCommandError(playerIndex, rootFrame.getErrorString("Blightringfull"));
+			war3MapViewer.getUiSounds().getSound("InterfaceError").play(uiScene.audioContext, 0, 0, 0);
 		}
 	}
 
 	public void update(final float deltaTime) {
-		this.portrait.update();
+		portrait.update();
 
 		final int baseMouseX = Gdx.input.getX();
 		int mouseX = baseMouseX;
 		final int baseMouseY = Gdx.input.getY();
 		int mouseY = baseMouseY;
-		final int minX = this.uiViewport.getScreenX();
-		final int maxX = minX + this.uiViewport.getScreenWidth();
-		final int minY = this.uiViewport.getScreenY();
-		final int maxY = minY + this.uiViewport.getScreenHeight();
+		final int minX = uiViewport.getScreenX();
+		final int maxX = minX + uiViewport.getScreenWidth();
+		final int minY = uiViewport.getScreenY();
+		final int maxY = minY + uiViewport.getScreenHeight();
 		final boolean left = (mouseX <= (minX + 3)) && WarsmashConstants.CATCH_CURSOR;
 		final boolean right = (mouseX >= (maxX - 3)) && WarsmashConstants.CATCH_CURSOR;
 		final boolean up = (mouseY <= (minY + 3)) && WarsmashConstants.CATCH_CURSOR;
 		final boolean down = (mouseY >= (maxY - 3)) && WarsmashConstants.CATCH_CURSOR;
-		this.cameraManager.applyVelocity(deltaTime, up, down, left, right);
+		cameraManager.applyVelocity(deltaTime, up, down, left, right);
 
 		mouseX = Math.max(minX, Math.min(maxX, mouseX));
 		mouseY = Math.max(minY, Math.min(maxY, mouseY));
@@ -1353,106 +1395,103 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				Gdx.input.setCursorPosition(mouseX, mouseY);
 			}
 		}
-		this.hpBarFrameIndex = 0;
-		if (this.currentlyDraggingPointer == -1) {
-			if ((this.mouseOverUnit != null) && isUnitSelectable(this.mouseOverUnit)) {
+		hpBarFrameIndex = 0;
+		if (currentlyDraggingPointer == -1) {
+			if ((mouseOverUnit != null) && isUnitSelectable(mouseOverUnit)) {
 				final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
-				positionHealthBar(simpleStatusBarFrame, this.mouseOverUnit, 1.0f);
-				final String hoverTipTextValue = getWorldFrameHoverTipText(this.mouseOverUnit);
-				this.hovertipFrame.setVisible(hoverTipTextValue != null);
+				positionHealthBar(simpleStatusBarFrame, mouseOverUnit, 1.0f);
+				final String hoverTipTextValue = getWorldFrameHoverTipText(mouseOverUnit);
+				hovertipFrame.setVisible(hoverTipTextValue != null);
 				if (hoverTipTextValue != null) {
-					this.rootFrame.setText(this.hovertipText, hoverTipTextValue);
-					final float predictedViewportHeight = this.hovertipText.getPredictedViewportHeight()
-							+ GameUI.convertY(this.uiViewport, 0.009f);
-					this.hovertipFrame.setHeight(predictedViewportHeight);
-					this.hovertipFrame.setWidth(
-							this.hovertipText.getPredictedViewportWidth() + GameUI.convertX(this.uiViewport, 0.012f));
-					this.hovertipFrame.positionBounds(this.rootFrame, this.uiViewport);
-					this.hovertipFrame.addSetPoint(new SetPoint(FramePoint.BOTTOM, simpleStatusBarFrame, FramePoint.TOP,
-							0, GameUI.convertY(this.uiViewport, 0.003f)));
+					rootFrame.setText(hovertipText, hoverTipTextValue);
+					final float predictedViewportHeight = hovertipText.getPredictedViewportHeight()
+							+ GameUI.convertY(uiViewport, 0.009f);
+					hovertipFrame.setHeight(predictedViewportHeight);
+					hovertipFrame.setWidth(
+							hovertipText.getPredictedViewportWidth() + GameUI.convertX(uiViewport, 0.012f));
+					hovertipFrame.positionBounds(rootFrame, uiViewport);
+					hovertipFrame.addSetPoint(new SetPoint(FramePoint.BOTTOM, simpleStatusBarFrame, FramePoint.TOP,
+							0, GameUI.convertY(uiViewport, 0.003f)));
 				}
-				if (this.mouseOverUnit.getSimulationWidget().isInvulnerable()
-						|| (this.mouseOverUnit instanceof RenderItem)) {
+				if (mouseOverUnit.getSimulationWidget().isInvulnerable()
+						|| (mouseOverUnit instanceof RenderItem)) {
 					// this is a bit silly, for now I'm using it to position the "Gold" text on gold
 					// mines even though they are invulnerable
 					simpleStatusBarFrame.setVisible(false);
 				}
 			}
 			else {
-				this.hovertipFrame.setVisible(false);
+				hovertipFrame.setVisible(false);
 			}
 		}
-		else if (this.currentlyDraggingPointer == Input.Buttons.LEFT) {
-			final float minDragX = Math.min(this.lastMouseClickLocation.x, this.lastMouseDragStart.x);
-			final float minDragY = Math.min(this.lastMouseClickLocation.y, this.lastMouseDragStart.y);
-			final float maxDragX = Math.max(this.lastMouseClickLocation.x, this.lastMouseDragStart.x);
-			final float maxDragY = Math.max(this.lastMouseClickLocation.y, this.lastMouseDragStart.y);
-			this.tempRect.set(minDragX, minDragY, maxDragX - minDragX, maxDragY - minDragY);
-			this.dragSelectPreviewUnitsUpcoming.clear();
-			this.war3MapViewer.simulation.getWorldCollision().enumUnitsInRect(this.tempRect, new CUnitEnumFunction() {
-				@Override
-				public boolean call(final CUnit unit) {
-					final RenderUnit renderUnit = MeleeUI.this.war3MapViewer.getRenderPeer(unit);
-					if (!unit.isDead() && renderUnit.isSelectable()
-							&& MeleeUI.this.dragSelectPreviewUnitsUpcoming.add(renderUnit)) {
-						final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
-						if (!unit.isInvulnerable()) {
-							positionHealthBar(simpleStatusBarFrame, renderUnit, 1.0f);
-						}
-						if (!MeleeUI.this.dragSelectPreviewUnits.contains(renderUnit)) {
-							MeleeUI.this.war3MapViewer.showUnitMouseOverHighlight(renderUnit);
-						}
+		else if (currentlyDraggingPointer == Input.Buttons.LEFT) {
+			final float minDragX = Math.min(lastMouseClickLocation.x, lastMouseDragStart.x);
+			final float minDragY = Math.min(lastMouseClickLocation.y, lastMouseDragStart.y);
+			final float maxDragX = Math.max(lastMouseClickLocation.x, lastMouseDragStart.x);
+			final float maxDragY = Math.max(lastMouseClickLocation.y, lastMouseDragStart.y);
+			tempRect.set(minDragX, minDragY, maxDragX - minDragX, maxDragY - minDragY);
+			dragSelectPreviewUnitsUpcoming.clear();
+			war3MapViewer.simulation.getWorldCollision().enumUnitsInRect(tempRect, unit -> {
+				final RenderUnit renderUnit = war3MapViewer.getRenderPeer(unit);
+				if (!unit.isDead() && renderUnit.isSelectable()
+						&& dragSelectPreviewUnitsUpcoming.add(renderUnit)) {
+					final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
+					if (!unit.isInvulnerable()) {
+						positionHealthBar(simpleStatusBarFrame, renderUnit, 1.0f);
 					}
-					return false;
+					if (!dragSelectPreviewUnits.contains(renderUnit)) {
+						war3MapViewer.showUnitMouseOverHighlight(renderUnit);
+					}
 				}
+				return false;
 			});
-			for (final RenderUnit unit : this.dragSelectPreviewUnits) {
-				if (!this.dragSelectPreviewUnitsUpcoming.contains(unit)) {
-					this.war3MapViewer.clearUnitMouseOverHighlight(unit);
+			for (final RenderUnit unit : dragSelectPreviewUnits) {
+				if (!dragSelectPreviewUnitsUpcoming.contains(unit)) {
+					war3MapViewer.clearUnitMouseOverHighlight(unit);
 				}
 			}
-			final Set<RenderUnit> temp = this.dragSelectPreviewUnits;
-			this.dragSelectPreviewUnits = this.dragSelectPreviewUnitsUpcoming;
-			this.dragSelectPreviewUnitsUpcoming = temp;
+			final Set<RenderUnit> temp = dragSelectPreviewUnits;
+			dragSelectPreviewUnits = dragSelectPreviewUnitsUpcoming;
+			dragSelectPreviewUnitsUpcoming = temp;
 		}
-		if ((this.selectedUnits != null) && false) {
-			for (final RenderUnit unit : this.selectedUnits) {
+		if (false) {
+			for (final RenderUnit unit : selectedUnits) {
 				final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
 				positionHealthBar(simpleStatusBarFrame, unit, 1.0f);
 			}
 		}
-		for (int i = this.hpBarFrameIndex; i < this.hpBarFrames.size(); i++) {
-			this.hpBarFrames.get(i).setVisible(false);
+		for (int i = hpBarFrameIndex; i < hpBarFrames.size(); i++) {
+			hpBarFrames.get(i).setVisible(false);
 		}
 
 		screenCoordsVector.set(mouseX, mouseY);
-		this.uiViewport.unproject(screenCoordsVector);
-		this.cursorFrame.setFramePointX(FramePoint.LEFT, screenCoordsVector.x);
-		this.cursorFrame.setFramePointY(FramePoint.BOTTOM, screenCoordsVector.y);
+		uiViewport.unproject(screenCoordsVector);
+		cursorFrame.setFramePointX(FramePoint.LEFT, screenCoordsVector.x);
+		cursorFrame.setFramePointY(FramePoint.BOTTOM, screenCoordsVector.y);
 
-		if (this.activeCommand != null) {
-			if (this.draggingItem != null) {
+		if (activeCommand != null) {
+			if (draggingItem != null) {
 				setCursorState(MenuCursorState.HOLD_ITEM);
 			}
 			else {
 				setCursorState(MenuCursorState.TARGET_CURSOR);
-				this.activeCommand.visit(this.cursorTargetSetupVisitor.reset(baseMouseX, baseMouseY));
+				activeCommand.visit(cursorTargetSetupVisitor.reset(baseMouseX, baseMouseY));
 			}
 		}
 		else {
-			if (this.cursorModelInstance != null) {
-				this.cursorModelInstance.detach();
-				this.cursorModelInstance = null;
-				this.cursorFrame.setVisible(true);
+			if (cursorModelInstance != null) {
+				cursorModelInstance.detach();
+				cursorModelInstance = null;
+				cursorFrame.setVisible(true);
 			}
-			if (this.placementCursor != null) {
-				this.placementCursor.destroy(Gdx.gl30, this.war3MapViewer.terrain.centerOffset);
-				this.placementCursor = null;
-				this.cursorFrame.setVisible(true);
+			if (placementCursor != null) {
+				placementCursor.destroy(Gdx.gl30, war3MapViewer.terrain.centerOffset);
+				placementCursor = null;
+				cursorFrame.setVisible(true);
 			}
-			if (this.cursorModelUnderneathPathingRedGreenSplatModel != null) {
-				this.war3MapViewer.terrain.removeSplatBatchModel(BUILDING_PATHING_PREVIEW_KEY);
-				this.cursorModelUnderneathPathingRedGreenSplatModel = null;
+			if (cursorModelUnderneathPathingRedGreenSplatModel != null) {
+				war3MapViewer.terrain.removeSplatBatchModel(BUILDING_PATHING_PREVIEW_KEY);
+				cursorModelUnderneathPathingRedGreenSplatModel = null;
 			}
 			if (down) {
 				if (left) {
@@ -1482,14 +1521,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			else if (right) {
 				setCursorState(MenuCursorState.SCROLL_RIGHT);
 			}
-			else if (this.mouseOverUnit != null) {
-				if (this.mouseOverUnit instanceof RenderUnit) {
-					final RenderUnit mouseOverUnitUnit = (RenderUnit) this.mouseOverUnit;
+			else if (mouseOverUnit != null) {
+				if (mouseOverUnit instanceof RenderUnit) {
+					final RenderUnit mouseOverUnitUnit = (RenderUnit) mouseOverUnit;
 					final int playerIndex = mouseOverUnitUnit.getSimulationUnit().getPlayerIndex();
-					if (!this.localPlayer.hasAlliance(playerIndex, CAllianceType.PASSIVE)) {
+					if (!localPlayer.hasAlliance(playerIndex, CAllianceType.PASSIVE)) {
 						setCursorState(MenuCursorState.SELECT, Color.RED);
 					}
-					else if (this.localPlayer.hasAlliance(playerIndex, CAllianceType.SHARED_CONTROL)) {
+					else if (localPlayer.hasAlliance(playerIndex, CAllianceType.SHARED_CONTROL)) {
 						setCursorState(MenuCursorState.SELECT, Color.GREEN);
 					}
 					else {
@@ -1504,60 +1543,60 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				setCursorState(MenuCursorState.NORMAL);
 			}
 		}
-		if (this.selectedUnit != null) {
-			if (this.simpleBuildTimeIndicator.isVisible()) {
-				this.simpleBuildTimeIndicator
-						.setValue(Math.min(this.selectedUnit.getSimulationUnit().getConstructionProgress()
-								/ this.selectedUnit.getSimulationUnit().getUnitType().getBuildTime(), 0.99f));
+		if (selectedUnit != null) {
+			if (simpleBuildTimeIndicator.isVisible()) {
+				simpleBuildTimeIndicator
+						.setValue(Math.min(selectedUnit.getSimulationUnit().getConstructionProgress()
+								/ selectedUnit.getSimulationUnit().getUnitType().getBuildTime(), 0.99f));
 			}
-			if (this.simpleBuildingBuildTimeIndicator.isVisible()) {
-				this.simpleBuildingBuildTimeIndicator
+			if (simpleBuildingBuildTimeIndicator.isVisible()) {
+				simpleBuildingBuildTimeIndicator
 						.setValue(Math.min(
-								this.selectedUnit.getSimulationUnit().getConstructionProgress() / this.selectedUnit
-										.getSimulationUnit().getBuildQueueTimeRemaining(this.war3MapViewer.simulation),
+								selectedUnit.getSimulationUnit().getConstructionProgress() / selectedUnit
+										.getSimulationUnit().getBuildQueueTimeRemaining(war3MapViewer.simulation),
 								0.99f));
 			}
 		}
 
 		final float groundHeight = Math.max(
-				this.war3MapViewer.terrain.getGroundHeight(this.cameraManager.target.x, this.cameraManager.target.y),
-				this.war3MapViewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y));
-		this.cameraManager.updateTargetZ(groundHeight);
-		this.cameraManager.updateCamera();
+				war3MapViewer.terrain.getGroundHeight(cameraManager.target.x, cameraManager.target.y),
+				war3MapViewer.terrain.getWaterHeight(cameraManager.target.x, cameraManager.target.y));
+		cameraManager.updateTargetZ(groundHeight);
+		cameraManager.updateCamera();
 		final long currentMillis = TimeUtils.millis();
-		if (currentMillis > this.lastErrorMessageExpireTime) {
-			this.errorMessageFrame.setVisible(false);
+		if (currentMillis > lastErrorMessageExpireTime) {
+			errorMessageFrame.setVisible(false);
 		}
-		else if (currentMillis > this.lastErrorMessageFadeTime) {
-			final float fadeAlpha = (this.lastErrorMessageExpireTime - currentMillis)
+		else if (currentMillis > lastErrorMessageFadeTime) {
+			final float fadeAlpha = (lastErrorMessageExpireTime - currentMillis)
 					/ (float) WORLD_FRAME_MESSAGE_FADE_DURATION;
-			this.errorMessageFrame.setAlpha(fadeAlpha);
+			errorMessageFrame.setAlpha(fadeAlpha);
 		}
-		if (currentMillis > this.lastGameMessageExpireTime) {
-			this.gameMessagesFrame.setVisible(false);
+		if (currentMillis > lastGameMessageExpireTime) {
+			gameMessagesFrame.setVisible(false);
 		}
-		else if (currentMillis > this.lastGameMessageFadeTime) {
-			final float fadeAlpha = (this.lastGameMessageExpireTime - currentMillis)
-					/ (float) (this.lastGameMessageExpireTime - this.lastGameMessageFadeTime);
-			this.gameMessagesFrame.setAlpha(fadeAlpha);
+		else if (currentMillis > lastGameMessageFadeTime) {
+			final float fadeAlpha = (lastGameMessageExpireTime - currentMillis)
+					/ (float) (lastGameMessageExpireTime - lastGameMessageFadeTime);
+			gameMessagesFrame.setAlpha(fadeAlpha);
 		}
-		if (this.currentMusics != null) {
-			if (!this.currentMusics[this.currentMusicIndex].isPlaying()) {
-				if (this.currentMusicRandomizeIndex) {
-					this.currentMusicIndex = (int) (Math.random() * this.currentMusics.length);
+		if (currentMusics != null) {
+			if (!currentMusics[currentMusicIndex].isPlaying()) {
+				if (currentMusicRandomizeIndex) {
+					currentMusicIndex = (int) (Math.random() * currentMusics.length);
 				}
 				else {
-					this.currentMusicIndex = (this.currentMusicIndex + 1) % this.currentMusics.length;
+					currentMusicIndex = (currentMusicIndex + 1) % currentMusics.length;
 				}
-				this.currentMusics[this.currentMusicIndex].play();
+				currentMusics[currentMusicIndex].play();
 			}
 		}
-		for (final CTimerDialog timerDialog : this.timerDialogs) {
-			timerDialog.update(this.rootFrame, this.war3MapViewer.simulation);
+		for (final CTimerDialog timerDialog : timerDialogs) {
+			timerDialog.update(rootFrame, war3MapViewer.simulation);
 		}
 	}
 
-	private boolean isUnitSelectable(final RenderWidget mouseOverUnit) {
+	private static boolean isUnitSelectable(final RenderWidget mouseOverUnit) {
 		return mouseOverUnit.isSelectable() && !mouseOverUnit.getSimulationWidget().isDead();
 	}
 
@@ -1567,8 +1606,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final CUnit simulationUnit = renderUnit.getSimulationUnit();
 			final CAbilityHero heroData = simulationUnit.getHeroData();
 			if (heroData != null) {
-				final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
-				return heroData.getProperName() + "|n" + level + " " + heroData.getHeroLevel();
+				final String level = rootFrame.getTemplates().getDecoratedString("LEVEL");
+				return heroData.getProperName() + "|n" + level + ' ' + heroData.getHeroLevel();
 			}
 			final boolean neutralHostile = simulationUnit.getPlayerIndex() == (WarsmashConstants.MAX_PLAYERS - 4);
 			final boolean neutralPassive = simulationUnit.getPlayerIndex() == (WarsmashConstants.MAX_PLAYERS - 1);
@@ -1576,20 +1615,20 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				String returnValue = simulationUnit.getUnitType().getName();
 				final CAbilityGoldMine goldMineData = simulationUnit.getGoldMineData();
 				if (goldMineData != null) {
-					final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
-					returnValue += "|n" + colonGold + " " + goldMineData.getGold();
+					final String colonGold = rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
+					returnValue += "|n" + colonGold + ' ' + goldMineData.getGold();
 				}
 				final int creepLevel = simulationUnit.getUnitType().getLevel();
 				if (neutralHostile && (creepLevel > 0)) {
-					final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
-					returnValue += "|n" + level + " " + creepLevel;
+					final String level = rootFrame.getTemplates().getDecoratedString("LEVEL");
+					returnValue += "|n" + level + ' ' + creepLevel;
 				}
 				return returnValue;
 			}
 		}
 		else if (whichUnit instanceof RenderItem) {
 			final RenderItem renderItem = (RenderItem) whichUnit;
-			final ItemUI itemUI = this.war3MapViewer.getAbilityDataUI()
+			final ItemUI itemUI = war3MapViewer.getAbilityDataUI()
 					.getItemUI(renderItem.getSimulationItem().getTypeId());
 			return itemUI.getName();
 		}
@@ -1614,47 +1653,47 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				clickLocationTemp.z += unitBoundsBox.max.z;
 			}
 		}
-		this.war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, clickLocationTemp);
-		simpleStatusBarFrame.getBarFrame().setTexture("SimpleHpBarConsole", this.rootFrame);
-		simpleStatusBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
+		war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, clickLocationTemp);
+		simpleStatusBarFrame.getBarFrame().setTexture("SimpleHpBarConsole", rootFrame);
+		simpleStatusBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", rootFrame);
 		simpleStatusBarFrame.getBorderFrame().setColor(0f, 0f, 0f, alpha);
 		final float lifeRatioRemaining = unit.getSimulationWidget().getLife() / unit.getSimulationWidget().getMaxLife();
 		simpleStatusBarFrame.getBarFrame().setColor(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
 				Math.min(1.0f, lifeRatioRemaining * 2), 0, alpha);
-		final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
+		final Vector2 unprojected = uiViewport.unproject(screenCoordsVector);
 		simpleStatusBarFrame.setWidth((unit.getSelectionScale() * 1.5f * Gdx.graphics.getWidth()) / 2560);
 		simpleStatusBarFrame.setHeight(16);
 		simpleStatusBarFrame.addSetPoint(
-				new SetPoint(FramePoint.CENTER, this.rootFrame, FramePoint.BOTTOMLEFT, unprojected.x, unprojected.y));
+				new SetPoint(FramePoint.CENTER, rootFrame, FramePoint.BOTTOMLEFT, unprojected.x, unprojected.y));
 		simpleStatusBarFrame.setValue(lifeRatioRemaining);
-		simpleStatusBarFrame.positionBounds(this.rootFrame, this.uiViewport);
+		simpleStatusBarFrame.positionBounds(rootFrame, uiViewport);
 	}
 
 	private SimpleStatusBarFrame getHpBar() {
 		final SimpleStatusBarFrame simpleStatusBarFrame;
-		if (this.hpBarFrameIndex >= this.hpBarFrames.size()) {
-			simpleStatusBarFrame = new SimpleStatusBarFrame("SmashHpBar" + this.hpBarFrameIndex, this.rootFrame, true,
+		if (hpBarFrameIndex >= hpBarFrames.size()) {
+			simpleStatusBarFrame = new SimpleStatusBarFrame("SmashHpBar" + hpBarFrameIndex, rootFrame, true,
 					true, 3.0f);
-			this.rootFrame.add(simpleStatusBarFrame);
-			this.hpBarFrames.add(simpleStatusBarFrame);
+			rootFrame.add(simpleStatusBarFrame);
+			hpBarFrames.add(simpleStatusBarFrame);
 		}
 		else {
-			simpleStatusBarFrame = this.hpBarFrames.get(this.hpBarFrameIndex);
+			simpleStatusBarFrame = hpBarFrames.get(hpBarFrameIndex);
 		}
-		this.hpBarFrameIndex++;
+		hpBarFrameIndex++;
 		return simpleStatusBarFrame;
 	}
 
 	private void setCursorState(final MenuCursorState state, final Color color) {
-		if (state != this.cursorState) {
+		if (state != cursorState) {
 			if (state.getAnimationName() != null) {
-				this.cursorFrame.setSequence(state.getAnimationName());
+				cursorFrame.setSequence(state.getAnimationName());
 			}
 		}
-		if (color != this.cursorColor) {
-			this.cursorFrame.setVertexColor(color);
+		if (!Objects.equals(color, cursorColor)) {
+			cursorFrame.setVertexColor(color);
 		}
-		this.cursorState = state;
+		cursorState = state;
 	}
 
 	private void setCursorState(final MenuCursorState state) {
@@ -1662,70 +1701,70 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public void render(final SpriteBatch batch, final GlyphLayout glyphLayout) {
-		final BitmapFont font = this.rootFrame.getFont();
+		final BitmapFont font = rootFrame.getFont();
 		font.setColor(Color.YELLOW);
 		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
 		glyphLayout.setText(font, fpsString);
-		font.draw(batch, fpsString, (this.uiViewport.getMinWorldWidth() - glyphLayout.width) / 2,
-				1100 * this.heightRatioCorrection);
-		this.rootFrame.render(batch, this.rootFrame.getFont20(), glyphLayout);
-		if (this.selectedUnit != null) {
-			this.rootFrame.getFont20().setColor(Color.WHITE);
+		font.draw(batch, fpsString, (uiViewport.getMinWorldWidth() - glyphLayout.width) / 2,
+				1100 * heightRatioCorrection);
+		rootFrame.render(batch, rootFrame.getFont20(), glyphLayout);
+		if (selectedUnit != null) {
+			rootFrame.getFont20().setColor(Color.WHITE);
 
 		}
 
-		this.meleeUIMinimap.render(batch, this.war3MapViewer.units);
-		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
-				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
-		for (final TextTag textTag : this.war3MapViewer.textTags) {
-			this.war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, textTag.getPosition());
-			if (this.war3MapViewer.worldScene.camera.rect.contains(screenCoordsVector.x,
+		meleeUIMinimap.render(batch, war3MapViewer.units);
+		timeIndicator.setFrameByRatio(war3MapViewer.simulation.getGameTimeOfDay()
+				/ war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
+		for (final TextTag textTag : war3MapViewer.textTags) {
+			war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, textTag.getPosition());
+			if (war3MapViewer.worldScene.camera.rect.contains(screenCoordsVector.x,
 					(Gdx.graphics.getHeight() - screenCoordsVector.y) + textTag.getScreenCoordsZHeight())) {
-				final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
+				final Vector2 unprojected = uiViewport.unproject(screenCoordsVector);
 				final float remainingLife = textTag.getRemainingLife();
-				final float alpha = (remainingLife > 1.0f ? 1.0f : remainingLife);
-				this.textTagFont.setColor(textTag.getColor().r, textTag.getColor().g, textTag.getColor().b,
+				final float alpha = (Math.min(remainingLife, 1.0f));
+				textTagFont.setColor(textTag.getColor().r, textTag.getColor().g, textTag.getColor().b,
 						textTag.getColor().a * alpha);
-				glyphLayout.setText(this.textTagFont, textTag.getText());
-				this.textTagFont.draw(batch, textTag.getText(), unprojected.x - (glyphLayout.width / 2),
+				glyphLayout.setText(textTagFont, textTag.getText());
+				textTagFont.draw(batch, textTag.getText(), unprojected.x - (glyphLayout.width / 2),
 						(unprojected.y - (glyphLayout.height / 2)) + textTag.getScreenCoordsZHeight());
 			}
 		}
-		if (this.currentlyDraggingPointer == Input.Buttons.LEFT) {
+		if (currentlyDraggingPointer == Input.Buttons.LEFT) {
 			batch.end();
-			this.shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
-			this.shapeRenderer.setColor(Color.GREEN);
+			shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+			shapeRenderer.setColor(Color.GREEN);
 			Gdx.gl.glLineWidth(2);
-			this.shapeRenderer.begin(ShapeType.Line);
-			this.cameraManager.camera.worldToScreen(screenCoordsVector, this.lastMouseDragStart);
-			final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
+			shapeRenderer.begin(ShapeType.Line);
+			cameraManager.camera.worldToScreen(screenCoordsVector, lastMouseDragStart);
+			final Vector2 unprojected = uiViewport.unproject(screenCoordsVector);
 			final float x = unprojected.x;
 			final float y = unprojected.y;
-			this.cameraManager.camera.worldToScreen(screenCoordsVector, this.lastMouseClickLocation);
-			final Vector2 unprojectedEnd = this.uiViewport.unproject(screenCoordsVector);
+			cameraManager.camera.worldToScreen(screenCoordsVector, lastMouseClickLocation);
+			final Vector2 unprojectedEnd = uiViewport.unproject(screenCoordsVector);
 			final float minX = Math.min(x, unprojectedEnd.x);
 			final float minY = Math.min(y, unprojectedEnd.y);
-			this.shapeRenderer.rect(minX, minY, Math.max(x, unprojectedEnd.x) - minX,
+			shapeRenderer.rect(minX, minY, Math.max(x, unprojectedEnd.x) - minX,
 					Math.max(y, unprojectedEnd.y) - minY);
-			this.shapeRenderer.end();
+			shapeRenderer.end();
 			Gdx.gl.glLineWidth(1);
 			batch.begin();
 		}
 	}
 
 	public void portraitTalk() {
-		this.portrait.talk();
+		portrait.talk();
 	}
 
 	private final class AnyClickableUnitFilter implements CWidgetFilterFunction {
 		@Override
 		public boolean call(final CWidget unit) {
-			final RenderWidget renderPeer = MeleeUI.this.war3MapViewer.getRenderPeer(unit);
+			final RenderWidget renderPeer = war3MapViewer.getRenderPeer(unit);
 			return !unit.isDead() && renderPeer.isSelectable();
 		}
 	}
 
-	private final class AnyTargetableUnitFilter implements CWidgetFilterFunction {
+	private static final class AnyTargetableUnitFilter implements CWidgetFilterFunction {
 		@Override
 		public boolean call(final CWidget unit) {
 			return !unit.isDead();
@@ -1744,9 +1783,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public Void accept(final CAbilityAttack ability) {
-			if (MeleeUI.this.activeCommandOrderId == OrderIds.attackground) {
+			if (activeCommandOrderId == OrderIds.attackground) {
 				float radius = 0;
-				for (final CUnitAttack attack : MeleeUI.this.activeCommandUnit.getSimulationUnit().getAttacks()) {
+				for (final CUnitAttack attack : activeCommandUnit.getSimulationUnit().getAttacks()) {
 					if (attack.getWeaponType().isAttackGroundSupported()) {
 						if (attack instanceof CUnitAttackMissileSplash) {
 							final int areaOfEffectSmallDamage = ((CUnitAttackMissileSplash) attack)
@@ -1874,69 +1913,67 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		private void handleTargetCursor(final CAbility ability) {
-			if (MeleeUI.this.cursorModelInstance != null) {
-				MeleeUI.this.cursorModelInstance.detach();
-				MeleeUI.this.cursorModelInstance = null;
-				MeleeUI.this.cursorFrame.setVisible(true);
+			if (cursorModelInstance != null) {
+				cursorModelInstance.detach();
+				cursorModelInstance = null;
+				cursorFrame.setVisible(true);
 			}
-			MeleeUI.this.cursorFrame.setSequence("Target");
+			cursorFrame.setSequence("Target");
 		}
 
 		private void handleBuildCursor(final AbstractCAbilityBuild ability) {
 			boolean justLoaded = false;
-			final War3MapViewer viewer = MeleeUI.this.war3MapViewer;
-			if (MeleeUI.this.cursorModelInstance == null) {
+			final War3MapViewer viewer = war3MapViewer;
+			if (cursorModelInstance == null) {
 				final MutableObjectData unitData = viewer.getAllObjectData().getUnits();
-				final War3ID buildingTypeId = new War3ID(MeleeUI.this.activeCommandOrderId);
-				MeleeUI.this.cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
+				final War3ID buildingTypeId = new War3ID(activeCommandOrderId);
+				cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
 				final String unitModelPath = viewer.getUnitModelPath(unitData.get(buildingTypeId));
 				final MdxModel model = viewer.loadModelMdx(unitModelPath);
-				MeleeUI.this.cursorModelInstance = (MdxComplexInstance) model.addInstance();
+				cursorModelInstance = (MdxComplexInstance) model.addInstance();
 //				MeleeUI.this.cursorModelInstance.setVertexColor(new float[] { 1, 1, 1, 0.5f });
 				final int playerColorIndex = viewer.simulation
-						.getPlayer(MeleeUI.this.activeCommandUnit.getSimulationUnit().getPlayerIndex()).getColor();
-				MeleeUI.this.cursorModelInstance.setTeamColor(playerColorIndex);
-				MeleeUI.this.cursorModelInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
+						.getPlayer(activeCommandUnit.getSimulationUnit().getPlayerIndex()).getColor();
+				cursorModelInstance.setTeamColor(playerColorIndex);
+				cursorModelInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
 						viewer.simulation.getGameplayConstants().getBuildingAngle()));
-				MeleeUI.this.cursorModelInstance.setAnimationSpeed(0f);
+				cursorModelInstance.setAnimationSpeed(0f);
 				justLoaded = true;
-				final CUnitType buildingUnitType = MeleeUI.this.cursorBuildingUnitType;
-				MeleeUI.this.cursorModelPathing = buildingUnitType.getBuildingPathingPixelMap();
+				final CUnitType buildingUnitType = cursorBuildingUnitType;
+				cursorModelPathing = buildingUnitType.getBuildingPathingPixelMap();
 
-				if (MeleeUI.this.cursorModelPathing != null) {
-					MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap = new Pixmap(
-							MeleeUI.this.cursorModelPathing.getWidth(), MeleeUI.this.cursorModelPathing.getHeight(),
+				if (cursorModelPathing != null) {
+					cursorModelUnderneathPathingRedGreenPixmap = new Pixmap(
+							cursorModelPathing.getWidth(), cursorModelPathing.getHeight(),
 							Format.RGBA8888);
-					MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.setBlending(Blending.None);
-					MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTextureData = new PixmapTextureData(
-							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap, Format.RGBA8888, false, false);
-					MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTexture = new Texture(
-							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTextureData);
+					cursorModelUnderneathPathingRedGreenPixmap.setBlending(Blending.None);
+					cursorModelUnderneathPathingRedGreenPixmapTextureData = new PixmapTextureData(
+							cursorModelUnderneathPathingRedGreenPixmap, Format.RGBA8888, false, false);
+					cursorModelUnderneathPathingRedGreenPixmapTexture = new Texture(
+							cursorModelUnderneathPathingRedGreenPixmapTextureData);
 					final ViewerTextureRenderable greenPixmap = new ViewerTextureRenderable.GdxViewerTextureRenderable(
-							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTexture);
-					MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel = new SplatModel(Gdx.gl30, greenPixmap,
+							cursorModelUnderneathPathingRedGreenPixmapTexture);
+					cursorModelUnderneathPathingRedGreenSplatModel = new SplatModel(Gdx.gl30, greenPixmap,
 							new ArrayList<>(), viewer.terrain.centerOffset, new ArrayList<>(), true, false, true);
-					MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel.color[3] = 0.20f;
+					cursorModelUnderneathPathingRedGreenSplatModel.color[3] = 0.20f;
 				}
 			}
-			viewer.getClickLocation(clickLocationTemp, this.baseMouseX, Gdx.graphics.getHeight() - this.baseMouseY);
-			if (MeleeUI.this.cursorModelPathing != null) {
+			viewer.getClickLocation(clickLocationTemp, baseMouseX, Gdx.graphics.getHeight() - baseMouseY);
+			if (cursorModelPathing != null) {
 				clickLocationTemp.x = (float) Math.floor(clickLocationTemp.x / 64f) * 64f;
 				clickLocationTemp.y = (float) Math.floor(clickLocationTemp.y / 64f) * 64f;
-				if (((MeleeUI.this.cursorModelPathing.getWidth() / 2) % 2) == 1) {
+				if (((cursorModelPathing.getWidth() / 2) % 2) == 1) {
 					clickLocationTemp.x += 32f;
 				}
-				if (((MeleeUI.this.cursorModelPathing.getHeight() / 2) % 2) == 1) {
+				if (((cursorModelPathing.getHeight() / 2) % 2) == 1) {
 					clickLocationTemp.y += 32f;
 				}
 				clickLocationTemp.z = viewer.terrain.getGroundHeight(clickLocationTemp.x, clickLocationTemp.y);
 
-				final int cursorWidthCells = MeleeUI.this.cursorModelPathing.getWidth();
+				final int cursorWidthCells = cursorModelPathing.getWidth();
 				final int halfCursorWidthCells = cursorWidthCells / 2;
-				final float halfRenderWidth = cursorWidthCells * 16;
-				final int cursorHeightCells = MeleeUI.this.cursorModelPathing.getHeight();
+				final int cursorHeightCells = cursorModelPathing.getHeight();
 				final int halfCursorHeightCells = cursorHeightCells / 2;
-				final float halfRenderHeight = cursorHeightCells * 16;
 				final PathingGrid pathingGrid = viewer.simulation.getPathingGrid();
 				boolean blockAll = false;
 				final int cellX = pathingGrid.getCellX(clickLocationTemp.x);
@@ -1946,88 +1983,90 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						|| (cellY > (pathingGrid.getHeight() - halfCursorHeightCells))) {
 					blockAll = true;
 				}
-				final boolean canBeBuiltOnThem = MeleeUI.this.cursorBuildingUnitType.isCanBeBuiltOnThem();
+				final boolean canBeBuiltOnThem = cursorBuildingUnitType.isCanBeBuiltOnThem();
 				if (canBeBuiltOnThem) {
 					viewer.simulation.getWorldCollision().enumBuildingsAtPoint(clickLocationTemp.x, clickLocationTemp.y,
-							MeleeUI.this.buildOnBuildingIntersector.reset(clickLocationTemp.x, clickLocationTemp.y));
-					blockAll = (MeleeUI.this.buildOnBuildingIntersector.getUnitToBuildOn() == null);
+							buildOnBuildingIntersector.reset(clickLocationTemp.x, clickLocationTemp.y));
+					blockAll = (buildOnBuildingIntersector.getUnitToBuildOn() == null);
 				}
+				final float halfRenderWidth = cursorWidthCells * 16;
+				final float halfRenderHeight = cursorHeightCells * 16;
 				if (blockAll) {
-					for (int i = 0; i < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
-						for (int j = 0; j < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
-							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
-									MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j,
+					for (int i = 0; i < cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
+						for (int j = 0; j < cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
+							cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
+									cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j,
 									Color.rgba8888(1, 0, 0, 1.0f));
 						}
 					}
 				}
 				else if (!canBeBuiltOnThem) {
-					for (int i = 0; i < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
-						for (int j = 0; j < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
+					for (int i = 0; i < cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
+						for (int j = 0; j < cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
 							boolean blocked = false;
 							final short pathing = pathingGrid.getPathing(
 									(clickLocationTemp.x + (i * 32)) - halfRenderWidth,
 									(clickLocationTemp.y + (j * 32)) - halfRenderHeight);
-							for (final CBuildingPathingType preventedType : MeleeUI.this.cursorBuildingUnitType
+							for (final CBuildingPathingType preventedType : cursorBuildingUnitType
 									.getPreventedPathingTypes()) {
 								if (PathingFlags.isPathingFlag(pathing, preventedType)) {
 									blocked = true;
 								}
 							}
-							for (final CBuildingPathingType requiredType : MeleeUI.this.cursorBuildingUnitType
+							for (final CBuildingPathingType requiredType : cursorBuildingUnitType
 									.getRequiredPathingTypes()) {
 								if (!PathingFlags.isPathingFlag(pathing, requiredType)) {
 									blocked = true;
 								}
 							}
 							final int color = blocked ? Color.rgba8888(1, 0, 0, 1.0f) : Color.rgba8888(0, 1, 0, 1.0f);
-							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
-									MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j, color);
+							cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
+									cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j, color);
 						}
 					}
 				}
 				else {
-					for (int i = 0; i < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
-						for (int j = 0; j < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
-							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
-									MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j,
+					for (int i = 0; i < cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
+						for (int j = 0; j < cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
+							cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
+									cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j,
 									Color.rgba8888(0, 1, 0, 1.0f));
 						}
 					}
 				}
-				MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTexture
-						.load(MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTextureData);
+				cursorModelUnderneathPathingRedGreenPixmapTexture
+						.load(cursorModelUnderneathPathingRedGreenPixmapTextureData);
 
 				if (justLoaded) {
 					viewer.terrain.addSplatBatchModel(BUILDING_PATHING_PREVIEW_KEY,
-							MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel);
-					MeleeUI.this.placementCursor = MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel.add(
+							cursorModelUnderneathPathingRedGreenSplatModel);
+					placementCursor = cursorModelUnderneathPathingRedGreenSplatModel.add(
 							clickLocationTemp.x - halfRenderWidth, clickLocationTemp.y - halfRenderHeight,
 							clickLocationTemp.x + halfRenderWidth, clickLocationTemp.y + halfRenderHeight, 10,
 							viewer.terrain.centerOffset);
 				}
-				MeleeUI.this.placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
+				placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
 						viewer.terrain.centerOffset);
 			}
-			MeleeUI.this.cursorModelInstance.setLocation(clickLocationTemp);
-			SequenceUtils.randomSequence(MeleeUI.this.cursorModelInstance, PrimaryTag.STAND);
-			MeleeUI.this.cursorFrame.setVisible(false);
+			cursorModelInstance.setLocation(clickLocationTemp);
+			SequenceUtils.randomSequence(cursorModelInstance, PrimaryTag.STAND);
+			cursorFrame.setVisible(false);
 			if (justLoaded) {
-				MeleeUI.this.cursorModelInstance.setScene(viewer.worldScene);
+				cursorModelInstance.setScene(viewer.worldScene);
 			}
 		}
 
 		private void handlePlacementCursor(final CAbility ability, final float radius) {
-			final War3MapViewer viewer = MeleeUI.this.war3MapViewer;
-			viewer.getClickLocation(clickLocationTemp, this.baseMouseX, Gdx.graphics.getHeight() - this.baseMouseY);
-			if (MeleeUI.this.placementCursor == null) {
-				MeleeUI.this.placementCursor = viewer.terrain.addUberSplat(
-						MeleeUI.this.rootFrame.getSkinField("PlacementCursor"), clickLocationTemp.x,
+			final War3MapViewer viewer = war3MapViewer;
+			viewer.getClickLocation(clickLocationTemp, baseMouseX, Gdx.graphics.getHeight() - baseMouseY);
+			if (placementCursor == null) {
+				placementCursor = viewer.terrain.addUberSplat(
+						rootFrame.getSkinField("PlacementCursor"), clickLocationTemp.x,
 						clickLocationTemp.y, 10, radius, true, true, true);
 			}
-			MeleeUI.this.placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
+			placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
 					viewer.terrain.centerOffset);
-			MeleeUI.this.cursorFrame.setVisible(false);
+			cursorFrame.setVisible(false);
 		}
 	}
 
@@ -2041,17 +2080,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public Void accept(final AbilityPointTarget target) {
-			this.rallyPointInstance.setParent(null);
+			rallyPointInstance.setParent(null);
 			final float rallyPointX = target.getX();
 			final float rallyPointY = target.getY();
-			this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
-					MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
+			rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+					war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
 			return null;
 		}
 
 		@Override
 		public Void accept(final CUnit target) {
-			final RenderUnit renderUnit = MeleeUI.this.war3MapViewer.getRenderPeer(target);
+			final RenderUnit renderUnit = war3MapViewer.getRenderPeer(target);
 			final MdxModel model = (MdxModel) renderUnit.instance.model;
 			int index = -1;
 			for (int i = 0; i < model.attachments.size(); i++) {
@@ -2080,36 +2119,36 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			if (index != -1) {
 				final MdxNode attachment = renderUnit.instance.getAttachment(index);
-				this.rallyPointInstance.setParent(attachment);
-				this.rallyPointInstance.setLocation(0, 0, 0);
+				rallyPointInstance.setParent(attachment);
+				rallyPointInstance.setLocation(0, 0, 0);
 			}
 			else {
-				this.rallyPointInstance.setParent(null);
+				rallyPointInstance.setParent(null);
 				final float rallyPointX = target.getX();
 				final float rallyPointY = target.getY();
-				this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
-						MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
+				rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+						war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
 			}
 			return null;
 		}
 
 		@Override
 		public Void accept(final CDestructable target) {
-			this.rallyPointInstance.setParent(null);
+			rallyPointInstance.setParent(null);
 			final float rallyPointX = target.getX();
 			final float rallyPointY = target.getY();
-			this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
-					MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY) + 192);
+			rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+					war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY) + 192);
 			return null;
 		}
 
 		@Override
 		public Void accept(final CItem target) {
-			this.rallyPointInstance.setParent(null);
+			rallyPointInstance.setParent(null);
 			final float rallyPointX = target.getX();
 			final float rallyPointY = target.getY();
-			this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
-					MeleeUI.this.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
+			rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+					war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
 			return null;
 		}
 	}
@@ -2118,9 +2157,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		@Override
 		public boolean call(final CWidget unit) {
 			final BooleanAbilityTargetCheckReceiver<CWidget> targetReceiver = BooleanAbilityTargetCheckReceiver
-					.<CWidget>getInstance();
-			MeleeUI.this.activeCommand.checkCanTarget(MeleeUI.this.war3MapViewer.simulation,
-					MeleeUI.this.activeCommandUnit.getSimulationUnit(), MeleeUI.this.activeCommandOrderId, unit,
+					.getInstance();
+			activeCommand.checkCanTarget(war3MapViewer.simulation,
+					activeCommandUnit.getSimulationUnit(), activeCommandOrderId, unit,
 					targetReceiver);
 			return targetReceiver.isTargetable();
 		}
@@ -2134,57 +2173,57 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				.noneOf(AnimationTokens.SecondaryTag.class);
 		private RenderUnit unit;
 
-		public Portrait(final War3MapViewer war3MapViewer, final Scene portraitScene) {
+		private Portrait(final War3MapViewer war3MapViewer, final Scene portraitScene) {
 			this.portraitScene = portraitScene;
-			this.portraitCameraManager = new PortraitCameraManager();
-			this.portraitCameraManager.setupCamera(this.portraitScene);
+			portraitCameraManager = new PortraitCameraManager();
+			portraitCameraManager.setupCamera(this.portraitScene);
 			this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
 		}
 
 		public void update() {
-			this.portraitCameraManager.updateCamera();
-			if ((this.modelInstance != null)
-					&& (this.modelInstance.sequenceEnded || (this.modelInstance.sequence == -1))) {
-				this.recycleSet.clear();
-				this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
-				SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+			portraitCameraManager.updateCamera();
+			if ((modelInstance != null)
+					&& (modelInstance.sequenceEnded || (modelInstance.sequence == -1))) {
+				recycleSet.clear();
+				recycleSet.addAll(unit.getSecondaryAnimationTags());
+				SequenceUtils.randomSequence(modelInstance, PrimaryTag.PORTRAIT, recycleSet, true);
 			}
 		}
 
 		public void talk() {
 			// TODO we somehow called talk from null by clicking a unit right at the same
 			// time it died, so I do a null check here until I study that case further.
-			if (this.modelInstance != null) {
-				this.recycleSet.clear();
-				this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
-				this.recycleSet.add(SecondaryTag.TALK);
-				SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+			if (modelInstance != null) {
+				recycleSet.clear();
+				recycleSet.addAll(unit.getSecondaryAnimationTags());
+				recycleSet.add(SecondaryTag.TALK);
+				SequenceUtils.randomSequence(modelInstance, PrimaryTag.PORTRAIT, recycleSet, true);
 			}
 		}
 
 		public void setSelectedUnit(final RenderUnit unit) {
-			if (this.unit != unit) {
+			if (!Objects.equals(this.unit, unit)) {
 				this.unit = unit;
 				if (unit == null) {
-					if (this.modelInstance != null) {
-						this.portraitScene.removeInstance(this.modelInstance);
+					if (modelInstance != null) {
+						portraitScene.removeInstance(modelInstance);
 					}
-					this.modelInstance = null;
-					this.portraitCameraManager.setModelInstance(null, null);
+					modelInstance = null;
+					portraitCameraManager.setModelInstance(null, null);
 				}
 				else {
 					final MdxModel portraitModel = unit.portraitModel;
 					if (portraitModel != null) {
-						if (this.modelInstance != null) {
-							this.portraitScene.removeInstance(this.modelInstance);
+						if (modelInstance != null) {
+							portraitScene.removeInstance(modelInstance);
 						}
-						this.modelInstance = (MdxComplexInstance) portraitModel.addInstance();
-						this.portraitCameraManager.setModelInstance(this.modelInstance, portraitModel);
-						this.modelInstance.setBlendTime(portraitModel.blendTime);
-						this.modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
-						this.modelInstance.setScene(this.portraitScene);
-						this.modelInstance.setVertexColor(unit.instance.vertexColor);
-						this.modelInstance.setTeamColor(unit.playerIndex);
+						modelInstance = (MdxComplexInstance) portraitModel.addInstance();
+						portraitCameraManager.setModelInstance(modelInstance, portraitModel);
+						modelInstance.setBlendTime(portraitModel.blendTime);
+						modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+						modelInstance.setScene(portraitScene);
+						modelInstance.setVertexColor(unit.instance.vertexColor);
+						modelInstance.setTeamColor(unit.playerIndex);
 					}
 				}
 			}
@@ -2192,17 +2231,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public void setDraggingItem(final CItem itemInSlot) {
-		this.draggingItem = itemInSlot;
+		draggingItem = itemInSlot;
 		if (itemInSlot != null) {
-			final String iconPath = this.war3MapViewer.getAbilityDataUI().getItemUI(itemInSlot.getTypeId())
+			final String iconPath = war3MapViewer.getAbilityDataUI().getItemUI(itemInSlot.getTypeId())
 					.getItemIconPathForDragging();
-			this.cursorFrame.setReplaceableId(21, this.war3MapViewer.blp(iconPath));
+			cursorFrame.setReplaceableId(21, war3MapViewer.blp(iconPath));
 
 			int index = 0;
-			final CAbilityInventory inventory = this.selectedUnit.getSimulationUnit().getInventoryData();
+			final CAbilityInventory inventory = selectedUnit.getSimulationUnit().getInventoryData();
 			for (int i = 0; i < INVENTORY_HEIGHT; i++) {
 				for (int j = 0; j < INVENTORY_WIDTH; j++) {
-					final CommandCardIcon inventoryIcon = this.inventoryIcons[i][j];
+					final CommandCardIcon inventoryIcon = inventoryIcons[i][j];
 					final CItem item = inventory.getItemInSlot(index);
 					if (item == null) {
 						if (index < inventory.getItemCapacity()) {
@@ -2215,13 +2254,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		else {
-			if (this.selectedUnit != null) {
-				final CAbilityInventory inventory = this.selectedUnit.getSimulationUnit().getInventoryData();
+			if (selectedUnit != null) {
+				final CAbilityInventory inventory = selectedUnit.getSimulationUnit().getInventoryData();
 				if (inventory != null) {
 					int index = 0;
 					for (int i = 0; i < INVENTORY_HEIGHT; i++) {
 						for (int j = 0; j < INVENTORY_WIDTH; j++) {
-							final CommandCardIcon inventoryIcon = this.inventoryIcons[i][j];
+							final CommandCardIcon inventoryIcon = inventoryIcons[i][j];
 							final CItem item = inventory.getItemInSlot(index);
 							if (item == null) {
 								if (index < inventory.getItemCapacity()) {
@@ -2238,49 +2277,49 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public void selectUnit(RenderUnit unit) {
-		this.subMenuOrderIdStack.clear();
+		subMenuOrderIdStack.clear();
 		if ((unit != null) && unit.getSimulationUnit().isDead()) {
 			unit = null;
 		}
-		if (this.selectedUnit != null) {
-			this.selectedUnit.getSimulationUnit().removeStateListener(this);
+		if (selectedUnit != null) {
+			selectedUnit.getSimulationUnit().removeStateListener(this);
 		}
-		this.portrait.setSelectedUnit(unit);
-		this.selectedUnit = unit;
+		portrait.setSelectedUnit(unit);
+		selectedUnit = unit;
 		setDraggingItem(null);
 		if (unit == null) {
 			clearCommandCard();
-			this.rootFrame.setText(this.simpleNameValue, "");
-			this.rootFrame.setText(this.unitLifeText, "");
-			this.rootFrame.setText(this.unitManaText, "");
-			this.rootFrame.setText(this.simpleClassValue, "");
-			this.rootFrame.setText(this.simpleBuildingActionLabel, "");
-			this.attack1Icon.setVisible(false);
-			this.attack2Icon.setVisible(false);
-			this.rootFrame.setText(this.attack1InfoPanelIconLevel, "");
-			this.rootFrame.setText(this.attack2InfoPanelIconLevel, "");
-			this.rootFrame.setText(this.simpleBuildingBuildingActionLabel, "");
-			this.rootFrame.setText(this.simpleBuildingNameValue, "");
-			this.armorIcon.setVisible(false);
-			this.rootFrame.setText(this.armorInfoPanelIconLevel, "");
-			this.simpleBuildTimeIndicator.setVisible(false);
-			this.simpleHeroLevelBar.setVisible(false);
-			this.simpleBuildingBuildTimeIndicator.setVisible(false);
-			this.simpleInfoPanelBuildingDetail.setVisible(false);
-			this.simpleInfoPanelUnitDetail.setVisible(false);
-			for (final QueueIcon queueIconFrame : this.queueIconFrames) {
+			rootFrame.setText(simpleNameValue, "");
+			rootFrame.setText(unitLifeText, "");
+			rootFrame.setText(unitManaText, "");
+			rootFrame.setText(simpleClassValue, "");
+			rootFrame.setText(simpleBuildingActionLabel, "");
+			attack1Icon.setVisible(false);
+			attack2Icon.setVisible(false);
+			rootFrame.setText(attack1InfoPanelIconLevel, "");
+			rootFrame.setText(attack2InfoPanelIconLevel, "");
+			rootFrame.setText(simpleBuildingBuildingActionLabel, "");
+			rootFrame.setText(simpleBuildingNameValue, "");
+			armorIcon.setVisible(false);
+			rootFrame.setText(armorInfoPanelIconLevel, "");
+			simpleBuildTimeIndicator.setVisible(false);
+			simpleHeroLevelBar.setVisible(false);
+			simpleBuildingBuildTimeIndicator.setVisible(false);
+			simpleInfoPanelBuildingDetail.setVisible(false);
+			simpleInfoPanelUnitDetail.setVisible(false);
+			for (final QueueIcon queueIconFrame : queueIconFrames) {
 				queueIconFrame.setVisible(false);
 			}
-			this.selectWorkerInsideFrame.setVisible(false);
-			this.heroInfoPanel.setVisible(false);
-			this.rallyPointInstance.hide();
-			this.rallyPointInstance.detach();
-			this.inventoryCover.setVisible(true);
-			this.inventoryBarFrame.setVisible(false);
-			for (final MultiSelectionIcon iconFrame : this.selectedUnitFrames) {
+			selectWorkerInsideFrame.setVisible(false);
+			heroInfoPanel.setVisible(false);
+			rallyPointInstance.hide();
+			rallyPointInstance.detach();
+			inventoryCover.setVisible(true);
+			inventoryBarFrame.setVisible(false);
+			for (final MultiSelectionIcon iconFrame : selectedUnitFrames) {
 				iconFrame.setVisible(false);
 			}
-			for (final UIFrame frame : this.selectedUnitHighlightBackdrop) {
+			for (final UIFrame frame : selectedUnitHighlightBackdrop) {
 				frame.setVisible(false);
 			}
 			repositionWaypointFlags(null);
@@ -2293,8 +2332,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void rallyPointChanged() {
-		if (this.selectedUnit != null) {
-			final CUnit simulationUnit = this.selectedUnit.getSimulationUnit();
+		if (selectedUnit != null) {
+			final CUnit simulationUnit = selectedUnit.getSimulationUnit();
 			repositionRallyPoint(simulationUnit);
 		}
 	}
@@ -2302,23 +2341,23 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private void repositionRallyPoint(final CUnit simulationUnit) {
 		final AbilityTarget rallyPoint = simulationUnit.getRallyPoint();
 		if (rallyPoint != null) {
-			this.rallyPointInstance
-					.setTeamColor(this.war3MapViewer.simulation.getPlayer(simulationUnit.getPlayerIndex()).getColor());
-			this.rallyPointInstance.show();
-			this.rallyPointInstance.detach();
-			rallyPoint.visit(this.rallyPositioningVisitor.reset(this.rallyPointInstance));
-			this.rallyPointInstance.setScene(this.war3MapViewer.worldScene);
+			rallyPointInstance
+					.setTeamColor(war3MapViewer.simulation.getPlayer(simulationUnit.getPlayerIndex()).getColor());
+			rallyPointInstance.show();
+			rallyPointInstance.detach();
+			rallyPoint.visit(rallyPositioningVisitor.reset(rallyPointInstance));
+			rallyPointInstance.setScene(war3MapViewer.worldScene);
 		}
 		else {
-			this.rallyPointInstance.hide();
-			this.rallyPointInstance.detach();
+			rallyPointInstance.hide();
+			rallyPointInstance.detach();
 		}
 	}
 
 	@Override
 	public void waypointsChanged() {
-		if (this.selectedUnit != null) {
-			final CUnit simulationUnit = this.selectedUnit.getSimulationUnit();
+		if (selectedUnit != null) {
+			final CUnit simulationUnit = selectedUnit.getSimulationUnit();
 			repositionWaypointFlags(simulationUnit);
 		}
 		else {
@@ -2335,12 +2374,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final COrder order = simulationUnit.getCurrentOrder();
 			if ((order != null) && order.isQueued()) {
 				final MdxComplexInstance waypointModelInstance = getOrCreateWaypointIndicator(orderIndex);
-				final AbilityTarget target = order.getTarget(this.war3MapViewer.simulation);
+				final AbilityTarget target = order.getTarget(war3MapViewer.simulation);
 				if (target != null) {
 					waypointModelInstance.show();
 					waypointModelInstance.detach();
-					target.visit(this.rallyPositioningVisitor.reset(waypointModelInstance));
-					waypointModelInstance.setScene(this.war3MapViewer.worldScene);
+					target.visit(rallyPositioningVisitor.reset(waypointModelInstance));
+					waypointModelInstance.setScene(war3MapViewer.worldScene);
 				}
 				else {
 					waypointModelInstance.hide();
@@ -2352,16 +2391,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		else {
 			iterator = Collections.emptyIterator();
 		}
-		for (; (orderIndex < this.waypointModelInstances.size()) || (iterator.hasNext()); orderIndex++) {
+		for (; (orderIndex < waypointModelInstances.size()) || (iterator.hasNext()); orderIndex++) {
 			final MdxComplexInstance waypointModelInstance = getOrCreateWaypointIndicator(orderIndex);
 			if (iterator.hasNext()) {
 				final COrder order = iterator.next();
-				final AbilityTarget target = order.getTarget(this.war3MapViewer.simulation);
+				final AbilityTarget target = order.getTarget(war3MapViewer.simulation);
 				if (target != null) {
 					waypointModelInstance.show();
 					waypointModelInstance.detach();
-					target.visit(this.rallyPositioningVisitor.reset(waypointModelInstance));
-					waypointModelInstance.setScene(this.war3MapViewer.worldScene);
+					target.visit(rallyPositioningVisitor.reset(waypointModelInstance));
+					waypointModelInstance.setScene(war3MapViewer.worldScene);
 				}
 				else {
 					waypointModelInstance.hide();
@@ -2376,16 +2415,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private MdxComplexInstance getOrCreateWaypointIndicator(final int index) {
-		while (index >= this.waypointModelInstances.size()) {
-			final MdxComplexInstance waypointModelInstance = (MdxComplexInstance) this.waypointModel.addInstance();
+		while (index >= waypointModelInstances.size()) {
+			final MdxComplexInstance waypointModelInstance = (MdxComplexInstance) waypointModel.addInstance();
 			waypointModelInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
-					this.war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
+					war3MapViewer.simulation.getGameplayConstants().getBuildingAngle()));
 			waypointModelInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 			SequenceUtils.randomStandSequence(waypointModelInstance);
 			waypointModelInstance.hide();
-			this.waypointModelInstances.add(waypointModelInstance);
+			waypointModelInstances.add(waypointModelInstance);
 		}
-		return this.waypointModelInstances.get(index);
+		return waypointModelInstances.get(index);
 	}
 
 	private void reloadSelectedUnitUI(final RenderUnit unit) {
@@ -2394,344 +2433,349 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 		final CUnit simulationUnit = unit.getSimulationUnit();
 		final float lifeRatioRemaining = simulationUnit.getLife() / simulationUnit.getMaxLife();
-		this.rootFrame.setText(this.unitLifeText, FastNumberFormat.formatWholeNumber(simulationUnit.getLife()) + " / "
+		rootFrame.setText(unitLifeText, FastNumberFormat.formatWholeNumber(simulationUnit.getLife()) + " / "
 				+ FastNumberFormat.formatWholeNumber(simulationUnit.getMaxLife()));
-		this.unitLifeText.setColor(new Color(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
+		unitLifeText.setColor(new Color(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
 				Math.min(1.0f, lifeRatioRemaining * 2), 0, 1.0f));
 		final int maximumMana = simulationUnit.getMaximumMana();
 		if (maximumMana > 0) {
-			this.rootFrame.setText(this.unitManaText,
+			rootFrame.setText(unitManaText,
 					FastNumberFormat.formatWholeNumber(simulationUnit.getMana()) + " / " + maximumMana);
 		}
 		else {
-			this.rootFrame.setText(this.unitManaText, "");
+			rootFrame.setText(unitManaText, "");
 		}
-		final boolean multiSelect = this.selectedUnits.size() > 1;
+		final boolean multiSelect = selectedUnits.size() > 1;
 		repositionRallyPoint(simulationUnit);
 		repositionWaypointFlags(simulationUnit);
 		if (!multiSelect) {
-			for (int i = 0; i < this.selectedUnitFrames.length; i++) {
-				this.selectedUnitFrames[i].setVisible(false);
-				this.selectedUnitHighlightBackdrop[i].setVisible(false);
+			for (int i = 0; i < selectedUnitFrames.length; i++) {
+				selectedUnitFrames[i].setVisible(false);
+				selectedUnitHighlightBackdrop[i].setVisible(false);
 			}
 		}
 		if ((simulationUnit.getBuildQueue()[0] != null)
-				&& (simulationUnit.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())) {
-			for (int i = 0; i < this.queueIconFrames.length; i++) {
+				&& (simulationUnit.getPlayerIndex() == war3MapViewer.getLocalPlayerIndex())) {
+			for (int i = 0; i < queueIconFrames.length; i++) {
 				final QueueItemType queueItemType = simulationUnit.getBuildQueueTypes()[i];
 				if (queueItemType == null) {
-					this.queueIconFrames[i].setVisible(false);
+					queueIconFrames[i].setVisible(false);
 				}
 				else {
-					this.queueIconFrames[i].setVisible(true);
+					queueIconFrames[i].setVisible(true);
 					switch (queueItemType) {
 					case RESEARCH:
-						final IconUI upgradeUI = this.war3MapViewer.getAbilityDataUI()
+						final IconUI upgradeUI = war3MapViewer.getAbilityDataUI()
 								.getUpgradeUI(simulationUnit.getBuildQueue()[i], 0);
-						this.queueIconFrames[i].setTexture(upgradeUI.getIcon());
-						this.queueIconFrames[i].setToolTip(upgradeUI.getToolTip());
-						this.queueIconFrames[i].setUberTip(upgradeUI.getUberTip());
+						queueIconFrames[i].setTexture(upgradeUI.getIcon());
+						queueIconFrames[i].setToolTip(upgradeUI.getToolTip());
+						queueIconFrames[i].setUberTip(upgradeUI.getUberTip());
 						break;
 					case HERO_REVIVE: {
 						final War3ID handleIdEncoded = simulationUnit.getBuildQueue()[i];
-						final CUnit hero = this.war3MapViewer.simulation.getUnit(handleIdEncoded.getValue());
-						final UnitIconUI unitUI = this.war3MapViewer.getAbilityDataUI().getUnitUI(hero.getTypeId());
-						this.queueIconFrames[i].setTexture(unitUI.getIcon());
-						this.queueIconFrames[i]
+						final CUnit hero = war3MapViewer.simulation.getUnit(handleIdEncoded.getValue());
+						final UnitIconUI unitUI = war3MapViewer.getAbilityDataUI().getUnitUI(hero.getTypeId());
+						queueIconFrames[i].setTexture(unitUI.getIcon());
+						queueIconFrames[i]
 								.setToolTip(unitUI.getReviveTip() + " - " + hero.getHeroData().getProperName());
-						this.queueIconFrames[i].setUberTip(unitUI.getUberTip());
+						queueIconFrames[i].setUberTip(unitUI.getUberTip());
 						break;
 					}
 					case UNIT:
 					default: {
-						final IconUI unitUI = this.war3MapViewer.getAbilityDataUI()
+						final IconUI unitUI = war3MapViewer.getAbilityDataUI()
 								.getUnitUI(simulationUnit.getBuildQueue()[i]);
-						this.queueIconFrames[i].setTexture(unitUI.getIcon());
-						this.queueIconFrames[i].setToolTip(unitUI.getToolTip());
-						this.queueIconFrames[i].setUberTip(unitUI.getUberTip());
+						queueIconFrames[i].setTexture(unitUI.getIcon());
+						queueIconFrames[i].setToolTip(unitUI.getToolTip());
+						queueIconFrames[i].setUberTip(unitUI.getUberTip());
 						break;
 					}
 					}
 				}
 			}
-			this.simpleInfoPanelBuildingDetail.setVisible(!multiSelect);
-			this.simpleInfoPanelUnitDetail.setVisible(false);
-			this.rootFrame.setText(this.simpleBuildingNameValue, simulationUnit.getUnitType().getName());
-			this.rootFrame.setText(this.simpleBuildingDescriptionValue, "");
+			simpleInfoPanelBuildingDetail.setVisible(!multiSelect);
+			simpleInfoPanelUnitDetail.setVisible(false);
+			rootFrame.setText(simpleBuildingNameValue, simulationUnit.getUnitType().getName());
+			rootFrame.setText(simpleBuildingDescriptionValue, "");
 
-			this.simpleBuildingBuildTimeIndicator.setVisible(true);
-			this.simpleBuildTimeIndicator.setVisible(false);
-			this.simpleHeroLevelBar.setVisible(false);
+			simpleBuildingBuildTimeIndicator.setVisible(true);
+			simpleBuildTimeIndicator.setVisible(false);
+			simpleHeroLevelBar.setVisible(false);
 			if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.UNIT) {
-				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
-						this.rootFrame.getTemplates().getDecoratedString("TRAINING"));
+				rootFrame.setText(simpleBuildingBuildingActionLabel,
+						rootFrame.getTemplates().getDecoratedString("TRAINING"));
 			}
 			else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.HERO_REVIVE) {
-				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
-						this.rootFrame.getTemplates().getDecoratedString("REVIVING"));
+				rootFrame.setText(simpleBuildingBuildingActionLabel,
+						rootFrame.getTemplates().getDecoratedString("REVIVING"));
 			}
 			else {
-				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
-						this.rootFrame.getTemplates().getDecoratedString("RESEARCHING"));
+				rootFrame.setText(simpleBuildingBuildingActionLabel,
+						rootFrame.getTemplates().getDecoratedString("RESEARCHING"));
 			}
-			this.attack1Icon.setVisible(false);
-			this.attack2Icon.setVisible(false);
-			this.armorIcon.setVisible(false);
-			this.heroInfoPanel.setVisible(false);
-			this.selectWorkerInsideFrame.setVisible(false);
+			attack1Icon.setVisible(false);
+			attack2Icon.setVisible(false);
+			armorIcon.setVisible(false);
+			heroInfoPanel.setVisible(false);
+			selectWorkerInsideFrame.setVisible(false);
 		}
 		else if (multiSelect) {
-			for (int i = 0; i < this.queueIconFrames.length; i++) {
-				this.queueIconFrames[i].setVisible(false);
+			for (QueueIcon queueIconFrame : queueIconFrames) {
+				queueIconFrame.setVisible(false);
 			}
-			for (int i = 0; i < this.selectedUnitFrames.length; i++) {
-				final boolean useIcon = i < this.selectedUnits.size();
-				this.selectedUnitFrames[i].setVisible(useIcon);
-				final boolean focused = useIcon && this.selectedUnits.get(i).groupsWith(this.selectedUnit);
-				this.selectedUnitHighlightBackdrop[i].setVisible(focused);
+			for (int i = 0; i < selectedUnitFrames.length; i++) {
+				final boolean useIcon = i < selectedUnits.size();
+				selectedUnitFrames[i].setVisible(useIcon);
+				final boolean focused = useIcon && selectedUnits.get(i).groupsWith(selectedUnit);
+				selectedUnitHighlightBackdrop[i].setVisible(focused);
 				if (useIcon) {
-					final CUnit multiSelectedUnit = this.selectedUnits.get(i).getSimulationUnit();
+					final CUnit multiSelectedUnit = selectedUnits.get(i).getSimulationUnit();
 					final CUnitType unitType = multiSelectedUnit.getUnitType();
-					final IconUI unitUI = this.war3MapViewer.getAbilityDataUI().getUnitUI(unitType.getTypeId());
-					this.selectedUnitFrames[i].setTexture(unitUI.getIcon());
-					this.selectedUnitFrames[i].setToolTip(unitUI.getToolTip());
-					this.selectedUnitFrames[i].setUberTip(unitUI.getUberTip());
-					this.selectedUnitFrames[i]
+					final IconUI unitUI = war3MapViewer.getAbilityDataUI().getUnitUI(unitType.getTypeId());
+					selectedUnitFrames[i].setTexture(unitUI.getIcon());
+					selectedUnitFrames[i].setToolTip(unitUI.getToolTip());
+					selectedUnitFrames[i].setUberTip(unitUI.getUberTip());
+					selectedUnitFrames[i]
 							.setLifeRatioRemaining(multiSelectedUnit.getLife() / multiSelectedUnit.getMaximumLife());
 					final boolean useManaBar = multiSelectedUnit.getMaximumMana() > 0;
-					this.selectedUnitFrames[i].setManaBarVisible(useManaBar);
+					selectedUnitFrames[i].setManaBarVisible(useManaBar);
 					if (useManaBar) {
-						this.selectedUnitFrames[i].setManaRatioRemaining(
+						selectedUnitFrames[i].setManaRatioRemaining(
 								multiSelectedUnit.getMana() / multiSelectedUnit.getMaximumMana());
 					}
 					if (focused) {
-						this.selectedUnitFrames[i].showFocused(this.rootFrame, this.uiViewport);
+						selectedUnitFrames[i].showFocused(rootFrame, uiViewport);
 						if (useManaBar) {
-							this.selectedUnitHighlightBackdrop[i].setHeight(this.frontQueueIconWidth * 1.75f);
+							selectedUnitHighlightBackdrop[i].setHeight(frontQueueIconWidth * 1.75f);
 						}
 						else {
-							this.selectedUnitHighlightBackdrop[i].setHeight(this.frontQueueIconWidth * 1.55f);
+							selectedUnitHighlightBackdrop[i].setHeight(frontQueueIconWidth * 1.55f);
 						}
-						this.selectedUnitHighlightBackdrop[i].positionBounds(this.rootFrame, this.uiViewport);
+						selectedUnitHighlightBackdrop[i].positionBounds(rootFrame, uiViewport);
 					}
 					else {
-						this.selectedUnitFrames[i].showUnFocused(this.rootFrame, this.uiViewport);
+						selectedUnitFrames[i].showUnFocused(rootFrame, uiViewport);
 					}
 				}
 			}
-			this.simpleInfoPanelBuildingDetail.setVisible(false);
-			this.simpleInfoPanelUnitDetail.setVisible(false);
-			this.simpleBuildingBuildTimeIndicator.setVisible(false);
-			this.simpleBuildTimeIndicator.setVisible(false);
-			this.simpleHeroLevelBar.setVisible(false);
-			this.attack1Icon.setVisible(false);
-			this.attack2Icon.setVisible(false);
-			this.armorIcon.setVisible(false);
-			this.heroInfoPanel.setVisible(false);
-			this.selectWorkerInsideFrame.setVisible(false);
+			simpleInfoPanelBuildingDetail.setVisible(false);
+			simpleInfoPanelUnitDetail.setVisible(false);
+			simpleBuildingBuildTimeIndicator.setVisible(false);
+			simpleBuildTimeIndicator.setVisible(false);
+			simpleHeroLevelBar.setVisible(false);
+			attack1Icon.setVisible(false);
+			attack2Icon.setVisible(false);
+			armorIcon.setVisible(false);
+			heroInfoPanel.setVisible(false);
+			selectWorkerInsideFrame.setVisible(false);
 		}
 		else {
-			for (final QueueIcon queueIconFrame : this.queueIconFrames) {
-				queueIconFrame.setVisible(false);
-			}
-			this.simpleInfoPanelBuildingDetail.setVisible(false);
-			this.simpleInfoPanelUnitDetail.setVisible(!multiSelect);
-			final String unitTypeName = simulationUnit.getUnitType().getName();
+			final CAbilityCargoHold cargoData = simulationUnit.getCargoData();
+			if (cargoData != null) {
 
-			final boolean anyAttacks = !simulationUnit.getAttacks().isEmpty();
-			final boolean constructing = simulationUnit.isConstructingOrUpgrading();
-			final UIFrame localArmorIcon = this.armorIcon;
-			final TextureFrame localArmorIconBackdrop = this.armorIconBackdrop;
-			final StringFrame localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
-			if (anyAttacks && !constructing) {
-				final CUnitAttack attackOne = simulationUnit.getAttacks().get(0);
-				this.attack1Icon.setVisible(attackOne.isShowUI());
-				this.attack1IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackOne.getAttackType()));
-				String attackOneDmgText = attackOne.getMinDamageDisplay() + " - " + attackOne.getMaxDamageDisplay();
-				final int attackOneTemporaryDamageBonus = attackOne.getTotalTemporaryDamageBonus();
-				if (attackOneTemporaryDamageBonus != 0) {
-					attackOneDmgText += (attackOneTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ") + attackOneTemporaryDamageBonus;
+			}
+			else {
+				for (final QueueIcon queueIconFrame : queueIconFrames) {
+					queueIconFrame.setVisible(false);
 				}
-				this.rootFrame.setText(this.attack1InfoPanelIconValue, attackOneDmgText);
-				if (simulationUnit.getAttacks().size() > 1) {
-					final CUnitAttack attackTwo = simulationUnit.getAttacks().get(1);
-					this.attack2Icon.setVisible(attackTwo.isShowUI());
-					this.attack2IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackTwo.getAttackType()));
-					String attackTwoDmgText = attackTwo.getMinDamage() + " - " + attackTwo.getMaxDamage();
-					final int attackTwoTemporaryDamageBonus = attackTwo.getTotalTemporaryDamageBonus();
-					if (attackTwoTemporaryDamageBonus != 0) {
-						attackTwoDmgText += (attackTwoTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ") + attackTwoTemporaryDamageBonus;
+				simpleInfoPanelBuildingDetail.setVisible(false);
+				simpleInfoPanelUnitDetail.setVisible(true);
+				final String unitTypeName = simulationUnit.getUnitType().getName();
+
+				final boolean anyAttacks = !simulationUnit.getAttacks().isEmpty();
+				final boolean constructing = simulationUnit.isConstructingOrUpgrading();
+				final UIFrame localArmorIcon = armorIcon;
+				final TextureFrame localArmorIconBackdrop = armorIconBackdrop;
+				final StringFrame localArmorInfoPanelIconValue = armorInfoPanelIconValue;
+				if (anyAttacks && !constructing) {
+					final CUnitAttack attackOne = simulationUnit.getAttacks().get(0);
+					attack1Icon.setVisible(attackOne.isShowUI());
+					attack1IconBackdrop.setTexture(damageBackdrops.getTexture(attackOne.getAttackType()));
+					String attackOneDmgText = attackOne.getMinDamageDisplay() + " - " + attackOne.getMaxDamageDisplay();
+					final int attackOneTemporaryDamageBonus = attackOne.getTotalTemporaryDamageBonus();
+					if (attackOneTemporaryDamageBonus != 0) {
+						attackOneDmgText += (attackOneTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
+								+ attackOneTemporaryDamageBonus;
 					}
-					this.rootFrame.setText(this.attack2InfoPanelIconValue, attackTwoDmgText);
-				}
-				else {
-					this.attack2Icon.setVisible(false);
-				}
-
-				this.smashArmorIconWrapper.addSetPoint(
-						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.0705f)));
-				this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
-				this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
-			}
-			else {
-				this.attack1Icon.setVisible(false);
-				this.attack2Icon.setVisible(false);
-
-				this.smashArmorIconWrapper.addSetPoint(
-						new SetPoint(FramePoint.TOPLEFT, this.simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
-								GameUI.convertX(this.uiViewport, 0f), GameUI.convertY(this.uiViewport, -0.040f)));
-				this.smashArmorIconWrapper.positionBounds(this.rootFrame, this.uiViewport);
-				this.armorIcon.positionBounds(this.rootFrame, this.uiViewport);
-			}
-
-			final CAbilityHero heroData = simulationUnit.getHeroData();
-			final boolean hero = heroData != null;
-			this.heroInfoPanel.setVisible(hero);
-			if (hero) {
-				final CPrimaryAttribute primaryAttribute = simulationUnit.getUnitType().getPrimaryAttribute();
-				String iconKey;
-				switch (primaryAttribute) {
-				case AGILITY:
-					iconKey = "InfoPanelIconHeroIconAGI";
-					break;
-				case INTELLIGENCE:
-					iconKey = "InfoPanelIconHeroIconINT";
-					break;
-				default:
-				case STRENGTH:
-					iconKey = "InfoPanelIconHeroIconSTR";
-					break;
-				}
-				this.primaryAttributeIcon.setTexture(iconKey, this.rootFrame);
-
-				this.rootFrame.setText(this.strengthValue, heroData.getStrength().getDisplayText());
-				this.rootFrame.setText(this.agilityValue, heroData.getAgility().getDisplayText());
-				this.rootFrame.setText(this.intelligenceValue, heroData.getIntelligence().getDisplayText());
-				final String infopanelLevelClass = this.rootFrame.getTemplates()
-						.getDecoratedString("INFOPANEL_LEVEL_CLASS").replace("%u", "%d"); // :(
-				final int heroLevel = heroData.getHeroLevel();
-				this.simpleClassValue.setVisible(true);
-				this.rootFrame.setText(this.simpleClassValue,
-						String.format(infopanelLevelClass, heroLevel, unitTypeName));
-				this.rootFrame.setText(this.simpleNameValue, heroData.getProperName());
-				this.simpleHeroLevelBar.setVisible(true);
-				final CGameplayConstants gameplayConstants = this.war3MapViewer.simulation.getGameplayConstants();
-				this.simpleHeroLevelBar.setValue((heroData.getXp() - gameplayConstants.getNeedHeroXPSum(heroLevel - 1))
-						/ (float) gameplayConstants.getNeedHeroXP(heroLevel));
-			}
-			else {
-				this.simpleClassValue.setVisible(!simulationUnit.isBuilding());
-				this.rootFrame.setText(this.simpleNameValue, unitTypeName);
-				String classText = null;
-				for (final CUnitClassification classification : simulationUnit.getClassifications()) {
-					if (classification.getDisplayName() != null) {
-						classText = classification.getDisplayName();
-					}
-				}
-				if (classText != null) {
-					this.rootFrame.setText(this.simpleClassValue, classText);
-				}
-				else {
-					this.rootFrame.setText(this.simpleClassValue, "");
-				}
-				this.simpleHeroLevelBar.setVisible(false);
-			}
-
-			localArmorIcon.setVisible(!constructing);
-			this.simpleBuildTimeIndicator.setVisible(constructing);
-			this.simpleBuildingBuildTimeIndicator.setVisible(false);
-			if (constructing) {
-				War3ID constructingTypeId = simulationUnit.getTypeId();
-				if (simulationUnit.isUpgrading()) {
-					constructingTypeId = simulationUnit.getUpgradeIdType();
-				}
-
-				this.rootFrame.setText(this.simpleBuildingActionLabel,
-						this.rootFrame.getTemplates().getDecoratedString("CONSTRUCTING"));
-				this.queueIconFrames[0].setVisible(true);
-				this.queueIconFrames[0]
-						.setTexture(this.war3MapViewer.getAbilityDataUI().getUnitUI(constructingTypeId).getIcon());
-
-				if (simulationUnit.getWorkerInside() != null) {
-					this.selectWorkerInsideFrame.setVisible(true);
-					this.selectWorkerInsideFrame.setTexture(this.war3MapViewer.getAbilityDataUI()
-							.getUnitUI(simulationUnit.getWorkerInside().getTypeId()).getIcon());
-				}
-				else {
-					this.selectWorkerInsideFrame.setVisible(false);
-				}
-			}
-			else {
-				this.rootFrame.setText(this.simpleBuildingActionLabel, "");
-				this.selectWorkerInsideFrame.setVisible(false);
-			}
-			final Texture defenseTexture = this.defenseBackdrops
-					.getTexture(simulationUnit.getUnitType().getDefenseType());
-			if (defenseTexture == null) {
-				throw new RuntimeException(simulationUnit.getUnitType().getDefenseType() + " can't find texture!");
-			}
-			localArmorIconBackdrop.setTexture(defenseTexture);
-
-			String defenseDisplayString;
-			if (simulationUnit.isInvulnerable()) {
-				defenseDisplayString = this.rootFrame.getTemplates().getDecoratedString("INVULNERABLE");
-			}
-			else {
-				defenseDisplayString = Integer.toString(simulationUnit.getCurrentDefenseDisplay());
-				final float temporaryDefenseBonus = simulationUnit.getTotalTemporaryDefenseBonus();
-				if (temporaryDefenseBonus != 0) {
-					if (temporaryDefenseBonus > 0) {
-						defenseDisplayString += "|cFF00FF00 +" + String.format("%.1f", temporaryDefenseBonus);
+					rootFrame.setText(attack1InfoPanelIconValue, attackOneDmgText);
+					if (simulationUnit.getAttacks().size() > 1) {
+						final CUnitAttack attackTwo = simulationUnit.getAttacks().get(1);
+						attack2Icon.setVisible(attackTwo.isShowUI());
+						attack2IconBackdrop.setTexture(damageBackdrops.getTexture(attackTwo.getAttackType()));
+						String attackTwoDmgText = attackTwo.getMinDamage() + " - " + attackTwo.getMaxDamage();
+						final int attackTwoTemporaryDamageBonus = attackTwo.getTotalTemporaryDamageBonus();
+						if (attackTwoTemporaryDamageBonus != 0) {
+							attackTwoDmgText += (attackTwoTemporaryDamageBonus > 0 ? "|cFF00FF00 +" : "|cFFFF0000 ")
+									+ attackTwoTemporaryDamageBonus;
+						}
+						rootFrame.setText(attack2InfoPanelIconValue, attackTwoDmgText);
 					}
 					else {
-						defenseDisplayString += "|cFFFF0000 " + String.format("%.1f", temporaryDefenseBonus);
+						attack2Icon.setVisible(false);
+					}
+
+					smashArmorIconWrapper.addSetPoint(
+							new SetPoint(FramePoint.TOPLEFT, simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
+									GameUI.convertX(uiViewport, 0f), GameUI.convertY(uiViewport, -0.0705f)));
+				}
+				else {
+					attack1Icon.setVisible(false);
+					attack2Icon.setVisible(false);
+
+					smashArmorIconWrapper.addSetPoint(
+							new SetPoint(FramePoint.TOPLEFT, simpleInfoPanelUnitDetail, FramePoint.TOPLEFT,
+									GameUI.convertX(uiViewport, 0f), GameUI.convertY(uiViewport, -0.040f)));
+				}
+				smashArmorIconWrapper.positionBounds(rootFrame, uiViewport);
+				armorIcon.positionBounds(rootFrame, uiViewport);
+
+				final CAbilityHero heroData = simulationUnit.getHeroData();
+				final boolean hero = heroData != null;
+				heroInfoPanel.setVisible(hero);
+				if (hero) {
+					final CPrimaryAttribute primaryAttribute = simulationUnit.getUnitType().getPrimaryAttribute();
+					String iconKey;
+					switch (primaryAttribute) {
+					case AGILITY:
+						iconKey = "InfoPanelIconHeroIconAGI";
+						break;
+					case INTELLIGENCE:
+						iconKey = "InfoPanelIconHeroIconINT";
+						break;
+					default:
+					case STRENGTH:
+						iconKey = "InfoPanelIconHeroIconSTR";
+						break;
+					}
+					primaryAttributeIcon.setTexture(iconKey, rootFrame);
+
+					rootFrame.setText(strengthValue, heroData.getStrength().getDisplayText());
+					rootFrame.setText(agilityValue, heroData.getAgility().getDisplayText());
+					rootFrame.setText(intelligenceValue, heroData.getIntelligence().getDisplayText());
+					final String infopanelLevelClass = rootFrame.getTemplates()
+							.getDecoratedString("INFOPANEL_LEVEL_CLASS").replace("%u", "%d"); // :(
+					final int heroLevel = heroData.getHeroLevel();
+					simpleClassValue.setVisible(true);
+					rootFrame.setText(simpleClassValue,
+							String.format(infopanelLevelClass, heroLevel, unitTypeName));
+					rootFrame.setText(simpleNameValue, heroData.getProperName());
+					simpleHeroLevelBar.setVisible(true);
+					final CGameplayConstants gameplayConstants = war3MapViewer.simulation.getGameplayConstants();
+					simpleHeroLevelBar
+							.setValue((heroData.getXp() - gameplayConstants.getNeedHeroXPSum(heroLevel - 1))
+									/ (float) gameplayConstants.getNeedHeroXP(heroLevel));
+				}
+				else {
+					simpleClassValue.setVisible(!simulationUnit.isBuilding());
+					rootFrame.setText(simpleNameValue, unitTypeName);
+					String classText = null;
+					for (final CUnitClassification classification : simulationUnit.getClassifications()) {
+						if (classification.getDisplayName() != null) {
+							classText = classification.getDisplayName();
+						}
+					}
+					if (classText != null) {
+						rootFrame.setText(simpleClassValue, classText);
+					}
+					else {
+						rootFrame.setText(simpleClassValue, "");
+					}
+					simpleHeroLevelBar.setVisible(false);
+				}
+
+				localArmorIcon.setVisible(!constructing);
+				simpleBuildTimeIndicator.setVisible(constructing);
+				simpleBuildingBuildTimeIndicator.setVisible(false);
+				if (constructing) {
+					War3ID constructingTypeId = simulationUnit.getTypeId();
+					if (simulationUnit.isUpgrading()) {
+						constructingTypeId = simulationUnit.getUpgradeIdType();
+					}
+
+					rootFrame.setText(simpleBuildingActionLabel,
+							rootFrame.getTemplates().getDecoratedString("CONSTRUCTING"));
+					queueIconFrames[0].setVisible(true);
+					queueIconFrames[0]
+							.setTexture(war3MapViewer.getAbilityDataUI().getUnitUI(constructingTypeId).getIcon());
+
+					if (simulationUnit.getWorkerInside() != null) {
+						selectWorkerInsideFrame.setVisible(true);
+						selectWorkerInsideFrame.setTexture(war3MapViewer.getAbilityDataUI()
+								.getUnitUI(simulationUnit.getWorkerInside().getTypeId()).getIcon());
+					}
+					else {
+						selectWorkerInsideFrame.setVisible(false);
 					}
 				}
+				else {
+					rootFrame.setText(simpleBuildingActionLabel, "");
+					selectWorkerInsideFrame.setVisible(false);
+				}
+				final Texture defenseTexture = defenseBackdrops
+						.getTexture(simulationUnit.getUnitType().getDefenseType());
+				Objects.requireNonNull(defenseTexture, () -> simulationUnit.getUnitType().getDefenseType() + " can't find texture!");
+				localArmorIconBackdrop.setTexture(defenseTexture);
+
+				String defenseDisplayString;
+				if (simulationUnit.isInvulnerable()) {
+					defenseDisplayString = rootFrame.getTemplates().getDecoratedString("INVULNERABLE");
+				}
+				else {
+					defenseDisplayString = Integer.toString(simulationUnit.getCurrentDefenseDisplay());
+					final float temporaryDefenseBonus = simulationUnit.getTotalTemporaryDefenseBonus();
+					if (temporaryDefenseBonus != 0) {
+						if (temporaryDefenseBonus > 0) {
+							defenseDisplayString += "|cFF00FF00 +" + String.format("%.1f", temporaryDefenseBonus);
+						}
+						else {
+							defenseDisplayString += "|cFFFF0000 " + String.format("%.1f", temporaryDefenseBonus);
+						}
+					}
+				}
+				rootFrame.setText(localArmorInfoPanelIconValue, defenseDisplayString);
 			}
-			this.rootFrame.setText(localArmorInfoPanelIconValue, defenseDisplayString);
 		}
 		final CAbilityInventory inventory = simulationUnit.getInventoryData();
-		this.inventoryCover.setVisible(inventory == null);
+		inventoryCover.setVisible(inventory == null);
 		if (inventory != null) {
-			this.inventoryBarFrame.setVisible(true);
+			inventoryBarFrame.setVisible(true);
 			int index = 0;
 			for (int i = 0; i < INVENTORY_HEIGHT; i++) {
 				for (int j = 0; j < INVENTORY_WIDTH; j++) {
-					final CommandCardIcon inventoryIcon = this.inventoryIcons[i][j];
+					final CommandCardIcon inventoryIcon = inventoryIcons[i][j];
 					final CItem item = inventory.getItemInSlot(index);
 					if (item != null) {
-						final ItemUI itemUI = this.war3MapViewer.getAbilityDataUI().getItemUI(item.getTypeId());
+						final ItemUI itemUI = war3MapViewer.getAbilityDataUI().getItemUI(item.getTypeId());
 						final IconUI iconUI = itemUI.getIconUI();
 						final CItemType itemType = item.getItemType();
 						// TODO: below we set menu=false, this is bad, item should be based on item abil
 						final boolean activelyUsed = itemType.isActivelyUsed();
 						final boolean pawnable = itemType.isPawnable();
 						final String uberTip = iconUI.getUberTip();
-						this.recycleStringBuilder.setLength(0);
+						recycleStringBuilder.setLength(0);
 						if (pawnable) {
-							this.recycleStringBuilder
-									.append(this.rootFrame.getTemplates().getDecoratedString("ITEM_PAWN_TOOLTIP"));
-							this.recycleStringBuilder.append("|n");
+							recycleStringBuilder
+									.append(rootFrame.getTemplates().getDecoratedString("ITEM_PAWN_TOOLTIP"));
+							recycleStringBuilder.append("|n");
 						}
 						if (activelyUsed) {
-							this.recycleStringBuilder
-									.append(this.rootFrame.getTemplates().getDecoratedString("ITEM_USE_TOOLTIP"));
-							this.recycleStringBuilder.append("|n");
+							recycleStringBuilder
+									.append(rootFrame.getTemplates().getDecoratedString("ITEM_USE_TOOLTIP"));
+							recycleStringBuilder.append("|n");
 						}
-						this.recycleStringBuilder.append(uberTip);
+						recycleStringBuilder.append(uberTip);
 						inventoryIcon.setCommandButtonData(iconUI.getIcon(), 0,
 								activelyUsed ? (OrderIds.itemuse00 + index) : 0, index + 1, activelyUsed, false, false,
-								itemUI.getName(), this.recycleStringBuilder.toString(), '\0', itemType.getGoldCost(),
+								itemUI.getName(), recycleStringBuilder.toString(), '\0', itemType.getGoldCost(),
 								itemType.getLumberCost(), 0, 0, false, 0, 0, -1);
 					}
 					else {
 						if (index >= inventory.getItemCapacity()) {
-							inventoryIcon.setCommandButtonData(this.consoleInventoryNoCapacityTexture, 0, 0, 0, false,
+							inventoryIcon.setCommandButtonData(consoleInventoryNoCapacityTexture, 0, 0, 0, false,
 									false, false, null, null, '\0', 0, 0, 0, 0, false, 0, 0, -1);
 						}
 						else {
-							if (this.draggingItem != null) {
+							if (draggingItem != null) {
 								inventoryIcon.setCommandButtonData(null, 0, 0, index + 1, true, false, false, null,
 										null, '\0', 0, 0, 0, 0, false, 0, 0, -1);
 							}
@@ -2750,20 +2794,20 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private void clearCommandCard() {
 		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
 			for (int i = 0; i < COMMAND_CARD_WIDTH; i++) {
-				this.commandCard[j][i].clear();
+				commandCard[j][i].clear();
 			}
 		}
 	}
 
 	@Override
 	public void commandButton(final int buttonPositionX, final int buttonPositionY, final Texture icon,
-			final int abilityHandleId, final int orderId, final int autoCastId, final boolean active,
-			final boolean autoCastActive, final boolean menuButton, final String tip, final String uberTip,
-			final char hotkey, final int goldCost, final int lumberCost, final int foodCost, final int manaCost,
-			final float cooldownRemaining, final float cooldownMax, final int numberOverlay) {
+							  final int abilityHandleId, final int orderId, final int autoCastOrderId, final boolean active,
+							  final boolean autoCastActive, final boolean menuButton, final String tip, final String uberTip,
+							  final char hotkey, final int goldCost, final int lumberCost, final int foodCost, final int manaCost,
+							  final float cooldownRemaining, final float cooldownMax, final int numberOverlay) {
 		int x = Math.max(0, Math.min(COMMAND_CARD_WIDTH - 1, buttonPositionX));
 		int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
-		while ((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT) && this.commandCard[y][x].isVisible()) {
+		while ((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT) && commandCard[y][x].isVisible()) {
 			x++;
 			if (x >= COMMAND_CARD_WIDTH) {
 				x = 0;
@@ -2771,49 +2815,49 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		if ((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT)) {
-			this.commandCard[y][x].setCommandButtonData(icon, abilityHandleId, orderId, autoCastId, active,
+			commandCard[y][x].setCommandButtonData(icon, abilityHandleId, orderId, autoCastOrderId, active,
 					autoCastActive, menuButton, tip, uberTip, hotkey, goldCost, lumberCost, foodCost, manaCost,
-					this.selectedUnit.getSimulationUnit().getMana() < manaCost, cooldownRemaining, cooldownMax,
+					selectedUnit.getSimulationUnit().getMana() < manaCost, cooldownRemaining, cooldownMax,
 					numberOverlay);
 		}
 	}
 
 	public void resize(final Rectangle viewport) {
-		this.cameraManager.resize(viewport);
+		cameraManager.resize(viewport);
 		positionPortrait();
 	}
 
 	public void positionPortrait() {
-		this.projectionTemp1.x = 422 * this.widthRatioCorrection;
-		this.projectionTemp1.y = 57 * this.heightRatioCorrection;
-		this.projectionTemp2.x = (422 + 167) * this.widthRatioCorrection;
-		this.projectionTemp2.y = (57 + 170) * this.heightRatioCorrection;
-		this.uiViewport.project(this.projectionTemp1);
-		this.uiViewport.project(this.projectionTemp2);
+		projectionTemp1.x = 422 * widthRatioCorrection;
+		projectionTemp1.y = 57 * heightRatioCorrection;
+		projectionTemp2.x = (422 + 167) * widthRatioCorrection;
+		projectionTemp2.y = (57 + 170) * heightRatioCorrection;
+		uiViewport.project(projectionTemp1);
+		uiViewport.project(projectionTemp2);
 
-		this.tempRect.x = this.projectionTemp1.x + this.uiViewport.getScreenX();
-		this.tempRect.y = this.projectionTemp1.y + this.uiViewport.getScreenY();
-		this.tempRect.width = this.projectionTemp2.x - this.projectionTemp1.x;
-		this.tempRect.height = this.projectionTemp2.y - this.projectionTemp1.y;
-		this.portrait.portraitScene.camera.viewport(this.tempRect);
+		tempRect.x = projectionTemp1.x + uiViewport.getScreenX();
+		tempRect.y = projectionTemp1.y + uiViewport.getScreenY();
+		tempRect.width = projectionTemp2.x - projectionTemp1.x;
+		tempRect.height = projectionTemp2.y - projectionTemp1.y;
+		portrait.portraitScene.camera.viewport(tempRect);
 	}
 
 	private static final class InfoPanelIconBackdrops {
 		private final Texture[] damageBackdropTextures;
 
-		public InfoPanelIconBackdrops(final CodeKeyType[] attackTypes, final GameUI gameUI, final String prefix,
-				final String suffix) {
-			this.damageBackdropTextures = new Texture[attackTypes.length];
+		private InfoPanelIconBackdrops(final CodeKeyType[] attackTypes, final GameUI gameUI, final String prefix,
+									   final String suffix) {
+			damageBackdropTextures = new Texture[attackTypes.length];
 			for (int index = 0; index < attackTypes.length; index++) {
 				final CodeKeyType attackType = attackTypes[index];
 				String skinLookupKey = "InfoPanelIcon" + prefix + attackType.getCodeKey() + suffix;
 				final Texture suffixTexture = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
 				if (suffixTexture != null) {
-					this.damageBackdropTextures[index] = suffixTexture;
+					damageBackdropTextures[index] = suffixTexture;
 				}
 				else {
 					skinLookupKey = "InfoPanelIcon" + prefix + attackType.getCodeKey();
-					this.damageBackdropTextures[index] = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
+					damageBackdropTextures[index] = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
 				}
 			}
 		}
@@ -2821,82 +2865,81 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		public Texture getTexture(final CodeKeyType attackType) {
 			if (attackType != null) {
 				final int ordinal = attackType.ordinal();
-				if ((ordinal >= 0) && (ordinal < this.damageBackdropTextures.length)) {
-					return this.damageBackdropTextures[ordinal];
+				if ((ordinal >= 0) && (ordinal < damageBackdropTextures.length)) {
+					return damageBackdropTextures[ordinal];
 				}
 			}
-			return this.damageBackdropTextures[0];
+			return damageBackdropTextures[0];
 		}
 	}
 
 	@Override
 	public void lifeChanged() {
-		if (this.selectedUnit == null) {
+		if (selectedUnit == null) {
 			return;
 		}
-		if (this.selectedUnit.getSimulationUnit().isDead()) {
-			final RenderUnit preferredSelectionReplacement = this.selectedUnit.getPreferredSelectionReplacement();
-			final List<RenderWidget> newSelection;
-			newSelection = new ArrayList<>(this.selectedUnits);
-			newSelection.remove(this.selectedUnit);
+		if (selectedUnit.getSimulationUnit().isDead()) {
+			final RenderUnit preferredSelectionReplacement = selectedUnit.getPreferredSelectionReplacement();
+			final List<RenderWidget> newSelection = new ArrayList<>(selectedUnits);
+			newSelection.remove(selectedUnit);
 			if (preferredSelectionReplacement != null) {
 				newSelection.add(preferredSelectionReplacement);
 			}
 			selectWidgets(newSelection);
-			this.war3MapViewer.doSelectUnit(newSelection);
+			war3MapViewer.doSelectUnit(newSelection);
 		}
 		else {
-			final float lifeRatioRemaining = this.selectedUnit.getSimulationUnit().getLife()
-					/ this.selectedUnit.getSimulationUnit().getMaxLife();
-			this.rootFrame.setText(this.unitLifeText,
-					FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getLife()) + " / "
-							+ FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMaxLife()));
-			this.unitLifeText.setColor(new Color(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
+			final float lifeRatioRemaining = selectedUnit.getSimulationUnit().getLife()
+					/ selectedUnit.getSimulationUnit().getMaxLife();
+			rootFrame.setText(unitLifeText,
+					FastNumberFormat.formatWholeNumber(selectedUnit.getSimulationUnit().getLife()) + " / "
+							+ FastNumberFormat.formatWholeNumber(selectedUnit.getSimulationUnit().getMaxLife()));
+			unitLifeText.setColor(new Color(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
 					Math.min(1.0f, lifeRatioRemaining * 2), 0, 1.0f));
 		}
 	}
 
 	@Override
 	public void manaChanged() {
-		this.rootFrame.setText(this.unitManaText,
-				FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMana()) + " / "
-						+ FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMaximumMana()));
+		rootFrame.setText(unitManaText,
+				FastNumberFormat.formatWholeNumber(selectedUnit.getSimulationUnit().getMana()) + " / "
+						+ FastNumberFormat.formatWholeNumber(selectedUnit.getSimulationUnit().getMaximumMana()));
 	}
 
 	@Override
 	public void goldChanged() {
-		this.rootFrame.setText(this.resourceBarGoldText, Integer.toString(this.localPlayer.getGold()));
+		rootFrame.setText(resourceBarGoldText, Integer.toString(localPlayer.getGold()));
 	}
 
 	@Override
 	public void lumberChanged() {
-		this.rootFrame.setText(this.resourceBarLumberText, Integer.toString(this.localPlayer.getLumber()));
+		rootFrame.setText(resourceBarLumberText, Integer.toString(localPlayer.getLumber()));
 	}
 
 	@Override
 	public void foodChanged() {
-		final int foodCap = this.localPlayer.getFoodCap();
+		final int foodCap = localPlayer.getFoodCap();
 		if (foodCap == 0) {
-			this.rootFrame.setText(this.resourceBarSupplyText, Integer.toString(this.localPlayer.getFoodUsed()));
-			this.resourceBarSupplyText.setColor(Color.WHITE);
+			rootFrame.setText(resourceBarSupplyText, Integer.toString(localPlayer.getFoodUsed()));
+			resourceBarSupplyText.setColor(Color.WHITE);
 		}
 		else {
-			this.rootFrame.setText(this.resourceBarSupplyText, this.localPlayer.getFoodUsed() + "/" + foodCap);
-			this.resourceBarSupplyText.setColor(this.localPlayer.getFoodUsed() > foodCap ? Color.RED : Color.WHITE);
+			rootFrame.setText(resourceBarSupplyText, localPlayer.getFoodUsed() + "/" + foodCap);
+			resourceBarSupplyText.setColor(localPlayer.getFoodUsed() > foodCap ? Color.RED : Color.WHITE);
 		}
 	}
 
 	@Override
 	public void upkeepChanged() {
-		this.rootFrame.setText(this.resourceBarUpkeepText, "Upkeep NYI");
-		this.resourceBarUpkeepText.setColor(Color.CYAN);
+		rootFrame.setText(resourceBarUpkeepText, "Upkeep NYI");
+		resourceBarUpkeepText.setColor(Color.CYAN);
 	}
 
 	@Override
 	public void heroDeath() {
-		if (this.selectedUnit != null) {
-			if (this.selectedUnit.getSimulationUnit().getUnitType().isRevivesHeroes()) {
-				reloadSelectedUnitUI(this.selectedUnit);
+		if (selectedUnit != null) {
+			if (selectedUnit.getSimulationUnit().getUnitType().isRevivesHeroes()) {
+				reloadSelectedUnitUI(selectedUnit);
 			}
 		}
 	}
@@ -2908,33 +2951,33 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void ordersChanged() {
-		reloadSelectedUnitUI(this.selectedUnit);
-		if (this.mouseOverUIFrame instanceof ClickableActionFrame) {
-			loadTooltip((ClickableActionFrame) this.mouseOverUIFrame);
+		reloadSelectedUnitUI(selectedUnit);
+		if (mouseOverUIFrame instanceof ClickableActionFrame) {
+			loadTooltip((ClickableActionFrame) mouseOverUIFrame);
 		}
 	}
 
 	@Override
 	public void heroStatsChanged() {
-		reloadSelectedUnitUI(this.selectedUnit);
+		reloadSelectedUnitUI(selectedUnit);
 	}
 
 	@Override
 	public void inventoryChanged() {
-		reloadSelectedUnitUI(this.selectedUnit);
+		reloadSelectedUnitUI(selectedUnit);
 	}
 
 	@Override
 	public void queueChanged() {
-		reloadSelectedUnitUI(this.selectedUnit);
+		reloadSelectedUnitUI(selectedUnit);
 	}
 
 	private void clearAndRepopulateCommandCard() {
 		clearCommandCard();
-		if (this.selectedUnit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()) {
-			final AbilityDataUI abilityDataUI = this.war3MapViewer.getAbilityDataUI();
+		if (selectedUnit.getSimulationUnit().getPlayerIndex() == war3MapViewer.getLocalPlayerIndex()) {
+			final AbilityDataUI abilityDataUI = war3MapViewer.getAbilityDataUI();
 			final int menuOrderId = getSubMenuOrderId();
-			if ((this.activeCommand != null) && (this.draggingItem == null)) {
+			if ((activeCommand != null) && (draggingItem == null)) {
 				final IconUI cancelUI = abilityDataUI.getCancelUI();
 				commandButton(cancelUI.getButtonPositionX(), cancelUI.getButtonPositionY(), cancelUI.getIcon(), 0,
 						menuOrderId, 0, false, false, true, cancelUI.getToolTip(), cancelUI.getUberTip(),
@@ -2942,27 +2985,27 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			else {
 				if (menuOrderId != 0) {
-					final int exitOrderId = this.subMenuOrderIdStack.size() > 1
-							? this.subMenuOrderIdStack.get(this.subMenuOrderIdStack.size() - 2)
+					final int exitOrderId = subMenuOrderIdStack.size() > 1
+							? subMenuOrderIdStack.get(subMenuOrderIdStack.size() - 2)
 							: 0;
 					final IconUI cancelUI = abilityDataUI.getCancelUI();
 					commandButton(cancelUI.getButtonPositionX(), cancelUI.getButtonPositionY(), cancelUI.getIcon(), 0,
 							exitOrderId, 0, false, false, true, cancelUI.getToolTip(), cancelUI.getUberTip(),
 							cancelUI.getHotkey(), 0, 0, 0, 0, 0, 0, -1);
 				}
-				this.selectedUnit.populateCommandCard(this.war3MapViewer.simulation, this.rootFrame, this,
-						abilityDataUI, menuOrderId, this.selectedUnits.size() > 1);
+				selectedUnit.populateCommandCard(war3MapViewer.simulation, rootFrame, this,
+						abilityDataUI, menuOrderId, selectedUnits.size() > 1);
 			}
 		}
 	}
 
 	private int getSubMenuOrderId() {
-		return this.subMenuOrderIdStack.isEmpty() ? 0
-				: this.subMenuOrderIdStack.get(this.subMenuOrderIdStack.size() - 1);
+		return subMenuOrderIdStack.isEmpty() ? 0
+				: subMenuOrderIdStack.get(subMenuOrderIdStack.size() - 1);
 	}
 
 	public RenderUnit getSelectedUnit() {
-		return this.selectedUnit;
+		return selectedUnit;
 	}
 
 	public boolean keyDown(final int keycode) {
@@ -2978,9 +3021,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		if (keycode == Input.Keys.TAB) {
-			if (this.selectedUnits.size() > 1) {
+			if (selectedUnits.size() > 1) {
 				advanceSelectedSubGroup();
-				this.war3MapViewer.getUiSounds().getSound("SubGroupSelectionChange").play(this.uiScene.audioContext, 0,
+				war3MapViewer.getUiSounds().getSound("SubGroupSelectionChange").play(uiScene.audioContext, 0,
 						0, 0);
 			}
 		}
@@ -2991,160 +3034,165 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				boolean match = false;
 				switch (WarsmashConstants.INPUT_HOTKEY_MODE){
 					case 0:
-						if (this.commandCard[j][i].checkHotkey(c, keycode)) match = true;
+						if (commandCard[j][i].checkHotkey(c, keycode)) {
+							match = true;
+						}
 						break;
 					case 1:
-
-						if(keycode == this.commandCardGridHotkeys[j][i]) match = true;
+						if(keycode == commandCardGridHotkeys[j][i]) {
+							match = true;
+						}
 						break;
+					default:
+						throw new IllegalStateException("Unexpected value: " + WarsmashConstants.INPUT_HOTKEY_MODE);
 				}
 				if(match){
-					this.commandCard[j][i].onClick(Input.Buttons.LEFT);
-					this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0,0);
+					commandCard[j][i].onClick(Input.Buttons.LEFT);
+					war3MapViewer.getUiSounds().getSound("InterfaceClick").play(uiScene.audioContext, 0, 0,0);
 				}
 			}
 		}
-		return this.cameraManager.keyDown(keycode);
+		return cameraManager.keyDown(keycode);
 	}
 
 	public boolean keyUp(final int keycode) {
-		return this.cameraManager.keyUp(keycode);
+		return cameraManager.keyUp(keycode);
 	}
 
 	public void scrolled(final int amount) {
-		this.cameraManager.scrolled(amount);
+		cameraManager.scrolled(amount);
 	}
 
 	public boolean touchDown(final int screenX, final int screenY, final float worldScreenY, final int button) {
-		this.allowDrag = false;
+		allowDrag = false;
 		if (button == Input.Buttons.FORWARD) {
-			if (this.selectedUnits.size() > 1) {
+			if (selectedUnits.size() > 1) {
 				advanceSelectedSubGroup();
-				this.war3MapViewer.getUiSounds().getSound("SubGroupSelectionChange").play(this.uiScene.audioContext, 0,
+				war3MapViewer.getUiSounds().getSound("SubGroupSelectionChange").play(uiScene.audioContext, 0,
 						0, 0);
 			}
 			return false;
 		}
 		if (button == Input.Buttons.BACK) {
-			if (this.selectedUnits.size() > 1) {
+			if (selectedUnits.size() > 1) {
 				advanceSelectedSubGroupReverse();
-				this.war3MapViewer.getUiSounds().getSound("SubGroupSelectionChange").play(this.uiScene.audioContext, 0,
+				war3MapViewer.getUiSounds().getSound("SubGroupSelectionChange").play(uiScene.audioContext, 0,
 						0, 0);
 			}
 			return false;
 		}
 		screenCoordsVector.set(screenX, screenY);
-		this.uiViewport.unproject(screenCoordsVector);
-		if (this.meleeUIMinimap.containsMouse(screenCoordsVector.x, screenCoordsVector.y)) {
-			final Vector2 worldPoint = this.meleeUIMinimap.getWorldPointFromScreen(screenCoordsVector.x,
+		uiViewport.unproject(screenCoordsVector);
+		if (meleeUIMinimap.containsMouse(screenCoordsVector.x, screenCoordsVector.y)) {
+			final Vector2 worldPoint = meleeUIMinimap.getWorldPointFromScreen(screenCoordsVector.x,
 					screenCoordsVector.y);
-			this.cameraManager.target.x = worldPoint.x;
-			this.cameraManager.target.y = worldPoint.y;
+			cameraManager.target.x = worldPoint.x;
+			cameraManager.target.y = worldPoint.y;
 			return true;
 		}
-		final UIFrame clickedUIFrame = this.rootFrame.touchDown(screenCoordsVector.x, screenCoordsVector.y, button);
+		final UIFrame clickedUIFrame = rootFrame.touchDown(screenCoordsVector.x, screenCoordsVector.y, button);
 		if (clickedUIFrame == null) {
 			// try to interact with world
-			if (this.activeCommand != null) {
+			if (activeCommand != null) {
 				if (button == Input.Buttons.RIGHT) {
-					this.activeCommandUnit = null;
-					this.activeCommand = null;
-					this.activeCommandOrderId = -1;
-					if (this.draggingItem != null) {
+					activeCommandUnit = null;
+					activeCommand = null;
+					activeCommandOrderId = -1;
+					if (draggingItem != null) {
 						setDraggingItem(null);
 					}
 					clearAndRepopulateCommandCard();
 				}
 				else {
 					final boolean shiftDown = isShiftDown();
-					final RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-							this.activeCommandUnitTargetFilter);
+					final RenderWidget rayPickUnit = war3MapViewer.rayPickUnit(screenX, worldScreenY,
+							activeCommandUnitTargetFilter);
 					if (rayPickUnit != null) {
 						useActiveCommandOnUnit(shiftDown, rayPickUnit);
 					}
 					else {
-						this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
+						war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
 						clickLocationTemp2.set(clickLocationTemp.x, clickLocationTemp.y);
 
-						if (this.draggingItem != null) {
-							this.war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
+						if (draggingItem != null) {
+							war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
 
-							this.unitOrderListener.issueDropItemAtPointOrder(
-									this.activeCommandUnit.getSimulationUnit().getHandleId(),
-									this.activeCommand.getHandleId(), this.activeCommandOrderId,
-									this.draggingItem.getHandleId(), clickLocationTemp2.x, clickLocationTemp2.y,
+							unitOrderListener.issueDropItemAtPointOrder(
+									activeCommandUnit.getSimulationUnit().getHandleId(),
+									activeCommand.getHandleId(), activeCommandOrderId,
+									draggingItem.getHandleId(), clickLocationTemp2.x, clickLocationTemp2.y,
 									shiftDown);
 							if (getSelectedUnit().soundset.yes
-									.playUnitResponse(this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
+									.playUnitResponse(war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
 								portraitTalk();
 							}
-							this.activeCommandUnit = null;
-							this.activeCommand = null;
-							this.activeCommandOrderId = -1;
+							activeCommandUnit = null;
+							activeCommand = null;
+							activeCommandOrderId = -1;
 							setDraggingItem(null);
 							clearAndRepopulateCommandCard();
 						}
 						else {
-							this.activeCommand.checkCanTarget(this.war3MapViewer.simulation,
-									this.activeCommandUnit.getSimulationUnit(), this.activeCommandOrderId,
+							activeCommand.checkCanTarget(war3MapViewer.simulation,
+									activeCommandUnit.getSimulationUnit(), activeCommandOrderId,
 									clickLocationTemp2, PointAbilityTargetCheckReceiver.INSTANCE);
 							final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
 							if (target != null) {
-								if ((this.activeCommand instanceof CAbilityAttack)
-										&& (this.activeCommandOrderId == OrderIds.attack)) {
-									this.war3MapViewer.showConfirmation(clickLocationTemp, 1, 0, 0);
+								if ((activeCommand instanceof CAbilityAttack)
+										&& (activeCommandOrderId == OrderIds.attack)) {
+									war3MapViewer.showConfirmation(clickLocationTemp, 1, 0, 0);
 								}
 								else {
-									this.war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
+									war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
 								}
-								this.unitOrderListener.issuePointOrder(
-										this.activeCommandUnit.getSimulationUnit().getHandleId(),
-										this.activeCommand.getHandleId(), this.activeCommandOrderId,
+								unitOrderListener.issuePointOrder(
+										activeCommandUnit.getSimulationUnit().getHandleId(),
+										activeCommand.getHandleId(), activeCommandOrderId,
 										clickLocationTemp2.x, clickLocationTemp2.y, shiftDown);
-								if (this.selectedUnits.size() > 1) {
-									for (final RenderUnit otherSelectedUnit : this.selectedUnits) {
-										if (otherSelectedUnit != this.activeCommandUnit) {
+								if (selectedUnits.size() > 1) {
+									for (final RenderUnit otherSelectedUnit : selectedUnits) {
+										if (!Objects.equals(otherSelectedUnit, activeCommandUnit)) {
 											CAbility abilityToUse = null;
 											AbilityPointTarget targetToUse = null;
 											for (final CAbility ability : otherSelectedUnit.getSimulationUnit()
 													.getAbilities()) {
 												final PointAbilityTargetCheckReceiver receiver = PointAbilityTargetCheckReceiver.INSTANCE
 														.reset();
-												ability.checkCanTarget(this.war3MapViewer.simulation,
+												ability.checkCanTarget(war3MapViewer.simulation,
 														otherSelectedUnit.getSimulationUnit(),
-														this.activeCommandOrderId, clickLocationTemp2, receiver);
+														activeCommandOrderId, clickLocationTemp2, receiver);
 												if (receiver.getTarget() != null) {
 													abilityToUse = ability;
 													targetToUse = receiver.getTarget();
 												}
 											}
 											if (abilityToUse != null) {
-												this.unitOrderListener.issuePointOrder(
+												unitOrderListener.issuePointOrder(
 														otherSelectedUnit.getSimulationUnit().getHandleId(),
-														abilityToUse.getHandleId(), this.activeCommandOrderId,
+														abilityToUse.getHandleId(), activeCommandOrderId,
 														targetToUse.getX(), targetToUse.getY(), shiftDown);
 											}
 										}
 									}
 								}
 								if (getSelectedUnit().soundset.yes.playUnitResponse(
-										this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
+										war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
 									portraitTalk();
 								}
-								this.selectedSoundCount = 0;
-								if (this.activeCommand instanceof AbstractCAbilityBuild) {
-									this.war3MapViewer.getUiSounds().getSound("PlaceBuildingDefault")
-											.play(this.uiScene.audioContext, 0, 0, 0);
+								selectedSoundCount = 0;
+								if (activeCommand instanceof AbstractCAbilityBuild) {
+									war3MapViewer.getUiSounds().getSound("PlaceBuildingDefault")
+											.play(uiScene.audioContext, 0, 0, 0);
 								}
-								else if (this.activeCommand instanceof CAbilityRally) {
-									this.war3MapViewer.getUiSounds().getSound("RallyPointPlace")
-											.play(this.uiScene.audioContext, 0, 0, 0);
+								else if (activeCommand instanceof CAbilityRally) {
+									war3MapViewer.getUiSounds().getSound("RallyPointPlace")
+											.play(uiScene.audioContext, 0, 0, 0);
 								}
 								if (!shiftDown) {
-									this.subMenuOrderIdStack.clear();
-									this.activeCommandUnit = null;
-									this.activeCommand = null;
-									this.activeCommandOrderId = -1;
+									subMenuOrderIdStack.clear();
+									activeCommandUnit = null;
+									activeCommand = null;
+									activeCommandOrderId = -1;
 									clearAndRepopulateCommandCard();
 								}
 
@@ -3157,22 +3205,22 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			else {
 				if (button == Input.Buttons.RIGHT) {
 					if ((getSelectedUnit() != null) && (getSelectedUnit().getSimulationUnit()
-							.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())) {
-						RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-								this.anyClickableUnitFilter);
+							.getPlayerIndex() == war3MapViewer.getLocalPlayerIndex())) {
+						RenderWidget rayPickUnit = war3MapViewer.rayPickUnit(screenX, worldScreenY,
+								anyClickableUnitFilter);
 						if (rayPickUnit == null) {
-							rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-									this.anyTargetableUnitFilter);
+							rayPickUnit = war3MapViewer.rayPickUnit(screenX, worldScreenY,
+									anyTargetableUnitFilter);
 						}
 						if (rayPickUnit != null) {
 							boolean ordered = false;
 							boolean rallied = false;
 							boolean attacked = false;
-							for (final RenderUnit unit : this.selectedUnits) {
+							for (final RenderUnit unit : selectedUnits) {
 								CAbility abilityToUse = null;
 								CWidget targetToUse = null;
 								for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
-									ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(),
+									ability.checkCanTarget(war3MapViewer.simulation, unit.getSimulationUnit(),
 											OrderIds.smart, rayPickUnit.getSimulationWidget(),
 											CWidgetAbilityTargetCheckReceiver.INSTANCE);
 									final CWidget targetWidget = CWidgetAbilityTargetCheckReceiver.INSTANCE.getTarget();
@@ -3182,7 +3230,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									}
 								}
 								if (abilityToUse != null) {
-									this.unitOrderListener.issueTargetOrder(unit.getSimulationUnit().getHandleId(),
+									unitOrderListener.issueTargetOrder(unit.getSimulationUnit().getHandleId(),
 											abilityToUse.getHandleId(), OrderIds.smart, targetToUse.getHandleId(),
 											isShiftDown());
 									rallied |= abilityToUse instanceof CAbilityRally;
@@ -3193,15 +3241,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							if (ordered) {
 								final UnitSound yesSound = attacked ? getSelectedUnit().soundset.yesAttack
 										: getSelectedUnit().soundset.yes;
-								if (yesSound.playUnitResponse(this.war3MapViewer.worldScene.audioContext,
+								if (yesSound.playUnitResponse(war3MapViewer.worldScene.audioContext,
 										getSelectedUnit())) {
 									portraitTalk();
 								}
 								if (rallied) {
-									this.war3MapViewer.getUiSounds().getSound("RallyPointPlace")
-											.play(this.uiScene.audioContext, 0, 0, 0);
+									war3MapViewer.getUiSounds().getSound("RallyPointPlace")
+											.play(uiScene.audioContext, 0, 0, 0);
 								}
-								this.selectedSoundCount = 0;
+								selectedSoundCount = 0;
 							}
 							else {
 								rightClickMove(screenX, worldScreenY);
@@ -3213,22 +3261,22 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					}
 				}
 				else {
-					this.war3MapViewer.getClickLocation(this.lastMouseClickLocation, screenX, (int) worldScreenY);
+					war3MapViewer.getClickLocation(lastMouseClickLocation, screenX, (int) worldScreenY);
 					if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-						final short pathing = this.war3MapViewer.simulation.getPathingGrid()
-								.getPathing(this.lastMouseClickLocation.x, this.lastMouseClickLocation.y);
+						final short pathing = war3MapViewer.simulation.getPathingGrid()
+								.getPathing(lastMouseClickLocation.x, lastMouseClickLocation.y);
 						System.out.println(Integer.toBinaryString(pathing));
 					}
-					this.lastMouseDragStart.set(this.lastMouseClickLocation);
-					this.allowDrag = true;
-					this.draggingMouseButton = button;
+					lastMouseDragStart.set(lastMouseClickLocation);
+					allowDrag = true;
+					draggingMouseButton = button;
 				}
 			}
 		}
 		else {
 			if (clickedUIFrame instanceof ClickableFrame) {
-				this.mouseDownUIFrame = (ClickableFrame) clickedUIFrame;
-				this.mouseDownUIFrame.mouseDown(this.rootFrame, this.uiViewport);
+				mouseDownUIFrame = (ClickableFrame) clickedUIFrame;
+				mouseDownUIFrame.mouseDown(rootFrame, uiViewport);
 			}
 		}
 		return false;
@@ -3236,112 +3284,112 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	private void advanceSelectedSubGroup() {
 		boolean foundSubSelection = false;
-		for (final RenderUnit unit : this.selectedUnits) {
+		for (final RenderUnit unit : selectedUnits) {
 			if (foundSubSelection) {
-				if (!unit.groupsWith(this.selectedUnit)) {
+				if (!unit.groupsWith(selectedUnit)) {
 					selectUnit(unit);
 					return;
 				}
 			}
-			else if (unit == this.selectedUnit) {
+			else if (Objects.equals(unit, selectedUnit)) {
 				foundSubSelection = true;
 			}
 		}
-		if (!this.selectedUnits.isEmpty()) {
-			selectUnit(this.selectedUnits.get(0));
+		if (!selectedUnits.isEmpty()) {
+			selectUnit(selectedUnits.get(0));
 		}
 	}
 
 	private void advanceSelectedSubGroupReverse() {
 		boolean foundSubSelection = false;
-		for (int i = this.selectedUnits.size() - 1; i >= 0; i--) {
-			final RenderUnit unit = this.selectedUnits.get(i);
+		for (int i = selectedUnits.size() - 1; i >= 0; i--) {
+			final RenderUnit unit = selectedUnits.get(i);
 			if (foundSubSelection) {
-				if (!unit.groupsWith(this.selectedUnit)) {
+				if (!unit.groupsWith(selectedUnit)) {
 					selectUnit(unit);
 					return;
 				}
 			}
-			else if (unit == this.selectedUnit) {
+			else if (Objects.equals(unit, selectedUnit)) {
 				foundSubSelection = true;
 			}
 		}
-		if (!this.selectedUnits.isEmpty()) {
-			selectUnit(this.selectedUnits.get(this.selectedUnits.size() - 1));
+		if (!selectedUnits.isEmpty()) {
+			selectUnit(selectedUnits.get(selectedUnits.size() - 1));
 		}
 	}
 
 	private void useActiveCommandOnUnit(final boolean shiftDown, final RenderWidget rayPickUnit) {
-		if (this.draggingItem != null) {
-			this.unitOrderListener.issueDropItemAtTargetOrder(this.activeCommandUnit.getSimulationUnit().getHandleId(),
-					this.activeCommand.getHandleId(), this.activeCommandOrderId, this.draggingItem.getHandleId(),
+		if (draggingItem != null) {
+			unitOrderListener.issueDropItemAtTargetOrder(activeCommandUnit.getSimulationUnit().getHandleId(),
+					activeCommand.getHandleId(), activeCommandOrderId, draggingItem.getHandleId(),
 					rayPickUnit.getSimulationWidget().getHandleId(), shiftDown);
 			setDraggingItem(null);
 		}
 		else {
-			this.unitOrderListener.issueTargetOrder(this.activeCommandUnit.getSimulationUnit().getHandleId(),
-					this.activeCommand.getHandleId(), this.activeCommandOrderId,
+			unitOrderListener.issueTargetOrder(activeCommandUnit.getSimulationUnit().getHandleId(),
+					activeCommand.getHandleId(), activeCommandOrderId,
 					rayPickUnit.getSimulationWidget().getHandleId(), shiftDown);
-			if (this.selectedUnits.size() > 1) {
-				for (final RenderUnit otherSelectedUnit : this.selectedUnits) {
-					if (otherSelectedUnit != this.activeCommandUnit) {
+			if (selectedUnits.size() > 1) {
+				for (final RenderUnit otherSelectedUnit : selectedUnits) {
+					if (!Objects.equals(otherSelectedUnit, activeCommandUnit)) {
 						CAbility abilityToUse = null;
 						CWidget targetToUse = null;
 						for (final CAbility ability : otherSelectedUnit.getSimulationUnit().getAbilities()) {
 							final CWidgetAbilityTargetCheckReceiver receiver = CWidgetAbilityTargetCheckReceiver.INSTANCE
 									.reset();
-							ability.checkCanTarget(this.war3MapViewer.simulation, otherSelectedUnit.getSimulationUnit(),
-									this.activeCommandOrderId, rayPickUnit.getSimulationWidget(), receiver);
+							ability.checkCanTarget(war3MapViewer.simulation, otherSelectedUnit.getSimulationUnit(),
+									activeCommandOrderId, rayPickUnit.getSimulationWidget(), receiver);
 							if (receiver.getTarget() != null) {
 								abilityToUse = ability;
 								targetToUse = receiver.getTarget();
 							}
 						}
 						if (abilityToUse != null) {
-							this.unitOrderListener.issueTargetOrder(otherSelectedUnit.getSimulationUnit().getHandleId(),
-									abilityToUse.getHandleId(), this.activeCommandOrderId, targetToUse.getHandleId(),
+							unitOrderListener.issueTargetOrder(otherSelectedUnit.getSimulationUnit().getHandleId(),
+									abilityToUse.getHandleId(), activeCommandOrderId, targetToUse.getHandleId(),
 									shiftDown);
 						}
 					}
 				}
 			}
 		}
-		final UnitSound yesSound = (this.activeCommand instanceof CAbilityAttack) ? getSelectedUnit().soundset.yesAttack
+		final UnitSound yesSound = (activeCommand instanceof CAbilityAttack) ? getSelectedUnit().soundset.yesAttack
 				: getSelectedUnit().soundset.yes;
-		if (yesSound.playUnitResponse(this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
+		if (yesSound.playUnitResponse(war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
 			portraitTalk();
 		}
-		this.selectedSoundCount = 0;
-		if (this.activeCommand instanceof CAbilityRally) {
-			this.war3MapViewer.getUiSounds().getSound("RallyPointPlace").play(this.uiScene.audioContext, 0, 0, 0);
+		selectedSoundCount = 0;
+		if (activeCommand instanceof CAbilityRally) {
+			war3MapViewer.getUiSounds().getSound("RallyPointPlace").play(uiScene.audioContext, 0, 0, 0);
 		}
 		if (!shiftDown) {
-			this.subMenuOrderIdStack.clear();
-			this.activeCommandUnit = null;
-			this.activeCommand = null;
-			this.activeCommandOrderId = -1;
+			subMenuOrderIdStack.clear();
+			activeCommandUnit = null;
+			activeCommand = null;
+			activeCommandOrderId = -1;
 			clearAndRepopulateCommandCard();
 		}
 	}
 
 	private void rightClickMove(final int screenX, final float worldScreenY) {
-		this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
-		this.war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
+		war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
+		war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
 		clickLocationTemp2.set(clickLocationTemp.x, clickLocationTemp.y);
 
 		boolean ordered = false;
 		boolean rallied = false;
-		for (final RenderUnit unit : this.selectedUnits) {
-			if (unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()) {
+		for (final RenderUnit unit : selectedUnits) {
+			if (unit.getSimulationUnit().getPlayerIndex() == war3MapViewer.getLocalPlayerIndex()) {
 				for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
-					ability.checkCanUse(this.war3MapViewer.simulation, unit.getSimulationUnit(), OrderIds.smart,
+					ability.checkCanUse(war3MapViewer.simulation, unit.getSimulationUnit(), OrderIds.smart,
 							BooleanAbilityActivationReceiver.INSTANCE);
 					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
-						ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(), OrderIds.smart,
+						ability.checkCanTarget(war3MapViewer.simulation, unit.getSimulationUnit(), OrderIds.smart,
 								clickLocationTemp2, PointAbilityTargetCheckReceiver.INSTANCE);
 						final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
 						if (target != null) {
-							this.unitOrderListener.issuePointOrder(unit.getSimulationUnit().getHandleId(),
+							unitOrderListener.issuePointOrder(unit.getSimulationUnit().getHandleId(),
 									ability.getHandleId(), OrderIds.smart, clickLocationTemp2.x, clickLocationTemp2.y,
 									isShiftDown());
 							rallied |= ability instanceof CAbilityRally;
@@ -3354,40 +3402,35 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		if (ordered) {
-			if (getSelectedUnit().soundset.yes.playUnitResponse(this.war3MapViewer.worldScene.audioContext,
+			if (getSelectedUnit().soundset.yes.playUnitResponse(war3MapViewer.worldScene.audioContext,
 					getSelectedUnit())) {
 				portraitTalk();
 			}
 			if (rallied) {
-				this.war3MapViewer.getUiSounds().getSound("RallyPointPlace").play(this.uiScene.audioContext, 0, 0, 0);
+				war3MapViewer.getUiSounds().getSound("RallyPointPlace").play(uiScene.audioContext, 0, 0, 0);
 			}
-			this.selectedSoundCount = 0;
+			selectedSoundCount = 0;
 		}
 	}
 
 	private void selectWidgets(final List<RenderWidget> selectedUnits) {
-		final List<RenderUnit> units = new ArrayList<>();
-		Collections.sort(selectedUnits, new Comparator<RenderWidget>() {
-			@Override
-			public int compare(final RenderWidget widget1, final RenderWidget widget2) {
-				final CUnitType unitType1 = ((RenderUnit) widget2).getSimulationUnit().getUnitType();
-				final CUnitType unitType2 = ((RenderUnit) widget1).getSimulationUnit().getUnitType();
-				final int prioSort = unitType1.getPriority() - unitType2.getPriority();
-				if (prioSort == 0) {
-					final int levelSort = unitType1.getLevel() - unitType2.getLevel();
-					if (levelSort == 0) {
-						return unitType1.getTypeId().getValue() - unitType2.getTypeId().getValue();
-					}
-					return levelSort;
+		selectedUnits.sort((widget1, widget2) -> {
+			final CUnitType unitType1 = ((RenderUnit) widget2).getSimulationUnit().getUnitType();
+			final CUnitType unitType2 = ((RenderUnit) widget1).getSimulationUnit().getUnitType();
+			final int prioSort = unitType1.getPriority() - unitType2.getPriority();
+			if (prioSort == 0) {
+				final int levelSort = unitType1.getLevel() - unitType2.getLevel();
+				if (levelSort == 0) {
+					return unitType1.getTypeId().getValue() - unitType2.getTypeId().getValue();
 				}
-				return prioSort;
+				return levelSort;
 			}
+			return prioSort;
 		});
-		for (final RenderWidget widget : selectedUnits) {
-			if (widget instanceof RenderUnit) {
-				units.add((RenderUnit) widget);
-			}
-		}
+		final List<RenderUnit> units = selectedUnits.stream()
+				.filter(widget -> widget instanceof RenderUnit)
+				.map(widget -> (RenderUnit) widget)
+				.collect(Collectors.toList());
 		selectUnits(units);
 	}
 
@@ -3396,18 +3439,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.selectedUnits = selectedUnits;
 		if (!selectedUnits.isEmpty()) {
 			final RenderUnit unit = selectedUnits.get(0);
-			boolean selectionChanged = (unit != this.selectedUnit)
+			boolean selectionChanged = (!Objects.equals(unit, selectedUnit))
 					|| (prevSelectedUnits.size() != selectedUnits.size());
 			for (int i = 0; (i < prevSelectedUnits.size()) && (i < selectedUnits.size()); i++) {
-				if (prevSelectedUnits.get(i) != selectedUnits.get(i)) {
+				if (!Objects.equals(prevSelectedUnits.get(i), selectedUnits.get(i))) {
 					selectionChanged = true;
+					break;
 				}
 			}
-			boolean playedNewSound = false;
 			if (selectionChanged) {
-				this.selectedSoundCount = 0;
+				selectedSoundCount = 0;
 			}
-			if ((unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())
+			boolean playedNewSound = false;
+			if ((unit.getSimulationUnit().getPlayerIndex() == war3MapViewer.getLocalPlayerIndex())
 					|| (unit.getSimulationUnit().getUnitType().getRace() == CUnitRace.CRITTERS)
 					|| ((unit.getSimulationUnit().getUnitType().getRace() == CUnitRace.OTHER)
 							&& (unit.getSimulationUnit().getPlayerIndex() == (WarsmashConstants.MAX_PLAYERS - 1)))) {
@@ -3416,13 +3460,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					int soundIndex;
 					final int pissedSoundCount = unit.soundset.pissed.getSoundCount();
 					if (unit.getSimulationUnit().isConstructing()) {
-						ackSoundToPlay = this.war3MapViewer.getUiSounds()
-								.getSound(this.rootFrame.getSkinField("ConstructingBuilding"));
+						ackSoundToPlay = war3MapViewer.getUiSounds()
+								.getSound(rootFrame.getSkinField("ConstructingBuilding"));
 						soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
 					}
 					else {
-						if ((this.selectedSoundCount >= 3) && (pissedSoundCount > 0)) {
-							soundIndex = this.selectedSoundCount - 3;
+						if ((selectedSoundCount >= 3) && (pissedSoundCount > 0)) {
+							soundIndex = selectedSoundCount - 3;
 							ackSoundToPlay = unit.soundset.pissed;
 						}
 						else {
@@ -3430,23 +3474,23 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						}
 					}
 					if ((ackSoundToPlay != null) && ackSoundToPlay
-							.playUnitResponse(this.war3MapViewer.worldScene.audioContext, unit, soundIndex)) {
-						this.selectedSoundCount++;
-						if ((this.selectedSoundCount - 3) >= pissedSoundCount) {
-							this.selectedSoundCount = 0;
+							.playUnitResponse(war3MapViewer.worldScene.audioContext, unit, soundIndex)) {
+						selectedSoundCount++;
+						if ((selectedSoundCount - 3) >= pissedSoundCount) {
+							selectedSoundCount = 0;
 						}
 						playedNewSound = true;
 					}
 				}
 			}
 			else {
-				this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0, 0);
+				war3MapViewer.getUiSounds().getSound("InterfaceClick").play(uiScene.audioContext, 0, 0, 0);
 			}
 			if (selectionChanged) {
-				for (final MultiSelectUnitStateListener listener : this.multiSelectUnitStateListeners) {
+				for (final MultiSelectUnitStateListener listener : multiSelectUnitStateListeners) {
 					listener.dispose();
 				}
-				this.multiSelectUnitStateListeners.clear();
+				multiSelectUnitStateListeners.clear();
 				selectUnit(unit);
 				if (selectedUnits.size() > 1) {
 					int index = 0;
@@ -3457,7 +3501,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						final MultiSelectUnitStateListener multiSelectUnitStateListener = new MultiSelectUnitStateListener(
 								renderUnit, index++);
 						renderUnit.getSimulationUnit().addStateListener(multiSelectUnitStateListener);
-						this.multiSelectUnitStateListeners.add(multiSelectUnitStateListener);
+						multiSelectUnitStateListeners.add(multiSelectUnitStateListener);
 					}
 				}
 			}
@@ -3477,16 +3521,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (button == Input.Buttons.BACK) {
 			return false;
 		}
-		this.currentlyDraggingPointer = -1;
+		currentlyDraggingPointer = -1;
 		screenCoordsVector.set(screenX, screenY);
-		this.uiViewport.unproject(screenCoordsVector);
-		final UIFrame clickedUIFrame = this.rootFrame.touchUp(screenCoordsVector.x, screenCoordsVector.y, button);
-		if (this.mouseDownUIFrame != null) {
-			if (clickedUIFrame == this.mouseDownUIFrame) {
-				this.mouseDownUIFrame.onClick(button);
+		uiViewport.unproject(screenCoordsVector);
+		final UIFrame clickedUIFrame = rootFrame.touchUp(screenCoordsVector.x, screenCoordsVector.y, button);
+		if (mouseDownUIFrame != null) {
+			if (Objects.equals(clickedUIFrame, mouseDownUIFrame)) {
+				mouseDownUIFrame.onClick(button);
 				String soundKey;
-				if (this.mouseDownUIFrame instanceof ClickableActionFrame) {
-					if (this.mouseDownUIFrame instanceof MultiSelectionIcon) {
+				if (mouseDownUIFrame instanceof ClickableActionFrame) {
+					if (mouseDownUIFrame instanceof MultiSelectionIcon) {
 						soundKey = "SubGroupSelectionChange";
 					}
 					else {
@@ -3496,91 +3540,88 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				else {
 					soundKey = "MenuButtonClick";
 				}
-				this.war3MapViewer.getUiSounds().getSound(soundKey).play(this.uiScene.audioContext, 0, 0, 0);
+				war3MapViewer.getUiSounds().getSound(soundKey).play(uiScene.audioContext, 0, 0, 0);
 			}
-			this.mouseDownUIFrame.mouseUp(this.rootFrame, this.uiViewport);
+			mouseDownUIFrame.mouseUp(rootFrame, uiViewport);
 		}
 		else {
-			if (!this.dragSelectPreviewUnits.isEmpty()) {
-				if (this.allowDrag) {
+			if (!dragSelectPreviewUnits.isEmpty()) {
+				if (allowDrag) {
 					final List<RenderWidget> selectedWidgets = new ArrayList<>();
 					boolean foundGoal = false;
-					for (final RenderUnit unit : this.dragSelectPreviewUnits) {
-						if ((unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())
+					for (final RenderUnit unit : dragSelectPreviewUnits) {
+						if ((unit.getSimulationUnit().getPlayerIndex() == war3MapViewer.getLocalPlayerIndex())
 								&& !unit.getSimulationUnit().isBuilding()) {
 							foundGoal = true;
 							selectedWidgets.add(unit);
 						}
 					}
 					if (!foundGoal) {
-						selectedWidgets.addAll(this.dragSelectPreviewUnits);
+						selectedWidgets.addAll(dragSelectPreviewUnits);
 					}
 					final boolean shiftDown = isShiftDown();
 					if (shiftDown) {
-						for (final RenderUnit unit : this.selectedUnits) {
+						for (final RenderUnit unit : selectedUnits) {
 							if (!selectedWidgets.contains(unit)) {
 								selectedWidgets.add(unit);
 							}
 						}
 					}
 
-					this.war3MapViewer.clearUnitMouseOverHighlight();
+					war3MapViewer.clearUnitMouseOverHighlight();
 
-					this.war3MapViewer.doSelectUnit(selectedWidgets);
+					war3MapViewer.doSelectUnit(selectedWidgets);
 					selectWidgets(selectedWidgets);
 				}
-				this.dragSelectPreviewUnits.clear();
+				dragSelectPreviewUnits.clear();
 			}
 			else {
-				if (this.allowDrag) {
-					if ((button == Input.Buttons.LEFT) && (this.mouseOverUnit != null)
-							&& isUnitSelectable(this.mouseOverUnit)) {
+				if (allowDrag) {
+					if ((button == Input.Buttons.LEFT) && (mouseOverUnit != null)
+							&& isUnitSelectable(mouseOverUnit)) {
 						final long currentMillis = TimeUtils.millis();
 						final List<RenderWidget> unitList = new ArrayList<>();
 						final boolean shiftDown = isShiftDown();
-						final boolean controlDown = isControlDown() || (((currentMillis - this.lastUnitClickTime) < 500)
-								&& (this.mouseOverUnit == this.lastClickUnit));
+						final boolean controlDown = isControlDown() || (((currentMillis - lastUnitClickTime) < 500)
+								&& (Objects.equals(mouseOverUnit, lastClickUnit)));
 						if (shiftDown) {
-							unitList.addAll(this.selectedUnits);
+							unitList.addAll(selectedUnits);
 						}
-						if ((this.mouseOverUnit instanceof RenderUnit) && controlDown) {
-							processSelectNearbyUnits(unitList, shiftDown, (RenderUnit) this.mouseOverUnit);
+						if ((mouseOverUnit instanceof RenderUnit) && controlDown) {
+							processSelectNearbyUnits(unitList, shiftDown, (RenderUnit) mouseOverUnit);
 						}
 						else {
-							processClickSelect(unitList, shiftDown, this.mouseOverUnit);
+							processClickSelect(unitList, shiftDown, mouseOverUnit);
 						}
-						this.war3MapViewer.doSelectUnit(unitList);
+						war3MapViewer.doSelectUnit(unitList);
 						selectWidgets(unitList);
-						this.lastUnitClickTime = currentMillis;
-						this.lastClickUnit = this.mouseOverUnit;
+						lastUnitClickTime = currentMillis;
+						lastClickUnit = mouseOverUnit;
 					}
 				}
 			}
 		}
-		this.mouseDownUIFrame = null;
+		mouseDownUIFrame = null;
 		return false;
 	}
 
 	private void processSelectNearbyUnits(final List<RenderWidget> unitList, final boolean shiftDown,
 			final RenderUnit mouseOverUnit) {
-		this.war3MapViewer.simulation.getWorldCollision().enumUnitsInRect(
+		war3MapViewer.simulation.getWorldCollision().enumUnitsInRect(
 				new Rectangle(this.mouseOverUnit.getX() - 1024, this.mouseOverUnit.getY() - 1024, 2048, 2048),
-				new CUnitEnumFunction() {
-					@Override
-					public boolean call(final CUnit unit) {
-						if (unit.getUnitType() == mouseOverUnit.getSimulationUnit().getUnitType()) {
-							final RenderUnit renderPeer = MeleeUI.this.war3MapViewer.getRenderPeer(unit);
-							processClickSelect(unitList, shiftDown, renderPeer);
-						}
-						return false;
+				unit -> {
+					if (Objects.equals(unit.getUnitType(), mouseOverUnit.getSimulationUnit().getUnitType())) {
+						final RenderUnit renderPeer = war3MapViewer.getRenderPeer(unit);
+						processClickSelect(unitList, shiftDown, renderPeer);
 					}
+					return false;
 				});
 	}
 
 	private void processClickSelect(final List<RenderWidget> unitList, final boolean shiftDown,
 			final RenderWidget mouseOverUnit) {
 		if (shiftDown) {
-			if (this.selectedUnits.contains(mouseOverUnit)) {
+			if (selectedUnits.contains(mouseOverUnit)) {
 				unitList.remove(mouseOverUnit);
 			}
 			else {
@@ -3602,35 +3643,35 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	public boolean touchDragged(final int screenX, final int screenY, final float worldScreenY, final int pointer) {
 		screenCoordsVector.set(screenX, screenY);
-		this.uiViewport.unproject(screenCoordsVector);
+		uiViewport.unproject(screenCoordsVector);
 
-		if (this.meleeUIMinimap.containsMouse(screenCoordsVector.x, screenCoordsVector.y)) {
-			final Vector2 worldPoint = this.meleeUIMinimap.getWorldPointFromScreen(screenCoordsVector.x,
+		if (meleeUIMinimap.containsMouse(screenCoordsVector.x, screenCoordsVector.y)) {
+			final Vector2 worldPoint = meleeUIMinimap.getWorldPointFromScreen(screenCoordsVector.x,
 					screenCoordsVector.y);
-			this.cameraManager.target.x = worldPoint.x;
-			this.cameraManager.target.y = worldPoint.y;
+			cameraManager.target.x = worldPoint.x;
+			cameraManager.target.y = worldPoint.y;
 		}
 		else {
-			if (this.allowDrag) {
-				if (null != this.mouseOverUnit) {
-					this.war3MapViewer.clearUnitMouseOverHighlight();
-					this.dragSelectPreviewUnits.clear();
-					this.mouseOverUnit = null;
+			if (allowDrag) {
+				if (null != mouseOverUnit) {
+					war3MapViewer.clearUnitMouseOverHighlight();
+					dragSelectPreviewUnits.clear();
+					mouseOverUnit = null;
 				}
 
-				this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
-				this.currentlyDraggingPointer = pointer;
-				if (this.draggingMouseButton == Input.Buttons.MIDDLE) {
-					this.cameraManager.target.add(this.lastMouseClickLocation.sub(clickLocationTemp).scl(-1));
+				war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
+				currentlyDraggingPointer = pointer;
+				if (draggingMouseButton == Input.Buttons.MIDDLE) {
+					cameraManager.target.add(lastMouseClickLocation.sub(clickLocationTemp).scl(-1));
 				}
-				else if (this.draggingMouseButton == Input.Buttons.LEFT) {
+				else if (draggingMouseButton == Input.Buttons.LEFT) {
 					// update mouseover
 				}
-				this.lastMouseClickLocation.set(clickLocationTemp);
+				lastMouseClickLocation.set(clickLocationTemp);
 			}
 			else {
-				if (this.mouseDownUIFrame != null) {
-					this.mouseDownUIFrame.mouseDragged(this.rootFrame, this.uiViewport, screenCoordsVector.x,
+				if (mouseDownUIFrame != null) {
+					mouseDownUIFrame.mouseDragged(rootFrame, uiViewport, screenCoordsVector.x,
 							screenCoordsVector.y);
 				}
 			}
@@ -3640,37 +3681,37 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	public boolean mouseMoved(final int screenX, final int screenY, final float worldScreenY) {
 		screenCoordsVector.set(screenX, screenY);
-		this.uiViewport.unproject(screenCoordsVector);
-		final UIFrame mousedUIFrame = this.rootFrame.getFrameChildUnderMouse(screenCoordsVector.x,
+		uiViewport.unproject(screenCoordsVector);
+		final UIFrame mousedUIFrame = rootFrame.getFrameChildUnderMouse(screenCoordsVector.x,
 				screenCoordsVector.y);
-		if (mousedUIFrame != this.mouseOverUIFrame) {
-			if (this.mouseOverUIFrame != null) {
-				this.mouseOverUIFrame.mouseExit(this.rootFrame, this.uiViewport);
+		if (!Objects.equals(mousedUIFrame, mouseOverUIFrame)) {
+			if (mouseOverUIFrame != null) {
+				mouseOverUIFrame.mouseExit(rootFrame, uiViewport);
 			}
 			if (mousedUIFrame instanceof ClickableFrame) {
-				this.mouseOverUIFrame = (ClickableFrame) mousedUIFrame;
-				if (this.mouseOverUIFrame != null) {
-					this.mouseOverUIFrame.mouseEnter(this.rootFrame, this.uiViewport);
+				mouseOverUIFrame = (ClickableFrame) mousedUIFrame;
+				if (mouseOverUIFrame != null) {
+					mouseOverUIFrame.mouseEnter(rootFrame, uiViewport);
 				}
 				if (mousedUIFrame instanceof ClickableActionFrame) {
 					loadTooltip((ClickableActionFrame) mousedUIFrame);
 				}
 			}
 			else {
-				this.mouseOverUIFrame = null;
-				this.tooltipFrame.setVisible(false);
+				mouseOverUIFrame = null;
+				tooltipFrame.setVisible(false);
 			}
 		}
 		if (mousedUIFrame == null) {
-			final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-					this.anyClickableUnitFilter);
-			if (newMouseOverUnit != this.mouseOverUnit) {
-				this.war3MapViewer.clearUnitMouseOverHighlight();
-				this.dragSelectPreviewUnits.clear();
+			final RenderWidget newMouseOverUnit = war3MapViewer.rayPickUnit(screenX, worldScreenY,
+					anyClickableUnitFilter);
+			if (!Objects.equals(newMouseOverUnit, mouseOverUnit)) {
+				war3MapViewer.clearUnitMouseOverHighlight();
+				dragSelectPreviewUnits.clear();
 				if (newMouseOverUnit != null) {
-					this.war3MapViewer.showUnitMouseOverHighlight(newMouseOverUnit);
+					war3MapViewer.showUnitMouseOverHighlight(newMouseOverUnit);
 				}
-				this.mouseOverUnit = newMouseOverUnit;
+				mouseOverUnit = newMouseOverUnit;
 			}
 		}
 		return false;
@@ -3684,131 +3725,133 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final String toolTip = mousedUIFrame.getToolTip();
 		final String uberTip = mousedUIFrame.getUberTip();
 		if ((toolTip == null) || (uberTip == null)) {
-			this.tooltipFrame.setVisible(false);
+			tooltipFrame.setVisible(false);
 		}
 		else {
-			this.rootFrame.setText(this.tooltipUberTipText, uberTip);
+			rootFrame.setText(tooltipUberTipText, uberTip);
 			int resourceIndex = 0;
 			if (goldCost != 0) {
-				this.tooltipResourceFrames[resourceIndex].setVisible(true);
-				this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipGoldIcon", this.rootFrame);
-				this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(goldCost));
+				tooltipResourceFrames[resourceIndex].setVisible(true);
+				tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipGoldIcon", rootFrame);
+				rootFrame.setText(tooltipResourceTextFrames[resourceIndex], Integer.toString(goldCost));
 				resourceIndex++;
 			}
 			if (lumberCost != 0) {
-				this.tooltipResourceFrames[resourceIndex].setVisible(true);
-				this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipLumberIcon", this.rootFrame);
-				this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(lumberCost));
+				tooltipResourceFrames[resourceIndex].setVisible(true);
+				tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipLumberIcon", rootFrame);
+				rootFrame.setText(tooltipResourceTextFrames[resourceIndex], Integer.toString(lumberCost));
 				resourceIndex++;
 			}
 			if (foodCost != 0) {
-				this.tooltipResourceFrames[resourceIndex].setVisible(true);
-				this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipSupplyIcon", this.rootFrame);
-				this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(foodCost));
+				tooltipResourceFrames[resourceIndex].setVisible(true);
+				tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipSupplyIcon", rootFrame);
+				rootFrame.setText(tooltipResourceTextFrames[resourceIndex], Integer.toString(foodCost));
 				resourceIndex++;
 			}
 			if (manaCost != 0) {
-				this.tooltipResourceFrames[resourceIndex].setVisible(true);
-				this.tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipManaIcon", this.rootFrame);
-				this.rootFrame.setText(this.tooltipResourceTextFrames[resourceIndex], Integer.toString(manaCost));
+				tooltipResourceFrames[resourceIndex].setVisible(true);
+				tooltipResourceIconFrames[resourceIndex].setTexture("ToolTipManaIcon", rootFrame);
+				rootFrame.setText(tooltipResourceTextFrames[resourceIndex], Integer.toString(manaCost));
 				resourceIndex++;
 			}
-			for (int i = resourceIndex; i < this.tooltipResourceFrames.length; i++) {
-				this.tooltipResourceFrames[i].setVisible(false);
+			for (int i = resourceIndex; i < tooltipResourceFrames.length; i++) {
+				tooltipResourceFrames[i].setVisible(false);
 			}
 			float resourcesHeight;
 			if (resourceIndex != 0) {
-				this.tooltipUberTipText.addSetPoint(this.uberTipWithResourcesSetPoint);
+				tooltipUberTipText.addSetPoint(uberTipWithResourcesSetPoint);
 				resourcesHeight = 0.014f;
 			}
 			else {
-				this.tooltipUberTipText.addSetPoint(this.uberTipNoResourcesSetPoint);
+				tooltipUberTipText.addSetPoint(uberTipNoResourcesSetPoint);
 				resourcesHeight = 0.004f;
 			}
-			this.rootFrame.setText(this.tooltipText, toolTip);
-			final float predictedViewportHeight = this.tooltipText.getPredictedViewportHeight()
-					+ GameUI.convertY(this.uiViewport, resourcesHeight)
-					+ this.tooltipUberTipText.getPredictedViewportHeight() + GameUI.convertY(this.uiViewport, 0.003f);
-			this.tooltipFrame.setHeight(predictedViewportHeight);
-			this.tooltipFrame.positionBounds(this.rootFrame, this.uiViewport);
-			this.tooltipFrame.setVisible(true);
+			rootFrame.setText(tooltipText, toolTip);
+			final float predictedViewportHeight = tooltipText.getPredictedViewportHeight()
+					+ GameUI.convertY(uiViewport, resourcesHeight)
+					+ tooltipUberTipText.getPredictedViewportHeight() + GameUI.convertY(uiViewport, 0.003f);
+			tooltipFrame.setHeight(predictedViewportHeight);
+			tooltipFrame.positionBounds(rootFrame, uiViewport);
+			tooltipFrame.setVisible(true);
 		}
 	}
 
 	public float getHeightRatioCorrection() {
-		return this.heightRatioCorrection;
+		return heightRatioCorrection;
 	}
 
 	@Override
 	public void queueIconClicked(final int index) {
-		final CUnit simulationUnit = this.selectedUnit.getSimulationUnit();
+		final CUnit simulationUnit = selectedUnit.getSimulationUnit();
 		if (simulationUnit.isConstructingOrUpgrading()) {
 			switch (index) {
-			case 0:
-				for (final CAbility ability : simulationUnit.getAbilities()) {
-					ability.checkCanUse(this.war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
-							BooleanAbilityActivationReceiver.INSTANCE);
-					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
+				case 0:
+					for (final CAbility ability : simulationUnit.getAbilities()) {
+						ability.checkCanUse(war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
+								BooleanAbilityActivationReceiver.INSTANCE);
+						if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
 
-						final BooleanAbilityTargetCheckReceiver<Void> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
-								.<Void>getInstance().reset();
-						ability.checkCanTargetNoTarget(this.war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
-								targetCheckReceiver);
-						if (targetCheckReceiver.isTargetable()) {
-							this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
-									ability.getHandleId(), OrderIds.cancel, false);
+							final BooleanAbilityTargetCheckReceiver<Void> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
+									.<Void>getInstance().reset();
+							ability.checkCanTargetNoTarget(war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
+									targetCheckReceiver);
+							if (targetCheckReceiver.isTargetable()) {
+								unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
+										ability.getHandleId(), OrderIds.cancel, false);
+							}
 						}
 					}
-				}
-				break;
-			case 1:
-				final List<RenderWidget> unitList = Arrays.asList(
-						this.war3MapViewer.getRenderPeer(this.selectedUnit.getSimulationUnit().getWorkerInside()));
-				this.war3MapViewer.doSelectUnit(unitList);
-				selectWidgets(unitList);
-				break;
+					break;
+				case 1:
+					final List<RenderWidget> unitList = Collections.singletonList(
+							war3MapViewer.getRenderPeer(selectedUnit.getSimulationUnit().getWorkerInside()));
+					war3MapViewer.doSelectUnit(unitList);
+					selectWidgets(unitList);
+					break;
+				default:
+					throw new IllegalStateException("Unexpected value: " + index);
 			}
 		}
 		else {
-			this.unitOrderListener.unitCancelTrainingItem(simulationUnit.getHandleId(), index);
+			unitOrderListener.unitCancelTrainingItem(simulationUnit.getHandleId(), index);
 		}
 	}
 
 	public void dispose() {
-		if (this.rootFrame != null) {
-			this.rootFrame.dispose();
+		if (rootFrame != null) {
+			rootFrame.dispose();
 		}
 	}
 
 	private class ItemCommandCardCommandListener implements CommandCardCommandListener {
 		@Override
 		public void onClick(final int abilityHandleId, final int orderId, final boolean rightClick) {
-			final RenderUnit selectedUnit2 = MeleeUI.this.selectedUnit;
+			final RenderUnit selectedUnit2 = selectedUnit;
 			final CUnit simulationUnit = selectedUnit2.getSimulationUnit();
 			if (rightClick) {
 				final CAbilityInventory inventoryData = simulationUnit.getInventoryData();
 				final int slot = orderId - 1;
 				final CItem itemInSlot = inventoryData.getItemInSlot(slot);
-				if (MeleeUI.this.draggingItem != null) {
-					final CUnit activeCmdSimUnit = MeleeUI.this.activeCommandUnit.getSimulationUnit();
-					MeleeUI.this.unitOrderListener.issueTargetOrder(activeCmdSimUnit.getHandleId(),
+				if (draggingItem != null) {
+					final CUnit activeCmdSimUnit = activeCommandUnit.getSimulationUnit();
+					unitOrderListener.issueTargetOrder(activeCmdSimUnit.getHandleId(),
 							activeCmdSimUnit.getInventoryData().getHandleId(), OrderIds.itemdrag00 + slot,
-							MeleeUI.this.draggingItem.getHandleId(), false);
+							draggingItem.getHandleId(), false);
 					setDraggingItem(null);
-					MeleeUI.this.activeCommand = null;
-					MeleeUI.this.activeCommandUnit = null;
+					activeCommand = null;
+					activeCommandUnit = null;
 				}
 				else {
 					if (itemInSlot != null) {
 						setDraggingItem(itemInSlot);
-						MeleeUI.this.activeCommand = inventoryData;
-						MeleeUI.this.activeCommandUnit = selectedUnit2;
-						MeleeUI.this.activeCommandOrderId = OrderIds.dropitem;
+						activeCommand = inventoryData;
+						activeCommandUnit = selectedUnit2;
+						activeCommandOrderId = OrderIds.dropitem;
 					}
 				}
 			}
 			else {
-				final CSimulation game = MeleeUI.this.war3MapViewer.simulation;
+				final CSimulation game = war3MapViewer.simulation;
 				final BooleanAbilityActivationReceiver receiver = BooleanAbilityActivationReceiver.INSTANCE;
 				final CAbilityInventory inventoryData = simulationUnit.getInventoryData();
 				inventoryData.checkCanUse(game, simulationUnit, orderId, receiver);
@@ -3818,7 +3861,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					targetReceiver.reset();
 					inventoryData.checkCanTargetNoTarget(game, simulationUnit, orderId, targetReceiver);
 					if (targetReceiver.isTargetable()) {
-						MeleeUI.this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
+						unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
 								inventoryData.getHandleId(), orderId, isShiftDown());
 					}
 				}
@@ -3837,51 +3880,51 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		private int index;
 		private boolean disposed;
 
-		public MultiSelectUnitStateListener(final RenderUnit sourceUnit, final int index) {
+		private MultiSelectUnitStateListener(final RenderUnit sourceUnit, final int index) {
 			this.sourceUnit = sourceUnit;
 			this.index = index;
 		}
 
 		public void dispose() {
-			this.sourceUnit.getSimulationUnit().removeStateListener(this);
-			this.disposed = true;
+			sourceUnit.getSimulationUnit().removeStateListener(this);
+			disposed = true;
 		}
 
 		@Override
 		public void lifeChanged() {
-			if (this.disposed) {
+			if (disposed) {
 				return;
 			}
-			if (this.sourceUnit.getSimulationUnit().isDead()) {
-				MeleeUI.this.selectedUnits.remove(this.sourceUnit);
-				MeleeUI.this.war3MapViewer.doUnselectUnit(this.sourceUnit);
-				MeleeUI.this.multiSelectUnitStateListeners.remove(this.index);
-				for (int i = this.index; i < MeleeUI.this.multiSelectUnitStateListeners.size(); i++) {
-					MeleeUI.this.multiSelectUnitStateListeners.get(i).index--;
+			if (sourceUnit.getSimulationUnit().isDead()) {
+				selectedUnits.remove(sourceUnit);
+				war3MapViewer.doUnselectUnit(sourceUnit);
+				multiSelectUnitStateListeners.remove(index);
+				for (int i = index; i < multiSelectUnitStateListeners.size(); i++) {
+					multiSelectUnitStateListeners.get(i).index--;
 				}
 				dispose();
-				reloadSelectedUnitUI(MeleeUI.this.selectedUnit);
+				reloadSelectedUnitUI(selectedUnit);
 			}
 			else {
-				MeleeUI.this.selectedUnitFrames[this.index]
-						.setLifeRatioRemaining(this.sourceUnit.getSimulationUnit().getLife()
-								/ this.sourceUnit.getSimulationUnit().getMaximumLife());
+				selectedUnitFrames[index]
+						.setLifeRatioRemaining(sourceUnit.getSimulationUnit().getLife()
+								/ sourceUnit.getSimulationUnit().getMaximumLife());
 			}
 		}
 
 		@Override
 		public void manaChanged() {
-			if (this.disposed) {
+			if (disposed) {
 				return;
 			}
-			MeleeUI.this.selectedUnitFrames[this.index]
-					.setManaRatioRemaining(this.sourceUnit.getSimulationUnit().getMana()
-							/ this.sourceUnit.getSimulationUnit().getMaximumMana());
+			selectedUnitFrames[index]
+					.setManaRatioRemaining(sourceUnit.getSimulationUnit().getMana()
+							/ sourceUnit.getSimulationUnit().getMaximumMana());
 		}
 
 		@Override
 		public void ordersChanged() {
-			if (this.disposed) {
+			if (disposed) {
 				return;
 			}
 
@@ -3889,7 +3932,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void queueChanged() {
-			if (this.disposed) {
+			if (disposed) {
 				return;
 			}
 
@@ -3897,7 +3940,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void rallyPointChanged() {
-			if (this.disposed) {
+			if (disposed) {
 				return;
 			}
 
@@ -3905,7 +3948,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void waypointsChanged() {
-			if (this.disposed) {
+			if (disposed) {
 				return;
 			}
 
@@ -3913,7 +3956,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void heroStatsChanged() {
-			if (this.disposed) {
+			if (disposed) {
 				return;
 			}
 
@@ -3921,7 +3964,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void inventoryChanged() {
-			if (this.disposed) {
+			if (disposed) {
 				return;
 			}
 
@@ -3930,7 +3973,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public GameCameraManager getCameraManager() {
-		return this.cameraManager;
+		return cameraManager;
 	}
 
 	public Music playMusic(final String musicField, final boolean random, int index) {
@@ -3942,27 +3985,27 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			for (String musicPath : semicolonMusics) {
 				// dumb support for comma as well as semicolon, I wonder if we can
 				// clean this up, simplify?
-				if (this.musicSLK.get(musicPath) != null) {
-					musicPath = this.musicSLK.get(musicPath).getField("FileNames");
+				if (musicSLK.get(musicPath) != null) {
+					musicPath = musicSLK.get(musicPath).getField("FileNames");
 				}
 				final String[] moreSplitMusics = musicPath.split(",");
 				Collections.addAll(musicPaths, moreSplitMusics);
 			}
-			final String[] musics = musicPaths.toArray(new String[musicPaths.size()]);
+			final String[] musics = musicPaths.toArray(new String[0]);
 
 			if (random) {
 				index = (int) (Math.random() * musics.length);
 			}
-			this.currentMusics = new Music[musics.length];
+			currentMusics = new Music[musics.length];
 			for (int i = 0; i < musics.length; i++) {
 				final Music newMusic = Gdx.audio
-						.newMusic(new DataSourceFileHandle(this.war3MapViewer.dataSource, musics[i]));
+						.newMusic(new DataSourceFileHandle(war3MapViewer.dataSource, musics[i]));
 				newMusic.setVolume(1.0f);
-				this.currentMusics[i] = newMusic;
+				currentMusics[i] = newMusic;
 			}
-			this.currentMusicIndex = index;
-			this.currentMusicRandomizeIndex = random;
-			this.currentMusics[index].play();
+			currentMusicIndex = index;
+			currentMusicRandomizeIndex = random;
+			currentMusics[index].play();
 		}
 		return null;
 	}
@@ -3972,22 +4015,22 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private void stopMusic() {
-		if (this.currentMusics != null) {
-			for (final Music music : this.currentMusics) {
+		if (currentMusics != null) {
+			for (final Music music : currentMusics) {
 				music.stop();
 			}
-			this.currentMusics = null;
+			currentMusics = null;
 		}
 	}
 
 	public Scene getUiScene() {
-		return this.uiScene;
+		return uiScene;
 	}
 
 	public CTimerDialog createTimerDialog(final CTimer timer) {
-		final UIFrame timerDialog = this.rootFrame.createFrame("TimerDialog", this.rootFrame, 0, 0);
-		final StringFrame valueFrame = (StringFrame) this.rootFrame.getFrameByName("TimeDialogValue", 0);
-		final StringFrame titleFrame = (StringFrame) this.rootFrame.getFrameByName("TimerDialogTitle", 0);
+		final UIFrame timerDialog = rootFrame.createFrame("TimerDialog", rootFrame, 0, 0);
+		final StringFrame valueFrame = (StringFrame) rootFrame.getFrameByName("TimeDialogValue", 0);
+		final StringFrame titleFrame = (StringFrame) rootFrame.getFrameByName("TimerDialogTitle", 0);
 		return new CTimerDialog(timer, timerDialog, valueFrame, titleFrame);
 	}
 
@@ -3996,41 +4039,41 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public CScriptDialog createScriptDialog(final GlobalScope globalScope) {
-		final SimpleFrame scriptDialog = (SimpleFrame) this.rootFrame.createFrame("ScriptDialog", this.rootFrame, 0, 0);
-		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+		final SimpleFrame scriptDialog = (SimpleFrame) rootFrame.createFrame("ScriptDialog", rootFrame, 0, 0);
+		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(uiViewport, -0.05f)));
 		scriptDialog.setVisible(false);
-		final StringFrame scriptDialogTextFrame = (StringFrame) this.rootFrame.getFrameByName("ScriptDialogText", 0);
-		scriptDialog.positionBounds(this.rootFrame, this.uiViewport);
+		final StringFrame scriptDialogTextFrame = (StringFrame) rootFrame.getFrameByName("ScriptDialogText", 0);
+		scriptDialog.positionBounds(rootFrame, uiViewport);
 		return new CScriptDialog(globalScope, scriptDialog, scriptDialogTextFrame);
 	}
 
 	public CScriptDialogButton createScriptDialogButton(final CScriptDialog scriptDialog, final String text,
 			final char hotkey) {
 		// TODO use hotkey
-		final GlueTextButtonFrame scriptDialogButton = (GlueTextButtonFrame) this.rootFrame
+		final GlueTextButtonFrame scriptDialogButton = (GlueTextButtonFrame) rootFrame
 				.createFrame("ScriptDialogButton", scriptDialog.getScriptDialogFrame(), 0, 0);
-		scriptDialogButton.setHeight(GameUI.convertY(this.uiViewport, 0.03f));
-		final StringFrame scriptDialogTextFrame = (StringFrame) this.rootFrame.getFrameByName("ScriptDialogButtonText",
+		scriptDialogButton.setHeight(GameUI.convertY(uiViewport, 0.03f));
+		final StringFrame scriptDialogTextFrame = (StringFrame) rootFrame.getFrameByName("ScriptDialogButtonText",
 				0);
-		this.rootFrame.setText(scriptDialogTextFrame, text);
+		rootFrame.setText(scriptDialogTextFrame, text);
 		scriptDialogButton.addSetPoint(new SetPoint(FramePoint.TOP, scriptDialog.getLastAddedComponent(),
-				FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, -0.005f)));
+				FramePoint.BOTTOM, 0, GameUI.convertY(uiViewport, -0.005f)));
 		final CScriptDialogButton newButton = new CScriptDialogButton(scriptDialogButton, scriptDialogTextFrame);
-		scriptDialog.addButton(this.rootFrame, this.uiViewport, newButton);
+		scriptDialog.addButton(rootFrame, uiViewport, newButton);
 		return newButton;
 	}
 
 	public void destroyDialog(final CScriptDialog dialog) {
-		this.rootFrame.remove(dialog.getScriptDialogFrame());
+		rootFrame.remove(dialog.getScriptDialogFrame());
 	}
 
 	public void clearDialog(final CScriptDialog dialog) {
 		destroyDialog(dialog);
-		final SimpleFrame scriptDialog = (SimpleFrame) this.rootFrame.createFrame("ScriptDialog", this.rootFrame, 0, 0);
-		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
+		final SimpleFrame scriptDialog = (SimpleFrame) rootFrame.createFrame("ScriptDialog", rootFrame, 0, 0);
+		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(uiViewport, -0.05f)));
 		scriptDialog.setVisible(false);
-		final StringFrame scriptDialogTextFrame = (StringFrame) this.rootFrame.getFrameByName("ScriptDialogText", 0);
-		scriptDialog.positionBounds(this.rootFrame, this.uiViewport);
+		final StringFrame scriptDialogTextFrame = (StringFrame) rootFrame.getFrameByName("ScriptDialogText", 0);
+		scriptDialog.positionBounds(rootFrame, uiViewport);
 		dialog.reset(scriptDialog, scriptDialogTextFrame);
 	}
 }

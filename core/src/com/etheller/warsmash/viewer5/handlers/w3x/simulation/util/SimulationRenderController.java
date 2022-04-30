@@ -87,4 +87,6 @@ public interface SimulationRenderController {
 	void setBlight(float x, float y, float radius, boolean blighted);
 
 	void createSpellEffectFacing(War3ID alias, float harvestStandX, float harvestStandY, float angle);
+
+	void unitUpdatedType(CUnit unit, War3ID typeId);
 }

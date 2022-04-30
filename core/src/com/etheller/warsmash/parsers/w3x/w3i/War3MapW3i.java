@@ -466,4 +466,8 @@ public class War3MapW3i {
 	public int getGameVersionMinor() {
 		return this.gameVersionMinor;
 	}
+
+	public boolean hasFlag(final int mapFlag) {
+		return (this.flags & mapFlag) != 0;
+	}
 }

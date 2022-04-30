@@ -6,6 +6,7 @@ import java.util.Map;
 import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3iFlags;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.RenderMathUtils;
@@ -48,8 +49,8 @@ public class WaveBuilder {
 		final char tileset = this.w3eFile.getTileset();
 		final Element waterRow = this.waterTable.get(tileset + "Sha");
 
-		final long wavesCliff = (this.w3iFile.getFlags() & 0x0800);
-		final long wavesRolling = (this.w3iFile.getFlags() & 0x1000);
+		final long wavesCliff = (this.w3iFile.getFlags() & War3MapW3iFlags.SHOW_WATER_WAVES_ON_CLIFF_SHORES);
+		final long wavesRolling = (this.w3iFile.getFlags() & War3MapW3iFlags.SHOW_WATER_WAVES_ON_ROLLING_SHORES);
 
 		final String shoreline = waterRow.getField("shoreDir") + "\\" + waterRow.getField("shoreSFile") + "\\"
 				+ waterRow.getField("shoreSFile") + "0.mdx";

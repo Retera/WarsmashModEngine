@@ -7,7 +7,7 @@ import java.nio.file.Files;
 public class CodeCounter {
 
 	public static void main(final String[] args) {
-		final int sourceLines = countFile(new File("src/com"));
+		final int sourceLines = countFile(new File("src/com/etheller"));
 		System.out.println(sourceLines);
 	}
 

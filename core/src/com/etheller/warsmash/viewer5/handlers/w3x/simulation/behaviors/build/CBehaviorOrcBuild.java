@@ -35,8 +35,14 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
 		final CUnitType unitType = simulation.getUnitData().getUnitType(this.orderId);
-		return this.unit.canReachToPathing(0, simulation.getGameplayConstants().getBuildingAngle(),
-				unitType.getBuildingPathingPixelMap(), this.target.getX(), this.target.getY());
+		final BufferedImage buildingPathingPixelMap = unitType.getBuildingPathingPixelMap();
+		if (buildingPathingPixelMap != null) {
+			return this.unit.canReachToPathing(0, simulation.getGameplayConstants().getBuildingAngle(),
+					buildingPathingPixelMap, this.target.getX(), this.target.getY());
+		}
+		else {
+			return this.unit.canReach(this.target.getX(), this.target.getY(), 0);
+		}
 	}
 
 	@Override

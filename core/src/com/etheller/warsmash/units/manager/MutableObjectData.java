@@ -802,6 +802,9 @@ public final class MutableObjectData {
 			final Change matchingChange = getMatchingChange(field, level);
 			if (matchingChange != null) {
 				if (matchingChange.getVartype() != War3ObjectDataChangeset.VAR_TYPE_INT) {
+					if (matchingChange.getVartype() == War3ObjectDataChangeset.VAR_TYPE_UNREAL) {
+						return (int) matchingChange.getRealval();
+					}
 					throw new IllegalStateException(
 							"Requested integer value of '" + field + "' from '" + this.parentWC3Object.getId()
 									+ "', but this field was not an int! vartype=" + matchingChange.getVartype());
@@ -903,12 +906,7 @@ public final class MutableObjectData {
 	}
 
 	public enum WorldEditorDataType {
-		UNITS("w3u"),
-		ITEM("w3t"),
-		DESTRUCTIBLES("w3b"),
-		DOODADS("w3d"),
-		ABILITIES("w3a"),
-		BUFFS_EFFECTS("w3h"),
+		UNITS("w3u"), ITEM("w3t"), DESTRUCTIBLES("w3b"), DOODADS("w3d"), ABILITIES("w3a"), BUFFS_EFFECTS("w3h"),
 		UPGRADES("w3q");
 
 		private String extension;

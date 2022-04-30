@@ -133,6 +133,9 @@ public class PlayerSlotPane {
 				setTextFromRacePreference(rootFrame, player);
 			}
 		});
+		this.raceMenu.setEnabled(player.isRaceSelectable());
+		this.teamButtonFrame.setEnabled(player.isRaceSelectable());
+		this.colorButtonFrame.setEnabled(player.isRaceSelectable());
 	}
 
 	public void setNameMenuTextByPlayer(final GameUI rootFrame, final CPlayerJass player,

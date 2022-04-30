@@ -673,4 +673,8 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.setBlight(x, y, radius, blighted);
 	}
 
+	public void unitUpdatedType(final CUnit unit, final War3ID typeId) {
+		this.simulationRenderController.unitUpdatedType(unit, typeId);
+	}
+
 }

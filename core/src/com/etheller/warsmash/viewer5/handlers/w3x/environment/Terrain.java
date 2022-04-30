@@ -589,6 +589,7 @@ public class Terrain {
 
 					int bottomLeftCliffTex = bottomLeft.getCliffTexture();
 					if (bottomLeftCliffTex == 15) {
+						boolean foundTexture = false;
 						final int topLeftCliffTex = topLeft.getCliffTexture();
 						if (topLeftCliffTex == 15) {
 							final int topRightCliffTex = topRight.getCliffTexture();
@@ -599,14 +600,20 @@ public class Terrain {
 								}
 								else {
 									bottomLeftCliffTex = bottomRightCliffTex;
+									foundTexture = true;
 								}
 							}
 							else {
 								bottomLeftCliffTex = topRightCliffTex;
+								foundTexture = true;
 							}
 						}
 						else {
 							bottomLeftCliffTex = topLeftCliffTex;
+							foundTexture = true;
+						}
+						if (foundTexture) {
+							bottomLeft.setCliffTexture(bottomLeftCliffTex);
 						}
 					}
 					if (!(facingDown && (j == 0)) && !(!facingDown && (j >= (this.rows - 2)))

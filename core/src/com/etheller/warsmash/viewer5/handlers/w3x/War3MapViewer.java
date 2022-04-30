@@ -652,7 +652,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// RenderUnit class:
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -664,7 +665,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -683,7 +685,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -695,7 +698,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -938,15 +942,80 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 					@Override
 					public void spawnUnitReadySound(final CUnit trainedUnit) {
-						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(trainedUnit);
-						renderPeer.soundset.ready.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
-								renderPeer);
+						if (trainedUnit.getPlayerIndex() == War3MapViewer.this.localPlayerIndex) {
+							final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(trainedUnit);
+							renderPeer.soundset.ready.playUnitResponse(War3MapViewer.this.worldScene.audioContext,
+									renderPeer);
+						}
 					}
 
 					@Override
 					public void unitRepositioned(final CUnit cUnit) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(cUnit);
 						renderPeer.repositioned(War3MapViewer.this);
+					}
+
+					@Override
+					public void unitUpdatedType(final CUnit simulationUnit, final War3ID typeId) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(simulationUnit);
+						final MutableGameObject row = War3MapViewer.this.allObjectData.getUnits().get(typeId);
+						final String path = getUnitModelPath(row);
+
+						final String unitSpecialArtPath = row.getFieldAsString(UNIT_SPECIAL, 0);
+						MdxModel specialArtModel;
+						if ((unitSpecialArtPath != null) && !unitSpecialArtPath.isEmpty()) {
+							try {
+								specialArtModel = loadModelMdx(unitSpecialArtPath);
+							}
+							catch (final Exception exc) {
+								exc.printStackTrace();
+								specialArtModel = null;
+							}
+						}
+						else {
+							specialArtModel = null;
+						}
+						final MdxModel model = loadModelMdx(path);
+						MdxModel portraitModel;
+						final String portraitPath = path.substring(0, path.length() - 4) + "_portrait.mdx";
+						if (War3MapViewer.this.dataSource.has(portraitPath)) {
+							portraitModel = loadModelMdx(portraitPath);
+						}
+						else {
+							portraitModel = model;
+						}
+
+						final float angle = (float) Math.toDegrees(simulationUnit.getFacing());
+						final RenderUnitTypeData typeData = getUnitTypeData(typeId, row);
+						final int customTeamColor = War3MapViewer.this.simulation
+								.getPlayer(simulationUnit.getPlayerIndex()).getColor();
+						final float unitX = simulationUnit.getX();
+						final float unitY = simulationUnit.getY();
+						final float unitZ = Math.max(getWalkableRenderHeight(unitX, unitY),
+								War3MapViewer.this.terrain.getGroundHeight(unitX, unitY))
+								+ simulationUnit.getFlyHeight();
+
+						UnitSoundset soundset = null;
+						BuildingShadow buildingShadowInstance = null;
+						final String buildingShadow = row.getFieldAsString(BUILDING_SHADOW, 0);
+						if ((buildingShadow != null) && !"_".equals(buildingShadow)) {
+							buildingShadowInstance = War3MapViewer.this.terrain.addShadow(buildingShadow, unitX, unitY);
+						}
+
+						final String soundName = row.getFieldAsString(UNIT_SOUNDSET, 0);
+						UnitSoundset unitSoundset = War3MapViewer.this.soundsetNameToSoundset.get(soundName);
+						if (unitSoundset == null) {
+							unitSoundset = new UnitSoundset(War3MapViewer.this.dataSource,
+									War3MapViewer.this.unitAckSoundsTable, soundName);
+							War3MapViewer.this.soundsetNameToSoundset.put(soundName, unitSoundset);
+						}
+						soundset = unitSoundset;
+
+						renderPeer.resetRenderUnit(War3MapViewer.this, model, row, unitX, unitY, unitZ,
+								localPlayerIndex, soundset, portraitModel, simulationUnit, typeData, specialArtModel,
+								buildingShadowInstance, War3MapViewer.this.selectionCircleScaleFactor,
+								typeData.getAnimationWalkSpeed(), typeData.getAnimationRunSpeed(),
+								typeData.getScalingValue());
 					}
 
 					@Override

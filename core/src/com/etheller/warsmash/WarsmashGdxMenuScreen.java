@@ -31,7 +31,6 @@ import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.StringBundle;
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.Model;
@@ -207,9 +206,8 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 						public void onCreate(final GameUI rootFrame) {
 //						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
 
-							singleModelScene(WarsmashGdxMenuScreen.this.scene, War3MapViewer.mdx(rootFrame
-									.getSkinField("GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION)),
-									"Stand");
+							singleModelScene(WarsmashGdxMenuScreen.this.scene,
+									War3MapViewer.mdx(rootFrame.getSkinField("GlueSpriteLayerBackground")), "Stand");
 							if (!WarsmashGdxMenuScreen.this.mainModel.cameras.isEmpty()) {
 								WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras
 										.get(0);

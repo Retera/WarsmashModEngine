@@ -43,6 +43,7 @@ import com.etheller.warsmash.viewer5.gl.WireframeExtension;
 
 public class DesktopLauncher {
 	public static void main(final String[] arg) {
+		System.out.println("You ran it.");
 		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.useGL30 = true;
 		config.gles30ContextMajorVersion = 3;
@@ -184,8 +185,8 @@ public class DesktopLauncher {
 			}
 		};
 		Extensions.audio = new AudioExtension() {
-			final FloatBuffer orientation = (FloatBuffer)BufferUtils.createFloatBuffer(6).clear();
-			final FloatBuffer position = (FloatBuffer)BufferUtils.createFloatBuffer(3).clear();
+			final FloatBuffer orientation = BufferUtils.createFloatBuffer(6).clear();
+			final FloatBuffer position = BufferUtils.createFloatBuffer(3).clear();
 
 			@Override
 			public float getDuration(final Sound sound) {

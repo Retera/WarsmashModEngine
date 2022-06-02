@@ -182,27 +182,27 @@ public class PlayerSlotPane {
 
 	public void setTextFromRacePreference(final GameUI rootFrame, final CPlayerJass player) {
 		final MenuFrame menuFrame = (MenuFrame) this.raceMenu.getPopupMenuFrame();
-		if (player.isRacePrefSet(CRacePreference.RANDOM)) {
+		if (player.isRacePrefSet(CRacePreference.RANDOM) && (menuFrame.getMenuItemCount() > 0)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(0).getText());
 		}
-		else if (player.isRacePrefSet(CRacePreference.HUMAN)) {
+		else if (player.isRacePrefSet(CRacePreference.HUMAN) && (menuFrame.getMenuItemCount() > 1)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(1).getText());
 		}
-		else if (player.isRacePrefSet(CRacePreference.ORC)) {
+		else if (player.isRacePrefSet(CRacePreference.ORC) && (menuFrame.getMenuItemCount() > 2)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(2).getText());
 		}
-		else if (player.isRacePrefSet(CRacePreference.UNDEAD)) {
+		else if (player.isRacePrefSet(CRacePreference.UNDEAD) && (menuFrame.getMenuItemCount() > 3)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(3).getText());
 		}
-		else if (player.isRacePrefSet(CRacePreference.NIGHTELF)) {
+		else if (player.isRacePrefSet(CRacePreference.NIGHTELF) && (menuFrame.getMenuItemCount() > 4)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(4).getText());

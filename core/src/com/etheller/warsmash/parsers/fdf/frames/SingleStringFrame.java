@@ -22,6 +22,9 @@ public class SingleStringFrame extends AbstractRenderableFrame {
 	public SingleStringFrame(final String name, final UIFrame parent, final Color color, final TextJustify justifyH,
 			final TextJustify justifyV, final BitmapFont frameFont) {
 		super(name, parent);
+		if (color == null) {
+			throw new IllegalArgumentException();
+		}
 		this.color = color;
 		this.justifyH = justifyH;
 		this.justifyV = justifyV;
@@ -37,6 +40,9 @@ public class SingleStringFrame extends AbstractRenderableFrame {
 	}
 
 	public void setColor(final Color color) {
+		if (color == null) {
+			throw new IllegalArgumentException();
+		}
 		this.color = color;
 	}
 

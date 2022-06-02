@@ -82,6 +82,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericAliasedAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
@@ -647,6 +648,53 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					return new StringJassValue("");
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("BlzGetUnitAbilityByIndex", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int whichAbilityIndex = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+
+					final List<CAbility> abilities = whichUnit.getAbilities();
+					if (whichAbilityIndex < abilities.size()) {
+						return new HandleJassValue(abilityType, abilities.get(whichAbilityIndex));
+					}
+					else {
+						return new HandleJassValue(abilityType, null);
+					}
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("WarsmashGetAbilityTypeId", new JassFunction() {
+
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CAbility ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					if (ability instanceof AbstractGenericAliasedAbility) {
+						final AbstractGenericAliasedAbility aliasedAbility = (AbstractGenericAliasedAbility) ability;
+						return new IntegerJassValue(aliasedAbility.getAlias().getValue());
+					}
+					return IntegerJassValue.ZERO;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("WarsmashGetAbilityClassName", new JassFunction() {
+
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CAbility ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					return new StringJassValue(ability.getClass().getSimpleName());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("WarsmashGetRawcode2String", new JassFunction() {
+
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					return new StringJassValue(new War3ID(rawcode).toString());
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetObjectName", new JassFunction() {
@@ -1325,6 +1373,9 @@ public class Jass2 {
 							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
 					final CPlayerJass player = arguments.get(1)
 							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					if (force == null) {
+						throw new JassException(globalScope, "force is null", new NullPointerException());
+					}
 					force.add(player);
 					return null;
 				}

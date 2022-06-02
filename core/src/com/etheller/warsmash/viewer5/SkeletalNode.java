@@ -119,7 +119,8 @@ public abstract class SkeletalNode extends GenericNode {
 				computedRotation.mul(scene.camera.inverseRotation);
 			}
 
-			this.convertBasis(computedRotation);
+			convertBasis(computedRotation);
+			computedRotation.mul(this.localRotation);
 		}
 		else {
 			computedRotation = rotationHeap.set(this.localRotation);

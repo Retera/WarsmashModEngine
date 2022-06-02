@@ -267,12 +267,12 @@ EXITWHEN : 'exitwhen';
 DEBUG : 'debug';
 
 fragment ESCAPED_QUOTE : '\\"';
-STRING_LITERAL :   '"' ( ESCAPED_QUOTE | ~('\n'|'\r') )*? '"';
+STRING_LITERAL :   '"' ( ESCAPED_QUOTE | . )*? '"';
 
  
 INTEGER : [0]|([1-9][0-9]*) ;
-
-HEX_CONSTANT : '0x'(([0-9]|[a-f])*) ;
+ 
+HEX_CONSTANT : '0x'(([0-9]|[a-f]|[A-F])*) ;
 DOLLAR_HEX_CONSTANT : '$'(([0-9]|[A-F])*) ;
 
 RAWCODE : ('\''.*?'\'');

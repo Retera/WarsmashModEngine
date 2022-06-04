@@ -1229,6 +1229,9 @@ public class CUnit extends CWidget {
 
 	public boolean canReachToPathing(final float range, final float rotationForPathing,
 			final BufferedImage buildingPathingPixelMap, final float targetX, final float targetY) {
+		if (buildingPathingPixelMap == null) {
+			return canReach(targetX, targetY, range);
+		}
 		final int rotation = ((int) rotationForPathing + 450) % 360;
 		final float relativeOffsetX = getX() - targetX;
 		final float relativeOffsetY = getY() - targetY;
@@ -1750,6 +1753,11 @@ public class CUnit extends CWidget {
 
 	@Override
 	public <T> T visit(final AbilityTargetVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
+	@Override
+	public <T> T visit(final CWidgetVisitor<T> visitor) {
 		return visitor.accept(this);
 	}
 

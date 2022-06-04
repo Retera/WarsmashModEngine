@@ -5,6 +5,8 @@ import com.etheller.warsmash.util.War3ID;
 public interface AbilityActivationReceiver {
 	void useOk();
 
+	void unknownReasonUseNotOk();
+
 	void notEnoughResources(ResourceType resource);
 
 	void notAnActiveAbility();
@@ -24,4 +26,6 @@ public interface AbilityActivationReceiver {
 	void techtreeMaximumReached();
 
 	void cooldownNotYetReady(float cooldownRemaining, float cooldown);
+
+	void noChargesRemaining();
 }

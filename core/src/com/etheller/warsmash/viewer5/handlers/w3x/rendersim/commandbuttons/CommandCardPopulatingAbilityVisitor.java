@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons;
 
+import com.badlogic.gdx.graphics.Texture;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
@@ -27,9 +28,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.G
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderCommandCardType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -173,6 +177,26 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	}
 
 	@Override
+	public Void accept(final CAbilityJass ability) {
+		if (ability.isIconShowing()) {
+			for (final JassOrder order : ability.getType().getJassOrders()) {
+				if (this.menuBaseOrderId == order.getContainerMenuOrderId()) {
+					addCommandButton(ability, this.gameUI.loadTexture(order.getIconPath()),
+							this.gameUI.loadTexture(
+									AbilityDataUI.disable(order.getIconPath(), this.abilityDataUI.getDisabledPrefix())),
+							order.getTip(), order.getUberTip(), order.getButtonPositionX(), order.getButtonPositionY(),
+							ability.getHandleId(), order.getOrderId(),
+							order.isAutoCastActive() ? order.getAutoCastOrderId() : order.getAutoCastUnOrderId(),
+							order.isAutoCastActive(), order.getType() == JassOrderCommandCardType.MENU,
+							order.getGoldCost(), order.getLumberCost(), order.getFoodCostDisplayOnly(),
+							order.getManaCost(), order.getCharges(), order.getHotkey());
+				}
+			}
+		}
+		return null;
+	}
+
+	@Override
 	public Void accept(final CAbilityOrcBuild ability) {
 		handleBuildMenu(ability, this.abilityDataUI.getBuildOrcUI());
 		return null;
@@ -244,8 +268,18 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	private void addCommandButton(final CAbility ability, final IconUI iconUI, final String toolTip,
 			final int buttonPosX, final int buttonPosY, final int handleId, final int orderId,
-			final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton, int goldCost,
-			int lumberCost, int foodCost, final int manaCost, final int numberOverlay) {
+			final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton, final int goldCost,
+			final int lumberCost, final int foodCost, final int manaCost, final int numberOverlay) {
+		addCommandButton(ability, iconUI.getIcon(), iconUI.getIconDisabled(), toolTip, iconUI.getUberTip(), buttonPosX,
+				buttonPosY, handleId, orderId, autoCastOrderId, autoCastActive, menuButton, goldCost, lumberCost,
+				foodCost, manaCost, numberOverlay, iconUI.getHotkey());
+	}
+
+	private void addCommandButton(final CAbility ability, final Texture icon, final Texture iconDisabled,
+			final String toolTip, String uberTip, final int buttonPosX, final int buttonPosY, final int handleId,
+			final int orderId, final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton,
+			int goldCost, int lumberCost, int foodCost, final int manaCost, final int numberOverlay,
+			final char hotkey) {
 		ability.checkCanUse(this.game, this.unit, orderId, this.previewCallback.reset());
 		if (!this.previewCallback.techtreeMaxReached) {
 			final boolean active = ((this.unit.getCurrentBehavior() != null)
@@ -253,7 +287,6 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			final boolean disabled = ((ability != null) && ability.isDisabled()) || this.previewCallback.disabled;
 			final float cooldownRemaining = this.previewCallback.cooldownRemaining;
 			final float cooldownMax = this.previewCallback.cooldownMax;
-			String uberTip = iconUI.getUberTip();
 			if (disabled) {
 				// dont show these on disabled
 				goldCost = 0;
@@ -263,10 +296,9 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			if (this.previewCallback.isShowingRequirements()) {
 				uberTip = this.previewCallback.getRequirementsText() + "|r" + uberTip;
 			}
-			this.commandButtonListener.commandButton(buttonPosX, buttonPosY,
-					disabled ? iconUI.getIconDisabled() : iconUI.getIcon(), handleId, disabled ? 0 : orderId,
-					autoCastOrderId, active, autoCastActive, menuButton, toolTip, uberTip, iconUI.getHotkey(), goldCost,
-					lumberCost, foodCost, manaCost, cooldownRemaining, cooldownMax, numberOverlay);
+			this.commandButtonListener.commandButton(buttonPosX, buttonPosY, disabled ? iconDisabled : icon, handleId,
+					disabled ? 0 : orderId, autoCastOrderId, active, autoCastActive, menuButton, toolTip, uberTip,
+					hotkey, goldCost, lumberCost, foodCost, manaCost, cooldownRemaining, cooldownMax, numberOverlay);
 		}
 	}
 
@@ -412,6 +444,11 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		}
 
 		@Override
+		public void unknownReasonUseNotOk() {
+
+		}
+
+		@Override
 		public void notEnoughResources(final ResourceType resource) {
 			if (resource == ResourceType.MANA) {
 				this.notEnoughMana = true;
@@ -487,6 +524,11 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 		}
 
+		@Override
+		public void noChargesRemaining() {
+
+		}
+
 		public boolean isShowingRequirements() {
 			return this.requirementsTextBuilder.length() != 0;
 		}
@@ -512,9 +554,11 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			if (this.multiSelect) {
 				return null;
 			}
-			final int skillPoints = ability.getSkillPoints();
-			addCommandButton(ability, this.abilityDataUI.getSelectSkillUI(), ability.getHandleId(), OrderIds.skillmenu,
-					0, false, true, 0, 0, 0, 0, skillPoints != 0 ? skillPoints : -1);
+			if (this.menuBaseOrderId == 0) {
+				final int skillPoints = ability.getSkillPoints();
+				addCommandButton(ability, this.abilityDataUI.getSelectSkillUI(), ability.getHandleId(),
+						OrderIds.skillmenu, 0, false, true, 0, 0, 0, 0, skillPoints != 0 ? skillPoints : -1);
+			}
 		}
 		return null;
 	}

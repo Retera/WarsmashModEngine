@@ -92,11 +92,12 @@ public class AbilityDataUI {
 	private final IconUI cancelTrainUI;
 	private final IconUI rallyUI;
 	private final IconUI selectSkillUI;
+	private final String disabledPrefix;
 
 	public AbilityDataUI(final MutableObjectData abilityData, final MutableObjectData unitData,
 			final MutableObjectData itemData, final MutableObjectData upgradeData, final GameUI gameUI,
 			final War3MapViewer viewer) {
-		final String disabledPrefix = gameUI.getSkinField("CommandButtonDisabledArtPath");
+		this.disabledPrefix = gameUI.getSkinField("CommandButtonDisabledArtPath");
 		for (final War3ID alias : abilityData.keySet()) {
 			final MutableGameObject abilityTypeData = abilityData.get(alias);
 			final String iconResearchPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(ICON_RESEARCH, 0));
@@ -118,11 +119,11 @@ public class AbilityDataUI {
 			final int iconTurnOffX = abilityTypeData.getFieldAsInteger(ICON_TURN_OFF_X, 0);
 			final int iconTurnOffY = abilityTypeData.getFieldAsInteger(ICON_TURN_OFF_Y, 0);
 			final Texture iconResearch = gameUI.loadTexture(iconResearchPath);
-			final Texture iconResearchDisabled = gameUI.loadTexture(disable(iconResearchPath, disabledPrefix));
+			final Texture iconResearchDisabled = gameUI.loadTexture(disable(iconResearchPath, this.disabledPrefix));
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
-			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
+			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
 			final Texture iconTurnOff = gameUI.loadTexture(iconTurnOffPath);
-			final Texture iconTurnOffDisabled = gameUI.loadTexture(disable(iconTurnOffPath, disabledPrefix));
+			final Texture iconTurnOffDisabled = gameUI.loadTexture(disable(iconTurnOffPath, this.disabledPrefix));
 
 			final List<String> casterArt = Arrays.asList(abilityTypeData.getFieldAsString(CASTER_ART, 0).split(","));
 			final List<String> targetArt = Arrays.asList(abilityTypeData.getFieldAsString(TARGET_ART, 0).split(","));
@@ -157,7 +158,7 @@ public class AbilityDataUI {
 			final String iconUberTip = abilityTypeData.getFieldAsString(UNIT_UBER_TIP, 0);
 			final char iconHotkey = getHotkey(abilityTypeData, UNIT_HOTKEY);
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
-			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
+			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
 			this.rawcodeToUnitUI.put(alias, new UnitIconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY,
 					iconTip, iconUberTip, iconHotkey, reviveTip, awakenTip));
 		}
@@ -171,7 +172,7 @@ public class AbilityDataUI {
 			final String iconDescription = abilityTypeData.getFieldAsString(ITEM_DESCRIPTION, 0);
 			final char iconHotkey = getHotkey(abilityTypeData, ITEM_HOTKEY);
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
-			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
+			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
 			this.rawcodeToItemUI
 					.put(alias,
 							new ItemUI(
@@ -192,29 +193,29 @@ public class AbilityDataUI {
 						.trySkinField(upgradeTypeData.getFieldAsString(UPGRADE_ICON_NORMAL, i));
 				final char iconHotkey = getHotkey(upgradeTypeData, UPGRADE_HOTKEY, i);
 				final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
-				final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, disabledPrefix));
+				final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
 				upgradeIconsByLevel.add(new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip,
 						iconUberTip, iconHotkey));
 			}
 			this.rawcodeToUpgradeUI.put(alias, upgradeIconsByLevel);
 		}
-		this.moveUI = createBuiltInIconUI(gameUI, "CmdMove", disabledPrefix);
-		this.stopUI = createBuiltInIconUI(gameUI, "CmdStop", disabledPrefix);
-		this.holdPosUI = createBuiltInIconUI(gameUI, "CmdHoldPos", disabledPrefix);
-		this.patrolUI = createBuiltInIconUI(gameUI, "CmdPatrol", disabledPrefix);
-		this.attackUI = createBuiltInIconUI(gameUI, "CmdAttack", disabledPrefix);
-		this.buildHumanUI = createBuiltInIconUI(gameUI, "CmdBuildHuman", disabledPrefix);
-		this.buildOrcUI = createBuiltInIconUI(gameUI, "CmdBuildOrc", disabledPrefix);
-		this.buildNightElfUI = createBuiltInIconUI(gameUI, "CmdBuildNightElf", disabledPrefix);
-		this.buildUndeadUI = createBuiltInIconUI(gameUI, "CmdBuildUndead", disabledPrefix);
-		this.buildNagaUI = createBuiltInIconUI(gameUI, "CmdBuildNaga", disabledPrefix);
-		this.buildNeutralUI = createBuiltInIconUI(gameUI, "CmdBuild", disabledPrefix);
-		this.attackGroundUI = createBuiltInIconUI(gameUI, "CmdAttackGround", disabledPrefix);
-		this.cancelUI = createBuiltInIconUI(gameUI, "CmdCancel", disabledPrefix);
-		this.cancelBuildUI = createBuiltInIconUI(gameUI, "CmdCancelBuild", disabledPrefix);
-		this.cancelTrainUI = createBuiltInIconUI(gameUI, "CmdCancelTrain", disabledPrefix);
-		this.rallyUI = createBuiltInIconUI(gameUI, "CmdRally", disabledPrefix);
-		this.selectSkillUI = createBuiltInIconUI(gameUI, "CmdSelectSkill", disabledPrefix);
+		this.moveUI = createBuiltInIconUI(gameUI, "CmdMove", this.disabledPrefix);
+		this.stopUI = createBuiltInIconUI(gameUI, "CmdStop", this.disabledPrefix);
+		this.holdPosUI = createBuiltInIconUI(gameUI, "CmdHoldPos", this.disabledPrefix);
+		this.patrolUI = createBuiltInIconUI(gameUI, "CmdPatrol", this.disabledPrefix);
+		this.attackUI = createBuiltInIconUI(gameUI, "CmdAttack", this.disabledPrefix);
+		this.buildHumanUI = createBuiltInIconUI(gameUI, "CmdBuildHuman", this.disabledPrefix);
+		this.buildOrcUI = createBuiltInIconUI(gameUI, "CmdBuildOrc", this.disabledPrefix);
+		this.buildNightElfUI = createBuiltInIconUI(gameUI, "CmdBuildNightElf", this.disabledPrefix);
+		this.buildUndeadUI = createBuiltInIconUI(gameUI, "CmdBuildUndead", this.disabledPrefix);
+		this.buildNagaUI = createBuiltInIconUI(gameUI, "CmdBuildNaga", this.disabledPrefix);
+		this.buildNeutralUI = createBuiltInIconUI(gameUI, "CmdBuild", this.disabledPrefix);
+		this.attackGroundUI = createBuiltInIconUI(gameUI, "CmdAttackGround", this.disabledPrefix);
+		this.cancelUI = createBuiltInIconUI(gameUI, "CmdCancel", this.disabledPrefix);
+		this.cancelBuildUI = createBuiltInIconUI(gameUI, "CmdCancelBuild", this.disabledPrefix);
+		this.cancelTrainUI = createBuiltInIconUI(gameUI, "CmdCancelTrain", this.disabledPrefix);
+		this.rallyUI = createBuiltInIconUI(gameUI, "CmdRally", this.disabledPrefix);
+		this.selectSkillUI = createBuiltInIconUI(gameUI, "CmdSelectSkill", this.disabledPrefix);
 	}
 
 	private char getHotkey(final MutableGameObject abilityTypeData, final War3ID abilityHotkeyNormal) {
@@ -277,7 +278,7 @@ public class AbilityDataUI {
 		return null;
 	}
 
-	private static String disable(final String path, final String disabledPrefix) {
+	public static String disable(final String path, final String disabledPrefix) {
 		final int slashIndex = path.lastIndexOf('\\');
 		String name = path;
 		if (slashIndex != -1) {
@@ -354,4 +355,7 @@ public class AbilityDataUI {
 		return this.selectSkillUI;
 	}
 
+	public String getDisabledPrefix() {
+		return this.disabledPrefix;
+	}
 }

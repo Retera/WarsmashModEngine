@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListene
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
@@ -469,28 +470,28 @@ public class CPlayer extends CBasePlayer {
 		return this.handicap;
 	}
 
-	public void fireAbilityEffectEventsTarget(final CUnit spellAbilityUnit, final CUnit spellTargetUnit,
-			final War3ID alias) {
+	public void fireAbilityEffectEventsTarget(final CAbility spellAbility, final CUnit spellAbilityUnit,
+			final CUnit spellTargetUnit, final War3ID alias) {
 		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT);
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
 				event.fire(spellAbilityUnit,
 						CommonTriggerExecutionScope.unitSpellEffectTargetScope(
-								JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT, event.getTrigger(), spellAbilityUnit,
-								spellTargetUnit, alias));
+								JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT, event.getTrigger(), spellAbility,
+								spellAbilityUnit, spellTargetUnit, alias));
 			}
 		}
 	}
 
-	public void fireAbilityEffectEventsPoint(final CUnit spellAbilityUnit, final AbilityPointTarget abilityPointTarget,
-			final War3ID alias) {
+	public void fireAbilityEffectEventsPoint(final CAbility spellAbility, final CUnit spellAbilityUnit,
+			final AbilityPointTarget abilityPointTarget, final War3ID alias) {
 		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT);
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
 				event.fire(spellAbilityUnit,
 						CommonTriggerExecutionScope.unitSpellEffectPointScope(
-								JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT, event.getTrigger(), spellAbilityUnit,
-								abilityPointTarget, alias));
+								JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT, event.getTrigger(), spellAbility,
+								spellAbilityUnit, abilityPointTarget, alias));
 			}
 		}
 	}

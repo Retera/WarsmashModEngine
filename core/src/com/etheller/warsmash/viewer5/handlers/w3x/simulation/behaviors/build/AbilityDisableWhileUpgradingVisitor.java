@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.G
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
@@ -153,6 +154,14 @@ public class AbilityDisableWhileUpgradingVisitor implements CAbilityVisitor<Void
 	public Void accept(final CAbilityHero ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
+		return null;
+	}
+
+	@Override
+	public Void accept(final CAbilityJass ability) {
+		final boolean enabledWhileUpgrading = ability.getType().isEnabledWhileUpgrading();
+		ability.setDisabled(!enabledWhileUpgrading);
+		ability.setIconShowing(enabledWhileUpgrading);
 		return null;
 	}
 

@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.G
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
@@ -144,6 +145,14 @@ public class GetAbilityByRawcodeVisitor implements CAbilityVisitor<CLevelingAbil
 
 	@Override
 	public CLevelingAbility accept(final CAbilityHero ability) {
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final CAbilityJass ability) {
+		if (this.rawcode.equals(ability.getAlias())) {
+			return ability;
+		}
 		return null;
 	}
 

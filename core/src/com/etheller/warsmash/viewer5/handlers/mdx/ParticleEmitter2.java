@@ -39,14 +39,7 @@ public class ParticleEmitter2 extends MdxEmitter<MdxComplexInstance, ParticleEmi
 
 	@Override
 	protected void emit() {
-		if (this.emitterObject.head) {
-			this.emitObject(0);
-		}
-
-		if (this.emitterObject.tail) {
-			this.emitObject(1);
-		}
-
+		emitObject(this.emitterObject.headOrTail.ordinal());
 	}
 
 	@Override

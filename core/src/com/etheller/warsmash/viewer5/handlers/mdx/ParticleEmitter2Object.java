@@ -24,8 +24,7 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 	public int teamColored = 0;
 	public Texture internalTexture;
 	public long replaceableId;
-	public boolean head;
-	public boolean tail;
+	public HeadOrTail headOrTail;
 	public float cellWidth;
 	public float cellHeight;
 	public float[][] colors;
@@ -72,8 +71,7 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 
 		final HeadOrTail headOrTail = emitter.getHeadOrTail();
 
-		this.head = headOrTail.isIncludesHead();
-		this.tail = headOrTail.isIncludesTail();
+		this.headOrTail = headOrTail;
 
 		this.cellWidth = 1f / emitter.getColumns();
 		this.cellHeight = 1f / emitter.getRows();

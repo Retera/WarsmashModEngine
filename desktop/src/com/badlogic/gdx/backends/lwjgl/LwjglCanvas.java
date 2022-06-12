@@ -383,12 +383,10 @@ public class LwjglCanvas implements Application {
 		if (this.preferences.containsKey(name)) {
 			return this.preferences.get(name);
 		}
-		else {
-			final Preferences prefs = new LwjglPreferences(name, ".prefs/");
-			this.preferences.put(name, prefs);
-			return prefs;
-		}
-	}
+        final Preferences prefs = new LwjglPreferences(name, ".prefs/");
+        this.preferences.put(name, prefs);
+        return prefs;
+    }
 
 	@Override
 	public Clipboard getClipboard() {

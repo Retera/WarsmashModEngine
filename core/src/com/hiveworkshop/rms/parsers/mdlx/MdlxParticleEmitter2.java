@@ -82,29 +82,29 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 		}
 	}
 
-	public float speed = 0;
-	public float variation = 0;
-	public float latitude = 0;
-	public float gravity = 0;
-	public float lifeSpan = 0;
-	public float emissionRate = 0;
-	public float length = 0;
-	public float width = 0;
+	public float speed;
+	public float variation;
+	public float latitude;
+	public float gravity;
+	public float lifeSpan;
+	public float emissionRate;
+	public float length;
+	public float width;
 	public FilterMode filterMode = FilterMode.BLEND;
-	public long rows = 0;
-	public long columns = 0;
+	public long rows;
+	public long columns;
 	public HeadOrTail headOrTail = HeadOrTail.HEAD;
-	public float tailLength = 0;
-	public float timeMiddle = 0;
+	public float tailLength;
+	public float timeMiddle;
 	public final float[][] segmentColors = new float[3][3];
 	public short[] segmentAlphas = new short[3]; // unsigned byte[]
 	public float[] segmentScaling = new float[3];
 	public long[][] headIntervals = new long[2][3];
 	public long[][] tailIntervals = new long[2][3];
 	public int textureId = -1;
-	public long squirt = 0;
-	public int priorityPlane = 0;
-	public long replaceableId = 0;
+	public long squirt;
+	public int priorityPlane;
+	public long replaceableId;
 
 	public MdlxParticleEmitter2() {
 		super(0x1000);

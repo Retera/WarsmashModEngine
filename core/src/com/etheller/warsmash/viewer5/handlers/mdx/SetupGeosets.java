@@ -11,7 +11,7 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
 public class SetupGeosets {
 
 	public static void setupGeosets(final MdxModel model, final List<MdlxGeoset> geosets, final boolean bigNodeSpace) {
-		if (geosets.size() > 0) {
+		if (!geosets.isEmpty()) {
 			final GL20 gl = model.viewer.gl;
 			int positionBytes = 0;
 			int normalBytes = 0;

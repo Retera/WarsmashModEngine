@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,7 +18,7 @@ import java.util.Set;
 import com.etheller.warsmash.util.StringBundle;
 
 public class DataTable implements ObjectData {
-	public static boolean DEBUG = false;
+	public static boolean DEBUG;
 
 	Map<StringKey, Element> dataTable = new LinkedHashMap<>();
 
@@ -57,7 +58,7 @@ public class DataTable implements ObjectData {
 
 	public void readTXT(final File f, final boolean canProduce) {
 		try {
-			readTXT(new FileInputStream(f), canProduce);
+			readTXT(Files.newInputStream(f.toPath()), canProduce);
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -66,7 +67,7 @@ public class DataTable implements ObjectData {
 
 	public void readSLK(final File f) {
 		try {
-			readSLK(new FileInputStream(f));
+			readSLK(Files.newInputStream(f.toPath()));
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -242,39 +243,37 @@ public class DataTable implements ObjectData {
 					lastFieldId = fieldId;
 					continue;
 				}
-				else {
-					int eIndex = kInput.indexOf("K");
-					if ((eIndex == -1) || (kInput.charAt(eIndex - 1) != ';')) {
-						continue;
-					}
-					final int fieldId;
-					if (subXIndex < 0) {
-						if (lastFieldId == 0) {
-							rowStartCount++;
-						}
-						fieldId = lastFieldId + 1;
-					}
-					else {
-						if (flipMode && input.contains("Y") && (input == kInput)) {
-							eIndex = Math.min(subYIndex, eIndex);
-						}
-						final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
-						fieldId = Integer.parseInt(input.substring(subXIndex + 1, fieldIdEndIndex));
-					}
-
-					final int quotationIndex = kInput.indexOf("\"");
-					if ((fieldId - 1) >= dataNames.length) {
-						dataNames = Arrays.copyOf(dataNames, fieldId);
-					}
-					if (quotationIndex == -1) {
-						dataNames[fieldId - 1] = kInput.substring(eIndex + 1, kInput.length());
-					}
-					else {
-						dataNames[fieldId - 1] = kInput.substring(quotationIndex + 1, kInput.lastIndexOf("\""));
-					}
-					lastFieldId = fieldId;
+				int eIndex = kInput.indexOf("K");
+				if ((eIndex == -1) || (kInput.charAt(eIndex - 1) != ';')) {
 					continue;
 				}
+				final int fieldId;
+				if (subXIndex < 0) {
+					if (lastFieldId == 0) {
+						rowStartCount++;
+					}
+					fieldId = lastFieldId + 1;
+				}
+				else {
+					if (flipMode && input.contains("Y") && (input == kInput)) {
+						eIndex = Math.min(subYIndex, eIndex);
+					}
+					final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
+					fieldId = Integer.parseInt(input.substring(subXIndex + 1, fieldIdEndIndex));
+				}
+
+				final int quotationIndex = kInput.indexOf("\"");
+				if ((fieldId - 1) >= dataNames.length) {
+					dataNames = Arrays.copyOf(dataNames, fieldId);
+				}
+				if (quotationIndex == -1) {
+					dataNames[fieldId - 1] = kInput.substring(eIndex + 1, kInput.length());
+				}
+				else {
+					dataNames[fieldId - 1] = kInput.substring(quotationIndex + 1, kInput.lastIndexOf("\""));
+				}
+				lastFieldId = fieldId;
+				continue;
 			}
 			if (input.contains("X1;") || ((input != kInput) && input.endsWith("X1"))) {
 				final int start = kInput.indexOf("\"") + 1;

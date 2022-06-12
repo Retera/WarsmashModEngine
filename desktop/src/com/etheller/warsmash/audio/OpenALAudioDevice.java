@@ -50,7 +50,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
 /** @author Nathan Sweet */
 public class OpenALAudioDevice implements AudioDevice {
-	static private final int bytesPerSample = 2;
+	private static final int bytesPerSample = 2;
 
 	private final OpenALAudio audio;
 	private final int channels;

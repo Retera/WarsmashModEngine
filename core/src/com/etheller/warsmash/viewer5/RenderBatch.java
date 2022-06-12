@@ -11,7 +11,7 @@ public abstract class RenderBatch {
 	public Model<?> model;
 	public TextureMapper textureMapper;
 	public List<ModelInstance> instances = new ArrayList<>();
-	public int count = 0;
+	public int count;
 
 	public abstract void render();
 

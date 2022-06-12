@@ -100,10 +100,10 @@ public class Huffman {
 		
 	private boolean adjustProbability;
 	
-	private Node nodes = null;
+	private Node nodes;
 	private TreeMap<Integer, Node> sorted2 = new TreeMap<Integer, Node>();
 	
-	private Node root = null;
+	private Node root;
 	private Node[] valueToNode = new Node[0x102];
 	
 	private int bitBuffer;

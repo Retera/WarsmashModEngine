@@ -16,7 +16,7 @@ public class UdpServerTestMain {
 	public static void main(final String[] args) {
 		try {
 			warsmashGameServer = new UdpServer(WarsmashConstants.PORT_NUMBER, new UdpServerListener() {
-				int n = 0;
+				int n;
 				ByteBuffer sendBuffer = ByteBuffer.allocate(1024);
 
 				@Override

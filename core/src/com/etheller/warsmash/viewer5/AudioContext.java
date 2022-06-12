@@ -1,7 +1,7 @@
 package com.etheller.warsmash.viewer5;
 
 public class AudioContext {
-	private boolean running = false;
+	private boolean running;
 	public Listener listener;
 	public AudioDestination destination;
 
@@ -94,13 +94,11 @@ public class AudioContext {
 				}
 			};
 		}
-		else {
-			return new AudioPanner(this.listener) {
-				@Override
-				public void connect(final AudioDestination destination) {
-				}
-			};
-		}
+		return new AudioPanner(this.listener) {
+			@Override
+			public void connect(final AudioDestination destination) {
+			}
+		};
 	}
 
 	public AudioBufferSource createBufferSource() {

@@ -128,7 +128,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 					receiver.targetOk(target);
 					return;
 				}
-				else if ((this.carriedResourceType != null) && (ability instanceof CAbilityReturnResources)) {
+				if ((this.carriedResourceType != null) && (ability instanceof CAbilityReturnResources)) {
 					final CAbilityReturnResources abilityReturn = (CAbilityReturnResources) ability;
 					if (abilityReturn.accepts(this.carriedResourceType)) {
 						receiver.targetOk(target);

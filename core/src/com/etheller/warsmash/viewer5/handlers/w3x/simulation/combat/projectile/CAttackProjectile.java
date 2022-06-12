@@ -98,17 +98,13 @@ public class CAttackProjectile {
 		if (this.unitAttack.isProjectileHomingEnabled() && (this.unitAttack.getWeaponType() != CWeaponType.ARTILLERY)) {
 			return this.target.getX();
 		}
-		else {
-			return this.initialTargetX;
-		}
+		return this.initialTargetX;
 	}
 
 	public float getTargetY() {
 		if (this.unitAttack.isProjectileHomingEnabled() && (this.unitAttack.getWeaponType() != CWeaponType.ARTILLERY)) {
 			return this.target.getY();
 		}
-		else {
-			return this.initialTargetY;
-		}
+		return this.initialTargetY;
 	}
 }

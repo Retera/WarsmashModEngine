@@ -13,7 +13,7 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 	private final AbilityActivationErrorHandler genericError;
 	private final AbilityActivationErrorHandler cooldownError;
 
-	private boolean ok = false;
+	private boolean ok;
 	private CommandErrorListener commandErrorListener;
 	private AudioContext worldSceneAudioContext;
 	private RenderUnit commandedUnit;

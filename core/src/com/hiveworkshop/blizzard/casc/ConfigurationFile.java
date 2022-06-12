@@ -87,7 +87,7 @@ public class ConfigurationFile {
 					record = line;
 				}
 
-				if (!record.equals("")) {
+				if (!record.isEmpty()) {
 					final int assignmentIndex = record.indexOf('=');
 					if (assignmentIndex == -1) {
 						throw new MalformedCASCStructureException(

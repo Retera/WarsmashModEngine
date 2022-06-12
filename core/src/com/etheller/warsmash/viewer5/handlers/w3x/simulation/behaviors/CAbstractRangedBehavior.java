@@ -12,9 +12,9 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	}
 
 	protected AbilityTarget target;
-	private boolean wasWithinPropWindow = false;
-	private boolean wasInRange = false;
-	private boolean disableMove = false;
+	private boolean wasWithinPropWindow;
+	private boolean wasInRange;
+	private boolean disableMove;
 	private CBehaviorMove moveBehavior;
 
 	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target) {
@@ -92,14 +92,9 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 				facing += angleToAdd;
 				this.unit.setFacing(facing);
 			}
-			if (absDelta < propulsionWindow) {
-				this.wasWithinPropWindow = true;
-			}
-			else {
-				// If this happens, the unit is facing the wrong way, and has to turn before
-				// moving.
-				this.wasWithinPropWindow = false;
-			}
+			// If absDelta >= propulsionWindow, the unit is facing the wrong way, and has to turn before
+			// moving.
+			this.wasWithinPropWindow = absDelta < propulsionWindow;
 		}
 		else {
 			this.wasWithinPropWindow = true;

@@ -250,7 +250,7 @@ public class AbilityDataUI {
 			}
 			return (char) hotkeyInt;
 		}
-		return hotkeyString.length() > 0 ? hotkeyString.charAt(0) : '\0';
+		return !hotkeyString.isEmpty() ? hotkeyString.charAt(0) : '\0';
 	}
 
 	public AbilityUI getUI(final War3ID rawcode) {
@@ -271,9 +271,7 @@ public class AbilityDataUI {
 			if (level < upgradeUI.size()) {
 				return upgradeUI.get(level);
 			}
-			else {
-				return upgradeUI.get(upgradeUI.size() - 1);
-			}
+			return upgradeUI.get(upgradeUI.size() - 1);
 		}
 		return null;
 	}

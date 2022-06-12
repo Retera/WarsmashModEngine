@@ -47,17 +47,17 @@ public class MdxComplexInstance extends ModelInstance {
 	public List<EventObjectEmitter<?, ?>> eventObjectEmitters = new ArrayList<>();
 	public MdxNode[] nodes;
 	public SkeletalNode[] sortedNodes;
-	public int frame = 0;
-	public float floatingFrame = 0;
+	public int frame;
+	public float floatingFrame;
 	// Global sequences
-	public int counter = 0;
+	public int counter;
 	public int sequence = -1;
 	public SequenceLoopMode sequenceLoopMode = SequenceLoopMode.NEVER_LOOP;
-	public boolean sequenceEnded = false;
+	public boolean sequenceEnded;
 	public float[] vertexColor = { 1, 1, 1, 1 };
 	// Particles do not spawn when the sequence is -1, or when the sequence finished
 	// and it's not repeating
-	public boolean allowParticleSpawn = false;
+	public boolean allowParticleSpawn;
 	// If forced is true, everything will update regardless of variancy.
 	// Any later non-forced update can then use variancy to skip updating things.
 	// It is set to true every time the sequence is set with setSequence().
@@ -76,8 +76,8 @@ public class MdxComplexInstance extends ModelInstance {
 	private float animationSpeed = 1.0f;
 	private float blendTime;
 	private float blendTimeRemaining;
-	public boolean additiveOverrideMeshMode = false;
-	private boolean hasAnyUnselectableMesh = false;
+	public boolean additiveOverrideMeshMode;
+	private boolean hasAnyUnselectableMesh;
 
 	public MdxComplexInstance(final MdxModel model) {
 		super(model);
@@ -209,7 +209,7 @@ public class MdxComplexInstance extends ModelInstance {
 		// the model loaded.
 		this.setSequence(this.sequence);
 
-		if (model.bones.size() != 0) {
+		if (!model.bones.isEmpty()) {
 			this.boneTexture = new DataTexture(model.viewer.gl, 4, model.bones.size() * 4, 1);
 		}
 	}
@@ -562,7 +562,7 @@ public class MdxComplexInstance extends ModelInstance {
 		final MdxModel model = (MdxModel) this.model;
 		final int sequenceId = this.sequence;
 
-		if ((sequenceId != -1) && (model.sequences.size() != 0)) {
+		if ((sequenceId != -1) && (!model.sequences.isEmpty())) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
 			final float frameTime = (dt * 1000 * this.animationSpeed);
@@ -810,19 +810,15 @@ public class MdxComplexInstance extends ModelInstance {
 		if (this.sequence == -1) {
 			return this.model.bounds;
 		}
-		else {
-			if (((MdxModel) this.model).sequences.isEmpty()) {
-				System.err.println("Printing diagnostics for corrupted state MdxComplexInstance (about to crash)");
-				System.err.println("Model name: " + ((MdxModel) this.model).name);
-			}
-			final Bounds sequenceBounds = ((MdxModel) this.model).sequences.get(this.sequence).getBounds();
-			if (sequenceBounds.r == 0) {
-				return this.model.bounds;
-			}
-			else {
-				return sequenceBounds;
-			}
+		if (((MdxModel) this.model).sequences.isEmpty()) {
+			System.err.println("Printing diagnostics for corrupted state MdxComplexInstance (about to crash)");
+			System.err.println("Model name: " + ((MdxModel) this.model).name);
 		}
+		final Bounds sequenceBounds = ((MdxModel) this.model).sequences.get(this.sequence).getBounds();
+		if (sequenceBounds.r == 0) {
+			return this.model.bounds;
+		}
+		return sequenceBounds;
 	}
 
 	public boolean intersectRayBounds(final Ray ray, final Vector3 intersection) {

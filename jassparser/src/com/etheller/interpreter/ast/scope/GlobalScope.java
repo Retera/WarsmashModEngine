@@ -159,9 +159,7 @@ public final class GlobalScope {
 		if (type != null) {
 			return type;
 		}
-		else {
-			throw new RuntimeException("Unknown type: " + text);
-		}
+		throw new RuntimeException("Unknown type: " + text);
 	}
 
 	public JassType parseArrayType(final String primitiveTypeName) {

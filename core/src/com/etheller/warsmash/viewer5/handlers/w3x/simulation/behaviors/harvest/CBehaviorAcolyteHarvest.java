@@ -16,7 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 	private final CAbilityAcolyteHarvest abilityAcolyteHarvest;
-	private boolean harvesting = false;
+	private boolean harvesting;
 	private float harvestStandX, harvestStandY;
 
 	public CBehaviorAcolyteHarvest(final CUnit unit, final CAbilityAcolyteHarvest abilityWispHarvest) {
@@ -37,7 +37,7 @@ public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 				simulation.getCommandErrorListener().showBlightRingFullError(this.unit.getPlayerIndex());
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
-			else if (result == HarvestStartResult.ACCEPTED) {
+			if (result == HarvestStartResult.ACCEPTED) {
 				this.harvesting = true;
 			}
 			else {

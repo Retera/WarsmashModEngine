@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
 
 /**
  *
@@ -31,7 +32,7 @@ public class TgaFile {
 	 * @throws IOException
 	 */
 	public static BufferedImage readTGA(final File file) throws FileNotFoundException, IOException {
-		return readTGA(file.getName(), new FileInputStream(file));
+		return readTGA(file.getName(), Files.newInputStream(file.toPath()));
 
 	}
 

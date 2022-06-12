@@ -28,11 +28,7 @@ public class SetupSimpleGroups {
 
 		layer.getAlpha(alphaHeap, 0, 0, 0);
 
-		if (alphaHeap[0] < 0.01) {
-			return false;
-		}
-
-		return true;
+		return !(alphaHeap[0] < 0.01);
 	}
 
 	public static void setupSimpleGroups(final MdxModel model) {

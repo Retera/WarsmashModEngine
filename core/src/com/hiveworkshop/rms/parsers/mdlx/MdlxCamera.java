@@ -9,9 +9,9 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 public class MdlxCamera extends MdlxAnimatedObject {
 	public String name = "";
 	public float[] position = new float[3];
-	public float fieldOfView = 0;
-	public float farClippingPlane = 0;
-	public float nearClippingPlane = 0;
+	public float fieldOfView;
+	public float farClippingPlane;
+	public float nearClippingPlane;
 	public float[] targetPosition = new float[3];
 
 	@Override

@@ -10,7 +10,7 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxGeosetAnimation extends MdlxAnimatedObject {
 	public float alpha = 1;
-	public int flags = 0;
+	public int flags;
 	public float[] color = { 1, 1, 1 };
 	public int geosetId = -1;
 

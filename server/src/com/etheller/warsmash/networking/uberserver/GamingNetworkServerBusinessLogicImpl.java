@@ -204,10 +204,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 				killSession(session);
 				return null;
 			}
-			else {
-				session.notifyUsed(mostRecentConnectionContext);
-				return session;
-			}
+			session.notifyUsed(mostRecentConnectionContext);
+			return session;
 		}
 		return null;
 	}

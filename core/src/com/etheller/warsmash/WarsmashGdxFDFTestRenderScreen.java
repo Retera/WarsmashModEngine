@@ -72,8 +72,8 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 	private TestUI menuUI;
 	private final WarsmashGdxMultiScreenGame game;
 	private Music currentMusic;
-	private boolean hasPlayedStandHack = false;
-	private boolean loaded = false;
+	private boolean hasPlayedStandHack;
+	private boolean loaded;
 	private final String finalFileToLoad;
 
 	public WarsmashGdxFDFTestRenderScreen(final DataTable warsmashIni, final WarsmashGdxMultiScreenGame game,

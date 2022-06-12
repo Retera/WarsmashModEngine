@@ -102,7 +102,7 @@ public abstract class Sd<TYPE> {
 		// type.
 		this.interpolationType = forcedInterp != null ? forcedInterp : timeline.getInterpolationType().ordinal();
 
-		if ((globalSequenceId != -1) && (globalSequences.size() > 0)) {
+		if ((globalSequenceId != -1) && (!globalSequences.isEmpty())) {
 			this.globalSequence = new SdSequence<TYPE>(this, 0, globalSequences.get(globalSequenceId).longValue(),
 					timeline, true, arrayDescriptor);
 		}
@@ -121,23 +121,19 @@ public abstract class Sd<TYPE> {
 			return this.globalSequence.getValue(out,
 					this.globalSequence.end == 0 ? 0 : counter % this.globalSequence.end);
 		}
-		else if ((sequence != -1) && (this.sequences.size() > sequence)) {
+		if ((sequence != -1) && (this.sequences.size() > sequence)) {
 			return this.sequences.get(sequence).getValue(out, frame);
 		}
-		else {
-			this.copy(out, this.defval);
+		this.copy(out, this.defval);
 
-			return -1;
-		}
+		return -1;
 	}
 
 	public boolean isVariant(final int sequence) {
 		if (this.globalSequence != null) {
 			return !this.globalSequence.constant;
 		}
-		else {
-			return !this.sequences.get(sequence).constant;
-		}
+		return !this.sequences.get(sequence).constant;
 	}
 
 	protected abstract TYPE convertDefaultValue(float[] defaultValue);

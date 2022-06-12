@@ -69,7 +69,7 @@ public final class MutableObjectData {
 					final String[] names = name.split(" ");
 					name = "";
 					for (final String subName : names) {
-						if (name.length() > 0) {
+						if (!name.isEmpty()) {
 							name += " ";
 						}
 						if (subName.startsWith("WESTRING")) {
@@ -715,7 +715,7 @@ public final class MutableObjectData {
 					final String[] names = name.split(" ");
 					name = "";
 					for (final String subName : names) {
-						if (name.length() > 0) {
+						if (!name.isEmpty()) {
 							name += " ";
 						}
 						// if (subName.startsWith("WESTRING")) {
@@ -733,7 +733,7 @@ public final class MutableObjectData {
 				name = MutableObjectData.this.worldEditStrings.getString("WESTRING_UNKNOWN") + " '"
 						+ getAlias().toString() + "'";
 			}
-			if ((suf.length() > 0) && !suf.equals("_")) {
+			if ((!suf.isEmpty()) && !suf.equals("_")) {
 				// if (suf.startsWith("WESTRING")) {
 				// suf = WEString.getString(suf);
 				// }
@@ -762,17 +762,17 @@ public final class MutableObjectData {
 					if (ROC_SUPPORT_URAC.equals(field)) {
 						return this.parentWC3Object.getField("race");
 					}
-					else if (ROC_SUPPORT_UCAM.equals(field)) {
+					if (ROC_SUPPORT_UCAM.equals(field)) {
 						return "0";
 					}
-					else if (ROC_SUPPORT_USPE.equals(field)) {
+					if (ROC_SUPPORT_USPE.equals(field)) {
 						return this.parentWC3Object.getField("special");
 					}
-					else if (ROC_SUPPORT_UBDG.equals(field)) {
+					if (ROC_SUPPORT_UBDG.equals(field)) {
 						return this.parentWC3Object.getField("isbldg");
 					}
 				}
-				throw new IllegalStateException("Program requested " + field.toString() + " from "
+				throw new IllegalStateException("Program requested " + field + " from "
 						+ MutableObjectData.this.worldEditorDataType);
 			}
 			if (this.parentWC3Object == null) {
@@ -827,11 +827,9 @@ public final class MutableObjectData {
 					if (matchingChange.getVartype() == War3ObjectDataChangeset.VAR_TYPE_INT) {
 						return matchingChange.getLongval() == 1;
 					}
-					else {
-						throw new IllegalStateException(
-								"Requested boolean value of '" + field + "' from '" + this.parentWC3Object.getId()
-										+ "', but this field was not a bool! vartype=" + matchingChange.getVartype());
-					}
+					throw new IllegalStateException(
+							"Requested boolean value of '" + field + "' from '" + this.parentWC3Object.getId()
+									+ "', but this field was not a bool! vartype=" + matchingChange.getVartype());
 				}
 				return matchingChange.isBoolval();
 			}
@@ -880,18 +878,14 @@ public final class MutableObjectData {
 						|| (MutableObjectData.this.worldEditorDataType == WorldEditorDataType.BUFFS_EFFECTS)) {
 					return War3ID.fromString(this.parentWC3Object.getField("code"));
 				}
-				else {
-					return War3ID.fromString(this.parentWC3Object.getId());
-				}
+				return War3ID.fromString(this.parentWC3Object.getId());
 			}
 			if (War3ID.NONE.equals(this.customUnitData.getNewId())) {
 				if ((MutableObjectData.this.worldEditorDataType == WorldEditorDataType.ABILITIES)
 						|| (MutableObjectData.this.worldEditorDataType == WorldEditorDataType.BUFFS_EFFECTS)) {
 					return War3ID.fromString(this.parentWC3Object.getField("code"));
 				}
-				else {
-					return this.customUnitData.getOldId();
-				}
+				return this.customUnitData.getOldId();
 			}
 			return this.customUnitData.getOldId();
 		}
@@ -903,12 +897,12 @@ public final class MutableObjectData {
 			return 0;
 		}
 		return text == null ? 0
-				: "".equals(text) ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Integer.parseInt(text);
+				: text.isEmpty() ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Integer.parseInt(text);
 	}
 
 	private static float asFloat(final String text) {
 		return text == null ? 0
-				: "".equals(text) ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Float.parseFloat(text);
+				: text.isEmpty() ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Float.parseFloat(text);
 	}
 
 	public enum WorldEditorDataType {

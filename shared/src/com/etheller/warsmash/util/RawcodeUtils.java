@@ -13,7 +13,7 @@ public final class RawcodeUtils {
 	 * @param id the string to convert
 	 * @return integer representation of the string.
 	 */
-	public final static int toInt(final String id) {
+	public static final int toInt(final String id) {
 		final byte[] bytes = id.getBytes(StandardCharsets.US_ASCII);
 		int result = 0;
 		if (bytes.length >= 4) {
@@ -37,7 +37,7 @@ public final class RawcodeUtils {
 	 * @param id the integer to convert
 	 * @return four character string representing the integer.
 	 */
-	public final static String toString(final int id) {
+	public static final String toString(final int id) {
 		final StringBuffer result = new StringBuffer(4);
 
 		return toString(id, result);

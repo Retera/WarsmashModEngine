@@ -19,17 +19,15 @@ public class CodeCounter {
 			}
 			return sum;
 		}
-		else {
-			try {
-				if (file.getName().toLowerCase().endsWith(".java")) {
-					return Files.readAllLines(file.toPath()).size();
-				}
+		try {
+			if (file.getName().toLowerCase().endsWith(".java")) {
+				return Files.readAllLines(file.toPath()).size();
 			}
-			catch (final IOException e) {
-				e.printStackTrace();
-			}
-			return 0;
 		}
+		catch (final IOException e) {
+			e.printStackTrace();
+		}
+		return 0;
 	}
 
 }

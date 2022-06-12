@@ -6,7 +6,7 @@ import com.hiveworkshop.rms.util.BinaryReader;
 import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxExtent {
-	public float boundsRadius = 0;
+	public float boundsRadius;
 	public float[] min = new float[3];
 	public float[] max = new float[3];
 

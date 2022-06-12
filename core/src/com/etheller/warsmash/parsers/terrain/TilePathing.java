@@ -1,9 +1,9 @@
 package com.etheller.warsmash.parsers.terrain;
 
 public class TilePathing {
-	boolean unwalkable = false;
-	boolean unflyable = false;
-	boolean unbuildable = false;
+	boolean unwalkable;
+	boolean unflyable;
+	boolean unbuildable;
 
 	public byte mask() {
 		byte mask = 0;

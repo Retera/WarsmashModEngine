@@ -21,7 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 
 public class CBehaviorMove implements CBehavior {
-	private static boolean ALWAYS_INTERRUPT_MOVE = false;
+	private static boolean ALWAYS_INTERRUPT_MOVE;
 
 	private static final Rectangle tempRect = new Rectangle();
 	private final CUnit unit;
@@ -33,17 +33,17 @@ public class CBehaviorMove implements CBehavior {
 		this.targetVisitingResetter = new TargetVisitingResetter();
 	}
 
-	private boolean wasWithinPropWindow = false;
-	private List<Point2D.Float> path = null;
+	private boolean wasWithinPropWindow;
+	private List<Point2D.Float> path;
 	private CPathfindingProcessor.GridMapping gridMapping;
 	private Point2D.Float target;
-	private int searchCycles = 0;
+	private int searchCycles;
 	private CUnit followUnit;
 	private CRangedBehavior rangedBehavior;
 	private boolean firstUpdate = true;
-	private boolean disableCollision = false;
-	private boolean pathfindingActive = false;
-	private boolean firstPathfindJob = false;
+	private boolean disableCollision;
+	private boolean pathfindingActive;
+	private boolean firstPathfindJob;
 	private boolean pathfindingFailedGiveUp;
 	private int giveUpUntilTurnTick;
 
@@ -251,64 +251,62 @@ public class CBehaviorMove implements CBehavior {
 							onMoveGiveUp(simulation);
 							return this.unit.pollNextOrderBehavior(simulation);
 						}
-						else {
-							System.out.println(this.path);
-							final Float removed = this.path.remove(0);
-							System.out.println(
-									"We think we reached  " + removed + " because we are at " + nextX + "," + nextY);
-							final boolean emptyPath = this.path.isEmpty();
-							if (emptyPath) {
-								if (this.followUnit != null) {
-									currentTargetX = this.followUnit.getX();
-									currentTargetY = this.followUnit.getY();
-								}
-								else {
-									currentTargetX = this.target.x;
-									currentTargetY = this.target.y;
-								}
+						System.out.println(this.path);
+						final Float removed = this.path.remove(0);
+						System.out.println(
+								"We think we reached  " + removed + " because we are at " + nextX + "," + nextY);
+						final boolean emptyPath = this.path.isEmpty();
+						if (emptyPath) {
+							if (this.followUnit != null) {
+								currentTargetX = this.followUnit.getX();
+								currentTargetY = this.followUnit.getY();
 							}
 							else {
-								if ((this.followUnit != null) && (this.path.size() == 1)) {
-									currentTargetX = this.followUnit.getX();
-									currentTargetY = this.followUnit.getY();
-								}
-								else {
-									final Point2D.Float firstPathElement = this.path.get(0);
-									currentTargetX = firstPathElement.x;
-									currentTargetY = firstPathElement.y;
-								}
+								currentTargetX = this.target.x;
+								currentTargetY = this.target.y;
 							}
-							deltaY = currentTargetY - nextY;
-							deltaX = currentTargetX - nextX;
-							if ((deltaX == 0.000f) && (deltaY == 0.000f) && this.path.isEmpty()) {
-								onMoveGiveUp(simulation);
-								return this.unit.pollNextOrderBehavior(simulation);
+						}
+						else {
+							if ((this.followUnit != null) && (this.path.size() == 1)) {
+								currentTargetX = this.followUnit.getX();
+								currentTargetY = this.followUnit.getY();
 							}
-							System.out.println("new target: " + currentTargetX + "," + currentTargetY);
-							System.out.println("new delta: " + deltaX + "," + deltaY);
-							goalAngleRad = Math.atan2(deltaY, deltaX);
-							goalAngle = (float) Math.toDegrees(goalAngleRad);
-							if (goalAngle < 0) {
-								goalAngle += 360;
+							else {
+								final Point2D.Float firstPathElement = this.path.get(0);
+								currentTargetX = firstPathElement.x;
+								currentTargetY = firstPathElement.y;
 							}
-							facing = this.unit.getFacing();
-							delta = goalAngle - facing;
+						}
+						deltaY = currentTargetY - nextY;
+						deltaX = currentTargetX - nextX;
+						if ((deltaX == 0.000f) && (deltaY == 0.000f) && this.path.isEmpty()) {
+							onMoveGiveUp(simulation);
+							return this.unit.pollNextOrderBehavior(simulation);
+						}
+						System.out.println("new target: " + currentTargetX + "," + currentTargetY);
+						System.out.println("new delta: " + deltaX + "," + deltaY);
+						goalAngleRad = Math.atan2(deltaY, deltaX);
+						goalAngle = (float) Math.toDegrees(goalAngleRad);
+						if (goalAngle < 0) {
+							goalAngle += 360;
+						}
+						facing = this.unit.getFacing();
+						delta = goalAngle - facing;
 
-							if (delta < -180) {
-								delta = 360 + delta;
+						if (delta < -180) {
+							delta = 360 + delta;
+						}
+						if (delta > 180) {
+							delta = -360 + delta;
+						}
+						absDelta = Math.abs(delta);
+						if (absDelta >= propulsionWindow) {
+							if (this.wasWithinPropWindow) {
+								this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
+										SequenceUtils.EMPTY, 1.0f, true);
 							}
-							if (delta > 180) {
-								delta = -360 + delta;
-							}
-							absDelta = Math.abs(delta);
-							if (absDelta >= propulsionWindow) {
-								if (this.wasWithinPropWindow) {
-									this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
-											SequenceUtils.EMPTY, 1.0f, true);
-								}
-								this.wasWithinPropWindow = false;
-								return this;
-							}
+							this.wasWithinPropWindow = false;
+							return this;
 						}
 					}
 				}

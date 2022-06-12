@@ -44,7 +44,7 @@ import com.jcraft.jorbis.Info;
  * @author kevin
  */
 public class OggInputStream extends InputStream {
-	private final static int BUFFER_SIZE = 512;
+	private static final int BUFFER_SIZE = 512;
 
 	/** The conversion buffer size */
 	private int convsize = BUFFER_SIZE * 4;
@@ -77,13 +77,13 @@ public class OggInputStream extends InputStream {
 	/** Temporary scratch buffer */
 	byte[] buffer;
 	/** The number of bytes read */
-	int bytes = 0;
+	int bytes;
 	/** The true if we should be reading big endian */
 	boolean bigEndian = ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN);
 	/** True if we're reached the end of the current bit stream */
 	boolean endOfBitStream = true;
 	/** True if we're initialise the OGG info block */
-	boolean inited = false;
+	boolean inited;
 
 	/** The index into the byte array we currently read from */
 	private int readIndex;
@@ -405,11 +405,9 @@ public class OggInputStream extends InputStream {
 										throw new GdxRuntimeException("Ogg block too big to be buffered: "
 												+ bytesToWrite + ", " + (this.outBuffer.length - this.outIndex));
 									}
-									else {
-										System.arraycopy(this.convbuffer, 0, this.outBuffer, this.outIndex,
-												bytesToWrite);
-										this.outIndex += bytesToWrite;
-									}
+									System.arraycopy(this.convbuffer, 0, this.outBuffer, this.outIndex,
+											bytesToWrite);
+									this.outIndex += bytesToWrite;
 
 									wrote = true;
 									this.dspState.synthesis_read(bout); // tell libvorbis how

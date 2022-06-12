@@ -15,7 +15,7 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 
 	private boolean enabled = true;
 	private boolean highlightOnMouseOver;
-	private boolean mouseOver = false;
+	private boolean mouseOver;
 
 	private UIFrame activeChild;
 

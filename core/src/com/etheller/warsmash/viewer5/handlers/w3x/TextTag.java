@@ -8,7 +8,7 @@ public class TextTag {
 	private float screenCoordsZHeight;
 	private final String text;
 	private final Color color;
-	private float lifetime = 0;
+	private float lifetime;
 
 	public TextTag(final Vector3 position, final String text, final Color color) {
 		this.position = position;

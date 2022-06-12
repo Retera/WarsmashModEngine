@@ -58,11 +58,11 @@ public class RenderUnit implements RenderWidget {
 	private boolean swimming;
 	private boolean working;
 
-	private boolean dead = false;
+	private boolean dead;
 
 	private UnitAnimationListenerImpl unitAnimationListenerImpl;
 	private OrientationInterpolation orientationInterpolation;
-	private float currentTurnVelocity = 0;
+	private float currentTurnVelocity;
 	public long lastUnitResponseEndTimeMillis;
 	private boolean corpse;
 	private boolean boneCorpse;
@@ -188,18 +188,16 @@ public class RenderUnit implements RenderWidget {
 			this.instance.hide();
 			return;
 		}
-		else {
-			this.instance.show();
-			if (wasHidden) {
-				if (this.selectionCircle != null) {
-					this.selectionCircle.show(map.terrain.centerOffset);
-				}
-				if (this.selectionPreviewHighlight != null) {
-					this.selectionPreviewHighlight.show(map.terrain.centerOffset);
-				}
-				if (this.shadow != null) {
-					this.shadow.show(map.terrain.centerOffset);
-				}
+		this.instance.show();
+		if (wasHidden) {
+			if (this.selectionCircle != null) {
+				this.selectionCircle.show(map.terrain.centerOffset);
+			}
+			if (this.selectionPreviewHighlight != null) {
+				this.selectionPreviewHighlight.show(map.terrain.centerOffset);
+			}
+			if (this.shadow != null) {
+				this.shadow.show(map.terrain.centerOffset);
 			}
 		}
 		final float prevX = this.location[0];

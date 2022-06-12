@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -174,7 +175,7 @@ public final class War3ObjectDataChangeset {
 			this.kind = 'u';
 			return false;
 		}
-		else if (ABILITY_ID_SET.contains(chid)) {
+		if (ABILITY_ID_SET.contains(chid)) {
 			this.kind = 'a';
 		}
 		else {
@@ -470,10 +471,10 @@ public final class War3ObjectDataChangeset {
 		if ("int".equals(name) || "bool".equals(name)) {
 			return 0;
 		}
-		else if ("real".equals(name)) {
+		if ("real".equals(name)) {
 			return 1;
 		}
-		else if ("unreal".equals(name)) {
+		if ("unreal".equals(name)) {
 			return 2;
 		}
 		return 3; // string
@@ -630,10 +631,10 @@ public final class War3ObjectDataChangeset {
 
 	private static int getWTSValue(final Change change) {
 		String numberAsText = change.getStrval().substring(8);
-		while ((numberAsText.length() > 0) && (numberAsText.charAt(0) == '0')) {
+		while ((!numberAsText.isEmpty()) && (numberAsText.charAt(0) == '0')) {
 			numberAsText = numberAsText.substring(1);
 		}
-		if (numberAsText.length() == 0) {
+		if (numberAsText.isEmpty()) {
 			return 0;
 		}
 		while (!Character.isDigit(numberAsText.charAt(numberAsText.length() - 1))) {
@@ -663,7 +664,7 @@ public final class War3ObjectDataChangeset {
 	}
 
 	public boolean load(final File file, final WTS wts, final boolean inlineWTS) throws IOException {
-		try (LittleEndianDataInputStream inputStream = new LittleEndianDataInputStream(new FileInputStream(file))) {
+		try (LittleEndianDataInputStream inputStream = new LittleEndianDataInputStream(Files.newInputStream(file.toPath()))) {
 			final boolean result = load(inputStream, wts, inlineWTS);
 			return result;
 		}

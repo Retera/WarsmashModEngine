@@ -46,12 +46,10 @@ public class RenderSpellEffect implements RenderEffect {
 			}
 			return everythingDone;
 		}
-		else {
-			this.animationQueueIndex = 0;
-			playNextAnimation();
-			;
-			return false;
-		}
+		this.animationQueueIndex = 0;
+		playNextAnimation();
+		;
+		return false;
 	}
 
 	private void playNextAnimation() {

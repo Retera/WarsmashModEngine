@@ -53,11 +53,9 @@ public class COrderDropItemAtTargetWidget implements COrder {
 			final CUnit targetHero = (CUnit) game.getWidget(this.targetHeroHandleId);
 			return ability.beginDropItem(game, caster, this.orderId, itemToDrop, targetHero);
 		}
-		else {
-			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
-					this.abilityActivationReceiver.getMessage());
-			return caster.pollNextOrderBehavior(game);
-		}
+		game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
+				this.abilityActivationReceiver.getMessage());
+		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
@@ -96,10 +94,7 @@ public class COrderDropItemAtTargetWidget implements COrder {
 		if (this.queued != other.queued) {
 			return false;
 		}
-		if (this.targetHeroHandleId != other.targetHeroHandleId) {
-			return false;
-		}
-		return true;
+		return this.targetHeroHandleId == other.targetHeroHandleId;
 	}
 
 }

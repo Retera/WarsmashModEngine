@@ -25,10 +25,10 @@ public class CPathfindingProcessor {
 	private final Node[][] nodes;
 	private final Node[][] cornerNodes;
 	private final Node[] goalSet = new Node[4];
-	private int goals = 0;
-	private int pathfindJobId = 0;
-	private int totalIterations = 0;
-	private int totalJobLoops = 0;
+	private int goals;
+	private int pathfindJobId;
+	private int totalIterations;
+	private int totalJobLoops;
 	private final int pathingGridCellCount;
 
 	public CPathfindingProcessor(final PathingGrid pathingGrid, final CWorldCollision worldCollision) {

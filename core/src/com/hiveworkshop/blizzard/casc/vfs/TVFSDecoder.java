@@ -35,22 +35,22 @@ public class TVFSDecoder {
 	 */
 	private static final int VALUE_PATH_STRING_LENGTH = 0xFF;
 
-	private byte version = 0;
-	private int flags = 0;
-	private int encodingKeySize = 0;
-	private int patchKeySize = 0;
-	private int pathOffset = 0;
-	private int pathSize = 0;
-	private int fileReferenceOffset = 0;
-	private int fileReferenceSize = 0;
-	private int cascReferenceOffset = 0;
-	private int cascReferenceSize = 0;
-	private int maximumPathDepth = 0;
+	private byte version;
+	private int flags;
+	private int encodingKeySize;
+	private int patchKeySize;
+	private int pathOffset;
+	private int pathSize;
+	private int fileReferenceOffset;
+	private int fileReferenceSize;
+	private int cascReferenceOffset;
+	private int cascReferenceSize;
+	private int maximumPathDepth;
 
-	private int contentsOffsetSize = 0;
-	private ByteBuffer pathBuffer = null;
-	private ByteBuffer logicalBuffer = null;
-	private ByteBuffer storageBuffer = null;
+	private int contentsOffsetSize;
+	private ByteBuffer pathBuffer;
+	private ByteBuffer logicalBuffer;
+	private ByteBuffer storageBuffer;
 
 	/**
 	 * The offset into the content buffer is a special type that uses the minimum

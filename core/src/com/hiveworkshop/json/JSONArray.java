@@ -244,7 +244,8 @@ public class JSONArray implements Iterable<Object> {
                 || (object instanceof String && ((String) object)
                         .equalsIgnoreCase("false"))) {
             return false;
-        } else if (object.equals(Boolean.TRUE)
+        }
+        if (object.equals(Boolean.TRUE)
                 || (object instanceof String && ((String) object)
                         .equalsIgnoreCase("true"))) {
             return true;

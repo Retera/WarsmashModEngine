@@ -10,8 +10,8 @@ public class DataTexture {
 	public int texture;
 	public int format;
 	public int internalFormat;
-	public int width = 0;
-	public int height = 0;
+	public int width;
+	public int height;
 
 	public DataTexture(final GL20 gl, final int channels, final int width, final int height) {
 		this.gl = gl;

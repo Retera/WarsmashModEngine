@@ -71,11 +71,9 @@ public class WebGL {
 		if (shaderProgram.isCompiled()) {
 			return shaderProgram;
 		}
-		else {
-			System.err.println(shaderProgram.getLog());
-			if (true) {
-				throw new IllegalStateException("Bad shader");
-			}
+		System.err.println(shaderProgram.getLog());
+		if (true) {
+			throw new IllegalStateException("Bad shader");
 		}
 		return null;
 	}

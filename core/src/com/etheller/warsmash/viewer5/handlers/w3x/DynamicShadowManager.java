@@ -9,7 +9,7 @@ import com.etheller.warsmash.viewer5.gl.Extensions;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 
 public class DynamicShadowManager {
-	public static boolean IS_SHADOW_MAPPING = false;
+	public static boolean IS_SHADOW_MAPPING;
 
 	private final Vector3 shadowVector = new Vector3();
 	private final Matrix4 depthProjectionMatrix = new Matrix4();

@@ -114,9 +114,7 @@ public class CAbilityMove extends AbstractCAbility {
 			caster.setDefaultBehavior(patrolBehavior);
 			return patrolBehavior;
 		}
-		else {
-			return caster.getMoveBehavior().reset(OrderIds.move, point);
-		}
+		return caster.getMoveBehavior().reset(OrderIds.move, point);
 	}
 
 	@Override

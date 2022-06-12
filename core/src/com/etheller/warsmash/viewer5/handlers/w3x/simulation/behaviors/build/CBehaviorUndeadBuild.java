@@ -26,8 +26,8 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 	private static int delayAnimationTicks = (int) (2.267f / WarsmashConstants.SIMULATION_STEP_TIME);
 	private int highlightOrderId;
 	private War3ID orderId;
-	private boolean unitCreated = false;
-	private int doneTick = 0;
+	private boolean unitCreated;
+	private int doneTick;
 	private final BuildOnBuildingIntersector buildOnBuildingIntersector;
 
 	public CBehaviorUndeadBuild(final CUnit unit) {

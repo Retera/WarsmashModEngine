@@ -7,12 +7,12 @@ import com.hiveworkshop.rms.util.BinaryReader;
 import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxParticleEmitterPopcorn extends MdlxGenericObject {
-	public float lifeSpan = 0;
-	public float emissionRate = 0;
-	public float speed = 0;
-	public float[] color = new float[] { 1, 1, 1 };
-	public float alpha = 0;
-	public int replaceableId = 0;
+	public float lifeSpan;
+	public float emissionRate;
+	public float speed;
+	public float[] color = { 1, 1, 1 };
+	public float alpha;
+	public int replaceableId;
 	public String path = "";
 	public String animationVisiblityGuide = "";
 
@@ -161,11 +161,11 @@ public class MdlxParticleEmitterPopcorn extends MdlxGenericObject {
 			stream.writeAttrib("ReplaceableId", this.replaceableId);
 		}
 
-		if (this.path.length() != 0) {
+		if (!this.path.isEmpty()) {
 			stream.writeStringAttrib("Path", this.path);
 		}
 
-		if (this.animationVisiblityGuide.length() != 0) {
+		if (!this.animationVisiblityGuide.isEmpty()) {
 			stream.writeStringAttrib("AnimVisibilityGuide", this.animationVisiblityGuide);
 		}
 

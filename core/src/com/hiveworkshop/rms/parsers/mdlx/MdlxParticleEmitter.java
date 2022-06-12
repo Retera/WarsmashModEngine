@@ -9,13 +9,13 @@ import com.hiveworkshop.rms.util.BinaryReader;
 import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxParticleEmitter extends MdlxGenericObject {
-	public float emissionRate = 0;
-	public float gravity = 0;
-	public float longitude = 0;
-	public float latitude = 0;
+	public float emissionRate;
+	public float gravity;
+	public float longitude;
+	public float latitude;
 	public String path = "";
-	public float lifeSpan = 0;
-	public float speed = 0;
+	public float lifeSpan;
+	public float speed;
 
 	public MdlxParticleEmitter() {
 		super(0x1000);

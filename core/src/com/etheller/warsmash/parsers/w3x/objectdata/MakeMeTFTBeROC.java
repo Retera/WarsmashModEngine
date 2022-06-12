@@ -2,6 +2,8 @@ package com.etheller.warsmash.parsers.w3x.objectdata;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
@@ -85,7 +87,7 @@ public class MakeMeTFTBeROC {
 			}
 
 			try (LittleEndianDataOutputStream outputStream = new LittleEndianDataOutputStream(
-					new FileOutputStream("C:\\Users\\micro\\OneDrive\\Documents\\Warcraft III\\Data\\roc.w3u"))) {
+					Files.newOutputStream(Paths.get("C:\\Users\\micro\\OneDrive\\Documents\\Warcraft III\\Data\\roc.w3u")))) {
 				frozenThroneUnitData.getUnits().getEditorData().save(outputStream, false);
 			}
 

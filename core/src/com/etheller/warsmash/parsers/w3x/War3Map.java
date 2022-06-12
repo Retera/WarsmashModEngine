@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -64,7 +65,7 @@ public class War3Map implements DataSource {
 			// 2.) Setup a Data Source that will read assets
 			// from either the map or the game, giving the map priority.
 			SeekableByteChannel sbc;
-			try (InputStream mapStream = new FileInputStream(mapFileName)) {
+			try (InputStream mapStream = Files.newInputStream(mapFileName.toPath())) {
 				final byte[] mapData = IOUtils.toByteArray(mapStream);
 				sbc = new SeekableInMemoryByteChannel(mapData);
 				this.internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);

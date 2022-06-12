@@ -9,8 +9,8 @@ public class CBehaviorAttackMove implements CRangedBehavior {
 
 	private final CUnit unit;
 	private AbilityPointTarget target;
-	private boolean justAutoAttacked = false;
-	private boolean endedMove = false;
+	private boolean justAutoAttacked;
+	private boolean endedMove;
 
 	public CBehaviorAttackMove(final CUnit unit) {
 		this.unit = unit;

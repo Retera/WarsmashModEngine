@@ -58,7 +58,8 @@ public class BLTEContent {
 		if (headerSize == 0L) {
 			storageBuffer.position(storageBuffer.position() + contentBuffer.position());
 			return new BLTEContent[0];
-		} else if (headerSize > contentBuffer.capacity()) {
+		}
+		if (headerSize > contentBuffer.capacity()) {
 			throw new MalformedCASCStructureException("BLTE header extends beyond storage buffer bounds");
 		}
 

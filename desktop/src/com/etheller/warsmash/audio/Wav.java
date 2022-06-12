@@ -26,7 +26,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.StreamUtils;
 
 public class Wav {
-	static public class Music extends OpenALMusic {
+	public static class Music extends OpenALMusic {
 		private WavInputStream input;
 
 		public Music(final OpenALAudio audio, final FileHandle file) {
@@ -59,7 +59,7 @@ public class Wav {
 		}
 	}
 
-	static public class Sound extends OpenALSound {
+	public static class Sound extends OpenALSound {
 		public Sound(final OpenALAudio audio, final FileHandle file) {
 			super(audio);
 			if (audio.noDevice) {
@@ -81,7 +81,7 @@ public class Wav {
 	}
 
 	/** @author Nathan Sweet */
-	static public class WavInputStream extends FilterInputStream {
+	public static class WavInputStream extends FilterInputStream {
 
 		public int channels, sampleRate, dataRemaining;
 

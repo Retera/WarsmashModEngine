@@ -61,7 +61,7 @@ public class Terrain {
 	private static final Vector3 normalHeap2 = new Vector3();
 	private static final float[] fourComponentHeap = new float[4];
 	private static final Matrix4 tempMatrix = new Matrix4();
-	public static boolean WIREFRAME_TERRAIN = false;
+	public static boolean WIREFRAME_TERRAIN;
 	// In WC3 they didn't finish developing the height 3 ramps
 	// There are a couple of models for some of them but generally they are just bad
 	// voodoo. Enabling this setting should be coupled with creating
@@ -131,7 +131,7 @@ public class Terrain {
 	public final SoftwareGroundMesh softwareGroundMesh;
 	private final int testArrayBuffer;
 	private final int testElementBuffer;
-	private boolean initShadowsFinished = false;
+	private boolean initShadowsFinished;
 	private byte[] staticShadowData;
 	private byte[] shadowData;
 
@@ -368,7 +368,7 @@ public class Terrain {
 		int waterImageDimension = 128;
 		for (int i = 0; i < this.waterTextureCount; i++) {
 			final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
-					fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt, "water texture");
+					fileName + (i < 10 ? "0" : "") + i + texturesExt, "water texture");
 			final BufferedImage image = imageInfo.getImageData();
 			if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
 				System.err
@@ -655,10 +655,7 @@ public class Terrain {
 								}
 							}
 							if (!invalidRamp) {
-								String fileName = "" + getRampLetter(topLeftHeight, topLeft.isRamp())
-										+ getRampLetter(topRightHeight, topRight.isRamp())
-										+ getRampLetter(bottomRightHeight, bottomRight.isRamp())
-										+ getRampLetter(bottomLeftHeight, bottomLeft.isRamp());
+								String fileName = String.valueOf(getRampLetter(topLeftHeight, topLeft.isRamp())) + getRampLetter(topRightHeight, topRight.isRamp()) + getRampLetter(bottomRightHeight, bottomRight.isRamp()) + getRampLetter(bottomLeftHeight, bottomLeft.isRamp());
 
 								final String rampModelDir = this.cliffTextures.get(bottomLeftCliffTex).rampModelDir;
 								fileName = "Doodads\\Terrain\\" + rampModelDir + "\\" + rampModelDir + fileName
@@ -712,10 +709,7 @@ public class Terrain {
 
 					// Cliff model path
 
-					String fileName = "" + (char) (('A' + topLeft.getLayerHeight()) - base)
-							+ (char) (('A' + topRight.getLayerHeight()) - base)
-							+ (char) (('A' + bottomRight.getLayerHeight()) - base)
-							+ (char) (('A' + bottomLeft.getLayerHeight()) - base);
+					String fileName = String.valueOf((char) (('A' + topLeft.getLayerHeight()) - base)) + (char) (('A' + topRight.getLayerHeight()) - base) + (char) (('A' + bottomRight.getLayerHeight()) - base) + (char) (('A' + bottomLeft.getLayerHeight()) - base);
 
 					if ("AAAA".equals(fileName)) {
 						continue;
@@ -911,21 +905,15 @@ public class Terrain {
 			if (variation <= 15) {
 				return (short) (16 + variation);
 			}
-			else if (variation == 16) {
+			if (variation == 16) {
 				return 15;
 			}
-			else {
-				return 0;
-			}
+			return 0;
 		}
-		else {
-			if (variation == 0) {
-				return 0;
-			}
-			else {
-				return 15;
-			}
+		if (variation == 0) {
+			return 0;
 		}
+		return 15;
 	}
 
 	public void update(final float deltaTime) {
@@ -1190,7 +1178,7 @@ public class Terrain {
 			this.shadowTextures.put(file, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null));
 		}
 		final List<float[]> shadowList = this.shadows.get(file);
-		final float[] shadowPositionArray = new float[] { shadowX, shadowY };
+		final float[] shadowPositionArray = { shadowX, shadowY };
 		shadowList.add(shadowPositionArray);
 		if (this.initShadowsFinished) {
 			final Texture texture = this.shadowTextures.get(file);
@@ -1622,9 +1610,7 @@ public class Terrain {
 				throw new IllegalArgumentException("Invalid ramp");
 			}
 		}
-		else {
-			return (char) ('A' + layerHeightOffset);
-		}
+		return (char) ('A' + layerHeightOffset);
 	}
 
 	public float[] getDefaultCameraBounds() {

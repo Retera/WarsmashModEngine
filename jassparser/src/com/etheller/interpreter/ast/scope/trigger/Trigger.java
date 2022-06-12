@@ -19,7 +19,7 @@ public class Trigger implements CHandle {
 	private int execCount;
 	private boolean enabled = true;
 	// used for eval
-	private transient final TriggerExecutionScope triggerExecutionScope = new TriggerExecutionScope(this);
+	private final transient TriggerExecutionScope triggerExecutionScope = new TriggerExecutionScope(this);
 	private boolean waitOnSleeps = true;
 
 	public int addAction(final JassFunction function) {

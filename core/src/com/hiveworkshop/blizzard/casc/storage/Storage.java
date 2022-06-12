@@ -94,7 +94,7 @@ public class Storage implements AutoCloseable {
 	/**
 	 * Used to track closed status of the store.
 	 */
-	private boolean closed = false;
+	private boolean closed;
 
 	private boolean useMemoryMapping;
 

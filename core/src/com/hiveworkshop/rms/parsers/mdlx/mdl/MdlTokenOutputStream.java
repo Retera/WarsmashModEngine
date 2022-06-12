@@ -2,7 +2,7 @@ package com.hiveworkshop.rms.parsers.mdlx.mdl;
 
 public class MdlTokenOutputStream {
 	public final StringBuilder buffer = new StringBuilder();
-	public int ident = 0;
+	public int ident;
 	public int fractionDigits = 6;
 
 	public void writeKeyframe(final String prefix, final long uInt32Value) {
@@ -31,12 +31,12 @@ public class MdlTokenOutputStream {
 	}
 
 	public void startBlock(final String name, final int blockSize) {
-		writeLine(name + " " + blockSize + " {" + "");
+		writeLine(name + " " + blockSize + " {");
 		this.ident += 1;
 	}
 
 	public void startBlock(final String name) {
-		writeLine(name + " {" + "");
+		writeLine(name + " {");
 		this.ident += 1;
 	}
 
@@ -120,7 +120,7 @@ public class MdlTokenOutputStream {
 	}
 
 	public void startBlock(final String tokenFaces, final int sizeNumberProbably, final int length) {
-		writeLine(tokenFaces + " " + sizeNumberProbably + " " + length + " {" + "");
+		writeLine(tokenFaces + " " + sizeNumberProbably + " " + length + " {");
 		this.ident += 1;
 	}
 
@@ -146,9 +146,7 @@ public class MdlTokenOutputStream {
 		if (s.length() > f.length()) {
 			return f;
 		}
-		else {
-			return s;
-		}
+		return s;
 	}
 
 	private String formatFloatArray(final float[] value) {

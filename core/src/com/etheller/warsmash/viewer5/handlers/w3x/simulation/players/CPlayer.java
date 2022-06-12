@@ -39,8 +39,8 @@ public class CPlayer extends CBasePlayer {
 			JassGameEventsWar3.class);
 
 	// Player state data
-	private boolean givesBounty = false;
-	private boolean alliedVictory = false;
+	private boolean givesBounty;
+	private boolean alliedVictory;
 	private int gameResult;
 	private int placed;
 	private boolean observerOnDeath;
@@ -278,15 +278,13 @@ public class CPlayer extends CBasePlayer {
 		if (!includeInProgress) {
 			return this.heroes.size();
 		}
-		else {
-			int heroInProgressCount = 0;
-			for (final Map.Entry<War3ID, Integer> entry : this.rawcodeToTechtreeInProgress.entrySet()) {
-				if (game.getUnitData().getUnitType(entry.getKey()).isHero()) {
-					heroInProgressCount += entry.getValue();
-				}
+		int heroInProgressCount = 0;
+		for (final Map.Entry<War3ID, Integer> entry : this.rawcodeToTechtreeInProgress.entrySet()) {
+			if (game.getUnitData().getUnitType(entry.getKey()).isHero()) {
+				heroInProgressCount += entry.getValue();
 			}
-			return this.heroes.size() + heroInProgressCount;
 		}
+		return this.heroes.size() + heroInProgressCount;
 	}
 
 	public void fireHeroLevelEvents(final CUnit hero) {
@@ -447,9 +445,7 @@ public class CPlayer extends CBasePlayer {
 	public boolean isTechtreeAllowedByMax(final War3ID techtree) {
 		final int techtreeMaxAllowed = getTechtreeMaxAllowed(techtree);
 		if (techtreeMaxAllowed > 0) {
-			if (getTechtreeUnlockedOrInProgress(techtree) >= techtreeMaxAllowed) {
-				return false;
-			}
+			return getTechtreeUnlockedOrInProgress(techtree) < techtreeMaxAllowed;
 		}
 		return true;
 	}

@@ -88,11 +88,9 @@ public abstract class SubframeEncoder {
 			accumulator |= x;
 		if (accumulator == 0)
 			return 0;
-		else {
-			int result = Long.numberOfTrailingZeros(accumulator);
-			assert 0 <= result && result <= 63;
-			return result;
-		}
+		int result = Long.numberOfTrailingZeros(accumulator);
+		assert 0 <= result && result <= 63;
+		return result;
 	}
 	
 	

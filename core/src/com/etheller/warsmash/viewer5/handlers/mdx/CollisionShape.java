@@ -87,10 +87,7 @@ public class CollisionShape extends GenericObject {
 		public boolean checkIntersect(final Ray ray, final MdxNode mdxNode, final Vector3 intersection) {
 			intersectHeap.set(this.center);
 			intersectHeap.prj(mdxNode.worldMatrix);
-			if (Intersector.intersectRaySphere(ray, intersectHeap, this.radius, intersection)) {
-				return true;
-			}
-			return false;
+			return Intersector.intersectRaySphere(ray, intersectHeap, this.radius, intersection);
 		}
 	}
 

@@ -37,9 +37,8 @@ public abstract class Hex {
 	public static byte decodeNibble(final int codePoint) {
 		if (codePoint > CHAR_VALUES.length) {
 			return NO_VALUE;
-		} else {
-			return CHAR_VALUES[codePoint];
 		}
+		return CHAR_VALUES[codePoint];
 	}
 
 	public static byte[] decodeHex(final CharSequence hex) {

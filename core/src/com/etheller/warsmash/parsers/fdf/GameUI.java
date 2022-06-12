@@ -296,7 +296,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			add(simpleFrame);
 			return simpleFrame;
 		}
-		else if (frameDefinition.getFrameClass() == FrameClass.Frame) {
+		if (frameDefinition.getFrameClass() == FrameClass.Frame) {
 			final UIFrame inflated = inflate(frameDefinition, owner, null, frameDefinition.has("DecorateFileNames"));
 			if (this.autoPosition) {
 				inflated.positionBounds(this, this.viewport);

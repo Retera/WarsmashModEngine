@@ -7,17 +7,17 @@ import com.hiveworkshop.rms.util.BinaryReader;
 import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxRibbonEmitter extends MdlxGenericObject {
-	public float heightAbove = 0;
-	public float heightBelow = 0;
-	public float alpha = 0;
+	public float heightAbove;
+	public float heightBelow;
+	public float alpha;
 	public float[] color = new float[3];
-	public float lifeSpan = 0;
-	public long textureSlot = 0;
-	public long emissionRate = 0;
-	public long rows = 0;
-	public long columns = 0;
-	public int materialId = 0;
-	public float gravity = 0;
+	public float lifeSpan;
+	public long textureSlot;
+	public long emissionRate;
+	public long rows;
+	public long columns;
+	public int materialId;
+	public float gravity;
 
 	public MdlxRibbonEmitter() {
 		super(0x4000);

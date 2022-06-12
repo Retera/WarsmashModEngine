@@ -86,7 +86,7 @@ public class WarsmashPreviewApplication extends ApplicationAdapter implements Ca
 		Gdx.gl30.glBindVertexArray(VAO);
 	}
 
-	private int frame = 0;
+	private int frame;
 	private MdxComplexInstance mainInstance;
 	private MdxModel mainModel;
 	private com.etheller.warsmash.viewer5.handlers.mdx.Camera modelCamera;
@@ -104,7 +104,7 @@ public class WarsmashPreviewApplication extends ApplicationAdapter implements Ca
 
 		this.frame++;
 		if ((this.frame % 1000) == 0) {
-			System.out.println(Integer.toString(Gdx.graphics.getFramesPerSecond()));
+			System.out.println(Gdx.graphics.getFramesPerSecond());
 		}
 
 	}

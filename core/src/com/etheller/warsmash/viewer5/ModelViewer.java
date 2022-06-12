@@ -202,14 +202,10 @@ public abstract class ModelViewer {
 
 				return resource;
 			}
-			else {
-				throw new IllegalStateException("Missing handler for: " + finalSrc);
-			}
+			throw new IllegalStateException("Missing handler for: " + finalSrc);
 		}
-		else {
-			throw new IllegalStateException(
-					"Could not resolve " + finalSrc + ". Did you forget to pass a path solver?");
-		}
+		throw new IllegalStateException(
+				"Could not resolve " + finalSrc + ". Did you forget to pass a path solver?");
 
 	}
 
@@ -282,7 +278,7 @@ public abstract class ModelViewer {
 	public boolean unload(final Resource resource) {
 		// TODO Auto-generated method stub
 		final String fetchUrl = resource.fetchUrl;
-		if (!"".equals(fetchUrl)) {
+		if (fetchUrl == null || !fetchUrl.isEmpty()) {
 			this.fetchCache.remove(fetchUrl);
 		}
 		return this.resources.remove(resource);

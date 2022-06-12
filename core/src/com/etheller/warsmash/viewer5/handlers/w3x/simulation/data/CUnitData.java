@@ -288,7 +288,7 @@ public class CUnitData {
 			unit.setMana(manaInitial);
 		}
 		for (final String ability : unitTypeInstance.getAbilityList().split(",")) {
-			if ((ability.length() > 0) && !"_".equals(ability)) {
+			if ((!ability.isEmpty()) && !"_".equals(ability)) {
 				final CAbility createAbility = this.abilityData.createAbility(ability, handleIdAllocator.createId());
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);

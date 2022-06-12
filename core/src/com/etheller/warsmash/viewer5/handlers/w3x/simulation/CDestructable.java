@@ -98,14 +98,10 @@ public class CDestructable extends CWidget {
 			if (isDead()) {
 				return targetsAllowed.contains(CTargetType.DEAD);
 			}
-			else {
-				return !targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE);
-			}
+			return !targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE);
 		}
-		else {
-			System.err.println("Not targeting because " + targetsAllowed + " does not contain all of "
-					+ this.destType.getTargetedAs());
-		}
+		System.err.println("Not targeting because " + targetsAllowed + " does not contain all of "
+				+ this.destType.getTargetedAs());
 		return false;
 	}
 

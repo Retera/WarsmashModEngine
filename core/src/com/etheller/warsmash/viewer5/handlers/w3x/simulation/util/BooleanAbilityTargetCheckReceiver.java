@@ -7,7 +7,7 @@ public final class BooleanAbilityTargetCheckReceiver<TARGET_TYPE> implements Abi
 		return (BooleanAbilityTargetCheckReceiver<T>) INSTANCE;
 	}
 
-	private boolean targetable = false;
+	private boolean targetable;
 
 	public boolean isTargetable() {
 		return this.targetable;

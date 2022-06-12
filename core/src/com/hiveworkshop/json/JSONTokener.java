@@ -453,7 +453,7 @@ public class JSONTokener {
         }
 
         string = sb.toString().trim();
-        if ("".equals(string)) {
+        if (string.isEmpty()) {
             throw this.syntaxError("Missing value");
         }
         return JSONObject.stringToValue(string);
@@ -504,7 +504,7 @@ public class JSONTokener {
      * @return  A JSONException object, suitable for throwing
      */
     public JSONException syntaxError(String message) {
-        return new JSONException(message + this.toString());
+        return new JSONException(message + this);
     }
 
     /**
@@ -515,7 +515,7 @@ public class JSONTokener {
      * @return  A JSONException object, suitable for throwing
      */
     public JSONException syntaxError(String message, Throwable causedBy) {
-        return new JSONException(message + this.toString(), causedBy);
+        return new JSONException(message + this, causedBy);
     }
 
     /**

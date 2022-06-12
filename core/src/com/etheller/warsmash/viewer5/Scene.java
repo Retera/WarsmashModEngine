@@ -58,7 +58,7 @@ public abstract class Scene {
 	 *
 	 * If true, alpha works as usual.
 	 */
-	public boolean alpha = false;
+	public boolean alpha;
 	private final SceneLightManager lightManager;
 
 	public Scene(final ModelViewer viewer, final SceneLightManager lightManager) {

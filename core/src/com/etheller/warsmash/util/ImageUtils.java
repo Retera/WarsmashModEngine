@@ -56,29 +56,21 @@ public final class ImageUtils {
 							final BufferedImage tgaData = TgaFile.readTGA(tgaPath, tgaStream);
 							return new AnyExtensionImage(false, tgaData);
 						}
-						else {
-							final String ddsPath = path.substring(0, path.length() - 4) + ".dds";
-							try (final InputStream ddsStream = dataSource.getResourceAsStream(ddsPath)) {
-								if (ddsStream != null) {
-									final BufferedImage image = ImageIO.read(ddsStream);
-									return new AnyExtensionImage(false, image);
-								}
-								else {
-									throw new IllegalStateException("Missing " + errorType + ": " + path);
-								}
+						final String ddsPath = path.substring(0, path.length() - 4) + ".dds";
+						try (final InputStream ddsStream = dataSource.getResourceAsStream(ddsPath)) {
+							if (ddsStream != null) {
+								final BufferedImage image = ImageIO.read(ddsStream);
+								return new AnyExtensionImage(false, image);
 							}
+							throw new IllegalStateException("Missing " + errorType + ": " + path);
 						}
 					}
 				}
-				else {
-					final BufferedImage image = ImageIO.read(stream);
-					return new AnyExtensionImage(true, image);
-				}
+				final BufferedImage image = ImageIO.read(stream);
+				return new AnyExtensionImage(true, image);
 			}
 		}
-		else {
-			throw new IllegalStateException("Missing " + errorType + ": " + path);
-		}
+		throw new IllegalStateException("Missing " + errorType + ": " + path);
 	}
 
 	public static final class AnyExtensionImage {
@@ -112,9 +104,7 @@ public final class ImageUtils {
 						if (tgaStream == null) {
 							throw new IllegalStateException("missing resource: " + path);
 						}
-						else {
-							return TgaFile.readTGA(tgaPath, tgaStream);
-						}
+						return TgaFile.readTGA(tgaPath, tgaStream);
 					}
 				}
 				final BufferedImage image = ImageIO.read(resourceAsStream);

@@ -17,8 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 public class CBehaviorHolyLight extends CAbstractRangedBehavior {
 	private final CAbilityHolyLight ability;
 	private final AbilityTargetStillAliveAndTargetableVisitor stillAliveVisitor;
-	private int castStartTick = 0;
-	private boolean doneEffect = false;
+	private int castStartTick;
+	private boolean doneEffect;
 
 	public CBehaviorHolyLight(final CUnit unit, final CAbilityHolyLight ability) {
 		super(unit);

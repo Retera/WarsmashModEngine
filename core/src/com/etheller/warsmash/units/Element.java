@@ -24,7 +24,7 @@ public class Element extends HashedGameObject {
 		final String stringList = getField("Requiresamount");
 		final String[] listAsArray = stringList.split(",");
 		final LinkedList<Integer> output = new LinkedList<>();
-		if ((listAsArray != null) && (listAsArray.length > 0) && !listAsArray[0].equals("")) {
+		if ((listAsArray != null) && (listAsArray.length > 0) && !listAsArray[0].isEmpty()) {
 			for (final String levelString : listAsArray) {
 				final Integer level = Integer.parseInt(levelString);
 				if (level != null) {
@@ -83,7 +83,7 @@ public class Element extends HashedGameObject {
 	}
 
 	public void setTechTier(final int i) {
-		setField("Custom Field: TechTier", i + "");
+		setField("Custom Field: TechTier", String.valueOf(i));
 	}
 
 	public int getTechDepth() {
@@ -95,7 +95,7 @@ public class Element extends HashedGameObject {
 	}
 
 	public void setTechDepth(final int i) {
-		setField("Custom Field: TechDepth", i + "");
+		setField("Custom Field: TechDepth", String.valueOf(i));
 	}
 
 	public String getIconPath() {
@@ -145,7 +145,7 @@ public class Element extends HashedGameObject {
 				final String[] names = name.split(" ");
 				name = "";
 				for (final String subName : names) {
-					if (name.length() > 0) {
+					if (!name.isEmpty()) {
 						name += " ";
 					}
 					if (subName.startsWith("WESTRING")) {
@@ -171,7 +171,7 @@ public class Element extends HashedGameObject {
 			}
 		}
 		String suf = getField("EditorSuffix");
-		if ((suf.length() > 0) && !suf.equals("_")) {
+		if ((!suf.isEmpty()) && !suf.equals("_")) {
 			if (suf.startsWith("WESTRING")) {
 				suf = this.parentTable.getLocalizedString(suf);
 			}

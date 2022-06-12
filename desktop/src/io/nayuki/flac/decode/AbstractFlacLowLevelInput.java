@@ -203,10 +203,8 @@ public abstract class AbstractFlacLowLevelInput implements FlacLowLevelInput {
 		checkByteAligned();
 		if (bitBufferLen >= 8)
 			return readUint(8);
-		else {
-			assert bitBufferLen == 0;
-			return readUnderlying();
-		}
+		assert bitBufferLen == 0;
+		return readUnderlying();
 	}
 	
 	

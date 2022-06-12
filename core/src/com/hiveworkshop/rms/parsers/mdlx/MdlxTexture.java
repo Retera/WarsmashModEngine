@@ -34,7 +34,7 @@ public class MdlxTexture implements MdlxBlock {
 		}
 	}
 
-	public int replaceableId = 0;
+	public int replaceableId;
 	public String path = "";
 	public WrapMode wrapMode = WrapMode.REPEAT_BOTH;
 

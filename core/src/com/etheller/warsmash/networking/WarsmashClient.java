@@ -280,7 +280,7 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 		return this.writer;
 	}
 
-	private static abstract class QueuedMessage implements Runnable {
+	private abstract static class QueuedMessage implements Runnable {
 		private final int messageTurnTick;
 
 		public QueuedMessage(final int messageTurnTick) {

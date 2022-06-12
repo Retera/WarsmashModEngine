@@ -22,7 +22,7 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 	public String name = "";
 	public int objectId = -1;
 	public int parentId = -1;
-	public int flags = 0;
+	public int flags;
 
 	public MdlxGenericObject(final int flags) {
 		this.flags = flags;
@@ -174,7 +174,7 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 		private final MdlxGenericObject updatingObject;
 		private final MdlTokenInputStream stream;
 		private String next;
-		private boolean hasLoaded = false;
+		private boolean hasLoaded;
 
 		public WrappedMdlTokenIterator(final Iterator<String> delegate, final MdlxGenericObject updatingObject,
 				final MdlTokenInputStream stream) {

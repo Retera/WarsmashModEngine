@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+
 import io.nayuki.flac.common.StreamInfo;
 import io.nayuki.flac.decode.DataFormatException;
 import io.nayuki.flac.encode.BitOutputStream;
@@ -65,7 +67,7 @@ public final class EncodeWavToFlac {
 		int[][] samples;
 		int sampleRate;
 		int sampleDepth;
-		try (InputStream in = new BufferedInputStream(new FileInputStream(inFile))) {
+		try (InputStream in = new BufferedInputStream(Files.newInputStream(inFile.toPath()))) {
 			// Parse and check WAV header
 			if (!readString(in, 4).equals("RIFF"))
 				throw new DataFormatException("Invalid RIFF file header");

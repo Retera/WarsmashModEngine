@@ -170,7 +170,8 @@ public class Compression {
 		if( flip ){
 			bufferCache[size] = in;
 			return out;
-		}else return in;
+		}
+		return in;
 	}
 	
 	/**
@@ -259,7 +260,7 @@ public class Compression {
 	
 	public ByteBuffer blockDecompressAny(ByteBuffer block, ByteBuffer extra) throws DecompressionException{
 		if( blockDecompress(block, extra) ) return extra;
-		else return block;
+		return block;
 	}
 	
 	public void blockExplode(ByteBuffer block, ByteBuffer extra){

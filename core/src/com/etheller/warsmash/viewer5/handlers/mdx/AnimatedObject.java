@@ -131,21 +131,19 @@ public class AnimatedObject {
 		if (timeline instanceof MdlxUInt32Timeline) {
 			return new UInt32Sd(model, (MdlxUInt32Timeline) timeline);
 		}
-		else if (timeline instanceof MdlxFloatTimeline) {
+		if (timeline instanceof MdlxFloatTimeline) {
 			return new ScalarSd(model, (MdlxFloatTimeline) timeline);
 		}
-		else if (timeline instanceof MdlxFloatArrayTimeline) {
+		if (timeline instanceof MdlxFloatArrayTimeline) {
 			final MdlxFloatArrayTimeline faTimeline = (MdlxFloatArrayTimeline) timeline;
 			final int arraySize = faTimeline.getArraySize();
 			if (arraySize == 3) {
 				return new VectorSd(model, faTimeline);
 			}
-			else if (arraySize == 4) {
+			if (arraySize == 4) {
 				return new QuaternionSd(model, faTimeline);
 			}
-			else {
-				throw new IllegalStateException("Unsupported arraySize = " + arraySize);
-			}
+			throw new IllegalStateException("Unsupported arraySize = " + arraySize);
 		}
 		throw new IllegalStateException("Unsupported timeline type " + timeline.getClass());
 	}

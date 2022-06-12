@@ -33,7 +33,7 @@ import io.nayuki.flac.decode.DataFormatException;
 import io.nayuki.flac.decode.FlacDecoder;
 
 public class Flac {
-	static public class Music extends OpenALMusic {
+	public static class Music extends OpenALMusic {
 		private WavInputStream input;
 
 		public Music(final OpenALAudio audio, final FileHandle file) {
@@ -76,7 +76,7 @@ public class Flac {
 		}
 	}
 
-	static public class Sound extends OpenALSound {
+	public static class Sound extends OpenALSound {
 		public Sound(final OpenALAudio audio, final FileHandle file) {
 			super(audio);
 			if (audio.noDevice) {

@@ -194,8 +194,7 @@ public final class FrameDecoder {
 		// Equivalent check: (val >> (depth - 1)) == 0 || (val >> (depth - 1)) == -1
 		if (val >> (depth - 1) == val >> depth)
 			return (int)val;
-		else
-			throw new IllegalArgumentException(val + " is not a signed " + depth + "-bit value");
+		throw new IllegalArgumentException(val + " is not a signed " + depth + "-bit value");
 	}
 	
 	

@@ -191,7 +191,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private final DataSource gameDataSource;
 
 	public Terrain terrain;
-	public int renderPathing = 0;
+	public int renderPathing;
 	public int renderLighting = 1;
 
 	private final Set<String> selectedSplatModelKeys = new HashSet<>();
@@ -412,9 +412,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		if (this.mapMpq == null) {
 			return this.loadGeneric(path, dataType, callback);
 		}
-		else {
-			return this.loadGeneric(path, dataType, callback, this.dataSource);
-		}
+		return this.loadGeneric(path, dataType, callback, this.dataSource);
 	}
 
 	public static War3Map beginLoadingMap(final DataSource gameDataSource, final String mapFilePath)
@@ -424,9 +422,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			if (mapFile.exists()) {
 				return new War3Map(gameDataSource, mapFile);
 			}
-			else {
-				throw new IllegalArgumentException("No such map file: " + mapFilePath);
-			}
+			throw new IllegalArgumentException("No such map file: " + mapFilePath);
 		}
 		return new War3Map(gameDataSource, mapFilePath);
 	}
@@ -1211,7 +1207,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		for (final com.etheller.warsmash.parsers.w3x.doo.TerrainDoodad doodad : doo.getTerrainDoodads()) {
 			final MutableGameObject row = modifications.getDoodads().get(doodad.getId());
 			String file = row.readSLKTag("file");//
-			if ("".equals(file)) {
+			if (file != null && file.isEmpty()) {
 				final String blaBla = row.readSLKTag("file");
 				System.out.println("bla");
 			}
@@ -1225,7 +1221,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 			final String pathingTexture = row.readSLKTag("pathTex");
 			BufferedImage pathingTextureImage;
-			if ((pathingTexture != null) && (pathingTexture.length() > 0) && !"_".equals(pathingTexture)) {
+			if ((pathingTexture != null) && (!pathingTexture.isEmpty()) && !"_".equals(pathingTexture)) {
 
 				pathingTextureImage = this.filePathToPathingMap.get(pathingTexture.toLowerCase());
 				if (pathingTextureImage == null) {
@@ -1293,7 +1289,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final float maxPitch = row.readSLKTagFloat("maxPitch");
 		final float maxRoll = row.readSLKTagFloat("maxRoll");
 		final String shadowString = row.readSLKTag("shadow");
-		if ((shadowString != null) && (shadowString.length() > 0) && !"_".equals(shadowString)) {
+		if ((shadowString != null) && (!shadowString.isEmpty()) && !"_".equals(shadowString)) {
 			destructableShadow = this.terrain.addShadow(shadowString, location[0], location[1]);
 		}
 
@@ -1695,33 +1691,29 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				}
 				return simulationUnit;
 			}
-			else {
 
-				final CItem simulationItem = this.simulation.internalCreateItem(row.getAlias(), unitX, unitY);
-				final float unitZ = Math.max(getWalkableRenderHeight(unitX, unitY),
-						War3MapViewer.this.terrain.getGroundHeight(unitX, unitY));
-				final RenderItem renderItem = new RenderItem(this, model, row, unitX, unitY, unitZ, unitAngle, soundset,
-						portraitModel, simulationItem);
-				this.widgets.add(renderItem);
-				this.itemToRenderPeer.put(simulationItem, renderItem);
+			final CItem simulationItem = this.simulation.internalCreateItem(row.getAlias(), unitX, unitY);
+			final float unitZ = Math.max(getWalkableRenderHeight(unitX, unitY),
+					War3MapViewer.this.terrain.getGroundHeight(unitX, unitY));
+			final RenderItem renderItem = new RenderItem(this, model, row, unitX, unitY, unitZ, unitAngle, soundset,
+					portraitModel, simulationItem);
+			this.widgets.add(renderItem);
+			this.itemToRenderPeer.put(simulationItem, renderItem);
 
-				if (unitShadowSplat != null) {
-					unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
-						@Override
-						public void accept(final SplatMover t) {
-							renderItem.shadow = t;
-						}
-					});
-				}
-				if (unitShadowSplatDynamicIngame != null) {
-					renderItem.shadow = unitShadowSplatDynamicIngame;
-				}
-				return simulationItem;
+			if (unitShadowSplat != null) {
+				unitShadowSplat.unitMapping.add(new Consumer<SplatModel.SplatMover>() {
+					@Override
+					public void accept(final SplatMover t) {
+						renderItem.shadow = t;
+					}
+				});
 			}
+			if (unitShadowSplatDynamicIngame != null) {
+				renderItem.shadow = unitShadowSplatDynamicIngame;
+			}
+			return simulationItem;
 		}
-		else {
-			System.err.println("Unknown unit ID: " + unitId);
-		}
+		System.err.println("Unknown unit ID: " + unitId);
 		return null;
 	}
 
@@ -1748,7 +1740,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private BufferedImage loadPathingTexture(final String pathingTexture) {
 		BufferedImage buildingPathingPixelMap = null;
-		if ((pathingTexture != null) && (pathingTexture.length() > 0) && !"_".equals(pathingTexture)) {
+		if ((pathingTexture != null) && (!pathingTexture.isEmpty()) && !"_".equals(pathingTexture)) {
 			buildingPathingPixelMap = this.filePathToPathingMap.get(pathingTexture.toLowerCase());
 			if (buildingPathingPixelMap == null) {
 				try {
@@ -2364,9 +2356,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		if (simple) {
 			return new W3xScenePortraitLightManager(this, this.lightDirection);
 		}
-		else {
-			return new W3xSceneWorldLightManager(this);
-		}
+		return new W3xSceneWorldLightManager(this);
 	}
 
 	@Override
@@ -2582,11 +2572,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		if (this.dataSource.has(mdxPath)) {
 			return (MdxModel) load(mdxPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
 		}
-		else {
-			final String mdlPath = mdl(mdxPath);
-			if (this.dataSource.has(mdlPath)) {
-				return (MdxModel) load(mdlPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
-			}
+		final String mdlPath = mdl(mdxPath);
+		if (this.dataSource.has(mdlPath)) {
+			return (MdxModel) load(mdlPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
 		}
 		return (MdxModel) load(mdxPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
 	}

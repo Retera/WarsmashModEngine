@@ -1050,7 +1050,7 @@ public class Jass2 {
 					final Integer countLimit = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
 					CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(rect,
 							new CUnitEnumFunction() {
-								int count = 0;
+								int count;
 
 								@Override
 								public boolean call(final CUnit unit) {
@@ -1059,9 +1059,7 @@ public class Jass2 {
 										// TODO the trigger scope for evaluation here might need to be a clean one?
 										group.add(unit);
 										this.count++;
-										if (this.count >= countLimit) {
-											return true;
-										}
+                                        return this.count >= countLimit;
 									}
 									return false;
 								}
@@ -1140,7 +1138,7 @@ public class Jass2 {
 					final Integer countLimit = arguments.get(5).visit(IntegerJassValueVisitor.getInstance());
 					CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
 							tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
-								int count = 0;
+								int count;
 
 								@Override
 								public boolean call(final CUnit unit) {
@@ -1150,9 +1148,7 @@ public class Jass2 {
 											// TODO the trigger scope for evaluation here might need to be a clean one?
 											group.add(unit);
 											this.count++;
-											if (this.count >= countLimit) {
-												return true;
-											}
+                                            return this.count >= countLimit;
 										}
 									}
 									return false;
@@ -1179,7 +1175,7 @@ public class Jass2 {
 							final Integer countLimit = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
 							CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
 									tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
-										int count = 0;
+										int count;
 
 										@Override
 										public boolean call(final CUnit unit) {
@@ -1190,9 +1186,7 @@ public class Jass2 {
 													// clean one?
 													group.add(unit);
 													this.count++;
-													if (this.count >= countLimit) {
-														return true;
-													}
+                                                    return this.count >= countLimit;
 												}
 											}
 											return false;
@@ -3182,10 +3176,8 @@ public class Jass2 {
 						// TODO below code is very stupid!!
 						return new IntegerJassValue(1);
 					}
-					else {
-						// TODO below code is very stupid!!
-						return new IntegerJassValue(1);
-					}
+					// TODO below code is very stupid!!
+					return new IntegerJassValue(1);
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerHandicap", new JassFunction() {

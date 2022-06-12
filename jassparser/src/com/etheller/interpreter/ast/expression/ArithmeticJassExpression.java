@@ -31,9 +31,7 @@ public class ArithmeticJassExpression implements JassExpression {
 				if (rightValue == null) {
 					return this.arithmeticSign.apply((String) null, (String) null);
 				}
-				else {
-					return rightValue.visit(ArithmeticLeftHandNullJassValueVisitor.INSTANCE.reset(this.arithmeticSign));
-				}
+				return rightValue.visit(ArithmeticLeftHandNullJassValueVisitor.INSTANCE.reset(this.arithmeticSign));
 			}
 			return leftValue.visit(ArithmeticJassValueVisitor.INSTANCE.reset(rightValue, this.arithmeticSign));
 		}

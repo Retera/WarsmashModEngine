@@ -7,7 +7,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 
 public class CheckBoxFrame extends GlueButtonFrame {
-	private boolean checked = false;
+	private boolean checked;
 	private UIFrame checkBoxCheckHighlight;
 	private UIFrame checkBoxDisabledCheckHighlight;
 	private UIFrame activeChildHighlight;

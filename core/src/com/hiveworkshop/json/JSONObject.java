@@ -378,7 +378,7 @@ public class JSONObject {
      *            An array of strings, the names of the fields to be obtained
      *            from the object.
      */
-    public JSONObject(Object object, String names[]) {
+    public JSONObject(Object object, String[] names) {
         this(names.length);
         Class<?> c = object.getClass();
         for (int i = 0; i < names.length; i += 1) {
@@ -618,7 +618,8 @@ public class JSONObject {
                 || (object instanceof String && ((String) object)
                         .equalsIgnoreCase("false"))) {
             return false;
-        } else if (object.equals(Boolean.TRUE)
+        }
+        if (object.equals(Boolean.TRUE)
                 || (object instanceof String && ((String) object)
                         .equalsIgnoreCase("true"))) {
             return true;
@@ -2145,7 +2146,7 @@ public class JSONObject {
     // Changes to this method must be copied to the corresponding method in
     // the XML class to keep full support for Android
     public static Object stringToValue(String string) {
-        if ("".equals(string)) {
+        if (string != null && string.isEmpty()) {
             return string;
         }
 

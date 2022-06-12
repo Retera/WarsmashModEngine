@@ -40,7 +40,7 @@ public class MenuFrame extends AbstractUIFrame {
 
 	@Override
 	public void positionBounds(final GameUI gameUI, final Viewport viewport) {
-		if (this.menuItems.size() != 0) {
+		if (!this.menuItems.isEmpty()) {
 			final float menuHeight = (this.border * 2) + (this.itemHeight * this.menuItems.size());
 			setHeight(menuHeight);
 		}

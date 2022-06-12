@@ -4,7 +4,7 @@ import com.etheller.warsmash.util.War3ID;
 
 public class StringMsgAbilityActivationReceiver implements AbilityActivationReceiver {
 	private String message;
-	private boolean useOk = false;
+	private boolean useOk;
 
 	public StringMsgAbilityActivationReceiver reset() {
 		this.message = null;

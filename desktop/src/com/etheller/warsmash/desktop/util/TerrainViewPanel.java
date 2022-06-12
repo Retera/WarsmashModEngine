@@ -16,7 +16,7 @@ public class TerrainViewPanel extends JPanel {
 	private final War3MapW3e environmentFile;
 	private final Font baseFont;
 	private final Font biggerFont;
-	private int cliffMode = 0;
+	private int cliffMode;
 
 	public TerrainViewPanel(final War3MapW3e environmentFile) {
 		this.environmentFile = environmentFile;
@@ -86,7 +86,7 @@ public class TerrainViewPanel extends JPanel {
 				else {
 					g.setFont(this.baseFont);
 				}
-				g.drawString(value + "", j * 32, (length - i - 1) * 32);
+				g.drawString(String.valueOf(value), j * 32, (length - i - 1) * 32);
 			}
 		}
 	}

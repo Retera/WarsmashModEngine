@@ -33,9 +33,7 @@ public class ArrayRefJassExpression implements JassExpression {
 		if (arrayValue != null) {
 			return arrayValue.get(index.visit(IntegerJassValueVisitor.getInstance()));
 		}
-		else {
-			throw new RuntimeException("Not an array");
-		}
+		throw new RuntimeException("Not an array");
 	}
 
 }

@@ -57,11 +57,11 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
 /** @author Nathan Sweet */
 public abstract class OpenALMusic implements Music {
-	static private final int bufferSize = 4096 * 10;
-	static private final int bufferCount = 3;
-	static private final int bytesPerSample = 2;
-	static private final byte[] tempBytes = new byte[bufferSize];
-	static private final ByteBuffer tempBuffer = BufferUtils.createByteBuffer(bufferSize);
+	private static final int bufferSize = 4096 * 10;
+	private static final int bufferCount = 3;
+	private static final int bytesPerSample = 2;
+	private static final byte[] tempBytes = new byte[bufferSize];
+	private static final ByteBuffer tempBuffer = BufferUtils.createByteBuffer(bufferSize);
 
 	private final FloatArray renderedSecondsQueue = new FloatArray(bufferCount);
 
@@ -71,11 +71,11 @@ public abstract class OpenALMusic implements Music {
 	private int format, sampleRate;
 	private boolean isLooping, isPlaying;
 	private float volume = 1;
-	private float pan = 0;
+	private float pan;
 	private float renderedSeconds, maxSecondsPerBuffer;
 
 	protected final FileHandle file;
-	protected int bufferOverhead = 0;
+	protected int bufferOverhead;
 
 	private OnCompletionListener onCompletionListener;
 
@@ -284,10 +284,10 @@ public abstract class OpenALMusic implements Music {
 	 * Fills as much of the buffer as possible and returns the number of bytes
 	 * filled. Returns <= 0 to indicate the end of the stream.
 	 */
-	abstract public int read(byte[] buffer);
+	public abstract int read(byte[] buffer);
 
 	/** Resets the stream to the beginning. */
-	abstract public void reset();
+	public abstract void reset();
 
 	/**
 	 * By default, does just the same as reset(). Used to add special behaviour in

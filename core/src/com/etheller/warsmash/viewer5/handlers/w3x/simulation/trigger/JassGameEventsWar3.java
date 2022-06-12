@@ -274,7 +274,9 @@ public enum JassGameEventsWar3 implements CHandle {
 	EVENT_UNIT_STACK_ITEM,
 
 	// use TriggerRegisterPlayerUnitEvent
-	EVENT_PLAYER_UNIT_STACK_ITEM,;
+	EVENT_PLAYER_UNIT_STACK_ITEM,
+	
+	;
 
 	private static final int TFT_CUTOFF = EVENT_GAME_LOADED.ordinal();
 

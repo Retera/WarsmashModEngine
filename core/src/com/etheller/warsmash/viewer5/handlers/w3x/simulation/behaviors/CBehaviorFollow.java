@@ -4,6 +4,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveVisitor;
 
 public class CBehaviorFollow extends CAbstractRangedBehavior {
@@ -15,7 +16,7 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 		super(unit);
 	}
 
-	public CBehavior reset(final int higlightOrderId, final CUnit target) {
+	public CBehavior reset(final int higlightOrderId, final CWidget target) {
 		this.higlightOrderId = higlightOrderId;
 		return innerReset(target);
 	}
@@ -27,7 +28,7 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
-		if(justAutoAttacked = this.unit.autoAcquireAttackTargets(simulation, false)) {
+		if (this.justAutoAttacked = this.unit.autoAcquireAttackTargets(simulation, false)) {
 			return true;
 		}
 		return this.unit.canReach(this.target, this.unit.getAcquisitionRange());
@@ -42,7 +43,7 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 
 	@Override
 	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
-		unit.setDefaultBehavior(unit.getStopBehavior());
+		this.unit.setDefaultBehavior(this.unit.getStopBehavior());
 		return this.unit.pollNextOrderBehavior(simulation);
 	}
 
@@ -50,7 +51,7 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
 		if (this.justAutoAttacked) {
 			this.justAutoAttacked = false;
-			this.unit.getMoveBehavior().reset(target, this, false);
+			this.unit.getMoveBehavior().reset(this.target, this, false);
 		}
 		return this.target.visit(AbilityTargetStillAliveVisitor.INSTANCE);
 	}

@@ -45,6 +45,11 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
+	public void unknownReasonUseNotOk() {
+		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
+	}
+
+	@Override
 	public void notEnoughResources(final ResourceType resource) {
 		switch (resource) {
 		case GOLD:
@@ -104,6 +109,11 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 
 	@Override
 	public void disabled() {
+		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
+	}
+
+	@Override
+	public void noChargesRemaining() {
 		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
 	}
 

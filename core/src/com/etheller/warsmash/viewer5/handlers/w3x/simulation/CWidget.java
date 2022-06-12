@@ -73,6 +73,8 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 
 	public abstract float getImpactZ();
 
+	public abstract <T> T visit(CWidgetVisitor<T> visitor);
+
 	public boolean isDead() {
 		return this.life <= 0;
 	}

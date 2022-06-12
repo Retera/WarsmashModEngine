@@ -54,12 +54,12 @@ public class CBehaviorCarrionSwarmDummy extends CAbstractRangedBehavior {
 	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		final int playerIndex = this.unit.getPlayerIndex();
 		if (this.target instanceof AbilityPointTarget) {
-			simulation.getPlayer(playerIndex).fireAbilityEffectEventsPoint(this.unit,
+			simulation.getPlayer(playerIndex).fireAbilityEffectEventsPoint(this.abilityCarrionSwarmDummy, this.unit,
 					((AbilityPointTarget) this.target), this.abilityCarrionSwarmDummy.getAlias());
 		}
 		else if (this.target instanceof CUnit) {
-			simulation.getPlayer(playerIndex).fireAbilityEffectEventsTarget(this.unit, ((CUnit) this.target),
-					this.abilityCarrionSwarmDummy.getAlias());
+			simulation.getPlayer(playerIndex).fireAbilityEffectEventsTarget(this.abilityCarrionSwarmDummy, this.unit,
+					((CUnit) this.target), this.abilityCarrionSwarmDummy.getAlias());
 		} // TODO other kinds of widgets
 		return this.unit.pollNextOrderBehavior(simulation);
 	}

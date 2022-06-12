@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -40,8 +41,8 @@ public class TeamSetupPane {
 			int forceIndex = 0;
 			for (final Force force : mapInfo.getForces()) {
 				final StringFrame forceLabelString = rootFrame.createStringFrame(
-						"SmashForce" + forceIndex + "NameLabel", rootFrame, null, TextJustify.LEFT, TextJustify.MIDDLE,
-						0.01f);
+						"SmashForce" + forceIndex + "NameLabel", rootFrame, Color.WHITE, TextJustify.LEFT,
+						TextJustify.MIDDLE, 0.01f);
 				rootFrame.setText(forceLabelString, rootFrame.getTrigStr(force.getName()));
 				for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (usedSlots < playerCount); i++) {
 					final CBasePlayer player = config.getPlayer(i);

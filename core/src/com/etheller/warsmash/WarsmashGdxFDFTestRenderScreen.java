@@ -135,7 +135,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 			this.uiViewport = new FitViewport(aspect3By4Width, aspect3By4Height, this.uiCamera);
 			this.uiViewport.update(width, height);
 
-			this.uiCamera.position.set(this.getMinWorldWidth() / 2, this.getMinWorldHeight() / 2, 0);
+			this.uiCamera.position.set(getMinWorldWidth() / 2, getMinWorldHeight() / 2, 0);
 			this.uiCamera.update();
 
 			this.batch = new SpriteBatch();
@@ -166,8 +166,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 //						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
 
 							if (WarsmashConstants.ENABLE_MUSIC) {
-								final String musicField = rootFrame
-										.getSkinField("GlueMusic_V" + WarsmashConstants.GAME_VERSION);
+								final String musicField = rootFrame.getSkinField("GlueMusic");
 								final String[] musics = musicField.split(";");
 								String musicPath = musics[(int) (Math.random() * musics.length)];
 								if (musicSLK.get(musicPath) != null) {
@@ -184,11 +183,9 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 								WarsmashGdxFDFTestRenderScreen.this.currentMusic = music;
 							}
 
-							WarsmashGdxFDFTestRenderScreen.this
-									.singleModelScene(WarsmashGdxFDFTestRenderScreen.this.scene,
-											War3MapViewer.mdx(rootFrame.getSkinField(
-													"GlueSpriteLayerBackground_V" + WarsmashConstants.GAME_VERSION)),
-											"Stand");
+							WarsmashGdxFDFTestRenderScreen.this.singleModelScene(
+									WarsmashGdxFDFTestRenderScreen.this.scene,
+									War3MapViewer.mdx(rootFrame.getSkinField("GlueSpriteLayerBackground")), "Stand");
 							WarsmashGdxFDFTestRenderScreen.this.modelCamera = WarsmashGdxFDFTestRenderScreen.this.mainModel.cameras
 									.get(0);
 						}
@@ -200,9 +197,9 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 			libgdxContentInstance.setScene(this.uiScene);
 			this.menuUI.main();
 
-			this.updateUIScene();
+			updateUIScene();
 
-			this.resize(width, height);
+			resize(width, height);
 		}
 
 		Gdx.input.setInputProcessor(this);
@@ -234,8 +231,8 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 		this.uiScene.camera.viewport(this.tempRect);
 		final float worldWidth = this.uiViewport.getWorldWidth();
 		final float worldHeight = this.uiViewport.getWorldHeight();
-		final float xScale = worldWidth / this.getMinWorldWidth();
-		final float yScale = worldHeight / this.getMinWorldHeight();
+		final float xScale = worldWidth / getMinWorldWidth();
+		final float yScale = worldHeight / getMinWorldHeight();
 		final float uiSceneWidth = 0.8f * xScale;
 		final float uiSceneHeight = 0.6f * yScale;
 		final float uiSceneX = (0.8f - uiSceneWidth) / 2;
@@ -251,7 +248,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 						return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
 					}
 				}, null);
-		this.makePerfectSquare(scene, model2, 15);
+		makePerfectSquare(scene, model2, 15);
 	}
 
 	private void singleAcolyteScene(final Scene scene) {
@@ -314,7 +311,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 			this.mainModel = null;
 		}
 		else {
-			this.singleModelScene(this.scene, War3MapViewer.mdx(path), "birth");
+			singleModelScene(this.scene, War3MapViewer.mdx(path), "birth");
 			WarsmashGdxFDFTestRenderScreen.this.modelCamera = WarsmashGdxFDFTestRenderScreen.this.mainModel.cameras
 					.get(0);
 			// this hack is because we only have the queued animation system in RenderWidget
@@ -569,10 +566,10 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 //		super.resize(width, height);
 
 		this.uiViewport.update(width, height);
-		this.uiCamera.position.set(this.getMinWorldWidth() / 2, this.getMinWorldHeight() / 2, 0);
+		this.uiCamera.position.set(getMinWorldWidth() / 2, getMinWorldHeight() / 2, 0);
 
 		this.menuUI.resize();
-		this.updateUIScene();
+		updateUIScene();
 
 	}
 
@@ -615,7 +612,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 			this.quatHeap = new Quaternion();
 			this.quatHeap2 = new Quaternion();
 
-			this.updateCamera();
+			updateCamera();
 
 //		cameraUpdate();
 		}
@@ -793,7 +790,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 
 		@Override
 		public void renderTranslucent() {
-			WarsmashGdxFDFTestRenderScreen.this.renderLibGDXContent();
+			renderLibGDXContent();
 		}
 
 		@Override

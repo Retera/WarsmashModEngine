@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.gl.ClientBuffer;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter2.HeadOrTail;
 
 //The total storage that emitted objects can use.
 //This is enough to support all of the MDX geometry emitters.
@@ -86,14 +87,17 @@ public class GeometryEmitterFuncs {
 
 		for (int objectIndex = 0; objectIndex < emitter.alive; objectIndex++) {
 			final Particle2 object = objects.get(objectIndex);
-			final int byteOffset = offset * BYTES_PER_OBJECT;
-			final int floatOffset = offset * FLOATS_PER_OBJECT;
-			final int p0Offset = floatOffset + FLOAT_OFFSET_P0;
-			Vector3 location = object.location;
-			final Vector3 scale = object.scale;
-			final int tail = object.tail;
+			final HeadOrTail tailness = HeadOrTail.fromId(object.tail);
+			final boolean tail = tailness.isIncludesTail();
+			final boolean head = tailness.isIncludesHead();
 
-			if (tail == HEAD) {
+			if (head) {
+				final int byteOffset = offset * BYTES_PER_OBJECT;
+				final int floatOffset = offset * FLOATS_PER_OBJECT;
+				final int p0Offset = floatOffset + FLOAT_OFFSET_P0;
+				Vector3 location = object.location;
+				final Vector3 scale = object.scale;
+
 				// If this is a model space emitter, the location is in local space, so convert
 				// it to world space.
 				if (modelSpace != 0) {
@@ -113,8 +117,25 @@ public class GeometryEmitterFuncs {
 					floatView.put(p0Offset + 3, 0);
 					floatView.put(p0Offset + 4, 0);
 				}
+
+				floatView.put(p0Offset + 6, scale.x);
+				floatView.put(p0Offset + 7, scale.y);
+				floatView.put(p0Offset + 8, scale.z);
+
+				floatView.put(floatOffset + FLOAT_OFFSET_HEALTH, object.health);
+
+				byteView.put(byteOffset + BYTE_OFFSET_TAIL, (byte) 0);
+				byteView.put(byteOffset + BYTE_OFFSET_TEAM_COLOR, (byte) 0);
+
+				offset += 1;
 			}
-			else {
+			if (tail) {
+				final int byteOffset = offset * BYTES_PER_OBJECT;
+				final int floatOffset = offset * FLOATS_PER_OBJECT;
+				final int p0Offset = floatOffset + FLOAT_OFFSET_P0;
+				final Vector3 location = object.location;
+				final Vector3 scale = object.scale;
+
 				final Vector3 velocity = object.velocity;
 				final Vector3 start = startHeap;
 				Vector3 end = location;
@@ -136,18 +157,19 @@ public class GeometryEmitterFuncs {
 				floatView.put(p0Offset + 3, end.x);
 				floatView.put(p0Offset + 4, end.y);
 				floatView.put(p0Offset + 5, end.z);
+
+				floatView.put(p0Offset + 6, scale.x);
+				floatView.put(p0Offset + 7, scale.y);
+				floatView.put(p0Offset + 8, scale.z);
+
+				floatView.put(floatOffset + FLOAT_OFFSET_HEALTH, object.health);
+
+				byteView.put(byteOffset + BYTE_OFFSET_TAIL, (byte) 1);
+				byteView.put(byteOffset + BYTE_OFFSET_TEAM_COLOR, (byte) 0);
+
+				offset += 1;
 			}
 
-			floatView.put(p0Offset + 6, scale.x);
-			floatView.put(p0Offset + 7, scale.y);
-			floatView.put(p0Offset + 8, scale.z);
-
-			floatView.put(floatOffset + FLOAT_OFFSET_HEALTH, object.health);
-
-			byteView.put(byteOffset + BYTE_OFFSET_TAIL, (byte) tail);
-			byteView.put(byteOffset + BYTE_OFFSET_TEAM_COLOR, (byte) 0);
-
-			offset += 1;
 		}
 
 	}
@@ -214,7 +236,7 @@ public class GeometryEmitterFuncs {
 
 		shader.setUniform3fv("u_scaling", emitterObject.scaling, 0, 3);
 
-		if (emitterObject.head) {
+		if (emitterObject.headOrTail.isIncludesHead()) {
 			shader.setUniform3fv("u_vertices[0]", asFloatArray(vectors[0]), 0, 3);
 			shader.setUniform3fv("u_vertices[1]", asFloatArray(vectors[1]), 0, 3);
 			shader.setUniform3fv("u_vertices[2]", asFloatArray(vectors[2]), 0, 3);
@@ -399,7 +421,13 @@ public class GeometryEmitterFuncs {
 		final EmitterObject emitterObject = emitter.emitterObject;
 		final int emitterType = emitterObject.getGeometryEmitterType();
 
-		if (emitterType == EMITTER_RIBBON) {
+		if (emitterType == EMITTER_PARTICLE2) {
+			final ParticleEmitter2Object emitterObject2 = ((ParticleEmitter2) emitter).emitterObject;
+			if (emitterObject2.headOrTail.isIncludesHead() && emitterObject2.headOrTail.isIncludesTail()) {
+				alive *= 2;
+			}
+		}
+		else if (emitterType == EMITTER_RIBBON) {
 			alive -= 1;
 		}
 		else if (emitterType == EMITTER_SPN) {

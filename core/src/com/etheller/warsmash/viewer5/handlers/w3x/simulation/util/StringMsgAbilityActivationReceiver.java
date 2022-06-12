@@ -26,6 +26,11 @@ public class StringMsgAbilityActivationReceiver implements AbilityActivationRece
 	}
 
 	@Override
+	public void unknownReasonUseNotOk() {
+		this.message = "NOTEXTERN: Unable to use this ability.";
+	}
+
+	@Override
 	public void notEnoughResources(final ResourceType resource) {
 		this.message = "NOTEXTERN: Requires more " + resource.name().toLowerCase() + ".";
 	}
@@ -73,6 +78,11 @@ public class StringMsgAbilityActivationReceiver implements AbilityActivationRece
 	@Override
 	public void disabled() {
 		this.message = "NOTEXTERN: Ability is disabled.";
+	}
+
+	@Override
+	public void noChargesRemaining() {
+		this.message = "NOTEXTERN: No charges remaining.";
 	}
 
 }

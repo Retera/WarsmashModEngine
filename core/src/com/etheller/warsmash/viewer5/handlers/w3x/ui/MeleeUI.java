@@ -129,6 +129,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -136,6 +137,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
@@ -365,9 +368,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	private final BuildOnBuildingIntersector buildOnBuildingIntersector = new BuildOnBuildingIntersector();
 
-	public int[][] commandCardGridHotkeys ={{Input.Keys.Q,Input.Keys.W,Input.Keys.E,Input.Keys.R},
-											{Input.Keys.A,Input.Keys.S,Input.Keys.D,Input.Keys.F},
-											{Input.Keys.Z,Input.Keys.X,Input.Keys.C,Input.Keys.V}};
+	public int[][] commandCardGridHotkeys = { { Input.Keys.Q, Input.Keys.W, Input.Keys.E, Input.Keys.R },
+			{ Input.Keys.A, Input.Keys.S, Input.Keys.D, Input.Keys.F },
+			{ Input.Keys.Z, Input.Keys.X, Input.Keys.C, Input.Keys.V } };
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -1912,6 +1915,24 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			return null;
 		}
 
+		@Override
+		public Void accept(final CAbilityJass ability) {
+			final CAbilityTypeJassDefinition type = ability.getType();
+			// TODO getting icon from type is currently inefficient
+			final JassOrder orderCommandCardIcon = type.getOrderCommandCardIcon(war3MapViewer.simulation,
+					selectedUnit.getSimulationUnit(), activeCommandOrderId);
+			if (orderCommandCardIcon.getMouseTargetRadius() > 0) {
+				handlePlacementCursor(ability, orderCommandCardIcon.getMouseTargetRadius());
+			}
+			else if (orderCommandCardIcon.getPreviewBuildUnitId() != null) {
+				handleBuildCursor(null, orderCommandCardIcon.getPreviewBuildUnitId().getValue());
+			}
+			else {
+				handleTargetCursor(ability);
+			}
+			return null;
+		}
+
 		private void handleTargetCursor(final CAbility ability) {
 			if (cursorModelInstance != null) {
 				cursorModelInstance.detach();
@@ -1922,11 +1943,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		private void handleBuildCursor(final AbstractCAbilityBuild ability) {
+			handleBuildCursor(ability, activeCommandOrderId);
+		}
+
+		private void handleBuildCursor(final AbstractCAbilityBuild ability, final int previewBuildUnitId) {
 			boolean justLoaded = false;
 			final War3MapViewer viewer = war3MapViewer;
 			if (cursorModelInstance == null) {
 				final MutableObjectData unitData = viewer.getAllObjectData().getUnits();
-				final War3ID buildingTypeId = new War3ID(activeCommandOrderId);
+				final War3ID buildingTypeId = new War3ID(previewBuildUnitId);
 				cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
 				final String unitModelPath = viewer.getUnitModelPath(unitData.get(buildingTypeId));
 				final MdxModel model = viewer.loadModelMdx(unitModelPath);
@@ -3032,23 +3057,23 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
 			for (int i = 0; i < COMMAND_CARD_WIDTH; i++) {
 				boolean match = false;
-				switch (WarsmashConstants.INPUT_HOTKEY_MODE){
-					case 0:
-						if (commandCard[j][i].checkHotkey(c, keycode)) {
-							match = true;
-						}
-						break;
-					case 1:
-						if(keycode == commandCardGridHotkeys[j][i]) {
-							match = true;
-						}
-						break;
-					default:
-						throw new IllegalStateException("Unexpected value: " + WarsmashConstants.INPUT_HOTKEY_MODE);
+				switch (WarsmashConstants.INPUT_HOTKEY_MODE) {
+				case 0:
+					if (commandCard[j][i].checkHotkey(c, keycode)) {
+						match = true;
+					}
+					break;
+				case 1:
+
+					if (keycode == commandCardGridHotkeys[j][i]) {
+						match = true;
+					}
+					break;
 				}
-				if(match){
+				if (match) {
 					commandCard[j][i].onClick(Input.Buttons.LEFT);
-					war3MapViewer.getUiSounds().getSound("InterfaceClick").play(uiScene.audioContext, 0, 0,0);
+					war3MapViewer.getUiSounds().getSound("InterfaceClick").play(uiScene.audioContext, 0, 0,
+							0);
 				}
 			}
 		}
@@ -4075,5 +4100,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final StringFrame scriptDialogTextFrame = (StringFrame) rootFrame.getFrameByName("ScriptDialogText", 0);
 		scriptDialog.positionBounds(rootFrame, uiViewport);
 		dialog.reset(scriptDialog, scriptDialogTextFrame);
+	}
+
+	public void removedUnit(final CUnit whichUnit) {
+		final RenderUnit renderUnit = war3MapViewer.getRenderPeer(whichUnit);
+		if ((selectedUnits != null) && selectedUnits.contains(renderUnit)) {
+			final List<RenderUnit> newSelectedUnits = new ArrayList<>(selectedUnits);
+			newSelectedUnits.remove(renderUnit);
+			selectUnits(newSelectedUnits);
+		}
+		else if (Objects.equals(selectedUnit, renderUnit)) {
+			selectUnit(null);
+		}
 	}
 }

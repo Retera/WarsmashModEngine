@@ -12,6 +12,11 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
+	public void unknownReasonUseNotOk() {
+		this.ok = false;
+	}
+
+	@Override
 	public void notEnoughResources(final ResourceType resource) {
 		this.ok = false;
 	}
@@ -58,6 +63,11 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 
 	@Override
 	public void cooldownNotYetReady(final float cooldownRemaining, final float cooldownMax) {
+		this.ok = false;
+	}
+
+	@Override
+	public void noChargesRemaining() {
 		this.ok = false;
 	}
 

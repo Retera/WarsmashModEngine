@@ -110,6 +110,11 @@ public class CDestructable extends CWidget {
 		return visitor.accept(this);
 	}
 
+	@Override
+	public <T> T visit(final CWidgetVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
 	public CDestructableType getDestType() {
 		return this.destType;
 	}

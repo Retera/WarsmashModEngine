@@ -65,6 +65,11 @@ public class CItem extends CWidget {
 		return visitor.accept(this);
 	}
 
+	@Override
+	public <T> T visit(final CWidgetVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
 	public War3ID getTypeId() {
 		return this.typeId;
 	}

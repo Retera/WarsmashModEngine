@@ -33,7 +33,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderCommandCardType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderButtonType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -187,7 +187,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							order.getTip(), order.getUberTip(), order.getButtonPositionX(), order.getButtonPositionY(),
 							ability.getHandleId(), order.getOrderId(),
 							order.isAutoCastActive() ? order.getAutoCastOrderId() : order.getAutoCastUnOrderId(),
-							order.isAutoCastActive(), order.getType() == JassOrderCommandCardType.MENU,
+							order.isAutoCastActive(), order.getType() == JassOrderButtonType.MENU,
 							order.getGoldCost(), order.getLumberCost(), order.getFoodCostDisplayOnly(),
 							order.getManaCost(), order.getCharges(), order.getHotkey());
 				}

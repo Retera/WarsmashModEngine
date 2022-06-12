@@ -201,7 +201,7 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	public CBehavior begin(final CSimulation game, final CAbilityJass abilityJass, final CUnit caster,
 			final int orderId, final CWidget target) {
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, caster, orderId);
-		if (orderCommandCardIcon.type == JassOrderCommandCardType.INSTANT_NO_TARGET) {
+		if (orderCommandCardIcon.type == JassOrderButtonType.INSTANT_NO_TARGET) {
 			if (this.beginJass != null) {
 				CommonTriggerExecutionScope scope;
 				scope = target.visit(new CWidgetVisitor<CommonTriggerExecutionScope>() {
@@ -237,7 +237,7 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	public CBehavior begin(final CSimulation game, final CAbilityJass abilityJass, final CUnit caster,
 			final int orderId, final AbilityPointTarget point) {
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, caster, orderId);
-		if (orderCommandCardIcon.type == JassOrderCommandCardType.INSTANT_NO_TARGET) {
+		if (orderCommandCardIcon.type == JassOrderButtonType.INSTANT_NO_TARGET) {
 			if (this.beginJass != null) {
 				return this.beginJass.evaluate(this.jassGlobalScope,
 						CommonTriggerExecutionScope.jassAbilityPointScope(abilityJass, caster, point,
@@ -255,7 +255,7 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	public CBehavior beginNoTarget(final CSimulation game, final CAbilityJass abilityJass, final CUnit caster,
 			final int orderId) {
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, caster, orderId);
-		if (orderCommandCardIcon.type == JassOrderCommandCardType.INSTANT_NO_TARGET) {
+		if (orderCommandCardIcon.type == JassOrderButtonType.INSTANT_NO_TARGET) {
 			if (this.beginJass != null) {
 				return this.beginJass.evaluate(this.jassGlobalScope,
 						CommonTriggerExecutionScope.jassAbilityNoTargetScope(abilityJass, caster,
@@ -285,7 +285,7 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 			}
 		}
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, caster, orderId);
-		if (orderCommandCardIcon.type == JassOrderCommandCardType.INSTANT_NO_TARGET_NO_INTERRUPT) {
+		if (orderCommandCardIcon.type == JassOrderButtonType.INSTANT_NO_TARGET_NO_INTERRUPT) {
 			if (this.checkBeforeQueueJass != null) {
 				return this.checkBeforeQueueJass.evaluate(this.jassGlobalScope,
 						CommonTriggerExecutionScope.jassAbilityNoTargetScope(abilityJass, caster,
@@ -303,8 +303,8 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	public void checkCanTarget(final CSimulation game, final CAbilityJass abilityJass, final CUnit unit,
 			final int orderId, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, unit, orderId);
-		if ((orderCommandCardIcon != null) && ((orderCommandCardIcon.type == JassOrderCommandCardType.UNIT_TARGET)
-				|| (orderCommandCardIcon.type == JassOrderCommandCardType.UNIT_OR_POINT_TARGET))) {
+		if ((orderCommandCardIcon != null) && ((orderCommandCardIcon.type == JassOrderButtonType.UNIT_TARGET)
+				|| (orderCommandCardIcon.type == JassOrderButtonType.UNIT_OR_POINT_TARGET))) {
 			if (this.checkTargetJass != null) {
 				CommonTriggerExecutionScope scope;
 				scope = target.visit(new CWidgetVisitor<CommonTriggerExecutionScope>() {
@@ -346,8 +346,8 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 			final int orderId, final AbilityPointTarget target,
 			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, unit, orderId);
-		if ((orderCommandCardIcon != null) && ((orderCommandCardIcon.type == JassOrderCommandCardType.POINT_TARGET)
-				|| (orderCommandCardIcon.type == JassOrderCommandCardType.UNIT_OR_POINT_TARGET))) {
+		if ((orderCommandCardIcon != null) && ((orderCommandCardIcon.type == JassOrderButtonType.POINT_TARGET)
+				|| (orderCommandCardIcon.type == JassOrderButtonType.UNIT_OR_POINT_TARGET))) {
 			if (this.checkTargetJass != null) {
 				if (this.checkTargetJass.evaluate(this.jassGlobalScope,
 						CommonTriggerExecutionScope.jassAbilityPointScope(abilityJass, unit, target,
@@ -371,7 +371,7 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, unit, orderId);
 		if ((orderCommandCardIcon != null)
-				&& (orderCommandCardIcon.type == JassOrderCommandCardType.INSTANT_NO_TARGET)) {
+				&& (orderCommandCardIcon.type == JassOrderButtonType.INSTANT_NO_TARGET)) {
 			if (this.checkTargetJass != null) {
 				if (this.checkTargetJass.evaluate(this.jassGlobalScope,
 						CommonTriggerExecutionScope.jassAbilityNoTargetScope(abilityJass, unit, abilityJass.getAlias(),
@@ -397,7 +397,7 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 		if ((orderCommandCardIcon == null) || orderCommandCardIcon.disabled) {
 			receiver.disabled();
 		}
-		else if (orderCommandCardIcon.type == JassOrderCommandCardType.PASSIVE) {
+		else if (orderCommandCardIcon.type == JassOrderButtonType.PASSIVE) {
 			receiver.notAnActiveAbility();
 		}
 		else if (orderCommandCardIcon.charges == 0) {
@@ -453,7 +453,7 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 				if (orderCommandCardIcon.disabled) {
 					continue;
 				}
-				if (orderCommandCardIcon.type == JassOrderCommandCardType.PASSIVE) {
+				if (orderCommandCardIcon.type == JassOrderButtonType.PASSIVE) {
 					continue;
 				}
 				if (orderCommandCardIcon.charges == 0) {
@@ -491,7 +491,7 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 		private int lumberCost;
 		private int charges = INFINITE_CHARGES;
 		private int foodCostDisplayOnly;
-		private JassOrderCommandCardType type;
+		private JassOrderButtonType type;
 		private boolean autoCastActive;
 
 		// UI
@@ -594,11 +594,11 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 			this.foodCostDisplayOnly = foodCostDisplayOnly;
 		}
 
-		public JassOrderCommandCardType getType() {
+		public JassOrderButtonType getType() {
 			return this.type;
 		}
 
-		public void setType(final JassOrderCommandCardType type) {
+		public void setType(final JassOrderButtonType type) {
 			this.type = type;
 		}
 
@@ -699,10 +699,10 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 		}
 	}
 
-	public static enum JassOrderCommandCardType {
+	public static enum JassOrderButtonType {
 		INSTANT_NO_TARGET, UNIT_TARGET, POINT_TARGET, UNIT_OR_POINT_TARGET, INSTANT_NO_TARGET_NO_INTERRUPT, PASSIVE,
 		MENU;
 
-		public static JassOrderCommandCardType[] VALUES = values();
+		public static JassOrderButtonType[] VALUES = values();
 	}
 }

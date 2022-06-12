@@ -91,7 +91,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.BehaviorExpr;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderCommandCardType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderButtonType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
@@ -612,10 +612,11 @@ public class Jass2 {
 
 			// Warsmash Ability API
 			final HandleJassType abilitytypeType = globals.registerHandleType("abilitytype");
-			final HandleJassType ordercommandcardType = globals.registerHandleType("ordercommandcard");
-			final HandleJassType ordercommandcardtypeType = globals.registerHandleType("ordercommandcardtype");
+			final HandleJassType orderbuttonType = globals.registerHandleType("orderbutton");
+			final HandleJassType orderbuttontypeType = globals.registerHandleType("orderbuttontype");
 			final HandleJassType abilitybehaviorType = globals.registerHandleType("abilitybehavior");
 			final HandleJassType behaviorexprType = globals.registerHandleType("behaviorexpr");
+			final HandleJassType iconuiType = globals.registerHandleType("iconui");
 
 			registerTypingNatives(jassProgramVisitor, raceType, alliancetypeType, racepreferenceType, igamestateType,
 					fgamestateType, playerstateType, playerscoreType, playergameresultType, unitstateType,
@@ -625,12 +626,12 @@ public class Jass2 {
 					volumegroupType, camerafieldType, playercolorType, placementType, startlocprioType,
 					raritycontrolType, blendmodeType, texmapflagsType, effecttypeType, fogstateType, versionType,
 					itemtypeType, attacktypeType, damagetypeType, weapontypeType, soundtypeType, pathingtypeType);
-			jassProgramVisitor.getJassNativeManager().createNative("ConvertOrderCommandCardType", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("ConvertOrderButtonType", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-					return new HandleJassValue(ordercommandcardtypeType, JassOrderCommandCardType.VALUES[i]);
+					return new HandleJassValue(orderbuttontypeType, JassOrderButtonType.VALUES[i]);
 				}
 			});
 
@@ -4048,20 +4049,18 @@ public class Jass2 {
 					return new IntegerJassValue(((CommonTriggerExecutionScope) triggerScope).getSpellAbilityOrderId());
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetSpellAbilityOrderCommandCard",
-					new JassFunction() {
-						@Override
-						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-								final TriggerExecutionScope triggerScope) {
-							return new IntegerJassValue(
-									((CommonTriggerExecutionScope) triggerScope).getSpellAbilityOrderId());
-						}
-					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetSpellAbilityOrderButton", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					return new IntegerJassValue(((CommonTriggerExecutionScope) triggerScope).getSpellAbilityOrderId());
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetSpellTargetType", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					return new HandleJassValue(ordercommandcardtypeType,
+					return new HandleJassValue(orderbuttontypeType,
 							((CommonTriggerExecutionScope) triggerScope).getSpellAbilityTargetType());
 				}
 			});
@@ -4215,56 +4214,97 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("CreateOrderCommandCard", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitIconUI", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final JassOrderCommandCardType type = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					return new HandleJassValue(iconuiType,
+							war3MapViewer.getAbilityDataUI().getUnitUI(new War3ID(rawcode)));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityOnIconUI", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					return new HandleJassValue(iconuiType,
+							war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOnIconUI());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityOffIconUI", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					return new HandleJassValue(iconuiType,
+							war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOffIconUI());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityLearnIconUI", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					return new HandleJassValue(iconuiType,
+							war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getLearnIconUI());
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetItemIconUI", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					return new HandleJassValue(iconuiType,
+							war3MapViewer.getAbilityDataUI().getItemUI(new War3ID(rawcode)));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("CreateOrderButton", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final JassOrderButtonType type = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 					final int buttonPositionX = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
 					final int buttonPositionY = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
 					final JassOrder javaValue = new JassOrder(orderId, buttonPositionX, buttonPositionY);
 					javaValue.setType(type);
-					return new HandleJassValue(ordercommandcardType, javaValue);
+					return new HandleJassValue(orderbuttonType, javaValue);
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("AbilityTypeAddOrderCommandCard",
-					new JassFunction() {
-						@Override
-						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-								final TriggerExecutionScope triggerScope) {
-							final CAbilityTypeJassDefinition abilityType = arguments.get(0)
-									.visit(ObjectJassValueVisitor.getInstance());
-							final JassOrder commandCard = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-							abilityType.addJassOrder(commandCard);
-							return null;
-						}
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("AbilityTypeRemoveOrderCommandCard",
-					new JassFunction() {
-						@Override
-						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-								final TriggerExecutionScope triggerScope) {
-							final CAbilityTypeJassDefinition abilityType = arguments.get(0)
-									.visit(ObjectJassValueVisitor.getInstance());
-							final JassOrder commandCard = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-							abilityType.removeJassOrder(commandCard);
-							return null;
-						}
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardAutoCastOrderId",
-					new JassFunction() {
-						@Override
-						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-								final TriggerExecutionScope triggerScope) {
-							final JassOrder orderCommandCard = arguments.get(0)
-									.visit(ObjectJassValueVisitor.getInstance());
-							final int autoCastOrderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-							orderCommandCard.setAutoCastOrderId(autoCastOrderId);
-							return null;
-						}
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardUnAutoCastOrderId",
+			jassProgramVisitor.getJassNativeManager().createNative("AbilityTypeAddOrderButton", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CAbilityTypeJassDefinition abilityType = arguments.get(0)
+							.visit(ObjectJassValueVisitor.getInstance());
+					final JassOrder commandCard = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+					abilityType.addJassOrder(commandCard);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("AbilityTypeRemoveOrderButton", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CAbilityTypeJassDefinition abilityType = arguments.get(0)
+							.visit(ObjectJassValueVisitor.getInstance());
+					final JassOrder commandCard = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+					abilityType.removeJassOrder(commandCard);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonAutoCastOrderId", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int autoCastOrderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					orderCommandCard.setAutoCastOrderId(autoCastOrderId);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonUnAutoCastOrderId",
 					new JassFunction() {
 						@Override
 						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -4276,7 +4316,7 @@ public class Jass2 {
 							return null;
 						}
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardContainerMenuOrderId",
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonContainerMenuOrderId",
 					new JassFunction() {
 						@Override
 						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -4288,7 +4328,7 @@ public class Jass2 {
 							return null;
 						}
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardDisabled", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonDisabled", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4298,7 +4338,7 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardManaCost", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonManaCost", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4308,7 +4348,7 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardGoldCost", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonGoldCost", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4318,7 +4358,7 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardLumberCost", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonLumberCost", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4328,7 +4368,7 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardFoodCostDisplayOnly",
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonFoodCostDisplayOnly",
 					new JassFunction() {
 						@Override
 						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -4340,7 +4380,7 @@ public class Jass2 {
 							return null;
 						}
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardCharges", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonCharges", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4350,19 +4390,17 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardAutoCastActive",
-					new JassFunction() {
-						@Override
-						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-								final TriggerExecutionScope triggerScope) {
-							final JassOrder orderCommandCard = arguments.get(0)
-									.visit(ObjectJassValueVisitor.getInstance());
-							final boolean active = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
-							orderCommandCard.setAutoCastActive(active);
-							return null;
-						}
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardHidden", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonAutoCastActive", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final boolean active = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+					orderCommandCard.setAutoCastActive(active);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonHidden", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4372,7 +4410,7 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardIconPath", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonIconPath", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4382,31 +4420,27 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardButtonPositionX",
-					new JassFunction() {
-						@Override
-						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-								final TriggerExecutionScope triggerScope) {
-							final JassOrder orderCommandCard = arguments.get(0)
-									.visit(ObjectJassValueVisitor.getInstance());
-							final int buttonPosX = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-							orderCommandCard.setButtonPositionX(buttonPosX);
-							return null;
-						}
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardButtonPositionY",
-					new JassFunction() {
-						@Override
-						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-								final TriggerExecutionScope triggerScope) {
-							final JassOrder orderCommandCard = arguments.get(0)
-									.visit(ObjectJassValueVisitor.getInstance());
-							final int buttonPosY = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-							orderCommandCard.setButtonPositionY(buttonPosY);
-							return null;
-						}
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardToolTip", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonButtonPositionX", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int buttonPosX = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					orderCommandCard.setButtonPositionX(buttonPosX);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonButtonPositionY", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int buttonPosY = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					orderCommandCard.setButtonPositionY(buttonPosY);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonToolTip", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4416,7 +4450,7 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardUberTip", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonUberTip", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4426,7 +4460,7 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardHotKey", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonHotKey", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4436,7 +4470,7 @@ public class Jass2 {
 					return null;
 				}
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardPreviewBuildUnitId",
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonPreviewBuildUnitId",
 					new JassFunction() {
 						@Override
 						public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -4448,7 +4482,7 @@ public class Jass2 {
 							return null;
 						}
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderCommandCardAOE", new JassFunction() {
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonAOE", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
@@ -4603,6 +4637,7 @@ public class Jass2 {
 			final HandleJassType ordercommandcardtypeType = globals.registerHandleType("ordercommandcardtype");
 			final HandleJassType abilitybehaviorType = globals.registerHandleType("abilitybehavior");
 			final HandleJassType behaviorexprType = globals.registerHandleType("behaviorexpr");
+			final HandleJassType iconuiType = globals.registerHandleType("iconui");
 
 			registerTypingNatives(jassProgramVisitor, raceType, alliancetypeType, racepreferenceType, igamestateType,
 					fgamestateType, playerstateType, playerscoreType, playergameresultType, unitstateType,

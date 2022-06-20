@@ -1,9 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui.menu;
 
 import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.CRC32C;
 
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.DataSource;
@@ -22,13 +25,32 @@ import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextAreaFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.parsers.jass.Jass2;
+import com.etheller.warsmash.parsers.w3x.War3Map;
+import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3iFlags;
+import com.etheller.warsmash.units.custom.WTS;
+import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapInfoPane;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapListContainer;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.TeamSetupPane;
 
+import net.warsmash.uberserver.ChannelServerMessageType;
+import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.LobbyGameSpeed;
 
 public class BattleNetUI {
 	private final GameUI rootFrame;
 	private final Viewport uiViewport;
+	private final Scene uiScene;
+	private final DataSource dataSource;
 
 	private final UIFrame battleNetMainFrame;
 	private final UIFrame battleNetChangePasswordPanel;
@@ -103,11 +125,28 @@ public class BattleNetUI {
 	private final StringFrame createGameSpeedValue;
 	private final CheckBoxFrame publicGameRadio;
 	private final CheckBoxFrame privateGameRadio;
+	private final GlueButtonFrame customCreatePanelCreateButton;
+	private String customCreatePanelCurrentSelectedMapPath;
+	private final MapInfoPane customCreateMapInfoPane;
+	private War3MapConfig customCreateCurrentMapConfig;
+	private War3MapW3i customCreateCurrentMapInfo;
+	private War3Map customCreateCurrentMap;
+	private UIFrame battleNetGameChatroom;
+	private final MapInfoPane gameChatroomMapInfoPane;
+	private StringFrame gameChatroomGameNameValue;
+	private GlueButtonFrame gameChatroomStartGameButton;
+	private GlueButtonFrame gameChatroomCancelButton;
+	private TextAreaFrame gameChatroomChatTextArea;
+	private EditBoxFrame gameChatroomChatEditBox;
+	private ListBoxFrame joinGameListBox;
+	private TeamSetupPane gameChatroomTeamSetupPane;
 
-	public BattleNetUI(final GameUI rootFrame, final Viewport uiViewport, final DataSource dataSource,
+	public BattleNetUI(final GameUI rootFrame, final Viewport uiViewport, Scene uiScene, final DataSource dataSource,
 			final BattleNetUIActionListener actionListener) {
 		this.rootFrame = rootFrame;
 		this.uiViewport = uiViewport;
+		this.uiScene = uiScene;
+		this.dataSource = dataSource;
 		this.actionListener = actionListener;
 		// Create BattleNet frames
 		this.battleNetMainFrame = rootFrame.createFrame("BattleNetMainFrame", rootFrame, 0, 0);
@@ -379,6 +418,12 @@ public class BattleNetUI {
 		this.customJoinPanelCreateGameButton.setOnClick(new Runnable() {
 			@Override
 			public void run() {
+
+				// clear these out when leaving a screen
+				BattleNetUI.this.customCreateCurrentMapConfig = null;
+				BattleNetUI.this.customCreateCurrentMapInfo = null;
+				BattleNetUI.this.customCreateCurrentMap = null;
+				BattleNetUI.this.customCreatePanelCurrentSelectedMapPath = null;
 				actionListener.showCreateGameMenu();
 			}
 		});
@@ -388,20 +433,15 @@ public class BattleNetUI {
 
 		final SimpleFrame joinGameListContainer = (SimpleFrame) this.rootFrame.getFrameByName("JoinGameListContainer",
 				0);
-		final ListBoxFrame joinGameListBox = (ListBoxFrame) this.rootFrame.createFrameByType("LISTBOX", "MapListBox",
+		this.joinGameListBox = (ListBoxFrame) this.rootFrame.createFrameByType("LISTBOX", "MapListBox",
 				joinGameListContainer, "WITHCHILDREN", 0);
-		joinGameListBox.setSetAllPoints(true);
+		this.joinGameListBox.setSetAllPoints(true);
 		final StringFrame joinGameListLabel = (StringFrame) this.rootFrame.getFrameByName("JoinGameListLabel", 0);
-		joinGameListBox.setFrameFont(joinGameListLabel.getFrameFont());
+		this.joinGameListBox.setFrameFont(joinGameListLabel.getFrameFont());
 
 		this.joinGameEditBox = (EditBoxFrame) this.rootFrame.getFrameByName("JoinGameNameEditBox", 0);
 
-		final List<String> testItems = new ArrayList<>();
-		testItems.add("Retera???'s game (1/4)");
-		for (final String displayItemPath : testItems) {
-			joinGameListBox.addItem(displayItemPath, this.rootFrame, this.uiViewport);
-		}
-		joinGameListBox.setSelectionListener(new ListBoxSelelectionListener() {
+		this.joinGameListBox.setSelectionListener(new ListBoxSelelectionListener() {
 			@Override
 			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
 				if (newSelectedItem != null) {
@@ -409,7 +449,7 @@ public class BattleNetUI {
 				}
 			}
 		});
-		joinGameListContainer.add(joinGameListBox);
+		joinGameListContainer.add(this.joinGameListBox);
 		this.joinGameButton = (GlueButtonFrame) this.rootFrame.getFrameByName("JoinGameButton", 0);
 		this.joinGameButton.setOnClick(new Runnable() {
 			@Override
@@ -433,6 +473,9 @@ public class BattleNetUI {
 		this.battleNetCustomCreatePanel = rootFrame.createFrame("BattleNetCustomCreatePanel", rootFrame, 0, 0);
 		this.battleNetCustomCreatePanel.setVisible(false);
 
+		final EditBoxFrame customCreatePanelNameEditBox = (EditBoxFrame) rootFrame
+				.getFrameByName("CreateGameNameEditBox", 0);
+
 		this.customCreatePanelBackButton = (GlueButtonFrame) rootFrame.getFrameByName("CancelButton", 0);
 		this.customCreatePanelBackButton.setOnClick(new Runnable() {
 			@Override
@@ -441,13 +484,46 @@ public class BattleNetUI {
 			}
 		});
 
+		this.customCreatePanelCreateButton = (GlueButtonFrame) rootFrame.getFrameByName("CreateGameButton", 0);
+
 		final StringFrame mapListLabel = (StringFrame) this.rootFrame.getFrameByName("MapListLabel", 0);
 		final MapListContainer mapListContainer = new MapListContainer(this.rootFrame, this.uiViewport,
 				"MapListContainer", dataSource, mapListLabel.getFrameFont());
 		mapListContainer.addSelectionListener(new ListBoxSelelectionListener() {
+
 			@Override
 			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
+				BattleNetUI.this.customCreateCurrentMapConfig = null;
+				BattleNetUI.this.customCreateCurrentMapInfo = null;
 				if (newSelectedItem != null) {
+					BattleNetUI.this.customCreatePanelCurrentSelectedMapPath = newSelectedItem;
+
+					try {
+						final War3Map map = War3MapViewer.beginLoadingMap(dataSource, newSelectedItem);
+
+						final War3MapW3i mapInfo = map.readMapInformation();
+						final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
+						rootFrame.setMapStrings(wtsFile);
+						final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+						for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
+							final CBasePlayer player = war3MapConfig.getPlayer(i);
+							player.setName(rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
+						}
+						war3MapConfig.setMapName(rootFrame.getTrigStr(mapInfo.getName()));
+						war3MapConfig.setMapDescription(rootFrame.getTrigStr(mapInfo.getDescription()));
+						BattleNetUI.this.customCreateMapInfoPane.setMap(rootFrame, uiViewport, map, mapInfo,
+								war3MapConfig);
+						BattleNetUI.this.customCreateCurrentMapConfig = war3MapConfig;
+						BattleNetUI.this.customCreateCurrentMapInfo = mapInfo;
+						BattleNetUI.this.customCreateCurrentMap = map;
+					}
+					catch (final Exception exc) {
+						exc.printStackTrace();
+						actionListener.showError("NETERROR_MAPLOADERROR");
+					}
+				}
+				else {
+					BattleNetUI.this.customCreatePanelCurrentSelectedMapPath = null;
 				}
 			}
 		});
@@ -487,8 +563,115 @@ public class BattleNetUI {
 			}
 		});
 		this.publicGameRadio.setChecked(true);
-		this.privateGameRadio.setEnabled(false);
+//		this.privateGameRadio.setEnabled(false);
 
+		{
+			final SimpleFrame mapInfoPaneContainer = (SimpleFrame) this.rootFrame.getFrameByName("MapInfoPaneContainer",
+					0);
+			this.customCreateMapInfoPane = new MapInfoPane(this.rootFrame, this.uiViewport, mapInfoPaneContainer);
+		}
+
+		this.customCreatePanelCreateButton.setOnClick(new Runnable() {
+			private final CRC32C mapChecksumCalculator = new CRC32C();
+
+			@Override
+			public void run() {
+				if (BattleNetUI.this.customCreateCurrentMapInfo == null) {
+					actionListener.showError("NETERROR_NOMAPSELECTED");
+					return;
+				}
+				final String gameName = customCreatePanelNameEditBox.getText();
+				if ((gameName == null) || gameName.isEmpty()) {
+					actionListener.showError("NETERROR_NOGAMENAMESPECIFIED");
+					return;
+				}
+				boolean nonSpace = false;
+				for (int i = 0; i < gameName.length(); i++) {
+					if (gameName.charAt(i) != ' ') {
+						nonSpace = true;
+					}
+				}
+				if (!nonSpace) {
+					actionListener.showError("NETERROR_EMPTYGAMENAMESPECIFIED");
+					return;
+				}
+				final int speedSliderValue = BattleNetUI.this.createGameSpeedSlider.getValue();
+
+				LobbyGameSpeed gameSpeed;
+				if ((speedSliderValue >= 0) && (speedSliderValue < LobbyGameSpeed.VALUES.length)) {
+					gameSpeed = LobbyGameSpeed.VALUES[speedSliderValue];
+				}
+				else {
+					actionListener.showError("NETERROR_DEFAULTERROR");
+					return;
+				}
+				final HostedGameVisibility hostedGameVisibility = BattleNetUI.this.publicGameRadio.isChecked()
+						? HostedGameVisibility.PUBLIC
+						: HostedGameVisibility.PRIVATE;
+				Jass2.loadConfig(BattleNetUI.this.customCreateCurrentMap, uiViewport, uiScene, rootFrame,
+						BattleNetUI.this.customCreateCurrentMapConfig, "Scripts\\common.j", "Scripts\\Blizzard.j",
+						"Scripts\\war3map.j").config();
+				int mapPlayerSlots = 0;
+				for (int i = 0; (i < (WarsmashConstants.MAX_PLAYERS - 4))
+						&& (i < BattleNetUI.this.customCreateCurrentMapConfig.getPlayerCount()); i++) {
+					if (BattleNetUI.this.customCreateCurrentMapConfig.getPlayer(i)
+							.getController() == CMapControl.USER) {
+						mapPlayerSlots++;
+					}
+				}
+
+				final long mapChecksum = BattleNetUI.this.customCreateCurrentMap
+						.computeChecksum(this.mapChecksumCalculator);
+
+				String mapName = BattleNetUI.this.customCreatePanelCurrentSelectedMapPath;
+				mapName = mapName.substring(Math.max(mapName.lastIndexOf('/'), mapName.lastIndexOf('\\')) + 1);
+
+				actionListener.createGame(gameName, mapName, mapPlayerSlots, gameSpeed, hostedGameVisibility,
+						mapChecksum, BattleNetUI.this.customCreateCurrentMap);
+			}
+		});
+
+		// *******************************************
+		// *
+		// * Battle Net Custom Create Panel
+		// *
+		// ******
+		this.battleNetGameChatroom = rootFrame.createFrame("GameChatroom", rootFrame, 0, 0);
+		this.battleNetGameChatroom.setVisible(false);
+
+		{
+			final SimpleFrame teamSetupContainer = (SimpleFrame) this.rootFrame.getFrameByName("TeamSetupContainer", 0);
+			this.gameChatroomTeamSetupPane = new TeamSetupPane(this.rootFrame, this.uiViewport, teamSetupContainer);
+		}
+
+		{
+			final SimpleFrame mapInfoPaneContainer = (SimpleFrame) this.rootFrame.getFrameByName("MapInfoPaneContainer",
+					0);
+			this.gameChatroomMapInfoPane = new MapInfoPane(this.rootFrame, this.uiViewport, mapInfoPaneContainer);
+		}
+
+		this.gameChatroomGameNameValue = (StringFrame) this.rootFrame.getFrameByName("GameNameValue", 0);
+
+		this.gameChatroomStartGameButton = (GlueButtonFrame) rootFrame.getFrameByName("StartGameButton", 0);
+
+		this.gameChatroomCancelButton = (GlueButtonFrame) rootFrame.getFrameByName("CancelButton", 0);
+		this.gameChatroomCancelButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				actionListener.leaveCustomGame();
+			}
+		});
+
+		this.gameChatroomChatTextArea = (TextAreaFrame) rootFrame.getFrameByName("ChatTextArea", 0);
+		this.gameChatroomChatEditBox = (EditBoxFrame) rootFrame.getFrameByName("ChatEditBox", 0);
+		this.gameChatroomChatEditBox.setFilterAllowAny();
+		this.gameChatroomChatEditBox.setOnEnter(new Runnable() {
+			@Override
+			public void run() {
+				actionListener.submitChatText(BattleNetUI.this.gameChatroomChatEditBox.getText());
+				BattleNetUI.this.gameChatroomChatEditBox.setText("", rootFrame, uiViewport);
+			}
+		});
 	}
 
 	public void setTopButtonsVisible(final boolean flag) {
@@ -560,6 +743,7 @@ public class BattleNetUI {
 		this.quitBattleNetButton.setVisible(false);
 		this.battleNetCustomJoinPanel.setVisible(false);
 		this.battleNetCustomCreatePanel.setVisible(false);
+		this.battleNetGameChatroom.setVisible(false);
 		setTopButtonsVisible(false);
 	}
 
@@ -598,17 +782,60 @@ public class BattleNetUI {
 		this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
 	}
 
+	public void joinedGame(String gameName, boolean host) {
+		this.currentChannel = null;
+		this.gameChatroomChatTextArea.removeAllItems();
+		this.rootFrame.setText(this.gameChatroomGameNameValue, gameName);
+		this.gameChatroomStartGameButton.setEnabled(host);
+	}
+
 	public void channelMessage(final String userName, final String message) {
 		final String messageText = String.format(this.rootFrame.getTemplates().getDecoratedString("CHATEVENT_ID_TALK"),
 				this.rootFrame.getTemplates().getDecoratedString("CHATCOLOR_TALK_USER"), userName,
 				this.rootFrame.getTemplates().getDecoratedString("CHATCOLOR_TALK_MESSAGE"), message);
-		this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+		if (this.currentChannel == null) {
+			this.gameChatroomChatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+		}
+		else {
+			this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+		}
 	}
 
 	public void channelEmote(final String userName, final String message) {
 		final String messageText = String.format(this.rootFrame.getTemplates().getDecoratedString("CHATEVENT_ID_EMOTE"),
 				this.rootFrame.getTemplates().getDecoratedString("CHATCOLOR_EMOTE_MESSAGE"), userName, message);
-		this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+		if (this.currentChannel == null) {
+			this.gameChatroomChatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+		}
+		else {
+			this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+		}
+	}
+
+	public void channelServerMessage(String userName, ChannelServerMessageType messageType) {
+		String msgKey;
+		switch (messageType) {
+		case JOIN_GAME: {
+			msgKey = "NETMESSAGE_PLAYERJOINED";
+			break;
+		}
+		case LEAVE_GAME: {
+			msgKey = "NETMESSAGE_PLAYERLEFT";
+			break;
+		}
+		default: {
+			msgKey = "NETERROR_DEFAULTERROR";
+			break;
+		}
+		}
+
+		final String messageText = String.format(this.rootFrame.getTemplates().getDecoratedString(msgKey), userName);
+		if (this.currentChannel == null) {
+			this.gameChatroomChatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+		}
+		else {
+			this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
+		}
 	}
 
 	public void showChannelMenu() {
@@ -617,5 +844,80 @@ public class BattleNetUI {
 
 	public String getCurrentChannel() {
 		return this.currentChannel;
+	}
+
+	public void showCustomGameLobby() {
+		this.battleNetGameChatroom.setVisible(true);
+	}
+
+	public void beginGamesList() {
+		this.joinGameListBox.removeAllItems();
+	}
+
+	public void gamesListItem(String gameName, int openSlots, int totalSlots) {
+		this.joinGameListBox.addItem(gameName, this.rootFrame, this.uiViewport);
+	}
+
+	public void endGamesList() {
+
+	}
+
+	public void setJoinGamePreviewMap(File mapLookupFile) {
+		War3Map map;
+		try {
+			map = War3MapViewer.beginLoadingMap(this.dataSource, mapLookupFile.getPath());
+
+			final War3MapW3i mapInfo = map.readMapInformation();
+			final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
+			this.rootFrame.setMapStrings(wtsFile);
+			final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+			setGameChatroomMap(map, mapInfo, war3MapConfig);
+		}
+		catch (final IOException e) {
+			e.printStackTrace();
+			this.actionListener.showError("NETERROR_MAPFILEREAD");
+		}
+
+	}
+
+	private void setGameChatroomMap(War3Map map, final War3MapW3i mapInfo, final War3MapConfig war3MapConfig)
+			throws IOException {
+		for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
+			final CBasePlayer player = war3MapConfig.getPlayer(i);
+			player.setName(this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
+		}
+		Jass2.loadConfig(map, this.uiViewport, this.uiScene, this.rootFrame, war3MapConfig, "Scripts\\common.j",
+				"Scripts\\Blizzard.j", "Scripts\\war3map.j").config();
+		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+			final CBasePlayer player = war3MapConfig.getPlayer(i);
+			if (player.getController() == CMapControl.COMPUTER) {
+				if (mapInfo.hasFlag(War3MapW3iFlags.FIXED_PLAYER_SETTINGS_FOR_CUSTOM_FORCES)) {
+					player.setSlotState(CPlayerSlotState.PLAYING);
+				}
+			}
+		}
+		this.gameChatroomMapInfoPane.setMap(this.rootFrame, this.uiViewport, map, mapInfo, war3MapConfig);
+		this.gameChatroomTeamSetupPane.setMap(map, this.rootFrame, this.uiViewport, war3MapConfig,
+				mapInfo.getPlayers().size(), mapInfo);
+
+	}
+
+	public void setJoinGamePreviewMapToHostedMap() {
+		try {
+			setGameChatroomMap(this.customCreateCurrentMap, this.customCreateCurrentMapInfo,
+					this.customCreateCurrentMapConfig);
+		}
+		catch (final IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	public String getLastHostedGamePath() {
+		return this.customCreatePanelCurrentSelectedMapPath;
+	}
+
+	public void clearJoinGamePreviewMap(String mapPreviewName) {
+		this.gameChatroomMapInfoPane.clearMap(this.rootFrame, this.uiViewport, mapPreviewName);
+		this.gameChatroomTeamSetupPane.clearMap(this.rootFrame, this.uiViewport);
 	}
 }

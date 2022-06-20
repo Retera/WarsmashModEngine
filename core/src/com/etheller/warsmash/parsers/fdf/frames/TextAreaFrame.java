@@ -118,6 +118,11 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 		updateUI(gameUI, viewport);
 	}
 
+	public void removeAllItems() {
+		this.listItems.clear();
+		updateUI(this.gameUI, this.viewport);
+	}
+
 	private void updateUI(final GameUI gameUI, final Viewport viewport) {
 		StringFrame prev = null;
 		final int numStringFrames = (int) (Math
@@ -131,8 +136,7 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 						TextJustify.MIDDLE, this.frameFont, null, null, null);
 				if (index < this.listItems.size()) {
 					gameUI.setText(stringFrame, this.listItems.get(index));
-				}
-				else {
+				} else {
 					gameUI.setText(stringFrame, "");
 				}
 				stringFrame.setWidth(this.renderBounds.width - (this.inset * 2));
@@ -140,23 +144,20 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 				if (prev != null) {
 					stringFrame.addSetPoint(
 							new SetPoint(FramePoint.TOPLEFT, prev, FramePoint.BOTTOMLEFT, 0, -this.lineGap));
-				}
-				else {
+				} else {
 					stringFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT, this.inset,
 							-this.inset - this.lineGap));
 				}
 				this.stringFrames.add(stringFrame);
 				prev = stringFrame;
 			}
-		}
-		else {
+		} else {
 			for (int stringFrameIndex = 0; stringFrameIndex < numStringFrames; stringFrameIndex++) {
 				final int index = stringFrameIndex + scrollOffset;
 				final StringFrame stringFrame = this.stringFrames.get(stringFrameIndex);
 				if (index < this.listItems.size()) {
 					gameUI.setText(stringFrame, this.listItems.get(index));
-				}
-				else {
+				} else {
 					gameUI.setText(stringFrame, "");
 				}
 			}
@@ -170,8 +171,7 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 		if ((this.scrollBarFrame != null) && (this.listItems.size() > numStringFrames)) {
 			scrollOffset = (int) Math
 					.ceil(((100 - this.scrollBarFrame.getValue()) / 100f) * (this.listItems.size() - numStringFrames));
-		}
-		else {
+		} else {
 			scrollOffset = 0;
 		}
 		return scrollOffset;

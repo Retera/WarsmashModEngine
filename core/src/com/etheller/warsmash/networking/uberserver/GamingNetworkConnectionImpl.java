@@ -1,6 +1,7 @@
 package com.etheller.warsmash.networking.uberserver;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import net.warsmash.nio.channels.SelectableChannelOpener;
@@ -27,6 +28,21 @@ public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
 		this.gateway = gateway;
 		this.selectableChannelOpener = new SelectableChannelOpener();
 		this.notifier = new GamingNetworkServerToClientNotifier();
+
+		// Below: Add a notifier to ourself to clear out the "tcp" channel field,
+		// this may seem weird put prior to adding this there was a bug after the server
+		// would drop the connection, and we did not set "tcpChannel" to null, then stop
+		// would be called and try to call "close()" on an already closed "tcpChannel"
+		// and crash.
+		this.notifier
+				.addSubscriber(new GamingNetworkServerToClientListener.GamingNetworkServerToClientListenerAdapter() {
+					@Override
+					public void disconnected() {
+						GamingNetworkConnectionImpl.this.tcpChannel = null;
+						GamingNetworkConnectionImpl.this.gamingNetworkClientToServerWriter = null;
+						stop();
+					}
+				});
 	}
 
 	public void start() {
@@ -38,8 +54,15 @@ public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
 		this.networkThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while (true) {
-					GamingNetworkConnectionImpl.this.selectableChannelOpener.select(0);
+				try {
+					while (true) {
+						GamingNetworkConnectionImpl.this.selectableChannelOpener.select(100);
+					}
+				}
+				catch (final Exception exc) {
+					System.err.println("GamingNetworkConnectionImpl network thread terminating due to exception:");
+					exc.printStackTrace();
+					stop();
 				}
 			}
 		});
@@ -105,9 +128,29 @@ public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
 
 	@Override
 	public void createGame(final long sessionToken, final String gameName, final String mapName, final int totalSlots,
-			final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis, final HostedGameVisibility visibility) {
+			final LobbyGameSpeed gameSpeed, final HostedGameVisibility visibility, long mapChecksum) {
 		this.gamingNetworkClientToServerWriter.createGame(sessionToken, gameName, mapName, totalSlots, gameSpeed,
-				gameCreationTimeMillis, visibility);
+				visibility, mapChecksum);
+	}
+
+	@Override
+	public void leaveGame(long sessionToken) {
+		this.gamingNetworkClientToServerWriter.leaveGame(sessionToken);
+	}
+
+	@Override
+	public void uploadMapData(long sessionToken, int sequenceNumber, ByteBuffer data) {
+		this.gamingNetworkClientToServerWriter.uploadMapData(sessionToken, sequenceNumber, data);
+	}
+
+	@Override
+	public void mapDone(long sessionToken, int sequenceNumber) {
+		this.gamingNetworkClientToServerWriter.mapDone(sessionToken, sequenceNumber);
+	}
+
+	@Override
+	public void requestMap(long sessionToken) {
+		this.gamingNetworkClientToServerWriter.requestMap(sessionToken);
 	}
 
 	@Override

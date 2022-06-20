@@ -3451,6 +3451,10 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final CDestructable whichDestructable = arguments.get(0)
 							.visit(ObjectJassValueVisitor.getInstance());
+					if(whichDestructable==null) {
+						// TODO this should not be the way to solve the problem i am facing
+						return RealJassValue.ZERO;
+					}
 					return new RealJassValue(whichDestructable.getLife());
 				}
 			});
@@ -3631,6 +3635,20 @@ public class Jass2 {
 							((CommonTriggerExecutionScope) triggerScope).getTriggeringUnit());
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTriggerDestructable", new JassFunction() {
+				
+				@Override
+				public JassValue call(List<JassValue> arguments, GlobalScope globalScope, TriggerExecutionScope triggerScope) {
+					CWidget triggerWidget = ((CommonTriggerExecutionScope) triggerScope).getTriggerWidget();
+					if (triggerWidget instanceof CDestructable) {
+						return new HandleJassValue(destructableType,
+								triggerWidget);
+					} else {
+						return new HandleJassValue(destructableType,
+								null);
+					}
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetSpellAbilityUnit", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -3794,6 +3812,8 @@ public class Jass2 {
 					new LoadHashtableValueFunc(BooleanJassValue.FALSE));
 			jassProgramVisitor.getJassNativeManager().createNative("LoadStr",
 					new LoadHashtableValueFunc(StringJassValue.EMPTY_STRING));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadTriggerHandle", new LoadHashtableValueFunc(new HandleJassValue(triggerType, null)));
+			
 
 			jassProgramVisitor.getJassNativeManager().createNative("HaveSavedInteger",
 					new HaveSavedHashtableValueFunc(JassType.INTEGER));
@@ -3803,6 +3823,8 @@ public class Jass2 {
 					new HaveSavedHashtableValueFunc(JassType.BOOLEAN));
 			jassProgramVisitor.getJassNativeManager().createNative("HaveSavedString",
 					new HaveSavedHashtableValueFunc(JassType.STRING));
+			jassProgramVisitor.getJassNativeManager().createNative("HaveSavedHandle",
+					new HaveSavedHashtableValueFunc(agentType));
 
 			jassProgramVisitor.getJassNativeManager().createNative("GetExpiredTimer", new JassFunction() {
 				@Override

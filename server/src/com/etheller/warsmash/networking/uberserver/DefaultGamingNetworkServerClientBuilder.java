@@ -1,5 +1,7 @@
 package com.etheller.warsmash.networking.uberserver;
 
+import java.nio.ByteBuffer;
+
 import net.warsmash.nio.channels.WritableOutput;
 import net.warsmash.uberserver.GamingNetworkClientToServerListener;
 import net.warsmash.uberserver.HostedGameVisibility;
@@ -18,7 +20,7 @@ public class DefaultGamingNetworkServerClientBuilder implements GamingNetworkSer
 		return new GamingNetworkClientToServerListener() {
 			@Override
 			public void disconnected() {
-
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.disconnected(writer);
 			}
 
 			@Override
@@ -70,9 +72,32 @@ public class DefaultGamingNetworkServerClientBuilder implements GamingNetworkSer
 
 			@Override
 			public void createGame(final long sessionToken, final String gameName, final String mapName,
-					final int totalSlots, final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis,
-					final HostedGameVisibility visibility) {
-				throw new UnsupportedOperationException();
+					final int totalSlots, final LobbyGameSpeed gameSpeed, final HostedGameVisibility visibility,
+					long mapChecksum) {
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.createGame(sessionToken, gameName,
+						mapName, totalSlots, gameSpeed, visibility, mapChecksum, writer);
+			}
+
+			@Override
+			public void leaveGame(long sessionToken) {
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.leaveGame(sessionToken, writer);
+			}
+
+			@Override
+			public void uploadMapData(long sessionToken, int sequenceNumber, ByteBuffer data) {
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.uploadMapData(sessionToken,
+						sequenceNumber, data, writer);
+			}
+
+			@Override
+			public void mapDone(long sessionToken, int sequenceNumber) {
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.mapDone(sessionToken, sequenceNumber,
+						writer);
+			}
+
+			@Override
+			public void requestMap(long sessionToken) {
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.requestMap(sessionToken, writer);
 			}
 		};
 	}

@@ -7,6 +7,7 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
@@ -24,11 +25,13 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.etheller.warsmash.datasources.CascDataSourceDescriptor;
+import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.CompoundDataSourceDescriptor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
 import com.etheller.warsmash.datasources.MpqDataSourceDescriptor;
+import com.etheller.warsmash.datasources.SubdirDataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2;
 import com.etheller.warsmash.parsers.jass.Jass2.CommonEnvironment;
@@ -216,6 +219,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		final Element dataSourcesConfig = warsmashIni.get("DataSources");
 		final int dataSourcesCount = dataSourcesConfig.getFieldValue("Count");
 		final List<DataSourceDescriptor> dataSourcesList = new ArrayList<>();
+		List<String> allCascPrefixes = new ArrayList<>();
 		for (int i = 0; i < dataSourcesCount; i++) {
 			final String type = dataSourcesConfig.getField("Type" + (i < 10 ? "0" : "") + i);
 			final String path = dataSourcesConfig.getField("Path" + (i < 10 ? "0" : "") + i);
@@ -230,14 +234,24 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 			}
 			case "CASC": {
 				final String prefixes = dataSourcesConfig.getField("Prefixes" + (i < 10 ? "0" : "") + i);
-				dataSourcesList.add(new CascDataSourceDescriptor(path, Arrays.asList(prefixes.split(","))));
+				List<String> parsedPrefixes = Arrays.asList(prefixes.split(","));
+				allCascPrefixes.addAll(parsedPrefixes);
+				dataSourcesList.add(new CascDataSourceDescriptor(path, parsedPrefixes));
 				break;
 			}
 			default:
 				throw new RuntimeException("Unknown data source type: " + type);
 			}
 		}
-		return new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
+		DataSource baseCompoundDataSource = new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
+
+		final List<DataSource> subdirDataSourcesList = new ArrayList<>();
+		subdirDataSourcesList.add(baseCompoundDataSource);
+//		Collections.reverse(allCascPrefixes);
+		for(String prefix: allCascPrefixes) {
+			subdirDataSourcesList.add(new SubdirDataSource(baseCompoundDataSource, prefix +"\\"));
+		}
+		return new CompoundDataSource(subdirDataSourcesList);
 	}
 
 	private void updateUIScene() {

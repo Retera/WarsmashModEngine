@@ -33,4 +33,8 @@ public class AbstractWriter {
 		this.writeBuffer.clear();
 	}
 
+	protected final void close() {
+		this.writableOutput.close();
+	}
+
 }

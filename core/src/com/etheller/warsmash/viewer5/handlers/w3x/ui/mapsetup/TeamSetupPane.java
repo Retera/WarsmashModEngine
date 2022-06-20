@@ -9,6 +9,7 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
+import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
@@ -23,6 +24,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl
 
 public class TeamSetupPane {
 	private final List<PlayerSlotPane> playerSlots = new ArrayList<>();
+	private final List<GlueTextButtonFrame> forceLabels = new ArrayList<>();
 	private final SimpleFrame container;
 
 	public TeamSetupPane(final GameUI rootFrame, final Viewport uiViewport, final SimpleFrame container) {
@@ -31,20 +33,42 @@ public class TeamSetupPane {
 
 	public void setMap(final DataSource dataSource, final GameUI rootFrame, final Viewport uiViewport,
 			final War3MapConfig config, final int playerCount, final War3MapW3i mapInfo) {
-		for (final PlayerSlotPane playerSlotPane : this.playerSlots) {
-			this.container.remove(playerSlotPane.getPlayerSlotFrame());
-		}
-		this.playerSlots.clear();
+		clear();
 		int usedSlots = 0;
 		if (mapInfo.hasFlag(War3MapW3iFlags.FIXED_PLAYER_SETTINGS_FOR_CUSTOM_FORCES)) {
 			UIFrame lastFrame = null;
 			int forceIndex = 0;
 			for (final Force force : mapInfo.getForces()) {
+				final GlueTextButtonFrame glueTextButton = new GlueTextButtonFrame("SmashForce" + forceIndex + "Btn",
+						this.container);
 				final StringFrame forceLabelString = rootFrame.createStringFrame(
-						"SmashForce" + forceIndex + "NameLabel", rootFrame, Color.WHITE, TextJustify.LEFT,
-						TextJustify.MIDDLE, 0.01f);
+						"SmashForce" + forceIndex + "NameLabel", glueTextButton, Color.YELLOW, Color.WHITE,
+						TextJustify.LEFT, TextJustify.MIDDLE, 0.01f);
+				forceLabelString.setSetAllPoints(true);
+				glueTextButton.setHighlightOnMouseOver(true);
+				glueTextButton.setHeight(GameUI.convertY(uiViewport, 0.01f));
+
+				this.container.add(glueTextButton);
+				// remove these 2, to be managed by GlueTextButton
+				rootFrame.remove(forceLabelString);
 				rootFrame.setText(forceLabelString, rootFrame.getTrigStr(force.getName()));
-				for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (usedSlots < playerCount); i++) {
+				glueTextButton.setButtonText(forceLabelString);
+
+				if (lastFrame == null) {
+					glueTextButton
+							.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.container, FramePoint.TOPLEFT, 0, 0));
+					glueTextButton
+							.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, this.container, FramePoint.TOPRIGHT, 0, 0));
+				}
+				else {
+					glueTextButton
+							.addSetPoint(new SetPoint(FramePoint.TOPLEFT, lastFrame, FramePoint.BOTTOMLEFT, 0, 0));
+					glueTextButton
+							.addSetPoint(new SetPoint(FramePoint.TOPRIGHT, lastFrame, FramePoint.BOTTOMRIGHT, 0, 0));
+				}
+				lastFrame = glueTextButton;
+				this.forceLabels.add(glueTextButton);
+				for (int i = 0; (i < (WarsmashConstants.MAX_PLAYERS - 4)) && (usedSlots < playerCount); i++) {
 					final CBasePlayer player = config.getPlayer(i);
 					if (player.getController() == CMapControl.NONE) {
 						continue;
@@ -64,7 +88,7 @@ public class TeamSetupPane {
 									new SetPoint(FramePoint.TOPLEFT, lastFrame, FramePoint.BOTTOMLEFT, 0, 0));
 						}
 						lastFrame = playerSlotPane.getPlayerSlotFrame();
-						playerSlotPane.setForPlayer(dataSource, rootFrame, uiViewport, player);
+						playerSlotPane.setForPlayer(dataSource, rootFrame, uiViewport, player, true);
 						usedSlots++;
 					}
 				}
@@ -87,10 +111,25 @@ public class TeamSetupPane {
 					playerSlotPane.getPlayerSlotFrame().addSetPoint(new SetPoint(FramePoint.TOPLEFT,
 							this.playerSlots.get(usedSlots - 1).getPlayerSlotFrame(), FramePoint.BOTTOMLEFT, 0, 0));
 				}
-				playerSlotPane.setForPlayer(dataSource, rootFrame, uiViewport, player);
+				playerSlotPane.setForPlayer(dataSource, rootFrame, uiViewport, player, false);
 				usedSlots++;
 			}
 		}
 		this.container.positionBounds(rootFrame, uiViewport);
+	}
+
+	private void clear() {
+		for (final PlayerSlotPane playerSlotPane : this.playerSlots) {
+			this.container.remove(playerSlotPane.getPlayerSlotFrame());
+		}
+		for (final GlueTextButtonFrame forceLabel : this.forceLabels) {
+			this.container.remove(forceLabel);
+		}
+		this.playerSlots.clear();
+		this.forceLabels.clear();
+	}
+
+	public void clearMap(GameUI rootFrame, Viewport uiViewport) {
+		clear();
 	}
 }

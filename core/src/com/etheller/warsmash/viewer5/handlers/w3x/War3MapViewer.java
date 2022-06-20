@@ -1326,7 +1326,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				simulationDestructable);
 		if (row.readSLKTagBoolean("walkable")) {
 			final float angle = facingRadians;
-			final BoundingBox boundingBox = model.bounds.getBoundingBox();
+			BoundingBox boundingBox = model.bounds.getBoundingBox();
+			if(boundingBox == null) {
+				// TODO this is a hack and should be fixed later
+				boundingBox = new BoundingBox(new Vector3(-10, -10, 0), new Vector3(10, 10, 0));
+			}
 			final Rectangle renderDestructableBounds = getRotatedBoundingBox(x, y, angle, boundingBox);
 			this.walkableObjectsTree.add((MdxComplexInstance) renderDestructable.instance, renderDestructableBounds);
 			renderDestructable.walkableBounds = renderDestructableBounds;

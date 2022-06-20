@@ -24,7 +24,10 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 			final int position = data.position();
 			final int protocolMessageId = data.getInt(position + 0);
 			final int length = data.getInt(position + 4);
-			if (data.remaining() >= length) {
+			if (length < 0) {
+				throw new IllegalStateException("Negative length value received from client while parsing: " + length);
+			}
+			if (data.remaining() >= (length + 8)) {
 				data.position(position + 8);
 				switch (protocolMessageId) {
 				case GamingNetworkClientToServerListener.Protocol.HANDSHAKE: {
@@ -66,16 +69,19 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 				case GamingNetworkClientToServerListener.Protocol.QUERY_GAMES_LIST: {
 					final long sessionToken = data.getLong();
 					this.listener.queryGamesList(sessionToken);
+					break;
 				}
 				case GamingNetworkClientToServerListener.Protocol.QUERY_GAME_INFO: {
 					final long sessionToken = data.getLong();
 					final String gameName = readString(GamingNetwork.CHANNEL_NAME_MAX_LENGTH, data);
 					this.listener.queryGameInfo(sessionToken, gameName);
+					break;
 				}
 				case GamingNetworkClientToServerListener.Protocol.JOIN_GAME: {
 					final long sessionToken = data.getLong();
 					final String gameName = readString(GamingNetwork.CHANNEL_NAME_MAX_LENGTH, data);
 					this.listener.joinGame(sessionToken, gameName);
+					break;
 				}
 				case GamingNetworkClientToServerListener.Protocol.CREATE_GAME: {
 					final long sessionToken = data.getLong();
@@ -83,15 +89,45 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 					final String mapName = readString(GamingNetwork.MAP_NAME_MAX_LENGTH, data);
 					final int totalSlots = data.getInt();
 					final LobbyGameSpeed gameSpeed = LobbyGameSpeed.VALUES[data.getInt()];
-					final long gameCreationTimeMillis = data.getLong();
 					final HostedGameVisibility visibility = HostedGameVisibility.VALUES[data.getInt()];
-					this.listener.createGame(sessionToken, gameName, mapName, totalSlots, gameSpeed,
-							gameCreationTimeMillis, visibility);
+					final long mapChecksum = data.getLong();
+					this.listener.createGame(sessionToken, gameName, mapName, totalSlots, gameSpeed, visibility,
+							mapChecksum);
+					break;
+				}
+				case GamingNetworkClientToServerListener.Protocol.LEAVE_GAME: {
+					final long sessionToken = data.getLong();
+					this.listener.leaveGame(sessionToken);
+					break;
+				}
+				case GamingNetworkClientToServerListener.Protocol.UPLOAD_MAP_DATA: {
+					final long sessionToken = data.getLong();
+					final int sequenceNumber = data.getInt();
+					final int mapDataPreLimit = data.limit();
+					try {
+						data.limit(position + 8 + length);
+						this.listener.uploadMapData(sessionToken, sequenceNumber, data);
+					}
+					finally {
+						data.limit(mapDataPreLimit);
+					}
+					break;
+				}
+				case GamingNetworkClientToServerListener.Protocol.UPLOAD_MAP_DATA_DONE: {
+					final long sessionToken = data.getLong();
+					final int sequenceNumber = data.getInt();
+					this.listener.mapDone(sessionToken, sequenceNumber);
+					break;
+				}
+				case GamingNetworkClientToServerListener.Protocol.REQUEST_MAP: {
+					final long sessionToken = data.getLong();
+					this.listener.requestMap(sessionToken);
+					break;
 				}
 				default:
 					break;
 				}
-				data.position(position + length);
+				data.position(position + 8 + length);
 			}
 			else {
 				break;

@@ -55,14 +55,14 @@ public class PlayerSlotPane {
 	}
 
 	public void setForPlayer(final DataSource dataSource, final GameUI rootFrame, final Viewport uiViewport,
-			final CPlayerJass player) {
+			final CPlayerJass player, boolean fixedPlayerSettings) {
 		final List<MenuItem> nameMenuItems = new ArrayList<>();
 		nameMenuItems.add(new MenuItem(rootFrame.getTemplates().getDecoratedString("OPEN"), -2));
 		nameMenuItems.add(new MenuItem(rootFrame.getTemplates().getDecoratedString("CLOSED"), -2));
 		nameMenuItems.add(new MenuItem(rootFrame.getTemplates().getDecoratedString("COMPUTER_NEWBIE"), -2));
 		nameMenuItems.add(new MenuItem(rootFrame.getTemplates().getDecoratedString("COMPUTER_NORMAL"), -2));
 		nameMenuItems.add(new MenuItem(rootFrame.getTemplates().getDecoratedString("COMPUTER_INSANE"), -2));
-		setNameMenuTextByPlayer(rootFrame, player, nameMenuItems);
+		setNameMenuTextByPlayer(rootFrame, player, nameMenuItems, fixedPlayerSettings);
 		rootFrame.setText(this.downloadValue, "");
 		this.downloadValue.setVisible(false);
 		setTextFromRacePreference(rootFrame, player);
@@ -103,7 +103,7 @@ public class PlayerSlotPane {
 					player.setAIDifficulty(AIDifficulty.INSANE);
 					break;
 				}
-				setNameMenuTextByPlayer(rootFrame, player, nameMenuItems);
+				setNameMenuTextByPlayer(rootFrame, player, nameMenuItems, false);
 			}
 		});
 
@@ -139,7 +139,7 @@ public class PlayerSlotPane {
 	}
 
 	public void setNameMenuTextByPlayer(final GameUI rootFrame, final CPlayerJass player,
-			final List<MenuItem> nameMenuItems) {
+			final List<MenuItem> nameMenuItems, boolean fixedPlayerSettings) {
 		String name = player.getName();
 		final CPlayerSlotState slotState = player.getSlotState();
 		final CMapControl controller = player.getController();
@@ -170,6 +170,9 @@ public class PlayerSlotPane {
 					name = nameMenuItems.get(3).getText();
 				default:
 					break;
+				}
+				if(fixedPlayerSettings) {
+					this.nameMenu.setEnabled(false);
 				}
 			}
 		}

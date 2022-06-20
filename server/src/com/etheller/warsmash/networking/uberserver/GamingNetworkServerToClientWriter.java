@@ -1,15 +1,19 @@
 package com.etheller.warsmash.networking.uberserver;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import net.warsmash.networking.util.AbstractWriter;
 import net.warsmash.nio.channels.WritableOutput;
 import net.warsmash.uberserver.AccountCreationFailureReason;
+import net.warsmash.uberserver.ChannelServerMessageType;
+import net.warsmash.uberserver.GameCreationFailureReason;
 import net.warsmash.uberserver.GamingNetwork;
 import net.warsmash.uberserver.GamingNetworkServerToClientListener;
 import net.warsmash.uberserver.HandshakeDeniedReason;
 import net.warsmash.uberserver.JoinGameFailureReason;
 import net.warsmash.uberserver.LoginFailureReason;
+import net.warsmash.uberserver.ServerErrorMessageType;
 
 public class GamingNetworkServerToClientWriter extends AbstractWriter implements GamingNetworkServerToClientListener {
 
@@ -145,14 +149,21 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	}
 
 	@Override
-	public void joinedGame(String gameName) {
+	public void joinedGame(String gameName, String mapName, long mapChecksum) {
 		if (gameName.length() > GamingNetwork.CHANNEL_NAME_MAX_LENGTH) {
 			gameName = gameName.substring(0, GamingNetwork.CHANNEL_NAME_MAX_LENGTH);
 		}
 		final byte[] bytes = gameName.getBytes(Charset.forName("utf-8"));
-		beginMessage(Protocol.JOINED_GAME, 4 + bytes.length);
+		if (mapName.length() > GamingNetwork.MAP_NAME_MAX_LENGTH) {
+			mapName = mapName.substring(0, GamingNetwork.MAP_NAME_MAX_LENGTH);
+		}
+		final byte[] mapNameBytes = mapName.getBytes(Charset.forName("utf-8"));
+		beginMessage(Protocol.JOINED_GAME, 4 + bytes.length + 4 + mapNameBytes.length + 8);
 		this.writeBuffer.putInt(bytes.length);
 		this.writeBuffer.put(bytes);
+		this.writeBuffer.putInt(mapNameBytes.length);
+		this.writeBuffer.put(mapNameBytes);
+		this.writeBuffer.putLong(mapChecksum);
 		send();
 	}
 
@@ -165,6 +176,60 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 
 	@Override
 	public void disconnected() {
-		throw new UnsupportedOperationException();
+		close();
+	}
+
+	@Override
+	public void gameCreationFailed(GameCreationFailureReason reason) {
+		beginMessage(Protocol.GAME_CREATION_FAILED, 4);
+		this.writeBuffer.putInt(reason.ordinal());
+		send();
+	}
+
+	@Override
+	public void gameCreationOk() {
+		beginMessage(Protocol.GAME_CREATION_OK, 0);
+		send();
+	}
+
+	@Override
+	public void channelServerMessage(String userName, ChannelServerMessageType messageType) {
+		if (userName.length() > GamingNetwork.USERNAME_MAX_LENGTH) {
+			userName = userName.substring(0, GamingNetwork.USERNAME_MAX_LENGTH);
+		}
+		final byte[] userNameBytes = userName.getBytes();
+		beginMessage(Protocol.CHANNEL_SERVER_MESSAGE, 4 + userNameBytes.length + 4);
+		this.writeBuffer.putInt(userNameBytes.length);
+		this.writeBuffer.put(userNameBytes);
+		this.writeBuffer.putInt(messageType.ordinal());
+		send();
+	}
+
+	@Override
+	public void beginSendMap() {
+		beginMessage(Protocol.BEGIN_SEND_MAP, 0);
+		send();
+	}
+
+	@Override
+	public void sendMapData(int sequenceNumber, ByteBuffer data) {
+		beginMessage(Protocol.SEND_MAP_DATA, 4 + data.remaining());
+		this.writeBuffer.putInt(sequenceNumber);
+		this.writeBuffer.put(data);
+		send();
+	}
+
+	@Override
+	public void endSendMap(int sequenceNumber) {
+		beginMessage(Protocol.END_SEND_MAP, 4);
+		this.writeBuffer.putInt(sequenceNumber);
+		send();
+	}
+
+	@Override
+	public void serverErrorMessage(ServerErrorMessageType messageType) {
+		beginMessage(Protocol.SERVER_ERROR_MESSAGE, 4);
+		this.writeBuffer.putInt(messageType.ordinal());
+		send();
 	}
 }

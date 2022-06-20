@@ -30,6 +30,9 @@ public class ArithmeticJassValueVisitor implements JassValueVisitor<JassValue> {
 
 	@Override
 	public JassValue accept(final IntegerJassValue value) {
+		if (this.rightHand == null) {
+			return this.sign.apply(value, IntegerJassValue.ZERO);
+		}
 		return this.rightHand.visit(ArithmeticLeftHandIntegerJassValueVisitor.INSTANCE.reset(value, this.sign));
 	}
 

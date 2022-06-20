@@ -3,7 +3,7 @@ package com.etheller.warsmash.util;
 import net.warsmash.uberserver.GamingNetwork;
 
 public class WarsmashConstants {
-	public static final int MAX_PLAYERS = 16;
+	public static final int MAX_PLAYERS = 28;
 	/*
 	 * With version, we use 0 for RoC, 1 for TFT emulation, and probably 2+ or
 	 * whatever for custom mods and other stuff
@@ -27,7 +27,7 @@ public class WarsmashConstants {
 	// find it yet so I used this
 	public static final String DEFAULT_STRING = "Default string";
 
-	public static final boolean CATCH_CURSOR = true;
+	public static final boolean CATCH_CURSOR = false;
 	public static final boolean VERBOSE_LOGGING = false;
 	public static final boolean ENABLE_DEBUG = false;
 	public static final char SPECIAL_ESCAPE_KEYCODE = 0x7E;

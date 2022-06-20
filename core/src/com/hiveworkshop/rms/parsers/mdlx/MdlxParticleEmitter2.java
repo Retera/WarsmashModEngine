@@ -55,7 +55,7 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 		}
 
 		public static HeadOrTail fromId(final int id) {
-			return values()[id];
+			return values()[id & 0x3];
 		}
 
 		public static int nameToId(final String name) {

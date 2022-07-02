@@ -3,7 +3,7 @@ package com.etheller.warsmash.util;
 import net.warsmash.uberserver.GamingNetwork;
 
 public class WarsmashConstants {
-	public static final int MAX_PLAYERS = 28;
+	public static final int MAX_PLAYERS = 16;
 	/*
 	 * With version, we use 0 for RoC, 1 for TFT emulation, and probably 2+ or
 	 * whatever for custom mods and other stuff

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.CRC32C;
 
+import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -34,17 +35,21 @@ import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapInfoPane;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapListContainer;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.PlayerSlotPaneListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.TeamSetupPane;
 
 import net.warsmash.uberserver.ChannelServerMessageType;
 import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.LobbyGameSpeed;
+import net.warsmash.uberserver.LobbyPlayerType;
 
 public class BattleNetUI {
 	private final GameUI rootFrame;
@@ -132,6 +137,8 @@ public class BattleNetUI {
 	private War3MapW3i customCreateCurrentMapInfo;
 	private War3Map customCreateCurrentMap;
 	private UIFrame battleNetGameChatroom;
+	private IntIntMap gameChatroomServerSlotToMapSlot;
+	private IntIntMap gameChatroomMapSlotToServerSlot;
 	private final MapInfoPane gameChatroomMapInfoPane;
 	private StringFrame gameChatroomGameNameValue;
 	private GlueButtonFrame gameChatroomStartGameButton;
@@ -140,6 +147,9 @@ public class BattleNetUI {
 	private EditBoxFrame gameChatroomChatEditBox;
 	private ListBoxFrame joinGameListBox;
 	private TeamSetupPane gameChatroomTeamSetupPane;
+	private War3MapConfig gameChatroomMapConfig;
+	private War3Map gameChatroomMap;
+	private War3MapW3i gameChatroomMapInfo;
 
 	public BattleNetUI(final GameUI rootFrame, final Viewport uiViewport, Scene uiScene, final DataSource dataSource,
 			final BattleNetUIActionListener actionListener) {
@@ -882,12 +892,18 @@ public class BattleNetUI {
 
 	private void setGameChatroomMap(War3Map map, final War3MapW3i mapInfo, final War3MapConfig war3MapConfig)
 			throws IOException {
+		this.gameChatroomMap = map;
+		this.gameChatroomMapInfo = mapInfo;
+		this.gameChatroomMapConfig = war3MapConfig;
 		for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
 			final CBasePlayer player = war3MapConfig.getPlayer(i);
 			player.setName(this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
 		}
 		Jass2.loadConfig(map, this.uiViewport, this.uiScene, this.rootFrame, war3MapConfig, "Scripts\\common.j",
 				"Scripts\\Blizzard.j", "Scripts\\war3map.j").config();
+		final IntIntMap serverSlotToMapSlot = new IntIntMap(WarsmashConstants.MAX_PLAYERS);
+		final IntIntMap mapSlotToServerSlot = new IntIntMap(WarsmashConstants.MAX_PLAYERS);
+		int serverSlot = 0;
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer player = war3MapConfig.getPlayer(i);
 			if (player.getController() == CMapControl.COMPUTER) {
@@ -895,11 +911,117 @@ public class BattleNetUI {
 					player.setSlotState(CPlayerSlotState.PLAYING);
 				}
 			}
+			else if (player.getController() == CMapControl.USER) {
+				serverSlotToMapSlot.put(serverSlot, i);
+				mapSlotToServerSlot.put(i, serverSlot);
+				serverSlot++;
+			}
 		}
+		this.gameChatroomServerSlotToMapSlot = serverSlotToMapSlot;
+		this.gameChatroomMapSlotToServerSlot = mapSlotToServerSlot;
 		this.gameChatroomMapInfoPane.setMap(this.rootFrame, this.uiViewport, map, mapInfo, war3MapConfig);
-		this.gameChatroomTeamSetupPane.setMap(map, this.rootFrame, this.uiViewport, war3MapConfig,
-				mapInfo.getPlayers().size(), mapInfo);
+		this.gameChatroomTeamSetupPane.setMap(this.rootFrame, this.uiViewport, war3MapConfig,
+				mapInfo.getPlayers().size(), mapInfo, new PlayerSlotPaneListener() {
 
+					@Override
+					public void setPlayerSlot(int index, LobbyPlayerType lobbyPlayerType) {
+						final int serverSlot = BattleNetUI.this.gameChatroomMapSlotToServerSlot.get(index, -1);
+						BattleNetUI.this.actionListener.gameLobbySetPlayerSlot(serverSlot, lobbyPlayerType);
+					}
+
+					@Override
+					public void setPlayerRace(int index, int raceItemIndex) {
+						final int serverSlot = BattleNetUI.this.gameChatroomMapSlotToServerSlot.get(index, -1);
+						BattleNetUI.this.actionListener.gameLobbySetPlayerRace(serverSlot, raceItemIndex);
+					}
+				});
+
+	}
+
+	public void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType) {
+		if (this.gameChatroomServerSlotToMapSlot != null) {
+			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
+			if (mapSlot != -1) {
+				final CBasePlayer player = this.gameChatroomMapConfig.getPlayer(mapSlot);
+				switch (playerType) {
+				case OPEN:
+					player.setController(CMapControl.NONE);
+					player.setSlotState(CPlayerSlotState.EMPTY);
+					player.setAIDifficulty(null);
+					break;
+				case CLOSED:
+					player.setController(CMapControl.NONE);
+					player.setSlotState(CPlayerSlotState.PLAYING);
+					player.setAIDifficulty(null);
+					break;
+				case COMPUTER_NEWBIE:
+					player.setController(CMapControl.COMPUTER);
+					player.setSlotState(CPlayerSlotState.PLAYING);
+					player.setAIDifficulty(AIDifficulty.NEWBIE);
+					break;
+				case COMPUTER_NORMAL:
+					player.setController(CMapControl.COMPUTER);
+					player.setSlotState(CPlayerSlotState.PLAYING);
+					player.setAIDifficulty(AIDifficulty.NORMAL);
+					break;
+				case COMPUTER_INSANE:
+					player.setController(CMapControl.COMPUTER);
+					player.setSlotState(CPlayerSlotState.PLAYING);
+					player.setAIDifficulty(AIDifficulty.INSANE);
+					break;
+				case USER:
+					player.setController(CMapControl.USER);
+					player.setSlotState(CPlayerSlotState.PLAYING);
+					player.setAIDifficulty(null);
+					break;
+				}
+				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(slot, this.rootFrame, this.uiViewport,
+						this.gameChatroomMapConfig, this.gameChatroomMapInfo);
+			}
+		}
+	}
+
+	public void gameLobbySlotSetPlayer(int slot, String userName) {
+		if (this.gameChatroomServerSlotToMapSlot != null) {
+			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
+			if (mapSlot != -1) {
+				final CBasePlayer player = this.gameChatroomMapConfig.getPlayer(mapSlot);
+				player.setName(userName);
+				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(slot, this.rootFrame, this.uiViewport,
+						this.gameChatroomMapConfig, this.gameChatroomMapInfo);
+			}
+		}
+	}
+
+	public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+		if (this.gameChatroomServerSlotToMapSlot != null) {
+			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
+			if (mapSlot != -1) {
+				final CBasePlayer player = this.gameChatroomMapConfig.getPlayer(mapSlot);
+				switch (raceItemIndex) {
+				case 0:
+					player.setRacePref(CRacePreference.RANDOM);
+					break;
+				case 1:
+					player.setRacePref(CRacePreference.HUMAN);
+					break;
+				case 2:
+					player.setRacePref(CRacePreference.ORC);
+					break;
+				case 3:
+					player.setRacePref(CRacePreference.UNDEAD);
+					break;
+				case 4:
+					player.setRacePref(CRacePreference.NIGHTELF);
+					break;
+
+				default:
+					break;
+				}
+				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(slot, this.rootFrame, this.uiViewport,
+						this.gameChatroomMapConfig, this.gameChatroomMapInfo);
+			}
+		}
 	}
 
 	public void setJoinGamePreviewMapToHostedMap() {
@@ -919,5 +1041,7 @@ public class BattleNetUI {
 	public void clearJoinGamePreviewMap(String mapPreviewName) {
 		this.gameChatroomMapInfoPane.clearMap(this.rootFrame, this.uiViewport, mapPreviewName);
 		this.gameChatroomTeamSetupPane.clearMap(this.rootFrame, this.uiViewport);
+		this.gameChatroomServerSlotToMapSlot = null;
+		this.gameChatroomMapSlotToServerSlot = null;
 	}
 }

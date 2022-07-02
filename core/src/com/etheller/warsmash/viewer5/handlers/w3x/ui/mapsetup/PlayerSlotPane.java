@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.MenuItem;
 import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
@@ -16,13 +15,14 @@ import com.etheller.warsmash.parsers.fdf.frames.PopupMenuFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
-import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.viewer5.handlers.mdx.ReplaceableIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
+
+import net.warsmash.uberserver.LobbyPlayerType;
 
 public class PlayerSlotPane {
 	private final SimpleFrame playerSlotFrame;
@@ -33,10 +33,12 @@ public class PlayerSlotPane {
 	private final GlueButtonFrame colorButtonFrame;
 	private final BackdropFrame colorButtonValueFrame;
 	private final int index;
+	private final PlayerSlotPaneListener playerSlotPaneListener;
 
 	public PlayerSlotPane(final GameUI rootFrame, final Viewport uiViewport, final SimpleFrame container,
-			final int index) {
+			final int index, PlayerSlotPaneListener playerSlotPaneListener) {
 		this.index = index;
+		this.playerSlotPaneListener = playerSlotPaneListener;
 		this.playerSlotFrame = (SimpleFrame) rootFrame.createFrameByType("SIMPLEFRAME", "PlayerSlot", container,
 				"WITHCHILDREN", index);
 		container.add(this.playerSlotFrame);
@@ -54,8 +56,8 @@ public class PlayerSlotPane {
 		this.playerSlotFrame.add(this.colorButtonValueFrame);
 	}
 
-	public void setForPlayer(final DataSource dataSource, final GameUI rootFrame, final Viewport uiViewport,
-			final CPlayerJass player, boolean fixedPlayerSettings) {
+	public void setForPlayer(final GameUI rootFrame, final Viewport uiViewport, final CPlayerJass player,
+			boolean fixedPlayerSettings) {
 		final List<MenuItem> nameMenuItems = new ArrayList<>();
 		nameMenuItems.add(new MenuItem(rootFrame.getTemplates().getDecoratedString("OPEN"), -2));
 		nameMenuItems.add(new MenuItem(rootFrame.getTemplates().getDecoratedString("CLOSED"), -2));
@@ -66,8 +68,7 @@ public class PlayerSlotPane {
 		rootFrame.setText(this.downloadValue, "");
 		this.downloadValue.setVisible(false);
 		setTextFromRacePreference(rootFrame, player);
-		// TODO maybe caching instead of accessing data source?
-		this.colorButtonValueFrame.setBackground(ImageUtils.getAnyExtensionTexture(dataSource, "ReplaceableTextures\\"
+		this.colorButtonValueFrame.setBackground(rootFrame.loadTexture("ReplaceableTextures\\"
 				+ ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(player.getColor()) + ".blp"));
 
 		((MenuFrame) this.nameMenu.getPopupMenuFrame()).setItems(uiViewport, nameMenuItems);
@@ -77,60 +78,34 @@ public class PlayerSlotPane {
 				switch (menuItemIndex) {
 				case 0:
 					// open
-					player.setController(CMapControl.NONE);
-					player.setSlotState(CPlayerSlotState.EMPTY);
-					player.setAIDifficulty(null);
+					PlayerSlotPane.this.playerSlotPaneListener.setPlayerSlot(PlayerSlotPane.this.index,
+							LobbyPlayerType.OPEN);
 					break;
 				case 1:
 					// close
-					player.setController(CMapControl.NONE);
-					player.setSlotState(CPlayerSlotState.PLAYING);
-					player.setAIDifficulty(null);
+					PlayerSlotPane.this.playerSlotPaneListener.setPlayerSlot(PlayerSlotPane.this.index,
+							LobbyPlayerType.CLOSED);
 					break;
 				case 2:
-					player.setController(CMapControl.COMPUTER);
-					player.setSlotState(CPlayerSlotState.PLAYING);
-					player.setAIDifficulty(AIDifficulty.NEWBIE);
+					PlayerSlotPane.this.playerSlotPaneListener.setPlayerSlot(PlayerSlotPane.this.index,
+							LobbyPlayerType.COMPUTER_NEWBIE);
 					break;
 				case 3:
-					player.setController(CMapControl.COMPUTER);
-					player.setSlotState(CPlayerSlotState.PLAYING);
-					player.setAIDifficulty(AIDifficulty.NORMAL);
+					PlayerSlotPane.this.playerSlotPaneListener.setPlayerSlot(PlayerSlotPane.this.index,
+							LobbyPlayerType.COMPUTER_NORMAL);
 					break;
 				case 4:
-					player.setController(CMapControl.COMPUTER);
-					player.setSlotState(CPlayerSlotState.PLAYING);
-					player.setAIDifficulty(AIDifficulty.INSANE);
+					PlayerSlotPane.this.playerSlotPaneListener.setPlayerSlot(PlayerSlotPane.this.index,
+							LobbyPlayerType.COMPUTER_INSANE);
 					break;
 				}
-				setNameMenuTextByPlayer(rootFrame, player, nameMenuItems, false);
 			}
 		});
 
 		this.raceMenu.setMenuClickListener(new MenuClickListener() {
 			@Override
 			public void onClick(final int button, final int menuItemIndex) {
-				switch (menuItemIndex) {
-				case 0:
-					player.setRacePref(CRacePreference.RANDOM);
-					break;
-				case 1:
-					player.setRacePref(CRacePreference.HUMAN);
-					break;
-				case 2:
-					player.setRacePref(CRacePreference.ORC);
-					break;
-				case 3:
-					player.setRacePref(CRacePreference.UNDEAD);
-					break;
-				case 4:
-					player.setRacePref(CRacePreference.NIGHTELF);
-					break;
-
-				default:
-					break;
-				}
-				setTextFromRacePreference(rootFrame, player);
+				PlayerSlotPane.this.playerSlotPaneListener.setPlayerRace(PlayerSlotPane.this.index, menuItemIndex);
 			}
 		});
 		this.raceMenu.setEnabled(player.isRaceSelectable());
@@ -144,6 +119,7 @@ public class PlayerSlotPane {
 		final CPlayerSlotState slotState = player.getSlotState();
 		final CMapControl controller = player.getController();
 		AIDifficulty aiDifficulty = player.getAIDifficulty();
+		this.nameMenu.setEnabled(true);
 		if (slotState == CPlayerSlotState.EMPTY) {
 			name = nameMenuItems.get(0).getText();
 		}
@@ -171,7 +147,7 @@ public class PlayerSlotPane {
 				default:
 					break;
 				}
-				if(fixedPlayerSettings) {
+				if (fixedPlayerSettings) {
 					this.nameMenu.setEnabled(false);
 				}
 			}

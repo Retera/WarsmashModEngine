@@ -192,6 +192,31 @@ public class TCPGamingNetworkServerToClientParser implements TCPClientParser {
 					this.listener.serverErrorMessage(messageType);
 					break;
 				}
+				case GamingNetworkServerToClientListener.Protocol.GAME_LOBBY_SET_PLAYER: {
+					final int lobbySlot = data.getInt();
+					final String username = readString(GamingNetwork.USERNAME_MAX_LENGTH, data);
+					this.listener.gameLobbySlotSetPlayer(lobbySlot, username);
+					break;
+				}
+				case GamingNetworkServerToClientListener.Protocol.GAME_LOBBY_SET_PLAYER_TYPE: {
+					final int lobbySlot = data.getInt();
+					final int playerTypeOrdinal = data.getInt();
+					LobbyPlayerType playerType;
+					if ((playerTypeOrdinal >= 0) && (playerTypeOrdinal < LobbyPlayerType.VALUES.length)) {
+						playerType = LobbyPlayerType.VALUES[playerTypeOrdinal];
+					}
+					else {
+						playerType = null;
+					}
+					this.listener.gameLobbySlotSetPlayerType(lobbySlot, playerType);
+					break;
+				}
+				case GamingNetworkServerToClientListener.Protocol.GAME_LOBBY_SET_PLAYER_RACE: {
+					final int lobbySlot = data.getInt();
+					final int raceItemIndex = data.getInt();
+					this.listener.gameLobbySlotSetPlayerRace(lobbySlot, raceItemIndex);
+					break;
+				}
 				default:
 					break;
 				}

@@ -26,6 +26,7 @@ import net.warsmash.uberserver.HandshakeDeniedReason;
 import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.JoinGameFailureReason;
 import net.warsmash.uberserver.LobbyGameSpeed;
+import net.warsmash.uberserver.LobbyPlayerType;
 import net.warsmash.uberserver.LoginFailureReason;
 import net.warsmash.uberserver.ServerErrorMessageType;
 
@@ -158,7 +159,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 					connectionContext.joinGameFailed(JoinGameFailureReason.NO_SUCH_GAME);
 				}
 				else {
-					if (game.userSessions.size() >= game.totalSlots) {
+					if (game.getUsedSlots() >= game.totalSlots) {
 						connectionContext.joinGameFailed(JoinGameFailureReason.GAME_FULL);
 					}
 					else {
@@ -166,6 +167,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 						session.currentGameName = gameKey;
 						connectionContext.joinedGame(gameName, game.mapName, game.mapChecksum);
 						game.sendServerMessage(session.getUser().getUsername(), ChannelServerMessageType.JOIN_GAME);
+						game.resendLobby(connectionContext);
 					}
 				}
 			}
@@ -237,6 +239,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 					// easy case: send map
 					System.err.println(session.getUser().getUsername() + " - sending map");
 					hostedGame.sendMap(connectionContext);
+					hostedGame.resendLobby(connectionContext);
 				}
 				else {
 					System.err.println(
@@ -286,6 +289,63 @@ public class GamingNetworkServerBusinessLogicImpl {
 				session.currentGameName = gameKey;
 				connectionContext.joinedGame(gameName, game.mapName, game.mapChecksum);
 				game.sendServerMessage(session.getUser().getUsername(), ChannelServerMessageType.JOIN_GAME);
+				game.resendLobby(connectionContext);
+			}
+		}
+		else {
+			connectionContext.badSession();
+		}
+	}
+
+	public void gameLobbySetPlayerSlot(long sessionToken, int slot, LobbyPlayerType lobbyPlayerType,
+			GamingNetworkServerToClientWriter connectionContext) {
+		final SessionImpl session = getSession(sessionToken, connectionContext);
+		if (session != null) {
+			if (session.currentGameName != null) {
+				final String channelKey = session.currentGameName.toLowerCase(Locale.US);
+				final HostedGame game = this.nameLowerCaseToGame.get(channelKey);
+				if (game != null) {
+					if (game.hostUser == session.getUser()) {
+						game.setPlayerSlotType(slot, lobbyPlayerType);
+					}
+					else {
+						connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+					}
+				}
+				else {
+					connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				}
+			}
+			else {
+				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+			}
+		}
+		else {
+			connectionContext.badSession();
+		}
+	}
+
+	public void gameLobbySetPlayerRace(long sessionToken, int slot, int raceItemIndex,
+			GamingNetworkServerToClientWriter connectionContext) {
+		final SessionImpl session = getSession(sessionToken, connectionContext);
+		if (session != null) {
+			if (session.currentGameName != null) {
+				final String channelKey = session.currentGameName.toLowerCase(Locale.US);
+				final HostedGame game = this.nameLowerCaseToGame.get(channelKey);
+				if (game != null) {
+					if (game.canSetRace(session, slot)) {
+						game.setPlayerRace(slot, raceItemIndex);
+					}
+					else {
+						connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+					}
+				}
+				else {
+					connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				}
+			}
+			else {
+				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
 			}
 		}
 		else {
@@ -329,9 +389,11 @@ public class GamingNetworkServerBusinessLogicImpl {
 
 	private void closeGame(final String previousGameKey, final HostedGame previousGame) {
 		// 1.) notify clients that they were booted from game
-		for (final SessionImpl nonHostUserSession : previousGame.userSessions) {
-			nonHostUserSession.currentGameName = null;
-			sendSessionToDefaultChannel(nonHostUserSession);
+		for (final SessionImpl nonHostUserSession : previousGame.userSessionSlots) {
+			if (nonHostUserSession != null) {
+				nonHostUserSession.currentGameName = null;
+				sendSessionToDefaultChannel(nonHostUserSession);
+			}
 		}
 		// 2.) close down the game
 		this.nameLowerCaseToGame.remove(previousGameKey);
@@ -528,6 +590,11 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
+	private static final class HostedGamePlayerData {
+		private LobbyPlayerType type = LobbyPlayerType.OPEN;
+		private int raceItemIndex = -1;
+	}
+
 	private static final class HostedGame {
 		private final User hostUser;
 		private final String gameName;
@@ -536,7 +603,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 		private final LobbyGameSpeed gameSpeed;
 		private final HostedGameVisibility visibility;
 		private final long mapChecksum;
-		private final List<SessionImpl> userSessions = new ArrayList<>();
+		private final SessionImpl[] userSessionSlots;
+		private final HostedGamePlayerData[] userSessionSlotsGameData;
 		private final List<SessionImpl> userSessionsAwaitingMap = new ArrayList<>();
 		private NetMapDownloader mapDownloader;
 		private File mapFile;
@@ -551,6 +619,11 @@ public class GamingNetworkServerBusinessLogicImpl {
 			this.gameSpeed = gameSpeed;
 			this.visibility = visibility;
 			this.mapChecksum = mapChecksum;
+			this.userSessionSlots = new SessionImpl[totalSlots];
+			this.userSessionSlotsGameData = new HostedGamePlayerData[totalSlots];
+			for (int i = 0; i < totalSlots; i++) {
+				this.userSessionSlotsGameData[i] = new HostedGamePlayerData();
+			}
 		}
 
 		public boolean mapDone(long sessionToken, int sequenceNumber) {
@@ -600,19 +673,71 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 
 		public void removeUser(final SessionImpl session) {
-			this.userSessions.remove(session);
+			int returnIndex = -1;
+			for (int i = 0; i < this.userSessionSlots.length; i++) {
+				if (this.userSessionSlots[i] == session) {
+					returnIndex = i;
+				}
+			}
+			if (returnIndex != -1) {
+				this.userSessionSlots[returnIndex] = null;
+				this.userSessionSlotsGameData[returnIndex].type = LobbyPlayerType.OPEN;
+
+				for (int i = 0; i < this.userSessionSlots.length; i++) {
+					if (this.userSessionSlots[i] != null) {
+						this.userSessionSlots[i].mostRecentConnectionContext.gameLobbySlotSetPlayerType(returnIndex,
+								LobbyPlayerType.OPEN);
+					}
+				}
+			}
+			this.userSessionsAwaitingMap.remove(session);
 		}
 
-		public void addUser(final SessionImpl session) {
-			this.userSessions.add(session);
+		public int addUser(final SessionImpl session) {
+			int returnIndex = -1;
+			for (int i = 0; i < this.userSessionSlots.length; i++) {
+				if (this.userSessionSlots[i] == null) {
+					returnIndex = i;
+					break;
+				}
+			}
+			if (returnIndex != -1) {
+				this.userSessionSlots[returnIndex] = session;
+				final HostedGamePlayerData hostedGamePlayerData = this.userSessionSlotsGameData[returnIndex];
+				hostedGamePlayerData.type = LobbyPlayerType.USER;
+
+				for (int i = 0; i < this.userSessionSlots.length; i++) {
+					if ((this.userSessionSlots[i] != null) && (this.userSessionSlots[i] != session)) {
+						// upon adding user X, we do not send to himself. At the moment, that is handled
+						// elsewhere...
+						this.userSessionSlots[i].mostRecentConnectionContext.gameLobbySlotSetPlayerType(returnIndex,
+								LobbyPlayerType.USER);
+						this.userSessionSlots[i].mostRecentConnectionContext.gameLobbySlotSetPlayer(returnIndex,
+								session.getUser().getUsername());
+					}
+				}
+			}
+			return returnIndex;
 		}
 
 		public void addPlayerAwaitingMap(SessionImpl session) {
 			this.userSessionsAwaitingMap.add(session);
 		}
 
+		public void resendLobby(GamingNetworkServerToClientListener connectionContext) {
+			for (int i = 0; i < this.userSessionSlotsGameData.length; i++) {
+				connectionContext.gameLobbySlotSetPlayerType(i, this.userSessionSlotsGameData[i].type);
+				if (this.userSessionSlots[i] != null) {
+					connectionContext.gameLobbySlotSetPlayer(i, this.userSessionSlots[i].getUser().getUsername());
+				}
+				if (this.userSessionSlotsGameData[i].raceItemIndex != -1) {
+					connectionContext.gameLobbySlotSetPlayerRace(i, this.userSessionSlotsGameData[i].raceItemIndex);
+				}
+			}
+		}
+
 		public boolean isEmpty() {
-			return this.userSessions.isEmpty();
+			return getUsedSlots() == 0;
 		}
 
 		public String getGameName() {
@@ -620,7 +745,13 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 
 		public int getUsedSlots() {
-			return this.userSessions.size();
+			int usedSlots = 0;
+			for (int i = 0; i < this.userSessionSlots.length; i++) {
+				if (this.userSessionSlots[i] != null) {
+					usedSlots++;
+				}
+			}
+			return usedSlots;
 		}
 
 		public int getTotalSlots() {
@@ -628,41 +759,114 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 
 		public void sendMessage(final String sourceUserName, final String message) {
-			for (final SessionImpl session : this.userSessions) {
-				try {
-					session.mostRecentConnectionContext.channelMessage(sourceUserName, message);
-				}
-				catch (final Exception exc) {
-					exc.printStackTrace();
+			for (int i = 0; i < this.userSessionSlots.length; i++) {
+				final SessionImpl session = this.userSessionSlots[i];
+				if (session != null) {
+					try {
+						session.mostRecentConnectionContext.channelMessage(sourceUserName, message);
+					}
+					catch (final Exception exc) {
+						exc.printStackTrace();
+					}
 				}
 			}
 		}
 
 		public void sendEmote(final String sourceUserName, final String message) {
-			for (final SessionImpl session : this.userSessions) {
-				try {
-					session.mostRecentConnectionContext.channelEmote(sourceUserName, message);
-				}
-				catch (final Exception exc) {
-					exc.printStackTrace();
+			for (int i = 0; i < this.userSessionSlots.length; i++) {
+				final SessionImpl session = this.userSessionSlots[i];
+				if (session != null) {
+					try {
+						session.mostRecentConnectionContext.channelEmote(sourceUserName, message);
+					}
+					catch (final Exception exc) {
+						exc.printStackTrace();
+					}
 				}
 			}
 		}
 
 		public void sendServerMessage(final String sourceUserName, final ChannelServerMessageType message) {
-			for (final SessionImpl session : this.userSessions) {
-				try {
-					session.mostRecentConnectionContext.channelServerMessage(sourceUserName, message);
+			for (int i = 0; i < this.userSessionSlots.length; i++) {
+				final SessionImpl session = this.userSessionSlots[i];
+				if (session != null) {
+					try {
+						session.mostRecentConnectionContext.channelServerMessage(sourceUserName, message);
+					}
+					catch (final Exception exc) {
+						exc.printStackTrace();
+					}
 				}
-				catch (final Exception exc) {
-					exc.printStackTrace();
+			}
+		}
+
+		public void setPlayerSlotType(int slot, LobbyPlayerType lobbyPlayerType) {
+			if (lobbyPlayerType != LobbyPlayerType.USER) {
+				this.userSessionSlotsGameData[slot].type = lobbyPlayerType;
+				this.userSessionSlots[slot] = null;
+				for (int i = 0; i < this.userSessionSlots.length; i++) {
+					if (this.userSessionSlots[i] != null) {
+						this.userSessionSlots[i].mostRecentConnectionContext.gameLobbySlotSetPlayerType(slot,
+								lobbyPlayerType);
+					}
 				}
+			}
+		}
+
+		public boolean canSetRace(SessionImpl session, int slot) {
+			return ((session.getUser() == this.hostUser)
+					&& (this.userSessionSlotsGameData[slot].type != LobbyPlayerType.USER))
+					|| (session == this.userSessionSlots[slot]);
+		}
+
+		public void setPlayerRace(int slot, int raceItemIndex) {
+			this.userSessionSlotsGameData[slot].raceItemIndex = raceItemIndex;
+			for (int i = 0; i < this.userSessionSlots.length; i++) {
+				if (this.userSessionSlots[i] != null) {
+					this.userSessionSlots[i].mostRecentConnectionContext.gameLobbySlotSetPlayerRace(slot,
+							raceItemIndex);
+				}
+			}
+		}
+
+		public void setPlayerSlot(SessionImpl session, int slot) {
+			int returnIndex = -1;
+			for (int i = 0; i < this.userSessionSlots.length; i++) {
+				if (this.userSessionSlots[i] == session) {
+					returnIndex = i;
+				}
+			}
+			if ((returnIndex != -1) && (slot != returnIndex)) {
+				if ((slot >= 0) && (slot < this.userSessionSlots.length)) {
+					if ((this.userSessionSlots[slot] == null)
+							&& (this.userSessionSlotsGameData[slot].type == LobbyPlayerType.OPEN)) {
+
+						this.userSessionSlots[returnIndex] = null;
+						this.userSessionSlotsGameData[returnIndex].type = LobbyPlayerType.OPEN;
+
+						this.userSessionSlots[slot] = session;
+						this.userSessionSlotsGameData[slot].type = LobbyPlayerType.USER;
+
+						for (int i = 0; i < this.userSessionSlots.length; i++) {
+							if (this.userSessionSlots[i] != null) {
+								this.userSessionSlots[i].mostRecentConnectionContext
+										.gameLobbySlotSetPlayerType(returnIndex, LobbyPlayerType.OPEN);
+								this.userSessionSlots[i].mostRecentConnectionContext.gameLobbySlotSetPlayerType(slot,
+										LobbyPlayerType.USER);
+								this.userSessionSlots[i].mostRecentConnectionContext.gameLobbySlotSetPlayer(slot,
+										session.getUser().getUsername());
+							}
+						}
+					}
+				}
+
 			}
 		}
 
 		public void sendMapToAwaitingUsers() {
 			for (final SessionImpl session : this.userSessionsAwaitingMap) {
 				sendMap(session.mostRecentConnectionContext);
+				resendLobby(session.mostRecentConnectionContext);
 			}
 			this.userSessionsAwaitingMap.clear();
 		}

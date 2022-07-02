@@ -14,6 +14,7 @@ import net.warsmash.uberserver.GamingNetworkServerToClientListener;
 import net.warsmash.uberserver.GamingNetworkServerToClientListener.GamingNetworkServerToClientNotifier;
 import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.LobbyGameSpeed;
+import net.warsmash.uberserver.LobbyPlayerType;
 import net.warsmash.uberserver.TCPGamingNetworkServerToClientParser;
 
 public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
@@ -151,6 +152,16 @@ public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
 	@Override
 	public void requestMap(long sessionToken) {
 		this.gamingNetworkClientToServerWriter.requestMap(sessionToken);
+	}
+
+	@Override
+	public void gameLobbySetPlayerSlot(long sessionToken, int slot, LobbyPlayerType lobbyPlayerType) {
+		this.gamingNetworkClientToServerWriter.gameLobbySetPlayerSlot(sessionToken, slot, lobbyPlayerType);
+	}
+
+	@Override
+	public void gameLobbySetPlayerRace(long sessionToken, int slot, int raceItemIndex) {
+		this.gamingNetworkClientToServerWriter.gameLobbySetPlayerRace(sessionToken, slot, raceItemIndex);
 	}
 
 	@Override

@@ -86,7 +86,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 		}
 		final byte[] usernameBytes = username.getBytes();
 		final int passwordHashUsedBytes = Math.min(passwordHash.length, GamingNetwork.PASSWORD_DATA_MAX_LENGTH);
-		beginMessage(Protocol.CREATE_ACCOUNT, 4 + usernameBytes.length + 4 + passwordHashUsedBytes);
+		beginMessage(Protocol.CREATE_ACCOUNT, 4 + usernameBytes.length + 4 + (passwordHashUsedBytes * 2));
 		this.writeBuffer.putInt(usernameBytes.length);
 		this.writeBuffer.put(usernameBytes);
 		this.writeBuffer.putInt(passwordHashUsedBytes);
@@ -181,6 +181,24 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 	public void requestMap(long sessionToken) {
 		beginMessage(Protocol.REQUEST_MAP, 8);
 		this.writeBuffer.putLong(sessionToken);
+		send();
+	}
+
+	@Override
+	public void gameLobbySetPlayerSlot(long sessionToken, int slot, LobbyPlayerType lobbyPlayerType) {
+		beginMessage(Protocol.GAME_LOBBY_SET_PLAYER_SLOT, 8 + 4 + 4);
+		this.writeBuffer.putLong(sessionToken);
+		this.writeBuffer.putInt(slot);
+		this.writeBuffer.putInt(lobbyPlayerType.ordinal());
+		send();
+	}
+
+	@Override
+	public void gameLobbySetPlayerRace(long sessionToken, int slot, int raceItemIndex) {
+		beginMessage(Protocol.GAME_LOBBY_SET_PLAYER_RACE, 8 + 4 + 4);
+		this.writeBuffer.putLong(sessionToken);
+		this.writeBuffer.putInt(slot);
+		this.writeBuffer.putInt(raceItemIndex);
 		send();
 	}
 

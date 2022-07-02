@@ -47,6 +47,18 @@ public class SetupGroups {
 		return object.layer.filterMode;
 	}
 
+	public static float getBackup2Prio(final Batch object) {
+		return (object.geoset.mdlxGeoset.extent.max[2] + object.geoset.mdlxGeoset.extent.min[2]) / 2;
+	}
+
+	public static float getBackup2Prio(final ParticleEmitter2Object object) {
+		return object.pivot[2];
+	}
+
+	public static float getBackup2Prio(final RibbonEmitterObject object) {
+		return object.pivot[2];
+	}
+
 	public static int getBackupPrio(final Object object) {
 		if (object instanceof Batch) {
 			return getBackupPrio((Batch) object);
@@ -56,6 +68,21 @@ public class SetupGroups {
 		}
 		else if (object instanceof ParticleEmitter2Object) {
 			return getBackupPrio((ParticleEmitter2Object) object);
+		}
+		else {
+			throw new IllegalArgumentException(object.getClass().getName());
+		}
+	}
+
+	public static float getBackup2Prio(final Object object) {
+		if (object instanceof Batch) {
+			return getBackup2Prio((Batch) object);
+		}
+		else if (object instanceof RibbonEmitterObject) {
+			return getBackup2Prio((RibbonEmitterObject) object);
+		}
+		else if (object instanceof ParticleEmitter2Object) {
+			return getBackup2Prio((ParticleEmitter2Object) object);
 		}
 		else {
 			throw new IllegalArgumentException(object.getClass().getName());
@@ -125,7 +152,12 @@ public class SetupGroups {
 			public int compare(final Object o1, final Object o2) {
 				final int priorityDifference = getPrio(o1) - getPrio(o2);
 				if (priorityDifference == 0) {
-					return getBackupPrio(o1) - getBackupPrio(o2);
+					final int backupPriorityDifference = getBackupPrio(o1) - getBackupPrio(o2);
+					if (backupPriorityDifference == 0) {
+						final int backup2 = Float.compare(getBackup2Prio(o1), getBackup2Prio(o2));
+						return backup2;
+					}
+					return backupPriorityDifference;
 				}
 				return priorityDifference;
 			}

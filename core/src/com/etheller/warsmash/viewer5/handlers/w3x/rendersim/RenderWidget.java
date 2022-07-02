@@ -74,32 +74,32 @@ public interface RenderWidget {
 				final boolean allowRarityVariations) {
 			EnumSet<SecondaryTag> secondaryWalkTags;
 			float animationMoveSpeed;
-			if (animationWalkSpeed < animationRunSpeed) {
-				final float midpoint = (animationWalkSpeed + animationRunSpeed) / 2;
+			if (this.animationWalkSpeed < this.animationRunSpeed) {
+				final float midpoint = (this.animationWalkSpeed + this.animationRunSpeed) / 2;
 				if (currentMovementSpeed >= midpoint) {
 					secondaryWalkTags = SequenceUtils.FAST;
-					animationMoveSpeed = animationRunSpeed;
+					animationMoveSpeed = this.animationRunSpeed;
 				}
 				else {
 					secondaryWalkTags = SequenceUtils.EMPTY;
-					animationMoveSpeed = animationWalkSpeed;
+					animationMoveSpeed = this.animationWalkSpeed;
 				}
 			}
 			else {
 				secondaryWalkTags = SequenceUtils.EMPTY;
-				animationMoveSpeed = animationWalkSpeed;
+				animationMoveSpeed = this.animationWalkSpeed;
 			}
-			animationMoveSpeed *= instance.localScale.x;
+			animationMoveSpeed *= this.instance.localScale.x;
 			final float speedRatio = (currentMovementSpeed) / animationMoveSpeed;
-			playAnimation(force, PrimaryTag.WALK, secondaryWalkTags, speedRatio, allowRarityVariations);
+			playAnimation(force, PrimaryTag.DISSIPATE, secondaryWalkTags, speedRatio, allowRarityVariations);
 		}
 
 		@Override
 		public void addSecondaryTag(final AnimationTokens.SecondaryTag tag) {
-			if (!secondaryAnimationTags.contains(tag)) {
+			if (!this.secondaryAnimationTags.contains(tag)) {
 				this.secondaryAnimationTags.add(tag);
-				if (!animationQueue.isEmpty()) {
-					final QueuedAnimation nextAnimation = animationQueue.poll();
+				if (!this.animationQueue.isEmpty()) {
+					final QueuedAnimation nextAnimation = this.animationQueue.poll();
 					playAnimation(true, nextAnimation.animationName, nextAnimation.secondaryAnimationTags, 1.0f,
 							nextAnimation.allowRarityVariations);
 				}
@@ -112,7 +112,7 @@ public interface RenderWidget {
 
 		@Override
 		public void removeSecondaryTag(final AnimationTokens.SecondaryTag tag) {
-			if (secondaryAnimationTags.contains(tag)) {
+			if (this.secondaryAnimationTags.contains(tag)) {
 				this.secondaryAnimationTags.remove(tag);
 				playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio,
 						this.currentlyAllowingRarityVariations);
@@ -132,14 +132,14 @@ public interface RenderWidget {
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);
 				this.instance.setAnimationSpeed(speedRatio);
-				if ((animationName != PrimaryTag.WALK) && (currentAnimation == PrimaryTag.WALK)) {
-					lastWalkFrame = instance.frame;
+				if ((animationName != PrimaryTag.WALK) && (this.currentAnimation == PrimaryTag.WALK)) {
+					this.lastWalkFrame = this.instance.frame;
 				}
 				if (SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
 						allowRarityVariations) != null) {
-					if ((lastWalkFrame != -1) && (animationName == PrimaryTag.WALK)
-							&& (currentAnimation != PrimaryTag.WALK)) {
-						instance.setFrame(instance.clampFrame(lastWalkFrame));
+					if ((this.lastWalkFrame != -1) && (animationName == PrimaryTag.WALK)
+							&& (this.currentAnimation != PrimaryTag.WALK)) {
+						this.instance.setFrame(this.instance.clampFrame(this.lastWalkFrame));
 					}
 					this.currentAnimation = animationName;
 					this.currentAnimationSecondaryTags = secondaryAnimationTags;
@@ -158,15 +158,15 @@ public interface RenderWidget {
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.secondaryAnimationTags);
 				this.recycleSet.addAll(secondaryAnimationTags);
-				if ((animationName != PrimaryTag.WALK) && (currentAnimation == PrimaryTag.WALK)) {
-					lastWalkFrame = instance.frame;
+				if ((animationName != PrimaryTag.WALK) && (this.currentAnimation == PrimaryTag.WALK)) {
+					this.lastWalkFrame = this.instance.frame;
 				}
 				final Sequence sequence = SequenceUtils.randomSequence(this.instance, animationName, this.recycleSet,
 						allowRarityVariations);
 				if (sequence != null) {
-					if ((lastWalkFrame != -1) && (animationName == PrimaryTag.WALK)
-							&& (currentAnimation != PrimaryTag.WALK)) {
-						instance.setFrame(instance.clampFrame(lastWalkFrame));
+					if ((this.lastWalkFrame != -1) && (animationName == PrimaryTag.WALK)
+							&& (this.currentAnimation != PrimaryTag.WALK)) {
+						this.instance.setFrame(this.instance.clampFrame(this.lastWalkFrame));
 					}
 					this.currentAnimation = animationName;
 					this.currentAnimationSecondaryTags = secondaryAnimationTags;

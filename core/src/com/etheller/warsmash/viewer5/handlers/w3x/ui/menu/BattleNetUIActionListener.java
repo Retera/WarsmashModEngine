@@ -4,6 +4,7 @@ import com.etheller.warsmash.parsers.w3x.War3Map;
 
 import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.LobbyGameSpeed;
+import net.warsmash.uberserver.LobbyPlayerType;
 
 public interface BattleNetUIActionListener {
 	void cancelLoginPrompt();
@@ -38,4 +39,8 @@ public interface BattleNetUIActionListener {
 	void showCreateGameMenu();
 
 	void leaveCustomGame();
+
+	void gameLobbySetPlayerSlot(int serverSlot, LobbyPlayerType lobbyPlayerType);
+
+	void gameLobbySetPlayerRace(int serverSlot, int raceItemIndex);
 }

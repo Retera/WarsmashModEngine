@@ -12,6 +12,7 @@ import net.warsmash.uberserver.GamingNetwork;
 import net.warsmash.uberserver.GamingNetworkServerToClientListener;
 import net.warsmash.uberserver.HandshakeDeniedReason;
 import net.warsmash.uberserver.JoinGameFailureReason;
+import net.warsmash.uberserver.LobbyPlayerType;
 import net.warsmash.uberserver.LoginFailureReason;
 import net.warsmash.uberserver.ServerErrorMessageType;
 
@@ -230,6 +231,36 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	public void serverErrorMessage(ServerErrorMessageType messageType) {
 		beginMessage(Protocol.SERVER_ERROR_MESSAGE, 4);
 		this.writeBuffer.putInt(messageType.ordinal());
+		send();
+	}
+
+	@Override
+	public void gameLobbySlotSetPlayer(int slot, String userName) {
+		if (userName.length() > GamingNetwork.USERNAME_MAX_LENGTH) {
+			userName = userName.substring(0, GamingNetwork.USERNAME_MAX_LENGTH);
+		}
+		final byte[] userNameBytes = userName.getBytes();
+		beginMessage(Protocol.GAME_LOBBY_SET_PLAYER, 4 + 4 + userNameBytes.length);
+		this.writeBuffer.putInt(slot);
+		this.writeBuffer.putInt(userNameBytes.length);
+		this.writeBuffer.put(userNameBytes);
+		send();
+
+	}
+
+	@Override
+	public void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType) {
+		beginMessage(Protocol.GAME_LOBBY_SET_PLAYER_TYPE, 4 + 4);
+		this.writeBuffer.putInt(slot);
+		this.writeBuffer.putInt(playerType.ordinal());
+		send();
+	}
+
+	@Override
+	public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+		beginMessage(Protocol.GAME_LOBBY_SET_PLAYER_RACE, 4 + 4);
+		this.writeBuffer.putInt(slot);
+		this.writeBuffer.putInt(raceItemIndex);
 		send();
 	}
 }

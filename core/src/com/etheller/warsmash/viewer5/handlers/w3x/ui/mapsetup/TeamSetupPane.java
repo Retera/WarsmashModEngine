@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
@@ -25,14 +25,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl
 public class TeamSetupPane {
 	private final List<PlayerSlotPane> playerSlots = new ArrayList<>();
 	private final List<GlueTextButtonFrame> forceLabels = new ArrayList<>();
+	private final IntMap<PlayerSlotPane> mapSlotToPlayerSlot = new IntMap<>();
 	private final SimpleFrame container;
 
 	public TeamSetupPane(final GameUI rootFrame, final Viewport uiViewport, final SimpleFrame container) {
 		this.container = container;
 	}
 
-	public void setMap(final DataSource dataSource, final GameUI rootFrame, final Viewport uiViewport,
-			final War3MapConfig config, final int playerCount, final War3MapW3i mapInfo) {
+	public void setMap(final GameUI rootFrame, final Viewport uiViewport, final War3MapConfig config,
+			final int playerCount, final War3MapW3i mapInfo, PlayerSlotPaneListener listener) {
 		clear();
 		int usedSlots = 0;
 		if (mapInfo.hasFlag(War3MapW3iFlags.FIXED_PLAYER_SETTINGS_FOR_CUSTOM_FORCES)) {
@@ -77,7 +78,8 @@ public class TeamSetupPane {
 					final boolean forceContainsPlayer = (force.getPlayerMasks() & playerMaskBit) != 0;
 					if (forceContainsPlayer) {
 						final PlayerSlotPane playerSlotPane = new PlayerSlotPane(rootFrame, uiViewport, this.container,
-								i);
+								i, listener);
+						this.mapSlotToPlayerSlot.put(i, playerSlotPane);
 						this.playerSlots.add(playerSlotPane);
 						if (lastFrame == null) {
 							playerSlotPane.getPlayerSlotFrame().addSetPoint(
@@ -88,7 +90,7 @@ public class TeamSetupPane {
 									new SetPoint(FramePoint.TOPLEFT, lastFrame, FramePoint.BOTTOMLEFT, 0, 0));
 						}
 						lastFrame = playerSlotPane.getPlayerSlotFrame();
-						playerSlotPane.setForPlayer(dataSource, rootFrame, uiViewport, player, true);
+						playerSlotPane.setForPlayer(rootFrame, uiViewport, player, true);
 						usedSlots++;
 					}
 				}
@@ -101,7 +103,9 @@ public class TeamSetupPane {
 				if (player.getController() == CMapControl.NONE) {
 					continue;
 				}
-				final PlayerSlotPane playerSlotPane = new PlayerSlotPane(rootFrame, uiViewport, this.container, i);
+				final PlayerSlotPane playerSlotPane = new PlayerSlotPane(rootFrame, uiViewport, this.container, i,
+						listener);
+				this.mapSlotToPlayerSlot.put(i, playerSlotPane);
 				this.playerSlots.add(playerSlotPane);
 				if (usedSlots == 0) {
 					playerSlotPane.getPlayerSlotFrame()
@@ -111,11 +115,21 @@ public class TeamSetupPane {
 					playerSlotPane.getPlayerSlotFrame().addSetPoint(new SetPoint(FramePoint.TOPLEFT,
 							this.playerSlots.get(usedSlots - 1).getPlayerSlotFrame(), FramePoint.BOTTOMLEFT, 0, 0));
 				}
-				playerSlotPane.setForPlayer(dataSource, rootFrame, uiViewport, player, false);
+				playerSlotPane.setForPlayer(rootFrame, uiViewport, player, false);
 				usedSlots++;
 			}
 		}
 		this.container.positionBounds(rootFrame, uiViewport);
+	}
+
+	public void notifyPlayerDataUpdated(int mapPlayerSlot, GameUI rootFrame, Viewport uiViewport, War3MapConfig config,
+			War3MapW3i mapInfo) {
+		final PlayerSlotPane playerSlotPane = this.mapSlotToPlayerSlot.get(mapPlayerSlot);
+		if (playerSlotPane != null) {
+			final CBasePlayer player = config.getPlayer(mapPlayerSlot);
+			playerSlotPane.setForPlayer(rootFrame, uiViewport, player,
+					mapInfo.hasFlag(War3MapW3iFlags.FIXED_PLAYER_SETTINGS_FOR_CUSTOM_FORCES));
+		}
 	}
 
 	private void clear() {

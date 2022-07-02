@@ -10,6 +10,7 @@ import net.warsmash.uberserver.GamingNetwork;
 import net.warsmash.uberserver.GamingNetworkClientToServerListener;
 import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.LobbyGameSpeed;
+import net.warsmash.uberserver.LobbyPlayerType;
 
 public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 	private final GamingNetworkClientToServerListener listener;
@@ -122,6 +123,27 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 				case GamingNetworkClientToServerListener.Protocol.REQUEST_MAP: {
 					final long sessionToken = data.getLong();
 					this.listener.requestMap(sessionToken);
+					break;
+				}
+				case GamingNetworkClientToServerListener.Protocol.GAME_LOBBY_SET_PLAYER_SLOT: {
+					final long sessionToken = data.getLong();
+					final int slot = data.getInt();
+					final int playerTypeOrdinal = data.getInt();
+					LobbyPlayerType playerType;
+					if ((playerTypeOrdinal >= 0) && (playerTypeOrdinal < LobbyPlayerType.VALUES.length)) {
+						playerType = LobbyPlayerType.VALUES[playerTypeOrdinal];
+					}
+					else {
+						playerType = null;
+					}
+					this.listener.gameLobbySetPlayerSlot(sessionToken, slot, playerType);
+					break;
+				}
+				case GamingNetworkClientToServerListener.Protocol.GAME_LOBBY_SET_PLAYER_RACE: {
+					final long sessionToken = data.getLong();
+					final int slot = data.getInt();
+					final int raceItemIndex = data.getInt();
+					this.listener.gameLobbySetPlayerRace(sessionToken, slot, raceItemIndex);
 					break;
 				}
 				default:

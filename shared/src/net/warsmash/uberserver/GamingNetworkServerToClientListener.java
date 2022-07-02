@@ -51,6 +51,12 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 
 	void serverErrorMessage(ServerErrorMessageType messageType);
 
+	void gameLobbySlotSetPlayer(int slot, String userName);
+
+	void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType);
+
+	void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex);
+
 	class Protocol {
 		public static final int HANDSHAKE_ACCEPTED = 1;
 		public static final int HANDSHAKE_DENIED = 2;
@@ -74,6 +80,9 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 		public static final int SEND_MAP_DATA = 20;
 		public static final int END_SEND_MAP = 21;
 		public static final int SERVER_ERROR_MESSAGE = 22;
+		public static final int GAME_LOBBY_SET_PLAYER = 23;
+		public static final int GAME_LOBBY_SET_PLAYER_TYPE = 24;
+		public static final int GAME_LOBBY_SET_PLAYER_RACE = 25;
 	}
 
 	public static final class GamingNetworkServerToClientNotifier implements GamingNetworkServerToClientListener {
@@ -243,6 +252,27 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 				listener.serverErrorMessage(messageType);
 			}
 		}
+
+		@Override
+		public void gameLobbySlotSetPlayer(int slot, String userName) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gameLobbySlotSetPlayer(slot, userName);
+			}
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gameLobbySlotSetPlayerType(slot, playerType);
+			}
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gameLobbySlotSetPlayerRace(slot, raceItemIndex);
+			}
+		}
 	}
 
 	public static abstract class GamingNetworkServerToClientListenerAdapter
@@ -340,5 +370,16 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 		public void serverErrorMessage(ServerErrorMessageType messageType) {
 		}
 
+		@Override
+		public void gameLobbySlotSetPlayer(int slot, String userName) {
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType) {
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+		}
 	}
 }

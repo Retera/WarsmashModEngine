@@ -1627,7 +1627,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.gameMessagesFrame.setAlpha(fadeAlpha);
 		}
 		if (this.currentMusics != null) {
-			if (!this.currentMusics[this.currentMusicIndex].isPlaying()) {
+			if ((this.currentMusics[this.currentMusicIndex] != null)
+					&& !this.currentMusics[this.currentMusicIndex].isPlaying()) {
 				if (this.currentMusicRandomizeIndex) {
 					this.currentMusicIndex = (int) (Math.random() * this.currentMusics.length);
 				}
@@ -4084,14 +4085,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			this.currentMusics = new Music[musics.length];
 			for (int i = 0; i < musics.length; i++) {
-				final Music newMusic = Gdx.audio
-						.newMusic(new DataSourceFileHandle(this.war3MapViewer.dataSource, musics[i]));
-				newMusic.setVolume(1.0f);
-				this.currentMusics[i] = newMusic;
+				if (this.war3MapViewer.dataSource.has(musics[i])) {
+					final Music newMusic = Gdx.audio
+							.newMusic(new DataSourceFileHandle(this.war3MapViewer.dataSource, musics[i]));
+					newMusic.setVolume(1.0f);
+					this.currentMusics[i] = newMusic;
+				}
 			}
 			this.currentMusicIndex = index;
 			this.currentMusicRandomizeIndex = random;
-			this.currentMusics[index].play();
+			if (this.currentMusics[index] != null) {
+				this.currentMusics[index].play();
+			}
 		}
 		return null;
 	}

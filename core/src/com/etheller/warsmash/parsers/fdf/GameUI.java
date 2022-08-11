@@ -79,7 +79,7 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private static final boolean SHOW_BLACKNESS_BEHIND_DIALOGS = false;
 	public static final boolean DEBUG = false;
-	private static final boolean PIN_FAIL_IS_FATAL = false;
+	private static final boolean PIN_FAIL_IS_FATAL = true;
 	private final DataSource dataSource;
 	private final Element skin;
 	private final Viewport viewport;

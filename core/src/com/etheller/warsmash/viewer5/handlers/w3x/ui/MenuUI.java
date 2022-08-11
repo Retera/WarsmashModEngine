@@ -1571,8 +1571,14 @@ public class MenuUI {
 
 		loadSounds();
 
-		final String glueLoopField = this.rootFrame.getSkinField("GlueScreenLoop");
-		this.mainMenuGlueScreenLoop = this.uiSounds.getSound(glueLoopField);
+		try {
+			final String glueLoopField = this.rootFrame.getSkinField("GlueScreenLoop");
+			this.mainMenuGlueScreenLoop = this.uiSounds.getSound(glueLoopField);
+		}
+		catch (final Exception exc) {
+			exc.printStackTrace();
+			this.mainMenuGlueScreenLoop = new UnitSound(0, 0, 0, 0, 0, 0, false);
+		}
 		this.glueScreenLoop = this.mainMenuGlueScreenLoop;
 		this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
 	}

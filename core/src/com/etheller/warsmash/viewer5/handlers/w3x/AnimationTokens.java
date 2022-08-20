@@ -4,7 +4,7 @@ public class AnimationTokens {
 	public static enum PrimaryTag {
 		ATTACK,
 		BIRTH,
-		CINEMATIC,
+//		CINEMATIC,
 		DEATH,
 		DECAY,
 		DISSIPATE,
@@ -58,6 +58,7 @@ public class AnimationTokens {
 		SPIKED,
 		SPIN,
 		SPELL,
+		CINEMATIC,
 		SWIM,
 		TALK,
 		THIRD,

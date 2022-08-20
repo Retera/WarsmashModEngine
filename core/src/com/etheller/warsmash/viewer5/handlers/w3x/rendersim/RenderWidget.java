@@ -91,7 +91,7 @@ public interface RenderWidget {
 			}
 			animationMoveSpeed *= this.instance.localScale.x;
 			final float speedRatio = (currentMovementSpeed) / animationMoveSpeed;
-			playAnimation(force, PrimaryTag.DISSIPATE, secondaryWalkTags, speedRatio, allowRarityVariations);
+			playAnimation(force, PrimaryTag.WALK, secondaryWalkTags, speedRatio, allowRarityVariations);
 		}
 
 		@Override

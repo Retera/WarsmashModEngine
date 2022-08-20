@@ -84,6 +84,24 @@ public class MapInfoPane {
 		this.authIconFrame.setVisible(false);
 	}
 
+	public void clearMap(final GameUI rootFrame, final Viewport uiViewport, String mapPreviewName) {
+		rootFrame.setText(this.mapNameValue, mapPreviewName);
+		rootFrame.setText(this.maxPlayersValue, rootFrame.getTemplates().getDecoratedString("UNKNOWNMAP_PLAYERCOUNT"));
+		rootFrame.setText(this.suggestedPlayersValue,
+				rootFrame.getTemplates().getDecoratedString("UNKNOWNMAP_SUGGESTEDPLAYERS"));
+		rootFrame.setText(this.mapDescValue, rootFrame.getTemplates().getDecoratedString("UNKNOWNMAP_DESCRIPTION"));
+		rootFrame.setText(this.mapSizeValue, rootFrame.getTemplates().getDecoratedString("UNKNOWNMAP_MAPSIZE"));
+		this.maxPlayersIcon.setBackground(rootFrame.loadTexture("ui\\widgets\\glues\\icon-file-ums.blp"));
+
+		rootFrame.setText(this.mapTilesetValue, rootFrame.getTemplates().getDecoratedString("UNKNOWNMAP_TILESET"));
+
+		Texture minimapTexture;
+		minimapTexture = rootFrame.loadTexture("ui\\widgets\\glues\\minimap-unknown.blp");
+		this.minimapImageTextureFrame.setTexture(minimapTexture);
+
+		this.mapInfoPaneFrame.positionBounds(rootFrame, uiViewport);
+	}
+
 	public void setMap(final GameUI rootFrame, final Viewport uiViewport, final War3Map map, final War3MapW3i mapInfo,
 			final War3MapConfig war3MapConfig) throws IOException {
 		rootFrame.setText(this.mapNameValue, rootFrame.getTrigStr(war3MapConfig.getMapName()));
@@ -114,7 +132,7 @@ public class MapInfoPane {
 
 		Texture minimapTexture;
 		if (mapInfo.hasFlag(War3MapW3iFlags.HIDE_MINIMAP_IN_PREVIEW_SCREENS)) {
-			minimapTexture = ImageUtils.getAnyExtensionTexture(map, "ui\\widgets\\glues\\minimap-unknown.blp");
+			minimapTexture = rootFrame.loadTexture("ui\\widgets\\glues\\minimap-unknown.blp");
 		}
 		else {
 			try {

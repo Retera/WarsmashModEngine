@@ -1,5 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui.menu;
 
+import com.etheller.warsmash.parsers.w3x.War3Map;
+
+import net.warsmash.uberserver.HostedGameVisibility;
+import net.warsmash.uberserver.LobbyGameSpeed;
+import net.warsmash.uberserver.LobbyPlayerType;
+
 public interface BattleNetUIActionListener {
 	void cancelLoginPrompt();
 
@@ -25,7 +31,16 @@ public interface BattleNetUIActionListener {
 
 	void requestJoinGame(String text);
 
+	void createGame(String string, String customCreatePanelCurrentSelectedMapPath, int mapPlayerSlots,
+			LobbyGameSpeed gameSpeed, HostedGameVisibility hostedGameVisibility, long mapChecksum, War3Map map);
+
 	void showError(String errorKey);
 
 	void showCreateGameMenu();
+
+	void leaveCustomGame();
+
+	void gameLobbySetPlayerSlot(int serverSlot, LobbyPlayerType lobbyPlayerType);
+
+	void gameLobbySetPlayerRace(int serverSlot, int raceItemIndex);
 }

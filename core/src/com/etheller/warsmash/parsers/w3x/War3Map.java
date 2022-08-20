@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.zip.Checksum;
 
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
@@ -77,6 +78,10 @@ public class War3Map implements DataSource {
 		catch (final MPQException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public MpqDataSource getInternalMpqContentsDataSource() {
+		return this.internalMpqContentsDataSource;
 	}
 
 	public War3MapW3i readMapInformation() throws IOException {
@@ -171,5 +176,25 @@ public class War3Map implements DataSource {
 
 	public CompoundDataSource getCompoundDataSource() {
 		return this.dataSource;
+	}
+
+	public long computeChecksum(Checksum checksum) {
+		final SeekableByteChannel inputChannel = this.internalMpqContentsDataSource.getInputChannel();
+		try {
+			final ByteBuffer byteBuffer = ByteBuffer.allocate(8 * 1024);
+			inputChannel.position(0);
+			int result;
+			byteBuffer.clear();
+			checksum.reset();
+			while ((result = inputChannel.read(byteBuffer)) != -1) {
+				byteBuffer.flip();
+				checksum.update(byteBuffer);
+				byteBuffer.clear();
+			}
+			return checksum.getValue();
+		}
+		catch (final IOException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 }

@@ -1,5 +1,6 @@
 package net.warsmash.uberserver;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import com.etheller.warsmash.util.War3ID;
@@ -29,7 +30,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 		}
 		final byte[] usernameBytes = username.getBytes();
 		final int passwordHashUsedBytes = Math.min(passwordHash.length, GamingNetwork.PASSWORD_DATA_MAX_LENGTH);
-		beginMessage(Protocol.LOGIN, 4 + usernameBytes.length + 4 + passwordHashUsedBytes);
+		beginMessage(Protocol.LOGIN, 4 + usernameBytes.length + 4 + (passwordHashUsedBytes * 2));
 		this.writeBuffer.putInt(usernameBytes.length);
 		this.writeBuffer.put(usernameBytes);
 		this.writeBuffer.putInt(passwordHashUsedBytes);
@@ -85,7 +86,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 		}
 		final byte[] usernameBytes = username.getBytes();
 		final int passwordHashUsedBytes = Math.min(passwordHash.length, GamingNetwork.PASSWORD_DATA_MAX_LENGTH);
-		beginMessage(Protocol.CREATE_ACCOUNT, 4 + usernameBytes.length + 4 + passwordHashUsedBytes);
+		beginMessage(Protocol.CREATE_ACCOUNT, 4 + usernameBytes.length + 4 + (passwordHashUsedBytes * 2));
 		this.writeBuffer.putInt(usernameBytes.length);
 		this.writeBuffer.put(usernameBytes);
 		this.writeBuffer.putInt(passwordHashUsedBytes);
@@ -130,7 +131,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 
 	@Override
 	public void createGame(final long sessionToken, String gameName, String mapName, final int totalSlots,
-			final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis, final HostedGameVisibility visibility) {
+			final LobbyGameSpeed gameSpeed, final HostedGameVisibility visibility, long mapChecksum) {
 		if (gameName.length() > GamingNetwork.CHANNEL_NAME_MAX_LENGTH) {
 			gameName = gameName.substring(0, GamingNetwork.CHANNEL_NAME_MAX_LENGTH);
 		}
@@ -139,7 +140,7 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 			mapName = mapName.substring(0, GamingNetwork.MAP_NAME_MAX_LENGTH);
 		}
 		final byte[] mapNameBytes = mapName.getBytes(Charset.forName("utf-8"));
-		beginMessage(Protocol.CREATE_GAME, 8 + 4 + channelNameBytes.length + 4 + mapNameBytes.length + 4 + 4 + 8 + 4);
+		beginMessage(Protocol.CREATE_GAME, 8 + 4 + channelNameBytes.length + 4 + mapNameBytes.length + 4 + 4 + 4 + 8);
 		this.writeBuffer.putLong(sessionToken);
 		this.writeBuffer.putInt(channelNameBytes.length);
 		this.writeBuffer.put(channelNameBytes);
@@ -147,8 +148,57 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 		this.writeBuffer.put(mapNameBytes);
 		this.writeBuffer.putInt(totalSlots);
 		this.writeBuffer.putInt(gameSpeed.ordinal());
-		this.writeBuffer.putLong(gameCreationTimeMillis);
 		this.writeBuffer.putInt(visibility.ordinal());
+		this.writeBuffer.putLong(mapChecksum);
+		send();
+	}
+
+	@Override
+	public void leaveGame(long sessionToken) {
+		beginMessage(Protocol.LEAVE_GAME, 8);
+		this.writeBuffer.putLong(sessionToken);
+		send();
+	}
+
+	@Override
+	public void uploadMapData(long sessionToken, int sequenceNumber, ByteBuffer data) {
+		beginMessage(Protocol.UPLOAD_MAP_DATA, 8 + 4 + data.remaining());
+		this.writeBuffer.putLong(sessionToken);
+		this.writeBuffer.putInt(sequenceNumber);
+		this.writeBuffer.put(data);
+		send();
+	}
+
+	@Override
+	public void mapDone(long sessionToken, int sequenceNumber) {
+		beginMessage(Protocol.UPLOAD_MAP_DATA_DONE, 8 + 4);
+		this.writeBuffer.putLong(sessionToken);
+		this.writeBuffer.putInt(sequenceNumber);
+		send();
+	}
+
+	@Override
+	public void requestMap(long sessionToken) {
+		beginMessage(Protocol.REQUEST_MAP, 8);
+		this.writeBuffer.putLong(sessionToken);
+		send();
+	}
+
+	@Override
+	public void gameLobbySetPlayerSlot(long sessionToken, int slot, LobbyPlayerType lobbyPlayerType) {
+		beginMessage(Protocol.GAME_LOBBY_SET_PLAYER_SLOT, 8 + 4 + 4);
+		this.writeBuffer.putLong(sessionToken);
+		this.writeBuffer.putInt(slot);
+		this.writeBuffer.putInt(lobbyPlayerType.ordinal());
+		send();
+	}
+
+	@Override
+	public void gameLobbySetPlayerRace(long sessionToken, int slot, int raceItemIndex) {
+		beginMessage(Protocol.GAME_LOBBY_SET_PLAYER_RACE, 8 + 4 + 4);
+		this.writeBuffer.putLong(sessionToken);
+		this.writeBuffer.putInt(slot);
+		this.writeBuffer.putInt(raceItemIndex);
 		send();
 	}
 

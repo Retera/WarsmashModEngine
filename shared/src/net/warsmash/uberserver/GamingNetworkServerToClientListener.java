@@ -1,5 +1,6 @@
 package net.warsmash.uberserver;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,9 +33,29 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 
 	void endGamesList();
 
-	void joinedGame(String gameName);
+	void joinedGame(String gameName, String mapName, long mapChecksum);
 
 	void joinGameFailed(JoinGameFailureReason joinGameFailureReason);
+
+	void gameCreationOk();
+
+	void gameCreationFailed(GameCreationFailureReason reason);
+
+	void channelServerMessage(String userName, ChannelServerMessageType messageType);
+
+	void beginSendMap();
+
+	void sendMapData(int sequenceNumber, ByteBuffer data);
+
+	void endSendMap(int sequenceNumber);
+
+	void serverErrorMessage(ServerErrorMessageType messageType);
+
+	void gameLobbySlotSetPlayer(int slot, String userName);
+
+	void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType);
+
+	void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex);
 
 	class Protocol {
 		public static final int HANDSHAKE_ACCEPTED = 1;
@@ -52,6 +73,16 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 		public static final int END_GAMES_LIST = 13;
 		public static final int JOINED_GAME = 14;
 		public static final int JOIN_GAME_FAILED = 15;
+		public static final int GAME_CREATION_OK = 16;
+		public static final int GAME_CREATION_FAILED = 17;
+		public static final int CHANNEL_SERVER_MESSAGE = 18;
+		public static final int BEGIN_SEND_MAP = 19;
+		public static final int SEND_MAP_DATA = 20;
+		public static final int END_SEND_MAP = 21;
+		public static final int SERVER_ERROR_MESSAGE = 22;
+		public static final int GAME_LOBBY_SET_PLAYER = 23;
+		public static final int GAME_LOBBY_SET_PLAYER_TYPE = 24;
+		public static final int GAME_LOBBY_SET_PLAYER_RACE = 25;
 	}
 
 	public static final class GamingNetworkServerToClientNotifier implements GamingNetworkServerToClientListener {
@@ -160,9 +191,9 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 		}
 
 		@Override
-		public void joinedGame(final String gameName) {
+		public void joinedGame(final String gameName, String mapName, long mapChecksum) {
 			for (final GamingNetworkServerToClientListener listener : this.listeners) {
-				listener.joinedGame(gameName);
+				listener.joinedGame(gameName, mapName, mapChecksum);
 			}
 		}
 
@@ -173,5 +204,182 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 			}
 		}
 
+		@Override
+		public void gameCreationOk() {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gameCreationOk();
+			}
+		}
+
+		@Override
+		public void gameCreationFailed(GameCreationFailureReason reason) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gameCreationFailed(reason);
+			}
+		}
+
+		@Override
+		public void channelServerMessage(String userName, ChannelServerMessageType messageType) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.channelServerMessage(userName, messageType);
+			}
+		}
+
+		@Override
+		public void beginSendMap() {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.beginSendMap();
+			}
+		}
+
+		@Override
+		public void sendMapData(int sequenceNumber, ByteBuffer data) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.sendMapData(sequenceNumber, data);
+			}
+		}
+
+		@Override
+		public void endSendMap(int sequenceNumber) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.endSendMap(sequenceNumber);
+			}
+		}
+
+		@Override
+		public void serverErrorMessage(ServerErrorMessageType messageType) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.serverErrorMessage(messageType);
+			}
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayer(int slot, String userName) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gameLobbySlotSetPlayer(slot, userName);
+			}
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gameLobbySlotSetPlayerType(slot, playerType);
+			}
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gameLobbySlotSetPlayerRace(slot, raceItemIndex);
+			}
+		}
+	}
+
+	public static abstract class GamingNetworkServerToClientListenerAdapter
+			implements GamingNetworkServerToClientListener {
+
+		@Override
+		public void disconnected() {
+		}
+
+		@Override
+		public void handshakeAccepted() {
+		}
+
+		@Override
+		public void handshakeDenied(HandshakeDeniedReason reason) {
+		}
+
+		@Override
+		public void accountCreationOk() {
+		}
+
+		@Override
+		public void accountCreationFailed(AccountCreationFailureReason reason) {
+		}
+
+		@Override
+		public void loginOk(long sessionToken, String welcomeMessage) {
+		}
+
+		@Override
+		public void loginFailed(LoginFailureReason loginFailureReason) {
+		}
+
+		@Override
+		public void joinedChannel(String channelName) {
+		}
+
+		@Override
+		public void badSession() {
+		}
+
+		@Override
+		public void channelMessage(String userName, String message) {
+		}
+
+		@Override
+		public void channelEmote(String userName, String message) {
+		}
+
+		@Override
+		public void beginGamesList() {
+		}
+
+		@Override
+		public void gamesListItem(String gameName, int openSlots, int totalSlots) {
+		}
+
+		@Override
+		public void endGamesList() {
+		}
+
+		@Override
+		public void joinedGame(String gameName, String mapName, long mapChecksum) {
+		}
+
+		@Override
+		public void joinGameFailed(JoinGameFailureReason joinGameFailureReason) {
+		}
+
+		@Override
+		public void gameCreationOk() {
+		}
+
+		@Override
+		public void gameCreationFailed(GameCreationFailureReason reason) {
+		}
+
+		@Override
+		public void channelServerMessage(String userName, ChannelServerMessageType messageType) {
+		}
+
+		@Override
+		public void beginSendMap() {
+		}
+
+		@Override
+		public void sendMapData(int sequenceNumber, ByteBuffer data) {
+		}
+
+		@Override
+		public void endSendMap(int sequenceNumber) {
+		}
+
+		@Override
+		public void serverErrorMessage(ServerErrorMessageType messageType) {
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayer(int slot, String userName) {
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType) {
+		}
+
+		@Override
+		public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+		}
 	}
 }

@@ -1,5 +1,7 @@
 package net.warsmash.uberserver;
 
+import java.nio.ByteBuffer;
+
 import net.warsmash.nio.util.DisconnectListener;
 
 public interface GamingNetworkClientToServerListener extends DisconnectListener {
@@ -22,7 +24,19 @@ public interface GamingNetworkClientToServerListener extends DisconnectListener 
 	void joinGame(long sessionToken, String gameName);
 
 	void createGame(final long sessionToken, final String gameName, final String mapName, final int totalSlots,
-			final LobbyGameSpeed gameSpeed, final long gameCreationTimeMillis, HostedGameVisibility visibility);
+			final LobbyGameSpeed gameSpeed, HostedGameVisibility visibility, long mapChecksum);
+
+	void leaveGame(long sessionToken);
+
+	void uploadMapData(long sessionToken, int sequenceNumber, ByteBuffer data);
+
+	void mapDone(long sessionToken, int sequenceNumber);
+
+	void requestMap(long sessionToken);
+
+	void gameLobbySetPlayerSlot(long sessionToken, int slot, LobbyPlayerType lobbyPlayerType);
+
+	void gameLobbySetPlayerRace(long sessionToken, int slot, int raceItemIndex);
 
 	class Protocol {
 		public static final int HANDSHAKE = 1;
@@ -35,5 +49,11 @@ public interface GamingNetworkClientToServerListener extends DisconnectListener 
 		public static final int QUERY_GAME_INFO = 8;
 		public static final int JOIN_GAME = 9;
 		public static final int CREATE_GAME = 10;
+		public static final int LEAVE_GAME = 11;
+		public static final int UPLOAD_MAP_DATA = 12;
+		public static final int UPLOAD_MAP_DATA_DONE = 13;
+		public static final int REQUEST_MAP = 14;
+		public static final int GAME_LOBBY_SET_PLAYER_SLOT = 15;
+		public static final int GAME_LOBBY_SET_PLAYER_RACE = 16;
 	}
 }

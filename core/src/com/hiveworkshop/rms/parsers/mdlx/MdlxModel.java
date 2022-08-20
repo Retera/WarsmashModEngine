@@ -192,6 +192,7 @@ public class MdlxModel {
 				loadBindPoseChunk(reader, size);
 				break;
 			default:
+				System.err.println("Unknown chunk: " + new War3ID(tag));
 				this.unknownChunks.add(new MdlxUnknownChunk(reader, size, new War3ID(tag)));
 				break;
 			}

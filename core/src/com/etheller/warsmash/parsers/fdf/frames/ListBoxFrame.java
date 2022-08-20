@@ -129,6 +129,11 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 		updateUI(gameUI, viewport);
 	}
 
+	public void removeAllItems() {
+		this.listItems.clear();
+		updateUI(this.gameUI, this.viewport);
+	}
+
 	public void setSelectedIndex(final int selectedIndex) {
 		this.selectedIndex = selectedIndex;
 	}
@@ -167,8 +172,7 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 				stringFrame.setHeight(this.frameFont.getLineHeight());
 				if (prev != null) {
 					stringFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, prev, FramePoint.BOTTOMLEFT, 0, 0));
-				}
-				else {
+				} else {
 					stringFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT,
 							this.listBoxBorder, -this.listBoxBorder));
 				}
@@ -180,8 +184,7 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 					this.selectionFrame.addSetPoint(
 							new SetPoint(FramePoint.BOTTOMRIGHT, stringFrame, FramePoint.BOTTOMRIGHT, 0, 0));
 					foundSelected = true;
-				}
-				else if (mousedOver) {
+				} else if (mousedOver) {
 					this.mouseHighlightFrame
 							.addSetPoint(new SetPoint(FramePoint.TOPLEFT, stringFrame, FramePoint.TOPLEFT, 0, 0));
 					this.mouseHighlightFrame.addSetPoint(
@@ -189,8 +192,7 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 					foundMouseOver = true;
 				}
 			}
-		}
-		else {
+		} else {
 			for (int stringFrameIndex = 0; stringFrameIndex < numStringFrames; stringFrameIndex++) {
 				final int index = stringFrameIndex + scrollOffset;
 				final boolean selected = (index == this.selectedIndex);
@@ -205,8 +207,7 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 					this.selectionFrame.addSetPoint(
 							new SetPoint(FramePoint.BOTTOMRIGHT, stringFrame, FramePoint.BOTTOMRIGHT, 0, 0));
 					foundSelected = true;
-				}
-				else if (mousedOver) {
+				} else if (mousedOver) {
 					this.mouseHighlightFrame
 							.addSetPoint(new SetPoint(FramePoint.TOPLEFT, stringFrame, FramePoint.TOPLEFT, 0, 0));
 					this.mouseHighlightFrame.addSetPoint(
@@ -225,8 +226,7 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 		if ((this.scrollBarFrame != null) && (this.listItems.size() > numStringFrames)) {
 			scrollOffset = (int) Math
 					.ceil(((100 - this.scrollBarFrame.getValue()) / 100f) * (this.listItems.size() - numStringFrames));
-		}
-		else {
+		} else {
 			scrollOffset = 0;
 		}
 		return scrollOffset;

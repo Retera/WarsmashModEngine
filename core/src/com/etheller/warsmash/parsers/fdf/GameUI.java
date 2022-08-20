@@ -79,7 +79,7 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private static final boolean SHOW_BLACKNESS_BEHIND_DIALOGS = false;
 	public static final boolean DEBUG = false;
-	private static final boolean PIN_FAIL_IS_FATAL = false;
+	private static final boolean PIN_FAIL_IS_FATAL = true;
 	private final DataSource dataSource;
 	private final Element skin;
 	private final Viewport viewport;
@@ -327,13 +327,18 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	public StringFrame createStringFrame(final String name, final UIFrame parent, final Color color,
 			final TextJustify justifyH, final TextJustify justifyV, final float fdfFontSize) {
+		return createStringFrame(name, parent, color, null, justifyH, justifyV, fdfFontSize);
+	}
+
+	public StringFrame createStringFrame(final String name, final UIFrame parent, final Color color,
+			Color highlightColor, final TextJustify justifyH, final TextJustify justifyV, final float fdfFontSize) {
 		this.fontParam.size = (int) convertY(this.viewport, fdfFontSize);
 		if (this.fontParam.size == 0) {
 			this.fontParam.size = 128;
 		}
 		final BitmapFont frameFont = this.fontGenerator.generateFont(this.fontParam);
-		final StringFrame stringFrame = new StringFrame(name, parent, color, justifyH, justifyV, frameFont, name, null,
-				null);
+		final StringFrame stringFrame = new StringFrame(name, parent, color, justifyH, justifyV, frameFont, name,
+				highlightColor, null);
 		this.nameToFrame.put(name, stringFrame);
 		add(stringFrame);
 		return stringFrame;
@@ -1038,6 +1043,46 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						setText(editTextFrame, "");
 					}
 				}
+				inflatedFrame = editBoxFrame;
+			}
+			else if ("SLASHCHATBOX".equals(frameDefinition.getFrameType())) {
+				final float editBorderSize = convertX(viewport2, frameDefinition.getFloat("EditBorderSize"));
+				final Vector4Definition editCursorColorDefinition = frameDefinition.getVector4("EditCursorColor");
+				Color editCursorColor;
+				if (editCursorColorDefinition == null) {
+					editCursorColor = Color.WHITE;
+				}
+				else {
+					editCursorColor = new Color(editCursorColorDefinition.getX(), editCursorColorDefinition.getY(),
+							editCursorColorDefinition.getZ(), editCursorColorDefinition.getW());
+				}
+				final EditBoxFrame editBoxFrame = new EditBoxFrame(frameDefinition.getName(), parent, editBorderSize,
+						editCursorColor);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinition.getName(), editBoxFrame);
+				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					if (childDefinition.getName().equals(controlBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, editBoxFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						editBoxFrame.setControlBackdrop(inflatedChild);
+					}
+				}
+
+				// TODO this is probably the only case where the inflate() call is hardcoding a
+				// template by name, in the future probably this should not hardcode by name
+				final FrameDefinition battleNetEditBoxTextTemplate = this.templates
+						.getFrame("BattleNetEditBoxTextTemplate");
+				final UIFrame inflatedChild = inflate(battleNetEditBoxTextTemplate, editBoxFrame, frameDefinition,
+						inDecorateFileNames || battleNetEditBoxTextTemplate.has("DecorateFileNames"));
+				final StringFrame editTextFrame = (StringFrame) inflatedChild;
+				inflatedChild.setSetAllPoints(true, editBorderSize);
+				editBoxFrame.setEditTextFrame(editTextFrame);
+				setText(editTextFrame, "");
+
 				inflatedFrame = editBoxFrame;
 			}
 			else if ("CONTROL".equals(frameDefinition.getFrameType())) {

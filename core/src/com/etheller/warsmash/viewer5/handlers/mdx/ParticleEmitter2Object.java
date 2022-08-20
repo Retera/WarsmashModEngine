@@ -37,7 +37,6 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 
 	public ParticleEmitter2Object(final MdxModel model, final MdlxParticleEmitter2 emitter, final int index) {
 		super(model, emitter, index);
-
 		this.width = emitter.getWidth();
 		this.length = emitter.getLength();
 		this.speed = emitter.getSpeed();

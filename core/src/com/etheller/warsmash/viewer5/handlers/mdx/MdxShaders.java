@@ -32,6 +32,13 @@ public class MdxShaders {
 			"    varying vec2 v_uv;\r\n" + //
 			"    varying float v_layerAlpha;\r\n" + //
 			"    varying vec3 v_lightDir;\r\n" + //
+			"    varying vec3 v_lightDir2;\r\n" + //
+			"    varying vec3 v_lightDir3;\r\n" + //
+			"    varying vec3 v_lightDir4;\r\n" + //
+			"    varying vec3 v_lightDir5;\r\n" + //
+			"    varying vec3 v_lightDir6;\r\n" + //
+			"    varying vec3 v_lightDir7;\r\n" + //
+			"    varying vec3 v_lightDir8;\r\n" + //
 			"    varying vec3 v_eyeVec;\r\n" + //
 			"    varying vec3 v_normal;\r\n" + //
 			"    \r\n" + //
@@ -64,14 +71,101 @@ public class MdxShaders {
 			"      vec3 b = normalize(mv * binormal);\r\n" + //
 			"      vec3 n = normalize(mv * normal);\r\n" + //
 			"      \r\n" + //
-			"      v_eyeVec = normalize(u_eyePos - position_mv);\r\n" + //
+			"      v_eyeVec = normalize(TBN(normalize(mv * u_eyePos - position_mv), t, b, n));\r\n" + //
 			"      \r\n" + //
 			// TODO fix giant hack on lighting
 			"      float rowPos = (0.5) / u_lightTextureHeight;\r\n" + //
 			"      vec4 lightPosition = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
-			"      vec3 u_lightPos = lightPosition.xyz;\r\n" + //
-			"      vec3 lightDir = normalize(u_lightPos - position_mv);\r\n" + //
+			"      vec4 lightExtra = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
+			"      vec3 u_lightPos = mv * lightPosition.xyz;\r\n" + //
+			"      vec3 lightDir = normalize((lightExtra.x > 0.5) ? (u_lightPos) : (u_lightPos - position_mv));\r\n" + //
 			"      v_lightDir = normalize(TBN(lightDir, t, b, n));\r\n" + //
+			"      \r\n" + //
+			"      if( u_lightTextureHeight > 1.5 ) {\r\n" + //
+			"          float rowPos = (1.5) / u_lightTextureHeight;\r\n" + //
+			"          vec4 lightPosition2 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
+			"          vec4 lightExtra2 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
+			"          vec3 u_lightPos2 = mv * lightPosition2.xyz;\r\n" + //
+			"          vec3 lightDir2 = normalize((lightExtra2.x > 0.5) ? (u_lightPos2) : (u_lightPos2 - position_mv));\r\n"
+			+ //
+			"          v_lightDir2 = normalize(TBN(lightDir2, t, b, n));\r\n" + //
+			"          if( u_lightTextureHeight > 2.5 ) {\r\n" + //
+			"              float rowPos = (2.5) / u_lightTextureHeight;\r\n" + //
+			"              vec4 lightPosition3 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
+			"              vec4 lightExtra3 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
+			"              vec3 u_lightPos3 = mv * lightPosition3.xyz;\r\n" + //
+			"              vec3 lightDir3 = normalize((lightExtra3.x > 0.5) ? (u_lightPos3) : (u_lightPos3 - position_mv));\r\n"
+			+ //
+			"              v_lightDir3 = normalize(TBN(lightDir3, t, b, n));\r\n" + //
+			"              if( u_lightTextureHeight > 3.5 ) {\r\n" + //
+			"                  float rowPos = (3.5) / u_lightTextureHeight;\r\n" + //
+			"                  vec4 lightPosition4 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
+			"                  vec4 lightExtra4 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
+			"                  vec3 u_lightPos4 = mv * lightPosition4.xyz;\r\n" + //
+			"                  vec3 lightDir4 = normalize((lightExtra4.x > 0.5) ? (u_lightPos4) : (u_lightPos4 - position_mv));\r\n"
+			+ //
+			"                  v_lightDir4 = normalize(TBN(lightDir4, t, b, n));\r\n" + //
+			"                  if( u_lightTextureHeight > 4.5 ) {\r\n" + //
+			"                      float rowPos = (4.5) / u_lightTextureHeight;\r\n" + //
+			"                      vec4 lightPosition5 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
+			"                      vec4 lightExtra5 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
+			"                      vec3 u_lightPos5 = mv * lightPosition5.xyz;\r\n" + //
+			"                      vec3 lightDir5 = normalize((lightExtra5.x > 0.5) ? (u_lightPos5) : (u_lightPos5 - position_mv));\r\n"
+			+ //
+			"                      v_lightDir5 = normalize(TBN(lightDir5, t, b, n));\r\n" + //
+			"                      if( u_lightTextureHeight > 5.5 ) {\r\n" + //
+			"                          float rowPos = (5.5) / u_lightTextureHeight;\r\n" + //
+			"                          vec4 lightPosition6 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
+			"                          vec4 lightExtra6 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
+			"                          vec3 u_lightPos6 = mv * lightPosition6.xyz;\r\n" + //
+			"                          vec3 lightDir6 = normalize((lightExtra6.x > 0.5) ? (u_lightPos6) : (u_lightPos6 - position_mv));\r\n"
+			+ //
+			"                          v_lightDir6 = normalize(TBN(lightDir6, t, b, n));\r\n" + //
+			"                          if( u_lightTextureHeight > 6.5 ) {\r\n" + //
+			"                              float rowPos = (6.5) / u_lightTextureHeight;\r\n" + //
+			"                              vec4 lightPosition7 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
+			"                              vec4 lightExtra7 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
+			"                              vec3 u_lightPos7 = mv * lightPosition7.xyz;\r\n" + //
+			"                              vec3 lightDir7 = normalize((lightExtra7.x > 0.5) ? (u_lightPos7) : (u_lightPos7 - position_mv));\r\n"
+			+ //
+			"                              v_lightDir7 = normalize(TBN(lightDir7, t, b, n));\r\n" + //
+			"                              if( u_lightTextureHeight > 7.5 ) {\r\n" + //
+			"                                  float rowPos = (7.5) / u_lightTextureHeight;\r\n" + //
+			"                                  vec4 lightPosition8 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n"
+			+ //
+			"                                  vec4 lightExtra8 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
+			"                                  vec3 u_lightPos8 = mv * lightPosition8.xyz;\r\n" + //
+			"                                  vec3 lightDir8 = normalize((lightExtra8.x > 0.5) ? (u_lightPos8) : (u_lightPos8 - position_mv));\r\n"
+			+ //
+			"                                  v_lightDir8 = normalize(TBN(lightDir8, t, b, n));\r\n" + //
+			"                              } else {\r\n" + //
+			"                                  v_lightDir8 = vec3(0.0);\r\n" + //
+			"                                  \r\n" + //
+			"                              }\r\n" + //
+			"                          } else {\r\n" + //
+			"                              v_lightDir7 = vec3(0.0);\r\n" + //
+			"                              \r\n" + //
+			"                          }\r\n" + //
+			"                      } else {\r\n" + //
+			"                          v_lightDir6 = vec3(0.0);\r\n" + //
+			"                          \r\n" + //
+			"                      }\r\n" + //
+			"                  } else {\r\n" + //
+			"                      v_lightDir5 = vec3(0.0);\r\n" + //
+			"                      \r\n" + //
+			"                  }\r\n" + //
+			"              } else {\r\n" + //
+			"                  v_lightDir4 = vec3(0.0);\r\n" + //
+			"                  \r\n" + //
+			"              }\r\n" + //
+			"          } else {\r\n" + //
+			"              v_lightDir3 = vec3(0.0);\r\n" + //
+			"              \r\n" + //
+			"          }\r\n" + //
+			"      } else {\r\n" + //
+			"          v_lightDir2 = vec3(0.0);\r\n" + //
+			"          \r\n" + //
+			"      }\r\n" + //
 			"      \r\n" + //
 			"      v_uv = a_uv;\r\n" + //
 			"      v_layerAlpha = u_layerAlpha;\r\n" + //
@@ -88,6 +182,9 @@ public class MdxShaders {
 				"\r\n" + //
 				"\r\n" + //
 				"\r\n" + //
+				"uniform sampler2D u_lightTexture;\r\n" + //
+				"uniform float u_lightTextureHeight;\r\n" + //
+				"\r\n" + //
 				"uniform sampler2D u_diffuseMap;\r\n" + //
 				"uniform sampler2D u_normalsMap;\r\n" + //
 				"uniform sampler2D u_ormMap;\r\n" + //
@@ -101,6 +198,13 @@ public class MdxShaders {
 				"varying vec2 v_uv;\r\n" + //
 				"varying float v_layerAlpha;\r\n" + //
 				"varying vec3 v_lightDir;\r\n" + //
+				"varying vec3 v_lightDir2;\r\n" + //
+				"varying vec3 v_lightDir3;\r\n" + //
+				"varying vec3 v_lightDir4;\r\n" + //
+				"varying vec3 v_lightDir5;\r\n" + //
+				"varying vec3 v_lightDir6;\r\n" + //
+				"varying vec3 v_lightDir7;\r\n" + //
+				"varying vec3 v_lightDir8;\r\n" + //
 				"varying vec3 v_eyeVec;\r\n" + //
 				"varying vec3 v_normal;\r\n" + //
 				"// varying vec3 v_lightDirWorld;\r\n" + //
@@ -108,7 +212,7 @@ public class MdxShaders {
 				"varying vec3 v_tangent;\r\n" + //
 				"#endif\r\n" + //
 				"vec3 decodeNormal() {\r\n" + //
-				"  vec2 xy = texture2D(u_normalsMap, v_uv).xy * 2.0 - 1.0;\r\n" + //
+				"  vec2 xy = texture2D(u_normalsMap, v_uv).yx * 2.0 - 1.0;\r\n" + //
 				"  \r\n" + //
 				"  return vec3(xy, sqrt(1.0 - dot(xy, xy)));\r\n" + //
 				"}\r\n" + //
@@ -135,6 +239,9 @@ public class MdxShaders {
 				"}\r\n" + //
 				"vec3 getTeamColor() {\r\n" + //
 				"  return texture2D(u_teamColorMap, v_uv).rgb;\r\n" + //
+				"}\r\n" + //
+				"vec3 getEnvironmentMapColor() {\r\n" + //
+				"  return texture2D(u_environmentMap, v_uv).rgb;\r\n" + //
 				"}\r\n" + //
 				"// const float PI = 3.14159265359;\r\n" + //
 				"// const float RECIPROCAL_PI = 0.31830988618;\r\n" + //
@@ -303,23 +410,92 @@ public class MdxShaders {
 				"  gl_FragColor = vec4(v_tangent, 1.0);\r\n" + //
 				"}\r\n" + //
 				"#endif\r\n" + //
+				"void applyLight(vec4 thisLightColor, vec3 thisLightDir, vec3 normal, vec3 baseColor, vec3 tc, vec4 ormTexel, vec3 reflectionsTexel, float tcFactor, inout vec3 color, inout vec3 lambertFactorSum) {\r\n"
+				+ //
+				"  if (thisLightColor.a > 0) {;\r\n" + //
+				"    float lambertFactor = clamp(dot(normal, thisLightDir), 0.0, 1.0);\r\n" + //
+				"    vec3 diffuse = baseColor.rgb;\r\n" + //
+				(MdxHandler.CURRENT_SHADER_TYPE != ShaderEnvironmentType.MENU ? "  if (tcFactor > 0.1) {\r\n" + //
+						"      diffuse = diffuse * (1.0 - tcFactor) + diffuse * tc * tcFactor;\r\n" + //
+						"    }\r\n" : "\r\n")
+				+ //
+				"    \r\n" + //
+				"			vec3 reflectDir = reflect(-thisLightDir, normal);\r\n" + //
+				"			vec3 halfwayDir = normalize(thisLightDir + v_eyeVec);\r\n" + //
+				"			float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);\r\n" + //
+				"			vec3 specular = vec3(max(-ormTexel.g+0.5, 0.0)+ormTexel.b) * spec /* * (reflectionsTexel.rgb * (1.0 - ormTexel.g) + ormTexel.g * baseColor.rgb) */ *  thisLightColor.rgb;\r\n"
+				+ //
+				"    diffuse *= clamp(lambertFactor, 0.0, 1.0) * thisLightColor.rgb;\r\n" + //
+				"    lambertFactorSum += clamp(lambertFactor, 0.0, 1.0) * thisLightColor.rgb;\r\n" + //
+				"        color += (specular) * thisLightColor.a;\r\n" + //
+				"  };\r\n" + //
+				"}\r\n" + //
 				"void lambert() {\r\n" + //
 				"  vec4 baseColor = getDiffuseColor();\r\n" + //
 				"  vec3 normal = decodeNormal();\r\n" + //
 				"  vec4 orm = getOrmColor();\r\n" + //
+				"  vec3 environmentMapColor = getEnvironmentMapColor();\r\n" + //
 				"  vec3 emissive = getEmissiveColor();\r\n" + //
 				"  vec3 tc = getTeamColor();\r\n" + //
 				"  float aoFactor = orm.r;\r\n" + //
 				"  float tcFactor = orm.a;\r\n" + //
 				"  float lambertFactor = clamp(dot(normal, v_lightDir), 0.0, 1.0);\r\n" + //
-				"  vec3 color = baseColor.rgb;\r\n" + //
-				(MdxHandler.CURRENT_SHADER_TYPE != ShaderEnvironmentType.MENU ? "  if (tcFactor > 0.1) {\r\n" + //
-						"    color = color * (1.0 - tcFactor) + color * tc * tcFactor;\r\n" + //
-						"  }\r\n" : "\r\n")
-				+ //
+				"  vec3 lambertFactorSum = vec3(0.0);\r\n" + //
+//				"void applyLight(vec4 thisLightColor, vec3 thisLightDir, vec3 normal, vec3 baseColor, vec3 tc, float tcFactor, output vec3 color) {\r\n" + //
+				"  vec3 color = vec3(0.0);\r\n" + //
 				"  \r\n" + //
-				"  color *= clamp(lambertFactor * aoFactor + 0.1, 0.0, 1.0);\r\n" + //
-				"  color += emissive;\r\n" + //
+				"  float rowPos = (0.5) / u_lightTextureHeight;\r\n" + //
+				"  vec4 lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
+				"  applyLight(lightColor, v_lightDir, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				+ //
+				"  if( u_lightTextureHeight > 1.5 ) {\r\n" + //
+				"    rowPos = (1.5) / u_lightTextureHeight;\r\n" + //
+				"    lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
+				"    applyLight(lightColor, v_lightDir2, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				+ //
+				"    if( u_lightTextureHeight > 2.5 ) {\r\n" + //
+				"      rowPos = (2.5) / u_lightTextureHeight;\r\n" + //
+				"      lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
+				"      applyLight(lightColor, v_lightDir3, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				+ //
+				"      if( u_lightTextureHeight > 3.5 ) {\r\n" + //
+				"        rowPos = (3.5) / u_lightTextureHeight;\r\n" + //
+				"        lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
+				"        applyLight(lightColor, v_lightDir4, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				+ //
+				"        if( u_lightTextureHeight > 4.5 ) {\r\n" + //
+				"          rowPos = (4.5) / u_lightTextureHeight;\r\n" + //
+				"          lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
+				"          applyLight(lightColor, v_lightDir5, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				+ //
+				"          if( u_lightTextureHeight > 5.5 ) {\r\n" + //
+				"            rowPos = (5.5) / u_lightTextureHeight;\r\n" + //
+				"            lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
+				"            applyLight(lightColor, v_lightDir6, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				+ //
+				"            if( u_lightTextureHeight > 6.5 ) {\r\n" + //
+				"              rowPos = (6.5) / u_lightTextureHeight;\r\n" + //
+				"              lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
+				"              applyLight(lightColor, v_lightDir7, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				+ //
+				"              if( u_lightTextureHeight > 7.5 ) {\r\n" + //
+				"                rowPos = (7.5) / u_lightTextureHeight;\r\n" + //
+				"                lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
+				"                applyLight(lightColor, v_lightDir8, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				+ //
+				"              }\r\n" + //
+				"            }\r\n" + //
+				"          }\r\n" + //
+				"        }\r\n" + //
+				"      }\r\n" + //
+				"    }\r\n" + //
+				"  }\r\n" + //
+				"    vec3 diffuse = baseColor.rgb;\r\n" + //
+				(MdxHandler.CURRENT_SHADER_TYPE != ShaderEnvironmentType.MENU ? "  if (tcFactor > 0.1) {\r\n" + //
+						"      diffuse = diffuse * (1.0 - tcFactor) + diffuse * tc * tcFactor;\r\n" + //
+						"    }\r\n" : "\r\n")
+				+ //
+				"  color = clamp(color, 0.0, 1.0) + diffuse * lambertFactorSum + emissive;\r\n" + //
 				"  gl_FragColor = vec4(color, baseColor.a);\r\n" + //
 				"}\r\n" + //
 				"void main() {\r\n" + //

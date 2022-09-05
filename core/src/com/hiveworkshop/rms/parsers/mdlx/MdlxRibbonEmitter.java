@@ -1,5 +1,6 @@
 package com.hiveworkshop.rms.parsers.mdlx;
 
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenInputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenOutputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlUtils;
@@ -40,7 +41,9 @@ public class MdlxRibbonEmitter extends MdlxGenericObject {
 		this.rows = reader.readUInt32();
 		this.columns = reader.readUInt32();
 		this.materialId = reader.readInt32();
-//		this.gravity = reader.readFloat32();
+		if (!WarsmashConstants.PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD) {
+			this.gravity = reader.readFloat32();
+		}
 
 		readTimelines(reader, size - (reader.position() - position));
 	}

@@ -7,7 +7,6 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
@@ -219,7 +218,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		final Element dataSourcesConfig = warsmashIni.get("DataSources");
 		final int dataSourcesCount = dataSourcesConfig.getFieldValue("Count");
 		final List<DataSourceDescriptor> dataSourcesList = new ArrayList<>();
-		List<String> allCascPrefixes = new ArrayList<>();
+		final List<String> allCascPrefixes = new ArrayList<>();
 		for (int i = 0; i < dataSourcesCount; i++) {
 			final String type = dataSourcesConfig.getField("Type" + (i < 10 ? "0" : "") + i);
 			final String path = dataSourcesConfig.getField("Path" + (i < 10 ? "0" : "") + i);
@@ -234,7 +233,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 			}
 			case "CASC": {
 				final String prefixes = dataSourcesConfig.getField("Prefixes" + (i < 10 ? "0" : "") + i);
-				List<String> parsedPrefixes = Arrays.asList(prefixes.split(","));
+				final List<String> parsedPrefixes = Arrays.asList(prefixes.split(","));
 				allCascPrefixes.addAll(parsedPrefixes);
 				dataSourcesList.add(new CascDataSourceDescriptor(path, parsedPrefixes));
 				break;
@@ -243,14 +242,14 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 				throw new RuntimeException("Unknown data source type: " + type);
 			}
 		}
-		DataSource baseCompoundDataSource = new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
+		final DataSource baseCompoundDataSource = new CompoundDataSourceDescriptor(dataSourcesList).createDataSource();
 
 		final List<DataSource> subdirDataSourcesList = new ArrayList<>();
-		subdirDataSourcesList.add(baseCompoundDataSource);
 //		Collections.reverse(allCascPrefixes);
-		for(String prefix: allCascPrefixes) {
-			subdirDataSourcesList.add(new SubdirDataSource(baseCompoundDataSource, prefix +"\\"));
+		for (final String prefix : allCascPrefixes) {
+			subdirDataSourcesList.add(new SubdirDataSource(baseCompoundDataSource, prefix + "\\"));
 		}
+		subdirDataSourcesList.add(baseCompoundDataSource);
 		return new CompoundDataSource(subdirDataSourcesList);
 	}
 

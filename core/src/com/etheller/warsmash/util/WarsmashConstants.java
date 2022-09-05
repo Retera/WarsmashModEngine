@@ -27,7 +27,7 @@ public class WarsmashConstants {
 	// find it yet so I used this
 	public static final String DEFAULT_STRING = "Default string";
 
-	public static final boolean CATCH_CURSOR = false;
+	public static final boolean CATCH_CURSOR = true;
 	public static final boolean VERBOSE_LOGGING = false;
 	public static final boolean ENABLE_DEBUG = false;
 	public static final char SPECIAL_ESCAPE_KEYCODE = 0x7E;
@@ -43,6 +43,7 @@ public class WarsmashConstants {
 	public static final boolean CRASH_ON_INCOMPATIBLE_132_FEATURES = false;
 	public static final boolean FIRE_DEATH_EVENTS_ON_REMOVEUNIT = false;
 	public static final int INPUT_HOTKEY_MODE = 1;
+	public static final boolean PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = false;
 
 	public static final String getGameId() {
 		return (GAME_VERSION == 0) ? GamingNetwork.GAME_ID_BASE : GamingNetwork.GAME_ID_XPAC;

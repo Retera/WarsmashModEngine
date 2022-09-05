@@ -207,7 +207,7 @@ public class MdxComplexInstance extends ModelInstance {
 
 		// If the sequence was changed before the model was loaded, reset it now that
 		// the model loaded.
-		this.setSequence(this.sequence);
+		setSequence(this.sequence);
 
 		if (model.bones.size() != 0) {
 			this.boneTexture = new DataTexture(model.viewer.gl, 4, model.bones.size() * 4, 1);
@@ -586,7 +586,7 @@ public class MdxComplexInstance extends ModelInstance {
 						|| ((this.sequenceLoopMode == SequenceLoopMode.MODEL_LOOP) && (sequence.getFlags() == 0))) {
 					this.floatingFrame = this.frame = (int) interval[0]; // TODO not cast
 
-					this.resetEventEmitters();
+					resetEventEmitters();
 					sequenceRestarted = true;
 				}
 				else if (this.sequenceLoopMode == SequenceLoopMode.LOOP_TO_NEXT_ANIMATION) { // faux queued animation
@@ -598,7 +598,7 @@ public class MdxComplexInstance extends ModelInstance {
 					this.floatingFrame = sequences.get(this.sequence).getInterval()[0] + framesPast; // TODO not cast
 					this.frame = (int) this.floatingFrame;
 					this.sequenceEnded = false;
-					this.resetEventEmitters();
+					resetEventEmitters();
 					this.forced = true;
 					sequenceRestarted = true;
 				}
@@ -608,7 +608,7 @@ public class MdxComplexInstance extends ModelInstance {
 					this.allowParticleSpawn = false;
 				}
 				if (this.sequenceLoopMode == SequenceLoopMode.NEVER_LOOP_AND_HIDE_WHEN_DONE) {
-					this.hide();
+					hide();
 				}
 
 				this.sequenceEnded = !sequenceRestarted;
@@ -623,12 +623,12 @@ public class MdxComplexInstance extends ModelInstance {
 		if (sequenceId == -1) {
 			if (forced) {
 				// Update the nodes
-				this.updateNodes(dt, forced);
+				updateNodes(dt, forced);
 
-				this.updateBoneTexture();
+				updateBoneTexture();
 
 				// Update the batches
-				this.updateBatches(forced);
+				updateBatches(forced);
 			}
 		}
 		else {
@@ -636,14 +636,14 @@ public class MdxComplexInstance extends ModelInstance {
 
 			// if (forced || variants.nodes[sequenceId]) {
 			// Update the nodes
-			this.updateNodes(dt, forced);
+			updateNodes(dt, forced);
 
-			this.updateBoneTexture();
+			updateBoneTexture();
 			// }
 
 			// if (forced || variants.batches[sequenceId]) {
 			// Update the batches
-			this.updateBatches(forced);
+			updateBatches(forced);
 			// }
 		}
 
@@ -755,7 +755,7 @@ public class MdxComplexInstance extends ModelInstance {
 				this.sequenceEnded = false;
 			}
 
-			this.resetEventEmitters();
+			resetEventEmitters();
 
 			this.forced = true;
 		}
@@ -826,7 +826,7 @@ public class MdxComplexInstance extends ModelInstance {
 	}
 
 	public boolean intersectRayBounds(final Ray ray, final Vector3 intersection) {
-		return CollisionShape.intersectRayBounds(this.getBounds(), this.worldMatrix, ray, intersection);
+		return CollisionShape.intersectRayBounds(getBounds(), this.worldMatrix, ray, intersection);
 	}
 
 	/**
@@ -850,7 +850,7 @@ public class MdxComplexInstance extends ModelInstance {
 				intersected = true;
 			}
 		}
-		return intersected || (!this.hasAnyUnselectableMesh && this.intersectRayBounds(ray, intersection));
+		return intersected || (!this.hasAnyUnselectableMesh && intersectRayBounds(ray, intersection));
 	}
 
 	/**

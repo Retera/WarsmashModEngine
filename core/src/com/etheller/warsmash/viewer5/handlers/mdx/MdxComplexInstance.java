@@ -850,7 +850,7 @@ public class MdxComplexInstance extends ModelInstance {
 				intersected = true;
 			}
 		}
-		return intersected || (!this.hasAnyUnselectableMesh && intersectRayBounds(ray, intersection));
+		return intersected || (collisionShapes.isEmpty() && intersectRayBounds(ray, intersection));
 	}
 
 	/**

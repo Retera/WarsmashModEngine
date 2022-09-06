@@ -1327,7 +1327,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		if (row.readSLKTagBoolean("walkable")) {
 			final float angle = facingRadians;
 			BoundingBox boundingBox = model.bounds.getBoundingBox();
-			if(boundingBox == null) {
+			if (boundingBox == null) {
 				// TODO this is a hack and should be fixed later
 				boundingBox = new BoundingBox(new Vector3(-10, -10, 0), new Vector3(10, 10, 0));
 			}
@@ -2193,7 +2193,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								if (intersectionHeap.z > this.terrain.getGroundHeight(intersectionHeap.x,
 										intersectionHeap.y)) {
 									this.worldScene.camera.worldToCamera(intersectionHeap, intersectionHeap);
-									if ((entity == null) || (intersectionHeap.z > intersectionHeap2.z)) {
+									if ((entity == null) || (intersectionHeap.z < intersectionHeap2.z)) {
 										entity = unit;
 										intersectionHeap2.set(intersectionHeap);
 									}

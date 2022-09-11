@@ -6,18 +6,19 @@ public class AbilityUI {
 	private final IconUI learnIconUI;
 	private final IconUI onIconUI;
 	private final IconUI offIconUI;
-	private final List<String> casterArt;
-	private final List<String> targetArt;
-	private final List<String> specialArt;
-	private final List<String> effectArt;
-	private final List<String> areaEffectArt;
-	private final List<String> missileArt;
+	private final List<EffectAttachmentUI> casterArt;
+	private final List<EffectAttachmentUI> targetArt;
+	private final List<EffectAttachmentUI> specialArt;
+	private final List<EffectAttachmentUI> effectArt;
+	private final List<EffectAttachmentUI> areaEffectArt;
+	private final List<EffectAttachmentUI> missileArt;
 	private final String effectSound;
 	private final String effectSoundLooped;
 
 	public AbilityUI(final IconUI learnIconUI, final IconUI onIconUI, final IconUI offIconUI,
-			final List<String> casterArt, final List<String> targetArt, final List<String> specialArt,
-			final List<String> effectArt, final List<String> areaEffectArt, final List<String> missileArt,
+			final List<EffectAttachmentUI> casterArt, final List<EffectAttachmentUI> targetArt,
+			final List<EffectAttachmentUI> specialArt, final List<EffectAttachmentUI> effectArt,
+			final List<EffectAttachmentUI> areaEffectArt, final List<EffectAttachmentUI> missileArt,
 			final String effectSound, final String effectSoundLooped) {
 		this.learnIconUI = learnIconUI;
 		this.onIconUI = onIconUI;
@@ -44,27 +45,27 @@ public class AbilityUI {
 		return this.offIconUI;
 	}
 
-	public String getCasterArt(final int index) {
+	public EffectAttachmentUI getCasterArt(final int index) {
 		return tryGet(this.casterArt, index);
 	}
 
-	public String getTargetArt(final int index) {
+	public EffectAttachmentUI getTargetArt(final int index) {
 		return tryGet(this.targetArt, index);
 	}
 
-	public String getSpecialArt(final int index) {
+	public EffectAttachmentUI getSpecialArt(final int index) {
 		return tryGet(this.specialArt, index);
 	}
 
-	public String getEffectArt(final int index) {
+	public EffectAttachmentUI getEffectArt(final int index) {
 		return tryGet(this.effectArt, index);
 	}
 
-	public String getAreaEffectArt(final int index) {
+	public EffectAttachmentUI getAreaEffectArt(final int index) {
 		return tryGet(this.areaEffectArt, index);
 	}
 
-	public String getMissileArt(final int index) {
+	public EffectAttachmentUI getMissileArt(final int index) {
 		return tryGet(this.missileArt, index);
 	}
 
@@ -76,7 +77,7 @@ public class AbilityUI {
 		return this.effectSoundLooped;
 	}
 
-	private static String tryGet(final List<String> items, final int index) {
+	protected static EffectAttachmentUI tryGet(final List<EffectAttachmentUI> items, final int index) {
 		if (index < items.size()) {
 			return items.get(index);
 		}

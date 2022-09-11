@@ -50,8 +50,8 @@ public class DesktopLauncher {
 		config.gles30ContextMinorVersion = 3;
 		config.samples = 16;
 		config.vSyncEnabled = false;
-		config.foregroundFPS = 0;
-		config.backgroundFPS = 0;
+//		config.foregroundFPS = 0;
+//		config.backgroundFPS = 0;
 		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
 		config.width = desktopDisplayMode.width;
 		config.height = desktopDisplayMode.height;

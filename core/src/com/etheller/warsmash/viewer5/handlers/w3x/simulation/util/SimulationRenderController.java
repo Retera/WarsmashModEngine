@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public interface SimulationRenderController {
 	CAttackProjectile createAttackProjectile(CSimulation simulation, float launchX, float launchY, float launchFacing,
@@ -60,6 +61,8 @@ public interface SimulationRenderController {
 	void spawnEffectOnUnit(CUnit unit, String effectPath);
 
 	void spawnSpellEffectOnUnit(CUnit unit, War3ID alias);
+
+	SimulationRenderComponent spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
 
 	void spawnUIUnitGetItemSound(CUnit cUnit, CItem item);
 

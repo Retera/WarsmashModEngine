@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +41,37 @@ public class AbilityDataUI {
 	private static final War3ID ABILITY_HOTKEY_LEARN = War3ID.fromString("arhk");
 
 	private static final War3ID CASTER_ART = War3ID.fromString("acat");
+	private static final War3ID[] CASTER_ART_ATTACHMENT_POINT = { War3ID.fromString("acap"),
+			War3ID.fromString("aca1") };
+	private static final War3ID CASTER_ART_ATTACHMENT_COUNT = War3ID.fromString("acac");
 	private static final War3ID TARGET_ART = War3ID.fromString("atat");
+	private static final War3ID[] TARGET_ART_ATTACHMENT_POINT = { War3ID.fromString("ata0"), War3ID.fromString("ata1"),
+			War3ID.fromString("ata2"), War3ID.fromString("ata3"), War3ID.fromString("ata4"),
+			War3ID.fromString("ata5") };
+	private static final War3ID TARGET_ART_ATTACHMENT_COUNT = War3ID.fromString("atac");
 	private static final War3ID SPECIAL_ART = War3ID.fromString("asat");
+	private static final War3ID SPECIAL_ART_ATTACHMENT_POINT = War3ID.fromString("aspt");
 	private static final War3ID EFFECT_ART = War3ID.fromString("aeat");
 	private static final War3ID AREA_EFFECT_ART = War3ID.fromString("aaea");
 	private static final War3ID MISSILE_ART = War3ID.fromString("amat");
+
+	// Standard buff icon fields
+	private static final War3ID BUFF_ICON_NORMAL = War3ID.fromString("fart");
+	private static final War3ID BUFF_ABILITY_TIP = War3ID.fromString("ftip");
+	private static final War3ID BUFF_ABILITY_UBER_TIP = War3ID.fromString("fube");
+	private static final War3ID BUFF_ABILITY_EFFECT_SOUND = War3ID.fromString("fefs");
+	private static final War3ID BUFF_ABILITY_EFFECT_SOUND_LOOPED = War3ID.fromString("fefl");
+
+	private static final War3ID BUFF_TARGET_ART = War3ID.fromString("ftat");
+	private static final War3ID[] BUFF_TARGET_ART_ATTACHMENT_POINT = { War3ID.fromString("fta0"),
+			War3ID.fromString("fta1"), War3ID.fromString("fta2"), War3ID.fromString("fta3"), War3ID.fromString("fta4"),
+			War3ID.fromString("fta5") };
+	private static final War3ID BUFF_TARGET_ART_ATTACHMENT_COUNT = War3ID.fromString("ftac");
+	private static final War3ID BUFF_SPECIAL_ART = War3ID.fromString("fsat");
+	private static final War3ID BUFF_SPECIAL_ART_ATTACHMENT_POINT = War3ID.fromString("fspt");
+	private static final War3ID BUFF_EFFECT_ART = War3ID.fromString("feat");
+	private static final War3ID BUFF_EFFECT_ART_ATTACHMENT_POINT = War3ID.fromString("feft");
+	private static final War3ID BUFF_MISSILE_ART = War3ID.fromString("fmat");
 
 	private static final War3ID UNIT_ICON_NORMAL_X = War3ID.fromString("ubpx");
 	private static final War3ID UNIT_ICON_NORMAL_Y = War3ID.fromString("ubpy");
@@ -72,6 +99,7 @@ public class AbilityDataUI {
 	private static final War3ID UPGRADE_HOTKEY = War3ID.fromString("ghk1");
 
 	private final Map<War3ID, AbilityUI> rawcodeToUI = new HashMap<>();
+	private final Map<War3ID, BuffUI> rawcodeToBuffUI = new HashMap<>();
 	private final Map<War3ID, UnitIconUI> rawcodeToUnitUI = new HashMap<>();
 	private final Map<War3ID, ItemUI> rawcodeToItemUI = new HashMap<>();
 	private final Map<War3ID, List<IconUI>> rawcodeToUpgradeUI = new HashMap<>();
@@ -94,9 +122,9 @@ public class AbilityDataUI {
 	private final IconUI selectSkillUI;
 	private final String disabledPrefix;
 
-	public AbilityDataUI(final MutableObjectData abilityData, final MutableObjectData unitData,
-			final MutableObjectData itemData, final MutableObjectData upgradeData, final GameUI gameUI,
-			final War3MapViewer viewer) {
+	public AbilityDataUI(final MutableObjectData abilityData, final MutableObjectData buffData,
+			final MutableObjectData unitData, final MutableObjectData itemData, final MutableObjectData upgradeData,
+			final GameUI gameUI, final War3MapViewer viewer) {
 		this.disabledPrefix = gameUI.getSkinField("CommandButtonDisabledArtPath");
 		for (final War3ID alias : abilityData.keySet()) {
 			final MutableGameObject abilityTypeData = abilityData.get(alias);
@@ -125,13 +153,62 @@ public class AbilityDataUI {
 			final Texture iconTurnOff = gameUI.loadTexture(iconTurnOffPath);
 			final Texture iconTurnOffDisabled = gameUI.loadTexture(disable(iconTurnOffPath, this.disabledPrefix));
 
-			final List<String> casterArt = Arrays.asList(abilityTypeData.getFieldAsString(CASTER_ART, 0).split(","));
-			final List<String> targetArt = Arrays.asList(abilityTypeData.getFieldAsString(TARGET_ART, 0).split(","));
-			final List<String> specialArt = Arrays.asList(abilityTypeData.getFieldAsString(SPECIAL_ART, 0).split(","));
-			final List<String> effectArt = Arrays.asList(abilityTypeData.getFieldAsString(EFFECT_ART, 0).split(","));
-			final List<String> areaEffectArt = Arrays
+			final List<EffectAttachmentUI> casterArt = new ArrayList<>();
+			final List<String> casterArtPaths = Arrays
+					.asList(abilityTypeData.getFieldAsString(CASTER_ART, 0).split(","));
+			final int casterAttachmentCount = abilityTypeData.getFieldAsInteger(CASTER_ART_ATTACHMENT_COUNT, 0);
+			for (int i = 0; i < casterAttachmentCount; i++) {
+				final String modelPath = casterArtPaths.get(Math.min(i, casterAttachmentCount - 1));
+				final War3ID attachmentPointKey = tryGet(CASTER_ART_ATTACHMENT_POINT, i);
+				final List<String> attachmentPoints = Arrays
+						.asList(abilityTypeData.getFieldAsString(attachmentPointKey, 0).split(","));
+				casterArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
+			}
+			final List<EffectAttachmentUI> targetArt = new ArrayList<>();
+			final List<String> targetArtPaths = Arrays
+					.asList(abilityTypeData.getFieldAsString(TARGET_ART, 0).split(","));
+			final int targetAttachmentCount = abilityTypeData.getFieldAsInteger(TARGET_ART_ATTACHMENT_COUNT, 0);
+			for (int i = 0; i < targetAttachmentCount; i++) {
+				final String modelPath = targetArtPaths.get(Math.min(i, targetAttachmentCount - 1));
+				final War3ID attachmentPointKey = tryGet(TARGET_ART_ATTACHMENT_POINT, i);
+				final List<String> attachmentPoints = Arrays
+						.asList(abilityTypeData.getFieldAsString(attachmentPointKey, 0).split(","));
+				targetArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
+			}
+			final List<EffectAttachmentUI> specialArt = new ArrayList<>();
+			final List<String> specialArtPaths = Arrays
+					.asList(abilityTypeData.getFieldAsString(SPECIAL_ART, 0).split(","));
+			for (int i = 0; i < specialArtPaths.size(); i++) {
+				final String modelPath = specialArtPaths.get(i);
+				final List<String> attachmentPoints = Arrays
+						.asList(abilityTypeData.getFieldAsString(SPECIAL_ART_ATTACHMENT_POINT, 0).split(","));
+				specialArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
+			}
+			final List<EffectAttachmentUI> effectArt = new ArrayList<>();
+			final List<String> effectArtPaths = Arrays
+					.asList(abilityTypeData.getFieldAsString(EFFECT_ART, 0).split(","));
+			for (int i = 0; i < effectArtPaths.size(); i++) {
+				final String modelPath = effectArtPaths.get(i);
+				// TODO so if this is used with buffs or whatever, it would break because of
+				// using ability meta on buff meta, just bad in a lot of ways
+				final String effectAttach = abilityTypeData.readSLKTag("Effectattach");
+				final List<String> attachmentPoints = ((effectAttach == null) || effectAttach.isEmpty())
+						? Collections.emptyList()
+						: Arrays.asList(effectAttach);
+				effectArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
+			}
+			final List<EffectAttachmentUI> areaEffectArt = new ArrayList<>();
+			final List<String> areaEffectArtPaths = Arrays
 					.asList(abilityTypeData.getFieldAsString(AREA_EFFECT_ART, 0).split(","));
-			final List<String> missileArt = Arrays.asList(abilityTypeData.getFieldAsString(MISSILE_ART, 0).split(","));
+			for (final String areaEffectArtPath : areaEffectArtPaths) {
+				areaEffectArt.add(new EffectAttachmentUI(areaEffectArtPath, Collections.emptyList()));
+			}
+			final List<EffectAttachmentUI> missileArt = new ArrayList<>();
+			final List<String> missileArtPaths = Arrays
+					.asList(abilityTypeData.getFieldAsString(MISSILE_ART, 0).split(","));
+			for (final String missileArtPath : missileArtPaths) {
+				missileArt.add(new EffectAttachmentUI(missileArtPath, Collections.emptyList()));
+			}
 
 			final String effectSound = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND, 0);
 			final String effectSoundLooped = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND_LOOPED, 0);
@@ -146,6 +223,64 @@ public class AbilityDataUI {
 									iconTurnOffUberTip, iconTurnOffHotkey),
 							casterArt, targetArt, specialArt, effectArt, areaEffectArt, missileArt, effectSound,
 							effectSoundLooped));
+		}
+		for (final War3ID alias : buffData.keySet()) {
+			// TODO pretty sure that in WC3 the buffs and abilities are stored in the same
+			// table, but I was already using an object editor tab emulator that I wrote
+			// previously and so it has these divided...
+			final MutableGameObject abilityTypeData = buffData.get(alias);
+			final String iconNormalPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(BUFF_ICON_NORMAL, 0));
+			final String iconTip = abilityTypeData.getFieldAsString(BUFF_ABILITY_TIP, 1);
+			final String iconUberTip = abilityTypeData.getFieldAsString(BUFF_ABILITY_UBER_TIP, 1);
+			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
+			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
+
+			final List<EffectAttachmentUI> targetArt = new ArrayList<>();
+			final List<String> targetArtPaths = Arrays
+					.asList(abilityTypeData.getFieldAsString(BUFF_TARGET_ART, 0).split(","));
+			final int targetAttachmentCount = abilityTypeData.getFieldAsInteger(BUFF_TARGET_ART_ATTACHMENT_COUNT, 0);
+			for (int i = 0; i < targetAttachmentCount; i++) {
+				final String modelPath = targetArtPaths.get(Math.min(i, targetAttachmentCount - 1));
+				final War3ID attachmentPointKey = tryGet(BUFF_TARGET_ART_ATTACHMENT_POINT, i);
+				final List<String> attachmentPoints = Arrays
+						.asList(abilityTypeData.getFieldAsString(attachmentPointKey, 0).split(","));
+				targetArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
+			}
+			final List<EffectAttachmentUI> specialArt = new ArrayList<>();
+			final List<String> specialArtPaths = Arrays
+					.asList(abilityTypeData.getFieldAsString(BUFF_SPECIAL_ART, 0).split(","));
+			for (int i = 0; i < specialArtPaths.size(); i++) {
+				final String modelPath = specialArtPaths.get(i);
+				final List<String> attachmentPoints = Arrays
+						.asList(abilityTypeData.getFieldAsString(BUFF_SPECIAL_ART_ATTACHMENT_POINT, 0).split(","));
+				specialArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
+			}
+			final List<EffectAttachmentUI> effectArt = new ArrayList<>();
+			final List<String> effectArtPaths = Arrays
+					.asList(abilityTypeData.getFieldAsString(BUFF_EFFECT_ART, 0).split(","));
+			for (int i = 0; i < effectArtPaths.size(); i++) {
+				final String modelPath = effectArtPaths.get(i);
+				// TODO so if this is used with buffs or whatever, it would break because of
+				// using ability meta on buff meta, just bad in a lot of ways
+				final String effectAttach = abilityTypeData.readSLKTag("Effectattach");
+				final List<String> attachmentPoints = ((effectAttach == null) || effectAttach.isEmpty())
+						? Collections.emptyList()
+						: Arrays.asList(effectAttach);
+				effectArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
+			}
+			final List<EffectAttachmentUI> missileArt = new ArrayList<>();
+			final List<String> missileArtPaths = Arrays
+					.asList(abilityTypeData.getFieldAsString(BUFF_MISSILE_ART, 0).split(","));
+			for (final String missileArtPath : missileArtPaths) {
+				missileArt.add(new EffectAttachmentUI(missileArtPath, Collections.emptyList()));
+			}
+
+			final String effectSound = abilityTypeData.getFieldAsString(BUFF_ABILITY_EFFECT_SOUND, 0);
+			final String effectSoundLooped = abilityTypeData.getFieldAsString(BUFF_ABILITY_EFFECT_SOUND_LOOPED, 0);
+
+			this.rawcodeToBuffUI.put(alias,
+					new BuffUI(new IconUI(iconNormal, iconNormalDisabled, 0, 0, iconTip, iconUberTip, '\0'), targetArt,
+							specialArt, effectArt, missileArt, effectSound, effectSoundLooped));
 		}
 		for (final War3ID alias : unitData.keySet()) {
 			final MutableGameObject abilityTypeData = unitData.get(alias);
@@ -257,6 +392,10 @@ public class AbilityDataUI {
 		return this.rawcodeToUI.get(rawcode);
 	}
 
+	public BuffUI getBuffUI(final War3ID rawcode) {
+		return this.rawcodeToBuffUI.get(rawcode);
+	}
+
 	public UnitIconUI getUnitUI(final War3ID rawcode) {
 		return this.rawcodeToUnitUI.get(rawcode);
 	}
@@ -357,5 +496,12 @@ public class AbilityDataUI {
 
 	public String getDisabledPrefix() {
 		return this.disabledPrefix;
+	}
+
+	private War3ID tryGet(final War3ID[] ids, final int index) {
+		if ((index >= 0) && (index < ids.length)) {
+			return ids[index];
+		}
+		return ids[ids.length - 1];
 	}
 }

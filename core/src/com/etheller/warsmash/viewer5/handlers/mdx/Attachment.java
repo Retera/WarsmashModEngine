@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
+import java.util.Locale;
+
 import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxAttachment;
 
@@ -14,7 +16,7 @@ public class Attachment extends GenericObject {
 
 		final String path = attachment.getPath().toLowerCase().replace(".mdl", ".mdx");
 
-		this.name = attachment.getName().toLowerCase();
+		this.name = attachment.getName().toLowerCase(Locale.US);
 		this.path = path;
 		this.attachmentId = attachment.getAttachmentId();
 		this.internalModel = null;

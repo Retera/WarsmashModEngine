@@ -147,6 +147,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CHashtable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
@@ -958,6 +959,40 @@ public class Jass2 {
 					if (abilityHandleId != 0) {
 						defaultPlayerUnitOrderExecutor.issuePointOrder(whichUnit.getHandleId(), abilityHandleId,
 								orderId, targetAsPoint.x, targetAsPoint.y, false);
+					}
+					return BooleanJassValue.of(abilityHandleId != 0);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("IssueTargetOrder", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					if (whichUnit == null) {
+						return BooleanJassValue.FALSE;
+					}
+					final String orderString = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+					CWidget whichTarget = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+					final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
+							.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+					final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+					final int orderId = OrderIdUtils.getOrderId(orderString);
+					int abilityHandleId = 0;
+					for (final CAbility ability : whichUnit.getAbilities()) {
+						ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId, activationReceiver);
+						if (activationReceiver.isOk()) {
+							final CWidgetAbilityTargetCheckReceiver targetReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
+							ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId, whichTarget,
+									targetReceiver.reset());
+							if (targetReceiver.getTarget() != null) {
+								whichTarget = targetReceiver.getTarget();
+								abilityHandleId = ability.getHandleId();
+							}
+						}
+					}
+					if (abilityHandleId != 0) {
+						defaultPlayerUnitOrderExecutor.issueTargetOrder(whichUnit.getHandleId(), abilityHandleId,
+								orderId, whichTarget.getHandleId(), false);
 					}
 					return BooleanJassValue.of(abilityHandleId != 0);
 				}
@@ -3451,7 +3486,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final CDestructable whichDestructable = arguments.get(0)
 							.visit(ObjectJassValueVisitor.getInstance());
-					if(whichDestructable==null) {
+					if (whichDestructable == null) {
 						// TODO this should not be the way to solve the problem i am facing
 						return RealJassValue.ZERO;
 					}
@@ -3636,16 +3671,16 @@ public class Jass2 {
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetTriggerDestructable", new JassFunction() {
-				
+
 				@Override
-				public JassValue call(List<JassValue> arguments, GlobalScope globalScope, TriggerExecutionScope triggerScope) {
-					CWidget triggerWidget = ((CommonTriggerExecutionScope) triggerScope).getTriggerWidget();
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CWidget triggerWidget = ((CommonTriggerExecutionScope) triggerScope).getTriggerWidget();
 					if (triggerWidget instanceof CDestructable) {
-						return new HandleJassValue(destructableType,
-								triggerWidget);
-					} else {
-						return new HandleJassValue(destructableType,
-								null);
+						return new HandleJassValue(destructableType, triggerWidget);
+					}
+					else {
+						return new HandleJassValue(destructableType, null);
 					}
 				}
 			});
@@ -3812,8 +3847,8 @@ public class Jass2 {
 					new LoadHashtableValueFunc(BooleanJassValue.FALSE));
 			jassProgramVisitor.getJassNativeManager().createNative("LoadStr",
 					new LoadHashtableValueFunc(StringJassValue.EMPTY_STRING));
-			jassProgramVisitor.getJassNativeManager().createNative("LoadTriggerHandle", new LoadHashtableValueFunc(new HandleJassValue(triggerType, null)));
-			
+			jassProgramVisitor.getJassNativeManager().createNative("LoadTriggerHandle",
+					new LoadHashtableValueFunc(new HandleJassValue(triggerType, null)));
 
 			jassProgramVisitor.getJassNativeManager().createNative("HaveSavedInteger",
 					new HaveSavedHashtableValueFunc(JassType.INTEGER));

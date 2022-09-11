@@ -99,6 +99,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitTypeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.BuffUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.EffectAttachmentUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructableEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
@@ -115,6 +117,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
@@ -893,6 +896,74 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public void spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias) {
 						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
 						spawnEffectOnUnit(unit, abilityUI.getTargetArt(0));
+					}
+
+					@Override
+					public SimulationRenderComponent spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+							final CEffectType effectType, final int index) {
+						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
+						EffectAttachmentUI effectAttachmentUI;
+						if (abilityUI != null) {
+							switch (effectType) {
+							case EFFECT:
+								effectAttachmentUI = abilityUI.getEffectArt(index);
+								break;
+							case TARGET:
+								effectAttachmentUI = abilityUI.getTargetArt(index);
+								break;
+							case CASTER:
+								effectAttachmentUI = abilityUI.getCasterArt(index);
+								break;
+							case SPECIAL:
+								effectAttachmentUI = abilityUI.getSpecialArt(index);
+								break;
+							case AREA_EFFECT:
+								effectAttachmentUI = abilityUI.getAreaEffectArt(index);
+								break;
+							case MISSILE:
+								effectAttachmentUI = abilityUI.getMissileArt(index);
+								break;
+							default:
+								throw new IllegalArgumentException("Unsupported effect type: " + effectType);
+							}
+						}
+						else {
+							final BuffUI buffUI = War3MapViewer.this.abilityDataUI.getBuffUI(alias);
+							if (buffUI != null) {
+								switch (effectType) {
+								case EFFECT:
+									effectAttachmentUI = buffUI.getEffectArt(index);
+									break;
+								case TARGET:
+									effectAttachmentUI = buffUI.getTargetArt(index);
+									break;
+								case SPECIAL:
+									effectAttachmentUI = buffUI.getSpecialArt(index);
+									break;
+								case MISSILE:
+									effectAttachmentUI = buffUI.getMissileArt(index);
+									break;
+								default:
+									throw new IllegalArgumentException("Unsupported effect type: " + effectType);
+								}
+							}
+							else {
+								return SimulationRenderComponent.DO_NOTHING;
+							}
+						}
+						if (effectAttachmentUI == null) {
+							return SimulationRenderComponent.DO_NOTHING;
+						}
+						final String modelPath = effectAttachmentUI.getModelPath();
+						final List<String> attachmentPoint = effectAttachmentUI.getAttachmentPoint();
+						final RenderSpellEffect specialEffect = addSpecialEffectTarget(modelPath, unit,
+								attachmentPoint);
+						return new SimulationRenderComponent() {
+							@Override
+							public void remove() {
+								specialEffect.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
+							}
+						};
 					}
 
 					@Override
@@ -2380,8 +2451,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public void setGameUI(final GameUI gameUI) {
 		this.gameUI = gameUI;
-		this.abilityDataUI = new AbilityDataUI(this.allObjectData.getAbilities(), this.allObjectData.getUnits(),
-				this.allObjectData.getItems(), this.allObjectData.getUpgrades(), gameUI, this);
+		this.abilityDataUI = new AbilityDataUI(this.allObjectData.getAbilities(), this.allObjectData.getBuffs(),
+				this.allObjectData.getUnits(), this.allObjectData.getItems(), this.allObjectData.getUpgrades(), gameUI,
+				this);
 	}
 
 	public GameUI getGameUI() {
@@ -2527,25 +2599,37 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.gameTurnManager = gameTurnManager;
 	}
 
-	public RenderEffect addSpecialEffectTarget(final String modelName, final CWidget targetWidget,
+	public RenderSpellEffect addSpecialEffectTarget(final String modelName, final CWidget targetWidget,
 			final String attachPointName) {
+		return addSpecialEffectTarget(modelName, targetWidget, Arrays.asList(attachPointName.split("\\s+")));
+	}
+
+	public RenderSpellEffect addSpecialEffectTarget(final String modelName, final CWidget targetWidget,
+			final List<String> attachPointNames) {
 		if (targetWidget instanceof CUnit) {
 			final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(targetWidget);
 			if (renderUnit == null) {
 				throw new NullPointerException(
 						"renderUnit is null! targetWidget is \"" + ((CUnit) targetWidget).getUnitType().getName()
-								+ "\", attachPointName=\"" + attachPointName + "\"");
+								+ "\", attachPointName=\"" + attachPointNames + "\"");
 			}
 			final MdxModel spawnedEffectModel = loadModelMdx(modelName);
 			if (spawnedEffectModel != null) {
 				final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel.addInstance();
 				modelInstance.setTeamColor(renderUnit.playerIndex);
+				float yaw = 0;
 				{
 					final MdxModel model = (MdxModel) renderUnit.instance.model;
 					int index = -1;
 					for (int i = 0; i < model.attachments.size(); i++) {
 						final Attachment attachment = model.attachments.get(i);
-						if (attachment.getName().startsWith(attachPointName)) {
+						boolean match = true;
+						for (final String attachmentPointNameToken : attachPointNames) {
+							if (!attachment.getName().contains(attachmentPointNameToken)) {
+								match = false;
+							}
+						}
+						if (match) {
 							index = i;
 							break;
 						}
@@ -2559,13 +2643,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					else {
 						// TODO This is not consistent with War3, is it? Should look nice though.
 						modelInstance.setLocation(renderUnit.location);
+						yaw = (float) Math.toRadians(renderUnit.getSimulationUnit().getFacing());
 					}
 				}
 				modelInstance.setScene(War3MapViewer.this.worldScene);
 				final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance, War3MapViewer.this,
-						(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing()),
-						RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
-				renderAttackInstant.setKillWhenDone(true);
+						yaw, RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
 				War3MapViewer.this.projectiles.add(renderAttackInstant);
 				return renderAttackInstant;
 			}

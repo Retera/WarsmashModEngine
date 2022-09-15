@@ -78,6 +78,9 @@ public class AbilityUI {
 	}
 
 	protected static EffectAttachmentUI tryGet(final List<EffectAttachmentUI> items, final int index) {
+		if (items.isEmpty()) {
+			return null;
+		}
 		if (index < items.size()) {
 			return items.get(index);
 		}

@@ -157,8 +157,10 @@ public class AbilityDataUI {
 			final List<String> casterArtPaths = Arrays
 					.asList(abilityTypeData.getFieldAsString(CASTER_ART, 0).split(","));
 			final int casterAttachmentCount = abilityTypeData.getFieldAsInteger(CASTER_ART_ATTACHMENT_COUNT, 0);
-			for (int i = 0; i < casterAttachmentCount; i++) {
-				final String modelPath = casterArtPaths.get(Math.min(i, casterAttachmentCount - 1));
+			final int casterAttachmentIndexMax = Math.min(casterAttachmentCount - 1, casterArtPaths.size() - 1);
+			final int casterIteratorCount = Math.max(casterAttachmentCount, casterArtPaths.size());
+			for (int i = 0; i < casterIteratorCount; i++) {
+				final String modelPath = casterArtPaths.get(Math.max(0, Math.min(i, casterAttachmentIndexMax)));
 				final War3ID attachmentPointKey = tryGet(CASTER_ART_ATTACHMENT_POINT, i);
 				final List<String> attachmentPoints = Arrays
 						.asList(abilityTypeData.getFieldAsString(attachmentPointKey, 0).split(","));
@@ -168,8 +170,10 @@ public class AbilityDataUI {
 			final List<String> targetArtPaths = Arrays
 					.asList(abilityTypeData.getFieldAsString(TARGET_ART, 0).split(","));
 			final int targetAttachmentCount = abilityTypeData.getFieldAsInteger(TARGET_ART_ATTACHMENT_COUNT, 0);
-			for (int i = 0; i < targetAttachmentCount; i++) {
-				final String modelPath = targetArtPaths.get(Math.min(i, targetAttachmentCount - 1));
+			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
+			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
+			for (int i = 0; i < targetIteratorCount; i++) {
+				final String modelPath = targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
 				final War3ID attachmentPointKey = tryGet(TARGET_ART_ATTACHMENT_POINT, i);
 				final List<String> attachmentPoints = Arrays
 						.asList(abilityTypeData.getFieldAsString(attachmentPointKey, 0).split(","));

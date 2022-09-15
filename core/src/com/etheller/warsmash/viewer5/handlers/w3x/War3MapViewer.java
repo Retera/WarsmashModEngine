@@ -128,6 +128,8 @@ import mpq.MPQArchive;
 import mpq.MPQException;
 
 public class War3MapViewer extends AbstractMdxModelViewer {
+	private static final List<String> ORIGIN_STRING_LIST = Arrays.asList("origin");
+
 	public static int DEBUG_DEPTH = 9999;
 
 	private static final War3ID ABILITY_HERO_RAWCODE = War3ID.fromString("AHer");
@@ -659,8 +661,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// RenderUnit class:
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -672,8 +673,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -692,8 +692,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -705,8 +704,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -821,7 +819,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public void spawnGainLevelEffect(final CUnit source) {
 						final AbilityUI heroUI = War3MapViewer.this.abilityDataUI.getUI(ABILITY_HERO_RAWCODE);
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
-						final String heroLevelUpArt = heroUI.getCasterArt(0);
+						final String heroLevelUpArt = heroUI.getCasterArt(0).getModelPath();
+						// TODO use addSpellEffectTarget
 						War3MapViewer.this.spawnFxOnOrigin(renderUnit, heroLevelUpArt);
 					}
 
@@ -832,7 +831,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						renderUnit.instance.additiveOverrideMeshMode = false;
 						renderUnit.instance.setVertexAlpha(1.0f);
 						final CPlayer player = War3MapViewer.this.simulation.getPlayer(source.getPlayerIndex());
-						final String heroReviveArt = reviveUI.getTargetArt(player.getRace().ordinal());
+						final String heroReviveArt = reviveUI.getTargetArt(player.getRace().ordinal()).getModelPath();
+						// TODO use addSpellEffectTarget, maybe?
 						War3MapViewer.this.spawnFxOnOrigin(renderUnit, heroReviveArt);
 						final MutableGameObject row = War3MapViewer.this.allObjectData.getUnits()
 								.get(source.getTypeId());
@@ -874,32 +874,34 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 					@Override
 					public void spawnEffectOnUnit(final CUnit unit, final String effectPath) {
-						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(unit);
-						final MdxModel spawnedEffectModel = loadModelMdx(effectPath);
-						if (spawnedEffectModel != null) {
-							final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel
-									.addInstance();
-							modelInstance.setTeamColor(unit.getPlayerIndex());
-							modelInstance.setLocation(renderUnit.location);
-							modelInstance.setScene(War3MapViewer.this.worldScene);
-							final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance,
-									War3MapViewer.this,
-									(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing()),
-									RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
-							renderAttackInstant.setKillWhenDone(true);
-							War3MapViewer.this.projectiles.add(renderAttackInstant);
-						}
-
+						final RenderSpellEffect spellEffect = addSpecialEffectTarget(effectPath, unit, "");
+						spellEffect.setKillWhenDone(true);
 					}
 
 					@Override
 					public void spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias) {
-						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
-						spawnEffectOnUnit(unit, abilityUI.getTargetArt(0));
+						final RenderSpellEffect spellEffect = spawnSpellEffectOnUnitEx(unit, alias, CEffectType.TARGET,
+								0);
+						spellEffect.setKillWhenDone(true);
 					}
 
 					@Override
 					public SimulationRenderComponent spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+							final CEffectType effectType, final int index) {
+						final RenderSpellEffect specialEffect = spawnSpellEffectOnUnitEx(unit, alias, effectType,
+								index);
+						if (specialEffect == null) {
+							return SimulationRenderComponent.DO_NOTHING;
+						}
+						return new SimulationRenderComponent() {
+							@Override
+							public void remove() {
+								specialEffect.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
+							}
+						};
+					}
+
+					private RenderSpellEffect spawnSpellEffectOnUnitEx(final CUnit unit, final War3ID alias,
 							final CEffectType effectType, final int index) {
 						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
 						EffectAttachmentUI effectAttachmentUI;
@@ -948,29 +950,25 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								}
 							}
 							else {
-								return SimulationRenderComponent.DO_NOTHING;
+								return null;
 							}
 						}
 						if (effectAttachmentUI == null) {
-							return SimulationRenderComponent.DO_NOTHING;
+							return null;
 						}
 						final String modelPath = effectAttachmentUI.getModelPath();
 						final List<String> attachmentPoint = effectAttachmentUI.getAttachmentPoint();
 						final RenderSpellEffect specialEffect = addSpecialEffectTarget(modelPath, unit,
 								attachmentPoint);
-						return new SimulationRenderComponent() {
-							@Override
-							public void remove() {
-								specialEffect.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
-							}
-						};
+						return specialEffect;
 					}
 
 					@Override
 					public SimulationRenderComponent createSpellEffectOverDestructable(final CUnit source,
 							final CDestructable target, final War3ID alias, final float artAttachmentHeight) {
 						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
-						final String effectPath = abilityUI.getTargetArt(0);
+						final String effectPath = abilityUI.getTargetArt(0).getModelPath();
+						// TODO use addSpellEffectTarget maybe?
 						final RenderDestructable renderDestructable = War3MapViewer.this.destructableToRenderPeer
 								.get(target);
 						final MdxModel spawnedEffectModel = loadModelMdx(effectPath);
@@ -1000,7 +998,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public void createSpellEffectFacing(final War3ID alias, final float harvestStandX,
 							final float harvestStandY, final float angle) {
 						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
-						final String effectPath = abilityUI.getEffectArt(0);
+						final String effectPath = abilityUI.getEffectArt(0).getModelPath();
+						// TODO use addSpellEffectTarget maybe?
 						final MdxModel spawnedEffectModel = loadModelMdx(effectPath);
 						if (spawnedEffectModel != null) {
 							final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel
@@ -2605,8 +2604,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public RenderSpellEffect addSpecialEffectTarget(final String modelName, final CWidget targetWidget,
-			final List<String> attachPointNames) {
+			List<String> attachPointNames) {
 		if (targetWidget instanceof CUnit) {
+			if (attachPointNames.isEmpty() || ((attachPointNames.size() == 1) && attachPointNames.get(0).isEmpty())) {
+				attachPointNames = ORIGIN_STRING_LIST;
+			}
 			final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(targetWidget);
 			if (renderUnit == null) {
 				throw new NullPointerException(

@@ -1,6 +1,7 @@
 package net.warsmash.networking.udp;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -14,6 +15,14 @@ public class OrderedUdpServer implements UdpServerListener, Runnable {
 	public OrderedUdpServer(final int port, final OrderedUdpServerListener listener) throws IOException {
 		this.listener = listener;
 		this.udpServer = new UdpServer(port, this);
+	}
+
+	public int getPort() {
+		return this.udpServer.getPort();
+	}
+
+	public InetSocketAddress getLocalAddress() {
+		return this.udpServer.getLocalAddress();
 	}
 
 	@Override

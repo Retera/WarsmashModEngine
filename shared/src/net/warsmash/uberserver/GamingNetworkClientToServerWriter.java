@@ -203,6 +203,13 @@ public class GamingNetworkClientToServerWriter extends AbstractWriter implements
 	}
 
 	@Override
+	public void gameLobbyStartGame(long sessionToken) {
+		beginMessage(Protocol.GAME_LOBBY_START_GAME, 8);
+		this.writeBuffer.putLong(sessionToken);
+		send();
+	}
+
+	@Override
 	public void disconnected() {
 		throw new UnsupportedOperationException();
 	}

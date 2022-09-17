@@ -112,6 +112,11 @@ public class DefaultGamingNetworkServerClientBuilder implements GamingNetworkSer
 				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.gameLobbySetPlayerRace(sessionToken,
 						slot, raceItemIndex, writer);
 			}
+
+			@Override
+			public void gameLobbyStartGame(long sessionToken) {
+				DefaultGamingNetworkServerClientBuilder.this.businessLogicImpl.gameLobbyStartGame(sessionToken, writer);
+			}
 		};
 	}
 

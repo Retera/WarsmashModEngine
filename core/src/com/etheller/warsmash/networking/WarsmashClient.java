@@ -24,12 +24,11 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 	private final WarsmashClientWriter writer;
 	private final Queue<QueuedMessage> queuedMessages = new ArrayDeque<>();
 
-	public WarsmashClient(final InetAddress serverAddress, final War3MapViewer game)
+	public WarsmashClient(final InetAddress serverAddress, int udpPort, final War3MapViewer game, long sessionToken)
 			throws UnknownHostException, IOException {
-		this.udpClient = new OrderedUdpClient(serverAddress, WarsmashConstants.PORT_NUMBER,
-				new WarsmashClientParser(this));
+		this.udpClient = new OrderedUdpClient(serverAddress, udpPort, new WarsmashClientParser(this));
 		this.game = game;
-		this.writer = new WarsmashClientWriter(this.udpClient);
+		this.writer = new WarsmashClientWriter(this.udpClient, sessionToken);
 	}
 
 	public CPlayerUnitOrderExecutor getExecutor(final int playerIndex) {

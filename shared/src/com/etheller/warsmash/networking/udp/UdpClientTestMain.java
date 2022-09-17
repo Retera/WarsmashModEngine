@@ -5,10 +5,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
-import com.etheller.warsmash.util.WarsmashConstants;
-
 import net.warsmash.networking.udp.UdpClient;
 import net.warsmash.networking.udp.UdpClientListener;
+import net.warsmash.uberserver.GamingNetwork;
 
 public class UdpClientTestMain {
 
@@ -16,7 +15,7 @@ public class UdpClientTestMain {
 
 	public static void main(final String[] args) {
 		try {
-			warsmashUdpClient = new UdpClient(InetAddress.getLocalHost(), WarsmashConstants.PORT_NUMBER,
+			warsmashUdpClient = new UdpClient(InetAddress.getLocalHost(), GamingNetwork.UDP_SINGLE_GAME_PORT,
 					new UdpClientListener() {
 						@Override
 						public void parse(final ByteBuffer buffer) {

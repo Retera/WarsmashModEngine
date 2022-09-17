@@ -43,4 +43,6 @@ public interface BattleNetUIActionListener {
 	void gameLobbySetPlayerSlot(int serverSlot, LobbyPlayerType lobbyPlayerType);
 
 	void gameLobbySetPlayerRace(int serverSlot, int raceItemIndex);
+
+	void startGame();
 }

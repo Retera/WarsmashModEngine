@@ -20,6 +20,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -30,7 +31,6 @@ import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.networking.GameTurnManager;
-import com.etheller.warsmash.networking.MultiplayerHack;
 import com.etheller.warsmash.networking.WarsmashClient;
 import com.etheller.warsmash.networking.WarsmashClientSendingOrderListener;
 import com.etheller.warsmash.networking.WarsmashClientWriter;
@@ -217,7 +217,7 @@ public class MenuUI {
 	private StringFrame loadingSubtitleText;
 	private StringFrame loadingText;
 	private SpriteFrame loadingBar;
-	private String mapFilepathToStart;
+	private BeginGameInformation beginGameInformation;
 	private LoadingMap loadingMap;
 	private SpriteFrame loadingBackground;
 	private boolean unifiedCampaignInfo = false;
@@ -686,6 +686,40 @@ public class MenuUI {
 					@Override
 					public void run() {
 						MenuUI.this.battleNetUI.gameLobbySlotSetPlayerRace(slot, raceItemIndex);
+					}
+				});
+			}
+
+			@Override
+			public void gameLobbyStartGame(byte[] hostIpAddressBytes, short hostUdpPort, int yourServerPlayerSlot) {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						MenuUI.this.campaignMenu.setVisible(false);
+						MenuUI.this.campaignBackButton.setVisible(false);
+						MenuUI.this.missionSelectFrame.setVisible(false);
+						MenuUI.this.campaignSelectFrame.setVisible(false);
+						MenuUI.this.campaignWarcraftIIILogo.setVisible(false);
+						MenuUI.this.campaignRootMenuUI.setVisible(false);
+						MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
+						MenuUI.this.skirmish.setVisible(false);
+						MenuUI.this.battleNetUI.hideCurrentScreen();
+						playCurrentBattleNetGlueSpriteDeath();
+						MenuUI.this.beginGameInformation = new BeginGameInformation();
+						MenuUI.this.beginGameInformation.gameMapLookup = currentNetGameMapLookup;
+						MenuUI.this.beginGameInformation.sessionToken = MenuUI.this.battleNetUI
+								.getGamingNetworkSessionToken();
+						MenuUI.this.beginGameInformation.hostInetAddress = hostIpAddressBytes;
+						MenuUI.this.beginGameInformation.hostUdpPort = hostUdpPort & 0xFFFF;
+						final IntIntMap gameChatroomServerSlotToMapSlot = MenuUI.this.battleNetUI
+								.getGameChatroomServerSlotToMapSlot();
+						MenuUI.this.beginGameInformation.serverSlotToMapSlot = gameChatroomServerSlotToMapSlot;
+						MenuUI.this.beginGameInformation.mapSlotToServerSlot = MenuUI.this.battleNetUI
+								.getGameChatroomMapSlotToServerSlot();
+						MenuUI.this.beginGameInformation.localPlayerIndex = gameChatroomServerSlotToMapSlot
+								.get(yourServerPlayerSlot, -1);
+						MenuUI.this.currentMapConfig = MenuUI.this.battleNetUI.getGameChatroomMapConfig();
+						MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 					}
 				});
 			}
@@ -1184,7 +1218,9 @@ public class MenuUI {
 					MenuUI.this.skirmish.setVisible(false);
 					MenuUI.this.glueSpriteLayerTopLeft.setSequence("Death");
 					MenuUI.this.glueSpriteLayerTopRight.setSequence("Death");
-					MenuUI.this.mapFilepathToStart = selectedItem;
+					MenuUI.this.beginGameInformation = new BeginGameInformation();
+					MenuUI.this.beginGameInformation.gameMapLookup = new CurrentNetGameMapLookupPath(selectedItem);
+					MenuUI.this.beginGameInformation.localPlayerIndex = -1;
 					MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 				}
 
@@ -1293,7 +1329,10 @@ public class MenuUI {
 								MenuUI.this.campaignRootMenuUI.setVisible(false);
 								MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
 								MenuUI.this.campaignFade.setSequence("Birth");
-								MenuUI.this.mapFilepathToStart = mission.getMapFilename();
+								MenuUI.this.beginGameInformation = new BeginGameInformation();
+								MenuUI.this.beginGameInformation.gameMapLookup = new CurrentNetGameMapLookupPath(
+										mission.getMapFilename());
+								MenuUI.this.beginGameInformation.localPlayerIndex = -1;
 							}
 						});
 					}
@@ -1560,6 +1599,12 @@ public class MenuUI {
 						MenuUI.this.gamingNetworkConnection.gameLobbySetPlayerSlot(
 								MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), serverSlot, lobbyPlayerType);
 					}
+
+					@Override
+					public void startGame() {
+						MenuUI.this.gamingNetworkConnection
+								.gameLobbyStartGame(MenuUI.this.battleNetUI.getGamingNetworkSessionToken());
+					}
 				});
 
 		this.dialog = new DialogWar3(this.rootFrame, this.uiViewport);
@@ -1611,10 +1656,18 @@ public class MenuUI {
 			final int loadingScreen = mapInfo.getLoadingScreen();
 			System.out.println("LOADING SCREEN INT: " + loadingScreen);
 			final int campaignBackground = mapInfo.getCampaignBackground();
-			final Element loadingScreens = worldEditData.get("LoadingScreens");
-			final String key = String.format("%2s", Integer.toString(campaignBackground)).replace(' ', '0');
-			final int animationSequenceIndex = loadingScreens.getFieldValue(key, 2);
-			final String campaignScreenModel = loadingScreens.getField(key, 3);
+			int animationSequenceIndex;
+			final String campaignScreenModel;
+			if (campaignBackground == -1) {
+				animationSequenceIndex = 0;
+				campaignScreenModel = this.rootFrame.getSkinField("LoadingMeleeBackground");
+			}
+			else {
+				final Element loadingScreens = worldEditData.get("LoadingScreens");
+				final String key = String.format("%2s", Integer.toString(campaignBackground)).replace(' ', '0');
+				animationSequenceIndex = loadingScreens.getFieldValue(key, 2);
+				campaignScreenModel = loadingScreens.getField(key, 3);
+			}
 
 			this.menuScreen.setModel(null);
 			this.rootFrame.setSpriteFrameModel(this.loadingBackground, campaignScreenModel);
@@ -1736,86 +1789,103 @@ public class MenuUI {
 	}
 
 	public void update(final float deltaTime) {
-		if ((this.mapFilepathToStart != null) && (this.menuState != MenuState.GOING_TO_MAP)) {
+		if ((this.beginGameInformation != null) && (this.menuState != MenuState.GOING_TO_MAP)) {
 			this.campaignFade.setVisible(false);
-			internalStartMap(this.mapFilepathToStart);
-			this.mapFilepathToStart = null;
-			return;
-		}
-		else if (this.loadingMap != null) {
-			int localPlayerIndex = MultiplayerHack.LP_VAL;
-			try {
-				this.loadingMap.viewer.loadMap(this.loadingMap.map, this.loadingMap.mapInfo, localPlayerIndex);
-			}
-			catch (final IOException e) {
-				throw new RuntimeException(e);
-			}
-			// TODO not cast menu screen
-			CPlayerUnitOrderListener uiOrderListener;
-			final WarsmashClient warsmashClient;
-			if (MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR != null) {
-				try {
-					warsmashClient = new WarsmashClient(
-							InetAddress.getByName(MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR),
-							this.loadingMap.viewer);
+			if (!this.beginGameInformation.loadingStarted) {
+				if (this.beginGameInformation.gameMapLookup instanceof CurrentNetGameMapLookupFile) {
+					internalStartMap(((CurrentNetGameMapLookupFile) this.beginGameInformation.gameMapLookup).getFile()
+							.getAbsolutePath());
 				}
-				catch (final UnknownHostException e) {
-					throw new RuntimeException(e);
+				else if (this.beginGameInformation.gameMapLookup instanceof CurrentNetGameMapLookupPath) {
+					internalStartMap(((CurrentNetGameMapLookupPath) this.beginGameInformation.gameMapLookup).getPath());
 				}
-				catch (final IOException e) {
-					throw new RuntimeException(e);
+				else {
+					throw new RuntimeException("Begin game information failed");
 				}
-				final WarsmashClientWriter warsmashClientWriter = warsmashClient.getWriter();
-				warsmashClientWriter.joinGame();
-				warsmashClientWriter.send();
-				uiOrderListener = new WarsmashClientSendingOrderListener(warsmashClientWriter);
+				this.beginGameInformation.loadingStarted = true;
+				return;
 			}
 			else {
-				final War3MapViewer mapViewer = this.loadingMap.viewer;
-				for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-					final CBasePlayer configPlayer = mapViewer.getMapConfig().getPlayer(i);
-					if ((configPlayer.getSlotState() == CPlayerSlotState.PLAYING)
-							&& (configPlayer.getController() == CMapControl.USER)) {
-						localPlayerIndex = i;
-						break;
+				if (this.loadingMap != null) {
+					int localPlayerIndex = this.beginGameInformation.localPlayerIndex;
+					try {
+						this.loadingMap.viewer.loadMap(this.loadingMap.map, this.loadingMap.mapInfo, localPlayerIndex);
 					}
+					catch (final IOException e) {
+						throw new RuntimeException(e);
+					}
+					CPlayerUnitOrderListener uiOrderListener;
+					final WarsmashClient warsmashClient;
+					if (this.beginGameInformation.hostInetAddress != null) {
+
+						try {
+							final InetAddress byAddress = InetAddress
+									.getByAddress(this.beginGameInformation.hostInetAddress);
+							System.err.println("Connecting to address: " + byAddress);
+							warsmashClient = new WarsmashClient(byAddress, this.beginGameInformation.hostUdpPort,
+									this.loadingMap.viewer, this.beginGameInformation.sessionToken);
+						}
+						catch (final UnknownHostException e) {
+							throw new RuntimeException(e);
+						}
+						catch (final IOException e) {
+							throw new RuntimeException(e);
+						}
+						final WarsmashClientWriter warsmashClientWriter = warsmashClient.getWriter();
+						warsmashClientWriter.joinGame();
+						warsmashClientWriter.send();
+						uiOrderListener = new WarsmashClientSendingOrderListener(warsmashClientWriter);
+					}
+					else {
+						final War3MapViewer mapViewer = this.loadingMap.viewer;
+						for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+							final CBasePlayer configPlayer = mapViewer.getMapConfig().getPlayer(i);
+							if ((configPlayer.getSlotState() == CPlayerSlotState.PLAYING)
+									&& (configPlayer.getController() == CMapControl.USER)) {
+								localPlayerIndex = i;
+								break;
+							}
+						}
+						mapViewer.setLocalPlayerIndex(localPlayerIndex);
+						final CPlayerUnitOrderExecutor executor = new CPlayerUnitOrderExecutor(
+								this.loadingMap.viewer.simulation, localPlayerIndex);
+						final CPlayerUnitOrderListenerDelaying delayingListener = new CPlayerUnitOrderListenerDelaying(
+								executor);
+						uiOrderListener = delayingListener;
+						warsmashClient = null;
+						mapViewer.setGameTurnManager(new GameTurnManager() {
+							@Override
+							public void turnCompleted(final int gameTurnTick) {
+								delayingListener.publishDelayedActions();
+							}
+
+							@Override
+							public int getLatestCompletedTurn() {
+								return Integer.MAX_VALUE;
+							}
+
+							@Override
+							public void framesSkipped(final float skippedCount) {
+
+							}
+						});
+					}
+
+					// TODO not cast menu screen
+					MenuUI.this.screenManager.setScreen(new WarsmashGdxMapScreen(this.loadingMap.viewer,
+							this.screenManager, (WarsmashGdxMenuScreen) this.menuScreen, uiOrderListener));
+					this.loadingMap = null;
+					this.beginGameInformation = null;
+
+					this.loadingBar.setVisible(false);
+					this.loadingFrame.setVisible(false);
+					this.loadingBackground.setVisible(false);
+					if (warsmashClient != null) {
+						warsmashClient.startThread();
+					}
+					return;
 				}
-				mapViewer.setLocalPlayerIndex(localPlayerIndex);
-				final CPlayerUnitOrderExecutor executor = new CPlayerUnitOrderExecutor(
-						this.loadingMap.viewer.simulation, localPlayerIndex);
-				final CPlayerUnitOrderListenerDelaying delayingListener = new CPlayerUnitOrderListenerDelaying(
-						executor);
-				uiOrderListener = delayingListener;
-				warsmashClient = null;
-				mapViewer.setGameTurnManager(new GameTurnManager() {
-					@Override
-					public void turnCompleted(final int gameTurnTick) {
-						delayingListener.publishDelayedActions();
-					}
-
-					@Override
-					public int getLatestCompletedTurn() {
-						return Integer.MAX_VALUE;
-					}
-
-					@Override
-					public void framesSkipped(final float skippedCount) {
-
-					}
-				});
 			}
-
-			MenuUI.this.screenManager.setScreen(new WarsmashGdxMapScreen(this.loadingMap.viewer, this.screenManager,
-					(WarsmashGdxMenuScreen) this.menuScreen, uiOrderListener));
-			this.loadingMap = null;
-
-			this.loadingBar.setVisible(false);
-			this.loadingFrame.setVisible(false);
-			this.loadingBackground.setVisible(false);
-			if (MultiplayerHack.MULTIPLAYER_HACK_SERVER_ADDR != null) {
-				warsmashClient.startThread();
-			}
-			return;
 		}
 		if (this.currentMusics != null) {
 			if ((this.currentMusics[this.currentMusicIndex] != null)

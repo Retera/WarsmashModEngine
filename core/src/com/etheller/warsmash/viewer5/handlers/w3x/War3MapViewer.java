@@ -1086,8 +1086,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						soundset = unitSoundset;
 
 						renderPeer.resetRenderUnit(War3MapViewer.this, model, row, unitX, unitY, unitZ,
-								localPlayerIndex, soundset, portraitModel, simulationUnit, typeData, specialArtModel,
-								buildingShadowInstance, War3MapViewer.this.selectionCircleScaleFactor,
+								renderPeer.playerIndex, soundset, portraitModel, simulationUnit, typeData,
+								specialArtModel, buildingShadowInstance, War3MapViewer.this.selectionCircleScaleFactor,
 								typeData.getAnimationWalkSpeed(), typeData.getAnimationRunSpeed(),
 								typeData.getScalingValue());
 					}

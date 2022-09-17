@@ -217,6 +217,15 @@ public class TCPGamingNetworkServerToClientParser implements TCPClientParser {
 					this.listener.gameLobbySlotSetPlayerRace(lobbySlot, raceItemIndex);
 					break;
 				}
+				case GamingNetworkServerToClientListener.Protocol.GAME_LOBBY_START_GAME: {
+					final int hostIpAddressByteCount = data.getInt();
+					final byte[] hostIpAddressBytes = new byte[hostIpAddressByteCount];
+					data.get(hostIpAddressBytes);
+					final short hostUdpPort = data.getShort();
+					final int yourServerPlayerSlot = data.getInt();
+					this.listener.gameLobbyStartGame(hostIpAddressBytes, hostUdpPort, yourServerPlayerSlot);
+					break;
+				}
 				default:
 					break;
 				}

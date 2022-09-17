@@ -4,10 +4,9 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 
-import com.etheller.warsmash.util.WarsmashConstants;
-
 import net.warsmash.networking.udp.UdpServer;
 import net.warsmash.networking.udp.UdpServerListener;
+import net.warsmash.uberserver.GamingNetwork;
 
 public class UdpServerTestMain {
 
@@ -15,7 +14,7 @@ public class UdpServerTestMain {
 
 	public static void main(final String[] args) {
 		try {
-			warsmashGameServer = new UdpServer(WarsmashConstants.PORT_NUMBER, new UdpServerListener() {
+			warsmashGameServer = new UdpServer(GamingNetwork.UDP_SINGLE_GAME_PORT, new UdpServerListener() {
 				int n = 0;
 				ByteBuffer sendBuffer = ByteBuffer.allocate(1024);
 

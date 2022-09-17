@@ -263,4 +263,14 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 		this.writeBuffer.putInt(raceItemIndex);
 		send();
 	}
+
+	@Override
+	public void gameLobbyStartGame(byte[] hostIpAddressBytes, short hostUdpPort, int yourServerPlayerSlot) {
+		beginMessage(Protocol.GAME_LOBBY_START_GAME, 4 + hostIpAddressBytes.length + 2 + 4);
+		this.writeBuffer.putInt(hostIpAddressBytes.length);
+		this.writeBuffer.put(hostIpAddressBytes);
+		this.writeBuffer.putShort(hostUdpPort);
+		this.writeBuffer.putInt(yourServerPlayerSlot);
+		send();
+	}
 }

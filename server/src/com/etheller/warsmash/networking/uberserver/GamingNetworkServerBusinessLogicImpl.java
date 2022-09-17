@@ -2,6 +2,9 @@ package com.etheller.warsmash.networking.uberserver;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
@@ -13,6 +16,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import com.etheller.warsmash.networking.WarsmashServer;
 import com.etheller.warsmash.networking.uberserver.users.PasswordAuthentication;
 import com.etheller.warsmash.networking.uberserver.users.User;
 import com.etheller.warsmash.networking.uberserver.users.UserManager;
@@ -353,6 +357,33 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
+	public void gameLobbyStartGame(long sessionToken, GamingNetworkServerToClientWriter connectionContext) {
+		final SessionImpl session = getSession(sessionToken, connectionContext);
+		if (session != null) {
+			if (session.currentGameName != null) {
+				final String channelKey = session.currentGameName.toLowerCase(Locale.US);
+				final HostedGame game = this.nameLowerCaseToGame.get(channelKey);
+				if (game != null) {
+					if (game.getHostUser() == session.getUser()) {
+						game.onStartGame();
+					}
+					else {
+						connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+					}
+				}
+				else {
+					connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				}
+			}
+			else {
+				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+			}
+		}
+		else {
+			connectionContext.badSession();
+		}
+	}
+
 	private void removeSessionFromCurrentChannel(final SessionImpl session) {
 		final String previousChatChannel = session.currentChatChannel;
 		if (previousChatChannel != null) {
@@ -609,6 +640,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 		private NetMapDownloader mapDownloader;
 		private File mapFile;
 		private boolean mapFullyLoaded = false;
+		private WarsmashServer warsmashGameServer;
 
 		public HostedGame(User hostUser, final String gameName, String mapName, final int totalSlots,
 				LobbyGameSpeed gameSpeed, HostedGameVisibility visibility, long mapChecksum) {
@@ -874,6 +906,49 @@ public class GamingNetworkServerBusinessLogicImpl {
 		public void onCloseGame() {
 			if (this.mapFile != null) {
 				this.mapFile.delete();
+			}
+		}
+
+		public void onStartGame() {
+			final Map<Long, Integer> sessionTokenToSlot = new HashMap<>();
+			for (int i = 0; i < this.userSessionSlotsGameData.length; i++) {
+				if (this.userSessionSlotsGameData[i].type == LobbyPlayerType.USER) {
+					sessionTokenToSlot.put(this.userSessionSlots[i].getToken(), i);
+				}
+			}
+
+			try {
+				this.warsmashGameServer = new WarsmashServer(0, sessionTokenToSlot);
+			}
+			catch (final IOException e) {
+				e.printStackTrace();
+			}
+			if (this.warsmashGameServer != null) {
+				this.warsmashGameServer.startThread();
+				final InetSocketAddress localAddress = this.warsmashGameServer.getLocalAddress();
+				if (localAddress != null) {
+					InetAddress localHost;
+					try {
+						localHost = InetAddress.getLocalHost();
+					}
+					catch (final UnknownHostException e) {
+						e.printStackTrace();
+						return;
+					}
+					final byte[] bytes = localHost.getAddress();
+					final short port = (short) localAddress.getPort();
+					for (int i = 0; i < this.userSessionSlots.length; i++) {
+						final SessionImpl session = this.userSessionSlots[i];
+						if (session != null) {
+							try {
+								session.mostRecentConnectionContext.gameLobbyStartGame(bytes, port, i);
+							}
+							catch (final Exception exc) {
+								exc.printStackTrace();
+							}
+						}
+					}
+				}
 			}
 		}
 	}

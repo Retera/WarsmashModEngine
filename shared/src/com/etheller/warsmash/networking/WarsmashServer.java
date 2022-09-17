@@ -1,31 +1,47 @@
 package com.etheller.warsmash.networking;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-
-import com.etheller.warsmash.util.WarsmashConstants;
+import java.util.Set;
 
 import net.warsmash.networking.udp.OrderedUdpServer;
+import net.warsmash.uberserver.GamingNetwork;
 
 public class WarsmashServer implements ClientToServerListener {
+	private static final boolean VERBOSE_LOGGING = false;
 	private static final int MAGIC_DELAY_OFFSET = 4;
 	private final OrderedUdpServer udpServer;
-	private final Map<SocketAddress, Integer> socketAddressToPlayerIndex = new HashMap<>();
+	private final Set<SocketAddress> socketAddressesKnown = new HashSet<>();
+	private final Map<Long, Integer> sessionTokenToPermittedSlot;
 	private final Map<SocketAddress, Integer> clientToTurnFinished = new HashMap<>();
 	private final List<Runnable> turnActions = new ArrayList<>();
 	private final WarsmashServerWriter writer;
 	private int currentTurnTick = MAGIC_DELAY_OFFSET;
 	private boolean gameStarted = false;
 	private long lastServerHeartbeatTime = 0;
+	private int joinCount = 0;
 
-	public WarsmashServer() throws IOException {
-		this.udpServer = new OrderedUdpServer(WarsmashConstants.PORT_NUMBER, new WarsmashServerParser(this));
-		this.writer = new WarsmashServerWriter(this.udpServer, this.socketAddressToPlayerIndex.keySet());
+	public WarsmashServer(int port, Map<Long, Integer> sessionTokenToPermittedSlot) throws IOException {
+		this.udpServer = new OrderedUdpServer(port, new WarsmashServerParser(this));
+		this.writer = new WarsmashServerWriter(this.udpServer, this.socketAddressesKnown);
+		this.sessionTokenToPermittedSlot = sessionTokenToPermittedSlot;
+	}
+
+	// Useful for if they pass 0 as port and get an auto-assigned one
+	public int getPort() {
+		return this.udpServer.getPort();
+	}
+
+	public InetSocketAddress getLocalAddress() {
+		return this.udpServer.getLocalAddress();
 	}
 
 	public void startThread() {
@@ -46,34 +62,40 @@ public class WarsmashServer implements ClientToServerListener {
 		this.currentTurnTick++;
 	}
 
-	private int getPlayerIndex(final SocketAddress sourceAddress) {
-		Integer playerIndex = this.socketAddressToPlayerIndex.get(sourceAddress);
-		if (playerIndex == null) {
-			playerIndex = this.socketAddressToPlayerIndex.size();
-			if (playerIndex == 2) {
-				playerIndex = 5;
-			}
-			else if (playerIndex == 3) {
-				playerIndex = 6;
-			}
-			this.socketAddressToPlayerIndex.put(sourceAddress, playerIndex);
+	private int getPlayerIndex(final SocketAddress sourceAddress, long sessionToken) {
+		final Integer permittedSlot = this.sessionTokenToPermittedSlot.get(sessionToken);
+		if (permittedSlot != null) {
+			this.socketAddressesKnown.add(sourceAddress);
+			return permittedSlot;
 		}
-		return playerIndex;
+		System.err.println("received bad session token during game: " + sessionToken);
+		return -1;
 	}
 
 	@Override
-	public void joinGame(final SocketAddress sourceAddress) {
+	public void joinGame(final SocketAddress sourceAddress, long sessionToken) {
 		System.out.println("joinGame " + sourceAddress);
-		final int playerIndex = getPlayerIndex(sourceAddress);
+		final int playerIndex = getPlayerIndex(sourceAddress, sessionToken);
+		if (playerIndex == -1) {
+			return;
+		}
 		WarsmashServer.this.writer.acceptJoin(playerIndex);
 		WarsmashServer.this.writer.send(sourceAddress);
+
+		this.joinCount++;
+		if (this.joinCount == this.sessionTokenToPermittedSlot.size()) {
+			startGame();
+		}
 	}
 
 	@Override
-	public void issueTargetOrder(final SocketAddress sourceAddress, final int unitHandleId, final int abilityHandleId,
-			final int orderId, final int targetHandleId, final boolean queue) {
+	public void issueTargetOrder(final SocketAddress sourceAddress, long sessionToken, final int unitHandleId,
+			final int abilityHandleId, final int orderId, final int targetHandleId, final boolean queue) {
 		System.out.println("issueTargetOrder from " + sourceAddress);
-		final int playerIndex = getPlayerIndex(sourceAddress);
+		final int playerIndex = getPlayerIndex(sourceAddress, sessionToken);
+		if (playerIndex == -1) {
+			return;
+		}
 		this.turnActions.add(new Runnable() {
 			@Override
 			public void run() {
@@ -85,10 +107,13 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	@Override
-	public void issuePointOrder(final SocketAddress sourceAddress, final int unitHandleId, final int abilityHandleId,
-			final int orderId, final float x, final float y, final boolean queue) {
+	public void issuePointOrder(final SocketAddress sourceAddress, long sessionToken, final int unitHandleId,
+			final int abilityHandleId, final int orderId, final float x, final float y, final boolean queue) {
 		System.out.println("issuePointOrder from " + sourceAddress);
-		final int playerIndex = getPlayerIndex(sourceAddress);
+		final int playerIndex = getPlayerIndex(sourceAddress, sessionToken);
+		if (playerIndex == -1) {
+			return;
+		}
 		this.turnActions.add(new Runnable() {
 			@Override
 			public void run() {
@@ -100,11 +125,14 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	@Override
-	public void issueDropItemAtPointOrder(final SocketAddress sourceAddress, final int unitHandleId,
+	public void issueDropItemAtPointOrder(final SocketAddress sourceAddress, long sessionToken, final int unitHandleId,
 			final int abilityHandleId, final int orderId, final int targetHandleId, final float x, final float y,
 			final boolean queue) {
 		System.out.println("issueDropItemAtPointOrder from " + sourceAddress);
-		final int playerIndex = getPlayerIndex(sourceAddress);
+		final int playerIndex = getPlayerIndex(sourceAddress, sessionToken);
+		if (playerIndex == -1) {
+			return;
+		}
 		this.turnActions.add(new Runnable() {
 			@Override
 			public void run() {
@@ -116,11 +144,14 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	@Override
-	public void issueDropItemAtTargetOrder(final SocketAddress sourceAddress, final int unitHandleId,
+	public void issueDropItemAtTargetOrder(final SocketAddress sourceAddress, long sessionToken, final int unitHandleId,
 			final int abilityHandleId, final int orderId, final int targetHandleId, final int targetHeroHandleId,
 			final boolean queue) {
 		System.out.println("issueDropItemAtTargetOrder from " + sourceAddress);
-		final int playerIndex = getPlayerIndex(sourceAddress);
+		final int playerIndex = getPlayerIndex(sourceAddress, sessionToken);
+		if (playerIndex == -1) {
+			return;
+		}
 		this.turnActions.add(new Runnable() {
 			@Override
 			public void run() {
@@ -132,10 +163,13 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	@Override
-	public void issueImmediateOrder(final SocketAddress sourceAddress, final int unitHandleId,
+	public void issueImmediateOrder(final SocketAddress sourceAddress, long sessionToken, final int unitHandleId,
 			final int abilityHandleId, final int orderId, final boolean queue) {
 		System.out.println("issueImmediateOrder from " + sourceAddress);
-		final int playerIndex = getPlayerIndex(sourceAddress);
+		final int playerIndex = getPlayerIndex(sourceAddress, sessionToken);
+		if (playerIndex == -1) {
+			return;
+		}
 		this.turnActions.add(new Runnable() {
 			@Override
 			public void run() {
@@ -147,10 +181,13 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	@Override
-	public void unitCancelTrainingItem(final SocketAddress sourceAddress, final int unitHandleId,
+	public void unitCancelTrainingItem(final SocketAddress sourceAddress, long sessionToken, final int unitHandleId,
 			final int cancelIndex) {
 		System.out.println("unitCancelTrainingItem from " + sourceAddress);
-		final int playerIndex = getPlayerIndex(sourceAddress);
+		final int playerIndex = getPlayerIndex(sourceAddress, sessionToken);
+		if (playerIndex == -1) {
+			return;
+		}
 		this.turnActions.add(new Runnable() {
 			@Override
 			public void run() {
@@ -161,9 +198,9 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	@Override
-	public void finishedTurn(final SocketAddress sourceAddress, final int clientGameTurnTick) {
+	public void finishedTurn(final SocketAddress sourceAddress, long sessionToken, final int clientGameTurnTick) {
 		final int gameTurnTick = clientGameTurnTick + MAGIC_DELAY_OFFSET;
-		if (WarsmashConstants.VERBOSE_LOGGING) {
+		if (VERBOSE_LOGGING) {
 			System.out.println("finishedTurn(" + gameTurnTick + ") from " + sourceAddress);
 		}
 		if (!this.gameStarted) {
@@ -172,7 +209,7 @@ public class WarsmashServer implements ClientToServerListener {
 		}
 		this.clientToTurnFinished.put(sourceAddress, clientGameTurnTick);
 		boolean allDone = true;
-		for (final SocketAddress clientAddress : this.socketAddressToPlayerIndex.keySet()) {
+		for (final SocketAddress clientAddress : this.socketAddressesKnown) {
 			final Integer turnFinishedValue = this.clientToTurnFinished.get(clientAddress);
 			if ((turnFinishedValue == null) || (turnFinishedValue < clientGameTurnTick)) {
 				allDone = false;
@@ -188,21 +225,24 @@ public class WarsmashServer implements ClientToServerListener {
 	}
 
 	@Override
-	public void framesSkipped(final int nFramesSkipped) {
-		// dont care for now
-		final long currentTimeMillis = System.currentTimeMillis();
-		if ((currentTimeMillis - this.lastServerHeartbeatTime) > 3000) {
-			// 3 seconds of frame skipping, make sure we keep in contact with client
-			System.out.println("sending server heartbeat()");
-			WarsmashServer.this.writer.heartbeat();
-			WarsmashServer.this.writer.send();
-			this.lastServerHeartbeatTime = currentTimeMillis;
+	public void framesSkipped(long sessionToken, final int nFramesSkipped) {
+		if (this.sessionTokenToPermittedSlot.containsKey(sessionToken)) {
+			// dont care for now
+			final long currentTimeMillis = System.currentTimeMillis();
+			if ((currentTimeMillis - this.lastServerHeartbeatTime) > 3000) {
+				// 3 seconds of frame skipping, make sure we keep in contact with client
+				System.out.println("sending server heartbeat()");
+				WarsmashServer.this.writer.heartbeat();
+				WarsmashServer.this.writer.send();
+				this.lastServerHeartbeatTime = currentTimeMillis;
+			}
 		}
 	}
 
 	public static void main(final String[] args) {
 		try {
-			final WarsmashServer server = new WarsmashServer();
+			final WarsmashServer server = new WarsmashServer(GamingNetwork.UDP_SINGLE_GAME_PORT,
+					Collections.emptyMap());
 			server.startThread();
 
 			final Scanner scanner = new Scanner(System.in);

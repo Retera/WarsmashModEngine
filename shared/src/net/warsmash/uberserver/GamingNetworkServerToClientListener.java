@@ -57,6 +57,8 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 
 	void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex);
 
+	void gameLobbyStartGame(byte[] hostIpAddressBytes, short hostUdpPort, int yourServerPlayerSlot);
+
 	class Protocol {
 		public static final int HANDSHAKE_ACCEPTED = 1;
 		public static final int HANDSHAKE_DENIED = 2;
@@ -83,6 +85,7 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 		public static final int GAME_LOBBY_SET_PLAYER = 23;
 		public static final int GAME_LOBBY_SET_PLAYER_TYPE = 24;
 		public static final int GAME_LOBBY_SET_PLAYER_RACE = 25;
+		public static final int GAME_LOBBY_START_GAME = 30;
 	}
 
 	public static final class GamingNetworkServerToClientNotifier implements GamingNetworkServerToClientListener {
@@ -273,6 +276,13 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 				listener.gameLobbySlotSetPlayerRace(slot, raceItemIndex);
 			}
 		}
+
+		@Override
+		public void gameLobbyStartGame(byte[] hostIpAddressBytes, short hostUdpPort, int yourServerPlayerSlot) {
+			for (final GamingNetworkServerToClientListener listener : this.listeners) {
+				listener.gameLobbyStartGame(hostIpAddressBytes, hostUdpPort, yourServerPlayerSlot);
+			}
+		}
 	}
 
 	public static abstract class GamingNetworkServerToClientListenerAdapter
@@ -380,6 +390,10 @@ public interface GamingNetworkServerToClientListener extends DisconnectListener 
 
 		@Override
 		public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+		}
+
+		@Override
+		public void gameLobbyStartGame(byte[] hostIpAddressBytes, short hostUdpPort, int yourServerPlayerSlot) {
 		}
 	}
 }

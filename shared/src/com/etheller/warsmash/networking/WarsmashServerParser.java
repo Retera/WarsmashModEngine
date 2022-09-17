@@ -29,26 +29,30 @@ public class WarsmashServerParser implements OrderedUdpServerListener {
 				final int protocol = buffer.getInt();
 				switch (protocol) {
 				case ClientToServerProtocol.ISSUE_TARGET_ORDER: {
+					final long sessionToken = buffer.getLong();
 					final int unitHandleId = buffer.getInt();
 					final int abilityHandleId = buffer.getInt();
 					final int orderId = buffer.getInt();
 					final int targetHandleId = buffer.getInt();
 					final boolean queue = buffer.get() == 1;
-					this.listener.issueTargetOrder(sourceAddress, unitHandleId, abilityHandleId, orderId,
+					this.listener.issueTargetOrder(sourceAddress, sessionToken, unitHandleId, abilityHandleId, orderId,
 							targetHandleId, queue);
 					break;
 				}
 				case ClientToServerProtocol.ISSUE_POINT_ORDER: {
+					final long sessionToken = buffer.getLong();
 					final int unitHandleId = buffer.getInt();
 					final int abilityHandleId = buffer.getInt();
 					final int orderId = buffer.getInt();
 					final float x = buffer.getFloat();
 					final float y = buffer.getFloat();
 					final boolean queue = buffer.get() == 1;
-					this.listener.issuePointOrder(sourceAddress, unitHandleId, abilityHandleId, orderId, x, y, queue);
+					this.listener.issuePointOrder(sourceAddress, sessionToken, unitHandleId, abilityHandleId, orderId,
+							x, y, queue);
 					break;
 				}
 				case ClientToServerProtocol.ISSUE_DROP_ITEM_ORDER: {
+					final long sessionToken = buffer.getLong();
 					final int unitHandleId = buffer.getInt();
 					final int abilityHandleId = buffer.getInt();
 					final int orderId = buffer.getInt();
@@ -56,47 +60,54 @@ public class WarsmashServerParser implements OrderedUdpServerListener {
 					final float x = buffer.getFloat();
 					final float y = buffer.getFloat();
 					final boolean queue = buffer.get() == 1;
-					this.listener.issueDropItemAtPointOrder(sourceAddress, unitHandleId, abilityHandleId, orderId,
-							targetHandleId, x, y, queue);
+					this.listener.issueDropItemAtPointOrder(sourceAddress, sessionToken, unitHandleId, abilityHandleId,
+							orderId, targetHandleId, x, y, queue);
 					break;
 				}
 				case ClientToServerProtocol.ISSUE_DROP_ITEM_ON_TARGET_ORDER: {
+					final long sessionToken = buffer.getLong();
 					final int unitHandleId = buffer.getInt();
 					final int abilityHandleId = buffer.getInt();
 					final int orderId = buffer.getInt();
 					final int targetHandleId = buffer.getInt();
 					final int targetHeroHandleId = buffer.getInt();
 					final boolean queue = buffer.get() == 1;
-					this.listener.issueDropItemAtTargetOrder(sourceAddress, unitHandleId, abilityHandleId, orderId,
-							targetHandleId, targetHeroHandleId, queue);
+					this.listener.issueDropItemAtTargetOrder(sourceAddress, sessionToken, unitHandleId, abilityHandleId,
+							orderId, targetHandleId, targetHeroHandleId, queue);
 					break;
 				}
 				case ClientToServerProtocol.ISSUE_IMMEDIATE_ORDER: {
+					final long sessionToken = buffer.getLong();
 					final int unitHandleId = buffer.getInt();
 					final int abilityHandleId = buffer.getInt();
 					final int orderId = buffer.getInt();
 					final boolean queue = buffer.get() == 1;
-					this.listener.issueImmediateOrder(sourceAddress, unitHandleId, abilityHandleId, orderId, queue);
+					this.listener.issueImmediateOrder(sourceAddress, sessionToken, unitHandleId, abilityHandleId,
+							orderId, queue);
 					break;
 				}
 				case ClientToServerProtocol.UNIT_CANCEL_TRAINING: {
+					final long sessionToken = buffer.getLong();
 					final int unitHandleId = buffer.getInt();
 					final int cancelIndex = buffer.getInt();
-					this.listener.unitCancelTrainingItem(sourceAddress, unitHandleId, cancelIndex);
+					this.listener.unitCancelTrainingItem(sourceAddress, sessionToken, unitHandleId, cancelIndex);
 					break;
 				}
 				case ClientToServerProtocol.FINISHED_TURN: {
+					final long sessionToken = buffer.getLong();
 					final int gameTurnTick = buffer.getInt();
-					this.listener.finishedTurn(sourceAddress, gameTurnTick);
+					this.listener.finishedTurn(sourceAddress, sessionToken, gameTurnTick);
 					break;
 				}
 				case ClientToServerProtocol.JOIN_GAME: {
-					this.listener.joinGame(sourceAddress);
+					final long sessionToken = buffer.getLong();
+					this.listener.joinGame(sourceAddress, sessionToken);
 					break;
 				}
 				case ClientToServerProtocol.FRAMES_SKIPPED: {
+					final long sessionToken = buffer.getLong();
 					final int nFramesSkipped = buffer.getInt();
-					this.listener.framesSkipped(nFramesSkipped);
+					this.listener.framesSkipped(sessionToken, nFramesSkipped);
 					break;
 				}
 

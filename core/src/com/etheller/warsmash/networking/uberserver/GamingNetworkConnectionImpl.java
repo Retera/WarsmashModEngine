@@ -165,6 +165,11 @@ public class GamingNetworkConnectionImpl implements GamingNetworkConnection {
 	}
 
 	@Override
+	public void gameLobbyStartGame(long sessionToken) {
+		this.gamingNetworkClientToServerWriter.gameLobbyStartGame(sessionToken);
+	}
+
+	@Override
 	public void disconnected() {
 		stop();
 	}

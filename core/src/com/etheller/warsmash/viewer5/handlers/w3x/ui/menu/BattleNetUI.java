@@ -664,6 +664,13 @@ public class BattleNetUI {
 
 		this.gameChatroomStartGameButton = (GlueButtonFrame) rootFrame.getFrameByName("StartGameButton", 0);
 
+		this.gameChatroomStartGameButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				actionListener.startGame();
+			}
+		});
+
 		this.gameChatroomCancelButton = (GlueButtonFrame) rootFrame.getFrameByName("CancelButton", 0);
 		this.gameChatroomCancelButton.setOnClick(new Runnable() {
 			@Override
@@ -1043,5 +1050,25 @@ public class BattleNetUI {
 		this.gameChatroomTeamSetupPane.clearMap(this.rootFrame, this.uiViewport);
 		this.gameChatroomServerSlotToMapSlot = null;
 		this.gameChatroomMapSlotToServerSlot = null;
+	}
+
+	public IntIntMap getGameChatroomMapSlotToServerSlot() {
+		return this.gameChatroomMapSlotToServerSlot;
+	}
+
+	public IntIntMap getGameChatroomServerSlotToMapSlot() {
+		return this.gameChatroomServerSlotToMapSlot;
+	}
+
+	public War3Map getGameChatroomMap() {
+		return this.gameChatroomMap;
+	}
+
+	public War3MapConfig getGameChatroomMapConfig() {
+		return this.gameChatroomMapConfig;
+	}
+
+	public War3MapW3i getGameChatroomMapInfo() {
+		return this.gameChatroomMapInfo;
 	}
 }

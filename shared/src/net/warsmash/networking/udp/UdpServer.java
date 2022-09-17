@@ -30,6 +30,24 @@ public class UdpServer implements Runnable {
 		this.readBuffer.order(ByteOrder.BIG_ENDIAN);
 	}
 
+	public InetSocketAddress getLocalAddress() {
+		try {
+			return ((InetSocketAddress) this.channel.getLocalAddress());
+		}
+		catch (final Exception exc) {
+			exc.printStackTrace();
+			return null;
+		}
+	}
+
+	public int getPort() {
+		final InetSocketAddress localAddress = getLocalAddress();
+		if (localAddress == null) {
+			return -1; // invalid
+		}
+		return localAddress.getPort();
+	}
+
 	public void send(final SocketAddress destination, final ByteBuffer buffer) throws IOException {
 		this.channel.send(buffer, destination);
 	}

@@ -38,6 +38,8 @@ public interface GamingNetworkClientToServerListener extends DisconnectListener 
 
 	void gameLobbySetPlayerRace(long sessionToken, int slot, int raceItemIndex);
 
+	void gameLobbyStartGame(long sessionToken);
+
 	class Protocol {
 		public static final int HANDSHAKE = 1;
 		public static final int CREATE_ACCOUNT = 2;
@@ -55,5 +57,6 @@ public interface GamingNetworkClientToServerListener extends DisconnectListener 
 		public static final int REQUEST_MAP = 14;
 		public static final int GAME_LOBBY_SET_PLAYER_SLOT = 15;
 		public static final int GAME_LOBBY_SET_PLAYER_RACE = 16;
+		public static final int GAME_LOBBY_START_GAME = 21;
 	}
 }

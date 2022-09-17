@@ -146,6 +146,11 @@ public class TCPGamingNetworkServerClientParser implements TCPClientParser {
 					this.listener.gameLobbySetPlayerRace(sessionToken, slot, raceItemIndex);
 					break;
 				}
+				case GamingNetworkClientToServerListener.Protocol.GAME_LOBBY_START_GAME: {
+					final long sessionToken = data.getLong();
+					this.listener.gameLobbyStartGame(sessionToken);
+					break;
+				}
 				default:
 					break;
 				}

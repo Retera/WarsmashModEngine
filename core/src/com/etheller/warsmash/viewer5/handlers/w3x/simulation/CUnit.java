@@ -703,6 +703,10 @@ public class CUnit extends CWidget {
 		if (order != null) {
 			final CAbility ability = game.getAbility(order.getAbilityHandleId());
 			if (ability != null) {
+				if (!getAbilities().contains(ability)) {
+					// not allowed to use ability of other unit...
+					return;
+				}
 				// Allow the ability to response to the order without actually placing itself in
 				// the queue, nor modifying (interrupting) the queue.
 				if (!ability.checkBeforeQueue(game, this, order.getOrderId(), order.getTarget(game))) {

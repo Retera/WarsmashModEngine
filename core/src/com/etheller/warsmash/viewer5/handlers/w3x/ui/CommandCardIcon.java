@@ -73,6 +73,9 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 		}
 		setVisible(false);
 		this.hotkey = '\0';
+		this.abilityHandleId = 0;
+		this.orderId = 0;
+		this.autoCastOrderId = 0;
 	}
 
 	public void setCommandButtonData(final Texture texture, final int abilityHandleId, final int orderId,
@@ -189,7 +192,8 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	}
 
 	public boolean checkHotkey(final char c, final int keycode) {
-		return (c == this.hotkey) || (Character.toUpperCase(c) == this.hotkey) || ((this.hotkey == 0x7E) && (keycode == Input.Keys.ESCAPE));
+		return (c == this.hotkey) || (Character.toUpperCase(c) == this.hotkey)
+				|| ((this.hotkey == 0x7E) && (keycode == Input.Keys.ESCAPE));
 	}
 
 	@Override

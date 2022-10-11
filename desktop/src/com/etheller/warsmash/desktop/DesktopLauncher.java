@@ -19,6 +19,7 @@ import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL33;
 
+import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.audio.Sound;
@@ -30,7 +31,9 @@ import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.audio.OpenALSound;
 import com.etheller.warsmash.units.DataTable;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.StringBundle;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.AudioContext;
 import com.etheller.warsmash.viewer5.AudioContext.Listener;
 import com.etheller.warsmash.viewer5.AudioDestination;
@@ -49,6 +52,10 @@ public class DesktopLauncher {
 		config.gles30ContextMinorVersion = 3;
 		config.samples = 16;
 		config.vSyncEnabled = false;
+		config.addIcon("resources/Icon16.png", Files.FileType.Internal);
+		config.addIcon("resources/Icon32.png", Files.FileType.Internal);
+		config.addIcon("resources/Icon64.png", Files.FileType.Internal);
+		config.addIcon("resources/Icon128.png", Files.FileType.Internal);
 //		config.foregroundFPS = 0;
 //		config.backgroundFPS = 0;
 		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
@@ -93,6 +100,8 @@ public class DesktopLauncher {
 		}
 		loadExtensions();
 		final DataTable warsmashIni = loadWarsmashIni(iniPath);
+		final Element emulatorConstants = warsmashIni.get("Emulator");
+		WarsmashConstants.loadConstants(emulatorConstants);
 
 		if (fileToLoad != null) {
 			System.out.println("About to run loading file: " + fileToLoad);

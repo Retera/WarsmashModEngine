@@ -4108,7 +4108,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private void stopMusic() {
 		if (this.currentMusics != null) {
 			for (final Music music : this.currentMusics) {
-				music.stop();
+				if (music != null) {
+					music.stop();
+				}
 			}
 			this.currentMusics = null;
 		}

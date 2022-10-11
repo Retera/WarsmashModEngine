@@ -237,7 +237,7 @@ public class MenuUI {
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
 			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
 			final DataTable warsmashIni, final RootFrameListener rootFrameListener,
-			final GamingNetworkConnection gamingNetworkConnection, String mapDownloadDir) {
+			final GamingNetworkConnection gamingNetworkConnection, final String mapDownloadDir) {
 		this.dataSource = dataSource;
 		this.uiViewport = uiViewport;
 		this.uiScene = uiScene;
@@ -388,7 +388,7 @@ public class MenuUI {
 			}
 
 			@Override
-			public void channelServerMessage(String userName, ChannelServerMessageType messageType) {
+			public void channelServerMessage(final String userName, final ChannelServerMessageType messageType) {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
@@ -433,7 +433,7 @@ public class MenuUI {
 			}
 
 			@Override
-			public void joinedGame(final String gameName, String mapName, long mapChecksum) {
+			public void joinedGame(final String gameName, final String mapName, final long mapChecksum) {
 				this.lastJoinGameChecksum = mapChecksum;
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
@@ -528,7 +528,7 @@ public class MenuUI {
 			}
 
 			@Override
-			public void serverErrorMessage(ServerErrorMessageType messageType) {
+			public void serverErrorMessage(final ServerErrorMessageType messageType) {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
@@ -546,7 +546,7 @@ public class MenuUI {
 			}
 
 			@Override
-			public void gameCreationFailed(GameCreationFailureReason reason) {
+			public void gameCreationFailed(final GameCreationFailureReason reason) {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
@@ -621,7 +621,7 @@ public class MenuUI {
 			}
 
 			@Override
-			public void sendMapData(int sequenceNumber, ByteBuffer data) {
+			public void sendMapData(final int sequenceNumber, final ByteBuffer data) {
 				final ByteBuffer gdxThreadBuffer = ByteBuffer.allocate(data.remaining());
 				gdxThreadBuffer.clear();
 				gdxThreadBuffer.put(data);
@@ -636,7 +636,7 @@ public class MenuUI {
 			}
 
 			@Override
-			public void endSendMap(int sequenceNumber) {
+			public void endSendMap(final int sequenceNumber) {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
@@ -661,7 +661,7 @@ public class MenuUI {
 			}
 
 			@Override
-			public void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType) {
+			public void gameLobbySlotSetPlayerType(final int slot, final LobbyPlayerType playerType) {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
@@ -671,7 +671,7 @@ public class MenuUI {
 			}
 
 			@Override
-			public void gameLobbySlotSetPlayer(int slot, String userName) {
+			public void gameLobbySlotSetPlayer(final int slot, final String userName) {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
@@ -681,7 +681,7 @@ public class MenuUI {
 			}
 
 			@Override
-			public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+			public void gameLobbySlotSetPlayerRace(final int slot, final int raceItemIndex) {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
@@ -691,7 +691,8 @@ public class MenuUI {
 			}
 
 			@Override
-			public void gameLobbyStartGame(byte[] hostIpAddressBytes, short hostUdpPort, int yourServerPlayerSlot) {
+			public void gameLobbyStartGame(final byte[] hostIpAddressBytes, final short hostUdpPort,
+					final int yourServerPlayerSlot) {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
@@ -1130,7 +1131,7 @@ public class MenuUI {
 								mapInfo.getPlayers().size(), mapInfo, new PlayerSlotPaneListener() {
 
 									@Override
-									public void setPlayerSlot(int index, LobbyPlayerType lobbyPlayerType) {
+									public void setPlayerSlot(final int index, final LobbyPlayerType lobbyPlayerType) {
 										final CBasePlayer player = war3MapConfig.getPlayer(index);
 										switch (lobbyPlayerType) {
 										case OPEN:
@@ -1169,7 +1170,7 @@ public class MenuUI {
 									}
 
 									@Override
-									public void setPlayerRace(int index, int raceItemIndex) {
+									public void setPlayerRace(final int index, final int raceItemIndex) {
 										final CBasePlayer player = war3MapConfig.getPlayer(index);
 										switch (raceItemIndex) {
 										case 0:
@@ -1459,12 +1460,7 @@ public class MenuUI {
 
 					@Override
 					public void enterDefaultChat() {
-						MenuUI.this.gamingNetworkConnection.joinChannel(
-								MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), "Frozen Throne USA-1"); // TODO
-																												// maybe
-																												// not
-																												// hardcode
-																												// this
+						requestEnterDefaultChat();
 					}
 
 					@Override
@@ -1555,9 +1551,9 @@ public class MenuUI {
 					}
 
 					@Override
-					public void createGame(String gameName, String mapPath, int mapPlayerSlots,
-							LobbyGameSpeed gameSpeed, HostedGameVisibility hostedGameVisibility, long mapChecksum,
-							War3Map map) {
+					public void createGame(final String gameName, final String mapPath, final int mapPlayerSlots,
+							final LobbyGameSpeed gameSpeed, final HostedGameVisibility hostedGameVisibility,
+							final long mapChecksum, final War3Map map) {
 						MenuUI.this.gamingNetworkConnection.createGame(
 								MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), gameName, mapPath,
 								mapPlayerSlots, gameSpeed, hostedGameVisibility, mapChecksum);
@@ -1589,13 +1585,13 @@ public class MenuUI {
 					}
 
 					@Override
-					public void gameLobbySetPlayerRace(int serverSlot, int raceItemIndex) {
+					public void gameLobbySetPlayerRace(final int serverSlot, final int raceItemIndex) {
 						MenuUI.this.gamingNetworkConnection.gameLobbySetPlayerRace(
 								MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), serverSlot, raceItemIndex);
 					}
 
 					@Override
-					public void gameLobbySetPlayerSlot(int serverSlot, LobbyPlayerType lobbyPlayerType) {
+					public void gameLobbySetPlayerSlot(final int serverSlot, final LobbyPlayerType lobbyPlayerType) {
 						MenuUI.this.gamingNetworkConnection.gameLobbySetPlayerSlot(
 								MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), serverSlot, lobbyPlayerType);
 					}
@@ -2042,7 +2038,12 @@ public class MenuUI {
 				this.menuState = MenuState.SINGLE_PLAYER;
 				break;
 			case GOING_TO_MAP:
-				this.menuState = MenuState.SINGLE_PLAYER;
+				if ((this.beginGameInformation != null) && (this.beginGameInformation.sessionToken != 0)) {
+					this.menuState = MenuState.BATTLE_NET_CUSTOM_GAME_LOBBY;
+				}
+				else {
+					this.menuState = MenuState.SINGLE_PLAYER;
+				}
 				break;
 			case LEAVING_CAMPAIGN:
 				this.glueSpriteLayerTopLeft.setSequence("Birth");
@@ -2259,42 +2260,15 @@ public class MenuUI {
 	}
 
 	private static enum MenuState {
-		GOING_TO_MAIN_MENU,
-		MAIN_MENU,
-		GOING_TO_BATTLE_NET_LOGIN,
-		GOING_TO_BATTLE_NET_LOGIN_PART2,
-		BATTLE_NET_LOGIN,
-		LEAVING_BATTLE_NET,
-		LEAVING_BATTLE_NET_FROM_LOGGED_IN,
-		GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU,
-		BATTLE_NET_CUSTOM_GAME_MENU,
-		GOING_TO_BATTLE_NET_CREATE_CUSTOM_GAME_MENU,
-		BATTLE_NET_CREATE_CUSTOM_GAME_MENU,
-		GOING_TO_BATTLE_NET_CHANNEL_MENU,
-		BATTLE_NET_CHANNEL_MENU,
-		GOING_TO_BATTLE_NET_WELCOME,
-		BATTLE_NET_WELCOME,
-		GOING_TO_SINGLE_PLAYER,
-		LEAVING_CAMPAIGN,
-		SINGLE_PLAYER,
-		GOING_TO_SINGLE_PLAYER_SKIRMISH,
-		SINGLE_PLAYER_SKIRMISH,
-		GOING_TO_MAP,
-		GOING_TO_CAMPAIGN,
-		GOING_TO_CAMPAIGN_PART2,
-		GOING_TO_MISSION_SELECT,
-		MISSION_SELECT,
-		CAMPAIGN,
-		GOING_TO_SINGLE_PLAYER_PROFILE,
-		SINGLE_PLAYER_PROFILE,
-		GOING_TO_LOADING_SCREEN,
-		QUITTING,
-		RESTARTING,
-		GOING_TO_BATTLE_NET_CHAT_CHANNEL,
-		GOING_TO_BATTLE_NET_CHAT_CHANNEL_FROM_OUTSIDE,
-		BATTLE_NET_CHAT_CHANNEL,
-		GOING_TO_BATTLE_NET_CUSTOM_GAME_LOBBY,
-		BATTLE_NET_CUSTOM_GAME_LOBBY;
+		GOING_TO_MAIN_MENU, MAIN_MENU, GOING_TO_BATTLE_NET_LOGIN, GOING_TO_BATTLE_NET_LOGIN_PART2, BATTLE_NET_LOGIN,
+		LEAVING_BATTLE_NET, LEAVING_BATTLE_NET_FROM_LOGGED_IN, GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU,
+		BATTLE_NET_CUSTOM_GAME_MENU, GOING_TO_BATTLE_NET_CREATE_CUSTOM_GAME_MENU, BATTLE_NET_CREATE_CUSTOM_GAME_MENU,
+		GOING_TO_BATTLE_NET_CHANNEL_MENU, BATTLE_NET_CHANNEL_MENU, GOING_TO_BATTLE_NET_WELCOME, BATTLE_NET_WELCOME,
+		GOING_TO_SINGLE_PLAYER, LEAVING_CAMPAIGN, SINGLE_PLAYER, GOING_TO_SINGLE_PLAYER_SKIRMISH,
+		SINGLE_PLAYER_SKIRMISH, GOING_TO_MAP, GOING_TO_CAMPAIGN, GOING_TO_CAMPAIGN_PART2, GOING_TO_MISSION_SELECT,
+		MISSION_SELECT, CAMPAIGN, GOING_TO_SINGLE_PLAYER_PROFILE, SINGLE_PLAYER_PROFILE, GOING_TO_LOADING_SCREEN,
+		QUITTING, RESTARTING, GOING_TO_BATTLE_NET_CHAT_CHANNEL, GOING_TO_BATTLE_NET_CHAT_CHANNEL_FROM_OUTSIDE,
+		BATTLE_NET_CHAT_CHANNEL, GOING_TO_BATTLE_NET_CUSTOM_GAME_LOBBY, BATTLE_NET_CUSTOM_GAME_LOBBY;
 	}
 
 	public void hide() {
@@ -2374,6 +2348,13 @@ public class MenuUI {
 			final String cursorSkin = getRaceNameByCursorID(this.currentCampaign.getCursor());
 			this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
 			break;
+		case BATTLE_NET_CUSTOM_GAME_LOBBY: {
+			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"));
+			MenuUI.this.menuScreen.alternateModelToBattlenet();
+			this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
+			requestEnterDefaultChat();
+			break;
+		}
 		}
 //		MenuUI.this.campaignFade.setSequence("Death");
 //		this.campaignFade.setVisible(true);
@@ -2419,7 +2400,9 @@ public class MenuUI {
 	private void stopMusic() {
 		if (this.currentMusics != null) {
 			for (final Music music : this.currentMusics) {
-				music.stop();
+				if (music != null) {
+					music.stop();
+				}
 			}
 			this.currentMusics = null;
 		}
@@ -2524,5 +2507,14 @@ public class MenuUI {
 			break;
 		}
 		return insideTopBarMode;
+	}
+
+	private void requestEnterDefaultChat() {
+		MenuUI.this.gamingNetworkConnection.joinChannel(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(),
+				"Frozen Throne USA-1"); // TODO
+										// maybe
+										// not
+										// hardcode
+										// this
 	}
 }

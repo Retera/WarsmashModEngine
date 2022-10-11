@@ -1,9 +1,11 @@
 package com.etheller.warsmash.util;
 
+import com.etheller.warsmash.units.GameObject;
+
 import net.warsmash.uberserver.GamingNetwork;
 
 public class WarsmashConstants {
-	public static final int MAX_PLAYERS = 16;
+	public static int MAX_PLAYERS = 28;
 	/*
 	 * With version, we use 0 for RoC, 1 for TFT emulation, and probably 2+ or
 	 * whatever for custom mods and other stuff
@@ -27,7 +29,7 @@ public class WarsmashConstants {
 	// find it yet so I used this
 	public static final String DEFAULT_STRING = "Default string";
 
-	public static final boolean CATCH_CURSOR = false;
+	public static boolean CATCH_CURSOR = false;
 	public static final boolean VERBOSE_LOGGING = false;
 	public static final boolean ENABLE_DEBUG = false;
 	public static final char SPECIAL_ESCAPE_KEYCODE = 0x7E;
@@ -37,13 +39,23 @@ public class WarsmashConstants {
 	// load index as a numeric value and could be changed. For now, I have this
 	// workaround to fix it if you need the local files
 	// to take priority over built-ins for tilesets.
-	public static final boolean FIX_FLAT_FILES_TILESET_LOADING = false;
-	public static final boolean ENABLE_MUSIC = false;
-	public static final boolean LOAD_UNITS_FROM_WORLDEDIT_DATA = false;
-	public static final boolean CRASH_ON_INCOMPATIBLE_132_FEATURES = false;
+	public static boolean FIX_FLAT_FILES_TILESET_LOADING = false;
+	public static boolean ENABLE_MUSIC = false;
+	public static boolean LOAD_UNITS_FROM_WORLDEDIT_DATA = false;
+	public static boolean CRASH_ON_INCOMPATIBLE_132_FEATURES = false;
 	public static final boolean FIRE_DEATH_EVENTS_ON_REMOVEUNIT = false;
 	public static final int INPUT_HOTKEY_MODE = 1;
 	public static final boolean PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = false;
+
+	public static void loadConstants(final GameObject emulatorConstants) {
+		MAX_PLAYERS = emulatorConstants.getFieldValue("MaxPlayers");
+		GAME_VERSION = emulatorConstants.getFieldValue("GameVersion");
+		CATCH_CURSOR = emulatorConstants.getFieldValue("CatchCursor") == 1;
+		FIX_FLAT_FILES_TILESET_LOADING = emulatorConstants.getFieldValue("FixFlatFilesTilesetLoading") == 1;
+		ENABLE_MUSIC = emulatorConstants.getFieldValue("EnableMusic") == 1;
+		LOAD_UNITS_FROM_WORLDEDIT_DATA = emulatorConstants.getFieldValue("LoadUnitsFromWorldEditData") == 1;
+		CRASH_ON_INCOMPATIBLE_132_FEATURES = emulatorConstants.getFieldValue("CrashOnIncompatible132Features") == 1;
+	}
 
 	public static final String getGameId() {
 		return (GAME_VERSION == 0) ? GamingNetwork.GAME_ID_BASE : GamingNetwork.GAME_ID_XPAC;

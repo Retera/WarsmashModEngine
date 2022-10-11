@@ -14,12 +14,14 @@ public class CItem extends CWidget {
 	private final CItemType itemType;
 	private boolean hidden;
 	private boolean invulnerable;
+	private int charges;
 
 	public CItem(final int handleId, final float x, final float y, final float life, final War3ID typeId,
 			final CItemType itemTypeInstance) {
 		super(handleId, x, y, life);
 		this.typeId = typeId;
 		this.itemType = itemTypeInstance;
+		this.charges = itemTypeInstance.getNumberOfCharges();
 	}
 
 	@Override
@@ -125,6 +127,14 @@ public class CItem extends CWidget {
 
 	public void setInvulernable(final boolean invulnerable) {
 		this.invulnerable = invulnerable;
+	}
+
+	public int getCharges() {
+		return this.charges;
+	}
+
+	public void setCharges(final int charges) {
+		this.charges = charges;
 	}
 
 }

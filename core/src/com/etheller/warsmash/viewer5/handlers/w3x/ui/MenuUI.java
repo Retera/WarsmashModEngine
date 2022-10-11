@@ -1720,7 +1720,20 @@ public class MenuUI {
 			e.printStackTrace();
 		}
 
-		internalStartMap(mapFilename);
+		MenuUI.this.campaignMenu.setVisible(false);
+		MenuUI.this.campaignBackButton.setVisible(false);
+		MenuUI.this.missionSelectFrame.setVisible(false);
+		MenuUI.this.campaignSelectFrame.setVisible(false);
+		MenuUI.this.campaignWarcraftIIILogo.setVisible(false);
+		MenuUI.this.campaignRootMenuUI.setVisible(false);
+		MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
+		MenuUI.this.skirmish.setVisible(false);
+		MenuUI.this.glueSpriteLayerTopLeft.setSequence("Death");
+		MenuUI.this.glueSpriteLayerTopRight.setSequence("Death");
+		MenuUI.this.beginGameInformation = new BeginGameInformation();
+		MenuUI.this.beginGameInformation.gameMapLookup = new CurrentNetGameMapLookupPath(mapFilename);
+		MenuUI.this.beginGameInformation.localPlayerIndex = -1;
+		MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 	}
 
 	private void setCurrentProfile(final String selectedProfileName) {

@@ -60,7 +60,7 @@ public interface SimulationRenderController {
 
 	void spawnEffectOnUnit(CUnit unit, String effectPath);
 
-	void spawnSpellEffectOnUnit(CUnit unit, War3ID alias);
+	void spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
 
 	SimulationRenderComponent spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
 

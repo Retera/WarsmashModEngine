@@ -661,7 +661,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// RenderUnit class:
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -673,7 +674,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -692,7 +694,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -704,7 +707,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -879,9 +883,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public void spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias) {
-						final RenderSpellEffect spellEffect = spawnSpellEffectOnUnitEx(unit, alias, CEffectType.TARGET,
-								0);
+					public void spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+							final CEffectType effectType) {
+						final RenderSpellEffect spellEffect = spawnSpellEffectOnUnitEx(unit, alias, effectType, 0);
 						spellEffect.setKillWhenDone(true);
 					}
 
@@ -2662,6 +2666,26 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		else if (targetWidget instanceof CDestructable) {
 			// TODO this is stupid api, who would do this?
 			throw new UnsupportedOperationException("API for addSpecialEffectTarget() on destructable is NYI");
+		}
+		return null;
+	}
+
+	public RenderSpellEffect addSpecialEffect(final String modelName, final float x, final float y) {
+		final MdxModel spawnedEffectModel = loadModelMdx(modelName);
+		if (spawnedEffectModel != null) {
+			final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel.addInstance();
+			float yaw = 0;
+			{
+				modelInstance.setLocation(x, y,
+						Math.max(getWalkableRenderHeight(x, y), this.terrain.getGroundHeight(x, y)));
+				// TODO not sure if this should actually use BuildingAngle
+				yaw = (float) Math.toRadians(this.simulation.getGameplayConstants().getBuildingAngle());
+			}
+			modelInstance.setScene(War3MapViewer.this.worldScene);
+			final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance, War3MapViewer.this, yaw,
+					RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
+			War3MapViewer.this.projectiles.add(renderAttackInstant);
+			return renderAttackInstant;
 		}
 		return null;
 	}

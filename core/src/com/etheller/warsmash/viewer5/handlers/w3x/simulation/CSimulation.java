@@ -50,6 +50,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePrefer
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
@@ -540,8 +541,13 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnEffectOnUnit(unit, effectPath);
 	}
 
-	public void createSpellEffectOnUnit(final CUnit unit, final War3ID alias) {
-		this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias);
+	public void createSpellEffectOnUnit(final CUnit unit, final War3ID alias, final CEffectType effectType) {
+		this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType);
+	}
+
+	public SimulationRenderComponent createSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+			final CEffectType effectType, final int index) {
+		return this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType, index);
 	}
 
 	public void unitSoundEffectEvent(final CUnit caster, final War3ID alias) {

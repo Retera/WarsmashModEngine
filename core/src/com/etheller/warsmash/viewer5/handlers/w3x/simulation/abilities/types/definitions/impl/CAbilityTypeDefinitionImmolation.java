@@ -27,9 +27,16 @@ public class CAbilityTypeDefinitionImmolation extends AbstractCAbilityTypeDefini
 		final float areaOfEffect = abilityEditorData.getFieldAsFloat(AREA_OF_EFFECT, level);
 		final float duration = abilityEditorData.getFieldAsFloat(DURATION, level);
 		final int manaCost = abilityEditorData.getFieldAsInteger(MANA_COST, level);
+		final String buffIdString = abilityEditorData.getFieldAsString(BUFF, level);
+		War3ID buffId = War3ID.NONE;
+		try {
+			buffId = War3ID.fromString(buffIdString.split(",")[0]);
+		}
+		catch (final Exception exc) {
+		}
 		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
 		return new CAbilityTypeImmolationLevelData(targetsAllowedAtLevel, bufferManaRequired, damagePerInterval,
-				manaDrainedPerSecond, areaOfEffect, manaCost, duration);
+				manaDrainedPerSecond, areaOfEffect, manaCost, duration, buffId);
 	}
 
 	@Override

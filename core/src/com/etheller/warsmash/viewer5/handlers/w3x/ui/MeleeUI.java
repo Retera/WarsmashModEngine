@@ -1012,6 +1012,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		int commandButtonIndex = 0;
+		final BitmapFont inventoryNumberOverlayFont = this.rootFrame.generateFont(DEFAULT_INVENTORY_ICON_WIDTH * 0.25f);
 		for (int j = 0; j < INVENTORY_HEIGHT; j++) {
 			for (int i = 0; i < INVENTORY_WIDTH; i++) {
 				final CommandCardIcon commandCardIcon = new CommandCardIcon(
@@ -1020,6 +1021,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.inventoryBarFrame.add(commandCardIcon);
 				final TextureFrame iconFrame = new TextureFrame(
 						"SmashInventoryButton_" + (commandButtonIndex) + "_Icon", this.rootFrame, false, null);
+				final TextureFrame numberOverlayFrame = new TextureFrame(
+						"SmashCommandButton_" + (commandButtonIndex) + "_NumberOverlay", this.rootFrame, true, null);
 				final SpriteFrame cooldownFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
 						"SmashInventoryButton_" + (commandButtonIndex) + "_Cooldown", this.rootFrame, "", 0);
 				commandCardIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame, FramePoint.TOPLEFT,
@@ -1035,7 +1038,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.rootFrame.setSpriteFrameModel(cooldownFrame, this.rootFrame.getSkinField("CommandButtonCooldown"));
 				cooldownFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
 				cooldownFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
-				commandCardIcon.set(iconFrame, null, cooldownFrame, null, null, null);
+
+				numberOverlayFrame.addSetPoint(
+						new SetPoint(FramePoint.BOTTOMRIGHT, commandCardIcon, FramePoint.BOTTOMRIGHT, 0, 0));
+				numberOverlayFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH) * 0.4f);
+				numberOverlayFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH) * 0.4f);
+				numberOverlayFrame.setTexture("CommandButtonNumberOverlay", this.rootFrame);
+				final SingleStringFrame numberOverlayStringFrame = new SingleStringFrame(
+						"SmashCommandButton_NumberOverlayText", numberOverlayFrame, Color.WHITE, TextJustify.CENTER,
+						TextJustify.BOTTOM, inventoryNumberOverlayFont);
+				numberOverlayStringFrame.setSetAllPoints(true);
+
+				commandCardIcon.set(iconFrame, null, cooldownFrame, null, numberOverlayFrame, numberOverlayStringFrame);
 				this.inventoryIcons[j][i] = commandCardIcon;
 				commandCardIcon.clear();
 				commandButtonIndex++;
@@ -1084,6 +1098,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.gameMessagesFrame.setVisible(true);
 
 		commandButtonIndex = 0;
+		final BitmapFont commandCardNumberOverlayFont = this.rootFrame
+				.generateFont(DEFAULT_COMMAND_CARD_ICON_WIDTH * 0.25f);
 		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
 			for (int i = 0; i < COMMAND_CARD_WIDTH; i++) {
 				final CommandCardIcon commandCardIcon = new CommandCardIcon("SmashCommandButton_" + commandButtonIndex,
@@ -1122,7 +1138,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				numberOverlayFrame.setTexture("CommandButtonNumberOverlay", this.rootFrame);
 				final SingleStringFrame numberOverlayStringFrame = new SingleStringFrame(
 						"SmashCommandButton_NumberOverlayText", numberOverlayFrame, Color.WHITE, TextJustify.CENTER,
-						TextJustify.BOTTOM, this.rootFrame.getFont());
+						TextJustify.BOTTOM, commandCardNumberOverlayFont);
 //				numberOverlayStringFrame.addAnchor(new AnchorDefinition(FramePoint.CENTER, 0, 0));
 				numberOverlayStringFrame.setSetAllPoints(true);
 				cooldownFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
@@ -2842,7 +2858,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						inventoryIcon.setCommandButtonData(iconUI.getIcon(), 0,
 								activelyUsed ? (OrderIds.itemuse00 + index) : 0, index + 1, activelyUsed, false, false,
 								itemUI.getName(), this.recycleStringBuilder.toString(), '\0', itemType.getGoldCost(),
-								itemType.getLumberCost(), 0, 0, false, 0, 0, -1);
+								itemType.getLumberCost(), 0, 0, false, 0, 0,
+								(item.getCharges() > 0) ? item.getCharges() : -1);
 					}
 					else {
 						if (index >= inventory.getItemCapacity()) {

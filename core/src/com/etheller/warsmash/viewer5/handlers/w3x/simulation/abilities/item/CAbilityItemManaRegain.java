@@ -13,12 +13,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbility {
-	private final int lifeToRegain;
+public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActiveAbility {
+	private final int manaToRegain;
 
-	public CAbilityItemHeal(final int handleId, final War3ID alias, final int lifeToRegain) {
+	public CAbilityItemManaRegain(final int handleId, final War3ID alias, final int manaToRegain) {
 		super(handleId, alias);
-		this.lifeToRegain = lifeToRegain;
+		this.manaToRegain = manaToRegain;
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 
 	@Override
 	public int getBaseOrderId() {
-		return OrderIds.heal;
+		return OrderIds.replenishmana;
 	}
 
 	@Override
@@ -84,8 +84,8 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityTarget target) {
 		if ((target == null) && (orderId == getBaseOrderId())) {
-			caster.heal(game, this.lifeToRegain);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.TARGET);
+			caster.restoreMana(game, this.manaToRegain);
+			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			return false;
 		}
 		return super.checkBeforeQueue(game, caster, orderId, target);

@@ -70,6 +70,7 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderSpellEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
@@ -3259,6 +3260,25 @@ public class Jass2 {
 					final String attachPointName = arguments.get(2).visit(StringJassValueVisitor.getInstance());
 					return new HandleJassValue(effectType,
 							war3MapViewer.addSpecialEffectTarget(modelName, targetWidget, attachPointName));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("AddSpecialEffectLoc", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final String modelName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+					final Point2D.Double positionLoc = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+					return new HandleJassValue(effectType,
+							war3MapViewer.addSpecialEffect(modelName, (float) positionLoc.x, (float) positionLoc.y));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyEffect", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final RenderSpellEffect fx = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					fx.setKillWhenDone(true);
+					return null;
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetItemInvulnerable", new JassFunction() {

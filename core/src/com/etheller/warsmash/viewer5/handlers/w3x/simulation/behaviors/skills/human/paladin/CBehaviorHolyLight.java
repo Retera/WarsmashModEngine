@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstract
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 
 public class CBehaviorHolyLight extends CAbstractRangedBehavior {
@@ -52,10 +53,7 @@ public class CBehaviorHolyLight extends CAbstractRangedBehavior {
 				/ WarsmashConstants.SIMULATION_STEP_TIME);
 		if (!this.doneEffect && ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks))) {
 			this.doneEffect = true;
-			if (this.unit.getMana() >= this.ability.getManaCost()) {
-				this.unit.setMana(this.unit.getMana() - this.ability.getManaCost());
-			}
-			else {
+			if (!this.unit.chargeMana(this.ability.getManaCost())) {
 				simulation.getCommandErrorListener().showNoManaError(this.unit.getPlayerIndex());
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
@@ -75,7 +73,7 @@ public class CBehaviorHolyLight extends CAbstractRangedBehavior {
 				}
 				this.ability.setCooldownRemaining(this.ability.getCooldown());
 				this.unit.fireCooldownsChangedEvent();
-				simulation.createSpellEffectOnUnit(targetUnit, this.ability.getAlias());
+				simulation.createSpellEffectOnUnit(targetUnit, this.ability.getAlias(), CEffectType.TARGET);
 			}
 		}
 		if (ticksSinceCast >= backswingTicks) {

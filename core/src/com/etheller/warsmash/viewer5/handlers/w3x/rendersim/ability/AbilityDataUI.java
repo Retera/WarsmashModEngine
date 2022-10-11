@@ -243,8 +243,10 @@ public class AbilityDataUI {
 			final List<String> targetArtPaths = Arrays
 					.asList(abilityTypeData.getFieldAsString(BUFF_TARGET_ART, 0).split(","));
 			final int targetAttachmentCount = abilityTypeData.getFieldAsInteger(BUFF_TARGET_ART_ATTACHMENT_COUNT, 0);
-			for (int i = 0; i < targetAttachmentCount; i++) {
-				final String modelPath = targetArtPaths.get(Math.min(i, targetAttachmentCount - 1));
+			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
+			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
+			for (int i = 0; i < targetIteratorCount; i++) {
+				final String modelPath = targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
 				final War3ID attachmentPointKey = tryGet(BUFF_TARGET_ART_ATTACHMENT_POINT, i);
 				final List<String> attachmentPoints = Arrays
 						.asList(abilityTypeData.getFieldAsString(attachmentPointKey, 0).split(","));

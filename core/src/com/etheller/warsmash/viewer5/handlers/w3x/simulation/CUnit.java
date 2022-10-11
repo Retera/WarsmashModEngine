@@ -630,8 +630,10 @@ public class CUnit extends CWidget {
 					this.mana = manaPlusRegen;
 					this.stateNotifier.manaChanged();
 				}
-				for (final CAbility ability : this.abilities) {
-					ability.onTick(game, this);
+				for (int i = this.abilities.size() - 1; i >= 0; i--) {
+					// okay if it removes self from this during onTick() because of reverse
+					// iteration order
+					this.abilities.get(i).onTick(game, this);
 				}
 				if (this.currentBehavior != null) {
 					final CBehavior lastBehavior = this.currentBehavior;
@@ -1372,6 +1374,10 @@ public class CUnit extends CWidget {
 
 	public void heal(final CSimulation game, final int lifeToRegain) {
 		setLife(game, Math.min(getLife() + lifeToRegain, getMaximumLife()));
+	}
+
+	public void restoreMana(final CSimulation game, final int manaToRegain) {
+		setMana(Math.min(getMana() + manaToRegain, getMaximumMana()));
 	}
 
 	private static final class AutoAttackTargetFinderEnum implements CUnitEnumFunction {
@@ -2256,5 +2262,13 @@ public class CUnit extends CWidget {
 		else {
 			return ability.getLevel();
 		}
+	}
+
+	public boolean chargeMana(final int manaCost) {
+		if (this.mana >= manaCost) {
+			setMana(this.mana - manaCost);
+			return true;
+		}
+		return false;
 	}
 }

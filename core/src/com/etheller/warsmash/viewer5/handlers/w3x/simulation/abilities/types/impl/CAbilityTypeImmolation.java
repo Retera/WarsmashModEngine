@@ -21,7 +21,7 @@ public class CAbilityTypeImmolation extends CAbilityType<CAbilityTypeImmolationL
 		final CAbilityTypeImmolationLevelData levelData = getLevelData(0);
 		return new CAbilityImmolation(handleId, getAlias(), levelData.getBufferManaRequired(),
 				levelData.getDamagePerInterval(), levelData.getManaDrainedPerSecond(), levelData.getAreaOfEffect(),
-				levelData.getManaCost(), levelData.getDuration(), levelData.getTargetsAllowed());
+				levelData.getManaCost(), levelData.getDuration(), levelData.getTargetsAllowed(), levelData.getBuffId());
 	}
 
 	@Override
@@ -37,6 +37,7 @@ public class CAbilityTypeImmolation extends CAbilityType<CAbilityTypeImmolationL
 		heroAbility.setManaCost(levelData.getManaCost());
 		heroAbility.setDuration(levelData.getDuration());
 		heroAbility.setTargetsAllowed(levelData.getTargetsAllowed());
+		heroAbility.setBuffId(levelData.getBuffId());
 
 		heroAbility.setLevel(level);
 

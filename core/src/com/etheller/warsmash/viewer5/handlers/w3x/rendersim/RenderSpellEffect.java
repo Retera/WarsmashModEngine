@@ -56,12 +56,16 @@ public class RenderSpellEffect implements RenderEffect {
 
 	private void playNextAnimation() {
 		while (this.modelInstance.sequenceEnded && (this.animationQueueIndex < this.animationQueue.length)) {
-			final IndexedSequence sequence = SequenceUtils.selectSequence(this.animationQueue[this.animationQueueIndex],
-					SequenceUtils.EMPTY, this.sequences, true);
-			if ((sequence != null) && (sequence.index != -1)) {
-				this.modelInstance.setSequence(sequence.index);
-			}
+			applySequence();
 			this.animationQueueIndex++;
+		}
+	}
+
+	public void applySequence() {
+		final IndexedSequence sequence = SequenceUtils.selectSequence(this.animationQueue[this.animationQueueIndex],
+				SequenceUtils.EMPTY, this.sequences, true);
+		if ((sequence != null) && (sequence.index != -1)) {
+			this.modelInstance.setSequence(sequence.index);
 		}
 	}
 
@@ -69,6 +73,7 @@ public class RenderSpellEffect implements RenderEffect {
 		this.animationQueue = animations;
 		this.animationQueueIndex = 0;
 		setKillWhenDone(killWhenDone);
+		applySequence();
 	}
 
 	public void setKillWhenDone(final boolean killWhenDone) {

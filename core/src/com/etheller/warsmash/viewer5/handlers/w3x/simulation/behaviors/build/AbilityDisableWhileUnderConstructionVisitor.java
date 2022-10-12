@@ -20,6 +20,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 
 public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisitor<Void> {
@@ -125,6 +126,13 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 
 	@Override
 	public Void accept(final GenericSingleIconActiveAbility ability) {
+		ability.setDisabled(true);
+		ability.setIconShowing(false);
+		return null;
+	}
+	
+	@Override
+	public Void accept(CAbilityRoot ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
 		return null;

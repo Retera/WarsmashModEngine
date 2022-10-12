@@ -30,6 +30,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -129,6 +130,7 @@ public class CUnit extends CWidget {
 	private transient CBehaviorHoldPosition holdPositionBehavior;
 	private boolean constructing = false;
 	private boolean constructingPaused = false;
+	private boolean structure;
 	private War3ID upgradeIdType = null;
 	private float constructionProgress;
 	private boolean hidden = false;
@@ -171,6 +173,7 @@ public class CUnit extends CWidget {
 		this.unitType = unitType;
 		this.classifications.addAll(unitType.getClassifications());
 		this.acquisitionRange = unitType.getDefaultAcquisitionRange();
+		this.structure = unitType.isBuilding();
 		this.stopBehavior = new CBehaviorStop(this);
 		this.defaultBehavior = this.stopBehavior;
 		this.currentBehavior = this.defaultBehavior;
@@ -310,6 +313,7 @@ public class CUnit extends CWidget {
 		this.classifications.clear();
 		this.classifications.addAll(this.unitType.getClassifications());
 		this.acquisitionRange = this.unitType.getDefaultAcquisitionRange();
+		this.structure = this.unitType.isBuilding();
 		for (final CAbility ability : this.abilities) {
 			ability.onRemove(game, this);
 			game.onAbilityRemovedFromUnit(this, ability);
@@ -1918,6 +1922,15 @@ public class CUnit extends CWidget {
 		return null;
 	}
 
+	public CAbilityRoot getRootData() {
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityRoot) {
+				return (CAbilityRoot) ability;
+			}
+		}
+		return null;
+	}
+
 	public CAbilityInventory getInventoryData() {
 		for (final CAbility ability : this.abilities) {
 			if (ability instanceof CAbilityInventory) {
@@ -1997,7 +2010,11 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean isBuilding() {
-		return this.unitType.isBuilding();
+		return this.structure;
+	}
+	
+	public void setStructure(boolean flag) {
+		this.structure = flag;
 	}
 
 	public void onRemove(final CSimulation simulation) {

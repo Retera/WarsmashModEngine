@@ -32,6 +32,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderButtonType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
@@ -137,6 +138,11 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					ability.getUILumberCost(), 0, ability.getUIManaCost(), -1);
 		}
 		return null;
+	}
+	
+	@Override
+	public Void accept(CAbilityRoot ability) {
+		return accept((GenericSingleIconActiveAbility)ability);
 	}
 
 	@Override

@@ -1,14 +1,14 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat;
 
 public enum CDefenseType implements CodeKeyType {
-	NONE,
-	NORMAL,
 	SMALL,
 	MEDIUM,
 	LARGE,
 	FORT,
+	NORMAL,
 	HERO,
-	DIVINE;
+	DIVINE,
+	NONE;
 
 	public static CDefenseType[] VALUES = values();
 

@@ -185,7 +185,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 
 							WarsmashGdxFDFTestRenderScreen.this.singleModelScene(
 									WarsmashGdxFDFTestRenderScreen.this.scene,
-									War3MapViewer.mdx(rootFrame.getSkinField("GlueSpriteLayerBackground")), "Stand");
+									rootFrame.getSkinField("GlueSpriteLayerBackground"), "Stand");
 							WarsmashGdxFDFTestRenderScreen.this.modelCamera = WarsmashGdxFDFTestRenderScreen.this.mainModel.cameras
 									.get(0);
 						}
@@ -275,7 +275,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 	}
 
 	private void singleModelScene(final Scene scene, final String path, final String animName) {
-		final MdxModel model2 = (MdxModel) this.viewer.load(path, new PathSolver() {
+		final MdxModel model2 = War3MapViewer.loadModelMdx(this.viewer.dataSource, viewer, path, new PathSolver() {
 			@Override
 			public SolvedPath solve(final String src, final Object solverParams) {
 				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
@@ -311,7 +311,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 			this.mainModel = null;
 		}
 		else {
-			singleModelScene(this.scene, War3MapViewer.mdx(path), "birth");
+			singleModelScene(this.scene, path, "birth");
 			WarsmashGdxFDFTestRenderScreen.this.modelCamera = WarsmashGdxFDFTestRenderScreen.this.mainModel.cameras
 					.get(0);
 			// this hack is because we only have the queued animation system in RenderWidget

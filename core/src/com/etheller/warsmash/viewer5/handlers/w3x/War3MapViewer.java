@@ -65,6 +65,7 @@ import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.GenericResource;
 import com.etheller.warsmash.viewer5.Grid;
 import com.etheller.warsmash.viewer5.ModelInstance;
+import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SceneLightManager;
@@ -2691,17 +2692,21 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public MdxModel loadModelMdx(final String path) {
+		return loadModelMdx(dataSource, this, path, mapPathSolver, solverParams);
+	}
+
+	public static MdxModel loadModelMdx(DataSource dataSource, ModelViewer modelViewer, final String path, PathSolver pathSolver, Object solverParams) {
 		final String mdxPath = mdx(path);
-		if (this.dataSource.has(mdxPath)) {
-			return (MdxModel) load(mdxPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
+		if (dataSource.has(mdxPath)) {
+			return (MdxModel) modelViewer.load(mdxPath, pathSolver, solverParams);
 		}
 		else {
 			final String mdlPath = mdl(mdxPath);
-			if (this.dataSource.has(mdlPath)) {
-				return (MdxModel) load(mdlPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
+			if (dataSource.has(mdlPath)) {
+				return (MdxModel) modelViewer.load(mdlPath, pathSolver, solverParams);
 			}
 		}
-		return (MdxModel) load(mdxPath, War3MapViewer.this.mapPathSolver, War3MapViewer.this.solverParams);
+		return (MdxModel) modelViewer.load(mdxPath, pathSolver, solverParams);
 	}
 
 	public void setBlight(float whichLocationX, float whichLocationY, final float radius, final boolean blighted) {

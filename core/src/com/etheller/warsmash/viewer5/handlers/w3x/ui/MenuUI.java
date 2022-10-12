@@ -1604,6 +1604,7 @@ public class MenuUI {
 				});
 
 		this.dialog = new DialogWar3(this.rootFrame, this.uiViewport);
+		
 
 		// position all
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);

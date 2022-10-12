@@ -71,7 +71,6 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 	private final DataTable warsmashIni;
 	private Scene uiScene;
-	private Texture solidGreenTexture;
 	private MenuUI menuUI;
 	private final WarsmashGdxMultiScreenGame game;
 	private boolean hasPlayedStandHack = false;
@@ -142,9 +141,6 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 //		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
 
-			this.solidGreenTexture = ImageUtils.getAnyExtensionTexture(this.viewer.dataSource,
-					"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
-
 			this.cameraManager = new CameraManager();
 			this.cameraManager.setupCamera(this.scene);
 
@@ -214,7 +210,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 //						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
 
 							singleModelScene(WarsmashGdxMenuScreen.this.scene,
-									War3MapViewer.mdx(rootFrame.getSkinField("GlueSpriteLayerBackground")), "Stand");
+									rootFrame.getSkinField("GlueSpriteLayerBackground"), "Stand");
 							if (!WarsmashGdxMenuScreen.this.mainModel.cameras.isEmpty()) {
 								WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras
 										.get(0);
@@ -309,7 +305,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 	}
 
 	private void singleModelScene(final Scene scene, final String path, final String animName) {
-		final MdxModel model2 = (MdxModel) this.viewer.load(path, new PathSolver() {
+		final MdxModel model2 = War3MapViewer.loadModelMdx(this.viewer.dataSource, viewer, path, new PathSolver() {
 			@Override
 			public SolvedPath solve(final String src, final Object solverParams) {
 				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
@@ -345,7 +341,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 			this.mainModel = null;
 		}
 		else {
-			singleModelScene(this.scene, War3MapViewer.mdx(path), "birth");
+			singleModelScene(this.scene, path, "birth");
 			if (!WarsmashGdxMenuScreen.this.mainModel.cameras.isEmpty()) {
 				WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras.get(0);
 			}

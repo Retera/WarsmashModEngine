@@ -73,6 +73,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
@@ -1482,11 +1483,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public void setSpriteFrameModel(final SpriteFrame spriteFrame, String backgroundArt) {
-		if (backgroundArt.toLowerCase().endsWith(".mdl") || backgroundArt.toLowerCase().endsWith(".mdx")) {
-			backgroundArt = backgroundArt.substring(0, backgroundArt.length() - 4);
-		}
-		backgroundArt += ".mdx";
-		final MdxModel model = (MdxModel) this.modelViewer.load(backgroundArt, this.modelViewer.mapPathSolver,
+		final MdxModel model = War3MapViewer.loadModelMdx(this.modelViewer.dataSource, this.modelViewer, backgroundArt, this.modelViewer.mapPathSolver,
 				this.modelViewer.solverParams);
 		spriteFrame.setModel(model);
 	}

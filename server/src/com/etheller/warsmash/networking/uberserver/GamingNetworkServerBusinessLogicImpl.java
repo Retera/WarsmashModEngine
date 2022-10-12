@@ -4,11 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -929,10 +932,14 @@ public class GamingNetworkServerBusinessLogicImpl {
 				if (localAddress != null) {
 					InetAddress localHost;
 					try {
-						localHost = InetAddress.getLocalHost();
+						localHost = getLocalHost();
 					}
-					catch (final UnknownHostException e) {
+					catch (final SocketException e) {
 						e.printStackTrace();
+						return;
+					}
+					if(localHost == null) {
+						System.err.println("Unable to find local host address in GamingNetworkServerBusinessLogicImpl!!!");
 						return;
 					}
 					final byte[] bytes = localHost.getAddress();
@@ -951,6 +958,25 @@ public class GamingNetworkServerBusinessLogicImpl {
 				}
 			}
 		}
+	}
+	
+	private static InetAddress getLocalHost() throws SocketException {
+	    Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
+	    InetAddress somePublicAddress = null;
+	    for (; n.hasMoreElements();)
+	    {
+	        NetworkInterface e = n.nextElement();
+
+	        if(!e.isLoopback() && e.isUp()) {
+	        	Enumeration<InetAddress> a = e.getInetAddresses();
+	        	for (; a.hasMoreElements();)
+	        	{
+	        		InetAddress addr = a.nextElement();
+	        		somePublicAddress = addr;
+	        	}
+	        }
+	    }
+	    return somePublicAddress;
 	}
 
 }

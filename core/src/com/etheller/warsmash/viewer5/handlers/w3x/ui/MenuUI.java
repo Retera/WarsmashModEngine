@@ -1710,15 +1710,25 @@ public class MenuUI {
 			}
 			Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame, war3MapConfig,
 					"Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j").config();
+			int localPlayerIndex = -1;
 			for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 				final CBasePlayer player = war3MapConfig.getPlayer(i);
 				if (player.getController() == CMapControl.USER) {
 					player.setSlotState(CPlayerSlotState.PLAYING);
 //					player.setName(MenuUI.this.profileManager.getCurrentProfile());
 //					break;
+					if(localPlayerIndex == -1) {
+						localPlayerIndex = i;
+					}
 				}
 			}
 			MenuUI.this.currentMapConfig = war3MapConfig;
+			
+			MenuUI.this.beginGameInformation = new BeginGameInformation();
+			MenuUI.this.beginGameInformation.localPlayerIndex = localPlayerIndex;
+			beginGameInformation.loadingStarted = true;
+			
+			MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 		}
 		catch (final IOException e) {
 			e.printStackTrace();

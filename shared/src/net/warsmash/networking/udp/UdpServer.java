@@ -3,6 +3,7 @@ package net.warsmash.networking.udp;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.StandardProtocolFamily;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.DatagramChannel;
@@ -23,7 +24,7 @@ public class UdpServer implements Runnable {
 	public UdpServer(final int portNumber, final UdpServerListener serverListener) throws IOException {
 		this.serverListener = serverListener;
 		this.selector = Selector.open();
-		this.channel = DatagramChannel.open().bind(new InetSocketAddress(portNumber));
+		this.channel = DatagramChannel.open(StandardProtocolFamily.INET).bind(new InetSocketAddress(portNumber));
 		this.channel.configureBlocking(false);
 		this.key = this.channel.register(this.selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
 		this.readBuffer = ByteBuffer.allocate(1024);

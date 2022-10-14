@@ -2680,7 +2680,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				modelInstance.setLocation(x, y,
 						Math.max(getWalkableRenderHeight(x, y), this.terrain.getGroundHeight(x, y)));
 				// TODO not sure if this should actually use BuildingAngle
-				yaw = (float) Math.toRadians(this.simulation.getGameplayConstants().getBuildingAngle());
+				yaw = 0;// (float)
+						// Math.toRadians(this.simulation.getGameplayConstants().getBuildingAngle());
 			}
 			modelInstance.setScene(War3MapViewer.this.worldScene);
 			final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance, War3MapViewer.this, yaw,
@@ -2692,10 +2693,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public MdxModel loadModelMdx(final String path) {
-		return loadModelMdx(dataSource, this, path, mapPathSolver, solverParams);
+		return loadModelMdx(this.dataSource, this, path, this.mapPathSolver, this.solverParams);
 	}
 
-	public static MdxModel loadModelMdx(DataSource dataSource, ModelViewer modelViewer, final String path, PathSolver pathSolver, Object solverParams) {
+	public static MdxModel loadModelMdx(final DataSource dataSource, final ModelViewer modelViewer, final String path,
+			final PathSolver pathSolver, final Object solverParams) {
 		final String mdxPath = mdx(path);
 		if (dataSource.has(mdxPath)) {
 			return (MdxModel) modelViewer.load(mdxPath, pathSolver, solverParams);

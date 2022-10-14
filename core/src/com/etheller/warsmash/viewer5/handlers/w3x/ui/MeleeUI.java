@@ -1652,7 +1652,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				else {
 					this.currentMusicIndex = (this.currentMusicIndex + 1) % this.currentMusics.length;
 				}
-				this.currentMusics[this.currentMusicIndex].play();
+				if (this.currentMusics[this.currentMusicIndex] != null) {
+					this.currentMusics[this.currentMusicIndex].play();
+				}
 			}
 		}
 		for (final CTimerDialog timerDialog : this.timerDialogs) {
@@ -1977,10 +1979,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			handleTargetCursor(ability);
 			return null;
 		}
-		
+
 		@Override
-		public Void accept(CAbilityRoot ability) {
-			handleBuildCursor(null, activeCommandUnit.getSimulationUnit().getTypeId().getValue());
+		public Void accept(final CAbilityRoot ability) {
+			handleBuildCursor(null, MeleeUI.this.activeCommandUnit.getSimulationUnit().getTypeId().getValue());
 			return null;
 		}
 
@@ -4104,17 +4106,27 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			final String[] musics = musicPaths.toArray(new String[musicPaths.size()]);
 
-			if (random) {
-				index = (int) (Math.random() * musics.length);
-			}
 			this.currentMusics = new Music[musics.length];
+			int validMusicCount = 0;
 			for (int i = 0; i < musics.length; i++) {
 				if (this.war3MapViewer.dataSource.has(musics[i])) {
 					final Music newMusic = Gdx.audio
 							.newMusic(new DataSourceFileHandle(this.war3MapViewer.dataSource, musics[i]));
 					newMusic.setVolume(1.0f);
 					this.currentMusics[i] = newMusic;
+					validMusicCount++;
 				}
+			}
+			if (this.currentMusics.length != validMusicCount) {
+				final Music[] fixedList = new Music[validMusicCount];
+				int fixedListIndex = 0;
+				for (int i = 0; i < this.currentMusics.length; i++) {
+					fixedList[fixedListIndex++] = this.currentMusics[i];
+				}
+				this.currentMusics = fixedList;
+			}
+			if (random) {
+				index = (int) (Math.random() * this.currentMusics.length);
 			}
 			this.currentMusicIndex = index;
 			this.currentMusicRandomizeIndex = random;
@@ -4204,5 +4216,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		else if (this.selectedUnit == renderUnit) {
 			selectUnit(null);
 		}
+	}
+
+	public void removedItem(final CItem whichItem) {
+		// TODO unselect an item if it exists
 	}
 }

@@ -1604,7 +1604,6 @@ public class MenuUI {
 				});
 
 		this.dialog = new DialogWar3(this.rootFrame, this.uiViewport);
-		
 
 		// position all
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
@@ -1714,17 +1713,17 @@ public class MenuUI {
 					player.setSlotState(CPlayerSlotState.PLAYING);
 //					player.setName(MenuUI.this.profileManager.getCurrentProfile());
 //					break;
-					if(localPlayerIndex == -1) {
+					if (localPlayerIndex == -1) {
 						localPlayerIndex = i;
 					}
 				}
 			}
 			MenuUI.this.currentMapConfig = war3MapConfig;
-			
+
 			MenuUI.this.beginGameInformation = new BeginGameInformation();
 			MenuUI.this.beginGameInformation.localPlayerIndex = localPlayerIndex;
-			beginGameInformation.loadingStarted = true;
-			
+			this.beginGameInformation.loadingStarted = true;
+
 			MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 		}
 		catch (final IOException e) {
@@ -2451,17 +2450,27 @@ public class MenuUI {
 			}
 			final String[] musics = musicPaths.toArray(new String[musicPaths.size()]);
 
-			if (random) {
-				index = (int) (Math.random() * musics.length);
-			}
 			this.currentMusics = new Music[musics.length];
+			int validMusicCount = 0;
 			for (int i = 0; i < musics.length; i++) {
 				if (this.viewer.dataSource.has(musics[i])) {
 					final Music newMusic = Gdx.audio
 							.newMusic(new DataSourceFileHandle(this.viewer.dataSource, musics[i]));
 					newMusic.setVolume(1.0f);
 					this.currentMusics[i] = newMusic;
+					validMusicCount++;
 				}
+			}
+			if (this.currentMusics.length != validMusicCount) {
+				final Music[] fixedList = new Music[validMusicCount];
+				int fixedListIndex = 0;
+				for (int i = 0; i < this.currentMusics.length; i++) {
+					fixedList[fixedListIndex++] = this.currentMusics[i];
+				}
+				this.currentMusics = fixedList;
+			}
+			if (random) {
+				index = (int) (Math.random() * this.currentMusics.length);
 			}
 			this.currentMusicIndex = index;
 			this.currentMusicRandomizeIndex = random;

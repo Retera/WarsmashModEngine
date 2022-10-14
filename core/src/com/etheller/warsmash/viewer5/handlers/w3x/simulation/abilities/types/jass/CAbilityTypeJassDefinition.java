@@ -370,8 +370,7 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	public void checkCanTargetNoTarget(final CSimulation game, final CAbilityJass abilityJass, final CUnit unit,
 			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, unit, orderId);
-		if ((orderCommandCardIcon != null)
-				&& (orderCommandCardIcon.type == JassOrderButtonType.INSTANT_NO_TARGET)) {
+		if ((orderCommandCardIcon != null) && (orderCommandCardIcon.type == JassOrderButtonType.INSTANT_NO_TARGET)) {
 			if (this.checkTargetJass != null) {
 				if (this.checkTargetJass.evaluate(this.jassGlobalScope,
 						CommonTriggerExecutionScope.jassAbilityNoTargetScope(abilityJass, unit, abilityJass.getAlias(),
@@ -485,17 +484,17 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 		private int autoCastOrderId;
 		private int autoCastUnOrderId;
 		private int containerMenuOrderId;
-		private boolean disabled;
+		private boolean disabled; // TODO instance
 		private int manaCost;
 		private int goldCost;
 		private int lumberCost;
-		private int charges = INFINITE_CHARGES;
+		private int charges = INFINITE_CHARGES; // TODO instance
 		private int foodCostDisplayOnly;
 		private JassOrderButtonType type;
-		private boolean autoCastActive;
+		private boolean autoCastActive; // TODO instance
 
 		// UI
-		private boolean hidden;
+		private boolean hidden; // TODO instance
 		private String iconPath;
 		private int buttonPositionX;
 		private int buttonPositionY;

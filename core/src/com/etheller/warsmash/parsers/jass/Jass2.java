@@ -95,6 +95,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jas
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderButtonType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.item.CItemTypeJass;
@@ -1024,6 +1025,37 @@ public class Jass2 {
 					defaultPlayerUnitOrderExecutor.issueImmediateOrder(whichUnit.getHandleId(), abilityHandleId,
 							orderId, false);
 					return BooleanJassValue.of(abilityHandleId != 0);
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitDamageTarget", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+					final CWidget target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+					final double amount = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+					final boolean attack = arguments.get(3).visit(BooleanJassValueVisitor.getInstance());
+					final boolean ranged = arguments.get(4).visit(BooleanJassValueVisitor.getInstance());
+					CAttackType attackType = nullable(arguments, 5, ObjectJassValueVisitor.getInstance());
+					final CDamageType damageType = nullable(arguments, 6, ObjectJassValueVisitor.getInstance());
+					CWeaponSoundTypeJass weaponType = nullable(arguments, 7, ObjectJassValueVisitor.getInstance());
+
+					if (whichUnit != null) {
+						if (target != null) {
+							if (attackType == null) {
+								attackType = CAttackType.UNKNOWN;
+							}
+
+							if (weaponType == null) {
+								weaponType = CWeaponSoundTypeJass.WHOKNOWS;
+							}
+
+							target.damage(CommonEnvironment.this.simulation, whichUnit, attackType, weaponType.name(),
+									(float) amount);
+						}
+					}
+
+					return BooleanJassValue.TRUE;
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsOfTypeCounted", new JassFunction() {
@@ -3455,6 +3487,16 @@ public class Jass2 {
 					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					CommonEnvironment.this.simulation.removeUnit(whichUnit);
 					meleeUI.removedUnit(whichUnit);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("RemoveItem", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CItem whichItem = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					CommonEnvironment.this.simulation.removeItem(whichItem);
+					meleeUI.removedItem(whichItem);
 					return null;
 				}
 			});

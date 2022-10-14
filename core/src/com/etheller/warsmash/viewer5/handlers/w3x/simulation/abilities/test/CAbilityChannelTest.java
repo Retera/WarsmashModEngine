@@ -33,7 +33,7 @@ public class CAbilityChannelTest extends AbstractGenericSingleIconNoSmartActiveA
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		this.behaviorChannelTest = new CBehaviorChannelTest(unit, this.artDuration);
+		this.behaviorChannelTest = new CBehaviorChannelTest(unit, this);
 	}
 
 	@Override
@@ -90,5 +90,9 @@ public class CAbilityChannelTest extends AbstractGenericSingleIconNoSmartActiveA
 
 	public void setArtDuration(final float artDuration) {
 		this.artDuration = artDuration;
+	}
+
+	public float getArtDuration() {
+		return this.artDuration;
 	}
 }

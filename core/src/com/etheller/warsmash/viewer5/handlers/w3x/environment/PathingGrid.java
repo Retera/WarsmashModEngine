@@ -273,8 +273,7 @@ public class PathingGrid {
 
 	public void setCellBlighted(final int cellX, final int cellY, final boolean blighted) {
 		if (blighted) {
-			setCellPathing(cellX, cellY,
-					(short) (getCellPermanentPathing(cellX, cellY) | (short) PathingFlags.BLIGHTED));
+			setCellPathing(cellX, cellY, (short) (getCellPermanentPathing(cellX, cellY) | PathingFlags.BLIGHTED));
 		}
 		else {
 			setCellPathing(cellX, cellY,
@@ -360,12 +359,12 @@ public class PathingGrid {
 	}
 
 	public static final class PathingFlags {
-		public static int UNWALKABLE = 0x2;
-		public static int UNFLYABLE = 0x4;
-		public static int UNBUILDABLE = 0x8;
-		public static int BLIGHTED = 0x20;
-		public static int UNSWIMABLE = 0x40; // PROBABLY, didn't confirm this flag value is accurate
-		public static int BOUDNARY = 0xF0;
+		public static short UNWALKABLE = 0x2;
+		public static short UNFLYABLE = 0x4;
+		public static short UNBUILDABLE = 0x8;
+		public static short BLIGHTED = 0x20;
+		public static short UNSWIMABLE = 0x40; // PROBABLY, didn't confirm this flag value is accurate
+		public static short BOUDNARY = 0xF0;
 
 		public static boolean isPathingFlag(final short pathingValue, final int flag) {
 			return (pathingValue & flag) != 0;
@@ -445,6 +444,7 @@ public class PathingGrid {
 				return true;
 			}
 		};
+
 		private final String typeKey;
 
 		// TODO windwalk pathing type can walk through units but not through items
@@ -457,9 +457,7 @@ public class PathingGrid {
 	}
 
 	public static enum PathingType {
-		WALKABLE(PathingFlags.UNWALKABLE),
-		FLYABLE(PathingFlags.UNFLYABLE),
-		BUILDABLE(PathingFlags.UNBUILDABLE),
+		WALKABLE(PathingFlags.UNWALKABLE), FLYABLE(PathingFlags.UNFLYABLE), BUILDABLE(PathingFlags.UNBUILDABLE),
 		SWIMMABLE(PathingFlags.UNSWIMABLE);
 
 		private final int preventionFlag;

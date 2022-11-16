@@ -4,7 +4,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.StringMsgTargetCheckReceiver;
 
@@ -33,9 +32,8 @@ public class COrderTargetWidget implements COrder {
 	}
 
 	@Override
-	public AbilityTarget getTarget(final CSimulation game) {
-		final CWidget target = game.getWidget(this.targetHandleId);
-		return target;
+	public CWidget getTarget(final CSimulation game) {
+		return game.getWidget(this.targetHandleId);
 	}
 
 	@Override
@@ -52,6 +50,7 @@ public class COrderTargetWidget implements COrder {
 			final StringMsgTargetCheckReceiver<CWidget> targetReceiver = (StringMsgTargetCheckReceiver<CWidget>) targetCheckReceiver;
 			ability.checkCanTarget(game, caster, this.orderId, target, targetReceiver.reset());
 			if (targetReceiver.getTarget() != null) {
+				caster.fireOrderEvents(game, this);
 				return ability.begin(game, caster, this.orderId, targetReceiver.getTarget());
 			}
 			else {
@@ -102,5 +101,10 @@ public class COrderTargetWidget implements COrder {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public void fireEvents(final CSimulation game, final CUnit unit) {
+		unit.fireOrderEvents(game, this);
 	}
 }

@@ -17,6 +17,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
@@ -716,6 +717,9 @@ public class CUnit extends CWidget {
 				// Allow the ability to response to the order without actually placing itself in
 				// the queue, nor modifying (interrupting) the queue.
 				if (!ability.checkBeforeQueue(game, this, order.getOrderId(), order.getTarget(game))) {
+					// TODO is this a possible bug vector that the network request doesn't
+					// checkCanUse like the UI before checkBeforeQueue is called??
+					order.fireEvents(game, this);
 					this.stateNotifier.ordersChanged();
 					return;
 				}
@@ -941,8 +945,8 @@ public class CUnit extends CWidget {
 			final float centerX = newX + (checkX * 64);
 			final float centerY = newY + (checkY * 64);
 			tempRect.setCenter(centerX, centerY);
-			if (!collision.intersectsAnythingOtherThan(tempRect, this, this.unitType.getMovementType())
-					&& pathingGrid.isPathable(centerX, centerY, this.unitType.getMovementType(), collisionSize)) {
+			if (!collision.intersectsAnythingOtherThan(tempRect, this, getMovementType())
+					&& pathingGrid.isPathable(centerX, centerY, getMovementType(), collisionSize)) {
 				outputX = centerX;
 				outputY = centerY;
 				break;
@@ -1368,6 +1372,15 @@ public class CUnit extends CWidget {
 		// I was trying to fix attack move on stationary units which was crashing
 	}
 
+	public boolean isMovementOnWaterAllowed() {
+		return !isMovementDisabled() && getMovementType().isPathable((short) ~PathingFlags.UNSWIMABLE);
+	}
+
+	public MovementType getMovementType() {
+		return getUnitType().getMovementType(); // later maybe it has unit instance override for windwalk, so this
+												// wrapper exists to later mod
+	}
+
 	public float getAcquisitionRange() {
 		return this.acquisitionRange;
 	}
@@ -1590,8 +1603,12 @@ public class CUnit extends CWidget {
 		return this.buildQueueTypes;
 	}
 
+	public boolean isBuildQueueActive() {
+		return this.buildQueueTypes[0] != null;
+	}
+
 	public float getBuildQueueTimeRemaining(final CSimulation simulation) {
-		if (this.buildQueueTypes[0] == null) {
+		if (!isBuildQueueActive()) {
 			return 0;
 		}
 		switch (this.buildQueueTypes[0]) {
@@ -1969,6 +1986,7 @@ public class CUnit extends CWidget {
 		if (playUserUISounds) {
 			game.unitPickUpItemEvent(this, item);
 		}
+		firePickUpItemEvents(game, item);
 	}
 
 	public void onDropItem(final CSimulation game, final CItem droppedItem, final boolean playUserUISounds) {
@@ -2012,8 +2030,8 @@ public class CUnit extends CWidget {
 	public boolean isBuilding() {
 		return this.structure;
 	}
-	
-	public void setStructure(boolean flag) {
+
+	public void setStructure(final boolean flag) {
 		this.structure = flag;
 	}
 
@@ -2287,5 +2305,55 @@ public class CUnit extends CWidget {
 			return true;
 		}
 		return false;
+	}
+
+	public void firePickUpItemEvents(final CSimulation game, final CItem item) {
+		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_PICKUP_ITEM);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, CommonTriggerExecutionScope.unitPickupItemScope(
+						JassGameEventsWar3.EVENT_UNIT_PICKUP_ITEM, event.getTrigger(), this, item));
+			}
+		}
+		game.getPlayer(this.playerIndex).firePickUpItemEvents(this, item, game);
+	}
+
+	public void fireOrderEvents(final CSimulation game, final COrderNoTarget order) {
+		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_ISSUED_ORDER);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, CommonTriggerExecutionScope.unitOrderScope(JassGameEventsWar3.EVENT_UNIT_ISSUED_ORDER,
+						event.getTrigger(), this, order.getOrderId()));
+			}
+		}
+		game.getPlayer(this.playerIndex).fireOrderEvents(this, game, order);
+	}
+
+	public void fireOrderEvents(final CSimulation game, final COrderTargetPoint order) {
+		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_ISSUED_POINT_ORDER);
+		if (eventList != null) {
+			final AbilityPointTarget target = order.getTarget(game);
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this,
+						CommonTriggerExecutionScope.unitOrderPointScope(
+								JassGameEventsWar3.EVENT_UNIT_ISSUED_POINT_ORDER, event.getTrigger(), this,
+								order.getOrderId(), target.x, target.y));
+			}
+		}
+		game.getPlayer(this.playerIndex).fireOrderEvents(this, game, order);
+	}
+
+	public void fireOrderEvents(final CSimulation game, final COrderTargetWidget order) {
+		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_ISSUED_TARGET_ORDER);
+		if (eventList != null) {
+			final CWidget target = order.getTarget(game);
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this,
+						CommonTriggerExecutionScope.unitOrderTargetScope(
+								JassGameEventsWar3.EVENT_UNIT_ISSUED_TARGET_ORDER, event.getTrigger(), this,
+								order.getOrderId(), target));
+			}
+		}
+		game.getPlayer(this.playerIndex).fireOrderEvents(this, game, order);
 	}
 }

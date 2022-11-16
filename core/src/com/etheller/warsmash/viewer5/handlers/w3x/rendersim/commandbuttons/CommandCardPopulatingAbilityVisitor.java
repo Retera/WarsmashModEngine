@@ -139,10 +139,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		}
 		return null;
 	}
-	
+
 	@Override
-	public Void accept(CAbilityRoot ability) {
-		return accept((GenericSingleIconActiveAbility)ability);
+	public Void accept(final CAbilityRoot ability) {
+		return accept((GenericSingleIconActiveAbility) ability);
 	}
 
 	@Override
@@ -193,9 +193,9 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							order.getTip(), order.getUberTip(), order.getButtonPositionX(), order.getButtonPositionY(),
 							ability.getHandleId(), order.getOrderId(),
 							order.isAutoCastActive() ? order.getAutoCastOrderId() : order.getAutoCastUnOrderId(),
-							order.isAutoCastActive(), order.getType() == JassOrderButtonType.MENU,
-							order.getGoldCost(), order.getLumberCost(), order.getFoodCostDisplayOnly(),
-							order.getManaCost(), order.getCharges(), order.getHotkey());
+							order.isAutoCastActive(), order.getType() == JassOrderButtonType.MENU, order.getGoldCost(),
+							order.getLumberCost(), order.getFoodCostDisplayOnly(), order.getManaCost(),
+							order.getCharges(), order.getHotkey());
 				}
 			}
 		}

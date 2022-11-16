@@ -20,4 +20,6 @@ public interface COrder {
 
 	final StringMsgTargetCheckReceiver<?> targetCheckReceiver = new StringMsgTargetCheckReceiver<>();
 	final StringMsgAbilityActivationReceiver abilityActivationReceiver = new StringMsgAbilityActivationReceiver();
+
+	void fireEvents(CSimulation game, CUnit unit);
 }

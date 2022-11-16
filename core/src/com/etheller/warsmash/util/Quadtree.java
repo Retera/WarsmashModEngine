@@ -142,7 +142,7 @@ public class Quadtree<T> {
 			overlapsAny = true;
 		}
 		if (!overlapsAny) {
-			throw new IllegalStateException("Does not overlap anything!");
+			throw new IllegalStateException("Does not overlap anything! " + node.bounds);
 		}
 	}
 

@@ -194,7 +194,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public static final float DEFAULT_INVENTORY_ICON_WIDTH = 0.03125f;
 	private static final int COMMAND_CARD_WIDTH = 4;
 	private static final int COMMAND_CARD_HEIGHT = 3;
-	private static final int INVENTORY_WIDTH = 2;
+	private static final int INVENTORY_WIDTH = WarsmashConstants.USE_NINE_ITEM_INVENTORY ? 3 : 2;
 	private static final int INVENTORY_HEIGHT = 3;
 
 	private static final Vector2 screenCoordsVector = new Vector2();
@@ -1062,7 +1062,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.inventoryTitleFrame
 				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame, FramePoint.TOPLEFT,
 						GameUI.convertX(this.uiViewport, 0.004f), GameUI.convertY(this.uiViewport, 0.0165625f)));
-		this.inventoryTitleFrame.setWidth(GameUI.convertX(this.uiViewport, 0.071f));
+		this.inventoryTitleFrame.setWidth(
+				GameUI.convertX(this.uiViewport, WarsmashConstants.USE_NINE_ITEM_INVENTORY ? 0.101f : 0.071f));
 		this.inventoryTitleFrame.setHeight(GameUI.convertX(this.uiViewport, 0.01125f));
 		this.inventoryTitleFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
 		this.inventoryTitleFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
@@ -1118,7 +1119,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final SpriteFrame autocastFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
 						"SmashCommandButton_" + (commandButtonIndex) + "_Autocast", this.rootFrame, "", 0);
 				commandCardIcon.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
-						GameUI.convertX(this.uiViewport, 0.6175f + (0.0434f * i)),
+						GameUI.convertX(this.uiViewport,
+								0.6175f + (WarsmashConstants.USE_NINE_ITEM_INVENTORY ? 0.0405f : 0.0f) + (0.0434f * i)),
 						GameUI.convertY(this.uiViewport, 0.095f - (0.044f * j))));
 				commandCardIcon.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
 				commandCardIcon.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
@@ -2050,11 +2052,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					final ViewerTextureRenderable greenPixmap = new ViewerTextureRenderable.GdxViewerTextureRenderable(
 							MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmapTexture);
 					MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel = new SplatModel(Gdx.gl30, greenPixmap,
-							new ArrayList<>(), viewer.terrain.centerOffset, new ArrayList<>(), true, false, true);
+							new ArrayList<>(), viewer.terrain.centerOffset, new ArrayList<>(), true, false, true,
+							false);
 					MeleeUI.this.cursorModelUnderneathPathingRedGreenSplatModel.color[3] = 0.20f;
 				}
 			}
-			viewer.getClickLocation(clickLocationTemp, this.baseMouseX, Gdx.graphics.getHeight() - this.baseMouseY);
+			viewer.getClickLocation(clickLocationTemp, this.baseMouseX, Gdx.graphics.getHeight() - this.baseMouseY,
+					false, false);
 			if (MeleeUI.this.cursorModelPathing != null) {
 				clickLocationTemp.x = (float) Math.floor(clickLocationTemp.x / 64f) * 64f;
 				clickLocationTemp.y = (float) Math.floor(clickLocationTemp.y / 64f) * 64f;
@@ -2154,7 +2158,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		private void handlePlacementCursor(final CAbility ability, final float radius) {
 			final War3MapViewer viewer = MeleeUI.this.war3MapViewer;
-			viewer.getClickLocation(clickLocationTemp, this.baseMouseX, Gdx.graphics.getHeight() - this.baseMouseY);
+			viewer.getClickLocation(clickLocationTemp, this.baseMouseX, Gdx.graphics.getHeight() - this.baseMouseY,
+					false, true); // TODO change this to true once the placement cursor can draw over water, which
+			// it should upgrade to do probs
 			if (MeleeUI.this.placementCursor == null) {
 				MeleeUI.this.placementCursor = viewer.terrain.addUberSplat(
 						MeleeUI.this.rootFrame.getSkinField("PlacementCursor"), clickLocationTemp.x,
@@ -3213,7 +3219,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						useActiveCommandOnUnit(shiftDown, rayPickUnit);
 					}
 					else {
-						this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
+						this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY,
+								this.activeCommandUnit.getSimulationUnit().isMovementOnWaterAllowed(), true);
 						clickLocationTemp2.set(clickLocationTemp.x, clickLocationTemp.y);
 
 						if (this.draggingItem != null) {
@@ -3363,12 +3370,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					}
 				}
 				else {
-					this.war3MapViewer.getClickLocation(this.lastMouseClickLocation, screenX, (int) worldScreenY);
-					if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-						final short pathing = this.war3MapViewer.simulation.getPathingGrid()
-								.getPathing(this.lastMouseClickLocation.x, this.lastMouseClickLocation.y);
-						System.out.println(Integer.toBinaryString(pathing));
-					}
+					this.war3MapViewer.getClickLocation(this.lastMouseClickLocation, screenX, (int) worldScreenY, true,
+							true);
 					this.lastMouseDragStart.set(this.lastMouseClickLocation);
 					this.allowDrag = true;
 					this.draggingMouseButton = button;
@@ -3475,7 +3478,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private void rightClickMove(final int screenX, final float worldScreenY) {
-		this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
+		this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY,
+				(getSelectedUnit() != null) && getSelectedUnit().getSimulationUnit().isMovementOnWaterAllowed(), true);
 		this.war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
 		clickLocationTemp2.set(clickLocationTemp.x, clickLocationTemp.y);
 
@@ -3772,7 +3776,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.mouseOverUnit = null;
 				}
 
-				this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY);
+				this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY, true, true);
 				this.currentlyDraggingPointer = pointer;
 				if (this.draggingMouseButton == Input.Buttons.MIDDLE) {
 					this.cameraManager.target.add(this.lastMouseClickLocation.sub(clickLocationTemp).scl(-1));

@@ -356,6 +356,12 @@ public class CSimulation implements CPlayerAPI {
 			internalRegisterTimer(timer);
 		}
 		this.addedTimers.clear();
+		final Set<CTimer> timers = new HashSet<>();
+		for (final CTimer timer : this.activeTimers) {
+			if (!timers.add(timer)) {
+				throw new IllegalStateException("Duplicate timer add: " + timer);
+			}
+		}
 		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
 		}
@@ -598,6 +604,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void removeItem(final CItem cItem) {
+		cItem.forceDropIfHeld(this);
 		cItem.setHidden(true); // TODO fix
 		cItem.setLife(this, 0);
 	}

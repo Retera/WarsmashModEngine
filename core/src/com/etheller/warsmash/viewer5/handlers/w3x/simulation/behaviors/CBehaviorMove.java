@@ -116,7 +116,7 @@ public class CBehaviorMove implements CBehavior {
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();
 
-		MovementType movementType = this.unit.getUnitType().getMovementType();
+		MovementType movementType = this.unit.getMovementType();
 		if (movementType == null) {
 			movementType = MovementType.DISABLED;
 		}
@@ -408,7 +408,7 @@ public class CBehaviorMove implements CBehavior {
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();
 
-		MovementType movementType = this.unit.getUnitType().getMovementType();
+		MovementType movementType = this.unit.getMovementType();
 		if (movementType == null) {
 			movementType = MovementType.DISABLED;
 		}

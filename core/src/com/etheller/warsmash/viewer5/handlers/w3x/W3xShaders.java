@@ -17,8 +17,11 @@ public class W3xShaders {
 					"    uniform vec2 u_shadowPixel;\r\n" + //
 					"    uniform vec2 u_centerOffset;\r\n" + //
 					"    uniform sampler2D u_lightTexture;\r\n" + //
+					"    uniform sampler2D u_waterHeightsMap;\r\n" + //
 					"    uniform float u_lightCount;\r\n" + //
 					"    uniform float u_lightTextureHeight;\r\n" + //
+					"    uniform bool u_aboveWater;\r\n" + //
+					"    uniform float u_waterHeightOffset;\r\n" + //
 					"    attribute vec3 a_position;\r\n" + //
 					"    attribute vec2 a_uv;\r\n" + //
 					"    attribute float a_absoluteHeight;\r\n" + //
@@ -46,6 +49,18 @@ public class W3xShaders {
 					+ //
 					"        hU = texture2D(u_heightMap, vec2(base + vec2(0.0, normalDist)) * u_pixel + halfPixel).r;\r\n"
 					+ //
+					"        if (u_aboveWater) {\r\n" + //
+					"          height = max(height, (texture2D(u_waterHeightsMap, base * u_pixel + halfPixel).r + u_waterHeightOffset) * 128.0);\r\n"
+					+ //
+					"          hL = max(hL, (texture2D(u_heightMap, vec2(base - vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					+ //
+					"          hR = max(hR, (texture2D(u_heightMap, vec2(base + vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					+ //
+					"          hD = max(hD, (texture2D(u_heightMap, vec2(base - vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					+ //
+					"          hU = max(hU, (texture2D(u_heightMap, vec2(base + vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					+ //
+					"        }\r\n" + //
 					"      } else {\r\n" + //
 					"        height = a_absoluteHeight;\r\n" + //
 					"        hL = a_absoluteHeight;\r\n" + //

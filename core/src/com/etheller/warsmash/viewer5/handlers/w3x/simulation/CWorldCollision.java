@@ -47,7 +47,7 @@ public class CWorldCollision {
 			this.buildingUnitCollision.add(unit, bounds);
 		}
 		else {
-			final MovementType movementType = unit.getUnitType().getMovementType();
+			final MovementType movementType = unit.getMovementType();
 			if (movementType != null) {
 				switch (movementType) {
 				case AMPHIBIOUS:
@@ -91,7 +91,7 @@ public class CWorldCollision {
 				this.buildingUnitCollision.remove(unit, bounds);
 			}
 			else {
-				final MovementType movementType = unit.getUnitType().getMovementType();
+				final MovementType movementType = unit.getMovementType();
 				if (movementType != null) {
 					switch (movementType) {
 					case AMPHIBIOUS:
@@ -183,7 +183,7 @@ public class CWorldCollision {
 		if (unit.isBuilding()) {
 			throw new IllegalArgumentException("Cannot add building to the CWorldCollision");
 		}
-		final MovementType movementType = unit.getUnitType().getMovementType();
+		final MovementType movementType = unit.getMovementType();
 		final Rectangle bounds = unit.getCollisionRectangle();
 		if (movementType != null) {
 			switch (movementType) {

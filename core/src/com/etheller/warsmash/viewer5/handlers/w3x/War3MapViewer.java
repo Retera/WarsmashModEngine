@@ -84,6 +84,8 @@ import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.RenderCorner;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
@@ -857,7 +859,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								final float x = unitX - shadowX;
 								final float y = unitY - shadowY;
 								renderUnit.shadow = War3MapViewer.this.terrain.addUnitShadowSplat(texture, x, y,
-										x + shadowWidth, y + shadowHeight, 3, 0.5f);
+										x + shadowWidth, y + shadowHeight, 3, 0.5f, false);
 							}
 							else {
 								final String textureFallback = "ReplaceableTextures\\Shadows\\" + unitShadow + ".dds";
@@ -865,7 +867,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									final float x = unitX - shadowX;
 									final float y = unitY - shadowY;
 									renderUnit.shadow = War3MapViewer.this.terrain.addUnitShadowSplat(textureFallback,
-											x, y, x + shadowWidth, y + shadowHeight, 3, 0.5f);
+											x, y, x + shadowWidth, y + shadowHeight, 3, 0.5f, false);
 								}
 							}
 						}
@@ -904,68 +906,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								specialEffect.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
 							}
 						};
-					}
-
-					private RenderSpellEffect spawnSpellEffectOnUnitEx(final CUnit unit, final War3ID alias,
-							final CEffectType effectType, final int index) {
-						final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
-						EffectAttachmentUI effectAttachmentUI;
-						if (abilityUI != null) {
-							switch (effectType) {
-							case EFFECT:
-								effectAttachmentUI = abilityUI.getEffectArt(index);
-								break;
-							case TARGET:
-								effectAttachmentUI = abilityUI.getTargetArt(index);
-								break;
-							case CASTER:
-								effectAttachmentUI = abilityUI.getCasterArt(index);
-								break;
-							case SPECIAL:
-								effectAttachmentUI = abilityUI.getSpecialArt(index);
-								break;
-							case AREA_EFFECT:
-								effectAttachmentUI = abilityUI.getAreaEffectArt(index);
-								break;
-							case MISSILE:
-								effectAttachmentUI = abilityUI.getMissileArt(index);
-								break;
-							default:
-								throw new IllegalArgumentException("Unsupported effect type: " + effectType);
-							}
-						}
-						else {
-							final BuffUI buffUI = War3MapViewer.this.abilityDataUI.getBuffUI(alias);
-							if (buffUI != null) {
-								switch (effectType) {
-								case EFFECT:
-									effectAttachmentUI = buffUI.getEffectArt(index);
-									break;
-								case TARGET:
-									effectAttachmentUI = buffUI.getTargetArt(index);
-									break;
-								case SPECIAL:
-									effectAttachmentUI = buffUI.getSpecialArt(index);
-									break;
-								case MISSILE:
-									effectAttachmentUI = buffUI.getMissileArt(index);
-									break;
-								default:
-									throw new IllegalArgumentException("Unsupported effect type: " + effectType);
-								}
-							}
-							else {
-								return null;
-							}
-						}
-						if (effectAttachmentUI == null) {
-							return null;
-						}
-						final String modelPath = effectAttachmentUI.getModelPath();
-						final List<String> attachmentPoint = effectAttachmentUI.getAttachmentPoint();
-						final RenderSpellEffect specialEffect = addSpecialEffectTarget(modelPath, unit,
-								attachmentPoint);
-						return specialEffect;
 					}
 
 					@Override
@@ -1352,7 +1292,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final float maxRoll = row.readSLKTagFloat("maxRoll");
 		final float defScale = row.readSLKTagFloat("defScale");
 		final RenderDoodad renderDoodad = new RenderDoodad(this, model, row, location, scale, facingRadians, maxPitch,
-				maxRoll, defScale);
+				maxRoll, defScale, doodadVariation);
 		renderDoodad.instance.uniformScale(defScale);
 		this.doodads.add(renderDoodad);
 	}
@@ -1398,7 +1338,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		simulationDestructable.setLife(this.simulation, simulationDestructable.getLife() * (lifePercent / 100f));
 		final RenderDestructable renderDestructable = new RenderDestructable(this, model, row, location, scale,
 				facingRadians, selectionScale, maxPitch, maxRoll, lifePercent, destructableShadow,
-				simulationDestructable);
+				simulationDestructable, doodadVariation);
 		if (row.readSLKTagBoolean("walkable")) {
 			final float angle = facingRadians;
 			BoundingBox boundingBox = model.bounds.getBoundingBox();
@@ -1599,7 +1539,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final float y = unitY - shadowY;
 						if (this.unitsReady) {
 							unitShadowSplatDynamicIngame = this.terrain.addUnitShadowSplat(texture, x, y,
-									x + shadowWidth, y + shadowHeight, 3, 0.5f);
+									x + shadowWidth, y + shadowHeight, 3, 0.5f, false);
 						}
 						else {
 							if (!this.terrain.splats.containsKey(texture)) {
@@ -1672,7 +1612,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final float y = unitY - shadowY;
 						if (this.unitsReady) {
 							unitShadowSplatDynamicIngame = this.terrain.addUnitShadowSplat(texture, x, y,
-									x + shadowWidth, y + shadowHeight, 3, 0.5f);
+									x + shadowWidth, y + shadowHeight, 3, 0.5f, false);
 						}
 						else {
 							if (!this.terrain.splats.containsKey(texture)) {
@@ -2039,6 +1979,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 				}
 				path = allyKey + path;
+				if (unit.isShowSelectionCircleAboveWater()) {
+					path = path + ":abovewater";
+				}
 				final SplatModel splatModel = this.terrain.getSplatModel("selection:" + path);
 				if (splatModel != null) {
 					final float x = unit.getX();
@@ -2057,6 +2000,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					final float x = unit.getX();
 					final float y = unit.getY();
 					System.out.println("Selecting a unit at " + x + "," + y);
+					if (unit.isShowSelectionCircleAboveWater()) {
+						splats.get(path).aboveWater = true;
+					}
 					splats.get(path).locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
 							x + (selectionSize / 2), y + (selectionSize / 2), 5 });
 					splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
@@ -2074,11 +2020,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
 			final String path = entry.getKey();
-			final String filePath = path.substring(2);
+			String filePath = path.substring(2);
+			if (filePath.endsWith(":abovewater")) {
+				filePath = filePath.substring(0, filePath.length() - 11);
+			}
 			final String allyKey = path.substring(0, 2);
 			final Splat locations = entry.getValue();
 			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(filePath, PathSolver.DEFAULT, null),
-					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true);
+					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true,
+					locations.aboveWater);
 			switch (allyKey) {
 			case "e:":
 				model.color[0] = this.selectionCircleColorEnemy.r;
@@ -2138,7 +2088,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				path += ".blp";
 			}
 			if (unit instanceof RenderUnit) {
-				final int selectedUnitPlayerIndex = ((RenderUnit) unit).getSimulationUnit().getPlayerIndex();
+				final CUnit simulationUnit = ((RenderUnit) unit).getSimulationUnit();
+				final int selectedUnitPlayerIndex = simulationUnit.getPlayerIndex();
 				final CPlayer localPlayer = this.simulation.getPlayer(this.localPlayerIndex);
 				if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
 					allyKey = "e:";
@@ -2148,6 +2099,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				}
 			}
 			path = allyKey + path;
+			if (unit.isShowSelectionCircleAboveWater()) {
+				path = path + ":abovewater";
+			}
 			final SplatModel splatModel = this.terrain.getSplatModel("mouseover:" + path);
 			if (splatModel != null) {
 				final float x = unit.getX();
@@ -2165,6 +2119,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				}
 				final float x = unit.getX();
 				final float y = unit.getY();
+				if (unit.isShowSelectionCircleAboveWater()) {
+					splats.get(path).aboveWater = true;
+				}
 				splats.get(path).locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
 						x + (selectionSize / 2), y + (selectionSize / 2), 4 });
 				splats.get(path).unitMapping.add(new Consumer<SplatModel.SplatMover>() {
@@ -2181,11 +2138,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.mouseHighlightWidgets.add(unit);
 		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
 			final String path = entry.getKey();
-			final String filePath = path.substring(2);
+			String filePath = path.substring(2);
+			if (filePath.endsWith(":abovewater")) {
+				filePath = filePath.substring(0, filePath.length() - 11);
+			}
 			final String allyKey = path.substring(0, 2);
 			final Splat locations = entry.getValue();
 			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(filePath, PathSolver.DEFAULT, null),
-					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true);
+					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true,
+					locations.aboveWater);
 			switch (allyKey) {
 			case "e:":
 				model.color[0] = this.selectionCircleColorEnemy.r;
@@ -2211,14 +2172,21 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 	}
 
-	public void getClickLocation(final Vector3 out, final int screenX, final int screenY) {
+	public void getClickLocation(final Vector3 out, final int screenX, final int screenY,
+			final boolean intersectWithWater, final boolean pushResultZAboveWater) {
 		final float[] ray = rayHeap;
 		mousePosHeap.set(screenX, screenY);
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
 		gdxRayHeap.set(ray[0], ray[1], ray[2], ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]);
 		gdxRayHeap.direction.nor();// needed for libgdx
-		RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.terrain.softwareGroundMesh.vertices,
-				this.terrain.softwareGroundMesh.indices, 3, out);
+		if (intersectWithWater) {
+			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.terrain.softwareWaterAndGroundMesh.vertices,
+					this.terrain.softwareWaterAndGroundMesh.indices, 3, out);
+		}
+		else {
+			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.terrain.softwareGroundMesh.vertices,
+					this.terrain.softwareGroundMesh.indices, 3, out);
+		}
 		rectangleHeap.set(Math.min(out.x, gdxRayHeap.origin.x), Math.min(out.y, gdxRayHeap.origin.y),
 				Math.abs(out.x - gdxRayHeap.origin.x), Math.abs(out.y - gdxRayHeap.origin.y));
 		this.walkableObjectsTree.intersect(rectangleHeap, this.walkablesIntersectionFinder.reset(gdxRayHeap));
@@ -2226,7 +2194,17 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			out.set(this.walkablesIntersectionFinder.intersection);
 		}
 		else {
+			final float oldZ = out.z;
 			out.z = Math.max(getWalkableRenderHeight(out.x, out.y), this.terrain.getGroundHeight(out.x, out.y));
+
+			if (pushResultZAboveWater) {
+				out.z = Math.max(out.z, oldZ);
+				final short pathing = this.simulation.getPathingGrid().getPathing(out.x, out.y);
+				if (PathingGrid.isPathingFlag(pathing, PathingType.SWIMMABLE)
+						&& !PathingGrid.isPathingFlag(pathing, PathingType.WALKABLE)) {
+					out.z = Math.max(out.z, this.terrain.getWaterHeight(out.x, out.y));
+				}
+			}
 		}
 	}
 
@@ -2601,6 +2579,86 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public void setGameTurnManager(final GameTurnManager gameTurnManager) {
 		this.gameTurnManager = gameTurnManager;
+	}
+
+	public RenderSpellEffect spawnSpellEffectOnUnitEx(final CUnit unit, final War3ID alias,
+			final CEffectType effectType, final int index) {
+		final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
+		final EffectAttachmentUI effectAttachmentUI = getEffectAttachmentUI(alias, effectType, index, abilityUI);
+		if (effectAttachmentUI == null) {
+			return null;
+		}
+		final String modelPath = effectAttachmentUI.getModelPath();
+		final List<String> attachmentPoint = effectAttachmentUI.getAttachmentPoint();
+		final RenderSpellEffect specialEffect = addSpecialEffectTarget(modelPath, unit, attachmentPoint);
+		return specialEffect;
+	}
+
+	public RenderSpellEffect spawnSpellEffectEx(final float x, final float y, final War3ID alias,
+			final CEffectType effectType, final int index) {
+		final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
+		final EffectAttachmentUI effectAttachmentUI = getEffectAttachmentUI(alias, effectType, index, abilityUI);
+		if (effectAttachmentUI == null) {
+			return null;
+		}
+		final String modelPath = effectAttachmentUI.getModelPath();
+		final List<String> attachmentPoint = effectAttachmentUI.getAttachmentPoint();
+		final RenderSpellEffect specialEffect = addSpecialEffect(modelPath, x, y);
+		return specialEffect;
+	}
+
+	public EffectAttachmentUI getEffectAttachmentUI(final War3ID alias, final CEffectType effectType, final int index,
+			final AbilityUI abilityUI) {
+		EffectAttachmentUI effectAttachmentUI = null;
+		if (abilityUI != null) {
+			switch (effectType) {
+			case EFFECT:
+				effectAttachmentUI = abilityUI.getEffectArt(index);
+				break;
+			case TARGET:
+				effectAttachmentUI = abilityUI.getTargetArt(index);
+				break;
+			case CASTER:
+				effectAttachmentUI = abilityUI.getCasterArt(index);
+				break;
+			case SPECIAL:
+				effectAttachmentUI = abilityUI.getSpecialArt(index);
+				break;
+			case AREA_EFFECT:
+				effectAttachmentUI = abilityUI.getAreaEffectArt(index);
+				break;
+			case MISSILE:
+				effectAttachmentUI = abilityUI.getMissileArt(index);
+				break;
+			default:
+				throw new IllegalArgumentException("Unsupported effect type: " + effectType);
+			}
+		}
+		else {
+			final BuffUI buffUI = War3MapViewer.this.abilityDataUI.getBuffUI(alias);
+			if (buffUI != null) {
+				switch (effectType) {
+				case EFFECT:
+					effectAttachmentUI = buffUI.getEffectArt(index);
+					break;
+				case TARGET:
+					effectAttachmentUI = buffUI.getTargetArt(index);
+					break;
+				case SPECIAL:
+					effectAttachmentUI = buffUI.getSpecialArt(index);
+					break;
+				case MISSILE:
+					effectAttachmentUI = buffUI.getMissileArt(index);
+					break;
+				default:
+					throw new IllegalArgumentException("Unsupported effect type: " + effectType);
+				}
+			}
+			else {
+				return null;
+			}
+		}
+		return effectAttachmentUI;
 	}
 
 	public RenderSpellEffect addSpecialEffectTarget(final String modelName, final CWidget targetWidget,

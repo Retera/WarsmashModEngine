@@ -45,6 +45,8 @@ public interface RenderWidget {
 
 	boolean isSelectable();
 
+	boolean isShowSelectionCircleAboveWater();
+
 	public static final class UnitAnimationListenerImpl implements CUnitAnimationListener {
 		private final MdxComplexInstance instance;
 		protected final EnumSet<AnimationTokens.SecondaryTag> secondaryAnimationTags = EnumSet

@@ -31,14 +31,16 @@ public class SplatModel implements Comparable<SplatModel> {
 	private final boolean unshaded;
 	private final boolean noDepthTest;
 	private final boolean highPriority;
+	private final boolean aboveWater;
 
 	public SplatModel(final GL30 gl, final ViewerTextureRenderable texture, final List<float[]> locations,
 			final float[] centerOffset, final List<Consumer<SplatMover>> unitMapping, final boolean unshaded,
-			final boolean noDepthTest, final boolean highPriority) {
+			final boolean noDepthTest, final boolean highPriority, final boolean aboveWater) {
 		this.texture = texture;
 		this.unshaded = unshaded;
 		this.noDepthTest = noDepthTest;
 		this.highPriority = highPriority;
+		this.aboveWater = aboveWater;
 		this.batches = new ArrayList<>();
 		this.color = new float[] { 1, 1, 1, 1 };
 
@@ -116,7 +118,7 @@ public class SplatModel implements Comparable<SplatModel> {
 
 			final int step = (ix1 - ix0) + 1;
 			if ((start + numVertsToCrate) > MAX_VERTICES) {
-				this.addBatch(gl, vertices, uvs, absoluteHeights, indices, batchRenderUnits);
+				addBatch(gl, vertices, uvs, absoluteHeights, indices, batchRenderUnits);
 				vertices.clear();
 				uvs.clear();
 				absoluteHeights.clear();
@@ -190,7 +192,7 @@ public class SplatModel implements Comparable<SplatModel> {
 
 		}
 		if (indices.size() > 0) {
-			this.addBatch(gl, vertices, uvs, absoluteHeights, indices, batchRenderUnits);
+			addBatch(gl, vertices, uvs, absoluteHeights, indices, batchRenderUnits);
 		}
 		if (this.splatInstances != null) {
 			for (final SplatMover splatMover : this.splatInstances) {
@@ -241,6 +243,7 @@ public class SplatModel implements Comparable<SplatModel> {
 		gl.glActiveTexture(GL30.GL_TEXTURE1);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.texture.getGlHandle());
 		shader.setUniformi("u_show_lighting", this.unshaded ? 0 : 1);
+		shader.setUniformi("u_aboveWater", this.aboveWater ? 1 : 0);
 		shader.setUniform4fv("u_color", this.color, 0, 4);
 
 		for (final Batch b : this.batches) {

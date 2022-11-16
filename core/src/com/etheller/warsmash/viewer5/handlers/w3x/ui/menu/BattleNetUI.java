@@ -151,8 +151,8 @@ public class BattleNetUI {
 	private War3Map gameChatroomMap;
 	private War3MapW3i gameChatroomMapInfo;
 
-	public BattleNetUI(final GameUI rootFrame, final Viewport uiViewport, Scene uiScene, final DataSource dataSource,
-			final BattleNetUIActionListener actionListener) {
+	public BattleNetUI(final GameUI rootFrame, final Viewport uiViewport, final Scene uiScene,
+			final DataSource dataSource, final BattleNetUIActionListener actionListener) {
 		this.rootFrame = rootFrame;
 		this.uiViewport = uiViewport;
 		this.uiScene = uiScene;
@@ -619,8 +619,7 @@ public class BattleNetUI {
 						? HostedGameVisibility.PUBLIC
 						: HostedGameVisibility.PRIVATE;
 				Jass2.loadConfig(BattleNetUI.this.customCreateCurrentMap, uiViewport, uiScene, rootFrame,
-						BattleNetUI.this.customCreateCurrentMapConfig, "Scripts\\common.j", "Scripts\\Blizzard.j",
-						"Scripts\\war3map.j").config();
+						BattleNetUI.this.customCreateCurrentMapConfig, WarsmashConstants.JASS_FILE_LIST).config();
 				int mapPlayerSlots = 0;
 				for (int i = 0; (i < (WarsmashConstants.MAX_PLAYERS - 4))
 						&& (i < BattleNetUI.this.customCreateCurrentMapConfig.getPlayerCount()); i++) {
@@ -799,7 +798,7 @@ public class BattleNetUI {
 		this.chatTextArea.addItem(messageText, this.rootFrame, this.uiViewport);
 	}
 
-	public void joinedGame(String gameName, boolean host) {
+	public void joinedGame(final String gameName, final boolean host) {
 		this.currentChannel = null;
 		this.gameChatroomChatTextArea.removeAllItems();
 		this.rootFrame.setText(this.gameChatroomGameNameValue, gameName);
@@ -829,7 +828,7 @@ public class BattleNetUI {
 		}
 	}
 
-	public void channelServerMessage(String userName, ChannelServerMessageType messageType) {
+	public void channelServerMessage(final String userName, final ChannelServerMessageType messageType) {
 		String msgKey;
 		switch (messageType) {
 		case JOIN_GAME: {
@@ -871,7 +870,7 @@ public class BattleNetUI {
 		this.joinGameListBox.removeAllItems();
 	}
 
-	public void gamesListItem(String gameName, int openSlots, int totalSlots) {
+	public void gamesListItem(final String gameName, final int openSlots, final int totalSlots) {
 		this.joinGameListBox.addItem(gameName, this.rootFrame, this.uiViewport);
 	}
 
@@ -879,7 +878,7 @@ public class BattleNetUI {
 
 	}
 
-	public void setJoinGamePreviewMap(File mapLookupFile) {
+	public void setJoinGamePreviewMap(final File mapLookupFile) {
 		War3Map map;
 		try {
 			map = War3MapViewer.beginLoadingMap(this.dataSource, mapLookupFile.getPath());
@@ -897,7 +896,7 @@ public class BattleNetUI {
 
 	}
 
-	private void setGameChatroomMap(War3Map map, final War3MapW3i mapInfo, final War3MapConfig war3MapConfig)
+	private void setGameChatroomMap(final War3Map map, final War3MapW3i mapInfo, final War3MapConfig war3MapConfig)
 			throws IOException {
 		this.gameChatroomMap = map;
 		this.gameChatroomMapInfo = mapInfo;
@@ -906,8 +905,8 @@ public class BattleNetUI {
 			final CBasePlayer player = war3MapConfig.getPlayer(i);
 			player.setName(this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
 		}
-		Jass2.loadConfig(map, this.uiViewport, this.uiScene, this.rootFrame, war3MapConfig, "Scripts\\common.j",
-				"Scripts\\Blizzard.j", "Scripts\\war3map.j").config();
+		Jass2.loadConfig(map, this.uiViewport, this.uiScene, this.rootFrame, war3MapConfig,
+				WarsmashConstants.JASS_FILE_LIST).config();
 		final IntIntMap serverSlotToMapSlot = new IntIntMap(WarsmashConstants.MAX_PLAYERS);
 		final IntIntMap mapSlotToServerSlot = new IntIntMap(WarsmashConstants.MAX_PLAYERS);
 		int serverSlot = 0;
@@ -931,13 +930,13 @@ public class BattleNetUI {
 				mapInfo.getPlayers().size(), mapInfo, new PlayerSlotPaneListener() {
 
 					@Override
-					public void setPlayerSlot(int index, LobbyPlayerType lobbyPlayerType) {
+					public void setPlayerSlot(final int index, final LobbyPlayerType lobbyPlayerType) {
 						final int serverSlot = BattleNetUI.this.gameChatroomMapSlotToServerSlot.get(index, -1);
 						BattleNetUI.this.actionListener.gameLobbySetPlayerSlot(serverSlot, lobbyPlayerType);
 					}
 
 					@Override
-					public void setPlayerRace(int index, int raceItemIndex) {
+					public void setPlayerRace(final int index, final int raceItemIndex) {
 						final int serverSlot = BattleNetUI.this.gameChatroomMapSlotToServerSlot.get(index, -1);
 						BattleNetUI.this.actionListener.gameLobbySetPlayerRace(serverSlot, raceItemIndex);
 					}
@@ -945,7 +944,7 @@ public class BattleNetUI {
 
 	}
 
-	public void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType) {
+	public void gameLobbySlotSetPlayerType(final int slot, final LobbyPlayerType playerType) {
 		if (this.gameChatroomServerSlotToMapSlot != null) {
 			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
 			if (mapSlot != -1) {
@@ -988,7 +987,7 @@ public class BattleNetUI {
 		}
 	}
 
-	public void gameLobbySlotSetPlayer(int slot, String userName) {
+	public void gameLobbySlotSetPlayer(final int slot, final String userName) {
 		if (this.gameChatroomServerSlotToMapSlot != null) {
 			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
 			if (mapSlot != -1) {
@@ -1000,7 +999,7 @@ public class BattleNetUI {
 		}
 	}
 
-	public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+	public void gameLobbySlotSetPlayerRace(final int slot, final int raceItemIndex) {
 		if (this.gameChatroomServerSlotToMapSlot != null) {
 			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
 			if (mapSlot != -1) {
@@ -1045,7 +1044,7 @@ public class BattleNetUI {
 		return this.customCreatePanelCurrentSelectedMapPath;
 	}
 
-	public void clearJoinGamePreviewMap(String mapPreviewName) {
+	public void clearJoinGamePreviewMap(final String mapPreviewName) {
 		this.gameChatroomMapInfoPane.clearMap(this.rootFrame, this.uiViewport, mapPreviewName);
 		this.gameChatroomTeamSetupPane.clearMap(this.rootFrame, this.uiViewport);
 		this.gameChatroomServerSlotToMapSlot = null;

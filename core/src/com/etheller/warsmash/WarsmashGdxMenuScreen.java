@@ -8,12 +8,12 @@ import java.nio.IntBuffer;
 import java.util.EnumSet;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Matrix4;
@@ -29,8 +29,8 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.StringBundle;
+import com.etheller.warsmash.util.WarsmashUtils;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.Model;
@@ -305,7 +305,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 	}
 
 	private void singleModelScene(final Scene scene, final String path, final String animName) {
-		final MdxModel model2 = War3MapViewer.loadModelMdx(this.viewer.dataSource, viewer, path, new PathSolver() {
+		final MdxModel model2 = War3MapViewer.loadModelMdx(this.viewer.dataSource, this.viewer, path, new PathSolver() {
 			@Override
 			public SolvedPath solve(final String src, final Object solverParams) {
 				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
@@ -734,6 +734,12 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 	@Override
 	public boolean keyDown(final int keycode) {
+		if (keycode == Input.Keys.ENTER) {
+			if (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.ALT_RIGHT)) {
+				WarsmashUtils.toggleFullScreen();
+				return true;
+			}
+		}
 		return this.menuUI.keyDown(keycode);
 	}
 

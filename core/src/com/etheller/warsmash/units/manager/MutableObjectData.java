@@ -942,7 +942,7 @@ public final class MutableObjectData {
 				metaDataName += Integer.toString(upgradeExtensionLevel);
 			}
 		}
-		else if (repeats && (index == -1)) {
+		else if (repeats && ((index == -1) || (repeatCount >= 10))) {
 			if (level == 0) {
 				level = 1;
 			}

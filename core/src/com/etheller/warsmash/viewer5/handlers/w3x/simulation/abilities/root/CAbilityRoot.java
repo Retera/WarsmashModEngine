@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -25,23 +24,24 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility {
 	private boolean rooted;
-	
+
 	private int rootedWeaponsAttackBits;
 	private int uprootedWeaponsAttackBits;
 	private boolean rootedTurning;
 	private CDefenseType uprootedDefenseType;
 	private float duration;
 	private float offDuration;
-	
-	private List<CAbility> rootedAbilities = new ArrayList<>();
-	private List<CAbility> uprootedAbilities = new ArrayList<>();
+
+	private final List<CAbility> rootedAbilities = new ArrayList<>();
+	private final List<CAbility> uprootedAbilities = new ArrayList<>();
 
 	private CBehaviorRoot behaviorRoot;
 	private CBehaviorUproot behaviorUproot;
 	private CBehaviorMove moveBehavior;
-	
-	public CAbilityRoot(int handleId, War3ID alias, int rootedWeaponsAttackBits, int uprootedWeaponsAttackBits,
-			boolean rootedTurning, CDefenseType uprootedDefenseType, float duration, float offDuration) {
+
+	public CAbilityRoot(final int handleId, final War3ID alias, final int rootedWeaponsAttackBits,
+			final int uprootedWeaponsAttackBits, final boolean rootedTurning, final CDefenseType uprootedDefenseType,
+			final float duration, final float offDuration) {
 		super(handleId, alias);
 		this.rootedWeaponsAttackBits = rootedWeaponsAttackBits;
 		this.uprootedWeaponsAttackBits = uprootedWeaponsAttackBits;
@@ -53,192 +53,204 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 
 	@Override
 	public int getBaseOrderId() {
-		return rooted ? OrderIds.unroot : OrderIds.root;
+		return this.rooted ? OrderIds.unroot : OrderIds.root;
 	}
 
 	@Override
 	public boolean isToggleOn() {
-		return rooted;
+		return this.rooted;
 	}
 
 	@Override
-	public void onAdd(CSimulation game, CUnit unit) {
-		uprootedAbilities.clear();
-		rootedAbilities.clear();
-		for(CAbility ability: unit.getAbilities()) {
-			if(ability instanceof CAbilityMove) {
-				uprootedAbilities.add(ability);
-			} else if (ability instanceof CAbilityAttack || ability instanceof CAbilityRoot) {
-			} else {
-				rootedAbilities.add(ability);
+	public void onAdd(final CSimulation game, final CUnit unit) {
+		this.uprootedAbilities.clear();
+		this.rootedAbilities.clear();
+		for (final CAbility ability : unit.getAbilities()) {
+			if (ability instanceof CAbilityMove) {
+				this.uprootedAbilities.add(ability);
+			}
+			else if ((ability instanceof CAbilityAttack) || (ability instanceof CAbilityRoot)) {
+			}
+			else {
+				this.rootedAbilities.add(ability);
 			}
 		}
-		behaviorRoot = new CBehaviorRoot(unit, this);
-		behaviorUproot = new CBehaviorUproot(unit, this);
-		moveBehavior = unit.getMoveBehavior();
+		this.behaviorRoot = new CBehaviorRoot(unit, this);
+		this.behaviorUproot = new CBehaviorUproot(unit, this);
+		this.moveBehavior = unit.getMoveBehavior();
 		this.rooted = true;
-		for(CAbility ability: uprootedAbilities) {
+		for (final CAbility ability : this.uprootedAbilities) {
 			unit.remove(game, ability);
 		}
 		setRooted(false, unit, game);
 	}
 
 	@Override
-	public void onRemove(CSimulation game, CUnit unit) {
+	public void onRemove(final CSimulation game, final CUnit unit) {
 	}
 
 	@Override
-	public void onTick(CSimulation game, CUnit unit) {
+	public void onTick(final CSimulation game, final CUnit unit) {
 	}
 
 	@Override
-	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
-		if(!rooted && orderId == OrderIds.root) {
-			return behaviorRoot.reset(point);
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityPointTarget point) {
+		if (!this.rooted && (orderId == OrderIds.root)) {
+			return this.behaviorRoot.reset(point);
 		}
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
-		if(rooted && orderId == OrderIds.unroot) {
-			return behaviorUproot.reset();
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+		if (this.rooted && (orderId == OrderIds.unroot)) {
+			return this.behaviorUproot.reset();
 		}
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
+	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		if(!rooted && orderId == OrderIds.root) {
+	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		if (!this.rooted && (orderId == OrderIds.root)) {
 			receiver.targetOk(target);
-		} else {
+		}
+		else {
 			receiver.orderIdNotAccepted();
 		}
 	}
 
 	@Override
-	protected void innerCheckCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
-		if(rooted && orderId == OrderIds.unroot) {
+	protected void innerCheckCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityTargetCheckReceiver<Void> receiver) {
+		if (this.rooted && (orderId == OrderIds.unroot)) {
 			receiver.targetOk(null);
-		} else {
+		}
+		else {
 			receiver.orderIdNotAccepted();
 		}
 	}
 
 	@Override
-	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
-		receiver.useOk();
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityActivationReceiver receiver) {
+		if (unit.isBuildQueueActive()) {
+			receiver.disabled();
+		}
+		else {
+			receiver.useOk();
+		}
 	}
 
 	public boolean isRooted() {
-		return rooted;
+		return this.rooted;
 	}
 
-	public void setRooted(boolean rooted, CUnit unit, CSimulation game) {
-		boolean rooting = !this.rooted && rooted;
-		boolean uprooting = this.rooted && !rooted;
+	public void setRooted(final boolean rooted, final CUnit unit, final CSimulation game) {
+		final boolean rooting = !this.rooted && rooted;
+		final boolean uprooting = this.rooted && !rooted;
 		this.rooted = rooted;
-		if(rooting) {
+		if (rooting) {
 			game.getWorldCollision().removeUnit(unit);
-			for(CAbility ability: uprootedAbilities) {
+			for (final CAbility ability : this.uprootedAbilities) {
 				unit.remove(game, ability);
 			}
-			for(CAbility ability: rootedAbilities) {
+			for (final CAbility ability : this.rootedAbilities) {
 				unit.add(game, ability);
 			}
 			unit.setMoveBehavior(null);
 			unit.setStructure(true);
 			game.getWorldCollision().addUnit(unit);
-		} else if(uprooting) {
+		}
+		else if (uprooting) {
 			game.getWorldCollision().removeUnit(unit);
-			for(CAbility ability: rootedAbilities) {
+			for (final CAbility ability : this.rootedAbilities) {
 				unit.remove(game, ability);
 			}
-			for(CAbility ability: uprootedAbilities) {
+			for (final CAbility ability : this.uprootedAbilities) {
 				unit.add(game, ability);
 			}
-			unit.setMoveBehavior(moveBehavior);
+			unit.setMoveBehavior(this.moveBehavior);
 			unit.setStructure(false);
 			game.getWorldCollision().addUnit(unit);
 		}
 	}
 
 	public int getRootedWeaponsAttackBits() {
-		return rootedWeaponsAttackBits;
+		return this.rootedWeaponsAttackBits;
 	}
 
-	public void setRootedWeaponsAttackBits(int rootedWeaponsAttackBits) {
+	public void setRootedWeaponsAttackBits(final int rootedWeaponsAttackBits) {
 		this.rootedWeaponsAttackBits = rootedWeaponsAttackBits;
 	}
 
 	public int getUprootedWeaponsAttackBits() {
-		return uprootedWeaponsAttackBits;
+		return this.uprootedWeaponsAttackBits;
 	}
 
-	public void setUprootedWeaponsAttackBits(int uprootedWeaponsAttackBits) {
+	public void setUprootedWeaponsAttackBits(final int uprootedWeaponsAttackBits) {
 		this.uprootedWeaponsAttackBits = uprootedWeaponsAttackBits;
 	}
 
 	public boolean isRootedTurning() {
-		return rootedTurning;
+		return this.rootedTurning;
 	}
 
-	public void setRootedTurning(boolean rootedTurning) {
+	public void setRootedTurning(final boolean rootedTurning) {
 		this.rootedTurning = rootedTurning;
 	}
 
 	public CDefenseType getUprootedDefenseType() {
-		return uprootedDefenseType;
+		return this.uprootedDefenseType;
 	}
 
-	public void setUprootedDefenseType(CDefenseType uprootedDefenseType) {
+	public void setUprootedDefenseType(final CDefenseType uprootedDefenseType) {
 		this.uprootedDefenseType = uprootedDefenseType;
 	}
 
 	public float getDuration() {
-		return duration;
+		return this.duration;
 	}
 
-	public void setDuration(float duration) {
+	public void setDuration(final float duration) {
 		this.duration = duration;
 	}
 
 	public float getOffDuration() {
-		return offDuration;
+		return this.offDuration;
 	}
 
-	public void setOffDuration(float offDuration) {
+	public void setOffDuration(final float offDuration) {
 		this.offDuration = offDuration;
 	}
 
 	public List<CAbility> getRootedAbilities() {
-		return rootedAbilities;
+		return this.rootedAbilities;
 	}
-	
+
 	public List<CAbility> getUprootedAbilities() {
-		return uprootedAbilities;
+		return this.uprootedAbilities;
 	}
-	
+
 	@Override
-	public <T> T visit(CAbilityVisitor<T> visitor) {
+	public <T> T visit(final CAbilityVisitor<T> visitor) {
 		return visitor.accept(this);
 	}
-	
+
 }

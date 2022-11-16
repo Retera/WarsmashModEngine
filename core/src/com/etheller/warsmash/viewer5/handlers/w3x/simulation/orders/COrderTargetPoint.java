@@ -49,6 +49,7 @@ public class COrderTargetPoint implements COrder {
 			final StringMsgTargetCheckReceiver<AbilityPointTarget> targetReceiver = (StringMsgTargetCheckReceiver<AbilityPointTarget>) targetCheckReceiver;
 			ability.checkCanTarget(game, caster, this.orderId, this.target, targetReceiver);
 			if (targetReceiver.getTarget() != null) {
+				caster.fireOrderEvents(game, this);
 				return ability.begin(game, caster, this.orderId, this.target);
 			}
 			else {
@@ -105,6 +106,11 @@ public class COrderTargetPoint implements COrder {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public void fireEvents(final CSimulation game, final CUnit unit) {
+		unit.fireOrderEvents(game, this);
 	}
 
 }

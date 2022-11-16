@@ -129,6 +129,7 @@ public class Terrain {
 	private final float[] shaderMapBounds;
 	private final int[] mapSize;
 	public final SoftwareGroundMesh softwareGroundMesh;
+	public final SoftwareWaterAndGroundMesh softwareWaterAndGroundMesh;
 	private final int testArrayBuffer;
 	private final int testElementBuffer;
 	private boolean initShadowsFinished = false;
@@ -419,6 +420,8 @@ public class Terrain {
 				(this.mapSize[0] * 128f) - 128, (this.mapSize[1] * 128f) - 128);
 		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundHeights, this.groundCornerHeights,
 				this.centerOffset, width, height);
+		this.softwareWaterAndGroundMesh = new SoftwareWaterAndGroundMesh(this.waterHeightOffset,
+				this.groundCornerHeights, this.waterHeights, this.waterExistsData, this.centerOffset, width, height);
 
 		this.testArrayBuffer = gl.glGenBuffer();
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.testArrayBuffer);
@@ -738,7 +741,7 @@ public class Terrain {
 			for (int j = (int) rampArea.getY(); j < yLimit; j++) {
 				final RenderCorner bottomLeft = this.corners[i][j];
 				if (bottomLeft.isRamp() && !bottomLeft.romp) {
-					bottomLeft.hideCliff = true;
+					bottomLeft.hideCliff = false;
 				}
 			}
 		}
@@ -1053,12 +1056,17 @@ public class Terrain {
 		shader.setUniform2fv("u_centerOffset", this.centerOffset, 0, 2);
 		shader.setUniformi("u_texture", 1);
 		shader.setUniformi("u_shadowMap", 2);
+		shader.setUniformi("u_waterHeightsMap", 3);
+		shader.setUniformf("u_waterHeightOffset", this.waterHeightOffset);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightLinear);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
+
+		gl.glActiveTexture(GL30.GL_TEXTURE3);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
 
 		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
 		final DataTexture terrainLightsTexture = lightManager.getTerrainLightsTexture();
@@ -1082,7 +1090,7 @@ public class Terrain {
 
 		final GL30 gl = Gdx.gl30;
 		gl.glDepthMask(false);
-		gl.glDisable(GL30.GL_CULL_FACE);
+		gl.glEnable(GL30.GL_CULL_FACE);
 		gl.glEnable(GL30.GL_BLEND);
 		gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
 
@@ -1484,6 +1492,7 @@ public class Terrain {
 		public List<float[]> locations = new ArrayList<>();
 		public List<Consumer<SplatMover>> unitMapping = new ArrayList<>();
 		public float opacity = 1;
+		public boolean aboveWater = false;
 	}
 
 	public void loadSplats() throws IOException {
@@ -1493,7 +1502,7 @@ public class Terrain {
 
 			final SplatModel splatModel = new SplatModel(Gdx.gl30,
 					(Texture) this.viewer.load(path, PathSolver.DEFAULT, null), splat.locations, this.centerOffset,
-					splat.unitMapping.isEmpty() ? null : splat.unitMapping, false, false, false);
+					splat.unitMapping.isEmpty() ? null : splat.unitMapping, false, false, false, false);
 			splatModel.color[3] = splat.opacity;
 			addSplatBatchModel(path, splatModel);
 		}
@@ -1518,18 +1527,19 @@ public class Terrain {
 		SplatModel splatModel = this.uberSplatModels.get(path);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null),
-					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest, highPriority);
+					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest, highPriority,
+					false);
 			addSplatBatchModel(path, splatModel);
 		}
 		return splatModel.add(x - scale, y - scale, x + scale, y + scale, z, this.centerOffset);
 	}
 
 	public SplatMover addUnitShadowSplat(final String texture, final float x, final float y, final float x2,
-			final float y2, final float zDepthUpward, final float opacity) {
+			final float y2, final float zDepthUpward, final float opacity, final boolean aboveWater) {
 		SplatModel splatModel = this.uberSplatModels.get(texture);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(texture, PathSolver.DEFAULT, null),
-					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false, false, false);
+					new ArrayList<>(), this.centerOffset, new ArrayList<>(), false, false, false, aboveWater);
 			splatModel.color[3] = opacity;
 			addSplatBatchModel(texture, splatModel);
 		}
@@ -1552,6 +1562,51 @@ public class Terrain {
 						final float vPositionY = Shapes.INSTANCE.quadVertices[vertexId][1];
 						final int groundCornerHeightIndex = (int) (((vPositionY + y) * (columns)) + (vPositionX + x));
 						final float height = groundCornerHeights[groundCornerHeightIndex];
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3)] = ((vPositionX + x) * 128f)
+								+ centerOffset[0];
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3) + 1] = ((vPositionY + y) * 128f)
+								+ centerOffset[1];
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3) + 2] = height * 128f;
+					}
+					for (int triangle = 0; triangle < Shapes.INSTANCE.quadIndices.length; triangle++) {
+						for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadIndices[triangle].length; vertexId++) {
+							final int vertexIndex = Shapes.INSTANCE.quadIndices[triangle][vertexId];
+							final int indexValue = (vertexIndex + (instanceId * 4));
+							if ((indexValue * 3) >= this.vertices.length) {
+								throw new IllegalStateException();
+							}
+							this.indices[(instanceId * 2 * 3) + (triangle * 3) + vertexId] = indexValue;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public static final class SoftwareWaterAndGroundMesh {
+		public final float[] vertices;
+		public final int[] indices;
+
+		private SoftwareWaterAndGroundMesh(final float waterHeightOffset, final float[] groundCornerHeights,
+				final float[] waterHeights, final byte[] waterExistsData, final float[] centerOffset, final int columns,
+				final int rows) {
+			this.vertices = new float[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadVertices.length * 3];
+			this.indices = new int[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadIndices.length * 3];
+			for (int y = 0; y < (rows - 1); y++) {
+				for (int x = 0; x < (columns - 1); x++) {
+					final int instanceId = (y * (columns - 1)) + x;
+					for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadVertices.length; vertexId++) {
+						final float vPositionX = Shapes.INSTANCE.quadVertices[vertexId][0];
+						final float vPositionY = Shapes.INSTANCE.quadVertices[vertexId][1];
+						final int groundCornerHeightIndex = (int) (((vPositionY + y) * (columns)) + (vPositionX + x));
+						final float height;
+						if (waterExistsData[groundCornerHeightIndex] != 0) {
+							height = Math.max(groundCornerHeights[groundCornerHeightIndex],
+									waterHeights[groundCornerHeightIndex] + waterHeightOffset);
+						}
+						else {
+							height = groundCornerHeights[groundCornerHeightIndex];
+						}
 						this.vertices[(instanceId * 4 * 3) + (vertexId * 3)] = ((vPositionX + x) * 128f)
 								+ centerOffset[0];
 						this.vertices[(instanceId * 4 * 3) + (vertexId * 3) + 1] = ((vPositionY + y) * 128f)

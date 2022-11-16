@@ -51,6 +51,7 @@ public abstract class CTimer {
 	public void resume(final CSimulation simulation) {
 		if (this.remainingTimeAfterPause == 0) {
 			start(simulation);
+			return;
 		}
 		final int currentTick = simulation.getGameTurnTick();
 		innerStart(this.remainingTimeAfterPause, simulation, currentTick);
@@ -82,8 +83,12 @@ public abstract class CTimer {
 		// its implied that we will have "unregisterTimer" happen automatically
 		// before this is called
 		this.running = false;
+		// the value of this.repeats is snapshotted before firing, because it is allowed
+		// to change
+		// while firing (we might recycle this timer object)
+		final boolean repeats = this.repeats;
 		onFire();
-		if (this.repeats) {
+		if (repeats) {
 			start(simulation);
 		}
 	}

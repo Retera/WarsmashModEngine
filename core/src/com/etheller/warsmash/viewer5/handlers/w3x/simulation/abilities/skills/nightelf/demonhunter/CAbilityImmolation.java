@@ -164,7 +164,7 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		if (unit.getMana() < (this.manaCost + this.bufferManaRequired)) {
+		if (!this.active && (unit.getMana() < (this.manaCost + this.bufferManaRequired))) {
 			receiver.notEnoughResources(ResourceType.MANA);
 		}
 		else {
@@ -205,6 +205,9 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	}
 
 	public int getManaCost() {
+		if (this.active) {
+			return 0;
+		}
 		return this.manaCost;
 	}
 

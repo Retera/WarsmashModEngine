@@ -1104,8 +1104,7 @@ public class MenuUI {
 							player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
 						}
 						Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame,
-								war3MapConfig, "Scripts\\common.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j")
-								.config();
+								war3MapConfig, WarsmashConstants.JASS_FILE_LIST).config();
 						boolean foundFirstHuman = false;
 						boolean foundFirstComp = false;
 						for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
@@ -1705,7 +1704,7 @@ public class MenuUI {
 				player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
 			}
 			Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame, war3MapConfig,
-					"Scripts\\common.j", "Scripts\\Blizzard.j", "war3map.j").config();
+					WarsmashConstants.JASS_FILE_LIST).config();
 			int localPlayerIndex = -1;
 			for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 				final CBasePlayer player = war3MapConfig.getPlayer(i);

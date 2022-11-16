@@ -47,6 +47,11 @@ public class WarsmashConstants {
 	public static final int INPUT_HOTKEY_MODE = 1;
 	public static final boolean PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = false;
 
+	public static boolean USE_NINE_ITEM_INVENTORY = false;
+
+	public static final String[] JASS_FILE_LIST = { "Scripts\\common.j", "Scripts\\abilitiesCommon.j",
+			"Scripts\\Blizzard.j", "Scripts\\war3map.j" };
+
 	public static void loadConstants(final GameObject emulatorConstants) {
 		MAX_PLAYERS = emulatorConstants.getFieldValue("MaxPlayers");
 		GAME_VERSION = emulatorConstants.getFieldValue("GameVersion");

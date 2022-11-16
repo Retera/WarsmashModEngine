@@ -204,4 +204,9 @@ public class RenderItem implements RenderWidget {
 	public CItem getSimulationItem() {
 		return this.simulationItem;
 	}
+
+	@Override
+	public boolean isShowSelectionCircleAboveWater() {
+		return false;
+	}
 }

@@ -29,15 +29,26 @@ public class CTimerJass extends CTimer implements CHandle {
 	@Override
 	public void onFire() {
 		final CommonTriggerExecutionScope handlerScope = CommonTriggerExecutionScope.expiringTimer(null, this);
+		// Snapshotting these values at the top... This is leaky and later I should make
+		// a better solution, but I was having a problem with bj_stockUpdateTimer where
+		// it would
+		// modify its own state while firing, and I put this in as an ideological
+		// safeguard so that
+		// the handler func cannot append more triggers to ourself or change our
+		// behavior when we
+		// are only halfway done firing.
+		final JassFunction handlerFunc = this.handlerFunc;
+		final List<Trigger> eventTriggers = this.eventTriggers.isEmpty() ? Collections.emptyList()
+				: new ArrayList<>(this.eventTriggers);
 		try {
-			if (this.handlerFunc != null) {
-				this.handlerFunc.call(Collections.emptyList(), this.jassGlobalScope, handlerScope);
+			if (handlerFunc != null) {
+				handlerFunc.call(Collections.emptyList(), this.jassGlobalScope, handlerScope);
 			}
 		}
 		catch (final Exception e) {
 			throw new JassException(this.jassGlobalScope, "Exception during jass timer fire", e);
 		}
-		for (final Trigger trigger : this.eventTriggers) {
+		for (final Trigger trigger : eventTriggers) {
 			final CommonTriggerExecutionScope executionScope = CommonTriggerExecutionScope.expiringTimer(trigger, this);
 			this.jassGlobalScope.queueTrigger(null, null, trigger, executionScope, executionScope);
 		}

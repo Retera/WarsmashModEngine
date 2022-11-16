@@ -41,6 +41,7 @@ public class COrderNoTarget implements COrder {
 			final StringMsgTargetCheckReceiver<Void> targetReceiver = (StringMsgTargetCheckReceiver<Void>) targetCheckReceiver;
 			ability.checkCanTargetNoTarget(game, caster, this.orderId, targetReceiver);
 			if (targetReceiver.getMessage() == null) {
+				caster.fireOrderEvents(game, this);
 				return ability.beginNoTarget(game, caster, this.orderId);
 			}
 			else {
@@ -92,6 +93,11 @@ public class COrderNoTarget implements COrder {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public void fireEvents(final CSimulation game, final CUnit unit) {
+		unit.fireOrderEvents(game, this);
 	}
 
 }

@@ -25,19 +25,25 @@ public class Sequence {
 	}
 
 	private void populateTags() {
-		this.primaryTags.clear();
-		this.secondaryTags.clear();
-		TokenLoop: for (final String token : this.sequence.name.split("\\s+")) {
+		populateTags(this.primaryTags, this.secondaryTags, this.sequence.name);
+	}
+
+	public static void populateTags(final EnumSet<AnimationTokens.PrimaryTag> primaryTags,
+			final EnumSet<AnimationTokens.SecondaryTag> secondaryTags, final String name) {
+		primaryTags.clear();
+		secondaryTags.clear();
+		TokenLoop:
+		for (final String token : name.split("\\s+")) {
 			final String upperCaseToken = token.toUpperCase();
 			for (final PrimaryTag primaryTag : PrimaryTag.values()) {
 				if (upperCaseToken.equals(primaryTag.name())) {
-					this.primaryTags.add(primaryTag);
+					primaryTags.add(primaryTag);
 					continue TokenLoop;
 				}
 			}
 			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 				if (upperCaseToken.equals(secondaryTag.name())) {
-					this.secondaryTags.add(secondaryTag);
+					secondaryTags.add(secondaryTag);
 					continue TokenLoop;
 				}
 			}

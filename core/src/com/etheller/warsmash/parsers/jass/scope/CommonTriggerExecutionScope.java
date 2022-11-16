@@ -7,6 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
@@ -552,6 +553,73 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		scope.clickedDialog = clickedDialog;
 		scope.clickedButton = clickedButton;
 		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitPickupItemScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit orderedUnit, final CItem whichItem) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = orderedUnit;
+		scope.triggeringUnit = orderedUnit;
+		scope.triggerEventId = triggerEventId;
+		scope.manipulatedItem = whichItem;
+		scope.manipulatingUnit = orderedUnit;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitOrderScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit orderedUnit, final int issuedOrderId) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = orderedUnit;
+		scope.triggeringUnit = orderedUnit;
+		scope.orderedUnit = orderedUnit;
+		scope.triggerEventId = triggerEventId;
+		scope.issuedOrderId = issuedOrderId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitOrderPointScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit orderedUnit, final int issuedOrderId, final float orderPointX,
+			final float orderPointY) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = orderedUnit;
+		scope.triggeringUnit = orderedUnit;
+		scope.orderedUnit = orderedUnit;
+		scope.triggerEventId = triggerEventId;
+		scope.issuedOrderId = issuedOrderId;
+		scope.orderPointX = orderPointX;
+		scope.orderPointY = orderPointY;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitOrderTargetScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit orderedUnit, final int issuedOrderId, final CWidget target) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = orderedUnit;
+		scope.triggeringUnit = orderedUnit;
+		scope.orderedUnit = orderedUnit;
+		scope.triggerEventId = triggerEventId;
+		scope.issuedOrderId = issuedOrderId;
+		scope.orderTarget = target;
+		target.visit(new CWidgetVisitor<Void>() {
+			@Override
+			public Void accept(final CUnit target) {
+				scope.orderTargetUnit = target;
+				return null;
+			}
+
+			@Override
+			public Void accept(final CDestructable target) {
+				scope.orderTargetDestructable = target;
+				return null;
+			}
+
+			@Override
+			public Void accept(final CItem target) {
+				scope.orderTargetItem = target;
+				return null;
+			}
+		});
 		return scope;
 	}
 

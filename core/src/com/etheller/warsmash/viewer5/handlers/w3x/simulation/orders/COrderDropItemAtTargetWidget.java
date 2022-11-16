@@ -102,4 +102,9 @@ public class COrderDropItemAtTargetWidget implements COrder {
 		return true;
 	}
 
+	@Override
+	public void fireEvents(final CSimulation game, final CUnit unit) {
+		// TODO Auto-generated method stub
+	}
+
 }

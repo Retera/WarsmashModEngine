@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
@@ -38,6 +39,8 @@ import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.util.WarsmashUtils;
 import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -210,7 +213,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 			throw new RuntimeException(e);
 		}
 		this.commonEnv = Jass2.loadCommon(this.viewer.mapMpq, this.uiViewport, this.uiScene, this.viewer, this.meleeUI,
-				"Scripts\\common.j", "Scripts\\abilitiesCommon.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j");
+				WarsmashConstants.JASS_FILE_LIST);
 		this.commonEnv.main();
 	}
 
@@ -337,6 +340,15 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 	@Override
 	public boolean keyDown(final int keycode) {
+		if ((keycode == Input.Keys.B) && Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+			Gdx.input.setCursorCatched(!Gdx.input.isCursorCatched());
+		}
+		if (keycode == Input.Keys.ENTER) {
+			if (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.ALT_RIGHT)) {
+				WarsmashUtils.toggleFullScreen();
+				return true;
+			}
+		}
 		this.meleeUI.keyDown(keycode);
 		return true;
 	}
@@ -349,9 +361,6 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 	@Override
 	public boolean keyTyped(final char character) {
-		if (character == '1') {
-			Gdx.input.setCursorCatched(!Gdx.input.isCursorCatched());
-		}
 		return false;
 	}
 

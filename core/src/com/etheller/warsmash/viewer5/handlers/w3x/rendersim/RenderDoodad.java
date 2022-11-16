@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -21,9 +22,13 @@ public class RenderDoodad {
 	protected float y;
 	protected float selectionScale;
 
+	private static final War3ID DOODAD_COLOR_RED = War3ID.fromString("dvr1");
+	private static final War3ID DOODAD_COLOR_GREEN = War3ID.fromString("dvg1");
+	private static final War3ID DOODAD_COLOR_BLUE = War3ID.fromString("dvb1");
+
 	public RenderDoodad(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final float[] location3D, final float[] scale3D, final float facingRadians, final float maxPitch,
-			final float maxRoll, final float selectionScale) {
+			final float maxRoll, final float selectionScale, final int doodadVariation) {
 		this.maxPitch = maxPitch;
 		this.maxRoll = maxRoll;
 		final boolean isSimple = row.readSLKTagBoolean("lightweight");
@@ -51,6 +56,9 @@ public class RenderDoodad {
 		{
 			if (!map.terrain.inPlayableArea(this.x, this.y)) {
 				((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+			}
+			else {
+				applyColor(row, doodadVariation + 1, instance);
 			}
 		}
 		final float pitchSampleForwardX = this.x + (SAMPLE_RADIUS * (float) Math.cos(facingRadians));
@@ -80,6 +88,13 @@ public class RenderDoodad {
 
 		this.instance = instance;
 		this.row = row;
+	}
+
+	public void applyColor(final MutableGameObject row, final int doodadVariation, final ModelInstance instance) {
+		final int vertR = row.getFieldAsInteger(DOODAD_COLOR_RED, doodadVariation);
+		final int vertG = row.getFieldAsInteger(DOODAD_COLOR_GREEN, doodadVariation);
+		final int vertB = row.getFieldAsInteger(DOODAD_COLOR_BLUE, doodadVariation);
+		((MdxComplexInstance) instance).setVertexColor(new float[] { vertR / 255f, vertG / 255f, vertB / 255f });
 	}
 
 	public PrimaryTag getAnimation() {

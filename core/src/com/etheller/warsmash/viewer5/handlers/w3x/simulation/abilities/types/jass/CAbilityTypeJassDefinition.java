@@ -201,7 +201,8 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	public CBehavior begin(final CSimulation game, final CAbilityJass abilityJass, final CUnit caster,
 			final int orderId, final CWidget target) {
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, caster, orderId);
-		if (orderCommandCardIcon.type == JassOrderButtonType.INSTANT_NO_TARGET) {
+		if ((orderCommandCardIcon.type == JassOrderButtonType.UNIT_TARGET)
+				|| (orderCommandCardIcon.type == JassOrderButtonType.UNIT_OR_POINT_TARGET)) {
 			if (this.beginJass != null) {
 				CommonTriggerExecutionScope scope;
 				scope = target.visit(new CWidgetVisitor<CommonTriggerExecutionScope>() {
@@ -237,7 +238,8 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	public CBehavior begin(final CSimulation game, final CAbilityJass abilityJass, final CUnit caster,
 			final int orderId, final AbilityPointTarget point) {
 		final JassOrder orderCommandCardIcon = getOrderCommandCardIcon(game, caster, orderId);
-		if (orderCommandCardIcon.type == JassOrderButtonType.INSTANT_NO_TARGET) {
+		if ((orderCommandCardIcon.type == JassOrderButtonType.POINT_TARGET)
+				|| (orderCommandCardIcon.type == JassOrderButtonType.UNIT_OR_POINT_TARGET)) {
 			if (this.beginJass != null) {
 				return this.beginJass.evaluate(this.jassGlobalScope,
 						CommonTriggerExecutionScope.jassAbilityPointScope(abilityJass, caster, point,
@@ -468,7 +470,8 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 				if (player.getLumber() < orderCommandCardIcon.lumberCost) {
 					continue;
 				}
-				if ((player.getFoodUsed() + orderCommandCardIcon.foodCostDisplayOnly) < player.getFoodCap()) {
+				if (((player.getFoodUsed() + orderCommandCardIcon.foodCostDisplayOnly) < player.getFoodCap())
+						&& (orderCommandCardIcon.foodCostDisplayOnly != 0)) {
 					continue;
 				}
 				commandCardIconToUse = orderCommandCardIcon;

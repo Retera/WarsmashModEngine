@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -15,6 +16,8 @@ public class CItem extends CWidget {
 	private boolean hidden;
 	private boolean invulnerable;
 	private int charges;
+	private CAbilityInventory containedInventory;
+	private CUnit containedUnit;
 
 	public CItem(final int handleId, final float x, final float y, final float life, final War3ID typeId,
 			final CItemType itemTypeInstance) {
@@ -45,6 +48,14 @@ public class CItem extends CWidget {
 		simulation.itemDamageEvent(this, weaponType, this.itemType.getArmorType());
 		if (isDead() && !wasDead) {
 			fireDeathEvents(simulation);
+			forceDropIfHeld(simulation);
+		}
+	}
+
+	public void forceDropIfHeld(final CSimulation simulation) {
+		if ((this.containedInventory != null) && (this.containedUnit != null)) {
+			this.containedInventory.dropItem(simulation, this.containedUnit, this, this.containedUnit.getX(),
+					this.containedUnit.getY(), false);
 		}
 	}
 
@@ -135,6 +146,19 @@ public class CItem extends CWidget {
 
 	public void setCharges(final int charges) {
 		this.charges = charges;
+	}
+
+	public void setContainedInventory(final CAbilityInventory containedInventory, final CUnit containedUnit) {
+		this.containedInventory = containedInventory;
+		this.containedUnit = containedUnit;
+	}
+
+	public CAbilityInventory getContainedInventory() {
+		return this.containedInventory;
+	}
+
+	public CUnit getContainedUnit() {
+		return this.containedUnit;
 	}
 
 }

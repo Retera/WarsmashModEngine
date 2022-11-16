@@ -33,7 +33,7 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 		float castRange = this.ability.getCastRange();
 		if (this.target instanceof CUnit) {
 			final CUnit unitTarget = (CUnit) this.target;
-			if (unitTarget.getUnitType().getMovementType() == PathingGrid.MovementType.FLOAT) {
+			if (unitTarget.getMovementType() == PathingGrid.MovementType.FLOAT) {
 				castRange += this.ability.getNavalRangeBonus();
 			}
 		}

@@ -225,7 +225,7 @@ public class RenderUnit implements RenderWidget {
 		final float dx = this.location[0] - prevX;
 		final float dy = this.location[1] - prevY;
 		final float groundHeight;
-		final MovementType movementType = this.simulationUnit.getUnitType().getMovementType();
+		final MovementType movementType = this.simulationUnit.getMovementType();
 		final short terrainPathing = map.terrain.pathingGrid.getPathing(this.location[0], this.location[1]);
 		boolean swimming = (movementType == MovementType.AMPHIBIOUS)
 				&& PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.SWIMMABLE)
@@ -591,6 +591,13 @@ public class RenderUnit implements RenderWidget {
 
 	public float getFacing() {
 		return this.facing;
+	}
+
+	@Override
+	public boolean isShowSelectionCircleAboveWater() {
+		return this.simulationUnit.isMovementOnWaterAllowed()
+				|| (this.simulationUnit.getMovementType() == MovementType.HOVER)
+				|| (this.simulationUnit.getMovementType() == MovementType.FLY);
 	}
 
 }

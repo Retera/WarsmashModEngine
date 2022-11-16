@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders;
 
+import com.etheller.warsmash.util.WarsmashConstants;
+
 /**
  * Thanks to the Wurst guys for this list of ids, taken from this link:
  * https://github.com/wurstscript/WurstStdlib2/blob/master/wurst/_wurst/assets/Orders.wurst
@@ -25,7 +27,7 @@ public class OrderIds {
 	 * An item targeted order that move the target item to a certain inventory slot
 	 * of the ordered hero.
 	 */
-	public static final int itemdrag00 = 852002;
+	public static final int itemdrag00 = WarsmashConstants.USE_NINE_ITEM_INVENTORY ? 85200200 : 852002;
 	/**
 	 * An item targeted order that move the target item to a certain inventory slot
 	 * of the ordered hero.
@@ -50,13 +52,13 @@ public class OrderIds {
 	 * An item targeted order that move the target item to a certain inventory slot
 	 * of the ordered hero.
 	 */
-	public static final int itemdrag05 = 852007;
+	public static final int itemdrag05 = WarsmashConstants.USE_NINE_ITEM_INVENTORY ? 85200700 : 852007;
 	/**
 	 * An order that will make the ordered hero use the item in a certain inventory
 	 * slot. If it's an order with no target or object or point targeted depends on
 	 * the type of item.
 	 */
-	public static final int itemuse00 = 852008;
+	public static final int itemuse00 = WarsmashConstants.USE_NINE_ITEM_INVENTORY ? 85200800 : 852008;
 	/**
 	 * An order that will make the ordered hero use the item in a certain inventory
 	 * slot. If it's an order with no target or object or point targeted depends on
@@ -86,7 +88,7 @@ public class OrderIds {
 	 * slot. If it's an order with no target or object or point targeted depends on
 	 * the type of item.
 	 */
-	public static final int itemuse05 = 852013;
+	public static final int itemuse05 = WarsmashConstants.USE_NINE_ITEM_INVENTORY ? 85201300 : 852013;
 	/**
 	 * Order for AIaa ability, which blizzard made for tome of attack, but never
 	 * used it. But it can actually change caster's base attack!

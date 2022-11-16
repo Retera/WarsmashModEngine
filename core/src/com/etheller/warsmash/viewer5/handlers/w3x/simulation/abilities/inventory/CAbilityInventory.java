@@ -301,6 +301,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					if (this.itemsHeld[i] == null) {
 						this.itemsHeld[i] = item;
 						item.setHidden(true);
+						item.setContainedInventory(this, hero);
 						if (this.canUseItems) {
 							for (final War3ID abilityId : item.getItemType().getAbilityList()) {
 								final CAbilityType<?> abilityType = simulation.getAbilityData()
@@ -336,6 +337,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 		}
 		this.itemsHeldAbilities[slotIndex].clear();
 		droppedItem.setHidden(false);
+		droppedItem.setContainedInventory(null, null);
 		droppedItem.setPointAndCheckUnstuck(x, y, simulation);
 	}
 
@@ -353,6 +355,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 		if (foundItem) {
 			hero.onDropItem(simulation, itemToDrop, playUserUISounds);
 			itemToDrop.setHidden(false);
+			itemToDrop.setContainedInventory(null, null);
 			for (final CAbility ability : this.itemsHeldAbilities[index]) {
 				hero.remove(simulation, ability);
 			}

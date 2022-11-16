@@ -12,14 +12,19 @@ import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener.CPlayerStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
 public class CPlayer extends CBasePlayer {
@@ -300,6 +305,53 @@ public class CPlayer extends CBasePlayer {
 			for (final CPlayerEvent event : eventList) {
 				event.fire(dyingUnit, CommonTriggerExecutionScope.unitDeathScope(
 						JassGameEventsWar3.EVENT_PLAYER_UNIT_DEATH, event.getTrigger(), dyingUnit, killingUnit));
+			}
+		}
+	}
+
+	public void fireOrderEvents(final CUnit unit, final CSimulation game, final COrderNoTarget orderNoTarget) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_ISSUED_ORDER);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit,
+						CommonTriggerExecutionScope.unitOrderScope(JassGameEventsWar3.EVENT_PLAYER_UNIT_ISSUED_ORDER,
+								event.getTrigger(), unit, orderNoTarget.getOrderId()));
+			}
+		}
+	}
+
+	public void fireOrderEvents(final CUnit unit, final CSimulation game, final COrderTargetPoint order) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER);
+		if (eventList != null) {
+			final AbilityPointTarget target = order.getTarget(game);
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit,
+						CommonTriggerExecutionScope.unitOrderPointScope(
+								JassGameEventsWar3.EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, event.getTrigger(), unit,
+								order.getOrderId(), target.x, target.y));
+			}
+		}
+	}
+
+	public void fireOrderEvents(final CUnit unit, final CSimulation game, final COrderTargetWidget order) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER);
+		if (eventList != null) {
+			final CWidget target = order.getTarget(game);
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit,
+						CommonTriggerExecutionScope.unitOrderTargetScope(
+								JassGameEventsWar3.EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, event.getTrigger(), unit,
+								order.getOrderId(), target));
+			}
+		}
+	}
+
+	public void firePickUpItemEvents(final CUnit unit, final CItem item, final CSimulation game) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_PICKUP_ITEM);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit, CommonTriggerExecutionScope.unitPickupItemScope(
+						JassGameEventsWar3.EVENT_PLAYER_UNIT_PICKUP_ITEM, event.getTrigger(), unit, item));
 			}
 		}
 	}

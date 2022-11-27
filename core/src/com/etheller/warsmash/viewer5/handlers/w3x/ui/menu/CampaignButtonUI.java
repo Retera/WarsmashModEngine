@@ -106,4 +106,8 @@ public class CampaignButtonUI extends AbstractUIFrame implements ClickableFrame 
 		this.defaultNameColor = nameText.getColor();
 	}
 
+	@Override
+	public String getSoundKey() {
+		return SOUND_KEY_GLUE_SCREEN_CLICK;
+	}
 }

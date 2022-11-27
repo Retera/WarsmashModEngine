@@ -341,4 +341,9 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 			}
 		};
 	}
+
+	@Override
+	public String getSoundKey() {
+		return SOUND_KEY_MENU_BUTTON_CLICK;
+	}
 }

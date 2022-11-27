@@ -27,6 +27,8 @@ import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -166,6 +168,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
 	private static final float[] rayHeap = new float[6];
 	public static final Ray gdxRayHeap = new Ray();
+	public static final Plane planeHeap = new Plane();
 	private static final Vector2 mousePosHeap = new Vector2();
 	private static final Vector3 normalHeap = new Vector3();
 	public static final Vector3 intersectionHeap = new Vector3();
@@ -664,8 +667,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// RenderUnit class:
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -677,8 +679,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -697,8 +698,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -710,8 +710,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -2206,6 +2205,16 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				}
 			}
 		}
+	}
+
+	public void getClickLocationOnZPlane(final Vector3 out, final int screenX, final int screenY, float worldZ) {
+		final float[] ray = rayHeap;
+		mousePosHeap.set(screenX, screenY);
+		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
+		gdxRayHeap.set(ray[0], ray[1], ray[2], ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]);
+		gdxRayHeap.direction.nor();// needed for libgdx
+		planeHeap.set(0, 0, -1, worldZ);
+		Intersector.intersectRayPlane(gdxRayHeap, planeHeap, out);
 	}
 
 	public void showConfirmation(final Vector3 position, final float red, final float green, final float blue) {

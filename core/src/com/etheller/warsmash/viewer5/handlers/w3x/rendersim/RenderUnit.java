@@ -115,8 +115,7 @@ public class RenderUnit implements RenderWidget {
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
-		TokenLoop:
-		for (final String animationName : requiredAnimationNames.split(",")) {
+		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 			final String upperCaseToken = animationName.toUpperCase();
 			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 				if (upperCaseToken.equals(secondaryTag.name())) {
@@ -591,6 +590,10 @@ public class RenderUnit implements RenderWidget {
 
 	public float getFacing() {
 		return this.facing;
+	}
+
+	public void setFacing(float facing) {
+		this.facing = facing;
 	}
 
 	@Override

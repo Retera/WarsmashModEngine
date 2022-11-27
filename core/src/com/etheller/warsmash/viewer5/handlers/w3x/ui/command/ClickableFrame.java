@@ -15,5 +15,14 @@ public interface ClickableFrame extends UIFrame {
 
 	void onClick(int button);
 
+	// played on click
+	String getSoundKey();
+
 	void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y);
+
+	String SOUND_KEY_INTERFACE_CLICK = "InterfaceClick";
+	String SOUND_KEY_MENU_BUTTON_CLICK = "MenuButtonClick";
+	String SOUND_KEY_GLUE_SCREEN_CLICK = "GlueScreenClick";
+	String SOUND_KEY_SUB_GROUP_SELECTION_CHANGE = "SubGroupSelectionChange";
+	String SOUND_KEY_NONE = null;
 }

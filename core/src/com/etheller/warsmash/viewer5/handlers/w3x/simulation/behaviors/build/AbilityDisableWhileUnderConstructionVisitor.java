@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityOrcBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CAbilityColdArrows;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
@@ -130,7 +131,7 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 		ability.setIconShowing(false);
 		return null;
 	}
-	
+
 	@Override
 	public Void accept(CAbilityRoot ability) {
 		ability.setDisabled(true);
@@ -149,6 +150,12 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 	public Void accept(final GenericNoIconAbility ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
+		return null;
+	}
+
+	@Override
+	public Void accept(CBuff ability) {
+		// this doesn't affect buffs
 		return null;
 	}
 

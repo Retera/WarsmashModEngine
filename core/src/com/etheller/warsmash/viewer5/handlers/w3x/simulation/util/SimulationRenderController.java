@@ -12,6 +12,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
@@ -19,6 +21,10 @@ public interface SimulationRenderController {
 	CAttackProjectile createAttackProjectile(CSimulation simulation, float launchX, float launchY, float launchFacing,
 			CUnit source, CUnitAttackMissile attack, AbilityTarget target, float damage, int bounceIndex,
 			CUnitAttackListener attackListener);
+
+	CAbilityProjectile createProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
+			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
+			CAbilityProjectileListener projectileListener);
 
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);

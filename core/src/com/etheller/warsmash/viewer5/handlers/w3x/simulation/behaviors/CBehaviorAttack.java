@@ -5,8 +5,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
 public class CBehaviorAttack extends CAbstractRangedBehavior {
@@ -50,7 +52,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 			range += this.unitAttack.getRangeMotionBuffer();
 		}
 		return this.unit.canReach(this.target, range)
-				&& (this.unit.distance(this.target) >= this.unit.getUnitType().getMinimumAttackRange());
+				&& this.unit.distance(this.target) >= this.unit.getUnitType().getMinimumAttackRange();
 	}
 
 	@Override
@@ -85,18 +87,22 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 					final int damage;
 					if (maxDamage == 0) {
 						damage = 0;
-					}
-					else if (minDamage == maxDamage) {
+					} else if (minDamage == maxDamage) {
 						damage = minDamage;
-					}
-					else {
+					} else {
 						damage = simulation.getSeededRandom().nextInt(maxDamage - minDamage) + minDamage;
 					}
-					this.unitAttack.launch(simulation, this.unit, this.target, damage, this.attackListener);
+					AbilityTarget target = this.target;
+					if (this.unitAttack.getWeaponType() == CWeaponType.ARTILLERY) {
+						// NOTE: adding this fixed a bunch of special cases in my code, but
+						// maybe we should re-use the point objects and not "new" here for
+						// better performance (maybe in a refactor in the future).
+						target = new AbilityPointTarget(target.getX(), target.getY());
+					}
+					this.unitAttack.launch(simulation, this.unit, target, damage, this.attackListener);
 					this.damagePointLaunchTime = 0;
 				}
-			}
-			else if (currentTurnTick >= cooldownEndTime) {
+			} else if (currentTurnTick >= cooldownEndTime) {
 				final float cooldownTime = this.unitAttack.getCooldownTime();
 				final float animationBackswingPoint = this.unitAttack.getAnimationBackswingPoint();
 				final int a1CooldownSteps = (int) (cooldownTime / WarsmashConstants.SIMULATION_STEP_TIME);
@@ -110,18 +116,16 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 				this.unit.getUnitAnimationListener().playAnimationWithDuration(true, PrimaryTag.ATTACK,
 						SequenceUtils.EMPTY, animationBackswingPoint + this.unitAttack.getAnimationDamagePoint(), true);
 				this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.READY, false);
-			}
-			else if ((currentTurnTick >= this.thisOrderCooldownEndTime)) {
+			} else if (currentTurnTick >= this.thisOrderCooldownEndTime) {
 				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.READY, 1.0f,
 						false);
 			}
-		}
-		else {
+		} else {
 			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.READY, 1.0f,
 					false);
 		}
 
-		if ((this.backSwingTime != 0) && (currentTurnTick >= this.backSwingTime)) {
+		if (this.backSwingTime != 0 && currentTurnTick >= this.backSwingTime) {
 			this.backSwingTime = 0;
 			return this.attackListener.onFirstUpdateAfterBackswing(this);
 		}

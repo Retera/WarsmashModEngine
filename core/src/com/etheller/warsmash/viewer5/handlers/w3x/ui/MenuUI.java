@@ -817,6 +817,7 @@ public class MenuUI {
 			Gdx.input.setCursorCatched(true);
 		}
 
+		if(false) {
 		this.battleNetConnectDialog = this.rootFrame.createFrame("BattleNetConnectDialog", this.rootFrame, 0, 0);
 		this.battleNetConnectDialog.setVisible(false);
 		this.battleNetConnectDialog.addAnchor(new AnchorDefinition(FramePoint.CENTER, 0, 0));
@@ -1605,6 +1606,7 @@ public class MenuUI {
 
 		this.dialog = new DialogWar3(this.rootFrame, this.uiViewport);
 		
+	}
 
 		// position all
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
@@ -1947,13 +1949,14 @@ public class MenuUI {
 		this.cursorFrame.setSequence("Normal");
 
 		if (this.glueSpriteLayerTopRight.isSequenceEnded() && this.glueSpriteLayerTopLeft.isSequenceEnded()
-				&& (!this.campaignFade.isVisible() || this.campaignFade.isSequenceEnded())
-				&& (!this.battleNetUI.getDoors().isVisible() || this.battleNetUI.getDoors().isSequenceEnded())) {
+//				&& (!this.campaignFade.isVisible() || this.campaignFade.isSequenceEnded())
+//				&& (!this.battleNetUI.getDoors().isVisible() || this.battleNetUI.getDoors().isSequenceEnded())) {
+				){
 			switch (this.menuState) {
 			case GOING_TO_MAIN_MENU:
 				this.glueSpriteLayerTopLeft.setSequence("MainMenu Birth");
 				this.glueSpriteLayerTopRight.setSequence("MainMenu Birth");
-				if (this.battleNetUI.getDoors().isVisible()) {
+				if (false && this.battleNetUI.getDoors().isVisible()) {
 					this.battleNetUI.getDoors().setVisible(false);
 					this.battleNetUI.setVisible(false);
 				}

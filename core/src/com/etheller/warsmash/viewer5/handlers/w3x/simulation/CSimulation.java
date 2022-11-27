@@ -31,7 +31,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -68,8 +71,8 @@ public class CSimulation implements CPlayerAPI {
 	private final List<CItem> items;
 	private final List<CPlayer> players;
 	private final List<CPlayerUnitOrderExecutor> defaultPlayerUnitOrderExecutors;
-	private final List<CAttackProjectile> projectiles;
-	private final List<CAttackProjectile> newProjectiles;
+	private final List<CProjectile> projectiles;
+	private final List<CProjectile> newProjectiles;
 	private final HandleIdAllocator handleIdAllocator;
 	private transient final SimulationRenderController simulationRenderController;
 	private int gameTurnTick = 0;
@@ -129,20 +132,15 @@ public class CSimulation implements CPlayerAPI {
 			final CRace defaultRace;
 			if (configPlayer.isRacePrefSet(CRacePreference.RANDOM)) {
 				defaultRace = CRace.VALUES[1 + seededRandom.nextInt(4)];
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.HUMAN)) {
+			} else if (configPlayer.isRacePrefSet(CRacePreference.HUMAN)) {
 				defaultRace = CRace.HUMAN;
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.ORC)) {
+			} else if (configPlayer.isRacePrefSet(CRacePreference.ORC)) {
 				defaultRace = CRace.ORC;
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.UNDEAD)) {
+			} else if (configPlayer.isRacePrefSet(CRacePreference.UNDEAD)) {
 				defaultRace = CRace.UNDEAD;
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.NIGHTELF)) {
+			} else if (configPlayer.isRacePrefSet(CRacePreference.NIGHTELF)) {
 				defaultRace = CRace.NIGHTELF;
-			}
-			else {
+			} else {
 				defaultRace = CRace.OTHER;
 			}
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
@@ -224,7 +222,7 @@ public class CSimulation implements CPlayerAPI {
 		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
 		this.worldCollision.addUnit(unit);
-		if (unit.getHeroData() != null) {
+		if (unit.isHero()) {
 			heroCreateEvent(unit);
 		}
 		return unit;
@@ -292,6 +290,16 @@ public class CSimulation implements CPlayerAPI {
 		return projectile;
 	}
 
+	public CAbilityProjectile createProjectile(final CUnit source, War3ID spellAlias, final float launchX,
+			final float launchY, final float launchFacing, float speed, boolean homing, final AbilityTarget target,
+			final CAbilityProjectileListener projectileListener) {
+		final CAbilityProjectile projectile = this.simulationRenderController.createProjectile(this, launchX, launchY,
+				launchFacing, speed, homing, source, spellAlias, target, projectileListener);
+		this.newProjectiles.add(projectile);
+		projectileListener.onLaunch(this, target);
+		return projectile;
+	}
+
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
 		this.simulationRenderController.createInstantAttackEffect(this, source, attack, target);
 	}
@@ -331,9 +339,9 @@ public class CSimulation implements CPlayerAPI {
 			}
 		}
 		finishAddingNewUnits();
-		final Iterator<CAttackProjectile> projectileIterator = this.projectiles.iterator();
+		final Iterator<CProjectile> projectileIterator = this.projectiles.iterator();
 		while (projectileIterator.hasNext()) {
-			final CAttackProjectile projectile = projectileIterator.next();
+			final CProjectile projectile = projectileIterator.next();
 			if (projectile.update(this)) {
 				projectileIterator.remove();
 			}
@@ -350,13 +358,13 @@ public class CSimulation implements CPlayerAPI {
 					% this.gameplayConstants.getGameDayLength();
 		}
 		final float timeOfDayAfter = getGameTimeOfDay();
-		this.daytime = (timeOfDayAfter >= this.gameplayConstants.getDawnTimeGameHours())
-				&& (timeOfDayAfter < this.gameplayConstants.getDuskTimeGameHours());
+		this.daytime = timeOfDayAfter >= this.gameplayConstants.getDawnTimeGameHours()
+				&& timeOfDayAfter < this.gameplayConstants.getDuskTimeGameHours();
 		for (final CTimer timer : this.addedTimers) {
 			internalRegisterTimer(timer);
 		}
 		this.addedTimers.clear();
-		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
+		while (!this.activeTimers.isEmpty() && this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick) {
 			this.activeTimers.pop().fire(this);
 		}
 		for (final CTimer timer : this.removedTimers) {
@@ -392,7 +400,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public float getGameTimeOfDay() {
-		return (this.currentGameDayTimeElapsed / this.gameplayConstants.getGameDayLength())
+		return this.currentGameDayTimeElapsed / this.gameplayConstants.getGameDayLength()
 				* this.gameplayConstants.getGameDayHours();
 	}
 

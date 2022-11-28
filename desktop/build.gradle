@@ -2,6 +2,8 @@ plugins {
     id 'org.beryx.runtime' version '1.12.5'
 }
 
+sourceCompatibility = 1.17
+
 sourceSets.main.java.srcDirs = [ "src/" ]
 
 project.ext.mainClassName = "com.etheller.warsmash.desktop.DesktopLauncher"

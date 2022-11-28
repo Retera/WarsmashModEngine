@@ -222,4 +222,9 @@ public class MultiSelectionIcon extends AbstractRenderableFrame implements Click
 	public void setManaBarVisible(final boolean visible) {
 		this.manaBarFrame.setVisible(visible);
 	}
+
+	@Override
+	public String getSoundKey() {
+		return SOUND_KEY_SUB_GROUP_SELECTION_CHANGE;
+	}
 }

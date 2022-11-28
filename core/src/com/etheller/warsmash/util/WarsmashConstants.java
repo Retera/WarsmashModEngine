@@ -30,7 +30,7 @@ public class WarsmashConstants {
 	public static final String DEFAULT_STRING = "Default string";
 
 	public static boolean CATCH_CURSOR = false;
-	public static final boolean VERBOSE_LOGGING = false;
+	public static final boolean VERBOSE_LOGGING = true;
 	public static final boolean ENABLE_DEBUG = false;
 	public static final char SPECIAL_ESCAPE_KEYCODE = 0x7E;
 
@@ -44,8 +44,8 @@ public class WarsmashConstants {
 	public static boolean LOAD_UNITS_FROM_WORLDEDIT_DATA = false;
 	public static boolean CRASH_ON_INCOMPATIBLE_132_FEATURES = false;
 	public static final boolean FIRE_DEATH_EVENTS_ON_REMOVEUNIT = false;
-	public static final int INPUT_HOTKEY_MODE = 1;
-	public static final boolean PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = false;
+	public static int INPUT_HOTKEY_MODE = 1;
+	public static boolean PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = false;
 
 	public static boolean USE_NINE_ITEM_INVENTORY = false;
 
@@ -60,6 +60,9 @@ public class WarsmashConstants {
 		ENABLE_MUSIC = emulatorConstants.getFieldValue("EnableMusic") == 1;
 		LOAD_UNITS_FROM_WORLDEDIT_DATA = emulatorConstants.getFieldValue("LoadUnitsFromWorldEditData") == 1;
 		CRASH_ON_INCOMPATIBLE_132_FEATURES = emulatorConstants.getFieldValue("CrashOnIncompatible132Features") == 1;
+		INPUT_HOTKEY_MODE = emulatorConstants.getFieldValue("InputHotkeyMode");
+		PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = emulatorConstants
+				.getFieldValue("ParseReignOfChaosBetaModelsInstead") == 1;
 	}
 
 	public static final String getGameId() {

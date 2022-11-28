@@ -203,4 +203,9 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 		};
 
 	}
+
+	@Override
+	public String getSoundKey() {
+		return SOUND_KEY_GLUE_SCREEN_CLICK;
+	}
 }

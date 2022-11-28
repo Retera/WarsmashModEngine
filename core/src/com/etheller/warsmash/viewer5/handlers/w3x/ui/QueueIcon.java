@@ -6,13 +6,13 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
-import com.etheller.warsmash.parsers.fdf.frames.AbstractRenderableFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.AbstractClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.QueueIconListener;
 
-public class QueueIcon extends AbstractRenderableFrame implements ClickableActionFrame {
+public class QueueIcon extends AbstractClickableActionFrame implements ClickableActionFrame {
 
 	private TextureFrame iconFrame;
 	private final QueueIconListener clickListener;
@@ -51,22 +51,6 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		this.iconFrame.render(batch, baseFont, glyphLayout);
-	}
-
-	@Override
-	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
-		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
-			return this;
-		}
-		return super.touchDown(screenX, screenY, button);
-	}
-
-	@Override
-	public UIFrame touchUp(final float screenX, final float screenY, final int button) {
-		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
-			return this;
-		}
-		return super.touchUp(screenX, screenY, button);
 	}
 
 	@Override
@@ -113,14 +97,6 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 	public void mouseExit(final GameUI gameUI, final Viewport uiViewport) {
 	}
 
-	@Override
-	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
-		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
-			return this;
-		}
-		return null;
-	}
-
 	public void setToolTip(final String toolTip) {
 		this.toolTip = toolTip;
 	}
@@ -157,5 +133,10 @@ public class QueueIcon extends AbstractRenderableFrame implements ClickableActio
 	@Override
 	public int getToolTipManaCost() {
 		return 0;
+	}
+
+	@Override
+	public String getSoundKey() {
+		return SOUND_KEY_INTERFACE_CLICK;
 	}
 }

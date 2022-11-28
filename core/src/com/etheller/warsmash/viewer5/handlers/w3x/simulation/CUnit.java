@@ -1147,7 +1147,7 @@ public class CUnit extends CWidget {
 								public boolean call(final CUnit unit) {
 									if (unit.distance(killedUnit) <= heroExpRange
 											&& sourcePlayer.hasAlliance(unit.getPlayerIndex(), CAllianceType.SHARED_XP)
-											&& unit.isHero()) {
+											&& unit.isHero() && !unit.isDead()) {
 										xpReceivingHeroes.add(unit);
 									}
 									return false;
@@ -1325,12 +1325,33 @@ public class CUnit extends CWidget {
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
 			if (!targetsAllowed.contains(CTargetType.ENEMIES)
 					|| !sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
-				if (isDead()) {
-					if (this.unitType.isRaise() && this.unitType.isDecay() && isBoneCorpse()) {
-						return targetsAllowed.contains(CTargetType.DEAD);
+				if (!targetsAllowed.contains(CTargetType.FRIEND)
+						|| sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
+					if (!targetsAllowed.contains(CTargetType.MECHANICAL)
+							|| this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
+						if (!targetsAllowed.contains(CTargetType.ORGANIC)
+								|| !this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
+							if (!targetsAllowed.contains(CTargetType.ANCIENT)
+									|| this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
+								if (!targetsAllowed.contains(CTargetType.NONANCIENT)
+										|| !this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
+									if (!targetsAllowed.contains(CTargetType.HERO) || getHeroData() != null) {
+										if (!targetsAllowed.contains(CTargetType.NONHERO) || getHeroData() == null) {
+											if (isDead()) {
+												if (this.unitType.isRaise() && this.unitType.isDecay()
+														&& isBoneCorpse()) {
+													return targetsAllowed.contains(CTargetType.DEAD);
+												}
+											} else {
+												return !targetsAllowed.contains(CTargetType.DEAD)
+														|| targetsAllowed.contains(CTargetType.ALIVE);
+											}
+										}
+									}
+								}
+							}
+						}
 					}
-				} else {
-					return !targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE);
 				}
 			}
 		} else {

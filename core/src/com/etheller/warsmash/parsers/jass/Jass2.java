@@ -3431,6 +3431,17 @@ public class Jass2 {
 					return null;
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("BlzSetUnitFacingEx", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final double facing = arguments.get(1).visit(RealJassValueVisitor.getInstance());
+					whichUnit.setFacing((float) facing);
+					war3MapViewer.getRenderPeer(whichUnit).setFacing((float) facing);
+					return null;
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("DestroyEffect", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,

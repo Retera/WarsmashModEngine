@@ -227,4 +227,8 @@ public final class GameCameraManager extends CameraManager {
 		this.targetControllerInheritOrientation = inheritOrientation;
 
 	}
+
+	public RenderUnit getTargetControllerUnit() {
+		return this.targetControllerUnit;
+	}
 }

@@ -37,6 +37,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -173,6 +174,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbility
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.AbstractClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandCardCommandListener;
@@ -216,7 +218,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private StringFrame resourceBarSupplyText;
 	private StringFrame resourceBarUpkeepText;
 	private SpriteFrame timeIndicator;
-	private UIFrame unitPortrait;
+	private SimpleFrame unitPortrait;
 	private StringFrame unitLifeText;
 	private StringFrame unitManaText;
 	private Portrait portrait;
@@ -355,6 +357,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private RenderWidget mouseOverUnit;
 	private RenderWidget currentHoverTipUnit;
 	private final Vector3 lastMouseDragStart = new Vector3();
+	private final Vector3 lastMouseDragCameraTargetStart = new Vector3();
 	private final Vector3 lastMouseClickLocation = new Vector3();
 
 	private final List<SimpleStatusBarFrame> hpBarFrames = new ArrayList<>();
@@ -382,6 +385,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public int[][] commandCardGridHotkeys = { { Input.Keys.Q, Input.Keys.W, Input.Keys.E, Input.Keys.R },
 			{ Input.Keys.A, Input.Keys.S, Input.Keys.D, Input.Keys.F },
 			{ Input.Keys.Z, Input.Keys.X, Input.Keys.C, Input.Keys.V } };
+	private ClickablePortrait clickablePortrait;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -668,7 +672,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		// Create the unit portrait stuff
 		this.portrait = new Portrait(this.war3MapViewer, this.portraitScene);
 		positionPortrait();
-		this.unitPortrait = this.rootFrame.createSimpleFrame("UnitPortrait", this.consoleUI, 0);
+		this.unitPortrait = (SimpleFrame) this.rootFrame.createSimpleFrame("UnitPortrait", this.consoleUI, 0);
+		final SimpleFrame unitPortraitModel = (SimpleFrame) this.rootFrame.getFrameByName("UnitPortraitModel", 0);
+		this.clickablePortrait = new ClickablePortrait("SmashClickablePortrait", unitPortraitModel);
+		this.clickablePortrait.setSetAllPoints(true);
+		unitPortraitModel.add(this.clickablePortrait);
+
 		this.unitLifeText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitHitPointText", 0);
 		this.unitManaText = (StringFrame) this.rootFrame.getFrameByName("UnitPortraitManaPointText", 0);
 
@@ -1444,7 +1453,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		this.hpBarFrameIndex = 0;
-		if (this.currentlyDraggingPointer == -1) {
+		if (!this.allowDrag) {
 			if (this.mouseOverUnit != null && isUnitSelectable(this.mouseOverUnit)) {
 				final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
 				positionHealthBar(simpleStatusBarFrame, this.mouseOverUnit, 1.0f);
@@ -1470,7 +1479,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			} else {
 				this.hovertipFrame.setVisible(false);
 			}
-		} else if (this.currentlyDraggingPointer == Input.Buttons.LEFT) {
+		} else if (this.draggingMouseButton == Input.Buttons.LEFT) {
 			final float minDragX = Math.min(this.lastMouseClickLocation.x, this.lastMouseDragStart.x);
 			final float minDragY = Math.min(this.lastMouseClickLocation.y, this.lastMouseDragStart.y);
 			final float maxDragX = Math.max(this.lastMouseClickLocation.x, this.lastMouseDragStart.x);
@@ -1598,6 +1607,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.war3MapViewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y));
 		this.cameraManager.updateTargetZ(groundHeight);
 		this.cameraManager.updateCamera();
+		if (this.allowDrag && this.draggingMouseButton == Input.Buttons.MIDDLE) {
+			// in case camera updates while dragging mouse, update where we think mouse is
+			// in 3d
+			this.lastMouseDragCameraTargetStart.set(this.cameraManager.target);
+		}
+
 		final long currentMillis = TimeUtils.millis();
 		if (currentMillis > this.lastErrorMessageExpireTime) {
 			this.errorMessageFrame.setVisible(false);
@@ -1763,7 +1778,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						unprojected.y - glyphLayout.height / 2 + textTag.getScreenCoordsZHeight());
 			}
 		}
-		if (this.currentlyDraggingPointer == Input.Buttons.LEFT) {
+		if (this.draggingMouseButton == Input.Buttons.LEFT) {
 			batch.end();
 			this.shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
 			this.shapeRenderer.setColor(Color.GREEN);
@@ -3142,7 +3157,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						setDraggingItem(null);
 					}
 					clearAndRepopulateCommandCard();
-				} else {
+				} else if (button == Input.Buttons.LEFT) {
 					final boolean shiftDown = isShiftDown();
 					final RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 							this.activeCommandUnitTargetFilter);
@@ -3296,6 +3311,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.war3MapViewer.getClickLocation(this.lastMouseClickLocation, screenX, (int) worldScreenY, true,
 							true);
 					this.lastMouseDragStart.set(this.lastMouseClickLocation);
+					this.lastMouseDragCameraTargetStart.set(this.cameraManager.target);
 					this.allowDrag = true;
 					this.draggingMouseButton = button;
 				}
@@ -3553,75 +3569,72 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (this.mouseDownUIFrame != null) {
 			if (clickedUIFrame == this.mouseDownUIFrame) {
 				this.mouseDownUIFrame.onClick(button);
-				String soundKey;
-				if (this.mouseDownUIFrame instanceof ClickableActionFrame) {
-					if (this.mouseDownUIFrame instanceof MultiSelectionIcon) {
-						soundKey = "SubGroupSelectionChange";
-					} else {
-						soundKey = "InterfaceClick";
-					}
-				} else {
-					soundKey = "MenuButtonClick";
+				final String soundKey = this.mouseDownUIFrame.getSoundKey();
+				if (soundKey != null) {
+					this.war3MapViewer.getUiSounds().getSound(soundKey).play(this.uiScene.audioContext, 0, 0, 0);
 				}
-				this.war3MapViewer.getUiSounds().getSound(soundKey).play(this.uiScene.audioContext, 0, 0, 0);
 			}
 			this.mouseDownUIFrame.mouseUp(this.rootFrame, this.uiViewport);
 		} else {
-			if (!this.dragSelectPreviewUnits.isEmpty()) {
-				if (this.allowDrag) {
-					final List<RenderWidget> selectedWidgets = new ArrayList<>();
-					boolean foundGoal = false;
-					for (final RenderUnit unit : this.dragSelectPreviewUnits) {
-						if (unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()
-								&& !unit.getSimulationUnit().isBuilding()) {
-							foundGoal = true;
-							selectedWidgets.add(unit);
-						}
-					}
-					if (!foundGoal) {
-						selectedWidgets.addAll(this.dragSelectPreviewUnits);
-					}
-					final boolean shiftDown = isShiftDown();
-					if (shiftDown) {
-						for (final RenderUnit unit : this.selectedUnits) {
-							if (!selectedWidgets.contains(unit)) {
+			if (this.draggingMouseButton == Input.Buttons.LEFT) {
+				if (!this.dragSelectPreviewUnits.isEmpty()) {
+					if (this.allowDrag) {
+						final List<RenderWidget> selectedWidgets = new ArrayList<>();
+						boolean foundGoal = false;
+						for (final RenderUnit unit : this.dragSelectPreviewUnits) {
+							if (unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()
+									&& !unit.getSimulationUnit().isBuilding()) {
+								foundGoal = true;
 								selectedWidgets.add(unit);
 							}
 						}
-					}
-
-					this.war3MapViewer.clearUnitMouseOverHighlight();
-
-					this.war3MapViewer.doSelectUnit(selectedWidgets);
-					selectWidgets(selectedWidgets);
-				}
-				this.dragSelectPreviewUnits.clear();
-			} else {
-				if (this.allowDrag) {
-					if (button == Input.Buttons.LEFT && this.mouseOverUnit != null
-							&& isUnitSelectable(this.mouseOverUnit)) {
-						final long currentMillis = TimeUtils.millis();
-						final List<RenderWidget> unitList = new ArrayList<>();
+						if (!foundGoal) {
+							selectedWidgets.addAll(this.dragSelectPreviewUnits);
+						}
 						final boolean shiftDown = isShiftDown();
-						final boolean controlDown = isControlDown() || currentMillis - this.lastUnitClickTime < 500
-								&& this.mouseOverUnit == this.lastClickUnit;
 						if (shiftDown) {
-							unitList.addAll(this.selectedUnits);
+							for (final RenderUnit unit : this.selectedUnits) {
+								if (!selectedWidgets.contains(unit)) {
+									selectedWidgets.add(unit);
+								}
+							}
 						}
-						if (this.mouseOverUnit instanceof RenderUnit && controlDown) {
-							processSelectNearbyUnits(unitList, shiftDown, (RenderUnit) this.mouseOverUnit);
-						} else {
-							processClickSelect(unitList, shiftDown, this.mouseOverUnit);
+
+						this.war3MapViewer.clearUnitMouseOverHighlight();
+
+						this.war3MapViewer.doSelectUnit(selectedWidgets);
+						selectWidgets(selectedWidgets);
+					}
+					this.dragSelectPreviewUnits.clear();
+				} else {
+					if (this.allowDrag) {
+						if (button == Input.Buttons.LEFT && this.mouseOverUnit != null
+								&& isUnitSelectable(this.mouseOverUnit)) {
+							final long currentMillis = TimeUtils.millis();
+							final List<RenderWidget> unitList = new ArrayList<>();
+							final boolean shiftDown = isShiftDown();
+							final boolean controlDown = isControlDown() || currentMillis - this.lastUnitClickTime < 500
+									&& this.mouseOverUnit == this.lastClickUnit;
+							if (shiftDown) {
+								unitList.addAll(this.selectedUnits);
+							}
+							if (this.mouseOverUnit instanceof RenderUnit && controlDown) {
+								processSelectNearbyUnits(unitList, shiftDown, (RenderUnit) this.mouseOverUnit);
+							} else {
+								processClickSelect(unitList, shiftDown, this.mouseOverUnit);
+							}
+							this.war3MapViewer.doSelectUnit(unitList);
+							selectWidgets(unitList);
+							this.lastUnitClickTime = currentMillis;
+							this.lastClickUnit = this.mouseOverUnit;
 						}
-						this.war3MapViewer.doSelectUnit(unitList);
-						selectWidgets(unitList);
-						this.lastUnitClickTime = currentMillis;
-						this.lastClickUnit = this.mouseOverUnit;
 					}
 				}
 			}
 		}
 		this.mouseDownUIFrame = null;
+		this.draggingMouseButton = -1;
+		this.allowDrag = false;
 		return false;
 	}
 
@@ -3679,10 +3692,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.mouseOverUnit = null;
 				}
 
-				this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY, true, true);
+				this.war3MapViewer.getClickLocationOnZPlane(clickLocationTemp, screenX, (int) worldScreenY,
+						this.lastMouseDragStart.z);
 				this.currentlyDraggingPointer = pointer;
 				if (this.draggingMouseButton == Input.Buttons.MIDDLE) {
-					this.cameraManager.target.add(this.lastMouseClickLocation.sub(clickLocationTemp).scl(-1));
+					this.cameraManager.target.set(clickLocationTemp.sub(this.lastMouseDragStart).scl(-1)
+							.add(this.lastMouseDragCameraTargetStart));
 				} else if (this.draggingMouseButton == Input.Buttons.LEFT) {
 					// update mouseover
 				}
@@ -4019,7 +4034,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final Music[] fixedList = new Music[validMusicCount];
 				int fixedListIndex = 0;
 				for (int i = 0; i < this.currentMusics.length; i++) {
-					fixedList[fixedListIndex++] = this.currentMusics[i];
+					if (this.currentMusics[i] != null) {
+						fixedList[fixedListIndex++] = this.currentMusics[i];
+					}
 				}
 				this.currentMusics = fixedList;
 			}
@@ -4117,5 +4134,56 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	public void removedItem(final CItem whichItem) {
 		// TODO unselect an item if it exists
+	}
+
+	private final class ClickablePortrait extends AbstractClickableActionFrame implements ClickableFrame {
+		public ClickablePortrait(String name, UIFrame parent) {
+			super(name, parent);
+		}
+
+		private boolean mouseDown = false;
+
+		@Override
+		public void mouseEnter(GameUI gameUI, Viewport uiViewport) {
+		}
+
+		@Override
+		public void mouseExit(GameUI gameUI, Viewport uiViewport) {
+		}
+
+		@Override
+		public void mouseDragged(GameUI rootFrame, Viewport uiViewport, float x, float y) {
+		}
+
+		@Override
+		public void mouseDown(GameUI gameUI, Viewport uiViewport) {
+			if (getCameraManager().getTargetControllerUnit() == null && MeleeUI.this.selectedUnit != null) {
+				getCameraManager().setTargetController(MeleeUI.this.selectedUnit, 0, 0, false);
+			}
+			this.mouseDown = true;
+		}
+
+		@Override
+		public void mouseUp(GameUI gameUI, Viewport uiViewport) {
+			getCameraManager().setTargetController(null, 0, 0, false);
+			this.mouseDown = true;
+		}
+
+		@Override
+		public void onClick(int button) {
+		}
+
+		@Override
+		protected void innerPositionBounds(GameUI gameUI, Viewport viewport) {
+		}
+
+		@Override
+		protected void internalRender(SpriteBatch batch, BitmapFont baseFont, GlyphLayout glyphLayout) {
+		}
+
+		@Override
+		public String getSoundKey() {
+			return SOUND_KEY_NONE;
+		}
 	}
 }

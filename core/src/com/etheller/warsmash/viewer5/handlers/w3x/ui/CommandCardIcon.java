@@ -299,4 +299,9 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	public int getToolTipManaCost() {
 		return this.tipManaCost;
 	}
+
+	@Override
+	public String getSoundKey() {
+		return SOUND_KEY_INTERFACE_CLICK;
+	}
 }

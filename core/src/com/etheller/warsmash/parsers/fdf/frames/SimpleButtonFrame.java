@@ -219,4 +219,9 @@ public class SimpleButtonFrame extends AbstractRenderableFrame implements Clicka
 	public void setDisabledText(final UIFrame disabledText) {
 		this.disabledText = disabledText;
 	}
+
+	@Override
+	public String getSoundKey() {
+		return SOUND_KEY_MENU_BUTTON_CLICK;
+	}
 }

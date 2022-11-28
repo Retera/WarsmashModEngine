@@ -413,234 +413,238 @@ public class CUnit extends CWidget {
 				}
 				return true;
 			}
-		} else if (!this.paused) {
-			if (this.rallyPoint != this && this.rallyPoint instanceof CUnit && ((CUnit) this.rallyPoint).isDead()) {
-				setRallyPoint(this);
-			}
-			if (this.constructing) {
-				if (!this.constructingPaused) {
-					this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
+		} else {
+			if (!this.paused) {
+				if (this.rallyPoint != this && this.rallyPoint instanceof CUnit && ((CUnit) this.rallyPoint).isDead()) {
+					setRallyPoint(this);
 				}
-				final int buildTime;
-				final boolean upgrading = isUpgrading();
-				if (!upgrading) {
-					buildTime = this.unitType.getBuildTime();
+				if (this.constructing) {
 					if (!this.constructingPaused) {
-						final float healthGain = WarsmashConstants.SIMULATION_STEP_TIME / buildTime
-								* (this.maximumLife * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
-						setLife(game, Math.min(this.life + healthGain, this.maximumLife));
-					}
-				} else {
-					buildTime = game.getUnitData().getUnitType(this.upgradeIdType).getBuildTime();
-				}
-				if (this.constructionProgress >= buildTime) {
-					this.constructing = false;
-					this.constructingPaused = false;
-					this.constructionProgress = 0;
-					popoutWorker(game);
-					final Iterator<CAbility> abilityIterator = this.abilities.iterator();
-					while (abilityIterator.hasNext()) {
-						final CAbility ability = abilityIterator.next();
-						if (ability instanceof CAbilityBuildInProgress) {
-							abilityIterator.remove();
-						} else {
-							ability.setDisabled(false);
-							ability.setIconShowing(true);
-						}
-					}
-					final CPlayer player = game.getPlayer(this.playerIndex);
-					if (upgrading) {
-						if (this.unitType.getFoodMade() != 0) {
-							player.setFoodCap(player.getFoodCap() - this.unitType.getFoodMade());
-						}
-						setTypeId(game, this.upgradeIdType);
-						this.upgradeIdType = null;
-					}
-					if (this.unitType.getFoodMade() != 0) {
-						player.setFoodCap(player.getFoodCap() + this.unitType.getFoodMade());
-					}
-					player.removeTechtreeInProgress(this.unitType.getTypeId());
-					player.addTechtreeUnlocked(this.unitType.getTypeId());
-					game.unitConstructFinishEvent(this);
-					if (upgrading) {
-						// TODO shouldnt need to play stand here, probably
-						getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
-								true);
-					}
-					this.stateNotifier.ordersChanged();
-				}
-			} else {
-				final War3ID queuedRawcode = this.buildQueue[0];
-				if (queuedRawcode != null) {
-					// queue step forward
-					if (this.queuedUnitFoodPaid) {
 						this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
+					}
+					final int buildTime;
+					final boolean upgrading = isUpgrading();
+					if (!upgrading) {
+						buildTime = this.unitType.getBuildTime();
+						if (!this.constructingPaused) {
+							final float healthGain = WarsmashConstants.SIMULATION_STEP_TIME / buildTime
+									* (this.maximumLife * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
+							setLife(game, Math.min(this.life + healthGain, this.maximumLife));
+						}
 					} else {
-						if (this.buildQueueTypes[0] == QueueItemType.UNIT) {
-							final CPlayer player = game.getPlayer(this.playerIndex);
-							final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
-							if (trainedUnitType.getFoodUsed() != 0) {
-								final int newFoodUsed = player.getFoodUsed() + trainedUnitType.getFoodUsed();
-								if (newFoodUsed <= player.getFoodCap()) {
-									player.setFoodUsed(newFoodUsed);
-									player.addTechtreeInProgress(queuedRawcode);
-									this.queuedUnitFoodPaid = true;
-								}
+						buildTime = game.getUnitData().getUnitType(this.upgradeIdType).getBuildTime();
+					}
+					if (this.constructionProgress >= buildTime) {
+						this.constructing = false;
+						this.constructingPaused = false;
+						this.constructionProgress = 0;
+						popoutWorker(game);
+						final Iterator<CAbility> abilityIterator = this.abilities.iterator();
+						while (abilityIterator.hasNext()) {
+							final CAbility ability = abilityIterator.next();
+							if (ability instanceof CAbilityBuildInProgress) {
+								abilityIterator.remove();
 							} else {
-								player.addTechtreeInProgress(queuedRawcode);
-								this.queuedUnitFoodPaid = true;
+								ability.setDisabled(false);
+								ability.setIconShowing(true);
 							}
-						} else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
-							final CPlayer player = game.getPlayer(this.playerIndex);
-							final CUnitType trainedUnitType = game.getUnit(queuedRawcode.getValue()).getUnitType();
-							final int newFoodUsed = player.getFoodUsed() + trainedUnitType.getFoodUsed();
-							if (newFoodUsed <= player.getFoodCap()) {
-								player.setFoodUsed(newFoodUsed);
-								this.queuedUnitFoodPaid = true;
-							}
-						} else {
-							this.queuedUnitFoodPaid = true;
-							System.err.println(
-									"Unpaid food for non unit queue item ???? Attempting to correct this by setting paid=true");
 						}
-					}
-					if (this.buildQueueTypes[0] == QueueItemType.UNIT) {
-						final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
-						if (this.constructionProgress >= trainedUnitType.getBuildTime()) {
-							this.constructionProgress = 0;
-							final CUnit trainedUnit = game.createUnit(queuedRawcode, this.playerIndex, getX(), getY(),
-									game.getGameplayConstants().getBuildingAngle());
-							// dont add food cost to player 2x
-							trainedUnit.setFoodUsed(trainedUnitType.getFoodUsed());
-							final CPlayer player = game.getPlayer(this.playerIndex);
-							player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
-							player.removeTechtreeInProgress(queuedRawcode);
-							player.addTechtreeUnlocked(queuedRawcode);
-							// nudge the trained unit out around us
-							trainedUnit.nudgeAround(game, this);
-							game.unitTrainedEvent(this, trainedUnit);
-							if (this.rallyPoint != null) {
-								final int rallyOrderId = OrderIds.smart;
-								this.rallyPoint.visit(
-										UseAbilityOnTargetByIdVisitor.INSTANCE.reset(game, trainedUnit, rallyOrderId));
+						final CPlayer player = game.getPlayer(this.playerIndex);
+						if (upgrading) {
+							if (this.unitType.getFoodMade() != 0) {
+								player.setFoodCap(player.getFoodCap() - this.unitType.getFoodMade());
 							}
-							for (int i = 0; i < this.buildQueue.length - 1; i++) {
-								setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
-							}
-							setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
-							this.stateNotifier.queueChanged();
+							setTypeId(game, this.upgradeIdType);
+							this.upgradeIdType = null;
 						}
-					} else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
-						final CUnit revivingHero = game.getUnit(queuedRawcode.getValue());
-						final CUnitType trainedUnitType = revivingHero.getUnitType();
-						final CGameplayConstants gameplayConstants = game.getGameplayConstants();
-						if (this.constructionProgress >= gameplayConstants.getHeroReviveTime(
-								trainedUnitType.getBuildTime(), revivingHero.getHeroData().getHeroLevel())) {
-							this.constructionProgress = 0;
-							revivingHero.getHeroData().setReviving(false);
-							revivingHero.getHeroData().setAwaitingRevive(false);
-							revivingHero.corpse = false;
-							revivingHero.boneCorpse = false;
-							revivingHero.deathTurnTick = 0;
-							revivingHero.setX(getX());
-							revivingHero.setY(getY());
-							game.getWorldCollision().addUnit(revivingHero);
-							revivingHero.setPoint(getX(), getY(), game.getWorldCollision(), game.getRegionManager());
-							revivingHero.setHidden(false);
-							revivingHero.setLife(game,
-									revivingHero.getMaximumLife() * gameplayConstants.getHeroReviveLifeFactor());
-							revivingHero.setMana(revivingHero.getMaximumMana()
-									* gameplayConstants.getHeroReviveManaFactor()
-									+ gameplayConstants.getHeroReviveManaStart() * trainedUnitType.getManaInitial());
-							// dont add food cost to player 2x
-							revivingHero.setFoodUsed(trainedUnitType.getFoodUsed());
-							final CPlayer player = game.getPlayer(this.playerIndex);
-							player.setUnitFoodMade(revivingHero, trainedUnitType.getFoodMade());
-							player.addTechtreeUnlocked(queuedRawcode);
-							// nudge the trained unit out around us
-							revivingHero.nudgeAround(game, this);
-							game.unitRepositioned(revivingHero); // dont blend animation
-							game.heroReviveEvent(this, revivingHero);
-							if (this.rallyPoint != null) {
-								final int rallyOrderId = OrderIds.smart;
-								this.rallyPoint.visit(
-										UseAbilityOnTargetByIdVisitor.INSTANCE.reset(game, revivingHero, rallyOrderId));
-							}
-							for (int i = 0; i < this.buildQueue.length - 1; i++) {
-								setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
-							}
-							setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
-							this.stateNotifier.queueChanged();
+						if (this.unitType.getFoodMade() != 0) {
+							player.setFoodCap(player.getFoodCap() + this.unitType.getFoodMade());
 						}
-					} else if (this.buildQueueTypes[0] == QueueItemType.RESEARCH) {
-						final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
-						if (this.constructionProgress >= trainedUnitType.getBuildTime()) {
-							this.constructionProgress = 0;
-							for (int i = 0; i < this.buildQueue.length - 1; i++) {
-								setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
-							}
-							setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
-							this.stateNotifier.queueChanged();
+						player.removeTechtreeInProgress(this.unitType.getTypeId());
+						player.addTechtreeUnlocked(this.unitType.getTypeId());
+						game.unitConstructFinishEvent(this);
+						if (upgrading) {
+							// TODO shouldnt need to play stand here, probably
+							getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
+									true);
 						}
-					}
-				}
-				if (this.life < this.maximumLife) {
-					final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
-					boolean active = false;
-					switch (lifeRegenType) {
-					case ALWAYS:
-						active = true;
-						break;
-					case DAY:
-						active = game.isDay();
-						break;
-					case NIGHT:
-						active = game.isNight();
-						break;
-					case BLIGHT:
-						active = PathingFlags.isPathingFlag(game.getPathingGrid().getPathing(getX(), getY()),
-								PathingFlags.BLIGHTED);
-						break;
-					default:
-						active = false;
-					}
-					if (active) {
-						float lifePlusRegen = this.life + this.currentLifeRegenPerTick;
-						if (lifePlusRegen > this.maximumLife) {
-							lifePlusRegen = this.maximumLife;
-						}
-						this.life = lifePlusRegen;
-						this.stateNotifier.lifeChanged();
-					}
-				}
-				if (this.mana < this.maximumMana) {
-					float manaPlusRegen = this.mana + this.currentManaRegenPerTick;
-					if (manaPlusRegen > this.maximumMana) {
-						manaPlusRegen = this.maximumMana;
-					}
-					this.mana = manaPlusRegen;
-					this.stateNotifier.manaChanged();
-				}
-				for (int i = this.abilities.size() - 1; i >= 0; i--) {
-					// okay if it removes self from this during onTick() because of reverse
-					// iteration order
-					this.abilities.get(i).onTick(game, this);
-				}
-				if (this.currentBehavior != null) {
-					final CBehavior lastBehavior = this.currentBehavior;
-					final int lastBehaviorHighlightOrderId = lastBehavior.getHighlightOrderId();
-					this.currentBehavior = this.currentBehavior.update(game);
-					if (lastBehavior != this.currentBehavior) {
-						lastBehavior.end(game, false);
-						this.currentBehavior.begin(game);
-					}
-					if (this.currentBehavior.getHighlightOrderId() != lastBehaviorHighlightOrderId) {
 						this.stateNotifier.ordersChanged();
 					}
 				} else {
-					// check to auto acquire targets
-					autoAcquireAttackTargets(game, false);
+					final War3ID queuedRawcode = this.buildQueue[0];
+					if (queuedRawcode != null) {
+						// queue step forward
+						if (this.queuedUnitFoodPaid) {
+							this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
+						} else {
+							if (this.buildQueueTypes[0] == QueueItemType.UNIT) {
+								final CPlayer player = game.getPlayer(this.playerIndex);
+								final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
+								if (trainedUnitType.getFoodUsed() != 0) {
+									final int newFoodUsed = player.getFoodUsed() + trainedUnitType.getFoodUsed();
+									if (newFoodUsed <= player.getFoodCap()) {
+										player.setFoodUsed(newFoodUsed);
+										player.addTechtreeInProgress(queuedRawcode);
+										this.queuedUnitFoodPaid = true;
+									}
+								} else {
+									player.addTechtreeInProgress(queuedRawcode);
+									this.queuedUnitFoodPaid = true;
+								}
+							} else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
+								final CPlayer player = game.getPlayer(this.playerIndex);
+								final CUnitType trainedUnitType = game.getUnit(queuedRawcode.getValue()).getUnitType();
+								final int newFoodUsed = player.getFoodUsed() + trainedUnitType.getFoodUsed();
+								if (newFoodUsed <= player.getFoodCap()) {
+									player.setFoodUsed(newFoodUsed);
+									this.queuedUnitFoodPaid = true;
+								}
+							} else {
+								this.queuedUnitFoodPaid = true;
+								System.err.println(
+										"Unpaid food for non unit queue item ???? Attempting to correct this by setting paid=true");
+							}
+						}
+						if (this.buildQueueTypes[0] == QueueItemType.UNIT) {
+							final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
+							if (this.constructionProgress >= trainedUnitType.getBuildTime()) {
+								this.constructionProgress = 0;
+								final CUnit trainedUnit = game.createUnit(queuedRawcode, this.playerIndex, getX(),
+										getY(), game.getGameplayConstants().getBuildingAngle());
+								// dont add food cost to player 2x
+								trainedUnit.setFoodUsed(trainedUnitType.getFoodUsed());
+								final CPlayer player = game.getPlayer(this.playerIndex);
+								player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
+								player.removeTechtreeInProgress(queuedRawcode);
+								player.addTechtreeUnlocked(queuedRawcode);
+								// nudge the trained unit out around us
+								trainedUnit.nudgeAround(game, this);
+								game.unitTrainedEvent(this, trainedUnit);
+								if (this.rallyPoint != null) {
+									final int rallyOrderId = OrderIds.smart;
+									this.rallyPoint.visit(UseAbilityOnTargetByIdVisitor.INSTANCE.reset(game,
+											trainedUnit, rallyOrderId));
+								}
+								for (int i = 0; i < this.buildQueue.length - 1; i++) {
+									setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
+								}
+								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
+								this.stateNotifier.queueChanged();
+							}
+						} else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
+							final CUnit revivingHero = game.getUnit(queuedRawcode.getValue());
+							final CUnitType trainedUnitType = revivingHero.getUnitType();
+							final CGameplayConstants gameplayConstants = game.getGameplayConstants();
+							if (this.constructionProgress >= gameplayConstants.getHeroReviveTime(
+									trainedUnitType.getBuildTime(), revivingHero.getHeroData().getHeroLevel())) {
+								this.constructionProgress = 0;
+								revivingHero.getHeroData().setReviving(false);
+								revivingHero.getHeroData().setAwaitingRevive(false);
+								revivingHero.corpse = false;
+								revivingHero.boneCorpse = false;
+								revivingHero.deathTurnTick = 0;
+								revivingHero.setX(getX());
+								revivingHero.setY(getY());
+								game.getWorldCollision().addUnit(revivingHero);
+								revivingHero.setPoint(getX(), getY(), game.getWorldCollision(),
+										game.getRegionManager());
+								revivingHero.setHidden(false);
+								revivingHero.setLife(game,
+										revivingHero.getMaximumLife() * gameplayConstants.getHeroReviveLifeFactor());
+								revivingHero.setMana(
+										revivingHero.getMaximumMana() * gameplayConstants.getHeroReviveManaFactor()
+												+ gameplayConstants.getHeroReviveManaStart()
+														* trainedUnitType.getManaInitial());
+								// dont add food cost to player 2x
+								revivingHero.setFoodUsed(trainedUnitType.getFoodUsed());
+								final CPlayer player = game.getPlayer(this.playerIndex);
+								player.setUnitFoodMade(revivingHero, trainedUnitType.getFoodMade());
+								player.addTechtreeUnlocked(queuedRawcode);
+								// nudge the trained unit out around us
+								revivingHero.nudgeAround(game, this);
+								game.unitRepositioned(revivingHero); // dont blend animation
+								game.heroReviveEvent(this, revivingHero);
+								if (this.rallyPoint != null) {
+									final int rallyOrderId = OrderIds.smart;
+									this.rallyPoint.visit(UseAbilityOnTargetByIdVisitor.INSTANCE.reset(game,
+											revivingHero, rallyOrderId));
+								}
+								for (int i = 0; i < this.buildQueue.length - 1; i++) {
+									setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
+								}
+								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
+								this.stateNotifier.queueChanged();
+							}
+						} else if (this.buildQueueTypes[0] == QueueItemType.RESEARCH) {
+							final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
+							if (this.constructionProgress >= trainedUnitType.getBuildTime()) {
+								this.constructionProgress = 0;
+								for (int i = 0; i < this.buildQueue.length - 1; i++) {
+									setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
+								}
+								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
+								this.stateNotifier.queueChanged();
+							}
+						}
+					}
+					if (this.life < this.maximumLife) {
+						final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
+						boolean active = false;
+						switch (lifeRegenType) {
+						case ALWAYS:
+							active = true;
+							break;
+						case DAY:
+							active = game.isDay();
+							break;
+						case NIGHT:
+							active = game.isNight();
+							break;
+						case BLIGHT:
+							active = PathingFlags.isPathingFlag(game.getPathingGrid().getPathing(getX(), getY()),
+									PathingFlags.BLIGHTED);
+							break;
+						default:
+							active = false;
+						}
+						if (active) {
+							float lifePlusRegen = this.life + this.currentLifeRegenPerTick;
+							if (lifePlusRegen > this.maximumLife) {
+								lifePlusRegen = this.maximumLife;
+							}
+							this.life = lifePlusRegen;
+							this.stateNotifier.lifeChanged();
+						}
+					}
+					if (this.mana < this.maximumMana) {
+						float manaPlusRegen = this.mana + this.currentManaRegenPerTick;
+						if (manaPlusRegen > this.maximumMana) {
+							manaPlusRegen = this.maximumMana;
+						}
+						this.mana = manaPlusRegen;
+						this.stateNotifier.manaChanged();
+					}
+					if (this.currentBehavior != null) {
+						final CBehavior lastBehavior = this.currentBehavior;
+						final int lastBehaviorHighlightOrderId = lastBehavior.getHighlightOrderId();
+						this.currentBehavior = this.currentBehavior.update(game);
+						if (lastBehavior != this.currentBehavior) {
+							lastBehavior.end(game, false);
+							this.currentBehavior.begin(game);
+						}
+						if (this.currentBehavior.getHighlightOrderId() != lastBehaviorHighlightOrderId) {
+							this.stateNotifier.ordersChanged();
+						}
+					} else {
+						// check to auto acquire targets
+						autoAcquireAttackTargets(game, false);
+					}
 				}
+			}
+			for (int i = this.abilities.size() - 1; i >= 0; i--) {
+				// okay if it removes self from this during onTick() because of reverse
+				// iteration order
+				this.abilities.get(i).onTick(game, this);
 			}
 		}
 		return false;

@@ -47,7 +47,7 @@ public class CBuffStun extends AbstractCBuff {
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
-
+		cUnit.remove(game, this);
 	}
 
 	@Override

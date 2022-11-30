@@ -15,11 +15,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
-public class RenderAttackProjectile implements RenderEffect {
+public class RenderProjectile implements RenderEffect {
 	private static final Quaternion pitchHeap = new Quaternion();
 
-	private final CAttackProjectile simulationProjectile;
+	private final CProjectile simulationProjectile;
 	private final MdxComplexInstance modelInstance;
 	private float x;
 	private float y;
@@ -36,7 +37,7 @@ public class RenderAttackProjectile implements RenderEffect {
 	private boolean done = false;
 	private float deathTimeElapsed;
 
-	public RenderAttackProjectile(final CAttackProjectile simulationProjectile, final MdxComplexInstance modelInstance,
+	public RenderProjectile(final CProjectile simulationProjectile, final MdxComplexInstance modelInstance,
 			final float z, final float arc, final War3MapViewer war3MapViewer) {
 		this.simulationProjectile = simulationProjectile;
 		this.modelInstance = modelInstance;
@@ -44,8 +45,8 @@ public class RenderAttackProjectile implements RenderEffect {
 		this.y = simulationProjectile.getY();
 		this.z = z;
 		this.startingHeight = z;
-		final float targetX = this.simulationProjectile.getTarget().getX();
-		final float targetY = this.simulationProjectile.getTarget().getY();
+		final float targetX = this.simulationProjectile.getTargetX();
+		final float targetY = this.simulationProjectile.getTargetY();
 		final float dxToTarget = targetX - this.x;
 		final float dyToTarget = targetY - this.y;
 		final float d2DToTarget = (float) StrictMath.sqrt((dxToTarget * dxToTarget) + (dyToTarget * dyToTarget));
@@ -53,7 +54,7 @@ public class RenderAttackProjectile implements RenderEffect {
 		final CWidget widgetTarget = this.simulationProjectile.getTarget().visit(AbilityTargetWidgetVisitor.INSTANCE);
 		float impactZ;
 		float flyHeight;
-		if ((simulationProjectile.getUnitAttack().getWeaponType() == CWeaponType.ARTILLERY) || (widgetTarget == null)) {
+		if (widgetTarget == null) {
 			impactZ = 0;
 			flyHeight = 0;
 		}

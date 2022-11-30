@@ -1,33 +1,35 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.skills.human.paladin;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.skills.human.mountainking;
 
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin.CAbilityHolyLight;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.mountainking.CAbilityThunderBolt;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffStun;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetUnitVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 
-public class CBehaviorHolyLight extends CAbstractRangedBehavior {
-	private final CAbilityHolyLight ability;
+public class CBehaviorThunderBolt extends CAbstractRangedBehavior implements CAbilityProjectileListener {
+	private final CAbilityThunderBolt ability;
 	private final AbilityTargetStillAliveAndTargetableVisitor stillAliveVisitor;
 	private int castStartTick = 0;
 	private boolean doneEffect = false;
 
-	public CBehaviorHolyLight(final CUnit unit, final CAbilityHolyLight ability) {
+	public CBehaviorThunderBolt(final CUnit unit, final CAbilityThunderBolt ability) {
 		super(unit);
 		this.ability = ability;
 		this.stillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 
-	public CBehaviorHolyLight reset(final CWidget target) {
+	public CBehaviorThunderBolt reset(final CWidget target) {
 		innerReset(target, false);
 		this.castStartTick = 0;
 		this.doneEffect = false;
@@ -42,7 +44,7 @@ public class CBehaviorHolyLight extends CAbstractRangedBehavior {
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
-		this.unit.getUnitAnimationListener().playAnimation(false, null, SequenceUtils.SPELL, 1.0f, true);
+		this.unit.getUnitAnimationListener().playAnimation(false, null, SequenceUtils.SPELL_THROW, 1.0f, true);
 		if (this.castStartTick == 0) {
 			this.castStartTick = simulation.getGameTurnTick();
 		}
@@ -59,26 +61,32 @@ public class CBehaviorHolyLight extends CAbstractRangedBehavior {
 			}
 			if (this.target instanceof CUnit) {
 				final CUnit targetUnit = (CUnit) this.target;
-				final boolean undead = targetUnit.getClassifications().contains(CUnitClassification.UNDEAD);
-				if (undead) {
-					targetUnit.damage(simulation, this.unit, CAttackType.SPELLS, CWeaponSoundTypeJass.WHOKNOWS.name(),
-							this.ability.getHealAmount() / 2);
-				} else {
-					float newLifeValue = targetUnit.getLife() + this.ability.getHealAmount();
-					if (newLifeValue > targetUnit.getMaxLife()) {
-						newLifeValue = targetUnit.getMaxLife();
-					}
-					targetUnit.setLife(simulation, newLifeValue);
-				}
+				simulation.createProjectile(targetUnit, ability.getAlias(), unit.getX(), unit.getY(),
+						(float) unit.angleTo(targetUnit), ability.getProjectileSpeed(),
+						ability.isProjectileHomingEnabled(), targetUnit, this);
 				this.ability.setCooldownRemaining(this.ability.getCooldown());
 				this.unit.fireCooldownsChangedEvent();
-				simulation.createSpellEffectOnUnit(targetUnit, this.ability.getAlias(), CEffectType.TARGET);
 			}
 		}
 		if (ticksSinceCast >= backswingTicks) {
 			return this.unit.pollNextOrderBehavior(simulation);
 		}
 		return this;
+	}
+
+	@Override
+	public void onLaunch(CSimulation game, AbilityTarget target) {
+	}
+
+	@Override
+	public void onHit(CSimulation game, AbilityTarget target) {
+		CUnit unitTarget = target.visit(AbilityTargetUnitVisitor.INSTANCE);
+		if (unitTarget != null) {
+			unitTarget.damage(game, this.unit, CAttackType.SPELLS, CWeaponSoundTypeJass.WHOKNOWS.name(),
+					this.ability.getDamage());
+			unitTarget.add(game, new CBuffStun(game.getHandleIdAllocator().createId(), ability.getBuffId(),
+					ability.getDuration(unitTarget)));
+		}
 	}
 
 	@Override
@@ -109,6 +117,6 @@ public class CBehaviorHolyLight extends CAbstractRangedBehavior {
 
 	@Override
 	public int getHighlightOrderId() {
-		return OrderIds.holybolt;
+		return OrderIds.thunderbolt;
 	}
 }

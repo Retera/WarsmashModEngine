@@ -4,6 +4,9 @@ This is a Warcraft III modding project that aspires to eventually make Warcraft 
 ## Gameplay Example
 [![GAMEPLAY VIDEO](http://img.youtube.com/vi/2YDPQW7uyQ8/0.jpg)](http://www.youtube.com/watch?v=2YDPQW7uyQ8)
 
+## Discord
+https://discord.com/invite/ucjftZ7x7H
+
 ## How to Install
 1. Clone the repo
 2. Open the repo as a Gradle Project with your Java IDE of choice (IntelliJ seems to be the easiest to get working)

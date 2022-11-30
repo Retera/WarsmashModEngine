@@ -54,6 +54,7 @@ public class AbilityDataUI {
 	private static final War3ID EFFECT_ART = War3ID.fromString("aeat");
 	private static final War3ID AREA_EFFECT_ART = War3ID.fromString("aaea");
 	private static final War3ID MISSILE_ART = War3ID.fromString("amat");
+	private static final War3ID MISSILE_ARC = War3ID.fromString("amac");
 
 	// Standard buff icon fields
 	private static final War3ID BUFF_ICON_NORMAL = War3ID.fromString("fart");
@@ -207,11 +208,13 @@ public class AbilityDataUI {
 			for (final String areaEffectArtPath : areaEffectArtPaths) {
 				areaEffectArt.add(new EffectAttachmentUI(areaEffectArtPath, Collections.emptyList()));
 			}
-			final List<EffectAttachmentUI> missileArt = new ArrayList<>();
+			final List<EffectAttachmentUIMissile> missileArt = new ArrayList<>();
 			final List<String> missileArtPaths = Arrays
 					.asList(abilityTypeData.getFieldAsString(MISSILE_ART, 0).split(","));
+			
+			float missileArc = abilityTypeData.getFieldAsFloat(MISSILE_ARC, 0);
 			for (final String missileArtPath : missileArtPaths) {
-				missileArt.add(new EffectAttachmentUI(missileArtPath, Collections.emptyList()));
+				missileArt.add(new EffectAttachmentUIMissile(missileArtPath, Collections.emptyList(), missileArc));
 			}
 
 			final String effectSound = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND, 0);

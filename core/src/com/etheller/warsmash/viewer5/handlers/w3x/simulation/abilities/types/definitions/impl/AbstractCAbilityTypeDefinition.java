@@ -22,6 +22,9 @@ public abstract class AbstractCAbilityTypeDefinition<TYPE_LEVEL_DATA extends CAb
 	protected static final War3ID AREA_OF_EFFECT = AREA;
 	protected static final War3ID BUFF = War3ID.fromString("abuf");
 
+	protected static final War3ID PROJECTILE_SPEED = War3ID.fromString("amsp");
+	protected static final War3ID PROJECTILE_HOMING_ENABLED = War3ID.fromString("amho");
+
 	@Override
 	public CAbilityType<?> createAbilityType(final War3ID alias, final MutableGameObject abilityEditorData) {
 		final int levels = abilityEditorData.getFieldAsInteger(LEVELS, 0);
@@ -36,4 +39,14 @@ public abstract class AbstractCAbilityTypeDefinition<TYPE_LEVEL_DATA extends CAb
 
 	protected abstract CAbilityType<?> innerCreateAbilityType(War3ID alias, MutableGameObject abilityEditorData,
 			List<TYPE_LEVEL_DATA> levelData);
+
+	protected static final War3ID getBuffId(final MutableGameObject abilityEditorData, final int level) {
+		final String buffIdString = abilityEditorData.getFieldAsString(BUFF, level);
+		War3ID buffId = War3ID.NONE;
+		try {
+			buffId = War3ID.fromString(buffIdString.split(",")[0]);
+		} catch (final Exception exc) {
+		}
+		return buffId;
+	}
 }

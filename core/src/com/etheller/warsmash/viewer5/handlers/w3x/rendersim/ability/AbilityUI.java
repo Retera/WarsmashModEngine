@@ -11,14 +11,14 @@ public class AbilityUI {
 	private final List<EffectAttachmentUI> specialArt;
 	private final List<EffectAttachmentUI> effectArt;
 	private final List<EffectAttachmentUI> areaEffectArt;
-	private final List<EffectAttachmentUI> missileArt;
+	private final List<EffectAttachmentUIMissile> missileArt;
 	private final String effectSound;
 	private final String effectSoundLooped;
 
 	public AbilityUI(final IconUI learnIconUI, final IconUI onIconUI, final IconUI offIconUI,
 			final List<EffectAttachmentUI> casterArt, final List<EffectAttachmentUI> targetArt,
 			final List<EffectAttachmentUI> specialArt, final List<EffectAttachmentUI> effectArt,
-			final List<EffectAttachmentUI> areaEffectArt, final List<EffectAttachmentUI> missileArt,
+			final List<EffectAttachmentUI> areaEffectArt, final List<EffectAttachmentUIMissile> missileArt,
 			final String effectSound, final String effectSoundLooped) {
 		this.learnIconUI = learnIconUI;
 		this.onIconUI = onIconUI;
@@ -65,7 +65,7 @@ public class AbilityUI {
 		return tryGet(this.areaEffectArt, index);
 	}
 
-	public EffectAttachmentUI getMissileArt(final int index) {
+	public EffectAttachmentUIMissile getMissileArt(final int index) {
 		return tryGet(this.missileArt, index);
 	}
 
@@ -77,7 +77,7 @@ public class AbilityUI {
 		return this.effectSoundLooped;
 	}
 
-	protected static EffectAttachmentUI tryGet(final List<EffectAttachmentUI> items, final int index) {
+	protected static <T> T tryGet(final List<T> items, final int index) {
 		if (items.isEmpty()) {
 			return null;
 		}

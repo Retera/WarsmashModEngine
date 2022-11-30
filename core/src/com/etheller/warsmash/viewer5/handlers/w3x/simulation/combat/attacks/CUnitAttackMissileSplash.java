@@ -109,7 +109,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 			final float damage, final float x, final float y, final int bounceIndex,
 			final CUnitAttackListener attackListener) {
 		SplashDamageConsumer.INSTANCE.doDamage(cSimulation, source, target, this, x, y, damage, attackListener);
-		if ((getWeaponType() != CWeaponType.ARTILLERY) && !SplashDamageConsumer.INSTANCE.hitTarget) {
+		if (!SplashDamageConsumer.INSTANCE.hitTarget) {
 			float originalTargetDamage = damage;
 			if (Math.abs(this.damageFactorSmall) > 0.0001) {
 				originalTargetDamage *= this.damageFactorSmall;

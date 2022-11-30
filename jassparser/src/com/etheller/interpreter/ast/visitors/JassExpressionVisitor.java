@@ -76,13 +76,13 @@ public class JassExpressionVisitor extends JassBaseVisitor<JassExpression> {
 
 	@Override
 	public JassExpression visitIntegerLiteralExpression(final IntegerLiteralExpressionContext ctx) {
-		return new LiteralJassExpression(new IntegerJassValue(Integer.parseInt(ctx.INTEGER().getText())));
+		return new LiteralJassExpression(new IntegerJassValue((int) Long.parseLong(ctx.INTEGER().getText())));
 	}
 
 	@Override
 	public JassExpression visitHexIntegerLiteralExpression(final HexIntegerLiteralExpressionContext ctx) {
-		return new LiteralJassExpression(
-				new IntegerJassValue(Integer.parseInt(ctx.HEX_CONSTANT().getText().substring(2), 16)));
+		return new LiteralJassExpression(new IntegerJassValue(
+				(int) (Long.parseLong(ctx.HEX_CONSTANT().getText().substring(2), 16) & 0xFFFFFFFF)));
 	}
 
 	@Override

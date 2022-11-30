@@ -267,7 +267,8 @@ EXITWHEN : 'exitwhen';
 DEBUG : 'debug';
 
 fragment ESCAPED_QUOTE : '\\"';
-STRING_LITERAL :   '"' ( ESCAPED_QUOTE | . )*? '"';
+fragment ESCAPED_SLASH : '\\\\';
+STRING_LITERAL :   '"' ( ESCAPED_SLASH | ESCAPED_QUOTE | . )*? '"';
 
  
 INTEGER : [0]|([1-9][0-9]*) ;

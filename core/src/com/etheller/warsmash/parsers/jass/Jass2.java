@@ -4263,8 +4263,7 @@ public class Jass2 {
 					if ((whichUnit == null) || (whichPlayer == null)) {
 						return BooleanJassValue.FALSE;
 					}
-					return BooleanJassValue
-							.of(!whichPlayer.hasAlliance(whichUnit.getPlayerIndex(), CAllianceType.PASSIVE));
+					return BooleanJassValue.of(!whichUnit.isUnitAlly(whichPlayer));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnitAlly", new JassFunction() {
@@ -4276,8 +4275,7 @@ public class Jass2 {
 					if ((whichUnit == null) || (whichPlayer == null)) {
 						return BooleanJassValue.FALSE;
 					}
-					return BooleanJassValue
-							.of(whichPlayer.hasAlliance(whichUnit.getPlayerIndex(), CAllianceType.PASSIVE));
+					return BooleanJassValue.of(whichUnit.isUnitAlly(whichPlayer));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("IsNoVictoryCheat", new JassFunction() {

@@ -63,6 +63,7 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHhb"), new CAbilityTypeDefinitionHolyLight());
 		// Mountain King:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtb"), new CAbilityTypeDefinitionThunderBolt());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANfb"), new CAbilityTypeDefinitionThunderBolt());
 
 		// Blood Mage:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Apxf"), new CAbilityTypeDefinitionPhoenixFire());

@@ -141,6 +141,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -1457,7 +1458,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (this.mouseOverUnit != null && isUnitSelectable(this.mouseOverUnit)) {
 				final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
 				positionHealthBar(simpleStatusBarFrame, this.mouseOverUnit, 1.0f);
-				final String hoverTipTextValue = getWorldFrameHoverTipText(this.mouseOverUnit);
+				final String hoverTipTextValue = getWorldFrameHoverTipText(war3MapViewer.simulation,
+						this.mouseOverUnit);
 				this.hovertipFrame.setVisible(hoverTipTextValue != null);
 				if (hoverTipTextValue != null) {
 					this.rootFrame.setText(this.hovertipText, hoverTipTextValue);
@@ -1650,7 +1652,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return mouseOverUnit.isSelectable() && !mouseOverUnit.getSimulationWidget().isDead();
 	}
 
-	private String getWorldFrameHoverTipText(final RenderWidget whichUnit) {
+	private String getWorldFrameHoverTipText(CSimulation game, final RenderWidget whichUnit) {
 		if (whichUnit instanceof RenderUnit) {
 			final RenderUnit renderUnit = (RenderUnit) whichUnit;
 			final CUnit simulationUnit = renderUnit.getSimulationUnit();
@@ -1659,14 +1661,21 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
 				return heroData.getProperName() + "|n" + level + " " + heroData.getHeroLevel();
 			} else {
-				final boolean neutralHostile = simulationUnit.getPlayerIndex() == WarsmashConstants.MAX_PLAYERS - 4;
-				final boolean neutralPassive = simulationUnit.getPlayerIndex() == WarsmashConstants.MAX_PLAYERS - 1;
+				int simulationUnitPlayerIndex = simulationUnit.getPlayerIndex();
+				final boolean neutralHostile = simulationUnitPlayerIndex == WarsmashConstants.MAX_PLAYERS - 4;
+				final boolean neutralPassive = simulationUnitPlayerIndex == WarsmashConstants.MAX_PLAYERS - 1;
 				if (neutralPassive && simulationUnit.isBuilding() || neutralHostile) {
 					String returnValue = simulationUnit.getUnitType().getName();
 					final CAbilityGoldMine goldMineData = simulationUnit.getGoldMineData();
 					if (goldMineData != null) {
 						final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
 						returnValue += "|n" + colonGold + " " + goldMineData.getGold();
+					} else {
+						CAbilityBlightedGoldMine blightedGoldMineData = simulationUnit.getBlightedGoldMineData();
+						if (blightedGoldMineData != null) {
+							final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
+							returnValue += "|n" + colonGold + " " + blightedGoldMineData.getGold();
+						}
 					}
 					final int creepLevel = simulationUnit.getUnitType().getLevel();
 					if (neutralHostile && creepLevel > 0) {
@@ -1674,6 +1683,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						returnValue += "|n" + level + " " + creepLevel;
 					}
 					return returnValue;
+				} else if (simulationUnitPlayerIndex != localPlayer.getId()
+						&& simulationUnitPlayerIndex < WarsmashConstants.MAX_PLAYERS - 4) {
+					boolean ally = simulationUnit.isUnitAlly(localPlayer);
+					String name = game.getPlayer(simulationUnitPlayerIndex).getName();
+					if (ally) {
+						return "|CFF00FFFF" + name;
+					} else {
+						return "|CFFFF0000" + name;
+					}
 				}
 			}
 		} else if (whichUnit instanceof RenderItem) {

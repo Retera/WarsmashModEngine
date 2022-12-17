@@ -1890,6 +1890,15 @@ public class CUnit extends CWidget {
 		return null;
 	}
 
+	public CAbilityBlightedGoldMine getBlightedGoldMineData() {
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityBlightedGoldMine) {
+				return (CAbilityBlightedGoldMine) ability;
+			}
+		}
+		return null;
+	}
+
 	public int getGold() {
 		for (final CAbility ability : this.abilities) {
 			if (ability instanceof CAbilityGoldMine) {
@@ -2344,5 +2353,9 @@ public class CUnit extends CWidget {
 
 	public boolean isHero() {
 		return getHeroData() != null; // in future maybe do this with better performance
+	}
+
+	public boolean isUnitAlly(CPlayer whichPlayer) {
+		return whichPlayer.hasAlliance(this.getPlayerIndex(), CAllianceType.PASSIVE);
 	}
 }

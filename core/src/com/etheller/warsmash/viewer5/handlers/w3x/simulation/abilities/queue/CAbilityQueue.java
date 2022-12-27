@@ -9,6 +9,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType.UpgradeLevel;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
@@ -108,7 +110,59 @@ public final class CAbilityQueue extends AbstractCAbility {
 				}
 			}
 			else {
-				receiver.useOk();
+				CUpgradeType upgrade = game.getUpgradeData().getType(orderIdAsRawtype);
+				if (upgrade != null) {
+					final CPlayer player = game.getPlayer(unit.getPlayerIndex());
+					int inProgressCount = player.getTechtreeInProgress(orderIdAsRawtype);
+					int unlockedCount = player.getTechtreeUnlocked(orderIdAsRawtype);
+					if (inProgressCount != 0) {
+						receiver.techItemAlreadyInProgress();
+					}
+					else {
+						UpgradeLevel upgradeLevel = upgrade.getLevel(unlockedCount);
+						if (upgradeLevel != null) {
+							final List<CUnitTypeRequirement> requirements = upgradeLevel.getRequirements();
+							final boolean techtreeAllowedByMax = player.isTechtreeAllowedByMax(orderIdAsRawtype);
+							boolean requirementsMet = techtreeAllowedByMax;
+							for (final CUnitTypeRequirement requirement : requirements) {
+								if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement
+										.getRequiredLevel()) {
+									requirementsMet = false;
+								}
+							}
+							if (requirementsMet) {
+								if (player.getGold() >= upgrade.getGoldCost(unlockedCount)) {
+									if (player.getLumber() >= upgrade.getLumberCost(unlockedCount)) {
+										receiver.useOk();
+									}
+									else {
+										receiver.notEnoughResources(ResourceType.LUMBER);
+									}
+								}
+								else {
+									receiver.notEnoughResources(ResourceType.GOLD);
+								}
+							}
+							else {
+								if (techtreeAllowedByMax) {
+									for (final CUnitTypeRequirement requirement : requirements) {
+										receiver.missingRequirement(requirement.getRequirement(),
+												requirement.getRequiredLevel());
+									}
+								}
+								else {
+									receiver.techtreeMaximumReached();
+								}
+							}
+						}
+						else {
+							receiver.techtreeMaximumReached();
+						}
+					}
+				}
+				else {
+					receiver.useOk();
+				}
 			}
 		}
 		else {

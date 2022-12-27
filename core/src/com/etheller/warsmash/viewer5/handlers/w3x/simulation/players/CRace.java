@@ -3,12 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 import com.etheller.interpreter.ast.util.CHandle;
 
 public enum CRace implements CHandle {
-	HUMAN(1),
-	ORC(2),
-	UNDEAD(3),
-	NIGHTELF(4),
-	DEMON(5),
-	OTHER(7);
+	ZEAR(1), TIDE(2), TRIBE(3), FLEGION(4), FALLY(5), VOID(6), OTHER(7);
 
 	private int id;
 
@@ -16,7 +11,7 @@ public enum CRace implements CHandle {
 		this.id = id;
 	}
 
-	public static CRace[] VALUES = { null, HUMAN, ORC, UNDEAD, NIGHTELF, DEMON, null, OTHER };
+	public static CRace[] VALUES = { null, ZEAR, TIDE, TRIBE, FLEGION, FALLY, VOID, OTHER };
 
 	public int getId() {
 		return this.id;

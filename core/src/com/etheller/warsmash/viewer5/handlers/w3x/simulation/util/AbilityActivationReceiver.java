@@ -25,6 +25,8 @@ public interface AbilityActivationReceiver {
 
 	void techtreeMaximumReached();
 
+	void techItemAlreadyInProgress();
+
 	void cooldownNotYetReady(float cooldownRemaining, float cooldown);
 
 	void noChargesRemaining();

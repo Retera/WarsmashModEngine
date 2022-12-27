@@ -11,6 +11,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.UnitIconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType.UpgradeLevel;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGenericDoNothing;
@@ -76,7 +78,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityAttack ability) {
-		if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			addCommandButton(ability, this.abilityDataUI.getAttackUI(), ability.getHandleId(), OrderIds.attack, 0,
 					false, false);
 			boolean attackGroundEnabled = false;
@@ -100,7 +102,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityMove ability) {
-		if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			addCommandButton(ability, this.abilityDataUI.getMoveUI(), ability.getHandleId(), OrderIds.move, 0, false,
 					false);
 			addCommandButton(ability, this.abilityDataUI.getHoldPosUI(), 0, OrderIds.holdposition, 0, false, false);
@@ -117,11 +119,12 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	@Override
 	public Void accept(final CAbilityGenericDoNothing ability) {
 		if (ENABLE_PLACEHOLDERS) {
-			if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
+			if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 				final AbilityUI abilityUI = this.abilityDataUI.getUI(ability.getAlias());
 				if (abilityUI != null) {
 					addCommandButton(ability, abilityUI.getOnIconUI(), ability.getHandleId(), 0, 0, false, false);
-				} else {
+				}
+				else {
 					addCommandButton(ability, this.abilityDataUI.getStopUI(), ability.getHandleId(), 0, 0, false,
 							false);
 				}
@@ -132,7 +135,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final GenericSingleIconActiveAbility ability) {
-		if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			final AbilityUI ui = this.abilityDataUI.getUI(ability.getAlias());
 			addCommandButton(ability, ability.isToggleOn() ? ui.getOffIconUI() : ui.getOnIconUI(),
 					ability.getHandleId(), ability.getBaseOrderId(), 0, false, false, ability.getUIGoldCost(),
@@ -174,12 +177,13 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityColdArrows ability) {
-		if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			final boolean autoCastActive = ability.isAutoCastActive();
 			int autoCastId;
 			if (autoCastActive) {
 				autoCastId = OrderIds.coldarrows;
-			} else {
+			}
+			else {
 				autoCastId = OrderIds.uncoldarrows;
 			}
 			final IconUI onIconUI = this.abilityDataUI.getUI(ability.getAlias()).getOnIconUI();
@@ -246,7 +250,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	}
 
 	private void handleBuildMenu(final AbstractCAbilityBuild ability, final IconUI buildUI) {
-		if (this.menuBaseOrderId == ability.getBaseOrderId() && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == ability.getBaseOrderId()) && ability.isIconShowing()) {
 			for (final War3ID unitType : ability.getStructuresBuilt()) {
 				final IconUI unitUI = this.abilityDataUI.getUnitUI(unitType);
 				if (unitUI != null) {
@@ -256,7 +260,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							simulationUnitType.getFoodUsed(), 0, -1);
 				}
 			}
-		} else if (this.menuBaseOrderId == 0) {
+		}
+		else if (this.menuBaseOrderId == 0) {
 			if (this.multiSelect) {
 				return;
 			}
@@ -297,10 +302,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			int goldCost, int lumberCost, int foodCost, final int manaCost, final int numberOverlay,
 			final char hotkey) {
 		ability.checkCanUse(this.game, this.unit, orderId, this.previewCallback.reset());
-		if (!this.previewCallback.techtreeMaxReached) {
-			final boolean active = this.unit.getCurrentBehavior() != null
-					&& orderId == this.unit.getCurrentBehavior().getHighlightOrderId();
-			final boolean disabled = ability != null && ability.isDisabled() || this.previewCallback.disabled;
+		if (!this.previewCallback.omitIconEntirely) {
+			final boolean active = (this.unit.getCurrentBehavior() != null)
+					&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId());
+			final boolean disabled = ((ability != null) && ability.isDisabled()) || this.previewCallback.disabled;
 			final float cooldownRemaining = this.previewCallback.cooldownRemaining;
 			final float cooldownMax = this.previewCallback.cooldownMax;
 			if (disabled) {
@@ -329,11 +334,12 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityReviveHero ability) {
-		if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			int heroIndex = 0;
 			for (final CUnit playerHero : this.game.getPlayerHeroes(this.unit.getPlayerIndex())) {
 				final CAbilityHero heroData = playerHero.getHeroData();
-				if (playerHero.isDead() && heroData != null && heroData.isAwaitingRevive() && !heroData.isReviving()) {
+				if (playerHero.isDead() && (heroData != null) && heroData.isAwaitingRevive()
+						&& !heroData.isReviving()) {
 
 					final UnitIconUI unitUI = this.abilityDataUI.getUnitUI(playerHero.getTypeId());
 					if (unitUI != null) {
@@ -362,17 +368,18 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityQueue ability) {
-		if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			for (final War3ID unitType : ability.getUnitsTrained()) {
 				final IconUI unitUI = this.abilityDataUI.getUnitUI(unitType);
 				if (unitUI != null) {
 					final CUnitType simulationUnitType = this.game.getUnitData().getUnitType(unitType);
 					int goldCost, lumberCost;
 					if (simulationUnitType.isHero()
-							&& this.game.getPlayer(this.unit.getPlayerIndex()).getHeroTokens() > 0) {
+							&& (this.game.getPlayer(this.unit.getPlayerIndex()).getHeroTokens() > 0)) {
 						goldCost = 0;
 						lumberCost = 0;
-					} else {
+					}
+					else {
 						goldCost = simulationUnitType.getGoldCost();
 						lumberCost = simulationUnitType.getLumberCost();
 					}
@@ -380,14 +387,16 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							goldCost, lumberCost, simulationUnitType.getFoodUsed(), 0, -1);
 				}
 			}
-			if (ENABLE_PLACEHOLDERS) {
-				for (final War3ID unitType : ability.getResearchesAvailable()) {
-					final CPlayer player = this.game.getPlayer(this.unit.getPlayerIndex());
-					final IconUI unitUI = this.abilityDataUI.getUpgradeUI(unitType,
-							player.getTechtreeUnlocked(unitType));
-					if (unitUI != null) {
-						addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false);
-					}
+			for (final War3ID unitType : ability.getResearchesAvailable()) {
+				final CPlayer player = this.game.getPlayer(this.unit.getPlayerIndex());
+				final IconUI unitUI = this.abilityDataUI.getUpgradeUI(unitType, player.getTechtreeUnlocked(unitType));
+				if (unitUI != null) {
+					final CUpgradeType simulationUpgradeType = this.game.getUpgradeData().getType(unitType);
+					int unlockCount = player.getTechtreeUnlocked(unitType);
+					int goldCost = simulationUpgradeType.getGoldCost(unlockCount);
+					int lumberCost = simulationUpgradeType.getLumberCost(unlockCount);
+					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false,
+							goldCost, lumberCost, 0, 0, -1);
 				}
 			}
 			if (this.unit.getBuildQueueTypes()[0] != null) {
@@ -403,7 +412,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityUpgrade ability) {
-		if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			for (final War3ID unitType : ability.getUpgradesTo()) {
 				final IconUI unitUI = this.abilityDataUI.getUnitUI(unitType);
 				if (unitUI != null) {
@@ -413,7 +422,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					if (this.game.getGameplayConstants().isRelativeUpgradeCosts()) {
 						relativeOffsetGold = existingUnitType.getGoldCost();
 						relativeOffsetLumber = existingUnitType.getLumberCost();
-					} else {
+					}
+					else {
 						relativeOffsetGold = 0;
 						relativeOffsetLumber = 0;
 					}
@@ -437,7 +447,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	private final class CommandCardActivationReceiverPreviewCallback implements AbilityActivationReceiver {
 		private boolean disabled;
-		private boolean techtreeMaxReached;
+		private boolean omitIconEntirely;
 		private boolean notEnoughMana;
 		private final StringBuilder requirementsTextBuilder = new StringBuilder();
 		private float cooldownRemaining;
@@ -445,7 +455,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 		public CommandCardActivationReceiverPreviewCallback reset() {
 			this.disabled = false;
-			this.techtreeMaxReached = false;
+			this.omitIconEntirely = false;
 			this.cooldownRemaining = 0;
 			this.requirementsTextBuilder.setLength(0);
 			return this;
@@ -480,12 +490,29 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				this.requirementsTextBuilder.append(CommandCardPopulatingAbilityVisitor.this.gameUI.getTemplates()
 						.getDecoratedString("REQUIRESTOOLTIP"));
 				this.requirementsTextBuilder.append("|n - ");
-			} else {
+			}
+			else {
 				this.requirementsTextBuilder.append(" - ");
 			}
 			final CUnitType unitType = CommandCardPopulatingAbilityVisitor.this.game.getUnitData().getUnitType(type);
-			this.requirementsTextBuilder
-					.append(unitType == null ? "NOTEXTERN Unknown ('" + type + "')" : unitType.getName());
+			if (unitType != null) {
+				this.requirementsTextBuilder.append(unitType.getName());
+			}
+			else {
+				CUpgradeType upgradeType = game.getUpgradeData().getType(type);
+				if (upgradeType != null) {
+					UpgradeLevel upgradeLevel = upgradeType.getLevel(level - 1);
+					if (upgradeLevel != null) {
+						this.requirementsTextBuilder.append(upgradeLevel.getName());
+					}
+					else {
+						this.requirementsTextBuilder.append("NOTEXTERN Unknown Level of Upgrade ('" + type + "')");
+					}
+				}
+				else {
+					this.requirementsTextBuilder.append("NOTEXTERN Unknown ('" + type + "')");
+				}
+			}
 			this.requirementsTextBuilder.append("|n");
 		}
 
@@ -496,7 +523,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				this.requirementsTextBuilder.append(CommandCardPopulatingAbilityVisitor.this.gameUI.getTemplates()
 						.getDecoratedString("REQUIRESTOOLTIP"));
 				this.requirementsTextBuilder.append("|n - ");
-			} else {
+			}
+			else {
 				this.requirementsTextBuilder.append(" - ");
 			}
 			this.requirementsTextBuilder.append(String.format(CommandCardPopulatingAbilityVisitor.this.gameUI
@@ -511,7 +539,12 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 		@Override
 		public void techtreeMaximumReached() {
-			this.techtreeMaxReached = true;
+			this.omitIconEntirely = true;
+		}
+
+		@Override
+		public void techItemAlreadyInProgress() {
+			this.omitIconEntirely = true;
 		}
 
 		@Override
@@ -551,7 +584,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityHero ability) {
-		if (this.menuBaseOrderId == OrderIds.skillmenu && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == OrderIds.skillmenu) && ability.isIconShowing()) {
 			for (final War3ID unitType : ability.getSkillsAvailable()) {
 				final AbilityUI abilityUI = this.abilityDataUI.getUI(unitType);
 				if (abilityUI != null) {
@@ -560,7 +593,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							false, false, 0, 0, 0, 0, nextLevel);
 				}
 			}
-		} else {
+		}
+		else {
 			if (this.multiSelect) {
 				return null;
 			}

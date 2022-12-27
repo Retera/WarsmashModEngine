@@ -14,6 +14,11 @@ public class SettableCommandErrorListener implements CommandErrorListener {
 	}
 
 	@Override
+	public void showCantTransportError(int playerIndex) {
+		this.delegate.showCantTransportError(playerIndex);
+	}
+
+	@Override
 	public void showNoFoodError(final int playerIndex) {
 		this.delegate.showNoFoodError(playerIndex);
 	}

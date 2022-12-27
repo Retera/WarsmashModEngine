@@ -23,18 +23,17 @@ public class JassTest {
 	public static void main(final String[] args) {
 		final JassProgramVisitor jassProgramVisitor = new JassProgramVisitor();
 		try {
-			final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor(
-					"E:\\Backups\\Warcraft\\Data\\127");
+			final FolderDataSourceDescriptor war3mpq = new FolderDataSourceDescriptor("C:\\Warsmash\\127-fix");
 			final FolderDataSourceDescriptor testingFolder = new FolderDataSourceDescriptor(
 					"E:\\Backups\\Warsmash\\Data");
 			final FolderDataSourceDescriptor currentFolder = new FolderDataSourceDescriptor(".");
 			final DataSource dataSource = new CompoundDataSourceDescriptor(
-					Arrays.<DataSourceDescriptor>asList(war3mpq, testingFolder, currentFolder)).createDataSource();
+					Arrays.<DataSourceDescriptor>asList(war3mpq/* , testingFolder */, currentFolder))
+					.createDataSource();
 			JassLexer lexer;
 			try {
 				lexer = new JassLexer(CharStreams.fromStream(dataSource.getResourceAsStream("Scripts\\common.j")));
-			}
-			catch (final IOException e) {
+			} catch (final IOException e) {
 				throw new RuntimeException(e);
 			}
 			final JassParser parser = new JassParser(new CommonTokenStream(lexer));
@@ -55,8 +54,7 @@ public class JassTest {
 				}
 			});
 			jassProgramVisitor.visit(parser.program());
-		}
-		catch (final Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 	}

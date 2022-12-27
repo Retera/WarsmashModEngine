@@ -1009,16 +1009,22 @@ public class BattleNetUI {
 					player.setRacePref(CRacePreference.RANDOM);
 					break;
 				case 1:
-					player.setRacePref(CRacePreference.HUMAN);
+					player.setRacePref(CRacePreference.ZEAR);
 					break;
 				case 2:
-					player.setRacePref(CRacePreference.ORC);
+					player.setRacePref(CRacePreference.TIDE);
 					break;
 				case 3:
-					player.setRacePref(CRacePreference.UNDEAD);
+					player.setRacePref(CRacePreference.TRIBE);
 					break;
 				case 4:
-					player.setRacePref(CRacePreference.NIGHTELF);
+					player.setRacePref(CRacePreference.FLEGION);
+					break;
+				case 5:
+					player.setRacePref(CRacePreference.FALLY);
+					break;
+				case 6:
+					player.setRacePref(CRacePreference.VOID);
 					break;
 
 				default:

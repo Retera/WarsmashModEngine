@@ -26,7 +26,12 @@ public class CAbilityAttack extends AbstractCAbility {
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		receiver.useOk();
+		if (unit.getAttacks().isEmpty()) {
+			receiver.disabled();
+		}
+		else {
+			receiver.useOk();
+		}
 	}
 
 	@Override

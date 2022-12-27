@@ -55,4 +55,11 @@ public class AttachmentInstance implements UpdatableObject {
 			}
 		}
 	}
+
+	public void onRemove() {
+		final MdxComplexInstance internalInstance = this.internalInstance;
+		if (internalInstance != null) {
+			internalInstance.detach();
+		}
+	}
 }

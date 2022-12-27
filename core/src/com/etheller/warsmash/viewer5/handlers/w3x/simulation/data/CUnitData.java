@@ -11,6 +11,7 @@ import java.util.Map;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
@@ -489,7 +490,8 @@ public class CUnitData {
 			final float deathTime = unitType.getFieldAsFloat(DEATH_TIME, 0);
 			final int goldCost = unitType.getFieldAsInteger(GOLD_COST, 0);
 			final int lumberCost = unitType.getFieldAsInteger(LUMBER_COST, 0);
-			final int buildTime = unitType.getFieldAsInteger(BUILD_TIME, 0);
+			final int buildTime = (int) Math
+					.ceil(unitType.getFieldAsInteger(BUILD_TIME, 0) * WarsmashConstants.GAME_SPEED_TIME_FACTOR);
 			final int foodUsed = unitType.getFieldAsInteger(FOOD_USED, 0);
 			final int foodMade = unitType.getFieldAsInteger(FOOD_MADE, 0);
 
@@ -583,7 +585,7 @@ public class CUnitData {
 		return unitTypeInstance;
 	}
 
-	public List<CUnitTypeRequirement> parseRequirements(final String requirementsString,
+	public static List<CUnitTypeRequirement> parseRequirements(final String requirementsString,
 			final String requirementsLevelsString) {
 		final String[] requirementsStringItems = requirementsString.split(",");
 		final String[] requirementsLevelsStringItems = requirementsLevelsString.split(",");
@@ -597,7 +599,12 @@ public class CUnitData {
 						level = 1;
 					}
 					else {
-						level = Integer.parseInt(requirementsLevelsStringItems[i]);
+						try {
+							level = Integer.parseInt(requirementsLevelsStringItems[i]);
+						}
+						catch (NumberFormatException exc) {
+							level = 1;
+						}
 					}
 				}
 				else if (requirementsLevelsStringItems.length > 0) {
@@ -607,7 +614,12 @@ public class CUnitData {
 						level = 1;
 					}
 					else {
-						level = Integer.parseInt(requirementLevel);
+						try {
+							level = Integer.parseInt(requirementLevel);
+						}
+						catch (NumberFormatException exc) {
+							level = 1;
+						}
 					}
 				}
 				else {

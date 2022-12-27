@@ -9,4 +9,5 @@ public class EventObjectSplEmitter extends EventObjectEmitter<EventObjectEmitter
 	protected EventObjectSplUbr createObject() {
 		return new EventObjectSplUbr(this);
 	}
+
 }

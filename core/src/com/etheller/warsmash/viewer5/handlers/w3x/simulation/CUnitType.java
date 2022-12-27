@@ -436,4 +436,8 @@ public class CUnitType {
 	public boolean isCanBuildOnMe() {
 		return this.canBuildOnMe;
 	}
+
+	public int getCargoCapacity() {
+		return 1;
+	}
 }

@@ -127,7 +127,7 @@ public class CItemData {
 			final String classificationString = itemType.getFieldAsString(CLASSIFICATION, 0);
 			CItemTypeJass itemClass = CItemTypeJass.UNKNOWN;
 			try {
-				itemClass = CItemTypeJass.valueOf(classificationString);
+				itemClass = CItemTypeJass.valueOf(classificationString.toUpperCase());
 			}
 			catch (final Exception exc) {
 				// do not bother to log this, means it didn't match constant (it's a user input)
@@ -174,10 +174,13 @@ public class CItemData {
 	public War3ID chooseRandomItem(final CItemTypeJass itemClass, final int level, final Random seededRandom) {
 		final RandomItemSet randomItemSet = this.levelToRandomChoices.get(level);
 		if (randomItemSet == null) {
+			System.err.println("chooseRandomItem: no item set: " + level);
 			return null;
 		}
 		final List<War3ID> itemsOfClass = randomItemSet.classificationToItems.get(itemClass);
 		if (itemsOfClass == null) {
+			System.err.println(
+					"chooseRandomItem: no items of class: " + itemsOfClass + " from " + itemClass + " " + level);
 			return null;
 		}
 		return itemsOfClass.get(seededRandom.nextInt(itemsOfClass.size()));

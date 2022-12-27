@@ -623,6 +623,38 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return scope;
 	}
 
+	public static CommonTriggerExecutionScope unitConstructFinishScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit constructedStructure, CUnit constructingUnit) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = constructedStructure;
+		scope.triggeringUnit = constructedStructure;
+		scope.constructedStructure = constructedStructure;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitTrainFinishScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit trainingUnit, CUnit trainedUnit) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = trainingUnit;
+		scope.triggeringUnit = trainingUnit;
+		scope.trainedUnit = trainedUnit;
+		scope.trainedUnitType = trainedUnit.getUnitType().getTypeId().getValue();
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitResearchFinishScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit researchingUnit, War3ID researched) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = researchingUnit;
+		scope.triggeringUnit = researchingUnit;
+		scope.researchingUnit = researchingUnit;
+		scope.researched = researched.getValue();
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
 	public static CommonTriggerExecutionScope unitSpellEffectTargetScope(final JassGameEventsWar3 triggerEventId,
 			final Trigger trigger, final CAbility spellAbility, final CUnit spellAbilityUnit, final CUnit targetUnit,
 			final War3ID spellAbilityId) {

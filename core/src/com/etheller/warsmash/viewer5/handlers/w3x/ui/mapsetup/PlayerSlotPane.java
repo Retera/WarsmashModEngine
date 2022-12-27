@@ -166,25 +166,35 @@ public class PlayerSlotPane {
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(0).getText());
 		}
-		else if (player.isRacePrefSet(CRacePreference.HUMAN) && (menuFrame.getMenuItemCount() > 1)) {
+		else if (player.isRacePrefSet(CRacePreference.ZEAR) && (menuFrame.getMenuItemCount() > 1)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(1).getText());
 		}
-		else if (player.isRacePrefSet(CRacePreference.ORC) && (menuFrame.getMenuItemCount() > 2)) {
+		else if (player.isRacePrefSet(CRacePreference.TIDE) && (menuFrame.getMenuItemCount() > 2)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(2).getText());
 		}
-		else if (player.isRacePrefSet(CRacePreference.UNDEAD) && (menuFrame.getMenuItemCount() > 3)) {
+		else if (player.isRacePrefSet(CRacePreference.TRIBE) && (menuFrame.getMenuItemCount() > 4)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(3).getText());
 		}
-		else if (player.isRacePrefSet(CRacePreference.NIGHTELF) && (menuFrame.getMenuItemCount() > 4)) {
+		else if (player.isRacePrefSet(CRacePreference.FLEGION) && (menuFrame.getMenuItemCount() > 3)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(4).getText());
+		}
+		else if (player.isRacePrefSet(CRacePreference.FALLY) && (menuFrame.getMenuItemCount() > 3)) {
+			rootFrame.setText(
+					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
+					menuFrame.getMenuItem(5).getText());
+		}
+		else if (player.isRacePrefSet(CRacePreference.VOID) && (menuFrame.getMenuItemCount() > 3)) {
+			rootFrame.setText(
+					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
+					menuFrame.getMenuItem(6).getText());
 		}
 	}
 

@@ -27,18 +27,24 @@ public class CBehaviorLoad extends CAbstractRangedBehavior {
 
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
-		final float castRange = this.ability.getCastRange();
+		final CAbilityCargoHold cargoData = this.unit.getCargoData();
+		final float castRange = cargoData.getCastRange();
 		return this.unit.canReach(this.target, castRange);
 	}
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
 		final CAbilityCargoHold cargoData = this.unit.getCargoData();
-		simulation.unitSoundEffectEvent(this.unit, cargoData.getAlias());
 		final CUnit targetUnit = (CUnit) this.target;
-		cargoData.addUnit(targetUnit);
-		targetUnit.setHidden(true);
-		targetUnit.setPaused(true);
+		if (cargoData.hasCapacity(targetUnit.getUnitType().getCargoCapacity())) {
+			simulation.unitSoundEffectEvent(this.unit, cargoData.getAlias());
+			cargoData.addUnit(this.unit, targetUnit);
+			targetUnit.setHidden(true);
+			targetUnit.setPaused(true);
+		}
+		else {
+			simulation.getCommandErrorListener().showCantTransportError(this.unit.getPlayerIndex());
+		}
 		return this.unit.pollNextOrderBehavior(simulation);
 	}
 

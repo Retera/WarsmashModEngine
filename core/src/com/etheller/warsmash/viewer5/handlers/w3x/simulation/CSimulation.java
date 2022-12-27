@@ -43,6 +43,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CDestructableData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CItemData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUpgradeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -64,6 +65,7 @@ public class CSimulation implements CPlayerAPI {
 	private final CUnitData unitData;
 	private final CDestructableData destructableData;
 	private final CItemData itemData;
+	private final CUpgradeData upgradeData;
 	private final List<CUnit> units;
 	private final List<CUnit> newUnits;
 	private final List<CUnit> removedUnits;
@@ -98,8 +100,9 @@ public class CSimulation implements CPlayerAPI {
 
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
-			final MutableObjectData parsedAbilityData, final SimulationRenderController simulationRenderController,
-			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
+			final MutableObjectData parsedAbilityData, final MutableObjectData parsedUpgradeData,
+			final SimulationRenderController simulationRenderController, final PathingGrid pathingGrid,
+			final Rectangle entireMapBounds, final Random seededRandom,
 			final CommandErrorListener commandErrorListener) {
 		this.gameplayConstants = new CGameplayConstants(miscData);
 		this.simulationRenderController = simulationRenderController;
@@ -109,6 +112,7 @@ public class CSimulation implements CPlayerAPI {
 				this.simulationRenderController);
 		this.destructableData = new CDestructableData(parsedDestructableData, simulationRenderController);
 		this.itemData = new CItemData(parsedItemData);
+		this.upgradeData = new CUpgradeData(gameplayConstants, parsedUpgradeData);
 		this.units = new ArrayList<>();
 		this.newUnits = new ArrayList<>();
 		this.removedUnits = new ArrayList<>();
@@ -132,15 +136,26 @@ public class CSimulation implements CPlayerAPI {
 			final CRace defaultRace;
 			if (configPlayer.isRacePrefSet(CRacePreference.RANDOM)) {
 				defaultRace = CRace.VALUES[1 + seededRandom.nextInt(4)];
-			} else if (configPlayer.isRacePrefSet(CRacePreference.HUMAN)) {
-				defaultRace = CRace.HUMAN;
-			} else if (configPlayer.isRacePrefSet(CRacePreference.ORC)) {
-				defaultRace = CRace.ORC;
-			} else if (configPlayer.isRacePrefSet(CRacePreference.UNDEAD)) {
-				defaultRace = CRace.UNDEAD;
-			} else if (configPlayer.isRacePrefSet(CRacePreference.NIGHTELF)) {
-				defaultRace = CRace.NIGHTELF;
-			} else {
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.ZEAR)) {
+				defaultRace = CRace.ZEAR;
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.TIDE)) {
+				defaultRace = CRace.TIDE;
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.FLEGION)) {
+				defaultRace = CRace.FLEGION;
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.TRIBE)) {
+				defaultRace = CRace.TRIBE;
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.FALLY)) {
+				defaultRace = CRace.FALLY;
+			}
+			else if (configPlayer.isRacePrefSet(CRacePreference.VOID)) {
+				defaultRace = CRace.VOID;
+			}
+			else {
 				defaultRace = CRace.OTHER;
 			}
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
@@ -167,6 +182,10 @@ public class CSimulation implements CPlayerAPI {
 
 	public CUnitData getUnitData() {
 		return this.unitData;
+	}
+
+	public CUpgradeData getUpgradeData() {
+		return upgradeData;
 	}
 
 	public CAbilityData getAbilityData() {
@@ -358,8 +377,8 @@ public class CSimulation implements CPlayerAPI {
 					% this.gameplayConstants.getGameDayLength();
 		}
 		final float timeOfDayAfter = getGameTimeOfDay();
-		this.daytime = timeOfDayAfter >= this.gameplayConstants.getDawnTimeGameHours()
-				&& timeOfDayAfter < this.gameplayConstants.getDuskTimeGameHours();
+		this.daytime = (timeOfDayAfter >= this.gameplayConstants.getDawnTimeGameHours())
+				&& (timeOfDayAfter < this.gameplayConstants.getDuskTimeGameHours());
 		for (final CTimer timer : this.addedTimers) {
 			internalRegisterTimer(timer);
 		}
@@ -370,7 +389,7 @@ public class CSimulation implements CPlayerAPI {
 				throw new IllegalStateException("Duplicate timer add: " + timer);
 			}
 		}
-		while (!this.activeTimers.isEmpty() && this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick) {
+		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
 		}
 		for (final CTimer timer : this.removedTimers) {
@@ -406,7 +425,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public float getGameTimeOfDay() {
-		return this.currentGameDayTimeElapsed / this.gameplayConstants.getGameDayLength()
+		return (this.currentGameDayTimeElapsed / this.gameplayConstants.getGameDayLength())
 				* this.gameplayConstants.getGameDayHours();
 	}
 

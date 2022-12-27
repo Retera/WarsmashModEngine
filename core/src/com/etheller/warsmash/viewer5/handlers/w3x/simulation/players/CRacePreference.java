@@ -3,13 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 import com.etheller.interpreter.ast.util.CHandle;
 
 public enum CRacePreference implements CHandle {
-	HUMAN,
-	ORC,
-	NIGHTELF,
-	UNDEAD,
-	DEMON,
-	RANDOM,
-	USER_SELECTABLE;
+	ZEAR, TIDE, TRIBE, FLEGION, FALLY, VOID, RANDOM, USER_SELECTABLE;
 
 	public static CRacePreference[] VALUES = values();
 

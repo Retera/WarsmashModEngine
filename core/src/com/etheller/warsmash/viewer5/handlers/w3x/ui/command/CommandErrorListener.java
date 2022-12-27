@@ -5,6 +5,8 @@ public interface CommandErrorListener {
 
 	void showCantPlaceError(int playerIndex);
 
+	void showCantTransportError(int playerIndex);
+
 	void showNoFoodError(int playerIndex);
 
 	void showNoManaError(int playerIndex);

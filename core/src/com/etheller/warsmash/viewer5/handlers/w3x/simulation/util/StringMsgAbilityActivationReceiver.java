@@ -66,6 +66,11 @@ public class StringMsgAbilityActivationReceiver implements AbilityActivationRece
 	}
 
 	@Override
+	public void techItemAlreadyInProgress() {
+		this.message = "NOTEXTERN: Tech item already in progress.";
+	}
+
+	@Override
 	public void cargoCapacityUnavailable() {
 		this.message = "NOTEXTERN: Cargo capacity unavailable.";
 	}

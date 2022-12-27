@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks;
 
 import java.util.EnumSet;
+import java.util.Random;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -44,8 +45,8 @@ public abstract class CUnitAttack {
 	private int temporaryDamageBonus;
 
 	// calculate
-	private int minDamage;
-	private int maxDamage;
+	private int totalBaseDamage;
+	private int totalDamageDice;
 	private int minDamageDisplay;
 	private int maxDamageDisplay;
 	private int totalTemporaryDamageBonus;
@@ -98,9 +99,10 @@ public abstract class CUnitAttack {
 	public abstract CUnitAttack copy();
 
 	private void computeDerivedFields() {
-		final int baseDamage = this.damageBase + this.primaryAttributePermanentDamageBonus + this.permanentDamageBonus;
-		this.minDamageDisplay = baseDamage + this.damageDice;
-		this.maxDamageDisplay = baseDamage + (this.damageDice * this.damageSidesPerDie);
+		this.totalBaseDamage = this.damageBase + this.primaryAttributePermanentDamageBonus + this.permanentDamageBonus;
+		this.totalDamageDice = this.damageDice;
+		this.minDamageDisplay = this.totalBaseDamage + this.totalDamageDice;
+		this.maxDamageDisplay = this.totalBaseDamage + (this.totalDamageDice * this.damageSidesPerDie);
 		if (this.minDamageDisplay < 0) {
 			this.minDamageDisplay = 0;
 		}
@@ -108,8 +110,6 @@ public abstract class CUnitAttack {
 			this.maxDamageDisplay = 0;
 		}
 		this.totalTemporaryDamageBonus = this.primaryAttributeTemporaryDamageBonus + this.temporaryDamageBonus;
-		this.minDamage = this.minDamageDisplay + this.totalTemporaryDamageBonus;
-		this.maxDamage = this.maxDamageDisplay + this.totalTemporaryDamageBonus;
 	}
 
 	public float getAnimationBackswingPoint() {
@@ -227,14 +227,6 @@ public abstract class CUnitAttack {
 		this.weaponType = weaponType;
 	}
 
-	public int getMinDamage() {
-		return this.minDamage;
-	}
-
-	public int getMaxDamage() {
-		return this.maxDamage;
-	}
-
 	public int getMinDamageDisplay() {
 		return this.minDamageDisplay;
 	}
@@ -279,10 +271,28 @@ public abstract class CUnitAttack {
 		return this.temporaryDamageBonus;
 	}
 
+	public int getTotalDamageDice() {
+		return totalDamageDice;
+	}
+
+	public int getTotalBaseDamage() {
+		return totalBaseDamage;
+	}
+
 	public int getTotalTemporaryDamageBonus() {
 		return this.totalTemporaryDamageBonus;
 	}
 
 	public abstract void launch(CSimulation simulation, CUnit unit, AbilityTarget target, float damage,
 			CUnitAttackListener attackListener);
+
+	public int roll(Random seededRandom) {
+		int damage = getTotalBaseDamage();
+		int dice = getTotalDamageDice();
+		int sidesPerDie = getDamageSidesPerDie();
+		for (int i = 0; i < dice; i++) {
+			damage += seededRandom.nextInt(sidesPerDie) + 1;
+		}
+		return damage + getTotalTemporaryDamageBonus();
+	}
 }

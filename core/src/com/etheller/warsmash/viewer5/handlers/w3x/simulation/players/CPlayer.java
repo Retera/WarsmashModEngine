@@ -17,7 +17,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListene
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CPlayerStateListener.CPlayerStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit.QueueItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -166,6 +168,10 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
+	public void setTechtreeUnlocked(War3ID rawcode, int setToLevel) {
+		rawcodeToTechtreeUnlocked.put(rawcode, setToLevel);
+	}
+
 	public void removeTechtreeUnlocked(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
@@ -223,6 +229,14 @@ public class CPlayer extends CBasePlayer {
 		this.stateNotifier.goldChanged();
 	}
 
+	public void chargeFor(CUpgradeType upgradeType) {
+		int unlockCount = getTechtreeUnlocked(upgradeType.getTypeId());
+		this.lumber -= upgradeType.getLumberCost(unlockCount);
+		this.gold -= upgradeType.getGoldCost(unlockCount);
+		this.stateNotifier.lumberChanged();
+		this.stateNotifier.goldChanged();
+	}
+
 	public boolean charge(final int gold, final int lumber) {
 		if ((this.lumber >= lumber) && (this.gold >= gold)) {
 			this.lumber -= lumber;
@@ -237,6 +251,14 @@ public class CPlayer extends CBasePlayer {
 	public void refundFor(final CUnitType unitType) {
 		this.lumber += unitType.getLumberCost();
 		this.gold += unitType.getGoldCost();
+		this.stateNotifier.lumberChanged();
+		this.stateNotifier.goldChanged();
+	}
+
+	public void refundFor(CUpgradeType upgradeType) {
+		int unlockCount = getTechtreeUnlocked(upgradeType.getTypeId());
+		this.lumber += upgradeType.getLumberCost(unlockCount);
+		this.gold += upgradeType.getGoldCost(unlockCount);
 		this.stateNotifier.lumberChanged();
 		this.stateNotifier.goldChanged();
 	}
@@ -286,7 +308,8 @@ public class CPlayer extends CBasePlayer {
 		else {
 			int heroInProgressCount = 0;
 			for (final Map.Entry<War3ID, Integer> entry : this.rawcodeToTechtreeInProgress.entrySet()) {
-				if (game.getUnitData().getUnitType(entry.getKey()).isHero()) {
+				CUnitType unitType = game.getUnitData().getUnitType(entry.getKey());
+				if ((unitType != null) && unitType.isHero()) {
 					heroInProgressCount += entry.getValue();
 				}
 			}
@@ -342,6 +365,38 @@ public class CPlayer extends CBasePlayer {
 						CommonTriggerExecutionScope.unitOrderTargetScope(
 								JassGameEventsWar3.EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, event.getTrigger(), unit,
 								order.getOrderId(), target));
+			}
+		}
+	}
+
+	public void fireConstructFinishEvents(final CUnit unit, final CSimulation game, final CUnit constructingUnit) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_CONSTRUCT_FINISH);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit,
+						CommonTriggerExecutionScope.unitConstructFinishScope(
+								JassGameEventsWar3.EVENT_PLAYER_UNIT_CONSTRUCT_FINISH, event.getTrigger(), unit,
+								constructingUnit));
+			}
+		}
+	}
+
+	public void fireTrainFinishEvents(final CUnit unit, final CSimulation game, final CUnit trainedUnit) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_TRAIN_FINISH);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit, CommonTriggerExecutionScope.unitTrainFinishScope(
+						JassGameEventsWar3.EVENT_PLAYER_UNIT_TRAIN_FINISH, event.getTrigger(), unit, trainedUnit));
+			}
+		}
+	}
+
+	public void fireResearchFinishEvents(final CUnit unit, final CSimulation game, War3ID researched) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_RESEARCH_FINISH);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit, CommonTriggerExecutionScope.unitResearchFinishScope(
+						JassGameEventsWar3.EVENT_PLAYER_UNIT_RESEARCH_FINISH, event.getTrigger(), unit, researched));
 			}
 		}
 	}
@@ -544,6 +599,35 @@ public class CPlayer extends CBasePlayer {
 						CommonTriggerExecutionScope.unitSpellEffectPointScope(
 								JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT, event.getTrigger(), spellAbility,
 								spellAbilityUnit, abilityPointTarget, alias));
+			}
+		}
+	}
+
+	public void addTechResearched(CSimulation simulation, War3ID techIdRawcodeId, int levels) {
+		int previousUnlockCount = getTechtreeUnlocked(techIdRawcodeId);
+		if (levels != 0) {
+			int setToLevel = previousUnlockCount + levels;
+			setTechToLevel(simulation, techIdRawcodeId, setToLevel);
+		}
+	}
+
+	public void setTechResearched(CSimulation simulation, War3ID techIdRawcodeId, int setToLevel) {
+		int previousUnlockCount = getTechtreeUnlocked(techIdRawcodeId);
+		if ((setToLevel > previousUnlockCount) || (setToLevel < previousUnlockCount)) {
+			setTechToLevel(simulation, techIdRawcodeId, setToLevel);
+		}
+
+	}
+
+	private void setTechToLevel(CSimulation simulation, War3ID techIdRawcodeId, int setToLevel) {
+		setTechtreeUnlocked(techIdRawcodeId, setToLevel);
+		// terminate in progress upgrades of this kind for player
+		for (CUnit unit : simulation.getUnits()) {
+			if (unit.getPlayerIndex() == getId()) {
+				if (unit.isBuildQueueActive() && (unit.getBuildQueueTypes()[0] == QueueItemType.RESEARCH)
+						&& (unit.getBuildQueue()[0].getValue() == techIdRawcodeId.getValue())) {
+					unit.cancelBuildQueueItem(simulation, 0);
+				}
 			}
 		}
 	}

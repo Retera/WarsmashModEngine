@@ -19,14 +19,16 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	private int cargoCapacity;
 	private final List<CUnit> cargoUnits;
 	private float duration;
+	private float castRange;
 	private EnumSet<CTargetType> targetsAllowed;
 
 	public CAbilityCargoHold(final int handleId, final War3ID alias, final int cargoCapacity, final float duration,
-			final EnumSet<CTargetType> targetsAllowed) {
+			float castRange, final EnumSet<CTargetType> targetsAllowed) {
 		super(handleId, alias);
 		this.cargoCapacity = cargoCapacity;
 		this.cargoUnits = new ArrayList<>();
 		this.duration = duration;
+		this.castRange = castRange;
 		this.targetsAllowed = targetsAllowed;
 	}
 
@@ -100,16 +102,32 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 		return this.duration;
 	}
 
-	public List<CUnit> getCargoUnits() {
-		return this.cargoUnits;
+	public float getCastRange() {
+		return castRange;
 	}
 
 	public EnumSet<CTargetType> getTargetsAllowed() {
 		return this.targetsAllowed;
 	}
 
-	public void addUnit(final CUnit target) {
+	public CUnit getUnit(int index) {
+		return cargoUnits.get(index);
+	}
+
+	public void addUnit(CUnit cargoHoldUnit, final CUnit target) {
 		this.cargoUnits.add(target);
+	}
+
+	public CUnit removeUnitAtIndex(CUnit cargoHoldUnit, int index) {
+		return this.cargoUnits.remove(index);
+	}
+
+	public boolean isEmpty() {
+		return cargoUnits.isEmpty();
+	}
+
+	public int getCargoCount() {
+		return cargoUnits.size();
 	}
 
 	public void setCargoCapacity(final int cargoCapacity) {
@@ -122,5 +140,12 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 
 	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
 		this.targetsAllowed = targetsAllowed;
+	}
+
+	public boolean hasCapacity(int cargoCapacityOfNewUnit) {
+		if (cargoCapacityOfNewUnit == 0) {
+			return false;
+		}
+		return (cargoUnits.size() + cargoCapacityOfNewUnit) <= cargoCapacity;
 	}
 }

@@ -138,8 +138,8 @@ public class AbilityDataUI {
 			final String iconTurnOffTip = abilityTypeData.getFieldAsString(ABILITY_UN_TIP, 1);
 			final String iconTurnOffUberTip = abilityTypeData.getFieldAsString(ABILITY_UN_UBER_TIP, 1);
 			final char iconTurnOffHotkey = getHotkey(abilityTypeData, ABILITY_HOTKEY_TURNOFF);
-			final String iconResearchTip = abilityTypeData.getFieldAsString(ABILITY_RESEARCH_TIP, 1);
-			final String iconResearchUberTip = abilityTypeData.getFieldAsString(ABILITY_RESEARCH_UBER_TIP, 1);
+			final String iconResearchTip = abilityTypeData.getFieldAsString(ABILITY_RESEARCH_TIP, 0);
+			final String iconResearchUberTip = abilityTypeData.getFieldAsString(ABILITY_RESEARCH_UBER_TIP, 0);
 			final char iconResearchHotkey = getHotkey(abilityTypeData, ABILITY_HOTKEY_LEARN);
 			final int iconResearchX = abilityTypeData.getFieldAsInteger(ICON_RESEARCH_X, 0);
 			final int iconResearchY = abilityTypeData.getFieldAsInteger(ICON_RESEARCH_Y, 0);
@@ -211,7 +211,7 @@ public class AbilityDataUI {
 			final List<EffectAttachmentUIMissile> missileArt = new ArrayList<>();
 			final List<String> missileArtPaths = Arrays
 					.asList(abilityTypeData.getFieldAsString(MISSILE_ART, 0).split(","));
-			
+
 			float missileArc = abilityTypeData.getFieldAsFloat(MISSILE_ARC, 0);
 			for (final String missileArtPath : missileArtPaths) {
 				missileArt.add(new EffectAttachmentUIMissile(missileArtPath, Collections.emptyList(), missileArc));
@@ -331,11 +331,12 @@ public class AbilityDataUI {
 			final int iconNormalY = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_Y, 0);
 			final List<IconUI> upgradeIconsByLevel = new ArrayList<>();
 			for (int i = 0; i < upgradeLevels; i++) {
-				final String iconTip = upgradeTypeData.getFieldAsString(UPGRADE_TIP, 0);
-				final String iconUberTip = upgradeTypeData.getFieldAsString(UPGRADE_UBER_TIP, 0);
+				int upgradeLevelValue = i + 1;
+				final String iconTip = upgradeTypeData.getFieldAsString(UPGRADE_TIP, upgradeLevelValue);
+				final String iconUberTip = upgradeTypeData.getFieldAsString(UPGRADE_UBER_TIP, upgradeLevelValue);
 				final String iconNormalPath = gameUI
-						.trySkinField(upgradeTypeData.getFieldAsString(UPGRADE_ICON_NORMAL, i));
-				final char iconHotkey = getHotkey(upgradeTypeData, UPGRADE_HOTKEY, i);
+						.trySkinField(upgradeTypeData.getFieldAsString(UPGRADE_ICON_NORMAL, upgradeLevelValue));
+				final char iconHotkey = getHotkey(upgradeTypeData, UPGRADE_HOTKEY, upgradeLevelValue);
 				final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
 				final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
 				upgradeIconsByLevel.add(new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip,
@@ -352,7 +353,8 @@ public class AbilityDataUI {
 		this.buildOrcUI = createBuiltInIconUI(gameUI, "CmdBuildOrc", this.disabledPrefix);
 		this.buildNightElfUI = createBuiltInIconUI(gameUI, "CmdBuildNightElf", this.disabledPrefix);
 		this.buildUndeadUI = createBuiltInIconUI(gameUI, "CmdBuildUndead", this.disabledPrefix);
-		this.buildNagaUI = createBuiltInIconUI(gameUI, "CmdBuildNaga", this.disabledPrefix);
+		this.buildNagaUI = createBuiltInIconUISplit(gameUI, "CmdBuildNaga", "CmdBuildOrc",
+				abilityData.get(War3ID.fromString("AGbu")), this.disabledPrefix);
 		this.buildNeutralUI = createBuiltInIconUI(gameUI, "CmdBuild", this.disabledPrefix);
 		this.attackGroundUI = createBuiltInIconUI(gameUI, "CmdAttackGround", this.disabledPrefix);
 		this.cancelUI = createBuiltInIconUI(gameUI, "CmdCancel", this.disabledPrefix);
@@ -379,6 +381,26 @@ public class AbilityDataUI {
 		final Texture iconDisabled = gameUI.loadTexture(disable(iconPath, disabledPrefix));
 		final int buttonPositionX = builtInAbility.getFieldValue("Buttonpos", 0);
 		final int buttonPositionY = builtInAbility.getFieldValue("Buttonpos", 1);
+		final String tip = builtInAbility.getField("Tip");
+		final String uberTip = builtInAbility.getField("UberTip");
+		final String hotkeyString = builtInAbility.getField("Hotkey");
+		final char hotkey = getHotkeyChar(hotkeyString);
+		return new IconUI(icon, iconDisabled, buttonPositionX, buttonPositionY, tip, uberTip, hotkey);
+	}
+
+	private IconUI createBuiltInIconUISplit(final GameUI gameUI, final String key, String funckey,
+			MutableGameObject worldEditorObject, final String disabledPrefix) {
+		final Element builtInAbility = gameUI.getSkinData().get(key);
+		final Element builtInAbilityFunc = gameUI.getSkinData().get(funckey);
+		String iconPath = gameUI.trySkinField(builtInAbilityFunc.getField("Art"));
+		String worldEditorValue = worldEditorObject.readSLKTag("Art");
+		if (worldEditorValue.length() > 0) {
+			iconPath = worldEditorValue;
+		}
+		final Texture icon = gameUI.loadTexture(iconPath);
+		final Texture iconDisabled = gameUI.loadTexture(disable(iconPath, disabledPrefix));
+		final int buttonPositionX = builtInAbilityFunc.getFieldValue("Buttonpos", 0);
+		final int buttonPositionY = builtInAbilityFunc.getFieldValue("Buttonpos", 1);
 		final String tip = builtInAbility.getField("Tip");
 		final String uberTip = builtInAbility.getField("UberTip");
 		final String hotkeyString = builtInAbility.getField("Hotkey");

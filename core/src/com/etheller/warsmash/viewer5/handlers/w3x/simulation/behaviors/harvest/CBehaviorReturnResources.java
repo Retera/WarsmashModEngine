@@ -9,7 +9,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityWispHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveVisitor;
@@ -144,7 +143,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 
 	}
 
-	private CUnit findNearestDropoffPoint(final CSimulation simulation) {
+	public CUnit findNearestDropoffPoint(final CSimulation simulation) {
 		CUnit nearestDropoffPoint = null;
 		double nearestDropoffDistance = Float.MAX_VALUE;
 		for (final CUnit unit : simulation.getUnits()) {
@@ -175,7 +174,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 		return nearestDropoffPoint;
 	}
 
-	private static CUnit findNearestMine(final CUnit worker, final CSimulation simulation) {
+	public static CUnit findNearestMine(final CUnit worker, final CSimulation simulation) {
 		CUnit nearestMine = null;
 		double nearestMineDistance = Float.MAX_VALUE;
 		for (final CUnit unit : simulation.getUnits()) {

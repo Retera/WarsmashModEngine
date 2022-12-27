@@ -98,6 +98,11 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
+	public void techItemAlreadyInProgress() {
+		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
+	}
+
+	@Override
 	public void casterMovementDisabled() {
 		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
 	}

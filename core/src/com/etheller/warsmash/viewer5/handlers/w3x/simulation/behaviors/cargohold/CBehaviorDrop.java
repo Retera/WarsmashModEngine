@@ -35,14 +35,14 @@ public class CBehaviorDrop extends CAbstractRangedBehavior {
 		final int gameTurnTick = simulation.getGameTurnTick();
 		final int deltaTicks = gameTurnTick - this.lastDropTick;
 		final CAbilityCargoHold cargoData = this.unit.getCargoData();
-		if (cargoData.getCargoUnits().isEmpty()) {
+		if (cargoData.isEmpty()) {
 			return this.unit.pollNextOrderBehavior(simulation);
 		}
 		// TODO i do a nonstandard Math.ceil() here to make this one feel a bit slower
 		final float durationTicks = (int) Math.ceil(cargoData.getDuration() / WarsmashConstants.SIMULATION_STEP_TIME);
 		if (deltaTicks >= durationTicks) {
 			simulation.unitSoundEffectEvent(this.unit, cargoData.getAlias());
-			final CUnit firstUnit = cargoData.getCargoUnits().remove(0);
+			final CUnit firstUnit = cargoData.removeUnitAtIndex(this.unit, 0);
 			firstUnit.setPointAndCheckUnstuck(this.target.getX(), this.target.getY(), simulation);
 			firstUnit.setHidden(false);
 			firstUnit.setPaused(false);

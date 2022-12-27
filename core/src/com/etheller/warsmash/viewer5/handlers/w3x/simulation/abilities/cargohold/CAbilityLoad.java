@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TeamType;
 
 public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility {
 	private float castRange;
@@ -81,11 +82,16 @@ public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility {
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if ((target instanceof CUnit) && target.canBeTargetedBy(game, unit, unit.getCargoData().getTargetsAllowed())
 				&& (target != unit)) {
-			if (!unit.isMovementDisabled() || unit.canReach(target, this.castRange)) {
-				receiver.targetOk(target);
+			if (((CUnit) target).getPlayerIndex() == unit.getPlayerIndex()) {
+				if (!unit.isMovementDisabled() || unit.canReach(target, unit.getCargoData().getCastRange())) {
+					receiver.targetOk(target);
+				}
+				else {
+					receiver.targetOutsideRange();
+				}
 			}
 			else {
-				receiver.targetOutsideRange();
+				receiver.mustTargetTeamType(TeamType.PLAYER_UNITS);
 			}
 		}
 		else {

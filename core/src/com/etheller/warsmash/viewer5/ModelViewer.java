@@ -196,8 +196,8 @@ public abstract class ModelViewer {
 				try {
 					resource.loadData(this.dataSource.getResourceAsStream(finalSrc), null);
 				}
-				catch (final IOException e) {
-					throw new IllegalStateException("Unable to load data: " + finalSrc);
+				catch (final Exception e) {
+					throw new IllegalStateException("Unable to load data: " + finalSrc, e);
 				}
 
 				return resource;

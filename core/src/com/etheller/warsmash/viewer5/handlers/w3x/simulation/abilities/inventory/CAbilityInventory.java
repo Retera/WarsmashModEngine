@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.SingleOrderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.inventory.CBehaviorDropItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.inventory.CBehaviorGetItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.inventory.CBehaviorGiveItemToHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
@@ -88,8 +89,8 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			final int slot = orderId - OrderIds.itemuse00;
 			final CAbility cAbility = this.itemsHeldAbilities[slot].get(0);
 			int forwardedOrderId = orderId;
-			if (cAbility instanceof GenericSingleIconActiveAbility) {
-				forwardedOrderId = ((GenericSingleIconActiveAbility) cAbility).getBaseOrderId();
+			if (cAbility instanceof SingleOrderAbility) {
+				forwardedOrderId = ((SingleOrderAbility) cAbility).getBaseOrderId();
 			}
 			final boolean checkResult = cAbility.checkBeforeQueue(game, caster, forwardedOrderId, target);
 			if (!checkResult) {
@@ -284,6 +285,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				if (itemType.isActivelyUsed()) {
 					item.setLife(simulation, 0);
 					// TODO when we give unit ability here, then use ability
+					List<CAbility> addedAbilities = new ArrayList<>();
 					for (final War3ID abilityId : item.getItemType().getAbilityList()) {
 						final CAbilityType<?> abilityType = simulation.getAbilityData().getAbilityType(abilityId);
 						if (abilityType != null) {
@@ -291,9 +293,18 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 									.createAbility(simulation.getHandleIdAllocator().createId());
 							abilityFromItem.setIconShowing(false);
 							hero.add(simulation, abilityFromItem);
+							if (abilityFromItem instanceof SingleOrderAbility) {
+								int baseOrderId = ((SingleOrderAbility) abilityFromItem).getBaseOrderId();
+								hero.order(simulation,
+										new COrderNoTarget(abilityFromItem.getHandleId(), baseOrderId, false), false);
+							}
+							addedAbilities.add(abilityFromItem);
 						}
 					}
 					hero.onPickUpItem(simulation, item, true);
+					for (CAbility ability : addedAbilities) {
+						hero.remove(simulation, ability);
+					}
 				}
 			}
 			else {

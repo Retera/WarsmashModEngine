@@ -456,4 +456,7 @@ public class OrderIds {
 	public static final int whirlwind = 852128;
 	public static final int windwalk = 852129;
 	public static final int wispharvest = 852214;
+
+	// NOTE: below made up for warsmash, could benefit from getting more accurate
+	public static final int itemstatgain = 852214001;
 }

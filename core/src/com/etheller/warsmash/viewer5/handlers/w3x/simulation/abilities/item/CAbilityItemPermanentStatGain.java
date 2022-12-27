@@ -5,13 +5,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.SingleOrderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityItemPermanentStatGain extends AbstractGenericNoIconAbility {
+public class CAbilityItemPermanentStatGain extends AbstractGenericNoIconAbility implements SingleOrderAbility {
 	private final int strength;
 	private final int agility;
 	private final int intelligence;
@@ -26,18 +30,25 @@ public class CAbilityItemPermanentStatGain extends AbstractGenericNoIconAbility 
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		final CAbilityHero heroData = unit.getHeroData();
-		heroData.addStrengthBase(game, unit, this.strength);
-		heroData.addAgilityBase(game, unit, this.agility);
-		heroData.addIntelligenceBase(game, unit, this.intelligence);
+	}
+
+	@Override
+	public boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId, AbilityTarget target) {
+		if (orderId == OrderIds.itemstatgain) {
+			final CAbilityHero heroData = caster.getHeroData();
+			heroData.addStrengthBase(game, caster, this.strength);
+			heroData.addAgilityBase(game, caster, this.agility);
+			heroData.addIntelligenceBase(game, caster, this.intelligence);
+			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.TARGET);
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-		final CAbilityHero heroData = unit.getHeroData();
-		heroData.addStrengthBase(game, unit, -this.strength);
-		heroData.addAgilityBase(game, unit, -this.agility);
-		heroData.addIntelligenceBase(game, unit, -this.intelligence);
 	}
 
 	@Override
@@ -75,13 +86,18 @@ public class CAbilityItemPermanentStatGain extends AbstractGenericNoIconAbility 
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
-		receiver.orderIdNotAccepted();
+		if (orderId == OrderIds.itemstatgain) {
+			receiver.targetOk(null);
+		}
+		else {
+			receiver.orderIdNotAccepted();
+		}
 	}
 
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		receiver.notAnActiveAbility();
+		receiver.useOk();
 	}
 
 	@Override
@@ -92,4 +108,8 @@ public class CAbilityItemPermanentStatGain extends AbstractGenericNoIconAbility 
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
 
+	@Override
+	public int getBaseOrderId() {
+		return OrderIds.itemstatgain;
+	}
 }

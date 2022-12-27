@@ -101,7 +101,7 @@ public class DesktopLauncher {
 		loadExtensions();
 		final DataTable warsmashIni = loadWarsmashIni(iniPath);
 		final Element emulatorConstants = warsmashIni.get("Emulator");
-		WarsmashConstants.loadConstants(emulatorConstants);
+		WarsmashConstants.loadConstants(emulatorConstants, warsmashIni);
 
 		if (fileToLoad != null) {
 			System.out.println("About to run loading file: " + fileToLoad);

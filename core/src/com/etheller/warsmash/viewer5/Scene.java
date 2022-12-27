@@ -236,8 +236,8 @@ public abstract class Scene {
 		gl.glScissor((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
 
 		// If this scene doesn't want alpha, clear it.
+		gl.glDepthMask(true);
 		if (!this.alpha) {
-			gl.glDepthMask(true);
 			gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 		}
 		else {

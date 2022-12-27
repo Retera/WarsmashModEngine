@@ -2,26 +2,23 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
 import com.etheller.interpreter.ast.util.CHandle;
 
-public enum CRacePreference implements CHandle {
-	ZEAR, TIDE, TRIBE, FLEGION, FALLY, VOID, RANDOM, USER_SELECTABLE;
+public class CRacePreference implements CHandle {
+	private int id;
 
-	public static CRacePreference[] VALUES = values();
-
-	public static CRacePreference getById(final int id) {
-		for (final CRacePreference type : VALUES) {
-			if ((type.getId()) == id) {
-				return type;
-			}
-		}
-		return null;
+	public CRacePreference(int id) {
+		this.id = id;
 	}
 
-	public int getId() {
+	public int ordinal() {
+		return id - 1;
+	}
+
+	public int getBitMaskValue() {
 		return 1 << ordinal();
 	}
 
 	@Override
 	public int getHandleId() {
-		return getId();
+		return getBitMaskValue();
 	}
 }

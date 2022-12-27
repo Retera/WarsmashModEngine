@@ -50,6 +50,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
@@ -133,30 +134,23 @@ public class CSimulation implements CPlayerAPI {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			final CRace defaultRace;
-			if (configPlayer.isRacePrefSet(CRacePreference.RANDOM)) {
-				defaultRace = CRace.VALUES[1 + seededRandom.nextInt(4)];
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.ZEAR)) {
-				defaultRace = CRace.ZEAR;
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.TIDE)) {
-				defaultRace = CRace.TIDE;
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.FLEGION)) {
-				defaultRace = CRace.FLEGION;
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.TRIBE)) {
-				defaultRace = CRace.TRIBE;
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.FALLY)) {
-				defaultRace = CRace.FALLY;
-			}
-			else if (configPlayer.isRacePrefSet(CRacePreference.VOID)) {
-				defaultRace = CRace.VOID;
+			CRace defaultRace = null;
+			if (configPlayer.isRacePrefSet(WarsmashConstants.RACE_MANAGER.getRandomRacePreference())) {
+				CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER
+						.get(seededRandom.nextInt(WarsmashConstants.RACE_MANAGER.getEntryCount()));
+				defaultRace = WarsmashConstants.RACE_MANAGER.getRace(raceEntry.getRaceId());
 			}
 			else {
-				defaultRace = CRace.OTHER;
+				for (int j = 0; j < WarsmashConstants.RACE_MANAGER.getEntryCount(); j++) {
+					CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(j);
+					CRace race = WarsmashConstants.RACE_MANAGER.getRace(entry.getRaceId());
+					CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
+							.getRacePreferenceById(entry.getRacePrefId());
+					if (configPlayer.isRacePrefSet(racePreference)) {
+						defaultRace = race;
+						break;
+					}
+				}
 			}
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
 					configPlayer);

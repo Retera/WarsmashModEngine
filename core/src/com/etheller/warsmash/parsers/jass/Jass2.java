@@ -3752,7 +3752,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final CPlayer whichPlayer = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					if (whichPlayer == null) {
-						return new HandleJassValue(raceType, CRace.OTHER);
+						return raceType.getNullValue();
 					}
 					return new HandleJassValue(raceType, whichPlayer.getRace());
 				}
@@ -6255,7 +6255,11 @@ public class Jass2 {
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
 				final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-				return new HandleJassValue(raceType, CRace.VALUES[i]);
+				CRace race = WarsmashConstants.RACE_MANAGER.getRace(i);
+				if (race == null) {
+					race = new CRace(i); // Give them a placeholder!
+				}
+				return new HandleJassValue(raceType, race);
 			}
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("ConvertAllianceType", new JassFunction() {
@@ -6271,7 +6275,11 @@ public class Jass2 {
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
 				final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-				return new HandleJassValue(racepreferenceType, CRacePreference.getById(i));
+				CRacePreference racePreference = WarsmashConstants.RACE_MANAGER.getRacePreference(i);
+				if (racePreference == null) {
+					racePreference = new CRacePreference(i); // Give them a placeholder!
+				}
+				return new HandleJassValue(racepreferenceType, racePreference);
 			}
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("ConvertIGameState", new JassFunction() {

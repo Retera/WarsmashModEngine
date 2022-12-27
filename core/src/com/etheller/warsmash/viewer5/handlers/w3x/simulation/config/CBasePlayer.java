@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreferences;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 
 public abstract class CBasePlayer implements CPlayerJass {
@@ -19,7 +20,7 @@ public abstract class CBasePlayer implements CPlayerJass {
 	private int startLocationIndex;
 	private int forcedStartLocationIndex = -1;
 	private int color;
-	private final EnumSet<CRacePreference> racePrefs;
+	private final CRacePreferences racePrefs;
 	private final EnumSet<CAllianceType>[] alliances;
 	private final EnumMap<CPlayerState, Integer>[] taxRates;
 	private boolean onScoreScreen;
@@ -48,7 +49,7 @@ public abstract class CBasePlayer implements CPlayerJass {
 		this.id = id;
 		this.alliances = new EnumSet[WarsmashConstants.MAX_PLAYERS];
 		this.taxRates = new EnumMap[WarsmashConstants.MAX_PLAYERS];
-		this.racePrefs = EnumSet.noneOf(CRacePreference.class);
+		this.racePrefs = new CRacePreferences();
 		for (int i = 0; i < this.alliances.length; i++) {
 			if (i == id) {
 				// player is fully allied with self

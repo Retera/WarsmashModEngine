@@ -39,6 +39,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.MapInfoPane;
@@ -1004,31 +1005,13 @@ public class BattleNetUI {
 			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
 			if (mapSlot != -1) {
 				final CBasePlayer player = this.gameChatroomMapConfig.getPlayer(mapSlot);
-				switch (raceItemIndex) {
-				case 0:
-					player.setRacePref(CRacePreference.RANDOM);
-					break;
-				case 1:
-					player.setRacePref(CRacePreference.ZEAR);
-					break;
-				case 2:
-					player.setRacePref(CRacePreference.TIDE);
-					break;
-				case 3:
-					player.setRacePref(CRacePreference.TRIBE);
-					break;
-				case 4:
-					player.setRacePref(CRacePreference.FLEGION);
-					break;
-				case 5:
-					player.setRacePref(CRacePreference.FALLY);
-					break;
-				case 6:
-					player.setRacePref(CRacePreference.VOID);
-					break;
-
-				default:
-					break;
+				if (raceItemIndex == 0) {
+					player.setRacePref(WarsmashConstants.RACE_MANAGER.getRandomRacePreference());
+				}
+				else {
+					CRace race = WarsmashConstants.RACE_MANAGER.getRace(raceItemIndex);
+					CRacePreference racePreference = WarsmashConstants.RACE_MANAGER.getRacePreferenceForRace(race);
+					player.setRacePref(racePreference);
 				}
 				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(slot, this.rootFrame, this.uiViewport,
 						this.gameChatroomMapConfig, this.gameChatroomMapInfo);

@@ -75,6 +75,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnit
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListenerDelaying;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
@@ -1171,31 +1172,15 @@ public class MenuUI {
 									@Override
 									public void setPlayerRace(final int index, final int raceItemIndex) {
 										final CBasePlayer player = war3MapConfig.getPlayer(index);
-										switch (raceItemIndex) {
-										case 0:
-											player.setRacePref(CRacePreference.RANDOM);
-											break;
-										case 1:
-											player.setRacePref(CRacePreference.ZEAR);
-											break;
-										case 2:
-											player.setRacePref(CRacePreference.TIDE);
-											break;
-										case 3:
-											player.setRacePref(CRacePreference.TRIBE);
-											break;
-										case 4:
-											player.setRacePref(CRacePreference.FLEGION);
-											break;
-										case 5:
-											player.setRacePref(CRacePreference.FALLY);
-											break;
-										case 6:
-											player.setRacePref(CRacePreference.VOID);
-											break;
-
-										default:
-											break;
+										if (raceItemIndex == 0) {
+											player.setRacePref(
+													WarsmashConstants.RACE_MANAGER.getRandomRacePreference());
+										}
+										else {
+											CRace race = WarsmashConstants.RACE_MANAGER.getRace(raceItemIndex);
+											CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
+													.getRacePreferenceForRace(race);
+											player.setRacePref(racePreference);
 										}
 										teamSetupPane.notifyPlayerDataUpdated(index, MenuUI.this.rootFrame,
 												MenuUI.this.uiViewport, war3MapConfig, mapInfo);
@@ -2393,14 +2378,15 @@ public class MenuUI {
 	}
 
 	private String getRaceNameByCursorID(final int cursorId) {
-		return getRaceByCursorID(cursorId).name();
+		CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER.get(getRaceByCursorID(cursorId));
+		return raceEntry.getKey();
 	}
 
 	private CRace getRaceByCursorID(final int cursorId) {
-		final CRace race;
 		final int raceId = cursorId + 1;
-		if ((raceId >= CRace.VALUES.length) || ((race = CRace.VALUES[raceId]) == null)) {
-			return CRace.ZEAR; // when in doubt, default to human
+		final CRace race = WarsmashConstants.RACE_MANAGER.getRace(raceId);
+		if (race == null) {
+			return WarsmashConstants.RACE_MANAGER.getRace(1); // when in doubt, default to human
 		}
 		return race;
 	}

@@ -2,33 +2,23 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
 import com.etheller.interpreter.ast.util.CHandle;
 
-public enum CRace implements CHandle {
-	ZEAR(1), TIDE(2), TRIBE(3), FLEGION(4), FALLY(5), VOID(6), OTHER(7);
-
+public class CRace implements CHandle {
 	private int id;
 
-	private CRace(final int id) {
+	public CRace(final int id) {
 		this.id = id;
 	}
-
-	public static CRace[] VALUES = { null, ZEAR, TIDE, TRIBE, FLEGION, FALLY, VOID, OTHER };
 
 	public int getId() {
 		return this.id;
 	}
 
-	public static CRace parseRace(final int race) {
-		// TODO: this is bad time complexity (slow) but we're only doing it on startup
-		for (final CRace raceEnum : values()) {
-			if (raceEnum.getId() == race) {
-				return raceEnum;
-			}
-		}
-		return null;
-	}
-
 	@Override
 	public int getHandleId() {
 		return getId();
+	}
+
+	public int ordinal() {
+		return this.id - 1;
 	}
 }

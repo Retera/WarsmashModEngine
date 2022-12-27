@@ -166,6 +166,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceTy
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildingIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationErrorHandler;
@@ -471,45 +472,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		// Load skins and templates
 		// =================================
 		final CRace race = this.localPlayer.getRace();
-		final String racialSkinKey;
-		int racialCommandIndex;
-		if (race == null) {
-			racialSkinKey = "Human";
-			racialCommandIndex = 0;
-		}
-		else {
-			switch (race) {
-			case ZEAR:
-				racialSkinKey = "Zear";
-				racialCommandIndex = 0;
-				break;
-			case TIDE:
-				racialSkinKey = "Tide";
-				racialCommandIndex = 1;
-				break;
-			case TRIBE:
-				racialSkinKey = "Tribe";
-				racialCommandIndex = 2;
-				break;
-			case FLEGION:
-				racialSkinKey = "Flegion";
-				racialCommandIndex = 3;
-				break;
-			case FALLY:
-				racialSkinKey = "Allies";
-				racialCommandIndex = 4;
-				break;
-			case VOID:
-				racialSkinKey = "Void";
-				racialCommandIndex = 5;
-				break;
-			case OTHER:
-			default:
-				racialSkinKey = "Fally";
-				racialCommandIndex = 0;
-				break;
-			}
-		}
+		CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER.get(race);
+		final String racialSkinKey = raceEntry.getKey();
+		int racialCommandIndex = raceEntry.getRaceId() - 1;
+
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, racialSkinKey), this.uiViewport,
 				this.uiScene, this.war3MapViewer, racialCommandIndex, this.war3MapViewer.getAllObjectData().getWts());
 		this.rootFrameListener.onCreate(this.rootFrame);
@@ -2802,7 +2768,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final StringFrame localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
 				if (anyAttacks && !constructing) {
 					final CUnitAttack attackOne = simulationUnit.getAttacks().get(0);
-					this.attack1Icon.setVisible(attackOne.isShowUI());
+					this.attack1Icon.setVisible(true);// attackOne.isShowUI());
 					this.attack1IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackOne.getAttackType()));
 					String attackOneDmgText = attackOne.getMinDamageDisplay() + " - " + attackOne.getMaxDamageDisplay();
 					final int attackOneTemporaryDamageBonus = attackOne.getTotalTemporaryDamageBonus();

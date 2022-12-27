@@ -79,22 +79,27 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	@Override
 	public Void accept(final CAbilityAttack ability) {
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
-			addCommandButton(ability, this.abilityDataUI.getAttackUI(), ability.getHandleId(), OrderIds.attack, 0,
-					false, false);
 			boolean attackGroundEnabled = false;
+			boolean showUI = false;
 			for (final CUnitAttack attack : this.unit.getAttacks()) {
 				if (attack.getWeaponType().isAttackGroundSupported()) {
 					attackGroundEnabled = true;
-					break;
+				}
+				if (attack.isShowUI()) {
+					showUI = true;
 				}
 			}
-			if (attackGroundEnabled) {
-				addCommandButton(ability, this.abilityDataUI.getAttackGroundUI(), ability.getHandleId(),
-						OrderIds.attackground, 0, false, false);
-			}
-			if (!this.hasStop) {
-				this.hasStop = true;
-				addCommandButton(ability, this.abilityDataUI.getStopUI(), 0, OrderIds.stop, 0, false, false);
+			if (showUI) {
+				addCommandButton(ability, this.abilityDataUI.getAttackUI(), ability.getHandleId(), OrderIds.attack, 0,
+						false, false);
+				if (attackGroundEnabled) {
+					addCommandButton(ability, this.abilityDataUI.getAttackGroundUI(), ability.getHandleId(),
+							OrderIds.attackground, 0, false, false);
+				}
+				if (!this.hasStop) {
+					this.hasStop = true;
+					addCommandButton(ability, this.abilityDataUI.getStopUI(), 0, OrderIds.stop, 0, false, false);
+				}
 			}
 		}
 		return null;

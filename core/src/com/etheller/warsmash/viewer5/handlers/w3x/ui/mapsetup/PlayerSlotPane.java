@@ -15,10 +15,12 @@ import com.etheller.warsmash.parsers.fdf.frames.PopupMenuFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.mdx.ReplaceableIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CPlayerSlotState;
 
@@ -161,40 +163,25 @@ public class PlayerSlotPane {
 
 	public void setTextFromRacePreference(final GameUI rootFrame, final CPlayerJass player) {
 		final MenuFrame menuFrame = (MenuFrame) this.raceMenu.getPopupMenuFrame();
-		if (player.isRacePrefSet(CRacePreference.RANDOM) && (menuFrame.getMenuItemCount() > 0)) {
+		if (player.isRacePrefSet(WarsmashConstants.RACE_MANAGER.getRandomRacePreference())
+				&& (menuFrame.getMenuItemCount() > 0)) {
 			rootFrame.setText(
 					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
 					menuFrame.getMenuItem(0).getText());
 		}
-		else if (player.isRacePrefSet(CRacePreference.ZEAR) && (menuFrame.getMenuItemCount() > 1)) {
-			rootFrame.setText(
-					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
-					menuFrame.getMenuItem(1).getText());
-		}
-		else if (player.isRacePrefSet(CRacePreference.TIDE) && (menuFrame.getMenuItemCount() > 2)) {
-			rootFrame.setText(
-					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
-					menuFrame.getMenuItem(2).getText());
-		}
-		else if (player.isRacePrefSet(CRacePreference.TRIBE) && (menuFrame.getMenuItemCount() > 4)) {
-			rootFrame.setText(
-					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
-					menuFrame.getMenuItem(3).getText());
-		}
-		else if (player.isRacePrefSet(CRacePreference.FLEGION) && (menuFrame.getMenuItemCount() > 3)) {
-			rootFrame.setText(
-					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
-					menuFrame.getMenuItem(4).getText());
-		}
-		else if (player.isRacePrefSet(CRacePreference.FALLY) && (menuFrame.getMenuItemCount() > 3)) {
-			rootFrame.setText(
-					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
-					menuFrame.getMenuItem(5).getText());
-		}
-		else if (player.isRacePrefSet(CRacePreference.VOID) && (menuFrame.getMenuItemCount() > 3)) {
-			rootFrame.setText(
-					((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
-					menuFrame.getMenuItem(6).getText());
+		else {
+			for (int i = 0; i < WarsmashConstants.RACE_MANAGER.getEntryCount(); i++) {
+				CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(i);
+				CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
+						.getRacePreferenceById(entry.getRacePrefId());
+				int menuItemIndex = entry.getRaceId();
+				if (player.isRacePrefSet(racePreference) && (menuFrame.getMenuItemCount() > menuItemIndex)) {
+					rootFrame.setText(
+							((StringFrame) ((GlueTextButtonFrame) this.raceMenu.getPopupTitleFrame()).getButtonText()),
+							menuFrame.getMenuItem(menuItemIndex).getText());
+					break;
+				}
+			}
 		}
 	}
 

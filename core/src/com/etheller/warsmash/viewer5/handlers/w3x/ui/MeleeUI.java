@@ -115,6 +115,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType.UpgradeLevel;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -1429,6 +1431,30 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
 			showCommandError(playerIndex, this.rootFrame.getErrorString("Blightringfull"));
 			this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
+		}
+	}
+
+	@Override
+	public void showUpgradeCompleteAlert(int playerIndex, War3ID queuedRawcode, int level) {
+		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
+			String upgradeName;
+			CUpgradeType upgradeType = war3MapViewer.simulation.getUpgradeData().getType(queuedRawcode);
+			if (upgradeType != null) {
+				UpgradeLevel upgradeLevel = upgradeType.getLevel(level - 1);
+				if (upgradeLevel != null) {
+					upgradeName = upgradeLevel.getName();
+				}
+				else {
+					upgradeName = "NOTEXTERN Unknown Level " + level + " for '" + queuedRawcode + "'";
+				}
+			}
+			else {
+				upgradeName = "NOTEXTERN Unknown ('" + queuedRawcode + "')";
+			}
+			showCommandError(playerIndex,
+					this.rootFrame.getTemplates().getDecoratedString("COLON_COMPLETED") + upgradeName);
+			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("ResearchComplete"))
+					.play(this.uiScene.audioContext, 0, 0, 0);
 		}
 	}
 
@@ -2907,9 +2933,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.rootFrame.setText(this.simpleBuildingActionLabel,
 							this.rootFrame.getTemplates().getDecoratedString("CONSTRUCTING"));
 					this.queueIconFrames[0].setVisible(true);
-					this.queueIconFrames[0]
-							.setTexture(this.war3MapViewer.getAbilityDataUI().getUnitUI(constructingTypeId).getIcon());
-
+					UnitIconUI constructingUnitUI = this.war3MapViewer.getAbilityDataUI().getUnitUI(constructingTypeId);
+					this.queueIconFrames[0].setTexture(constructingUnitUI.getIcon());
+					this.queueIconFrames[0].setToolTip(constructingUnitUI.getToolTip());
+					this.queueIconFrames[0].setUberTip(constructingUnitUI.getUberTip());
 					if (simulationUnit.getWorkerInside() != null) {
 						this.selectWorkerInsideFrame.setVisible(true);
 						this.selectWorkerInsideFrame.setTexture(this.war3MapViewer.getAbilityDataUI()

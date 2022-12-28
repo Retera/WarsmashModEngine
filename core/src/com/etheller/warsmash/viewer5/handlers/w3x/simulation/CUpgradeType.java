@@ -140,9 +140,21 @@ public class CUpgradeType {
 		}
 	}
 
+	public void apply(CSimulation simulation, int playerIndex, int i) {
+		for (CUpgradeEffect upgradeEffect : getUpgradeEffects()) {
+			upgradeEffect.apply(simulation, playerIndex, i);
+		}
+	}
+
 	public void unapply(CSimulation simulation, CUnit unit, int i) {
 		for (CUpgradeEffect upgradeEffect : getUpgradeEffects()) {
 			upgradeEffect.unapply(simulation, unit, i);
+		}
+	}
+
+	public void unapply(CSimulation simulation, int playerIndex, int i) {
+		for (CUpgradeEffect upgradeEffect : getUpgradeEffects()) {
+			upgradeEffect.unapply(simulation, playerIndex, i);
 		}
 	}
 }

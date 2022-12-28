@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui.command;
 
+import com.etheller.warsmash.util.War3ID;
+
 public class SettableCommandErrorListener implements CommandErrorListener {
 	private CommandErrorListener delegate;
 
@@ -45,5 +47,10 @@ public class SettableCommandErrorListener implements CommandErrorListener {
 	@Override
 	public void showBlightRingFullError(final int playerIndex) {
 		this.delegate.showBlightRingFullError(playerIndex);
+	}
+
+	@Override
+	public void showUpgradeCompleteAlert(int playerIndex, War3ID queuedRawcode, int level) {
+		this.delegate.showUpgradeCompleteAlert(playerIndex, queuedRawcode, level);
 	}
 }

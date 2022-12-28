@@ -601,7 +601,7 @@ public final class MutableObjectData {
 			}
 			// no luck with custom data, look at the standard data
 			int slkLevel = level;
-			if (MutableObjectData.this.worldEditorDataType == WorldEditorDataType.UPGRADES) {
+			if ((MutableObjectData.this.worldEditorDataType == WorldEditorDataType.UPGRADES) && false) {
 				slkLevel -= 1;
 			}
 			return getFieldStringFromSLKs(field, slkLevel);

@@ -144,6 +144,7 @@ public class CUnitData {
 
 	private static final War3ID DEFENSE = War3ID.fromString("udef");
 	private static final War3ID DEFENSE_TYPE = War3ID.fromString("udty");
+	private static final War3ID DEFENSE_UPGRADE_BONUS = War3ID.fromString("udup");
 	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
 	private static final War3ID MOVE_TYPE = War3ID.fromString("umvt");
 	private static final War3ID COLLISION_SIZE = War3ID.fromString("ucol");
@@ -231,6 +232,7 @@ public class CUnitData {
 				manaMaximum, speed, unitTypeInstance, pathingInstance);
 		addDefaultAbilitiesToUnit(simulation, handleIdAllocator, unitTypeInstance, true, manaInitial, speed, unit);
 		applyPlayerUpgradesToUnit(simulation, playerIndex, unitTypeInstance, unit);
+		unit.performDefaultBehavior(simulation);
 		return unit;
 	}
 
@@ -351,6 +353,7 @@ public class CUnitData {
 			final String heroAbilityListString = unitType.getFieldAsString(ABILITIES_HERO, 0);
 			final int unitLevel = unitType.getFieldAsInteger(UNIT_LEVEL, 0);
 			final int priority = unitType.getFieldAsInteger(PRIORITY, 0);
+			final int defenseUpgradeBonus = unitType.getFieldAsInteger(DEFENSE_UPGRADE_BONUS, 0);
 
 			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
 			final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
@@ -633,7 +636,7 @@ public class CUnitData {
 					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
 					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
 					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,
-					castPoint, canBeBuiltOnThem, canBuildOnMe);
+					castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

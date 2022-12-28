@@ -15,10 +15,21 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequiremen
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CUpgradeClass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectAttackDamage;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectAttackDice;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectAttackRange;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectAttackSpeed;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectDefenseUpgradeBonus;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectHitPointRegen;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectHitPoints;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectHitPointsPcnt;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectManaPoints;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectManaPointsPcnt;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectManaRegen;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectMovementSpeed;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectMovementSpeedPcnt;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectSpellLevel;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectTechMaxAllowed;
 
 public class CUpgradeData {
 	private static final War3ID APPLIES_TO_ALL_UNITS = War3ID.fromString("glob");
@@ -59,6 +70,9 @@ public class CUpgradeData {
 
 	public CUpgradeType getType(final War3ID typeId) {
 		final MutableGameObject upgradeType = this.upgradeData.get(typeId);
+		if (upgradeType == null) {
+			return null;
+		}
 		return getUpgradeTypeInstance(typeId, upgradeType);
 	}
 
@@ -101,6 +115,59 @@ public class CUpgradeData {
 								.add(new CUpgradeEffectManaPoints(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
 										upgradeType.getFieldAsInteger(effectModMetaKey, 0)));
 						break;
+					case "rmvx":
+						upgradeEffects.add(
+								new CUpgradeEffectMovementSpeed(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsInteger(effectModMetaKey, 0)));
+						break;
+					case "rmnr":
+						upgradeEffects
+								.add(new CUpgradeEffectManaRegen(upgradeType.getFieldAsFloat(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsFloat(effectModMetaKey, 0)));
+						break;
+					case "rhpo":
+						upgradeEffects
+								.add(new CUpgradeEffectHitPointsPcnt(upgradeType.getFieldAsFloat(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsFloat(effectModMetaKey, 0)));
+						break;
+					case "rman":
+						upgradeEffects
+								.add(new CUpgradeEffectManaPointsPcnt(upgradeType.getFieldAsFloat(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsFloat(effectModMetaKey, 0)));
+						break;
+					case "rmov":
+						upgradeEffects.add(
+								new CUpgradeEffectMovementSpeedPcnt(upgradeType.getFieldAsFloat(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsFloat(effectModMetaKey, 0)));
+						break;
+					case "ratx":
+						upgradeEffects
+								.add(new CUpgradeEffectAttackDamage(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsInteger(effectModMetaKey, 0)));
+						break;
+					case "ratr":
+						upgradeEffects
+								.add(new CUpgradeEffectAttackRange(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsInteger(effectModMetaKey, 0)));
+						break;
+					case "rats":
+						upgradeEffects
+								.add(new CUpgradeEffectAttackSpeed(upgradeType.getFieldAsFloat(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsFloat(effectModMetaKey, 0)));
+						break;
+					case "rhpr":
+						upgradeEffects
+								.add(new CUpgradeEffectHitPointRegen(upgradeType.getFieldAsFloat(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsFloat(effectModMetaKey, 0)));
+						break;
+					case "rtma":
+						upgradeEffects.add(
+								new CUpgradeEffectTechMaxAllowed(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+										War3ID.fromString(upgradeType.getFieldAsString(effectCodeMetaKey, 0))));
+						break;
+					case "rarm":
+						upgradeEffects.add(new CUpgradeEffectDefenseUpgradeBonus());
+						break;
 					default:
 						System.err.println("No such UpgradeEffect: " + effectIdString);
 						break;
@@ -133,11 +200,11 @@ public class CUpgradeData {
 
 			final List<CUpgradeType.UpgradeLevel> upgradeLevels = new ArrayList<>();
 			for (int i = 1; i <= levelCount; i++) {
-				final String requirementsTierString = upgradeType.getFieldAsString(REQUIREMENTS, i + 1);
-				final String requirementsLevelsString = upgradeType.getFieldAsString(REQUIREMENTS_LEVELS, i + 1);
+				final String requirementsTierString = upgradeType.getFieldAsString(REQUIREMENTS, i);
+				final String requirementsLevelsString = upgradeType.getFieldAsString(REQUIREMENTS_LEVELS, i);
 				final List<CUnitTypeRequirement> tierRequirements = CUnitData.parseRequirements(requirementsTierString,
 						requirementsLevelsString);
-				final String levelName = upgradeType.getFieldAsString(NAME, i + 1);
+				final String levelName = upgradeType.getFieldAsString(NAME, i);
 				upgradeLevels.add(new CUpgradeType.UpgradeLevel(levelName, tierRequirements));
 			}
 

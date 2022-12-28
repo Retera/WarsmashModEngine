@@ -7,6 +7,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -14,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 public class CAbilityCharm extends CAbilityTargetSpellBase {
 	private int maximumCreepLevel;
@@ -30,6 +32,17 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 	@Override
 	public int getBaseOrderId() {
 		return OrderIds.charm;
+	}
+
+	@Override
+	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+			AbilityTargetCheckReceiver<CWidget> receiver) {
+		if (target.visit(AbilityTargetVisitor.UNIT).getUnitType().getLevel() <= maximumCreepLevel) {
+			super.innerCheckCanTarget(game, unit, orderId, target, receiver);
+		}
+		else {
+			receiver.targetTooComplicated();
+		}
 	}
 
 	@Override
@@ -51,9 +64,12 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 		}
 		simulation.getUnitData().unapplyPlayerUpgradesToUnit(simulation, targetUnit.getPlayerIndex(),
 				targetUnit.getUnitType(), targetUnit);
+		int oldFoodUsed = targetUnit.getFoodUsed();
+		targetPlayer.setUnitFoodUsed(targetUnit, 0);
 		targetUnit.setPlayerIndex(simulation, unit.getPlayerIndex(), true);
 		simulation.getUnitData().applyPlayerUpgradesToUnit(simulation, targetUnit.getPlayerIndex(),
 				targetUnit.getUnitType(), targetUnit);
+		castingUnitPlayer.setUnitFoodUsed(targetUnit, oldFoodUsed);
 		targetUnit.order(simulation, OrderIds.stop, null);
 		return false;
 	}

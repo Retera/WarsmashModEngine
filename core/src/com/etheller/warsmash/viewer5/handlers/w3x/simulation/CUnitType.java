@@ -92,6 +92,7 @@ public class CUnitType {
 	private final float castPoint;
 	private final boolean canBeBuiltOnThem;
 	private final boolean canBuildOnMe;
+	private final int defenseUpgradeBonus;
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
@@ -112,7 +113,7 @@ public class CUnitType {
 			final CPrimaryAttribute primaryAttribute, final List<War3ID> heroAbilityList,
 			final List<String> heroProperNames, final int properNamesCount, final boolean canFlee, final int priority,
 			final boolean revivesHeroes, final int pointValue, final float castBackswingPoint, final float castPoint,
-			final boolean canBeBuiltOnThem, final boolean canBuildOnMe) {
+			final boolean canBeBuiltOnThem, final boolean canBuildOnMe, final int defenseUpgradeBonus) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
@@ -179,6 +180,7 @@ public class CUnitType {
 		this.castPoint = castPoint;
 		this.canBeBuiltOnThem = canBeBuiltOnThem;
 		this.canBuildOnMe = canBuildOnMe;
+		this.defenseUpgradeBonus = defenseUpgradeBonus;
 	}
 
 	public String getName() {
@@ -450,6 +452,10 @@ public class CUnitType {
 
 	public boolean isCanBuildOnMe() {
 		return this.canBuildOnMe;
+	}
+
+	public int getDefenseUpgradeBonus() {
+		return defenseUpgradeBonus;
 	}
 
 	public int getCargoCapacity() {

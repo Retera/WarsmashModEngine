@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui.command;
 
+import com.etheller.warsmash.util.War3ID;
+
 public interface CommandErrorListener {
 	void showCommandError(int playerIndex, String message);
 
@@ -16,5 +18,7 @@ public interface CommandErrorListener {
 	void showUnableToFindCoupleTargetError(int playerIndex);
 
 	void showBlightRingFullError(int playerIndex);
+
+	void showUpgradeCompleteAlert(int playerIndex, War3ID queuedRawcode, int level);
 
 }

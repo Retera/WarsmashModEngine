@@ -182,8 +182,15 @@ public class CUnit extends CWidget {
 		this.structure = unitType.isBuilding();
 		this.stopBehavior = new CBehaviorStop(this);
 		this.defaultBehavior = this.stopBehavior;
-		this.currentBehavior = this.defaultBehavior;
 		computeDerivedFields();
+	}
+
+	public void performDefaultBehavior(CSimulation game) {
+		if (this.currentBehavior != null) {
+			this.currentBehavior.end(game, true);
+		}
+		this.currentBehavior = this.defaultBehavior;
+		this.currentBehavior.begin(game);
 	}
 
 	public float getLifeRegenBonus() {
@@ -238,6 +245,10 @@ public class CUnit extends CWidget {
 	public void setPermanentDefenseBonus(final int permanentDefenseBonus) {
 		this.permanentDefenseBonus = permanentDefenseBonus;
 		computeDerivedFields();
+	}
+
+	public int getPermanentDefenseBonus() {
+		return permanentDefenseBonus;
 	}
 
 	public void setTemporaryDefenseBonus(final float temporaryDefenseBonus) {
@@ -484,7 +495,7 @@ public class CUnit extends CWidget {
 						if (!upgrading) {
 							fireConstructFinishEvents(game);
 						}
-						if (upgrading) {
+						if (upgrading || true) {
 							// TODO shouldnt need to play stand here, probably
 							getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
 									true);
@@ -618,6 +629,8 @@ public class CUnit extends CWidget {
 								player.removeTechtreeInProgress(queuedRawcode);
 								player.addTechResearched(game, queuedRawcode, 1);
 								fireResearchFinishEvents(game, queuedRawcode);
+								game.researchFinishEvent(this, queuedRawcode,
+										player.getTechtreeUnlocked(queuedRawcode));
 								this.stateNotifier.queueChanged();
 							}
 						}

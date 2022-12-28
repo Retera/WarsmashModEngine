@@ -553,7 +553,7 @@ public class CPlayer extends CBasePlayer {
 
 	public boolean isTechtreeAllowedByMax(final War3ID techtree) {
 		final int techtreeMaxAllowed = getTechtreeMaxAllowed(techtree);
-		if (techtreeMaxAllowed > 0) {
+		if (techtreeMaxAllowed >= 0) {
 			if (getTechtreeUnlockedOrInProgress(techtree) >= techtreeMaxAllowed) {
 				return false;
 			}
@@ -640,6 +640,12 @@ public class CPlayer extends CBasePlayer {
 						}
 					}
 				}
+			}
+			if (previousLevel != 0) {
+				upgradeType.unapply(simulation, getId(), previousLevel);
+			}
+			if (setToLevel != 0) {
+				upgradeType.apply(simulation, getId(), setToLevel);
 			}
 		}
 	}

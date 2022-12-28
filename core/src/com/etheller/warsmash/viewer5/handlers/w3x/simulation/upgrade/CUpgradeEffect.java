@@ -8,6 +8,12 @@ public interface CUpgradeEffect {
 
 	void unapply(CSimulation simulation, CUnit unit, int level);
 
+	default void apply(CSimulation simulation, int playerIndex, int level) {
+	}
+
+	default void unapply(CSimulation simulation, int playerIndex, int level) {
+	}
+
 	class Util {
 		static int levelValue(int base, int mod, int level) {
 			return base + (mod * level);

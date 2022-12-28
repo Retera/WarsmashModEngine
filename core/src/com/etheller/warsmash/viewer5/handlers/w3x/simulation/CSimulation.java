@@ -525,6 +525,10 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnUnitReadySound(trainedUnit);
 	}
 
+	public void researchFinishEvent(CUnit cUnit, War3ID queuedRawcode, int level) {
+		getCommandErrorListener().showUpgradeCompleteAlert(cUnit.getPlayerIndex(), queuedRawcode, level);
+	}
+
 	public void heroReviveEvent(final CUnit trainingUnit, final CUnit trainedUnit) {
 		this.simulationRenderController.heroRevived(trainedUnit);
 		this.simulationRenderController.spawnUnitReadySound(trainedUnit);

@@ -93,6 +93,9 @@ public class CUnitType {
 	private final boolean canBeBuiltOnThem;
 	private final boolean canBuildOnMe;
 	private final int defenseUpgradeBonus;
+	private final float sightRadiusDay;
+	private final float sightRadiusNight;
+	private final boolean extendedLineOfSight;
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
@@ -113,7 +116,8 @@ public class CUnitType {
 			final CPrimaryAttribute primaryAttribute, final List<War3ID> heroAbilityList,
 			final List<String> heroProperNames, final int properNamesCount, final boolean canFlee, final int priority,
 			final boolean revivesHeroes, final int pointValue, final float castBackswingPoint, final float castPoint,
-			final boolean canBeBuiltOnThem, final boolean canBuildOnMe, final int defenseUpgradeBonus) {
+			final boolean canBeBuiltOnThem, final boolean canBuildOnMe, final int defenseUpgradeBonus,
+			final float sightRadiusDay, final float sightRadiusNight, final boolean extendedLineOfSight) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
@@ -181,6 +185,9 @@ public class CUnitType {
 		this.canBeBuiltOnThem = canBeBuiltOnThem;
 		this.canBuildOnMe = canBuildOnMe;
 		this.defenseUpgradeBonus = defenseUpgradeBonus;
+		this.sightRadiusDay = sightRadiusDay;
+		this.sightRadiusNight = sightRadiusNight;
+		this.extendedLineOfSight = extendedLineOfSight;
 	}
 
 	public String getName() {
@@ -456,6 +463,18 @@ public class CUnitType {
 
 	public int getDefenseUpgradeBonus() {
 		return defenseUpgradeBonus;
+	}
+
+	public float getSightRadiusDay() {
+		return sightRadiusDay;
+	}
+
+	public float getSightRadiusNight() {
+		return sightRadiusNight;
+	}
+
+	public boolean isExtendedLineOfSight() {
+		return extendedLineOfSight;
 	}
 
 	public int getCargoCapacity() {

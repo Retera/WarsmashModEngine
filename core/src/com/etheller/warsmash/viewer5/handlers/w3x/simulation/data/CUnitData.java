@@ -197,12 +197,16 @@ public class CUnitData {
 	private static final War3ID CAN_BE_BUILT_ON_THEM = War3ID.fromString("uibo");
 	private static final War3ID CAN_BUILD_ON_ME = War3ID.fromString("ucbo");
 
+	private static final War3ID SIGHT_RADIUS_DAY = War3ID.fromString("usid");
+	private static final War3ID SIGHT_RADIUS_NIGHT = War3ID.fromString("usin");
+	private static final War3ID EXTENDED_LOS = War3ID.fromString("ulos");
+
 	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
 	private final Map<String, War3ID> jassLegacyNameToUnitId = new HashMap<>();
 	private final CAbilityData abilityData;
-	private CUpgradeData upgradeData;
+	private final CUpgradeData upgradeData;
 	private final SimulationRenderController simulationRenderController;
 
 	public CUnitData(final CGameplayConstants gameplayConstants, final MutableObjectData unitData,
@@ -236,13 +240,13 @@ public class CUnitData {
 		return unit;
 	}
 
-	public void applyPlayerUpgradesToUnit(CSimulation simulation, int playerIndex, CUnitType unitTypeInstance,
-			CUnit unit) {
-		CPlayer player = simulation.getPlayer(playerIndex);
-		for (War3ID upgradeId : unitTypeInstance.getUpgradesUsed()) {
-			int techtreeUnlocked = player.getTechtreeUnlocked(upgradeId);
+	public void applyPlayerUpgradesToUnit(final CSimulation simulation, final int playerIndex,
+			final CUnitType unitTypeInstance, final CUnit unit) {
+		final CPlayer player = simulation.getPlayer(playerIndex);
+		for (final War3ID upgradeId : unitTypeInstance.getUpgradesUsed()) {
+			final int techtreeUnlocked = player.getTechtreeUnlocked(upgradeId);
 			if (techtreeUnlocked > 0) {
-				CUpgradeType upgradeType = upgradeData.getType(upgradeId);
+				final CUpgradeType upgradeType = upgradeData.getType(upgradeId);
 				if (upgradeType != null) {
 					upgradeType.apply(simulation, unit, techtreeUnlocked);
 				}
@@ -250,13 +254,13 @@ public class CUnitData {
 		}
 	}
 
-	public void unapplyPlayerUpgradesToUnit(CSimulation simulation, int playerIndex, CUnitType unitTypeInstance,
-			CUnit unit) {
-		CPlayer player = simulation.getPlayer(playerIndex);
-		for (War3ID upgradeId : unitTypeInstance.getUpgradesUsed()) {
-			int techtreeUnlocked = player.getTechtreeUnlocked(upgradeId);
+	public void unapplyPlayerUpgradesToUnit(final CSimulation simulation, final int playerIndex,
+			final CUnitType unitTypeInstance, final CUnit unit) {
+		final CPlayer player = simulation.getPlayer(playerIndex);
+		for (final War3ID upgradeId : unitTypeInstance.getUpgradesUsed()) {
+			final int techtreeUnlocked = player.getTechtreeUnlocked(upgradeId);
 			if (techtreeUnlocked > 0) {
-				CUpgradeType upgradeType = upgradeData.getType(upgradeId);
+				final CUpgradeType upgradeType = upgradeData.getType(upgradeId);
 				if (upgradeType != null) {
 					upgradeType.unapply(simulation, unit, techtreeUnlocked);
 				}
@@ -538,6 +542,10 @@ public class CUnitData {
 
 			final int pointValue = unitType.getFieldAsInteger(POINT_VALUE, 0);
 
+			final float sightRadiusDay = unitType.getFieldAsFloat(SIGHT_RADIUS_DAY, 0);
+			final float sightRadiusNight = unitType.getFieldAsFloat(SIGHT_RADIUS_NIGHT, 0);
+			final boolean extendedLineOfSight = unitType.getFieldAsBoolean(EXTENDED_LOS, 0);
+
 			final boolean revivesHeroes = unitType.getFieldAsBoolean(REVIVES_HEROES, 0);
 
 			final String unitsTrainedString = unitType.getFieldAsString(UNITS_TRAINED, 0);
@@ -575,11 +583,11 @@ public class CUnitData {
 					upgradesUsed.add(War3ID.fromString(upgradesUsedStringItem));
 				}
 			}
-			EnumMap<CUpgradeClass, War3ID> upgradeClassToType = new EnumMap<>(CUpgradeClass.class);
-			for (War3ID upgradeUsed : upgradesUsed) {
-				CUpgradeType upgradeType = upgradeData.getType(upgradeUsed);
+			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType = new EnumMap<>(CUpgradeClass.class);
+			for (final War3ID upgradeUsed : upgradesUsed) {
+				final CUpgradeType upgradeType = upgradeData.getType(upgradeUsed);
 				if (upgradeType != null) {
-					CUpgradeClass upgradeClass = upgradeType.getUpgradeClass();
+					final CUpgradeClass upgradeClass = upgradeType.getUpgradeClass();
 					if (upgradeClass != null) {
 						upgradeClassToType.put(upgradeClass, upgradeUsed);
 					}
@@ -636,7 +644,8 @@ public class CUnitData {
 					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
 					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
 					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,
-					castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus);
+					castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay, sightRadiusNight,
+					extendedLineOfSight);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}
@@ -660,7 +669,7 @@ public class CUnitData {
 						try {
 							level = Integer.parseInt(requirementsLevelsStringItems[i]);
 						}
-						catch (NumberFormatException exc) {
+						catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
@@ -675,7 +684,7 @@ public class CUnitData {
 						try {
 							level = Integer.parseInt(requirementLevel);
 						}
-						catch (NumberFormatException exc) {
+						catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}

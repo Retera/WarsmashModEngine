@@ -167,11 +167,16 @@ public class CAbilityHero extends AbstractCAbility {
 				final int heroRequiredLevel = abilityData.getHeroRequiredLevel(game, orderIdAsRawtype, priorLevel);
 				final CAbilityType<?> abilityType = abilityData.getAbilityType(orderIdAsRawtype);
 				// TODO check abilityType.getRequiredLevel() which api doesn't currently offer!!
-				if (this.heroLevel >= heroRequiredLevel) {
-					receiver.useOk();
+				if ((abilityType == null) || (priorLevel < abilityType.getLevelCount())) {
+					if (this.heroLevel >= heroRequiredLevel) {
+						receiver.useOk();
+					}
+					else {
+						receiver.missingHeroLevelRequirement(heroRequiredLevel);
+					}
 				}
 				else {
-					receiver.missingHeroLevelRequirement(heroRequiredLevel);
+					receiver.techtreeMaximumReached();
 				}
 			}
 			else {
@@ -201,10 +206,6 @@ public class CAbilityHero extends AbstractCAbility {
 
 	public int getHeroLevel() {
 		return this.heroLevel;
-	}
-
-	public void setHeroLevel(final int level) {
-		this.heroLevel = level;
 	}
 
 	public HeroStatValue getStrength() {
@@ -250,6 +251,17 @@ public class CAbilityHero extends AbstractCAbility {
 			simulation.unitGainLevelEvent(unit);
 		}
 		unit.internalPublishHeroStatsChanged();
+	}
+
+	public void setHeroLevel(CSimulation simulation, CUnit unit, int level, boolean showEffect) {
+		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
+		int neededTotalXp = gameplayConstants.getNeedHeroXPSum(level);
+		if (this.xp < neededTotalXp) {
+			addXp(simulation, unit, neededTotalXp - this.xp);
+		}
+		else {
+			// remove xp TODO
+		}
 	}
 
 	public void addStrengthBonus(final CSimulation game, final CUnit unit, final int strengthBonus) {

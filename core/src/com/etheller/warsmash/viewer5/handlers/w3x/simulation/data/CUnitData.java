@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +22,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.HandleIdAllocator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
@@ -40,6 +42,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CUpgradeClass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
@@ -49,6 +52,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissileSplash;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackNormal;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 
 public class CUnitData {
@@ -153,6 +157,7 @@ public class CUnitData {
 	private static final War3ID STRUCTURES_BUILT = War3ID.fromString("ubui");
 	private static final War3ID UNITS_TRAINED = War3ID.fromString("utra");
 	private static final War3ID RESEARCHES_AVAILABLE = War3ID.fromString("ures");
+	private static final War3ID UPGRADES_USED = War3ID.fromString("upgr");
 	private static final War3ID UPGRADES_TO = War3ID.fromString("uupt");
 	private static final War3ID REVIVES_HEROES = War3ID.fromString("urev");
 	private static final War3ID UNIT_RACE = War3ID.fromString("urac");
@@ -196,13 +201,16 @@ public class CUnitData {
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
 	private final Map<String, War3ID> jassLegacyNameToUnitId = new HashMap<>();
 	private final CAbilityData abilityData;
+	private CUpgradeData upgradeData;
 	private final SimulationRenderController simulationRenderController;
 
 	public CUnitData(final CGameplayConstants gameplayConstants, final MutableObjectData unitData,
-			final CAbilityData abilityData, final SimulationRenderController simulationRenderController) {
+			final CAbilityData abilityData, final CUpgradeData upgradeData,
+			final SimulationRenderController simulationRenderController) {
 		this.gameplayConstants = gameplayConstants;
 		this.unitData = unitData;
 		this.abilityData = abilityData;
+		this.upgradeData = upgradeData;
 		this.simulationRenderController = simulationRenderController;
 	}
 
@@ -222,7 +230,36 @@ public class CUnitData {
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, lifeRegen,
 				manaMaximum, speed, unitTypeInstance, pathingInstance);
 		addDefaultAbilitiesToUnit(simulation, handleIdAllocator, unitTypeInstance, true, manaInitial, speed, unit);
+		applyPlayerUpgradesToUnit(simulation, playerIndex, unitTypeInstance, unit);
 		return unit;
+	}
+
+	public void applyPlayerUpgradesToUnit(CSimulation simulation, int playerIndex, CUnitType unitTypeInstance,
+			CUnit unit) {
+		CPlayer player = simulation.getPlayer(playerIndex);
+		for (War3ID upgradeId : unitTypeInstance.getUpgradesUsed()) {
+			int techtreeUnlocked = player.getTechtreeUnlocked(upgradeId);
+			if (techtreeUnlocked > 0) {
+				CUpgradeType upgradeType = upgradeData.getType(upgradeId);
+				if (upgradeType != null) {
+					upgradeType.apply(simulation, unit, techtreeUnlocked);
+				}
+			}
+		}
+	}
+
+	public void unapplyPlayerUpgradesToUnit(CSimulation simulation, int playerIndex, CUnitType unitTypeInstance,
+			CUnit unit) {
+		CPlayer player = simulation.getPlayer(playerIndex);
+		for (War3ID upgradeId : unitTypeInstance.getUpgradesUsed()) {
+			int techtreeUnlocked = player.getTechtreeUnlocked(upgradeId);
+			if (techtreeUnlocked > 0) {
+				CUpgradeType upgradeType = upgradeData.getType(upgradeId);
+				if (upgradeType != null) {
+					upgradeType.unapply(simulation, unit, techtreeUnlocked);
+				}
+			}
+		}
 	}
 
 	public void addDefaultAbilitiesToUnit(final CSimulation simulation, final HandleIdAllocator handleIdAllocator,
@@ -231,13 +268,11 @@ public class CUnitData {
 		if (speed > 0) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
-		if (unitTypeInstance.isHero()) {
-			final List<CUnitAttack> heroAttacks = new ArrayList<>();
-			for (final CUnitAttack attack : unitTypeInstance.getAttacks()) {
-				heroAttacks.add(attack.copy());
-			}
-			unit.setUnitSpecificAttacks(heroAttacks);
+		final List<CUnitAttack> unitSpecificAttacks = new ArrayList<>();
+		for (final CUnitAttack attack : unitTypeInstance.getAttacks()) {
+			unitSpecificAttacks.add(attack.copy());
 		}
+		unit.setUnitSpecificAttacks(unitSpecificAttacks);
 		if (!unit.getAttacks().isEmpty()) {
 			unit.add(simulation, new CAbilityAttack(handleIdAllocator.createId()));
 		}
@@ -529,6 +564,25 @@ public class CUnitData {
 				}
 			}
 
+			final String upgradesUsedString = unitType.getFieldAsString(UPGRADES_USED, 0);
+			final String[] upgradesUsedStringItems = upgradesUsedString.trim().split(",");
+			final List<War3ID> upgradesUsed = new ArrayList<>();
+			for (final String upgradesUsedStringItem : upgradesUsedStringItems) {
+				if (upgradesUsedStringItem.length() == 4) {
+					upgradesUsed.add(War3ID.fromString(upgradesUsedStringItem));
+				}
+			}
+			EnumMap<CUpgradeClass, War3ID> upgradeClassToType = new EnumMap<>(CUpgradeClass.class);
+			for (War3ID upgradeUsed : upgradesUsed) {
+				CUpgradeType upgradeType = upgradeData.getType(upgradeUsed);
+				if (upgradeType != null) {
+					CUpgradeClass upgradeClass = upgradeType.getUpgradeClass();
+					if (upgradeClass != null) {
+						upgradeClassToType.put(upgradeClass, upgradeUsed);
+					}
+				}
+			}
+
 			final String structuresBuiltString = unitType.getFieldAsString(STRUCTURES_BUILT, 0);
 			final String[] structuresBuiltStringItems = structuresBuiltString.split(",");
 			final List<War3ID> structuresBuilt = new ArrayList<>();
@@ -574,11 +628,12 @@ public class CUnitData {
 					manaInitial, manaMaximum, speed, defense, abilityList, isBldg, movementType, moveHeight,
 					collisionSize, classifications, attacks, armorType, raise, decay, defenseType, impactZ,
 					buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange, minimumAttackRange,
-					structuresBuilt, unitsTrained, researchesAvailable, upgradesTo, unitRace, goldCost, lumberCost,
-					foodUsed, foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow, turnRate,
-					requirements, requirementTiers, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence,
-					intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount, canFlee, priority,
-					revivesHeroes, pointValue, castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe);
+					structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed, upgradeClassToType, upgradesTo,
+					unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes,
+					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
+					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
+					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,
+					castPoint, canBeBuiltOnThem, canBuildOnMe);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

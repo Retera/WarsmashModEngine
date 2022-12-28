@@ -155,6 +155,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jas
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CUpgradeClass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CodeKeyType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissileSplash;
@@ -273,6 +274,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private StringFrame armorInfoPanelIconLevel;
 	private InfoPanelIconBackdrops damageBackdrops;
 	private InfoPanelIconBackdrops defenseBackdrops;
+	private InfoPanelIconBackdrops damageBackdropsNeutral;
+	private InfoPanelIconBackdrops defenseBackdropsNeutral;
 
 	private UIFrame heroInfoPanel;
 
@@ -491,8 +494,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		catch (final IOException exc) {
 			throw new IllegalStateException("Unable to load SmashFrameDef.toc", exc);
 		}
-		this.damageBackdrops = new InfoPanelIconBackdrops(CAttackType.values(), this.rootFrame, "Damage", "Neutral");
-		this.defenseBackdrops = new InfoPanelIconBackdrops(CDefenseType.values(), this.rootFrame, "Armor", "Neutral");
+		this.damageBackdrops = new InfoPanelIconBackdrops(CAttackType.values(), this.rootFrame, "Damage", "");
+		this.defenseBackdrops = new InfoPanelIconBackdrops(CDefenseType.values(), this.rootFrame, "Armor", "");
+		this.damageBackdropsNeutral = new InfoPanelIconBackdrops(CAttackType.values(), this.rootFrame, "Damage",
+				"Neutral");
+		this.defenseBackdropsNeutral = new InfoPanelIconBackdrops(CDefenseType.values(), this.rootFrame, "Armor",
+				"Neutral");
 
 		// =================================
 		// Load major UI components
@@ -2760,16 +2767,28 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				for (int i = 0; i < cargoUnitFrames.length; i++) {
 					cargoUnitFrames[i].setVisible(false);
 				}
-				final String unitTypeName = simulationUnit.getUnitType().getName();
+				CUnitType unitType = simulationUnit.getUnitType();
+				final String unitTypeName = unitType.getName();
 
 				final boolean anyAttacks = simulationUnit.getAttacks().size() > 0;
 				final UIFrame localArmorIcon = this.armorIcon;
 				final TextureFrame localArmorIconBackdrop = this.armorIconBackdrop;
 				final StringFrame localArmorInfoPanelIconValue = this.armorInfoPanelIconValue;
+				final StringFrame localArmorInfoPanelIconLevel = this.armorInfoPanelIconLevel;
 				if (anyAttacks && !constructing) {
+					War3ID weaponUpgradeId = unitType.getUpgradeClassToType().get(CUpgradeClass.MELEE);
+					if (weaponUpgradeId == null) {
+						weaponUpgradeId = unitType.getUpgradeClassToType().get(CUpgradeClass.RANGED);
+						if (weaponUpgradeId == null) {
+							weaponUpgradeId = unitType.getUpgradeClassToType().get(CUpgradeClass.ARTILLERY);
+						}
+					}
+					boolean weaponUpgradeLevelVisible = weaponUpgradeId != null;
+					InfoPanelIconBackdrops damageBackdrops = weaponUpgradeLevelVisible ? this.damageBackdrops
+							: this.damageBackdropsNeutral;
 					final CUnitAttack attackOne = simulationUnit.getAttacks().get(0);
 					this.attack1Icon.setVisible(true);// attackOne.isShowUI());
-					this.attack1IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackOne.getAttackType()));
+					this.attack1IconBackdrop.setTexture(damageBackdrops.getTexture(attackOne.getAttackType()));
 					String attackOneDmgText = attackOne.getMinDamageDisplay() + " - " + attackOne.getMaxDamageDisplay();
 					final int attackOneTemporaryDamageBonus = attackOne.getTotalTemporaryDamageBonus();
 					if (attackOneTemporaryDamageBonus != 0) {
@@ -2777,10 +2796,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 								+ attackOneTemporaryDamageBonus + "";
 					}
 					this.rootFrame.setText(this.attack1InfoPanelIconValue, attackOneDmgText);
+					this.attack1InfoPanelIconLevel.setVisible(weaponUpgradeLevelVisible);
+					if (weaponUpgradeLevelVisible) {
+						this.rootFrame.setText(this.attack1InfoPanelIconLevel, Integer.toString(war3MapViewer.simulation
+								.getPlayer(simulationUnit.getPlayerIndex()).getTechtreeUnlocked(weaponUpgradeId)));
+					}
 					if (simulationUnit.getAttacks().size() > 1) {
 						final CUnitAttack attackTwo = simulationUnit.getAttacks().get(1);
 						this.attack2Icon.setVisible(attackTwo.isShowUI());
-						this.attack2IconBackdrop.setTexture(this.damageBackdrops.getTexture(attackTwo.getAttackType()));
+						this.attack2IconBackdrop.setTexture(damageBackdrops.getTexture(attackTwo.getAttackType()));
 						String attackTwoDmgText = attackTwo.getMinDamageDisplay() + " - "
 								+ attackTwo.getMaxDamageDisplay();
 						final int attackTwoTemporaryDamageBonus = attackTwo.getTotalTemporaryDamageBonus();
@@ -2789,6 +2813,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									+ attackTwoTemporaryDamageBonus + "";
 						}
 						this.rootFrame.setText(this.attack2InfoPanelIconValue, attackTwoDmgText);
+						this.attack2InfoPanelIconLevel.setVisible(weaponUpgradeLevelVisible);
+						if (weaponUpgradeLevelVisible) {
+							this.rootFrame.setText(this.attack2InfoPanelIconLevel,
+									Integer.toString(war3MapViewer.simulation.getPlayer(simulationUnit.getPlayerIndex())
+											.getTechtreeUnlocked(weaponUpgradeId)));
+						}
 					}
 					else {
 						this.attack2Icon.setVisible(false);
@@ -2893,8 +2923,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.rootFrame.setText(this.simpleBuildingActionLabel, "");
 					this.selectWorkerInsideFrame.setVisible(false);
 				}
-				final Texture defenseTexture = this.defenseBackdrops
-						.getTexture(simulationUnit.getUnitType().getDefenseType());
+				War3ID armorUpgradeId = unitType.getUpgradeClassToType().get(CUpgradeClass.ARMOR);
+				boolean armorUpgradeLevelVisible = armorUpgradeId != null;
+				final Texture defenseTexture = (armorUpgradeLevelVisible ? this.defenseBackdrops
+						: this.defenseBackdropsNeutral).getTexture(simulationUnit.getUnitType().getDefenseType());
 				if (defenseTexture == null) {
 					throw new RuntimeException(simulationUnit.getUnitType().getDefenseType() + " can't find texture!");
 				}
@@ -2917,6 +2949,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					}
 				}
 				this.rootFrame.setText(localArmorInfoPanelIconValue, defenseDisplayString);
+				localArmorInfoPanelIconLevel.setVisible(armorUpgradeLevelVisible);
+				if (armorUpgradeLevelVisible) {
+					this.rootFrame.setText(localArmorInfoPanelIconLevel, Integer.toString(war3MapViewer.simulation
+							.getPlayer(simulationUnit.getPlayerIndex()).getTechtreeUnlocked(armorUpgradeId)));
+				}
 			}
 		}
 		final CAbilityInventory inventory = simulationUnit.getInventoryData();
@@ -4067,6 +4104,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					if (targetReceiver.isTargetable()) {
 						MeleeUI.this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
 								inventoryData.getHandleId(), orderId, isShiftDown());
+					}
+					else {
+						activeCommand = inventoryData;
+						activeCommandOrderId = orderId;
+						activeCommandUnit = selectedUnit2;
+						clearAndRepopulateCommandCard();
 					}
 				}
 			}

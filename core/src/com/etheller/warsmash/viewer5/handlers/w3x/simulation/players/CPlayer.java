@@ -620,13 +620,25 @@ public class CPlayer extends CBasePlayer {
 	}
 
 	private void setTechToLevel(CSimulation simulation, War3ID techIdRawcodeId, int setToLevel) {
+		int previousLevel = getTechtreeUnlocked(techIdRawcodeId);
 		setTechtreeUnlocked(techIdRawcodeId, setToLevel);
 		// terminate in progress upgrades of this kind for player
-		for (CUnit unit : simulation.getUnits()) {
-			if (unit.getPlayerIndex() == getId()) {
-				if (unit.isBuildQueueActive() && (unit.getBuildQueueTypes()[0] == QueueItemType.RESEARCH)
-						&& (unit.getBuildQueue()[0].getValue() == techIdRawcodeId.getValue())) {
-					unit.cancelBuildQueueItem(simulation, 0);
+		CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
+		if (upgradeType != null) {
+			for (CUnit unit : simulation.getUnits()) {
+				if (unit.getPlayerIndex() == getId()) {
+					if (unit.isBuildQueueActive() && (unit.getBuildQueueTypes()[0] == QueueItemType.RESEARCH)
+							&& (unit.getBuildQueue()[0].getValue() == techIdRawcodeId.getValue())) {
+						unit.cancelBuildQueueItem(simulation, 0);
+					}
+					if (unit.getUnitType().getUpgradesUsed().contains(techIdRawcodeId)) {
+						if (previousLevel != 0) {
+							upgradeType.unapply(simulation, unit, previousLevel);
+						}
+						if (setToLevel != 0) {
+							upgradeType.apply(simulation, unit, setToLevel);
+						}
+					}
 				}
 			}
 		}

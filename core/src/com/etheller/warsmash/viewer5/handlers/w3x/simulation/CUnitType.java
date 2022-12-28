@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
 import java.awt.image.BufferedImage;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPri
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CUpgradeClass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
@@ -55,6 +57,8 @@ public class CUnitType {
 	private final List<War3ID> structuresBuilt;
 	private final List<War3ID> unitsTrained;
 	private final List<War3ID> researchesAvailable;
+	private final List<War3ID> upgradesUsed;
+	private final EnumMap<CUpgradeClass, War3ID> upgradeClassToType;
 	private final List<War3ID> upgradesTo;
 	private final CUnitRace unitRace;
 	private final int goldCost;
@@ -97,7 +101,8 @@ public class CUnitType {
 			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ,
 			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs,
 			final float defaultAcquisitionRange, final float minimumAttackRange, final List<War3ID> structuresBuilt,
-			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final List<War3ID> upgradesTo,
+			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final List<War3ID> upgradesUsed,
+			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType, final List<War3ID> upgradesTo,
 			final CUnitRace unitRace, final int goldCost, final int lumberCost, final int foodUsed, final int foodMade,
 			final int buildTime, final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes, final float propWindow, final float turnRate,
@@ -139,6 +144,8 @@ public class CUnitType {
 		this.structuresBuilt = structuresBuilt;
 		this.unitsTrained = unitsTrained;
 		this.researchesAvailable = researchesAvailable;
+		this.upgradesUsed = upgradesUsed;
+		this.upgradeClassToType = upgradeClassToType;
 		this.upgradesTo = upgradesTo;
 		this.unitRace = unitRace;
 		this.goldCost = goldCost;
@@ -296,6 +303,14 @@ public class CUnitType {
 
 	public List<War3ID> getResearchesAvailable() {
 		return this.researchesAvailable;
+	}
+
+	public List<War3ID> getUpgradesUsed() {
+		return this.upgradesUsed;
+	}
+
+	public EnumMap<CUpgradeClass, War3ID> getUpgradeClassToType() {
+		return this.upgradeClassToType;
 	}
 
 	public List<War3ID> getUpgradesTo() {

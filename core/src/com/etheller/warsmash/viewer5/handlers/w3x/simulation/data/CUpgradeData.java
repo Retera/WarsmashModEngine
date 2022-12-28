@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
@@ -13,6 +14,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CGameplayConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CUpgradeClass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectAttackDice;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectHitPoints;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectManaPoints;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectSpellLevel;
 
 public class CUpgradeData {
 	private static final War3ID APPLIES_TO_ALL_UNITS = War3ID.fromString("glob");
@@ -30,13 +36,25 @@ public class CUpgradeData {
 	private static final War3ID REQUIREMENTS_LEVELS = War3ID.fromString("grqc");
 	private static final War3ID NAME = War3ID.fromString("gnam");
 
+	private static final War3ID[] EFFECT = { War3ID.fromString("gef1"), War3ID.fromString("gef2"),
+			War3ID.fromString("gef3"), War3ID.fromString("gef4"), };
+	private static final War3ID[] EFFECT_BASE = { War3ID.fromString("gba1"), War3ID.fromString("gba2"),
+			War3ID.fromString("gba3"), War3ID.fromString("gba4"), };
+	private static final War3ID[] EFFECT_MOD = { War3ID.fromString("gmo1"), War3ID.fromString("gmo2"),
+			War3ID.fromString("gmo3"), War3ID.fromString("gmo4"), };
+	private static final War3ID[] EFFECT_CODE = { War3ID.fromString("gco1"), War3ID.fromString("gco2"),
+			War3ID.fromString("gco3"), War3ID.fromString("gco4"), };
+
 	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData upgradeData;
+	private final DataTable standardUpgradeEffectMeta;
 	private final Map<War3ID, CUpgradeType> idToType = new HashMap<>();
 
-	public CUpgradeData(final CGameplayConstants gameplayConstants, final MutableObjectData upgradeData) {
+	public CUpgradeData(final CGameplayConstants gameplayConstants, final MutableObjectData upgradeData,
+			DataTable standardUpgradeEffectMeta) {
 		this.gameplayConstants = gameplayConstants;
 		this.upgradeData = upgradeData;
+		this.standardUpgradeEffectMeta = standardUpgradeEffectMeta;
 	}
 
 	public CUpgradeType getType(final War3ID typeId) {
@@ -47,6 +65,49 @@ public class CUpgradeData {
 	private CUpgradeType getUpgradeTypeInstance(final War3ID typeId, final MutableGameObject upgradeType) {
 		CUpgradeType upgradeTypeInstance = this.idToType.get(typeId);
 		if (upgradeTypeInstance == null) {
+			List<CUpgradeEffect> upgradeEffects = new ArrayList<>();
+			for (int i = 0; i < EFFECT.length; i++) {
+				War3ID effectMetaKey = EFFECT[i];
+				War3ID effectBaseMetaKey = EFFECT_BASE[i];
+				War3ID effectModMetaKey = EFFECT_MOD[i];
+				War3ID effectCodeMetaKey = EFFECT_CODE[i];
+
+				/* This effectId defines what type of benefit the upgrade will provide */
+				String effectIdString = upgradeType.getFieldAsString(effectMetaKey, 0);
+				if (effectIdString.length() == 4) {
+					War3ID effectId = War3ID.fromString(effectIdString);
+					// NOTE: maybe a string switch is not performant, if it's a problem maybe change
+					// it later but the syntax is pretty nice and the calculation is cached and only
+					// runs once per upgrade
+					switch (effectId.toString()) {
+					case "ratd":
+						upgradeEffects
+								.add(new CUpgradeEffectAttackDice(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsInteger(effectModMetaKey, 0)));
+						break;
+					case "rlev":
+						upgradeEffects
+								.add(new CUpgradeEffectSpellLevel(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsInteger(effectModMetaKey, 0),
+										War3ID.fromString(upgradeType.getFieldAsString(effectCodeMetaKey, 0))));
+						break;
+					case "rhpx":
+						upgradeEffects
+								.add(new CUpgradeEffectHitPoints(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsInteger(effectModMetaKey, 0)));
+						break;
+					case "rmnx":
+						upgradeEffects
+								.add(new CUpgradeEffectManaPoints(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+										upgradeType.getFieldAsInteger(effectModMetaKey, 0)));
+						break;
+					default:
+						System.err.println("No such UpgradeEffect: " + effectIdString);
+						break;
+					}
+				}
+			}
+
 			boolean appliesToAllUnits = upgradeType.getFieldAsBoolean(APPLIES_TO_ALL_UNITS, 0);
 
 			final String classString = upgradeType.getFieldAsString(CLASS, 0);
@@ -72,17 +133,17 @@ public class CUpgradeData {
 
 			final List<CUpgradeType.UpgradeLevel> upgradeLevels = new ArrayList<>();
 			for (int i = 1; i <= levelCount; i++) {
-				final String requirementsTierString = upgradeType.getFieldAsString(REQUIREMENTS, i);
-				final String requirementsLevelsString = upgradeType.getFieldAsString(REQUIREMENTS_LEVELS, i);
+				final String requirementsTierString = upgradeType.getFieldAsString(REQUIREMENTS, i + 1);
+				final String requirementsLevelsString = upgradeType.getFieldAsString(REQUIREMENTS_LEVELS, i + 1);
 				final List<CUnitTypeRequirement> tierRequirements = CUnitData.parseRequirements(requirementsTierString,
 						requirementsLevelsString);
-				final String levelName = upgradeType.getFieldAsString(NAME, i);
+				final String levelName = upgradeType.getFieldAsString(NAME, i + 1);
 				upgradeLevels.add(new CUpgradeType.UpgradeLevel(levelName, tierRequirements));
 			}
 
-			upgradeTypeInstance = new CUpgradeType(typeId, appliesToAllUnits, upgradeClass, goldBase, goldIncrement,
-					levelCount, lumberBase, lumberIncrement, unitRace, timeBase, timeIncrement, transferWithUnitOwnership,
-					upgradeLevels);
+			upgradeTypeInstance = new CUpgradeType(typeId, upgradeEffects, appliesToAllUnits, upgradeClass, goldBase,
+					goldIncrement, levelCount, lumberBase, lumberIncrement, unitRace, timeBase, timeIncrement,
+					transferWithUnitOwnership, upgradeLevels);
 			this.idToType.put(typeId, upgradeTypeInstance);
 		}
 		return upgradeTypeInstance;

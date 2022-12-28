@@ -127,7 +127,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 				final AbilityUI abilityUI = this.abilityDataUI.getUI(ability.getAlias());
 				if (abilityUI != null) {
-					addCommandButton(ability, abilityUI.getOnIconUI(), ability.getHandleId(), 0, 0, false, false);
+					addCommandButton(ability, abilityUI.getOnIconUI(ability.getLevel() - 1), ability.getHandleId(), 0,
+							0, false, false);
 				}
 				else {
 					addCommandButton(ability, this.abilityDataUI.getStopUI(), ability.getHandleId(), 0, 0, false,
@@ -142,7 +143,9 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	public Void accept(final GenericSingleIconActiveAbility ability) {
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			final AbilityUI ui = this.abilityDataUI.getUI(ability.getAlias());
-			addCommandButton(ability, ability.isToggleOn() ? ui.getOffIconUI() : ui.getOnIconUI(),
+			addCommandButton(ability,
+					ability.isToggleOn() ? ui.getOffIconUI(ability.getLevel() - 1)
+							: ui.getOnIconUI(ability.getLevel() - 1),
 					ability.getHandleId(), ability.getBaseOrderId(), 0, false, false, ability.getUIGoldCost(),
 					ability.getUILumberCost(), 0, ability.getUIManaCost(), -1);
 		}
@@ -191,7 +194,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			else {
 				autoCastId = OrderIds.uncoldarrows;
 			}
-			final IconUI onIconUI = this.abilityDataUI.getUI(ability.getAlias()).getOnIconUI();
+			final IconUI onIconUI = this.abilityDataUI.getUI(ability.getAlias()).getOnIconUI(ability.getLevel() - 1);
 			addCommandButton(ability, onIconUI, ability.getHandleId(), OrderIds.coldarrowstarg, autoCastId,
 					autoCastActive, false);
 		}
@@ -594,8 +597,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				final AbilityUI abilityUI = this.abilityDataUI.getUI(unitType);
 				if (abilityUI != null) {
 					final int nextLevel = this.unit.getAbilityLevel(unitType) + 1;
-					addCommandButton(ability, abilityUI.getLearnIconUI(), ability.getHandleId(), unitType.getValue(), 0,
-							false, false, 0, 0, 0, 0, nextLevel);
+					IconUI learnIconUI = abilityUI.getLearnIconUI();
+					addCommandButton(ability, learnIconUI, String.format(learnIconUI.getToolTip(), nextLevel),
+							learnIconUI.getButtonPositionX(), learnIconUI.getButtonPositionY(), ability.getHandleId(),
+							unitType.getValue(), 0, false, false, 0, 0, 0, 0, nextLevel);
 				}
 			}
 		}

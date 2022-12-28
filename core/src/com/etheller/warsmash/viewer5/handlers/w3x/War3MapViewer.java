@@ -550,7 +550,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 		this.simulation = new CSimulation(this.mapConfig, this.miscData, this.allObjectData.getUnits(),
 				this.allObjectData.getItems(), this.allObjectData.getDestructibles(), this.allObjectData.getAbilities(),
-				this.allObjectData.getUpgrades(), new SimulationRenderController() {
+				this.allObjectData.getUpgrades(), this.allObjectData.getStandardUpgradeEffectMeta(),
+				new SimulationRenderController() {
 					private final Map<String, UnitSound> keyToCombatSound = new HashMap<>();
 
 					@Override
@@ -1139,6 +1140,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								specialArtModel, buildingShadowInstance, War3MapViewer.this.selectionCircleScaleFactor,
 								typeData.getAnimationWalkSpeed(), typeData.getAnimationRunSpeed(),
 								typeData.getScalingValue());
+					}
+
+					@Override
+					public void changeUnitColor(CUnit unit, int playerIndex) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
+						renderPeer.setPlayerColor(simulation.getPlayer(playerIndex).getColor());
 					}
 
 					@Override
@@ -2560,9 +2567,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public void setGameUI(final GameUI gameUI) {
 		this.gameUI = gameUI;
-		this.abilityDataUI = new AbilityDataUI(this.allObjectData.getAbilities(), this.allObjectData.getBuffs(),
-				this.allObjectData.getUnits(), this.allObjectData.getItems(), this.allObjectData.getUpgrades(), gameUI,
-				this);
+		this.abilityDataUI = new AbilityDataUI(this.allObjectData, gameUI, this);
 	}
 
 	public GameUI getGameUI() {

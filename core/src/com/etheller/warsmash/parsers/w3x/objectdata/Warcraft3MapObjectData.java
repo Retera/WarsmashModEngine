@@ -30,13 +30,15 @@ public final class Warcraft3MapObjectData {
 	private final MutableObjectData abilities;
 	private final MutableObjectData buffs;
 	private final MutableObjectData upgrades;
+	private final DataTable standardUpgradeEffectMeta;
 	private final List<MutableObjectData> datas;
 	private transient Map<WorldEditorDataType, MutableObjectData> typeToData = new HashMap<>();
 	private final WTS wts;
 
 	public Warcraft3MapObjectData(final MutableObjectData units, final MutableObjectData items,
 			final MutableObjectData destructibles, final MutableObjectData doodads, final MutableObjectData abilities,
-			final MutableObjectData buffs, final MutableObjectData upgrades, final WTS wts) {
+			final MutableObjectData buffs, final MutableObjectData upgrades, DataTable standardUpgradeEffectMeta,
+			final WTS wts) {
 		this.units = units;
 		this.items = items;
 		this.destructibles = destructibles;
@@ -44,6 +46,7 @@ public final class Warcraft3MapObjectData {
 		this.abilities = abilities;
 		this.buffs = buffs;
 		this.upgrades = upgrades;
+		this.standardUpgradeEffectMeta = standardUpgradeEffectMeta;
 		this.datas = new ArrayList<>();
 		this.datas.add(units);
 		this.datas.add(items);
@@ -90,6 +93,10 @@ public final class Warcraft3MapObjectData {
 		return this.upgrades;
 	}
 
+	public DataTable getStandardUpgradeEffectMeta() {
+		return standardUpgradeEffectMeta;
+	}
+
 	public List<MutableObjectData> getDatas() {
 		return this.datas;
 	}
@@ -127,6 +134,7 @@ public final class Warcraft3MapObjectData {
 		final DataTable abilityMeta = standardObjectData.getStandardAbilityMeta();
 		final DataTable standardAbilityBuffMeta = standardObjectData.getStandardAbilityBuffMeta();
 		final DataTable standardUpgradeMeta = standardObjectData.getStandardUpgradeMeta();
+		DataTable standardUpgradeEffectMeta = standardObjectData.getStandardUpgradeEffectMeta();
 
 		final War3ObjectDataChangeset unitChangeset = new War3ObjectDataChangeset('u');
 		final War3ObjectDataChangeset itemChangeset = new War3ObjectDataChangeset('t');
@@ -204,6 +212,6 @@ public final class Warcraft3MapObjectData {
 				standardUpgrades, standardUpgradeMeta, upgradeChangeset);
 
 		return new Warcraft3MapObjectData(unitData, itemData, destructableData, doodadData, abilityData, buffData,
-				upgradeData, wts);
+				upgradeData, standardUpgradeEffectMeta, wts);
 	}
 }

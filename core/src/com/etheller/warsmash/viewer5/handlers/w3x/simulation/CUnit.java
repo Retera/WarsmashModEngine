@@ -221,6 +221,10 @@ public class CUnit extends CWidget {
 		computeDerivedFields();
 	}
 
+	public float getManaRegenBonus() {
+		return manaRegenBonus;
+	}
+
 	public void setAgilityDefensePermanentBonus(final int agilityDefensePermanentBonus) {
 		this.agilityDefensePermanentBonus = agilityDefensePermanentBonus;
 		computeDerivedFields();
@@ -340,6 +344,7 @@ public class CUnit extends CWidget {
 
 	public void setMana(final float mana) {
 		this.mana = mana;
+		stateNotifier.manaChanged();
 	}
 
 	public void setMaximumLife(final int maximumLife) {
@@ -603,15 +608,15 @@ public class CUnit extends CWidget {
 							// been cached, for performance, since we are in the update method. But maybe it
 							// doens't matter.
 							CPlayer player = game.getPlayer(this.playerIndex);
-							if (this.constructionProgress >= trainedUnitType
-									.getBuildTime(player.getTechtreeUnlocked(queuedRawcode))) {
+							int techtreeUnlocked = player.getTechtreeUnlocked(queuedRawcode);
+							if (this.constructionProgress >= trainedUnitType.getBuildTime(techtreeUnlocked)) {
 								this.constructionProgress = 0;
 								for (int i = 0; i < (this.buildQueue.length - 1); i++) {
 									setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
 								}
 								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
 								player.removeTechtreeInProgress(queuedRawcode);
-								player.addTechtreeUnlocked(queuedRawcode);
+								player.addTechResearched(game, queuedRawcode, 1);
 								fireResearchFinishEvents(game, queuedRawcode);
 								this.stateNotifier.queueChanged();
 							}
@@ -905,8 +910,11 @@ public class CUnit extends CWidget {
 		return this.playerIndex;
 	}
 
-	public void setPlayerIndex(final int playerIndex) {
+	public void setPlayerIndex(CSimulation simulation, final int playerIndex, boolean changeColor) {
 		this.playerIndex = playerIndex;
+		if (changeColor) {
+			simulation.changeUnitColor(this, playerIndex);
+		}
 	}
 
 	public CUnitType getUnitType() {
@@ -1008,6 +1016,10 @@ public class CUnit extends CWidget {
 
 	public EnumSet<CUnitClassification> getClassifications() {
 		return this.classifications;
+	}
+
+	public void addClassification(CUnitClassification unitClassification) {
+		this.classifications.add(unitClassification);
 	}
 
 	public float getDefense() {
@@ -1227,6 +1239,12 @@ public class CUnit extends CWidget {
 			}
 		}
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
+	}
+
+	public void kill(CSimulation simulation) {
+		if (!isDead()) {
+			setLife(simulation, 0f);
+		}
 	}
 
 	public boolean canReach(final AbilityTarget target, final float range) {
@@ -2524,5 +2542,9 @@ public class CUnit extends CWidget {
 		}
 
 		return null;
+	}
+
+	public void notifyAttacksChanged() {
+		stateNotifier.attacksChanged();
 	}
 }

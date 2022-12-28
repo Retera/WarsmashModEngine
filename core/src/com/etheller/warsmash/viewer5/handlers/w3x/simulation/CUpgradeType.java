@@ -5,9 +5,11 @@ import java.util.List;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CUpgradeClass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitRace;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffect;
 
 public class CUpgradeType {
 	private War3ID typeId;
+	private List<CUpgradeEffect> upgradeEffects;
 	private boolean appliesToAllUnits;
 	private CUpgradeClass upgradeClass;
 	private int goldBase;
@@ -21,10 +23,12 @@ public class CUpgradeType {
 	private boolean transferWithUnitOwnership;
 	private final List<UpgradeLevel> levelData;
 
-	public CUpgradeType(War3ID typeId, boolean appliesToAllUnits, CUpgradeClass upgradeClass, int goldBase,
-			int goldIncrement, int levelCount, int lumberBase, int lumberIncrement, CUnitRace unitRace, int timeBase,
-			int timeIncrement, boolean transferWithUnitOwnership, List<UpgradeLevel> levelData) {
+	public CUpgradeType(War3ID typeId, List<CUpgradeEffect> upgradeEffects, boolean appliesToAllUnits,
+			CUpgradeClass upgradeClass, int goldBase, int goldIncrement, int levelCount, int lumberBase,
+			int lumberIncrement, CUnitRace unitRace, int timeBase, int timeIncrement, boolean transferWithUnitOwnership,
+			List<UpgradeLevel> levelData) {
 		this.typeId = typeId;
+		this.upgradeEffects = upgradeEffects;
 		this.appliesToAllUnits = appliesToAllUnits;
 		this.upgradeClass = upgradeClass;
 		this.goldBase = goldBase;
@@ -41,6 +45,10 @@ public class CUpgradeType {
 
 	public War3ID getTypeId() {
 		return typeId;
+	}
+
+	public List<CUpgradeEffect> getUpgradeEffects() {
+		return upgradeEffects;
 	}
 
 	public boolean isAppliesToAllUnits() {
@@ -123,6 +131,18 @@ public class CUpgradeType {
 
 		public List<CUnitTypeRequirement> getRequirements() {
 			return requirements;
+		}
+	}
+
+	public void apply(CSimulation simulation, CUnit unit, int i) {
+		for (CUpgradeEffect upgradeEffect : getUpgradeEffects()) {
+			upgradeEffect.apply(simulation, unit, i);
+		}
+	}
+
+	public void unapply(CSimulation simulation, CUnit unit, int i) {
+		for (CUpgradeEffect upgradeEffect : getUpgradeEffects()) {
+			upgradeEffect.unapply(simulation, unit, i);
 		}
 	}
 }

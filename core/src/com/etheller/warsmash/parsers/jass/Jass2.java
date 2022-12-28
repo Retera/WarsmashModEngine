@@ -90,6 +90,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericAliasedAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -2726,18 +2727,8 @@ public class Jass2 {
 					final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 					final double facing = arguments.get(4).visit(RealJassValueVisitor.getInstance());
 					final War3ID rawcodeId = new War3ID(rawcode);
-					final CUnit newUnit = CommonEnvironment.this.simulation.createUnit(rawcodeId, player.getId(),
+					final CUnit newUnit = CommonEnvironment.this.simulation.createUnitSimple(rawcodeId, player.getId(),
 							(float) x, (float) y, (float) facing);
-					final CUnitType newUnitType = newUnit.getUnitType();
-					final int foodUsed = newUnitType.getFoodUsed();
-					newUnit.setFoodUsed(foodUsed);
-					player.setFoodUsed(player.getFoodUsed() + foodUsed);
-					if (newUnitType.getFoodMade() != 0) {
-						player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
-					}
-					player.addTechtreeUnlocked(rawcodeId);
-					// nudge unit
-					newUnit.setPointAndCheckUnstuck((float) x, (float) y, CommonEnvironment.this.simulation);
 					return new HandleJassValue(unitType, newUnit);
 				}
 			});
@@ -2752,18 +2743,8 @@ public class Jass2 {
 					final double facing = arguments.get(4).visit(RealJassValueVisitor.getInstance());
 					final int skinId = arguments.get(5).visit(IntegerJassValueVisitor.getInstance());
 					final War3ID rawcodeId = new War3ID(rawcode);
-					final CUnit newUnit = CommonEnvironment.this.simulation.createUnit(rawcodeId, player.getId(),
+					final CUnit newUnit = CommonEnvironment.this.simulation.createUnitSimple(rawcodeId, player.getId(),
 							(float) x, (float) y, (float) facing);
-					final CUnitType newUnitType = newUnit.getUnitType();
-					final int foodUsed = newUnitType.getFoodUsed();
-					newUnit.setFoodUsed(foodUsed);
-					player.setFoodUsed(player.getFoodUsed() + foodUsed);
-					if (newUnitType.getFoodMade() != 0) {
-						player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
-					}
-					player.addTechtreeUnlocked(rawcodeId);
-					// nudge unit
-					newUnit.setPointAndCheckUnstuck((float) x, (float) y, CommonEnvironment.this.simulation);
 					if (skinId != rawcode) {
 //						throw new IllegalStateException("Our engine does not support UnitSkinID != UnitID (skinId="
 //								+ new War3ID(skinId) + ", unitId=" + new War3ID(rawcode) + ")");
@@ -2783,18 +2764,8 @@ public class Jass2 {
 					final War3ID rawcodeId = new War3ID(rawcode);
 					float x = whichLocation == null ? 0 : (float) whichLocation.x;
 					float y = whichLocation == null ? 0 : (float) whichLocation.y;
-					final CUnit newUnit = CommonEnvironment.this.simulation.createUnit(rawcodeId, player.getId(), x, y,
-							facing);
-					final CUnitType newUnitType = newUnit.getUnitType();
-					final int foodUsed = newUnitType.getFoodUsed();
-					newUnit.setFoodUsed(foodUsed);
-					player.setFoodUsed(player.getFoodUsed() + foodUsed);
-					if (newUnitType.getFoodMade() != 0) {
-						player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
-					}
-					player.addTechtreeUnlocked(rawcodeId);
-					// nudge unit
-					newUnit.setPointAndCheckUnstuck(x, y, CommonEnvironment.this.simulation);
+					final CUnit newUnit = CommonEnvironment.this.simulation.createUnitSimple(rawcodeId, player.getId(),
+							x, y, facing);
 					return new HandleJassValue(unitType, newUnit);
 				}
 			});
@@ -2810,9 +2781,9 @@ public class Jass2 {
 					final War3ID blightedMineRawcode = War3ID.fromString("ugol");
 					final War3ID goldMineRawcode = War3ID.fromString("ngol");
 					player.addTechtreeUnlocked(blightedMineRawcode);
-					final CUnit blightedMine = CommonEnvironment.this.simulation.createUnit(blightedMineRawcode,
+					final CUnit blightedMine = CommonEnvironment.this.simulation.createUnitSimple(blightedMineRawcode,
 							player.getId(), (float) x, (float) y, (float) facing);
-					final CUnit goldMine = CommonEnvironment.this.simulation.createUnit(goldMineRawcode,
+					final CUnit goldMine = CommonEnvironment.this.simulation.createUnitSimple(goldMineRawcode,
 							WarsmashConstants.MAX_PLAYERS - 1, (float) x, (float) y, (float) facing);
 					goldMine.setHidden(true);
 					for (final CAbility ability : blightedMine.getAbilities()) {
@@ -2879,6 +2850,20 @@ public class Jass2 {
 						return RealJassValue.ZERO;
 					}
 					return new RealJassValue(whichUnit.getUnitState(CommonEnvironment.this.simulation, whichUnitState));
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetHeroLevel", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					int level = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					boolean fx = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+					CAbilityHero heroData = whichUnit.getHeroData();
+					if (heroData != null) {
+						heroData.setHeroLevel(simulation, whichUnit, level, fx);
+					}
+					return null;
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnitType", new JassFunction() {
@@ -3693,9 +3678,7 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-					if (!whichUnit.isDead()) {
-						whichUnit.setLife(CommonEnvironment.this.simulation, 0f);
-					}
+					whichUnit.kill(CommonEnvironment.this.simulation);
 					return null;
 				}
 			});
@@ -4858,7 +4841,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 					return new HandleJassValue(iconuiType,
-							war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOnIconUI());
+							war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOnIconUI(0));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityOffIconUI", new JassFunction() {
@@ -4867,7 +4850,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 					return new HandleJassValue(iconuiType,
-							war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOffIconUI());
+							war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOffIconUI(0));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityLearnIconUI", new JassFunction() {

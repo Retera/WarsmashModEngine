@@ -4,20 +4,19 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
-public class CBuffStun extends CBuffTimed {
+public class CBuffTimedLife extends CBuffTimed {
 
-	public CBuffStun(final int handleId, final War3ID alias, float duration) {
+	public CBuffTimedLife(int handleId, War3ID alias, float duration) {
 		super(handleId, alias, duration);
 	}
 
 	@Override
 	protected void onBuffAdd(CSimulation game, CUnit unit) {
-		unit.setPaused(true);
+
 	}
 
 	@Override
 	protected void onBuffRemove(CSimulation game, CUnit unit) {
-		unit.setPaused(false);
+		unit.kill(game);
 	}
-
 }

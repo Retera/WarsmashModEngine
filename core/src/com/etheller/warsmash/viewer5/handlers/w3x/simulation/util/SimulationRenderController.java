@@ -98,4 +98,6 @@ public interface SimulationRenderController {
 	void createSpellEffectFacing(War3ID alias, float harvestStandX, float harvestStandY, float angle);
 
 	void unitUpdatedType(CUnit unit, War3ID typeId);
+
+	void changeUnitColor(CUnit unit, int playerIndex);
 }

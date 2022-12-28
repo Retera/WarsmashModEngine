@@ -4,8 +4,8 @@ import java.util.List;
 
 public class AbilityUI {
 	private final IconUI learnIconUI;
-	private final IconUI onIconUI;
-	private final IconUI offIconUI;
+	private final List<IconUI> onIconUIs;
+	private final List<IconUI> offIconUIs;
 	private final List<EffectAttachmentUI> casterArt;
 	private final List<EffectAttachmentUI> targetArt;
 	private final List<EffectAttachmentUI> specialArt;
@@ -15,14 +15,13 @@ public class AbilityUI {
 	private final String effectSound;
 	private final String effectSoundLooped;
 
-	public AbilityUI(final IconUI learnIconUI, final IconUI onIconUI, final IconUI offIconUI,
-			final List<EffectAttachmentUI> casterArt, final List<EffectAttachmentUI> targetArt,
-			final List<EffectAttachmentUI> specialArt, final List<EffectAttachmentUI> effectArt,
-			final List<EffectAttachmentUI> areaEffectArt, final List<EffectAttachmentUIMissile> missileArt,
-			final String effectSound, final String effectSoundLooped) {
+	public AbilityUI(IconUI learnIconUI, List<IconUI> onIconUIs, List<IconUI> offIconUIs,
+			List<EffectAttachmentUI> casterArt, List<EffectAttachmentUI> targetArt, List<EffectAttachmentUI> specialArt,
+			List<EffectAttachmentUI> effectArt, List<EffectAttachmentUI> areaEffectArt,
+			List<EffectAttachmentUIMissile> missileArt, String effectSound, String effectSoundLooped) {
 		this.learnIconUI = learnIconUI;
-		this.onIconUI = onIconUI;
-		this.offIconUI = offIconUI;
+		this.onIconUIs = onIconUIs;
+		this.offIconUIs = offIconUIs;
 		this.casterArt = casterArt;
 		this.targetArt = targetArt;
 		this.specialArt = specialArt;
@@ -37,12 +36,12 @@ public class AbilityUI {
 		return this.learnIconUI;
 	}
 
-	public IconUI getOnIconUI() {
-		return this.onIconUI;
+	public IconUI getOnIconUI(int index) {
+		return tryGet(this.onIconUIs, index);
 	}
 
-	public IconUI getOffIconUI() {
-		return this.offIconUI;
+	public IconUI getOffIconUI(int index) {
+		return tryGet(this.offIconUIs, index);
 	}
 
 	public EffectAttachmentUI getCasterArt(final int index) {

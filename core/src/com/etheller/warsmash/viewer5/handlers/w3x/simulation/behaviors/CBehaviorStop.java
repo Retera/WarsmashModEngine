@@ -24,13 +24,12 @@ public class CBehaviorStop implements CBehavior {
 		if (this.unit.autoAcquireAttackTargets(game, false)) {
 			return this.unit.getCurrentBehavior();
 		}
-		this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, true);
 		return this.unit.pollNextOrderBehavior(game);
 	}
 
 	@Override
 	public void begin(final CSimulation game) {
-
+		this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, true);
 	}
 
 	@Override

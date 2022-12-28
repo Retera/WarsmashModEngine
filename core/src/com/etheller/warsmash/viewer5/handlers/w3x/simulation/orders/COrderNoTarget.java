@@ -35,6 +35,9 @@ public class COrderNoTarget implements COrder {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster) {
+		if (this.abilityHandleId == 0) {
+			return caster.getStopBehavior();
+		}
 		final CAbility ability = game.getAbility(this.abilityHandleId);
 		ability.checkCanUse(game, caster, this.orderId, this.abilityActivationReceiver.reset());
 		if (this.abilityActivationReceiver.isUseOk()) {

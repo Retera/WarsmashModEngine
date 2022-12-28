@@ -23,6 +23,8 @@ import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -102,18 +104,18 @@ public class CSimulation implements CPlayerAPI {
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
 			final MutableObjectData parsedAbilityData, final MutableObjectData parsedUpgradeData,
-			final SimulationRenderController simulationRenderController, final PathingGrid pathingGrid,
-			final Rectangle entireMapBounds, final Random seededRandom,
+			DataTable standardUpgradeEffectMeta, final SimulationRenderController simulationRenderController,
+			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
 			final CommandErrorListener commandErrorListener) {
 		this.gameplayConstants = new CGameplayConstants(miscData);
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
 		this.abilityData = new CAbilityData(parsedAbilityData);
-		this.unitData = new CUnitData(this.gameplayConstants, parsedUnitData, this.abilityData,
+		this.upgradeData = new CUpgradeData(gameplayConstants, parsedUpgradeData, standardUpgradeEffectMeta);
+		this.unitData = new CUnitData(this.gameplayConstants, parsedUnitData, this.abilityData, this.upgradeData,
 				this.simulationRenderController);
 		this.destructableData = new CDestructableData(parsedDestructableData, simulationRenderController);
 		this.itemData = new CItemData(parsedItemData);
-		this.upgradeData = new CUpgradeData(gameplayConstants, parsedUpgradeData);
 		this.units = new ArrayList<>();
 		this.newUnits = new ArrayList<>();
 		this.removedUnits = new ArrayList<>();
@@ -266,6 +268,27 @@ public class CSimulation implements CPlayerAPI {
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		return this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
+	}
+
+	public CUnit createUnitSimple(final War3ID typeId, final int playerIndex, final float x, final float y,
+			final float facing) {
+		final CUnit newUnit = createUnit(typeId, playerIndex, x, y, facing);
+		CPlayer player = getPlayer(playerIndex);
+		final CUnitType newUnitType = newUnit.getUnitType();
+		final int foodUsed = newUnitType.getFoodUsed();
+		newUnit.setFoodUsed(foodUsed);
+		player.setFoodUsed(player.getFoodUsed() + foodUsed);
+		if (newUnitType.getFoodMade() != 0) {
+			player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
+		}
+		player.addTechtreeUnlocked(typeId);
+		// nudge unit
+		newUnit.setPointAndCheckUnstuck(x, y, this);
+		if (!newUnit.isBuilding()) {
+			newUnit.getUnitAnimationListener().playAnimation(false, PrimaryTag.BIRTH, SequenceUtils.EMPTY, 1.0f, true);
+			newUnit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.EMPTY, true);
+		}
+		return newUnit;
 	}
 
 	public CDestructable createDestructable(final War3ID typeId, final float x, final float y, final float facing,
@@ -712,6 +735,10 @@ public class CSimulation implements CPlayerAPI {
 
 	public void unitUpdatedType(final CUnit unit, final War3ID typeId) {
 		this.simulationRenderController.unitUpdatedType(unit, typeId);
+	}
+
+	public void changeUnitColor(CUnit unit, int playerIndex) {
+		simulationRenderController.changeUnitColor(unit, playerIndex);
 	}
 
 }

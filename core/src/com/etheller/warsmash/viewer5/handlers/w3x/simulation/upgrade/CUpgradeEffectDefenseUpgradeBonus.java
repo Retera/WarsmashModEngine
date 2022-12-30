@@ -9,14 +9,16 @@ public class CUpgradeEffectDefenseUpgradeBonus implements CUpgradeEffect {
 	}
 
 	@Override
-	public void apply(CSimulation simulation, CUnit unit, int level) {
-		unit.setPermanentDefenseBonus(unit.getPermanentDefenseBonus() + unit.getUnitType().getDefenseUpgradeBonus());
+	public void apply(final CSimulation simulation, final CUnit unit, final int level) {
+		unit.setPermanentDefenseBonus(
+				unit.getPermanentDefenseBonus() + (unit.getUnitType().getDefenseUpgradeBonus() * level));
 		unit.notifyAttacksChanged(); // rebuild defense ui for selected unit maybe
 	}
 
 	@Override
-	public void unapply(CSimulation simulation, CUnit unit, int level) {
-		unit.setPermanentDefenseBonus(unit.getPermanentDefenseBonus() - unit.getUnitType().getDefenseUpgradeBonus());
+	public void unapply(final CSimulation simulation, final CUnit unit, final int level) {
+		unit.setPermanentDefenseBonus(
+				unit.getPermanentDefenseBonus() - (unit.getUnitType().getDefenseUpgradeBonus() * level));
 		unit.notifyAttacksChanged(); // rebuild defense ui for selected unit maybe
 	}
 }

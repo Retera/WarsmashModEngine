@@ -50,6 +50,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindin
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
@@ -104,7 +105,7 @@ public class CSimulation implements CPlayerAPI {
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
 			final MutableObjectData parsedAbilityData, final MutableObjectData parsedUpgradeData,
-			DataTable standardUpgradeEffectMeta, final SimulationRenderController simulationRenderController,
+			final DataTable standardUpgradeEffectMeta, final SimulationRenderController simulationRenderController,
 			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
 			final CommandErrorListener commandErrorListener) {
 		this.gameplayConstants = new CGameplayConstants(miscData);
@@ -138,15 +139,15 @@ public class CSimulation implements CPlayerAPI {
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
 			CRace defaultRace = null;
 			if (configPlayer.isRacePrefSet(WarsmashConstants.RACE_MANAGER.getRandomRacePreference())) {
-				CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER
+				final CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER
 						.get(seededRandom.nextInt(WarsmashConstants.RACE_MANAGER.getEntryCount()));
 				defaultRace = WarsmashConstants.RACE_MANAGER.getRace(raceEntry.getRaceId());
 			}
 			else {
 				for (int j = 0; j < WarsmashConstants.RACE_MANAGER.getEntryCount(); j++) {
-					CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(j);
-					CRace race = WarsmashConstants.RACE_MANAGER.getRace(entry.getRaceId());
-					CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
+					final CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(j);
+					final CRace race = WarsmashConstants.RACE_MANAGER.getRace(entry.getRaceId());
+					final CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
 							.getRacePreferenceById(entry.getRacePrefId());
 					if (configPlayer.isRacePrefSet(racePreference)) {
 						defaultRace = race;
@@ -160,7 +161,9 @@ public class CSimulation implements CPlayerAPI {
 			this.players.add(newPlayer);
 			this.defaultPlayerUnitOrderExecutors.add(new CPlayerUnitOrderExecutor(this, i));
 		}
-		this.players.get(this.players.size() - 4).setName(miscData.getLocalizedString("WESTRING_PLAYER_NA"));
+		final CPlayer neutralAggressive = this.players.get(this.players.size() - 4);
+		neutralAggressive.setName(miscData.getLocalizedString("WESTRING_PLAYER_NA"));
+		neutralAggressive.setPlayerState(this, CPlayerState.GIVES_BOUNTY, 1);
 		this.players.get(this.players.size() - 3).setName(miscData.getLocalizedString("WESTRING_PLAYER_NV"));
 		this.players.get(this.players.size() - 2).setName(miscData.getLocalizedString("WESTRING_PLAYER_NE"));
 		final CPlayer neutralPassive = this.players.get(this.players.size() - 1);
@@ -267,13 +270,15 @@ public class CSimulation implements CPlayerAPI {
 
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
-		return this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
+		final CUnit createdUnit = this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
+		createdUnit.performDefaultBehavior(this);
+		return createdUnit;
 	}
 
 	public CUnit createUnitSimple(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		final CUnit newUnit = createUnit(typeId, playerIndex, x, y, facing);
-		CPlayer player = getPlayer(playerIndex);
+		final CPlayer player = getPlayer(playerIndex);
 		final CUnitType newUnitType = newUnit.getUnitType();
 		final int foodUsed = newUnitType.getFoodUsed();
 		newUnit.setFoodUsed(foodUsed);
@@ -326,9 +331,9 @@ public class CSimulation implements CPlayerAPI {
 		return projectile;
 	}
 
-	public CAbilityProjectile createProjectile(final CUnit source, War3ID spellAlias, final float launchX,
-			final float launchY, final float launchFacing, float speed, boolean homing, final AbilityTarget target,
-			final CAbilityProjectileListener projectileListener) {
+	public CAbilityProjectile createProjectile(final CUnit source, final War3ID spellAlias, final float launchX,
+			final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final AbilityTarget target, final CAbilityProjectileListener projectileListener) {
 		final CAbilityProjectile projectile = this.simulationRenderController.createProjectile(this, launchX, launchY,
 				launchFacing, speed, homing, source, spellAlias, target, projectileListener);
 		this.newProjectiles.add(projectile);
@@ -525,7 +530,7 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnUnitReadySound(trainedUnit);
 	}
 
-	public void researchFinishEvent(CUnit cUnit, War3ID queuedRawcode, int level) {
+	public void researchFinishEvent(final CUnit cUnit, final War3ID queuedRawcode, final int level) {
 		getCommandErrorListener().showUpgradeCompleteAlert(cUnit.getPlayerIndex(), queuedRawcode, level);
 	}
 
@@ -538,7 +543,8 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.unitRepositioned(cUnit);
 	}
 
-	public void unitGainResourceEvent(final CUnit unit, final ResourceType resourceType, final int amount) {
+	public void unitGainResourceEvent(final CUnit unit, final int playerIndex, final ResourceType resourceType,
+			final int amount) {
 		this.simulationRenderController.spawnGainResourceTextTag(unit, resourceType, amount);
 	}
 
@@ -663,9 +669,9 @@ public class CSimulation implements CPlayerAPI {
 				artAttachmentHeight);
 	}
 
-	public void createSpellEffectFacing(final War3ID alias, final float harvestStandX, final float harvestStandY,
-			final float angle) {
-		this.simulationRenderController.createSpellEffectFacing(alias, harvestStandX, harvestStandY, angle);
+	public SimulationRenderComponent spawnSpellEffectOnPoint(final float x, final float y, final float facing,
+			final War3ID alias, final CEffectType effectType, final int index) {
+		return this.simulationRenderController.spawnSpellEffectOnPoint(x, y, facing, alias, effectType, index);
 	}
 
 	public void tagTreeOwned(final CDestructable target) {
@@ -741,7 +747,7 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.unitUpdatedType(unit, typeId);
 	}
 
-	public void changeUnitColor(CUnit unit, int playerIndex) {
+	public void changeUnitColor(final CUnit unit, final int playerIndex) {
 		simulationRenderController.changeUnitColor(unit, playerIndex);
 	}
 

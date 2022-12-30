@@ -70,6 +70,9 @@ public interface SimulationRenderController {
 
 	SimulationRenderComponent spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
 
+	SimulationRenderComponent spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
+			CEffectType effectType, int index);
+
 	void spawnUIUnitGetItemSound(CUnit cUnit, CItem item);
 
 	void spawnUIUnitDropItemSound(CUnit cUnit, CItem item);
@@ -94,8 +97,6 @@ public interface SimulationRenderController {
 	void unitCancelUpgradingEvent(CUnit unit, War3ID upgradeIdType);
 
 	void setBlight(float x, float y, float radius, boolean blighted);
-
-	void createSpellEffectFacing(War3ID alias, float harvestStandX, float harvestStandY, float angle);
 
 	void unitUpdatedType(CUnit unit, War3ID typeId);
 

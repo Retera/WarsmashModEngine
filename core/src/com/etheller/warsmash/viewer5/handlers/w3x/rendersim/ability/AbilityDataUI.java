@@ -123,9 +123,10 @@ public class AbilityDataUI {
 	private final IconUI cancelTrainUI;
 	private final IconUI rallyUI;
 	private final IconUI selectSkillUI;
+	private final IconUI neutralInteractUI;
 	private final String disabledPrefix;
 
-	public AbilityDataUI(Warcraft3MapObjectData allObjectData, final GameUI gameUI, final War3MapViewer viewer) {
+	public AbilityDataUI(final Warcraft3MapObjectData allObjectData, final GameUI gameUI, final War3MapViewer viewer) {
 		final MutableObjectData abilityData = allObjectData.getAbilities();
 		final MutableObjectData buffData = allObjectData.getBuffs();
 		final MutableObjectData unitData = allObjectData.getUnits();
@@ -156,9 +157,9 @@ public class AbilityDataUI {
 			final Texture iconTurnOff = gameUI.loadTexture(iconTurnOffPath);
 			final Texture iconTurnOffDisabled = gameUI.loadTexture(disable(iconTurnOffPath, this.disabledPrefix));
 
-			List<IconUI> turnOffIconUIs = new ArrayList<>();
-			List<IconUI> normalIconUIs = new ArrayList<>();
-			int levels = Math.max(1, abilityTypeData.getFieldAsInteger(AbilityFields.LEVELS, 0));
+			final List<IconUI> turnOffIconUIs = new ArrayList<>();
+			final List<IconUI> normalIconUIs = new ArrayList<>();
+			final int levels = Math.max(1, abilityTypeData.getFieldAsInteger(AbilityFields.LEVELS, 0));
 			for (int i = 1; i <= levels; i++) {
 				final String iconTip = abilityTypeData.getFieldAsString(ABILITY_TIP, i);
 				final String iconUberTip = parseUbertip(allObjectData,
@@ -231,7 +232,7 @@ public class AbilityDataUI {
 			final List<String> missileArtPaths = Arrays
 					.asList(abilityTypeData.getFieldAsString(MISSILE_ART, 0).split(","));
 
-			float missileArc = abilityTypeData.getFieldAsFloat(MISSILE_ARC, 0);
+			final float missileArc = abilityTypeData.getFieldAsFloat(MISSILE_ARC, 0);
 			for (final String missileArtPath : missileArtPaths) {
 				missileArt.add(new EffectAttachmentUIMissile(missileArtPath, Collections.emptyList(), missileArc));
 			}
@@ -346,7 +347,7 @@ public class AbilityDataUI {
 			final int iconNormalY = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_Y, 0);
 			final List<IconUI> upgradeIconsByLevel = new ArrayList<>();
 			for (int i = 0; i < upgradeLevels; i++) {
-				int upgradeLevelValue = i + 1;
+				final int upgradeLevelValue = i + 1;
 				final String iconTip = upgradeTypeData.getFieldAsString(UPGRADE_TIP, upgradeLevelValue);
 				final String iconUberTip = parseUbertip(allObjectData,
 						upgradeTypeData.getFieldAsString(UPGRADE_UBER_TIP, upgradeLevelValue));
@@ -378,23 +379,24 @@ public class AbilityDataUI {
 		this.cancelTrainUI = createBuiltInIconUI(gameUI, "CmdCancelTrain", this.disabledPrefix);
 		this.rallyUI = createBuiltInIconUI(gameUI, "CmdRally", this.disabledPrefix);
 		this.selectSkillUI = createBuiltInIconUI(gameUI, "CmdSelectSkill", this.disabledPrefix);
+		this.neutralInteractUI = getUI(War3ID.fromString("Anei")).getOnIconUI(0);
 	}
 
-	private static String parseUbertip(Warcraft3MapObjectData allObjectData, String originalText) {
+	private static String parseUbertip(final Warcraft3MapObjectData allObjectData, final String originalText) {
 		String tooltipText = originalText;
 		int openBracketIndex = tooltipText.indexOf('<');
 		int closeBracketIndex = tooltipText.indexOf('>');
 		while ((openBracketIndex < closeBracketIndex) && (openBracketIndex != -1)) {
-			String textBefore = tooltipText.substring(0, openBracketIndex);
-			String textAfter = tooltipText.substring(closeBracketIndex + 1);
-			String codeText = tooltipText.substring(openBracketIndex + 1, closeBracketIndex);
-			String[] codeTextParts = codeText.split(",");
+			final String textBefore = tooltipText.substring(0, openBracketIndex);
+			final String textAfter = tooltipText.substring(closeBracketIndex + 1);
+			final String codeText = tooltipText.substring(openBracketIndex + 1, closeBracketIndex);
+			final String[] codeTextParts = codeText.split(",");
 			String valueText = "";
 			boolean percent = false;
 			if (((codeTextParts.length == 2)
 					|| ((codeTextParts.length == 3) && (percent = "%".equals(codeTextParts[2]))))
 					&& (codeTextParts[0].length() == 4)) {
-				War3ID rawcode = War3ID.fromString(codeTextParts[0]);
+				final War3ID rawcode = War3ID.fromString(codeTextParts[0]);
 				MutableGameObject unit = allObjectData.getUnits().get(rawcode);
 				if (unit == null) {
 					unit = allObjectData.getItems().get(rawcode);
@@ -449,12 +451,12 @@ public class AbilityDataUI {
 		return new IconUI(icon, iconDisabled, buttonPositionX, buttonPositionY, tip, uberTip, hotkey);
 	}
 
-	private IconUI createBuiltInIconUISplit(final GameUI gameUI, final String key, String funckey,
-			MutableGameObject worldEditorObject, final String disabledPrefix) {
+	private IconUI createBuiltInIconUISplit(final GameUI gameUI, final String key, final String funckey,
+			final MutableGameObject worldEditorObject, final String disabledPrefix) {
 		final Element builtInAbility = gameUI.getSkinData().get(key);
 		final Element builtInAbilityFunc = gameUI.getSkinData().get(funckey);
 		String iconPath = gameUI.trySkinField(builtInAbilityFunc.getField("Art"));
-		String worldEditorValue = worldEditorObject.readSLKTag("Art");
+		final String worldEditorValue = worldEditorObject.readSLKTag("Art");
 		if (worldEditorValue.length() > 0) {
 			iconPath = worldEditorValue;
 		}
@@ -584,6 +586,10 @@ public class AbilityDataUI {
 
 	public IconUI getSelectSkillUI() {
 		return this.selectSkillUI;
+	}
+
+	public IconUI getNeutralInteractUI() {
+		return neutralInteractUI;
 	}
 
 	public String getDisabledPrefix() {

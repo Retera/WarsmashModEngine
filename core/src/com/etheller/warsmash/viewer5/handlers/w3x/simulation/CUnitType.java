@@ -60,6 +60,8 @@ public class CUnitType {
 	private final List<War3ID> upgradesUsed;
 	private final EnumMap<CUpgradeClass, War3ID> upgradeClassToType;
 	private final List<War3ID> upgradesTo;
+	private final List<War3ID> itemsSold;
+	private final List<War3ID> itemsMade;
 	private final CUnitRace unitRace;
 	private final int goldCost;
 	private final int lumberCost;
@@ -93,9 +95,15 @@ public class CUnitType {
 	private final boolean canBeBuiltOnThem;
 	private final boolean canBuildOnMe;
 	private final int defenseUpgradeBonus;
-	private final float sightRadiusDay;
-	private final float sightRadiusNight;
+	private final int sightRadiusDay;
+	private final int sightRadiusNight;
 	private final boolean extendedLineOfSight;
+	private final int goldBountyAwardedBase;
+	private final int goldBountyAwardedDice;
+	private final int goldBountyAwardedSides;
+	private final int lumberBountyAwardedBase;
+	private final int lumberBountyAwardedDice;
+	private final int lumberBountyAwardedSides;
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
@@ -107,8 +115,9 @@ public class CUnitType {
 			final float defaultAcquisitionRange, final float minimumAttackRange, final List<War3ID> structuresBuilt,
 			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final List<War3ID> upgradesUsed,
 			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType, final List<War3ID> upgradesTo,
-			final CUnitRace unitRace, final int goldCost, final int lumberCost, final int foodUsed, final int foodMade,
-			final int buildTime, final EnumSet<CBuildingPathingType> preventedPathingTypes,
+			final List<War3ID> itemsSold, final List<War3ID> itemsMade, final CUnitRace unitRace, final int goldCost,
+			final int lumberCost, final int foodUsed, final int foodMade, final int buildTime,
+			final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes, final float propWindow, final float turnRate,
 			final List<CUnitTypeRequirement> requirements, final List<List<CUnitTypeRequirement>> requirementTiers,
 			final int level, final boolean hero, final int strength, final float strengthPerLevel, final int agility,
@@ -117,7 +126,9 @@ public class CUnitType {
 			final List<String> heroProperNames, final int properNamesCount, final boolean canFlee, final int priority,
 			final boolean revivesHeroes, final int pointValue, final float castBackswingPoint, final float castPoint,
 			final boolean canBeBuiltOnThem, final boolean canBuildOnMe, final int defenseUpgradeBonus,
-			final float sightRadiusDay, final float sightRadiusNight, final boolean extendedLineOfSight) {
+			final int sightRadiusDay, final int sightRadiusNight, final boolean extendedLineOfSight,
+			final int goldBountyAwardedBase, final int goldBountyAwardedDice, final int goldBountyAwardedSides,
+			final int lumberBountyAwardedBase, final int lumberBountyAwardedDice, final int lumberBountyAwardedSides) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
@@ -152,6 +163,8 @@ public class CUnitType {
 		this.upgradesUsed = upgradesUsed;
 		this.upgradeClassToType = upgradeClassToType;
 		this.upgradesTo = upgradesTo;
+		this.itemsSold = itemsSold;
+		this.itemsMade = itemsMade;
 		this.unitRace = unitRace;
 		this.goldCost = goldCost;
 		this.lumberCost = lumberCost;
@@ -188,6 +201,12 @@ public class CUnitType {
 		this.sightRadiusDay = sightRadiusDay;
 		this.sightRadiusNight = sightRadiusNight;
 		this.extendedLineOfSight = extendedLineOfSight;
+		this.goldBountyAwardedBase = goldBountyAwardedBase;
+		this.goldBountyAwardedDice = goldBountyAwardedDice;
+		this.goldBountyAwardedSides = goldBountyAwardedSides;
+		this.lumberBountyAwardedBase = lumberBountyAwardedBase;
+		this.lumberBountyAwardedDice = lumberBountyAwardedDice;
+		this.lumberBountyAwardedSides = lumberBountyAwardedSides;
 	}
 
 	public String getName() {
@@ -324,6 +343,14 @@ public class CUnitType {
 
 	public List<War3ID> getUpgradesTo() {
 		return this.upgradesTo;
+	}
+
+	public List<War3ID> getItemsSold() {
+		return itemsSold;
+	}
+
+	public List<War3ID> getItemsMade() {
+		return itemsMade;
 	}
 
 	public CUnitRace getRace() {
@@ -465,16 +492,40 @@ public class CUnitType {
 		return defenseUpgradeBonus;
 	}
 
-	public float getSightRadiusDay() {
+	public int getSightRadiusDay() {
 		return sightRadiusDay;
 	}
 
-	public float getSightRadiusNight() {
+	public int getSightRadiusNight() {
 		return sightRadiusNight;
 	}
 
 	public boolean isExtendedLineOfSight() {
 		return extendedLineOfSight;
+	}
+
+	public int getGoldBountyAwardedBase() {
+		return goldBountyAwardedBase;
+	}
+
+	public int getGoldBountyAwardedDice() {
+		return goldBountyAwardedDice;
+	}
+
+	public int getGoldBountyAwardedSides() {
+		return goldBountyAwardedSides;
+	}
+
+	public int getLumberBountyAwardedBase() {
+		return lumberBountyAwardedBase;
+	}
+
+	public int getLumberBountyAwardedDice() {
+		return lumberBountyAwardedDice;
+	}
+
+	public int getLumberBountyAwardedSides() {
+		return lumberBountyAwardedSides;
 	}
 
 	public int getCargoCapacity() {

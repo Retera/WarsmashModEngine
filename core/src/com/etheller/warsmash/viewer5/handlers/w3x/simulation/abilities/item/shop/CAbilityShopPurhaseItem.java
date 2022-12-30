@@ -1,61 +1,31 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop;
 
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractCBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
-public abstract class CBuffTimed extends AbstractCBuff {
-	private SimulationRenderComponent fx;
-	private final float duration;
-	private int expireTick;
+public class CAbilityShopPurhaseItem extends AbstractGenericNoIconAbility {
 
-	public CBuffTimed(final int handleId, final War3ID alias, final float duration) {
+	public CAbilityShopPurhaseItem(final int handleId, final War3ID alias) {
 		super(handleId, alias);
-		this.duration = duration;
 	}
-
-	protected abstract void onBuffAdd(final CSimulation game, final CUnit unit);
-
-	protected abstract void onBuffRemove(final CSimulation game, final CUnit unit);
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		onBuffAdd(game, unit);
-		this.fx = game.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
-		final int durationTicks = (int) (duration / WarsmashConstants.SIMULATION_STEP_TIME);
-		expireTick = game.getGameTurnTick() + durationTicks;
 	}
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-		onBuffRemove(game, unit);
-		this.fx.remove();
 	}
 
 	@Override
-	public void onTick(final CSimulation game, final CUnit caster) {
-		final int currentTick = game.getGameTurnTick();
-		if (currentTick >= expireTick) {
-			caster.remove(game, this);
-		}
-	}
-
-	@Override
-	public void onDeath(final CSimulation game, final CUnit cUnit) {
-		cUnit.remove(game, this);
-	}
-
-	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onTick(final CSimulation game, final CUnit unit) {
 	}
 
 	@Override
@@ -99,14 +69,11 @@ public abstract class CBuffTimed extends AbstractCBuff {
 	}
 
 	@Override
-	public float getDurationMax() {
-		return duration;
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
 	@Override
-	public float getDurationRemaining(final CSimulation game) {
-		final int currentTick = game.getGameTurnTick();
-		final int remaining = Math.max(0, expireTick - currentTick);
-		return remaining * WarsmashConstants.SIMULATION_STEP_TIME;
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
+
 }

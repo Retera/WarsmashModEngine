@@ -113,9 +113,17 @@ public class CPlayer extends CBasePlayer {
 		this.stateNotifier.goldChanged();
 	}
 
+	public void addGold(final int gold) {
+		setGold(getGold() + gold);
+	}
+
 	public void setLumber(final int lumber) {
 		this.lumber = lumber;
 		this.stateNotifier.lumberChanged();
+	}
+
+	public void addLumber(final int lumber) {
+		setLumber(getLumber() + lumber);
 	}
 
 	public void setHeroTokens(final int heroTokens) {
@@ -168,7 +176,7 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
-	public void setTechtreeUnlocked(War3ID rawcode, int setToLevel) {
+	public void setTechtreeUnlocked(final War3ID rawcode, final int setToLevel) {
 		rawcodeToTechtreeUnlocked.put(rawcode, setToLevel);
 	}
 
@@ -229,8 +237,8 @@ public class CPlayer extends CBasePlayer {
 		this.stateNotifier.goldChanged();
 	}
 
-	public void chargeFor(CUpgradeType upgradeType) {
-		int unlockCount = getTechtreeUnlocked(upgradeType.getTypeId());
+	public void chargeFor(final CUpgradeType upgradeType) {
+		final int unlockCount = getTechtreeUnlocked(upgradeType.getTypeId());
 		this.lumber -= upgradeType.getLumberCost(unlockCount);
 		this.gold -= upgradeType.getGoldCost(unlockCount);
 		this.stateNotifier.lumberChanged();
@@ -255,8 +263,8 @@ public class CPlayer extends CBasePlayer {
 		this.stateNotifier.goldChanged();
 	}
 
-	public void refundFor(CUpgradeType upgradeType) {
-		int unlockCount = getTechtreeUnlocked(upgradeType.getTypeId());
+	public void refundFor(final CUpgradeType upgradeType) {
+		final int unlockCount = getTechtreeUnlocked(upgradeType.getTypeId());
 		this.lumber += upgradeType.getLumberCost(unlockCount);
 		this.gold += upgradeType.getGoldCost(unlockCount);
 		this.stateNotifier.lumberChanged();
@@ -308,7 +316,7 @@ public class CPlayer extends CBasePlayer {
 		else {
 			int heroInProgressCount = 0;
 			for (final Map.Entry<War3ID, Integer> entry : this.rawcodeToTechtreeInProgress.entrySet()) {
-				CUnitType unitType = game.getUnitData().getUnitType(entry.getKey());
+				final CUnitType unitType = game.getUnitData().getUnitType(entry.getKey());
 				if ((unitType != null) && unitType.isHero()) {
 					heroInProgressCount += entry.getValue();
 				}
@@ -391,7 +399,7 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
-	public void fireResearchFinishEvents(final CUnit unit, final CSimulation game, War3ID researched) {
+	public void fireResearchFinishEvents(final CUnit unit, final CSimulation game, final War3ID researched) {
 		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_RESEARCH_FINISH);
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
@@ -603,29 +611,29 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
-	public void addTechResearched(CSimulation simulation, War3ID techIdRawcodeId, int levels) {
-		int previousUnlockCount = getTechtreeUnlocked(techIdRawcodeId);
+	public void addTechResearched(final CSimulation simulation, final War3ID techIdRawcodeId, final int levels) {
+		final int previousUnlockCount = getTechtreeUnlocked(techIdRawcodeId);
 		if (levels != 0) {
-			int setToLevel = previousUnlockCount + levels;
+			final int setToLevel = previousUnlockCount + levels;
 			setTechToLevel(simulation, techIdRawcodeId, setToLevel);
 		}
 	}
 
-	public void setTechResearched(CSimulation simulation, War3ID techIdRawcodeId, int setToLevel) {
-		int previousUnlockCount = getTechtreeUnlocked(techIdRawcodeId);
+	public void setTechResearched(final CSimulation simulation, final War3ID techIdRawcodeId, final int setToLevel) {
+		final int previousUnlockCount = getTechtreeUnlocked(techIdRawcodeId);
 		if ((setToLevel > previousUnlockCount) || (setToLevel < previousUnlockCount)) {
 			setTechToLevel(simulation, techIdRawcodeId, setToLevel);
 		}
 
 	}
 
-	private void setTechToLevel(CSimulation simulation, War3ID techIdRawcodeId, int setToLevel) {
-		int previousLevel = getTechtreeUnlocked(techIdRawcodeId);
+	private void setTechToLevel(final CSimulation simulation, final War3ID techIdRawcodeId, final int setToLevel) {
+		final int previousLevel = getTechtreeUnlocked(techIdRawcodeId);
 		setTechtreeUnlocked(techIdRawcodeId, setToLevel);
 		// terminate in progress upgrades of this kind for player
-		CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
+		final CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
 		if (upgradeType != null) {
-			for (CUnit unit : simulation.getUnits()) {
+			for (final CUnit unit : simulation.getUnits()) {
 				if (unit.getPlayerIndex() == getId()) {
 					if (unit.isBuildQueueActive() && (unit.getBuildQueueTypes()[0] == QueueItemType.RESEARCH)
 							&& (unit.getBuildQueue()[0].getValue() == techIdRawcodeId.getValue())) {

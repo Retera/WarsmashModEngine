@@ -99,7 +99,8 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 						}
 						break;
 					}
-					this.simulation.unitGainResourceEvent(this.unit, this.abilityHarvest.getCarriedResourceType(),
+					this.simulation.unitGainResourceEvent(this.unit, player.getId(),
+							this.abilityHarvest.getCarriedResourceType(),
 							this.abilityHarvest.getCarriedResourceAmount());
 					this.abilityHarvest.setCarriedResources(null, 0);
 					if (nextTarget != null) {

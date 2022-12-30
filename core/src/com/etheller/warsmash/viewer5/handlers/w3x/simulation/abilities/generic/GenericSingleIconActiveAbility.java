@@ -12,4 +12,5 @@ public interface GenericSingleIconActiveAbility extends CLevelingAbility, Single
 	int getUILumberCost();
 
 	int getUIManaCost();
+
 }

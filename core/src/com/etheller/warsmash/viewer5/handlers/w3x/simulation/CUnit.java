@@ -31,6 +31,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root.CAbilityRoot;
@@ -60,6 +61,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTarget
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
@@ -185,7 +187,7 @@ public class CUnit extends CWidget {
 		computeDerivedFields();
 	}
 
-	public void performDefaultBehavior(CSimulation game) {
+	public void performDefaultBehavior(final CSimulation game) {
 		if (this.currentBehavior != null) {
 			this.currentBehavior.end(game, true);
 		}
@@ -281,6 +283,7 @@ public class CUnit extends CWidget {
 		this.abilities.add(ability);
 		simulation.onAbilityAddedToUnit(this, ability);
 		ability.onAdd(simulation, this);
+		stateNotifier.abilitiesChanged();
 	}
 
 	public void remove(final CSimulation simulation, final CAbility ability) {
@@ -596,7 +599,8 @@ public class CUnit extends CWidget {
 								revivingHero.setFoodUsed(trainedUnitType.getFoodUsed());
 								final CPlayer player = game.getPlayer(this.playerIndex);
 								player.setUnitFoodMade(revivingHero, trainedUnitType.getFoodMade());
-								player.addTechtreeUnlocked(queuedRawcode);
+								// NOTE: Dont "add techtree unlocked" here, because hero doesn't lose that
+								// status upon death
 								// nudge the trained unit out around us
 								revivingHero.nudgeAround(game, this);
 								game.unitRepositioned(revivingHero); // dont blend animation
@@ -618,8 +622,8 @@ public class CUnit extends CWidget {
 							// TODO the "getBuildTime" math below probably would be better served to have
 							// been cached, for performance, since we are in the update method. But maybe it
 							// doens't matter.
-							CPlayer player = game.getPlayer(this.playerIndex);
-							int techtreeUnlocked = player.getTechtreeUnlocked(queuedRawcode);
+							final CPlayer player = game.getPlayer(this.playerIndex);
+							final int techtreeUnlocked = player.getTechtreeUnlocked(queuedRawcode);
 							if (this.constructionProgress >= trainedUnitType.getBuildTime(techtreeUnlocked)) {
 								this.constructionProgress = 0;
 								for (int i = 0; i < (this.buildQueue.length - 1); i++) {
@@ -923,7 +927,7 @@ public class CUnit extends CWidget {
 		return this.playerIndex;
 	}
 
-	public void setPlayerIndex(CSimulation simulation, final int playerIndex, boolean changeColor) {
+	public void setPlayerIndex(final CSimulation simulation, final int playerIndex, final boolean changeColor) {
 		this.playerIndex = playerIndex;
 		if (changeColor) {
 			simulation.changeUnitColor(this, playerIndex);
@@ -1031,7 +1035,7 @@ public class CUnit extends CWidget {
 		return this.classifications;
 	}
 
-	public void addClassification(CUnitClassification unitClassification) {
+	public void addClassification(final CUnitClassification unitClassification) {
 		this.classifications.add(unitClassification);
 	}
 
@@ -1194,6 +1198,30 @@ public class CUnit extends CWidget {
 		if (source != null) {
 			final CPlayer sourcePlayer = simulation.getPlayer(source.getPlayerIndex());
 			if (!sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
+				if (player.getPlayerState(simulation, CPlayerState.GIVES_BOUNTY) > 0) {
+					int goldBountyAwarded = this.unitType.getGoldBountyAwardedBase();
+					final int goldBountyAwardedDice = this.unitType.getGoldBountyAwardedDice();
+					final int goldBountyAwardedSides = this.unitType.getGoldBountyAwardedSides();
+					for (int i = 0; i < goldBountyAwardedDice; i++) {
+						goldBountyAwarded += simulation.getSeededRandom().nextInt(goldBountyAwardedSides) + 1;
+					}
+					if (goldBountyAwarded > 0) {
+						sourcePlayer.addGold(goldBountyAwarded);
+						simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.GOLD,
+								goldBountyAwarded);
+					}
+					int lumberBountyAwarded = this.unitType.getLumberBountyAwardedBase();
+					final int lumberBountyAwardedDice = this.unitType.getLumberBountyAwardedDice();
+					final int lumberBountyAwardedSides = this.unitType.getLumberBountyAwardedSides();
+					for (int i = 0; i < lumberBountyAwardedDice; i++) {
+						lumberBountyAwarded += simulation.getSeededRandom().nextInt(lumberBountyAwardedSides) + 1;
+					}
+					if (lumberBountyAwarded > 0) {
+						sourcePlayer.addLumber(lumberBountyAwarded);
+						simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.LUMBER,
+								lumberBountyAwarded);
+					}
+				}
 				final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
 				if (gameplayConstants.isBuildingKillsGiveExp() || !source.isBuilding()) {
 					final CUnit killedUnit = this;
@@ -1254,7 +1282,7 @@ public class CUnit extends CWidget {
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
 	}
 
-	public void kill(CSimulation simulation) {
+	public void kill(final CSimulation simulation) {
 		if (!isDead()) {
 			setLife(simulation, 0f);
 		}
@@ -1685,7 +1713,7 @@ public class CUnit extends CWidget {
 		}
 		switch (this.buildQueueTypes[0]) {
 		case RESEARCH: {
-			War3ID rawcode = this.buildQueue[0];
+			final War3ID rawcode = this.buildQueue[0];
 			final CUpgradeType trainedUnitType = simulation.getUpgradeData().getType(rawcode);
 			return trainedUnitType.getBuildTime(simulation.getPlayer(playerIndex).getTechtreeUnlocked(rawcode));
 		}
@@ -1838,7 +1866,7 @@ public class CUnit extends CWidget {
 	public void queueResearch(final CSimulation game, final War3ID rawcode) {
 		if (queue(game, rawcode, QueueItemType.RESEARCH)) {
 			final CPlayer player = game.getPlayer(this.playerIndex);
-			CUpgradeType upgradeType = game.getUpgradeData().getType(rawcode);
+			final CUpgradeType upgradeType = game.getUpgradeData().getType(rawcode);
 			player.chargeFor(upgradeType);
 		}
 	}
@@ -2050,6 +2078,15 @@ public class CUnit extends CWidget {
 		return null;
 	}
 
+	public CAbilityNeutralBuilding getNeutralBuildingData() {
+		for (final CAbility ability : this.abilities) {
+			if (ability instanceof CAbilityNeutralBuilding) {
+				return (CAbilityNeutralBuilding) ability;
+			}
+		}
+		return null;
+	}
+
 	public CAbilityCargoHold getCargoData() {
 		for (final CAbility ability : this.abilities) {
 			if (ability instanceof CAbilityCargoHold) {
@@ -2077,7 +2114,7 @@ public class CUnit extends CWidget {
 		return this.unitType.getAttacks();
 	}
 
-	public void setDisableAttacks(boolean disableAttacks) {
+	public void setDisableAttacks(final boolean disableAttacks) {
 		this.disableAttacks = disableAttacks;
 		stateNotifier.attacksChanged();
 	}
@@ -2463,7 +2500,7 @@ public class CUnit extends CWidget {
 	}
 
 	public void fireConstructFinishEvents(final CSimulation game) {
-		CUnit constructingUnit = workerInside; // TODO incorrect for human/undead/ancient, etc, needs work
+		final CUnit constructingUnit = workerInside; // TODO incorrect for human/undead/ancient, etc, needs work
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_CONSTRUCT_FINISH);
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {
@@ -2474,7 +2511,7 @@ public class CUnit extends CWidget {
 		game.getPlayer(this.playerIndex).fireConstructFinishEvents(this, game, constructingUnit);
 	}
 
-	public void fireTrainFinishEvents(final CSimulation game, CUnit trainedUnit) {
+	public void fireTrainFinishEvents(final CSimulation game, final CUnit trainedUnit) {
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_TRAIN_FINISH);
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {
@@ -2485,7 +2522,7 @@ public class CUnit extends CWidget {
 		game.getPlayer(this.playerIndex).fireTrainFinishEvents(this, game, trainedUnit);
 	}
 
-	public void fireResearchFinishEvents(final CSimulation game, War3ID researched) {
+	public void fireResearchFinishEvents(final CSimulation game, final War3ID researched) {
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_RESEARCH_FINISH);
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {
@@ -2500,18 +2537,18 @@ public class CUnit extends CWidget {
 		return getHeroData() != null; // in future maybe do this with better performance
 	}
 
-	public boolean isUnitAlly(CPlayer whichPlayer) {
+	public boolean isUnitAlly(final CPlayer whichPlayer) {
 		return whichPlayer.hasAlliance(this.getPlayerIndex(), CAllianceType.PASSIVE);
 	}
 
-	public ResourceType backToWork(CSimulation game, ResourceType defaultResourceType) {
+	public ResourceType backToWork(final CSimulation game, final ResourceType defaultResourceType) {
 		// if possible, check if this is a worker and send it to work
-		for (CAbility ability : abilities) {
+		for (final CAbility ability : abilities) {
 			if (ability instanceof CAbilityHarvest) {
-				CAbilityHarvest abilityHarvest = (CAbilityHarvest) ability;
-				int carriedResourceAmount = abilityHarvest.getCarriedResourceAmount();
+				final CAbilityHarvest abilityHarvest = (CAbilityHarvest) ability;
+				final int carriedResourceAmount = abilityHarvest.getCarriedResourceAmount();
 				if (carriedResourceAmount != 0) {
-					ResourceType carriedResourceType = abilityHarvest.getCarriedResourceType();
+					final ResourceType carriedResourceType = abilityHarvest.getCarriedResourceType();
 					switch (carriedResourceType) {
 					case GOLD:
 						if (carriedResourceAmount >= abilityHarvest.getGoldCapacity()) {
@@ -2559,5 +2596,9 @@ public class CUnit extends CWidget {
 
 	public void notifyAttacksChanged() {
 		stateNotifier.attacksChanged();
+	}
+
+	public void notifyOrdersChanged() {
+		stateNotifier.ordersChanged();
 	}
 }

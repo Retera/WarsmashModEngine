@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderDropItemAtPoint;
@@ -20,11 +21,26 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 		this.playerIndex = playerIndex;
 	}
 
+	private boolean sharedControl(final CUnit unit) {
+		boolean controlShared = game.getPlayer(unit.getPlayerIndex()).hasAlliance(playerIndex,
+				CAllianceType.SHARED_CONTROL);
+		if (!controlShared) {
+			final CAbilityNeutralBuilding neutralBuildingData = unit.getNeutralBuildingData();
+			if (neutralBuildingData != null) {
+				final CUnit selectedPlayerUnit = neutralBuildingData.getSelectedPlayerUnit(playerIndex);
+				if (selectedPlayerUnit != null) {
+					controlShared = true;
+				}
+			}
+		}
+		return controlShared;
+	}
+
 	@Override
 	public void issueTargetOrder(final int unitHandleId, final int abilityHandleId, final int orderId,
 			final int targetHandleId, final boolean queue) {
 		final CUnit unit = this.game.getUnit(unitHandleId);
-		if (this.playerIndex == unit.getPlayerIndex()) {
+		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
 			unit.order(this.game, new COrderTargetWidget(abilityHandleId, orderId, targetHandleId, queue), queue);
 		}
 	}
@@ -33,7 +49,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 	public void issueDropItemAtPointOrder(final int unitHandleId, final int abilityHandleId, final int orderId,
 			final int targetHandleId, final float x, final float y, final boolean queue) {
 		final CUnit unit = this.game.getUnit(unitHandleId);
-		if (this.playerIndex == unit.getPlayerIndex()) {
+		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
 			unit.order(this.game, new COrderDropItemAtPoint(abilityHandleId, orderId, targetHandleId,
 					new AbilityPointTarget(x, y), queue), queue);
 		}
@@ -43,7 +59,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 	public void issueDropItemAtTargetOrder(final int unitHandleId, final int abilityHandleId, final int orderId,
 			final int targetItemHandleId, final int targetHeroHandleId, final boolean queue) {
 		final CUnit unit = this.game.getUnit(unitHandleId);
-		if (this.playerIndex == unit.getPlayerIndex()) {
+		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
 			unit.order(this.game, new COrderDropItemAtTargetWidget(abilityHandleId, orderId, targetItemHandleId,
 					targetHeroHandleId, queue), queue);
 		}
@@ -53,7 +69,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 	public void issuePointOrder(final int unitHandleId, final int abilityHandleId, final int orderId, final float x,
 			final float y, final boolean queue) {
 		final CUnit unit = this.game.getUnit(unitHandleId);
-		if (this.playerIndex == unit.getPlayerIndex()) {
+		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
 			unit.order(this.game, new COrderTargetPoint(abilityHandleId, orderId, new AbilityPointTarget(x, y), queue),
 					queue);
 		}
@@ -63,7 +79,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 	public void issueImmediateOrder(final int unitHandleId, final int abilityHandleId, final int orderId,
 			final boolean queue) {
 		final CUnit unit = this.game.getUnit(unitHandleId);
-		if (this.playerIndex == unit.getPlayerIndex()) {
+		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
 			if (abilityHandleId == 0) {
 				if (orderId == OrderIds.stop) {
 					unit.order(this.game, null, queue);
@@ -85,7 +101,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 	@Override
 	public void unitCancelTrainingItem(final int unitHandleId, final int cancelIndex) {
 		final CUnit unit = this.game.getUnit(unitHandleId);
-		if (this.playerIndex == unit.getPlayerIndex()) {
+		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
 			unit.cancelBuildQueueItem(this.game, cancelIndex);
 		}
 	}

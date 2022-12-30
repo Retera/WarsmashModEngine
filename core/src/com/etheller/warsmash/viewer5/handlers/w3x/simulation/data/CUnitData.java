@@ -34,6 +34,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityUndeadBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilitySellItems;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
@@ -160,6 +161,8 @@ public class CUnitData {
 	private static final War3ID RESEARCHES_AVAILABLE = War3ID.fromString("ures");
 	private static final War3ID UPGRADES_USED = War3ID.fromString("upgr");
 	private static final War3ID UPGRADES_TO = War3ID.fromString("uupt");
+	private static final War3ID ITEMS_SOLD = War3ID.fromString("usei");
+	private static final War3ID ITEMS_MADE = War3ID.fromString("umki");
 	private static final War3ID REVIVES_HEROES = War3ID.fromString("urev");
 	private static final War3ID UNIT_RACE = War3ID.fromString("urac");
 
@@ -201,6 +204,14 @@ public class CUnitData {
 	private static final War3ID SIGHT_RADIUS_NIGHT = War3ID.fromString("usin");
 	private static final War3ID EXTENDED_LOS = War3ID.fromString("ulos");
 
+	private static final War3ID GOLD_BOUNTY_AWARDED_BASE = War3ID.fromString("ubba");
+	private static final War3ID GOLD_BOUNTY_AWARDED_DICE = War3ID.fromString("ubdi");
+	private static final War3ID GOLD_BOUNTY_AWARDED_SIDES = War3ID.fromString("ubsi");
+
+	private static final War3ID LUMBER_BOUNTY_AWARDED_BASE = War3ID.fromString("ulba");
+	private static final War3ID LUMBER_BOUNTY_AWARDED_DICE = War3ID.fromString("ulbd");
+	private static final War3ID LUMBER_BOUNTY_AWARDED_SIDES = War3ID.fromString("ulbs");
+
 	private final CGameplayConstants gameplayConstants;
 	private final MutableObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
@@ -236,7 +247,6 @@ public class CUnitData {
 				manaMaximum, speed, unitTypeInstance, pathingInstance);
 		addDefaultAbilitiesToUnit(simulation, handleIdAllocator, unitTypeInstance, true, manaInitial, speed, unit);
 		applyPlayerUpgradesToUnit(simulation, playerIndex, unitTypeInstance, unit);
-		unit.performDefaultBehavior(simulation);
 		return unit;
 	}
 
@@ -311,11 +321,19 @@ public class CUnitData {
 		final List<War3ID> unitsTrained = unitTypeInstance.getUnitsTrained();
 		final List<War3ID> researchesAvailable = unitTypeInstance.getResearchesAvailable();
 		final List<War3ID> upgradesTo = unitTypeInstance.getUpgradesTo();
+		final List<War3ID> itemsSold = unitTypeInstance.getItemsSold();
+		final List<War3ID> itemsMade = unitTypeInstance.getItemsMade();
 		if (!unitsTrained.isEmpty() || !researchesAvailable.isEmpty()) {
 			unit.add(simulation, new CAbilityQueue(handleIdAllocator.createId(), unitsTrained, researchesAvailable));
 		}
 		if (!upgradesTo.isEmpty()) {
 			unit.add(simulation, new CAbilityUpgrade(handleIdAllocator.createId(), upgradesTo));
+		}
+		if (!itemsSold.isEmpty()) {
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold));
+		}
+		if (!itemsMade.isEmpty()) {
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade));
 		}
 		if (unitTypeInstance.isRevivesHeroes()) {
 			unit.add(simulation, new CAbilityReviveHero(handleIdAllocator.createId()));
@@ -542,47 +560,27 @@ public class CUnitData {
 
 			final int pointValue = unitType.getFieldAsInteger(POINT_VALUE, 0);
 
-			final float sightRadiusDay = unitType.getFieldAsFloat(SIGHT_RADIUS_DAY, 0);
-			final float sightRadiusNight = unitType.getFieldAsFloat(SIGHT_RADIUS_NIGHT, 0);
+			final int sightRadiusDay = unitType.getFieldAsInteger(SIGHT_RADIUS_DAY, 0);
+			final int sightRadiusNight = unitType.getFieldAsInteger(SIGHT_RADIUS_NIGHT, 0);
 			final boolean extendedLineOfSight = unitType.getFieldAsBoolean(EXTENDED_LOS, 0);
+
+			final int goldBountyAwardedBase = unitType.getFieldAsInteger(GOLD_BOUNTY_AWARDED_BASE, 0);
+			final int goldBountyAwardedDice = unitType.getFieldAsInteger(GOLD_BOUNTY_AWARDED_DICE, 0);
+			final int goldBountyAwardedSides = unitType.getFieldAsInteger(GOLD_BOUNTY_AWARDED_SIDES, 0);
+
+			final int lumberBountyAwardedBase = unitType.getFieldAsInteger(LUMBER_BOUNTY_AWARDED_BASE, 0);
+			final int lumberBountyAwardedDice = unitType.getFieldAsInteger(LUMBER_BOUNTY_AWARDED_DICE, 0);
+			final int lumberBountyAwardedSides = unitType.getFieldAsInteger(LUMBER_BOUNTY_AWARDED_SIDES, 0);
 
 			final boolean revivesHeroes = unitType.getFieldAsBoolean(REVIVES_HEROES, 0);
 
-			final String unitsTrainedString = unitType.getFieldAsString(UNITS_TRAINED, 0);
-			final String[] unitsTrainedStringItems = unitsTrainedString.trim().split(",");
-			final List<War3ID> unitsTrained = new ArrayList<>();
-			for (final String unitsTrainedStringItem : unitsTrainedStringItems) {
-				if (unitsTrainedStringItem.length() == 4) {
-					unitsTrained.add(War3ID.fromString(unitsTrainedStringItem));
-				}
-			}
+			final List<War3ID> unitsTrained = parseIDList(unitType.getFieldAsString(UNITS_TRAINED, 0));
 
-			final String upgradesToString = unitType.getFieldAsString(UPGRADES_TO, 0);
-			final String[] upgradesToStringItems = upgradesToString.trim().split(",");
-			final List<War3ID> upgradesTo = new ArrayList<>();
-			for (final String upgradesToStringItem : upgradesToStringItems) {
-				if (upgradesToStringItem.length() == 4) {
-					upgradesTo.add(War3ID.fromString(upgradesToStringItem));
-				}
-			}
+			final List<War3ID> upgradesTo = parseIDList(unitType.getFieldAsString(UPGRADES_TO, 0));
 
-			final String researchesAvailableString = unitType.getFieldAsString(RESEARCHES_AVAILABLE, 0);
-			final String[] researchesAvailableStringItems = researchesAvailableString.trim().split(",");
-			final List<War3ID> researchesAvailable = new ArrayList<>();
-			for (final String researchesAvailableStringItem : researchesAvailableStringItems) {
-				if (researchesAvailableStringItem.length() == 4) {
-					researchesAvailable.add(War3ID.fromString(researchesAvailableStringItem));
-				}
-			}
+			final List<War3ID> researchesAvailable = parseIDList(unitType.getFieldAsString(RESEARCHES_AVAILABLE, 0));
 
-			final String upgradesUsedString = unitType.getFieldAsString(UPGRADES_USED, 0);
-			final String[] upgradesUsedStringItems = upgradesUsedString.trim().split(",");
-			final List<War3ID> upgradesUsed = new ArrayList<>();
-			for (final String upgradesUsedStringItem : upgradesUsedStringItems) {
-				if (upgradesUsedStringItem.length() == 4) {
-					upgradesUsed.add(War3ID.fromString(upgradesUsedStringItem));
-				}
-			}
+			final List<War3ID> upgradesUsed = parseIDList(unitType.getFieldAsString(UPGRADES_USED, 0));
 			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType = new EnumMap<>(CUpgradeClass.class);
 			for (final War3ID upgradeUsed : upgradesUsed) {
 				final CUpgradeType upgradeType = upgradeData.getType(upgradeUsed);
@@ -594,14 +592,10 @@ public class CUnitData {
 				}
 			}
 
-			final String structuresBuiltString = unitType.getFieldAsString(STRUCTURES_BUILT, 0);
-			final String[] structuresBuiltStringItems = structuresBuiltString.split(",");
-			final List<War3ID> structuresBuilt = new ArrayList<>();
-			for (final String structuresBuiltStringItem : structuresBuiltStringItems) {
-				if (structuresBuiltStringItem.length() == 4) {
-					structuresBuilt.add(War3ID.fromString(structuresBuiltStringItem));
-				}
-			}
+			final List<War3ID> structuresBuilt = parseIDList(unitType.getFieldAsString(STRUCTURES_BUILT, 0));
+
+			final List<War3ID> itemsSold = parseIDList(unitType.getFieldAsString(ITEMS_SOLD, 0));
+			final List<War3ID> itemsMade = parseIDList(unitType.getFieldAsString(ITEMS_MADE, 0));
 
 			final String[] heroAbilityListStringItems = heroAbilityListString.split(",");
 			final List<War3ID> heroAbilityList = new ArrayList<>();
@@ -640,16 +634,28 @@ public class CUnitData {
 					collisionSize, classifications, attacks, armorType, raise, decay, defenseType, impactZ,
 					buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange, minimumAttackRange,
 					structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed, upgradeClassToType, upgradesTo,
-					unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime, preventedPathingTypes,
-					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
-					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
-					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,
-					castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay, sightRadiusNight,
-					extendedLineOfSight);
+					itemsSold, itemsMade, unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime,
+					preventedPathingTypes, requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers,
+					unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute,
+					heroAbilityList, heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue,
+					castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay,
+					sightRadiusNight, extendedLineOfSight, goldBountyAwardedBase, goldBountyAwardedDice,
+					goldBountyAwardedSides, lumberBountyAwardedBase, lumberBountyAwardedDice, lumberBountyAwardedSides);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}
 		return unitTypeInstance;
+	}
+
+	private List<War3ID> parseIDList(final String structuresBuiltString) {
+		final String[] structuresBuiltStringItems = structuresBuiltString.split(",");
+		final List<War3ID> structuresBuilt = new ArrayList<>();
+		for (final String structuresBuiltStringItem : structuresBuiltStringItems) {
+			if (structuresBuiltStringItem.length() == 4) {
+				structuresBuilt.add(War3ID.fromString(structuresBuiltStringItem));
+			}
+		}
+		return structuresBuilt;
 	}
 
 	public static List<CUnitTypeRequirement> parseRequirements(final String requirementsString,

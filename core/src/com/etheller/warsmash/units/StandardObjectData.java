@@ -220,7 +220,7 @@ public class StandardObjectData {
 
 		final WarcraftData abilities = new WarcraftData();
 
-		abilities.add(profile, "Profile", false);
+		abilities.add(profile, "Profile", true);
 		abilities.add(abilityData, "AbilityData", true);
 
 		return abilities;

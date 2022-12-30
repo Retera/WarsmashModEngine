@@ -40,4 +40,6 @@ public interface CommandButtonListener {
 			float cooldownMax, int numberOverlay);
 
 	void buff(Texture icon, int level, String tip, String uberTip);
+
+	void timedLifeBar(int level, String toolTip, float durationRemaining, float durationMax);
 }

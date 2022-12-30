@@ -24,5 +24,29 @@ public interface AbilityFields {
 	public static final War3ID WATER_ELEMENTAL_UNIT_TYPE = War3ID.fromString("Hwe1");
 	public static final War3ID WATER_ELEMENTAL_UNIT_COUNT = War3ID.fromString("Hwe2");
 
+	public static final War3ID BLIZZARD_WAVE_COUNT = War3ID.fromString("Hbz1");
+	public static final War3ID BLIZZARD_DAMAGE = War3ID.fromString("Hbz2");
+	public static final War3ID BLIZZARD_SHARD_COUNT = War3ID.fromString("Hbz3");
+	public static final War3ID BLIZZARD_BUILDING_REDUCTION = War3ID.fromString("Hbz4");
+	public static final War3ID BLIZZARD_DAMAGE_PER_SECOND = War3ID.fromString("Hbz5");
+	public static final War3ID BLIZZARD_MAX_DAMAGE_PER_WAVE = War3ID.fromString("Hbz6");
+
+	public static final War3ID ITEM_FIGURINE_SUMMON_UNIT_TYPE_1 = War3ID.fromString("Ist1");
+	public static final War3ID ITEM_FIGURINE_SUMMON_UNIT_COUNT_1 = War3ID.fromString("Isn1");
+	public static final War3ID ITEM_FIGURINE_SUMMON_UNIT_TYPE_2 = War3ID.fromString("Ist2");
+	public static final War3ID ITEM_FIGURINE_SUMMON_UNIT_COUNT_2 = War3ID.fromString("Isn2");
+
+	public static final War3ID ITEM_EXPERIENCE_GAINED = War3ID.fromString("Ixpg");
+	public static final War3ID ITEM_LEVEL_GAINED = War3ID.fromString("Ilev");
+
+	public static final War3ID ITEM_LIFE_GAINED = War3ID.fromString("Ilif");
+
+	public static final War3ID ITEM_MANA = War3ID.fromString("Iman");
+
+	public static final War3ID NEUTRAL_BUILDING_ACTIVATION_RADIUS = War3ID.fromString("Neu1");
+	public static final War3ID NEUTRAL_BUILDING_INTERACTION_TYPE = War3ID.fromString("Neu2");
+	public static final War3ID NEUTRAL_BUILDING_SHOW_SELECT_UNIT_BUTTON = War3ID.fromString("Neu3");
+	public static final War3ID NEUTRAL_BUILDING_SHOW_UNIT_INDICATOR = War3ID.fromString("Neu4");
+
 	public static final War3ID CHARM_MAX_CREEP_LEVEL = War3ID.fromString("Nch1");
 }

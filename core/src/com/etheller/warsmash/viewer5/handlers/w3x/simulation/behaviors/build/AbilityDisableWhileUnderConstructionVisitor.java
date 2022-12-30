@@ -17,6 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.G
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilitySellItems;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -112,6 +114,13 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 	}
 
 	@Override
+	public Void accept(final CAbilitySellItems ability) {
+		ability.setDisabled(true);
+		ability.setIconShowing(false);
+		return null;
+	}
+
+	@Override
 	public Void accept(final CAbilityUpgrade ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
@@ -133,7 +142,7 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 	}
 
 	@Override
-	public Void accept(CAbilityRoot ability) {
+	public Void accept(final CAbilityRoot ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
 		return null;
@@ -154,7 +163,14 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 	}
 
 	@Override
-	public Void accept(CBuff ability) {
+	public Void accept(final CAbilityNeutralBuilding ability) {
+		ability.setDisabled(true);
+		ability.setIconShowing(false);
+		return null;
+	}
+
+	@Override
+	public Void accept(final CBuff ability) {
 		// this doesn't affect buffs
 		return null;
 	}

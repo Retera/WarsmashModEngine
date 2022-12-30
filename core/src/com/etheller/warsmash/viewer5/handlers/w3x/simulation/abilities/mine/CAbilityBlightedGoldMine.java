@@ -1,5 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -11,9 +14,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorAcolyteHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 	public static final int NO_MINER = -1;
@@ -27,6 +32,8 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 	private final Vector2[] minerLocs;
 	private int currentActiveMinerCount;
 	private int lastIncomeTick;
+
+	private final List<SimulationRenderComponent> spellEffects = new ArrayList<>();
 
 	public CAbilityBlightedGoldMine(final int handleId, final War3ID alias, final int goldPerInterval,
 			final float intervalDuration, final int maxNumberOfMiners, final float radiusOfMiningRing) {
@@ -54,13 +61,18 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 			final float harvestStandY = unit.getY()
 					+ (float) (StrictMath.sin(thisMinerAngle) * this.radiusOfMiningRing);
 			this.minerLocs[i] = new Vector2(harvestStandX, harvestStandY);
-			game.createSpellEffectFacing(getAlias(), harvestStandX, harvestStandY, (float) (thisMinerAngle));
+			final SimulationRenderComponent spellEffect = game.spawnSpellEffectOnPoint(harvestStandX, harvestStandY,
+					(float) (thisMinerAngle), getAlias(), CEffectType.EFFECT, 0);
+			this.spellEffects.add(spellEffect);
 		}
 	}
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-
+		for (final SimulationRenderComponent spellEffect : this.spellEffects) {
+			spellEffect.remove();
+		}
+		this.spellEffects.clear();
 	}
 
 	@Override
@@ -77,7 +89,7 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 				player.setGold(player.getGold() + this.goldPerInterval);
 				this.parentGoldMineAbility.setGold(this.parentGoldMineAbility.getGold() - this.goldPerInterval);
-				game.unitGainResourceEvent(unit, ResourceType.GOLD, this.goldPerInterval);
+				game.unitGainResourceEvent(unit, player.getId(), ResourceType.GOLD, this.goldPerInterval);
 			}
 		}
 //		final boolean empty = this.activeMiners.isEmpty();

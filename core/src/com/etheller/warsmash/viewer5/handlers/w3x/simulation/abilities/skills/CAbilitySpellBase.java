@@ -29,18 +29,18 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	private PrimaryTag castingPrimaryTag;
 	private EnumSet<SecondaryTag> castingSecondaryTags;
 
-	public CAbilitySpellBase(int handleId, War3ID alias) {
+	public CAbilitySpellBase(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
-	public final void populate(MutableGameObject worldEditorAbility, int level) {
+	public final void populate(final MutableGameObject worldEditorAbility, final int level) {
 		manaCost = worldEditorAbility.getFieldAsInteger(AbilityFields.MANA_COST, level);
 		castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE, level);
-		cooldown = worldEditorAbility.getFieldAsFloat(AbilityFields.COOLDOWN, level);
+		cooldown = worldEditorAbility.readSLKTagFloat("Cool" + level);
 		castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME, level);
 		targetsAllowed = CTargetType
 				.parseTargetTypeSet(worldEditorAbility.getFieldAsString(AbilityFields.TARGETS_ALLOWED, level));
-		String animNames = worldEditorAbility.getFieldAsString(AbilityFields.ANIM_NAMES, 0);
+		final String animNames = worldEditorAbility.getFieldAsString(AbilityFields.ANIM_NAMES, 0);
 
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
 		castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
@@ -68,15 +68,15 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	@Override
-	public void onRemove(CSimulation game, CUnit unit) {
+	public void onRemove(final CSimulation game, final CUnit unit) {
 	}
 
 	@Override
-	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
 	@Override
-	public void onTick(CSimulation game, CUnit unit) {
+	public void onTick(final CSimulation game, final CUnit unit) {
 		// TODO instead of ability cooldown, unit should have a per-code cooldown
 		// pool probably so that when items are removed and added the item cooldown
 		// is retained
@@ -128,27 +128,27 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		return cooldownRemaining;
 	}
 
-	public void setManaCost(int manaCost) {
+	public void setManaCost(final int manaCost) {
 		this.manaCost = manaCost;
 	}
 
-	public void setCastRange(float castRange) {
+	public void setCastRange(final float castRange) {
 		this.castRange = castRange;
 	}
 
-	public void setCooldown(float cooldown) {
+	public void setCooldown(final float cooldown) {
 		this.cooldown = cooldown;
 	}
 
-	public void setCastingTime(float castingTime) {
+	public void setCastingTime(final float castingTime) {
 		this.castingTime = castingTime;
 	}
 
-	public void setTargetsAllowed(EnumSet<CTargetType> targetsAllowed) {
+	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
 		this.targetsAllowed = targetsAllowed;
 	}
 
-	public void setCooldownRemaining(float cooldownRemaining) {
+	public void setCooldownRemaining(final float cooldownRemaining) {
 		this.cooldownRemaining = cooldownRemaining;
 	}
 

@@ -160,10 +160,10 @@ public class RenderUnit implements RenderWidget {
 
 	public void populateCommandCard(final CSimulation game, final GameUI gameUI,
 			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
-			final int subMenuOrderId, final boolean multiSelect) {
+			final int subMenuOrderId, final boolean multiSelect, final int localPlayerIndex) {
 		final CommandCardPopulatingAbilityVisitor commandCardPopulatingVisitor = CommandCardPopulatingAbilityVisitor.INSTANCE
 				.reset(game, gameUI, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId,
-						multiSelect);
+						multiSelect, localPlayerIndex);
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
 			ability.visit(commandCardPopulatingVisitor);
 		}
@@ -592,7 +592,7 @@ public class RenderUnit implements RenderWidget {
 		return this.facing;
 	}
 
-	public void setFacing(float facing) {
+	public void setFacing(final float facing) {
 		this.facing = facing;
 	}
 

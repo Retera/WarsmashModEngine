@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.SingleOrderAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityShopPurhaseItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -88,7 +89,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 		}
 		else if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
-			List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
+			final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
 			if (!itemsHeldAbilitiesForSlot.isEmpty()) {
 				final CAbility cAbility = itemsHeldAbilitiesForSlot.get(0);
 				int forwardedOrderId = orderId;
@@ -115,7 +116,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	private void consumePerishableCharge(final CSimulation game, final CUnit caster, final int slot,
 			final CItem cItem) {
-		int updatedCharges = cItem.getCharges() - 1;
+		final int updatedCharges = cItem.getCharges() - 1;
 		if (updatedCharges >= 0) {
 			cItem.setCharges(updatedCharges);
 			if (updatedCharges == 0) {
@@ -151,9 +152,9 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
-			List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
+			final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
 			if (!itemsHeldAbilitiesForSlot.isEmpty()) {
-				CAbility ability = itemsHeldAbilitiesForSlot.get(0);
+				final CAbility ability = itemsHeldAbilitiesForSlot.get(0);
 				int forwardedOrderId = orderId;
 				if (ability instanceof SingleOrderAbility) {
 					forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
@@ -164,7 +165,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				return behavior;
 			}
 		}
-		CItem targetItem = target.visit(AbilityTargetVisitor.ITEM);
+		final CItem targetItem = target.visit(AbilityTargetVisitor.ITEM);
 		if (targetItem != null) {
 			return this.behaviorGetItem.reset((CItem) target);
 		}
@@ -186,9 +187,9 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			final AbilityPointTarget point) {
 		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
-			List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
+			final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
 			if (!itemsHeldAbilitiesForSlot.isEmpty()) {
-				CAbility ability = itemsHeldAbilitiesForSlot.get(0);
+				final CAbility ability = itemsHeldAbilitiesForSlot.get(0);
 				int forwardedOrderId = orderId;
 				if (ability instanceof SingleOrderAbility) {
 					forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
@@ -206,9 +207,9 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
 		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
-			List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
+			final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
 			if (!itemsHeldAbilitiesForSlot.isEmpty()) {
-				CAbility ability = itemsHeldAbilitiesForSlot.get(0);
+				final CAbility ability = itemsHeldAbilitiesForSlot.get(0);
 				int forwardedOrderId = orderId;
 				if (ability instanceof SingleOrderAbility) {
 					forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
@@ -257,9 +258,17 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			else if (orderId == OrderIds.dropitem) {
 				if (target instanceof CUnit) {
 					final CUnit hero = (CUnit) target;
-					if ((hero.getInventoryData() != null) && game.getPlayer(hero.getPlayerIndex())
-							.hasAlliance(unit.getPlayerIndex(), CAllianceType.PASSIVE) && (hero != unit)) {
-						receiver.targetOk(target);
+					if (game.getPlayer(hero.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(), CAllianceType.PASSIVE)
+							&& (hero != unit)) {
+						if (hero.getInventoryData() != null) {
+							receiver.targetOk(target);
+						}
+						else if (hero.getFirstAbilityOfType(CAbilityShopPurhaseItem.class) != null) {
+							receiver.targetOk(target);
+						}
+						else {
+							receiver.orderIdNotAccepted();
+						}
 					}
 					else {
 						receiver.orderIdNotAccepted();
@@ -272,9 +281,9 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			else {
 				if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 					final int slot = orderId - OrderIds.itemuse00;
-					List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
+					final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
 					if (!itemsHeldAbilitiesForSlot.isEmpty()) {
-						CAbility ability = itemsHeldAbilitiesForSlot.get(0);
+						final CAbility ability = itemsHeldAbilitiesForSlot.get(0);
 						int forwardedOrderId = orderId;
 						if (ability instanceof SingleOrderAbility) {
 							forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
@@ -308,9 +317,9 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 		if (orderId != OrderIds.dropitem) {
 			if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 				final int slot = orderId - OrderIds.itemuse00;
-				List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
+				final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
 				if (!itemsHeldAbilitiesForSlot.isEmpty()) {
-					CAbility ability = itemsHeldAbilitiesForSlot.get(0);
+					final CAbility ability = itemsHeldAbilitiesForSlot.get(0);
 					int forwardedOrderId = orderId;
 					if (ability instanceof SingleOrderAbility) {
 						forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
@@ -335,9 +344,9 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
-			List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
+			final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
 			if (!itemsHeldAbilitiesForSlot.isEmpty()) {
-				CAbility ability = itemsHeldAbilitiesForSlot.get(0);
+				final CAbility ability = itemsHeldAbilitiesForSlot.get(0);
 				int forwardedOrderId = orderId;
 				if (ability instanceof SingleOrderAbility) {
 					forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
@@ -363,9 +372,9 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					receiver.notAnActiveAbility();
 				}
 				else {
-					List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
+					final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
 					if (!itemsHeldAbilitiesForSlot.isEmpty()) {
-						CAbility ability = itemsHeldAbilitiesForSlot.get(0);
+						final CAbility ability = itemsHeldAbilitiesForSlot.get(0);
 						int forwardedOrderId = orderId;
 						if (ability instanceof SingleOrderAbility) {
 							forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
@@ -401,7 +410,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				if (itemType.isActivelyUsed()) {
 					item.setLife(simulation, 0);
 					// TODO when we give unit ability here, then use ability
-					List<CAbility> addedAbilities = new ArrayList<>();
+					final List<CAbility> addedAbilities = new ArrayList<>();
 					for (final War3ID abilityId : item.getItemType().getAbilityList()) {
 						final CAbilityType<?> abilityType = simulation.getAbilityData().getAbilityType(abilityId);
 						if (abilityType != null) {
@@ -410,7 +419,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 							abilityFromItem.setIconShowing(false);
 							hero.add(simulation, abilityFromItem);
 							if (abilityFromItem instanceof SingleOrderAbility) {
-								int baseOrderId = ((SingleOrderAbility) abilityFromItem).getBaseOrderId();
+								final int baseOrderId = ((SingleOrderAbility) abilityFromItem).getBaseOrderId();
 								hero.order(simulation,
 										new COrderNoTarget(abilityFromItem.getHandleId(), baseOrderId, false), false);
 							}
@@ -418,7 +427,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 						}
 					}
 					hero.onPickUpItem(simulation, item, true);
-					for (CAbility ability : addedAbilities) {
+					for (final CAbility ability : addedAbilities) {
 						hero.remove(simulation, ability);
 					}
 				}

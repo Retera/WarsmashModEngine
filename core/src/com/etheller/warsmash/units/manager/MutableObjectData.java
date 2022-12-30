@@ -628,12 +628,48 @@ public final class MutableObjectData {
 			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
 				return getFieldAsString(MutableObjectData.this.metaNameToMetaId.get(key), 0);
 			}
+			if ((worldEditorDataType == WorldEditorDataType.ABILITIES) && key.startsWith("Data")) {
+				for (final String metaKeyString : sourceSLKMetaData.keySet()) {
+					final GameObject metaField = sourceSLKMetaData.get(metaKeyString);
+					if ("data".equals(metaField.getField("field").toLowerCase())) {
+						final String useSpecific = metaField.getField("useSpecific");
+						final String[] specificUses = useSpecific.split(",");
+						for (final String use : specificUses) {
+							if (this.getAlias().asStringValue().equalsIgnoreCase(use)) {
+								final int index = metaField.getFieldValue("index");
+								if ((key.length() >= 5) && (key.charAt(4) == (('A' + index) - 1))) {
+									final int level = Integer.parseInt(key.substring(5));
+									return getFieldAsString(War3ID.fromString(metaField.getId()), level);
+								}
+							}
+						}
+					}
+				}
+			}
 			return this.parentWC3Object.getField(key);
 		}
 
 		public boolean readSLKTagBoolean(final String key) {
 			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
 				return getFieldAsBoolean(MutableObjectData.this.metaNameToMetaId.get(key), 0);
+			}
+			if ((worldEditorDataType == WorldEditorDataType.ABILITIES) && key.startsWith("Data")) {
+				for (final String metaKeyString : sourceSLKMetaData.keySet()) {
+					final GameObject metaField = sourceSLKMetaData.get(metaKeyString);
+					if ("data".equals(metaField.getField("field").toLowerCase())) {
+						final String useSpecific = metaField.getField("useSpecific");
+						final String[] specificUses = useSpecific.split(",");
+						for (final String use : specificUses) {
+							if (this.getAlias().asStringValue().equalsIgnoreCase(use)) {
+								final int index = metaField.getFieldValue("index");
+								if ((key.length() >= 5) && (key.charAt(4) == (('A' + index) - 1))) {
+									final int level = Integer.parseInt(key.substring(5));
+									return getFieldAsBoolean(War3ID.fromString(metaField.getId()), level);
+								}
+							}
+						}
+					}
+				}
 			}
 			return this.parentWC3Object.getFieldValue(key) == 1;
 		}
@@ -642,12 +678,48 @@ public final class MutableObjectData {
 			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
 				return getFieldAsInteger(MutableObjectData.this.metaNameToMetaId.get(key), 0);
 			}
+			if ((worldEditorDataType == WorldEditorDataType.ABILITIES) && key.startsWith("Data")) {
+				for (final String metaKeyString : sourceSLKMetaData.keySet()) {
+					final GameObject metaField = sourceSLKMetaData.get(metaKeyString);
+					if ("data".equals(metaField.getField("field").toLowerCase())) {
+						final String useSpecific = metaField.getField("useSpecific");
+						final String[] specificUses = useSpecific.split(",");
+						for (final String use : specificUses) {
+							if (this.getAlias().asStringValue().equalsIgnoreCase(use)) {
+								final int index = metaField.getFieldValue("index");
+								if ((key.length() >= 5) && (key.charAt(4) == (('A' + index) - 1))) {
+									final int level = Integer.parseInt(key.substring(5));
+									return getFieldAsInteger(War3ID.fromString(metaField.getId()), level);
+								}
+							}
+						}
+					}
+				}
+			}
 			return this.parentWC3Object.getFieldValue(key);
 		}
 
 		public float readSLKTagFloat(final String key) {
 			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
 				return getFieldAsFloat(MutableObjectData.this.metaNameToMetaId.get(key), 0);
+			}
+			if ((worldEditorDataType == WorldEditorDataType.ABILITIES) && key.startsWith("Data")) {
+				for (final String metaKeyString : sourceSLKMetaData.keySet()) {
+					final GameObject metaField = sourceSLKMetaData.get(metaKeyString);
+					if ("data".equals(metaField.getField("field").toLowerCase())) {
+						final String useSpecific = metaField.getField("useSpecific");
+						final String[] specificUses = useSpecific.split(",");
+						for (final String use : specificUses) {
+							if (this.getAlias().asStringValue().equalsIgnoreCase(use)) {
+								final int index = metaField.getFieldValue("index");
+								if ((key.length() >= 5) && (key.charAt(4) == (('A' + index) - 1))) {
+									final int level = Integer.parseInt(key.substring(5));
+									return getFieldAsFloat(War3ID.fromString(metaField.getId()), level);
+								}
+							}
+						}
+					}
+				}
 			}
 			try {
 				return Float.parseFloat(this.parentWC3Object.getField(key));

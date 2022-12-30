@@ -253,9 +253,10 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.internalPublishHeroStatsChanged();
 	}
 
-	public void setHeroLevel(CSimulation simulation, CUnit unit, int level, boolean showEffect) {
+	public void setHeroLevel(final CSimulation simulation, final CUnit unit, final int level,
+			final boolean showEffect) {
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
-		int neededTotalXp = gameplayConstants.getNeedHeroXPSum(level);
+		final int neededTotalXp = gameplayConstants.getNeedHeroXPSum(level - 1);
 		if (this.xp < neededTotalXp) {
 			addXp(simulation, unit, neededTotalXp - this.xp);
 		}

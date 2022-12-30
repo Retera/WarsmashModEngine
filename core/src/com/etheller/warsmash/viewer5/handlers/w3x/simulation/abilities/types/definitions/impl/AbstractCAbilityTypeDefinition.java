@@ -28,7 +28,16 @@ public abstract class AbstractCAbilityTypeDefinition<TYPE_LEVEL_DATA extends CAb
 			List<TYPE_LEVEL_DATA> levelData);
 
 	public static final War3ID getBuffId(final MutableGameObject abilityEditorData, final int level) {
-		final String buffIdString = abilityEditorData.getFieldAsString(BUFF, level);
+		return getBuffId(BUFF, abilityEditorData, level);
+	}
+
+	public static final War3ID getEffectId(final MutableGameObject abilityEditorData, final int level) {
+		return getBuffId(EFFECT, abilityEditorData, level);
+	}
+
+	private static final War3ID getBuffId(final War3ID metaKey, final MutableGameObject abilityEditorData,
+			final int level) {
+		final String buffIdString = abilityEditorData.getFieldAsString(metaKey, level);
 		War3ID buffId = War3ID.NONE;
 		try {
 			buffId = War3ID.fromString(buffIdString.split(",")[0]);

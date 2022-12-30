@@ -667,7 +667,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final Integer id = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 					final War3ID war3id = new War3ID(id);
-					CUnitType unitType = CommonEnvironment.this.simulation.getUnitData().getUnitType(war3id);
+					final CUnitType unitType = CommonEnvironment.this.simulation.getUnitData().getUnitType(war3id);
 					return unitType == null ? JassType.STRING.getNullValue()
 							: new StringJassValue(unitType.getLegacyName());
 				}
@@ -2636,6 +2636,20 @@ public class Jass2 {
 							CommonEnvironment.this.simulation.createItem(new War3ID(rawcode), (float) x, (float) y));
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitAddItemById", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit unit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int rawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+
+					final CItem newItem = CommonEnvironment.this.simulation.createItem(new War3ID(rawcode), unit.getX(),
+							unit.getY());
+					unit.getInventoryData().giveItem(simulation, unit, newItem, false);
+
+					return new HandleJassValue(itemType, newItem);
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("ChooseRandomItem", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -2762,8 +2776,8 @@ public class Jass2 {
 					final Point2D.Double whichLocation = nullable(arguments, 2, ObjectJassValueVisitor.getInstance());
 					final float facing = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 					final War3ID rawcodeId = new War3ID(rawcode);
-					float x = whichLocation == null ? 0 : (float) whichLocation.x;
-					float y = whichLocation == null ? 0 : (float) whichLocation.y;
+					final float x = whichLocation == null ? 0 : (float) whichLocation.x;
+					final float y = whichLocation == null ? 0 : (float) whichLocation.y;
 					final CUnit newUnit = CommonEnvironment.this.simulation.createUnitSimple(rawcodeId, player.getId(),
 							x, y, facing);
 					return new HandleJassValue(unitType, newUnit);
@@ -2857,9 +2871,9 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-					int level = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-					boolean fx = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
-					CAbilityHero heroData = whichUnit.getHeroData();
+					final int level = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final boolean fx = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+					final CAbilityHero heroData = whichUnit.getHeroData();
 					if (heroData != null) {
 						heroData.setHeroLevel(simulation, whichUnit, level, fx);
 					}
@@ -2923,8 +2937,8 @@ public class Jass2 {
 					final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final int techIdRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 					final int setToLevel = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
-					War3ID techIdRawcodeId = new War3ID(techIdRawcode);
-					CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
+					final War3ID techIdRawcodeId = new War3ID(techIdRawcode);
+					final CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
 					if (upgradeType != null) {
 						player.setTechResearched(simulation, techIdRawcodeId, setToLevel);
 					}
@@ -2938,8 +2952,8 @@ public class Jass2 {
 					final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final int techIdRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 					final int levels = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
-					War3ID techIdRawcodeId = new War3ID(techIdRawcode);
-					CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
+					final War3ID techIdRawcodeId = new War3ID(techIdRawcode);
+					final CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
 					if (upgradeType != null) {
 						player.addTechResearched(simulation, techIdRawcodeId, levels);
 					}
@@ -3446,8 +3460,8 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final String modelName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 					final Point2D.Double positionLoc = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-					return new HandleJassValue(effectType,
-							war3MapViewer.addSpecialEffect(modelName, (float) positionLoc.x, (float) positionLoc.y));
+					return new HandleJassValue(effectType, war3MapViewer.addSpecialEffect(modelName,
+							(float) positionLoc.x, (float) positionLoc.y, 0 /* facing */));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("AddSpellEffectById", new JassFunction() {
@@ -3459,7 +3473,7 @@ public class Jass2 {
 					final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
 					final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 					return new HandleJassValue(effectType, war3MapViewer.spawnSpellEffectEx((float) x, (float) y,
-							new War3ID(rawcode), whichEffectType, 0));
+							0 /* facing */, new War3ID(rawcode), whichEffectType, 0));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitFacing", new JassFunction() {
@@ -4111,7 +4125,7 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					War3ID spellAbilityId = ((CommonTriggerExecutionScope) triggerScope).getSpellAbilityId();
+					final War3ID spellAbilityId = ((CommonTriggerExecutionScope) triggerScope).getSpellAbilityId();
 					return new IntegerJassValue(spellAbilityId == null ? 0 : spellAbilityId.getValue());
 				}
 			});
@@ -4167,7 +4181,7 @@ public class Jass2 {
 					final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 					float x, y;
 					if (whichUnit != null) {
-						AbilityTarget rallyPoint = whichUnit.getRallyPoint();
+						final AbilityTarget rallyPoint = whichUnit.getRallyPoint();
 						if (rallyPoint != null) {
 							x = rallyPoint.getX();
 							y = rallyPoint.getY();
@@ -4189,26 +4203,26 @@ public class Jass2 {
 					final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 					HandleJassValue rallyUnit;
 					if (whichUnit != null) {
-						AbilityTarget rallyPoint = whichUnit.getRallyPoint();
+						final AbilityTarget rallyPoint = whichUnit.getRallyPoint();
 						if (rallyPoint != null) {
 							rallyUnit = rallyPoint.visit(new AbilityTargetVisitor<HandleJassValue>() {
 								@Override
-								public HandleJassValue accept(AbilityPointTarget target) {
+								public HandleJassValue accept(final AbilityPointTarget target) {
 									return unitType.getNullValue();
 								}
 
 								@Override
-								public HandleJassValue accept(CUnit target) {
+								public HandleJassValue accept(final CUnit target) {
 									return new HandleJassValue(unitType, target);
 								}
 
 								@Override
-								public HandleJassValue accept(CDestructable target) {
+								public HandleJassValue accept(final CDestructable target) {
 									return unitType.getNullValue();
 								}
 
 								@Override
-								public HandleJassValue accept(CItem target) {
+								public HandleJassValue accept(final CItem target) {
 									return unitType.getNullValue();
 								}
 							});
@@ -4230,26 +4244,26 @@ public class Jass2 {
 					final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 					HandleJassValue rallyDest;
 					if (whichUnit != null) {
-						AbilityTarget rallyPoint = whichUnit.getRallyPoint();
+						final AbilityTarget rallyPoint = whichUnit.getRallyPoint();
 						if (rallyPoint != null) {
 							rallyDest = rallyPoint.visit(new AbilityTargetVisitor<HandleJassValue>() {
 								@Override
-								public HandleJassValue accept(AbilityPointTarget target) {
+								public HandleJassValue accept(final AbilityPointTarget target) {
 									return destructableType.getNullValue();
 								}
 
 								@Override
-								public HandleJassValue accept(CUnit target) {
+								public HandleJassValue accept(final CUnit target) {
 									return destructableType.getNullValue();
 								}
 
 								@Override
-								public HandleJassValue accept(CDestructable target) {
+								public HandleJassValue accept(final CDestructable target) {
 									return new HandleJassValue(destructableType, target);
 								}
 
 								@Override
-								public HandleJassValue accept(CItem target) {
+								public HandleJassValue accept(final CItem target) {
 									return destructableType.getNullValue();
 								}
 							});

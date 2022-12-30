@@ -459,4 +459,8 @@ public class OrderIds {
 
 	// NOTE: below made up for warsmash, could benefit from getting more accurate
 	public static final int itemstatgain = 852214001;
+	public static final int itemfigurinesummon = 852214002;
+	public static final int itemxpgain = 852214003;
+	public static final int itemlifegain = 852214004;
+	public static final int itemlevelgain = 852214005;
 }

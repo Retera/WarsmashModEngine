@@ -34,15 +34,15 @@ public class MeleeUIMinimap {
 		batch.draw(this.minimapTexture, this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
 
 		for (final RenderUnit unit : units) {
-			final Texture minimapIcon = this.teamColors[unit.getSimulationUnit().getPlayerIndex()];
-			batch.draw(minimapIcon,
-					this.minimapFilledArea.x
-							+ (((unit.location[0] - this.playableMapArea.getX()) / (this.playableMapArea.getWidth()))
-									* this.minimapFilledArea.width),
-					this.minimapFilledArea.y
-							+ (((unit.location[1] - this.playableMapArea.getY()) / (this.playableMapArea.getHeight()))
-									* this.minimapFilledArea.height),
-					4, 4);
+			if (!unit.getSimulationUnit().isHidden() && !unit.getSimulationUnit().isDead()) {
+				final Texture minimapIcon = this.teamColors[unit.getSimulationUnit().getPlayerIndex()];
+				batch.draw(minimapIcon,
+						this.minimapFilledArea.x + (((unit.location[0] - this.playableMapArea.getX())
+								/ (this.playableMapArea.getWidth())) * this.minimapFilledArea.width),
+						this.minimapFilledArea.y + (((unit.location[1] - this.playableMapArea.getY())
+								/ (this.playableMapArea.getHeight())) * this.minimapFilledArea.height),
+						4, 4);
+			}
 		}
 	}
 

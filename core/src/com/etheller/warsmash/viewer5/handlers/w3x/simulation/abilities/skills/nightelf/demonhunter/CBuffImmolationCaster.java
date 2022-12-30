@@ -113,4 +113,19 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 		receiver.notAnActiveAbility();
 	}
 
+	@Override
+	public float getDurationRemaining(final CSimulation game) {
+		return 0;
+	}
+
+	@Override
+	public float getDurationMax() {
+		return 0;
+	}
+
+	@Override
+	public boolean isTimedLifeBar() {
+		return false;
+	}
+
 }

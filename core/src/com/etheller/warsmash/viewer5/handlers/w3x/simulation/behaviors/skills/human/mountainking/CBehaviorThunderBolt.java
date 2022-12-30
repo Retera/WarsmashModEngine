@@ -53,7 +53,7 @@ public class CBehaviorThunderBolt extends CAbstractRangedBehavior implements CAb
 				/ WarsmashConstants.SIMULATION_STEP_TIME);
 		final int backswingTicks = (int) (this.unit.getUnitType().getCastBackswingPoint()
 				/ WarsmashConstants.SIMULATION_STEP_TIME);
-		if (!this.doneEffect && (ticksSinceCast >= castPointTicks || ticksSinceCast >= backswingTicks)) {
+		if (!this.doneEffect && ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks))) {
 			this.doneEffect = true;
 			if (!this.unit.chargeMana(this.ability.getManaCost())) {
 				simulation.getCommandErrorListener().showNoManaError(this.unit.getPlayerIndex());
@@ -75,17 +75,19 @@ public class CBehaviorThunderBolt extends CAbstractRangedBehavior implements CAb
 	}
 
 	@Override
-	public void onLaunch(CSimulation game, AbilityTarget target) {
+	public void onLaunch(final CSimulation game, final AbilityTarget target) {
 	}
 
 	@Override
-	public void onHit(CSimulation game, AbilityTarget target) {
-		CUnit unitTarget = target.visit(AbilityTargetUnitVisitor.INSTANCE);
+	public void onHit(final CSimulation game, final AbilityTarget target) {
+		final CUnit unitTarget = target.visit(AbilityTargetUnitVisitor.INSTANCE);
 		if (unitTarget != null) {
 			unitTarget.damage(game, this.unit, CAttackType.SPELLS, CWeaponSoundTypeJass.WHOKNOWS.name(),
 					this.ability.getDamage());
-			unitTarget.add(game, new CBuffStun(game.getHandleIdAllocator().createId(), ability.getBuffId(),
-					ability.getDuration(unitTarget)));
+			if (!unitTarget.isDead()) {
+				unitTarget.add(game, new CBuffStun(game.getHandleIdAllocator().createId(), ability.getBuffId(),
+						ability.getDuration(unitTarget)));
+			}
 		}
 	}
 

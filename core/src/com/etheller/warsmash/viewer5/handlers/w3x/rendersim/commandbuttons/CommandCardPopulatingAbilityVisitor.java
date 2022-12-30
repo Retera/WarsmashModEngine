@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.BuffUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.UnitIconUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
@@ -32,6 +33,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.G
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilitySellItems;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -42,6 +45,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jas
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
@@ -56,6 +60,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	private AbilityDataUI abilityDataUI;
 	private int menuBaseOrderId;
 	private boolean multiSelect;
+	private int localPlayerIndex;
 	private boolean hasStop;
 	private final CommandCardActivationReceiverPreviewCallback previewCallback = new CommandCardActivationReceiverPreviewCallback();
 	private GameUI gameUI;
@@ -63,7 +68,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	public CommandCardPopulatingAbilityVisitor reset(final CSimulation game, final GameUI gameUI, final CUnit unit,
 			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
-			final int menuBaseOrderId, final boolean multiSelect) {
+			final int menuBaseOrderId, final boolean multiSelect, final int localPlayerIndex) {
 		this.game = game;
 		this.gameUI = gameUI;
 		this.unit = unit;
@@ -71,6 +76,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		this.abilityDataUI = abilityDataUI;
 		this.menuBaseOrderId = menuBaseOrderId;
 		this.multiSelect = multiSelect;
+		this.localPlayerIndex = localPlayerIndex;
 		this.hasStop = false;
 		this.hasCancel = false;
 		return this;
@@ -153,14 +159,14 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	}
 
 	@Override
-	public Void accept(CBuff ability) {
-		BuffUI buffUI = abilityDataUI.getBuffUI(ability.getAlias());
+	public Void accept(final CBuff ability) {
+		final BuffUI buffUI = abilityDataUI.getBuffUI(ability.getAlias());
 		addBuffIcon(ability, buffUI.getOnIconUI());
 		return null;
 	}
 
 	@Override
-	public Void accept(CAbilityRoot ability) {
+	public Void accept(final CAbilityRoot ability) {
 		return accept((GenericSingleIconActiveAbility) ability);
 	}
 
@@ -171,6 +177,17 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityReturnResources ability) {
+		return null;
+	}
+
+	@Override
+	public Void accept(final CAbilityNeutralBuilding ability) {
+		if (this.menuBaseOrderId == 0) {
+			if (ability.isShowSelectUnitButton()) {
+				addCommandButton(ability, this.abilityDataUI.getNeutralInteractUI(), ability.getHandleId(),
+						OrderIds.neutralinteract, 0, false, false);
+			}
+		}
 		return null;
 	}
 
@@ -277,8 +294,18 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		}
 	}
 
-	private void addBuffIcon(CBuff buff, final IconUI iconUI) {
-		commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(), iconUI.getUberTip());
+	private void addBuffIcon(final CBuff buff, final IconUI iconUI) {
+		if (!multiSelect) {
+			if (buff.isTimedLifeBar()) {
+				if (unit.getPlayerIndex() == localPlayerIndex) {
+					commandButtonListener.timedLifeBar(buff.getLevel(), iconUI.getToolTip(),
+							buff.getDurationRemaining(game), buff.getDurationMax());
+				}
+			}
+			else {
+				commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(), iconUI.getUberTip());
+			}
+		}
 	}
 
 	private void addCommandButton(final CAbility ability, final IconUI iconUI, final int handleId, final int orderId,
@@ -309,8 +336,31 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			final int orderId, final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton,
 			int goldCost, int lumberCost, int foodCost, final int manaCost, final int numberOverlay,
 			final char hotkey) {
+		boolean requiresPatron = false;
+		if (unit.getPlayerIndex() != localPlayerIndex) {
+			boolean controlShared = game.getPlayer(unit.getPlayerIndex()).hasAlliance(localPlayerIndex,
+					CAllianceType.SHARED_CONTROL);
+			if (!controlShared) {
+				final CAbilityNeutralBuilding neutralBuildingData = unit.getNeutralBuildingData();
+				if (neutralBuildingData != null) {
+					final CUnit selectedPlayerUnit = neutralBuildingData.getSelectedPlayerUnit(localPlayerIndex);
+					if (selectedPlayerUnit != null) {
+						controlShared = true;
+					}
+					else {
+						requiresPatron = true;
+					}
+				}
+			}
+			if (!controlShared && !requiresPatron) {
+				return;
+			}
+		}
 		ability.checkCanUse(this.game, this.unit, orderId, this.previewCallback.reset());
 		if (!this.previewCallback.omitIconEntirely) {
+			if (requiresPatron) {
+				previewCallback.missingRequirement(gameUI.getTemplates().getDecoratedString("REQUIRESNEARPATRON"));
+			}
 			final boolean active = (this.unit.getCurrentBehavior() != null)
 					&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId());
 			final boolean disabled = ((ability != null) && ability.isDisabled()) || this.previewCallback.disabled;
@@ -329,6 +379,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					disabled ? 0 : orderId, autoCastOrderId, active, autoCastActive, menuButton, toolTip, uberTip,
 					hotkey, goldCost, lumberCost, foodCost, manaCost, cooldownRemaining, cooldownMax, numberOverlay);
 		}
+
 	}
 
 	@Override
@@ -400,9 +451,9 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				final IconUI unitUI = this.abilityDataUI.getUpgradeUI(unitType, player.getTechtreeUnlocked(unitType));
 				if (unitUI != null) {
 					final CUpgradeType simulationUpgradeType = this.game.getUpgradeData().getType(unitType);
-					int unlockCount = player.getTechtreeUnlocked(unitType);
-					int goldCost = simulationUpgradeType.getGoldCost(unlockCount);
-					int lumberCost = simulationUpgradeType.getLumberCost(unlockCount);
+					final int unlockCount = player.getTechtreeUnlocked(unitType);
+					final int goldCost = simulationUpgradeType.getGoldCost(unlockCount);
+					final int lumberCost = simulationUpgradeType.getLumberCost(unlockCount);
 					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false,
 							goldCost, lumberCost, 0, 0, -1);
 				}
@@ -413,6 +464,26 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					addCommandButton(ability, this.abilityDataUI.getCancelTrainUI(), ability.getHandleId(),
 							OrderIds.cancel, 0, false, false);
 				}
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public Void accept(final CAbilitySellItems ability) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
+			int itemIndex = 0;
+			for (final War3ID unitType : ability.getItemsSold()) {
+				final IconUI unitUI = this.abilityDataUI.getItemUI(unitType).getIconUI();
+				if (unitUI != null) {
+					final CItemType simulationUnitType = this.game.getItemData().getItemType(unitType);
+					int goldCost, lumberCost;
+					goldCost = simulationUnitType.getGoldCost();
+					lumberCost = simulationUnitType.getLumberCost();
+					addCommandButton(ability, unitUI, ability.getHandleId(), localPlayerIndex | (itemIndex << 8), 0,
+							false, false, goldCost, lumberCost, 0, 0, -1);
+				}
+				itemIndex++;
 			}
 		}
 		return null;
@@ -493,39 +564,36 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 		@Override
 		public void missingRequirement(final War3ID type, final int level) {
-			this.disabled = true;
-			if (this.requirementsTextBuilder.length() == 0) {
-				this.requirementsTextBuilder.append(CommandCardPopulatingAbilityVisitor.this.gameUI.getTemplates()
-						.getDecoratedString("REQUIRESTOOLTIP"));
-				this.requirementsTextBuilder.append("|n - ");
-			}
-			else {
-				this.requirementsTextBuilder.append(" - ");
-			}
 			final CUnitType unitType = CommandCardPopulatingAbilityVisitor.this.game.getUnitData().getUnitType(type);
+			String requirementString;
 			if (unitType != null) {
-				this.requirementsTextBuilder.append(unitType.getName());
+				requirementString = unitType.getName();
 			}
 			else {
-				CUpgradeType upgradeType = game.getUpgradeData().getType(type);
+				final CUpgradeType upgradeType = game.getUpgradeData().getType(type);
 				if (upgradeType != null) {
-					UpgradeLevel upgradeLevel = upgradeType.getLevel(level - 1);
+					final UpgradeLevel upgradeLevel = upgradeType.getLevel(level - 1);
 					if (upgradeLevel != null) {
-						this.requirementsTextBuilder.append(upgradeLevel.getName());
+						requirementString = upgradeLevel.getName();
 					}
 					else {
-						this.requirementsTextBuilder.append("NOTEXTERN Unknown Level of Upgrade ('" + type + "')");
+						requirementString = "NOTEXTERN Unknown Level of Upgrade ('" + type + "')";
 					}
 				}
 				else {
-					this.requirementsTextBuilder.append("NOTEXTERN Unknown ('" + type + "')");
+					requirementString = "NOTEXTERN Unknown ('" + type + "')";
 				}
 			}
-			this.requirementsTextBuilder.append("|n");
+			missingRequirement(requirementString);
 		}
 
 		@Override
 		public void missingHeroLevelRequirement(final int level) {
+			missingRequirement(String.format(CommandCardPopulatingAbilityVisitor.this.gameUI.getTemplates()
+					.getDecoratedString("INFOPANEL_LEVEL").replace("%u", "%d"), level));
+		}
+
+		public void missingRequirement(final String requirementString) {
 			this.disabled = true;
 			if (this.requirementsTextBuilder.length() == 0) {
 				this.requirementsTextBuilder.append(CommandCardPopulatingAbilityVisitor.this.gameUI.getTemplates()
@@ -535,8 +603,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			else {
 				this.requirementsTextBuilder.append(" - ");
 			}
-			this.requirementsTextBuilder.append(String.format(CommandCardPopulatingAbilityVisitor.this.gameUI
-					.getTemplates().getDecoratedString("INFOPANEL_LEVEL").replace("%u", "%d"), level));
+			this.requirementsTextBuilder.append(requirementString);
 			this.requirementsTextBuilder.append("|n");
 		}
 
@@ -597,7 +664,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				final AbilityUI abilityUI = this.abilityDataUI.getUI(unitType);
 				if (abilityUI != null) {
 					final int nextLevel = this.unit.getAbilityLevel(unitType) + 1;
-					IconUI learnIconUI = abilityUI.getLearnIconUI();
+					final IconUI learnIconUI = abilityUI.getLearnIconUI();
 					addCommandButton(ability, learnIconUI, String.format(learnIconUI.getToolTip(), nextLevel),
 							learnIconUI.getButtonPositionX(), learnIconUI.getButtonPositionY(), ability.getHandleId(),
 							unitType.getValue(), 0, false, false, 0, 0, 0, 0, nextLevel);

@@ -789,9 +789,11 @@ public class CUnit extends CWidget {
 				this.currentBehavior.begin(game);
 			}
 			for (final COrder queuedOrder : this.orderQueue) {
-				final int abilityHandleId = queuedOrder.getAbilityHandleId();
-				final CAbility ability = game.getAbility(abilityHandleId);
-				ability.onCancelFromQueue(game, this, queuedOrder.getOrderId());
+				if (queuedOrder != null) {
+					final int abilityHandleId = queuedOrder.getAbilityHandleId();
+					final CAbility ability = game.getAbility(abilityHandleId);
+					ability.onCancelFromQueue(game, this, queuedOrder.getOrderId());
+				}
 			}
 			this.orderQueue.clear();
 			this.stateNotifier.ordersChanged();

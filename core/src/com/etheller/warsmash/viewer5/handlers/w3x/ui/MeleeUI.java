@@ -2634,12 +2634,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final MdxComplexInstance waypointModelInstance = getOrCreateWaypointIndicator(orderIndex);
 			if (iterator.hasNext()) {
 				final COrder order = iterator.next();
-				final AbilityTarget target = order.getTarget(this.war3MapViewer.simulation);
-				if (target != null) {
-					waypointModelInstance.show();
-					waypointModelInstance.detach();
-					target.visit(this.rallyPositioningVisitor.reset(waypointModelInstance));
-					waypointModelInstance.setScene(this.war3MapViewer.worldScene);
+				if (order != null) {
+					final AbilityTarget target = order.getTarget(this.war3MapViewer.simulation);
+					if (target != null) {
+						waypointModelInstance.show();
+						waypointModelInstance.detach();
+						target.visit(this.rallyPositioningVisitor.reset(waypointModelInstance));
+						waypointModelInstance.setScene(this.war3MapViewer.worldScene);
+					}
+					else {
+						waypointModelInstance.hide();
+						waypointModelInstance.detach();
+					}
 				}
 				else {
 					waypointModelInstance.hide();

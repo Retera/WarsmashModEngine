@@ -24,8 +24,8 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 	private final WarsmashClientWriter writer;
 	private final Queue<QueuedMessage> queuedMessages = new ArrayDeque<>();
 
-	public WarsmashClient(final InetAddress serverAddress, int udpPort, final War3MapViewer game, long sessionToken)
-			throws UnknownHostException, IOException {
+	public WarsmashClient(final InetAddress serverAddress, final int udpPort, final War3MapViewer game,
+			final long sessionToken) throws UnknownHostException, IOException {
 		this.udpClient = new OrderedUdpClient(serverAddress, udpPort, new WarsmashClientParser(this));
 		this.game = game;
 		this.writer = new WarsmashClientWriter(this.udpClient, sessionToken);
@@ -46,7 +46,8 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 
 	@Override
 	public void acceptJoin(final int playerIndex) {
-		this.game.setLocalPlayerIndex(playerIndex);
+		System.err.println("acceptJoin " + playerIndex);
+		this.game.setLocalPlayerServerSlot(playerIndex);
 	}
 
 	@Override

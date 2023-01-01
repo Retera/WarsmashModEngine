@@ -2408,6 +2408,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private Color selectionCircleColorEnemy;
 
+	private int localPlayerServerSlot;
+
 	/**
 	 * Returns a power of two size for the given target capacity.
 	 */
@@ -2642,6 +2644,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		// TODO this is HACKY to not do this on INIT, but it is a cheese way to try to
 		// do the networking for now!!!
 		this.localPlayerIndex = playerIndex;
+	}
+
+	public void setLocalPlayerServerSlot(final int localPlayerServerSlot) {
+		this.localPlayerServerSlot = localPlayerServerSlot;
 	}
 
 	public void setGameTurnManager(final GameTurnManager gameTurnManager) {

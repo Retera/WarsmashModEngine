@@ -150,7 +150,7 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	}
 
 	@Override
-	public void joinedGame(String gameName, String mapName, long mapChecksum) {
+	public void joinedGame(String gameName, String mapName, final long mapChecksum) {
 		if (gameName.length() > GamingNetwork.CHANNEL_NAME_MAX_LENGTH) {
 			gameName = gameName.substring(0, GamingNetwork.CHANNEL_NAME_MAX_LENGTH);
 		}
@@ -181,7 +181,7 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	}
 
 	@Override
-	public void gameCreationFailed(GameCreationFailureReason reason) {
+	public void gameCreationFailed(final GameCreationFailureReason reason) {
 		beginMessage(Protocol.GAME_CREATION_FAILED, 4);
 		this.writeBuffer.putInt(reason.ordinal());
 		send();
@@ -194,7 +194,7 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	}
 
 	@Override
-	public void channelServerMessage(String userName, ChannelServerMessageType messageType) {
+	public void channelServerMessage(String userName, final ChannelServerMessageType messageType) {
 		if (userName.length() > GamingNetwork.USERNAME_MAX_LENGTH) {
 			userName = userName.substring(0, GamingNetwork.USERNAME_MAX_LENGTH);
 		}
@@ -213,7 +213,7 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	}
 
 	@Override
-	public void sendMapData(int sequenceNumber, ByteBuffer data) {
+	public void sendMapData(final int sequenceNumber, final ByteBuffer data) {
 		beginMessage(Protocol.SEND_MAP_DATA, 4 + data.remaining());
 		this.writeBuffer.putInt(sequenceNumber);
 		this.writeBuffer.put(data);
@@ -221,21 +221,21 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	}
 
 	@Override
-	public void endSendMap(int sequenceNumber) {
+	public void endSendMap(final int sequenceNumber) {
 		beginMessage(Protocol.END_SEND_MAP, 4);
 		this.writeBuffer.putInt(sequenceNumber);
 		send();
 	}
 
 	@Override
-	public void serverErrorMessage(ServerErrorMessageType messageType) {
+	public void serverErrorMessage(final ServerErrorMessageType messageType) {
 		beginMessage(Protocol.SERVER_ERROR_MESSAGE, 4);
 		this.writeBuffer.putInt(messageType.ordinal());
 		send();
 	}
 
 	@Override
-	public void gameLobbySlotSetPlayer(int slot, String userName) {
+	public void gameLobbySlotSetPlayer(final int slot, String userName) {
 		if (userName.length() > GamingNetwork.USERNAME_MAX_LENGTH) {
 			userName = userName.substring(0, GamingNetwork.USERNAME_MAX_LENGTH);
 		}
@@ -249,7 +249,7 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	}
 
 	@Override
-	public void gameLobbySlotSetPlayerType(int slot, LobbyPlayerType playerType) {
+	public void gameLobbySlotSetPlayerType(final int slot, final LobbyPlayerType playerType) {
 		beginMessage(Protocol.GAME_LOBBY_SET_PLAYER_TYPE, 4 + 4);
 		this.writeBuffer.putInt(slot);
 		this.writeBuffer.putInt(playerType.ordinal());
@@ -257,7 +257,7 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	}
 
 	@Override
-	public void gameLobbySlotSetPlayerRace(int slot, int raceItemIndex) {
+	public void gameLobbySlotSetPlayerRace(final int slot, final int raceItemIndex) {
 		beginMessage(Protocol.GAME_LOBBY_SET_PLAYER_RACE, 4 + 4);
 		this.writeBuffer.putInt(slot);
 		this.writeBuffer.putInt(raceItemIndex);
@@ -265,7 +265,8 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 	}
 
 	@Override
-	public void gameLobbyStartGame(byte[] hostIpAddressBytes, short hostUdpPort, int yourServerPlayerSlot) {
+	public void gameLobbyStartGame(final byte[] hostIpAddressBytes, final short hostUdpPort,
+			final int yourServerPlayerSlot) {
 		beginMessage(Protocol.GAME_LOBBY_START_GAME, 4 + hostIpAddressBytes.length + 2 + 4);
 		this.writeBuffer.putInt(hostIpAddressBytes.length);
 		this.writeBuffer.put(hostIpAddressBytes);

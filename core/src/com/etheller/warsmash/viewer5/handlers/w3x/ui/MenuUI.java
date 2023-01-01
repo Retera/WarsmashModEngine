@@ -666,6 +666,7 @@ public class MenuUI {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
+						System.err.println("gameLobbySlotSetPlayerType " + slot + " " + playerType);
 						MenuUI.this.battleNetUI.gameLobbySlotSetPlayerType(slot, playerType);
 					}
 				});
@@ -676,6 +677,7 @@ public class MenuUI {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
+						System.err.println("gameLobbySlotSetPlayer " + slot + " " + userName);
 						MenuUI.this.battleNetUI.gameLobbySlotSetPlayer(slot, userName);
 					}
 				});
@@ -686,6 +688,7 @@ public class MenuUI {
 				Gdx.app.postRunnable(new Runnable() {
 					@Override
 					public void run() {
+						System.err.println("gameLobbySlotSetPlayerRace " + slot + " " + raceItemIndex);
 						MenuUI.this.battleNetUI.gameLobbySlotSetPlayerRace(slot, raceItemIndex);
 					}
 				});
@@ -1177,8 +1180,8 @@ public class MenuUI {
 													WarsmashConstants.RACE_MANAGER.getRandomRacePreference());
 										}
 										else {
-											CRace race = WarsmashConstants.RACE_MANAGER.getRace(raceItemIndex);
-											CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
+											final CRace race = WarsmashConstants.RACE_MANAGER.getRace(raceItemIndex);
+											final CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
 													.getRacePreferenceForRace(race);
 											player.setRacePref(racePreference);
 										}
@@ -2378,7 +2381,7 @@ public class MenuUI {
 	}
 
 	private String getRaceNameByCursorID(final int cursorId) {
-		CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER.get(getRaceByCursorID(cursorId));
+		final CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER.get(getRaceByCursorID(cursorId));
 		return raceEntry.getKey();
 	}
 

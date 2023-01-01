@@ -623,7 +623,7 @@ public class BattleNetUI {
 						BattleNetUI.this.customCreateCurrentMapConfig, WarsmashConstants.JASS_FILE_LIST).config();
 				int mapPlayerSlots = 0;
 				for (int i = 0; (i < (WarsmashConstants.MAX_PLAYERS - 4))
-						&& (i < BattleNetUI.this.customCreateCurrentMapConfig.getPlayerCount()); i++) {
+						&& (mapPlayerSlots < BattleNetUI.this.customCreateCurrentMapConfig.getPlayerCount()); i++) {
 					if (BattleNetUI.this.customCreateCurrentMapConfig.getPlayer(i)
 							.getController() == CMapControl.USER) {
 						mapPlayerSlots++;
@@ -949,6 +949,7 @@ public class BattleNetUI {
 		if (this.gameChatroomServerSlotToMapSlot != null) {
 			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
 			if (mapSlot != -1) {
+				System.err.println("mapSlot got mapping " + mapSlot + " for " + slot);
 				final CBasePlayer player = this.gameChatroomMapConfig.getPlayer(mapSlot);
 				switch (playerType) {
 				case OPEN:
@@ -982,9 +983,17 @@ public class BattleNetUI {
 					player.setAIDifficulty(null);
 					break;
 				}
-				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(slot, this.rootFrame, this.uiViewport,
+				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(mapSlot, this.rootFrame, this.uiViewport,
 						this.gameChatroomMapConfig, this.gameChatroomMapInfo);
 			}
+			else {
+				System.err.println(
+						"gameLobbySlotSetPlayerType(" + slot + "," + playerType + ") failed, no such map slot");
+			}
+		}
+		else {
+			System.err.println(
+					"gameLobbySlotSetPlayerType(" + slot + "," + playerType + ") failed, no ServerSlotToMapSlot");
 		}
 	}
 
@@ -992,11 +1001,18 @@ public class BattleNetUI {
 		if (this.gameChatroomServerSlotToMapSlot != null) {
 			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
 			if (mapSlot != -1) {
+				System.err.println("mapSlot got mapping " + mapSlot + " for " + slot);
 				final CBasePlayer player = this.gameChatroomMapConfig.getPlayer(mapSlot);
 				player.setName(userName);
-				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(slot, this.rootFrame, this.uiViewport,
+				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(mapSlot, this.rootFrame, this.uiViewport,
 						this.gameChatroomMapConfig, this.gameChatroomMapInfo);
 			}
+			else {
+				System.err.println("gameLobbySlotSetPlayer(" + slot + "," + userName + ") failed, no such map slot");
+			}
+		}
+		else {
+			System.err.println("gameLobbySlotSetPlayer(" + slot + "," + userName + ") failed, no ServerSlotToMapSlot");
 		}
 	}
 
@@ -1004,18 +1020,28 @@ public class BattleNetUI {
 		if (this.gameChatroomServerSlotToMapSlot != null) {
 			final int mapSlot = this.gameChatroomServerSlotToMapSlot.get(slot, -1);
 			if (mapSlot != -1) {
+				System.err.println("mapSlot got mapping " + mapSlot + " for " + slot);
 				final CBasePlayer player = this.gameChatroomMapConfig.getPlayer(mapSlot);
 				if (raceItemIndex == 0) {
 					player.setRacePref(WarsmashConstants.RACE_MANAGER.getRandomRacePreference());
 				}
 				else {
-					CRace race = WarsmashConstants.RACE_MANAGER.getRace(raceItemIndex);
-					CRacePreference racePreference = WarsmashConstants.RACE_MANAGER.getRacePreferenceForRace(race);
+					final CRace race = WarsmashConstants.RACE_MANAGER.getRace(raceItemIndex);
+					final CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
+							.getRacePreferenceForRace(race);
 					player.setRacePref(racePreference);
 				}
-				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(slot, this.rootFrame, this.uiViewport,
+				this.gameChatroomTeamSetupPane.notifyPlayerDataUpdated(mapSlot, this.rootFrame, this.uiViewport,
 						this.gameChatroomMapConfig, this.gameChatroomMapInfo);
 			}
+			else {
+				System.err.println(
+						"gameLobbySlotSetPlayerRace(" + slot + "," + raceItemIndex + ") failed, no such map slot");
+			}
+		}
+		else {
+			System.err.println(
+					"gameLobbySlotSetPlayerRace(" + slot + "," + raceItemIndex + ") failed, no ServerSlotToMapSlot");
 		}
 	}
 

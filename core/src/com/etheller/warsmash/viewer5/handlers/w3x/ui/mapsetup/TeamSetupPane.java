@@ -33,7 +33,7 @@ public class TeamSetupPane {
 	}
 
 	public void setMap(final GameUI rootFrame, final Viewport uiViewport, final War3MapConfig config,
-			final int playerCount, final War3MapW3i mapInfo, PlayerSlotPaneListener listener) {
+			final int playerCount, final War3MapW3i mapInfo, final PlayerSlotPaneListener listener) {
 		clear();
 		int usedSlots = 0;
 		if (mapInfo.hasFlag(War3MapW3iFlags.FIXED_PLAYER_SETTINGS_FOR_CUSTOM_FORCES)) {
@@ -122,13 +122,16 @@ public class TeamSetupPane {
 		this.container.positionBounds(rootFrame, uiViewport);
 	}
 
-	public void notifyPlayerDataUpdated(int mapPlayerSlot, GameUI rootFrame, Viewport uiViewport, War3MapConfig config,
-			War3MapW3i mapInfo) {
+	public void notifyPlayerDataUpdated(final int mapPlayerSlot, final GameUI rootFrame, final Viewport uiViewport,
+			final War3MapConfig config, final War3MapW3i mapInfo) {
 		final PlayerSlotPane playerSlotPane = this.mapSlotToPlayerSlot.get(mapPlayerSlot);
 		if (playerSlotPane != null) {
 			final CBasePlayer player = config.getPlayer(mapPlayerSlot);
 			playerSlotPane.setForPlayer(rootFrame, uiViewport, player,
 					mapInfo.hasFlag(War3MapW3iFlags.FIXED_PLAYER_SETTINGS_FOR_CUSTOM_FORCES));
+		}
+		else {
+			System.err.println("notifyPlayerDataUpdated: doing nothing because there was no slot: " + mapPlayerSlot);
 		}
 	}
 
@@ -143,7 +146,7 @@ public class TeamSetupPane {
 		this.forceLabels.clear();
 	}
 
-	public void clearMap(GameUI rootFrame, Viewport uiViewport) {
+	public void clearMap(final GameUI rootFrame, final Viewport uiViewport) {
 		clear();
 	}
 }

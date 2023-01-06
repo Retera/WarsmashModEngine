@@ -1,0 +1,364 @@
+{
+	"abilityList": [{
+		"id": "AHad",
+		"type": "PASSIVE",
+		"active": false,
+		"onAddAbility": [{
+			"type": "createBuffFromId",
+			"abilityId": {
+				"type": "getWar3IDFromString",
+				"id": "BHad"
+			}
+		},{
+			"type": "createUnitGroup",
+			"name": "auraUnits"
+		},{
+			"type": "storeValueLocally",
+			"key": {
+				"type": "rawString",
+				"value": "prevLevel"
+			},
+			"valueToStore": {
+				"type": "getSpellLevel"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "iterateUnitsInGroup",
+			"unitGroup": {
+				"type": "getUnitGroupByName",
+				"name": "auraUnits"
+			},
+			"iterationActions": [{
+				"type": "removeAbility",
+				"targetUnit": {
+					"type": "getEnumUnit"
+				},
+				"abilityToRemove": {
+					"type": "getLastCreatedAbility"
+				}
+			},{
+				"type": "removeUnitFromGroup",
+				"group": {
+					"type": "getUnitGroupByName",
+					"name": "auraUnits"
+				},
+				"unit": {
+					"type": "getEnumUnit"
+				}
+			}]
+		}],
+		"onDeathPreCast": [{
+			"type": "iterateUnitsInGroup",
+			"unitGroup": {
+				"type": "getUnitGroupByName",
+				"name": "auraUnits"
+			},
+			"iterationActions": [{
+				"type": "removeAbility",
+				"targetUnit": {
+					"type": "getEnumUnit"
+				},
+				"abilityToRemove": {
+					"type": "getLastCreatedAbility"
+				}
+			},{
+				"type": "removeUnitFromGroup",
+				"group": {
+					"type": "getUnitGroupByName",
+					"name": "auraUnits"
+				},
+				"unit": {
+					"type": "getEnumUnit"
+				}
+			}]
+		}],
+		"onTickPreCast": [{
+			"type": "periodicExecute",
+			"periodicActions": [{
+			"type": "if",
+			"condition": {
+				"type": "integerEqual",
+				"value1": {
+					"type": "getSpellLevel"
+				},
+				"value2": {
+					"type": "getStoredIntegerByKey",
+					"key": {
+						"type": "rawString",
+						"value": "prevLevel"
+					}
+				}
+			},
+			"thenActions": [{
+				"type": "iterateUnitsInGroup",
+				"unitGroup": {
+					"type": "getUnitGroupByName",
+					"name": "auraUnits"
+				},
+				"iterationActions": [{
+					"type": "if",
+					"condition": {
+						"type": "and",
+						"condition1": {
+							"type": "isValidTarget",
+							"target": {
+								"type": "getEnumUnit"
+							}
+						},
+						"condition2": {
+							"type": "isUnitInRangeOfUnit",
+							"caster": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getEnumUnit"
+							},
+							"range": {
+								"type": "getAbilityArea"
+							}
+						}
+					},
+					"thenActions": [],
+					"elseActions": [{
+						"type": "removeAbility",
+						"targetUnit": {
+							"type": "getEnumUnit"
+						},
+						"abilityToRemove": {
+							"type": "getLastCreatedAbility"
+						}
+					},{
+						"type": "removeUnitFromGroup",
+						"group": {
+							"type": "getUnitGroupByName",
+							"name": "auraUnits"
+						},
+						"unit": {
+							"type": "getEnumUnit"
+						}
+					}]
+				}]
+			}],
+			"elseActions": [{
+					"type": "iterateUnitsInGroup",
+					"unitGroup": {
+						"type": "getUnitGroupByName",
+						"name": "auraUnits"
+					},
+					"iterationActions": [{
+						"type": "removeAbility",
+						"targetUnit": {
+							"type": "getEnumUnit"
+						},
+						"abilityToRemove": {
+							"type": "getLastCreatedAbility"
+						}
+					},{
+						"type": "removeUnitFromGroup",
+						"group": {
+							"type": "getUnitGroupByName",
+							"name": "auraUnits"
+						},
+						"unit": {
+							"type": "getEnumUnit"
+						}
+					}]
+				}]
+			}],
+			"delaySeconds": 3
+		},{
+			"type": "periodicExecute",
+			"periodicActions": [{
+				"type": "iterateUnitsInRangeOfUnit",
+				"iterationActions": [{
+					"type": "if",
+					"condition": {
+						"type": "and",
+						"condition1": {
+							"type": "isValidTarget",
+							"target": {
+								"type": "getEnumUnit"
+							}
+						},
+						"condition2": {
+							"type": "not",
+							"condition": {
+								"type": "isUnitInGroup",
+								"group": {
+									"type": "getUnitGroupByName",
+									"name": "auraUnits"
+								},
+								"unit": {
+									"type": "getEnumUnit"
+								}
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "addAbility",
+						"targetUnit": {
+							"type": "getEnumUnit"
+						},
+						"abilityToAdd": {
+							"type": "getLastCreatedAbility"
+						}
+					},{
+						"type": "addUnitToGroup",
+						"group": {
+							"type": "getUnitGroupByName",
+							"name": "auraUnits"
+						},
+						"unit": {
+							"type": "getEnumUnit"
+						}
+					}],
+					"elseActions": []
+				}],
+				"originUnit": {
+					"type": "getCastingUnit"
+				},
+				"range": {
+					"type": "getAbilityArea"
+				}
+			}],
+			"delaySeconds": 0.4
+		}]
+	},{
+		"id": "BHad",
+		"type": "BUFF",
+		"onAddAbility": [{
+			"type": "if",
+			"condition": {
+				"type": "isUnitEqual",
+				"unit1": {
+					"type": "getCastingUnit"
+				},
+				"unit2": {
+					"type": "getParentCastingUnit"
+				}
+			},
+			"thenActions": [{
+				"type": "createSpellEffectOnUnit",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"effectToAdd": {
+					"type": "getParentAlias"
+				},
+				"effectType": "TARGET"
+			}],
+			"elseActions": [{
+				"type": "createSpellEffectOnUnit",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"effectToAdd": {
+					"type": "getAlias"
+				},
+				"effectType": "TARGET"
+			}]
+		},{
+			"type": "storeValueLocally",
+			"key": {
+				"type": "catStrings",
+				"stringList": [{
+					"type": "rawString",
+					"value": "fxid"
+				},{
+					"type": "getUnitHandleAsString",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				}]
+			},
+			"valueToStore": {
+				"type": "getLastCreatedSpellEffect"
+			}
+		},{
+			"type": "addDefenseBonus",
+			"targetUnit": {
+				"type": "getCastingUnit"
+			},
+			"defenseValue": {
+				"type": "getParentAbilityDataAsFloat",
+				"dataField": {
+					"type": "rawInteger",
+					"value": 0
+				}
+			},
+			"percentage": {
+				"type": "getParentAbilityDataAsBoolean",
+				"dataField": {
+					"type": "rawInteger",
+					"value": 1
+				}
+			}
+		},{
+			"type": "storeValueLocally",
+			"key": {
+				"type": "catStrings",
+				"stringList": [{
+					"type": "rawString",
+					"value": "prev"
+				},{
+					"type": "getUnitHandleAsString",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				}]
+			},
+			"valueToStore": {
+				"type": "getParentAbilityDataAsFloat",
+				"dataField": {
+					"type": "rawInteger",
+					"value": 0
+				}
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeSpellEffect",
+			"effectToRemove": {
+				"type": "getStoredFXByKey",
+				"key": {
+					"type": "catStrings",
+					"stringList": [{
+						"type": "rawString",
+						"value": "fxid"
+					},{
+						"type": "getUnitHandleAsString",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					}]
+				}
+			}
+		},{
+			"type": "removeDefenseBonus",
+			"targetUnit": {
+				"type": "getCastingUnit"
+			},
+			"defenseValue": {
+				"type": "getStoredFloatByKey",
+				"key": {
+					"type": "catStrings",
+					"stringList": [{
+						"type": "rawString",
+						"value": "prev"
+					},{
+						"type": "getUnitHandleAsString",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					}]
+				}
+			},
+			"percentage": {
+				"type": "getParentAbilityDataAsBoolean",
+				"dataField": {
+					"type": "rawInteger",
+					"value": 1
+				}
+			}
+		}]
+	}]
+}

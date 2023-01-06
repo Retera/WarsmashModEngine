@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
+import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +56,75 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionThunderBolt;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionWispHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionAddAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateAbilityFromId;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateBuffFromId;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateSpellEffectOnUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionRemoveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionRemoveSpellEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.ABActionAddDefenseBonus;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.ABActionRemoveDefenseBonus;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionIf;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionIterateUnitsInGroup;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionIterateUnitsInRangeOfUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionIterateUnitsInRect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionPeriodicExecute;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionStoreValueLocally;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitgroup.ABActionAddUnitToGroup;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitgroup.ABActionCreateUnitGroup;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitgroup.ABActionRemoveUnitFromGroup;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.ABAbilityCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.ABCallbackGetLastCreatedAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.ABCallbackGetStoredAbilityByKey;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABCallbackGetParentAbilityDataAsBoolean;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABCallbackRawBoolean;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetAbilityArea;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetParentAbilityDataAsFloat;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetStoredFloatByKey;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.ABCallbackGetLastCreatedSpellEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.ABCallbackGetStoredFXByKey;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.ABFXCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABCallbackGetAlias;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABCallbackGetParentAlias;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABCallbackGetStoredIDByKey;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABCallbackGetWar3IDFromString;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABCallbackGetSpellLevel;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABCallbackGetStoredIntegerByKey;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABCallbackRawInteger;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABCallbackCatStrings;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABCallbackGetUnitHandleAsString;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABCallbackRawString;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetCastingUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetEnumUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetParentCastingUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetStoredUnitByKey;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitgroupcallbacks.ABCallbackGetLastCreatedUnitGroup;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitgroupcallbacks.ABCallbackGetUnitGroupByName;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitgroupcallbacks.ABUnitGroupCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ABConditionIsUnitEqual;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ABConditionIsUnitInGroup;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ABConditionIsUnitInRangeOfUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ABConditionIsValidTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.ABConditionAnd;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.ABConditionNot;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.ABConditionOr;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatEqual;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionIntegerEqual;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderFile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 
 public class CAbilityData {
 	private static final War3ID REQUIRED_LEVEL = War3ID.fromString("arlv");
@@ -63,6 +133,7 @@ public class CAbilityData {
 	private final MutableObjectData abilityData;
 	private Map<War3ID, CAbilityType<?>> aliasToAbilityType = new HashMap<>();
 	private final Map<War3ID, CAbilityTypeDefinition> codeToAbilityTypeDefinition = new HashMap<>();
+	private final Map<War3ID, CAbilityTypeDefinition> codeToBuffTypeDefinition = new HashMap<>();
 
 	public CAbilityData(final MutableObjectData abilityData) {
 		this.abilityData = abilityData;
@@ -145,6 +216,147 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aloa"), new CAbilityTypeDefinitionLoad());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Adro"), new CAbilityTypeDefinitionDrop());
 //		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aroo"), new CAbilityTypeDefinitionRoot());
+
+		System.err.println("========================================================================");
+		System.err.println("Starting to load ability builder");
+		System.err.println("========================================================================");
+		GsonBuilder gsonBuilder = new GsonBuilder();
+
+		final RuntimeTypeAdapterFactory<ABAction> actionTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABAction.class, "type").registerSubtype(ABActionIf.class, "if")
+				.registerSubtype(ABActionAddAbility.class, "addAbility")
+				.registerSubtype(ABActionCreateSpellEffectOnUnit.class, "createSpellEffectOnUnit")
+				.registerSubtype(ABActionIterateUnitsInRangeOfUnit.class, "iterateUnitsInRangeOfUnit")
+				.registerSubtype(ABActionIterateUnitsInRect.class, "iterateUnitsInRect")
+				.registerSubtype(ABActionPeriodicExecute.class, "periodicExecute")
+				.registerSubtype(ABActionRemoveAbility.class, "removeAbility")
+				.registerSubtype(ABActionStoreValueLocally.class, "storeValueLocally")
+				.registerSubtype(ABActionRemoveSpellEffect.class, "removeSpellEffect")
+				.registerSubtype(ABActionCreateAbilityFromId.class, "createAbilityFromId")
+				.registerSubtype(ABActionCreateBuffFromId.class, "createBuffFromId")
+				.registerSubtype(ABActionAddDefenseBonus.class, "addDefenseBonus")
+				.registerSubtype(ABActionRemoveDefenseBonus.class, "removeDefenseBonus")
+				.registerSubtype(ABActionCreateUnitGroup.class, "createUnitGroup")
+				.registerSubtype(ABActionIterateUnitsInGroup.class, "iterateUnitsInGroup")
+				.registerSubtype(ABActionAddUnitToGroup.class, "addUnitToGroup")
+				.registerSubtype(ABActionRemoveUnitFromGroup.class, "removeUnitFromGroup");
+		gsonBuilder.registerTypeAdapterFactory(actionTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABCallback> callbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABCallback.class, "type").registerSubtype(ABCallbackRawBoolean.class, "rawBoolean")
+				.registerSubtype(ABCallbackGetStoredAbilityByKey.class, "getStoredAbilityByKey")
+				.registerSubtype(ABCallbackGetLastCreatedSpellEffect.class, "getLastCreatedSpellEffect")
+				.registerSubtype(ABCallbackGetStoredFXByKey.class, "getStoredFXByKey")
+				.registerSubtype(ABCallbackGetStoredIDByKey.class, "getStoredIDByKey")
+				.registerSubtype(ABCallbackGetWar3IDFromString.class, "getWar3IDFromString")
+				.registerSubtype(ABCallbackGetAlias.class, "getAlias")
+				.registerSubtype(ABCallbackGetParentAlias.class, "getParentAlias")
+				.registerSubtype(ABCallbackGetCastingUnit.class, "getCastingUnit")
+				.registerSubtype(ABCallbackGetEnumUnit.class, "getEnumUnit")
+				.registerSubtype(ABCallbackGetStoredUnitByKey.class, "getStoredUnitByKey")
+				.registerSubtype(ABCallbackGetAbilityArea.class, "getAbilityArea")
+				.registerSubtype(ABCallbackGetLastCreatedAbility.class, "getLastCreatedAbility")
+				.registerSubtype(ABCallbackGetStoredFloatByKey.class, "getStoredFloatByKey")
+				.registerSubtype(ABCallbackGetParentAbilityDataAsFloat.class, "getParentAbilityDataAsFloat")
+				.registerSubtype(ABCallbackGetUnitGroupByName.class, "getUnitGroupByName")
+				.registerSubtype(ABCallbackGetLastCreatedUnitGroup.class, "getLastCreatedUnitGroup")
+				.registerSubtype(ABCallbackRawInteger.class, "rawInteger")
+				.registerSubtype(ABCallbackGetStoredIntegerByKey.class, "getStoredIntegerByKey")
+				.registerSubtype(ABCallbackGetParentAbilityDataAsBoolean.class, "getParentAbilityDataAsBoolean")
+				.registerSubtype(ABCallbackRawString.class, "rawString")
+				.registerSubtype(ABCallbackGetParentCastingUnit.class, "getParentCastingUnit")
+				.registerSubtype(ABCallbackCatStrings.class, "catStrings")
+				.registerSubtype(ABCallbackGetUnitHandleAsString.class, "getUnitHandleAsString")
+				.registerSubtype(ABCallbackGetSpellLevel.class, "getSpellLevel");
+		gsonBuilder.registerTypeAdapterFactory(callbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABAbilityCallback> abilityCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABAbilityCallback.class, "type")
+				.registerSubtype(ABCallbackGetStoredAbilityByKey.class, "getStoredAbilityByKey")
+				.registerSubtype(ABCallbackGetLastCreatedAbility.class, "getLastCreatedAbility");
+		gsonBuilder.registerTypeAdapterFactory(abilityCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABBooleanCallback> booleanCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABBooleanCallback.class, "type").registerSubtype(ABCallbackRawBoolean.class, "rawBoolean")
+				.registerSubtype(ABCallbackGetParentAbilityDataAsBoolean.class, "getParentAbilityDataAsBoolean");
+		gsonBuilder.registerTypeAdapterFactory(booleanCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABFloatCallback> floatCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABFloatCallback.class, "type").registerSubtype(ABCallbackGetAbilityArea.class, "getAbilityArea")
+				.registerSubtype(ABCallbackGetStoredFloatByKey.class, "getStoredFloatByKey")
+				.registerSubtype(ABCallbackGetParentAbilityDataAsFloat.class, "getParentAbilityDataAsFloat");
+		gsonBuilder.registerTypeAdapterFactory(floatCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABFXCallback> fxCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABFXCallback.class, "type")
+				.registerSubtype(ABCallbackGetLastCreatedSpellEffect.class, "getLastCreatedSpellEffect")
+				.registerSubtype(ABCallbackGetStoredFXByKey.class, "getStoredFXByKey");
+		gsonBuilder.registerTypeAdapterFactory(fxCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABIDCallback> idCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABIDCallback.class, "type").registerSubtype(ABCallbackGetStoredIDByKey.class, "getStoredIDByKey")
+				.registerSubtype(ABCallbackGetWar3IDFromString.class, "getWar3IDFromString")
+				.registerSubtype(ABCallbackGetAlias.class, "getAlias")
+				.registerSubtype(ABCallbackGetParentAlias.class, "getParentAlias");
+		gsonBuilder.registerTypeAdapterFactory(idCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABIntegerCallback> integerCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABIntegerCallback.class, "type").registerSubtype(ABCallbackRawInteger.class, "rawInteger")
+				.registerSubtype(ABCallbackGetStoredIntegerByKey.class, "getStoredIntegerByKey")
+				.registerSubtype(ABCallbackGetSpellLevel.class, "getSpellLevel");
+		gsonBuilder.registerTypeAdapterFactory(integerCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABStringCallback> stringCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABStringCallback.class, "type").registerSubtype(ABCallbackRawString.class, "rawString")
+				.registerSubtype(ABCallbackCatStrings.class, "catStrings")
+				.registerSubtype(ABCallbackGetUnitHandleAsString.class, "getUnitHandleAsString");
+		gsonBuilder.registerTypeAdapterFactory(stringCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABUnitCallback> unitCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABUnitCallback.class, "type").registerSubtype(ABCallbackGetCastingUnit.class, "getCastingUnit")
+				.registerSubtype(ABCallbackGetEnumUnit.class, "getEnumUnit")
+				.registerSubtype(ABCallbackGetStoredUnitByKey.class, "getStoredUnitByKey")
+				.registerSubtype(ABCallbackGetParentCastingUnit.class, "getParentCastingUnit");
+		gsonBuilder.registerTypeAdapterFactory(unitCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABUnitGroupCallback> unitGroupCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABUnitGroupCallback.class, "type")
+				.registerSubtype(ABCallbackGetUnitGroupByName.class, "getUnitGroupByName")
+				.registerSubtype(ABCallbackGetLastCreatedUnitGroup.class, "getLastCreatedUnitGroup");
+		gsonBuilder.registerTypeAdapterFactory(unitGroupCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABCondition> conditionTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABCondition.class, "type").registerSubtype(ABConditionAnd.class, "and")
+				.registerSubtype(ABConditionOr.class, "or").registerSubtype(ABConditionNot.class, "not")
+				.registerSubtype(ABConditionFloatEqual.class, "floatEqual")
+				.registerSubtype(ABConditionIntegerEqual.class, "integerEqual")
+				.registerSubtype(ABConditionIsValidTarget.class, "isValidTarget")
+				.registerSubtype(ABConditionIsUnitInRangeOfUnit.class, "isUnitInRangeOfUnit")
+				.registerSubtype(ABConditionIsUnitInGroup.class, "isUnitInGroup")
+				.registerSubtype(ABConditionIsUnitEqual.class, "isUnitEqual");
+		gsonBuilder.registerTypeAdapterFactory(conditionTypeFactory);
+
+		Gson gson = gsonBuilder.create();
+
+		AbilityBuilderFile behaviors = null;
+		try {
+			behaviors = gson.fromJson(new FileReader("BehaviorsConfigFile.json"), AbilityBuilderFile.class);
+			for (AbilityBuilderParser behavior : behaviors.getAbilityList()) {
+				if (behavior.getType().equals(AbilityBuilderType.BUFF)) {
+					this.codeToBuffTypeDefinition.put(War3ID.fromString(behavior.getId()), behavior.createDefinition());
+				} else {
+					this.codeToAbilityTypeDefinition.put(War3ID.fromString(behavior.getId()),
+							behavior.createDefinition());
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		System.err.println("========================================================================");
+		System.err.println("registered abilities");
+		System.err.println("========================================================================");
+
 	}
 
 	public void registerJassType(final War3ID war3id, final CAbilityTypeJassDefinition whichAbilityType) {
@@ -165,6 +377,17 @@ public class CAbilityData {
 				this.aliasToAbilityType.put(alias, abilityType);
 			}
 		}
+		return abilityType;
+	}
+
+	public CAbilityType<?> getBuffType(final War3ID code) {
+		CAbilityType<?> abilityType = null;
+		final CAbilityTypeDefinition buffTypeDefinition = this.codeToBuffTypeDefinition.get(code);
+		if (buffTypeDefinition != null) {
+			abilityType = buffTypeDefinition.createAbilityType(code, null);
+			this.aliasToAbilityType.put(code, abilityType);
+		}
+
 		return abilityType;
 	}
 

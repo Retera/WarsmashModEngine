@@ -13,4 +13,6 @@ public interface GenericSingleIconActiveAbility extends CLevelingAbility, Single
 
 	int getUIManaCost();
 
+	float getUIAreaOfEffect();
+
 }

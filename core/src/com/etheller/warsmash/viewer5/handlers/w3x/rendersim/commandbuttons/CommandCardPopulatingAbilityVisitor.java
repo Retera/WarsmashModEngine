@@ -160,7 +160,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CBuff ability) {
-		final BuffUI buffUI = abilityDataUI.getBuffUI(ability.getAlias());
+		final BuffUI buffUI = this.abilityDataUI.getBuffUI(ability.getAlias());
 		addBuffIcon(ability, buffUI.getOnIconUI());
 		return null;
 	}
@@ -295,15 +295,16 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	}
 
 	private void addBuffIcon(final CBuff buff, final IconUI iconUI) {
-		if (!multiSelect) {
+		if (!this.multiSelect) {
 			if (buff.isTimedLifeBar()) {
-				if (unit.getPlayerIndex() == localPlayerIndex) {
-					commandButtonListener.timedLifeBar(buff.getLevel(), iconUI.getToolTip(),
-							buff.getDurationRemaining(game), buff.getDurationMax());
+				if (this.unit.getPlayerIndex() == this.localPlayerIndex) {
+					this.commandButtonListener.timedLifeBar(buff.getLevel(), iconUI.getToolTip(),
+							buff.getDurationRemaining(this.game), buff.getDurationMax());
 				}
 			}
 			else {
-				commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(), iconUI.getUberTip());
+				this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
+						iconUI.getUberTip());
 			}
 		}
 	}
@@ -337,13 +338,13 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			int goldCost, int lumberCost, int foodCost, final int manaCost, final int numberOverlay,
 			final char hotkey) {
 		boolean requiresPatron = false;
-		if (unit.getPlayerIndex() != localPlayerIndex) {
-			boolean controlShared = game.getPlayer(unit.getPlayerIndex()).hasAlliance(localPlayerIndex,
+		if (this.unit.getPlayerIndex() != this.localPlayerIndex) {
+			boolean controlShared = this.game.getPlayer(this.unit.getPlayerIndex()).hasAlliance(this.localPlayerIndex,
 					CAllianceType.SHARED_CONTROL);
 			if (!controlShared) {
-				final CAbilityNeutralBuilding neutralBuildingData = unit.getNeutralBuildingData();
+				final CAbilityNeutralBuilding neutralBuildingData = this.unit.getNeutralBuildingData();
 				if (neutralBuildingData != null) {
-					final CUnit selectedPlayerUnit = neutralBuildingData.getSelectedPlayerUnit(localPlayerIndex);
+					final CUnit selectedPlayerUnit = neutralBuildingData.getSelectedPlayerUnit(this.localPlayerIndex);
 					if (selectedPlayerUnit != null) {
 						controlShared = true;
 					}
@@ -359,7 +360,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		ability.checkCanUse(this.game, this.unit, orderId, this.previewCallback.reset());
 		if (!this.previewCallback.omitIconEntirely) {
 			if (requiresPatron) {
-				previewCallback.missingRequirement(gameUI.getTemplates().getDecoratedString("REQUIRESNEARPATRON"));
+				this.previewCallback
+						.missingRequirement(this.gameUI.getTemplates().getDecoratedString("REQUIRESNEARPATRON"));
 			}
 			final boolean active = (this.unit.getCurrentBehavior() != null)
 					&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId());
@@ -448,10 +450,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			}
 			for (final War3ID unitType : ability.getResearchesAvailable()) {
 				final CPlayer player = this.game.getPlayer(this.unit.getPlayerIndex());
-				final IconUI unitUI = this.abilityDataUI.getUpgradeUI(unitType, player.getTechtreeUnlocked(unitType));
+				final int unlockCount = player.getTechtreeUnlocked(unitType);
+				final IconUI unitUI = this.abilityDataUI.getUpgradeUI(unitType, unlockCount);
 				if (unitUI != null) {
 					final CUpgradeType simulationUpgradeType = this.game.getUpgradeData().getType(unitType);
-					final int unlockCount = player.getTechtreeUnlocked(unitType);
 					final int goldCost = simulationUpgradeType.getGoldCost(unlockCount);
 					final int lumberCost = simulationUpgradeType.getLumberCost(unlockCount);
 					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false,
@@ -480,8 +482,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					int goldCost, lumberCost;
 					goldCost = simulationUnitType.getGoldCost();
 					lumberCost = simulationUnitType.getLumberCost();
-					addCommandButton(ability, unitUI, ability.getHandleId(), localPlayerIndex | (itemIndex << 8), 0,
-							false, false, goldCost, lumberCost, 0, 0, -1);
+					addCommandButton(ability, unitUI, ability.getHandleId(), this.localPlayerIndex | (itemIndex << 8),
+							0, false, false, goldCost, lumberCost, 0, 0, -1);
 				}
 				itemIndex++;
 			}
@@ -570,7 +572,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				requirementString = unitType.getName();
 			}
 			else {
-				final CUpgradeType upgradeType = game.getUpgradeData().getType(type);
+				final CUpgradeType upgradeType = CommandCardPopulatingAbilityVisitor.this.game.getUpgradeData()
+						.getType(type);
 				if (upgradeType != null) {
 					final UpgradeLevel upgradeLevel = upgradeType.getLevel(level - 1);
 					if (upgradeLevel != null) {

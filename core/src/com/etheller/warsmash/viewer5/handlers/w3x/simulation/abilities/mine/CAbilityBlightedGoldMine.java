@@ -9,7 +9,6 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorAcolyteHarvest;
@@ -20,10 +19,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
-public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
+public class CAbilityBlightedGoldMine extends CAbilityOverlayedMine {
 	public static final int NO_MINER = -1;
-	private CUnit parentGoldMineUnit;
-	private CAbilityGoldMine parentGoldMineAbility;
 	private int goldPerInterval;
 	private float intervalDuration;
 	private int maxNumberOfMiners;
@@ -46,11 +43,6 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 		this.minerLocs = new Vector2[maxNumberOfMiners];
 	}
 
-	public void setParentMine(final CUnit parentGoldMineUnit, final CAbilityGoldMine parentGoldMineAbility) {
-		this.parentGoldMineUnit = parentGoldMineUnit;
-		this.parentGoldMineAbility = parentGoldMineAbility;
-	}
-
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
 		for (int i = 0; i < this.minerLocs.length; i++) {
@@ -62,7 +54,7 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 					+ (float) (StrictMath.sin(thisMinerAngle) * this.radiusOfMiningRing);
 			this.minerLocs[i] = new Vector2(harvestStandX, harvestStandY);
 			final SimulationRenderComponent spellEffect = game.spawnSpellEffectOnPoint(harvestStandX, harvestStandY,
-					(float) (thisMinerAngle), getAlias(), CEffectType.EFFECT, 0);
+					(float) (StrictMath.toDegrees(thisMinerAngle)), getAlias(), CEffectType.EFFECT, 0);
 			this.spellEffects.add(spellEffect);
 		}
 	}
@@ -83,13 +75,15 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 			final int nextIncomeTick = this.lastIncomeTick
 					+ (int) (currentInterval / WarsmashConstants.SIMULATION_STEP_TIME);
 			final int currentTurnTick = game.getGameTurnTick();
-			if ((currentTurnTick >= nextIncomeTick) && (this.parentGoldMineAbility != null)
-					&& (this.parentGoldMineAbility.getGold() > 0)) {
+			final CAbilityGoldMine parentGoldMineAbility = getParentGoldMineAbility();
+			final int totalGoldAvailable = parentGoldMineAbility.getGold();
+			if ((currentTurnTick >= nextIncomeTick) && (parentGoldMineAbility != null) && (totalGoldAvailable > 0)) {
 				this.lastIncomeTick = currentTurnTick;
 				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
-				player.setGold(player.getGold() + this.goldPerInterval);
-				this.parentGoldMineAbility.setGold(this.parentGoldMineAbility.getGold() - this.goldPerInterval);
-				game.unitGainResourceEvent(unit, player.getId(), ResourceType.GOLD, this.goldPerInterval);
+				final int goldGained = Math.min(totalGoldAvailable, this.goldPerInterval);
+				player.addGold(goldGained);
+				parentGoldMineAbility.setGold(totalGoldAvailable - goldGained);
+				game.unitGainResourceEvent(unit, player.getId(), ResourceType.GOLD, goldGained);
 			}
 		}
 //		final boolean empty = this.activeMiners.isEmpty();
@@ -220,27 +214,7 @@ public class CAbilityBlightedGoldMine extends AbstractGenericNoIconAbility {
 		this.radiusOfMiningRing = radiusOfMiningRing;
 	}
 
-	@Override
-	public void onDeath(final CSimulation game, final CUnit cUnit) {
-		if (this.parentGoldMineUnit != null) {
-			this.parentGoldMineUnit.setHidden(false);
-		}
-	}
-
 	public Vector2 getMinerLoc(final int index) {
 		return this.minerLocs[index];
-	}
-
-	public void setGold(final int gold) {
-		if (this.parentGoldMineAbility != null) {
-			this.parentGoldMineAbility.setGold(gold);
-		}
-	}
-
-	public int getGold() {
-		if (this.parentGoldMineAbility != null) {
-			return this.parentGoldMineAbility.getGold();
-		}
-		return 0;
 	}
 }

@@ -9,11 +9,14 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGenericDoNothing;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityDropInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemExperienceGain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemFigurineSummon;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemLevelGain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemManaBonus;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemPermanentLifeGain;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityEntangledMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root.CAbilityEntangleGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilityBlizzard;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilitySummonWaterElemental;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.darkranger.CAbilityCharm;
@@ -24,6 +27,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionCargoHold;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionCargoHoldBurrow;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionCargoHoldEntangledMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionCarrionSwarmDummy;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionChannelTest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionColdArrows;
@@ -48,6 +52,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionNeutralBuilding;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionPhoenixFire;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionReturnResources;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionShopPurchaseItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionShopSharing;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionSpellBase;
@@ -86,9 +91,23 @@ public class CAbilityData {
 		// Blood Mage:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Apxf"), new CAbilityTypeDefinitionPhoenixFire());
 
+		// ----Orc----
+
+		// Burrow:
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Abun"), new CAbilityTypeDefinitionCargoHoldBurrow());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Astd"), new CAbilityTypeDefinitionStandDown());
+
 		// ----Night Elf----
 		// Demon Hunter:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AEim"), new CAbilityTypeDefinitionImmolation());
+
+		// Entangled Mine:
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aenc"),
+				new CAbilityTypeDefinitionCargoHoldEntangledMine());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aent"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityEntangleGoldMine(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aegm"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityEntangledMine(handleId, alias)));
 
 		// ----Neutral----
 		// Dark Ranger:
@@ -140,11 +159,11 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIlm"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityItemLevelGain(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Acar"), new CAbilityTypeDefinitionCargoHold());
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Abun"), new CAbilityTypeDefinitionCargoHoldBurrow());
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Astd"), new CAbilityTypeDefinitionStandDown());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aloa"), new CAbilityTypeDefinitionLoad());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Adro"), new CAbilityTypeDefinitionDrop());
-//		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aroo"), new CAbilityTypeDefinitionRoot());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Adri"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityDropInstant(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aroo"), new CAbilityTypeDefinitionRoot());
 	}
 
 	public void registerJassType(final War3ID war3id, final CAbilityTypeJassDefinition whichAbilityType) {

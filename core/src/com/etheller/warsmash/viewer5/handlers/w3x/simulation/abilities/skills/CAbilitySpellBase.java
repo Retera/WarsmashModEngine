@@ -19,7 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
-public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmartActiveAbility {
+public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmartActiveAbility implements CAbilitySpell {
 	private int manaCost;
 	private float castRange;
 	private float cooldown;
@@ -33,26 +33,27 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		super(handleId, alias);
 	}
 
+	@Override
 	public final void populate(final MutableGameObject worldEditorAbility, final int level) {
-		manaCost = worldEditorAbility.getFieldAsInteger(AbilityFields.MANA_COST, level);
-		castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE, level);
-		cooldown = worldEditorAbility.readSLKTagFloat("Cool" + level);
-		castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME, level);
-		targetsAllowed = CTargetType
+		this.manaCost = worldEditorAbility.getFieldAsInteger(AbilityFields.MANA_COST, level);
+		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE, level);
+		this.cooldown = worldEditorAbility.readSLKTagFloat("Cool" + level);
+		this.castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME, level);
+		this.targetsAllowed = CTargetType
 				.parseTargetTypeSet(worldEditorAbility.getFieldAsString(AbilityFields.TARGETS_ALLOWED, level));
 		final String animNames = worldEditorAbility.getFieldAsString(AbilityFields.ANIM_NAMES, 0);
 
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
-		castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
-		Sequence.populateTags(primaryTags, castingSecondaryTags, animNames);
+		this.castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, this.castingSecondaryTags, animNames);
 		if (primaryTags.isEmpty()) {
-			castingPrimaryTag = null;
+			this.castingPrimaryTag = null;
 		}
 		else {
-			castingPrimaryTag = primaryTags.iterator().next();
+			this.castingPrimaryTag = primaryTags.iterator().next();
 		}
-		if (castingSecondaryTags.isEmpty()) {
-			castingSecondaryTags = SequenceUtils.SPELL;
+		if (this.castingSecondaryTags.isEmpty()) {
+			this.castingSecondaryTags = SequenceUtils.SPELL;
 		}
 
 		populateData(worldEditorAbility, level);
@@ -100,32 +101,32 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	public int getManaCost() {
-		return manaCost;
+		return this.manaCost;
 	}
 
 	@Override
 	public int getUIManaCost() {
-		return manaCost;
+		return this.manaCost;
 	}
 
 	public float getCastRange() {
-		return castRange;
+		return this.castRange;
 	}
 
 	public float getCooldown() {
-		return cooldown;
+		return this.cooldown;
 	}
 
 	public float getCastingTime() {
-		return castingTime;
+		return this.castingTime;
 	}
 
 	public EnumSet<CTargetType> getTargetsAllowed() {
-		return targetsAllowed;
+		return this.targetsAllowed;
 	}
 
 	public float getCooldownRemaining() {
-		return cooldownRemaining;
+		return this.cooldownRemaining;
 	}
 
 	public void setManaCost(final int manaCost) {
@@ -153,11 +154,19 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	public PrimaryTag getCastingPrimaryTag() {
-		return castingPrimaryTag;
+		return this.castingPrimaryTag;
+	}
+
+	public void setCastingPrimaryTag(final PrimaryTag castingPrimaryTag) {
+		this.castingPrimaryTag = castingPrimaryTag;
 	}
 
 	public EnumSet<SecondaryTag> getCastingSecondaryTags() {
-		return castingSecondaryTags;
+		return this.castingSecondaryTags;
+	}
+
+	public void setCastingSecondaryTags(final EnumSet<SecondaryTag> castingSecondaryTags) {
+		this.castingSecondaryTags = castingSecondaryTags;
 	}
 
 }

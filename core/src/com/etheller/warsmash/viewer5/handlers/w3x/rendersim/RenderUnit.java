@@ -66,6 +66,7 @@ public class RenderUnit implements RenderWidget {
 	public long lastUnitResponseEndTimeMillis;
 	private boolean corpse;
 	private boolean boneCorpse;
+	private boolean building;
 	private RenderUnitTypeData typeData;
 	public MdxModel specialArtModel;
 	public SplatMover uberSplat;
@@ -115,7 +116,8 @@ public class RenderUnit implements RenderWidget {
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
-		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+		TokenLoop:
+		for (final String animationName : requiredAnimationNames.split(",")) {
 			final String upperCaseToken = animationName.toUpperCase();
 			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 				if (upperCaseToken.equals(secondaryTag.name())) {
@@ -156,6 +158,7 @@ public class RenderUnit implements RenderWidget {
 		this.instance = instance;
 		this.row = row;
 		this.soundset = soundset;
+		this.building = simulationUnit.isBuilding();
 	}
 
 	public void populateCommandCard(final CSimulation game, final GameUI gameUI,
@@ -280,9 +283,27 @@ public class RenderUnit implements RenderWidget {
 		final boolean dead = this.simulationUnit.isDead();
 		final boolean corpse = this.simulationUnit.isCorpse();
 		final boolean boneCorpse = this.simulationUnit.isBoneCorpse();
-		if (dead && !this.dead) {
-			this.unitAnimationListenerImpl.playAnimation(true, PrimaryTag.DEATH, SequenceUtils.EMPTY, 1.0f, true);
-			removeSplats(map);
+		final boolean building = this.simulationUnit.isBuilding();
+		if (dead) {
+			if (!this.dead) {
+				this.unitAnimationListenerImpl.playAnimation(true, PrimaryTag.DEATH, SequenceUtils.EMPTY, 1.0f, true);
+				removeSplats(map);
+			}
+		}
+		else if (building != this.building) {
+			if (building) {
+				if (this.shadow != null) {
+					this.shadow.hide();
+				}
+				createBuildingDecalSplats(map);
+			}
+			else {
+				if (this.shadow != null) {
+					this.shadow.show(map.terrain.centerOffset);
+				}
+				removeBuildingDecalSplats(map);
+			}
+			this.building = building;
 		}
 		if (boneCorpse && !this.boneCorpse) {
 			if (this.simulationUnit.getUnitType().isHero()) {
@@ -436,6 +457,18 @@ public class RenderUnit implements RenderWidget {
 			this.shadow.destroy(Gdx.gl30, map.terrain.centerOffset);
 			this.shadow = null;
 		}
+		removeBuildingDecalSplats(map);
+		if (this.selectionCircle != null) {
+			this.selectionCircle.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.selectionCircle = null;
+		}
+		if (this.selectionPreviewHighlight != null) {
+			this.selectionPreviewHighlight.destroy(Gdx.gl30, map.terrain.centerOffset);
+			this.selectionPreviewHighlight = null;
+		}
+	}
+
+	public void removeBuildingDecalSplats(final War3MapViewer map) {
 		if (this.buildingShadowInstance != null) {
 			this.buildingShadowInstance.remove();
 			this.buildingShadowInstance = null;
@@ -444,13 +477,23 @@ public class RenderUnit implements RenderWidget {
 			this.uberSplat.destroy(Gdx.gl30, map.terrain.centerOffset);
 			this.uberSplat = null;
 		}
-		if (this.selectionCircle != null) {
-			this.selectionCircle.destroy(Gdx.gl30, map.terrain.centerOffset);
-			this.selectionCircle = null;
+	}
+
+	public void createBuildingDecalSplats(final War3MapViewer map) {
+		final float unitX = this.simulationUnit.getX();
+		final float unitY = this.simulationUnit.getY();
+		if (this.buildingShadowInstance == null) {
+			final String buildingShadow = this.typeData.getBuildingShadow();
+			if (buildingShadow != null) {
+				this.buildingShadowInstance = map.terrain.addShadow(buildingShadow, unitX, unitY);
+			}
 		}
-		if (this.selectionPreviewHighlight != null) {
-			this.selectionPreviewHighlight.destroy(Gdx.gl30, map.terrain.centerOffset);
-			this.selectionPreviewHighlight = null;
+		if (this.uberSplat == null) {
+			final String uberSplatTexturePath = this.typeData.getUberSplat();
+			if (uberSplatTexturePath != null) {
+				this.uberSplat = map.addUberSplatIngame(unitX, unitY, uberSplatTexturePath,
+						this.typeData.getUberSplatScaleValue());
+			}
 		}
 	}
 

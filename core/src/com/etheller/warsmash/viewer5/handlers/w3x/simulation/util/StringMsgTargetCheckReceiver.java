@@ -64,6 +64,11 @@ public final class StringMsgTargetCheckReceiver<TARGET_TYPE> implements AbilityT
 	}
 
 	@Override
+	public void mustTargetPeon() {
+		this.message = "NOTEXTERN: Must target a unit of specific type";
+	}
+
+	@Override
 	public void notHolyBoltTarget() {
 		this.message = "NOTEXTERN: Holybolttarget=Must target friendly living units or enemy Undead units.";
 	}

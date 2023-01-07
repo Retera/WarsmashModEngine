@@ -9,10 +9,14 @@ public class RenderUnitTypeData {
 	private final float animationRunSpeed;
 	private final float scalingValue;
 	private final float animationWalkSpeed;
+	private final String buildingShadow;
+	private final String uberSplat;
+	private final float uberSplatScaleValue;
 
 	public RenderUnitTypeData(final float maxPitch, final float maxRoll, final float sampleRadius,
 			final boolean allowCustomTeamColor, final int teamColor, final float animationRunSpeed,
-			final float animationWalkSpeed, final float scalingValue) {
+			final float animationWalkSpeed, final float scalingValue, final String buildingShadow,
+			final String uberSplat, final float uberSplatScaleValue) {
 		this.maxPitch = maxPitch;
 		this.maxRoll = maxRoll;
 		this.sampleRadius = sampleRadius;
@@ -21,6 +25,9 @@ public class RenderUnitTypeData {
 		this.animationRunSpeed = animationRunSpeed;
 		this.animationWalkSpeed = animationWalkSpeed;
 		this.scalingValue = scalingValue;
+		this.buildingShadow = buildingShadow;
+		this.uberSplat = uberSplat;
+		this.uberSplatScaleValue = uberSplatScaleValue;
 	}
 
 	public float getMaxPitch() {
@@ -53,5 +60,17 @@ public class RenderUnitTypeData {
 
 	public float getScalingValue() {
 		return this.scalingValue;
+	}
+
+	public String getBuildingShadow() {
+		return this.buildingShadow;
+	}
+
+	public String getUberSplat() {
+		return this.uberSplat;
+	}
+
+	public float getUberSplatScaleValue() {
+		return this.uberSplatScaleValue;
 	}
 }

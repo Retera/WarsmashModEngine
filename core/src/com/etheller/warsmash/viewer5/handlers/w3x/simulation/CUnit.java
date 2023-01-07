@@ -34,6 +34,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityOverlayedMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -159,13 +160,13 @@ public class CUnit extends CWidget {
 
 	private List<CUnitAttack> unitSpecificAttacks;
 	private boolean disableAttacks;
+
 	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
 	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
-			final int maximumMana, final int speed, final CUnitType unitType,
-			final RemovablePathingMapInstance pathingInstance) {
+			final int maximumMana, final int speed, final CUnitType unitType) {
 		super(handleId, x, y, life);
 		this.playerIndex = playerIndex;
 		this.typeId = typeId;
@@ -176,7 +177,6 @@ public class CUnit extends CWidget {
 		this.manaRegen = unitType.getManaRegen();
 		this.maximumMana = maximumMana;
 		this.speed = speed;
-		this.pathingInstance = pathingInstance;
 		this.flyHeight = unitType.getDefaultFlyingHeight();
 		this.unitType = unitType;
 		this.classifications.addAll(unitType.getClassifications());
@@ -193,6 +193,23 @@ public class CUnit extends CWidget {
 		}
 		this.currentBehavior = this.defaultBehavior;
 		this.currentBehavior.begin(game);
+	}
+
+	public void regeneratePathingInstance(final CSimulation game, final BufferedImage buildingPathingPixelMap) {
+		float unitX = getX();
+		float unitY = getY();
+		unitX = (float) Math.floor(unitX / 64f) * 64f;
+		unitY = (float) Math.floor(unitY / 64f) * 64f;
+		if (((buildingPathingPixelMap.getWidth() / 2) % 2) == 1) {
+			unitX += 32f;
+		}
+		if (((buildingPathingPixelMap.getHeight() / 2) % 2) == 1) {
+			unitY += 32f;
+		}
+		this.pathingInstance = game.getPathingGrid().blitRemovablePathingOverlayTexture(unitX, unitY,
+				270 /* no rotation, face forward */, buildingPathingPixelMap);
+		setX(unitX);
+		setY(unitY);
 	}
 
 	public float getLifeRegenBonus() {
@@ -231,7 +248,7 @@ public class CUnit extends CWidget {
 	}
 
 	public float getManaRegenBonus() {
-		return manaRegenBonus;
+		return this.manaRegenBonus;
 	}
 
 	public void setAgilityDefensePermanentBonus(final int agilityDefensePermanentBonus) {
@@ -250,7 +267,7 @@ public class CUnit extends CWidget {
 	}
 
 	public int getPermanentDefenseBonus() {
-		return permanentDefenseBonus;
+		return this.permanentDefenseBonus;
 	}
 
 	public void setTemporaryDefenseBonus(final float temporaryDefenseBonus) {
@@ -283,7 +300,7 @@ public class CUnit extends CWidget {
 		this.abilities.add(ability);
 		simulation.onAbilityAddedToUnit(this, ability);
 		ability.onAdd(simulation, this);
-		stateNotifier.abilitiesChanged();
+		this.stateNotifier.abilitiesChanged();
 	}
 
 	public void remove(final CSimulation simulation, final CAbility ability) {
@@ -358,7 +375,7 @@ public class CUnit extends CWidget {
 
 	public void setMana(final float mana) {
 		this.mana = mana;
-		stateNotifier.manaChanged();
+		this.stateNotifier.manaChanged();
 	}
 
 	public void setMaximumLife(final int maximumLife) {
@@ -974,7 +991,7 @@ public class CUnit extends CWidget {
 		int checkX = 0;
 		int checkY = 0;
 		float collisionSize;
-		if (this.unitType.getBuildingPathingPixelMap() != null) {
+		if (isBuilding() && (this.unitType.getBuildingPathingPixelMap() != null)) {
 			tempRect.setSize(this.unitType.getBuildingPathingPixelMap().getWidth() * 32,
 					this.unitType.getBuildingPathingPixelMap().getHeight() * 32);
 			collisionSize = tempRect.getWidth() / 2;
@@ -987,7 +1004,6 @@ public class CUnit extends CWidget {
 			tempRect.setSize(16, 16);
 			collisionSize = this.unitType.getCollisionSize();
 		}
-		final boolean repos = false;
 		for (int i = 0; i < 300; i++) {
 			final float centerX = newX + (checkX * 64);
 			final float centerY = newY + (checkY * 64);
@@ -1173,10 +1189,7 @@ public class CUnit extends CWidget {
 		else {
 			this.deathTurnTick = simulation.getGameTurnTick();
 		}
-		if (this.pathingInstance != null) {
-			this.pathingInstance.remove();
-			this.pathingInstance = null;
-		}
+		killPathingInstance();
 		popoutWorker(simulation);
 		final CPlayer player = simulation.getPlayer(this.playerIndex);
 		if (this.foodMade != 0) {
@@ -1282,6 +1295,13 @@ public class CUnit extends CWidget {
 			}
 		}
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
+	}
+
+	public void killPathingInstance() {
+		if (this.pathingInstance != null) {
+			this.pathingInstance.remove();
+			this.pathingInstance = null;
+		}
 	}
 
 	public void kill(final CSimulation simulation) {
@@ -1479,6 +1499,9 @@ public class CUnit extends CWidget {
 	}
 
 	public MovementType getMovementType() {
+		if (isMovementDisabled()) {
+			return MovementType.DISABLED;
+		}
 		return getUnitType().getMovementType(); // later maybe it has unit instance override for windwalk, so this
 												// wrapper exists to later mod
 	}
@@ -1717,7 +1740,7 @@ public class CUnit extends CWidget {
 		case RESEARCH: {
 			final War3ID rawcode = this.buildQueue[0];
 			final CUpgradeType trainedUnitType = simulation.getUpgradeData().getType(rawcode);
-			return trainedUnitType.getBuildTime(simulation.getPlayer(playerIndex).getTechtreeUnlocked(rawcode));
+			return trainedUnitType.getBuildTime(simulation.getPlayer(this.playerIndex).getTechtreeUnlocked(rawcode));
 		}
 		case UNIT: {
 			final CUnitType trainedUnitType = simulation.getUnitData().getUnitType(this.buildQueue[0]);
@@ -2013,10 +2036,10 @@ public class CUnit extends CWidget {
 		return null;
 	}
 
-	public CAbilityBlightedGoldMine getBlightedGoldMineData() {
+	public CAbilityOverlayedMine getOverlayedGoldMineData() {
 		for (final CAbility ability : this.abilities) {
-			if (ability instanceof CAbilityBlightedGoldMine) {
-				return (CAbilityBlightedGoldMine) ability;
+			if (ability instanceof CAbilityOverlayedMine) {
+				return (CAbilityOverlayedMine) ability;
 			}
 		}
 		return null;
@@ -2107,7 +2130,7 @@ public class CUnit extends CWidget {
 	}
 
 	public List<CUnitAttack> getAttacks() {
-		if (disableAttacks) {
+		if (this.disableAttacks) {
 			return Collections.emptyList();
 		}
 		if (this.unitSpecificAttacks != null) {
@@ -2118,11 +2141,11 @@ public class CUnit extends CWidget {
 
 	public void setDisableAttacks(final boolean disableAttacks) {
 		this.disableAttacks = disableAttacks;
-		stateNotifier.attacksChanged();
+		this.stateNotifier.attacksChanged();
 	}
 
 	public boolean isDisableAttacks() {
-		return disableAttacks;
+		return this.disableAttacks;
 	}
 
 	public void onPickUpItem(final CSimulation game, final CItem item, final boolean playUserUISounds) {
@@ -2502,7 +2525,7 @@ public class CUnit extends CWidget {
 	}
 
 	public void fireConstructFinishEvents(final CSimulation game) {
-		final CUnit constructingUnit = workerInside; // TODO incorrect for human/undead/ancient, etc, needs work
+		final CUnit constructingUnit = this.workerInside; // TODO incorrect for human/undead/ancient, etc, needs work
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_CONSTRUCT_FINISH);
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {
@@ -2540,12 +2563,12 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean isUnitAlly(final CPlayer whichPlayer) {
-		return whichPlayer.hasAlliance(this.getPlayerIndex(), CAllianceType.PASSIVE);
+		return whichPlayer.hasAlliance(getPlayerIndex(), CAllianceType.PASSIVE);
 	}
 
 	public ResourceType backToWork(final CSimulation game, final ResourceType defaultResourceType) {
 		// if possible, check if this is a worker and send it to work
-		for (final CAbility ability : abilities) {
+		for (final CAbility ability : this.abilities) {
 			if (ability instanceof CAbilityHarvest) {
 				final CAbilityHarvest abilityHarvest = (CAbilityHarvest) ability;
 				final int carriedResourceAmount = abilityHarvest.getCarriedResourceAmount();
@@ -2597,10 +2620,10 @@ public class CUnit extends CWidget {
 	}
 
 	public void notifyAttacksChanged() {
-		stateNotifier.attacksChanged();
+		this.stateNotifier.attacksChanged();
 	}
 
 	public void notifyOrdersChanged() {
-		stateNotifier.ordersChanged();
+		this.stateNotifier.ordersChanged();
 	}
 }

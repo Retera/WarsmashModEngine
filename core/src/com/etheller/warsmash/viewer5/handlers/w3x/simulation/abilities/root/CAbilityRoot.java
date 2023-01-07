@@ -78,11 +78,12 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 		this.behaviorRoot = new CBehaviorRoot(unit, this);
 		this.behaviorUproot = new CBehaviorUproot(unit, this);
 		this.moveBehavior = unit.getMoveBehavior();
+		unit.setMoveBehavior(null);
 		this.rooted = true;
 		for (final CAbility ability : this.uprootedAbilities) {
 			unit.remove(game, ability);
 		}
-		setRooted(false, unit, game);
+		unit.setFacing(game.getGameplayConstants().getRootAngle());
 	}
 
 	@Override
@@ -176,6 +177,7 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 			}
 			unit.setMoveBehavior(null);
 			unit.setStructure(true);
+			unit.regeneratePathingInstance(game, unit.getUnitType().getBuildingPathingPixelMap());
 			game.getWorldCollision().addUnit(unit);
 		}
 		else if (uprooting) {
@@ -188,6 +190,7 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 			}
 			unit.setMoveBehavior(this.moveBehavior);
 			unit.setStructure(false);
+			unit.killPathingInstance();
 			game.getWorldCollision().addUnit(unit);
 		}
 	}

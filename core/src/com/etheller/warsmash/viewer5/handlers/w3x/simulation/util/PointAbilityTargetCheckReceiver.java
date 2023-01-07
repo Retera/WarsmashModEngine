@@ -33,6 +33,11 @@ public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiv
 	}
 
 	@Override
+	public void mustTargetPeon() {
+		this.target = null;
+	}
+
+	@Override
 	public void notHolyBoltTarget() {
 		this.target = null;
 	}

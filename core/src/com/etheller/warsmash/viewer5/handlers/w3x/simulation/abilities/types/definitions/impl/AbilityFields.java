@@ -49,4 +49,9 @@ public interface AbilityFields {
 	public static final War3ID NEUTRAL_BUILDING_SHOW_UNIT_INDICATOR = War3ID.fromString("Neu4");
 
 	public static final War3ID CHARM_MAX_CREEP_LEVEL = War3ID.fromString("Nch1");
+
+	public static final War3ID ENTANGLE_MINE_RESULTING_TYPE = War3ID.fromString("ent1");
+
+	public static final War3ID ENTANGLE_MINE_GOLD_PER_INTERVAL = War3ID.fromString("Egm1");
+	public static final War3ID ENTANGLE_MINE_INTERVAL_DURATION = War3ID.fromString("Egm2");
 }

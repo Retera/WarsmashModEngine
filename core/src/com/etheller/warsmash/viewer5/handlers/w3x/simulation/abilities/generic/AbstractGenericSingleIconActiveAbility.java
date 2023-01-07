@@ -98,6 +98,11 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 	}
 
 	@Override
+	public float getUIAreaOfEffect() {
+		return Float.NaN;
+	}
+
+	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
 

@@ -678,6 +678,11 @@ public class MdxComplexInstance extends ModelInstance {
 		this.replaceableTextures[2] = (Texture) this.model.viewer.load(
 				"ReplaceableTextures\\" + ReplaceableIds.getPathString(2) + ReplaceableIds.getIdString(id) + ".blp",
 				PathSolver.DEFAULT, null);
+		for (final AttachmentInstance attachmentInstance : this.attachments) {
+			if (attachmentInstance.internalInstance != null) {
+				attachmentInstance.internalInstance.setTeamColor(id);
+			}
+		}
 		return this;
 	}
 

@@ -6,8 +6,10 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
@@ -15,7 +17,6 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
-import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CGameplayConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -232,7 +233,7 @@ public class CUnitData {
 
 	public CUnit create(final CSimulation simulation, final int playerIndex, final War3ID typeId, final float x,
 			final float y, final float facing, final BufferedImage buildingPathingPixelMap,
-			final HandleIdAllocator handleIdAllocator, final RemovablePathingMapInstance pathingInstance) {
+			final HandleIdAllocator handleIdAllocator) {
 		final MutableGameObject unitType = this.unitData.get(typeId);
 		final int handleId = handleIdAllocator.createId();
 
@@ -244,9 +245,12 @@ public class CUnitData {
 		final int speed = unitTypeInstance.getSpeed();
 
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, lifeRegen,
-				manaMaximum, speed, unitTypeInstance, pathingInstance);
+				manaMaximum, speed, unitTypeInstance);
 		addDefaultAbilitiesToUnit(simulation, handleIdAllocator, unitTypeInstance, true, manaInitial, speed, unit);
 		applyPlayerUpgradesToUnit(simulation, playerIndex, unitTypeInstance, unit);
+		if (buildingPathingPixelMap != null) {
+			unit.regeneratePathingInstance(simulation, buildingPathingPixelMap);
+		}
 		return unit;
 	}
 
@@ -256,7 +260,7 @@ public class CUnitData {
 		for (final War3ID upgradeId : unitTypeInstance.getUpgradesUsed()) {
 			final int techtreeUnlocked = player.getTechtreeUnlocked(upgradeId);
 			if (techtreeUnlocked > 0) {
-				final CUpgradeType upgradeType = upgradeData.getType(upgradeId);
+				final CUpgradeType upgradeType = this.upgradeData.getType(upgradeId);
 				if (upgradeType != null) {
 					upgradeType.apply(simulation, unit, techtreeUnlocked);
 				}
@@ -270,7 +274,7 @@ public class CUnitData {
 		for (final War3ID upgradeId : unitTypeInstance.getUpgradesUsed()) {
 			final int techtreeUnlocked = player.getTechtreeUnlocked(upgradeId);
 			if (techtreeUnlocked > 0) {
-				final CUpgradeType upgradeType = upgradeData.getType(upgradeId);
+				final CUpgradeType upgradeType = this.upgradeData.getType(upgradeId);
 				if (upgradeType != null) {
 					upgradeType.unapply(simulation, unit, techtreeUnlocked);
 				}
@@ -583,7 +587,7 @@ public class CUnitData {
 			final List<War3ID> upgradesUsed = parseIDList(unitType.getFieldAsString(UPGRADES_USED, 0));
 			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType = new EnumMap<>(CUpgradeClass.class);
 			for (final War3ID upgradeUsed : upgradesUsed) {
-				final CUpgradeType upgradeType = upgradeData.getType(upgradeUsed);
+				final CUpgradeType upgradeType = this.upgradeData.getType(upgradeUsed);
 				if (upgradeType != null) {
 					final CUpgradeClass upgradeClass = upgradeType.getUpgradeClass();
 					if (upgradeClass != null) {
@@ -647,9 +651,20 @@ public class CUnitData {
 		return unitTypeInstance;
 	}
 
-	private List<War3ID> parseIDList(final String structuresBuiltString) {
+	public static List<War3ID> parseIDList(final String structuresBuiltString) {
 		final String[] structuresBuiltStringItems = structuresBuiltString.split(",");
 		final List<War3ID> structuresBuilt = new ArrayList<>();
+		for (final String structuresBuiltStringItem : structuresBuiltStringItems) {
+			if (structuresBuiltStringItem.length() == 4) {
+				structuresBuilt.add(War3ID.fromString(structuresBuiltStringItem));
+			}
+		}
+		return structuresBuilt;
+	}
+
+	public static Set<War3ID> parseIDSet(final String structuresBuiltString) {
+		final String[] structuresBuiltStringItems = structuresBuiltString.split(",");
+		final Set<War3ID> structuresBuilt = new HashSet<>();
 		for (final String structuresBuiltStringItem : structuresBuiltStringItems) {
 			if (structuresBuiltStringItem.length() == 4) {
 				structuresBuilt.add(War3ID.fromString(structuresBuiltStringItem));

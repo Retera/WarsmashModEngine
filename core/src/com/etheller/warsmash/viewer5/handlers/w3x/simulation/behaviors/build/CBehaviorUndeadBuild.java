@@ -109,6 +109,7 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 							blightedGoldMine.setParentMine(this.buildOnBuildingIntersector.getUnitToBuildOn(),
 									abilityGoldMine);
 							this.buildOnBuildingIntersector.getUnitToBuildOn().setHidden(true);
+							this.buildOnBuildingIntersector.getUnitToBuildOn().setPaused(true);
 						}
 					}
 				}

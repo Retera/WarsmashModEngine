@@ -858,7 +858,7 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					return new HandleJassValue(groupType, new UnitGroup(stupidGroupHandleId++));
+					return new HandleJassValue(groupType, new UnitGroup(this.stupidGroupHandleId++));
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("DestroyGroup", new JassFunction() {
@@ -2645,7 +2645,7 @@ public class Jass2 {
 
 					final CItem newItem = CommonEnvironment.this.simulation.createItem(new War3ID(rawcode), unit.getX(),
 							unit.getY());
-					unit.getInventoryData().giveItem(simulation, unit, newItem, false);
+					unit.getInventoryData().giveItem(CommonEnvironment.this.simulation, unit, newItem, false);
 
 					return new HandleJassValue(itemType, newItem);
 				}
@@ -2875,7 +2875,7 @@ public class Jass2 {
 					final boolean fx = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
 					final CAbilityHero heroData = whichUnit.getHeroData();
 					if (heroData != null) {
-						heroData.setHeroLevel(simulation, whichUnit, level, fx);
+						heroData.setHeroLevel(CommonEnvironment.this.simulation, whichUnit, level, fx);
 					}
 					return null;
 				}
@@ -2938,9 +2938,10 @@ public class Jass2 {
 					final int techIdRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 					final int setToLevel = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
 					final War3ID techIdRawcodeId = new War3ID(techIdRawcode);
-					final CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
+					final CUpgradeType upgradeType = CommonEnvironment.this.simulation.getUpgradeData()
+							.getType(techIdRawcodeId);
 					if (upgradeType != null) {
-						player.setTechResearched(simulation, techIdRawcodeId, setToLevel);
+						player.setTechResearched(CommonEnvironment.this.simulation, techIdRawcodeId, setToLevel);
 					}
 					return null;
 				}
@@ -2953,9 +2954,10 @@ public class Jass2 {
 					final int techIdRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 					final int levels = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
 					final War3ID techIdRawcodeId = new War3ID(techIdRawcode);
-					final CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
+					final CUpgradeType upgradeType = CommonEnvironment.this.simulation.getUpgradeData()
+							.getType(techIdRawcodeId);
 					if (upgradeType != null) {
-						player.addTechResearched(simulation, techIdRawcodeId, levels);
+						player.addTechResearched(CommonEnvironment.this.simulation, techIdRawcodeId, levels);
 					}
 					return null;
 				}
@@ -5141,6 +5143,7 @@ public class Jass2 {
 			triggerQueueTimer.setRepeats(true);
 			triggerQueueTimer.setTimeoutTime(0f);
 			triggerQueueTimer.start(this.simulation);
+			this.simulation.setGlobalScope(this.jassProgramVisitor.getGlobals());
 			try {
 				this.jassProgramVisitor.getGlobals().getFunctionByName("main").call(Collections.emptyList(),
 						this.jassProgramVisitor.getGlobals(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);

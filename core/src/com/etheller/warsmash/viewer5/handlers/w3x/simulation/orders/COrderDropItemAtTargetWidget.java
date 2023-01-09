@@ -48,6 +48,10 @@ public class COrderDropItemAtTargetWidget implements COrder {
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster) {
 		final CAbilityInventory ability = (CAbilityInventory) game.getAbility(this.abilityHandleId);
+		if (ability == null) {
+			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
+			return caster.pollNextOrderBehavior(game);
+		}
 		ability.checkCanUse(game, caster, this.orderId, this.abilityActivationReceiver.reset());
 		if (this.abilityActivationReceiver.isUseOk()) {
 			final CItem itemToDrop = (CItem) game.getWidget(this.itemHandleId);

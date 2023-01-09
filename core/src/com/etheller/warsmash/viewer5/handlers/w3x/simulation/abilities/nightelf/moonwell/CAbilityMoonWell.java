@@ -37,55 +37,57 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 
 	private final Rectangle recycleRect = new Rectangle();
 
+	private float areaOfEffect;
+
 	public CAbilityMoonWell(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		baseManaRegen = unit.getManaRegen();
+		this.baseManaRegen = unit.getManaRegen();
 		unit.setManaRegen(0);
-		manaRegenActive = false;
+		this.manaRegenActive = false;
 	}
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-		waterRenderComponent.remove();
+		this.waterRenderComponent.remove();
 		enableManaRegen(unit);
 	}
 
 	private void disableManaRegen(final CUnit unit) {
-		if (manaRegenActive) {
+		if (this.manaRegenActive) {
 			unit.setManaRegen(0);
-			manaRegenActive = false;
+			this.manaRegenActive = false;
 		}
 	}
 
 	private void enableManaRegen(final CUnit unit) {
-		if (!manaRegenActive) {
-			unit.setManaRegen(baseManaRegen);
-			manaRegenActive = true;
+		if (!this.manaRegenActive) {
+			unit.setManaRegen(this.baseManaRegen);
+			this.manaRegenActive = true;
 		}
 	}
 
 	@Override
 	public void onTick(final CSimulation game, final CUnit unit) {
-		if (waterRenderComponent == null) {
+		if (this.waterRenderComponent == null) {
 			if (!isDisabled()) {
 				final CUnitRace unitRace = unit.getUnitType().getRace();
-				waterRenderComponent = game.spawnSpellEffectOnPoint(unit.getX(), unit.getY(), 0, getAlias(),
+				this.waterRenderComponent = game.spawnSpellEffectOnPoint(unit.getX(), unit.getY(), 0, getAlias(),
 						CEffectType.EFFECT, unitRace.ordinal());
 			}
 		}
 		else {
 			if (isDisabled()) {
-				waterRenderComponent.remove();
+				this.waterRenderComponent.remove();
 			}
 			else {
-				waterRenderComponent.setHeight(waterHeight * (unit.getMana() / unit.getMaximumMana()));
+				this.waterRenderComponent.setHeight(this.waterHeight * (unit.getMana() / unit.getMaximumMana()));
 			}
 		}
-		if (regenerateOnlyAtNight) {
+		if (this.regenerateOnlyAtNight) {
 			if (game.isNight()) {
 				enableManaRegen(unit);
 			}
@@ -93,11 +95,11 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 				disableManaRegen(unit);
 			}
 		}
-		if (autoCastActive) {
+		if (this.autoCastActive) {
 			final int gameTurnTick = game.getGameTurnTick();
-			if ((gameTurnTick >= lastAutoCastCheckTick) && (unit.getMana() > autocastRequirement)) {
+			if ((gameTurnTick >= this.lastAutoCastCheckTick) && (unit.getMana() > this.autocastRequirement)) {
 				checkAutoCast(game, unit);
-				lastAutoCastCheckTick = gameTurnTick + (int) (2.0f / WarsmashConstants.SIMULATION_STEP_TIME);
+				this.lastAutoCastCheckTick = gameTurnTick + (int) (2.0f / WarsmashConstants.SIMULATION_STEP_TIME);
 			}
 		}
 		super.onTick(game, unit);
@@ -106,7 +108,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	private void checkAutoCast(final CSimulation game, final CUnit unit) {
 		final float castRange = getCastRange();
 		game.getWorldCollision().enumUnitsInRect(
-				recycleRect.set(unit.getX() - castRange, unit.getY() - castRange, castRange * 2, castRange * 2),
+				this.recycleRect.set(unit.getX() - castRange, unit.getY() - castRange, castRange * 2, castRange * 2),
 				new CUnitEnumFunction() {
 					@Override
 					public boolean call(final CUnit enumUnit) {
@@ -131,13 +133,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 			final float manaWanted = mana > maximumMana ? 0 : maximumMana - mana;
 			float availableCasterMana = caster.getMana();
 			if ((lifeWanted > 0) && (availableCasterMana > 0)) {
-				final float availableLifeOffered = availableCasterMana / hitPointsGained;
+				final float availableLifeOffered = availableCasterMana / this.hitPointsGained;
 				final float lifeGained = Math.min(availableLifeOffered, lifeWanted);
 				unitTarget.heal(game, lifeGained);
-				availableCasterMana -= lifeGained * hitPointsGained;
+				availableCasterMana -= lifeGained * this.hitPointsGained;
 			}
 			if ((manaWanted > 0) && (availableCasterMana > 0)) {
-				final float availableManaOffered = availableCasterMana / manaGained;
+				final float availableManaOffered = availableCasterMana / this.manaGained;
 				final float manaGained = Math.min(availableManaOffered, manaWanted);
 				unitTarget.setMana(mana + manaGained);
 				availableCasterMana -= manaGained * this.manaGained;
@@ -164,13 +166,15 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_MANA_GAINED, level);
-		hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_HIT_POINTS_GAINED, level);
-		autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_AUTOCAST_REQUIREMENT, level);
-		waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_WATER_HEIGHT, level);
-		regenerateOnlyAtNight = worldEditorAbility.getFieldAsBoolean(AbilityFields.MOON_WELL_REGENERATE_ONLY_AT_NIGHT,
+		this.manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_MANA_GAINED, level);
+		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_HIT_POINTS_GAINED, level);
+		this.autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_AUTOCAST_REQUIREMENT,
 				level);
-
+		this.waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_WATER_HEIGHT, level);
+		this.regenerateOnlyAtNight = worldEditorAbility
+				.getFieldAsBoolean(AbilityFields.MOON_WELL_REGENERATE_ONLY_AT_NIGHT, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		setCastRange(this.areaOfEffect); // TODO use cast range as a smart right click interact radius
 	}
 
 	@Override
@@ -208,7 +212,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 
 	@Override
 	public boolean isAutoCastOn() {
-		return autoCastActive;
+		return this.autoCastActive;
 	}
 
 	@Override

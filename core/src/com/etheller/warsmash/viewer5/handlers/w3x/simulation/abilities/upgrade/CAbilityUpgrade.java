@@ -184,7 +184,10 @@ public final class CAbilityUpgrade extends AbstractCAbility {
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
-	public void onSetUnitType(final CUnitType unitType) {
+	@Override
+	public void onSetUnitType(final CSimulation game, final CUnit cUnit) {
+		// NOTE: this method not actually used, because CAbilityQueue is not Aliased
+		final CUnitType unitType = cUnit.getUnitType();
 		this.upgradesTo.clear();
 		this.upgradesTo.addAll(unitType.getUpgradesTo());
 	}

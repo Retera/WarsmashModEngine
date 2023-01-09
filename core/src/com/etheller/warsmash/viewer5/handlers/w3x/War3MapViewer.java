@@ -715,7 +715,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// RenderUnit class:
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -727,7 +728,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -746,7 +748,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -758,7 +761,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop:
+						for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -810,6 +814,18 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public void spawnUnitConstructionFinishSound(final CUnit constructedStructure) {
 						final UnitSound constructingBuilding = War3MapViewer.this.uiSounds
 								.getSound(War3MapViewer.this.gameUI.getSkinField("JobDoneSound"));
+						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(constructedStructure);
+						if ((constructingBuilding != null) && (renderUnit.getSimulationUnit()
+								.getPlayerIndex() == War3MapViewer.this.localPlayerIndex)) {
+							constructingBuilding.play(War3MapViewer.this.worldScene.audioContext,
+									constructedStructure.getX(), constructedStructure.getY(), renderUnit.getZ());
+						}
+					}
+
+					@Override
+					public void spawnUnitUpgradeFinishSound(final CUnit constructedStructure) {
+						final UnitSound constructingBuilding = War3MapViewer.this.uiSounds
+								.getSound(War3MapViewer.this.gameUI.getSkinField("UpgradeComplete"));
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(constructedStructure);
 						if ((constructingBuilding != null) && (renderUnit.getSimulationUnit()
 								.getPlayerIndex() == War3MapViewer.this.localPlayerIndex)) {
@@ -1013,9 +1029,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 							@Override
 							public void setHeight(final float height) {
-								specialEffect.setHeight(
-										Math.max(getWalkableRenderHeight(x, y), terrain.getGroundHeight(x, y))
-												+ height);
+								specialEffect.setHeight(Math.max(getWalkableRenderHeight(x, y),
+										War3MapViewer.this.terrain.getGroundHeight(x, y)) + height);
 							}
 						};
 					}

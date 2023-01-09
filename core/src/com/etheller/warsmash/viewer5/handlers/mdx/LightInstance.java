@@ -108,9 +108,4 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 			}
 		}
 	}
-
-	@Override
-	public String getName() {
-		return this.light.name;
-	}
 }

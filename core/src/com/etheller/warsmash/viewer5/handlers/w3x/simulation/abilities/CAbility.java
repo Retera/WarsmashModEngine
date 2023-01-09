@@ -18,6 +18,11 @@ public interface CAbility extends CAbilityView {
 
 	void onDeath(CSimulation game, CUnit cUnit);
 
+	/*
+	 * should fire for "permanent" abilities that are kept across unit type change
+	 */
+	void onSetUnitType(CSimulation game, CUnit cUnit);
+
 	void onCancelFromQueue(CSimulation game, CUnit unit, int orderId);
 
 	/* return false to not do anything, such as for toggling autocast */
@@ -32,5 +37,7 @@ public interface CAbility extends CAbilityView {
 	void setDisabled(boolean disabled);
 
 	void setIconShowing(boolean iconShowing);
+
+	void setPermanent(boolean permanent);
 
 }

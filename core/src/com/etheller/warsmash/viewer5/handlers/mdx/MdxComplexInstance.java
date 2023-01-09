@@ -5,7 +5,6 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -237,15 +236,16 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 	}
 
-	private void initNode(final MdxNode[] nodes, final SkeletalNode node, final GenericObject genericObject) {
+	private void initNode(final MdxNode[] nodes, final MdxNode node, final GenericObject genericObject) {
 		this.initNode(nodes, node, genericObject, null);
 	}
 
 	/**
 	 * Initialize a skeletal node.
 	 */
-	private void initNode(final MdxNode[] nodes, final SkeletalNode node, final GenericObject genericObject,
+	private void initNode(final MdxNode[] nodes, final MdxNode node, final GenericObject genericObject,
 			final UpdatableObject object) {
+		node.name = genericObject.name;
 		node.pivot.set(genericObject.pivot);
 
 		if (genericObject.parentId == -1) {
@@ -992,8 +992,7 @@ public class MdxComplexInstance extends ModelInstance {
 
 	public MdxNode inefficientlyGetNodeByNameSearch(final String name) {
 		for (final MdxNode node : this.nodes) {
-			if ((node.object != null)
-					&& node.object.getName().toLowerCase(Locale.US).equals(name.toLowerCase(Locale.US))) {
+			if ((node.name != null) && node.name.equalsIgnoreCase(name)) {
 				return node;
 			}
 		}

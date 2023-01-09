@@ -19,11 +19,14 @@ public interface CAbilityView extends CHandle {
 
 	void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId, AbilityTargetCheckReceiver<Void> receiver);
 
+	@Override
 	int getHandleId();
 
 	boolean isDisabled();
 
 	boolean isIconShowing();
+
+	boolean isPermanent();
 
 	<T> T visit(CAbilityVisitor<T> visitor);
 }

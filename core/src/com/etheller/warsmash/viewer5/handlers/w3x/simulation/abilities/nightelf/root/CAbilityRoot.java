@@ -84,8 +84,9 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 				this.rootedAbilities.add(ability);
 			}
 		}
-		this.rootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(), rootedWeaponsAttackBits);
-		this.uprootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(), uprootedWeaponsAttackBits);
+		this.rootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(), this.rootedWeaponsAttackBits);
+		this.uprootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(),
+				this.uprootedWeaponsAttackBits);
 
 		this.behaviorRoot = new CBehaviorRoot(unit, this);
 		this.behaviorUproot = new CBehaviorUproot(unit, this);
@@ -98,7 +99,47 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 			unit.remove(game, ability);
 		}
 		unit.setFacing(game.getGameplayConstants().getRootAngle());
-		unit.setUnitSpecificCurrentAttacks(rootedAttacks);
+		unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
+	}
+
+	@Override
+	public void onSetUnitType(final CSimulation game, final CUnit unit) {
+		this.uprootedAbilities.clear();
+		this.rootedAbilities.clear();
+		for (final CAbility ability : unit.getAbilities()) {
+			if ((ability instanceof CAbilityMove) || (ability instanceof CAbilityEatTree)) {
+				this.uprootedAbilities.add(ability);
+			}
+			else if ((ability instanceof CAbilityAttack) || (ability instanceof CAbilityRoot)) {
+			}
+			else {
+				this.rootedAbilities.add(ability);
+			}
+		}
+		this.rootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(), this.rootedWeaponsAttackBits);
+		this.uprootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(),
+				this.uprootedWeaponsAttackBits);
+		this.moveBehavior = unit.getMoveBehavior();
+		this.attackMoveBehavior = unit.getAttackMoveBehavior();
+
+		if (this.rooted) {
+			for (final CAbility ability : this.uprootedAbilities) {
+				unit.remove(game, ability);
+			}
+			unit.setMoveBehavior(null);
+			unit.setAttackMoveBehavior(null);
+			unit.setFacing(game.getGameplayConstants().getRootAngle());
+			unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
+		}
+		else {
+			for (final CAbility ability : this.rootedAbilities) {
+				unit.remove(game, ability);
+			}
+			unit.setMoveBehavior(this.moveBehavior);
+			unit.setAttackMoveBehavior(this.attackMoveBehavior);
+			unit.setUnitSpecificCurrentAttacks(this.uprootedAttacks);
+		}
+
 	}
 
 	@Override
@@ -193,7 +234,7 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 			}
 			unit.setMoveBehavior(null);
 			unit.setAttackMoveBehavior(null);
-			unit.setUnitSpecificCurrentAttacks(rootedAttacks);
+			unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
 			unit.setDefenseType(unit.getUnitType().getDefenseType());
 			unit.setStructure(true);
 			unit.regeneratePathingInstance(game, unit.getUnitType().getBuildingPathingPixelMap());
@@ -209,8 +250,8 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 			}
 			unit.setMoveBehavior(this.moveBehavior);
 			unit.setAttackMoveBehavior(this.attackMoveBehavior);
-			unit.setUnitSpecificCurrentAttacks(uprootedAttacks);
-			unit.setDefenseType(uprootedDefenseType);
+			unit.setUnitSpecificCurrentAttacks(this.uprootedAttacks);
+			unit.setDefenseType(this.uprootedDefenseType);
 			unit.setStructure(false);
 			unit.killPathingInstance();
 			game.getWorldCollision().addUnit(unit);

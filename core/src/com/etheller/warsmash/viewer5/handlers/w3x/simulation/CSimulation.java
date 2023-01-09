@@ -273,9 +273,7 @@ public class CSimulation implements CPlayerAPI {
 			final float facing) {
 		final CUnit createdUnit = this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
 		createdUnit.performDefaultBehavior(this);
-		if (createdUnit.getRootData() != null) {
-			createdUnit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
-		}
+		setupCreatedUnit(createdUnit);
 		return createdUnit;
 	}
 
@@ -749,6 +747,13 @@ public class CSimulation implements CPlayerAPI {
 
 	public void unitUpdatedType(final CUnit unit, final War3ID typeId) {
 		this.simulationRenderController.unitUpdatedType(unit, typeId);
+		setupCreatedUnit(unit);
+	}
+
+	private void setupCreatedUnit(final CUnit unit) {
+		if (unit.getRootData() != null) {
+			unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
+		}
 	}
 
 	public void changeUnitColor(final CUnit unit, final int playerIndex) {

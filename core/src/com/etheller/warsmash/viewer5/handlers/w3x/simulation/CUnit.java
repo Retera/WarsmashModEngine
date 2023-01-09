@@ -35,7 +35,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityOverlayedMine;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root.CAbilityRoot;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -51,6 +51,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUpgradingVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -99,6 +100,7 @@ public class CUnit extends CWidget {
 	private float currentDefense;
 	private float currentLifeRegenPerTick;
 	private float currentManaRegenPerTick;
+	private CDefenseType defenseType;
 
 	private int cooldownEndTime = 0;
 	private float flyHeight;
@@ -159,10 +161,13 @@ public class CUnit extends CWidget {
 	private int triggerEditorCustomValue;
 
 	private List<CUnitAttack> unitSpecificAttacks;
+	private List<CUnitAttack> unitSpecificCurrentAttacks;
 	private boolean disableAttacks;
 
 	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
 	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
+
+	private boolean constructionConsumesWorker;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
@@ -179,6 +184,7 @@ public class CUnit extends CWidget {
 		this.speed = speed;
 		this.flyHeight = unitType.getDefaultFlyingHeight();
 		this.unitType = unitType;
+		this.defenseType = unitType.getDefenseType();
 		this.classifications.addAll(unitType.getClassifications());
 		this.acquisitionRange = unitType.getDefaultAcquisitionRange();
 		this.structure = unitType.isBuilding();
@@ -247,8 +253,17 @@ public class CUnit extends CWidget {
 		computeDerivedFields();
 	}
 
+	public void setManaRegen(final float manaRegen) {
+		this.manaRegen = manaRegen;
+		computeDerivedFields();
+	}
+
 	public float getManaRegenBonus() {
 		return this.manaRegenBonus;
+	}
+
+	public float getManaRegen() {
+		return manaRegen;
 	}
 
 	public void setAgilityDefensePermanentBonus(final int agilityDefensePermanentBonus) {
@@ -337,6 +352,7 @@ public class CUnit extends CWidget {
 		this.typeId = typeId;
 		final float lifeRatio = this.maximumLife == 0 ? 1 : this.life / this.maximumLife;
 		final float manaRatio = this.maximumMana == 0 ? Float.NaN : this.mana / this.maximumMana;
+		final CUnitType previousUnitType = getUnitType();
 		this.unitType = game.getUnitData().getUnitType(typeId);
 		if (Float.isNaN(manaRatio)) {
 			this.mana = this.unitType.getManaInitial();
@@ -353,11 +369,15 @@ public class CUnit extends CWidget {
 		this.speed = this.unitType.getSpeed();
 		this.classifications.clear();
 		this.classifications.addAll(this.unitType.getClassifications());
+		this.defenseType = this.unitType.getDefenseType();
 		this.acquisitionRange = this.unitType.getDefaultAcquisitionRange();
 		this.structure = this.unitType.isBuilding();
 		for (final CAbility ability : this.abilities) {
-			ability.onRemove(game, this);
-			game.onAbilityRemovedFromUnit(this, ability);
+			if (!(ability instanceof Aliased)
+					|| !this.unitType.getAbilityList().contains(((Aliased) ability).getAlias())) {
+				ability.onRemove(game, this);
+				game.onAbilityRemovedFromUnit(this, ability);
+			}
 		}
 		this.abilities.clear();
 		game.getUnitData().addDefaultAbilitiesToUnit(game, game.getHandleIdAllocator(), this.unitType, false, -1,
@@ -486,7 +506,15 @@ public class CUnit extends CWidget {
 						this.constructing = false;
 						this.constructingPaused = false;
 						this.constructionProgress = 0;
-						popoutWorker(game);
+						if (constructionConsumesWorker) {
+							if (this.workerInside != null) {
+								game.removeUnit(workerInside);
+								workerInside = null;
+							}
+						}
+						else {
+							popoutWorker(game);
+						}
 						final Iterator<CAbility> abilityIterator = this.abilities.iterator();
 						while (abilityIterator.hasNext()) {
 							final CAbility ability = abilityIterator.next();
@@ -727,12 +755,16 @@ public class CUnit extends CWidget {
 			this.workerInside.setHidden(false);
 			this.workerInside.setPaused(false);
 			this.workerInside.nudgeAround(game, this);
+			if (constructionConsumesWorker) {
+				game.getPlayer(workerInside.getPlayerIndex()).setUnitFoodUsed(workerInside,
+						workerInside.getUnitType().getFoodUsed());
+			}
 			this.workerInside = null;
 		}
 	}
 
 	public boolean autoAcquireAttackTargets(final CSimulation game, final boolean disableMove) {
-		if (!getAttacks().isEmpty() && !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
+		if (!getCurrentAttacks().isEmpty() && !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 			if (this.collisionRectangle != null) {
 				tempRect.set(this.collisionRectangle);
 			}
@@ -1122,7 +1154,7 @@ public class CUnit extends CWidget {
 		final boolean wasDead = isDead();
 		if (!this.invulnerable) {
 			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
-					this.unitType.getDefenseType());
+					this.getDefenseType());
 			final float damageRatioFromDefense;
 			final float defense = this.currentDefense;
 			if (defense >= 0) {
@@ -1154,7 +1186,7 @@ public class CUnit extends CWidget {
 				boolean foundMatchingReturnFireAttack = false;
 				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(), CAllianceType.PASSIVE)
 						&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
-					for (final CUnitAttack attack : getAttacks()) {
+					for (final CUnitAttack attack : getCurrentAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
 							this.currentBehavior = getAttackBehavior().reset(OrderIds.attack, attack, source, false,
 									CBehaviorAttackListener.DO_NOTHING);
@@ -1514,7 +1546,7 @@ public class CUnit extends CWidget {
 		this.acquisitionRange = acquisitionRange;
 	}
 
-	public void heal(final CSimulation game, final int lifeToRegain) {
+	public void heal(final CSimulation game, final float lifeToRegain) {
 		setLife(game, Math.min(getLife() + lifeToRegain, getMaximumLife()));
 	}
 
@@ -1541,7 +1573,7 @@ public class CUnit extends CWidget {
 		public boolean call(final CUnit unit) {
 			if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
 					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()) {
-				for (final CUnitAttack attack : this.source.getAttacks()) {
+				for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
 							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
@@ -2125,18 +2157,22 @@ public class CUnit extends CWidget {
 		this.unitSpecificAttacks = unitSpecificAttacks;
 	}
 
+	public void setUnitSpecificCurrentAttacks(final List<CUnitAttack> unitSpecificCurrentAttacks) {
+		this.unitSpecificCurrentAttacks = unitSpecificCurrentAttacks;
+	}
+
 	public List<CUnitAttack> getUnitSpecificAttacks() {
 		return this.unitSpecificAttacks;
 	}
 
-	public List<CUnitAttack> getAttacks() {
+	public List<CUnitAttack> getCurrentAttacks() {
 		if (this.disableAttacks) {
 			return Collections.emptyList();
 		}
-		if (this.unitSpecificAttacks != null) {
-			return this.unitSpecificAttacks;
+		if (this.unitSpecificCurrentAttacks != null) {
+			return this.unitSpecificCurrentAttacks;
 		}
-		return this.unitType.getAttacks();
+		return Collections.emptyList();
 	}
 
 	public void setDisableAttacks(final boolean disableAttacks) {
@@ -2354,14 +2390,14 @@ public class CUnit extends CWidget {
 			return getUnitType().getTargetedAs().contains(CTargetType.GROUND);
 
 		case ATTACKS_FLYING:
-			for (final CUnitAttack attack : getAttacks()) {
+			for (final CUnitAttack attack : getCurrentAttacks()) {
 				if (attack.getTargetsAllowed().contains(CTargetType.AIR)) {
 					return true;
 				}
 			}
 			return false;
 		case ATTACKS_GROUND:
-			for (final CUnitAttack attack : getAttacks()) {
+			for (final CUnitAttack attack : getCurrentAttacks()) {
 				if (attack.getTargetsAllowed().contains(CTargetType.GROUND)) {
 					return true;
 				}
@@ -2370,7 +2406,7 @@ public class CUnit extends CWidget {
 
 		case MELEE_ATTACKER:
 			boolean hasAttacks = false;
-			for (final CUnitAttack attack : getAttacks()) {
+			for (final CUnitAttack attack : getCurrentAttacks()) {
 				if (attack.getWeaponType() != CWeaponType.NORMAL) {
 					return false;
 				}
@@ -2379,7 +2415,7 @@ public class CUnit extends CWidget {
 			return hasAttacks;
 
 		case RANGED_ATTACKER:
-			for (final CUnitAttack attack : getAttacks()) {
+			for (final CUnitAttack attack : getCurrentAttacks()) {
 				if (attack.getWeaponType() != CWeaponType.NORMAL) {
 					return true;
 				}
@@ -2625,5 +2661,21 @@ public class CUnit extends CWidget {
 
 	public void notifyOrdersChanged() {
 		this.stateNotifier.ordersChanged();
+	}
+
+	public void setConstructionConsumesWorker(final boolean constructionConsumesWorker) {
+		this.constructionConsumesWorker = constructionConsumesWorker;
+	}
+
+	public boolean isConstructionConsumesWorker() {
+		return constructionConsumesWorker;
+	}
+
+	public CDefenseType getDefenseType() {
+		return this.defenseType;
+	}
+
+	public void setDefenseType(final CDefenseType defenseType) {
+		this.defenseType = defenseType;
 	}
 }

@@ -34,13 +34,14 @@ public class CUnitType {
 	private final int manaMaximum;
 	private final int speed;
 	private final int defense;
-	private final String abilityList;
+	private final List<War3ID> abilityList;
 	private final boolean building;
 	private final PathingGrid.MovementType movementType;
 	private final float defaultFlyingHeight;
 	private final float collisionSize;
 	private final EnumSet<CUnitClassification> classifications;
 	private final List<CUnitAttack> attacks;
+	private final int attacksEnabled;
 	private final String armorType; // used for audio
 	private final boolean raise;
 	private final boolean decay;
@@ -107,10 +108,11 @@ public class CUnitType {
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
-			final int manaMaximum, final int speed, final int defense, final String abilityList, final boolean isBldg,
-			final MovementType movementType, final float defaultFlyingHeight, final float collisionSize,
-			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks, final String armorType,
-			final boolean raise, final boolean decay, final CDefenseType defenseType, final float impactZ,
+			final int manaMaximum, final int speed, final int defense, final List<War3ID> abilityList,
+			final boolean isBldg, final MovementType movementType, final float defaultFlyingHeight,
+			final float collisionSize, final EnumSet<CUnitClassification> classifications,
+			final List<CUnitAttack> attacks, final int attacksEnabled, final String armorType, final boolean raise,
+			final boolean decay, final CDefenseType defenseType, final float impactZ,
 			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs,
 			final float defaultAcquisitionRange, final float minimumAttackRange, final List<War3ID> structuresBuilt,
 			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final List<War3ID> upgradesUsed,
@@ -147,6 +149,7 @@ public class CUnitType {
 		this.collisionSize = collisionSize;
 		this.classifications = classifications;
 		this.attacks = attacks;
+		this.attacksEnabled = attacksEnabled;
 		this.armorType = armorType;
 		this.raise = raise;
 		this.decay = decay;
@@ -253,7 +256,7 @@ public class CUnitType {
 		return this.defense;
 	}
 
-	public String getAbilityList() {
+	public List<War3ID> getAbilityList() {
 		return this.abilityList;
 	}
 
@@ -279,6 +282,10 @@ public class CUnitType {
 
 	public List<CUnitAttack> getAttacks() {
 		return this.attacks;
+	}
+
+	public int getAttacksEnabled() {
+		return attacksEnabled;
 	}
 
 	public boolean isRaise() {

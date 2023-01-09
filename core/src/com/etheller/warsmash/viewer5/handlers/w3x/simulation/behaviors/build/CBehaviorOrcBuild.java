@@ -73,17 +73,19 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
 				constructedStructure.setConstructing(true);
 				constructedStructure.setWorkerInside(this.unit);
+				final CAbilityBuildInProgress abilityBuildInProgress = new CAbilityBuildInProgress(
+						simulation.getHandleIdAllocator().createId());
 				constructedStructure.setLife(simulation,
 						constructedStructure.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
 				constructedStructure.setFoodUsed(unitTypeToCreate.getFoodUsed());
-				constructedStructure.add(simulation,
-						new CAbilityBuildInProgress(simulation.getHandleIdAllocator().createId()));
+				constructedStructure.add(simulation, abilityBuildInProgress);
 				for (final CAbility ability : constructedStructure.getAbilities()) {
 					ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
 				}
 				this.unit.setHidden(true);
 				this.unit.setPaused(true);
 				this.unit.setInvulnerable(true);
+				onStructureCreated(simulation, constructedStructure, abilityBuildInProgress);
 				simulation.getPlayer(playerIndex).addTechtreeInProgress(this.orderId);
 				simulation.unitConstructedEvent(this.unit, constructedStructure);
 			}
@@ -94,6 +96,10 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 			}
 		}
 		return this.unit.pollNextOrderBehavior(simulation);
+	}
+
+	protected void onStructureCreated(final CSimulation game, final CUnit constructedStructure,
+			final CAbilityBuildInProgress abilityBuildInProgress) {
 	}
 
 	@Override

@@ -12,7 +12,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGenericAliasedAbility
 		implements GenericSingleIconActiveAbility {
-
 	public AbstractGenericSingleIconActiveAbility(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
@@ -20,7 +19,24 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityTarget target) {
-		return true;
+		final int autoCastOnOrderId = getAutoCastOnOrderId();
+		final int autoCastOffOrderId = getAutoCastOffOrderId();
+		if (orderId != 0) {
+			if (orderId == autoCastOnOrderId) {
+				setAutoCastOn(true);
+				return false;
+			}
+			else if (orderId == autoCastOffOrderId) {
+				setAutoCastOn(false);
+				return false;
+			}
+			else {
+				return super.checkBeforeQueue(game, caster, orderId, target);
+			}
+		}
+		else {
+			return super.checkBeforeQueue(game, caster, orderId, target);
+		}
 	}
 
 	@Override
@@ -66,7 +82,10 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
-		if (orderId == getBaseOrderId()) {
+		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
+			receiver.targetOk(null);
+		}
+		else if (orderId == getBaseOrderId()) {
 			innerCheckCanTargetNoTarget(game, unit, orderId, receiver);
 		}
 		else {
@@ -100,6 +119,24 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 	@Override
 	public float getUIAreaOfEffect() {
 		return Float.NaN;
+	}
+
+	@Override
+	public boolean isAutoCastOn() {
+		return false;
+	}
+
+	@Override
+	public int getAutoCastOnOrderId() {
+		return 0;
+	}
+
+	@Override
+	public int getAutoCastOffOrderId() {
+		return 0;
+	}
+
+	public void setAutoCastOn(final boolean autoCastOn) {
 	}
 
 	@Override

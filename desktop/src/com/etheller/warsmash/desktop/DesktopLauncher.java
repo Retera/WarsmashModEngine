@@ -50,8 +50,8 @@ public class DesktopLauncher {
 		config.useGL30 = true;
 		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
-		config.samples = 16;
-		config.vSyncEnabled = false;
+//		config.samples = 16;
+//		config.vSyncEnabled = false;
 		config.addIcon("resources/Icon16.png", Files.FileType.Internal);
 		config.addIcon("resources/Icon32.png", Files.FileType.Internal);
 		config.addIcon("resources/Icon64.png", Files.FileType.Internal);

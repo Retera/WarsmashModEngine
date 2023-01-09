@@ -82,7 +82,12 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
-		return this.target.visit(this.stillAliveVisitor.reset(simulation, this.unit, this.ability.getTargetsAllowed()));
+		/*
+		 * BELOW: "doneEffect" allows us to channel "at" something that died, if you hit
+		 * a bug with that, then fix it here
+		 */
+		return this.doneEffect || this.target
+				.visit(this.stillAliveVisitor.reset(simulation, this.unit, this.ability.getTargetsAllowed()));
 	}
 
 	@Override

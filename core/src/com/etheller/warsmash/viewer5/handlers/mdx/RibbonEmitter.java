@@ -73,4 +73,9 @@ public class RibbonEmitter extends MdxEmitter<MdxComplexInstance, RibbonEmitterO
 		return new Ribbon(this);
 	}
 
+	@Override
+	public String getName() {
+		return this.emitterObject.name;
+	}
+
 }

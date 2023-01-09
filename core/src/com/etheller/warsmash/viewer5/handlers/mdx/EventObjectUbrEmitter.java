@@ -10,4 +10,9 @@ public class EventObjectUbrEmitter extends EventObjectEmitter<EventObjectEmitter
 		return new EventObjectSplUbr(this);
 	}
 
+	@Override
+	public String getName() {
+		return this.emitterObject.name;
+	}
+
 }

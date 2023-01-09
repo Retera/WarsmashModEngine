@@ -58,7 +58,7 @@ public class WarsmashConstants {
 			"Scripts\\Blizzard.j", "Scripts\\war3map.j" };
 	public static final float GAME_SPEED_TIME_FACTOR = 0.5f;
 
-	public static void loadConstants(final GameObject emulatorConstants, DataTable warsmashIni) {
+	public static void loadConstants(final GameObject emulatorConstants, final DataTable warsmashIni) {
 		MAX_PLAYERS = emulatorConstants.getFieldValue("MaxPlayers");
 		GAME_VERSION = emulatorConstants.getFieldValue("GameVersion");
 		CATCH_CURSOR = emulatorConstants.getFieldValue("CatchCursor") == 1;
@@ -69,7 +69,7 @@ public class WarsmashConstants {
 		INPUT_HOTKEY_MODE = emulatorConstants.getFieldValue("InputHotkeyMode");
 		PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = emulatorConstants
 				.getFieldValue("ParseReignOfChaosBetaModelsInstead") == 1;
-		String races = emulatorConstants.getField("Races");
+		final String races = emulatorConstants.getField("Races");
 		RACE_MANAGER = new CRaceManager();
 		if ((races == null) || races.isEmpty()) {
 			RACE_MANAGER.addRace("Human", 1, 1);
@@ -78,9 +78,9 @@ public class WarsmashConstants {
 			RACE_MANAGER.addRace("NightElf", 4, 3);
 		}
 		else {
-			String[] raceKeys = races.split(",");
-			for (String raceKey : raceKeys) {
-				Element raceElement = warsmashIni.get(raceKey);
+			final String[] raceKeys = races.split(",");
+			for (final String raceKey : raceKeys) {
+				final Element raceElement = warsmashIni.get(raceKey);
 				if (raceElement == null) {
 					throw new IllegalStateException("Missing data in warsmash.ini for race: " + raceKey);
 				}

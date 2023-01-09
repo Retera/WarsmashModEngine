@@ -19,6 +19,7 @@ public class SequenceUtils {
 	public static final EnumSet<SecondaryTag> BONE = EnumSet.of(SecondaryTag.BONE);
 	public static final EnumSet<SecondaryTag> HIT = EnumSet.of(SecondaryTag.HIT);
 	public static final EnumSet<SecondaryTag> SPELL = EnumSet.of(SecondaryTag.SPELL);
+	public static final EnumSet<SecondaryTag> SPELL_EATTREE = EnumSet.of(SecondaryTag.SPELL, SecondaryTag.EATTREE);
 	public static final EnumSet<SecondaryTag> SPELL_THROW = EnumSet.of(SecondaryTag.SPELL, SecondaryTag.THROW);
 	public static final EnumSet<SecondaryTag> WORK = EnumSet.of(SecondaryTag.WORK);
 	public static final EnumSet<SecondaryTag> COMPLETE = EnumSet.of(SecondaryTag.COMPLETE);

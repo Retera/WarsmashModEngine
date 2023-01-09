@@ -66,6 +66,8 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 			final AbilityPointTarget point) {
 		this.currentWave = 0;
 		this.waveForDamage = false;
+		// TODO below: stupid, needs to change to wait until doEffect first call to be
+		// set
 		this.nextWaveTick = game.getGameTurnTick()
 				+ (int) StrictMath.ceil(this.waveDelay / WarsmashConstants.SIMULATION_STEP_TIME);
 		return super.begin(game, caster, orderId, point);

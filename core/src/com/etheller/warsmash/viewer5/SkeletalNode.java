@@ -28,6 +28,8 @@ public abstract class SkeletalNode extends GenericNode {
 	public Quaternion localBlendRotation;
 	public Vector3 localBlendScale;
 
+	public Quaternion overrideWorldRotation;
+
 	public SkeletalNode() {
 		this.pivot = new Vector3();
 		this.localLocation = new Vector3();
@@ -198,6 +200,11 @@ public abstract class SkeletalNode extends GenericNode {
 			else if (this.dontInheritRotation) {
 				RenderMathUtils.mul(computedRotation, this.parent.inverseWorldRotation, computedRotation);
 			}
+			else if (this.overrideWorldRotation != null) {
+				RenderMathUtils.mul(computedRotation, this.parent.inverseWorldRotation, computedRotation);
+				RenderMathUtils.mul(computedRotation, overrideWorldRotation, computedRotation);
+
+			}
 		}
 
 		if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0)) {
@@ -252,6 +259,10 @@ public abstract class SkeletalNode extends GenericNode {
 		for (int i = 0, l = this.children.size(); i < l; i++) {
 			this.children.get(i).update(dt, scene);
 		}
+	}
+
+	public void setOverrideWorldRotation(final Quaternion overrideWorldRotation) {
+		this.overrideWorldRotation = overrideWorldRotation;
 	}
 
 	protected abstract void convertBasis(Quaternion computedRotation);

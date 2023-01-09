@@ -5,19 +5,19 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
 public class CUpgradeEffectAttackSpeed implements CUpgradeEffect {
-	private float base;
-	private float mod;
+	private final float base;
+	private final float mod;
 
-	public CUpgradeEffectAttackSpeed(float base, float mod) {
+	public CUpgradeEffectAttackSpeed(final float base, final float mod) {
 		this.base = base;
 		this.mod = mod;
 	}
 
 	@Override
-	public void apply(CSimulation simulation, CUnit unit, int level) {
+	public void apply(final CSimulation simulation, final CUnit unit, final int level) {
 		int weaponIndex = 0;
-		for (CUnitAttack attack : unit.getAttacks()) {
-			float attackCooldownReduction = StrictMath
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
+			final float attackCooldownReduction = StrictMath
 					.round(unit.getUnitType().getAttacks().get(weaponIndex).getCooldownTime()
 							* Util.levelValue(base, mod, level - 1));
 			attack.setCooldownTime(attack.getCooldownTime() - attackCooldownReduction);
@@ -27,10 +27,10 @@ public class CUpgradeEffectAttackSpeed implements CUpgradeEffect {
 	}
 
 	@Override
-	public void unapply(CSimulation simulation, CUnit unit, int level) {
+	public void unapply(final CSimulation simulation, final CUnit unit, final int level) {
 		int weaponIndex = 0;
-		for (CUnitAttack attack : unit.getAttacks()) {
-			float attackCooldownReduction = StrictMath
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
+			final float attackCooldownReduction = StrictMath
 					.round(unit.getUnitType().getAttacks().get(weaponIndex).getCooldownTime()
 							* Util.levelValue(base, mod, level - 1));
 			attack.setCooldownTime(attack.getCooldownTime() + attackCooldownReduction);

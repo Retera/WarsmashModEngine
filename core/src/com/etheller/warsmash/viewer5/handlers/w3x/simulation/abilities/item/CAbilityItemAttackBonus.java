@@ -21,14 +21,14 @@ public class CAbilityItemAttackBonus extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		for (final CUnitAttack attack : unit.getAttacks()) {
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setTemporaryDamageBonus(attack.getTemporaryDamageBonus() + this.damageBonus);
 		}
 	}
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-		for (final CUnitAttack attack : unit.getAttacks()) {
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setTemporaryDamageBonus(attack.getTemporaryDamageBonus() - this.damageBonus);
 		}
 	}

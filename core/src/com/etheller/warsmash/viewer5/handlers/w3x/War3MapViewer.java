@@ -715,8 +715,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// RenderUnit class:
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -728,8 +727,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -748,8 +746,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -761,8 +758,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -956,6 +952,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							public void remove() {
 								specialEffect.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
 							}
+
+							@Override
+							public void setHeight(final float height) {
+								specialEffect.setHeight(height);
+							}
 						};
 					}
 
@@ -973,8 +974,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									.addInstance();
 							modelInstance.setTeamColor(
 									War3MapViewer.this.simulation.getPlayer(source.getPlayerIndex()).getColor());
+							final float startingHeight = renderDestructable.getZ() + artAttachmentHeight;
 							modelInstance.setLocation(renderDestructable.getX(), renderDestructable.getY(),
-									renderDestructable.getZ() + artAttachmentHeight);
+									startingHeight);
 							modelInstance.setScene(War3MapViewer.this.worldScene);
 							final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance,
 									War3MapViewer.this, 0, RenderSpellEffect.STAND_ONLY);
@@ -984,6 +986,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								@Override
 								public void remove() {
 									renderAttackInstant.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
+								}
+
+								@Override
+								public void setHeight(final float height) {
+									renderAttackInstant.setHeight(startingHeight + height);
 								}
 							};
 						}
@@ -1002,6 +1009,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							@Override
 							public void remove() {
 								specialEffect.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
+							}
+
+							@Override
+							public void setHeight(final float height) {
+								specialEffect.setHeight(
+										Math.max(getWalkableRenderHeight(x, y), terrain.getGroundHeight(x, y))
+												+ height);
 							}
 						};
 					}

@@ -232,6 +232,9 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 
 	@Override
 	public void turnCompleted(final int gameTurnTick) {
+		if (WarsmashConstants.VERBOSE_LOGGING) {
+			System.out.println("turnCompleted " + gameTurnTick);
+		}
 		this.writer.finishedTurn(gameTurnTick);
 		this.writer.send();
 		this.latestLocallyRequestedTurn = gameTurnTick;

@@ -47,16 +47,7 @@ public class CAbilityDropInstant extends AbstractGenericSingleIconNoSmartActiveA
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
 		final CAbilityCargoHold cargoData = caster.getCargoData();
-		if (!cargoData.isEmpty()) {
-			game.unitSoundEffectEvent(caster, cargoData.getAlias());
-			final int cargoCount = cargoData.getCargoCount();
-			for (int i = 0; i < cargoCount; i++) {
-				final CUnit droppedUnit = cargoData.removeUnitAtIndex(caster, cargoCount - i - 1);
-				droppedUnit.setPointAndCheckUnstuck(caster.getX(), caster.getY(), game);
-				droppedUnit.setHidden(false);
-				droppedUnit.setPaused(false);
-			}
-		}
+		cargoData.unloadAllInstant(game, caster);
 		return caster.pollNextOrderBehavior(game);
 
 	}

@@ -5,6 +5,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -329,6 +330,7 @@ public class MdxComplexInstance extends ModelInstance {
 				final Vector3 localLocation = node.localLocation;
 				final Quaternion localRotation = node.localRotation;
 				final Vector3 localScale = node.localScale;
+				final Quaternion overrideWorldRotation = node.overrideWorldRotation;
 
 				// Only update the local node data if there is a need to
 				if (forced || variants.generic[sequence]) {
@@ -363,7 +365,8 @@ public class MdxComplexInstance extends ModelInstance {
 					}
 				}
 
-				final boolean wasReallyDirty = forced || wasDirty || parent.wasDirty || genericObject.anyBillboarding;
+				final boolean wasReallyDirty = forced || wasDirty || parent.wasDirty || genericObject.anyBillboarding
+						|| (overrideWorldRotation != null);
 
 				node.wasDirty = wasReallyDirty;
 
@@ -985,5 +988,15 @@ public class MdxComplexInstance extends ModelInstance {
 			return (int) Math.max(interval[0], Math.min(interval[1], frameToClamp));
 		}
 		return frameToClamp;
+	}
+
+	public MdxNode inefficientlyGetNodeByNameSearch(final String name) {
+		for (final MdxNode node : this.nodes) {
+			if ((node.object != null)
+					&& node.object.getName().toLowerCase(Locale.US).equals(name.toLowerCase(Locale.US))) {
+				return node;
+			}
+		}
+		return null;
 	}
 }

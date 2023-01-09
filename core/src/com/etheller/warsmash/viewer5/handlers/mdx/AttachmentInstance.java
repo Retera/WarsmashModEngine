@@ -62,4 +62,9 @@ public class AttachmentInstance implements UpdatableObject {
 			internalInstance.detach();
 		}
 	}
+
+	@Override
+	public String getName() {
+		return attachment.getName();
+	}
 }

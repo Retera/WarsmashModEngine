@@ -16,7 +16,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemManaBonus;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemPermanentLifeGain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityEntangledMine;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root.CAbilityEntangleGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.eattree.CAbilityEatTree;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.moonwell.CAbilityMoonWell;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityEntangleGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilityBlizzard;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilitySummonWaterElemental;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.darkranger.CAbilityCharm;
@@ -109,6 +111,13 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aegm"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityEntangledMine(handleId, alias)));
 
+		// Ancients:
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aeat"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityEatTree(handleId, alias)));
+
+		// Moon Well
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Ambt"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMoonWell(handleId, alias)));
 		// ----Neutral----
 		// Dark Ranger:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANch"),
@@ -201,12 +210,11 @@ public class CAbilityData {
 		return baseRequiredLevel + (currentLevelOfAbility * levelSkip);
 	}
 
-	public CAbility createAbility(final String ability, final int handleId) {
-		final War3ID war3Id = War3ID.fromString(ability.trim());
-		final CAbilityType<?> abilityType = getAbilityType(war3Id);
+	public CAbility createAbility(final War3ID abilityId, final int handleId) {
+		final CAbilityType<?> abilityType = getAbilityType(abilityId);
 		if (abilityType != null) {
 			return abilityType.createAbility(handleId);
 		}
-		return new CAbilityGenericDoNothing(war3Id, handleId);
+		return new CAbilityGenericDoNothing(abilityId, handleId);
 	}
 }

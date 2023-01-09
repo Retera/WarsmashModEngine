@@ -3404,7 +3404,7 @@ public class Jass2 {
 							.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(war3id));
 					if (ability == null) {
 						whichWidget.add(CommonEnvironment.this.simulation,
-								CommonEnvironment.this.simulation.getAbilityData().createAbility(war3id.toString(),
+								CommonEnvironment.this.simulation.getAbilityData().createAbility(war3id,
 										CommonEnvironment.this.simulation.getHandleIdAllocator().createId()));
 						// TODO below code is very stupid!!
 						return new IntegerJassValue(1);
@@ -4598,7 +4598,7 @@ public class Jass2 {
 
 					return new HandleJassValue(abilitybehaviorType,
 							unit.getAttackBehavior().reset(highlightOrderId,
-									unit.getAttacks().get(whichUnitAttackIndex), target, false,
+									unit.getCurrentAttacks().get(whichUnitAttackIndex), target, false,
 									CBehaviorAttackListener.DO_NOTHING));
 				}
 			});
@@ -4617,7 +4617,7 @@ public class Jass2 {
 
 					return new HandleJassValue(abilitybehaviorType,
 							unit.getAttackBehavior().reset(highlightOrderId,
-									unit.getAttacks().get(whichUnitAttackIndex),
+									unit.getCurrentAttacks().get(whichUnitAttackIndex),
 									new AbilityPointTarget((float) targetX, (float) targetY), false,
 									CBehaviorAttackListener.DO_NOTHING));
 				}
@@ -4638,7 +4638,7 @@ public class Jass2 {
 
 							return new HandleJassValue(abilitybehaviorType,
 									unit.getAttackBehavior().reset(highlightOrderId,
-											unit.getAttacks().get(whichUnitAttackIndex),
+											unit.getCurrentAttacks().get(whichUnitAttackIndex),
 											new AbilityPointTarget((float) target.x, (float) target.y), false,
 											CBehaviorAttackListener.DO_NOTHING));
 						}

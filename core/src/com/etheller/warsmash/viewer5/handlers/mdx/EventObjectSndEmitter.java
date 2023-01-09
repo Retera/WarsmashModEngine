@@ -11,4 +11,9 @@ public class EventObjectSndEmitter extends EventObjectEmitter<EventObjectEmitter
 		return new EventObjectSnd(this);
 	}
 
+	@Override
+	public String getName() {
+		return this.emitterObject.name;
+	}
+
 }

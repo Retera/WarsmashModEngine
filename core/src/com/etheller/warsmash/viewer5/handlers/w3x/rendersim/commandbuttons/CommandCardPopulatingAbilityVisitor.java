@@ -36,10 +36,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilitySellItems;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderButtonType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
@@ -87,7 +87,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			boolean attackGroundEnabled = false;
 			boolean showUI = false;
-			for (final CUnitAttack attack : this.unit.getAttacks()) {
+			for (final CUnitAttack attack : this.unit.getCurrentAttacks()) {
 				if (attack.getWeaponType().isAttackGroundSupported()) {
 					attackGroundEnabled = true;
 				}
@@ -149,11 +149,13 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	public Void accept(final GenericSingleIconActiveAbility ability) {
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
 			final AbilityUI ui = this.abilityDataUI.getUI(ability.getAlias());
+			final boolean autoCastOn = ability.isAutoCastOn();
 			addCommandButton(ability,
 					ability.isToggleOn() ? ui.getOffIconUI(ability.getLevel() - 1)
 							: ui.getOnIconUI(ability.getLevel() - 1),
-					ability.getHandleId(), ability.getBaseOrderId(), 0, false, false, ability.getUIGoldCost(),
-					ability.getUILumberCost(), 0, ability.getUIManaCost(), -1);
+					ability.getHandleId(), ability.getBaseOrderId(),
+					autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn, false,
+					ability.getUIGoldCost(), ability.getUILumberCost(), 0, ability.getUIManaCost(), -1);
 		}
 		return null;
 	}

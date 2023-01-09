@@ -54,4 +54,14 @@ public interface AbilityFields {
 
 	public static final War3ID ENTANGLE_MINE_GOLD_PER_INTERVAL = War3ID.fromString("Egm1");
 	public static final War3ID ENTANGLE_MINE_INTERVAL_DURATION = War3ID.fromString("Egm2");
+
+	public static final War3ID EAT_TREE_RIP_DELAY = War3ID.fromString("Eat1");
+	public static final War3ID EAT_TREE_EAT_DELAY = War3ID.fromString("Eat2");
+	public static final War3ID EAT_TREE_HIT_POINTS_GAINED = War3ID.fromString("Eat3");
+
+	public static final War3ID MOON_WELL_MANA_GAINED = War3ID.fromString("Mbt1");
+	public static final War3ID MOON_WELL_HIT_POINTS_GAINED = War3ID.fromString("Mbt2");
+	public static final War3ID MOON_WELL_AUTOCAST_REQUIREMENT = War3ID.fromString("Mbt3");
+	public static final War3ID MOON_WELL_WATER_HEIGHT = War3ID.fromString("Mbt4");
+	public static final War3ID MOON_WELL_REGENERATE_ONLY_AT_NIGHT = War3ID.fromString("Mbt5");
 }

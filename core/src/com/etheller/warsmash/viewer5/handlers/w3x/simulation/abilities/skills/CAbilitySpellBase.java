@@ -89,6 +89,10 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
+		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
+			receiver.useOk();
+			return;
+		}
 		if (this.cooldownRemaining > 0) {
 			receiver.cooldownNotYetReady(this.cooldownRemaining, this.cooldown);
 		}

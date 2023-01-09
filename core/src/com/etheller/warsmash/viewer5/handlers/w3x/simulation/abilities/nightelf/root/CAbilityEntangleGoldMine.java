@@ -1,4 +1,4 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root;
 
 import java.util.List;
 

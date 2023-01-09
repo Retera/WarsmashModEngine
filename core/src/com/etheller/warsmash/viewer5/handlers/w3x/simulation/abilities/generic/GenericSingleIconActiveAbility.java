@@ -7,6 +7,12 @@ public interface GenericSingleIconActiveAbility extends CLevelingAbility, Single
 
 	boolean isToggleOn();
 
+	boolean isAutoCastOn();
+
+	int getAutoCastOnOrderId();
+
+	int getAutoCastOffOrderId();
+
 	int getUIGoldCost();
 
 	int getUILumberCost();

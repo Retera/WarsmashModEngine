@@ -27,8 +27,9 @@ public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 
 	private int lastAttackTurnTick;
 
-	public CAbilityPhoenixFire(int handleId, War3ID alias, float initialDamage, float damagePerSecond,
-			float areaOfEffect, float cooldown, float duration, final EnumSet<CTargetType> targetsAllowed) {
+	public CAbilityPhoenixFire(final int handleId, final War3ID alias, final float initialDamage,
+			final float damagePerSecond, final float areaOfEffect, final float cooldown, final float duration,
+			final EnumSet<CTargetType> targetsAllowed) {
 		super(handleId, alias);
 		this.initialDamage = initialDamage;
 		this.damagePerSecond = damagePerSecond;
@@ -39,15 +40,15 @@ public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 	}
 
 	@Override
-	public void onAdd(CSimulation game, CUnit unit) {
+	public void onAdd(final CSimulation game, final CUnit unit) {
 	}
 
 	@Override
-	public void onRemove(CSimulation game, CUnit unit) {
+	public void onRemove(final CSimulation game, final CUnit unit) {
 	}
 
 	@Override
-	public void onTick(CSimulation game, CUnit unit) {
+	public void onTick(final CSimulation game, final CUnit unit) {
 		final int cooldownTicks = (int) (this.cooldown / WarsmashConstants.SIMULATION_STEP_TIME);
 		final int gameTurnTick = game.getGameTurnTick();
 		if (gameTurnTick > (this.lastAttackTurnTick + cooldownTicks)) {
@@ -55,7 +56,7 @@ public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 					unit.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2), enumUnit -> {
 						if (unit.canReach(enumUnit, this.areaOfEffect)
 								&& enumUnit.canBeTargetedBy(game, unit, this.targetsAllowed)) {
-							unit.getAttacks().get(0).launch(game, unit, enumUnit, this.initialDamage,
+							unit.getCurrentAttacks().get(0).launch(game, unit, enumUnit, this.initialDamage,
 									CUnitAttackListener.DO_NOTHING);
 							this.lastAttackTurnTick = gameTurnTick;
 //							return true;
@@ -66,50 +67,52 @@ public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 	}
 
 	@Override
-	public void onDeath(CSimulation game, CUnit cUnit) {
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
 
 	}
 
 	@Override
-	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
+			final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.notAnActiveAbility();
 	}
 
@@ -137,27 +140,27 @@ public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 		return this.targetsAllowed;
 	}
 
-	public void setInitialDamage(float initialDamage) {
+	public void setInitialDamage(final float initialDamage) {
 		this.initialDamage = initialDamage;
 	}
 
-	public void setDamagePerSecond(float damagePerSecond) {
+	public void setDamagePerSecond(final float damagePerSecond) {
 		this.damagePerSecond = damagePerSecond;
 	}
 
-	public void setAreaOfEffect(float areaOfEffect) {
+	public void setAreaOfEffect(final float areaOfEffect) {
 		this.areaOfEffect = areaOfEffect;
 	}
 
-	public void setCooldown(float cooldown) {
+	public void setCooldown(final float cooldown) {
 		this.cooldown = cooldown;
 	}
 
-	public void setDuration(float duration) {
+	public void setDuration(final float duration) {
 		this.duration = duration;
 	}
 
-	public void setTargetsAllowed(EnumSet<CTargetType> targetsAllowed) {
+	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
 		this.targetsAllowed = targetsAllowed;
 	}
 

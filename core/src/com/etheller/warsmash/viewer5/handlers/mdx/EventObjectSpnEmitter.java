@@ -11,4 +11,9 @@ public class EventObjectSpnEmitter extends EventObjectEmitter<EventObjectEmitter
 		return new EventObjectSpn(this);
 	}
 
+	@Override
+	public String getName() {
+		return this.emitterObject.name;
+	}
+
 }

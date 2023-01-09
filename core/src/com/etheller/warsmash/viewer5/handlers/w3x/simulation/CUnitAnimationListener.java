@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 
 public interface CUnitAnimationListener {
 	void playAnimation(boolean force, final PrimaryTag animationName,
@@ -21,5 +22,9 @@ public interface CUnitAnimationListener {
 	void addSecondaryTag(SecondaryTag secondaryTag);
 
 	void removeSecondaryTag(SecondaryTag secondaryTag);
+
+	void lockTurrentFacing(AbilityTarget target);
+
+	void clearTurrentFacing();
 
 }

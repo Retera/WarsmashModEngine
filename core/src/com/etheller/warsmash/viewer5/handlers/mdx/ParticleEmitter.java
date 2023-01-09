@@ -31,4 +31,9 @@ public class ParticleEmitter extends MdxEmitter<MdxComplexInstance, ParticleEmit
 		return new Particle(this);
 	}
 
+	@Override
+	public String getName() {
+		return this.emitterObject.name;
+	}
+
 }

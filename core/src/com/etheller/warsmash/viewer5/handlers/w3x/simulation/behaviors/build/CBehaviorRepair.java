@@ -1,29 +1,28 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build;
 
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanRepair;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityRepair;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
-public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
-	private final CAbilityHumanRepair ability;
+public class CBehaviorRepair extends CAbstractRangedBehavior {
+	private final CAbilityRepair ability;
 	private final AbilityTargetStillAliveAndTargetableVisitor stillAliveVisitor;
 
-	public CBehaviorHumanRepair(final CUnit unit, final CAbilityHumanRepair ability) {
+	public CBehaviorRepair(final CUnit unit, final CAbilityRepair ability) {
 		super(unit);
 		this.ability = ability;
 		this.stillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 
-	public CBehaviorHumanRepair reset(final CWidget target) {
+	public CBehaviorRepair reset(final CWidget target) {
 		innerReset(target, false);
 		return this;
 	}
@@ -46,30 +45,14 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 				1.0f, true);
 		if (this.target instanceof CWidget) {
 			final CWidget targetWidget = (CWidget) this.target;
-			if ((targetWidget instanceof CUnit) && ((CUnit) targetWidget).isConstructing()
-					&& ((CUnit) targetWidget).isConstructingPaused()) {
-				final CUnit targetUnit = (CUnit) targetWidget;
-				targetUnit.setConstructionProgress(
-						targetUnit.getConstructionProgress() + WarsmashConstants.SIMULATION_STEP_TIME);
-				final int buildTime = targetUnit.getUnitType().getBuildTime();
-				final float healthGain = (WarsmashConstants.SIMULATION_STEP_TIME / buildTime)
-						* (targetUnit.getMaximumLife() * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
-				targetUnit.setLife(simulation,
-						Math.min(targetUnit.getLife() + healthGain, targetUnit.getMaximumLife()));
-				if (targetUnit.getConstructionProgress() >= buildTime) {
-					return this.unit.pollNextOrderBehavior(simulation);
-				}
+			float newLifeValue = targetWidget.getLife() + 1;
+			final boolean done = newLifeValue > targetWidget.getMaxLife();
+			if (done) {
+				newLifeValue = targetWidget.getMaxLife();
 			}
-			else {
-				float newLifeValue = targetWidget.getLife() + 1;
-				final boolean done = newLifeValue > targetWidget.getMaxLife();
-				if (done) {
-					newLifeValue = targetWidget.getMaxLife();
-				}
-				targetWidget.setLife(simulation, newLifeValue);
-				if (done) {
-					return this.unit.pollNextOrderBehavior(simulation);
-				}
+			targetWidget.setLife(simulation, newLifeValue);
+			if (done) {
+				return this.unit.pollNextOrderBehavior(simulation);
 			}
 		}
 		return this;

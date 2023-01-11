@@ -23,17 +23,12 @@ public class ParticleEmitter extends MdxEmitter<MdxComplexInstance, ParticleEmit
 
 	@Override
 	protected void emit() {
-		this.emitObject(0);
+		emitObject(0);
 	}
 
 	@Override
 	protected Particle createObject() {
 		return new Particle(this);
-	}
-
-	@Override
-	public String getName() {
-		return this.emitterObject.name;
 	}
 
 }

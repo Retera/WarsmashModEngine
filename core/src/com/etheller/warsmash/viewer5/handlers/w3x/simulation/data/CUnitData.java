@@ -358,7 +358,7 @@ public class CUnitData {
 		for (final War3ID ability : unitTypeInstance.getAbilityList()) {
 			final CLevelingAbility existingAbility = unit
 					.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(ability));
-			if (existingAbility == null) {
+			if ((existingAbility == null) || !existingAbility.isPermanent()) {
 				final CAbility createAbility = this.abilityData.createAbility(ability, handleIdAllocator.createId());
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);

@@ -30,7 +30,7 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	}
 
 	public List<War3ID> getItemsSold() {
-		return itemsSold;
+		return this.itemsSold;
 	}
 
 	@Override
@@ -38,8 +38,8 @@ public final class CAbilitySellItems extends AbstractCAbility {
 			final AbilityActivationReceiver receiver) {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
 		final int itemIndex = (orderId & 0xFF00) >> 8;
-		if ((itemIndex >= 0) && (itemIndex < itemsSold.size())) {
-			final CItemType itemType = game.getItemData().getItemType(itemsSold.get(itemIndex));
+		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
+			final CItemType itemType = game.getItemData().getItemType(this.itemsSold.get(itemIndex));
 			if (itemType != null) {
 				final CPlayer player = game.getPlayer(playerIndex);
 				if ((player.getGold() >= itemType.getGoldCost())) {
@@ -80,7 +80,7 @@ public final class CAbilitySellItems extends AbstractCAbility {
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
 		final int itemIndex = (orderId & 0xFF00) >> 8;
-		if ((itemIndex >= 0) && (itemIndex < itemsSold.size())) {
+		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
 			receiver.targetOk(null);
 		}
 		else {
@@ -124,8 +124,8 @@ public final class CAbilitySellItems extends AbstractCAbility {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
 		final int itemIndex = (orderId & 0xFF00) >> 8;
 		final CAbilityNeutralBuilding neutralBuildingData = caster.getNeutralBuildingData();
-		if ((itemIndex >= 0) && (itemIndex < itemsSold.size())) {
-			final War3ID itemTypeId = itemsSold.get(itemIndex);
+		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
+			final War3ID itemTypeId = this.itemsSold.get(itemIndex);
 			final CItemType itemType = game.getItemData().getItemType(itemTypeId);
 			if ((neutralBuildingData != null) && (neutralBuildingData.getSelectedPlayerUnit(playerIndex) != null)) {
 				final CUnit purchasingHero = neutralBuildingData.getSelectedPlayerUnit(playerIndex);
@@ -155,7 +155,10 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
-	public void onSetUnitType(final CUnitType unitType) {
+	@Override
+	public void onSetUnitType(final CSimulation game, final CUnit cUnit) {
+		// NOTE: this method not actually used, because CAbilityQueue is not Aliased
+		final CUnitType unitType = cUnit.getUnitType();
 		this.itemsSold.clear();
 		this.itemsSold.addAll(unitType.getItemsSold());
 	}

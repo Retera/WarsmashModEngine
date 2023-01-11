@@ -263,7 +263,7 @@ public class CUnit extends CWidget {
 	}
 
 	public float getManaRegen() {
-		return manaRegen;
+		return this.manaRegen;
 	}
 
 	public void setAgilityDefensePermanentBonus(final int agilityDefensePermanentBonus) {
@@ -372,18 +372,28 @@ public class CUnit extends CWidget {
 		this.defenseType = this.unitType.getDefenseType();
 		this.acquisitionRange = this.unitType.getDefaultAcquisitionRange();
 		this.structure = this.unitType.isBuilding();
+		final List<CAbility> persistedAbilities = new ArrayList<>();
+		final List<CAbility> removedAbilities = new ArrayList<>();
 		for (final CAbility ability : this.abilities) {
-			if (!(ability instanceof Aliased)
-					|| !this.unitType.getAbilityList().contains(((Aliased) ability).getAlias())) {
+			if (!ability.isPermanent()) {
 				ability.onRemove(game, this);
 				game.onAbilityRemovedFromUnit(this, ability);
+				removedAbilities.add(ability);
+			}
+			else {
+				persistedAbilities.add(ability);
 			}
 		}
-		this.abilities.clear();
+		for (final CAbility removed : removedAbilities) {
+			this.abilities.remove(removed); // TODO remove inefficient O(N) search
+		}
 		game.getUnitData().addDefaultAbilitiesToUnit(game, game.getHandleIdAllocator(), this.unitType, false, -1,
 				this.speed, this);
 		computeDerivedFields();
 		game.getWorldCollision().addUnit(this);
+		for (final CAbility ability : persistedAbilities) {
+			ability.onSetUnitType(game, this);
+		}
 		game.unitUpdatedType(this, typeId);
 	}
 
@@ -506,10 +516,10 @@ public class CUnit extends CWidget {
 						this.constructing = false;
 						this.constructingPaused = false;
 						this.constructionProgress = 0;
-						if (constructionConsumesWorker) {
+						if (this.constructionConsumesWorker) {
 							if (this.workerInside != null) {
-								game.removeUnit(workerInside);
-								workerInside = null;
+								game.removeUnit(this.workerInside);
+								this.workerInside = null;
 							}
 						}
 						else {
@@ -539,9 +549,12 @@ public class CUnit extends CWidget {
 						}
 						player.removeTechtreeInProgress(this.unitType.getTypeId());
 						player.addTechtreeUnlocked(this.unitType.getTypeId());
-						game.unitConstructFinishEvent(this);
 						if (!upgrading) {
+							game.unitConstructFinishEvent(this);
 							fireConstructFinishEvents(game);
+						}
+						else {
+							game.unitUpgradeFinishEvent(this);
 						}
 						if (upgrading || true) {
 							// TODO shouldnt need to play stand here, probably
@@ -727,9 +740,12 @@ public class CUnit extends CWidget {
 						this.currentBehavior = this.currentBehavior.update(game);
 						if (lastBehavior != this.currentBehavior) {
 							lastBehavior.end(game, false);
-							this.currentBehavior.begin(game);
+							if (this.currentBehavior != null) {
+								this.currentBehavior.begin(game);
+							}
 						}
-						if (this.currentBehavior.getHighlightOrderId() != lastBehaviorHighlightOrderId) {
+						if ((this.currentBehavior != null)
+								&& (this.currentBehavior.getHighlightOrderId() != lastBehaviorHighlightOrderId)) {
 							this.stateNotifier.ordersChanged();
 						}
 					}
@@ -755,9 +771,9 @@ public class CUnit extends CWidget {
 			this.workerInside.setHidden(false);
 			this.workerInside.setPaused(false);
 			this.workerInside.nudgeAround(game, this);
-			if (constructionConsumesWorker) {
-				game.getPlayer(workerInside.getPlayerIndex()).setUnitFoodUsed(workerInside,
-						workerInside.getUnitType().getFoodUsed());
+			if (this.constructionConsumesWorker) {
+				game.getPlayer(this.workerInside.getPlayerIndex()).setUnitFoodUsed(this.workerInside,
+						this.workerInside.getUnitType().getFoodUsed());
 			}
 			this.workerInside = null;
 		}
@@ -1154,7 +1170,7 @@ public class CUnit extends CWidget {
 		final boolean wasDead = isDead();
 		if (!this.invulnerable) {
 			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
-					this.getDefenseType());
+					getDefenseType());
 			final float damageRatioFromDefense;
 			final float defense = this.currentDefense;
 			if (defense >= 0) {
@@ -1677,6 +1693,10 @@ public class CUnit extends CWidget {
 
 	public boolean isConstructing() {
 		return this.constructing && (this.upgradeIdType == null);
+	}
+
+	public boolean isConstructingPaused() {
+		return this.constructingPaused;
 	}
 
 	public boolean isUpgrading() {
@@ -2668,7 +2688,7 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean isConstructionConsumesWorker() {
-		return constructionConsumesWorker;
+		return this.constructionConsumesWorker;
 	}
 
 	public CDefenseType getDefenseType() {

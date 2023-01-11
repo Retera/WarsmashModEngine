@@ -873,14 +873,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 			@Override
 			public void multiSelectIconClicked(final int index) {
-				if (selectedUnit != null) {
-					final CUnit simulationUnit = selectedUnit.getSimulationUnit();
+				if (MeleeUI.this.selectedUnit != null) {
+					final CUnit simulationUnit = MeleeUI.this.selectedUnit.getSimulationUnit();
 					final CAbilityCargoHold cargoData = simulationUnit.getCargoData();
 					if (cargoData != null) {
 						final CUnit unitInside = cargoData.getUnit(index);
 						if ((index >= 0) && (index < cargoData.getCargoCount())) {
 							final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
-							final CSimulation simulation = war3MapViewer.simulation;
+							final CSimulation simulation = MeleeUI.this.war3MapViewer.simulation;
 							cargoData.checkCanUse(simulation, simulationUnit, OrderIds.unload, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final CWidgetAbilityTargetCheckReceiver targetCheckReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
@@ -888,7 +888,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 										targetCheckReceiver.reset());
 								if (targetCheckReceiver.getTarget() != null) {
 									final CPlayer player = simulation.getPlayer(simulationUnit.getPlayerIndex());
-									unitOrderListener.issueTargetOrder(simulationUnit.getHandleId(),
+									MeleeUI.this.unitOrderListener.issueTargetOrder(simulationUnit.getHandleId(),
 											cargoData.getHandleId(), OrderIds.unload,
 											targetCheckReceiver.getTarget().getHandleId(), false);
 								}
@@ -3197,22 +3197,31 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final boolean autoCastActive, final boolean menuButton, final String tip, final String uberTip,
 			final char hotkey, final int goldCost, final int lumberCost, final int foodCost, final int manaCost,
 			final float cooldownRemaining, final float cooldownMax, final int numberOverlay) {
+		if ((buttonPositionX == -11) || (buttonPositionY == -11)) {
+			// NOTE some guys said they liked to do this as a hack to hide icons or whatever
+			return;
+		}
 		int x = Math.max(0, Math.min(COMMAND_CARD_WIDTH - 1, buttonPositionX));
 		int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
-		while ((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT) && this.commandCard[y][x].isVisible()) {
-			x++;
-			if (x >= COMMAND_CARD_WIDTH) {
-				x = 0;
-				y++;
+		while ((x >= 0) && (y >= 0) && this.commandCard[y][x].isVisible()) {
+			x--;
+			if (x < 0) {
+				x = COMMAND_CARD_WIDTH - 1;
+				y--;
 			}
 		}
-		if (y >= COMMAND_CARD_HEIGHT) {
-			y--;
-			while ((x >= 0) && (y >= 0) && this.commandCard[y][x].isVisible()) {
-				x--;
-				if (x < 0) {
-					x = COMMAND_CARD_WIDTH;
-					y--;
+		if ((y < 0) || (x < 0)) {
+			if (y < 0) {
+				y = 0;
+			}
+			if (x < 0) {
+				x = 0;
+			}
+			while ((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT) && this.commandCard[y][x].isVisible()) {
+				x++;
+				if (x >= COMMAND_CARD_WIDTH) {
+					x = 0;
+					y++;
 				}
 			}
 		}

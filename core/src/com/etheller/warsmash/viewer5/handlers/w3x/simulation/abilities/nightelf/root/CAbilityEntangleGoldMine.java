@@ -26,6 +26,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUnderConstructionVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
@@ -82,6 +83,17 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityActivationReceiver receiver) {
+		if (this.entangledMine != null) {
+			receiver.disabled();
+		}
+		else {
+			super.innerCheckCanUse(game, unit, orderId, receiver);
+		}
+	}
+
+	@Override
 	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
@@ -112,6 +124,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 						0);
 
 				setIconShowing(false);
+				setPermanent(true);
 				// TODO maybe don't literally use a Trigger type (?) or else use it for
 				// everything to be consistent:
 				if (this.mineDeathEvent != null) {
@@ -143,9 +156,21 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 			this.unitRootsRenderComponent.remove();
 		}
 		setIconShowing(true);
+		setPermanent(false);
 		if (this.mineDeathEvent != null) {
 			this.mineDeathEvent.remove();
 			this.mineDeathEvent = null;
+		}
+	}
+
+	@Override
+	public void onSetUnitType(final CSimulation game, final CUnit cUnit) {
+		super.onSetUnitType(game, cUnit);
+		if (this.entangledMine != null) {
+			// NOTE: this is getting used here as a quick solution to a problem that is
+			// better solved later by making setters (setIconShowing, etc, whatever)
+			// use some type of increasing/decreasing count
+			setIconShowing(false);
 		}
 	}
 

@@ -520,6 +520,10 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnUnitConstructionFinishSound(constructedStructure);
 	}
 
+	public void unitUpgradeFinishEvent(final CUnit constructedStructure) {
+		this.simulationRenderController.spawnUnitUpgradeFinishSound(constructedStructure);
+	}
+
 	public void createBuildingDeathEffect(final CUnit cUnit) {
 		this.simulationRenderController.spawnBuildingDeathEffect(cUnit);
 	}

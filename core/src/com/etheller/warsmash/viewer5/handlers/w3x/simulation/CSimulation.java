@@ -50,6 +50,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUpgradeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
@@ -158,7 +159,7 @@ public class CSimulation implements CPlayerAPI {
 				}
 			}
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
-					configPlayer);
+					configPlayer, new CPlayerFogOfWar(pathingGrid));
 			newPlayer.setAIDifficulty(configPlayer.getAIDifficulty());
 			this.players.add(newPlayer);
 			this.defaultPlayerUnitOrderExecutors.add(new CPlayerUnitOrderExecutor(this, i));
@@ -179,6 +180,15 @@ public class CSimulation implements CPlayerAPI {
 
 		this.commandErrorListener = commandErrorListener;
 
+		final CTimer fogUpdateTimer = new CTimer() {
+			@Override
+			public void onFire() {
+				updateFogOfWar();
+			}
+		};
+		fogUpdateTimer.setRepeats(true);
+		fogUpdateTimer.setTimeoutTime(1.0f);
+		fogUpdateTimer.start(this);
 	}
 
 	public CUnitData getUnitData() {
@@ -364,6 +374,15 @@ public class CSimulation implements CPlayerAPI {
 	public void removeFromPathfindingQueue(final CBehaviorMove behaviorMove) {
 		final int playerIndex = behaviorMove.getUnit().getPlayerIndex();
 		this.pathfindingProcessors[playerIndex].removeFromPathfindingQueue(behaviorMove);
+	}
+
+	protected void updateFogOfWar() {
+		for (final CPlayer player : this.players) {
+			player.getFogOfWar().convertVisibleToFogged();
+		}
+		for (final CUnit unit : this.units) {
+			unit.updateFogOfWar(this);
+		}
 	}
 
 	public void update() {

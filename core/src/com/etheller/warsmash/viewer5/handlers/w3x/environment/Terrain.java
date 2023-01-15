@@ -52,6 +52,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 
 public class Terrain {
 	public static final float CELL_SIZE = 128f;
@@ -122,6 +123,7 @@ public class Terrain {
 	private final Map<String, SplatModel> uberSplatModels;
 	private final List<SplatModel> uberSplatModelsList;
 	private int shadowMap;
+	private int fogOfWarMap;
 	public final Map<String, Splat> splats = new HashMap<>();
 	public final Map<String, List<float[]>> shadows = new HashMap<>();
 	public final Map<String, Texture> shadowTextures = new HashMap<>();
@@ -135,6 +137,7 @@ public class Terrain {
 	private boolean initShadowsFinished = false;
 	private byte[] staticShadowData;
 	private byte[] shadowData;
+	private CPlayerFogOfWar fogOfWarData;
 
 	public Terrain(final War3MapW3e w3eFile, final War3MapWpm terrainPathing, final War3MapW3i w3iFile,
 			final WebGL webGL, final DataSource dataSource, final WorldEditStrings worldEditStrings,
@@ -449,8 +452,7 @@ public class Terrain {
 
 				float rampHeight = 0f;
 				// Check if in one of the configurations the bottom_left is a ramp
-				XLoop:
-				for (int xOffset = -1; xOffset <= 0; xOffset++) {
+				XLoop: for (int xOffset = -1; xOffset <= 0; xOffset++) {
 					for (int yOffset = -1; yOffset <= 0; yOffset++) {
 						if (((i + xOffset) >= 0) && ((i + xOffset) < (this.columns - 1)) && ((j + yOffset) >= 0)
 								&& ((j + yOffset) < (this.rows - 1))) {
@@ -692,7 +694,7 @@ public class Terrain {
 									topRight.setCliffTexture(bottomLeftCliffTex);
 									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
 											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))]
-													.setCliffTexture(bottomLeftCliffTex);
+											.setCliffTexture(bottomLeftCliffTex);
 
 									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
 											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))].romp = true;
@@ -846,8 +848,7 @@ public class Terrain {
 	}
 
 	private int realTileTexture(final int x, final int y) {
-		ILoop:
-		for (int i = -1; i < 1; i++) {
+		ILoop: for (int i = -1; i < 1; i++) {
 			for (int j = -1; j < 1; j++) {
 				if (((x + i) >= 0) && ((x + i) < this.columns) && ((y + j) >= 0) && ((y + j) < this.rows)) {
 					if (this.corners[x + i][y + j].cliff) {
@@ -1002,6 +1003,7 @@ public class Terrain {
 		gl.glUniform1i(this.groundShader.getUniformLocation("sample15"), 18);
 		gl.glUniform1i(this.groundShader.getUniformLocation("sample16"), 19);
 		gl.glUniform1i(this.groundShader.getUniformLocation("shadowMap"), 20);
+		gl.glUniform1i(this.groundShader.getUniformLocation("fogOfWarMap"), 22);
 		for (int i = 0; i < this.groundTextures.size(); i++) {
 			gl.glActiveTexture(GL30.GL_TEXTURE3 + i);
 			gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.groundTextures.get(i).id);
@@ -1012,6 +1014,9 @@ public class Terrain {
 
 		gl.glActiveTexture(GL30.GL_TEXTURE20);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
+
+		gl.glActiveTexture(GL30.GL_TEXTURE22);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
 
 //		gl.glEnableVertexAttribArray(0);
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, Shapes.INSTANCE.vertexBuffer);
@@ -1117,6 +1122,7 @@ public class Terrain {
 		this.waterShader.setUniformi("ground_height_texture", 1);
 		this.waterShader.setUniformi("water_exists_texture", 2);
 		this.waterShader.setUniformi("water_textures", 4);
+		this.waterShader.setUniformi("fogOfWarMap", 5);
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
 		gl.glActiveTexture(GL30.GL_TEXTURE1);
@@ -1125,6 +1131,8 @@ public class Terrain {
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterExists);
 		gl.glActiveTexture(GL30.GL_TEXTURE4);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
+		gl.glActiveTexture(GL30.GL_TEXTURE5);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
 
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, Shapes.INSTANCE.vertexBuffer);
 		gl.glVertexAttribPointer(this.waterShader.getAttributeLocation("vPosition"), 2, GL30.GL_FLOAT, false, 0, 0);
@@ -1176,6 +1184,10 @@ public class Terrain {
 		this.cliffShader.setUniformi("shadowMap", 2);
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
+
+		this.cliffShader.setUniformi("fogOfWarMap", 3);
+		gl.glActiveTexture(GL30.GL_TEXTURE3);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
 
 		this.cliffShader.setUniformi("cliff_textures", 0);
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
@@ -1296,6 +1308,9 @@ public class Terrain {
 		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, columns, rows, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
 				RenderMathUtils.wrap(this.shadowData));
 		this.initShadowsFinished = true;
+
+		this.fogOfWarMap = gl.glGenTexture();
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
 	}
 
 	private void reloadShadowData(final float[] centerOffset, final int columns, final int rows) {
@@ -1684,5 +1699,25 @@ public class Terrain {
 
 	public float[] getDefaultCameraBounds() {
 		return this.defaultCameraBounds;
+	}
+
+	public void setFogOfWarData(final CPlayerFogOfWar fogOfWarData) {
+		this.fogOfWarData = fogOfWarData;
+		reloadFogOfWarDataToGPU();
+	}
+
+	public void reloadFogOfWarDataToGPU() {
+		final GL30 gl = Gdx.gl30;
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, Terrain.this.fogOfWarMap);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, fogOfWarData.getWidth(), fogOfWarData.getHeight(), 0,
+				GL30.GL_RED, GL30.GL_UNSIGNED_BYTE, fogOfWarData.getFogOfWarBuffer());
+	}
+
+	public int getFogOfWarMap() {
+		return fogOfWarMap;
 	}
 }

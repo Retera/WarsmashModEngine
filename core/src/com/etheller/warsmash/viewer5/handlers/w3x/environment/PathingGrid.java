@@ -358,6 +358,18 @@ public class PathingGrid {
 		return movetpToMovementType.get(movetp);
 	}
 
+	public int getFogOfWarIndexX(final float x) {
+		final float userCellSpaceX = ((x + 128f) - this.centerOffset[0]) / 256.0f;
+		final int cellX = (int) userCellSpaceX;
+		return cellX;
+	}
+
+	public int getFogOfWarIndexY(final float y) {
+		final float userCellSpaceY = ((y + 128f) - this.centerOffset[1]) / 256.0f;
+		final int cellY = (int) userCellSpaceY;
+		return cellY;
+	}
+
 	public static final class PathingFlags {
 		public static short UNWALKABLE = 0x2;
 		public static short UNFLYABLE = 0x4;

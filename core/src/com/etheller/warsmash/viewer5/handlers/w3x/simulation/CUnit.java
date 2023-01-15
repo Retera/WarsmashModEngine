@@ -63,6 +63,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTarget
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionEnumFunction;
@@ -2697,5 +2698,28 @@ public class CUnit extends CWidget {
 
 	public void setDefenseType(final CDefenseType defenseType) {
 		this.defenseType = defenseType;
+	}
+
+	public void updateFogOfWar(final CSimulation game) {
+		if (!isDead() && !paused && !hidden) {
+			final float sightRadius = game.isDay() ? unitType.getSightRadiusDay() : unitType.getSightRadiusNight();
+			final CPlayerFogOfWar fogOfWar = game.getPlayer(playerIndex).getFogOfWar();
+			final float myX = getX();
+			final int myIndexX = game.getPathingGrid().getFogOfWarIndexX(myX);
+			final float myY = getY();
+			final int myIndexY = game.getPathingGrid().getFogOfWarIndexY(myY);
+			fogOfWar.setState(myIndexX, myIndexY, (byte) 0);
+			final float twoPi = (float) StrictMath.PI * 2;
+			final float angleIncrement = (float) StrictMath.PI / 6;
+			for (float angle = 0; angle < twoPi; angle += angleIncrement) {
+				for (float dist = 128; dist <= sightRadius; dist += 128) {
+					final int iterationIndexX = game.getPathingGrid()
+							.getFogOfWarIndexX(myX + (float) (StrictMath.cos(angle) * dist));
+					final int iterationIndexY = game.getPathingGrid()
+							.getFogOfWarIndexY(myY + (float) (StrictMath.sin(angle) * dist));
+					fogOfWar.setState(iterationIndexX, iterationIndexY, (byte) 0);
+				}
+			}
+		}
 	}
 }

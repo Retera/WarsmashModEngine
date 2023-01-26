@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.ArrayList;
@@ -456,9 +455,7 @@ public final class War3ObjectDataChangeset {
 	}
 
 	public static enum CollisionHandling {
-		CREATE_NEW_ID,
-		REPLACE,
-		MERGE;
+		CREATE_NEW_ID, REPLACE, MERGE;
 	}
 
 	public void merge(final War3ObjectDataChangeset obj, final CollisionHandling collisionHandling) {
@@ -482,9 +479,7 @@ public final class War3ObjectDataChangeset {
 	public boolean loadtable(final LittleEndianDataInputStream stream, final ObjectMap map, final boolean isOriginal,
 			final WTS wts, final boolean inlineWTS) throws IOException {
 		final War3ID noid = new War3ID(0);
-		final ByteBuffer stringByteBuffer = ByteBuffer.allocate(1024); // TODO check max len?
-		final CharsetDecoder decoder = Charset.forName("utf-8").newDecoder().onMalformedInput(CodingErrorAction.REPLACE)
-				.onUnmappableCharacter(CodingErrorAction.REPLACE);
+		final StringBuilder stringBuilder = new StringBuilder();
 		int ptr;
 		final int count = stream.readInt();
 		for (int i = 0; i < count; i++) {
@@ -553,13 +548,12 @@ public final class War3ObjectDataChangeset {
 					break;
 				case 3:
 					ptr = 0;
-					stringByteBuffer.clear();
-					byte charRead;
-					while ((charRead = (byte) stream.read()) != 0) {
-						stringByteBuffer.put(charRead);
+					stringBuilder.setLength(0);
+					int charRead;
+					while ((charRead = stream.read()) != 0) {
+						stringBuilder.append((char) charRead);
 					}
-					stringByteBuffer.flip();
-					newlyReadChange.setStrval(decoder.decode(stringByteBuffer).toString());
+					newlyReadChange.setStrval(stringBuilder.toString());
 					if (inlineWTS && (newlyReadChange.getStrval().length() > 8)
 							&& "TRIGSTR_".equals(newlyReadChange.getStrval().substring(0, 8))) {
 						final int key = getWTSValue(newlyReadChange);

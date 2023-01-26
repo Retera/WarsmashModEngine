@@ -40,7 +40,11 @@ public class CPlayerFogOfWar {
 	}
 
 	public byte getState(final int indexX, final int indexY) {
-		return fogOfWarBuffer.get((indexY * getWidth()) + indexX);
+		final int index = (indexY * getWidth()) + indexX;
+		if ((index >= 0) && (index < fogOfWarBuffer.capacity())) {
+			return fogOfWarBuffer.get(index);
+		}
+		return 0;
 	}
 
 	public void setState(final PathingGrid pathingGrid, final float x, final float y, final byte fogOfWarState) {
@@ -50,7 +54,10 @@ public class CPlayerFogOfWar {
 	}
 
 	public void setState(final int indexX, final int indexY, final byte fogOfWarState) {
-		fogOfWarBuffer.put((indexY * getWidth()) + indexX, fogOfWarState);
+		final int writeIndex = (indexY * getWidth()) + indexX;
+		if ((writeIndex >= 0) && (writeIndex < fogOfWarBuffer.capacity())) {
+			fogOfWarBuffer.put(writeIndex, fogOfWarState);
+		}
 	}
 
 	public void convertVisibleToFogged() {

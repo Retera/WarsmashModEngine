@@ -991,9 +991,11 @@ public class MdxComplexInstance extends ModelInstance {
 	}
 
 	public MdxNode inefficientlyGetNodeByNameSearch(final String name) {
-		for (final MdxNode node : this.nodes) {
-			if ((node.name != null) && node.name.equalsIgnoreCase(name)) {
-				return node;
+		if (this.model.ok) {
+			for (final MdxNode node : this.nodes) {
+				if ((node.name != null) && node.name.equalsIgnoreCase(name)) {
+					return node;
+				}
 			}
 		}
 		return null;

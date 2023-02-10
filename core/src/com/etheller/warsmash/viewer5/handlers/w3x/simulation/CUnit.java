@@ -169,6 +169,7 @@ public class CUnit extends CWidget {
 	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
 
 	private boolean constructionConsumesWorker;
+	private boolean explodesOnDeath;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
@@ -1233,7 +1234,7 @@ public class CUnit extends CWidget {
 		this.currentBehavior = null;
 		this.orderQueue.clear();
 		if (this.constructing) {
-			simulation.createBuildingDeathEffect(this);
+			simulation.createDeathExplodeEffect(this);
 		}
 		else {
 			this.deathTurnTick = simulation.getGameTurnTick();
@@ -1344,6 +1345,11 @@ public class CUnit extends CWidget {
 			}
 		}
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
+		if (isExplodesOnDeath()) {
+			setHidden(true);
+			simulation.createDeathExplodeEffect(this);
+			simulation.removeUnit(this);
+		}
 	}
 
 	public void killPathingInstance() {
@@ -2701,9 +2707,10 @@ public class CUnit extends CWidget {
 	}
 
 	public void updateFogOfWar(final CSimulation game) {
-		if (!isDead() && !paused && !hidden) {
-			final float sightRadius = game.isDay() ? unitType.getSightRadiusDay() : unitType.getSightRadiusNight();
-			final CPlayerFogOfWar fogOfWar = game.getPlayer(playerIndex).getFogOfWar();
+		if (!isDead() && !this.paused && !this.hidden) {
+			final float sightRadius = game.isDay() ? this.unitType.getSightRadiusDay()
+					: this.unitType.getSightRadiusNight();
+			final CPlayerFogOfWar fogOfWar = game.getPlayer(this.playerIndex).getFogOfWar();
 			final float myX = getX();
 			final int myIndexX = game.getPathingGrid().getFogOfWarIndexX(myX);
 			final float myY = getY();
@@ -2721,5 +2728,13 @@ public class CUnit extends CWidget {
 				}
 			}
 		}
+	}
+
+	public void setExplodesOnDeath(final boolean explodesOnDeath) {
+		this.explodesOnDeath = explodesOnDeath;
+	}
+
+	public boolean isExplodesOnDeath() {
+		return this.explodesOnDeath;
 	}
 }

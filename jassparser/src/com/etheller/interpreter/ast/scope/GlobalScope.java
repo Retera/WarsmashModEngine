@@ -222,7 +222,9 @@ public final class GlobalScope {
 	public void queueTrigger(final TriggerBooleanExpression filter, final TriggerExecutionScope filterScope,
 			final Trigger trigger, final TriggerExecutionScope evaluateScope,
 			final TriggerExecutionScope executeScope) {
-		this.triggerQueue.add(new QueuedTrigger(filter, filterScope, trigger, evaluateScope, executeScope));
+		if (trigger.isEnabled()) {
+			this.triggerQueue.add(new QueuedTrigger(filter, filterScope, trigger, evaluateScope, executeScope));
+		}
 	}
 
 	public void queueFunction(final JassFunction function, final TriggerExecutionScope scope) {

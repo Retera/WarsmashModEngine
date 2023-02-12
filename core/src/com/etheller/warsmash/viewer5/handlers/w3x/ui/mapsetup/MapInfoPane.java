@@ -81,12 +81,13 @@ public class MapInfoPane {
 		
 		// Right-section
 		this.suggestedPlayersValue
-				.addSetPoint(new SetPoint(FramePoint.TOP, minimapImageFrame, FramePoint.BOTTOM, 0, GameUI.convertY(uiViewport, -0.01f)));
+				.addSetPoint(new SetPoint(FramePoint.TOP, minimapImageFrame, FramePoint.BOTTOM,
+				GameUI.convertX(uiViewport, -0.005f), GameUI.convertY(uiViewport, -0.01f)));
 		this.mapSizeValue.addSetPoint(new SetPoint(FramePoint.TOP, suggestedPlayersValue, FramePoint.BOTTOM, 0, 0));
 		this.mapTilesetValue.addSetPoint(new SetPoint(FramePoint.TOP, mapSizeValue, FramePoint.BOTTOM, 0, 0));
 		
 		// Bottom
-		mapDescLabel.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapTilesetLabel, FramePoint.BOTTOMLEFT, 0, 0));
+		mapDescLabel.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapTilesetLabel, FramePoint.BOTTOMLEFT, 0, GameUI.convertY(uiViewport, -0.01f)));
 		this.mapDescValue.clearFramePointAssignments();
 		this.mapDescValue.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapDescLabel, FramePoint.BOTTOMLEFT, 0, 0));
 		this.mapDescValue.setWidth(GameUI.convertX(uiViewport, 0.23f));

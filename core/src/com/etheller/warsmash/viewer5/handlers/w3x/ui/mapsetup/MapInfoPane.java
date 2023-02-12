@@ -63,25 +63,37 @@ public class MapInfoPane {
 
 		// TODO there might be some kind of layout manager system that is supposed to do
 		// the below anchoring automatically but I don't have that atm
-		this.maxPlayersIcon
-				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.mapInfoPaneFrame, FramePoint.TOPLEFT, 0, 0));
 
-		minimapImageFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.maxPlayersIcon, FramePoint.BOTTOMLEFT, 0,
+		// Top
+		this.mapNameValue.clearFramePointAssignments();
+		this.mapNameValue
+				.addSetPoint(new SetPoint(FramePoint.CENTER, this.mapInfoPaneFrame, FramePoint.TOP, 0, 0));
+		this.maxPlayersIcon
+				.addSetPoint(new SetPoint(FramePoint.RIGHT, mapNameValue, FramePoint.LEFT, 0, 0));
+		minimapImageFrame.addSetPoint(new SetPoint(FramePoint.TOP, this.mapNameValue, FramePoint.BOTTOM, 0,
 				GameUI.convertY(uiViewport, -0.01f)));
-		suggestedPlayersLabel.addSetPoint(new SetPoint(FramePoint.TOPLEFT, minimapImageFrame, FramePoint.BOTTOMLEFT, 0,
+		
+		// Left-section
+		suggestedPlayersLabel.addSetPoint(new SetPoint(FramePoint.TOP, minimapImageFrame, FramePoint.BOTTOMLEFT, 0,
 				GameUI.convertY(uiViewport, -0.01f)));
-		this.suggestedPlayersValue
-				.addSetPoint(new SetPoint(FramePoint.TOPLEFT, suggestedPlayersLabel, FramePoint.TOPRIGHT, 0, 0));
 		mapSizeLabel.addSetPoint(new SetPoint(FramePoint.TOPLEFT, suggestedPlayersLabel, FramePoint.BOTTOMLEFT, 0, 0));
-		this.mapSizeValue.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapSizeLabel, FramePoint.TOPRIGHT, 0, 0));
 		mapTilesetLabel.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapSizeLabel, FramePoint.BOTTOMLEFT, 0, 0));
-		this.mapTilesetValue.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapTilesetLabel, FramePoint.TOPRIGHT, 0, 0));
+		
+		// Right-section
+		this.suggestedPlayersValue
+				.addSetPoint(new SetPoint(FramePoint.TOP, minimapImageFrame, FramePoint.BOTTOM, 0, GameUI.convertY(uiViewport, -0.01f)));
+		this.mapSizeValue.addSetPoint(new SetPoint(FramePoint.TOP, suggestedPlayersValue, FramePoint.BOTTOM, 0, 0));
+		this.mapTilesetValue.addSetPoint(new SetPoint(FramePoint.TOP, mapSizeValue, FramePoint.BOTTOM, 0, 0));
+		
+		// Bottom
 		mapDescLabel.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapTilesetLabel, FramePoint.BOTTOMLEFT, 0, 0));
 		this.mapDescValue.clearFramePointAssignments();
 		this.mapDescValue.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapDescLabel, FramePoint.BOTTOMLEFT, 0, 0));
 		this.mapDescValue.setWidth(GameUI.convertX(uiViewport, 0.23f));
 
 		this.authIconFrame.setVisible(false);
+
+		toggleMapInfo(false);
 	}
 
 	public void clearMap(final GameUI rootFrame, final Viewport uiViewport, String mapPreviewName) {
@@ -100,6 +112,8 @@ public class MapInfoPane {
 		this.minimapImageTextureFrame.setTexture(minimapTexture);
 
 		this.mapInfoPaneFrame.positionBounds(rootFrame, uiViewport);
+
+		toggleMapInfo(false);
 	}
 
 	public void setMap(final GameUI rootFrame, final Viewport uiViewport, final War3Map map, final War3MapW3i mapInfo,
@@ -145,6 +159,19 @@ public class MapInfoPane {
 		this.minimapImageTextureFrame.setTexture(minimapTexture);
 
 		this.mapInfoPaneFrame.positionBounds(rootFrame, uiViewport);
+
+		toggleMapInfo(true);
+	}
+
+	public void toggleMapInfo(final boolean visible){
+		this.mapInfoPaneFrame.setVisible(visible);
+		this.maxPlayersIcon.setVisible(visible);
+		this.maxPlayersValue.setVisible(visible);
+		this.suggestedPlayersValue.setVisible(visible);
+		this.mapSizeValue.setVisible(visible);
+		this.mapDescValue.setVisible(visible);
+		this.mapNameValue.setVisible(visible);
+		this.mapTilesetValue.setVisible(visible);
 	}
 
 }

@@ -100,6 +100,10 @@ com_crashlytics_export_strings.xml
 nbactions.xml
 nb-configuration.xml
 
+## VSCode
+
+.vscode
+
 ## Gradle
 
 /local.properties
@@ -134,3 +138,4 @@ Thumbs.db
 
 ## data
 /core/data
+/core/assets/Logs

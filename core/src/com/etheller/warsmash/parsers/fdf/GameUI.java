@@ -1613,6 +1613,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return this.font20;
 	}
 
+	public DataSource getDataSource() {
+		return this.dataSource;
+	}
+
 	public FreeTypeFontGenerator getFontGenerator() {
 		return this.fontGenerator;
 	}

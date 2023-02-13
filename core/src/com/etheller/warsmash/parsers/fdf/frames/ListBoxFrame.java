@@ -14,7 +14,10 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
-
+import com.etheller.warsmash.parsers.w3x.War3Map;
+import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
+import com.etheller.warsmash.units.custom.WTS;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollBarChangeListener {
 	// TODO where are these colors in the UI definition files?
 	private static final Color SELECT_COLOR = Color.BLUE;
@@ -166,7 +169,15 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 				final SingleStringFrame stringFrame = new SingleStringFrame("LISTY" + index, this, Color.WHITE,
 						TextJustify.LEFT, TextJustify.MIDDLE, this.frameFont);
 				if (index < this.listItems.size()) {
-					stringFrame.setText(this.listItems.get(index));
+					// stringFrame.setText(this.listItems.get(index));
+					try {
+						War3Map map = War3MapViewer.beginLoadingMap(gameUI.getDataSource(), this.listItems.get(index));
+						WTS objDat = Warcraft3MapObjectData.loadWTS(map);
+						gameUI.setMapStrings(objDat);
+						stringFrame.setText(gameUI.getTrigStr(map.readMapInformation().getName()));
+					}catch(Exception e){
+						e.printStackTrace();
+					}
 				}
 				stringFrame.setWidth(this.renderBounds.width - (this.listBoxBorder * 2));
 				stringFrame.setHeight(this.frameFont.getLineHeight());
@@ -199,7 +210,15 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 				final boolean mousedOver = (index == this.mouseOverIndex);
 				final SingleStringFrame stringFrame = this.stringFrames.get(stringFrameIndex);
 				if (index < this.listItems.size()) {
-					stringFrame.setText(this.listItems.get(index));
+					// stringFrame.setText(this.listItems.get(index));
+					try {
+						War3Map map = War3MapViewer.beginLoadingMap(gameUI.getDataSource(), this.listItems.get(index));
+						WTS objDat = Warcraft3MapObjectData.loadWTS(map);
+						gameUI.setMapStrings(objDat);
+						stringFrame.setText(gameUI.getTrigStr(map.readMapInformation().getName()));
+					}catch(Exception e){
+						e.printStackTrace();
+					}
 				}
 				if (selected) {
 					this.selectionFrame

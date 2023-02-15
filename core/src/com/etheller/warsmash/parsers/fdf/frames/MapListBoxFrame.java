@@ -3,84 +3,431 @@ package com.etheller.warsmash.parsers.fdf.frames;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Pixmap.Format;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
-import com.etheller.warsmash.parsers.jass.Jass2;
+import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
+import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame.ListBoxSelelectionListener;
 import com.etheller.warsmash.parsers.w3x.War3Map;
+import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3iFlags;
-import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
 import com.etheller.warsmash.units.custom.WTS;
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 
-public class MapListBoxFrame extends ListBoxFrame {
+public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollBarChangeListener, ListBoxFrame.ListBoxSelelectionListener {
+	private static final float mapIconSize = 32.0f;
 
-    private DataSource dataSource;
+	private final List<String> mapFilenames = new ArrayList<>();
+	private final List<String> mapNames = new ArrayList<>();
+	private final List<Integer> mapPlayerCounts = new ArrayList<>();
+	private final List<MapType> mapTypes = new ArrayList<>();
 
-    private List<String> mapNamesList = new ArrayList<>();
-    private List<Integer> mapPlayerCountsList = new ArrayList<>();
-    private List<MapTypes> mapTypeList = new ArrayList<>();
+	private final List<SingleStringFrame> mapNameFrames = new ArrayList<>();
+	private final List<SingleStringFrame> mapPlayerCountFrames = new ArrayList<>();
+	private final List<BackdropFrame> mapTypeFrames = new ArrayList<>();
+	
+	private BitmapFont frameFont;
+	private float listBoxBorder;
+	private int selectedIndex = -1;
+	private int mouseOverIndex = -1;
 
-    public MapListBoxFrame(String name, UIFrame parent, Viewport viewport, DataSource dataSource) {
-        super(name, parent, viewport);
-        this.dataSource = dataSource;
-    }
+	private final TextureFrame selectionFrame;
+	private final TextureFrame mouseHighlightFrame;
+	private GameUI gameUI;
+	private Viewport viewport;
+	private ScrollBarFrame scrollBarFrame;
+	private ListBoxSelelectionListener selectionListener = ListBoxSelelectionListener.DO_NOTHING;
 
-    @Override
-    public void addItem(String item, GameUI gameUI, Viewport viewport) {
-        try {
-            final War3Map map = War3MapViewer.beginLoadingMap(dataSource, item);
-            final War3MapW3i mapInfo = map.readMapInformation();
-            final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
-            gameUI.setMapStrings(wtsFile);
+	private DataSource dataSource;
 
-            final War3MapConfig mapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
-            Jass2.loadConfig(map, viewport, gameUI.getUiScene(), gameUI, mapConfig, WarsmashConstants.JASS_FILE_LIST).config();
+	public MapListBoxFrame(final String name, final UIFrame parent, final Viewport viewport, DataSource dataSource) {
+		super(name, parent);
+		this.listBoxBorder = GameUI.convertX(viewport, 0.01f);
+		this.selectionFrame = new TextureFrame(null, this, false, null);
+		this.mouseHighlightFrame = new TextureFrame(null, this, false, null);
+		final Pixmap pixmap = new Pixmap(1, 1, Format.RGBA8888);
+		pixmap.setColor(ListBoxFrame.SELECT_COLOR);
+		pixmap.fill();
+		this.selectionFrame.setTexture(new Texture(pixmap));
+		final Pixmap mousePixmap = new Pixmap(1, 1, Format.RGBA8888);
+		mousePixmap.setColor(ListBoxFrame.MOUSE_OVER_HIGHLIGHT_COLOR);
+		mousePixmap.fill();
+		this.mouseHighlightFrame.setTexture(new Texture(mousePixmap));
 
-            String mapName = gameUI.getTrigStr(mapConfig.getMapName());
-            int playablePlayers = 0;
-            for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-                if(mapConfig.getPlayer(i).getController() == CMapControl.USER) {
-                    playablePlayers++;
-                }
-            }
+		this.dataSource = dataSource;
+	}
 
-            MapTypes curMap;
-            if (mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP)) {
-                curMap = MapTypes.MELEE_MAP;
-            } else {
-                curMap = MapTypes.CUSTOM_MAP;
-            }
+	public void setScrollBarFrame(final ScrollBarFrame scrollBarFrame) {
+		this.scrollBarFrame = scrollBarFrame;
+		// TODO might be a better place to add these set points, but we definitely need
+		// them
+		scrollBarFrame.addSetPoint(
+				new SetPoint(FramePoint.TOPRIGHT, this, FramePoint.TOPRIGHT, -this.listBoxBorder, -this.listBoxBorder));
+		scrollBarFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, this, FramePoint.BOTTOMRIGHT,
+				-this.listBoxBorder, this.listBoxBorder));
+		scrollBarFrame.setChangeListener(this);
+	}
 
-            mapNamesList.add(mapName);
-            mapPlayerCountsList.add(playablePlayers);
-            mapTypeList.add(curMap);
-            listItems.add(item);
-        } catch (Exception e){
-            throw new RuntimeException(e);
-        }
-        
-    }
+	public ScrollBarFrame getScrollBarFrame() {
+		return this.scrollBarFrame;
+	}
 
-    @Override
-    public void positionBounds(GameUI gameUI, Viewport viewport) {
-        super.positionBounds(gameUI, viewport);
-    }
+	public void setListBoxBorder(final float listBoxBorder) {
+		this.listBoxBorder = listBoxBorder;
+	}
 
-    @Override
-    protected void internalRender(SpriteBatch batch, BitmapFont baseFont, GlyphLayout glyphLayout) {
-        super.internalRender(batch, baseFont, glyphLayout);
-    }
+	public float getListBoxBorder() {
+		return this.listBoxBorder;
+	}
 
-    public enum MapTypes {
-        MELEE_MAP,
-        CUSTOM_MAP
-    }
+	public void setFrameFont(final BitmapFont frameFont) {
+		this.frameFont = frameFont;
+	}
+
+	public BitmapFont getFrameFont() {
+		return this.frameFont;
+	}
+
+	@Override
+	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
+		this.gameUI = gameUI;
+		this.viewport = viewport;
+		super.innerPositionBounds(gameUI, viewport);
+		updateUI(gameUI, viewport);
+	}
+
+	private void positionChildren(final GameUI gameUI, final Viewport viewport) {
+		for (int i = 0; i < mapNameFrames.size(); i++) {
+			mapTypeFrames.get(i).positionBounds(gameUI, viewport);
+			mapPlayerCountFrames.get(i).positionBounds(gameUI, viewport);
+			mapNameFrames.get(i).positionBounds(gameUI, viewport);
+		}
+		selectionFrame.positionBounds(gameUI, viewport);
+		mouseHighlightFrame.positionBounds(gameUI, viewport);
+		if (scrollBarFrame != null) {
+			scrollBarFrame.positionBounds(gameUI, viewport);
+		}
+	}
+
+	@Override
+	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
+		super.internalRender(batch, baseFont, glyphLayout);
+		this.selectionFrame.render(batch, baseFont, glyphLayout);
+		this.mouseHighlightFrame.render(batch, baseFont, glyphLayout);
+		for (int i = 0; i < mapNameFrames.size(); i++) {
+			mapNameFrames.get(i).render(batch, baseFont, glyphLayout);
+			mapTypeFrames.get(i).render(batch, baseFont, glyphLayout);
+			mapPlayerCountFrames.get(i).render(batch, baseFont, glyphLayout);
+		}
+		if (this.scrollBarFrame != null) {
+			this.scrollBarFrame.render(batch, baseFont, glyphLayout);
+		}
+	}
+
+	public void addItem(final String item, final GameUI gameUI, final Viewport viewport) {
+		try {
+			final War3Map map = War3MapViewer.beginLoadingMap(dataSource, item);
+			final War3MapW3i mapInfo = map.readMapInformation();
+			final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
+			gameUI.setMapStrings(wtsFile);
+			
+			mapNames.add(gameUI.getTrigStr(mapInfo.getName()));
+			mapPlayerCounts.add(mapInfo.getPlayers().size());
+			if (mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP)) {
+				mapTypes.add(MapType.MELEE_MAP);
+			} else {
+				mapTypes.add(MapType.CUSTOM_MAP);
+			}
+
+			mapFilenames.add(item);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void setItems(final List<String> items, final GameUI gameUI, final Viewport viewport) {
+		mapFilenames.clear();
+		mapNames.clear();
+		mapPlayerCounts.clear();
+		mapTypes.clear();
+
+		for (String item : items) {
+			try {
+				final War3Map map = War3MapViewer.beginLoadingMap(dataSource, item);
+				final War3MapW3i mapInfo = map.readMapInformation();
+				final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
+				gameUI.setMapStrings(wtsFile);
+				
+				mapNames.add(gameUI.getTrigStr(mapInfo.getName()));
+				mapPlayerCounts.add(mapInfo.getPlayers().size());
+				if (mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP)) {
+					mapTypes.add(MapType.MELEE_MAP);
+				} else {
+					mapTypes.add(MapType.CUSTOM_MAP);
+				}
+	
+				mapFilenames.add(item);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	public void removeItem(final String item, final GameUI gameUI, final Viewport viewport) {
+		int index = 0;
+		while (index < mapFilenames.size()) {
+			if (mapFilenames.get(index).equals(item)) {
+				break;
+			}
+			index++;
+		}
+		if (index >= mapFilenames.size()) return;
+
+		mapFilenames.remove(index);
+		mapNames.remove(index);
+		mapPlayerCounts.remove(index);
+		mapTypes.remove(index);
+	}
+
+	public void removeItem(final int index, final GameUI gameUI, final Viewport viewport) {
+		if (index >= mapFilenames.size()) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		mapFilenames.remove(index);
+		mapNames.remove(index);
+		mapPlayerCounts.remove(index);
+		mapTypes.remove(index);
+	}
+
+	public void removeAllItems() {
+		mapFilenames.clear();
+		mapNames.clear();
+		mapPlayerCounts.clear();
+		mapTypes.clear();
+	}
+
+	public void setSelectedIndex(final int selectedIndex) {
+		this.selectedIndex = selectedIndex;
+	}
+
+	public int getSelectedIndex() {
+		return this.selectedIndex;
+	}
+
+	public String getSelectedItem() {
+		if ((this.selectedIndex < 0) || (this.selectedIndex >= mapFilenames.size())) {
+			return null;
+		}
+		return mapFilenames.get(this.selectedIndex);
+	}
+
+	private void updateUI(final GameUI gameUI, final Viewport viewport) {
+		final float numStringSize = (float) Math.max(mapIconSize, frameFont.getLineHeight());
+		AbstractRenderableFrame prev = null;
+		boolean foundSelected = false;
+		boolean foundMouseOver = false;
+		final int numStringFrames = (int) Math.min(mapFilenames.size(),
+				(Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / numStringSize)));
+
+		final int scrollOffset = computeScrollOffset(numStringFrames);
+		if (numStringFrames != mapNameFrames.size()) {
+			mapNameFrames.clear();
+			mapPlayerCountFrames.clear();
+			mapTypeFrames.clear();
+
+			final BitmapFont refFont = ((StringFrame)gameUI.getFrameByName("MaxPlayersValue", 0)).getFrameFont();
+			for (int stringFrameIndex = 0; stringFrameIndex < numStringFrames; stringFrameIndex++) {
+				final int index = stringFrameIndex + scrollOffset;
+				boolean selected = (index == selectedIndex);
+				boolean mouseOver = (index == mouseOverIndex);
+
+				final SingleStringFrame mapNameFrame = new SingleStringFrame("MapNameY_" + stringFrameIndex, this, Color.WHITE, TextJustify.LEFT, TextJustify.MIDDLE, frameFont);
+				mapNameFrame.setWidth(this.renderBounds.getWidth() - 2 * listBoxBorder - mapIconSize);
+				mapNameFrame.setHeight(frameFont.getLineHeight());
+				
+				final BackdropFrame mapTypeFrame = (BackdropFrame) gameUI.createFrameByType("BACKDROP", "MapTypeY_" + stringFrameIndex, this, "", 0);
+				mapTypeFrame.setWidth(mapIconSize);
+				mapTypeFrame.setHeight(mapIconSize);
+				
+				final SingleStringFrame mapPlayerCountFrame = new SingleStringFrame("MapPlayerCountY_" + stringFrameIndex, mapTypeFrame, Color.YELLOW, TextJustify.CENTER, TextJustify.MIDDLE, refFont);
+
+				if (index < mapFilenames.size()) {
+					mapNameFrame.setText(mapNames.get(index));
+
+					if (mapTypes.get(index) == MapType.MELEE_MAP) {
+						mapTypeFrame.setBackground(gameUI.loadTexture("ui\\widgets\\glues\\icon-file-melee.blp"));
+					} else if (mapTypes.get(index) == MapType.CUSTOM_MAP) {
+						mapTypeFrame.setBackground(gameUI.loadTexture("ui\\widgets\\glues\\icon-file-ums.blp"));
+					}
+
+					mapPlayerCountFrame.setText(Integer.toString(mapPlayerCounts.get(index)));
+				}
+				if (prev != null) {
+					mapTypeFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, prev, FramePoint.BOTTOMLEFT, 0, 0));
+				} else {
+					mapTypeFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT, listBoxBorder, -listBoxBorder));
+				}
+				mapNameFrame.addSetPoint(new SetPoint(FramePoint.LEFT, mapTypeFrame, FramePoint.RIGHT, 0, 0));
+				mapPlayerCountFrame.addSetPoint(new SetPoint(FramePoint.CENTER, mapTypeFrame, FramePoint.CENTER, 0, 0));
+
+				mapNameFrames.add(mapNameFrame);
+				mapTypeFrames.add(mapTypeFrame);
+				mapPlayerCountFrames.add(mapPlayerCountFrame);
+				prev = mapTypeFrame;
+
+				if (selected) {
+					selectionFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapTypeFrame, FramePoint.TOPLEFT, 0, 0));
+					selectionFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, mapNameFrame, FramePoint.BOTTOMRIGHT, 0, 0));
+					foundSelected = true;
+				} else if (mouseOver) {
+					mouseHighlightFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapTypeFrame, FramePoint.TOPLEFT, 0, 0));
+					mouseHighlightFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, mapNameFrame, FramePoint.BOTTOMRIGHT, 0, 0));
+					foundMouseOver = true;
+				}
+			}
+		} else {
+			for (int stringFrameIndex = 0; stringFrameIndex < numStringFrames; stringFrameIndex++) {
+				final int index = stringFrameIndex + scrollOffset;
+				boolean selected = (index == selectedIndex);
+				boolean mouseOver = (index == mouseOverIndex);
+
+				SingleStringFrame mapNameFrame = mapNameFrames.get(stringFrameIndex);
+				SingleStringFrame mapPlayerCountFrame = mapPlayerCountFrames.get(stringFrameIndex);
+				BackdropFrame mapTypeFrame = mapTypeFrames.get(stringFrameIndex);
+
+				if (index < mapFilenames.size()) {
+					mapNameFrame.setText(mapNames.get(index));
+					
+					if (mapTypes.get(index) == MapType.MELEE_MAP) {
+						mapTypeFrame.setBackground(gameUI.loadTexture("ui\\widgets\\glues\\icon-file-melee.blp"));
+					} else if (mapTypes.get(index) == MapType.CUSTOM_MAP) {
+						mapTypeFrame.setBackground(gameUI.loadTexture("ui\\widgets\\glues\\icon-file-ums.blp"));
+					}
+
+					mapPlayerCountFrame.setText(Integer.toString(mapPlayerCounts.get(index)));
+				}
+
+				if (selected) {
+					selectionFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapTypeFrame, FramePoint.TOPLEFT, 0, 0));
+					selectionFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, mapNameFrame, FramePoint.BOTTOMRIGHT, 0, 0));
+					foundSelected = true;
+				} else if (mouseOver) {
+					mouseHighlightFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, mapTypeFrame, FramePoint.TOPLEFT, 0, 0));
+					mouseHighlightFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, mapNameFrame, FramePoint.BOTTOMRIGHT, 0, 0));
+					foundMouseOver = true;
+				}
+			}
+		}
+		this.selectionFrame.setVisible(foundSelected);
+		this.mouseHighlightFrame.setVisible(foundMouseOver);
+		positionChildren(gameUI, viewport);
+	}
+
+	protected int computeScrollOffset(final int numStringFrames) {
+		int scrollOffset;
+		if ((this.scrollBarFrame != null) && (mapFilenames.size() > numStringFrames)) {
+			scrollOffset = (int) Math
+					.ceil(((100 - this.scrollBarFrame.getValue()) / 100f) * (mapFilenames.size() - numStringFrames));
+		} else {
+			scrollOffset = 0;
+		}
+		return scrollOffset;
+	}
+
+	@Override
+	public UIFrame touchDown(final float screenX, final float screenY, final int button) {
+		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
+			if (this.scrollBarFrame != null) {
+				final UIFrame sliderFrameChildUnderMouse = this.scrollBarFrame.touchDown(screenX, screenY, button);
+				if (sliderFrameChildUnderMouse != null) {
+					return sliderFrameChildUnderMouse;
+				}
+			}
+			int index = 0;
+			for (int i = 0; i < mapNameFrames.size(); i++) {
+				Rectangle mapNameFrameRect = mapNameFrames.get(i).getRenderBounds();
+				Rectangle mapTypeFrameRect = mapTypeFrames.get(i).getRenderBounds();
+				if (mapNameFrameRect.contains(screenX, screenY) || mapTypeFrameRect.contains(screenX, screenY)) {
+					selectedIndex = index + computeScrollOffset(mapNameFrames.size());
+					break;
+				}
+				index++;
+			}
+			updateUI(this.gameUI, this.viewport);
+			this.selectionListener.onSelectionChanged(this.selectedIndex, getSelectedItem());
+			return this;
+		}
+		return super.touchDown(screenX, screenY, button);
+	}
+
+	@Override
+	public UIFrame touchUp(final float screenX, final float screenY, final int button) {
+		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
+			if (this.scrollBarFrame != null) {
+				final UIFrame sliderFrameChildUnderMouse = this.scrollBarFrame.touchDown(screenX, screenY, button);
+				if (sliderFrameChildUnderMouse != null) {
+					return sliderFrameChildUnderMouse;
+				}
+			}
+		}
+		return super.touchUp(screenX, screenY, button);
+	}
+
+	@Override
+	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
+		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
+			if (this.scrollBarFrame != null) {
+				final UIFrame sliderFrameChildUnderMouse = this.scrollBarFrame.getFrameChildUnderMouse(screenX,
+						screenY);
+				if (sliderFrameChildUnderMouse != null) {
+					return sliderFrameChildUnderMouse;
+				}
+			}
+			int index = 0;
+			int mouseOverIndex = -1;
+			for (int i = 0; i < mapNameFrames.size(); i++) {
+				Rectangle mapNameFrameRect = mapNameFrames.get(i).getRenderBounds();
+				Rectangle mapTypeFrameRect = mapTypeFrames.get(i).getRenderBounds();
+				if (mapNameFrameRect.contains(screenX, screenY) || mapTypeFrameRect.contains(screenX, screenY)) {
+					mouseOverIndex = index;
+					break;
+				}
+				index++;
+			}
+			if (this.mouseOverIndex != mouseOverIndex) {
+				this.mouseOverIndex = mouseOverIndex + computeScrollOffset(mapNameFrames.size());
+				updateUI(this.gameUI, this.viewport);
+			}
+		}
+		return super.getFrameChildUnderMouse(screenX, screenY);
+	}
+
+	public void setSelectionListener(final ListBoxSelelectionListener selectionListener) {
+		this.selectionListener = selectionListener;
+	}
+
+	@Override
+	public void onChange(final GameUI gameUI, final Viewport uiViewport, final int newValue) {
+		updateUI(gameUI, uiViewport);
+	}
+
+	public enum MapType {
+		MELEE_MAP,
+		CUSTOM_MAP,
+		FOLDER_MAP,
+		FOLDERBACK_MAP
+	}
+
+	@Override
+	public void onSelectionChanged(int newSelectedIndex, String newSelectedItem){}
 }

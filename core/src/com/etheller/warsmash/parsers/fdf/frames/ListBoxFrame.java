@@ -17,21 +17,21 @@ import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 
 public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollBarChangeListener {
 	// TODO where are these colors in the UI definition files?
-	protected static final Color SELECT_COLOR = Color.BLUE;
-	protected static final Color MOUSE_OVER_HIGHLIGHT_COLOR = new Color(0.3f, 0.3f, 1.0f, 0.25f);
+	public static final Color SELECT_COLOR = Color.BLUE;
+	public static final Color MOUSE_OVER_HIGHLIGHT_COLOR = new Color(0.3f, 0.3f, 1.0f, 0.25f);
 
-	protected final List<String> listItems = new ArrayList<>();
-	protected final List<SingleStringFrame> stringFrames = new ArrayList<>();
+	private final List<String> listItems = new ArrayList<>();
+	private final List<SingleStringFrame> stringFrames = new ArrayList<>();
 	private BitmapFont frameFont;
 	private float listBoxBorder;
-	protected int selectedIndex = -1;
-	protected int mouseOverIndex = -1;
+	private int selectedIndex = -1;
+	private int mouseOverIndex = -1;
 
-	protected final TextureFrame selectionFrame;
-	protected final TextureFrame mouseHighlightFrame;
-	protected GameUI gameUI;
-	protected Viewport viewport;
-	protected ScrollBarFrame scrollBarFrame;
+	private final TextureFrame selectionFrame;
+	private final TextureFrame mouseHighlightFrame;
+	private GameUI gameUI;
+	private Viewport viewport;
+	private ScrollBarFrame scrollBarFrame;
 	private ListBoxSelelectionListener selectionListener = ListBoxSelelectionListener.DO_NOTHING;
 
 	public ListBoxFrame(final String name, final UIFrame parent, final Viewport viewport) {

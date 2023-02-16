@@ -32,7 +32,7 @@ public class ListItemStringDisplay extends AbstractListItemDisplay {
 
     @Override
     public void setValuesFromProperty(AbstractListItemProperty itemProperty) {
-        if (itemProperty.dataType != this.dataType) return;
+        if (!this.compareType(itemProperty)) return;
 
         String val = ((ListItemStringProperty) itemProperty).getRawValue();
         stringFrame.setText(val); 

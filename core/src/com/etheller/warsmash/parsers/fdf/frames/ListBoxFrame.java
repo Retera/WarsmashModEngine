@@ -214,10 +214,25 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 				final boolean selected = (index == this.selectedIndex);
 				final boolean mousedOver = (index == this.mouseOverIndex);
 
-				final AbstractListItemDisplay listDisplay = this.listFrames.get(stringFrameIndex);
+				AbstractListItemDisplay listDisplay = this.listFrames.get(stringFrameIndex);
 				if (index < this.listItems.size()) {
 					if (listDisplay.compareType(this.listItems.get(index))) {
 						listDisplay.setValuesFromProperty(this.listItems.get(index));
+					} else {
+						listDisplay.remove(gameUI);
+						listDisplay = AbstractListItemDisplay.createFromType(this.listItems.get(index).getItemType(), this, gameUI, viewport);
+						listDisplay.setValuesFromProperty(this.listItems.get(index));
+
+						if (stringFrameIndex > 0) {
+							listDisplay.getParentFrame().addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.listFrames.get(stringFrameIndex - 1).getParentFrame(), FramePoint.BOTTOMLEFT, 0, 0));
+						} else {
+							listDisplay.getParentFrame().addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT, this.listBoxBorder, -this.listBoxBorder));
+						}
+						if (stringFrameIndex < this.listFrames.size()-1) {
+							this.listFrames.get(stringFrameIndex+1).getParentFrame().addSetPoint(new SetPoint(FramePoint.TOPLEFT, listDisplay.getParentFrame(), FramePoint.BOTTOMLEFT, 0, 0));
+						}
+
+						this.listFrames.set(stringFrameIndex, listDisplay);
 					}
 				}
 				if (selected) {

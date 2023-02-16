@@ -170,7 +170,10 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 
 		final int scrollOffset = computeScrollOffset(numStringFrames);
 		if (numStringFrames != this.listFrames.size()) {
-			this.listFrames.clear();
+			for (int i = 0; i < this.listFrames.size(); i++) {
+				this.listFrames.get(0).remove(gameUI);
+				this.listFrames.remove(0);
+			}
 			for (int stringFrameIndex = 0; stringFrameIndex < numStringFrames; stringFrameIndex++) {
 				final int index = stringFrameIndex + scrollOffset;
 				final boolean selected = (index == this.selectedIndex);

@@ -1,6 +1,8 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
@@ -27,10 +29,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollBarChangeListener, ListBoxFrame.ListBoxSelelectionListener {
 	private static final float mapIconSize = 32.0f;
 
-	private final List<String> mapFilenames = new ArrayList<>();
-	private final List<String> mapNames = new ArrayList<>();
-	private final List<Integer> mapPlayerCounts = new ArrayList<>();
-	private final List<MapType> mapTypes = new ArrayList<>();
+	private final List<MapItem> mapItems = new ArrayList<>();
 
 	private final List<SingleStringFrame> mapNameFrames = new ArrayList<>();
 	private final List<SingleStringFrame> mapPlayerCountFrames = new ArrayList<>();
@@ -141,25 +140,17 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 			final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
 			gameUI.setMapStrings(wtsFile);
 			
-			mapNames.add(gameUI.getTrigStr(mapInfo.getName()));
-			mapPlayerCounts.add(mapInfo.getPlayers().size());
-			if (mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP)) {
-				mapTypes.add(MapType.MELEE_MAP);
-			} else {
-				mapTypes.add(MapType.CUSTOM_MAP);
-			}
-
-			mapFilenames.add(item);
+			String mapName = gameUI.getTrigStr(mapInfo.getName());
+			int playerCount = mapInfo.getPlayers().size();
+			MapType type = mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP) ? MapType.MELEE_MAP : MapType.CUSTOM_MAP;
+			mapItems.add(new MapItem(item, mapName, playerCount, type));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public void setItems(final List<String> items, final GameUI gameUI, final Viewport viewport) {
-		mapFilenames.clear();
-		mapNames.clear();
-		mapPlayerCounts.clear();
-		mapTypes.clear();
+		mapItems.clear();
 
 		for (String item : items) {
 			try {
@@ -168,15 +159,10 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 				final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
 				gameUI.setMapStrings(wtsFile);
 				
-				mapNames.add(gameUI.getTrigStr(mapInfo.getName()));
-				mapPlayerCounts.add(mapInfo.getPlayers().size());
-				if (mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP)) {
-					mapTypes.add(MapType.MELEE_MAP);
-				} else {
-					mapTypes.add(MapType.CUSTOM_MAP);
-				}
-	
-				mapFilenames.add(item);
+				String mapName = gameUI.getTrigStr(mapInfo.getName());
+				int playerCount = mapInfo.getPlayers().size();
+				MapType type = mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP) ? MapType.MELEE_MAP : MapType.CUSTOM_MAP;
+				mapItems.add(new MapItem(item, mapName, playerCount, type));
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -185,35 +171,34 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 
 	public void removeItem(final String item, final GameUI gameUI, final Viewport viewport) {
 		int index = 0;
-		while (index < mapFilenames.size()) {
-			if (mapFilenames.get(index).equals(item)) {
+		while (index < mapItems.size()) {
+			if (mapItems.get(index).mapFilename == item) {
 				break;
 			}
 			index++;
 		}
-		if (index >= mapFilenames.size()) return;
-
-		mapFilenames.remove(index);
-		mapNames.remove(index);
-		mapPlayerCounts.remove(index);
-		mapTypes.remove(index);
+		if (index >= mapItems.size()) return;
+		mapItems.remove(index);
 	}
 
 	public void removeItem(final int index, final GameUI gameUI, final Viewport viewport) {
-		if (index >= mapFilenames.size()) {
+		if (index >= mapItems.size()) {
 			throw new ArrayIndexOutOfBoundsException();
 		}
-		mapFilenames.remove(index);
-		mapNames.remove(index);
-		mapPlayerCounts.remove(index);
-		mapTypes.remove(index);
+		mapItems.remove(index);
 	}
 
 	public void removeAllItems() {
-		mapFilenames.clear();
-		mapNames.clear();
-		mapPlayerCounts.clear();
-		mapTypes.clear();
+		mapItems.clear();
+	}
+
+	public void sortItems() {
+		Collections.sort(mapItems, new Comparator<MapItem>() {
+			@Override
+			public int compare(MapItem arg0, MapItem arg1) {
+				return MapItem.compare(arg0, arg1); 
+			}
+		});
 	}
 
 	public void setSelectedIndex(final int selectedIndex) {
@@ -225,10 +210,10 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 	}
 
 	public String getSelectedItem() {
-		if ((this.selectedIndex < 0) || (this.selectedIndex >= mapFilenames.size())) {
+		if (this.selectedIndex < 0 || this.selectedIndex >= mapItems.size()) {
 			return null;
 		}
-		return mapFilenames.get(this.selectedIndex);
+		return mapItems.get(selectedIndex).mapFilename;
 	}
 
 	private void updateUI(final GameUI gameUI, final Viewport viewport) {
@@ -236,8 +221,8 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 		AbstractRenderableFrame prev = null;
 		boolean foundSelected = false;
 		boolean foundMouseOver = false;
-		final int numStringFrames = (int) Math.min(mapFilenames.size(),
-				(Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / numStringSize)));
+		final int numStringFrames = (int) Math.min(mapItems.size(),
+				Math.floor((renderBounds.height - listBoxBorder * 2) / numStringSize));
 
 		final int scrollOffset = computeScrollOffset(numStringFrames);
 		if (numStringFrames != mapNameFrames.size()) {
@@ -261,16 +246,16 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 				
 				final SingleStringFrame mapPlayerCountFrame = new SingleStringFrame("MapPlayerCountY_" + stringFrameIndex, mapTypeFrame, Color.YELLOW, TextJustify.CENTER, TextJustify.MIDDLE, refFont);
 
-				if (index < mapFilenames.size()) {
-					mapNameFrame.setText(mapNames.get(index));
+				if (index < mapItems.size()) {
+					mapNameFrame.setText(mapItems.get(index).mapName);
 
-					if (mapTypes.get(index) == MapType.MELEE_MAP) {
+					if (mapItems.get(index).mapType == MapType.MELEE_MAP) {
 						mapTypeFrame.setBackground(gameUI.loadTexture("ui\\widgets\\glues\\icon-file-melee.blp"));
-					} else if (mapTypes.get(index) == MapType.CUSTOM_MAP) {
+					} else if (mapItems.get(index).mapType == MapType.CUSTOM_MAP) {
 						mapTypeFrame.setBackground(gameUI.loadTexture("ui\\widgets\\glues\\icon-file-ums.blp"));
 					}
 
-					mapPlayerCountFrame.setText(Integer.toString(mapPlayerCounts.get(index)));
+					mapPlayerCountFrame.setText(Integer.toString(mapItems.get(index).mapPlayerCount));
 				}
 				if (prev != null) {
 					mapTypeFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, prev, FramePoint.BOTTOMLEFT, 0, 0));
@@ -305,16 +290,16 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 				SingleStringFrame mapPlayerCountFrame = mapPlayerCountFrames.get(stringFrameIndex);
 				BackdropFrame mapTypeFrame = mapTypeFrames.get(stringFrameIndex);
 
-				if (index < mapFilenames.size()) {
-					mapNameFrame.setText(mapNames.get(index));
+				if (index < mapItems.size()) {
+					mapNameFrame.setText(mapItems.get(index).mapName);
 					
-					if (mapTypes.get(index) == MapType.MELEE_MAP) {
+					if (mapItems.get(index).mapType == MapType.MELEE_MAP) {
 						mapTypeFrame.setBackground(gameUI.loadTexture("ui\\widgets\\glues\\icon-file-melee.blp"));
-					} else if (mapTypes.get(index) == MapType.CUSTOM_MAP) {
+					} else if (mapItems.get(index).mapType == MapType.CUSTOM_MAP) {
 						mapTypeFrame.setBackground(gameUI.loadTexture("ui\\widgets\\glues\\icon-file-ums.blp"));
 					}
 
-					mapPlayerCountFrame.setText(Integer.toString(mapPlayerCounts.get(index)));
+					mapPlayerCountFrame.setText(Integer.toString(mapItems.get(index).mapPlayerCount));
 				}
 
 				if (selected) {
@@ -335,9 +320,9 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 
 	protected int computeScrollOffset(final int numStringFrames) {
 		int scrollOffset;
-		if ((this.scrollBarFrame != null) && (mapFilenames.size() > numStringFrames)) {
+		if ((this.scrollBarFrame != null) && (mapItems.size() > numStringFrames)) {
 			scrollOffset = (int) Math
-					.ceil(((100 - this.scrollBarFrame.getValue()) / 100f) * (mapFilenames.size() - numStringFrames));
+					.ceil(((100 - this.scrollBarFrame.getValue()) / 100f) * (mapItems.size() - numStringFrames));
 		} else {
 			scrollOffset = 0;
 		}
@@ -419,6 +404,28 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 	@Override
 	public void onChange(final GameUI gameUI, final Viewport uiViewport, final int newValue) {
 		updateUI(gameUI, uiViewport);
+	}
+
+	private class MapItem {
+		public String mapFilename = null;
+		public String mapName = null;
+		public int mapPlayerCount = 0;
+		public MapType mapType = null;
+
+		public MapItem(String filename, String name, int playerCount, MapType type) {
+			mapFilename = filename;
+			mapName = name;
+			mapPlayerCount = playerCount;
+			mapType = type;
+		}
+
+		public static int compare(MapItem map1, MapItem map2) {
+			if (map1.mapPlayerCount == map2.mapPlayerCount) {
+				return map1.mapName.compareTo(map2.mapName);
+			} else {
+				return Integer.compare(map1.mapPlayerCount, map2.mapPlayerCount);
+			}
+		}
 	}
 
 	public enum MapType {

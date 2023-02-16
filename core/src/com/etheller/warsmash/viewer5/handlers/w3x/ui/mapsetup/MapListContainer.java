@@ -2,7 +2,6 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -32,10 +31,10 @@ public class MapListContainer {
 				displayItemPaths.add(file);
 			}
 		}
-		Collections.sort(displayItemPaths);
 		for (final String displayItemPath : displayItemPaths) {
 			this.mapListBox.addItem(displayItemPath, rootFrame, uiViewport);
 		}
+		this.mapListBox.sortItems();
 		this.mapListContainer.add(this.mapListBox);
 	}
 

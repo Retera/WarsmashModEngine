@@ -1094,11 +1094,22 @@ public class MenuUI {
 		final MapListContainer mapListContainer = new MapListContainer(this.rootFrame, this.uiViewport,
 				"MapListContainer", this.dataSource, profileListText.getFrameFont());
 		mapListContainer.addSelectionListener(new ListBoxSelelectionListener() {
+			War3Map lastMapListMap;
+
 			@Override
 			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
 				if (newSelectedItem != null) {
 					try {
 						final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
+						if (this.lastMapListMap != null) {
+							try {
+								this.lastMapListMap.close();
+							}
+							catch (final IOException e) {
+								e.printStackTrace();
+							}
+							this.lastMapListMap = map;
+						}
 						final War3MapW3i mapInfo = map.readMapInformation();
 						final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
 						MenuUI.this.rootFrame.setMapStrings(wtsFile);
@@ -1107,6 +1118,8 @@ public class MenuUI {
 							final CBasePlayer player = war3MapConfig.getPlayer(i);
 							player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
 						}
+						war3MapConfig.setMapName("NOTEXTERN: default name string");
+						war3MapConfig.setMapDescription("NOTEXTERN: default description string");
 						Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame,
 								war3MapConfig, WarsmashConstants.JASS_FILE_LIST).config();
 						boolean foundFirstHuman = false;
@@ -1128,67 +1141,14 @@ public class MenuUI {
 								}
 							}
 						}
-						MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map,
-								mapInfo, war3MapConfig);
+						if (false) {
+							MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map,
+									mapInfo, war3MapConfig);
+						}
 						teamSetupPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig,
-								mapInfo.getPlayers().size(), mapInfo, new PlayerSlotPaneListener() {
-
-									@Override
-									public void setPlayerSlot(final int index, final LobbyPlayerType lobbyPlayerType) {
-										final CBasePlayer player = war3MapConfig.getPlayer(index);
-										switch (lobbyPlayerType) {
-										case OPEN:
-											player.setController(CMapControl.NONE);
-											player.setSlotState(CPlayerSlotState.EMPTY);
-											player.setAIDifficulty(null);
-											break;
-										case CLOSED:
-											player.setController(CMapControl.NONE);
-											player.setSlotState(CPlayerSlotState.PLAYING);
-											player.setAIDifficulty(null);
-											break;
-										case COMPUTER_NEWBIE:
-											player.setController(CMapControl.COMPUTER);
-											player.setSlotState(CPlayerSlotState.PLAYING);
-											player.setAIDifficulty(AIDifficulty.NEWBIE);
-											break;
-										case COMPUTER_NORMAL:
-											player.setController(CMapControl.COMPUTER);
-											player.setSlotState(CPlayerSlotState.PLAYING);
-											player.setAIDifficulty(AIDifficulty.NORMAL);
-											break;
-										case COMPUTER_INSANE:
-											player.setController(CMapControl.COMPUTER);
-											player.setSlotState(CPlayerSlotState.PLAYING);
-											player.setAIDifficulty(AIDifficulty.INSANE);
-											break;
-										case USER:
-											player.setController(CMapControl.USER);
-											player.setSlotState(CPlayerSlotState.PLAYING);
-											player.setAIDifficulty(null);
-											break;
-										}
-										teamSetupPane.notifyPlayerDataUpdated(index, MenuUI.this.rootFrame,
-												MenuUI.this.uiViewport, war3MapConfig, mapInfo);
-									}
-
-									@Override
-									public void setPlayerRace(final int index, final int raceItemIndex) {
-										final CBasePlayer player = war3MapConfig.getPlayer(index);
-										if (raceItemIndex == 0) {
-											player.setRacePref(
-													WarsmashConstants.RACE_MANAGER.getRandomRacePreference());
-										}
-										else {
-											final CRace race = WarsmashConstants.RACE_MANAGER.getRace(raceItemIndex);
-											final CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
-													.getRacePreferenceForRace(race);
-											player.setRacePref(racePreference);
-										}
-										teamSetupPane.notifyPlayerDataUpdated(index, MenuUI.this.rootFrame,
-												MenuUI.this.uiViewport, war3MapConfig, mapInfo);
-									}
-								});
+								mapInfo.getPlayers().size(), mapInfo,
+								new PlayerSlotPaneListenerImplementation(teamSetupPane, war3MapConfig, mapInfo,
+										MenuUI.this.rootFrame, MenuUI.this.uiViewport));
 						MenuUI.this.currentMapConfig = war3MapConfig;
 					}
 					catch (final IOException e) {
@@ -2276,6 +2236,78 @@ public class MenuUI {
 
 	public KeyedSounds getUiSounds() {
 		return this.uiSounds;
+	}
+
+	private static final class PlayerSlotPaneListenerImplementation implements PlayerSlotPaneListener {
+		private final TeamSetupPane teamSetupPane;
+		private final War3MapConfig war3MapConfig;
+		private final War3MapW3i mapInfo;
+		private final GameUI rootFrame;
+		private final Viewport uiViewport;
+
+		private PlayerSlotPaneListenerImplementation(final TeamSetupPane teamSetupPane,
+				final War3MapConfig war3MapConfig, final War3MapW3i mapInfo, final GameUI rootFrame,
+				final Viewport uiViewport) {
+			this.teamSetupPane = teamSetupPane;
+			this.war3MapConfig = war3MapConfig;
+			this.mapInfo = mapInfo;
+			this.rootFrame = rootFrame;
+			this.uiViewport = uiViewport;
+		}
+
+		@Override
+		public void setPlayerSlot(final int index, final LobbyPlayerType lobbyPlayerType) {
+			final CBasePlayer player = this.war3MapConfig.getPlayer(index);
+			switch (lobbyPlayerType) {
+			case OPEN:
+				player.setController(CMapControl.NONE);
+				player.setSlotState(CPlayerSlotState.EMPTY);
+				player.setAIDifficulty(null);
+				break;
+			case CLOSED:
+				player.setController(CMapControl.NONE);
+				player.setSlotState(CPlayerSlotState.PLAYING);
+				player.setAIDifficulty(null);
+				break;
+			case COMPUTER_NEWBIE:
+				player.setController(CMapControl.COMPUTER);
+				player.setSlotState(CPlayerSlotState.PLAYING);
+				player.setAIDifficulty(AIDifficulty.NEWBIE);
+				break;
+			case COMPUTER_NORMAL:
+				player.setController(CMapControl.COMPUTER);
+				player.setSlotState(CPlayerSlotState.PLAYING);
+				player.setAIDifficulty(AIDifficulty.NORMAL);
+				break;
+			case COMPUTER_INSANE:
+				player.setController(CMapControl.COMPUTER);
+				player.setSlotState(CPlayerSlotState.PLAYING);
+				player.setAIDifficulty(AIDifficulty.INSANE);
+				break;
+			case USER:
+				player.setController(CMapControl.USER);
+				player.setSlotState(CPlayerSlotState.PLAYING);
+				player.setAIDifficulty(null);
+				break;
+			}
+			this.teamSetupPane.notifyPlayerDataUpdated(index, this.rootFrame, this.uiViewport, this.war3MapConfig,
+					this.mapInfo);
+		}
+
+		@Override
+		public void setPlayerRace(final int index, final int raceItemIndex) {
+			final CBasePlayer player = this.war3MapConfig.getPlayer(index);
+			if (raceItemIndex == 0) {
+				player.setRacePref(WarsmashConstants.RACE_MANAGER.getRandomRacePreference());
+			}
+			else {
+				final CRace race = WarsmashConstants.RACE_MANAGER.getRace(raceItemIndex);
+				final CRacePreference racePreference = WarsmashConstants.RACE_MANAGER.getRacePreferenceForRace(race);
+				player.setRacePref(racePreference);
+			}
+			this.teamSetupPane.notifyPlayerDataUpdated(index, this.rootFrame, this.uiViewport, this.war3MapConfig,
+					this.mapInfo);
+		}
 	}
 
 	private static enum MenuState {

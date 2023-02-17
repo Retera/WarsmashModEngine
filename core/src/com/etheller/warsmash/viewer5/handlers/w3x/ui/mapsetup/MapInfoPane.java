@@ -35,6 +35,7 @@ public class MapInfoPane {
 	private final StringFrame mapDescValue;
 	private final StringFrame mapTilesetValue;
 	private final BackdropFrame maxPlayersIcon;
+	private Texture lastUnmanagedTexture = null;
 
 	public MapInfoPane(final GameUI rootFrame, final Viewport uiViewport, final SimpleFrame container) {
 		this.mapInfoPaneFrame = rootFrame.createFrame("MapInfoPane", container, 0, 0);
@@ -97,7 +98,7 @@ public class MapInfoPane {
 		toggleMapInfo(false);
 	}
 
-	public void clearMap(final GameUI rootFrame, final Viewport uiViewport, String mapPreviewName) {
+	public void clearMap(final GameUI rootFrame, final Viewport uiViewport, final String mapPreviewName) {
 		rootFrame.setText(this.mapNameValue, mapPreviewName);
 		rootFrame.setText(this.maxPlayersValue, rootFrame.getTemplates().getDecoratedString("UNKNOWNMAP_PLAYERCOUNT"));
 		rootFrame.setText(this.suggestedPlayersValue,
@@ -146,15 +147,25 @@ public class MapInfoPane {
 		rootFrame.setText(this.mapTilesetValue, rootFrame.getTrigStr(tileSetNameString));
 
 		Texture minimapTexture;
+		if (this.lastUnmanagedTexture != null) {
+			this.lastUnmanagedTexture.dispose();
+			this.lastUnmanagedTexture = null;
+		}
 		if (mapInfo.hasFlag(War3MapW3iFlags.HIDE_MINIMAP_IN_PREVIEW_SCREENS)) {
 			minimapTexture = rootFrame.loadTexture("ui\\widgets\\glues\\minimap-unknown.blp");
 		}
 		else {
 			try {
 				minimapTexture = ImageUtils.getAnyExtensionTexture(map, "war3mapPreview.blp");
+				if (minimapTexture != null) {
+					this.lastUnmanagedTexture = minimapTexture;
+				}
 			}
 			catch (final Exception exc) {
 				minimapTexture = ImageUtils.getAnyExtensionTexture(map, "war3mapMap.blp");
+				if (minimapTexture != null) {
+					this.lastUnmanagedTexture = minimapTexture;
+				}
 			}
 		}
 		this.minimapImageTextureFrame.setTexture(minimapTexture);

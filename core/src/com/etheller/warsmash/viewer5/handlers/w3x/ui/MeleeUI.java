@@ -145,7 +145,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilitySellItems;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityOverlayedMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
@@ -1795,15 +1795,38 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final int simulationUnitPlayerIndex = simulationUnit.getPlayerIndex();
 				final boolean neutralHostile = simulationUnitPlayerIndex == (WarsmashConstants.MAX_PLAYERS - 4);
 				final boolean neutralPassive = simulationUnitPlayerIndex == (WarsmashConstants.MAX_PLAYERS - 1);
-				if ((neutralPassive && simulationUnit.isBuilding()) || neutralHostile) {
-					String returnValue = simulationUnit.getUnitType().getName();
-					final CAbilityGoldMine goldMineData = simulationUnit.getGoldMineData();
+				String returnValue = "";
+				if ((simulationUnitPlayerIndex != this.localPlayer.getId())
+						&& (simulationUnitPlayerIndex < (WarsmashConstants.MAX_PLAYERS - 4))) {
+					final boolean ally = simulationUnit.isUnitAlly(this.localPlayer);
+					final CPlayer unitPlayer = game.getPlayer(simulationUnitPlayerIndex);
+					final String name = unitPlayer.getName();
+					if (ally) {
+						if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_CONTROL)) {
+							returnValue = "|CFF00FF00" + name;
+						}
+						else {
+							returnValue = "|CFFFFFF00" + name;
+						}
+					}
+					else {
+						returnValue = "|CFFFF0000" + name;
+					}
+				}
+				final CAbilityGoldMinable goldMineData = simulationUnit.getGoldMineData();
+				final CAbilityOverlayedMine blightedGoldMineData = simulationUnit.getOverlayedGoldMineData();
+				final boolean neutral = (neutralPassive && simulationUnit.isBuilding()) || neutralHostile
+						|| (goldMineData != null) || (blightedGoldMineData != null);
+				if (neutral) {
+					if (!returnValue.isEmpty()) {
+						returnValue += "|n";
+					}
+					returnValue += simulationUnit.getUnitType().getName();
 					if (goldMineData != null) {
 						final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
 						returnValue += "|n" + colonGold + " " + goldMineData.getGold();
 					}
 					else {
-						final CAbilityOverlayedMine blightedGoldMineData = simulationUnit.getOverlayedGoldMineData();
 						if (blightedGoldMineData != null) {
 							final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
 							returnValue += "|n" + colonGold + " " + blightedGoldMineData.getGold();
@@ -1814,24 +1837,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
 						returnValue += "|n" + level + " " + creepLevel;
 					}
-					return returnValue;
 				}
-				else if ((simulationUnitPlayerIndex != this.localPlayer.getId())
-						&& (simulationUnitPlayerIndex < (WarsmashConstants.MAX_PLAYERS - 4))) {
-					final boolean ally = simulationUnit.isUnitAlly(this.localPlayer);
-					final CPlayer unitPlayer = game.getPlayer(simulationUnitPlayerIndex);
-					final String name = unitPlayer.getName();
-					if (ally) {
-						if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_CONTROL)) {
-							return "|CFF00FF00" + name;
-						}
-						else {
-							return "|CFFFFFF00" + name;
-						}
-					}
-					else {
-						return "|CFFFF0000" + name;
-					}
+				if (!returnValue.isEmpty()) {
+					return returnValue;
 				}
 			}
 		}

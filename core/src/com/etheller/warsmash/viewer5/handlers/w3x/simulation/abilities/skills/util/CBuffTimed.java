@@ -31,8 +31,8 @@ public abstract class CBuffTimed extends AbstractCBuff {
 	public void onAdd(final CSimulation game, final CUnit unit) {
 		onBuffAdd(game, unit);
 		this.fx = game.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
-		final int durationTicks = (int) (duration / WarsmashConstants.SIMULATION_STEP_TIME);
-		expireTick = game.getGameTurnTick() + durationTicks;
+		final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
+		this.expireTick = game.getGameTurnTick() + durationTicks;
 	}
 
 	@Override
@@ -44,14 +44,14 @@ public abstract class CBuffTimed extends AbstractCBuff {
 	@Override
 	public void onTick(final CSimulation game, final CUnit caster) {
 		final int currentTick = game.getGameTurnTick();
-		if (currentTick >= expireTick) {
+		if (currentTick >= this.expireTick) {
 			caster.remove(game, this);
 		}
 	}
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
-		cUnit.remove(game, this);
+//		cUnit.remove(game, this);
 	}
 
 	@Override
@@ -100,13 +100,13 @@ public abstract class CBuffTimed extends AbstractCBuff {
 
 	@Override
 	public float getDurationMax() {
-		return duration;
+		return this.duration;
 	}
 
 	@Override
 	public float getDurationRemaining(final CSimulation game) {
 		final int currentTick = game.getGameTurnTick();
-		final int remaining = Math.max(0, expireTick - currentTick);
+		final int remaining = Math.max(0, this.expireTick - currentTick);
 		return remaining * WarsmashConstants.SIMULATION_STEP_TIME;
 	}
 }

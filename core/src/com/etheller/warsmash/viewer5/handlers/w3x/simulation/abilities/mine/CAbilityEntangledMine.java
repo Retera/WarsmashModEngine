@@ -48,7 +48,7 @@ public class CAbilityEntangledMine extends CAbilityOverlayedMine implements CAbi
 					return;
 				}
 			}
-			final CAbilityGoldMine parentGoldMineAbility = getParentGoldMineAbility();
+			final CAbilityGoldMinable parentGoldMineAbility = getParentGoldMineAbility();
 			if (parentGoldMineAbility != null) {
 				final int totalGoldAvailable = parentGoldMineAbility.getGold();
 				if (totalGoldAvailable > 0) {

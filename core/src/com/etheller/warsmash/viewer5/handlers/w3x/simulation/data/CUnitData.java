@@ -648,10 +648,14 @@ public class CUnitData {
 	public static List<CUnitAttack> getEnabledAttacks(final List<CUnitAttack> attacks, final int attacksEnabled) {
 		final List<CUnitAttack> enabledAttacks = new ArrayList<>();
 		if ((attacksEnabled & 0x1) != 0) {
-			enabledAttacks.add(attacks.get(0));
+			if (attacks.size() > 0) {
+				enabledAttacks.add(attacks.get(0));
+			}
 		}
 		if ((attacksEnabled & 0x2) != 0) {
-			enabledAttacks.add(attacks.get(1));
+			if (attacks.size() > 1) {
+				enabledAttacks.add(attacks.get(1));
+			}
 		}
 		return enabledAttacks;
 	}

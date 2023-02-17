@@ -50,12 +50,11 @@ public class WarsmashConstants {
 	public static int INPUT_HOTKEY_MODE = 1;
 	public static boolean PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = false;
 
-	public static boolean USE_NINE_ITEM_INVENTORY = false;
+	public static boolean USE_NINE_ITEM_INVENTORY = true;
 
 	public static CRaceManager RACE_MANAGER;
 
-	public static final String[] JASS_FILE_LIST = { "Scripts\\common.j", "Scripts\\abilitiesCommon.j",
-			"Scripts\\Blizzard.j", "Scripts\\war3map.j" };
+	public static final String[] JASS_FILE_LIST = { "Scripts\\common.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j" };
 	public static final float GAME_SPEED_TIME_FACTOR = 0.5f;
 
 	public static void loadConstants(final GameObject emulatorConstants, final DataTable warsmashIni) {
@@ -69,6 +68,7 @@ public class WarsmashConstants {
 		INPUT_HOTKEY_MODE = emulatorConstants.getFieldValue("InputHotkeyMode");
 		PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = emulatorConstants
 				.getFieldValue("ParseReignOfChaosBetaModelsInstead") == 1;
+		USE_NINE_ITEM_INVENTORY = emulatorConstants.getFieldValue("UseNineItemInventory") == 1;
 		final String races = emulatorConstants.getField("Races");
 		RACE_MANAGER = new CRaceManager();
 		if ((races == null) || races.isEmpty()) {

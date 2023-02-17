@@ -7,13 +7,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 
 public abstract class CAbilityOverlayedMine extends AbstractGenericNoIconAbility {
 	private CUnit parentGoldMineUnit;
-	private CAbilityGoldMine parentGoldMineAbility;
+	private CAbilityGoldMinable parentGoldMineAbility;
 
 	public CAbilityOverlayedMine(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
-	public void setParentMine(final CUnit parentGoldMineUnit, final CAbilityGoldMine parentGoldMineAbility) {
+	public void setParentMine(final CUnit parentGoldMineUnit, final CAbilityGoldMinable parentGoldMineAbility) {
 		this.parentGoldMineUnit = parentGoldMineUnit;
 		this.parentGoldMineAbility = parentGoldMineAbility;
 	}
@@ -22,7 +22,7 @@ public abstract class CAbilityOverlayedMine extends AbstractGenericNoIconAbility
 		return this.parentGoldMineUnit;
 	}
 
-	public CAbilityGoldMine getParentGoldMineAbility() {
+	public CAbilityGoldMinable getParentGoldMineAbility() {
 		return this.parentGoldMineAbility;
 	}
 

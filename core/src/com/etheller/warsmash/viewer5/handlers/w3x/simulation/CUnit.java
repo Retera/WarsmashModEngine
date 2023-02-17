@@ -32,8 +32,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityOverlayedMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -1603,9 +1602,14 @@ public class CUnit extends CWidget {
 						if (this.source.currentBehavior != null) {
 							this.source.currentBehavior.end(this.game, false);
 						}
-						this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack, attack,
-								unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING);
-						this.source.currentBehavior.begin(this.game);
+						if (this.source.getAttackBehavior() != null) {
+							// TODO this "attack behavior null" check was added for some weird Root edge
+							// case with NE, maybe
+							// refactor it later
+							this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack, attack,
+									unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING);
+							this.source.currentBehavior.begin(this.game);
+						}
 						this.foundAnyTarget = true;
 						return true;
 					}
@@ -2086,10 +2090,10 @@ public class CUnit extends CWidget {
 		this.defaultBehavior = defaultBehavior;
 	}
 
-	public CAbilityGoldMine getGoldMineData() {
+	public CAbilityGoldMinable getGoldMineData() {
 		for (final CAbility ability : this.abilities) {
-			if (ability instanceof CAbilityGoldMine) {
-				return (CAbilityGoldMine) ability;
+			if (ability instanceof CAbilityGoldMinable) {
+				return (CAbilityGoldMinable) ability;
 			}
 		}
 		return null;
@@ -2106,11 +2110,11 @@ public class CUnit extends CWidget {
 
 	public int getGold() {
 		for (final CAbility ability : this.abilities) {
-			if (ability instanceof CAbilityGoldMine) {
-				return ((CAbilityGoldMine) ability).getGold();
+			if (ability instanceof CAbilityGoldMinable) {
+				return ((CAbilityGoldMinable) ability).getGold();
 			}
-			if (ability instanceof CAbilityBlightedGoldMine) {
-				return ((CAbilityBlightedGoldMine) ability).getGold();
+			if (ability instanceof CAbilityOverlayedMine) {
+				return ((CAbilityOverlayedMine) ability).getGold();
 			}
 		}
 		return 0;
@@ -2118,11 +2122,11 @@ public class CUnit extends CWidget {
 
 	public void setGold(final int goldAmount) {
 		for (final CAbility ability : this.abilities) {
-			if (ability instanceof CAbilityGoldMine) {
-				((CAbilityGoldMine) ability).setGold(goldAmount);
+			if (ability instanceof CAbilityGoldMinable) {
+				((CAbilityGoldMinable) ability).setGold(goldAmount);
 			}
-			if (ability instanceof CAbilityBlightedGoldMine) {
-				((CAbilityBlightedGoldMine) ability).setGold(goldAmount);
+			if (ability instanceof CAbilityOverlayedMine) {
+				((CAbilityOverlayedMine) ability).setGold(goldAmount);
 			}
 		}
 	}

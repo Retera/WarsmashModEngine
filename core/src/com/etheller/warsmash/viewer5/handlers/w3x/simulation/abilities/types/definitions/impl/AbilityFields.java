@@ -36,6 +36,9 @@ public interface AbilityFields {
 	public static final War3ID ITEM_FIGURINE_SUMMON_UNIT_TYPE_2 = War3ID.fromString("Ist2");
 	public static final War3ID ITEM_FIGURINE_SUMMON_UNIT_COUNT_2 = War3ID.fromString("Isn2");
 
+	public static final War3ID FERAL_SPIRIT_SUMMON_UNIT_TYPE_1 = War3ID.fromString("Osf1");
+	public static final War3ID FERAL_SPIRIT_SUMMON_UNIT_COUNT_1 = War3ID.fromString("Osf2");
+
 	public static final War3ID ITEM_EXPERIENCE_GAINED = War3ID.fromString("Ixpg");
 	public static final War3ID ITEM_LEVEL_GAINED = War3ID.fromString("Ilev");
 

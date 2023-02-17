@@ -75,7 +75,7 @@ public class CAbilityBlightedGoldMine extends CAbilityOverlayedMine {
 			final int nextIncomeTick = this.lastIncomeTick
 					+ (int) (currentInterval / WarsmashConstants.SIMULATION_STEP_TIME);
 			final int currentTurnTick = game.getGameTurnTick();
-			final CAbilityGoldMine parentGoldMineAbility = getParentGoldMineAbility();
+			final CAbilityGoldMinable parentGoldMineAbility = getParentGoldMineAbility();
 			final int totalGoldAvailable = parentGoldMineAbility.getGold();
 			if ((currentTurnTick >= nextIncomeTick) && (parentGoldMineAbility != null) && (totalGoldAvailable > 0)) {
 				this.lastIncomeTick = currentTurnTick;

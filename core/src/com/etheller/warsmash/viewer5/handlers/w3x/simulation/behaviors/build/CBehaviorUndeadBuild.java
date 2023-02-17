@@ -12,8 +12,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityOverlayedMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -94,22 +94,25 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX(),
 						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
 				if (canBeBuiltOnThem) {
-					CAbilityGoldMine abilityGoldMine = null;
+					CAbilityGoldMinable abilityGoldMine = null;
 					if (this.buildOnBuildingIntersector.getUnitToBuildOn() != null) {
 						for (final CAbility ability : this.buildOnBuildingIntersector.getUnitToBuildOn()
 								.getAbilities()) {
-							if ((ability instanceof CAbilityGoldMine) && !ability.isDisabled()) {
-								abilityGoldMine = (CAbilityGoldMine) ability;
+							if ((ability instanceof CAbilityGoldMinable) && !ability.isDisabled()
+									&& ((CAbilityGoldMinable) ability).isBaseMine()) {
+								abilityGoldMine = (CAbilityGoldMinable) ability;
 							}
 						}
 					}
-					for (final CAbility ability : constructedStructure.getAbilities()) {
-						if (ability instanceof CAbilityBlightedGoldMine) {
-							final CAbilityBlightedGoldMine blightedGoldMine = (CAbilityBlightedGoldMine) ability;
-							blightedGoldMine.setParentMine(this.buildOnBuildingIntersector.getUnitToBuildOn(),
-									abilityGoldMine);
-							this.buildOnBuildingIntersector.getUnitToBuildOn().setHidden(true);
-							this.buildOnBuildingIntersector.getUnitToBuildOn().setPaused(true);
+					if (abilityGoldMine != null) {
+						for (final CAbility ability : constructedStructure.getAbilities()) {
+							if (ability instanceof CAbilityOverlayedMine) {
+								final CAbilityOverlayedMine blightedGoldMine = (CAbilityOverlayedMine) ability;
+								blightedGoldMine.setParentMine(this.buildOnBuildingIntersector.getUnitToBuildOn(),
+										abilityGoldMine);
+								this.buildOnBuildingIntersector.getUnitToBuildOn().setHidden(true);
+								this.buildOnBuildingIntersector.getUnitToBuildOn().setPaused(true);
+							}
 						}
 					}
 				}

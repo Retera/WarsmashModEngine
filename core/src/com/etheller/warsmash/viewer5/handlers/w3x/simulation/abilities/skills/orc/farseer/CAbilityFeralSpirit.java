@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer;
 
-import com.badlogic.gdx.utils.IntArray;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -21,7 +23,10 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 	private float duration;
 	private float areaOfEffect;
 
-	private final IntArray lastSummonHandleIds = new IntArray();
+	// TODO maybe "lastSummonHandleIds" instead, for ease of use with saving game,
+	// but then we have to track when they die or else risk re-used handle ID
+	// messing us up
+	private final List<CUnit> lastSummonUnits = new ArrayList<>();
 
 	public CAbilityFeralSpirit(final int handleId, final War3ID alias) {
 		super(handleId, alias);
@@ -29,10 +34,10 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_TYPE_1,
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.FERAL_SPIRIT_SUMMON_UNIT_TYPE_1,
 				level);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_COUNT_1,
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.FERAL_SPIRIT_SUMMON_UNIT_COUNT_1,
 				level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
@@ -50,14 +55,21 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 		final float facingRad = (float) StrictMath.toRadians(facing);
 		final float x = unit.getX() + ((float) StrictMath.cos(facingRad) * this.areaOfEffect);
 		final float y = unit.getY() + ((float) StrictMath.sin(facingRad) * this.areaOfEffect);
+		for (final CUnit lastSummon : this.lastSummonUnits) {
+			if (!lastSummon.isDead()) {
+				lastSummon.kill(simulation);
+			}
+		}
+		this.lastSummonUnits.clear();
 		for (int i = 0; i < this.summonUnitCount; i++) {
 			final CUnit summonedUnit = simulation.createUnitSimple(this.summonUnitId, unit.getPlayerIndex(), x, y,
 					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
 					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
-			this.lastSummonHandleIds.add(summonedUnit.getHandleId());
+			summonedUnit.setExplodesOnDeath(true);
+			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.SPECIAL);
+			this.lastSummonUnits.add(summonedUnit);
 		}
 		return false;
 	}

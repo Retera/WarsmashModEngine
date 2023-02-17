@@ -1141,10 +1141,8 @@ public class MenuUI {
 								}
 							}
 						}
-						if (false) {
-							MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map,
-									mapInfo, war3MapConfig);
-						}
+						MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map,
+								mapInfo, war3MapConfig);
 						teamSetupPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig,
 								mapInfo.getPlayers().size(), mapInfo,
 								new PlayerSlotPaneListenerImplementation(teamSetupPane, war3MapConfig, mapInfo,

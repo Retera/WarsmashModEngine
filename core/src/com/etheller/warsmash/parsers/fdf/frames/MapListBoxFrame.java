@@ -172,7 +172,7 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 	public void removeItem(final String item, final GameUI gameUI, final Viewport viewport) {
 		int index = 0;
 		while (index < mapItems.size()) {
-			if (mapItems.get(index).mapFilename == item) {
+			if (mapItems.get(index).mapFilename.equals(item)) {
 				break;
 			}
 			index++;

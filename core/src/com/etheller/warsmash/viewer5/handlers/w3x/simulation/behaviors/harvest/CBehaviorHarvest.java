@@ -12,7 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveVisitor;
@@ -72,8 +72,8 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		if ((this.abilityHarvest.getCarriedResourceAmount() == 0)
 				|| (this.abilityHarvest.getCarriedResourceType() != ResourceType.GOLD)) {
 			for (final CAbility ability : target.getAbilities()) {
-				if (ability instanceof CAbilityGoldMine) {
-					final CAbilityGoldMine abilityGoldMine = (CAbilityGoldMine) ability;
+				if (ability instanceof CAbilityGoldMinable) {
+					final CAbilityGoldMinable abilityGoldMine = (CAbilityGoldMinable) ability;
 					final int activeMiners = abilityGoldMine.getActiveMinerCount();
 					if (activeMiners < abilityGoldMine.getMiningCapacity()) {
 						abilityGoldMine.addMiner(this);

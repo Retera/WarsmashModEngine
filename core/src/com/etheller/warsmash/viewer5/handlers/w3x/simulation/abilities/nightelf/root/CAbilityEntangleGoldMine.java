@@ -18,7 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -97,8 +97,8 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
-			final CAbilityGoldMine goldMineData = unitTarget.getGoldMineData();
-			if (goldMineData != null) {
+			final CAbilityGoldMinable goldMineData = unitTarget.getGoldMineData();
+			if ((goldMineData != null) && goldMineData.isBaseMine()) {
 				unitTarget.setHidden(true);
 				unitTarget.setPaused(true);
 				// == stuff copied from build behavior ==

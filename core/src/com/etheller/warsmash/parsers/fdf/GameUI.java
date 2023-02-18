@@ -15,7 +15,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -80,6 +79,7 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private static final boolean SHOW_BLACKNESS_BEHIND_DIALOGS = false;
 	public static final boolean DEBUG = false;
+	public static final boolean DEBUG_LOG = false;
 	private static final boolean PIN_FAIL_IS_FATAL = false;
 	private final DataSource dataSource;
 	private final Element skin;
@@ -90,7 +90,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final FrameTemplateEnvironment templates;
 	private final Map<String, Texture> pathToTexture = new HashMap<>();
 	private final boolean autoPosition = false;
-	private final FreeTypeFontGenerator fontGenerator;
+	private final FontGeneratorHolder fontGenerator;
 	private final FreeTypeFontParameter fontParam;
 	private final Map<String, UIFrame> nameToFrame = new HashMap<>();
 	private final Viewport fdfCoordinateResolutionDummyViewport;
@@ -313,6 +313,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		final TextureFrame textureFrame = new TextureFrame(name, parent, decorateFileNames, texCoord);
 		this.nameToFrame.put(name, textureFrame);
 		add(textureFrame);
+		checkInternalMappingSize();
 		return textureFrame;
 	}
 
@@ -323,6 +324,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		textureFrame.setFilterMode(filterMode);
 		this.nameToFrame.put(name, textureFrame);
 		add(textureFrame);
+		checkInternalMappingSize();
 		return textureFrame;
 	}
 
@@ -332,12 +334,14 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public StringFrame createStringFrame(final String name, final UIFrame parent, final Color color,
-			Color highlightColor, final TextJustify justifyH, final TextJustify justifyV, final float fdfFontSize) {
+			final Color highlightColor, final TextJustify justifyH, final TextJustify justifyV,
+			final float fdfFontSize) {
 		final BitmapFont frameFont = generateFont(fdfFontSize);
 		final StringFrame stringFrame = new StringFrame(name, parent, color, justifyH, justifyV, frameFont, name,
 				highlightColor, null);
 		this.nameToFrame.put(name, stringFrame);
 		add(stringFrame);
+		checkInternalMappingSize();
 		return stringFrame;
 	}
 
@@ -1338,7 +1342,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				final boolean decorateFileNames = frameDefinition.has("DecorateFileNames") || inDecorateFileNames;
 				String edgeFileString = frameDefinition.getString("BackdropEdgeFile");
-				System.out.println(frameDefinition.getName() + " wants edge file: " + edgeFileString);
+				if (DEBUG_LOG) {
+					System.out.println(frameDefinition.getName() + " wants edge file: " + edgeFileString);
+				}
 				if (decorateFileNames && (edgeFileString != null)) {
 					edgeFileString = trySkinField(edgeFileString);
 				}
@@ -1347,7 +1353,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				final Texture background = backgroundString == null ? null : loadTexture(backgroundString);
 				final Texture edgeFile = edgeFileString == null ? null : loadTexture(edgeFileString);
-				System.out.println(frameDefinition.getName() + " got edge file: " + edgeFile);
+				if (DEBUG_LOG) {
+					System.out.println(frameDefinition.getName() + " got edge file: " + edgeFile);
+				}
 
 				final BackdropFrame backdropFrame = new BackdropFrame(frameDefinition.getName(), parent,
 						decorateFileNames, tileBackground, background, cornerFlags, cornerSize, backgroundSize,
@@ -1479,12 +1487,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		else {
 			// TODO in production throw some kind of exception here
 		}
+		checkInternalMappingSize();
 		return inflatedFrame;
 	}
 
-	public void setSpriteFrameModel(final SpriteFrame spriteFrame, String backgroundArt) {
-		final MdxModel model = War3MapViewer.loadModelMdx(this.modelViewer.dataSource, this.modelViewer, backgroundArt, this.modelViewer.mapPathSolver,
-				this.modelViewer.solverParams);
+	public void setSpriteFrameModel(final SpriteFrame spriteFrame, final String backgroundArt) {
+		final MdxModel model = War3MapViewer.loadModelMdx(this.modelViewer.dataSource, this.modelViewer, backgroundArt,
+				this.modelViewer.mapPathSolver, this.modelViewer.solverParams);
 		spriteFrame.setModel(model);
 	}
 
@@ -1551,7 +1560,6 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				this.pathToTexture.put(path, texture);
 			}
 			catch (final Exception exc) {
-
 			}
 		}
 		return texture;
@@ -1571,6 +1579,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	public void add(final UIFrame childFrame) {
 		super.add(childFrame);
 		this.nameToFrame.put(childFrame.getName(), childFrame);
+		checkInternalMappingSize();
+	}
+
+	public void checkInternalMappingSize() {
+//		System.out.println("nameToFrame.size(): " + this.nameToFrame.size());
 	}
 
 	public Scene getUiScene() {
@@ -1613,7 +1626,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return this.font20;
 	}
 
-	public FreeTypeFontGenerator getFontGenerator() {
+	public FontGeneratorHolder getFontGenerator() {
 		return this.fontGenerator;
 	}
 

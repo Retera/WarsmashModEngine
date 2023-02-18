@@ -238,7 +238,7 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 
 				final SingleStringFrame mapNameFrame = new SingleStringFrame("MapNameY_" + stringFrameIndex, this, Color.WHITE, TextJustify.LEFT, TextJustify.MIDDLE, frameFont);
 				mapNameFrame.setWidth(this.renderBounds.getWidth() - 2 * listBoxBorder - mapIconSize);
-				mapNameFrame.setHeight(frameFont.getLineHeight());
+				mapNameFrame.setHeight(mapIconSize);
 				
 				final BackdropFrame mapTypeFrame = (BackdropFrame) gameUI.createFrameByType("BACKDROP", "MapTypeY_" + stringFrameIndex, this, "", 0);
 				mapTypeFrame.setWidth(mapIconSize);

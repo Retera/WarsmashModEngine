@@ -27,7 +27,7 @@ import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollBarChangeListener, ListBoxFrame.ListBoxSelelectionListener {
-	private static final float mapIconSize = 32.0f;
+	private final float mapIconSize;
 
 	private final List<MapItem> mapItems = new ArrayList<>();
 
@@ -51,6 +51,7 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 
 	public MapListBoxFrame(final String name, final UIFrame parent, final Viewport viewport, DataSource dataSource) {
 		super(name, parent);
+		mapIconSize = GameUI.convertY(viewport, 1/48f);
 		this.listBoxBorder = GameUI.convertX(viewport, 0.01f);
 		this.selectionFrame = new TextureFrame(null, this, false, null);
 		this.mouseHighlightFrame = new TextureFrame(null, this, false, null);
@@ -222,7 +223,7 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 		boolean foundSelected = false;
 		boolean foundMouseOver = false;
 		final int numStringFrames = (int) Math.min(mapItems.size(),
-				Math.floor((renderBounds.height - listBoxBorder * 2) / numStringSize));
+			Math.floor((renderBounds.height - listBoxBorder * 2) / numStringSize));
 
 		final int scrollOffset = computeScrollOffset(numStringFrames);
 		if (numStringFrames != mapNameFrames.size()) {

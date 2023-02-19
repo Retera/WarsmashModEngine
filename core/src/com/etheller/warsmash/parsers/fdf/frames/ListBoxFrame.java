@@ -165,8 +165,11 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 		AbstractRenderableFrame prev = null;
 		boolean foundSelected = false;
 		boolean foundMouseOver = false;
-		final int numStringFrames = (int) Math.min(this.listItems.size(),
-				(Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / (this.frameFont.getLineHeight()))));
+		// final int numStringFrames = (int) Math.min(this.listItems.size(),
+		// 		(Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / (this.frameFont.getLineHeight()))));
+		final int numStringFrames = this.listFrames.isEmpty() ? 
+				(int) Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / this.frameFont.getLineHeight() ) :
+				(int) Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / this.listFrames.get(0).getParentFrame().getAssignedHeight() ); 
 
 		final int scrollOffset = computeScrollOffset(numStringFrames);
 		if (numStringFrames != this.listFrames.size()) {

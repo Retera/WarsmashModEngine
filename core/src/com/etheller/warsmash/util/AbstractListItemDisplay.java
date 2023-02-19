@@ -11,7 +11,7 @@ import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 
 public abstract class AbstractListItemDisplay {
     protected ListItemEnum dataType;
-    protected AbstractRenderableFrame parentFrame;
+    protected SimpleFrame parentFrame;
 
     public AbstractListItemDisplay(ListItemEnum dataType, ListBoxFrame rootList, GameUI gameUI, Viewport viewport) {
         this.dataType = dataType;

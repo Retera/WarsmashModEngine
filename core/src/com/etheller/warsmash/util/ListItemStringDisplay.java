@@ -1,9 +1,6 @@
 package com.etheller.warsmash.util;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
@@ -21,7 +18,7 @@ public class ListItemStringDisplay extends AbstractListItemDisplay {
         
         stringFrame = new SingleStringFrame(null, gameUI, Color.WHITE, TextJustify.LEFT, TextJustify.MIDDLE, rootList.getFrameFont());
         stringFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, super.parentFrame, FramePoint.LEFT, 0, 0));
-        // parentFrame.add(stringFrame);
+        parentFrame.add(stringFrame);
     }
 
     @Override
@@ -36,18 +33,6 @@ public class ListItemStringDisplay extends AbstractListItemDisplay {
 
         String val = ((ListItemStringProperty) itemProperty).getRawValue();
         stringFrame.setText(val); 
-    }
-
-    @Override
-    public void internalRender(SpriteBatch batch, BitmapFont baseFont, GlyphLayout glyphLayout) {
-        super.internalRender(batch, baseFont, glyphLayout);
-        stringFrame.render(batch, baseFont, glyphLayout);
-    }
-
-    @Override
-    public void positionBounds(GameUI gameUI, Viewport viewport) {
-        super.positionBounds(gameUI, viewport);
-        stringFrame.positionBounds(gameUI, viewport);
     }
     
 }

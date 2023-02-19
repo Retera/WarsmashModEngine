@@ -180,7 +180,13 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 			}
 			this.listFrames.clear();
 
+			float curY = 0;
+			float prevY = 0;
 			for (int stringFrameIndex = 0; stringFrameIndex < numStringFrames; stringFrameIndex++) {
+				if (curY + prevY >= this.getRenderBounds().height - 2 * this.listBoxBorder) {
+					break;
+				}
+				
 				final int index = stringFrameIndex + scrollOffset;
 				final boolean selected = (index == this.selectedIndex);
 				final boolean mousedOver = (index == this.mouseOverIndex);
@@ -194,6 +200,8 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 					}
 					listDisplay.setValuesFromProperty(itemProperty);
 				}
+				prevY = listDisplay.getParentFrame().getRenderBounds().height;
+				curY += prevY;
 
 				if (prev != null) {
 					listDisplay.getParentFrame().addSetPoint(new SetPoint(FramePoint.TOPLEFT, prev, FramePoint.BOTTOMLEFT, 0, 0));

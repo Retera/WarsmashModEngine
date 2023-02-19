@@ -27,7 +27,7 @@ import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollBarChangeListener, ListBoxFrame.ListBoxSelelectionListener {
-	private static final float mapIconSize = 32.0f;
+	private final float mapIconSize;
 
 	private final List<MapItem> mapItems = new ArrayList<>();
 
@@ -51,6 +51,7 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 
 	public MapListBoxFrame(final String name, final UIFrame parent, final Viewport viewport, DataSource dataSource) {
 		super(name, parent);
+		mapIconSize = GameUI.convertY(viewport, 0.018f);
 		this.listBoxBorder = GameUI.convertX(viewport, 0.01f);
 		this.selectionFrame = new TextureFrame(null, this, false, null);
 		this.mouseHighlightFrame = new TextureFrame(null, this, false, null);
@@ -217,12 +218,11 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 	}
 
 	private void updateUI(final GameUI gameUI, final Viewport viewport) {
-		final float numStringSize = (float) Math.max(mapIconSize, frameFont.getLineHeight());
 		AbstractRenderableFrame prev = null;
 		boolean foundSelected = false;
 		boolean foundMouseOver = false;
 		final int numStringFrames = (int) Math.min(mapItems.size(),
-				Math.floor((renderBounds.height - listBoxBorder * 2) / numStringSize));
+			Math.floor((renderBounds.height - listBoxBorder * 2) / mapIconSize));
 
 		final int scrollOffset = computeScrollOffset(numStringFrames);
 		if (numStringFrames != mapNameFrames.size()) {
@@ -238,7 +238,7 @@ public class MapListBoxFrame extends ControlFrame implements ScrollBarFrame.Scro
 
 				final SingleStringFrame mapNameFrame = new SingleStringFrame("MapNameY_" + stringFrameIndex, this, Color.WHITE, TextJustify.LEFT, TextJustify.MIDDLE, frameFont);
 				mapNameFrame.setWidth(this.renderBounds.getWidth() - 2 * listBoxBorder - mapIconSize);
-				mapNameFrame.setHeight(frameFont.getLineHeight());
+				mapNameFrame.setHeight(mapIconSize);
 				
 				final BackdropFrame mapTypeFrame = (BackdropFrame) gameUI.createFrameByType("BACKDROP", "MapTypeY_" + stringFrameIndex, this, "", 0);
 				mapTypeFrame.setWidth(mapIconSize);

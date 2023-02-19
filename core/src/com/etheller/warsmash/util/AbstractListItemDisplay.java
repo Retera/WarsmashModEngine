@@ -13,11 +13,11 @@ public abstract class AbstractListItemDisplay {
     protected ListItemEnum dataType;
     protected SimpleFrame parentFrame;
 
-    public AbstractListItemDisplay(ListItemEnum dataType, ListBoxFrame rootList, GameUI gameUI, Viewport viewport) {
+    public AbstractListItemDisplay(ListItemEnum dataType, String name, ListBoxFrame rootList, GameUI gameUI, Viewport viewport) {
         this.dataType = dataType;
 
         // parentFrame = (SimpleFrame) gameUI.createSimpleFrame(null, rootList, 0);
-        parentFrame = (SimpleFrame) gameUI.createFrameByType("FRAME", null, rootList, "", 0);
+        parentFrame = (SimpleFrame) gameUI.createFrameByType("FRAME", name, rootList, "", 0);
         parentFrame.setWidth(rootList.getRenderBounds().width - 2 * rootList.getListBoxBorder());
         parentFrame.setHeight(rootList.getFrameFont().getLineHeight());
     }
@@ -50,10 +50,10 @@ public abstract class AbstractListItemDisplay {
 
     // ======== GLOBAL ========= //
 
-    public static AbstractListItemDisplay createFromType(ListItemEnum dataType, ListBoxFrame rootList, GameUI gameUI, Viewport viewport) {
+    public static AbstractListItemDisplay createFromType(ListItemEnum dataType, String name, ListBoxFrame rootList, GameUI gameUI, Viewport viewport) {
         switch(dataType) {
             case ITEM_STRING:
-                return new ListItemStringDisplay(rootList, gameUI, viewport);
+                return new ListItemStringDisplay(rootList, name, gameUI, viewport);
             default:
                 return null;
         }

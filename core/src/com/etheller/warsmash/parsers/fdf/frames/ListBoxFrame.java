@@ -165,29 +165,32 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 		AbstractRenderableFrame prev = null;
 		boolean foundSelected = false;
 		boolean foundMouseOver = false;
-		// final int numStringFrames = (int) Math.min(this.listItems.size(),
-		// 		(Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / (this.frameFont.getLineHeight()))));
-		final int numStringFrames = this.listFrames.isEmpty() ? 
-				(int) Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / this.frameFont.getLineHeight() ) :
-				(int) Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / this.listFrames.get(0).getParentFrame().getAssignedHeight() ); 
+		
+		float itemSize = this.frameFont.getLineHeight();
+		if (!this.listFrames.isEmpty()) {
+			itemSize = (float)Math.floor(this.listFrames.get(0).getParentFrame().getRenderBounds().height);
+		}
+		final int numStringFrames = (int) Math.min(this.listItems.size(),
+				(Math.floor((this.renderBounds.height - (this.listBoxBorder * 2)) / itemSize)));
 
 		final int scrollOffset = computeScrollOffset(numStringFrames);
 		if (numStringFrames != this.listFrames.size()) {
 			for (int i = 0; i < this.listFrames.size(); i++) {
 				this.listFrames.get(0).remove(gameUI);
-				this.listFrames.remove(0);
 			}
+			this.listFrames.clear();
+
 			for (int stringFrameIndex = 0; stringFrameIndex < numStringFrames; stringFrameIndex++) {
 				final int index = stringFrameIndex + scrollOffset;
 				final boolean selected = (index == this.selectedIndex);
 				final boolean mousedOver = (index == this.mouseOverIndex);
 
-				AbstractListItemDisplay listDisplay = AbstractListItemDisplay.createFromType(ListItemEnum.ITEM_STRING, this, gameUI, viewport);
+				AbstractListItemDisplay listDisplay = AbstractListItemDisplay.createFromType(ListItemEnum.ITEM_STRING, "LISTY_" + stringFrameIndex, this, gameUI, viewport);
 				if (index < this.listItems.size()) {
 					AbstractListItemProperty itemProperty = this.listItems.get(index);
 					if (!listDisplay.compareType(itemProperty)) {
 						listDisplay.remove(gameUI);
-						listDisplay = AbstractListItemDisplay.createFromType(itemProperty.getItemType(), this, gameUI, viewport);
+						listDisplay = AbstractListItemDisplay.createFromType(itemProperty.getItemType(), "LISTY_" + stringFrameIndex, this, gameUI, viewport);
 					}
 					listDisplay.setValuesFromProperty(itemProperty);
 				}
@@ -228,7 +231,7 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 						listDisplay.setValuesFromProperty(this.listItems.get(index));
 					} else {
 						listDisplay.remove(gameUI);
-						listDisplay = AbstractListItemDisplay.createFromType(this.listItems.get(index).getItemType(), this, gameUI, viewport);
+						listDisplay = AbstractListItemDisplay.createFromType(this.listItems.get(index).getItemType(), "LISTY_" + stringFrameIndex, this, gameUI, viewport);
 						listDisplay.setValuesFromProperty(this.listItems.get(index));
 
 						if (stringFrameIndex > 0) {

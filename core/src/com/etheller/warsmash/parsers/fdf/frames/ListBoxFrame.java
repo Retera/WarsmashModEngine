@@ -19,8 +19,8 @@ import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 
 public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollBarChangeListener {
 	// TODO where are these colors in the UI definition files?
-	private static final Color SELECT_COLOR = Color.BLUE;
-	private static final Color MOUSE_OVER_HIGHLIGHT_COLOR = new Color(0.3f, 0.3f, 1.0f, 0.25f);
+	public static final Color SELECT_COLOR = Color.BLUE;
+	public static final Color MOUSE_OVER_HIGHLIGHT_COLOR = new Color(0.3f, 0.3f, 1.0f, 0.25f);
 
 	// private final List<String> listItems = new ArrayList<>();
 	private final List<AbstractListItemProperty> listItems = new ArrayList<>();

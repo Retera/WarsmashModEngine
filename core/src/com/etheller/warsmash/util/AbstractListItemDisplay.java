@@ -54,6 +54,8 @@ public abstract class AbstractListItemDisplay {
         switch(dataType) {
             case ITEM_STRING:
                 return new ListItemStringDisplay(rootList, name, gameUI, viewport);
+            case ITEM_MAP:
+                return new ListItemMapDisplay(dataType, name, rootList, gameUI, viewport);
             default:
                 return null;
         }

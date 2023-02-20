@@ -1,6 +1,8 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
@@ -14,6 +16,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.util.AbstractListItemDisplay;
 import com.etheller.warsmash.util.AbstractListItemProperty;
 import com.etheller.warsmash.util.ListItemEnum;
+import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 
@@ -37,7 +40,9 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 	private ScrollBarFrame scrollBarFrame;
 	private ListBoxSelelectionListener selectionListener = ListBoxSelelectionListener.DO_NOTHING;
 
-	public ListBoxFrame(final String name, final UIFrame parent, final Viewport viewport) {
+	private final DataSource dataSource;
+
+	public ListBoxFrame(final String name, final UIFrame parent, final Viewport viewport, DataSource dataSource) {
 		super(name, parent);
 		this.listBoxBorder = GameUI.convertX(viewport, 0.01f);
 		this.selectionFrame = new TextureFrame(null, this, false, null);
@@ -50,6 +55,8 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 		mousePixmap.setColor(MOUSE_OVER_HIGHLIGHT_COLOR);
 		mousePixmap.fill();
 		this.mouseHighlightFrame.setTexture(new Texture(mousePixmap));
+
+		this.dataSource = dataSource;
 	}
 
 	public void setScrollBarFrame(final ScrollBarFrame scrollBarFrame) {
@@ -117,11 +124,11 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 
 	// Default
 	public void addItem(final String item, final GameUI gameUI, final Viewport viewport) {
-		this.listItems.add(AbstractListItemProperty.createFromType(item, ListItemEnum.ITEM_STRING));
+		this.listItems.add(AbstractListItemProperty.createFromType(item, ListItemEnum.ITEM_STRING, gameUI, this.dataSource));
 	}
 
 	public void addItem(final String item, final ListItemEnum itemType, final GameUI gameUI, final Viewport viewport) {
-		this.listItems.add(AbstractListItemProperty.createFromType(item, itemType));
+		this.listItems.add(AbstractListItemProperty.createFromType(item, itemType, gameUI, this.dataSource));
 	}
 
 	public void setItems(final List<AbstractListItemProperty> items, final GameUI gameUI, final Viewport viewport) {
@@ -144,6 +151,15 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 
 	public void removeAllItems() {
 		this.listItems.clear();
+	}
+
+	public void sortItems() {
+		Collections.sort(this.listItems, new Comparator<AbstractListItemProperty>() {
+			@Override
+			public int compare(AbstractListItemProperty arg0, AbstractListItemProperty arg1) {
+				return arg0.compare(arg1);
+			}
+		});
 	}
 
 	public void setSelectedIndex(final int selectedIndex) {
@@ -176,7 +192,7 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 		final int scrollOffset = computeScrollOffset(numStringFrames);
 		if (numStringFrames != this.listFrames.size()) {
 			for (int i = 0; i < this.listFrames.size(); i++) {
-				this.listFrames.get(0).remove(gameUI);
+				this.listFrames.get(i).remove(gameUI);
 			}
 			this.listFrames.clear();
 

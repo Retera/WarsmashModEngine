@@ -16,7 +16,7 @@ public class ListItemStringDisplay extends AbstractListItemDisplay {
     public ListItemStringDisplay(ListBoxFrame rootList, String name, GameUI gameUI, Viewport viewport) {
         super(ListItemEnum.ITEM_STRING, name, rootList, gameUI, viewport);
         
-        stringFrame = new SingleStringFrame(null, gameUI, Color.WHITE, TextJustify.LEFT, TextJustify.MIDDLE, rootList.getFrameFont());
+        stringFrame = new SingleStringFrame(null, parentFrame, Color.WHITE, TextJustify.LEFT, TextJustify.MIDDLE, rootList.getFrameFont());
         stringFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, super.parentFrame, FramePoint.LEFT, 0, 0));
         parentFrame.add(stringFrame);
     }

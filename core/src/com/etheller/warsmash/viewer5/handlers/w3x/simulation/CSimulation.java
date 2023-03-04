@@ -379,6 +379,7 @@ public class CSimulation implements CPlayerAPI {
 	protected void updateFogOfWar() {
 		for (final CPlayer player : this.players) {
 			player.getFogOfWar().convertVisibleToFogged();
+			player.updateFogModifiers(this);
 		}
 		for (final CUnit unit : this.units) {
 			unit.updateFogOfWar(this);

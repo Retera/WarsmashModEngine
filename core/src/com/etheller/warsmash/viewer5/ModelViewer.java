@@ -119,6 +119,11 @@ public abstract class ModelViewer {
 		return scene;
 	}
 
+	public void addScene(final Scene scene) {
+		// NOTE added to API in 2023, maybe a hack, consider better API in future?
+		this.scenes.add(scene);
+	}
+
 	public boolean removeScene(final Scene scene) {
 		return this.scenes.remove(scene);
 	}
@@ -170,7 +175,7 @@ public abstract class ModelViewer {
 			// Built-in texture sources
 			// ---- TODO not using JS code here
 
-			final Object[] handlerAndDataType = this.findHandler(extension.toLowerCase());
+			final Object[] handlerAndDataType = findHandler(extension.toLowerCase());
 
 			// Is there a handler for this file type?
 			if (handlerAndDataType != null) {
@@ -272,9 +277,9 @@ public abstract class ModelViewer {
 	}
 
 	public void updateAndRender() {
-		this.update();
-		this.startFrame();
-		this.render();
+		update();
+		startFrame();
+		render();
 	}
 
 //	public Resource loadGeneric(String path, String dataType, )

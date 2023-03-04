@@ -128,6 +128,14 @@ public class CWorldCollision {
 		this.buildingUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
 	}
 
+	public void enumUnitsAtPoint(final float x, final float y, final CUnitEnumFunction callback) {
+		this.eachUnitOnlyOnceIntersector.reset(callback);
+		this.groundUnitCollision.intersect(x, y, this.eachUnitOnlyOnceIntersector);
+		this.airUnitCollision.intersect(x, y, this.eachUnitOnlyOnceIntersector);
+		this.seaUnitCollision.intersect(x, y, this.eachUnitOnlyOnceIntersector);
+		this.buildingUnitCollision.intersect(x, y, this.eachUnitOnlyOnceIntersector);
+	}
+
 	public void enumBuildingsInRect(final Rectangle rect, final QuadtreeIntersector<CUnit> callback) {
 		this.buildingUnitCollision.intersect(rect, callback);
 	}

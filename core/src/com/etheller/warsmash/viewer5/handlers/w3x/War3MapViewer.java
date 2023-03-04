@@ -113,6 +113,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffTimedLife;
@@ -129,6 +130,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
@@ -248,6 +250,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private Quadtree<MdxComplexInstance> walkableObjectsTree;
 	private final QuadtreeIntersectorFindsWalkableRenderHeight walkablesIntersector = new QuadtreeIntersectorFindsWalkableRenderHeight();
+	private final QuadtreeIntersectorFindsBuildingRenderHeight walkableBuildingIntersector = new QuadtreeIntersectorFindsBuildingRenderHeight();
+	private final QuadtreeIntersectorFindsWalkableRayHit walkablesRayHitter = new QuadtreeIntersectorFindsWalkableRayHit();
+	private final QuadtreeIntersectorFindsBuildingRayHit walkableBuildingRayHitter = new QuadtreeIntersectorFindsBuildingRayHit();
 	private final QuadtreeIntersectorFindsHitPoint walkablesIntersectionFinder = new QuadtreeIntersectorFindsHitPoint();
 	private final QuadtreeIntersectorFindsHighestWalkable intersectorFindsHighestWalkable = new QuadtreeIntersectorFindsHighestWalkable();
 
@@ -1459,7 +1464,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				// TODO this is a hack and should be fixed later
 				boundingBox = new BoundingBox(new Vector3(-10, -10, 0), new Vector3(10, 10, 0));
 			}
-			final Rectangle renderDestructableBounds = getRotatedBoundingBox(x, y, angle, boundingBox);
+			final Rectangle renderDestructableBounds = getRotatedBoundingBox(x, y, scale, angle, boundingBox);
 			this.walkableObjectsTree.add((MdxComplexInstance) renderDestructable.instance, renderDestructableBounds);
 			renderDestructable.walkableBounds = renderDestructableBounds;
 		}
@@ -1522,7 +1527,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return model;
 	}
 
-	private Rectangle getRotatedBoundingBox(final float x, final float y, final float angle,
+	private Rectangle getRotatedBoundingBox(final float x, final float y, final float[] scale, final float angle,
 			final BoundingBox boundingBox) {
 		final float x1 = boundingBox.min.x;
 		final float y1 = boundingBox.min.y;
@@ -1548,10 +1553,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final double y2prime = StrictMath.sin(angle2) * len2;
 		final double y3prime = StrictMath.sin(angle3) * len3;
 		final double y4prime = StrictMath.sin(angle4) * len4;
-		final float minX = (float) StrictMath.min(StrictMath.min(x1prime, x2prime), StrictMath.min(x3prime, x4prime));
-		final float minY = (float) StrictMath.min(StrictMath.min(y1prime, y2prime), StrictMath.min(y3prime, y4prime));
-		final float maxX = (float) StrictMath.max(StrictMath.max(x1prime, x2prime), StrictMath.max(x3prime, x4prime));
-		final float maxY = (float) StrictMath.max(StrictMath.max(y1prime, y2prime), StrictMath.max(y3prime, y4prime));
+		final float minX = (float) StrictMath.min(StrictMath.min(x1prime, x2prime), StrictMath.min(x3prime, x4prime))
+				* scale[0];
+		final float minY = (float) StrictMath.min(StrictMath.min(y1prime, y2prime), StrictMath.min(y3prime, y4prime))
+				* scale[1];
+		final float maxX = (float) StrictMath.max(StrictMath.max(x1prime, x2prime), StrictMath.max(x3prime, x4prime))
+				* scale[0];
+		final float maxY = (float) StrictMath.max(StrictMath.max(y1prime, y2prime), StrictMath.max(y3prime, y4prime))
+				* scale[1];
 		return new Rectangle(x + minX, y + minY, maxX - minX, maxY - minY);
 	}
 
@@ -2601,6 +2610,63 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return this.walkablesIntersector.z;
 	}
 
+	public float getBuildingRenderHeight(final float x, final float y) {
+		this.simulation.getWorldCollision().enumBuildingsAtPoint(x, y, this.walkableBuildingIntersector.reset(x, y));
+		return this.walkableBuildingIntersector.z;
+	}
+
+	public float getNearestIntersectingZBeneath(final float x, final float y, final float z,
+			final RenderUnit[] intersectorUnitOut) {
+		final float groundHeight = this.terrain.getGroundHeight(x, y);
+		if (z < groundHeight) {
+			return groundHeight;
+		}
+		intersectorUnitOut[0] = null;
+		this.walkableObjectsTree.intersect(x, y, this.walkablesIntersector.reset(x, y, z + 1));
+		this.simulation.getWorldCollision().enumBuildingsAtPoint(x, y,
+				this.walkableBuildingIntersector.reset(x, y, z + 1));
+		this.simulation.getWorldCollision().enumUnitsAtPoint(x, y, this.walkableBuildingIntersector.reset(x, y, z + 1));
+		if (this.walkableBuildingIntersector.bestIntersectedUnit != null) {
+			intersectorUnitOut[0] = this.walkableBuildingIntersector.bestIntersectedUnit;
+		}
+		return Math.max(groundHeight, Math.max(this.walkablesIntersector.z, this.walkableBuildingIntersector.z));
+	}
+
+	public boolean is3DTravelBlocked(final Vector3 prevLocation, final Vector3 newLocation, final float stairsHeight,
+			final float pawnHeight) {
+		final float prevGroundHeight = this.terrain.getGroundHeight(prevLocation.x, prevLocation.y);
+		final float newGroundHeight = this.terrain.getGroundHeight(newLocation.x, newLocation.y);
+		if ((newGroundHeight - prevGroundHeight) > stairsHeight) {
+			return true;
+		}
+		final float dx = newLocation.x - prevLocation.x;
+		final float dy = newLocation.y - prevLocation.y;
+		final float dz = newLocation.z - prevLocation.z;
+		rectangleHeap.set(Math.min(newLocation.x, prevLocation.x), Math.min(newLocation.y, prevLocation.y),
+				Math.abs(dx), Math.abs(dy));
+		this.walkableObjectsTree.intersect(rectangleHeap, this.walkablesRayHitter.reset(prevLocation.x, prevLocation.y,
+				prevLocation.z + stairsHeight, dx, dy, dz));
+		if (this.walkablesRayHitter.intersected) {
+			return true;
+		}
+		this.walkableObjectsTree.intersect(rectangleHeap,
+				this.walkablesRayHitter.reset(prevLocation.x, prevLocation.y, prevLocation.z + pawnHeight, dx, dy, dz));
+		if (this.walkablesRayHitter.intersected) {
+			return true;
+		}
+		this.simulation.getWorldCollision().enumBuildingsInRect(rectangleHeap, this.walkableBuildingRayHitter
+				.reset(prevLocation.x, prevLocation.y, prevLocation.z + stairsHeight, dx, dy, dz));
+		if (this.walkableBuildingRayHitter.intersected) {
+			return true;
+		}
+		this.simulation.getWorldCollision().enumBuildingsInRect(rectangleHeap, this.walkableBuildingRayHitter
+				.reset(prevLocation.x, prevLocation.y, prevLocation.z + pawnHeight, dx, dy, dz));
+		if (this.walkableBuildingRayHitter.intersected) {
+			return true;
+		}
+		return false;
+	}
+
 	public MdxComplexInstance getHighestWalkableUnder(final float x, final float y) {
 		this.walkableObjectsTree.intersect(x, y, this.intersectorFindsHighestWalkable.reset(x, y));
 		return this.intersectorFindsHighestWalkable.highestInstance;
@@ -2645,10 +2711,106 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			return this;
 		}
 
+		private QuadtreeIntersectorFindsWalkableRenderHeight reset(final float x, final float y, final float z) {
+			this.z = -Float.MAX_VALUE;
+			this.ray.set(x, y, z, 0, 0, -8192);
+			return this;
+		}
+
 		@Override
 		public boolean onIntersect(final MdxComplexInstance intersectingObject) {
 			if (intersectingObject.intersectRayWithCollision(this.ray, this.intersection, true, true)) {
 				this.z = Math.max(this.z, this.intersection.z);
+			}
+			return false;
+		}
+	}
+
+	private static final class QuadtreeIntersectorFindsWalkableRayHit
+			implements QuadtreeIntersector<MdxComplexInstance> {
+		private final Ray ray = new Ray();
+		private final Vector3 intersection = new Vector3();
+		private boolean intersected = false;
+
+		private QuadtreeIntersectorFindsWalkableRayHit reset(final float x, final float y, final float z,
+				final float dx, final float dy, final float dz) {
+			this.intersected = false;
+			this.ray.set(x, y, z, dx, dy, dz);
+			return this;
+		}
+
+		@Override
+		public boolean onIntersect(final MdxComplexInstance intersectingObject) {
+			if (intersectingObject.intersectRayWithCollision(this.ray, this.intersection, true, true)) {
+				if (this.intersection.dst2(this.ray.origin) < this.ray.direction.len2()) {
+					this.intersected = true;
+				}
+			}
+			return false;
+		}
+	}
+
+	private final class QuadtreeIntersectorFindsBuildingRenderHeight
+			implements QuadtreeIntersector<CUnit>, CUnitEnumFunction {
+		private float z;
+		private final Ray ray = new Ray();
+		private final Vector3 intersection = new Vector3();
+		private RenderUnit bestIntersectedUnit;
+
+		private QuadtreeIntersectorFindsBuildingRenderHeight reset(final float x, final float y) {
+			this.z = -Float.MAX_VALUE;
+			this.bestIntersectedUnit = null;
+			this.ray.set(x, y, 4096, 0, 0, -8192);
+			return this;
+		}
+
+		private QuadtreeIntersectorFindsBuildingRenderHeight reset(final float x, final float y, final float z) {
+			this.z = -Float.MAX_VALUE;
+			this.bestIntersectedUnit = null;
+			this.ray.set(x, y, z, 0, 0, -8192);
+			return this;
+		}
+
+		@Override
+		public boolean onIntersect(final CUnit intersectingObject) {
+			final RenderUnit renderPeer = getRenderPeer(intersectingObject);
+			if (renderPeer.instance.intersectRayWithCollision(this.ray, this.intersection, true, true)) {
+				if (this.intersection.z > this.z) {
+					this.z = this.intersection.z;
+					this.bestIntersectedUnit = renderPeer;
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public boolean call(final CUnit unit) {
+			if (unit.isUnitType(CUnitTypeJass.MECHANICAL)) {
+				return onIntersect(unit);
+			}
+			return false;
+		}
+	}
+
+	private final class QuadtreeIntersectorFindsBuildingRayHit implements QuadtreeIntersector<CUnit> {
+		private boolean intersected = false;
+		private final Ray ray = new Ray();
+		private final Vector3 intersection = new Vector3();
+
+		private QuadtreeIntersectorFindsBuildingRayHit reset(final float x, final float y, final float z,
+				final float dx, final float dy, final float dz) {
+			this.intersected = false;
+			this.ray.set(x, y, z, dx, dy, dz);
+			return this;
+		}
+
+		@Override
+		public boolean onIntersect(final CUnit intersectingObject) {
+			final RenderUnit renderPeer = getRenderPeer(intersectingObject);
+			if (renderPeer.instance.intersectRayWithCollision(this.ray, this.intersection, true, true)) {
+				if (this.intersection.dst2(this.ray.origin) < this.ray.direction.len2()) {
+					this.intersected = true;
+				}
 			}
 			return false;
 		}

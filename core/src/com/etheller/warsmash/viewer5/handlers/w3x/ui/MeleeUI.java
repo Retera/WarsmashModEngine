@@ -195,7 +195,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CTimerDialog;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
 public class MeleeUI implements CUnitStateListener, CommandButtonListener, CommandCardCommandListener,
-		QueueIconListener, CommandErrorListener, CPlayerStateListener {
+		QueueIconListener, CommandErrorListener, CPlayerStateListener, WarsmashUI, WarsmashToggleableUI {
 	private static final long WORLD_FRAME_MESSAGE_FADEOUT_MILLIS = TimeUnit.SECONDS.toMillis(9);
 	private static final long WORLD_FRAME_MESSAGE_EXPIRE_MILLIS = TimeUnit.SECONDS.toMillis(10);
 	private static final long WORLD_FRAME_MESSAGE_FADE_DURATION = WORLD_FRAME_MESSAGE_EXPIRE_MILLIS
@@ -483,6 +483,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	 * Called "main" because this was originally written in JASS so that maps could
 	 * override it, and I may convert it back to the JASS at some point.
 	 */
+	@Override
 	public void main() {
 		// =================================
 		// Load skins and templates
@@ -1529,6 +1530,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
+	@Override
 	public void update(final float deltaTime) {
 		this.portrait.update();
 
@@ -1917,6 +1919,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		setCursorState(state, Color.WHITE);
 	}
 
+	@Override
 	public void render(final SpriteBatch batch, final GlyphLayout glyphLayout) {
 		final BitmapFont font = this.rootFrame.getFont();
 		font.setColor(Color.YELLOW);
@@ -3261,9 +3264,20 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.rootFrame.setText(this.simpleClassValue, toolTip);
 	}
 
-	public void resize(final Rectangle viewport) {
-		this.cameraManager.resize(viewport);
+	@Override
+	public void resize(final int width, final int height) {
+		this.cameraManager.resize(setupWorldFrameViewport(width, height));
 		positionPortrait();
+	}
+
+	private Rectangle setupWorldFrameViewport(final int width, final int height) {
+		this.tempRect.x = 0;
+		this.tempRect.width = width;
+		final float topHeight = 0.02666f * height;
+		final float bottomHeight = 0.21333f * height;
+		this.tempRect.y = (int) bottomHeight;
+		this.tempRect.height = height - (int) (topHeight + bottomHeight);
+		return this.tempRect;
 	}
 
 	public void positionPortrait() {
@@ -3456,6 +3470,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return this.selectedUnit;
 	}
 
+	@Override
 	public boolean keyDown(final int keycode) {
 		if (WarsmashConstants.ENABLE_DEBUG) {
 			if (keycode == Input.Keys.Z) {
@@ -3503,14 +3518,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return this.cameraManager.keyDown(keycode);
 	}
 
+	@Override
 	public boolean keyUp(final int keycode) {
 		return this.cameraManager.keyUp(keycode);
 	}
 
-	public void scrolled(final int amount) {
+	@Override
+	public boolean scrolled(final int amount) {
 		this.cameraManager.scrolled(amount);
+		return true;
 	}
 
+	@Override
 	public boolean touchDown(final int screenX, final int screenY, final float worldScreenY, final int button) {
 		this.allowDrag = false;
 		if (button == Input.Buttons.FORWARD) {
@@ -3969,6 +3988,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
+	@Override
 	public boolean touchUp(final int screenX, final int screenY, final float worldScreenY, final int button) {
 		if (button == Input.Buttons.FORWARD) {
 			return false;
@@ -4095,6 +4115,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT);
 	}
 
+	@Override
 	public boolean touchDragged(final int screenX, final int screenY, final float worldScreenY, final int pointer) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
@@ -4135,6 +4156,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return false;
 	}
 
+	@Override
 	public boolean mouseMoved(final int screenX, final int screenY, final float worldScreenY) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
@@ -4271,6 +4293,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
+	@Override
 	public void dispose() {
 		if (this.rootFrame != null) {
 			this.rootFrame.dispose();
@@ -4448,10 +4471,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	}
 
+	@Override
 	public GameCameraManager getCameraManager() {
 		return this.cameraManager;
 	}
 
+	@Override
 	public Music playMusic(final String musicField, final boolean random, int index) {
 		if (WarsmashConstants.ENABLE_MUSIC) {
 			stopMusic();
@@ -4504,6 +4529,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return null;
 	}
 
+	@Override
 	public void gameClosed() {
 		stopMusic();
 	}
@@ -4519,21 +4545,26 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
+	@Override
 	public Scene getUiScene() {
 		return this.uiScene;
 	}
 
+	@Override
 	public CTimerDialog createTimerDialog(final CTimer timer) {
 		final UIFrame timerDialog = this.rootFrame.createFrame("TimerDialog", this.rootFrame, 0, 0);
 		final StringFrame valueFrame = (StringFrame) this.rootFrame.getFrameByName("TimeDialogValue", 0);
 		final StringFrame titleFrame = (StringFrame) this.rootFrame.getFrameByName("TimerDialogTitle", 0);
+		timerDialog.positionBounds(this.rootFrame, this.uiViewport);
 		return new CTimerDialog(timer, timerDialog, valueFrame, titleFrame);
 	}
 
+	@Override
 	public void displayTimedText(final float x, final float y, final float duration, final String message) {
 		showGameMessage(message, duration); // TODO x y
 	}
 
+	@Override
 	public CScriptDialog createScriptDialog(final GlobalScope globalScope) {
 		final SimpleFrame scriptDialog = (SimpleFrame) this.rootFrame.createFrame("ScriptDialog", this.rootFrame, 0, 0);
 		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
@@ -4543,6 +4574,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return new CScriptDialog(globalScope, scriptDialog, scriptDialogTextFrame);
 	}
 
+	@Override
 	public CScriptDialogButton createScriptDialogButton(final CScriptDialog scriptDialog, final String text,
 			final char hotkey) {
 		// TODO use hotkey
@@ -4559,10 +4591,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return newButton;
 	}
 
+	@Override
 	public void destroyDialog(final CScriptDialog dialog) {
 		this.rootFrame.remove(dialog.getScriptDialogFrame());
 	}
 
+	@Override
 	public void clearDialog(final CScriptDialog dialog) {
 		destroyDialog(dialog);
 		final SimpleFrame scriptDialog = (SimpleFrame) this.rootFrame.createFrame("ScriptDialog", this.rootFrame, 0, 0);
@@ -4573,6 +4607,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		dialog.reset(scriptDialog, scriptDialogTextFrame);
 	}
 
+	@Override
 	public void removedUnit(final CUnit whichUnit) {
 		final RenderUnit renderUnit = this.war3MapViewer.getRenderPeer(whichUnit);
 		if ((this.selectedUnits != null) && this.selectedUnits.contains(renderUnit)) {
@@ -4585,6 +4620,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
+	@Override
 	public void removedItem(final CItem whichItem) {
 		// TODO unselect an item if it exists
 	}
@@ -4639,5 +4675,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		public String getSoundKey() {
 			return SOUND_KEY_NONE;
 		}
+	}
+
+	@Override
+	public void onHide() {
+		this.timeIndicator.setVisible(false);
+	}
+
+	@Override
+	public void onShow() {
+		this.timeIndicator.setVisible(true);
 	}
 }

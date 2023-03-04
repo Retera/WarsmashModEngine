@@ -194,11 +194,14 @@ public class CAbilityData {
 			if (mutableGameObject == null) {
 				return null;
 			}
-			final War3ID code = War3ID.fromString(mutableGameObject.readSLKTag("code"));
-			final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
-			if (abilityTypeDefinition != null) {
-				abilityType = abilityTypeDefinition.createAbilityType(alias, mutableGameObject);
-				this.aliasToAbilityType.put(alias, abilityType);
+			final String codeSLKTag = mutableGameObject.readSLKTag("code");
+			if (codeSLKTag.length() == 4) {
+				final War3ID code = War3ID.fromString(codeSLKTag);
+				final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
+				if (abilityTypeDefinition != null) {
+					abilityType = abilityTypeDefinition.createAbilityType(alias, mutableGameObject);
+					this.aliasToAbilityType.put(alias, abilityType);
+				}
 			}
 		}
 		return abilityType;

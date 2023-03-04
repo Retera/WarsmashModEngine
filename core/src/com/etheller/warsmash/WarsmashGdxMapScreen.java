@@ -55,6 +55,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson.ThirdPersonUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.toggle.MeleeToggleUI;
 
 public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	public static final boolean ENABLE_AUDIO = true;
@@ -74,7 +77,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	private MdxModel timeIndicator;
 
 	private Scene uiScene;
-	private MeleeUI meleeUI;
+	private WarsmashUI meleeUI;
 
 	private Music currentMusic;
 	private final WarsmashGdxMultiScreenGame screenManager;
@@ -182,8 +185,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 				cameraRatesElement.getFieldFloatValue("FOV"), cameraRatesElement.getFieldFloatValue("Rotation"),
 				cameraRatesElement.getFieldFloatValue("Distance"), cameraRatesElement.getFieldFloatValue("Forward"),
 				cameraRatesElement.getFieldFloatValue("Strafe"));
-		this.meleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, this.uiScene, portraitScene, cameraPresets,
-				cameraRates, this.viewer, new RootFrameListener() {
+		final MeleeUI baseMeleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, this.uiScene, portraitScene,
+				cameraPresets, cameraRates, this.viewer, new RootFrameListener() {
 					@Override
 					public void onCreate(final GameUI rootFrame) {
 						WarsmashGdxMapScreen.this.viewer.setGameUI(rootFrame);
@@ -195,6 +198,10 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 						WarsmashGdxMapScreen.this.screenManager.setScreen(WarsmashGdxMapScreen.this.menuScreen);
 					}
 				});
+		this.meleeUI = new MeleeToggleUI(baseMeleeUI,
+				Arrays.asList(baseMeleeUI,
+						new ThirdPersonUI(this.viewer, this.uiScene, portraitScene, "bloodelfmale_guard.mdx"),
+						new ThirdPersonUI(this.viewer, this.uiScene, portraitScene, "tentaclefacepriest.mdx")));
 		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 				this.viewer.mapPathSolver, "").addInstance();
@@ -323,19 +330,9 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		this.uiViewport.update(width, height);
 		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
 
-		this.meleeUI.resize(setupWorldFrameViewport(width, height));
+		this.meleeUI.resize(width, height);
 		updateUIScene();
 
-	}
-
-	private Rectangle setupWorldFrameViewport(final int width, final int height) {
-		this.tempRect.x = 0;
-		this.tempRect.width = width;
-		final float topHeight = 0.02666f * height;
-		final float bottomHeight = 0.21333f * height;
-		this.tempRect.y = (int) bottomHeight;
-		this.tempRect.height = height - (int) (topHeight + bottomHeight);
-		return this.tempRect;
 	}
 
 	@Override

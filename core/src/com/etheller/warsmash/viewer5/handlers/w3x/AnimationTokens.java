@@ -2,77 +2,21 @@ package com.etheller.warsmash.viewer5.handlers.w3x;
 
 public class AnimationTokens {
 	public static enum PrimaryTag {
-		ATTACK,
-		BIRTH,
+		ATTACK, BIRTH,
 //		CINEMATIC,
-		DEATH,
-		DECAY,
-		DISSIPATE,
-		MORPH,
-		PORTRAIT,
-		SLEEP,
+		DEATH, DECAY, DISSIPATE, MORPH, PORTRAIT, SLEEP,
 //		SPELL,
-		STAND,
-		WALK;
+		STAND, WALK, JUMPSTART, JUMPEND, JUMP, FALL, RUN, WALKBACKWARDS, SHUFFLERIGHT, SHUFFLELEFT;
 	}
 
 	public static enum SecondaryTag {
-		ALTERNATE,
-		ALTERNATEEX,
-		BONE,
-		CHAIN,
-		CHANNEL,
-		COMPLETE,
-		CRITICAL,
-		DEFEND,
-		DRAIN,
-		EATTREE,
-		FAST,
-		FILL,
-		FLAIL,
-		FLESH,
-		FIFTH,
-		FIRE,
-		FIRST,
-		FIVE,
-		FOUR,
-		FOURTH,
-		GOLD,
-		HIT,
-		LARGE,
-		LEFT,
-		LIGHT,
-		LOOPING,
-		LUMBER,
-		MEDIUM,
-		MODERATE,
-		OFF,
-		ONE,
-		PUKE,
-		READY,
-		RIGHT,
-		SECOND,
-		SEVERE,
-		SLAM,
-		SMALL,
-		SPIKED,
-		SPIN,
-		SPELL,
-		CINEMATIC,
-		SWIM,
-		TALK,
-		THIRD,
-		THREE,
-		THROW,
-		TWO,
-		TURN,
-		VICTORY,
-		WORK,
-		WOUNDED,
-		UPGRADE;
-		
-		public static SecondaryTag fromCount(int count) {
-			switch(count) {
+		ALTERNATE, ALTERNATEEX, BONE, CHAIN, CHANNEL, COMPLETE, CRITICAL, DEFEND, DRAIN, EATTREE, FAST, FILL, FLAIL,
+		FLESH, FIFTH, FIRE, FIRST, FIVE, FOUR, FOURTH, GOLD, HIT, LARGE, LEFT, LIGHT, LOOPING, LUMBER, MEDIUM, MODERATE,
+		OFF, ONE, PUKE, READY, RIGHT, SECOND, SEVERE, SLAM, SMALL, SPIKED, SPIN, SPELL, CINEMATIC, SWIM, TALK, THIRD,
+		THREE, THROW, TWO, TURN, VICTORY, WORK, WOUNDED, UPGRADE;
+
+		public static SecondaryTag fromCount(final int count) {
+			switch (count) {
 			case 1:
 				return SecondaryTag.FIRST;
 			case 2:

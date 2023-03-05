@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
+import com.etheller.warsmash.util.Descriptor;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Bounds;
 import com.etheller.warsmash.viewer5.GenericNode;
@@ -30,14 +31,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
 
 public class MdxComplexInstance extends ModelInstance {
-	private static final float[] visibilityHeap = new float[1];
-	private static final float[] translationHeap = new float[3];
-	private static final float[] rotationHeap = new float[4];
-	private static final float[] scaleHeap = new float[3];
-	private static final float[] colorHeap = new float[3];
-	private static final float[] alphaHeap = new float[1];
-	private static final long[] textureIdHeap = new long[1];
-	private static final Vector3 intersectionHeap = new Vector3();
+	protected static final float[] visibilityHeap = new float[1];
+	protected static final float[] translationHeap = new float[3];
+	protected static final float[] rotationHeap = new float[4];
+	protected static final float[] scaleHeap = new float[3];
+	protected static final float[] colorHeap = new float[3];
+	protected static final float[] alphaHeap = new float[1];
+	protected static final long[] textureIdHeap = new long[1];
+	protected static final Vector3 intersectionHeap = new Vector3();
 
 	public List<LightInstance> lights = new ArrayList<>();
 	public List<AttachmentInstance> attachments = new ArrayList<>();
@@ -73,14 +74,20 @@ public class MdxComplexInstance extends ModelInstance {
 	public Texture[] replaceableTextures_diffuse = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
 	public Texture[] replaceableTextures_normal = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
 	public Texture[] replaceableTextures_orm = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
-	private float animationSpeed = 1.0f;
-	private float blendTime;
-	private float blendTimeRemaining;
+	protected float animationSpeed = 1.0f;
+	protected float blendTime;
+	protected float blendTimeRemaining;
 	public boolean additiveOverrideMeshMode = false;
 	private boolean hasAnyUnselectableMesh = false;
+	private final Descriptor<MdxNode> mdxNodeDescriptor;
 
 	public MdxComplexInstance(final MdxModel model) {
+		this(model, MdxNodeDescriptor.INSTANCE);
+	}
+
+	public MdxComplexInstance(final MdxModel model, final Descriptor<MdxNode> mdxNodeDescriptor) {
 		super(model);
+		this.mdxNodeDescriptor = mdxNodeDescriptor;
 	}
 
 	@Override
@@ -105,8 +112,7 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 
 		// Create the needed amount of shared nodes.
-		final Object[] sharedNodeData = Node.createSkeletalNodes(model.genericObjects.size(),
-				MdxNodeDescriptor.INSTANCE);
+		final Object[] sharedNodeData = Node.createSkeletalNodes(model.genericObjects.size(), this.mdxNodeDescriptor);
 		final List<MdxNode> nodes = (List<MdxNode>) sharedNodeData[0];
 		int nodeIndex = 0;
 		this.nodes = nodes.toArray(new MdxNode[nodes.size()]);
@@ -805,7 +811,7 @@ public class MdxComplexInstance extends ModelInstance {
 	 * it's a different one, do something. When changing sequences, these states
 	 * need to be reset, so they can immediately emit things if needed.
 	 */
-	private void resetEventEmitters() {
+	protected void resetEventEmitters() {
 		/// TODO: Update this. Said Ghostwolf.
 		for (final EventObjectEmitter<?, ?> eventObjectEmitter : this.eventObjectEmitters) {
 			eventObjectEmitter.reset();

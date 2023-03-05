@@ -7,4 +7,8 @@ public final class CameraPanControls {
 	public boolean right;
 	public boolean insertDown;
 	public boolean deleteDown;
+
+	public boolean isAnyArrowPressed() {
+		return this.down || this.up || this.left || this.right;
+	}
 }

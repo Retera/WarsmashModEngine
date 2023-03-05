@@ -7,7 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 
 public interface CUnitAnimationListener {
-	void playAnimation(boolean force, final PrimaryTag animationName,
+	boolean playAnimation(boolean force, final PrimaryTag animationName,
 			final EnumSet<SecondaryTag> secondaryAnimationTags, float speedRatio, boolean allowRarityVariations);
 
 	void playAnimationWithDuration(final boolean force, final PrimaryTag animationName,

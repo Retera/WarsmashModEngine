@@ -7,12 +7,12 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public final class MdlxUInt32Timeline extends MdlxTimeline<long[]> {
 	@Override
-	protected int size() {
+	protected int size(int version) {
 		return 1;
 	}
 
 	@Override
-	protected long[] readMdxValue(final BinaryReader reader) {
+	protected long[] readMdxValue(final BinaryReader reader, int version) {
 		return new long[]{reader.readUInt32()};
 	}
 

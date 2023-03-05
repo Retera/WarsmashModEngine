@@ -23,7 +23,8 @@ public final class ThirdPersonCameraManager extends CameraManager {
 
 	@Override
 	public void updateCamera() {
-		if (!this.touchDown) {
+		final CameraPanControls cameraPanControls = this.playerPawn.getCameraPanControls();
+		if ((cameraPanControls.isAnyArrowPressed()) && !this.touchDown) {
 			float destAngle = (float) Math.toRadians(this.playerPawn.getFacingDegrees());
 			if (destAngle > Math.PI) {
 				destAngle -= Math.PI * 2;

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxAnimatedObject;
 import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxFloatArrayTimeline;
 import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxFloatTimeline;
@@ -21,7 +22,17 @@ public class AnimatedObject {
 		this.variants = new HashMap<>();
 
 		for (final MdlxTimeline<?> timeline : object.getTimelines()) {
-			this.timelines.put(timeline.getName(), createTypedSd(model, timeline));
+			War3ID name = timeline.getName();
+			if (name.equals(AnimationMap.KP2V.getWar3id())) {
+				name = AnimationMap.KVIS.getWar3id();
+			}
+			if (name.equals(AnimationMap.KRVS.getWar3id())) {
+				name = AnimationMap.KVIS.getWar3id();
+			}
+			if (name.equals(AnimationMap.KPPV.getWar3id())) {
+				name = AnimationMap.KVIS.getWar3id();
+			}
+			this.timelines.put(name, createTypedSd(model, timeline));
 		}
 	}
 

@@ -7,25 +7,23 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.compress.utils.IOUtils;
-
 import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
 
 public class MdxUtils {
-	public static MdlxModel loadMdlx(final InputStream inputStream) throws IOException {
-		return new MdlxModel(ByteBuffer.wrap(IOUtils.toByteArray(inputStream)));
+	public static MdlxModel loadMdlx(final InputStream in) throws IOException {
+		return new MdlxModel(ByteBuffer.wrap(in.readAllBytes()));
 	}
 
-	public static void saveMdx(final MdlxModel model, final OutputStream outputStream) throws IOException {
-		outputStream.write(model.saveMdx().array());
+	public static void saveMdx(final MdlxModel model, final OutputStream out) throws IOException {
+		out.write(model.saveMdx().array());
 	}
 
-	public static void saveMdl(final MdlxModel model, final OutputStream outputStream) throws IOException {
-		outputStream.write(model.saveMdl().array());
+	public static void saveMdl(final MdlxModel model, final OutputStream out) throws IOException {
+		out.write(model.saveMdl().array());
 	}
 
-	public static void saveMdl(final MdlxModel model, final File file) throws IOException {
-		saveMdl(model, new FileOutputStream(file));
+	public static void saveMdl(final MdlxModel model, final File out) throws IOException {
+		saveMdl(model, new FileOutputStream(out));
 	}
 
 }

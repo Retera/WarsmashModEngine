@@ -8,10 +8,7 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxCollisionShape extends MdlxGenericObject {
 	public enum Type {
-		BOX,
-		PLANE,
-		SPHERE,
-		CYLINDER;
+		BOX, PLANE, SPHERE, CYLINDER;
 
 		private static final Type[] VALUES = values();
 
@@ -90,15 +87,16 @@ public class MdlxCollisionShape extends MdlxGenericObject {
 			case MdlUtils.TOKEN_CYLINDER:
 				this.type = Type.CYLINDER;
 				break;
-			case MdlUtils.TOKEN_VERTICES: {
+			case MdlUtils.TOKEN_VERTICES:
 				final int count = stream.readInt();
 				stream.read(); // {
+
 				stream.readFloatArray(this.vertices[0]);
 				if (count == 2) {
 					stream.readFloatArray(this.vertices[1]);
 				}
+
 				stream.read(); // }
-			}
 				break;
 			case MdlUtils.TOKEN_BOUNDSRADIUS:
 				this.boundsRadius = stream.readFloat();
@@ -122,10 +120,9 @@ public class MdlxCollisionShape extends MdlxGenericObject {
 		case PLANE:
 			type = MdlUtils.TOKEN_PLANE;
 			break;
-		case SPHERE: {
+		case SPHERE:
 			type = MdlUtils.TOKEN_SPHERE;
 			vertices = 1;
-		}
 			break;
 		case CYLINDER:
 			type = MdlUtils.TOKEN_CYLINDER;
@@ -175,13 +172,5 @@ public class MdlxCollisionShape extends MdlxGenericObject {
 
 	public float getBoundsRadius() {
 		return this.boundsRadius;
-	}
-
-	public void setType(final MdlxCollisionShape.Type type) {
-		this.type = type;
-	}
-
-	public void setBoundsRadius(final float boundsRadius) {
-		this.boundsRadius = boundsRadius;
 	}
 }

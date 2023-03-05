@@ -4680,10 +4680,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	@Override
 	public void onHide() {
 		this.timeIndicator.setVisible(false);
+		this.cursorFrame.setVisible(false);
 	}
 
 	@Override
 	public void onShow() {
 		this.timeIndicator.setVisible(true);
+		this.cursorFrame.setVisible(true);
 	}
 }

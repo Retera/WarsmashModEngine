@@ -1,6 +1,5 @@
 package com.hiveworkshop.rms.parsers.mdlx;
 
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenInputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenOutputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlUtils;
@@ -20,6 +19,8 @@ public class MdlxRibbonEmitter extends MdlxGenericObject {
 	public int materialId = 0;
 	public float gravity = 0;
 
+	public long emitterSize = 0;
+
 	public MdlxRibbonEmitter() {
 		super(0x4000);
 	}
@@ -31,6 +32,14 @@ public class MdlxRibbonEmitter extends MdlxGenericObject {
 
 		super.readMdx(reader, version);
 
+		int posAfterEmitterSize;
+		if (version == 1300) {
+			this.emitterSize = reader.readUInt32();
+			posAfterEmitterSize = reader.position();
+		}
+		else {
+			posAfterEmitterSize = 0;
+		}
 		this.heightAbove = reader.readFloat32();
 		this.heightBelow = reader.readFloat32();
 		this.alpha = reader.readFloat32();
@@ -41,11 +50,9 @@ public class MdlxRibbonEmitter extends MdlxGenericObject {
 		this.rows = reader.readUInt32();
 		this.columns = reader.readUInt32();
 		this.materialId = reader.readInt32();
-		if (!WarsmashConstants.PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD) {
-			this.gravity = reader.readFloat32();
-		}
+		this.gravity = reader.readFloat32();
 
-		readTimelines(reader, size - (reader.position() - position));
+		readTimelines(reader, size - (reader.position() - position), version);
 	}
 
 	@Override
@@ -174,7 +181,7 @@ public class MdlxRibbonEmitter extends MdlxGenericObject {
 
 	@Override
 	public long getByteLength(final int version) {
-		return 56 + super.getByteLength(version);
+		return 56 + super.getByteLength(version) + (version == 1300 ? 4 : 0);
 	}
 
 	public float getHeightAbove() {
@@ -219,49 +226,5 @@ public class MdlxRibbonEmitter extends MdlxGenericObject {
 
 	public float getGravity() {
 		return this.gravity;
-	}
-
-	public void setHeightAbove(final float heightAbove) {
-		this.heightAbove = heightAbove;
-	}
-
-	public void setHeightBelow(final float heightBelow) {
-		this.heightBelow = heightBelow;
-	}
-
-	public void setAlpha(final float alpha) {
-		this.alpha = alpha;
-	}
-
-	public void setColor(final float[] color) {
-		this.color = color;
-	}
-
-	public void setLifeSpan(final float lifeSpan) {
-		this.lifeSpan = lifeSpan;
-	}
-
-	public void setTextureSlot(final long textureSlot) {
-		this.textureSlot = textureSlot;
-	}
-
-	public void setEmissionRate(final long emissionRate) {
-		this.emissionRate = emissionRate;
-	}
-
-	public void setRows(final long rows) {
-		this.rows = rows;
-	}
-
-	public void setColumns(final long columns) {
-		this.columns = columns;
-	}
-
-	public void setMaterialId(final int materialId) {
-		this.materialId = materialId;
-	}
-
-	public void setGravity(final float gravity) {
-		this.gravity = gravity;
 	}
 }

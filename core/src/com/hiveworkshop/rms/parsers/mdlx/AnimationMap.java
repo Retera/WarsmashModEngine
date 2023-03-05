@@ -157,6 +157,10 @@ public enum AnimationMap {
 	 * Particle emitter 2 visibility
 	 */
 	KP2V("Visibility", MdlxTimelineDescriptor.FLOAT_TIMELINE),
+	/**
+	 * Generic visibility from MDLX1300 (first historical vers number increase)
+	 */
+	KVIS("Visibility", MdlxTimelineDescriptor.FLOAT_TIMELINE),
 	// ParticleEmitterCorn
 	/**
 	 * Popcorn emitter alpha
@@ -219,7 +223,7 @@ public enum AnimationMap {
 	/**
 	 * Camera source rotation
 	 */
-	KCRL(MdlUtils.TOKEN_ROTATION, MdlxTimelineDescriptor.FLOAT_TIMELINE),
+	KCRL(MdlUtils.TOKEN_ROTATION, MdlxTimelineDescriptor.UINT32_TIMELINE),
 	// GenericObject
 	/**
 	 * Generic object translation

@@ -18,18 +18,19 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 public abstract class MdlxAnimatedObject implements MdlxChunk, MdlxBlock {
 	public final List<MdlxTimeline<?>> timelines = new ArrayList<>();
 
-	public void readTimelines(final BinaryReader reader, long size) {
+	public void readTimelines(final BinaryReader reader, long size, final int version) {
 		while (size > 0) {
-			final War3ID name = new War3ID(reader.readTag());
-			final AnimationMap animationMap = AnimationMap.ID_TO_TAG.get(name);
-			if (animationMap == null) {
-				throw new IllegalStateException("Unknown node tag: " + name);
+			final int readTag = reader.readTag();
+			if ((version == 1300) && (readTag == 0)) {
+				continue;
 			}
-			final MdlxTimeline<?> timeline = animationMap.getImplementation().createTimeline();
+			final War3ID name = new War3ID(readTag);
+			System.out.println("Timeline loading: " + name + " (" + size + " remaining)");
+			final MdlxTimeline<?> timeline = AnimationMap.ID_TO_TAG.get(name).getImplementation().createTimeline();
 
-			timeline.readMdx(reader, name);
+			timeline.readMdx(reader, name, version);
 
-			size -= timeline.getByteLength();
+			size -= timeline.getByteLength(version);
 
 			this.timelines.add(timeline);
 		}
@@ -67,13 +68,9 @@ public abstract class MdlxAnimatedObject implements MdlxChunk, MdlxBlock {
 	public long getByteLength(final int version) {
 		long size = 0;
 		for (final MdlxTimeline<?> timeline : this.timelines) {
-			size += timeline.getByteLength();
+			size += timeline.getByteLength(version);
 		}
 		return size;
-	}
-
-	public List<MdlxTimeline<?>> getTimelines() {
-		return this.timelines;
 	}
 
 	/**
@@ -102,5 +99,9 @@ public abstract class MdlxAnimatedObject implements MdlxChunk, MdlxBlock {
 			}
 			return token;
 		}
+	}
+
+	public List<MdlxTimeline<?>> getTimelines() {
+		return this.timelines;
 	}
 }

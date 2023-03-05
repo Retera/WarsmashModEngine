@@ -366,7 +366,7 @@ public class Terrain {
 		this.waterTextureArray = gl.glGenTexture();
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
 
-		final String fileName = waterInfo.getField("texFile");
+		final String fileName = waterInfo == null ? "" : waterInfo.getField("texFile");
 		final List<BufferedImage> waterTextures = new ArrayList<>();
 		boolean anyWaterTextureNeedsSRGB = false;
 		int waterImageDimension = 128;
@@ -452,7 +452,8 @@ public class Terrain {
 
 				float rampHeight = 0f;
 				// Check if in one of the configurations the bottom_left is a ramp
-				XLoop: for (int xOffset = -1; xOffset <= 0; xOffset++) {
+				XLoop:
+				for (int xOffset = -1; xOffset <= 0; xOffset++) {
 					for (int yOffset = -1; yOffset <= 0; yOffset++) {
 						if (((i + xOffset) >= 0) && ((i + xOffset) < (this.columns - 1)) && ((j + yOffset) >= 0)
 								&& ((j + yOffset) < (this.rows - 1))) {
@@ -694,7 +695,7 @@ public class Terrain {
 									topRight.setCliffTexture(bottomLeftCliffTex);
 									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
 											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))]
-											.setCliffTexture(bottomLeftCliffTex);
+													.setCliffTexture(bottomLeftCliffTex);
 
 									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
 											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))].romp = true;
@@ -848,7 +849,8 @@ public class Terrain {
 	}
 
 	private int realTileTexture(final int x, final int y) {
-		ILoop: for (int i = -1; i < 1; i++) {
+		ILoop:
+		for (int i = -1; i < 1; i++) {
 			for (int j = -1; j < 1; j++) {
 				if (((x + i) >= 0) && ((x + i) < this.columns) && ((y + j) >= 0) && ((y + j) < this.rows)) {
 					if (this.corners[x + i][y + j].cliff) {
@@ -1713,11 +1715,11 @@ public class Terrain {
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, fogOfWarData.getWidth(), fogOfWarData.getHeight(), 0,
-				GL30.GL_RED, GL30.GL_UNSIGNED_BYTE, fogOfWarData.getFogOfWarBuffer());
+		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, this.fogOfWarData.getWidth(), this.fogOfWarData.getHeight(),
+				0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE, this.fogOfWarData.getFogOfWarBuffer());
 	}
 
 	public int getFogOfWarMap() {
-		return fogOfWarMap;
+		return this.fogOfWarMap;
 	}
 }

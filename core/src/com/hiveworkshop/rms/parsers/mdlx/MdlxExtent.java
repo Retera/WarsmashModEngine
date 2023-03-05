@@ -1,5 +1,7 @@
 package com.hiveworkshop.rms.parsers.mdlx;
 
+import java.util.Arrays;
+
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenOutputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlUtils;
 import com.hiveworkshop.rms.util.BinaryReader;
@@ -36,6 +38,12 @@ public class MdlxExtent {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "MdlxExtent{" + "boundsRadius=" + this.boundsRadius + ", min=" + Arrays.toString(this.min) + ", max="
+				+ Arrays.toString(this.max) + '}';
+	}
+
 	public float getBoundsRadius() {
 		return this.boundsRadius;
 	}
@@ -46,17 +54,5 @@ public class MdlxExtent {
 
 	public float[] getMax() {
 		return this.max;
-	}
-
-	public void setBoundsRadius(final float boundsRadius) {
-		this.boundsRadius = boundsRadius;
-	}
-
-	public void setMin(final float[] min) {
-		this.min = min;
-	}
-
-	public void setMax(final float[] max) {
-		this.max = max;
 	}
 }

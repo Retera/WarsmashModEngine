@@ -15,8 +15,7 @@ public class MdxHandler extends ModelHandler {
 	public final Shaders shaders = new Shaders();
 
 	public static enum ShaderEnvironmentType {
-		MENU,
-		GAME
+		MENU, GAME
 	};
 
 	public static ShaderEnvironmentType CURRENT_SHADER_TYPE;
@@ -34,13 +33,11 @@ public class MdxHandler extends ModelHandler {
 		viewer.addHandler(new DdsHandler());
 		viewer.addHandler(new TgaHandler());
 
-		this.shaders.complex = viewer.webGL.createShaderProgram(MdxShaders.vsComplex(), MdxShaders.fsComplex);
-		this.shaders.extended = viewer.webGL.createShaderProgram("#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex(),
+		this.shaders.complex = viewer.webGL.createShaderProgram(MdxShaders.vsComplex("", false), MdxShaders.fsComplex);
+		this.shaders.extended = viewer.webGL
+				.createShaderProgram(MdxShaders.vsComplex("#define EXTENDED_BONES\r\n", false), MdxShaders.fsComplex);
+		this.shaders.complexSkin = viewer.webGL.createShaderProgram(MdxShaders.vsComplex("", true),
 				MdxShaders.fsComplex);
-		this.shaders.complexShadowMap = viewer.webGL.createShaderProgram(MdxShaders.vsComplex(),
-				MdxShaders.fsComplexShadowMap);
-		this.shaders.extendedShadowMap = viewer.webGL.createShaderProgram(
-				"#define EXTENDED_BONES\r\n" + MdxShaders.vsComplex(), MdxShaders.fsComplexShadowMap);
 		this.shaders.particles = viewer.webGL.createShaderProgram(MdxShaders.vsParticles(), MdxShaders.fsParticles);
 		// Shaders.simple = viewer.webGL.createShaderProgram(MdxShaders.vsSimple,
 		// MdxShaders.fsSimple);
@@ -66,9 +63,8 @@ public class MdxHandler extends ModelHandler {
 		}
 
 		public ShaderProgram complex;
-		public ShaderProgram complexShadowMap;
+		public ShaderProgram complexSkin;
 		public ShaderProgram extended;
-		public ShaderProgram extendedShadowMap;
 		public ShaderProgram simple;
 		public ShaderProgram particles;
 		public ShaderProgram hd;

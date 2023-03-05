@@ -19,18 +19,36 @@ public class MdlxEventObject extends MdlxGenericObject {
 
 	@Override
 	public void readMdx(final BinaryReader reader, final int version) {
+		long size;
+		long position;
+		if (version == 1300) {
+			position = reader.position();
+			size = reader.readUInt32();
+			System.out.println("MdlxEventObject size: " + size);
+		}
+		else {
+			position = 0;
+			size = 0;
+		}
 		super.readMdx(reader, version);
 
-		reader.readInt32(); // KEVT skipped
+		if ((version != 1300) || ((reader.position() - position) < size)) {
+			System.out.println((reader.position() - position) + " < " + size);
+			final int shouldBeKEVT = reader.readInt32(); // KEVT skipped
+			System.out.println("MdlxEventObject should be KEVT: " + MdlxModel.convertInt2(shouldBeKEVT));
 
-		final long count = reader.readUInt32();
+			final long count = reader.readUInt32();
+			System.out.println("MdlxEventObject count: " + count);
 
-		this.globalSequenceId = reader.readInt32();
+			this.globalSequenceId = reader.readInt32();
+			System.out.println("MdlxEventObject globalSequenceId: " + this.globalSequenceId);
 
-		this.keyFrames = new long[(int) count];
+			this.keyFrames = new long[(int) count];
 
-		for (int i = 0; i < count; i++) {
-			this.keyFrames[i] = reader.readInt32();
+			for (int i = 0; i < count; i++) {
+				this.keyFrames[i] = reader.readInt32();
+				System.out.println("MdlxEventObject keyFrame[" + i + "]: " + this.keyFrames[i]);
+			}
 		}
 	}
 
@@ -81,19 +99,15 @@ public class MdlxEventObject extends MdlxGenericObject {
 		return 12 + (this.keyFrames.length * 4) + super.getByteLength(version);
 	}
 
+	public static War3ID getKevt() {
+		return KEVT;
+	}
+
 	public int getGlobalSequenceId() {
 		return this.globalSequenceId;
 	}
 
 	public long[] getKeyFrames() {
 		return this.keyFrames;
-	}
-
-	public void setGlobalSequenceId(final int globalSequenceId) {
-		this.globalSequenceId = globalSequenceId;
-	}
-
-	public void setKeyFrames(final long[] keyFrames) {
-		this.keyFrames = keyFrames;
 	}
 }

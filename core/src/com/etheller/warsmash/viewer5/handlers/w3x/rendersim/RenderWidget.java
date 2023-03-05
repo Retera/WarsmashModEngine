@@ -77,8 +77,8 @@ public interface RenderWidget {
 			this.instance = instance;
 			this.animationWalkSpeed = animationWalkSpeed;
 			this.animationRunSpeed = animationRunSpeed;
-			turretBone = this.instance.inefficientlyGetNodeByNameSearch("bone_turret");
-			headBone = this.instance.inefficientlyGetNodeByNameSearch("bone_head");
+			this.turretBone = this.instance.inefficientlyGetNodeByNameSearch("bone_turret");
+			this.headBone = this.instance.inefficientlyGetNodeByNameSearch("bone_head");
 		}
 
 		@Override
@@ -132,7 +132,7 @@ public interface RenderWidget {
 		}
 
 		@Override
-		public void playAnimation(final boolean force, final PrimaryTag animationName,
+		public boolean playAnimation(final boolean force, final PrimaryTag animationName,
 				final EnumSet<SecondaryTag> secondaryAnimationTags, final float speedRatio,
 				final boolean allowRarityVariations) {
 			this.animationQueue.clear();
@@ -157,7 +157,9 @@ public interface RenderWidget {
 					this.currentAnimationSecondaryTags = secondaryAnimationTags;
 					this.currentlyAllowingRarityVariations = allowRarityVariations;
 				}
+				return true;
 			}
+			return false;
 		}
 
 		@Override
@@ -213,8 +215,8 @@ public interface RenderWidget {
 					}
 				}
 			}
-			applyLock(turretBone, turretFacingLock);
-			applyLock(headBone, headFacingLock);
+			applyLock(this.turretBone, this.turretFacingLock);
+			applyLock(this.headBone, this.headFacingLock);
 		}
 
 		private static void applyLock(final MdxNode turretBone, final AbilityTarget turretFacingLock) {

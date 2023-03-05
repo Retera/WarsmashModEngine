@@ -133,7 +133,7 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 
 	@Override
 	public int getVisibility(final float[] out, final int sequence, final int frame, final int counter) {
-		return this.getScalarValue(out, AnimationMap.KP2V.getWar3id(), sequence, frame, counter, 1);
+		return this.getScalarValue(out, AnimationMap.KVIS.getWar3id(), sequence, frame, counter, 1);
 	}
 
 	public int getVariation(final float[] out, final int sequence, final int frame, final int counter) {

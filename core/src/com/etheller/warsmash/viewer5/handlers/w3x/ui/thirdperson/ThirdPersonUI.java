@@ -1,12 +1,18 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.Scene;
-import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
@@ -18,38 +24,58 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashToggleableUI;
 
 public class ThirdPersonUI implements WarsmashToggleableUI {
+	private static final Vector2 screenCoordsVector = new Vector2();
 	private final PlayerPawn playerPawn;
 	private final ThirdPersonCameraManager cameraManager;
 	private final War3MapViewer war3MapViewer;
 	private CFogModifier myFogModifier;
 	private final Scene uiScene;
+	private final Viewport uiViewport;
 	private final Scene portraitScene;
 	private final Rectangle tempRect = new Rectangle();
 	private int lastX;
 	private int lastY;
 	private int button;
 	private boolean showing = false;
+	private GameUI rootFrame;
+	private SpriteFrame cursorFrame;
+	private boolean touchDown;
+//	private final ModelInstance skyModelInstance;
 
-	public ThirdPersonUI(final War3MapViewer war3MapViewer, final Scene uiScene, final Scene portraitScene,
-			final String pawnModel) {
+	public ThirdPersonUI(final War3MapViewer war3MapViewer, final Scene uiScene, final Viewport uiViewport,
+			final Scene portraitScene, final String pawnModel) {
 		this.war3MapViewer = war3MapViewer;
 		this.uiScene = uiScene;
+		this.uiViewport = uiViewport;
 		this.portraitScene = portraitScene;
 		final MdxModel pawnMdx = war3MapViewer.loadModelMdx(pawnModel);
-		final ModelInstance pawnModelInstance = pawnMdx.addInstance();
+		final ModelInstance pawnModelInstance = pawnMdx.addInstance(2);
 		pawnModelInstance.setScene(war3MapViewer.worldScene);
 
-		final MdxComplexInstance pawnComplexInstance = (MdxComplexInstance) pawnModelInstance;
+		final MdxCharacterInstance pawnComplexInstance = (MdxCharacterInstance) pawnModelInstance;
 		pawnComplexInstance.setBlendTime(150);
 		final UnitAnimationListenerImpl animationProcessor = new UnitAnimationListenerImpl(pawnComplexInstance, 3, 4);
 
 		final String texture = "ReplaceableTextures\\Shadows\\ShadowFlyer.blp";
-		final SplatMover unitShadowSplatDynamicIngame = war3MapViewer.terrain.addUnitShadowSplat(texture, -32, -32, 32,
-				32, 3, 1.0f, false);
+		final SplatMover unitShadowSplatDynamicIngame = war3MapViewer.terrain.addUnitShadowSplat(texture, -16, -16, 16,
+				16, 3, 1.0f, false);
 		this.playerPawn = new PlayerPawn(pawnModelInstance, animationProcessor, unitShadowSplatDynamicIngame,
 				pawnComplexInstance);
 		this.cameraManager = new ThirdPersonCameraManager(this.playerPawn);
 		this.cameraManager.setupCamera(this.war3MapViewer.worldScene);
+
+//		final MdxModel skyModel = war3MapViewer
+//				.loadModelMdx("environment\\sky\\lordaeronsummersky\\lordaeronsummersky.mdx");
+//		this.skyModelInstance = skyModel.addInstance();
+////		this.skyModelInstance.setParent(pawnComplexInstance.getAttachment(0));
+//		this.skyModelInstance.setScene(war3MapViewer.worldScene);
+//		this.skyModelInstance.uniformScale(10);
+//		this.skyModelInstance.setLocation(0, 0, 0);
+//		((MdxComplexInstance) this.skyModelInstance).setSequence(0);
+	}
+
+	public PlayerPawn getPlayerPawn() {
+		return this.playerPawn;
 	}
 
 	@Override
@@ -57,6 +83,15 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final CPlayer localPlayer = this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex());
 		this.myFogModifier = new CFogModifier(CFogState.VISIBLE, this.war3MapViewer.terrain.getEntireMap());
 		localPlayer.addFogModifer(this.myFogModifier);
+
+		this.rootFrame = new GameUI(this.war3MapViewer.dataSource, GameUI.loadSkin(this.war3MapViewer.dataSource, 0),
+				this.uiViewport, this.uiScene, this.war3MapViewer, 0, this.war3MapViewer.getAllObjectData().getWts());
+
+		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashTPCursorFrame",
+				this.rootFrame, "", 0);
+		this.rootFrame.setSpriteFrameModel(this.cursorFrame, "Interface\\Cursor\\Cursor.mdx");
+		this.cursorFrame.setSequence("Point");
+		this.cursorFrame.setZDepth(1.0f);
 	}
 
 	@Override
@@ -65,6 +100,20 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 		if (this.showing) {
 			this.cameraManager.updateCamera();
+		}
+
+		final int baseMouseX = Gdx.input.getX();
+		final int mouseX = baseMouseX;
+		final int baseMouseY = Gdx.input.getY();
+		final int mouseY = baseMouseY;
+
+		screenCoordsVector.set(mouseX, mouseY);
+		this.uiViewport.unproject(screenCoordsVector);
+		this.cursorFrame.setFramePointX(FramePoint.LEFT, screenCoordsVector.x);
+		this.cursorFrame.setFramePointY(FramePoint.BOTTOM, screenCoordsVector.y);
+
+		if (this.showing) {
+			this.cursorFrame.setVisible(!this.touchDown);
 		}
 	}
 
@@ -143,12 +192,14 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.lastX = screenX;
 		this.lastY = screenY;
 		this.button = button;
+		this.touchDown = true;
 		this.cameraManager.setTouchDown(true);
 		return false;
 	}
 
 	@Override
 	public boolean touchUp(final int screenX, final int screenY, final float worldScreenY, final int button) {
+		this.touchDown = false;
 		this.cameraManager.setTouchDown(false);
 		return false;
 	}
@@ -198,6 +249,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.war3MapViewer.addScene(this.portraitScene);
 		this.war3MapViewer.addScene(this.uiScene);
 		this.showing = false;
+		this.cursorFrame.setVisible(false);
+//		this.skyModelInstance.hide();
 
 	}
 
@@ -207,6 +260,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.war3MapViewer.removeScene(this.portraitScene);
 //		this.war3MapViewer.removeScene(this.uiScene);
 		this.showing = true;
+		this.cursorFrame.setVisible(true);
+//		this.skyModelInstance.show();
 	}
 
 }

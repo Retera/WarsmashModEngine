@@ -18,12 +18,20 @@ public class MdlxGeosetAnimation extends MdlxAnimatedObject {
 	public void readMdx(final BinaryReader reader, final int version) {
 		final long size = reader.readUInt32();
 
-		this.alpha = reader.readFloat32();
-		this.flags = reader.readInt32();
-		reader.readFloat32Array(this.color);
-		this.geosetId = reader.readInt32();
+		if (version == 1300) {
+			this.geosetId = reader.readInt32();
+			this.alpha = reader.readFloat32();
+			reader.readFloat32Array(this.color);
+			this.flags = reader.readInt32();
+		}
+		else {
+			this.alpha = reader.readFloat32();
+			this.flags = reader.readInt32();
+			reader.readFloat32Array(this.color);
+			this.geosetId = reader.readInt32();
+		}
 
-		readTimelines(reader, size - 28);
+		readTimelines(reader, size - 28, version);
 	}
 
 	@Override
@@ -52,15 +60,13 @@ public class MdlxGeosetAnimation extends MdlxAnimatedObject {
 			case MdlUtils.TOKEN_ALPHA:
 				readTimeline(stream, AnimationMap.KGAO);
 				break;
-			case MdlUtils.TOKEN_STATIC_COLOR: {
+			case MdlUtils.TOKEN_STATIC_COLOR:
 				this.flags |= 0x2;
 				stream.readColor(this.color);
-			}
 				break;
-			case MdlUtils.TOKEN_COLOR: {
+			case MdlUtils.TOKEN_COLOR:
 				this.flags |= 0x2;
 				readTimeline(stream, AnimationMap.KGAC);
-			}
 				break;
 			case MdlUtils.TOKEN_GEOSETID:
 				this.geosetId = stream.readInt();
@@ -116,21 +122,5 @@ public class MdlxGeosetAnimation extends MdlxAnimatedObject {
 
 	public int getGeosetId() {
 		return this.geosetId;
-	}
-
-	public void setAlpha(final float alpha) {
-		this.alpha = alpha;
-	}
-
-	public void setFlags(final int flags) {
-		this.flags = flags;
-	}
-
-	public void setColor(final float[] color) {
-		this.color = color;
-	}
-
-	public void setGeosetId(final int geosetId) {
-		this.geosetId = geosetId;
 	}
 }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
 
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
@@ -27,8 +28,13 @@ public class BlpTexture extends RawOpenGLTextureResource {
 	protected void load(final InputStream src, final Object options) {
 		BufferedImage img;
 		try {
-			img = ImageIO.read(src);
-			update(img, true);
+			final ImageInputStream imageInputStream = ImageIO.createImageInputStream(src);
+			imageInputStream.mark();
+			imageInputStream.skipBytes(3);
+			final byte versionByte = imageInputStream.readByte();
+			imageInputStream.reset();
+			img = ImageIO.read(imageInputStream);
+			update(img, versionByte != '2');
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);

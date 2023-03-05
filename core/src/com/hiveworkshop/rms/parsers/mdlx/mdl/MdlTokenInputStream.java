@@ -9,19 +9,19 @@ public class MdlTokenInputStream {
 
 	public MdlTokenInputStream(final ByteBuffer buffer) {
 		this.buffer = buffer;
-		this.index = 0;
+		index = 0;
 	}
 
 	public String read() {
 		boolean inComment = false;
 		boolean inString = false;
 		final StringBuilder token = new StringBuilder();
-		final int length = this.buffer.remaining();
+		final int length = buffer.remaining();
 
-		while (this.index < length) {
+		while (index < length) {
 			// Note: cast from 'byte' to 'char' will cause Java incompatibility with Chinese
 			// and Russian/Cyrillic and others
-			final char c = (char) this.buffer.get(this.buffer.position() + this.index++);
+			final char c = (char) buffer.get(buffer.position() + index++);
 
 			if (inComment) {
 				if (c == '\n') {
@@ -43,16 +43,16 @@ public class MdlTokenInputStream {
 			}
 			else if ((c == '{') || (c == '}')) {
 				if (token.length() > 0) {
-					this.index--;
+					index--;
 					return token.toString();
 				}
 				else {
 					return Character.toString(c);
 				}
 			}
-			else if ((c == '/') && (this.buffer.get(this.buffer.position() + this.index) == '/')) {
+			else if ((c == '/') && (buffer.get(buffer.position() + index) == '/')) {
 				if (token.length() > 0) {
-					this.index--;
+					index--;
 					return token.toString();
 				}
 				else {
@@ -61,7 +61,7 @@ public class MdlTokenInputStream {
 			}
 			else if (c == '"') {
 				if (token.length() > 0) {
-					this.index--;
+					index--;
 					return token.toString();
 				}
 				else {
@@ -120,7 +120,7 @@ public class MdlTokenInputStream {
 	 * Read an MDL keyframe value. If the value is a scalar, it is just the number.
 	 * If the value is a vector, it is enclosed with curly braces.
 	 *
-	 * @param values {Float32Array|Uint32Array}
+	 * @param {Float32Array|Uint32Array} value
 	 */
 	public void readKeyframe(final float[] values) {
 		if (values.length == 1) {
@@ -150,24 +150,24 @@ public class MdlTokenInputStream {
 
 	public Iterable<String> readBlock() {
 		read(); // {
-		return () -> new Iterator<String>() {
+		return () -> new Iterator<>() {
 			String current;
 			private boolean hasLoaded = false;
 
 			@Override
 			public String next() {
-				if (!this.hasLoaded) {
+				if (!hasLoaded) {
 					hasNext();
 				}
-				this.hasLoaded = false;
-				return this.current;
+				hasLoaded = false;
+				return current;
 			}
 
 			@Override
 			public boolean hasNext() {
-				this.current = read();
-				this.hasLoaded = true;
-				return (this.current != null) && !this.current.equals("}");
+				current = read();
+				hasLoaded = true;
+				return (current != null) && !current.equals("}");
 			}
 		};
 	}

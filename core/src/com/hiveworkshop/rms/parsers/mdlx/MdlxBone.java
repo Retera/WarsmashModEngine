@@ -93,12 +93,4 @@ public class MdlxBone extends MdlxGenericObject {
 	public int getGeosetAnimationId() {
 		return this.geosetAnimationId;
 	}
-
-	public void setGeosetId(final int geosetId) {
-		this.geosetId = geosetId;
-	}
-
-	public void setGeosetAnimationId(final int geosetAnimationId) {
-		this.geosetAnimationId = geosetAnimationId;
-	}
 }

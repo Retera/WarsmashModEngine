@@ -11,7 +11,7 @@ public class MdlxTextureAnimation extends MdlxAnimatedObject {
 	public void readMdx(final BinaryReader reader, final int version) {
 		final long size = reader.readUInt32();
 
-		readTimelines(reader, size - 4);
+		readTimelines(reader, size - 4, version);
 	}
 
 	@Override
@@ -42,7 +42,7 @@ public class MdlxTextureAnimation extends MdlxAnimatedObject {
 
 	@Override
 	public void writeMdl(final MdlTokenOutputStream stream, final int version) {
-		stream.startBlock(MdlUtils.TOKEN_TVERTEX_ANIM);
+		stream.startBlock(MdlUtils.TOKEN_TVERTEX_ANIM_SPACE);
 		writeTimeline(stream, AnimationMap.KTAT);
 		writeTimeline(stream, AnimationMap.KTAR);
 		writeTimeline(stream, AnimationMap.KTAS);

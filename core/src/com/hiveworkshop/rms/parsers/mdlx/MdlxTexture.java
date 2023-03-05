@@ -8,29 +8,18 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxTexture implements MdlxBlock {
 	public enum WrapMode {
-		REPEAT_BOTH(false, false),
-		WRAP_WIDTH(true, false),
-		WRAP_HEIGHT(false, true),
-		WRAP_BOTH(true, true);
-
-		private final boolean wrapWidth;
-		private final boolean wrapHeight;
+		REPEAT_BOTH, WRAP_WIDTH, WRAP_HEIGHT, WRAP_BOTH;
 
 		public static WrapMode fromId(final int id) {
 			return values()[id];
 		}
 
-		private WrapMode(final boolean wrapWidth, final boolean wrapHeight) {
-			this.wrapWidth = wrapWidth;
-			this.wrapHeight = wrapHeight;
-		}
-
 		public boolean isWrapWidth() {
-			return this.wrapWidth;
+			return (this == WrapMode.WRAP_WIDTH) || (this == WrapMode.WRAP_BOTH);
 		}
 
 		public boolean isWrapHeight() {
-			return this.wrapHeight;
+			return (this == WrapMode.WRAP_BOTH) || (this == WrapMode.WRAP_HEIGHT);
 		}
 	}
 

@@ -25,7 +25,7 @@ public class MdlxCamera extends MdlxAnimatedObject {
 		this.nearClippingPlane = reader.readFloat32();
 		reader.readFloat32Array(this.targetPosition);
 
-		readTimelines(reader, size - 120);
+		readTimelines(reader, size - 120, version);
 	}
 
 	@Override
@@ -132,29 +132,5 @@ public class MdlxCamera extends MdlxAnimatedObject {
 
 	public float[] getTargetPosition() {
 		return this.targetPosition;
-	}
-
-	public void setName(final String name) {
-		this.name = name;
-	}
-
-	public void setPosition(final float[] position) {
-		this.position = position;
-	}
-
-	public void setFieldOfView(final float fieldOfView) {
-		this.fieldOfView = fieldOfView;
-	}
-
-	public void setFarClippingPlane(final float farClippingPlane) {
-		this.farClippingPlane = farClippingPlane;
-	}
-
-	public void setNearClippingPlane(final float nearClippingPlane) {
-		this.nearClippingPlane = nearClippingPlane;
-	}
-
-	public void setTargetPosition(final float[] targetPosition) {
-		this.targetPosition = targetPosition;
 	}
 }

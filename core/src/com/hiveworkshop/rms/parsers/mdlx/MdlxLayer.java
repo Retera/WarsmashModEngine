@@ -10,13 +10,8 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxLayer extends MdlxAnimatedObject {
 	public enum FilterMode {
-		NONE("None"),
-		TRANSPARENT("Transparent"),
-		BLEND("Blend"),
-		ADDITIVE("Additive"),
-		ADDALPHA("AddAlpha"),
-		MODULATE("Modulate"),
-		MODULATE2X("Modulate2x");
+		NONE("None"), TRANSPARENT("Transparent"), BLEND("Blend"), ADDITIVE("Additive"), ADDALPHA("AddAlpha"),
+		MODULATE("Modulate"), MODULATE2X("Modulate2x");
 
 		String token;
 
@@ -79,15 +74,22 @@ public class MdlxLayer extends MdlxAnimatedObject {
 	public void readMdx(final BinaryReader reader, final int version) {
 		final int position = reader.position();
 		final long size = reader.readUInt32();
+		System.out.println("MdlxLayer size: " + size);
 
 		this.filterMode = FilterMode.fromId(reader.readInt32());
+		System.out.println("MdlxLayer filterMode: " + this.filterMode);
 		this.flags = reader.readInt32(); // UInt32 in JS
+		System.out.println("MdlxLayer flags: " + Integer.toBinaryString(this.flags));
 		this.textureId = reader.readInt32();
+		System.out.println("MdlxLayer textureId: " + this.textureId);
 		this.textureAnimationId = reader.readInt32();
+		System.out.println("MdlxLayer textureAnimationId: " + this.textureAnimationId);
 		this.coordId = reader.readInt32();
+		System.out.println("MdlxLayer coordId: " + this.coordId);
 		this.alpha = reader.readFloat32();
+		System.out.println("MdlxLayer alpha: " + this.alpha);
 
-		if (version > 800) {
+		if ((version > 800) && (version != 1300)) {
 			this.emissiveGain = reader.readFloat32();
 
 			if (version > 900) {
@@ -97,7 +99,7 @@ public class MdlxLayer extends MdlxAnimatedObject {
 			}
 		}
 
-		readTimelines(reader, size - (reader.position() - position));
+		readTimelines(reader, size - (reader.position() - position), version);
 	}
 
 	@Override

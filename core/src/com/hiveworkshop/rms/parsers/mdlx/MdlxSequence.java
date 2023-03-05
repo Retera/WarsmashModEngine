@@ -1,5 +1,7 @@
 package com.hiveworkshop.rms.parsers.mdlx;
 
+import java.util.Arrays;
+
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenInputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenOutputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlUtils;
@@ -18,12 +20,30 @@ public class MdlxSequence implements MdlxBlock {
 	@Override
 	public void readMdx(final BinaryReader reader, final int version) {
 		this.name = reader.read(80);
+		System.out.println("MdlxSequence name: " + this.name);
 		reader.readUInt32Array(this.interval);
+		System.out.println("MdlxSequence interval: " + Arrays.toString(this.interval));
 		this.moveSpeed = reader.readFloat32();
+		System.out.println("MdlxSequence moveSpeed: " + this.moveSpeed);
 		this.flags = reader.readInt32();
-		this.rarity = reader.readFloat32();
-		this.syncPoint = reader.readUInt32();
+		System.out.println("MdlxSequence flags: " + this.flags);
+		if (version != 1300) {
+			this.rarity = reader.readFloat32();
+			System.out.println("MdlxSequence rarity: " + this.rarity);
+			this.syncPoint = reader.readUInt32();
+			System.out.println("MdlxSequence syncPoint: " + this.syncPoint);
+		}
 		this.extent.readMdx(reader);
+		System.out.println("MdlxSequence extent: " + this.extent);
+		if (version == 1300) {
+			final float frequency = reader.readFloat32();
+			System.out.println("MdlxSequence frequency: " + frequency);
+			final long[] replay = new long[2];
+			reader.readUInt32Array(replay);
+			System.out.println("MdlxSequence replay: " + Arrays.toString(replay));
+			final long blendTime = reader.readUInt32();
+			System.out.println("MdlxSequence blendTime: " + blendTime);
+		}
 	}
 
 	@Override

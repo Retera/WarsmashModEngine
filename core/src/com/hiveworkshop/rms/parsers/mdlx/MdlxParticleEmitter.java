@@ -36,7 +36,7 @@ public class MdlxParticleEmitter extends MdlxGenericObject {
 		this.lifeSpan = reader.readFloat32();
 		this.speed = reader.readFloat32();
 
-		readTimelines(reader, size - (reader.position() - position));
+		readTimelines(reader, size - (reader.position() - position), version);
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class MdlxParticleEmitter extends MdlxGenericObject {
 			case MdlUtils.TOKEN_VISIBILITY:
 				readTimeline(stream, AnimationMap.KPEV);
 				break;
-			case MdlUtils.TOKEN_PARTICLE: {
+			case MdlUtils.TOKEN_PARTICLE:
 				final Iterator<String> iterator = readAnimatedBlock(stream);
 				while (iterator.hasNext()) {
 					final String subToken = iterator.next();
@@ -118,7 +118,6 @@ public class MdlxParticleEmitter extends MdlxGenericObject {
 								"Unknown token in ParticleEmitter " + this.name + "'s Particle: " + subToken);
 					}
 				}
-			}
 				break;
 			default:
 				throw new RuntimeException("Unknown token in ParticleEmitter " + this.name + ": " + token);
@@ -209,33 +208,5 @@ public class MdlxParticleEmitter extends MdlxGenericObject {
 
 	public float getSpeed() {
 		return this.speed;
-	}
-
-	public void setEmissionRate(final float emissionRate) {
-		this.emissionRate = emissionRate;
-	}
-
-	public void setGravity(final float gravity) {
-		this.gravity = gravity;
-	}
-
-	public void setLongitude(final float longitude) {
-		this.longitude = longitude;
-	}
-
-	public void setLatitude(final float latitude) {
-		this.latitude = latitude;
-	}
-
-	public void setPath(final String path) {
-		this.path = path;
-	}
-
-	public void setLifeSpan(final float lifeSpan) {
-		this.lifeSpan = lifeSpan;
-	}
-
-	public void setSpeed(final float speed) {
-		this.speed = speed;
 	}
 }

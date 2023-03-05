@@ -62,6 +62,7 @@ public class MdlxModel {
 	public String animationFile = "";
 	public MdlxExtent extent = new MdlxExtent();
 	public long blendTime = 0;
+	public byte flags = 0;
 	public List<MdlxSequence> sequences = new ArrayList<>();
 	public List<Long /* UInt32 */> globalSequences = new ArrayList<>();
 	public List<MdlxMaterial> materials = new ArrayList<>();
@@ -109,6 +110,16 @@ public class MdlxModel {
 		}
 	}
 
+	public static String convertInt(final int tag) {
+		return "" + (char) ((tag >> 24) & 0xFF) + (char) ((tag >> 16) & 0xFF) + (char) ((tag >> 8) & 0xFF)
+				+ (char) ((tag >> 0) & 0xFF);
+	}
+
+	public static String convertInt2(final int tag) {
+		return "" + (char) ((tag >> 0) & 0xFF) + (char) ((tag >> 8) & 0xFF) + (char) ((tag >> 16) & 0xFF)
+				+ (char) ((tag >> 24) & 0xFF);
+	}
+
 	public void loadMdx(final ByteBuffer buffer) {
 		final BinaryReader reader = new BinaryReader(buffer);
 
@@ -119,7 +130,8 @@ public class MdlxModel {
 		while (reader.remaining() > 0) {
 			final int tag = reader.readTag();
 			final int size = reader.readInt32();
-
+			System.out.println("about to load tag : " + convertInt(tag));
+			System.out.println("size: " + size);
 			switch (tag) {
 			case VERS:
 				loadVersionChunk(reader);
@@ -127,15 +139,26 @@ public class MdlxModel {
 			case MODL:
 				loadModelChunk(reader);
 				break;
-			case SEQS:
-				loadStaticObjects(this.sequences, MdlxBlockDescriptor.SEQUENCE, reader, size / 132);
+			case SEQS: {
+				final int elementCount = this.version == 1300 ? (int) reader.readUInt32() : (size / 132);
+				loadStaticObjects(this.sequences, MdlxBlockDescriptor.SEQUENCE, reader, elementCount);
 				break;
+			}
 			case GLBS:
 				loadGlobalSequenceChunk(reader, size);
 				break;
-			case MTLS:
-				loadDynamicObjects(this.materials, MdlxBlockDescriptor.MATERIAL, reader, size);
+			case MTLS: {
+				if (this.version == 1300) {
+					final long numMaterials = reader.readUInt32();
+					System.out.println("MTLS num sequences is: " + numMaterials);
+					System.out.println("MTLS extra data is: " + reader.readUInt32());
+					loadNDynamicObjects(this.materials, MdlxBlockDescriptor.MATERIAL, reader, numMaterials);
+				}
+				else {
+					loadDynamicObjects(this.materials, MdlxBlockDescriptor.MATERIAL, reader, size);
+				}
 				break;
+			}
 			case TEXS:
 				loadStaticObjects(this.textures, MdlxBlockDescriptor.TEXTURE, reader, size / 268);
 				break;
@@ -143,47 +166,134 @@ public class MdlxModel {
 				loadDynamicObjects(this.textureAnimations, MdlxBlockDescriptor.TEXTURE_ANIMATION, reader, size);
 				break;
 			case GEOS:
-				loadDynamicObjects(this.geosets, MdlxBlockDescriptor.GEOSET, reader, size);
+				if (this.version == 1300) {
+					final long numGeos = reader.readUInt32();
+					System.out.println("GEOS num is: " + numGeos);
+					loadNDynamicObjects(this.geosets, MdlxBlockDescriptor.GEOSET, reader, numGeos);
+				}
+				else {
+					loadDynamicObjects(this.geosets, MdlxBlockDescriptor.GEOSET, reader, size);
+				}
 				break;
 			case GEOA:
-				loadDynamicObjects(this.geosetAnimations, MdlxBlockDescriptor.GEOSET_ANIMATION, reader, size);
+				if (this.version == 1300) {
+					final long numGeoAs = reader.readUInt32();
+					loadNDynamicObjects(this.geosetAnimations, MdlxBlockDescriptor.GEOSET_ANIMATION, reader, numGeoAs);
+				}
+				else {
+					loadDynamicObjects(this.geosetAnimations, MdlxBlockDescriptor.GEOSET_ANIMATION, reader, size);
+				}
 				break;
 			case BONE:
-				loadDynamicObjects(this.bones, MdlxBlockDescriptor.BONE, reader, size);
+				if (this.version == 1300) {
+					final long count = reader.readUInt32();
+					System.out.println("BONE count is: " + count);
+					loadNDynamicObjects(this.bones, MdlxBlockDescriptor.BONE, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.bones, MdlxBlockDescriptor.BONE, reader, size);
+				}
 				break;
 			case LITE:
-				loadDynamicObjects(this.lights, MdlxBlockDescriptor.LIGHT, reader, size);
+				if (this.version == 1300) {
+					final long count = reader.readUInt32();
+					System.out.println("BONE count is: " + count);
+					loadNDynamicObjects(this.lights, MdlxBlockDescriptor.LIGHT, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.lights, MdlxBlockDescriptor.LIGHT, reader, size);
+				}
 				break;
 			case HELP:
-				loadDynamicObjects(this.helpers, MdlxBlockDescriptor.HELPER, reader, size);
+				if (this.version == 1300) {
+					final long count = reader.readUInt32();
+					System.out.println("HELP count is: " + count);
+					loadNDynamicObjects(this.helpers, MdlxBlockDescriptor.HELPER, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.helpers, MdlxBlockDescriptor.HELPER, reader, size);
+				}
 				break;
 			case ATCH:
-				loadDynamicObjects(this.attachments, MdlxBlockDescriptor.ATTACHMENT, reader, size);
+				if (this.version == 1300) {
+					final long count = reader.readUInt32();
+					System.out.println("ATCH count is: " + count);
+					final long unused = reader.readUInt32();
+					System.out.println("ATCH unused is: " + unused);
+					loadNDynamicObjects(this.attachments, MdlxBlockDescriptor.ATTACHMENT, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.attachments, MdlxBlockDescriptor.ATTACHMENT, reader, size);
+				}
 				break;
 			case PIVT:
 				loadPivotPointChunk(reader, size);
 				break;
 			case PREM:
-				loadDynamicObjects(this.particleEmitters, MdlxBlockDescriptor.PARTICLE_EMITTER, reader, size);
+				if (this.version == 1300) {
+					final long count = reader.readUInt32();
+					System.out.println("PREM count is: " + count);
+					loadNDynamicObjects(this.particleEmitters, MdlxBlockDescriptor.PARTICLE_EMITTER, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.particleEmitters, MdlxBlockDescriptor.PARTICLE_EMITTER, reader, size);
+				}
 				break;
 			case PRE2:
-				loadDynamicObjects(this.particleEmitters2, MdlxBlockDescriptor.PARTICLE_EMITTER2, reader, size);
+				if (this.version == 1300) {
+					final long count = reader.readUInt32();
+					System.out.println("PRE2 count is: " + count);
+					loadNDynamicObjects(this.particleEmitters2, MdlxBlockDescriptor.PARTICLE_EMITTER2, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.particleEmitters2, MdlxBlockDescriptor.PARTICLE_EMITTER2, reader, size);
+				}
 				break;
 			case CORN:
 				loadDynamicObjects(this.particleEmittersPopcorn, MdlxBlockDescriptor.PARTICLE_EMITTER_POPCORN, reader,
 						size);
 				break;
 			case RIBB:
-				loadDynamicObjects(this.ribbonEmitters, MdlxBlockDescriptor.RIBBON_EMITTER, reader, size);
+				if (this.version == 1300) {
+					final long count = reader.readUInt32();
+					System.out.println("RIBB count is: " + count);
+					loadNDynamicObjects(this.ribbonEmitters, MdlxBlockDescriptor.RIBBON_EMITTER, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.ribbonEmitters, MdlxBlockDescriptor.RIBBON_EMITTER, reader, size);
+				}
 				break;
 			case CAMS:
-				loadDynamicObjects(this.cameras, MdlxBlockDescriptor.CAMERA, reader, size);
+				if (this.version == 1300) {
+					final long count = reader.readUInt32();
+					System.out.println("CAMS count is: " + count);
+					loadNDynamicObjects(this.cameras, MdlxBlockDescriptor.CAMERA, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.cameras, MdlxBlockDescriptor.CAMERA, reader, size);
+				}
 				break;
 			case EVTS:
-				loadDynamicObjects(this.eventObjects, MdlxBlockDescriptor.EVENT_OBJECT, reader, size);
+				if (this.version == 1300) {
+					final long count = reader.readUInt32();
+					System.out.println("EVTS count is: " + count);
+					loadNDynamicObjects(this.eventObjects, MdlxBlockDescriptor.EVENT_OBJECT, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.eventObjects, MdlxBlockDescriptor.EVENT_OBJECT, reader, size);
+				}
 				break;
 			case CLID:
-				loadDynamicObjects(this.collisionShapes, MdlxBlockDescriptor.COLLISION_SHAPE, reader, size);
+				if (this.version == 1300) {
+					// long count = reader.readUInt32();
+					// System.out.println("CLID count is: " + count);
+					// loadNDynamicObjects(collisionShapes, MdlxBlockDescriptor.COLLISION_SHAPE,
+					// reader, count);
+					this.unknownChunks.add(new MdlxUnknownChunk(reader, size, new War3ID(tag)));
+				}
+				else {
+					loadDynamicObjects(this.collisionShapes, MdlxBlockDescriptor.COLLISION_SHAPE, reader, size);
+				}
 				break;
 			case FAFX:
 				loadStaticObjects(this.faceEffects, MdlxBlockDescriptor.FACE_EFFECT, reader, size / 340);
@@ -192,15 +302,14 @@ public class MdlxModel {
 				loadBindPoseChunk(reader, size);
 				break;
 			default:
-				System.err.println("Unknown chunk: " + new War3ID(tag));
 				this.unknownChunks.add(new MdlxUnknownChunk(reader, size, new War3ID(tag)));
-				break;
 			}
 		}
 	}
 
 	private void loadVersionChunk(final BinaryReader reader) {
 		this.version = reader.readInt32();
+		System.out.println("version: " + this.version);
 	}
 
 	private void loadModelChunk(final BinaryReader reader) {
@@ -208,6 +317,14 @@ public class MdlxModel {
 		this.animationFile = reader.read(260);
 		this.extent.readMdx(reader);
 		this.blendTime = reader.readInt32();
+		if (this.version == 1300) {
+			this.flags = reader.readInt8();
+		}
+		System.out.println("name: " + this.name);
+		System.out.println("animationFile: " + this.animationFile);
+		System.out.println("extent: " + this.extent);
+		System.out.println("blendTime: " + this.blendTime);
+		System.out.println("flags: " + this.flags);
 	}
 
 	private <E extends MdlxBlock> void loadStaticObjects(final List<E> out, final MdlxBlockDescriptor<E> constructor,
@@ -236,6 +353,18 @@ public class MdlxModel {
 			object.readMdx(reader, this.version);
 
 			totalSize += object.getByteLength(this.version);
+
+			out.add(object);
+		}
+	}
+
+	private <E extends MdlxBlock & MdlxChunk> void loadNDynamicObjects(final List<E> out,
+			final MdlxBlockDescriptor<E> constructor, final BinaryReader reader, final long count) {
+
+		while (out.size() < count) {
+			final E object = constructor.create();
+
+			object.readMdx(reader, this.version);
 
 			out.add(object);
 		}
@@ -394,7 +523,7 @@ public class MdlxModel {
 				break;
 			case MdlUtils.TOKEN_TEXTURE_ANIMS:
 				loadNumberedObjectBlock(this.textureAnimations, MdlxBlockDescriptor.TEXTURE_ANIMATION,
-						MdlUtils.TOKEN_TVERTEX_ANIM, stream);
+						MdlUtils.TOKEN_TEXTURE_ANIM, stream);
 				break;
 			case MdlUtils.TOKEN_GEOSET:
 				loadObject(this.geosets, MdlxBlockDescriptor.GEOSET, stream);
@@ -452,10 +581,11 @@ public class MdlxModel {
 
 	private void loadVersionBlock(final MdlTokenInputStream stream) {
 		for (final String token : stream.readBlock()) {
-			if (MdlUtils.TOKEN_FORMAT_VERSION.equals(token)) {
+			switch (token) {
+			case MdlUtils.TOKEN_FORMAT_VERSION:
 				this.version = stream.readInt();
-			}
-			else {
+				break;
+			default:
 				throw new IllegalStateException("Unknown token in Version: " + token);
 			}
 		}
@@ -750,219 +880,227 @@ public class MdlxModel {
 		return 0;
 	}
 
-	public List<MdlxGeoset> getGeosets() {
-		return this.geosets;
-	}
-
 	public int getVersion() {
 		return this.version;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public String getAnimationFile() {
-		return this.animationFile;
-	}
-
-	public MdlxExtent getExtent() {
-		return this.extent;
-	}
-
-	public long getBlendTime() {
-		return this.blendTime;
-	}
-
-	public List<MdlxSequence> getSequences() {
-		return this.sequences;
-	}
-
-	public List<Long> getGlobalSequences() {
-		return this.globalSequences;
-	}
-
-	public List<MdlxMaterial> getMaterials() {
-		return this.materials;
-	}
-
-	public List<MdlxTexture> getTextures() {
-		return this.textures;
-	}
-
-	public List<MdlxTextureAnimation> getTextureAnimations() {
-		return this.textureAnimations;
-	}
-
-	public List<MdlxGeosetAnimation> getGeosetAnimations() {
-		return this.geosetAnimations;
-	}
-
-	public List<MdlxBone> getBones() {
-		return this.bones;
-	}
-
-	public List<MdlxLight> getLights() {
-		return this.lights;
-	}
-
-	public List<MdlxHelper> getHelpers() {
-		return this.helpers;
-	}
-
-	public List<MdlxAttachment> getAttachments() {
-		return this.attachments;
-	}
-
-	public List<float[]> getPivotPoints() {
-		return this.pivotPoints;
-	}
-
-	public List<MdlxParticleEmitter> getParticleEmitters() {
-		return this.particleEmitters;
-	}
-
-	public List<MdlxParticleEmitter2> getParticleEmitters2() {
-		return this.particleEmitters2;
-	}
-
-	public List<MdlxParticleEmitterPopcorn> getParticleEmittersPopcorn() {
-		return this.particleEmittersPopcorn;
-	}
-
-	public List<MdlxRibbonEmitter> getRibbonEmitters() {
-		return this.ribbonEmitters;
-	}
-
-	public List<MdlxCamera> getCameras() {
-		return this.cameras;
-	}
-
-	public List<MdlxEventObject> getEventObjects() {
-		return this.eventObjects;
-	}
-
-	public List<MdlxCollisionShape> getCollisionShapes() {
-		return this.collisionShapes;
-	}
-
-	public List<MdlxFaceEffect> getFaceEffects() {
-		return this.faceEffects;
-	}
-
-	public List<float[]> getBindPose() {
-		return this.bindPose;
-	}
-
-	public List<MdlxUnknownChunk> getUnknownChunks() {
-		return this.unknownChunks;
 	}
 
 	public void setVersion(final int version) {
 		this.version = version;
 	}
 
+	public String getName() {
+		return this.name;
+	}
+
 	public void setName(final String name) {
 		this.name = name;
+	}
+
+	public String getAnimationFile() {
+		return this.animationFile;
 	}
 
 	public void setAnimationFile(final String animationFile) {
 		this.animationFile = animationFile;
 	}
 
+	public MdlxExtent getExtent() {
+		return this.extent;
+	}
+
 	public void setExtent(final MdlxExtent extent) {
 		this.extent = extent;
+	}
+
+	public long getBlendTime() {
+		return this.blendTime;
 	}
 
 	public void setBlendTime(final long blendTime) {
 		this.blendTime = blendTime;
 	}
 
+	public byte getFlags() {
+		return this.flags;
+	}
+
+	public void setFlags(final byte flags) {
+		this.flags = flags;
+	}
+
+	public List<MdlxSequence> getSequences() {
+		return this.sequences;
+	}
+
 	public void setSequences(final List<MdlxSequence> sequences) {
 		this.sequences = sequences;
+	}
+
+	public List<Long> getGlobalSequences() {
+		return this.globalSequences;
 	}
 
 	public void setGlobalSequences(final List<Long> globalSequences) {
 		this.globalSequences = globalSequences;
 	}
 
+	public List<MdlxMaterial> getMaterials() {
+		return this.materials;
+	}
+
 	public void setMaterials(final List<MdlxMaterial> materials) {
 		this.materials = materials;
+	}
+
+	public List<MdlxTexture> getTextures() {
+		return this.textures;
 	}
 
 	public void setTextures(final List<MdlxTexture> textures) {
 		this.textures = textures;
 	}
 
+	public List<MdlxTextureAnimation> getTextureAnimations() {
+		return this.textureAnimations;
+	}
+
 	public void setTextureAnimations(final List<MdlxTextureAnimation> textureAnimations) {
 		this.textureAnimations = textureAnimations;
 	}
 
-	public void setGeosets(final List<MdlxGeoset> geosets) {
-		this.geosets = geosets;
+	public List<MdlxGeosetAnimation> getGeosetAnimations() {
+		return this.geosetAnimations;
 	}
 
 	public void setGeosetAnimations(final List<MdlxGeosetAnimation> geosetAnimations) {
 		this.geosetAnimations = geosetAnimations;
 	}
 
+	public List<MdlxBone> getBones() {
+		return this.bones;
+	}
+
 	public void setBones(final List<MdlxBone> bones) {
 		this.bones = bones;
+	}
+
+	public List<MdlxLight> getLights() {
+		return this.lights;
 	}
 
 	public void setLights(final List<MdlxLight> lights) {
 		this.lights = lights;
 	}
 
+	public List<MdlxHelper> getHelpers() {
+		return this.helpers;
+	}
+
 	public void setHelpers(final List<MdlxHelper> helpers) {
 		this.helpers = helpers;
+	}
+
+	public List<MdlxAttachment> getAttachments() {
+		return this.attachments;
 	}
 
 	public void setAttachments(final List<MdlxAttachment> attachments) {
 		this.attachments = attachments;
 	}
 
+	public List<float[]> getPivotPoints() {
+		return this.pivotPoints;
+	}
+
 	public void setPivotPoints(final List<float[]> pivotPoints) {
 		this.pivotPoints = pivotPoints;
+	}
+
+	public List<MdlxParticleEmitter> getParticleEmitters() {
+		return this.particleEmitters;
 	}
 
 	public void setParticleEmitters(final List<MdlxParticleEmitter> particleEmitters) {
 		this.particleEmitters = particleEmitters;
 	}
 
+	public List<MdlxParticleEmitter2> getParticleEmitters2() {
+		return this.particleEmitters2;
+	}
+
 	public void setParticleEmitters2(final List<MdlxParticleEmitter2> particleEmitters2) {
 		this.particleEmitters2 = particleEmitters2;
+	}
+
+	public List<MdlxParticleEmitterPopcorn> getParticleEmittersPopcorn() {
+		return this.particleEmittersPopcorn;
 	}
 
 	public void setParticleEmittersPopcorn(final List<MdlxParticleEmitterPopcorn> particleEmittersPopcorn) {
 		this.particleEmittersPopcorn = particleEmittersPopcorn;
 	}
 
+	public List<MdlxRibbonEmitter> getRibbonEmitters() {
+		return this.ribbonEmitters;
+	}
+
 	public void setRibbonEmitters(final List<MdlxRibbonEmitter> ribbonEmitters) {
 		this.ribbonEmitters = ribbonEmitters;
+	}
+
+	public List<MdlxCamera> getCameras() {
+		return this.cameras;
 	}
 
 	public void setCameras(final List<MdlxCamera> cameras) {
 		this.cameras = cameras;
 	}
 
+	public List<MdlxEventObject> getEventObjects() {
+		return this.eventObjects;
+	}
+
 	public void setEventObjects(final List<MdlxEventObject> eventObjects) {
 		this.eventObjects = eventObjects;
+	}
+
+	public List<MdlxCollisionShape> getCollisionShapes() {
+		return this.collisionShapes;
 	}
 
 	public void setCollisionShapes(final List<MdlxCollisionShape> collisionShapes) {
 		this.collisionShapes = collisionShapes;
 	}
 
+	public List<MdlxFaceEffect> getFaceEffects() {
+		return this.faceEffects;
+	}
+
 	public void setFaceEffects(final List<MdlxFaceEffect> faceEffects) {
 		this.faceEffects = faceEffects;
+	}
+
+	public List<float[]> getBindPose() {
+		return this.bindPose;
 	}
 
 	public void setBindPose(final List<float[]> bindPose) {
 		this.bindPose = bindPose;
 	}
 
+	public List<MdlxUnknownChunk> getUnknownChunks() {
+		return this.unknownChunks;
+	}
+
 	public void setUnknownChunks(final List<MdlxUnknownChunk> unknownChunks) {
 		this.unknownChunks = unknownChunks;
+	}
+
+	public void setGeosets(final List<MdlxGeoset> geosets) {
+		this.geosets = geosets;
+	}
+
+	public List<MdlxGeoset> getGeosets() {
+		return this.geosets;
 	}
 }

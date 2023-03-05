@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
 
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -71,8 +72,13 @@ public final class ImageUtils {
 					}
 				}
 				else {
-					final BufferedImage image = ImageIO.read(stream);
-					return new AnyExtensionImage(true, image);
+					final ImageInputStream imageInputStream = ImageIO.createImageInputStream(stream);
+					imageInputStream.mark();
+					imageInputStream.skipBytes(3);
+					final byte versionByte = imageInputStream.readByte();
+					imageInputStream.reset();
+					final BufferedImage image = ImageIO.read(imageInputStream);
+					return new AnyExtensionImage(versionByte != '2', image);
 				}
 			}
 		}

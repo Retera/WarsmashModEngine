@@ -31,25 +31,29 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 	@Override
 	public void readMdx(final BinaryReader reader, final int version) {
 		final long size = reader.readUInt32();
-
+		System.out.println("MdlxGenericObject size: " + size);
 		this.name = reader.read(80);
+		System.out.println("MdlxGenericObject name: " + this.name);
 		this.objectId = reader.readInt32();
+		System.out.println("MdlxGenericObject objectId: " + this.objectId);
 		this.parentId = reader.readInt32();
+		System.out.println("MdlxGenericObject parentId: " + this.parentId);
 		this.flags = reader.readInt32();
+		System.out.println("MdlxGenericObject flags: " + this.flags);
 
-		this.readTimelines(reader, size - 96);
+		readTimelines(reader, size - 96, version);
 	}
 
 	@Override
 	public void writeMdx(final BinaryWriter writer, final int version) {
-		writer.writeUInt32(this.getGenericByteLength(version));
+		writer.writeUInt32(getGenericByteLength(version));
 		writer.writeWithNulls(this.name, 80);
 		writer.writeInt32(this.objectId);
 		writer.writeInt32(this.parentId);
 		writer.writeInt32(this.flags);
 
 		for (final MdlxTimeline<?> timeline : this.timelines) {
-			if (this.isGeneric(timeline)) {
+			if (isGeneric(timeline)) {
 				timeline.writeMdx(writer);
 			}
 		}
@@ -57,7 +61,7 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 
 	public void writeNonGenericAnimationChunks(final BinaryWriter writer) {
 		for (final MdlxTimeline<?> timeline : this.timelines) {
-			if (!this.isGeneric(timeline)) {
+			if (!isGeneric(timeline)) {
 				timeline.writeMdx(writer);
 			}
 		}
@@ -65,7 +69,7 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 
 	protected final Iterable<String> readMdlGeneric(final MdlTokenInputStream stream) {
 		this.name = stream.read();
-		return () -> new WrappedMdlTokenIterator(this.readAnimatedBlock(stream), MdlxGenericObject.this, stream);
+		return () -> new WrappedMdlTokenIterator(readAnimatedBlock(stream), MdlxGenericObject.this, stream);
 	}
 
 	public void writeGenericHeader(final MdlTokenOutputStream stream) {
@@ -95,7 +99,7 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 			stream.writeFlag(MdlUtils.TOKEN_CAMERA_ANCHORED);
 		}
 
-		if ((this.flags & 0x4) != 0) {
+		if ((this.flags & 0x2) != 0) {
 			stream.writeFlag(MdlUtils.TOKEN_DONT_INHERIT + " { " + MdlUtils.TOKEN_ROTATION + " }");
 		}
 
@@ -103,23 +107,23 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 			stream.writeFlag(MdlUtils.TOKEN_DONT_INHERIT + " { " + MdlUtils.TOKEN_TRANSLATION + " }");
 		}
 
-		if ((this.flags & 0x2) != 0) {
+		if ((this.flags & 0x4) != 0) {
 			stream.writeFlag(MdlUtils.TOKEN_DONT_INHERIT + " { " + MdlUtils.TOKEN_SCALING + " }");
 		}
 	}
 
 	public void writeGenericTimelines(final MdlTokenOutputStream stream) {
-		this.writeTimeline(stream, AnimationMap.KGTR);
-		this.writeTimeline(stream, AnimationMap.KGRT);
-		this.writeTimeline(stream, AnimationMap.KGSC);
+		writeTimeline(stream, AnimationMap.KGTR);
+		writeTimeline(stream, AnimationMap.KGRT);
+		writeTimeline(stream, AnimationMap.KGSC);
 	}
 
 	public long getGenericByteLength(final int version) {
 		long size = 96;
 
 		for (final MdlxTimeline<?> timeline : this.timelines) {
-			if (this.isGeneric(timeline)) {
-				size += timeline.getByteLength();
+			if (isGeneric(timeline)) {
+				size += timeline.getByteLength(version);
 			}
 		}
 
@@ -153,22 +157,6 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 		return this.flags;
 	}
 
-	public void setName(final String name) {
-		this.name = name;
-	}
-
-	public void setObjectId(final int objectId) {
-		this.objectId = objectId;
-	}
-
-	public void setParentId(final int parentId) {
-		this.parentId = parentId;
-	}
-
-	public void setFlags(final int flags) {
-		this.flags = flags;
-	}
-
 	private static final class WrappedMdlTokenIterator implements Iterator<String> {
 		private final Iterator<String> delegate;
 		private final MdlxGenericObject updatingObject;
@@ -186,7 +174,7 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 		@Override
 		public boolean hasNext() {
 			if (this.delegate.hasNext()) {
-				this.next = this.read();
+				this.next = read();
 				this.hasLoaded = true;
 				return this.next != null;
 			}
@@ -196,7 +184,7 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 		@Override
 		public String next() {
 			if (!this.hasLoaded) {
-				this.next = this.read();
+				this.next = read();
 			}
 			this.hasLoaded = false;
 			return this.next;
@@ -204,7 +192,8 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 
 		private String read() {
 			String token;
-			InteriorParsing: do {
+			InteriorParsing:
+			do {
 				token = this.delegate.next();
 				if (token == null) {
 					break;
@@ -242,13 +231,13 @@ public abstract class MdlxGenericObject extends MdlxAnimatedObject {
 					for (final String subToken : this.stream.readBlock()) {
 						switch (subToken) {
 						case MdlUtils.TOKEN_ROTATION:
-							this.updatingObject.flags |= 0x4;
+							this.updatingObject.flags |= 0x2;
 							break;
 						case MdlUtils.TOKEN_TRANSLATION:
 							this.updatingObject.flags |= 0x1;
 							break;
 						case MdlUtils.TOKEN_SCALING:
-							this.updatingObject.flags |= 0x2;
+							this.updatingObject.flags |= 0x0;
 							break;
 						}
 					}

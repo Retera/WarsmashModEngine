@@ -4,6 +4,8 @@ import com.etheller.warsmash.viewer5.Shaders;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
 
 public class MdxShaders {
+	private static final boolean SCALE_PARTICLE2_BY_MODEL = true;
+
 	public static final String vsHd = "#version 120\r\n" + Shaders.boneTexture + "\r\n" + //
 			"    uniform mat4 u_VP;\r\n" + //
 			"    uniform mat4 u_MV;\r\n" + //
@@ -625,8 +627,9 @@ public class MdxShaders {
 			"      gl_FragColor = color;\r\n" + //
 			"    }\r\n";
 
-	public static final String vsComplex() {
-		return "\r\n" + //
+	public static final String vsComplex(final String addendum, final boolean skin) {
+		return "#version 120\r\n" + //
+				addendum + //
 				"\r\n" + //
 				"    uniform mat4 u_mvp;\r\n" + //
 				"    uniform vec4 u_vertexColor;\r\n" + //
@@ -644,7 +647,10 @@ public class MdxShaders {
 				"    #ifdef EXTENDED_BONES\r\n" + //
 				"    attribute vec4 a_extendedBones;\r\n" + //
 				"    #endif\r\n" + //
-				"    attribute float a_boneNumber;\r\n" + //
+				(skin ? //
+						"    attribute vec4 a_weights;\r\n" : //
+						"    attribute float a_boneNumber;\r\n")
+				+ //
 				"    varying vec2 v_uv;\r\n" + //
 				"    varying vec4 v_color;\r\n" + //
 				"    varying vec4 v_uvTransRot;\r\n" + //
@@ -653,37 +659,48 @@ public class MdxShaders {
 				"    uniform float u_lightCount;\r\n" + //
 				"    uniform float u_lightTextureHeight;\r\n" + //
 				Shaders.boneTexture + "\r\n" + //
-				"    void transform(inout vec3 position, inout vec3 normal) {\r\n" + //
-				"      // For the broken models out there, since the game supports this.\r\n" + //
-				"      if (a_boneNumber > 0.0) {\r\n" + //
-				"        vec4 position4 = vec4(position, 1.0);\r\n" + //
-				"        vec4 normal4 = vec4(normal, 0.0);\r\n" + //
-				"        mat4 bone;\r\n" + //
-				"        vec4 p = vec4(0.0,0.0,0.0,0.0);\r\n" + //
-				"        vec4 n = vec4(0.0,0.0,0.0,0.0);\r\n" + //
-				"        for (int i = 0; i < 4; i++) {\r\n" + //
-				"          if (a_bones[i] > 0.0) {\r\n" + //
-				"            bone = fetchMatrix(a_bones[i] - 1.0, 0.0);\r\n" + //
-				"            p += bone * position4;\r\n" + //
-				"            n += bone * normal4;\r\n" + //
-				"          }\r\n" + //
-				"        }\r\n" + //
-				"        #ifdef EXTENDED_BONES\r\n" + //
-				"          for (int i = 0; i < 4; i++) {\r\n" + //
-				"            if (a_extendedBones[i] > 0.0) {\r\n" + //
-				"              bone = fetchMatrix(a_extendedBones[i] - 1.0, 0.0);\r\n" + //
-				"              p += bone * position4;\r\n" + //
-				"              n += bone * normal4;\r\n" + //
-				"            }\r\n" + //
-				"          }\r\n" + //
-				"        #endif\r\n" + //
-				"        position = p.xyz / a_boneNumber;\r\n" + //
-				"        normal = normalize(n.xyz);\r\n" + //
-				"      } else {\r\n" + //
-				"        position.x += 100.0;\r\n" + //
-				"      }\r\n" + //
-				"\r\n" + //
-				"    }\r\n" + //
+				(!skin ? ("    void transform(inout vec3 position, inout vec3 normal) {\r\n" + //
+						"      // For the broken models out there, since the game supports this.\r\n" + //
+						"      if (a_boneNumber > 0.0) {\r\n" + //
+						"        vec4 position4 = vec4(position, 1.0);\r\n" + //
+						"        vec4 normal4 = vec4(normal, 0.0);\r\n" + //
+						"        mat4 bone;\r\n" + //
+						"        vec4 p = vec4(0.0,0.0,0.0,0.0);\r\n" + //
+						"        vec4 n = vec4(0.0,0.0,0.0,0.0);\r\n" + //
+						"        for (int i = 0; i < 4; i++) {\r\n" + //
+						"          if (a_bones[i] > 0.0) {\r\n" + //
+						"            bone = fetchMatrix(a_bones[i] - 1.0, 0.0);\r\n" + //
+						"            p += bone * position4;\r\n" + //
+						"            n += bone * normal4;\r\n" + //
+						"          }\r\n" + //
+						"        }\r\n" + //
+						"        #ifdef EXTENDED_BONES\r\n" + //
+						"          for (int i = 0; i < 4; i++) {\r\n" + //
+						"            if (a_extendedBones[i] > 0.0) {\r\n" + //
+						"              bone = fetchMatrix(a_extendedBones[i] - 1.0, 0.0);\r\n" + //
+						"              p += bone * position4;\r\n" + //
+						"              n += bone * normal4;\r\n" + //
+						"            }\r\n" + //
+						"          }\r\n" + //
+						"        #endif\r\n" + //
+						"        position = p.xyz / a_boneNumber;\r\n" + //
+						"        normal = normalize(n.xyz);\r\n" + //
+						"      } else {\r\n" + //
+						"        position.x += 100.0;\r\n" + //
+						"      }\r\n" + //
+						"\r\n" + //
+						"    }\r\n") : //
+						("    void transform(inout vec3 position, inout vec3 normal) {\r\n" + //
+								"      mat4 bone = mat4(0);\r\n" + //
+								"      bone += fetchMatrix(a_bones[0], 0.0) * a_weights[0];\r\n" + //
+								"      bone += fetchMatrix(a_bones[1], 0.0) * a_weights[1];\r\n" + //
+								"      bone += fetchMatrix(a_bones[2], 0.0) * a_weights[2];\r\n" + //
+								"      bone += fetchMatrix(a_bones[3], 0.0) * a_weights[3];\r\n" + //
+								"      mat3 rotation = mat3(bone);\r\n" + //
+								"      position = vec3(bone * vec4(position, 1.0));\r\n" + //
+								"      normal = rotation * normal;\r\n" + //
+								"    }\r\n") //
+				) + //
 				"    void main() {\r\n" + //
 				"      vec3 position = a_position;\r\n" + //
 				"      vec3 normal = a_normal;\r\n" + //
@@ -831,7 +848,10 @@ public class MdxShaders {
 				"        index = 1;\r\n" + //
 				"      }\r\n" + //
 				"      factor = min(factor, 1.0);\r\n" + //
-				"      float scale = mix(u_scaling[index], u_scaling[index + 1], factor);\r\n" + //
+				(SCALE_PARTICLE2_BY_MODEL ? //
+						"      float scale = mix(u_scaling[index], u_scaling[index + 1], factor) * a_p2[0];\r\n" : //
+						"      float scale = mix(u_scaling[index], u_scaling[index + 1], factor);\r\n")
+				+ //
 				"      vec4 color = mix(u_colors[index], u_colors[index + 1], factor);\r\n" + //
 				"      float cell = 0.0;\r\n" + //
 				"      if (u_teamColored) {\r\n" + //

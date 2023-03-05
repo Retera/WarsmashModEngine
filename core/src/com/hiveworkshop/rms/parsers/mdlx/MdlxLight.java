@@ -8,9 +8,7 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxLight extends MdlxGenericObject {
 	public enum Type {
-		OMNIDIRECTIONAL("Omnidirectional"),
-		DIRECTIONAL("Directional"),
-		AMBIENT("Ambient");
+		OMNIDIRECTIONAL("Omnidirectional"), DIRECTIONAL("Directional"), AMBIENT("Ambient");
 
 		String token;
 
@@ -53,7 +51,7 @@ public class MdlxLight extends MdlxGenericObject {
 		reader.readFloat32Array(this.ambientColor);
 		this.ambientIntensity = reader.readFloat32();
 
-		readTimelines(reader, size - (reader.position() - position));
+		readTimelines(reader, size - (reader.position() - position), version);
 	}
 
 	@Override
@@ -194,29 +192,5 @@ public class MdlxLight extends MdlxGenericObject {
 
 	public float getAmbientIntensity() {
 		return this.ambientIntensity;
-	}
-
-	public void setType(final Type type) {
-		this.type = type;
-	}
-
-	public void setAttenuation(final float[] attenuation) {
-		this.attenuation = attenuation;
-	}
-
-	public void setColor(final float[] color) {
-		this.color = color;
-	}
-
-	public void setIntensity(final float intensity) {
-		this.intensity = intensity;
-	}
-
-	public void setAmbientColor(final float[] ambientColor) {
-		this.ambientColor = ambientColor;
-	}
-
-	public void setAmbientIntensity(final float ambientIntensity) {
-		this.ambientIntensity = ambientIntensity;
 	}
 }

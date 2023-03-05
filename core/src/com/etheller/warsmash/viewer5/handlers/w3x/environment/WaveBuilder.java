@@ -49,57 +49,61 @@ public class WaveBuilder {
 		final char tileset = this.w3eFile.getTileset();
 		final Element waterRow = this.waterTable.get(tileset + "Sha");
 
-		final long wavesCliff = (this.w3iFile.getFlags() & War3MapW3iFlags.SHOW_WATER_WAVES_ON_CLIFF_SHORES);
-		final long wavesRolling = (this.w3iFile.getFlags() & War3MapW3iFlags.SHOW_WATER_WAVES_ON_ROLLING_SHORES);
+		if (waterRow != null) {
+			final long wavesCliff = (this.w3iFile.getFlags() & War3MapW3iFlags.SHOW_WATER_WAVES_ON_CLIFF_SHORES);
+			final long wavesRolling = (this.w3iFile.getFlags() & War3MapW3iFlags.SHOW_WATER_WAVES_ON_ROLLING_SHORES);
 
-		final String shoreline = waterRow.getField("shoreDir") + "\\" + waterRow.getField("shoreSFile") + "\\"
-				+ waterRow.getField("shoreSFile") + "0.mdx";
-		final String outsideCorner = waterRow.getField("shoreDir") + "\\" + waterRow.getField("shoreOCFile") + "\\"
-				+ waterRow.getField("shoreOCFile") + "0.mdx";
-		final String insideCorner = waterRow.getField("shoreDir") + "\\" + waterRow.getField("shoreICFile") + "\\"
-				+ waterRow.getField("shoreICFile") + "0.mdx";
+			final String shoreline = waterRow.getField("shoreDir") + "\\" + waterRow.getField("shoreSFile") + "\\"
+					+ waterRow.getField("shoreSFile") + "0.mdx";
+			final String outsideCorner = waterRow.getField("shoreDir") + "\\" + waterRow.getField("shoreOCFile") + "\\"
+					+ waterRow.getField("shoreOCFile") + "0.mdx";
+			final String insideCorner = waterRow.getField("shoreDir") + "\\" + waterRow.getField("shoreICFile") + "\\"
+					+ waterRow.getField("shoreICFile") + "0.mdx";
 //		final String shoreline = "Buildings\\Other\\TempArtB\\TempArtB.mdx";
 //		final String outsideCorner = "Buildings\\Other\\TempArtB\\TempArtB.mdx";
 //		final String insideCorner = "Buildings\\Other\\TempArtB\\TempArtB.mdx";
 
-		this.locations = new float[3];
+			this.locations = new float[3];
 
-		for (int y = 0; y < (rows - 1); ++y) {
-			for (int x = 0; x < (columns - 1); ++x) {
-				final RenderCorner a = this.corners[x][y];
-				final RenderCorner b = this.corners[x + 1][y];
-				final RenderCorner c = this.corners[x + 1][y + 1];
-				final RenderCorner d = this.corners[x][y + 1];
-				if ((a.getWater() != 0) || (b.getWater() != 0) || (c.getWater() != 0) || (d.getWater() != 0)) {
-					final boolean isCliff = (a.getLayerHeight() != b.getLayerHeight())
-							|| (a.getLayerHeight() != c.getLayerHeight()) || (a.getLayerHeight() != d.getLayerHeight());
-					if (isCliff && (wavesCliff == 0)) {
-						continue;
-					}
-					if (!isCliff && (wavesRolling == 0)) {
-						continue;
-					}
-					final int ad = (a.depth > wavesDepth) ? 1 : 0;
-					final int bd = (b.depth > wavesDepth) ? 1 : 0;
-					final int cd = (c.depth > wavesDepth) ? 1 : 0;
-					final int dd = (d.depth > wavesDepth) ? 1 : 0;
-					final int count = ad + bd + cd + dd;
-					this.locations[0] = (x * 128.0f) + this.centerOffset[0] + 64.0f;
-					this.locations[1] = (y * 128.0f) + this.centerOffset[1] + 64.0f;
-					this.locations[2] = ((((a.getWaterHeight() + b.getWaterHeight() + c.getWaterHeight()
-							+ d.getWaterHeight()) / 4f) + this.waterHeightOffset) * 128.0f) + 1.0f;
-					if (count == 1) {
-						addModelInstance(terrain, insideCorner, rotation(ad, bd, cd/* , dd */) - ((3 * Math.PI) / 4));
-					}
-					else if (count == 2) {
-						final double rot = rotation2(ad, bd, cd, dd);
-						if (!Double.isNaN(rot)) {
-							addModelInstance(terrain, shoreline, rot);
+			for (int y = 0; y < (rows - 1); ++y) {
+				for (int x = 0; x < (columns - 1); ++x) {
+					final RenderCorner a = this.corners[x][y];
+					final RenderCorner b = this.corners[x + 1][y];
+					final RenderCorner c = this.corners[x + 1][y + 1];
+					final RenderCorner d = this.corners[x][y + 1];
+					if ((a.getWater() != 0) || (b.getWater() != 0) || (c.getWater() != 0) || (d.getWater() != 0)) {
+						final boolean isCliff = (a.getLayerHeight() != b.getLayerHeight())
+								|| (a.getLayerHeight() != c.getLayerHeight())
+								|| (a.getLayerHeight() != d.getLayerHeight());
+						if (isCliff && (wavesCliff == 0)) {
+							continue;
 						}
-					}
-					else if (count == 3) {
-						addModelInstance(terrain, outsideCorner,
-								rotation(1 ^ ad, 1 ^ bd, 1 ^ cd/* , 1 ^ dd */) + ((5 * Math.PI) / 4));
+						if (!isCliff && (wavesRolling == 0)) {
+							continue;
+						}
+						final int ad = (a.depth > wavesDepth) ? 1 : 0;
+						final int bd = (b.depth > wavesDepth) ? 1 : 0;
+						final int cd = (c.depth > wavesDepth) ? 1 : 0;
+						final int dd = (d.depth > wavesDepth) ? 1 : 0;
+						final int count = ad + bd + cd + dd;
+						this.locations[0] = (x * 128.0f) + this.centerOffset[0] + 64.0f;
+						this.locations[1] = (y * 128.0f) + this.centerOffset[1] + 64.0f;
+						this.locations[2] = ((((a.getWaterHeight() + b.getWaterHeight() + c.getWaterHeight()
+								+ d.getWaterHeight()) / 4f) + this.waterHeightOffset) * 128.0f) + 1.0f;
+						if (count == 1) {
+							addModelInstance(terrain, insideCorner,
+									rotation(ad, bd, cd/* , dd */) - ((3 * Math.PI) / 4));
+						}
+						else if (count == 2) {
+							final double rot = rotation2(ad, bd, cd, dd);
+							if (!Double.isNaN(rot)) {
+								addModelInstance(terrain, shoreline, rot);
+							}
+						}
+						else if (count == 3) {
+							addModelInstance(terrain, outsideCorner,
+									rotation(1 ^ ad, 1 ^ bd, 1 ^ cd/* , 1 ^ dd */) + ((5 * Math.PI) / 4));
+						}
 					}
 				}
 			}

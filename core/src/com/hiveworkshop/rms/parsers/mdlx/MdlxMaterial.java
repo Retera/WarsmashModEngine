@@ -22,18 +22,26 @@ public class MdlxMaterial implements MdlxBlock, MdlxChunk {
 
 	@Override
 	public void readMdx(final BinaryReader reader, final int version) {
-		reader.readUInt32(); // Don't care about the size
+		final long throwawaySize = reader.readUInt32(); // Don't care about the size
+		System.out.println("MdlxMaterial throwawaySize: " + throwawaySize);
 
 		this.priorityPlane = reader.readInt32();
-		this.flags = reader.readInt32();
+		System.out.println("MdlxMaterial priorityPlane: " + this.priorityPlane);
+		if (version != 1300) {
+			this.flags = reader.readInt32();
+			System.out.println("MdlxMaterial flags: " + this.flags);
+		}
 
-		if (version > 800) {
+		if ((version > 800) && (version != 1300)) {
 			this.shader = reader.read(80);
 		}
 
-		reader.readInt32(); // skip LAYS
+		if (version != 1300) {
+			reader.readInt32(); // skip LAYS
+		}
 
 		final long layerCount = reader.readUInt32();
+		System.out.println("MdlxMaterial layerCount: " + layerCount);
 		for (int i = 0; i < layerCount; i++) {
 			final MdlxLayer layer = new MdlxLayer();
 			layer.readMdx(reader, version);
@@ -85,8 +93,8 @@ public class MdlxMaterial implements MdlxBlock, MdlxChunk {
 				final MdlxLayer layer = new MdlxLayer();
 				layer.readMdl(stream, version);
 				this.layers.add(layer);
-			}
 				break;
+			}
 			default:
 				throw new RuntimeException("Unknown token in Material: " + token);
 			}
@@ -157,17 +165,5 @@ public class MdlxMaterial implements MdlxBlock, MdlxChunk {
 
 	public List<MdlxLayer> getLayers() {
 		return this.layers;
-	}
-
-	public void setPriorityPlane(final int priorityPlane) {
-		this.priorityPlane = priorityPlane;
-	}
-
-	public void setFlags(final int flags) {
-		this.flags = flags;
-	}
-
-	public void setShader(final String shader) {
-		this.shader = shader;
 	}
 }

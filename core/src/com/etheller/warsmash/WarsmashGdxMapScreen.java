@@ -49,6 +49,7 @@ import com.etheller.warsmash.viewer5.RenderBatch;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.handlers.ModelHandler;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
@@ -198,10 +199,12 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 						WarsmashGdxMapScreen.this.screenManager.setScreen(WarsmashGdxMapScreen.this.menuScreen);
 					}
 				});
-		this.meleeUI = new MeleeToggleUI(baseMeleeUI,
-				Arrays.asList(baseMeleeUI,
-						new ThirdPersonUI(this.viewer, this.uiScene, portraitScene, "bloodelfmale_guard.mdx"),
-						new ThirdPersonUI(this.viewer, this.uiScene, portraitScene, "tentaclefacepriest.mdx")));
+		final ThirdPersonUI thirdPersonUI = new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene,
+				"Creature\\HighElf\\HighElfFemale_Warrior.mdx");
+		final MdxComplexInstance pawnComplexInstance = thirdPersonUI.getPlayerPawn().getPawnComplexInstance();
+		pawnComplexInstance.setReplaceableTexture(11, "Creature\\HighElf\\BloodElfFemaleWarrior.blp");
+		pawnComplexInstance.setUniformScale(50.0f);
+		this.meleeUI = new MeleeToggleUI(baseMeleeUI, Arrays.asList(baseMeleeUI, thirdPersonUI));
 		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 				this.viewer.mapPathSolver, "").addInstance();

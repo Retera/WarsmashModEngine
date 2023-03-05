@@ -12,7 +12,6 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.gl.WebGL;
-import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 
 public class BatchGroup extends GenericGroup {
@@ -49,20 +48,13 @@ public class BatchGroup extends GenericGroup {
 			shader = handler.shaders.hd;
 		}
 		else if (skinningType == SkinningType.ExtendedVertexGroups) {
-			if (DynamicShadowManager.IS_SHADOW_MAPPING) {
-				shader = handler.shaders.extendedShadowMap;
-			}
-			else {
-				shader = handler.shaders.extended;
-			}
+			shader = handler.shaders.extended;
+		}
+		else if (skinningType == SkinningType.Skin) {
+			shader = handler.shaders.complexSkin;
 		}
 		else {
-			if (DynamicShadowManager.IS_SHADOW_MAPPING) {
-				shader = handler.shaders.complexShadowMap;
-			}
-			else {
-				shader = handler.shaders.complex;
-			}
+			shader = handler.shaders.complex;
 		}
 
 		webGL.useShaderProgram(shader);
@@ -262,6 +254,9 @@ public class BatchGroup extends GenericGroup {
 
 					if (skinningType == SkinningType.ExtendedVertexGroups) {
 						geoset.bindExtended(shader, layer.coordId);
+					}
+					else if (skinningType == SkinningType.Skin) {
+						geoset.bindSkin(shader, layer.coordId);
 					}
 					else {
 						geoset.bind(shader, layer.coordId);

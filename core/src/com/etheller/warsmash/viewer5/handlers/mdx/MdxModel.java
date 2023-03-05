@@ -35,7 +35,6 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxTextureAnimation;
 
 public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	public boolean reforged = false;
-	public boolean hd = false;
 	public SolverParams solverParams = new SolverParams();
 	public String name = "";
 	public long blendTime;
@@ -81,6 +80,9 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		if (type == 1) {
 			return new MdxSimpleInstance(this);
 		}
+		else if (type == 2) {
+			return new MdxCharacterInstance(this);
+		}
 		else {
 			return new MdxComplexInstance(this);
 		}
@@ -100,7 +102,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		final ModelViewer viewer = this.viewer;
 		final PathSolver pathSolver = this.pathSolver;
 		final SolverParams solverParams = this.solverParams;
-		final boolean reforged = parser.getVersion() > 800;
+		final boolean reforged = (parser.getVersion() > 800) && (parser.getVersion() != 1300);
 		final String texturesExt = reforged ? ".dds" : ".blp";
 
 		this.reforged = reforged;
@@ -146,17 +148,10 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 			this.materials.add(new Material(this, material.shader, layers));
 
-			if (!"".equals(material.shader)) {
-				this.hd = true;
-			}
 		}
 
 		if (reforged) {
 			solverParams.reforged = true;
-		}
-
-		if (this.hd) {
-			solverParams.hd = true;
 		}
 
 		final GL20 gl = viewer.gl;
@@ -280,7 +275,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 		// Creates the sorted indices array of the generic objects
 		try {
-			this.setupHierarchy(-1);
+			setupHierarchy(-1);
 		}
 		catch (final StackOverflowError e) {
 			System.out.println("bah");
@@ -300,7 +295,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 			if (object.parentId == parent) {
 				this.hierarchy.add(i);
 
-				this.setupHierarchy(object.objectId);
+				setupHierarchy(object.objectId);
 			}
 		}
 	}

@@ -41,7 +41,7 @@ public class SetupGeosets {
 						tangentBytes += vertices * 16;
 					}
 
-					if (geoset.skin != null) {
+					if ((geoset.skin != null) && model.reforged) {
 						skinBytes += vertices * 8;
 
 						batchTypes[i] = SkinningType.Skin;

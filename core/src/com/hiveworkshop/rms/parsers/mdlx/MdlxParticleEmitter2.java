@@ -8,11 +8,7 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxParticleEmitter2 extends MdlxGenericObject {
 	public enum FilterMode {
-		BLEND("Blend"),
-		ADDITIVE("Additive"),
-		MODULATE("Modulate"),
-		MODULATE2X("Modulate2x"),
-		ALPHAKEY("AlphaKey");
+		BLEND("Blend"), ADDITIVE("Additive"), MODULATE("Modulate"), MODULATE2X("Modulate2x"), ALPHAKEY("AlphaKey");
 
 		String token;
 
@@ -40,22 +36,16 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 	}
 
 	public enum HeadOrTail {
-		HEAD("Head", true, false),
-		TAIL("Tail", false, true),
-		BOTH("Both", true, true);
+		HEAD("Head"), TAIL("Tail"), BOTH("Both");
 
 		String token;
-		boolean includesHead;
-		boolean includesTail;
 
-		private HeadOrTail(final String token, final boolean includesHead, final boolean includesTail) {
+		HeadOrTail(final String token) {
 			this.token = token;
-			this.includesHead = includesHead;
-			this.includesTail = includesTail;
 		}
 
 		public static HeadOrTail fromId(final int id) {
-			return values()[id & 0x3];
+			return values()[id];
 		}
 
 		public static int nameToId(final String name) {
@@ -74,18 +64,20 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 		}
 
 		public boolean isIncludesHead() {
-			return this.includesHead;
+			return (this == HEAD) || (this == BOTH);
 		}
 
 		public boolean isIncludesTail() {
-			return this.includesTail;
+			return (this == TAIL) || (this == BOTH);
 		}
 	}
 
 	public float speed = 0;
 	public float variation = 0;
 	public float latitude = 0;
+	public float longitude = 0;
 	public float gravity = 0;
+	public float zSource = 0;
 	public float lifeSpan = 0;
 	public float emissionRate = 0;
 	public float length = 0;
@@ -106,6 +98,32 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 	public int priorityPlane = 0;
 	public long replaceableId = 0;
 
+	public long emitterSize;
+	public long emitterType;
+	public byte[] geometryMdl = new byte[104];
+	public byte[] recursionMdl = new byte[104];
+	public float twinkleFPS; // default is 10.0
+	public float twinkleOnOff; // boolean, twinkle applies additional scaling to make a shrink and grow effect
+	public float twinkleScaleMin; // twinkle is not applied if twinkleScaleMax - twinkleScaleMin == 0.0
+	public float twinkleScaleMax;
+	public float ivelScale; // instant velocity scale, multiplier for each particle's intial velocity
+	public float tumblexMin; // tumble adds a randomised rotation to each particle
+	public float tumblexMax;
+	public float tumbleyMin;
+	public float tumbleyMax;
+	public float tumblezMin;
+	public float tumblezMax;
+	public float drag; // decreases particle velocity over time
+	public float spin;
+	public float[] windVector = new float[3];
+	public float windTime;
+	public float followSpeed1;
+	public float followScale1;
+	public float followSpeed2;
+	public float followScale2;
+	public int numSplines;
+	public float[] splineData;
+
 	public MdlxParticleEmitter2() {
 		super(0x1000);
 	}
@@ -117,15 +135,33 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 
 		super.readMdx(reader, version);
 
+		int posAfterEmitterSize;
+		if (version == 1300) {
+			this.emitterSize = reader.readUInt32();
+			posAfterEmitterSize = reader.position();
+//			size = emitterSize;
+			this.emitterType = reader.readUInt32();
+		}
+		else {
+			posAfterEmitterSize = 0;
+		}
 		this.speed = reader.readFloat32();
 		this.variation = reader.readFloat32();
 		this.latitude = reader.readFloat32();
+		if (version == 1300) {
+			this.longitude = reader.readFloat32();
+		}
 		this.gravity = reader.readFloat32();
+		if (version == 1300) {
+			this.zSource = reader.readFloat32();
+		}
 		this.lifeSpan = reader.readFloat32();
 		this.emissionRate = reader.readFloat32();
 		this.length = reader.readFloat32();
 		this.width = reader.readFloat32();
-		this.filterMode = FilterMode.fromId(reader.readInt32());
+		if (version != 1300) {
+			this.filterMode = FilterMode.fromId(reader.readInt32());
+		}
 		this.rows = reader.readUInt32();
 		this.columns = reader.readUInt32();
 		this.headOrTail = HeadOrTail.fromId(reader.readInt32());
@@ -140,12 +176,49 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 		reader.readUInt32Array(this.headIntervals[1]);
 		reader.readUInt32Array(this.tailIntervals[0]);
 		reader.readUInt32Array(this.tailIntervals[1]);
+		if (version == 1300) {
+			this.filterMode = FilterMode.fromId(reader.readInt32());
+		}
 		this.textureId = reader.readInt32();
-		this.squirt = reader.readUInt32();
+		if (version != 1300) {
+			this.squirt = reader.readUInt32();
+		}
 		this.priorityPlane = reader.readInt32();
 		this.replaceableId = reader.readUInt32();
 
-		readTimelines(reader, size - (reader.position() - position));
+		if (version == 1300) {
+			reader.readInt8Array(this.geometryMdl);
+			reader.readInt8Array(this.recursionMdl);
+			this.twinkleFPS = reader.readFloat32();
+			this.twinkleOnOff = reader.readFloat32();
+			this.twinkleScaleMin = reader.readFloat32();
+			this.twinkleScaleMax = reader.readFloat32();
+			this.ivelScale = reader.readFloat32();
+			this.tumblexMin = reader.readFloat32();
+			this.tumblexMax = reader.readFloat32();
+			this.tumbleyMin = reader.readFloat32();
+			this.tumbleyMax = reader.readFloat32();
+			this.tumblezMin = reader.readFloat32();
+			this.tumblezMax = reader.readFloat32();
+			this.drag = reader.readFloat32();
+			this.spin = reader.readFloat32();
+			reader.readFloat32Array(this.windVector);
+			this.windTime = reader.readFloat32();
+			this.followSpeed1 = reader.readFloat32();
+			this.followScale1 = reader.readFloat32();
+			this.followSpeed2 = reader.readFloat32();
+			this.followScale2 = reader.readFloat32();
+			this.numSplines = reader.readInt32();
+			this.splineData = new float[this.numSplines * 3];
+			reader.readFloat32Array(this.splineData);
+			this.squirt = reader.readUInt32();
+
+			while ((reader.position() - posAfterEmitterSize) < this.emitterSize) {
+				reader.readFloat32();
+			}
+		}
+
+		readTimelines(reader, size - (reader.position() - position), version);
 	}
 
 	@Override
@@ -294,14 +367,15 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 			case MdlUtils.TOKEN_TIME:
 				this.timeMiddle = stream.readFloat();
 				break;
-			case MdlUtils.TOKEN_SEGMENT_COLOR: {
+			case MdlUtils.TOKEN_SEGMENT_COLOR:
 				stream.read(); // {
+
 				for (int i = 0; i < 3; i++) {
 					stream.read(); // Color
 					stream.readColor(this.segmentColors[i]);
 				}
+
 				stream.read(); // }
-			}
 				break;
 			case MdlUtils.TOKEN_ALPHA:
 				stream.readUInt8Array(this.segmentAlphas);
@@ -437,7 +511,11 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 
 	@Override
 	public long getByteLength(final int version) {
-		return 175 + super.getByteLength(version);
+		int extra = 0;
+		if (version == 1300) {
+			extra = 12 + 296 + (this.numSplines * 12);
+		}
+		return 175 + extra + super.getByteLength(version);
 	}
 
 	public float getSpeed() {
@@ -530,93 +608,5 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 
 	public long getReplaceableId() {
 		return this.replaceableId;
-	}
-
-	public void setSpeed(final float speed) {
-		this.speed = speed;
-	}
-
-	public void setVariation(final float variation) {
-		this.variation = variation;
-	}
-
-	public void setLatitude(final float latitude) {
-		this.latitude = latitude;
-	}
-
-	public void setGravity(final float gravity) {
-		this.gravity = gravity;
-	}
-
-	public void setLifeSpan(final float lifeSpan) {
-		this.lifeSpan = lifeSpan;
-	}
-
-	public void setEmissionRate(final float emissionRate) {
-		this.emissionRate = emissionRate;
-	}
-
-	public void setLength(final float length) {
-		this.length = length;
-	}
-
-	public void setWidth(final float width) {
-		this.width = width;
-	}
-
-	public void setFilterMode(final FilterMode filterMode) {
-		this.filterMode = filterMode;
-	}
-
-	public void setRows(final long rows) {
-		this.rows = rows;
-	}
-
-	public void setColumns(final long columns) {
-		this.columns = columns;
-	}
-
-	public void setHeadOrTail(final HeadOrTail headOrTail) {
-		this.headOrTail = headOrTail;
-	}
-
-	public void setTailLength(final float tailLength) {
-		this.tailLength = tailLength;
-	}
-
-	public void setTimeMiddle(final float timeMiddle) {
-		this.timeMiddle = timeMiddle;
-	}
-
-	public void setSegmentAlphas(final short[] segmentAlphas) {
-		this.segmentAlphas = segmentAlphas;
-	}
-
-	public void setSegmentScaling(final float[] segmentScaling) {
-		this.segmentScaling = segmentScaling;
-	}
-
-	public void setHeadIntervals(final long[][] headIntervals) {
-		this.headIntervals = headIntervals;
-	}
-
-	public void setTailIntervals(final long[][] tailIntervals) {
-		this.tailIntervals = tailIntervals;
-	}
-
-	public void setTextureId(final int textureId) {
-		this.textureId = textureId;
-	}
-
-	public void setSquirt(final long squirt) {
-		this.squirt = squirt;
-	}
-
-	public void setPriorityPlane(final int priorityPlane) {
-		this.priorityPlane = priorityPlane;
-	}
-
-	public void setReplaceableId(final long replaceableId) {
-		this.replaceableId = replaceableId;
 	}
 }

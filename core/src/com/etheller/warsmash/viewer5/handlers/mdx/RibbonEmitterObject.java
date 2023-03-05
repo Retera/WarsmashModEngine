@@ -53,7 +53,7 @@ public class RibbonEmitterObject extends GenericObject implements EmitterObject 
 	}
 
 	public int getColor(final float[] out, final int sequence, final int frame, final int counter) {
-		return this.getVectorValue(out, AnimationMap.KRCO.getWar3id(), sequence, frame, counter, this.color);
+		return getVectorValue(out, AnimationMap.KRCO.getWar3id(), sequence, frame, counter, this.color);
 	}
 
 	public int getAlpha(final float[] out, final int sequence, final int frame, final int counter) {
@@ -62,7 +62,7 @@ public class RibbonEmitterObject extends GenericObject implements EmitterObject 
 
 	@Override
 	public int getVisibility(final float[] out, final int sequence, final int frame, final int counter) {
-		return this.getScalarValue(out, AnimationMap.KRVS.getWar3id(), sequence, frame, counter, 1f);
+		return this.getScalarValue(out, AnimationMap.KVIS.getWar3id(), sequence, frame, counter, 1f);
 	}
 
 	@Override

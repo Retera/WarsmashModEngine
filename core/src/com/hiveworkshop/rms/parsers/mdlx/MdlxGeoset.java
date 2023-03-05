@@ -24,6 +24,8 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 	private static final War3ID SKIN = War3ID.fromString("SKIN");
 	private static final War3ID UVAS = War3ID.fromString("UVAS");
 	private static final War3ID UVBS = War3ID.fromString("UVBS");
+	private static final War3ID BIDX = War3ID.fromString("BIDX");
+	private static final War3ID BWGT = War3ID.fromString("BWGT");
 
 	public float[] vertices;
 	public float[] normals;
@@ -60,27 +62,83 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 	public void readMdx(final BinaryReader reader, final int version) {
 		final long size = reader.readUInt32();
 
-		reader.readInt32(); // skip VRTX
-		this.vertices = reader.readFloat32Array(reader.readInt32() * 3);
-		reader.readInt32(); // skip NRMS
+		final int thisIsVRTX = reader.readInt32(); // skip VRTX
+		System.out.println("should be VRTX: " + MdlxModel.convertInt2(thisIsVRTX));
+		final int numVertices = reader.readInt32();
+		this.vertices = reader.readFloat32Array(numVertices * 3);
+		System.out.println("vertexCount: " + (this.vertices.length / 3));
+		final int thisIsNRMS = reader.readInt32(); // skip NRMS
+		System.out.println("should be NRMS: " + MdlxModel.convertInt2(thisIsNRMS));
 		this.normals = reader.readFloat32Array(reader.readInt32() * 3);
-		reader.readInt32(); // skip PTYP
-		this.faceTypeGroups = reader.readUInt32Array(reader.readInt32());
-		reader.readInt32(); // skip PCNT
+		System.out.println("normalsCount: " + (this.normals.length / 3));
+		if (version == 1300) {
+			final int id = reader.readTag(); // UVAS
+			System.out.println("should be UVAS: " + MdlxModel.convertInt2(id));
+			this.uvSets = new float[1][];
+			for (int i = 0; i < 1; i++) {
+				this.uvSets[i] = reader.readFloat32Array(numVertices * reader.readInt32() * 2);
+			}
+		}
+		final int thisIsPTYP = reader.readInt32(); // skip PTYP
+		System.out.println("should be PTYP: " + MdlxModel.convertInt2(thisIsPTYP));
+		if (version == 1300) {
+			final short[] faceTypeGroups8Bit = reader.readUInt8Array(reader.readInt32());
+			this.faceTypeGroups = new long[faceTypeGroups8Bit.length];
+			for (int i = 0; i < faceTypeGroups8Bit.length; i++) {
+				this.faceTypeGroups[i] = faceTypeGroups8Bit[i];
+			}
+		}
+		else {
+			this.faceTypeGroups = reader.readUInt32Array(reader.readInt32());
+		}
+		final int thisIsPCNT = reader.readInt32(); // skip PCNT
+		System.out.println("should be PCNT: " + MdlxModel.convertInt2(thisIsPCNT));
 		this.faceGroups = reader.readUInt32Array(reader.readInt32());
-		reader.readInt32(); // skip PVTX
+		final int thisIsPVTX = reader.readInt32(); // skip PVTX
+		System.out.println("should be PVTX: " + MdlxModel.convertInt2(thisIsPVTX));
 		this.faces = reader.readUInt16Array(reader.readInt32());
-		reader.readInt32(); // skip GNDX
+		final int thisIsGNDX = reader.readInt32(); // skip GNDX
+		System.out.println("should be GNDX: " + MdlxModel.convertInt2(thisIsGNDX));
 		this.vertexGroups = reader.readUInt8Array(reader.readInt32());
-		reader.readInt32(); // skip MTGC
+		final int thisIsMTGC = reader.readInt32(); // skip MTGC
+		System.out.println("should be MTGC: " + MdlxModel.convertInt2(thisIsMTGC));
 		this.matrixGroups = reader.readUInt32Array(reader.readInt32());
-		reader.readInt32(); // skip MATS
+		final int thisIsMATS = reader.readInt32(); // skip MATS
+		System.out.println("should be MATS: " + MdlxModel.convertInt2(thisIsMATS));
 		this.matrixIndices = reader.readUInt32Array(reader.readInt32());
+
+		if (version == 1300) {
+			final int thisIsBIDX = reader.readInt32(); // skip BIDX
+			System.out.println("should be BIDX: " + MdlxModel.convertInt2(thisIsBIDX));
+			final int bidxCount = (int) reader.readUInt32();
+			System.out.println("bidx count: " + bidxCount);
+			final short[] boneIndices = reader.readUInt8Array(bidxCount * 4);
+
+			final int thisIsBWGT = reader.readInt32(); // skip BWGT
+			System.out.println("should be BWGT: " + MdlxModel.convertInt2(thisIsBWGT));
+			final int bwgtCount = (int) reader.readUInt32();
+			System.out.println("bwgt count: " + bwgtCount);
+			final short[] boneWeights = reader.readUInt8Array(bidxCount * 4);
+
+			this.skin = new short[boneIndices.length + boneWeights.length];
+			for (int boneIndexing = 0; (boneIndexing < boneIndices.length)
+					&& (boneIndexing < boneWeights.length); boneIndexing += 4) {
+				this.skin[(boneIndexing * 2) + 0] = boneIndices[boneIndexing + 0];
+				this.skin[(boneIndexing * 2) + 1] = boneIndices[boneIndexing + 1];
+				this.skin[(boneIndexing * 2) + 2] = boneIndices[boneIndexing + 2];
+				this.skin[(boneIndexing * 2) + 3] = boneIndices[boneIndexing + 3];
+				this.skin[(boneIndexing * 2) + 4] = boneWeights[boneIndexing + 0];
+				this.skin[(boneIndexing * 2) + 5] = boneWeights[boneIndexing + 1];
+				this.skin[(boneIndexing * 2) + 6] = boneWeights[boneIndexing + 2];
+				this.skin[(boneIndexing * 2) + 7] = boneWeights[boneIndexing + 3];
+			}
+		}
+
 		this.materialId = reader.readUInt32();
 		this.selectionGroup = reader.readUInt32();
 		this.selectionFlags = reader.readUInt32();
 
-		if (version > 800) {
+		if ((version > 800) && (version < 1300)) {
 			this.lod = reader.readInt32();
 			this.lodName = reader.read(80);
 		}
@@ -95,27 +153,30 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 			this.sequenceExtents.add(extent);
 		}
 
-		int id = reader.readTag(); // TANG or SKIN or UVAS
+		if (version != 1300) {
+			int id = reader.readTag(); // TANG or SKIN or UVAS
 
-		if ((version > 800) && (id != UVAS.getValue())) {
-			if (id == TANG.getValue()) {
-				this.tangents = reader.readFloat32Array(reader.readInt32() * 4);
+			if ((version > 800) && (version < 1300) && (id != UVAS.getValue())) {
+				if (id == TANG.getValue()) {
+					this.tangents = reader.readFloat32Array(reader.readInt32() * 4);
 
-				id = reader.readTag(); // SKIN or UVAS
+					id = reader.readTag(); // SKIN or UVAS
+				}
+
+				if (id == SKIN.getValue()) {
+					this.skin = reader.readUInt8Array(reader.readInt32());
+
+					id = reader.readInt32(); // UVAS
+				}
 			}
 
-			if (id == SKIN.getValue()) {
-				this.skin = reader.readUInt8Array(reader.readInt32());
-
-				id = reader.readInt32(); // UVAS
+			final long numUVLayers = reader.readUInt32();
+			System.out.println("numUVLayers: " + numUVLayers);
+			this.uvSets = new float[(int) numUVLayers][];
+			for (int i = 0; i < numUVLayers; i++) {
+				reader.readInt32(); // skip UVBS
+				this.uvSets[i] = reader.readFloat32Array(reader.readInt32() * 2);
 			}
-		}
-
-		final long numUVLayers = reader.readUInt32();
-		this.uvSets = new float[(int) numUVLayers][];
-		for (int i = 0; i < numUVLayers; i++) {
-			reader.readInt32(); // skip UVBS
-			this.uvSets[i] = reader.readFloat32Array(reader.readInt32() * 2);
 		}
 	}
 
@@ -191,8 +252,6 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 		this.uvSets = new float[0][];
 
 		for (final String token : stream.readBlock()) {
-			// For now hardcoded for triangles, until I see a model with something
-			// different.
 			switch (token) {
 			case MdlUtils.TOKEN_VERTICES:
 				this.vertices = stream.readVectorArray(new float[stream.readInt() * 3], 3);
@@ -200,10 +259,9 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 			case MdlUtils.TOKEN_NORMALS:
 				this.normals = stream.readVectorArray(new float[stream.readInt() * 3], 3);
 				break;
-			case MdlUtils.TOKEN_TVERTICES: {
+			case MdlUtils.TOKEN_TVERTICES:
 				this.uvSets = Arrays.copyOf(this.uvSets, this.uvSets.length + 1);
 				this.uvSets[this.uvSets.length - 1] = stream.readVectorArray(new float[stream.readInt() * 2], 2);
-			}
 				break;
 			case MdlUtils.TOKEN_VERTEX_GROUP: {
 				// Vertex groups are stored in a block with no count, can't allocate the buffer
@@ -220,30 +278,40 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 				}
 			}
 				break;
-			case "Tangents": {
+			case "Tangents":
 				final int tansCount = (int) stream.readUInt32();
+
 				this.tangents = new float[tansCount * 4];
+
 				stream.readVectorArray(this.tangents, 4);
-			}
+
 				break;
-			case "SkinWeights": {
+			case "SkinWeights":
 				final int skinCount = (int) stream.readUInt32();
+
 				this.skin = new short[skinCount * 8];
+
 				stream.readUInt8Array(this.skin);
-			}
+
 				break;
-			case MdlUtils.TOKEN_FACES: {
+			case MdlUtils.TOKEN_FACES:
+				// For now hardcoded for triangles, until I see a model with something
+				// different.
 				this.faceTypeGroups = new long[] { 4L };
+
 				stream.readInt(); // number of groups
+
 				final int count = stream.readInt();
+
 				stream.read(); // {
 				stream.read(); // Triangles
 				stream.read(); // {
+
 				this.faces = stream.readUInt16Array(new int[count]);
 				this.faceGroups = new long[] { count };
+
 				stream.read(); // }
 				stream.read(); // }
-			}
 				break;
 			case MdlUtils.TOKEN_GROUPS: {
 				final List<Integer> indices = new ArrayList<>();
@@ -284,8 +352,9 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 			case MdlUtils.TOKEN_BOUNDSRADIUS:
 				this.extent.boundsRadius = stream.readFloat();
 				break;
-			case MdlUtils.TOKEN_ANIM: {
+			case MdlUtils.TOKEN_ANIM:
 				final MdlxExtent extent = new MdlxExtent();
+
 				for (final String subToken : stream.readBlock()) {
 					switch (subToken) {
 					case MdlUtils.TOKEN_MINIMUM_EXTENT:
@@ -299,8 +368,8 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 						break;
 					}
 				}
+
 				this.sequenceExtents.add(extent);
-			}
 				break;
 			case MdlUtils.TOKEN_MATERIAL_ID:
 				this.materialId = stream.readInt();
@@ -334,24 +403,13 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 			stream.writeVectorArray(MdlUtils.TOKEN_TVERTICES, uvSet, 2);
 		}
 
-		if (version <= 800) {
-			stream.startBlock(MdlUtils.TOKEN_VERTEX_GROUP);
-			for (final short vertexGroup : this.vertexGroups) {
-				stream.writeLine(vertexGroup + ",");
-			}
-			stream.endBlock();
+		stream.startBlock(MdlUtils.TOKEN_VERTEX_GROUP);
+		for (final short vertexGroup : this.vertexGroups) {
+			stream.writeLine(vertexGroup + ",");
 		}
+		stream.endBlock();
 
 		if (version > 800) {
-
-			stream.startBlock(MdlUtils.TOKEN_VERTEX_GROUP);
-			if (this.skin == null) {
-				for (final short vertexGroup : this.vertexGroups) {
-					stream.writeLine(vertexGroup + ",");
-				}
-			}
-			stream.endBlock();
-
 			if (this.tangents != null) {
 				stream.startBlock("Tangents", this.tangents.length / 4);
 
@@ -377,7 +435,7 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 		// different.
 		stream.startBlock(MdlUtils.TOKEN_FACES, 1, this.faces.length);
 		stream.startBlock(MdlUtils.TOKEN_TRIANGLES);
-		final StringBuilder facesBuffer = new StringBuilder();
+		final StringBuffer facesBuffer = new StringBuffer();
 		for (final int faceValue : this.faces) {
 			if (facesBuffer.length() > 0) {
 				facesBuffer.append(", ");
@@ -450,12 +508,12 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 		return this.vertices;
 	}
 
-	public float[] getNormals() {
-		return this.normals;
+	public float[][] getUvSets() {
+		return this.uvSets;
 	}
 
-	public long[] getFaceTypeGroups() {
-		return this.faceTypeGroups;
+	public float[] getNormals() {
+		return this.normals;
 	}
 
 	public long[] getFaceGroups() {
@@ -464,6 +522,10 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 
 	public int[] getFaces() {
 		return this.faces;
+	}
+
+	public long[] getFaceTypeGroups() {
+		return this.faceTypeGroups;
 	}
 
 	public short[] getVertexGroups() {
@@ -512,81 +574,5 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 
 	public short[] getSkin() {
 		return this.skin;
-	}
-
-	public float[][] getUvSets() {
-		return this.uvSets;
-	}
-
-	public void setVertices(final float[] vertices) {
-		this.vertices = vertices;
-	}
-
-	public void setNormals(final float[] normals) {
-		this.normals = normals;
-	}
-
-	public void setFaceTypeGroups(final long[] faceTypeGroups) {
-		this.faceTypeGroups = faceTypeGroups;
-	}
-
-	public void setFaceGroups(final long[] faceGroups) {
-		this.faceGroups = faceGroups;
-	}
-
-	public void setFaces(final int[] faces) {
-		this.faces = faces;
-	}
-
-	public void setVertexGroups(final short[] vertexGroups) {
-		this.vertexGroups = vertexGroups;
-	}
-
-	public void setMatrixGroups(final long[] matrixGroups) {
-		this.matrixGroups = matrixGroups;
-	}
-
-	public void setMatrixIndices(final long[] matrixIndices) {
-		this.matrixIndices = matrixIndices;
-	}
-
-	public void setMaterialId(final long materialId) {
-		this.materialId = materialId;
-	}
-
-	public void setSelectionGroup(final long selectionGroup) {
-		this.selectionGroup = selectionGroup;
-	}
-
-	public void setSelectionFlags(final long selectionFlags) {
-		this.selectionFlags = selectionFlags;
-	}
-
-	public void setLod(final int lod) {
-		this.lod = lod;
-	}
-
-	public void setLodName(final String lodName) {
-		this.lodName = lodName;
-	}
-
-	public void setExtent(final MdlxExtent extent) {
-		this.extent = extent;
-	}
-
-	public void setSequenceExtents(final List<MdlxExtent> sequenceExtents) {
-		this.sequenceExtents = sequenceExtents;
-	}
-
-	public void setTangents(final float[] tangents) {
-		this.tangents = tangents;
-	}
-
-	public void setSkin(final short[] skin) {
-		this.skin = skin;
-	}
-
-	public void setUvSets(final float[][] uvSets) {
-		this.uvSets = uvSets;
 	}
 }

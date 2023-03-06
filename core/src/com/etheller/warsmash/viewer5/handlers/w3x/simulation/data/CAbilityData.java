@@ -119,6 +119,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.AbilityBuilderGsonBuilder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
@@ -220,123 +221,8 @@ public class CAbilityData {
 		System.err.println("========================================================================");
 		System.err.println("Starting to load ability builder");
 		System.err.println("========================================================================");
-		GsonBuilder gsonBuilder = new GsonBuilder();
-
-		final RuntimeTypeAdapterFactory<ABAction> actionTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABAction.class, "type").registerSubtype(ABActionIf.class, "if")
-				.registerSubtype(ABActionAddAbility.class, "addAbility")
-				.registerSubtype(ABActionCreateSpellEffectOnUnit.class, "createSpellEffectOnUnit")
-				.registerSubtype(ABActionIterateUnitsInRangeOfUnit.class, "iterateUnitsInRangeOfUnit")
-				.registerSubtype(ABActionIterateUnitsInRect.class, "iterateUnitsInRect")
-				.registerSubtype(ABActionPeriodicExecute.class, "periodicExecute")
-				.registerSubtype(ABActionRemoveAbility.class, "removeAbility")
-				.registerSubtype(ABActionStoreValueLocally.class, "storeValueLocally")
-				.registerSubtype(ABActionRemoveSpellEffect.class, "removeSpellEffect")
-				.registerSubtype(ABActionCreateAbilityFromId.class, "createAbilityFromId")
-				.registerSubtype(ABActionCreateBuffFromId.class, "createBuffFromId")
-				.registerSubtype(ABActionAddDefenseBonus.class, "addDefenseBonus")
-				.registerSubtype(ABActionRemoveDefenseBonus.class, "removeDefenseBonus")
-				.registerSubtype(ABActionCreateUnitGroup.class, "createUnitGroup")
-				.registerSubtype(ABActionIterateUnitsInGroup.class, "iterateUnitsInGroup")
-				.registerSubtype(ABActionAddUnitToGroup.class, "addUnitToGroup")
-				.registerSubtype(ABActionRemoveUnitFromGroup.class, "removeUnitFromGroup");
-		gsonBuilder.registerTypeAdapterFactory(actionTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABCallback> callbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABCallback.class, "type").registerSubtype(ABCallbackRawBoolean.class, "rawBoolean")
-				.registerSubtype(ABCallbackGetStoredAbilityByKey.class, "getStoredAbilityByKey")
-				.registerSubtype(ABCallbackGetLastCreatedSpellEffect.class, "getLastCreatedSpellEffect")
-				.registerSubtype(ABCallbackGetStoredFXByKey.class, "getStoredFXByKey")
-				.registerSubtype(ABCallbackGetStoredIDByKey.class, "getStoredIDByKey")
-				.registerSubtype(ABCallbackGetWar3IDFromString.class, "getWar3IDFromString")
-				.registerSubtype(ABCallbackGetAlias.class, "getAlias")
-				.registerSubtype(ABCallbackGetParentAlias.class, "getParentAlias")
-				.registerSubtype(ABCallbackGetCastingUnit.class, "getCastingUnit")
-				.registerSubtype(ABCallbackGetEnumUnit.class, "getEnumUnit")
-				.registerSubtype(ABCallbackGetStoredUnitByKey.class, "getStoredUnitByKey")
-				.registerSubtype(ABCallbackGetAbilityArea.class, "getAbilityArea")
-				.registerSubtype(ABCallbackGetLastCreatedAbility.class, "getLastCreatedAbility")
-				.registerSubtype(ABCallbackGetStoredFloatByKey.class, "getStoredFloatByKey")
-				.registerSubtype(ABCallbackGetParentAbilityDataAsFloat.class, "getParentAbilityDataAsFloat")
-				.registerSubtype(ABCallbackGetUnitGroupByName.class, "getUnitGroupByName")
-				.registerSubtype(ABCallbackGetLastCreatedUnitGroup.class, "getLastCreatedUnitGroup")
-				.registerSubtype(ABCallbackRawInteger.class, "rawInteger")
-				.registerSubtype(ABCallbackGetStoredIntegerByKey.class, "getStoredIntegerByKey")
-				.registerSubtype(ABCallbackGetParentAbilityDataAsBoolean.class, "getParentAbilityDataAsBoolean")
-				.registerSubtype(ABCallbackRawString.class, "rawString")
-				.registerSubtype(ABCallbackGetParentCastingUnit.class, "getParentCastingUnit")
-				.registerSubtype(ABCallbackCatStrings.class, "catStrings")
-				.registerSubtype(ABCallbackGetUnitHandleAsString.class, "getUnitHandleAsString")
-				.registerSubtype(ABCallbackGetSpellLevel.class, "getSpellLevel");
-		gsonBuilder.registerTypeAdapterFactory(callbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABAbilityCallback> abilityCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABAbilityCallback.class, "type")
-				.registerSubtype(ABCallbackGetStoredAbilityByKey.class, "getStoredAbilityByKey")
-				.registerSubtype(ABCallbackGetLastCreatedAbility.class, "getLastCreatedAbility");
-		gsonBuilder.registerTypeAdapterFactory(abilityCallbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABBooleanCallback> booleanCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABBooleanCallback.class, "type").registerSubtype(ABCallbackRawBoolean.class, "rawBoolean")
-				.registerSubtype(ABCallbackGetParentAbilityDataAsBoolean.class, "getParentAbilityDataAsBoolean");
-		gsonBuilder.registerTypeAdapterFactory(booleanCallbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABFloatCallback> floatCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABFloatCallback.class, "type").registerSubtype(ABCallbackGetAbilityArea.class, "getAbilityArea")
-				.registerSubtype(ABCallbackGetStoredFloatByKey.class, "getStoredFloatByKey")
-				.registerSubtype(ABCallbackGetParentAbilityDataAsFloat.class, "getParentAbilityDataAsFloat");
-		gsonBuilder.registerTypeAdapterFactory(floatCallbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABFXCallback> fxCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABFXCallback.class, "type")
-				.registerSubtype(ABCallbackGetLastCreatedSpellEffect.class, "getLastCreatedSpellEffect")
-				.registerSubtype(ABCallbackGetStoredFXByKey.class, "getStoredFXByKey");
-		gsonBuilder.registerTypeAdapterFactory(fxCallbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABIDCallback> idCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABIDCallback.class, "type").registerSubtype(ABCallbackGetStoredIDByKey.class, "getStoredIDByKey")
-				.registerSubtype(ABCallbackGetWar3IDFromString.class, "getWar3IDFromString")
-				.registerSubtype(ABCallbackGetAlias.class, "getAlias")
-				.registerSubtype(ABCallbackGetParentAlias.class, "getParentAlias");
-		gsonBuilder.registerTypeAdapterFactory(idCallbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABIntegerCallback> integerCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABIntegerCallback.class, "type").registerSubtype(ABCallbackRawInteger.class, "rawInteger")
-				.registerSubtype(ABCallbackGetStoredIntegerByKey.class, "getStoredIntegerByKey")
-				.registerSubtype(ABCallbackGetSpellLevel.class, "getSpellLevel");
-		gsonBuilder.registerTypeAdapterFactory(integerCallbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABStringCallback> stringCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABStringCallback.class, "type").registerSubtype(ABCallbackRawString.class, "rawString")
-				.registerSubtype(ABCallbackCatStrings.class, "catStrings")
-				.registerSubtype(ABCallbackGetUnitHandleAsString.class, "getUnitHandleAsString");
-		gsonBuilder.registerTypeAdapterFactory(stringCallbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABUnitCallback> unitCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABUnitCallback.class, "type").registerSubtype(ABCallbackGetCastingUnit.class, "getCastingUnit")
-				.registerSubtype(ABCallbackGetEnumUnit.class, "getEnumUnit")
-				.registerSubtype(ABCallbackGetStoredUnitByKey.class, "getStoredUnitByKey")
-				.registerSubtype(ABCallbackGetParentCastingUnit.class, "getParentCastingUnit");
-		gsonBuilder.registerTypeAdapterFactory(unitCallbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABUnitGroupCallback> unitGroupCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABUnitGroupCallback.class, "type")
-				.registerSubtype(ABCallbackGetUnitGroupByName.class, "getUnitGroupByName")
-				.registerSubtype(ABCallbackGetLastCreatedUnitGroup.class, "getLastCreatedUnitGroup");
-		gsonBuilder.registerTypeAdapterFactory(unitGroupCallbackTypeFactory);
-
-		final RuntimeTypeAdapterFactory<ABCondition> conditionTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABCondition.class, "type").registerSubtype(ABConditionAnd.class, "and")
-				.registerSubtype(ABConditionOr.class, "or").registerSubtype(ABConditionNot.class, "not")
-				.registerSubtype(ABConditionFloatEqual.class, "floatEqual")
-				.registerSubtype(ABConditionIntegerEqual.class, "integerEqual")
-				.registerSubtype(ABConditionIsValidTarget.class, "isValidTarget")
-				.registerSubtype(ABConditionIsUnitInRangeOfUnit.class, "isUnitInRangeOfUnit")
-				.registerSubtype(ABConditionIsUnitInGroup.class, "isUnitInGroup")
-				.registerSubtype(ABConditionIsUnitEqual.class, "isUnitEqual");
-		gsonBuilder.registerTypeAdapterFactory(conditionTypeFactory);
-
-		Gson gson = gsonBuilder.create();
+		
+		Gson gson = AbilityBuilderGsonBuilder.create();
 
 		AbilityBuilderFile behaviors = null;
 		try {

@@ -24,6 +24,7 @@ import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
@@ -49,6 +50,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUpgradeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
@@ -101,6 +103,7 @@ public class CSimulation implements CPlayerAPI {
 	private boolean timeOfDaySuspended;
 	private boolean daytime;
 	private final Set<CDestructable> ownedTreeSet = new HashSet<>();
+	private GlobalScope globalScope;
 
 	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
 			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
@@ -112,7 +115,7 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
 		this.abilityData = new CAbilityData(parsedAbilityData);
-		this.upgradeData = new CUpgradeData(gameplayConstants, parsedUpgradeData, standardUpgradeEffectMeta);
+		this.upgradeData = new CUpgradeData(this.gameplayConstants, parsedUpgradeData, standardUpgradeEffectMeta);
 		this.unitData = new CUnitData(this.gameplayConstants, parsedUnitData, this.abilityData, this.upgradeData,
 				this.simulationRenderController);
 		this.destructableData = new CDestructableData(parsedDestructableData, simulationRenderController);
@@ -156,7 +159,7 @@ public class CSimulation implements CPlayerAPI {
 				}
 			}
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
-					configPlayer);
+					configPlayer, new CPlayerFogOfWar(pathingGrid));
 			newPlayer.setAIDifficulty(configPlayer.getAIDifficulty());
 			this.players.add(newPlayer);
 			this.defaultPlayerUnitOrderExecutors.add(new CPlayerUnitOrderExecutor(this, i));
@@ -177,6 +180,15 @@ public class CSimulation implements CPlayerAPI {
 
 		this.commandErrorListener = commandErrorListener;
 
+		final CTimer fogUpdateTimer = new CTimer() {
+			@Override
+			public void onFire() {
+				updateFogOfWar();
+			}
+		};
+		fogUpdateTimer.setRepeats(true);
+		fogUpdateTimer.setTimeoutTime(1.0f);
+		fogUpdateTimer.start(this);
 	}
 
 	public CUnitData getUnitData() {
@@ -184,7 +196,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public CUpgradeData getUpgradeData() {
-		return upgradeData;
+		return this.upgradeData;
 	}
 
 	public CAbilityData getAbilityData() {
@@ -233,10 +245,9 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public CUnit internalCreateUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
-			final float facing, final BufferedImage buildingPathingPixelMap,
-			final RemovablePathingMapInstance pathingInstance) {
+			final float facing, final BufferedImage buildingPathingPixelMap) {
 		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
-				this.handleIdAllocator, pathingInstance);
+				this.handleIdAllocator);
 		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
 		this.worldCollision.addUnit(unit);
@@ -272,6 +283,7 @@ public class CSimulation implements CPlayerAPI {
 			final float facing) {
 		final CUnit createdUnit = this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
 		createdUnit.performDefaultBehavior(this);
+		setupCreatedUnit(createdUnit);
 		return createdUnit;
 	}
 
@@ -362,6 +374,15 @@ public class CSimulation implements CPlayerAPI {
 	public void removeFromPathfindingQueue(final CBehaviorMove behaviorMove) {
 		final int playerIndex = behaviorMove.getUnit().getPlayerIndex();
 		this.pathfindingProcessors[playerIndex].removeFromPathfindingQueue(behaviorMove);
+	}
+
+	protected void updateFogOfWar() {
+		for (final CPlayer player : this.players) {
+			player.getFogOfWar().convertVisibleToFogged();
+		}
+		for (final CUnit unit : this.units) {
+			unit.updateFogOfWar(this);
+		}
 	}
 
 	public void update() {
@@ -518,8 +539,12 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnUnitConstructionFinishSound(constructedStructure);
 	}
 
-	public void createBuildingDeathEffect(final CUnit cUnit) {
-		this.simulationRenderController.spawnBuildingDeathEffect(cUnit);
+	public void unitUpgradeFinishEvent(final CUnit constructedStructure) {
+		this.simulationRenderController.spawnUnitUpgradeFinishSound(constructedStructure);
+	}
+
+	public void createDeathExplodeEffect(final CUnit cUnit) {
+		this.simulationRenderController.spawnDeathExplodeEffect(cUnit);
 	}
 
 	public HandleIdAllocator getHandleIdAllocator() {
@@ -745,10 +770,25 @@ public class CSimulation implements CPlayerAPI {
 
 	public void unitUpdatedType(final CUnit unit, final War3ID typeId) {
 		this.simulationRenderController.unitUpdatedType(unit, typeId);
+		setupCreatedUnit(unit);
+	}
+
+	private void setupCreatedUnit(final CUnit unit) {
+		if (unit.getRootData() != null) {
+			unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
+		}
 	}
 
 	public void changeUnitColor(final CUnit unit, final int playerIndex) {
-		simulationRenderController.changeUnitColor(unit, playerIndex);
+		this.simulationRenderController.changeUnitColor(unit, playerIndex);
+	}
+
+	public void setGlobalScope(final GlobalScope globalScope) {
+		this.globalScope = globalScope;
+	}
+
+	public GlobalScope getGlobalScope() {
+		return this.globalScope;
 	}
 
 }

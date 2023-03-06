@@ -26,7 +26,7 @@ public class RibbonEmitter extends MdxEmitter<MdxComplexInstance, RibbonEmitterO
 
 	@Override
 	protected void emit() {
-		final Ribbon ribbon = this.emitObject(0);
+		final Ribbon ribbon = emitObject(0);
 		final Ribbon last = this.last;
 
 		if (last != null) {

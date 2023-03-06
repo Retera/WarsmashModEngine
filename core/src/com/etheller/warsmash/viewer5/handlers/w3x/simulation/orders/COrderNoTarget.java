@@ -39,6 +39,10 @@ public class COrderNoTarget implements COrder {
 			return caster.getStopBehavior();
 		}
 		final CAbility ability = game.getAbility(this.abilityHandleId);
+		if (ability == null) {
+			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
+			return caster.pollNextOrderBehavior(game);
+		}
 		ability.checkCanUse(game, caster, this.orderId, this.abilityActivationReceiver.reset());
 		if (this.abilityActivationReceiver.isUseOk()) {
 			final StringMsgTargetCheckReceiver<Void> targetReceiver = (StringMsgTargetCheckReceiver<Void>) targetCheckReceiver;

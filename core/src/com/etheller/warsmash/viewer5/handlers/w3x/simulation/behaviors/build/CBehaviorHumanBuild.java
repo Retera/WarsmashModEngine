@@ -12,11 +12,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanRepair;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityOverlayedMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildingIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
@@ -24,9 +27,11 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 	private int highlightOrderId;
 	private War3ID orderId;
 	private boolean unitCreated = false;
+	private final BuildOnBuildingIntersector buildOnBuildingIntersector;
 
 	public CBehaviorHumanBuild(final CUnit unit) {
 		super(unit);
+		this.buildOnBuildingIntersector = new BuildOnBuildingIntersector();
 	}
 
 	public CBehavior reset(final AbilityPointTarget target, final int orderId, final int highlightOrderId) {
@@ -55,7 +60,13 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 			final CUnitType unitTypeToCreate = simulation.getUnitData().getUnitType(this.orderId);
 			final BufferedImage buildingPathingPixelMap = unitTypeToCreate.getBuildingPathingPixelMap();
 			boolean buildLocationObstructed = false;
-			if (buildingPathingPixelMap != null) {
+			final boolean canBeBuiltOnThem = unitTypeToCreate.isCanBeBuiltOnThem();
+			if (canBeBuiltOnThem) {
+				simulation.getWorldCollision().enumBuildingsAtPoint(this.target.getX(), this.target.getY(),
+						this.buildOnBuildingIntersector.reset(this.target.getX(), this.target.getY()));
+				buildLocationObstructed = (this.buildOnBuildingIntersector.getUnitToBuildOn() == null);
+			}
+			else if (buildingPathingPixelMap != null) {
 				final EnumSet<CBuildingPathingType> preventedPathingTypes = unitTypeToCreate.getPreventedPathingTypes();
 				final EnumSet<CBuildingPathingType> requiredPathingTypes = unitTypeToCreate.getRequiredPathingTypes();
 
@@ -69,6 +80,29 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 			if (!buildLocationObstructed) {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX(),
 						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
+				if (canBeBuiltOnThem) {
+					CAbilityGoldMinable abilityGoldMine = null;
+					if (this.buildOnBuildingIntersector.getUnitToBuildOn() != null) {
+						for (final CAbility ability : this.buildOnBuildingIntersector.getUnitToBuildOn()
+								.getAbilities()) {
+							if ((ability instanceof CAbilityGoldMinable) && !ability.isDisabled()
+									&& ((CAbilityGoldMinable) ability).isBaseMine()) {
+								abilityGoldMine = (CAbilityGoldMinable) ability;
+							}
+						}
+					}
+					if (abilityGoldMine != null) {
+						for (final CAbility ability : constructedStructure.getAbilities()) {
+							if (ability instanceof CAbilityOverlayedMine) {
+								final CAbilityOverlayedMine blightedGoldMine = (CAbilityOverlayedMine) ability;
+								blightedGoldMine.setParentMine(this.buildOnBuildingIntersector.getUnitToBuildOn(),
+										abilityGoldMine);
+								this.buildOnBuildingIntersector.getUnitToBuildOn().setHidden(true);
+								this.buildOnBuildingIntersector.getUnitToBuildOn().setPaused(true);
+							}
+						}
+					}
+				}
 				constructedStructure.setConstructing(true);
 				constructedStructure.setConstructingPaused(true);
 				constructedStructure.setLife(simulation,

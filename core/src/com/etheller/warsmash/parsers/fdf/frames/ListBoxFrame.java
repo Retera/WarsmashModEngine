@@ -17,8 +17,8 @@ import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 
 public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollBarChangeListener {
 	// TODO where are these colors in the UI definition files?
-	private static final Color SELECT_COLOR = Color.BLUE;
-	private static final Color MOUSE_OVER_HIGHLIGHT_COLOR = new Color(0.3f, 0.3f, 1.0f, 0.25f);
+	public static final Color SELECT_COLOR = Color.BLUE;
+	public static final Color MOUSE_OVER_HIGHLIGHT_COLOR = new Color(0.3f, 0.3f, 1.0f, 0.25f);
 
 	private final List<String> listItems = new ArrayList<>();
 	private final List<SingleStringFrame> stringFrames = new ArrayList<>();
@@ -172,7 +172,8 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 				stringFrame.setHeight(this.frameFont.getLineHeight());
 				if (prev != null) {
 					stringFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, prev, FramePoint.BOTTOMLEFT, 0, 0));
-				} else {
+				}
+				else {
 					stringFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT,
 							this.listBoxBorder, -this.listBoxBorder));
 				}
@@ -184,7 +185,8 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 					this.selectionFrame.addSetPoint(
 							new SetPoint(FramePoint.BOTTOMRIGHT, stringFrame, FramePoint.BOTTOMRIGHT, 0, 0));
 					foundSelected = true;
-				} else if (mousedOver) {
+				}
+				else if (mousedOver) {
 					this.mouseHighlightFrame
 							.addSetPoint(new SetPoint(FramePoint.TOPLEFT, stringFrame, FramePoint.TOPLEFT, 0, 0));
 					this.mouseHighlightFrame.addSetPoint(
@@ -192,7 +194,8 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 					foundMouseOver = true;
 				}
 			}
-		} else {
+		}
+		else {
 			for (int stringFrameIndex = 0; stringFrameIndex < numStringFrames; stringFrameIndex++) {
 				final int index = stringFrameIndex + scrollOffset;
 				final boolean selected = (index == this.selectedIndex);
@@ -207,7 +210,8 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 					this.selectionFrame.addSetPoint(
 							new SetPoint(FramePoint.BOTTOMRIGHT, stringFrame, FramePoint.BOTTOMRIGHT, 0, 0));
 					foundSelected = true;
-				} else if (mousedOver) {
+				}
+				else if (mousedOver) {
 					this.mouseHighlightFrame
 							.addSetPoint(new SetPoint(FramePoint.TOPLEFT, stringFrame, FramePoint.TOPLEFT, 0, 0));
 					this.mouseHighlightFrame.addSetPoint(
@@ -226,7 +230,8 @@ public class ListBoxFrame extends ControlFrame implements ScrollBarFrame.ScrollB
 		if ((this.scrollBarFrame != null) && (this.listItems.size() > numStringFrames)) {
 			scrollOffset = (int) Math
 					.ceil(((100 - this.scrollBarFrame.getValue()) / 100f) * (this.listItems.size() - numStringFrames));
-		} else {
+		}
+		else {
 			scrollOffset = 0;
 		}
 		return scrollOffset;

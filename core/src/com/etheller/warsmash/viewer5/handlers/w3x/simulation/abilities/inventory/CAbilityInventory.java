@@ -395,6 +395,11 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 		}
 	}
 
+	public int giveItem(final CSimulation simulation, final CUnit hero, final CItem item,
+			final boolean playUserUISounds) {
+		return giveItem(simulation, hero, item, 0, playUserUISounds);
+	}
+
 	/**
 	 * Attempts to give the hero the specified item, returning the item slot to
 	 * which the item is added or -1 if no available slot is found
@@ -402,7 +407,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	 * @param item
 	 * @return
 	 */
-	public int giveItem(final CSimulation simulation, final CUnit hero, final CItem item,
+	public int giveItem(final CSimulation simulation, final CUnit hero, final CItem item, final int slotPreference,
 			final boolean playUserUISounds) {
 		if ((item != null) && !item.isDead() && !item.isHidden()) {
 			final CItemType itemType = item.getItemType();
@@ -434,8 +439,9 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			}
 			else {
 				for (int i = 0; i < this.itemsHeld.length; i++) {
-					if (this.itemsHeld[i] == null) {
-						this.itemsHeld[i] = item;
+					final int itemIndex = (i + slotPreference) % this.itemsHeld.length;
+					if (this.itemsHeld[itemIndex] == null) {
+						this.itemsHeld[itemIndex] = item;
 						item.setHidden(true);
 						item.setContainedInventory(this, hero);
 						if (this.canUseItems) {
@@ -447,12 +453,12 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 											.createAbility(simulation.getHandleIdAllocator().createId());
 									abilityFromItem.setIconShowing(false);
 									hero.add(simulation, abilityFromItem);
-									this.itemsHeldAbilities[i].add(abilityFromItem);
+									this.itemsHeldAbilities[itemIndex].add(abilityFromItem);
 								}
 							}
 						}
 						hero.onPickUpItem(simulation, item, true);
-						return i;
+						return itemIndex;
 					}
 				}
 				if (playUserUISounds) {

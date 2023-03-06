@@ -79,7 +79,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 		if (withinFacingWindow) {
 			if (this.damagePointLaunchTime != 0) {
 				if (currentTurnTick >= this.damagePointLaunchTime) {
-					int damage = this.unitAttack.roll(simulation.getSeededRandom());
+					final int damage = this.unitAttack.roll(simulation.getSeededRandom());
 					AbilityTarget target = this.target;
 					if (this.unitAttack.getWeaponType() == CWeaponType.ARTILLERY) {
 						// NOTE: adding this fixed a bunch of special cases in my code, but
@@ -125,11 +125,16 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
-
+		if (unit.isMovementDisabled()) {
+			unit.getUnitAnimationListener().lockTurrentFacing(this.target);
+		}
 	}
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
+		if (unit.isMovementDisabled()) {
+			unit.getUnitAnimationListener().clearTurrentFacing();
+		}
 	}
 
 	@Override

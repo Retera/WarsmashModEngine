@@ -19,8 +19,10 @@ public class SequenceUtils {
 	public static final EnumSet<SecondaryTag> BONE = EnumSet.of(SecondaryTag.BONE);
 	public static final EnumSet<SecondaryTag> HIT = EnumSet.of(SecondaryTag.HIT);
 	public static final EnumSet<SecondaryTag> SPELL = EnumSet.of(SecondaryTag.SPELL);
+	public static final EnumSet<SecondaryTag> SPELL_EATTREE = EnumSet.of(SecondaryTag.SPELL, SecondaryTag.EATTREE);
 	public static final EnumSet<SecondaryTag> SPELL_THROW = EnumSet.of(SecondaryTag.SPELL, SecondaryTag.THROW);
 	public static final EnumSet<SecondaryTag> WORK = EnumSet.of(SecondaryTag.WORK);
+	public static final EnumSet<SecondaryTag> COMPLETE = EnumSet.of(SecondaryTag.COMPLETE);
 	public static final EnumSet<SecondaryTag> FAST = EnumSet.of(SecondaryTag.FAST);
 	public static final EnumSet<SecondaryTag> ALTERNATE = EnumSet.of(SecondaryTag.ALTERNATE);
 
@@ -117,7 +119,9 @@ public class SequenceUtils {
 				final Sequence sequence = sequences.get(i);
 				if (sequence.getPrimaryTags().contains(type) || (type == null)) {
 					final int matchCount = matchCount(tags, sequence.getSecondaryTags());
-					if (matchCount > fallbackTagsMatchCount) {
+					if ((matchCount > fallbackTagsMatchCount)
+							|| ((matchCount > 0) && (matchCount == fallbackTagsMatchCount)
+									&& (fallbackTags.size() > sequence.getSecondaryTags().size()))) {
 						fallbackTags = sequence.getSecondaryTags();
 						fallbackTagsMatchCount = matchCount;
 					}

@@ -10,10 +10,14 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class RenderDoodad {
 	private static final int SAMPLE_RADIUS = 4;
 	private static final float[] VERTEX_COLOR_BLACK = { 0f, 0f, 0f, 1f };
+	private static final float[] VERTEX_COLOR_UNEXPLORED = VERTEX_COLOR_BLACK; // later optionally gray
 	public final ModelInstance instance;
 	private final MutableGameObject row;
 	private final float maxPitch;
@@ -25,6 +29,10 @@ public class RenderDoodad {
 	private static final War3ID DOODAD_COLOR_RED = War3ID.fromString("dvr1");
 	private static final War3ID DOODAD_COLOR_GREEN = War3ID.fromString("dvg1");
 	private static final War3ID DOODAD_COLOR_BLUE = War3ID.fromString("dvb1");
+
+	private CFogState fogState;
+	private final float[] vertexColorBase;
+	private final float[] vertexColorFogged;
 
 	public RenderDoodad(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
 			final float[] location3D, final float[] scale3D, final float facingRadians, final float maxPitch,
@@ -61,6 +69,9 @@ public class RenderDoodad {
 				applyColor(row, doodadVariation + 1, instance);
 			}
 		}
+		vertexColorBase = new float[] { ((MdxComplexInstance) instance).vertexColor[0],
+				((MdxComplexInstance) instance).vertexColor[1], ((MdxComplexInstance) instance).vertexColor[2] };
+		vertexColorFogged = new float[] { vertexColorBase[0] / 2, vertexColorBase[1] / 2, vertexColorBase[2] / 2 };
 		final float pitchSampleForwardX = this.x + (SAMPLE_RADIUS * (float) Math.cos(facingRadians));
 		final float pitchSampleForwardY = this.y + (SAMPLE_RADIUS * (float) Math.sin(facingRadians));
 		final float pitchSampleBackwardX = this.x - (SAMPLE_RADIUS * (float) Math.cos(facingRadians));
@@ -88,6 +99,10 @@ public class RenderDoodad {
 
 		this.instance = instance;
 		this.row = row;
+
+		this.fogState = CFogState.MASKED;
+		((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+
 	}
 
 	public void applyColor(final MutableGameObject row, final int doodadVariation, final ModelInstance instance) {
@@ -99,5 +114,37 @@ public class RenderDoodad {
 
 	public PrimaryTag getAnimation() {
 		return PrimaryTag.STAND;
+	}
+
+	public void updateFog(final War3MapViewer war3MapViewer) {
+		final CPlayerFogOfWar fogOfWar = war3MapViewer.getFogOfWar();
+		final PathingGrid pathingGrid = war3MapViewer.simulation.getPathingGrid();
+		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(x);
+		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(y);
+		final byte state = fogOfWar.getState(fogOfWarIndexX, fogOfWarIndexY);
+		CFogState newFogState = CFogState.MASKED;
+		if (state < 0) {
+			newFogState = CFogState.MASKED;
+		}
+		else if (state == 0) {
+			newFogState = CFogState.VISIBLE;
+		}
+		else {
+			newFogState = CFogState.FOGGED;
+		}
+		if (newFogState != fogState) {
+			this.fogState = newFogState;
+			switch (newFogState) {
+			case MASKED:
+				((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+				break;
+			case FOGGED:
+				((MdxComplexInstance) instance).setVertexColor(vertexColorFogged);
+				break;
+			case VISIBLE:
+				((MdxComplexInstance) instance).setVertexColor(vertexColorBase);
+				break;
+			}
+		}
 	}
 }

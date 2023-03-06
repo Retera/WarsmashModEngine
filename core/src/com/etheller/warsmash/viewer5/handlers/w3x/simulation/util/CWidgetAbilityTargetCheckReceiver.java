@@ -33,6 +33,11 @@ public class CWidgetAbilityTargetCheckReceiver implements AbilityTargetCheckRece
 	}
 
 	@Override
+	public void mustTargetPeon() {
+		this.target = null;
+	}
+
+	@Override
 	public void targetOutsideRange() {
 		this.target = null;
 	}

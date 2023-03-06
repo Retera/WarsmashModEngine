@@ -18,7 +18,7 @@ public class CAbilityTypeLoad extends CAbilityType<CAbilityTypeLoadLevelData> {
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeLoadLevelData levelData = getLevelData(0);
-		return new CAbilityLoad(handleId, getAlias(), levelData.getCastRange());
+		return new CAbilityLoad(handleId, getAlias(), levelData.getCastRange(), levelData.getAllowedUnitTypes());
 	}
 
 	@Override
@@ -27,6 +27,7 @@ public class CAbilityTypeLoad extends CAbilityType<CAbilityTypeLoadLevelData> {
 		final CAbilityLoad heroAbility = ((CAbilityLoad) existingAbility);
 
 		heroAbility.setCastRange(levelData.getCastRange());
+		heroAbility.setAllowedUnitTypes(levelData.getAllowedUnitTypes());
 
 		heroAbility.setLevel(level);
 	}

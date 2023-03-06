@@ -1,4 +1,4 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.root;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,12 +12,16 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.eattree.CAbilityEatTree;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.root.CBehaviorRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.root.CBehaviorUproot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -38,6 +42,11 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 	private CBehaviorRoot behaviorRoot;
 	private CBehaviorUproot behaviorUproot;
 	private CBehaviorMove moveBehavior;
+	private CBehaviorAttackMove attackMoveBehavior;
+
+	private List<CUnitAttack> rootedAttacks;
+
+	private List<CUnitAttack> uprootedAttacks;
 
 	public CAbilityRoot(final int handleId, final War3ID alias, final int rootedWeaponsAttackBits,
 			final int uprootedWeaponsAttackBits, final boolean rootedTurning, final CDefenseType uprootedDefenseType,
@@ -66,7 +75,7 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 		this.uprootedAbilities.clear();
 		this.rootedAbilities.clear();
 		for (final CAbility ability : unit.getAbilities()) {
-			if (ability instanceof CAbilityMove) {
+			if ((ability instanceof CAbilityMove) || (ability instanceof CAbilityEatTree)) {
 				this.uprootedAbilities.add(ability);
 			}
 			else if ((ability instanceof CAbilityAttack) || (ability instanceof CAbilityRoot)) {
@@ -75,18 +84,67 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 				this.rootedAbilities.add(ability);
 			}
 		}
+		this.rootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(), this.rootedWeaponsAttackBits);
+		this.uprootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(),
+				this.uprootedWeaponsAttackBits);
+
 		this.behaviorRoot = new CBehaviorRoot(unit, this);
 		this.behaviorUproot = new CBehaviorUproot(unit, this);
 		this.moveBehavior = unit.getMoveBehavior();
+		unit.setMoveBehavior(null);
+		this.attackMoveBehavior = unit.getAttackMoveBehavior();
+		unit.setAttackMoveBehavior(null);
 		this.rooted = true;
 		for (final CAbility ability : this.uprootedAbilities) {
 			unit.remove(game, ability);
 		}
-		setRooted(false, unit, game);
+		unit.setFacing(game.getGameplayConstants().getRootAngle());
+		unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
+	}
+
+	@Override
+	public void onSetUnitType(final CSimulation game, final CUnit unit) {
+		this.uprootedAbilities.clear();
+		this.rootedAbilities.clear();
+		for (final CAbility ability : unit.getAbilities()) {
+			if ((ability instanceof CAbilityMove) || (ability instanceof CAbilityEatTree)) {
+				this.uprootedAbilities.add(ability);
+			}
+			else if ((ability instanceof CAbilityAttack) || (ability instanceof CAbilityRoot)) {
+			}
+			else {
+				this.rootedAbilities.add(ability);
+			}
+		}
+		this.rootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(), this.rootedWeaponsAttackBits);
+		this.uprootedAttacks = CUnitData.getEnabledAttacks(unit.getUnitSpecificAttacks(),
+				this.uprootedWeaponsAttackBits);
+		this.moveBehavior = unit.getMoveBehavior();
+		this.attackMoveBehavior = unit.getAttackMoveBehavior();
+
+		if (this.rooted) {
+			for (final CAbility ability : this.uprootedAbilities) {
+				unit.remove(game, ability);
+			}
+			unit.setMoveBehavior(null);
+			unit.setAttackMoveBehavior(null);
+			unit.setFacing(game.getGameplayConstants().getRootAngle());
+			unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
+		}
+		else {
+			for (final CAbility ability : this.rootedAbilities) {
+				unit.remove(game, ability);
+			}
+			unit.setMoveBehavior(this.moveBehavior);
+			unit.setAttackMoveBehavior(this.attackMoveBehavior);
+			unit.setUnitSpecificCurrentAttacks(this.uprootedAttacks);
+		}
+
 	}
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
+		// TODO reset unit settings here
 	}
 
 	@Override
@@ -175,7 +233,11 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 				unit.add(game, ability);
 			}
 			unit.setMoveBehavior(null);
+			unit.setAttackMoveBehavior(null);
+			unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
+			unit.setDefenseType(unit.getUnitType().getDefenseType());
 			unit.setStructure(true);
+			unit.regeneratePathingInstance(game, unit.getUnitType().getBuildingPathingPixelMap());
 			game.getWorldCollision().addUnit(unit);
 		}
 		else if (uprooting) {
@@ -187,7 +249,11 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 				unit.add(game, ability);
 			}
 			unit.setMoveBehavior(this.moveBehavior);
+			unit.setAttackMoveBehavior(this.attackMoveBehavior);
+			unit.setUnitSpecificCurrentAttacks(this.uprootedAttacks);
+			unit.setDefenseType(this.uprootedDefenseType);
 			unit.setStructure(false);
+			unit.killPathingInstance();
 			game.getWorldCollision().addUnit(unit);
 		}
 	}

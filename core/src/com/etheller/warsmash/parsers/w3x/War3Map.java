@@ -42,13 +42,11 @@ public class War3Map implements DataSource {
 			// 1.) Copy map into RAM
 			// 2.) Setup a Data Source that will read assets
 			// from either the map or the game, giving the map priority.
+
 			SeekableByteChannel sbc;
-			try (InputStream mapStream = dataSource.getResourceAsStream(mapFileName)) {
-				final byte[] mapData = IOUtils.toByteArray(mapStream);
-				sbc = new SeekableInMemoryByteChannel(mapData);
-				this.internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
-				this.dataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
-			}
+			sbc = new SeekableInMemoryByteChannel(dataSource.read(mapFileName).array());
+			this.internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
+			this.dataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -150,7 +148,7 @@ public class War3Map implements DataSource {
 	}
 
 	@Override
-	public File getDirectory(String filepath) throws IOException {
+	public File getDirectory(final String filepath) throws IOException {
 		return this.dataSource.getDirectory(filepath);
 	}
 
@@ -178,7 +176,7 @@ public class War3Map implements DataSource {
 		return this.dataSource;
 	}
 
-	public long computeChecksum(Checksum checksum) {
+	public long computeChecksum(final Checksum checksum) {
 		final SeekableByteChannel inputChannel = this.internalMpqContentsDataSource.getInputChannel();
 		try {
 			final ByteBuffer byteBuffer = ByteBuffer.allocate(8 * 1024);

@@ -236,15 +236,16 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 	}
 
-	private void initNode(final MdxNode[] nodes, final SkeletalNode node, final GenericObject genericObject) {
+	private void initNode(final MdxNode[] nodes, final MdxNode node, final GenericObject genericObject) {
 		this.initNode(nodes, node, genericObject, null);
 	}
 
 	/**
 	 * Initialize a skeletal node.
 	 */
-	private void initNode(final MdxNode[] nodes, final SkeletalNode node, final GenericObject genericObject,
+	private void initNode(final MdxNode[] nodes, final MdxNode node, final GenericObject genericObject,
 			final UpdatableObject object) {
+		node.name = genericObject.name;
 		node.pivot.set(genericObject.pivot);
 
 		if (genericObject.parentId == -1) {
@@ -329,6 +330,7 @@ public class MdxComplexInstance extends ModelInstance {
 				final Vector3 localLocation = node.localLocation;
 				final Quaternion localRotation = node.localRotation;
 				final Vector3 localScale = node.localScale;
+				final Quaternion overrideWorldRotation = node.overrideWorldRotation;
 
 				// Only update the local node data if there is a need to
 				if (forced || variants.generic[sequence]) {
@@ -363,7 +365,8 @@ public class MdxComplexInstance extends ModelInstance {
 					}
 				}
 
-				final boolean wasReallyDirty = forced || wasDirty || parent.wasDirty || genericObject.anyBillboarding;
+				final boolean wasReallyDirty = forced || wasDirty || parent.wasDirty || genericObject.anyBillboarding
+						|| (overrideWorldRotation != null);
 
 				node.wasDirty = wasReallyDirty;
 
@@ -678,6 +681,11 @@ public class MdxComplexInstance extends ModelInstance {
 		this.replaceableTextures[2] = (Texture) this.model.viewer.load(
 				"ReplaceableTextures\\" + ReplaceableIds.getPathString(2) + ReplaceableIds.getIdString(id) + ".blp",
 				PathSolver.DEFAULT, null);
+		for (final AttachmentInstance attachmentInstance : this.attachments) {
+			if (attachmentInstance.internalInstance != null) {
+				attachmentInstance.internalInstance.setTeamColor(id);
+			}
+		}
 		return this;
 	}
 
@@ -980,5 +988,16 @@ public class MdxComplexInstance extends ModelInstance {
 			return (int) Math.max(interval[0], Math.min(interval[1], frameToClamp));
 		}
 		return frameToClamp;
+	}
+
+	public MdxNode inefficientlyGetNodeByNameSearch(final String name) {
+		if (this.model.ok) {
+			for (final MdxNode node : this.nodes) {
+				if ((node.name != null) && node.name.equalsIgnoreCase(name)) {
+					return node;
+				}
+			}
+		}
+		return null;
 	}
 }

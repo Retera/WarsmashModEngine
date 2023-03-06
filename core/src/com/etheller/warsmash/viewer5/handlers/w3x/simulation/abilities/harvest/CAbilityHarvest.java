@@ -10,7 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
@@ -57,7 +57,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 		this.behaviorHarvest = new CBehaviorHarvest(unit, this);
 		this.behaviorReturnResources = new CBehaviorReturnResources(unit, this);
 
-		final List<CUnitAttack> unitAttacks = unit.getAttacks();
+		final List<CUnitAttack> unitAttacks = unit.getUnitSpecificAttacks();
 		CUnitAttack bestFitTreeAttack = null;
 		for (final CUnitAttack attack : unitAttacks) {
 			if (attack.getTargetsAllowed().contains(CTargetType.TREE)) {
@@ -124,7 +124,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 		if (target instanceof CUnit) {
 			final CUnit targetUnit = (CUnit) target;
 			for (final CAbility ability : targetUnit.getAbilities()) {
-				if (ability instanceof CAbilityGoldMine) {
+				if (ability instanceof CAbilityGoldMinable) {
 					receiver.targetOk(target);
 					return;
 				}

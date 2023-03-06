@@ -46,7 +46,8 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 				1.0f, true);
 		if (this.target instanceof CWidget) {
 			final CWidget targetWidget = (CWidget) this.target;
-			if ((targetWidget instanceof CUnit) && ((CUnit) targetWidget).isConstructing()) {
+			if ((targetWidget instanceof CUnit) && ((CUnit) targetWidget).isConstructing()
+					&& ((CUnit) targetWidget).isConstructingPaused()) {
 				final CUnit targetUnit = (CUnit) targetWidget;
 				targetUnit.setConstructionProgress(
 						targetUnit.getConstructionProgress() + WarsmashConstants.SIMULATION_STEP_TIME);

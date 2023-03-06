@@ -9,6 +9,8 @@ public interface AbilityTargetCheckReceiver<TARGET_TYPE> {
 
 	void mustTargetResources();
 
+	void mustTargetPeon();
+
 	void targetOutsideRange();
 
 	void notAnActiveAbility();
@@ -28,16 +30,11 @@ public interface AbilityTargetCheckReceiver<TARGET_TYPE> {
 	void orderIdNotAccepted();
 
 	public static enum TeamType {
-		ALLIED,
-		ENEMY,
-		PLAYER_UNITS;
+		ALLIED, ENEMY, PLAYER_UNITS;
 	}
 
 	public static enum TargetType {
-		UNIT,
-		POINT,
-		UNIT_OR_POINT,
-		NO_TARGET
+		UNIT, POINT, UNIT_OR_POINT, NO_TARGET
 	}
 
 }

@@ -87,6 +87,7 @@ public class TerrainShaders {
 				"\r\n" + //
 				"uniform sampler2DArray cliff_textures;\r\n" + //
 				"uniform sampler2D shadowMap;\r\n" + //
+				"uniform sampler2D fogOfWarMap;\r\n" + //
 				"\r\n" + //
 				"uniform bool show_lighting;\r\n" + //
 				"\r\n" + //
@@ -103,6 +104,8 @@ public class TerrainShaders {
 				"	color = texture(cliff_textures, UV);\r\n" + //
 				"\r\n" + //
 				"   float shadow = texture2D(shadowMap, v_suv).r;\r\n" + //
+				"   float fogOfWarData = texture2D(fogOfWarMap, v_suv).r;\r\n" + //
+				"   shadow = clamp(shadow + fogOfWarData, 0.0, 1.0);\r\n" + //
 				"   color.rgb *= (1.0 - shadow);\r\n" + //
 				"	if (show_lighting) {\r\n" + //
 				"		color.rgb *=  shadeColor;\r\n" + //
@@ -195,13 +198,14 @@ public class TerrainShaders {
 				"uniform sampler2DArray sample11;\r\n" + //
 				"uniform sampler2DArray sample12;\r\n" + //
 				"uniform sampler2DArray sample13;\r\n" + //
-				"uniform sampler2DArray sample14;\r\n" + //
-				"uniform sampler2DArray sample15;\r\n" + //
+//				"uniform sampler2DArray sample14;\r\n" + //
+//				"uniform sampler2DArray sample15;\r\n" + //
 				"uniform sampler2DArray sample16;\r\n" + //
 				"\r\n" + //
 //				"layout (binding = 20) uniform usampler2D pathing_map_static;\r\n" + //
 //				"layout (binding = 21) uniform usampler2D pathing_map_dynamic;\r\n" + //
 				"uniform sampler2D shadowMap;\r\n" + //
+				"uniform sampler2D fogOfWarMap;\r\n" + //
 				"\r\n" + //
 				"in vec2 UV;\r\n" + //
 				"flat in uvec4 texture_indices;\r\n" + //
@@ -247,10 +251,10 @@ public class TerrainShaders {
 				"			return textureGrad(sample12, uv, dx, dy);\r\n" + //
 				"		case 13u:\r\n" + //
 				"			return textureGrad(sample13, uv, dx, dy);\r\n" + //
-				"		case 14u:\r\n" + //
-				"			return textureGrad(sample14, uv, dx, dy);\r\n" + //
-				"		case 15u:\r\n" + //
-				"			return textureGrad(sample15, uv, dx, dy);\r\n" + //
+//				"		case 14u:\r\n" + //
+//				"			return textureGrad(sample14, uv, dx, dy);\r\n" + //
+//				"		case 15u:\r\n" + //
+//				"			return textureGrad(sample15, uv, dx, dy);\r\n" + //
 				"		case 16u:\r\n" + //
 				"			return textureGrad(sample16, uv, dx, dy);\r\n" + //
 				"		case 17u:\r\n" + //
@@ -268,6 +272,8 @@ public class TerrainShaders {
 				"	color = color * color.a + get_fragment(texture_indices.r & 31u, vec3(UV, texture_indices.r >> 5)) * (1 - color.a);\r\n"
 				+ //
 				"   float shadow = texture2D(shadowMap, v_suv).r;\r\n" + //
+				"   float fogOfWarData = texture2D(fogOfWarMap, v_suv).r;\r\n" + //
+				"   shadow = clamp(shadow + fogOfWarData, 0.0, 1.0);\r\n" + //
 //				"   float visibility = 1.0;\r\n" + //
 //				"   if ( texture2D(shadowMap, ShadowCoord.xy).z > ShadowCoord.z ) {\r\n" + //
 //				"       visibility = 0.5;\r\n" + //
@@ -322,6 +328,7 @@ public class TerrainShaders {
 					"out vec4 Color;\r\n" + //
 					"out vec2 position;\r\n" + //
 					"out vec3 shadeColor;\r\n" + //
+					"out vec2 v_suv;\r\n" + //
 					"\r\n" + //
 					"const float min_depth = 10.f / 128;\r\n" + //
 					"const float deeplevel = 64.f / 128;\r\n" + //
@@ -359,6 +366,7 @@ public class TerrainShaders {
 							true)
 					+ "\r\n" + //
 					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
+					"        v_suv = (vPosition + pos) / size;\r\n" + //
 					" }";
 		}
 
@@ -366,6 +374,7 @@ public class TerrainShaders {
 				"\r\n" + //
 				"uniform sampler2DArray water_textures;\r\n" + //
 				"uniform sampler2D water_exists_texture;\r\n" + //
+				"uniform sampler2D fogOfWarMap;\r\n" + //
 				"\r\n" + //
 				"\r\n" + //
 				"uniform int current_texture;\r\n" + //
@@ -375,13 +384,15 @@ public class TerrainShaders {
 				"in vec4 Color;\r\n" + //
 				"in vec2 position;\r\n" + //
 				"in vec3 shadeColor;\r\n" + //
+				"in vec2 v_suv;\r\n" + //
 				"\r\n" + //
 				"out vec4 outColor;\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
 				"   vec2 d2 = min(position - mapBounds.xy, mapBounds.zw - position);\r\n" + //
 				"   float d1 = clamp(min(d2.x, d2.y) / 64.0 + 1.0, 0.0, 1.0) * 0.8 + 0.2;;\r\n" + //
-				"	outColor = texture(water_textures, vec3(UV, current_texture)) * vec4(Color.rgb * d1 * shadeColor, Color.a);\r\n"
+				"   float fogOfWarData = texture2D(fogOfWarMap, v_suv).r;\r\n" + //
+				"	outColor = texture(water_textures, vec3(UV, current_texture)) * vec4(Color.rgb * d1 * shadeColor, Color.a) * (1.0 - fogOfWarData);\r\n"
 				+ //
 				"}";
 	}

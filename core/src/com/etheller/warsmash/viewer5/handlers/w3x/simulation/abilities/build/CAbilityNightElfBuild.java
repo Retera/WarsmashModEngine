@@ -11,12 +11,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.CBehaviorOrcBuild;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.CBehaviorNightElfBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
 public class CAbilityNightElfBuild extends AbstractCAbilityBuild {
-	private CBehaviorOrcBuild buildBehavior;
+	private CBehaviorNightElfBuild buildBehavior;
 
 	public CAbilityNightElfBuild(final int handleId, final List<War3ID> structuresBuilt) {
 		super(handleId, structuresBuilt);
@@ -29,7 +29,7 @@ public class CAbilityNightElfBuild extends AbstractCAbilityBuild {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		this.buildBehavior = new CBehaviorOrcBuild(unit);
+		this.buildBehavior = new CBehaviorNightElfBuild(unit);
 	}
 
 	@Override

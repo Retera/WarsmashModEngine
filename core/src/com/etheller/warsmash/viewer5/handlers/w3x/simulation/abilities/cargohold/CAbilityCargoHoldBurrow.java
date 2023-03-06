@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -13,38 +12,35 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 public class CAbilityCargoHoldBurrow extends CAbilityCargoHold {
 	private float[] originalBaseAttackRates;
 
-	public CAbilityCargoHoldBurrow(int handleId, War3ID alias, int cargoCapacity, float duration, float castRange,
-			EnumSet<CTargetType> targetsAllowed) {
+	public CAbilityCargoHoldBurrow(final int handleId, final War3ID alias, final int cargoCapacity,
+			final float duration, final float castRange, final EnumSet<CTargetType> targetsAllowed) {
 		super(handleId, alias, cargoCapacity, duration, castRange, targetsAllowed);
 	}
 
 	@Override
-	public void onAdd(CSimulation game, CUnit unit) {
+	public void onAdd(final CSimulation game, final CUnit unit) {
 		// NOTE: this might have weird interactions with heroes, which
 		// also setup unit specific attack objects in memory
-		List<CUnitAttack> originalAttacks = unit.getAttacks();
-		List<CUnitAttack> unitSpecificAttacks = new ArrayList<>();
-		int originalAttackCount = originalAttacks.size();
+		final List<CUnitAttack> unitSpecificAttacks = unit.getUnitSpecificAttacks();
+		final int originalAttackCount = unitSpecificAttacks.size();
 		originalBaseAttackRates = new float[originalAttackCount];
 		for (int i = 0; i < originalAttackCount; i++) {
-			CUnitAttack originalAttack = originalAttacks.get(i);
-			unitSpecificAttacks.add(originalAttack.copy());
+			final CUnitAttack originalAttack = unitSpecificAttacks.get(i);
 			originalBaseAttackRates[i] = originalAttack.getCooldownTime();
 		}
-		unit.setUnitSpecificAttacks(unitSpecificAttacks);
 		unit.setDisableAttacks(true);
 		super.onAdd(game, unit);
 	}
 
 	@Override
-	public void onRemove(CSimulation game, CUnit unit) {
+	public void onRemove(final CSimulation game, final CUnit unit) {
 		unit.setDisableAttacks(false);
 		super.onRemove(game, unit);
 	}
 
 	@Override
-	public void addUnit(CUnit cargoHoldUnit, CUnit target) {
-		boolean wasEmpty = isEmpty();
+	public void addUnit(final CUnit cargoHoldUnit, final CUnit target) {
+		final boolean wasEmpty = isEmpty();
 		super.addUnit(cargoHoldUnit, target);
 		if (wasEmpty) {
 			cargoHoldUnit.setDisableAttacks(false);
@@ -53,8 +49,8 @@ public class CAbilityCargoHoldBurrow extends CAbilityCargoHold {
 	}
 
 	@Override
-	public CUnit removeUnitAtIndex(CUnit cargoHoldUnit, int index) {
-		CUnit removedUnit = super.removeUnitAtIndex(cargoHoldUnit, index);
+	public CUnit removeUnitAtIndex(final CUnit cargoHoldUnit, final int index) {
+		final CUnit removedUnit = super.removeUnitAtIndex(cargoHoldUnit, index);
 		if (isEmpty()) {
 			cargoHoldUnit.setDisableAttacks(true);
 		}
@@ -64,8 +60,8 @@ public class CAbilityCargoHoldBurrow extends CAbilityCargoHold {
 		return removedUnit;
 	}
 
-	private void updateAttackCooldowns(CUnit cargoHoldUnit) {
-		List<CUnitAttack> unitSpecificAttacks = cargoHoldUnit.getUnitSpecificAttacks();
+	private void updateAttackCooldowns(final CUnit cargoHoldUnit) {
+		final List<CUnitAttack> unitSpecificAttacks = cargoHoldUnit.getUnitSpecificAttacks();
 		for (int i = 0, l = unitSpecificAttacks.size(); i < l; i++) {
 			unitSpecificAttacks.get(i)
 					.setCooldownTime(originalBaseAttackRates[i] / (float) Math.pow(2, getCargoCount()));

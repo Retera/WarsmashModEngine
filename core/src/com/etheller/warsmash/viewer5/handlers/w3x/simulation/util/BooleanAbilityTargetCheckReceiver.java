@@ -39,6 +39,11 @@ public final class BooleanAbilityTargetCheckReceiver<TARGET_TYPE> implements Abi
 	}
 
 	@Override
+	public void mustTargetPeon() {
+		this.targetable = false;
+	}
+
+	@Override
 	public void targetOutsideRange() {
 		this.targetable = false;
 	}

@@ -54,7 +54,9 @@ public interface SimulationRenderController {
 
 	void spawnUnitConstructionFinishSound(CUnit constructedStructure);
 
-	void spawnBuildingDeathEffect(CUnit cUnit);
+	void spawnUnitUpgradeFinishSound(CUnit constructedStructure);
+
+	void spawnDeathExplodeEffect(CUnit cUnit);
 
 	void spawnGainLevelEffect(CUnit cUnit);
 

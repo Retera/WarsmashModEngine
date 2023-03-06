@@ -47,7 +47,8 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
-		this.unit.getUnitAnimationListener().playAnimation(false, null, ability.getCastingSecondaryTags(), 1.0f, true);
+		this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+				this.ability.getCastingSecondaryTags(), 1.0f, true);
 		if (this.castStartTick == 0) {
 			this.castStartTick = simulation.getGameTurnTick();
 		}
@@ -66,9 +67,9 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 				this.ability.setCooldownRemaining(this.ability.getCooldown());
 				this.unit.fireCooldownsChangedEvent();
 			}
-			channeling = channeling && ability.doEffect(simulation, unit, target);
+			this.channeling = this.channeling && this.ability.doEffect(simulation, this.unit, this.target);
 		}
-		if ((ticksSinceCast >= backswingTicks) && !channeling) {
+		if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
 			return this.unit.pollNextOrderBehavior(simulation);
 		}
 		return this;
@@ -81,7 +82,12 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
-		return this.target.visit(this.stillAliveVisitor.reset(simulation, this.unit, this.ability.getTargetsAllowed()));
+		/*
+		 * BELOW: "doneEffect" allows us to channel "at" something that died, if you hit
+		 * a bug with that, then fix it here
+		 */
+		return this.doneEffect || this.target
+				.visit(this.stillAliveVisitor.reset(simulation, this.unit, this.ability.getTargetsAllowed()));
 	}
 
 	@Override
@@ -102,10 +108,10 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 
 	@Override
 	public int getHighlightOrderId() {
-		return ability.getBaseOrderId();
+		return this.ability.getBaseOrderId();
 	}
 
 	public CAbilitySpellBase getAbility() {
-		return ability;
+		return this.ability;
 	}
 }

@@ -110,16 +110,16 @@ public final class CAbilityQueue extends AbstractCAbility {
 				}
 			}
 			else {
-				CUpgradeType upgrade = game.getUpgradeData().getType(orderIdAsRawtype);
+				final CUpgradeType upgrade = game.getUpgradeData().getType(orderIdAsRawtype);
 				if (upgrade != null) {
 					final CPlayer player = game.getPlayer(unit.getPlayerIndex());
-					int inProgressCount = player.getTechtreeInProgress(orderIdAsRawtype);
-					int unlockedCount = player.getTechtreeUnlocked(orderIdAsRawtype);
+					final int inProgressCount = player.getTechtreeInProgress(orderIdAsRawtype);
+					final int unlockedCount = player.getTechtreeUnlocked(orderIdAsRawtype);
 					if (inProgressCount != 0) {
 						receiver.techItemAlreadyInProgress();
 					}
 					else {
-						UpgradeLevel upgradeLevel = upgrade.getLevel(unlockedCount);
+						final UpgradeLevel upgradeLevel = upgrade.getLevel(unlockedCount);
 						if (upgradeLevel != null) {
 							final List<CUnitTypeRequirement> requirements = upgradeLevel.getRequirements();
 							final boolean techtreeAllowedByMax = player.isTechtreeAllowedByMax(orderIdAsRawtype);
@@ -254,7 +254,10 @@ public final class CAbilityQueue extends AbstractCAbility {
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
-	public void onSetUnitType(final CUnitType unitType) {
+	@Override
+	public void onSetUnitType(final CSimulation game, final CUnit cUnit) {
+		// NOTE: this method not actually used, because CAbilityQueue is not Aliased
+		final CUnitType unitType = cUnit.getUnitType();
 		this.unitsTrained.clear();
 		this.researchesAvailable.clear();
 		this.unitsTrained.addAll(unitType.getUnitsTrained());

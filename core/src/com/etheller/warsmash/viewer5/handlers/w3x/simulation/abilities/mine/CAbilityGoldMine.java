@@ -15,7 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
+public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CAbilityGoldMinable {
 	private int gold;
 	private float miningDuration;
 	private int miningCapacity;
@@ -119,26 +119,32 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 	}
 
+	@Override
 	public int getGold() {
 		return this.gold;
 	}
 
+	@Override
 	public void setGold(final int gold) {
 		this.gold = gold;
 	}
 
+	@Override
 	public int getActiveMinerCount() {
 		return this.activeMiners.size();
 	}
 
+	@Override
 	public void addMiner(final CBehaviorHarvest miner) {
 		this.activeMiners.add(miner);
 	}
 
+	@Override
 	public int getMiningCapacity() {
 		return this.miningCapacity;
 	}
 
+	@Override
 	public float getMiningDuration() {
 		return this.miningDuration;
 	}
@@ -153,5 +159,10 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
+	@Override
+	public boolean isBaseMine() {
+		return true;
 	}
 }

@@ -65,11 +65,19 @@ public class CPlayer extends CBasePlayer {
 	private transient CPlayerStateNotifier stateNotifier = new CPlayerStateNotifier();
 	private float handicapXP = 1.0f;
 	private float handicap = 0.9f;
+	private final CPlayerFogOfWar fogOfWar;
 
-	public CPlayer(final CRace race, final float[] startLocation, final CBasePlayer configPlayer) {
+	public CPlayer(final CRace race, final float[] startLocation, final CBasePlayer configPlayer,
+			final CPlayerFogOfWar fogOfWar) {
 		super(configPlayer);
 		this.race = race;
 		this.startLocation = startLocation;
+		// Below: 32x32 cells to find the number of 128x128 cells
+		this.fogOfWar = fogOfWar;
+	}
+
+	public CPlayerFogOfWar getFogOfWar() {
+		return fogOfWar;
 	}
 
 	public void setAlliance(final CPlayer other, final CAllianceType alliance, final boolean flag) {

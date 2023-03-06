@@ -10,20 +10,23 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 
 public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	private int cargoCapacity;
 	private final List<CUnit> cargoUnits;
 	private float duration;
-	private float castRange;
+	private final float castRange;
 	private EnumSet<CTargetType> targetsAllowed;
 
 	public CAbilityCargoHold(final int handleId, final War3ID alias, final int cargoCapacity, final float duration,
-			float castRange, final EnumSet<CTargetType> targetsAllowed) {
+			final float castRange, final EnumSet<CTargetType> targetsAllowed) {
 		super(handleId, alias);
 		this.cargoCapacity = cargoCapacity;
 		this.cargoUnits = new ArrayList<>();
@@ -39,7 +42,7 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-
+		unloadAllInstant(game, unit);
 	}
 
 	@Override
@@ -47,8 +50,29 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	}
 
 	@Override
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+			final AbilityTarget target) {
+		if (orderId == OrderIds.unload) {
+			final int targetIndex = cargoUnits.indexOf(target);
+			if (targetIndex != -1) {
+				dropUnitByIndex(game, caster, targetIndex);
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return null;
+		return caster.pollNextOrderBehavior(game);
+	}
+
+	public void dropUnitByIndex(final CSimulation game, final CUnit caster, final int targetIndex) {
+		game.unitSoundEffectEvent(caster, getAlias());
+		final CUnit firstUnit = removeUnitAtIndex(caster, targetIndex);
+		firstUnit.setPointAndCheckUnstuck(caster.getX(), caster.getY(), game);
+		firstUnit.setHidden(false);
+		firstUnit.setPaused(false);
 	}
 
 	@Override
@@ -65,7 +89,17 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
 			final AbilityTargetCheckReceiver<CWidget> receiver) {
-		receiver.orderIdNotAccepted();
+		if (orderId == OrderIds.unload) {
+			if (cargoUnits.contains(target)) {
+				receiver.targetOk(target);
+			}
+			else {
+				receiver.mustTargetType(TargetType.UNIT);
+			}
+		}
+		else {
+			receiver.orderIdNotAccepted();
+		}
 	}
 
 	@Override
@@ -83,7 +117,7 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		receiver.notAnActiveAbility();
+		receiver.useOk();
 	}
 
 	@Override
@@ -91,7 +125,8 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	}
 
 	@Override
-	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	public void onDeath(final CSimulation game, final CUnit unit) {
+		unloadAllInstant(game, unit);
 	}
 
 	public int getCargoCapacity() {
@@ -110,15 +145,15 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 		return this.targetsAllowed;
 	}
 
-	public CUnit getUnit(int index) {
+	public CUnit getUnit(final int index) {
 		return cargoUnits.get(index);
 	}
 
-	public void addUnit(CUnit cargoHoldUnit, final CUnit target) {
+	public void addUnit(final CUnit cargoHoldUnit, final CUnit target) {
 		this.cargoUnits.add(target);
 	}
 
-	public CUnit removeUnitAtIndex(CUnit cargoHoldUnit, int index) {
+	public CUnit removeUnitAtIndex(final CUnit cargoHoldUnit, final int index) {
 		return this.cargoUnits.remove(index);
 	}
 
@@ -142,10 +177,23 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 		this.targetsAllowed = targetsAllowed;
 	}
 
-	public boolean hasCapacity(int cargoCapacityOfNewUnit) {
+	public boolean hasCapacity(final int cargoCapacityOfNewUnit) {
 		if (cargoCapacityOfNewUnit == 0) {
 			return false;
 		}
 		return (cargoUnits.size() + cargoCapacityOfNewUnit) <= cargoCapacity;
+	}
+
+	public void unloadAllInstant(final CSimulation game, final CUnit caster) {
+		if (!isEmpty()) {
+			game.unitSoundEffectEvent(caster, getAlias());
+			final int cargoCount = getCargoCount();
+			for (int i = 0; i < cargoCount; i++) {
+				final CUnit droppedUnit = removeUnitAtIndex(caster, cargoCount - i - 1);
+				droppedUnit.setPointAndCheckUnstuck(caster.getX(), caster.getY(), game);
+				droppedUnit.setHidden(false);
+				droppedUnit.setPaused(false);
+			}
+		}
 	}
 }

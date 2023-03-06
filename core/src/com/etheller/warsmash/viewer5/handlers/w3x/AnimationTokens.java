@@ -70,5 +70,21 @@ public class AnimationTokens {
 		WORK,
 		WOUNDED,
 		UPGRADE;
+		
+		public static SecondaryTag fromCount(int count) {
+			switch(count) {
+			case 1:
+				return SecondaryTag.FIRST;
+			case 2:
+				return SecondaryTag.SECOND;
+			case 3:
+				return SecondaryTag.THIRD;
+			case 4:
+				return SecondaryTag.FOURTH;
+			case 5:
+				return SecondaryTag.FIFTH;
+			}
+			return null;
+		}
 	}
 }

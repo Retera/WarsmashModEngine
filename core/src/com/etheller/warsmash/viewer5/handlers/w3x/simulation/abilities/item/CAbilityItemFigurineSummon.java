@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnitId;
@@ -27,12 +28,14 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.summonUnitId = War3ID
-				.fromString(worldEditorAbility.getFieldAsString(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_TYPE_1, level));
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_TYPE_1,
+				level);
+		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
 		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_COUNT_1,
 				level);
-		this.summonUnit2Id = War3ID
-				.fromString(worldEditorAbility.getFieldAsString(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_TYPE_2, level));
+		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_TYPE_2,
+				level);
+		this.summonUnit2Id = unitTypeTwo.length() == 4 ? War3ID.fromString(unitTypeTwo) : War3ID.NONE;
 		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_COUNT_2,
 				level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
@@ -49,49 +52,53 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
 		final float facing = unit.getFacing();
 		final float facingRad = (float) StrictMath.toRadians(facing);
-		final float x = unit.getX() + ((float) StrictMath.cos(facingRad) * areaOfEffect);
-		final float y = unit.getY() + ((float) StrictMath.sin(facingRad) * areaOfEffect);
-		for (int i = 0; i < summonUnitCount; i++) {
-			final CUnit summonedUnit = simulation.createUnitSimple(summonUnitId, unit.getPlayerIndex(), x, y, facing);
+		final float x = unit.getX() + ((float) StrictMath.cos(facingRad) * this.areaOfEffect);
+		final float y = unit.getY() + ((float) StrictMath.sin(facingRad) * this.areaOfEffect);
+		for (int i = 0; i < this.summonUnitCount; i++) {
+			final CUnit summonedUnit = simulation.createUnitSimple(this.summonUnitId, unit.getPlayerIndex(), x, y,
+					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, duration));
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
+			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
-		for (int i = 0; i < summonUnit2Count; i++) {
-			final CUnit summonedUnit = simulation.createUnitSimple(summonUnit2Id, unit.getPlayerIndex(), x, y, facing);
+		for (int i = 0; i < this.summonUnit2Count; i++) {
+			final CUnit summonedUnit = simulation.createUnitSimple(this.summonUnit2Id, unit.getPlayerIndex(), x, y,
+					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, duration));
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
+			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
 		return false;
 	}
 
 	public War3ID getSummonUnitId() {
-		return summonUnitId;
+		return this.summonUnitId;
 	}
 
 	public int getSummonUnitCount() {
-		return summonUnitCount;
+		return this.summonUnitCount;
 	}
 
 	public War3ID getSummonUnit2Id() {
-		return summonUnit2Id;
+		return this.summonUnit2Id;
 	}
 
 	public int getSummonUnit2Count() {
-		return summonUnit2Count;
+		return this.summonUnit2Count;
 	}
 
 	public War3ID getBuffId() {
-		return buffId;
+		return this.buffId;
 	}
 
 	public float getDuration() {
-		return duration;
+		return this.duration;
 	}
 
 	public float getAreaOfEffect() {
-		return areaOfEffect;
+		return this.areaOfEffect;
 	}
 
 	public void setSummonUnitId(final War3ID summonUnitId) {

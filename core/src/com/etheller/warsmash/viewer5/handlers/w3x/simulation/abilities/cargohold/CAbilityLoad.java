@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold;
 
+import java.util.Set;
+
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -16,11 +18,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility {
 	private float castRange;
+	private Set<War3ID> allowedUnitTypes;
 	private CBehaviorLoad behaviorLoad;
 
-	public CAbilityLoad(final int handleId, final War3ID alias, final float castRange) {
+	public CAbilityLoad(final int handleId, final War3ID alias, final float castRange,
+			final Set<War3ID> allowedUnitTypes) {
 		super(handleId, alias);
 		this.castRange = castRange;
+		this.allowedUnitTypes = allowedUnitTypes;
 	}
 
 	@Override
@@ -83,11 +88,16 @@ public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility {
 		if ((target instanceof CUnit) && target.canBeTargetedBy(game, unit, unit.getCargoData().getTargetsAllowed())
 				&& (target != unit)) {
 			if (((CUnit) target).getPlayerIndex() == unit.getPlayerIndex()) {
-				if (!unit.isMovementDisabled() || unit.canReach(target, unit.getCargoData().getCastRange())) {
-					receiver.targetOk(target);
+				if (this.allowedUnitTypes.isEmpty() || this.allowedUnitTypes.contains(((CUnit) target).getTypeId())) {
+					if (!unit.isMovementDisabled() || unit.canReach(target, unit.getCargoData().getCastRange())) {
+						receiver.targetOk(target);
+					}
+					else {
+						receiver.targetOutsideRange();
+					}
 				}
 				else {
-					receiver.targetOutsideRange();
+					receiver.mustTargetPeon();
 				}
 			}
 			else {
@@ -117,6 +127,14 @@ public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility {
 
 	public void setCastRange(final float castRange) {
 		this.castRange = castRange;
+	}
+
+	public Set<War3ID> getAllowedUnitTypes() {
+		return this.allowedUnitTypes;
+	}
+
+	public void setAllowedUnitTypes(final Set<War3ID> allowedUnitTypes) {
+		this.allowedUnitTypes = allowedUnitTypes;
 	}
 
 	@Override

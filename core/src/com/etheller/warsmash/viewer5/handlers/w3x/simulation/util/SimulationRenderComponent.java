@@ -5,7 +5,13 @@ public interface SimulationRenderComponent {
 		@Override
 		public void remove() {
 		}
+
+		@Override
+		public void setHeight(final float height) {
+		}
 	};
 
 	void remove();
+
+	void setHeight(float height);
 }

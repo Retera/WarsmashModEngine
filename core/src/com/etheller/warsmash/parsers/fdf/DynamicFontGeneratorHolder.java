@@ -11,7 +11,7 @@ import com.etheller.warsmash.util.DataSourceFileHandle;
 public class DynamicFontGeneratorHolder {
 	private final DataSource dataSource;
 	private final Element skin;
-	private final Map<String, FreeTypeFontGenerator> fontNameToGenerator;
+	private final Map<String, FontGeneratorHolder> fontNameToGenerator;
 
 	public DynamicFontGeneratorHolder(final DataSource dataSource, final Element skin) {
 		this.dataSource = dataSource;
@@ -19,8 +19,8 @@ public class DynamicFontGeneratorHolder {
 		this.fontNameToGenerator = new HashMap<>();
 	}
 
-	public FreeTypeFontGenerator getFontGenerator(final String font) {
-		FreeTypeFontGenerator fontGenerator = this.fontNameToGenerator.get(font);
+	public FontGeneratorHolder getFontGenerator(final String font) {
+		FontGeneratorHolder fontGenerator = this.fontNameToGenerator.get(font);
 		if (fontGenerator == null) {
 			final String fontName = this.skin.getField(font);
 			if (fontName == null) {
@@ -29,14 +29,15 @@ public class DynamicFontGeneratorHolder {
 			if (!this.dataSource.has(fontName)) {
 				throw new IllegalStateException("No such font file: " + fontName + " (for \"" + font + "\")");
 			}
-			fontGenerator = new FreeTypeFontGenerator(new DataSourceFileHandle(this.dataSource, fontName));
+			fontGenerator = new FontGeneratorHolder(
+					new FreeTypeFontGenerator(new DataSourceFileHandle(this.dataSource, fontName)));
 			this.fontNameToGenerator.put(font, fontGenerator);
 		}
 		return fontGenerator;
 	}
 
 	public void dispose() {
-		for (final FreeTypeFontGenerator generator : this.fontNameToGenerator.values()) {
+		for (final FontGeneratorHolder generator : this.fontNameToGenerator.values()) {
 			generator.dispose();
 		}
 		this.fontNameToGenerator.clear();

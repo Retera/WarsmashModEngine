@@ -41,11 +41,7 @@ public class CBehaviorDrop extends CAbstractRangedBehavior {
 		// TODO i do a nonstandard Math.ceil() here to make this one feel a bit slower
 		final float durationTicks = (int) Math.ceil(cargoData.getDuration() / WarsmashConstants.SIMULATION_STEP_TIME);
 		if (deltaTicks >= durationTicks) {
-			simulation.unitSoundEffectEvent(this.unit, cargoData.getAlias());
-			final CUnit firstUnit = cargoData.removeUnitAtIndex(this.unit, 0);
-			firstUnit.setPointAndCheckUnstuck(this.target.getX(), this.target.getY(), simulation);
-			firstUnit.setHidden(false);
-			firstUnit.setPaused(false);
+			cargoData.dropUnitByIndex(simulation, unit, 0);
 			this.lastDropTick = gameTurnTick;
 		}
 		return this;

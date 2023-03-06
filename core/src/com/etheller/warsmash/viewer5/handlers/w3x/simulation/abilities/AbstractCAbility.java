@@ -8,6 +8,7 @@ public abstract class AbstractCAbility implements CAbility {
 	private final int handleId;
 	private boolean disabled = false;
 	private boolean iconShowing = true;
+	private boolean permanent = false;
 
 	public AbstractCAbility(final int handleId) {
 		this.handleId = handleId;
@@ -39,6 +40,16 @@ public abstract class AbstractCAbility implements CAbility {
 	}
 
 	@Override
+	public boolean isPermanent() {
+		return this.permanent;
+	}
+
+	@Override
+	public void setPermanent(final boolean permanent) {
+		this.permanent = permanent;
+	}
+
+	@Override
 	public final void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		if (this.disabled) {
@@ -51,4 +62,8 @@ public abstract class AbstractCAbility implements CAbility {
 
 	protected abstract void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver);
+
+	@Override
+	public void onSetUnitType(final CSimulation game, final CUnit cUnit) {
+	}
 }

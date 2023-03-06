@@ -27,7 +27,8 @@ public class CBehaviorNoTargetSpellBase implements CBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation simulation) {
-		this.unit.getUnitAnimationListener().playAnimation(false, null, ability.getCastingSecondaryTags(), 1.0f, true);
+		this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+				this.ability.getCastingSecondaryTags(), 1.0f, true);
 		if (this.castStartTick == 0) {
 			this.castStartTick = simulation.getGameTurnTick();
 		}
@@ -46,9 +47,9 @@ public class CBehaviorNoTargetSpellBase implements CBehavior {
 				this.ability.setCooldownRemaining(this.ability.getCooldown());
 				this.unit.fireCooldownsChangedEvent();
 			}
-			channeling = channeling && ability.doEffect(simulation, unit, null);
+			this.channeling = this.channeling && this.ability.doEffect(simulation, this.unit, null);
 		}
-		if ((ticksSinceCast >= backswingTicks) && !channeling) {
+		if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
 			return this.unit.pollNextOrderBehavior(simulation);
 		}
 		return this;
@@ -64,10 +65,10 @@ public class CBehaviorNoTargetSpellBase implements CBehavior {
 
 	@Override
 	public int getHighlightOrderId() {
-		return ability.getBaseOrderId();
+		return this.ability.getBaseOrderId();
 	}
 
 	public CAbilitySpellBase getAbility() {
-		return ability;
+		return this.ability;
 	}
 }

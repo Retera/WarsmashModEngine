@@ -36,6 +36,9 @@ public interface AbilityFields {
 	public static final War3ID ITEM_FIGURINE_SUMMON_UNIT_TYPE_2 = War3ID.fromString("Ist2");
 	public static final War3ID ITEM_FIGURINE_SUMMON_UNIT_COUNT_2 = War3ID.fromString("Isn2");
 
+	public static final War3ID FERAL_SPIRIT_SUMMON_UNIT_TYPE_1 = War3ID.fromString("Osf1");
+	public static final War3ID FERAL_SPIRIT_SUMMON_UNIT_COUNT_1 = War3ID.fromString("Osf2");
+
 	public static final War3ID ITEM_EXPERIENCE_GAINED = War3ID.fromString("Ixpg");
 	public static final War3ID ITEM_LEVEL_GAINED = War3ID.fromString("Ilev");
 
@@ -49,4 +52,19 @@ public interface AbilityFields {
 	public static final War3ID NEUTRAL_BUILDING_SHOW_UNIT_INDICATOR = War3ID.fromString("Neu4");
 
 	public static final War3ID CHARM_MAX_CREEP_LEVEL = War3ID.fromString("Nch1");
+
+	public static final War3ID ENTANGLE_MINE_RESULTING_TYPE = War3ID.fromString("ent1");
+
+	public static final War3ID ENTANGLE_MINE_GOLD_PER_INTERVAL = War3ID.fromString("Egm1");
+	public static final War3ID ENTANGLE_MINE_INTERVAL_DURATION = War3ID.fromString("Egm2");
+
+	public static final War3ID EAT_TREE_RIP_DELAY = War3ID.fromString("Eat1");
+	public static final War3ID EAT_TREE_EAT_DELAY = War3ID.fromString("Eat2");
+	public static final War3ID EAT_TREE_HIT_POINTS_GAINED = War3ID.fromString("Eat3");
+
+	public static final War3ID MOON_WELL_MANA_GAINED = War3ID.fromString("Mbt1");
+	public static final War3ID MOON_WELL_HIT_POINTS_GAINED = War3ID.fromString("Mbt2");
+	public static final War3ID MOON_WELL_AUTOCAST_REQUIREMENT = War3ID.fromString("Mbt3");
+	public static final War3ID MOON_WELL_WATER_HEIGHT = War3ID.fromString("Mbt4");
+	public static final War3ID MOON_WELL_REGENERATE_ONLY_AT_NIGHT = War3ID.fromString("Mbt5");
 }

@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -347,7 +348,7 @@ public class AbilityDataUI {
 			final int iconNormalY = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_Y, 0);
 			final List<IconUI> upgradeIconsByLevel = new ArrayList<>();
 			for (int i = 0; i < upgradeLevels; i++) {
-				final int upgradeLevelValue = i + 1;
+				final int upgradeLevelValue = i;
 				final String iconTip = upgradeTypeData.getFieldAsString(UPGRADE_TIP, upgradeLevelValue);
 				final String iconUberTip = parseUbertip(allObjectData,
 						upgradeTypeData.getFieldAsString(UPGRADE_UBER_TIP, upgradeLevelValue));
@@ -473,11 +474,32 @@ public class AbilityDataUI {
 
 	private char getHotkeyChar(final String hotkeyString) {
 		if (hotkeyString.length() > 1) {
-			final int hotkeyInt = Integer.parseInt(hotkeyString);
-			if (hotkeyInt == 512) {
-				return WarsmashConstants.SPECIAL_ESCAPE_KEYCODE;
+			boolean anyNonDigit = false;
+			for (int i = 0; i < hotkeyString.length(); i++) {
+				if (!Character.isDigit(hotkeyString.charAt(i))) {
+					anyNonDigit = true;
+				}
 			}
-			return (char) hotkeyInt;
+			if (!anyNonDigit) {
+				final int hotkeyInt = Integer.parseInt(hotkeyString);
+				if (hotkeyInt == 512) {
+					return WarsmashConstants.SPECIAL_ESCAPE_KEYCODE;
+				}
+				return (char) hotkeyInt;
+			}
+			else {
+				String resultStr;
+				try {
+					resultStr = new String(hotkeyString.getBytes(), "utf-8");
+				}
+				catch (final UnsupportedEncodingException e) {
+					e.printStackTrace();
+					return '\0';
+				}
+				final char result = resultStr.charAt(0);
+				System.out.println("weird hotkey: " + result);
+				return result;
+			}
 		}
 		return hotkeyString.length() > 0 ? hotkeyString.charAt(0) : '\0';
 	}
@@ -589,7 +611,7 @@ public class AbilityDataUI {
 	}
 
 	public IconUI getNeutralInteractUI() {
-		return neutralInteractUI;
+		return this.neutralInteractUI;
 	}
 
 	public String getDisabledPrefix() {

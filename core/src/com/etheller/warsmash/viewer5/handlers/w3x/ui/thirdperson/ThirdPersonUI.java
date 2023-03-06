@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson;
 
+import java.io.IOException;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
@@ -93,6 +95,13 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 		this.rootFrame = new GameUI(this.war3MapViewer.dataSource, GameUI.loadSkin(this.war3MapViewer.dataSource, 0),
 				this.uiViewport, this.uiScene, this.war3MapViewer, 0, this.war3MapViewer.getAllObjectData().getWts());
+
+		try {
+			this.rootFrame.loadTOCFile("Interface\\FrameXML\\FrameXML.toc");
+		}
+		catch (final IOException e) {
+			throw new IllegalStateException(e);
+		}
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashTPCursorFrame",
 				this.rootFrame, "", 0);

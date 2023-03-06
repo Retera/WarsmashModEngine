@@ -10,6 +10,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -35,9 +45,17 @@ import com.etheller.warsmash.parsers.fdf.datamodel.MenuItem;
 import com.etheller.warsmash.parsers.fdf.datamodel.SetPointDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector2Definition;
+import com.etheller.warsmash.parsers.fdf.datamodel.Vector3Definition;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.FloatFrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.FontFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringPairFrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.TextJustifyFrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.Vector2FrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.Vector3FrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.Vector4FrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetMenuItemFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
 import com.etheller.warsmash.parsers.fdf.frames.BackdropFrame;
@@ -231,8 +249,42 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			String line;
 			int tocLines = 0;
 			while ((line = reader.readLine()) != null) {
-				final FDFParser firstFileParser = dataSourceFDFParserBuilder.build(line);
-				fdfVisitor.visit(firstFileParser.program());
+				if (line.toLowerCase().endsWith(".xml")) {
+					if (line.startsWith("#")) {
+						continue;
+					}
+					final DocumentBuilderFactory newInstance = DocumentBuilderFactory.newInstance();
+					try {
+						final DocumentBuilder docBuilder = newInstance.newDocumentBuilder();
+						final Document root = docBuilder.parse(this.dataSource.getResourceAsStream(line));
+						final NodeList rootChildNodes = root.getChildNodes();
+						for (int i = 0; i < rootChildNodes.getLength(); i++) {
+							final Node uiChild = rootChildNodes.item(i);
+							if (uiChild.getNodeName().equals("Ui")) {
+								inflateMultipleXMLs(uiChild.getChildNodes());
+							}
+							else if (uiChild.getNodeName().equals("#comment")) {
+								System.err.println("Skipping #comment in XML");
+							}
+							else {
+								throw new IllegalStateException("node name wasn't ui: " + uiChild.getNodeName());
+							}
+						}
+					}
+					catch (final ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+					catch (final SAXException e) {
+						e.printStackTrace();
+					}
+					catch (final IOException e) {
+						e.printStackTrace();
+					}
+				}
+				else {
+					final FDFParser firstFileParser = dataSourceFDFParserBuilder.build(line);
+					fdfVisitor.visit(firstFileParser.program());
+				}
 				tocLines++;
 			}
 			System.out.println("TOC file loaded " + tocLines + " lines");
@@ -353,6 +405,632 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		}
 		final BitmapFont frameFont = this.fontGenerator.generateFont(this.fontParam);
 		return frameFont;
+	}
+
+	private int untitledXMLFrameId = 0;
+
+	private FrameDefinition inflateXMLToDef(final Node xmlNode) {
+		return inflateXMLToDef(xmlNode, null);
+	}
+
+	private FrameDefinition inflateXMLToDef(final Node xmlNode, final String forceType) {
+		FrameDefinition frameDefinition = null;
+		FrameClass frameClass = null;
+		String frameType = null;
+		final NamedNodeMap attributes = xmlNode.getAttributes();
+		String baseXmlNodeName = xmlNode.getNodeName();
+		if (forceType != null) {
+			baseXmlNodeName = forceType;
+		}
+		if ("#text".equals(baseXmlNodeName) || "#comment".equals(baseXmlNodeName) || "Script".equals(baseXmlNodeName)
+				|| "Scripts".equals(baseXmlNodeName)) {
+			return null;
+		}
+		if ("Frame".equals(baseXmlNodeName) || "GameTooltip".equals(baseXmlNodeName)
+				|| "WorldFrame".equals(baseXmlNodeName)) {
+			// TODO got my own world frame, ignoring this one
+			frameClass = FrameClass.Frame;
+			frameType = "SIMPLEFRAME";
+		}
+		else if ("StatusBar".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SIMPLESTATUSBAR";
+		}
+		else if ("EditBox".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "EDITBOX";
+		}
+		else if ("Slider".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SLIDER";
+		}
+		else if ("ScrollFrame".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SCROLLBAR";
+		}
+		else if ("ScrollChild".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SIMPLEFRAME";
+		}
+		else if ("TitleRegion".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SIMPLEFRAME";
+		}
+		else if ("MessageFrame".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SIMPLEFRAME";
+		}
+		else if ("ScrollingMessageFrame".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "TEXTAREA";
+		}
+		else if ("SimpleHTML".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "TEXTAREA";
+		}
+		else if ("Minimap".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SIMPLEFRAME";
+		}
+		else if ("Model".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SPRITE";
+		}
+		else if ("PlayerModel".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SPRITE";
+		}
+		else if ("TabardModel".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "SPRITE";
+		}
+		else if ("FontString".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "TEXT";
+		}
+		else if ("Button".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "GLUETEXTBUTTON";
+		}
+		else if ("CheckButton".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "CHECKBOX";
+		}
+		else if ("Backdrop".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Frame;
+			frameType = "BACKDROP";
+		}
+		else if ("Layer".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Layer;
+		}
+		else if ("Texture".equals(baseXmlNodeName)) {
+			frameClass = FrameClass.Texture;
+		}
+		final Node nameAttribute = getAttributesNamedItem(attributes, "name");
+		String name = null;
+		if (nameAttribute != null) {
+			name = getAttributeText(nameAttribute);
+		}
+		if (name == null) {
+			name = "#UntitledXMLFrame" + this.untitledXMLFrameId++;
+		}
+		frameDefinition = new FrameDefinition(frameClass, frameType, name);
+		final Node inheritsItem = getAttributesNamedItem(attributes, "inherits");
+		if (inheritsItem != null) {
+			final String inheritsText = getAttributeText(inheritsItem);
+			if (inheritsText != null) {
+				final FrameDefinition toInheritFrom = this.templates.getFrame(inheritsText);
+				if (toInheritFrom != null) {
+					frameDefinition.inheritFrom(toInheritFrom, true);
+				}
+				else {
+					System.err.println("UNABLE TO FIND FRAME TO INHERIT: " + inheritsText);
+				}
+			}
+		}
+		final Node parentItem = getAttributesNamedItem(attributes, "parent");
+		if (parentItem != null) {
+			final String attribText = getAttributeText(parentItem);
+			if (attribText != null) {
+				frameDefinition.set("Parent", new StringFrameDefinitionField(attribText));
+			}
+		}
+		final Node frameStrataItem = getAttributesNamedItem(attributes, "frameStrata");
+		if (frameStrataItem != null) {
+			final String attribText = getAttributeText(frameStrataItem);
+			if (attribText != null) {
+				frameDefinition.set("FrameStrata", new StringFrameDefinitionField(attribText));
+			}
+		}
+		final Node setAllPointsItem = getAttributesNamedItem(attributes, "setAllPoints");
+		if (setAllPointsItem != null) {
+			final String attribText = getAttributeText(setAllPointsItem);
+			if ((attribText != null) && "true".equals(attribText.toLowerCase())) {
+				frameDefinition.add("SetAllPoints");
+			}
+		}
+		final NodeList childNodes = xmlNode.getChildNodes();
+		if (frameClass == null) {
+			throw new IllegalStateException("Unknown node name: " + baseXmlNodeName);
+		}
+		if ("Backdrop".equals(baseXmlNodeName)) {
+			final Node bgFileItem = getAttributesNamedItem(attributes, "bgFile");
+			if (bgFileItem != null) {
+				final String attribText = getAttributeText(bgFileItem);
+				if (attribText != null) {
+					frameDefinition.set("BackdropBackground", new StringFrameDefinitionField(attribText));
+				}
+			}
+			final Node edgeFileItem = getAttributesNamedItem(attributes, "edgeFile");
+			if (edgeFileItem != null) {
+				final String attribText = getAttributeText(edgeFileItem);
+				if (attribText != null) {
+					frameDefinition.set("BackdropEdgeFile", new StringFrameDefinitionField(attribText));
+				}
+			}
+			final Node tileItem = getAttributesNamedItem(attributes, "tile");
+			if (tileItem != null) {
+				final String attribText = getAttributeText(tileItem);
+				if ((attribText != null) && "true".equals(attribText.toLowerCase())) {
+					frameDefinition.add("BackdropTileBackground");
+				}
+			}
+		}
+		float myFontHeight = 12;
+		switch (frameClass) {
+		case Frame:
+		case Layer:
+		case Texture:
+			for (int i = 0; i < childNodes.getLength(); i++) {
+				final Node item = childNodes.item(i);
+				final String nodeName = item.getNodeName();
+				switch (nodeName) {
+				case "Size":
+					final Node absDimensionChild = firstChild(item, "AbsDimension");
+					if (absDimensionChild != null) {
+						final NamedNodeMap dimensionAttributes = absDimensionChild.getAttributes();
+						final Node xAttr = dimensionAttributes.getNamedItem("x");
+						if (xAttr != null) {
+							frameDefinition.set("Width",
+									new FloatFrameDefinitionField(Float.parseFloat(getAttributeText(xAttr))));
+						}
+						final Node yAttr = dimensionAttributes.getNamedItem("y");
+						if (yAttr != null) {
+							frameDefinition.set("Height",
+									new FloatFrameDefinitionField(Float.parseFloat(getAttributeText(yAttr))));
+						}
+					}
+					else {
+						throw new RuntimeException("Bad size");
+					}
+					break;
+				case "Anchors":
+					final NodeList anchorNodes = item.getChildNodes();
+					for (int j = 0; j < anchorNodes.getLength(); j++) {
+						final Node anchorNode = anchorNodes.item(j);
+						if ("Anchor".equals(anchorNode.getNodeName())) {
+							final NamedNodeMap anchorAttributes = anchorNode.getAttributes();
+							final Node pointAttr = anchorAttributes.getNamedItem("point");
+							final Node relativeToAttr = anchorAttributes.getNamedItem("relativeTo");
+							final String pointText = getAttributeText(pointAttr);
+							final FramePoint framePoint = FramePoint.valueOf(pointText);
+							final NodeList anchorChildNodes = anchorNode.getChildNodes();
+							float offsetX = 0;
+							float offsetY = 0;
+							for (int k = 0; k < anchorChildNodes.getLength(); k++) {
+								final Node anchorChild = anchorChildNodes.item(k);
+								if (anchorChild.getNodeName().equals("Offset")) {
+									final Node absDimension = firstChild(anchorChild, "AbsDimension");
+									if (absDimension.getNodeName().equals("AbsDimension")) {
+										final NamedNodeMap dimensionAttributes = absDimension.getAttributes();
+										final Node xAttr = dimensionAttributes.getNamedItem("x");
+										if (xAttr != null) {
+											offsetX = convertXMLCoordX(Float.parseFloat(getAttributeText(xAttr)));
+										}
+										final Node yAttr = dimensionAttributes.getNamedItem("y");
+										if (yAttr != null) {
+											offsetY = convertXMLCoordY(Float.parseFloat(getAttributeText(yAttr)));
+										}
+									}
+									else {
+										throw new RuntimeException("Not AbsDimension:" + absDimension.getNodeName());
+									}
+								}
+							}
+							if (relativeToAttr != null) {
+								final String relativeToText = getAttributeText(relativeToAttr);
+								frameDefinition.add(new SetPointDefinition(framePoint, relativeToText, framePoint,
+										offsetX, offsetY));
+							}
+							else {
+								frameDefinition.add(new AnchorDefinition(framePoint, offsetX, offsetY));
+							}
+						}
+						else if ("#text".equals(anchorNode.getNodeName())) {
+							System.err.println("skipping text in Anchors: " + anchorNode.getTextContent());
+						}
+						else {
+							throw new RuntimeException("Not anchor:" + anchorNode.getNodeName());
+						}
+					}
+					break;
+				case "Frames":
+				case "Layers":
+					for (final FrameDefinition subFrameDef : inflateMultipleXMLs(item.getChildNodes())) {
+						frameDefinition.add(subFrameDef);
+					}
+					break;
+				case "Texture":
+				case "Frame":
+				case "Backdrop":
+				case "ScrollChild":
+				case "SimpleHTML":
+				case "TitleRegion":
+				case "EditBox":
+					frameDefinition.add(inflateXMLToDef(item));
+					break;
+				case "FontString":
+					frameDefinition.add(inflateXMLToDef(item));
+					break;
+				case "BarTexture":
+					final Node barTextureFileItem = item.getAttributes().getNamedItem("file");
+					frameDefinition.set("BarTexture",
+							new StringFrameDefinitionField(getAttributeText(barTextureFileItem)));
+					break;
+				case "BarColor":
+					frameDefinition.set("BarColor", parseColorAttributes(item.getAttributes()));
+					break;
+				case "Script":
+				case "Scripts":
+					System.err.println("Ignoring <Script> from UI because that is not implemented yet");
+					break;
+				case "#text":
+					System.err.println("skipping #text: " + item.getTextContent());
+					break;
+				case "Color":
+					final NamedNodeMap colorAttributes = item.getAttributes();
+					String colorKey = "Color";
+					if ("FontString".equals(baseXmlNodeName)) {
+						colorKey = "FontColor";
+					}
+					frameDefinition.set(colorKey, parseColorAttributes(colorAttributes));
+					break;
+				case "FontHeight":
+					final NamedNodeMap fontHeightAttributes = firstChild(item, "AbsValue").getAttributes();
+					myFontHeight = convertXMLCoordY(
+							Float.parseFloat(fontHeightAttributes.getNamedItem("val").getNodeValue()));
+					frameDefinition.set("FontHeight", new FloatFrameDefinitionField(myFontHeight));
+					break;
+//					final Float cornerSizeNullable = frameDefinition.getFloat("BackdropCornerSize");
+//					final Float backgroundSizeNullable = frameDefinition.getFloat("BackdropBackgroundSize");
+//					Vector4Definition backgroundInsets = frameDefinition.getVector4("BackdropBackgroundInsets");
+				case "EdgeSize": {
+					final NamedNodeMap valueAttributes = firstChild(item, "AbsValue").getAttributes();
+					frameDefinition.set("BackdropCornerSize", new FloatFrameDefinitionField(
+							convertXMLCoordX(Float.parseFloat(valueAttributes.getNamedItem("val").getNodeValue()))));
+					break;
+				}
+				case "TileSize": {
+					final NamedNodeMap valueAttributes = firstChild(item, "AbsValue").getAttributes();
+					frameDefinition.set("BackdropBackgroundSize", new FloatFrameDefinitionField(
+							convertXMLCoordX(Float.parseFloat(valueAttributes.getNamedItem("val").getNodeValue()))));
+					break;
+				}
+				case "BackgroundInsets": {
+					final NamedNodeMap valueAttributes = firstChild(item, "AbsInset").getAttributes();
+					frameDefinition.set("BackdropBackgroundInsets",
+							new Vector4FrameDefinitionField(new Vector4Definition(
+									Float.parseFloat(valueAttributes.getNamedItem("left").getNodeValue()),
+									Float.parseFloat(valueAttributes.getNamedItem("right").getNodeValue()),
+									Float.parseFloat(valueAttributes.getNamedItem("top").getNodeValue()),
+									Float.parseFloat(valueAttributes.getNamedItem("bottom").getNodeValue()))));
+					break;
+				}
+				case "NormalTexture": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "Texture");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					frameDefinition.set("ControlBackdrop", new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "PushedTexture": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "Texture");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					frameDefinition.set("ControlPushedBackdrop", new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "CheckedTexture": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "Texture");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					frameDefinition.set("CheckBoxCheckHighlight", new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "DisabledCheckedTexture": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "Texture");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					frameDefinition.set("CheckBoxDisabledCheckHighlight",
+							new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "DisabledTexture": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "Texture");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					frameDefinition.set("ControlDisabledBackdrop", new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "HighlightTexture": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "Texture");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					frameDefinition.set("ControlMouseOverHighlight", new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "ThumbTexture": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "Texture");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					frameDefinition.set("SliderThumbButtonFrame", new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "NormalText": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "FontString");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					frameDefinition.set("ButtonText", new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "HighlightText": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "FontString");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					// TODO ButtonTextHighlight is bogus, made up, not going to work
+					frameDefinition.set("ButtonTextHighlight", new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "DisabledText": {
+					final FrameDefinition normalTextureDefinition = inflateXMLToDef(item, "FontString");
+					final String normalTextureName = normalTextureDefinition.getName();
+					if (normalTextureName == null) {
+						throw new IllegalStateException();
+					}
+					frameDefinition.add(normalTextureDefinition);
+					// TODO ButtonTextDisabled is bogus, made up, not going to work
+					frameDefinition.set("ButtonTextDisabled", new StringFrameDefinitionField(normalTextureName));
+					break;
+				}
+				case "TexCoords":
+					final NamedNodeMap texCoordsAttributes = item.getAttributes();
+					frameDefinition.set("TexCoord",
+							new Vector4FrameDefinitionField(new Vector4Definition(
+									Float.parseFloat(texCoordsAttributes.getNamedItem("left").getNodeValue()),
+									Float.parseFloat(texCoordsAttributes.getNamedItem("right").getNodeValue()),
+									Float.parseFloat(texCoordsAttributes.getNamedItem("top").getNodeValue()),
+									Float.parseFloat(texCoordsAttributes.getNamedItem("bottom").getNodeValue()))));
+					break;
+				case "Shadow":
+					// FontShadowColor
+					// FontShadowOffset
+//					<Offset>
+//						<AbsDimension x="1" y="-1"/>
+//					</Offset>
+//					<Color r="0" g="0" b="0"/>
+					final NodeList shadowChildren = item.getChildNodes();
+					for (int k = 0; k < shadowChildren.getLength(); k++) {
+						final Node shadowChild = shadowChildren.item(k);
+						if (shadowChild.getNodeName().startsWith("Color")) {
+							frameDefinition.set("FontShadowColor", parseColorAttributes(shadowChild.getAttributes()));
+						}
+						else if (shadowChild.getNodeName().equals("Offset")) {
+							frameDefinition.set("FontShadowOffset", new Vector2FrameDefinitionField(
+									parseAbsDimension(firstChild(shadowChild, "AbsDimension"))));
+						}
+						else if (shadowChild.getNodeName().equals("#text")) {
+							// ignore
+							System.err.println("Skipping shadow child text: " + shadowChild);
+						}
+						else {
+							throw new IllegalArgumentException(shadowChild.getNodeName());
+						}
+					}
+					break;
+				case "PushedTextOffset":
+				case "HitRectInsets":
+					// TODO i am currently ignoring this
+					break;
+				default:
+					throw new IllegalArgumentException(nodeName);
+				}
+			}
+			break;
+		default:
+			throw new IllegalArgumentException(String.valueOf(frameClass));
+		}
+		if ("FontString".equals(baseXmlNodeName)) {
+			final Node fontItem = getAttributesNamedItem(attributes, "font");
+			if (fontItem != null) {
+				final String attribText = getAttributeText(fontItem);
+				if (attribText != null) {
+					frameDefinition.set("FrameFont",
+							new FontFrameDefinitionField(new FontDefinition(attribText, myFontHeight, null)));
+				}
+			}
+			final Node textItem = getAttributesNamedItem(attributes, "text");
+			if (textItem != null) {
+				final String attribText = getAttributeText(textItem);
+				if (attribText != null) {
+					frameDefinition.set("Text", new StringFrameDefinitionField(attribText));
+				}
+			}
+			final Node justifyHItem = getAttributesNamedItem(attributes, "justifyH");
+			if (justifyHItem != null) {
+				final String attribText = getAttributeText(justifyHItem);
+				if (attribText != null) {
+					frameDefinition.set("FontJustificationH",
+							new TextJustifyFrameDefinitionField(TextJustify.valueOf(attribText.toUpperCase())));
+				}
+			}
+			final Node justifyVItem = getAttributesNamedItem(attributes, "justifyV");
+			if (justifyVItem != null) {
+				final String attribText = getAttributeText(justifyVItem);
+				if (attribText != null) {
+					frameDefinition.set("FontJustificationV",
+							new TextJustifyFrameDefinitionField(TextJustify.valueOf(attribText.toUpperCase())));
+				}
+			}
+		}
+		else if ("Model".equals(baseXmlNodeName)) {
+			final Node textItem = getAttributesNamedItem(attributes, "file");
+			if (textItem != null) {
+				final String attribText = getAttributeText(textItem);
+				if (attribText != null) {
+					frameDefinition.set("BackgroundArt", new StringFrameDefinitionField(attribText));
+				}
+			}
+		}
+		else if ("Slider".equals(baseXmlNodeName)) {
+			final Node orientationItem = getAttributesNamedItem(attributes, "orientation");
+			if (orientationItem != null) {
+				final String attribText = getAttributeText(orientationItem);
+				if (attribText != null) {
+					if ("HORIZONTAL".equals(attribText)) {
+						frameDefinition.add("SliderLayoutHorizontal");
+					}
+					else {
+						frameDefinition.add("SliderLayoutVertical");
+					}
+				}
+			}
+		}
+		else if ("EditBox".equals(baseXmlNodeName)) {
+			for (final FrameDefinition innerFrame : frameDefinition.getInnerFrames()) {
+				if ("TEXT".equals(innerFrame.getFrameType())) {
+					frameDefinition.set("EditTextFrame", new StringFrameDefinitionField(innerFrame.getName()));
+				}
+			}
+		}
+		if (frameDefinition != null) {
+			this.templates.put(name, frameDefinition);
+		}
+		return frameDefinition;
+	}
+
+	private List<FrameDefinition> inflateMultipleXMLs(final NodeList frameNodes) {
+		final List<FrameDefinition> results = new ArrayList<>();
+		for (int j = 0; j < frameNodes.getLength(); j++) {
+			final Node frameNode = frameNodes.item(j);
+			final FrameDefinition subFrameDef = inflateXMLToDef(frameNode);
+			if (subFrameDef != null) {
+				results.add(subFrameDef);
+			}
+		}
+		return results;
+	}
+
+	private static Node getAttributesNamedItem(final NamedNodeMap attributes, final String attr) {
+		if (attributes == null) {
+			return null;
+		}
+		return attributes.getNamedItem(attr);
+	}
+
+	private static Node firstChild(final Node node, final String type) {
+		final NodeList childNodes = node.getChildNodes();
+		for (int i = 0; i < childNodes.getLength(); i++) {
+			final Node item = childNodes.item(i);
+			if (item.getNodeName().equals(type)) {
+				return item;
+			}
+		}
+		return null;
+	}
+
+	public FrameDefinitionField parseColorAttributes(final NamedNodeMap colorAttributes) {
+		float r = 0, g = 0, b = 0, a = 1;
+		final Node rAttr = colorAttributes.getNamedItem("r");
+		if (rAttr != null) {
+			r = convertXMLCoordX(Float.parseFloat(getAttributeText(rAttr)));
+		}
+		final Node gAttr = colorAttributes.getNamedItem("g");
+		if (gAttr != null) {
+			g = convertXMLCoordX(Float.parseFloat(getAttributeText(gAttr)));
+		}
+		final Node bAttr = colorAttributes.getNamedItem("b");
+		if (bAttr != null) {
+			b = convertXMLCoordX(Float.parseFloat(getAttributeText(bAttr)));
+		}
+		final Node aAttr = colorAttributes.getNamedItem("a");
+		if (aAttr != null) {
+			a = convertXMLCoordX(Float.parseFloat(getAttributeText(aAttr)));
+			final Vector4Definition colorDefinition = new Vector4Definition(r, g, b, a);
+			return new Vector4FrameDefinitionField(colorDefinition);
+		}
+		else {
+			final Vector3Definition colorDefinition = new Vector3Definition(r, g, b);
+			return new Vector3FrameDefinitionField(colorDefinition);
+		}
+	}
+
+	private static Vector2Definition parseAbsDimension(final Node absDimensionChild) {
+		float x = 0;
+		float y = 0;
+		if (absDimensionChild.getNodeName().equals("AbsDimension")) {
+			final NamedNodeMap dimensionAttributes = absDimensionChild.getAttributes();
+			final Node xAttr = dimensionAttributes.getNamedItem("x");
+			if (xAttr != null) {
+				x = Float.parseFloat(getAttributeText(xAttr));
+			}
+			final Node yAttr = dimensionAttributes.getNamedItem("y");
+			if (yAttr != null) {
+				y = Float.parseFloat(getAttributeText(yAttr));
+			}
+		}
+		else {
+			throw new RuntimeException("Not AbsDimension:" + absDimensionChild.getNodeName());
+		}
+		return new Vector2Definition(x, y);
+	}
+
+	private static float convertXMLCoordY(final float xmlY) {
+		return (xmlY / 768) * 0.6f;
+	}
+
+	private static float convertXMLCoordX(final float xmlX) {
+		return (xmlX / 1024) * 0.8f;
+	}
+
+	private static String getAttributeText(final Node nameAttribute) {
+		return nameAttribute.getNodeValue();
 	}
 
 	public UIFrame inflate(final FrameDefinition frameDefinition, final UIFrame parent,
@@ -1153,7 +1831,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 			else if ("MAPLISTBOX".equals(frameDefinition.getFrameType())) {
 				// Replica of the LISTBOX method above.
-				final MapListBoxFrame controlFrame = new MapListBoxFrame(frameDefinition.getName(), parent, viewport2, dataSource);
+				final MapListBoxFrame controlFrame = new MapListBoxFrame(frameDefinition.getName(), parent, viewport2,
+						this.dataSource);
 				this.nameToFrame.put(frameDefinition.getName(), controlFrame);
 				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
 				final String listBoxScrollBarKey = frameDefinition.getString("ListBoxScrollBar");

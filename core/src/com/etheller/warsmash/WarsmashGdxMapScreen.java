@@ -200,9 +200,15 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 					}
 				});
 		final ThirdPersonUI thirdPersonUI = new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene,
-				"Creature\\HighElf\\HighElfFemale_Warrior.mdx");
+				"Creature\\HighElf\\HighElfMale_Mage.mdx");
+//		final ThirdPersonUI thirdPersonUI = new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene,
+//				"Creature\\TempScarletCrusaderLight\\ScarletCrusaderLight.mdx");
 		final MdxComplexInstance pawnComplexInstance = thirdPersonUI.getPlayerPawn().getPawnComplexInstance();
-		pawnComplexInstance.setReplaceableTexture(11, "Creature\\HighElf\\BloodElfFemaleWarrior.blp");
+//		pawnComplexInstance.setReplaceableTexture(11, "Creature\\OrcMaleWarriorHeavy\\OrcNPCSkin.blp");
+//		pawnComplexInstance.setReplaceableTexture(12, "Creature\\OrcMaleWarriorHeavy\\OrcMaleSamuHairSkin.blp");
+		pawnComplexInstance.setReplaceableTexture(1, "Creature\\HighElf\\BloodElfMaleMage.blp");
+		pawnComplexInstance.setReplaceableTexture(6, "Creature\\HighElf\\BloodElfMaleHair.blp");
+//		pawnComplexInstance.setReplaceableTexture(11, "Creature\\HighElf\\BloodElfFemaleWarrior.blp");
 		pawnComplexInstance.setUniformScale(50.0f);
 		this.meleeUI = new MeleeToggleUI(baseMeleeUI, Arrays.asList(baseMeleeUI, thirdPersonUI));
 		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);

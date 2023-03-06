@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.ModelInstance;
@@ -20,6 +22,7 @@ public class PlayerPawn {
 	private static final float ROOT_TWO = (float) Math.sqrt(2);
 	private static final Quaternion tempQuat = new Quaternion();
 	private static final Vector3 tempVec = new Vector3();
+	private static final Vector3 tempVec2 = new Vector3();
 	public final CameraPanControls cameraPanControls;
 	private final Vector3 location;
 	private final Vector3 velocity;
@@ -69,7 +72,8 @@ public class PlayerPawn {
 			shuffle = -1;
 		}
 		int walking = 0;
-		if (this.cameraPanControls.up) {
+		if (this.cameraPanControls.up
+				|| (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && Gdx.input.isButtonPressed(Input.Buttons.RIGHT))) {
 			this.forwardSpeed = (6);
 			walking = 1;
 		}
@@ -111,14 +115,22 @@ public class PlayerPawn {
 		}
 		else {
 			final double facingRad = Math.toRadians(this.facingDegrees);
-			this.velocity.x = (float) (Math.cos(facingRad) * this.forwardSpeed);
-			this.velocity.y = (float) (Math.sin(facingRad) * this.forwardSpeed);
+			this.velocity.x = (float) (Math.cos(facingRad));
+			this.velocity.y = (float) (Math.sin(facingRad));
 			this.velocity.z = 0;
+			tempVec.set(this.location).add(this.velocity);
+			final float nextZBeneath = war3MapViewer.getNearestIntersectingZBeneath(tempVec.x, tempVec.y, tempVec.z + 9,
+					intersectingUnit);
+			this.velocity.z = Math.max(-this.forwardSpeed, Math.min(this.forwardSpeed, nextZBeneath - this.location.z));
+			this.velocity.nor();
+			this.velocity.scl(this.forwardSpeed);
 		}
 		this.wasFalling = (prevZBeneath + 9) < this.location.z;
 		final float speed = this.velocity.len();
 		tempVec.set(this.location).add(this.velocity);
-		if ((speed > 0) && !war3MapViewer.is3DTravelBlocked(this.location, tempVec, 9, getHeight())) {
+		final float stairsHeight = 9;
+		if ((speed > 0)
+				&& !war3MapViewer.is3DTravelBlocked(this.location, tempVec, stairsHeight, getHeight(), tempVec)) {
 			final float nextZBeneath = war3MapViewer.getNearestIntersectingZBeneath(tempVec.x, tempVec.y, tempVec.z + 9,
 					intersectingUnit);
 			this.lastIntersectedUnit = intersectingUnit[0];
@@ -126,14 +138,17 @@ public class PlayerPawn {
 				this.lastIntersectedUnitLocation.set(intersectingUnit[0].location);
 				this.lastIntersectedUnitFacing = this.lastIntersectedUnit.getFacing();
 			}
-			this.location.set(tempVec.x, tempVec.y, Math.max(tempVec.z, nextZBeneath));
+			this.location.set(tempVec.x, tempVec.y, falling ? Math.max(tempVec.z, nextZBeneath)
+					: Math.max(tempVec.z - this.forwardSpeed, nextZBeneath));
 		}
 		else {
-			tempVec.set(this.location.x, this.location.y, Math.max(prevZBeneath, this.location.z + this.velocity.z));
-			if (!war3MapViewer.is3DTravelBlocked(this.location, tempVec, 9, getHeight())) {
-				this.location.z = tempVec.z;
+			tempVec2.set(this.location.x, this.location.y, Math.max(prevZBeneath, this.location.z + this.velocity.z));
+			if (!war3MapViewer.is3DTravelBlocked(this.location, tempVec2, stairsHeight, getHeight(), tempVec)) {
+				this.location.z = tempVec2.z;
 			}
 			else {
+				this.location.set(tempVec2);
+				this.velocity.z = 0;
 				this.wasFalling = false;
 			}
 		}

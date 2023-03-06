@@ -2,17 +2,20 @@ package com.etheller.warsmash.viewer5.handlers.w3x.camera;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson.PlayerPawn;
 
 public final class ThirdPersonCameraManager extends CameraManager {
 	private final float fov = 70;
-	private final float nearZ = 100;
+	private final float nearZ = 50;
 	private final float farZ = 5000;
 	private final PlayerPawn playerPawn;
 	private boolean touchDown;
+	private final War3MapViewer war3MapViewer;
 
-	public ThirdPersonCameraManager(final PlayerPawn playerPawn) {
+	public ThirdPersonCameraManager(final PlayerPawn playerPawn, final War3MapViewer war3MapViewer) {
 		this.playerPawn = playerPawn;
+		this.war3MapViewer = war3MapViewer;
 	}
 
 	@Override
@@ -60,6 +63,8 @@ public final class ThirdPersonCameraManager extends CameraManager {
 		this.target.set(this.playerPawn.getLocation());
 		this.target.z += this.playerPawn.getHeight();
 		this.position = this.position.add(this.target);
+		this.war3MapViewer.rayTest(this.target, this.position, this.position);
+
 		this.camera.perspective(this.fov, this.camera.getAspect(), this.nearZ, this.farZ);
 
 		this.camera.moveToAndFace(this.position, this.target, this.worldUp);

@@ -2,14 +2,17 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
+import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterInstance;
@@ -41,6 +44,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private SpriteFrame cursorFrame;
 	private boolean touchDown;
 //	private final ModelInstance skyModelInstance;
+	private Texture uiPortraitTexture;
+	private Texture uiMinimapTexture;
+	private Texture endCapTexture;
 
 	public ThirdPersonUI(final War3MapViewer war3MapViewer, final Scene uiScene, final Viewport uiViewport,
 			final Scene portraitScene, final String pawnModel) {
@@ -61,7 +67,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 				16, 3, 1.0f, false);
 		this.playerPawn = new PlayerPawn(pawnModelInstance, animationProcessor, unitShadowSplatDynamicIngame,
 				pawnComplexInstance);
-		this.cameraManager = new ThirdPersonCameraManager(this.playerPawn);
+		this.cameraManager = new ThirdPersonCameraManager(this.playerPawn, war3MapViewer);
 		this.cameraManager.setupCamera(this.war3MapViewer.worldScene);
 
 //		final MdxModel skyModel = war3MapViewer
@@ -72,6 +78,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 //		this.skyModelInstance.uniformScale(10);
 //		this.skyModelInstance.setLocation(0, 0, 0);
 //		((MdxComplexInstance) this.skyModelInstance).setSequence(0);
+
 	}
 
 	public PlayerPawn getPlayerPawn() {
@@ -92,6 +99,14 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.rootFrame.setSpriteFrameModel(this.cursorFrame, "Interface\\Cursor\\Cursor.mdx");
 		this.cursorFrame.setSequence("Point");
 		this.cursorFrame.setZDepth(1.0f);
+
+		this.uiPortraitTexture = ImageUtils.getAnyExtensionTexture(this.war3MapViewer.dataSource,
+				"Interface\\CharacterFrame\\UI-Player-Portrait.blp");
+		this.uiMinimapTexture = ImageUtils.getAnyExtensionTexture(this.war3MapViewer.dataSource,
+				"Interface\\Minimap\\UI-Minimap-Border.blp");
+
+		this.endCapTexture = ImageUtils.getAnyExtensionTexture(this.war3MapViewer.dataSource,
+				"Interface\\MainMenuBar\\UI-MainMenuBar-EndCap-Dwarf.blp");
 	}
 
 	@Override
@@ -119,7 +134,19 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 	@Override
 	public void render(final SpriteBatch batch, final GlyphLayout glyphLayout) {
+		this.rootFrame.render(batch, this.rootFrame.getFont20(), glyphLayout);
+		final float worldWidth = ((ExtendViewport) this.uiViewport).getMinWorldWidth();
+		final float worldHeight = ((ExtendViewport) this.uiViewport).getMinWorldHeight();
+		batch.draw(this.uiMinimapTexture, worldWidth - (this.uiMinimapTexture.getWidth() * 2),
+				worldHeight - (this.uiMinimapTexture.getHeight() * 2), this.uiMinimapTexture.getWidth() * 2,
+				this.uiMinimapTexture.getHeight() * 2);
+		batch.draw(this.uiPortraitTexture, 0, worldHeight - (this.uiPortraitTexture.getHeight() * 2),
+				this.uiPortraitTexture.getWidth() * 2, this.uiPortraitTexture.getHeight() * 2);
 
+		batch.draw(this.endCapTexture, 0, 0, this.endCapTexture.getWidth() * 2, this.endCapTexture.getHeight() * 2);
+		batch.draw(this.endCapTexture, worldWidth - this.endCapTexture.getWidth(), 0, this.endCapTexture.getWidth() * 2,
+				this.endCapTexture.getHeight() * 2, 0, 0, this.endCapTexture.getWidth(), this.endCapTexture.getHeight(),
+				true, false);
 	}
 
 	@Override

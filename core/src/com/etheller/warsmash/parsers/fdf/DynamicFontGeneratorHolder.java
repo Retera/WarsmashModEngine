@@ -22,9 +22,14 @@ public class DynamicFontGeneratorHolder {
 	public FontGeneratorHolder getFontGenerator(final String font) {
 		FontGeneratorHolder fontGenerator = this.fontNameToGenerator.get(font);
 		if (fontGenerator == null) {
-			final String fontName = this.skin.getField(font);
-			if (fontName == null) {
-				throw new IllegalStateException("No such font: " + font);
+			String fontName = this.skin.getField(font);
+			if ((fontName == null) || fontName.isEmpty()) {
+				if (this.dataSource.has(font)) {
+					fontName = font;
+				}
+				else {
+					throw new IllegalStateException("No such font: " + font);
+				}
 			}
 			if (!this.dataSource.has(fontName)) {
 				throw new IllegalStateException("No such font file: " + fontName + " (for \"" + font + "\")");

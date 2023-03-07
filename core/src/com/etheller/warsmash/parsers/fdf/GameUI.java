@@ -591,13 +591,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						final NamedNodeMap dimensionAttributes = absDimensionChild.getAttributes();
 						final Node xAttr = dimensionAttributes.getNamedItem("x");
 						if (xAttr != null) {
-							frameDefinition.set("Width",
-									new FloatFrameDefinitionField(Float.parseFloat(getAttributeText(xAttr))));
+							frameDefinition.set("Width", new FloatFrameDefinitionField(
+									convertXMLCoordX(Float.parseFloat(getAttributeText(xAttr)))));
 						}
 						final Node yAttr = dimensionAttributes.getNamedItem("y");
 						if (yAttr != null) {
-							frameDefinition.set("Height",
-									new FloatFrameDefinitionField(Float.parseFloat(getAttributeText(yAttr))));
+							frameDefinition.set("Height", new FloatFrameDefinitionField(
+									convertXMLCoordY(Float.parseFloat(getAttributeText(yAttr)))));
 						}
 					}
 					else {
@@ -612,6 +612,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 							final NamedNodeMap anchorAttributes = anchorNode.getAttributes();
 							final Node pointAttr = anchorAttributes.getNamedItem("point");
 							final Node relativeToAttr = anchorAttributes.getNamedItem("relativeTo");
+							final Node relativePointAttr = anchorAttributes.getNamedItem("relativePoint");
 							final String pointText = getAttributeText(pointAttr);
 							final FramePoint framePoint = FramePoint.valueOf(pointText);
 							final NodeList anchorChildNodes = anchorNode.getChildNodes();
@@ -639,7 +640,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 							}
 							if (relativeToAttr != null) {
 								final String relativeToText = getAttributeText(relativeToAttr);
-								frameDefinition.add(new SetPointDefinition(framePoint, relativeToText, framePoint,
+								FramePoint relativePoint = framePoint;
+								if (relativePointAttr != null) {
+									final String relativePointText = getAttributeText(relativePointAttr);
+									relativePoint = FramePoint.valueOf(relativePointText);
+								}
+								frameDefinition.add(new SetPointDefinition(framePoint, relativeToText, relativePoint,
 										offsetX, offsetY));
 							}
 							else {
@@ -720,10 +726,14 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					final NamedNodeMap valueAttributes = firstChild(item, "AbsInset").getAttributes();
 					frameDefinition.set("BackdropBackgroundInsets",
 							new Vector4FrameDefinitionField(new Vector4Definition(
-									Float.parseFloat(valueAttributes.getNamedItem("left").getNodeValue()),
-									Float.parseFloat(valueAttributes.getNamedItem("right").getNodeValue()),
-									Float.parseFloat(valueAttributes.getNamedItem("top").getNodeValue()),
-									Float.parseFloat(valueAttributes.getNamedItem("bottom").getNodeValue()))));
+									convertXMLCoordX(
+											Float.parseFloat(valueAttributes.getNamedItem("left").getNodeValue())),
+									convertXMLCoordX(
+											Float.parseFloat(valueAttributes.getNamedItem("right").getNodeValue())),
+									convertXMLCoordY(
+											Float.parseFloat(valueAttributes.getNamedItem("top").getNodeValue())),
+									convertXMLCoordY(
+											Float.parseFloat(valueAttributes.getNamedItem("bottom").getNodeValue())))));
 					break;
 				}
 				case "NormalTexture": {
@@ -876,6 +886,37 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		default:
 			throw new IllegalArgumentException(String.valueOf(frameClass));
 		}
+		if (frameClass == FrameClass.Texture) {
+			{
+				final Node textItem = getAttributesNamedItem(attributes, "file");
+				if (textItem != null) {
+					final String attribText = getAttributeText(textItem);
+					if (attribText != null) {
+						frameDefinition.set("File", new StringFrameDefinitionField(attribText));
+					}
+				}
+			}
+			{
+				final Node textItem = getAttributesNamedItem(attributes, "alphaMode");
+				if (textItem != null) {
+					final String attribText = getAttributeText(textItem);
+					if (attribText != null) {
+						frameDefinition.set("AlphaMode", new StringFrameDefinitionField(attribText));
+					}
+				}
+			}
+		}
+		else if (frameClass == FrameClass.Layer) {
+			{
+				final Node textItem = getAttributesNamedItem(attributes, "level");
+				if (textItem != null) {
+					final String attribText = getAttributeText(textItem);
+					if (attribText != null) {
+						frameDefinition.set("XMLLayerLevel", new StringFrameDefinitionField(attribText));
+					}
+				}
+			}
+		}
 		if ("FontString".equals(baseXmlNodeName)) {
 			final Node fontItem = getAttributesNamedItem(attributes, "font");
 			if (fontItem != null) {
@@ -940,6 +981,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 		}
 		if (frameDefinition != null) {
+			frameDefinition.sortChildren();
 			this.templates.put(name, frameDefinition);
 		}
 		return frameDefinition;
@@ -1008,11 +1050,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			final NamedNodeMap dimensionAttributes = absDimensionChild.getAttributes();
 			final Node xAttr = dimensionAttributes.getNamedItem("x");
 			if (xAttr != null) {
-				x = Float.parseFloat(getAttributeText(xAttr));
+				x = convertXMLCoordX(Float.parseFloat(getAttributeText(xAttr)));
 			}
 			final Node yAttr = dimensionAttributes.getNamedItem("y");
 			if (yAttr != null) {
-				y = Float.parseFloat(getAttributeText(yAttr));
+				y = convertXMLCoordY(Float.parseFloat(getAttributeText(yAttr)));
 			}
 		}
 		else {
@@ -2147,7 +2189,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			else {
 				textureFrame = new TextureFrame(frameDefinition.getName(), parent, decorateFileNames, texCoord);
 			}
-			textureFrame.setTexture(file, this);
+			if (file != null) {
+				textureFrame.setTexture(file, this);
+			}
 			inflatedFrame = textureFrame;
 			break;
 		default:

@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
@@ -13,8 +12,12 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
+import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
+import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
-import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
+import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterInstance;
@@ -27,6 +30,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CFogModifie
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashToggleableUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 
 public class ThirdPersonUI implements WarsmashToggleableUI {
 	private static final Vector2 screenCoordsVector = new Vector2();
@@ -46,9 +51,16 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private SpriteFrame cursorFrame;
 	private boolean touchDown;
 //	private final ModelInstance skyModelInstance;
-	private Texture uiPortraitTexture;
-	private Texture uiMinimapTexture;
-	private Texture endCapTexture;
+	private SimpleFrame mainMenuBar;
+	private SimpleFrame worldFrame;
+	private SimpleFrame uiParent;
+	private SimpleStatusBarFrame mainMenuExpBar;
+	private StringFrame mainMenuExpBarText;
+	private UIFrame castingBarFrame;
+	private ClickableFrame mouseDownUIFrame;
+	private ClickableFrame mouseOverUIFrame;
+	private UIFrame tooltipFrame;
+	private StringFrame tooltipFrame1;
 
 	public ThirdPersonUI(final War3MapViewer war3MapViewer, final Scene uiScene, final Viewport uiViewport,
 			final Scene portraitScene, final String pawnModel) {
@@ -93,7 +105,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.myFogModifier = new CFogModifier(CFogState.VISIBLE, this.war3MapViewer.terrain.getEntireMap());
 		localPlayer.addFogModifer(this.myFogModifier);
 
-		this.rootFrame = new GameUI(this.war3MapViewer.dataSource, GameUI.loadSkin(this.war3MapViewer.dataSource, 0),
+		this.rootFrame = new GameUI(this.war3MapViewer.mapMpq, GameUI.loadSkin(this.war3MapViewer.mapMpq, 0),
 				this.uiViewport, this.uiScene, this.war3MapViewer, 0, this.war3MapViewer.getAllObjectData().getWts());
 
 		try {
@@ -102,20 +114,114 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		catch (final IOException e) {
 			throw new IllegalStateException(e);
 		}
+		this.worldFrame = (SimpleFrame) this.rootFrame.createFrame("WorldFrame", this.rootFrame, 0, 0);
+		this.worldFrame.setSetAllPoints(true);
+		this.uiParent = (SimpleFrame) this.rootFrame.createFrame("UIParent", this.worldFrame, 0, 0);
+		this.worldFrame.add(this.uiParent);
+		this.mainMenuBar = (SimpleFrame) this.rootFrame.createFrame("MainMenuBar", this.uiParent, 0, 0);
+		this.uiParent.add(this.mainMenuBar);
+
+		this.mainMenuExpBar = (SimpleStatusBarFrame) this.rootFrame.getFrameByName("MainMenuExpBar", 0);
+		this.mainMenuExpBar.setValue(25 / 100f);
+		this.mainMenuExpBar.getBarFrame().setColor(0.58f, 0, 0.55f, 1.0f);
+
+		this.mainMenuExpBarText = (StringFrame) this.rootFrame.getFrameByName("MainMenuExpBarText", 0);
+		this.rootFrame.setText(this.mainMenuExpBarText, "25 / 100");
+
+		final SimpleFrame mainMenuBarArtFrame = (SimpleFrame) this.rootFrame.getFrameByName("MainMenuBarArtFrame", 0);
+
+		for (int i = 1; i <= 12; i++) {
+			final String buttonName = "ActionButton" + i;
+			final UIFrame actionButtonFrame = this.rootFrame.createFrame(buttonName, mainMenuBarArtFrame, i, i);
+			mainMenuBarArtFrame.add(actionButtonFrame);
+		}
+		final UIFrame actionBarUpButtonFrame = this.rootFrame.createFrame("ActionBarUpButton", mainMenuBarArtFrame, 0,
+				0);
+		final UIFrame actionBarDownButtonFrame = this.rootFrame.createFrame("ActionBarDownButton", mainMenuBarArtFrame,
+				0, 0);
+		mainMenuBarArtFrame.add(actionBarUpButtonFrame);
+		mainMenuBarArtFrame.add(actionBarDownButtonFrame);
+
+		final UIFrame characterMicroButton = this.rootFrame.createFrame("CharacterMicroButton", mainMenuBarArtFrame, 0,
+				0);
+		mainMenuBarArtFrame.add(characterMicroButton);
+		final GlueTextButtonFrame spellbookMicroButton = (GlueTextButtonFrame) this.rootFrame
+				.createFrame("SpellbookMicroButton", mainMenuBarArtFrame, 0, 0);
+		mainMenuBarArtFrame.add(spellbookMicroButton);
+		final UIFrame questLogMicroButton = this.rootFrame.createFrame("QuestLogMicroButton", mainMenuBarArtFrame, 0,
+				0);
+		mainMenuBarArtFrame.add(questLogMicroButton);
+		final UIFrame socialsMicroButton = this.rootFrame.createFrame("SocialsMicroButton", mainMenuBarArtFrame, 0, 0);
+		mainMenuBarArtFrame.add(socialsMicroButton);
+		final UIFrame worldMapMicroButton = this.rootFrame.createFrame("WorldMapMicroButton", mainMenuBarArtFrame, 0,
+				0);
+		mainMenuBarArtFrame.add(worldMapMicroButton);
+		final GlueTextButtonFrame mainMenuMicroButton = (GlueTextButtonFrame) this.rootFrame
+				.createFrame("MainMenuMicroButton", mainMenuBarArtFrame, 0, 0);
+		mainMenuBarArtFrame.add(mainMenuMicroButton);
+		final UIFrame bugsMicroButton = this.rootFrame.createFrame("BugsMicroButton", mainMenuBarArtFrame, 0, 0);
+		mainMenuBarArtFrame.add(bugsMicroButton);
+
+		final UIFrame mainMenuBarBackpackButton = this.rootFrame.createFrame("MainMenuBarBackpackButton",
+				mainMenuBarArtFrame, 0, 0);
+		mainMenuBarArtFrame.add(mainMenuBarBackpackButton);
+		for (int i = 0; i < 4; i++) {
+			final UIFrame characterBagButton = this.rootFrame.createFrame("CharacterBag" + i + "Slot",
+					mainMenuBarArtFrame, 0, 0);
+			mainMenuBarArtFrame.add(characterBagButton);
+		}
+
+		final UIFrame spellBookFrame = this.rootFrame.createFrame("SpellBookFrame", this.uiParent, 0, 0);
+		this.uiParent.add(spellBookFrame);
+		spellBookFrame.setVisible(false);
+		final GlueTextButtonFrame spellBookCloseButton = (GlueTextButtonFrame) this.rootFrame
+				.getFrameByName("SpellBookCloseButton", 0);
+
+		final UIFrame gameMenuFrame = this.rootFrame.createFrame("GameMenuFrame", this.uiParent, 0, 0);
+		this.uiParent.add(gameMenuFrame);
+		gameMenuFrame.setVisible(false);
+		final GlueTextButtonFrame gameMenuButtonContinue = (GlueTextButtonFrame) this.rootFrame
+				.getFrameByName("GameMenuButtonContinue", 0);
+		gameMenuButtonContinue.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				gameMenuFrame.setVisible(false);
+			}
+		});
+		mainMenuMicroButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				gameMenuFrame.setVisible(true);
+			}
+		});
+		spellbookMicroButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				spellBookFrame.setVisible(true);
+			}
+		});
+		spellBookCloseButton.setOnClick(new Runnable() {
+			@Override
+			public void run() {
+				spellBookFrame.setVisible(false);
+			}
+		});
+
+		this.castingBarFrame = this.rootFrame.createFrame("CastingBarFrame", this.uiParent, 0, 0);
+		this.uiParent.add(this.castingBarFrame);
+
+		this.tooltipFrame = this.rootFrame.createFrame("GameTooltip", this.uiParent, 0, 0);
+		this.uiParent.add(this.tooltipFrame);
+		this.tooltipFrame1 = (StringFrame) this.rootFrame.getFrameByName("$parentTextLeft1", 0);
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashTPCursorFrame",
 				this.rootFrame, "", 0);
 		this.rootFrame.setSpriteFrameModel(this.cursorFrame, "Interface\\Cursor\\Cursor.mdx");
 		this.cursorFrame.setSequence("Point");
 		this.cursorFrame.setZDepth(1.0f);
+		this.cursorFrame.setVisible(false);
 
-		this.uiPortraitTexture = ImageUtils.getAnyExtensionTexture(this.war3MapViewer.dataSource,
-				"Interface\\CharacterFrame\\UI-Player-Portrait.blp");
-		this.uiMinimapTexture = ImageUtils.getAnyExtensionTexture(this.war3MapViewer.dataSource,
-				"Interface\\Minimap\\UI-Minimap-Border.blp");
-
-		this.endCapTexture = ImageUtils.getAnyExtensionTexture(this.war3MapViewer.dataSource,
-				"Interface\\MainMenuBar\\UI-MainMenuBar-EndCap-Dwarf.blp");
+		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 	}
 
 	@Override
@@ -146,16 +252,6 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.rootFrame.render(batch, this.rootFrame.getFont20(), glyphLayout);
 		final float worldWidth = ((ExtendViewport) this.uiViewport).getMinWorldWidth();
 		final float worldHeight = ((ExtendViewport) this.uiViewport).getMinWorldHeight();
-		batch.draw(this.uiMinimapTexture, worldWidth - (this.uiMinimapTexture.getWidth() * 2),
-				worldHeight - (this.uiMinimapTexture.getHeight() * 2), this.uiMinimapTexture.getWidth() * 2,
-				this.uiMinimapTexture.getHeight() * 2);
-		batch.draw(this.uiPortraitTexture, 0, worldHeight - (this.uiPortraitTexture.getHeight() * 2),
-				this.uiPortraitTexture.getWidth() * 2, this.uiPortraitTexture.getHeight() * 2);
-
-		batch.draw(this.endCapTexture, 0, 0, this.endCapTexture.getWidth() * 2, this.endCapTexture.getHeight() * 2);
-		batch.draw(this.endCapTexture, worldWidth - this.endCapTexture.getWidth(), 0, this.endCapTexture.getWidth() * 2,
-				this.endCapTexture.getHeight() * 2, 0, 0, this.endCapTexture.getWidth(), this.endCapTexture.getHeight(),
-				true, false);
 	}
 
 	@Override
@@ -228,15 +324,43 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.lastX = screenX;
 		this.lastY = screenY;
 		this.button = button;
-		this.touchDown = true;
-		this.cameraManager.setTouchDown(true);
+
+		screenCoordsVector.set(screenX, screenY);
+		this.uiViewport.unproject(screenCoordsVector);
+		final UIFrame clickedUIFrame = this.rootFrame.touchDown(screenCoordsVector.x, screenCoordsVector.y, button);
+		if (clickedUIFrame == null) {
+			this.touchDown = true;
+			this.cameraManager.setTouchDown(true);
+		}
+		else {
+			if (clickedUIFrame instanceof ClickableFrame) {
+				this.mouseDownUIFrame = (ClickableFrame) clickedUIFrame;
+				this.mouseDownUIFrame.mouseDown(this.rootFrame, this.uiViewport);
+			}
+		}
 		return false;
 	}
 
 	@Override
 	public boolean touchUp(final int screenX, final int screenY, final float worldScreenY, final int button) {
-		this.touchDown = false;
-		this.cameraManager.setTouchDown(false);
+		screenCoordsVector.set(screenX, screenY);
+		this.uiViewport.unproject(screenCoordsVector);
+		final UIFrame clickedUIFrame = this.rootFrame.touchUp(screenCoordsVector.x, screenCoordsVector.y, button);
+		if (this.mouseDownUIFrame != null) {
+			if (clickedUIFrame == this.mouseDownUIFrame) {
+				this.mouseDownUIFrame.onClick(button);
+				final String soundKey = this.mouseDownUIFrame.getSoundKey();
+				if (soundKey != null) {
+					this.war3MapViewer.getUiSounds().getSound(soundKey).play(this.uiScene.audioContext, 0, 0, 0);
+				}
+			}
+			this.mouseDownUIFrame.mouseUp(this.rootFrame, this.uiViewport);
+		}
+		else {
+			this.touchDown = false;
+			this.cameraManager.setTouchDown(false);
+		}
+		this.mouseDownUIFrame = null;
 		return false;
 	}
 
@@ -246,17 +370,25 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final int newY = screenY;
 		final int dx = newX - this.lastX;
 		final int dy = newY - this.lastY;
-		if (this.button == Input.Buttons.LEFT) {
-			this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15);
-			this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15);
+		if (this.touchDown) {
+			if (this.button == Input.Buttons.LEFT) {
+				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15);
+				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15);
+			}
+			else if (this.button == Input.Buttons.RIGHT) {
+				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15);
+				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15);
+				this.playerPawn.setFacingDegrees((float) Math.toDegrees(this.cameraManager.horizontalAngle));
+			}
+			this.lastX = newX;
+			this.lastY = newY;
 		}
-		else if (this.button == Input.Buttons.RIGHT) {
-			this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15);
-			this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15);
-			this.playerPawn.setFacingDegrees((float) Math.toDegrees(this.cameraManager.horizontalAngle));
+		else if (this.mouseDownUIFrame != null) {
+			screenCoordsVector.set(screenX, screenY);
+			this.uiViewport.unproject(screenCoordsVector);
+			this.mouseDownUIFrame.mouseDragged(this.rootFrame, this.uiViewport, screenCoordsVector.x,
+					screenCoordsVector.y);
 		}
-		this.lastX = newX;
-		this.lastY = newY;
 		return false;
 	}
 
@@ -264,7 +396,42 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	public boolean mouseMoved(final int screenX, final int screenY, final float worldScreenY) {
 		this.lastX = screenX;
 		this.lastY = screenY;
+		screenCoordsVector.set(screenX, screenY);
+		this.uiViewport.unproject(screenCoordsVector);
+		final UIFrame mousedUIFrame = this.rootFrame.getFrameChildUnderMouse(screenCoordsVector.x,
+				screenCoordsVector.y);
+		if (mousedUIFrame != this.mouseOverUIFrame) {
+			if (this.mouseOverUIFrame != null) {
+				this.mouseOverUIFrame.mouseExit(this.rootFrame, this.uiViewport);
+			}
+			if (mousedUIFrame instanceof ClickableFrame) {
+				this.mouseOverUIFrame = (ClickableFrame) mousedUIFrame;
+				if (this.mouseOverUIFrame != null) {
+					this.mouseOverUIFrame.mouseEnter(this.rootFrame, this.uiViewport);
+				}
+				if (mousedUIFrame instanceof ClickableActionFrame) {
+					loadTooltip((ClickableActionFrame) mousedUIFrame);
+				}
+			}
+			else {
+				this.mouseOverUIFrame = null;
+				this.tooltipFrame.setVisible(false);
+			}
+		}
+		if (mousedUIFrame == null) {
+		}
 		return false;
+	}
+
+	private void loadTooltip(final ClickableActionFrame mousedUIFrame) {
+		final String toolTip = mousedUIFrame.getToolTip();
+		final String uberTip = mousedUIFrame.getUberTip();
+		if ((toolTip == null) || (uberTip == null)) {
+			this.tooltipFrame.setVisible(false);
+		}
+		else {
+			this.rootFrame.setText(this.tooltipFrame1, uberTip);
+		}
 	}
 
 	@Override

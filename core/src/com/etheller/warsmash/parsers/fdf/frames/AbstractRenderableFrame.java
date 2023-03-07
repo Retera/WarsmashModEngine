@@ -23,7 +23,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	private static final FramePoint[] TOP_ANCHOR_PRIORITY = { FramePoint.TOP, FramePoint.TOPLEFT, FramePoint.TOPRIGHT };
 	private static final FramePoint[] BOTTOM_ANCHOR_PRIORITY = { FramePoint.BOTTOM, FramePoint.BOTTOMLEFT,
 			FramePoint.BOTTOMRIGHT };
-	private static final boolean DEBUG_LOG = false;
+	private static final boolean DEBUG_LOG = true;
 	protected String name;
 	protected UIFrame parent;
 	protected boolean visible = true;
@@ -40,9 +40,12 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	@Override
 	public void setSetAllPoints(final boolean setAllPoints) {
-		for (final FramePoint framePoint : FramePoint.values()) {
-			if (!this.framePointToAssignment.containsKey(framePoint)) {
-				this.framePointToAssignment.put(framePoint, new SetPoint(framePoint, this.parent, framePoint, 0, 0));
+		if (!this.framePointToAssignment.containsKey(FramePoint.CENTER)) {
+			for (final FramePoint framePoint : FramePoint.values()) {
+				if (!this.framePointToAssignment.containsKey(framePoint)) {
+					this.framePointToAssignment.put(framePoint,
+							new SetPoint(framePoint, this.parent, framePoint, 0, 0));
+				}
 			}
 		}
 	}

@@ -447,12 +447,11 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 		@Override
 		public void renderOpaque(final Matrix4 mvp) {
-
+			renderLibGDXContent();
 		}
 
 		@Override
 		public void renderTranslucent() {
-			renderLibGDXContent();
 		}
 
 		@Override

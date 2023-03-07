@@ -1,6 +1,7 @@
 package com.etheller.warsmash.parsers.fdf.datamodel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -183,5 +184,29 @@ public class FrameDefinition {
 			return frameDefinitionField.visit(GetTextJustifyFieldVisitor.INSTANCE);
 		}
 		return null;
+	}
+
+	public void sortChildren() {
+		final List<String> levels = Arrays.asList("BACKGROUND", "BORDER", "ARTWORK", "OVERLAY", "HIGHLIGHT");
+		final List<FrameDefinition>[] reorderedFramesByLevel = new List[levels.size()];
+		for (int i = 0; i < reorderedFramesByLevel.length; i++) {
+			reorderedFramesByLevel[i] = new ArrayList<>();
+		}
+		for (final FrameDefinition innerFrame : this.innerFrames) {
+			int layerLevelIndex = -1;
+			final String layerLevel = innerFrame.getString("XMLLayerLevel");
+			if (layerLevel != null) {
+				layerLevelIndex = levels.indexOf(layerLevel);
+			}
+			if (layerLevelIndex == -1) {
+				layerLevelIndex = 2;
+			}
+			reorderedFramesByLevel[layerLevelIndex].add(innerFrame);
+		}
+
+		this.innerFrames.clear();
+		for (int i = 0; i < reorderedFramesByLevel.length; i++) {
+			this.innerFrames.addAll(reorderedFramesByLevel[i]);
+		}
 	}
 }

@@ -90,4 +90,9 @@ public class StringMsgAbilityActivationReceiver implements AbilityActivationRece
 		this.message = "NOTEXTERN: No charges remaining.";
 	}
 
+	@Override
+	public void alreadyFullHealth() {
+		this.message = "NOTEXTERN: Already full health.";
+	}
+
 }

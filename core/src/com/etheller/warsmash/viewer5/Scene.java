@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.math.Matrix4;
@@ -59,6 +60,7 @@ public abstract class Scene {
 	 * If true, alpha works as usual.
 	 */
 	public boolean alpha = false;
+	public Color backgroundColor = Color.BLACK;
 	private final SceneLightManager lightManager;
 
 	public Scene(final ModelViewer viewer, final SceneLightManager lightManager) {
@@ -238,6 +240,7 @@ public abstract class Scene {
 		// If this scene doesn't want alpha, clear it.
 		gl.glDepthMask(true);
 		if (!this.alpha) {
+			gl.glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
 			gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 		}
 		else {

@@ -637,6 +637,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		}
 
 		@Override
+		public void alreadyFullHealth() {
+		}
+
+		@Override
 		public void disabled() {
 			this.disabled = true;
 		}

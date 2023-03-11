@@ -1684,29 +1684,6 @@ public class Jass2 {
 				return new HandleJassValue(eventType, whichPlayer.addEvent(globalScope, whichTrigger, whichPlayerEvent));
 			});
 			// TODO past this point things are inconsistent about ordering
-			// jassProgramVisitor.getJassNativeManager().createNative("GetCameraMargin", new JassFunction() {
-			// 	@Override
-			// 	public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-			// 			final TriggerExecutionScope triggerScope) {
-			// 		final int whichMargin = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-			// 		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();
-			// 		switch (whichMargin) {
-			// 		case 0:// CAMERA_MARGIN_LEFT
-			// 			return new RealJassValue(war3MapViewer.terrain.getDefaultCameraBounds()[0] - playableMapArea.x);
-			// 		case 1:// CAMERA_MARGIN_RIGHT
-			// 			return new RealJassValue((playableMapArea.x + playableMapArea.width)
-			// 					- war3MapViewer.terrain.getDefaultCameraBounds()[2]);
-			// 		case 2:// CAMERA_MARGIN_TOP
-			// 			return new RealJassValue((playableMapArea.y + playableMapArea.height)
-			// 					- war3MapViewer.terrain.getDefaultCameraBounds()[3]);
-			// 		case 3:// CAMERA_MARGIN_BOTTOM
-			// 			return new RealJassValue(war3MapViewer.terrain.getDefaultCameraBounds()[1] - playableMapArea.y);
-			// 		default:
-			// 			throw new IllegalArgumentException(
-			// 					"Must input one of these constants: [CAMERA_MARGIN_LEFT, CAMERA_MARGIN_RIGHT, CAMERA_MARGIN_TOP, CAMERA_MARGIN_BOTTOM]");
-			// 		}
-			// 	}
-			// });
 			jassProgramVisitor.getJassNativeManager().createNative("GetCameraMargin", (arguments, globalScope, triggerScope) -> {
 				final int whichMargin = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 				final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();

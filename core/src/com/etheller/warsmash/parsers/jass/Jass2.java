@@ -2650,6 +2650,21 @@ public class Jass2 {
 					return new HandleJassValue(itemType, newItem);
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitAddItemToSlotById", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit unit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int rawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final int slot = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+
+					final CItem newItem = CommonEnvironment.this.simulation.createItem(new War3ID(rawcode), unit.getX(),
+							unit.getY());
+					unit.getInventoryData().giveItem(CommonEnvironment.this.simulation, unit, newItem, slot, false);
+
+					return new HandleJassValue(itemType, newItem);
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("ChooseRandomItem", new JassFunction() {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -2816,6 +2831,18 @@ public class Jass2 {
 					final CPlayerColor whichPlayerColor = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 					final RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
 					renderPeer.setPlayerColor(whichPlayerColor.ordinal());
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetUnitOwner", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final CPlayer whichPlayer = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+					final boolean changeColor = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+
+					whichUnit.setPlayerIndex(CommonEnvironment.this.simulation, whichPlayer.getId(), changeColor);
 					return null;
 				}
 			});

@@ -8,24 +8,21 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CAbilityGoldMinable {
-	private int gold;
+public class CAbilityOverlayedMinableMine extends CAbilityOverlayedMine implements CAbilityGoldMinable {
 	private float miningDuration;
 	private int miningCapacity;
 	private final List<CBehaviorHarvest> activeMiners;
 	private boolean wasEmpty;
 
-	public CAbilityGoldMine(final int handleId, final War3ID alias, final int maxGold, final float miningDuration,
-			final int miningCapacity) {
+	public CAbilityOverlayedMinableMine(final int handleId, final War3ID alias, final int maxGold,
+			final float miningDuration, final int miningCapacity) {
 		super(handleId, alias);
-		this.gold = maxGold;
 		this.miningDuration = miningDuration;
 		this.miningCapacity = miningCapacity;
 		this.activeMiners = new ArrayList<>();
@@ -54,14 +51,15 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CA
 			}
 			this.wasEmpty = empty;
 		}
+		final CAbilityGoldMinable parentGoldMineAbility = getParentGoldMineAbility();
 		for (int i = this.activeMiners.size() - 1; i >= 0; i--) {
 			final CBehaviorHarvest activeMiner = this.activeMiners.get(i);
 			if (game.getGameTurnTick() >= activeMiner.getPopoutFromMineTurnTick()) {
 
 				int goldMined;
-				if (this.gold > 0) {
-					goldMined = Math.min(this.gold, activeMiner.getGoldCapacity());
-					this.gold -= goldMined;
+				if (parentGoldMineAbility.getGold() > 0) {
+					goldMined = Math.min(parentGoldMineAbility.getGold(), activeMiner.getGoldCapacity());
+					parentGoldMineAbility.setGold(parentGoldMineAbility.getGold() - goldMined);
 				}
 				else {
 					goldMined = 0;
@@ -70,7 +68,7 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CA
 				this.activeMiners.remove(i);
 			}
 		}
-		if (this.gold <= 0) {
+		if (parentGoldMineAbility.getGold() <= 0) {
 			unit.setLife(game, 0);
 		}
 	}
@@ -121,12 +119,12 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CA
 
 	@Override
 	public int getGold() {
-		return this.gold;
+		return getParentGoldMineAbility().getGold();
 	}
 
 	@Override
 	public void setGold(final int gold) {
-		this.gold = gold;
+		getParentGoldMineAbility().setGold(gold);
 	}
 
 	@Override
@@ -158,11 +156,7 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CA
 	}
 
 	@Override
-	public void onDeath(final CSimulation game, final CUnit cUnit) {
-	}
-
-	@Override
 	public boolean isBaseMine() {
-		return true;
+		return false;
 	}
 }

@@ -543,8 +543,8 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnUnitUpgradeFinishSound(constructedStructure);
 	}
 
-	public void createBuildingDeathEffect(final CUnit cUnit) {
-		this.simulationRenderController.spawnBuildingDeathEffect(cUnit);
+	public void createDeathExplodeEffect(final CUnit cUnit) {
+		this.simulationRenderController.spawnDeathExplodeEffect(cUnit);
 	}
 
 	public HandleIdAllocator getHandleIdAllocator() {

@@ -29,11 +29,14 @@ public class CBehaviorStop implements CBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
-		this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, true);
+		if (!this.unit.isConstructingOrUpgrading()) {
+			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
+					true);
+		}
 	}
 
 	@Override
-	public void end(final CSimulation game, boolean interrupted) {
+	public void end(final CSimulation game, final boolean interrupted) {
 
 	}
 

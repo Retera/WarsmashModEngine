@@ -113,7 +113,7 @@ public class MpqDataSource implements DataSource {
 	}
 
 	@Override
-	public File getDirectory(String filepath) throws IOException {
+	public File getDirectory(final String filepath) throws IOException {
 		return null;
 	}
 

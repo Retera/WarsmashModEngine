@@ -49,7 +49,6 @@ import com.etheller.warsmash.parsers.fdf.frames.FilterModeTextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame;
-import com.etheller.warsmash.parsers.fdf.frames.MapListBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.MenuFrame;
 import com.etheller.warsmash.parsers.fdf.frames.MenuFrame.MenuClickListener;
 import com.etheller.warsmash.parsers.fdf.frames.PopupMenuFrame;
@@ -1115,45 +1114,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 			else if ("LISTBOX".equals(frameDefinition.getFrameType())) {
 				// TODO advanced components here
-				final ListBoxFrame controlFrame = new ListBoxFrame(frameDefinition.getName(), parent, viewport2);
+				final ListBoxFrame controlFrame = new ListBoxFrame(frameDefinition.getName(), parent, viewport2, dataSource);
 				// TODO: we should not need to put ourselves in this map 2x, but we do
 				// since there are nested inflate calls happening before the general case
 				// mapping
-				this.nameToFrame.put(frameDefinition.getName(), controlFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String listBoxScrollBarKey = frameDefinition.getString("ListBoxScrollBar");
-				final Float listBoxBorder = frameDefinition.getFloat("ListBoxBorder");
-				if (listBoxBorder != null) {
-					controlFrame.setListBoxBorder(convertX(viewport2, listBoxBorder));
-				}
-				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
-					if (childDefinition.getName().equals(controlBackdropKey)) {
-						final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
-								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
-						inflatedChild.setSetAllPoints(true);
-						controlFrame.setControlBackdrop(inflatedChild);
-					}
-					else if (childDefinition.getName().equals(listBoxScrollBarKey)) {
-						final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
-								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
-						controlFrame.setScrollBarFrame((ScrollBarFrame) inflatedChild);
-					}
-				}
-				if (controlFrame.getScrollBarFrame() == null) {
-					// TODO this is probably not how this should work
-					for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
-						if (childDefinition.getFrameType().equals("SCROLLBAR")) {
-							final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
-									inDecorateFileNames || childDefinition.has("DecorateFileNames"));
-							controlFrame.setScrollBarFrame((ScrollBarFrame) inflatedChild);
-						}
-					}
-				}
-				inflatedFrame = controlFrame;
-			}
-			else if ("MAPLISTBOX".equals(frameDefinition.getFrameType())) {
-				// Replica of the LISTBOX method above.
-				final MapListBoxFrame controlFrame = new MapListBoxFrame(frameDefinition.getName(), parent, viewport2, dataSource);
 				this.nameToFrame.put(frameDefinition.getName(), controlFrame);
 				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
 				final String listBoxScrollBarKey = frameDefinition.getString("ListBoxScrollBar");

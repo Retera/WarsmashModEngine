@@ -130,8 +130,6 @@ public class MdlxModel {
 		while (reader.remaining() > 0) {
 			final int tag = reader.readTag();
 			final int size = reader.readInt32();
-			System.out.println("about to load tag : " + convertInt(tag));
-			System.out.println("size: " + size);
 			switch (tag) {
 			case VERS:
 				loadVersionChunk(reader);
@@ -150,8 +148,7 @@ public class MdlxModel {
 			case MTLS: {
 				if (this.version == 1300) {
 					final long numMaterials = reader.readUInt32();
-					System.out.println("MTLS num sequences is: " + numMaterials);
-					System.out.println("MTLS extra data is: " + reader.readUInt32());
+					reader.readUInt32(); // MTLS extra data
 					loadNDynamicObjects(this.materials, MdlxBlockDescriptor.MATERIAL, reader, numMaterials);
 				}
 				else {
@@ -168,7 +165,6 @@ public class MdlxModel {
 			case GEOS:
 				if (this.version == 1300) {
 					final long numGeos = reader.readUInt32();
-					System.out.println("GEOS num is: " + numGeos);
 					loadNDynamicObjects(this.geosets, MdlxBlockDescriptor.GEOSET, reader, numGeos);
 				}
 				else {
@@ -187,7 +183,6 @@ public class MdlxModel {
 			case BONE:
 				if (this.version == 1300) {
 					final long count = reader.readUInt32();
-					System.out.println("BONE count is: " + count);
 					loadNDynamicObjects(this.bones, MdlxBlockDescriptor.BONE, reader, count);
 				}
 				else {
@@ -197,7 +192,6 @@ public class MdlxModel {
 			case LITE:
 				if (this.version == 1300) {
 					final long count = reader.readUInt32();
-					System.out.println("BONE count is: " + count);
 					loadNDynamicObjects(this.lights, MdlxBlockDescriptor.LIGHT, reader, count);
 				}
 				else {
@@ -207,7 +201,6 @@ public class MdlxModel {
 			case HELP:
 				if (this.version == 1300) {
 					final long count = reader.readUInt32();
-					System.out.println("HELP count is: " + count);
 					loadNDynamicObjects(this.helpers, MdlxBlockDescriptor.HELPER, reader, count);
 				}
 				else {
@@ -217,9 +210,7 @@ public class MdlxModel {
 			case ATCH:
 				if (this.version == 1300) {
 					final long count = reader.readUInt32();
-					System.out.println("ATCH count is: " + count);
 					final long unused = reader.readUInt32();
-					System.out.println("ATCH unused is: " + unused);
 					loadNDynamicObjects(this.attachments, MdlxBlockDescriptor.ATTACHMENT, reader, count);
 				}
 				else {
@@ -232,7 +223,6 @@ public class MdlxModel {
 			case PREM:
 				if (this.version == 1300) {
 					final long count = reader.readUInt32();
-					System.out.println("PREM count is: " + count);
 					loadNDynamicObjects(this.particleEmitters, MdlxBlockDescriptor.PARTICLE_EMITTER, reader, count);
 				}
 				else {
@@ -242,7 +232,6 @@ public class MdlxModel {
 			case PRE2:
 				if (this.version == 1300) {
 					final long count = reader.readUInt32();
-					System.out.println("PRE2 count is: " + count);
 					loadNDynamicObjects(this.particleEmitters2, MdlxBlockDescriptor.PARTICLE_EMITTER2, reader, count);
 				}
 				else {
@@ -256,7 +245,6 @@ public class MdlxModel {
 			case RIBB:
 				if (this.version == 1300) {
 					final long count = reader.readUInt32();
-					System.out.println("RIBB count is: " + count);
 					loadNDynamicObjects(this.ribbonEmitters, MdlxBlockDescriptor.RIBBON_EMITTER, reader, count);
 				}
 				else {
@@ -266,7 +254,6 @@ public class MdlxModel {
 			case CAMS:
 				if (this.version == 1300) {
 					final long count = reader.readUInt32();
-					System.out.println("CAMS count is: " + count);
 					loadNDynamicObjects(this.cameras, MdlxBlockDescriptor.CAMERA, reader, count);
 				}
 				else {
@@ -276,7 +263,6 @@ public class MdlxModel {
 			case EVTS:
 				if (this.version == 1300) {
 					final long count = reader.readUInt32();
-					System.out.println("EVTS count is: " + count);
 					loadNDynamicObjects(this.eventObjects, MdlxBlockDescriptor.EVENT_OBJECT, reader, count);
 				}
 				else {
@@ -309,7 +295,6 @@ public class MdlxModel {
 
 	private void loadVersionChunk(final BinaryReader reader) {
 		this.version = reader.readInt32();
-		System.out.println("version: " + this.version);
 	}
 
 	private void loadModelChunk(final BinaryReader reader) {
@@ -320,11 +305,6 @@ public class MdlxModel {
 		if (this.version == 1300) {
 			this.flags = reader.readInt8();
 		}
-		System.out.println("name: " + this.name);
-		System.out.println("animationFile: " + this.animationFile);
-		System.out.println("extent: " + this.extent);
-		System.out.println("blendTime: " + this.blendTime);
-		System.out.println("flags: " + this.flags);
 	}
 
 	private <E extends MdlxBlock> void loadStaticObjects(final List<E> out, final MdlxBlockDescriptor<E> constructor,

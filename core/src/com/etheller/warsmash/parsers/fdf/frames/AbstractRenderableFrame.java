@@ -2,14 +2,25 @@ package com.etheller.warsmash.parsers.fdf.frames;
 
 import java.util.EnumMap;
 
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
+
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlClick;
+import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlEvent;
+import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
+import com.etheller.warsmash.parsers.fdf.UIFrameScripts;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.lua.SixArgFunction;
 
 public abstract class AbstractRenderableFrame implements UIFrame {
 	private static final FramePoint[] LEFT_ANCHOR_PRIORITY = { FramePoint.LEFT, FramePoint.TOPLEFT,
@@ -32,6 +43,8 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	private final EnumMap<FramePoint, FramePointAssignment> framePointToAssignment = new EnumMap<>(FramePoint.class);
 	protected float assignedHeight;
 	protected float assignedWidth;
+	private UIFrameScripts scripts;
+	private int id;
 
 	public AbstractRenderableFrame(final String name, final UIFrame parent) {
 		this.name = name;
@@ -254,7 +267,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	@Override
 	public void addAnchor(final AnchorDefinition anchorDefinition) {
 		this.framePointToAssignment.put(anchorDefinition.getMyPoint(), new SetPoint(anchorDefinition.getMyPoint(),
-				this.parent, anchorDefinition.getMyPoint(), anchorDefinition.getX(), anchorDefinition.getY()));
+				this.parent, anchorDefinition.getRelativePoint(), anchorDefinition.getX(), anchorDefinition.getY()));
 	}
 
 	@Override
@@ -264,6 +277,9 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	@Override
 	public void positionBounds(final GameUI gameUI, final Viewport viewport) {
+		if ("SpellbookMicroButton".equals(this.name)) {
+			System.out.println(1);
+		}
 		if (this.parent == null) {
 			// TODO this is a bit of a hack, remove later
 			return;
@@ -401,5 +417,158 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	public Rectangle getRenderBounds() {
 		return this.renderBounds;
+	}
+
+	@Override
+	public int getID() {
+		return this.id;
+	}
+
+	@Override
+	public void setID(final int x) {
+		this.id = x;
+	}
+
+	@Override
+	public UIFrameScripts getScripts() {
+		return this.scripts;
+	}
+
+	@Override
+	public void setScripts(final UIFrameScripts scripts) {
+		this.scripts = scripts;
+	}
+
+	@Override
+	public void setupTable(final LuaTable table, final LuaEnvironment luaEnvironment,
+			final UIFrameLuaWrapper luaWrapper) {
+		table.set("RegisterEvent", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				final ThirdPersonLuaXmlEvent eventToRegister = ThirdPersonLuaXmlEvent.valueOf(arg.checkjstring());
+				luaEnvironment.registerEvent(eventToRegister, luaWrapper);
+				return LuaValue.NIL;
+			}
+		});
+		table.set("RegisterForClicks", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue args) {
+				final int narg = args.narg();
+				for (int i = 1; i <= narg; i++) {
+					final String argString = args.tojstring(i);
+					final ThirdPersonLuaXmlClick click = ThirdPersonLuaXmlClick.valueOf(argString);
+					luaEnvironment.registerForClick(click, luaWrapper);
+				}
+				return LuaValue.NIL;
+			}
+		});
+		table.set("GetName", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(getName());
+			}
+		});
+		table.set("Hide", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				setVisible(false);
+				return LuaValue.NIL;
+			}
+		});
+		table.set("Show", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				setVisible(true);
+				return LuaValue.NIL;
+			}
+		});
+		table.set("SetHeight", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				setHeight(GameUI.convertXMLCoordY((float) arg.checkdouble()));
+				// TODO positionBounds
+				return LuaValue.NIL;
+			}
+		});
+		table.set("SetWidth", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				setWidth(GameUI.convertXMLCoordX((float) arg.checkdouble()));
+				// TODO positionBounds
+				return LuaValue.NIL;
+			}
+		});
+		table.set("GetWidth", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(GameUI.unconvertXMLCoordX(getAssignedWidth()));
+//				return LuaValue.valueOf(GameUI.unconvertXMLCoordX(getRenderBounds().getWidth()));
+			}
+		});
+		table.set("GetHeight", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(GameUI.unconvertXMLCoordY(getAssignedHeight()));
+//				return LuaValue.valueOf(GameUI.unconvertXMLCoordY(getRenderBounds().getHeight()));
+			}
+		});
+		table.set("IsShown", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(isVisible());
+			}
+		});
+		table.set("IsVisible", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(isVisible());
+			}
+		});
+		table.set("SetPoint", new SixArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue myPoint, final LuaValue otherName,
+					final LuaValue otherPoint, final LuaValue xValue, final LuaValue yValue) {
+				final UIFrame other = luaEnvironment.getRootFrame().getFrameByName(otherName.checkjstring(), 0);
+				addSetPoint(new SetPoint(FramePoint.valueOf(myPoint.checkjstring()), other,
+						FramePoint.valueOf(otherPoint.checkjstring()),
+						GameUI.convertXMLCoordX((float) xValue.checkdouble()),
+						GameUI.convertXMLCoordY((float) yValue.checkdouble())));
+				positionBounds(luaEnvironment.getRootFrame(), luaEnvironment.getUiViewport());
+				// TODO positionBounds
+				return LuaValue.NIL;
+			}
+		});
+		table.set("SetFrameLevel", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				setLevel(arg.checkint()); // TODO doubt this currently actually does anything
+				return LuaValue.NIL;
+			}
+		});
+		table.set("GetFrameLevel", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(getLevel());
+			}
+		});
+		table.set("GetID", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(getID());
+			}
+		});
+		table.set("SetID", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				setID(arg.checkint());
+				return LuaValue.NIL;
+			}
+		});
+		table.set("GetParent", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return AbstractRenderableFrame.this.parent.getScripts().getLuaWrapper().getTable();
+			}
+		});
 	}
 }

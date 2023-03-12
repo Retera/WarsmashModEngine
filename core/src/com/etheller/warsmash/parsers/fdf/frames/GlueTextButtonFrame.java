@@ -1,11 +1,18 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
 
 public class GlueTextButtonFrame extends GlueButtonFrame {
 	private UIFrame buttonText;
@@ -77,5 +84,44 @@ public class GlueTextButtonFrame extends GlueButtonFrame {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void setupTable(final LuaTable table, final LuaEnvironment luaEnvironment,
+			final UIFrameLuaWrapper luaWrapper) {
+		super.setupTable(table, luaEnvironment, luaWrapper);
+		table.set("SetText", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				final String text = arg.checkjstring();
+				if (GlueTextButtonFrame.this.buttonText instanceof StringFrame) {
+					luaEnvironment.getRootFrame().setText((StringFrame) GlueTextButtonFrame.this.buttonText, text);
+				}
+				return null;
+			}
+		});
+		table.set("GetText", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				if (GlueTextButtonFrame.this.buttonText instanceof StringFrame) {
+					return LuaValue.valueOf(((StringFrame) GlueTextButtonFrame.this.buttonText).getText());
+				}
+				return null;
+			}
+		});
+		table.set("LockHighlight", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				// TODO what does this do?
+				return null;
+			}
+		});
+		table.set("UnlockHighlight", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				// TODO what does this do?
+				return null;
+			}
+		});
 	}
 }

@@ -135,6 +135,9 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 	}
 
 	public void updateThumbButtonPoint() {
+		if (this.thumbButtonFrame == null) {
+			return;
+		}
 		if (this.vertical) {
 			final float newYValue = (this.scrollValuePercent / (float) this.maxValue)
 					* getMaxThumbButtonTravelDistance();

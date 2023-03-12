@@ -34,6 +34,7 @@ public class FrameDefinition {
 	private final Map<String, FrameDefinitionField> nameToField = new HashMap<>();
 	private final List<SetPointDefinition> setPoints = new ArrayList<>();
 	private final List<AnchorDefinition> anchors = new ArrayList<>();
+	private FrameDefinition scriptDefinition;
 
 	public FrameDefinition(final FrameClass frameClass, final String frameType, final String name) {
 		this.frameClass = frameClass;
@@ -47,6 +48,7 @@ public class FrameDefinition {
 		if (withChildren) {
 			this.innerFrames.addAll(other.innerFrames);
 		}
+		this.scriptDefinition = other.scriptDefinition;
 	}
 
 	public void set(final String fieldName, final FrameDefinitionField value) {
@@ -186,6 +188,14 @@ public class FrameDefinition {
 		return null;
 	}
 
+	public FrameDefinition getScriptDefinition() {
+		return this.scriptDefinition;
+	}
+
+	public void setScriptDefinition(final FrameDefinition scriptDefinition) {
+		this.scriptDefinition = scriptDefinition;
+	}
+
 	public void sortChildren() {
 		final List<String> levels = Arrays.asList("BACKGROUND", "BORDER", "ARTWORK", "OVERLAY", "HIGHLIGHT");
 		final List<FrameDefinition>[] reorderedFramesByLevel = new List[levels.size()];
@@ -198,6 +208,12 @@ public class FrameDefinition {
 			if (layerLevel != null) {
 				layerLevelIndex = levels.indexOf(layerLevel);
 			}
+			else {
+				final String strata = innerFrame.getString("FrameStrata");
+				if (strata != null) {
+					layerLevelIndex = levels.indexOf(strata);
+				}
+			}
 			if (layerLevelIndex == -1) {
 				layerLevelIndex = 2;
 			}
@@ -208,5 +224,9 @@ public class FrameDefinition {
 		for (int i = 0; i < reorderedFramesByLevel.length; i++) {
 			this.innerFrames.addAll(reorderedFramesByLevel[i]);
 		}
+	}
+
+	public void remove(final String string) {
+		this.flags.remove(string);
 	}
 }

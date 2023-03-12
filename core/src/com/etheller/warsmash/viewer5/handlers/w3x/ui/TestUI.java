@@ -14,6 +14,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.SingleModelScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.parsers.dbc.DbcParser;
+import com.etheller.warsmash.parsers.dbc.decoders.DbcDecoderSoundEntries;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
@@ -28,6 +30,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
+import com.hiveworkshop.rms.util.BinaryReader;
 
 public class TestUI {
 	private static final Vector2 screenCoordsVector = new Vector2();
@@ -74,8 +77,8 @@ public class TestUI {
 		this.rootFrameListener = rootFrameListener;
 		this.customTOC = customTOC;
 
-		this.widthRatioCorrection = this.getMinWorldWidth() / 1600f;
-		this.heightRatioCorrection = this.getMinWorldHeight() / 1200f;
+		this.widthRatioCorrection = getMinWorldWidth() / 1600f;
+		this.heightRatioCorrection = getMinWorldHeight() / 1200f;
 	}
 
 	public float getHeightRatioCorrection() {
@@ -87,11 +90,12 @@ public class TestUI {
 	 * override it, and I may convert it back to the JASS at some point.
 	 */
 	public void main() {
+		loadSounds();
 		// =================================
 		// Load skins and templates
 		// =================================
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, WarsmashConstants.GAME_VERSION),
-				this.uiViewport, this.uiScene, this.viewer, 0, WTS.DO_NOTHING);
+				this.uiViewport, this.uiScene, this.viewer, 0, WTS.DO_NOTHING, this.uiSounds);
 
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
@@ -102,7 +106,7 @@ public class TestUI {
 		}
 
 		// Create main menu
-		this.main = this.rootFrame.createFrame("Main", this.rootFrame, 0, 0);
+//		this.main = this.rootFrame.createFrame("Main", this.rootFrame, 0, 0);
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashCursorFrame", this.rootFrame,
 				"", 0);
@@ -116,7 +120,6 @@ public class TestUI {
 		// position all
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 
-		this.loadSounds();
 	}
 
 	private static String getStringWithWTS(final WTS wts, String string) {
@@ -136,8 +139,7 @@ public class TestUI {
 		font.setColor(Color.YELLOW);
 		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
 		glyphLayout.setText(font, fpsString);
-		font.draw(batch, fpsString, (this.getMinWorldWidth() - glyphLayout.width) / 2,
-				1100 * this.heightRatioCorrection);
+		font.draw(batch, fpsString, (getMinWorldWidth() - glyphLayout.width) / 2, 1100 * this.heightRatioCorrection);
 		this.rootFrame.render(batch, font20, glyphLayout);
 	}
 
@@ -157,7 +159,7 @@ public class TestUI {
 
 	public void update(final float deltaTime) {
 		if ((this.focusUIFrame != null) && !this.focusUIFrame.isVisibleOnScreen()) {
-			this.setFocusFrame(this.getNextFocusFrame());
+			setFocusFrame(getNextFocusFrame());
 		}
 
 		final int baseMouseX = Gdx.input.getX();
@@ -201,7 +203,7 @@ public class TestUI {
 			if (clickedUIFrame instanceof FocusableFrame) {
 				final FocusableFrame clickedFocusableFrame = (FocusableFrame) clickedUIFrame;
 				if (clickedFocusableFrame.isFocusable()) {
-					this.setFocusFrame(clickedFocusableFrame);
+					setFocusFrame(clickedFocusableFrame);
 				}
 			}
 		}
@@ -225,7 +227,7 @@ public class TestUI {
 		if (this.mouseDownUIFrame != null) {
 			if (clickedUIFrame == this.mouseDownUIFrame) {
 				this.mouseDownUIFrame.onClick(button);
-				this.uiSounds.getSound("GlueScreenClick").play(this.uiScene.audioContext, 0, 0, 0);
+//				this.uiSounds.getSound("GlueScreenClick").play(this.uiScene.audioContext, 0, 0, 0);
 			}
 			this.mouseDownUIFrame.mouseUp(this.rootFrame, this.uiViewport);
 		}
@@ -234,7 +236,7 @@ public class TestUI {
 	}
 
 	public boolean touchDragged(final int screenX, final int screenY, final float worldScreenY, final int pointer) {
-		this.mouseMoved(screenX, screenY, worldScreenY);
+		mouseMoved(screenX, screenY, worldScreenY);
 		return false;
 	}
 
@@ -271,6 +273,8 @@ public class TestUI {
 					.getResourceAsStream("UI\\SoundInfo\\AmbienceSounds.slk")) {
 				this.uiSoundsTable.readSLK(miscDataTxtStream);
 			}
+			DbcParser.parse(new BinaryReader(this.dataSource.read("DBFilesClient\\SoundEntries.dbc")),
+					new DbcDecoderSoundEntries(), this.uiSoundsTable);
 		}
 		catch (final IOException e) {
 			e.printStackTrace();

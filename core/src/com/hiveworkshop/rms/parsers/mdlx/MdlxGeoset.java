@@ -63,24 +63,18 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 		final long size = reader.readUInt32();
 
 		final int thisIsVRTX = reader.readInt32(); // skip VRTX
-		System.out.println("should be VRTX: " + MdlxModel.convertInt2(thisIsVRTX));
 		final int numVertices = reader.readInt32();
 		this.vertices = reader.readFloat32Array(numVertices * 3);
-		System.out.println("vertexCount: " + (this.vertices.length / 3));
 		final int thisIsNRMS = reader.readInt32(); // skip NRMS
-		System.out.println("should be NRMS: " + MdlxModel.convertInt2(thisIsNRMS));
 		this.normals = reader.readFloat32Array(reader.readInt32() * 3);
-		System.out.println("normalsCount: " + (this.normals.length / 3));
 		if (version == 1300) {
 			final int id = reader.readTag(); // UVAS
-			System.out.println("should be UVAS: " + MdlxModel.convertInt2(id));
 			this.uvSets = new float[1][];
 			for (int i = 0; i < 1; i++) {
 				this.uvSets[i] = reader.readFloat32Array(numVertices * reader.readInt32() * 2);
 			}
 		}
 		final int thisIsPTYP = reader.readInt32(); // skip PTYP
-		System.out.println("should be PTYP: " + MdlxModel.convertInt2(thisIsPTYP));
 		if (version == 1300) {
 			final short[] faceTypeGroups8Bit = reader.readUInt8Array(reader.readInt32());
 			this.faceTypeGroups = new long[faceTypeGroups8Bit.length];
@@ -92,32 +86,23 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 			this.faceTypeGroups = reader.readUInt32Array(reader.readInt32());
 		}
 		final int thisIsPCNT = reader.readInt32(); // skip PCNT
-		System.out.println("should be PCNT: " + MdlxModel.convertInt2(thisIsPCNT));
 		this.faceGroups = reader.readUInt32Array(reader.readInt32());
 		final int thisIsPVTX = reader.readInt32(); // skip PVTX
-		System.out.println("should be PVTX: " + MdlxModel.convertInt2(thisIsPVTX));
 		this.faces = reader.readUInt16Array(reader.readInt32());
 		final int thisIsGNDX = reader.readInt32(); // skip GNDX
-		System.out.println("should be GNDX: " + MdlxModel.convertInt2(thisIsGNDX));
 		this.vertexGroups = reader.readUInt8Array(reader.readInt32());
 		final int thisIsMTGC = reader.readInt32(); // skip MTGC
-		System.out.println("should be MTGC: " + MdlxModel.convertInt2(thisIsMTGC));
 		this.matrixGroups = reader.readUInt32Array(reader.readInt32());
 		final int thisIsMATS = reader.readInt32(); // skip MATS
-		System.out.println("should be MATS: " + MdlxModel.convertInt2(thisIsMATS));
 		this.matrixIndices = reader.readUInt32Array(reader.readInt32());
 
 		if (version == 1300) {
 			final int thisIsBIDX = reader.readInt32(); // skip BIDX
-			System.out.println("should be BIDX: " + MdlxModel.convertInt2(thisIsBIDX));
 			final int bidxCount = (int) reader.readUInt32();
-			System.out.println("bidx count: " + bidxCount);
 			final short[] boneIndices = reader.readUInt8Array(bidxCount * 4);
 
 			final int thisIsBWGT = reader.readInt32(); // skip BWGT
-			System.out.println("should be BWGT: " + MdlxModel.convertInt2(thisIsBWGT));
 			final int bwgtCount = (int) reader.readUInt32();
-			System.out.println("bwgt count: " + bwgtCount);
 			final short[] boneWeights = reader.readUInt8Array(bidxCount * 4);
 
 			this.skin = new short[boneIndices.length + boneWeights.length];
@@ -171,7 +156,6 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 			}
 
 			final long numUVLayers = reader.readUInt32();
-			System.out.println("numUVLayers: " + numUVLayers);
 			this.uvSets = new float[(int) numUVLayers][];
 			for (int i = 0; i < numUVLayers; i++) {
 				reader.readInt32(); // skip UVBS

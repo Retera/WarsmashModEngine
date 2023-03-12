@@ -74,20 +74,13 @@ public class MdlxLayer extends MdlxAnimatedObject {
 	public void readMdx(final BinaryReader reader, final int version) {
 		final int position = reader.position();
 		final long size = reader.readUInt32();
-		System.out.println("MdlxLayer size: " + size);
 
 		this.filterMode = FilterMode.fromId(reader.readInt32());
-		System.out.println("MdlxLayer filterMode: " + this.filterMode);
 		this.flags = reader.readInt32(); // UInt32 in JS
-		System.out.println("MdlxLayer flags: " + Integer.toBinaryString(this.flags));
 		this.textureId = reader.readInt32();
-		System.out.println("MdlxLayer textureId: " + this.textureId);
 		this.textureAnimationId = reader.readInt32();
-		System.out.println("MdlxLayer textureAnimationId: " + this.textureAnimationId);
 		this.coordId = reader.readInt32();
-		System.out.println("MdlxLayer coordId: " + this.coordId);
 		this.alpha = reader.readFloat32();
-		System.out.println("MdlxLayer alpha: " + this.alpha);
 
 		if ((version > 800) && (version != 1300)) {
 			this.emissiveGain = reader.readFloat32();

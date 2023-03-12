@@ -24,7 +24,6 @@ public class MdlxEventObject extends MdlxGenericObject {
 		if (version == 1300) {
 			position = reader.position();
 			size = reader.readUInt32();
-			System.out.println("MdlxEventObject size: " + size);
 		}
 		else {
 			position = 0;
@@ -33,21 +32,16 @@ public class MdlxEventObject extends MdlxGenericObject {
 		super.readMdx(reader, version);
 
 		if ((version != 1300) || ((reader.position() - position) < size)) {
-			System.out.println((reader.position() - position) + " < " + size);
 			final int shouldBeKEVT = reader.readInt32(); // KEVT skipped
-			System.out.println("MdlxEventObject should be KEVT: " + MdlxModel.convertInt2(shouldBeKEVT));
 
 			final long count = reader.readUInt32();
-			System.out.println("MdlxEventObject count: " + count);
 
 			this.globalSequenceId = reader.readInt32();
-			System.out.println("MdlxEventObject globalSequenceId: " + this.globalSequenceId);
 
 			this.keyFrames = new long[(int) count];
 
 			for (int i = 0; i < count; i++) {
 				this.keyFrames[i] = reader.readInt32();
-				System.out.println("MdlxEventObject keyFrame[" + i + "]: " + this.keyFrames[i]);
 			}
 		}
 	}

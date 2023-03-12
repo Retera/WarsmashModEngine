@@ -1,10 +1,15 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import org.luaj.vm2.LuaTable;
+
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
+import com.etheller.warsmash.parsers.fdf.UIFrameScripts;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 
@@ -54,4 +59,14 @@ public interface UIFrame {
 	UIFrame getFrameChildUnderMouse(float screenX, float screenY);
 
 	String getName();
+
+	UIFrameScripts getScripts();
+
+	void setScripts(UIFrameScripts scripts);
+
+	void setupTable(final LuaTable table, final LuaEnvironment luaEnvironment, UIFrameLuaWrapper luaWrapper);
+
+	int getID();
+
+	void setID(int x);
 }

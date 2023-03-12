@@ -1,10 +1,18 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
+
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
+import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
 
 public class GlueButtonFrame extends AbstractRenderableFrame implements ClickableFrame {
@@ -207,5 +215,64 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 	@Override
 	public String getSoundKey() {
 		return SOUND_KEY_GLUE_SCREEN_CLICK;
+	}
+
+	@Override
+	public void setupTable(final LuaTable table, final LuaEnvironment luaEnvironment,
+			final UIFrameLuaWrapper luaWrapper) {
+		super.setupTable(table, luaEnvironment, luaWrapper);
+		table.set("SetNormalTexture", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				final String textureString = arg.checkjstring();
+				GlueButtonFrame.this.controlBackdrop = luaLoadTexture(luaEnvironment, "ControlBackdropGen",
+						textureString);
+				return null;
+			}
+		});
+		table.set("SetPushedTexture", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				final String textureString = arg.checkjstring();
+				GlueButtonFrame.this.controlPushedBackdrop = luaLoadTexture(luaEnvironment, "ControlPushedBackdropGen",
+						textureString);
+				return null;
+			}
+		});
+		table.set("SetHighlightTexture", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				final String textureString = arg.checkjstring();
+				GlueButtonFrame.this.controlMouseOverHighlight = luaLoadTexture(luaEnvironment,
+						"ControlMouseOverHighlightGen", textureString);
+				GlueButtonFrame.this.highlightOnMouseOver = true;
+				return null;
+			}
+		});
+		table.set("Enable", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				setEnabled(true);
+				return LuaValue.valueOf(getName());
+			}
+		});
+		table.set("Disable", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				setEnabled(false);
+				return LuaValue.valueOf(getName());
+			}
+		});
+	}
+
+	public TextureFrame luaLoadTexture(final LuaEnvironment luaEnvironment, final String string,
+			final String textureString) {
+		final GameUI rootFrame = luaEnvironment.getRootFrame();
+		final TextureFrame textureFrame = new TextureFrame(getName() + string, GlueButtonFrame.this, false,
+				new Vector4Definition(0, 1, 0, 1));
+		textureFrame.setTexture(rootFrame.loadTexture(textureString));
+		textureFrame.setSetAllPoints(true);
+		textureFrame.positionBounds(rootFrame, luaEnvironment.getUiViewport());
+		return textureFrame;
 	}
 }

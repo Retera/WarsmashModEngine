@@ -25,7 +25,6 @@ public abstract class MdlxAnimatedObject implements MdlxChunk, MdlxBlock {
 				continue;
 			}
 			final War3ID name = new War3ID(readTag);
-			System.out.println("Timeline loading: " + name + " (" + size + " remaining)");
 			final MdlxTimeline<?> timeline = AnimationMap.ID_TO_TAG.get(name).getImplementation().createTimeline();
 
 			timeline.readMdx(reader, name, version);

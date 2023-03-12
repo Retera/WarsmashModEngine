@@ -86,7 +86,7 @@ public class TerrainViewPanel extends JPanel {
 				else {
 					g.setFont(this.baseFont);
 				}
-				g.drawString(value + "", j * 32, (length - i - 1) * 32);
+				g.drawString(value + "", j * 32, (corners.length - i - 1) * 32);
 			}
 		}
 	}

@@ -125,8 +125,19 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 
 	private void updateUI(final GameUI gameUI, final Viewport viewport) {
 		StringFrame prev = null;
+		float lineHeight2 = this.lineHeight;
+		if (lineHeight2 == 0) {
+			lineHeight2 = this.frameFont.getLineHeight();
+		}
+		if (lineHeight2 == 0) {
+			lineHeight2 = getAssignedHeight();
+		}
+		if (lineHeight2 == 0) {
+			return; // //err
+		}
+		final float numStringFramesDivisor = lineHeight2 + this.lineGap;
 		final int numStringFrames = (int) (Math
-				.floor((this.renderBounds.height - (this.inset * 2)) / (this.lineHeight + this.lineGap)));
+				.floor((this.renderBounds.height - (this.inset * 2)) / numStringFramesDivisor));
 		final int scrollOffset = computeScrollOffset(numStringFrames);
 		if (numStringFrames != this.stringFrames.size()) {
 			this.stringFrames.clear();
@@ -136,33 +147,39 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 						TextJustify.MIDDLE, this.frameFont, null, null, null);
 				if (index < this.listItems.size()) {
 					gameUI.setText(stringFrame, this.listItems.get(index));
-				} else {
+				}
+				else {
 					gameUI.setText(stringFrame, "");
 				}
 				stringFrame.setWidth(this.renderBounds.width - (this.inset * 2));
-				stringFrame.setHeight(this.lineHeight);
+				stringFrame.setHeight(lineHeight2);
 				if (prev != null) {
 					stringFrame.addSetPoint(
 							new SetPoint(FramePoint.TOPLEFT, prev, FramePoint.BOTTOMLEFT, 0, -this.lineGap));
-				} else {
+				}
+				else {
 					stringFrame.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this, FramePoint.TOPLEFT, this.inset,
 							-this.inset - this.lineGap));
 				}
 				this.stringFrames.add(stringFrame);
 				prev = stringFrame;
 			}
-		} else {
+		}
+		else {
 			for (int stringFrameIndex = 0; stringFrameIndex < numStringFrames; stringFrameIndex++) {
 				final int index = stringFrameIndex + scrollOffset;
 				final StringFrame stringFrame = this.stringFrames.get(stringFrameIndex);
 				if (index < this.listItems.size()) {
 					gameUI.setText(stringFrame, this.listItems.get(index));
-				} else {
+				}
+				else {
 					gameUI.setText(stringFrame, "");
 				}
 			}
 		}
-		this.scrollBarFrame.setVisible(this.listItems.size() > numStringFrames);
+		if (this.scrollBarFrame != null) {
+			this.scrollBarFrame.setVisible(this.listItems.size() > numStringFrames);
+		}
 		positionChildren(gameUI, viewport);
 	}
 
@@ -171,7 +188,8 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 		if ((this.scrollBarFrame != null) && (this.listItems.size() > numStringFrames)) {
 			scrollOffset = (int) Math
 					.ceil(((100 - this.scrollBarFrame.getValue()) / 100f) * (this.listItems.size() - numStringFrames));
-		} else {
+		}
+		else {
 			scrollOffset = 0;
 		}
 		return scrollOffset;

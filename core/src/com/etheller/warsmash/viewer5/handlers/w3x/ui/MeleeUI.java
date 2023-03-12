@@ -405,6 +405,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private float simpleProgressIndicatorDurationMax;
 	private StringFrame smashBuffStatusBar;
 
+	private boolean showing;
+
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
 			final War3MapViewer war3MapViewer, final RootFrameListener rootFrameListener,
@@ -494,7 +496,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final int racialCommandIndex = raceEntry.getRaceId() - 1;
 
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, racialSkinKey), this.uiViewport,
-				this.uiScene, this.war3MapViewer, racialCommandIndex, this.war3MapViewer.getAllObjectData().getWts());
+				this.uiScene, this.war3MapViewer, racialCommandIndex, this.war3MapViewer.getAllObjectData().getWts(),
+				this.war3MapViewer.getUiSounds());
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
 			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
@@ -1551,7 +1554,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		mouseX = Math.max(minX, Math.min(maxX, mouseX));
 		mouseY = Math.max(minY, Math.min(maxY, mouseY));
 		if (Gdx.input.isCursorCatched()) {
-			if (WarsmashConstants.CATCH_CURSOR) {
+			if (WarsmashConstants.CATCH_CURSOR && this.showing) {
 				Gdx.input.setCursorPosition(mouseX, mouseY);
 			}
 		}
@@ -4681,11 +4684,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void onHide() {
 		this.timeIndicator.setVisible(false);
 		this.cursorFrame.setVisible(false);
+		this.showing = false;
 	}
 
 	@Override
 	public void onShow() {
 		this.timeIndicator.setVisible(true);
 		this.cursorFrame.setVisible(true);
+		this.showing = true;
 	}
 }

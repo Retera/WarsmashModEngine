@@ -17,7 +17,7 @@ public class TerrainView {
 	public static void main(final String[] args) {
 		final DataTable warsmashIni = DesktopLauncher.loadWarsmashIni();
 		final DataSource dataSources = WarsmashGdxMapScreen.parseDataSources(warsmashIni);
-		final War3Map war3Map = new War3Map(dataSources, warsmashIni.get("Map").getField("FilePath"));
+		final War3Map war3Map = new War3Map(dataSources, args[0]);
 		try {
 			final War3MapW3e environmentFile = war3Map.readEnvironment();
 			final TerrainViewPanel terrainViewPanel = new TerrainViewPanel(environmentFile);

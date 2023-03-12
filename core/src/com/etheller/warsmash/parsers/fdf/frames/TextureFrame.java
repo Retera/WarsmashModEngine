@@ -1,5 +1,9 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.TwoArgFunction;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -8,7 +12,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
+import com.etheller.warsmash.parsers.fdf.lua.FourArgFunction;
 
 public class TextureFrame extends AbstractRenderableFrame {
 	public static final Vector4Definition DEFAULT_TEX_COORDS = new Vector4Definition(0, 1, 0, 1);
@@ -94,5 +101,28 @@ public class TextureFrame extends AbstractRenderableFrame {
 
 	public void setTexture(final TextureRegion texture) {
 		this.texture = texture;
+	}
+
+	@Override
+	public void setupTable(final LuaTable table, final LuaEnvironment luaEnvironment,
+			final UIFrameLuaWrapper luaWrapper) {
+		super.setupTable(table, luaEnvironment, luaWrapper);
+		table.set("SetTexture", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				final String text = arg.checkjstring();
+				setTexture(text, luaEnvironment.getRootFrame());
+				return LuaValue.NIL;
+			}
+		});
+		table.set("SetVertexColor", new FourArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg, final LuaValue arg2,
+					final LuaValue arg3) {
+				setColor(arg.tofloat(), arg2.tofloat(), arg3.tofloat(),
+						TextureFrame.this.color == null ? 1.0f : TextureFrame.this.color.a);
+				return LuaValue.NIL;
+			}
+		});
 	}
 }

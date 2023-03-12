@@ -740,11 +740,12 @@ public class MenuUI {
 	 * override it, and I may convert it back to the JASS at some point.
 	 */
 	public void main() {
+		loadSounds();
 		// =================================
 		// Load skins and templates
 		// =================================
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, WarsmashConstants.GAME_VERSION),
-				this.uiViewport, this.uiScene, this.viewer, 0, WTS.DO_NOTHING);
+				this.uiViewport, this.uiScene, this.viewer, 0, WTS.DO_NOTHING, this.uiSounds);
 
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
@@ -1560,8 +1561,6 @@ public class MenuUI {
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 
 		this.menuState = MenuState.GOING_TO_MAIN_MENU;
-
-		loadSounds();
 
 		try {
 			final String glueLoopField = this.rootFrame.getSkinField("GlueScreenLoop");

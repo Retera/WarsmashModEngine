@@ -158,6 +158,10 @@ public enum AnimationMap {
 	 */
 	KP2V("Visibility", MdlxTimelineDescriptor.FLOAT_TIMELINE),
 	/**
+	 * Particle emitter 2 lifespan
+	 */
+	KLIF("LifeSpan", MdlxTimelineDescriptor.FLOAT_TIMELINE),
+	/**
 	 * Generic visibility from MDLX1300 (first historical vers number increase)
 	 */
 	KVIS("Visibility", MdlxTimelineDescriptor.FLOAT_TIMELINE),

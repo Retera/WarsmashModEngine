@@ -375,7 +375,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 	@Override
 	public void onHide() {
-		this.myFogModifier.setEnabled(false);
+		this.myFogModifier.setEnabled(true);
 		this.war3MapViewer.removeScene(this.uiScene);
 		this.war3MapViewer.addScene(this.portraitScene);
 		this.war3MapViewer.addScene(this.uiScene);

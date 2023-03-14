@@ -264,13 +264,14 @@ public class TerrainShaders {
 				"\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
-				"	color = get_fragment(texture_indices.a & 31u, vec3(UV, texture_indices.a >> 5));\r\n" + //
-				"	color = color * color.a + get_fragment(texture_indices.b & 31u, vec3(UV, texture_indices.b >> 5)) * (1 - color.a);\r\n"
-				+ //
-				"	color = color * color.a + get_fragment(texture_indices.g & 31u, vec3(UV, texture_indices.g >> 5)) * (1 - color.a);\r\n"
-				+ //
-				"	color = color * color.a + get_fragment(texture_indices.r & 31u, vec3(UV, texture_indices.r >> 5)) * (1 - color.a);\r\n"
-				+ //
+				"	vec4 layerFragment = get_fragment(texture_indices.r & 31u, vec3(UV, texture_indices.r >> 5));\r\n" + //
+				"	color = layerFragment;\r\n" + //
+				"	layerFragment = get_fragment(texture_indices.g & 31u, vec3(UV, texture_indices.g >> 5));\r\n" + //
+				"	color = mix(color, vec4(layerFragment.rgb, 1), layerFragment.a);\r\n" + //
+				"	layerFragment = get_fragment(texture_indices.b & 31u, vec3(UV, texture_indices.b >> 5));\r\n" + //
+				"	color = mix(color, vec4(layerFragment.rgb, 1), layerFragment.a);\r\n" + //
+				"	layerFragment = get_fragment(texture_indices.a & 31u, vec3(UV, texture_indices.a >> 5));\r\n" + //
+				"	color = mix(color, vec4(layerFragment.rgb, 1), layerFragment.a);\r\n" + //
 				"   float shadow = texture2D(shadowMap, v_suv).r;\r\n" + //
 				"   float fogOfWarData = texture2D(fogOfWarMap, v_suv).r;\r\n" + //
 				"   shadow = clamp(shadow + fogOfWarData, 0.0, 1.0);\r\n" + //

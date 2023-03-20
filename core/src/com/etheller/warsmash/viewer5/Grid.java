@@ -74,10 +74,10 @@ public class Grid {
 
 	public void moved(final ModelInstance instance, final float upcomingX, final float upcomingY) {
 		final Bounds bounds = instance.model.bounds;
-		final float x = (upcomingX + bounds.x) - this.x;
-		final float y = (upcomingY + bounds.y) - this.y;
-		final float r = bounds.r;
 		final Vector3 s = instance.worldScale;
+		final float x = (upcomingX + (bounds.x * s.x)) - this.x;
+		final float y = (upcomingY + (bounds.y * s.y)) - this.y;
+		final float r = bounds.r;
 		int left = (int) (Math.floor((x - (r * s.x)) / this.cellWidth));
 		int right = (int) (Math.floor((x + (r * s.x)) / this.cellWidth));
 		int bottom = (int) (Math.floor((y - (r * s.y)) / this.cellDepth));
@@ -85,7 +85,7 @@ public class Grid {
 
 		if ((right < 0) || (left > (this.columns - 1)) || (top < 0) || (bottom > (this.rows - 1))) {
 			// The instance is outside of the grid, so remove it.
-			this.remove(instance);
+			remove(instance);
 		}
 		else {
 			// Clamp the values so they are in the grid.
@@ -100,14 +100,14 @@ public class Grid {
 				/// TODO: This can be optimized by checking if there are shared cells.
 				/// That can be done in precisely the same way as done a few lines above, i.e.
 				/// simple rectangle intersection.
-				this.remove(instance);
+				remove(instance);
 
 				instance.left = left;
 				instance.right = right;
 				instance.bottom = bottom;
 				instance.top = top;
 
-				this.add(instance);
+				add(instance);
 			}
 		}
 	}

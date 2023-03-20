@@ -463,4 +463,16 @@ public class OrderIds {
 	public static final int itemxpgain = 852214003;
 	public static final int itemlifegain = 852214004;
 	public static final int itemlevelgain = 852214005;
+
+	// NOTE: below made up for world of warsmash
+	public static final int pawnLeftPressed = 999999001;
+	public static final int pawnRightPressed = 999999002;
+	public static final int pawnUpPressed = 999999003;
+	public static final int pawnDownPressed = 999999004;
+	public static final int pawnJumpPressed = 999999005;
+	public static final int pawnFaceAngle = 999999006;
+	public static final int pawnLeftReleased = 999999007;
+	public static final int pawnRightReleased = 999999008;
+	public static final int pawnUpReleased = 999999009;
+	public static final int pawnDownReleased = 999999010;
 }

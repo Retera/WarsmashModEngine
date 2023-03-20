@@ -37,7 +37,7 @@ public final class Warcraft3MapObjectData {
 
 	public Warcraft3MapObjectData(final MutableObjectData units, final MutableObjectData items,
 			final MutableObjectData destructibles, final MutableObjectData doodads, final MutableObjectData abilities,
-			final MutableObjectData buffs, final MutableObjectData upgrades, DataTable standardUpgradeEffectMeta,
+			final MutableObjectData buffs, final MutableObjectData upgrades, final DataTable standardUpgradeEffectMeta,
 			final WTS wts) {
 		this.units = units;
 		this.items = items;
@@ -94,7 +94,7 @@ public final class Warcraft3MapObjectData {
 	}
 
 	public DataTable getStandardUpgradeEffectMeta() {
-		return standardUpgradeEffectMeta;
+		return this.standardUpgradeEffectMeta;
 	}
 
 	public List<MutableObjectData> getDatas() {
@@ -134,7 +134,7 @@ public final class Warcraft3MapObjectData {
 		final DataTable abilityMeta = standardObjectData.getStandardAbilityMeta();
 		final DataTable standardAbilityBuffMeta = standardObjectData.getStandardAbilityBuffMeta();
 		final DataTable standardUpgradeMeta = standardObjectData.getStandardUpgradeMeta();
-		DataTable standardUpgradeEffectMeta = standardObjectData.getStandardUpgradeEffectMeta();
+		final DataTable standardUpgradeEffectMeta = standardObjectData.getStandardUpgradeEffectMeta();
 
 		final War3ObjectDataChangeset unitChangeset = new War3ObjectDataChangeset('u');
 		final War3ObjectDataChangeset itemChangeset = new War3ObjectDataChangeset('t');
@@ -169,8 +169,16 @@ public final class Warcraft3MapObjectData {
 				}
 			}
 		}
+		if (dataSource.has("war3mapSkin.w3u")) {
+			unitChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3u")), wts,
+					inlineWTS);
+		}
 		if (dataSource.has("war3map.w3t")) {
 			itemChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3t")), wts,
+					inlineWTS);
+		}
+		if (dataSource.has("war3mapSkin.w3t")) {
+			itemChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3t")), wts,
 					inlineWTS);
 		}
 		if (dataSource.has("war3map.w3d")) {
@@ -181,17 +189,33 @@ public final class Warcraft3MapObjectData {
 			destructableChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3b")),
 					wts, inlineWTS);
 		}
+		if (dataSource.has("war3mapSkin.w3b")) {
+			destructableChangeset.load(
+					new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3b")), wts, inlineWTS);
+		}
 		if (dataSource.has("war3map.w3a")) {
 			abilityChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3a")), wts,
 					inlineWTS);
+		}
+		if (dataSource.has("war3mapSkin.w3a")) {
+			abilityChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3a")),
+					wts, inlineWTS);
 		}
 		if (dataSource.has("war3map.w3h")) {
 			buffChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3h")), wts,
 					inlineWTS);
 		}
+		if (dataSource.has("war3mapSkin.w3h")) {
+			buffChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3h")), wts,
+					inlineWTS);
+		}
 		if (dataSource.has("war3map.w3q")) {
 			upgradeChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3q")), wts,
 					inlineWTS);
+		}
+		if (dataSource.has("war3mapSkin.w3q")) {
+			upgradeChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3q")),
+					wts, inlineWTS);
 		}
 
 		final WorldEditStrings worldEditStrings = standardObjectData.getWorldEditStrings();

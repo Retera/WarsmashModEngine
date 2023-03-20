@@ -882,17 +882,28 @@ public class MdxComplexInstance extends ModelInstance {
 		boolean intersected = false;
 		ray.getEndPoint(intersection, 99999);
 		for (final Geoset geoset : mdxModel.geosets) {
-			if (!geoset.unselectable) {
-				geoset.getAlpha(alphaHeap, this.sequence, this.frame, this.counter);
-				if (alphaHeap[0] > 0) {
-					final MdlxGeoset mdlxGeoset = geoset.mdlxGeoset;
-					if (CollisionShape.intersectRayTriangles(ray, this, mdlxGeoset.getVertices(), mdlxGeoset.getFaces(),
-							3, intersectionHeap)) {
-						if (intersectionHeap.dst2(ray.origin) < intersection.dst2(ray.origin)) {
-							intersection.set(intersectionHeap);
-						}
-						intersected = true;
+			intersected = intersectGeosetTest(ray, geoset, intersection, intersected);
+		}
+		return intersected;
+	}
+
+	public boolean intersectRayWithGeosetSlow(final Ray ray, final Geoset geoset, final Vector3 intersection) {
+		ray.getEndPoint(intersection, 99999);
+		return intersectGeosetTest(ray, geoset, intersection, false);
+	}
+
+	private boolean intersectGeosetTest(final Ray ray, final Geoset geoset, final Vector3 intersection,
+			boolean intersected) {
+		if (!geoset.unselectable) {
+			geoset.getAlpha(alphaHeap, this.sequence, this.frame, this.counter);
+			if (alphaHeap[0] > 0) {
+				final MdlxGeoset mdlxGeoset = geoset.mdlxGeoset;
+				if (CollisionShape.intersectRayTriangles(ray, this, mdlxGeoset.getVertices(), mdlxGeoset.getFaces(), 3,
+						intersectionHeap)) {
+					if (intersectionHeap.dst2(ray.origin) < intersection.dst2(ray.origin)) {
+						intersection.set(intersectionHeap);
 					}
+					intersected = true;
 				}
 			}
 		}

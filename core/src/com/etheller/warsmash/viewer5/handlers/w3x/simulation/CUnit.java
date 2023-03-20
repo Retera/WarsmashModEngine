@@ -951,6 +951,10 @@ public class CUnit extends CWidget {
 		return this.currentBehavior;
 	}
 
+	public CBehavior getDefaultBehavior() {
+		return this.defaultBehavior;
+	}
+
 	public List<CAbility> getAbilities() {
 		return this.abilities;
 	}

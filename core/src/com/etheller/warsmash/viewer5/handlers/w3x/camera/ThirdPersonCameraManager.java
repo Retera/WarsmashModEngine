@@ -3,18 +3,22 @@ package com.etheller.warsmash.viewer5.handlers.w3x.camera;
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson.PlayerPawn;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 
 public final class ThirdPersonCameraManager extends CameraManager {
 	private final float fov = 70;
 	private final float nearZ = 50;
 	private final float farZ = 5000;
-	private final PlayerPawn playerPawn;
 	private boolean touchDown;
 	private final War3MapViewer war3MapViewer;
+	private final RenderUnit pawnUnit;
+	private final CAbilityPlayerPawn abilityPlayerPawn;
 
-	public ThirdPersonCameraManager(final PlayerPawn playerPawn, final War3MapViewer war3MapViewer) {
-		this.playerPawn = playerPawn;
+	public ThirdPersonCameraManager(final RenderUnit pawnUnit, final CAbilityPlayerPawn abilityPlayerPawn,
+			final War3MapViewer war3MapViewer) {
+		this.pawnUnit = pawnUnit;
+		this.abilityPlayerPawn = abilityPlayerPawn;
 		this.war3MapViewer = war3MapViewer;
 	}
 
@@ -26,9 +30,10 @@ public final class ThirdPersonCameraManager extends CameraManager {
 
 	@Override
 	public void updateCamera() {
-		final CameraPanControls cameraPanControls = this.playerPawn.getCameraPanControls();
+		final CameraPanControls cameraPanControls = this.abilityPlayerPawn.getBehaviorPlayerPawn()
+				.getCameraPanControls();
 		if ((cameraPanControls.isAnyArrowPressed()) && !this.touchDown) {
-			float destAngle = (float) Math.toRadians(this.playerPawn.getFacingDegrees());
+			float destAngle = (float) Math.toRadians(this.pawnUnit.getFacing());
 			if (destAngle > Math.PI) {
 				destAngle -= Math.PI * 2;
 			}
@@ -60,8 +65,8 @@ public final class ThirdPersonCameraManager extends CameraManager {
 		this.quatHeap.transform(this.position);
 		this.position.nor();
 		this.position.scl(this.distance);
-		this.target.set(this.playerPawn.getLocation());
-		this.target.z += this.playerPawn.getHeight();
+		this.target.set(this.pawnUnit.getX(), this.pawnUnit.getY(), this.pawnUnit.getZ());
+		this.target.z += this.abilityPlayerPawn.getBehaviorPlayerPawn().getHeight();
 		this.position = this.position.add(this.target);
 		this.war3MapViewer.rayTest(this.target, this.position, this.position);
 

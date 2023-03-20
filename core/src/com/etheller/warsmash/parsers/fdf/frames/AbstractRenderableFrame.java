@@ -34,7 +34,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	private static final FramePoint[] TOP_ANCHOR_PRIORITY = { FramePoint.TOP, FramePoint.TOPLEFT, FramePoint.TOPRIGHT };
 	private static final FramePoint[] BOTTOM_ANCHOR_PRIORITY = { FramePoint.BOTTOM, FramePoint.BOTTOMLEFT,
 			FramePoint.BOTTOMRIGHT };
-	private static final boolean DEBUG_LOG = true;
+	private static final boolean DEBUG_LOG = false;
 	protected String name;
 	protected UIFrame parent;
 	protected boolean visible = true;

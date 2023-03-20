@@ -14,6 +14,7 @@ public class CWorldCollision {
 	private final Quadtree<CUnit> airUnitCollision;
 	private final Quadtree<CUnit> seaUnitCollision;
 	private final Quadtree<CUnit> buildingUnitCollision;
+	private final Quadtree<CUnit> unsetMovetypeUnitCollision;
 	private final Quadtree<CDestructable> destructablesForEnum;
 	private final float maxCollisionRadius;
 	private final AnyUnitExceptTwoIntersector anyUnitExceptTwoIntersector;
@@ -26,6 +27,7 @@ public class CWorldCollision {
 		this.seaUnitCollision = new Quadtree<>(entireMapBounds);
 		this.buildingUnitCollision = new Quadtree<>(entireMapBounds);
 		this.destructablesForEnum = new Quadtree<>(entireMapBounds);
+		this.unsetMovetypeUnitCollision = new Quadtree<>(entireMapBounds);
 		this.maxCollisionRadius = maxCollisionRadius;
 		this.anyUnitExceptTwoIntersector = new AnyUnitExceptTwoIntersector();
 		this.eachUnitOnlyOnceIntersector = new EachUnitOnlyOnceIntersector();
@@ -61,6 +63,7 @@ public class CWorldCollision {
 					this.airUnitCollision.add(unit, bounds);
 					break;
 				case DISABLED:
+					this.unsetMovetypeUnitCollision.add(unit, bounds);
 					break;
 				default:
 				case FOOT:
@@ -70,6 +73,9 @@ public class CWorldCollision {
 					this.groundUnitCollision.add(unit, bounds);
 					break;
 				}
+			}
+			else {
+				this.unsetMovetypeUnitCollision.add(unit, bounds);
 			}
 		}
 	}
@@ -105,6 +111,7 @@ public class CWorldCollision {
 						this.airUnitCollision.remove(unit, bounds);
 						break;
 					case DISABLED:
+						this.unsetMovetypeUnitCollision.remove(unit, bounds);
 						break;
 					default:
 					case FOOT:
@@ -114,6 +121,9 @@ public class CWorldCollision {
 						this.groundUnitCollision.remove(unit, bounds);
 						break;
 					}
+				}
+				else {
+					this.unsetMovetypeUnitCollision.remove(unit, bounds);
 				}
 			}
 		}
@@ -126,6 +136,7 @@ public class CWorldCollision {
 		this.airUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
 		this.seaUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
 		this.buildingUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
+		this.unsetMovetypeUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
 	}
 
 	public void enumUnitsAtPoint(final float x, final float y, final CUnitEnumFunction callback) {
@@ -134,6 +145,7 @@ public class CWorldCollision {
 		this.airUnitCollision.intersect(x, y, this.eachUnitOnlyOnceIntersector);
 		this.seaUnitCollision.intersect(x, y, this.eachUnitOnlyOnceIntersector);
 		this.buildingUnitCollision.intersect(x, y, this.eachUnitOnlyOnceIntersector);
+		this.unsetMovetypeUnitCollision.intersect(x, y, this.eachUnitOnlyOnceIntersector);
 	}
 
 	public void enumBuildingsInRect(final Rectangle rect, final QuadtreeIntersector<CUnit> callback) {
@@ -210,6 +222,7 @@ public class CWorldCollision {
 				this.airUnitCollision.translate(unit, bounds, xShift, yShift);
 				break;
 			case DISABLED:
+				this.unsetMovetypeUnitCollision.translate(unit, bounds, xShift, yShift);
 				break;
 			default:
 			case FOOT:
@@ -219,6 +232,9 @@ public class CWorldCollision {
 				this.groundUnitCollision.translate(unit, bounds, xShift, yShift);
 				break;
 			}
+		}
+		else {
+			this.unsetMovetypeUnitCollision.translate(unit, bounds, xShift, yShift);
 		}
 	}
 

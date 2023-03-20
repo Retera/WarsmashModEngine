@@ -39,6 +39,7 @@ import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WarsmashUtils;
 import com.etheller.warsmash.viewer5.Model;
@@ -49,7 +50,6 @@ import com.etheller.warsmash.viewer5.RenderBatch;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.handlers.ModelHandler;
-import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
@@ -200,16 +200,16 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 					}
 				});
 		final ThirdPersonUI thirdPersonUI = new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene,
-				"Creature\\HighElf\\HighElfMale_Mage.mdx");
+				this.uiOrderListener, War3ID.fromString("plyr"));
 //		final ThirdPersonUI thirdPersonUI = new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene,
 //				"Creature\\TempScarletCrusaderLight\\ScarletCrusaderLight.mdx");
-		final MdxComplexInstance pawnComplexInstance = thirdPersonUI.getPlayerPawn().getPawnComplexInstance();
+//		final MdxComplexInstance pawnComplexInstance = thirdPersonUI.getPlayerPawn().getPawnComplexInstance();
 //		pawnComplexInstance.setReplaceableTexture(11, "Creature\\OrcMaleWarriorHeavy\\OrcNPCSkin.blp");
 //		pawnComplexInstance.setReplaceableTexture(12, "Creature\\OrcMaleWarriorHeavy\\OrcMaleSamuHairSkin.blp");
-		pawnComplexInstance.setReplaceableTexture(1, "Creature\\HighElf\\BloodElfMaleMage.blp");
-		pawnComplexInstance.setReplaceableTexture(6, "Creature\\HighElf\\BloodElfMaleHair.blp");
+//		pawnComplexInstance.setReplaceableTexture(1, "Creature\\HighElf\\BloodElfMaleMage.blp");
+//		pawnComplexInstance.setReplaceableTexture(6, "Creature\\HighElf\\BloodElfMaleHair.blp");
 //		pawnComplexInstance.setReplaceableTexture(11, "Creature\\HighElf\\BloodElfFemaleWarrior.blp");
-		pawnComplexInstance.setUniformScale(50.0f);
+//		pawnComplexInstance.setUniformScale(50.0f);
 		this.meleeUI = new MeleeToggleUI(baseMeleeUI, Arrays.asList(baseMeleeUI, thirdPersonUI));
 		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",

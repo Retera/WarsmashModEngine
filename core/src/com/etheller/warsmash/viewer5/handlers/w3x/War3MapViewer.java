@@ -51,6 +51,7 @@ import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.units.StandardObjectData;
 import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.units.manager.MutableObjectData;
@@ -63,6 +64,7 @@ import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WorldEditStrings;
+import com.etheller.warsmash.viewer5.Bounds;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.GenericResource;
 import com.etheller.warsmash.viewer5.Grid;
@@ -76,6 +78,7 @@ import com.etheller.warsmash.viewer5.WorldScene;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.Attachment;
+import com.etheller.warsmash.viewer5.handlers.mdx.Geoset;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
@@ -100,6 +103,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderSpellEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitReplaceableTex;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitTypeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
@@ -118,6 +122,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffTimedLife;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
@@ -136,6 +141,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRend
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxExtent;
 
 import mpq.MPQArchive;
 import mpq.MPQException;
@@ -249,9 +255,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private Vector3 lightDirection;
 
 	private Quadtree<MdxComplexInstance> walkableObjectsTree;
+	private Quadtree<CollidableDoodadComponent> walkableComponentTree;
 	private final QuadtreeIntersectorFindsWalkableRenderHeight walkablesIntersector = new QuadtreeIntersectorFindsWalkableRenderHeight();
+	private final QuadtreeIntersectorFindsWalkableComponentRenderHeight walkableComponentsIntersector = new QuadtreeIntersectorFindsWalkableComponentRenderHeight();
 	private final QuadtreeIntersectorFindsBuildingRenderHeight walkableBuildingIntersector = new QuadtreeIntersectorFindsBuildingRenderHeight();
 	private final QuadtreeIntersectorFindsWalkableRayHit walkablesRayHitter = new QuadtreeIntersectorFindsWalkableRayHit();
+	private final QuadtreeIntersectorFindsWalkableComponentRayHit walkableComponentsRayHitter = new QuadtreeIntersectorFindsWalkableComponentRayHit();
 	private final QuadtreeIntersectorFindsBuildingRayHit walkableBuildingRayHitter = new QuadtreeIntersectorFindsBuildingRayHit();
 	private final QuadtreeIntersectorFindsHitPoint walkablesIntersectionFinder = new QuadtreeIntersectorFindsHitPoint();
 	private final QuadtreeIntersectorFindsHighestWalkable intersectorFindsHighestWalkable = new QuadtreeIntersectorFindsHighestWalkable();
@@ -289,6 +298,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		this.commandErrorListener = new SettableCommandErrorListener();
 		this.mapConfig = mapConfig;
+		this.soundsetNameToSoundset = new HashMap<>();
 	}
 
 	public void loadSLKs(final WorldEditStrings worldEditStrings) throws IOException {
@@ -799,6 +809,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							War3MapViewer.this.walkableObjectsTree.remove((MdxComplexInstance) renderPeer.instance,
 									renderPeer.walkableBounds);
 						}
+						for (final CollidableDoodadComponent component : renderPeer.getCollidableComponents()) {
+							War3MapViewer.this.walkableComponentTree.remove(component,
+									component.getGeosetRotatedBounds());
+						}
 					}
 
 					@Override
@@ -1226,7 +1240,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, this.commandErrorListener);
 
-		this.walkableObjectsTree = new Quadtree<>(this.terrain.getEntireMap());
+		final Rectangle entireMap = this.terrain.getEntireMap();
+		this.walkableObjectsTree = new Quadtree<>(entireMap);
+		final Vector2 center = entireMap.getCenter(mousePosHeap);
+		this.walkableComponentTree = new Quadtree<>(new Rectangle(center.x - (entireMap.getWidth()),
+				center.y - (entireMap.getHeight()), (entireMap.getWidth() * 2), (entireMap.getHeight() * 2)));
 		if (this.doodadsAndDestructiblesLoaded) {
 			loadDoodadsAndDestructibles(this.allObjectData, w3iFile);
 		}
@@ -1457,17 +1475,32 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final RenderDestructable renderDestructable = new RenderDestructable(this, model, row, location, scale,
 				facingRadians, selectionScale, maxPitch, maxRoll, lifePercent, destructableShadow,
 				simulationDestructable, doodadVariation);
+		final float angle = facingRadians;
 		if (row.readSLKTagBoolean("walkable")) {
-			final float angle = facingRadians;
 			BoundingBox boundingBox = model.bounds.getBoundingBox();
 			if (boundingBox == null) {
 				// TODO this is a hack and should be fixed later
 				boundingBox = new BoundingBox(new Vector3(-10, -10, 0), new Vector3(10, 10, 0));
 			}
 			final Rectangle renderDestructableBounds = getRotatedBoundingBox(x, y, scale, angle, boundingBox);
-			this.walkableObjectsTree.add((MdxComplexInstance) renderDestructable.instance, renderDestructableBounds);
+			final MdxComplexInstance complexInstance = (MdxComplexInstance) renderDestructable.instance;
+			this.walkableObjectsTree.add(complexInstance, renderDestructableBounds);
 			renderDestructable.walkableBounds = renderDestructableBounds;
+
+			// Third person
+			for (final Geoset geoset : model.getGeosets()) {
+				final MdlxExtent extent = geoset.mdlxGeoset.extent;
+				final Bounds bounds = new Bounds();
+				bounds.fromExtents(extent.getMin(), extent.getMax(), extent.getBoundsRadius());
+				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
+				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(x, y, scale, angle, geosetBoundingBox);
+				final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(complexInstance,
+						geoset, geosetRotatedBounds);
+				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+				renderDestructable.add(collidableComponent);
+			}
 		}
+
 		this.widgets.add(renderDestructable);
 		this.decals.add(renderDestructable);
 		this.destructableToRenderPeer.put(simulationDestructable, renderDestructable);
@@ -1575,8 +1608,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			throws IOException {
 		final War3Map mpq = this.mapMpq;
 		this.unitsReady = false;
-
-		this.soundsetNameToSoundset = new HashMap<>();
 
 		if (this.dataSource.has("war3mapUnits.doo") && WarsmashConstants.LOAD_UNITS_FROM_WORLDEDIT_DATA) {
 			final War3MapUnitsDoo dooFile = mpq.readUnits(mapInformation);
@@ -1819,6 +1850,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				if (buildingUberSplatDynamicIngame != null) {
 					renderUnit.uberSplat = buildingUberSplatDynamicIngame;
 				}
+				if (renderUnit.isPlayerPawn()) {
+					simulationUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class).getBehaviorPlayerPawn()
+							.setViewerWorldAccess(this);
+				}
 				return simulationUnit;
 			}
 			else {
@@ -1906,6 +1941,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return buildingPathingPixelMap;
 	}
 
+	private static final War3ID REPLACEABLE_TEXTURE_PATHS = War3ID.fromString("usk1");
+	private static final War3ID REPLACEABLE_TEXTURE_IDS = War3ID.fromString("usk2");
+
 	public RenderUnitTypeData getUnitTypeData(final War3ID key, MutableGameObject row) {
 		RenderUnitTypeData unitTypeData = this.unitIdToTypeData.get(key);
 		if (unitTypeData == null) {
@@ -1930,11 +1968,33 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			if ("_".equals(buildingShadow)) {
 				buildingShadow = null;
 			}
+
+			final List<RenderUnitReplaceableTex> replaceables = new ArrayList<>();
+			final ObjectData unitMetaData = this.allObjectData.getUnits().getSourceSLKMetaData();
+			if ((unitMetaData.get(REPLACEABLE_TEXTURE_IDS.toString()) != null)
+					&& (unitMetaData.get(REPLACEABLE_TEXTURE_PATHS.toString()) != null)) {
+				final String replaceablePaths = row.getFieldAsString(REPLACEABLE_TEXTURE_PATHS, 0);
+				final String replaceableIds = row.getFieldAsString(REPLACEABLE_TEXTURE_IDS, 0);
+
+				if ((replaceablePaths != null) && (replaceableIds != null)) {
+					final String[] replaceableTexPaths = replaceablePaths.split(",");
+					final String[] replaceableTexIds = replaceableIds.split(",");
+					for (int i = 0; (i < replaceableTexIds.length) && (i < replaceableTexPaths.length); i++) {
+						try {
+							replaceables.add(new RenderUnitReplaceableTex(Integer.parseInt(replaceableTexIds[i]),
+									replaceableTexPaths[i]));
+						}
+						catch (final NumberFormatException exc) {
+						}
+					}
+				}
+			}
+
 			unitTypeData = new RenderUnitTypeData(row.getFieldAsFloat(MAX_PITCH, 0), row.getFieldAsFloat(MAX_ROLL, 0),
 					row.getFieldAsFloat(ELEVATION_SAMPLE_RADIUS, 0), row.getFieldAsBoolean(ALLOW_CUSTOM_TEAM_COLOR, 0),
 					row.getFieldAsInteger(TEAM_COLOR, 0), row.getFieldAsFloat(ANIMATION_RUN_SPEED, 0),
 					row.getFieldAsFloat(ANIMATION_WALK_SPEED, 0), row.getFieldAsFloat(MODEL_SCALE, 0), buildingShadow,
-					uberSplatTexturePath, uberSplatScaleValue);
+					uberSplatTexturePath, uberSplatScaleValue, replaceables);
 			this.unitIdToTypeData.put(key, unitTypeData);
 		}
 		return unitTypeData;
@@ -2480,7 +2540,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private WorldEditStrings worldEditStrings;
 	private Warcraft3MapObjectData allObjectData;
 	private AbilityDataUI abilityDataUI;
-	private Map<String, UnitSoundset> soundsetNameToSoundset;
+	private final Map<String, UnitSoundset> soundsetNameToSoundset;
 	public int imageWalkableZOffset;
 	private WTS preloadedWTS;
 
@@ -2622,7 +2682,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			return groundHeight;
 		}
 		intersectorUnitOut[0] = null;
-		this.walkableObjectsTree.intersect(x, y, this.walkablesIntersector.reset(x, y, z + 1));
+		this.walkableComponentTree.intersect(x, y, this.walkableComponentsIntersector.reset(x, y, z + 1));
 		this.simulation.getWorldCollision().enumBuildingsAtPoint(x, y,
 				this.walkableBuildingIntersector.reset(x, y, z + 1));
 		this.simulation.getWorldCollision().enumUnitsAtPoint(x, y, this.walkableBuildingIntersector.reset(x, y, z + 1));
@@ -2660,15 +2720,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		rectangleHeap.set(Math.min(newLocation.x, prevLocation.x), Math.min(newLocation.y, prevLocation.y),
 				Math.abs(dx), Math.abs(dy));
-		this.walkableObjectsTree.intersect(rectangleHeap, this.walkablesRayHitter.reset(prevLocation.x, prevLocation.y,
-				prevLocation.z + stairsHeight, dx, dy, dz));
+		this.walkableComponentTree.intersect(rectangleHeap, this.walkableComponentsRayHitter.reset(prevLocation.x,
+				prevLocation.y, prevLocation.z + stairsHeight, dx, dy, dz));
 		if (this.walkablesRayHitter.intersected) {
 			bestClosestAvailableLocationIfFailed.set(this.walkablesRayHitter.nearestHit);
 			bestClosestAvailableLocationIfFailed.z -= stairsHeight;
 			return true;
 		}
-		this.walkableObjectsTree.intersect(rectangleHeap,
-				this.walkablesRayHitter.reset(prevLocation.x, prevLocation.y, prevLocation.z + pawnHeight, dx, dy, dz));
+		this.walkableComponentTree.intersect(rectangleHeap, this.walkableComponentsRayHitter.reset(prevLocation.x,
+				prevLocation.y, prevLocation.z + pawnHeight, dx, dy, dz));
 		if (this.walkablesRayHitter.intersected) {
 			bestClosestAvailableLocationIfFailed.set(this.walkablesRayHitter.nearestHit);
 			bestClosestAvailableLocationIfFailed.z -= pawnHeight;
@@ -2776,6 +2836,34 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 	}
 
+	private static final class QuadtreeIntersectorFindsWalkableComponentRenderHeight
+			implements QuadtreeIntersector<CollidableDoodadComponent> {
+		private float z;
+		private final Ray ray = new Ray();
+		private final Vector3 intersection = new Vector3();
+
+		private QuadtreeIntersectorFindsWalkableComponentRenderHeight reset(final float x, final float y) {
+			this.z = -Float.MAX_VALUE;
+			this.ray.set(x, y, 4096, 0, 0, -8192);
+			return this;
+		}
+
+		private QuadtreeIntersectorFindsWalkableComponentRenderHeight reset(final float x, final float y,
+				final float z) {
+			this.z = -Float.MAX_VALUE;
+			this.ray.set(x, y, z, 0, 0, -8192);
+			return this;
+		}
+
+		@Override
+		public boolean onIntersect(final CollidableDoodadComponent intersectingObject) {
+			if (intersectingObject.intersectRayWithGeosetSlow(this.ray, this.intersection)) {
+				this.z = Math.max(this.z, this.intersection.z);
+			}
+			return false;
+		}
+	}
+
 	private final class QuadtreeIntersectorFindsBuildingRenderHeight
 			implements QuadtreeIntersector<CUnit>, CUnitEnumFunction {
 		private float z;
@@ -2837,6 +2925,36 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		@Override
 		public boolean onIntersect(final MdxComplexInstance intersectingObject) {
 			if (intersectingObject.intersectRayWithMeshSlow(this.ray, this.intersection)) {
+				final float dst2 = this.intersection.dst2(this.ray.origin);
+				if (dst2 <= this.lastDist2) {
+					this.intersected = true;
+					this.lastDist2 = dst2;
+					this.nearestHit.set(this.intersection);
+				}
+			}
+			return false;
+		}
+	}
+
+	private static final class QuadtreeIntersectorFindsWalkableComponentRayHit
+			implements QuadtreeIntersector<CollidableDoodadComponent> {
+		private final Ray ray = new Ray();
+		private final Vector3 intersection = new Vector3();
+		private final Vector3 nearestHit = new Vector3();
+		private float lastDist2;
+		private boolean intersected = false;
+
+		private QuadtreeIntersectorFindsWalkableComponentRayHit reset(final float x, final float y, final float z,
+				final float dx, final float dy, final float dz) {
+			this.intersected = false;
+			this.ray.set(x, y, z, dx, dy, dz);
+			this.lastDist2 = this.ray.direction.len2();
+			return this;
+		}
+
+		@Override
+		public boolean onIntersect(final CollidableDoodadComponent intersectingObject) {
+			if (intersectingObject.intersectRayWithGeosetSlow(this.ray, this.intersection)) {
 				final float dst2 = this.intersection.dst2(this.ray.origin);
 				if (dst2 <= this.lastDist2) {
 					this.intersected = true;

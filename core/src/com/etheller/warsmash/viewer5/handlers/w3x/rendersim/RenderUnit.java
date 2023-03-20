@@ -8,6 +8,7 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
@@ -27,6 +28,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 
 public class RenderUnit implements RenderWidget {
 	public static final Quaternion tempQuat = new Quaternion();
@@ -72,6 +74,7 @@ public class RenderUnit implements RenderWidget {
 	public SplatMover uberSplat;
 	private float selectionHeight;
 	private RenderUnit preferredSelectionReplacement;
+	private CAbilityPlayerPawn playerPawn;
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
 			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
@@ -100,7 +103,9 @@ public class RenderUnit implements RenderWidget {
 		if (this.instance != null) {
 			this.instance.detach();
 		}
-		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
+		this.playerPawn = simulationUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
+		final MdxComplexInstance instance = (MdxComplexInstance) (isPlayerPawn() ? model.addInstance(2)
+				: model.addInstance());
 
 		this.location[0] = x;
 		this.location[1] = y;
@@ -112,11 +117,15 @@ public class RenderUnit implements RenderWidget {
 		instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
 		this.playerIndex = playerIndex & 0xFFFF;
 		instance.setTeamColor(this.playerIndex);
+		for (final RenderUnitReplaceableTex replaceableTex : typeData.getReplaceableTextures()) {
+			instance.setReplaceableTexture(replaceableTex.getReplaceableId(), replaceableTex.getPath());
+		}
 		instance.setScene(map.worldScene);
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
-		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+		TokenLoop:
+		for (final String animationName : requiredAnimationNames.split(",")) {
 			final String upperCaseToken = animationName.toUpperCase();
 			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 				if (upperCaseToken.equals(secondaryTag.name())) {
@@ -211,7 +220,7 @@ public class RenderUnit implements RenderWidget {
 		final float simDx = simulationX - this.location[0];
 		final float simDy = simulationY - this.location[1];
 		final float distanceToSimulation = (float) Math.sqrt((simDx * simDx) + (simDy * simDy));
-		final int speed = this.simulationUnit.getSpeed();
+		final float speed = isPlayerPawn() ? this.playerPawn.getRenderMoveSpeed() : this.simulationUnit.getSpeed();
 		final float speedDelta = speed * deltaTime;
 		if ((distanceToSimulation > speedDelta) && (deltaTime < 1.0)) {
 			// The 1.0 here says that after 1 second of lag, units just teleport to show
@@ -223,6 +232,27 @@ public class RenderUnit implements RenderWidget {
 			this.location[0] = simulationX;
 			this.location[1] = simulationY;
 		}
+		final float groundHeightTerrain = map.terrain.getGroundHeight(this.location[0], this.location[1]);
+		if (isPlayerPawn()) {
+			final float prevZ = this.location[2];
+			final float simDz = this.playerPawn.getZ() - this.location[2];
+			final float absSimDz = Math.abs(simDz);
+			final float verticalSign = Math.signum(simDz);
+			if (verticalSign != 0) {
+				final float elapsedSteps = deltaTime / WarsmashConstants.SIMULATION_STEP_TIME;
+				final float verticalSpeed = (elapsedSteps
+						* Math.abs(this.playerPawn.getBehaviorPlayerPawn().getVelocity().z
+								- (float) Math.pow(1.5, elapsedSteps - 2f)));
+				float min = Math.min(verticalSpeed, absSimDz);
+				if (min <= 0) {
+					min = 0;
+				}
+				this.location[2] += min * verticalSign;
+				if (this.location[2] < groundHeightTerrain) {
+					this.location[2] = groundHeightTerrain;
+				}
+			}
+		}
 		final float dx = this.location[0] - prevX;
 		final float dy = this.location[1] - prevY;
 		final float groundHeight;
@@ -232,7 +262,6 @@ public class RenderUnit implements RenderWidget {
 				&& PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.SWIMMABLE)
 				&& !PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.WALKABLE);
 		final boolean working = this.simulationUnit.getBuildQueueTypes()[0] != null;
-		final float groundHeightTerrain = map.terrain.getGroundHeight(this.location[0], this.location[1]);
 		float groundHeightTerrainAndWater;
 		MdxComplexInstance currentWalkableUnder;
 		final boolean standingOnWater = (swimming) || (movementType == MovementType.FLOAT)
@@ -321,7 +350,9 @@ public class RenderUnit implements RenderWidget {
 		this.dead = dead;
 		this.corpse = corpse;
 		this.boneCorpse = boneCorpse;
-		this.location[2] = this.simulationUnit.getFlyHeight() + groundHeight;
+		if (!isPlayerPawn()) {
+			this.location[2] = this.simulationUnit.getFlyHeight() + groundHeight;
+		}
 		final float selectionCircleHeight = this.selectionHeight + groundHeight;
 		this.instance.moveTo(this.location);
 		float simulationFacing = this.simulationUnit.getFacing();
@@ -428,7 +459,13 @@ public class RenderUnit implements RenderWidget {
 		map.worldScene.instanceMoved(this.instance, this.location[0], this.location[1]);
 		if (this.shadow != null) {
 			this.shadow.move(dx, dy, map.terrain.centerOffset);
-			this.shadow.setHeightAbsolute(currentWalkableUnder != null, groundHeight + map.imageWalkableZOffset);
+			if (isPlayerPawn()) {
+				this.shadow.setHeightAbsolute(this.playerPawn.getZ() > (groundHeightTerrain + 9),
+						groundHeight + map.imageWalkableZOffset);
+			}
+			else {
+				this.shadow.setHeightAbsolute(currentWalkableUnder != null, groundHeight + map.imageWalkableZOffset);
+			}
 		}
 		if (this.selectionCircle != null) {
 			this.selectionCircle.move(dx, dy, map.terrain.centerOffset);
@@ -643,6 +680,10 @@ public class RenderUnit implements RenderWidget {
 		return this.simulationUnit.isMovementOnWaterAllowed()
 				|| (this.simulationUnit.getMovementType() == MovementType.HOVER)
 				|| (this.simulationUnit.getMovementType() == MovementType.FLY);
+	}
+
+	public boolean isPlayerPawn() {
+		return this.playerPawn != null;
 	}
 
 }

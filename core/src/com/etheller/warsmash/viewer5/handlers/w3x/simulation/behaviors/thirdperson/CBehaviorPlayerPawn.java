@@ -75,12 +75,13 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			walking = 1;
 		}
 		else if (this.cameraPanControls.down) {
-			this.forwardSpeed = (-18);
+			this.forwardSpeed = (-9);
 			walking = -1;
 		}
 		else {
 			this.forwardSpeed = (0);
 		}
+		final float absForwardSpeed = Math.abs(this.forwardSpeed);
 		final float prevX = this.unit.getX();
 		final float prevY = this.unit.getY();
 		if (this.lastIntersectedUnit != null) {
@@ -105,7 +106,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		if (falling) {
 			// falling
 			this.velocity.z -= 3;
-			if ((this.velocity.x == 0) && (this.velocity.y == 0) && (this.forwardSpeed > 0)) {
+			if ((this.velocity.x == 0) && (this.velocity.y == 0) && (absForwardSpeed > 0)) {
 				final double facingRad = Math.toRadians(this.unit.getFacing());
 				final float slowSpeed = this.forwardSpeed / 2;
 				this.velocity.x = (float) (Math.cos(facingRad) * slowSpeed);
@@ -120,8 +121,8 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			tempVec.set(this.unit.getX(), this.unit.getY(), this.playerPawn.getZ()).add(this.velocity);
 			final float nextZBeneath = this.viewerWorldAccess.getNearestIntersectingZBeneath(tempVec.x, tempVec.y,
 					tempVec.z + 9, intersectingUnit);
-			this.velocity.z = Math.max(-this.forwardSpeed,
-					Math.min(this.forwardSpeed, nextZBeneath - this.playerPawn.getZ()));
+			this.velocity.z = Math.max(-absForwardSpeed,
+					Math.min(absForwardSpeed, nextZBeneath - this.playerPawn.getZ()));
 			this.velocity.nor();
 			this.velocity.scl(this.forwardSpeed);
 		}
@@ -140,8 +141,8 @@ public class CBehaviorPlayerPawn implements CBehavior {
 				this.lastIntersectedUnitFacing = this.lastIntersectedUnit.getFacing();
 			}
 			this.unit.setPoint(tempVec.x, tempVec.y, game.getWorldCollision(), game.getRegionManager());
-			this.playerPawn.setZ(falling ? Math.max(tempVec.z, nextZBeneath)
-					: Math.max(tempVec.z - this.forwardSpeed, nextZBeneath));
+			this.playerPawn.setZ(
+					falling ? Math.max(tempVec.z, nextZBeneath) : Math.max(tempVec.z - absForwardSpeed, nextZBeneath));
 		}
 		else {
 			tempVec2.set(this.unit.getX(), this.unit.getY(),
@@ -245,8 +246,8 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	}
 
 	public void jump() {
-		if (!this.wasFalling) {
-			setVelocityZ(27);
+		if (!this.wasFalling || HACKON) {
+			setVelocityZ(HACKON ? 270 : 27);
 			this.playerPawn.setZ(this.playerPawn.getZ() + 1);
 			this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.JUMPSTART, SequenceUtils.EMPTY, 1.0f,
 					true);
@@ -265,4 +266,5 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		return this.velocity;
 	}
 
+	public static boolean HACKON = false;
 }

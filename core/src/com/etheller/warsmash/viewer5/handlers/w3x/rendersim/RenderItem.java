@@ -6,6 +6,7 @@ import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.CollidableDoodadComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
@@ -119,7 +120,7 @@ public class RenderItem implements RenderWidget {
 		// land units will have their feet pass under the surface of the water, so items
 		// here are in the same place
 		final float groundHeightTerrainAndWater = map.terrain.getGroundHeight(this.location[0], this.location[1]);
-		MdxComplexInstance currentWalkableUnder;
+		CollidableDoodadComponent currentWalkableUnder;
 		currentWalkableUnder = map.getHighestWalkableUnder(this.location[0], this.location[1]);
 		War3MapViewer.gdxRayHeap.set(this.location[0], this.location[1], 4096, 0, 0, -8192);
 		if ((currentWalkableUnder != null)

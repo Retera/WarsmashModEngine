@@ -219,7 +219,8 @@ public class LuaEnvironment {
 			@Override
 			public LuaValue call(final LuaValue arg) {
 				// TODO lookup?
-				return LuaValue.valueOf(0);
+				return LuaValue
+						.listOf(new LuaValue[] { LuaValue.valueOf(0f), LuaValue.valueOf(0f), LuaValue.valueOf(false) });
 			}
 		});
 	}

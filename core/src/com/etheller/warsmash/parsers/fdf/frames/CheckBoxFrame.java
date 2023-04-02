@@ -1,10 +1,16 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.ZeroArgFunction;
+
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
 
 public class CheckBoxFrame extends GlueButtonFrame {
 	private boolean checked = false;
@@ -77,6 +83,18 @@ public class CheckBoxFrame extends GlueButtonFrame {
 	public void onClick(final int button) {
 		this.checked = !this.checked;
 		super.onClick(button);
+	}
+
+	@Override
+	public void setupTable(final LuaTable table, final LuaEnvironment luaEnvironment,
+			final UIFrameLuaWrapper luaWrapper) {
+		super.setupTable(table, luaEnvironment, luaWrapper);
+		table.set("GetChecked", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(isChecked());
+			}
+		});
 	}
 
 }

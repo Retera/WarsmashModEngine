@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.CollidableDoodadComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
@@ -263,7 +264,7 @@ public class RenderUnit implements RenderWidget {
 				&& !PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.WALKABLE);
 		final boolean working = this.simulationUnit.getBuildQueueTypes()[0] != null;
 		float groundHeightTerrainAndWater;
-		MdxComplexInstance currentWalkableUnder;
+		CollidableDoodadComponent currentWalkableUnder;
 		final boolean standingOnWater = (swimming) || (movementType == MovementType.FLOAT)
 				|| (movementType == MovementType.FLY) || (movementType == MovementType.HOVER);
 		if (standingOnWater) {
@@ -281,7 +282,7 @@ public class RenderUnit implements RenderWidget {
 		}
 		else {
 			currentWalkableUnder = map.getHighestWalkableUnder(this.location[0], this.location[1]);
-			War3MapViewer.gdxRayHeap.set(this.location[0], this.location[1], 4096, 0, 0, -8192);
+			War3MapViewer.gdxRayHeap.set(this.location[0], this.location[1], 40960, 0, 0, -81920);
 			if ((currentWalkableUnder != null)
 					&& currentWalkableUnder.intersectRayWithCollision(War3MapViewer.gdxRayHeap,
 							War3MapViewer.intersectionHeap, true, true)
@@ -533,7 +534,7 @@ public class RenderUnit implements RenderWidget {
 		}
 	}
 
-	private float getGroundHeightSample(final float groundHeight, final MdxComplexInstance currentWalkableUnder,
+	private float getGroundHeightSample(final float groundHeight, final CollidableDoodadComponent currentWalkableUnder,
 			final float sampleX, final float sampleY) {
 		final float sampleGroundHeight;
 		War3MapViewer.gdxRayHeap.origin.x = sampleX;

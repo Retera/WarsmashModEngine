@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -28,6 +30,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.camera.ThirdPersonCameraManage
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdperson.CBehaviorPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CFogModifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -95,8 +98,12 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 	@Override
 	public void main() {
-		this.pawnUnit = this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-				this.war3MapViewer.getLocalPlayerIndex(), 0, 0, 0);
+		final List<CUnit> pawnUnits = new ArrayList<>();
+		for (int i = 0; i < /* WarsmashConstants.MAX_PLAYERS */ 2; i++) {
+			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId, i, 1500, 11000, 0));
+		}
+
+		this.pawnUnit = pawnUnits.get(this.war3MapViewer.getLocalPlayerIndex());
 		this.abilityPlayerPawn = this.pawnUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
 
 		final RenderUnit pawnRenderUnit = this.war3MapViewer.getRenderPeer(this.pawnUnit);
@@ -200,6 +207,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		if (keycode == Input.Keys.SPACE) {
 			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
 					OrderIds.pawnJumpPressed, false);
+		}
+		if (keycode == Input.Keys.Z) {
+			CBehaviorPlayerPawn.HACKON = !CBehaviorPlayerPawn.HACKON;
 		}
 		if ((keycode == Input.Keys.LEFT) || (keycode == Input.Keys.A)) {
 			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
@@ -309,7 +319,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			else if (this.button == Input.Buttons.RIGHT) {
 				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15);
 				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15);
-				this.pawnUnit.setFacing((float) Math.toDegrees(this.cameraManager.horizontalAngle));
+//				this.pawnUnit.setFacing((float) Math.toDegrees(this.cameraManager.horizontalAngle));
 			}
 			this.lastX = newX;
 			this.lastY = newY;

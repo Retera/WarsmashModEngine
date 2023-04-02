@@ -48,7 +48,7 @@ public class CollisionShape extends GenericObject {
 		boolean checkIntersect(final Ray ray, final MdxNode mdxNode, final Vector3 intersection);
 	}
 
-	private static final class IntersectableBox implements Intersectable {
+	public static final class IntersectableBox implements Intersectable {
 		private final BoundingBox boundingBox;
 
 		public IntersectableBox(final float[] vertex1, final float[] vertex2) {

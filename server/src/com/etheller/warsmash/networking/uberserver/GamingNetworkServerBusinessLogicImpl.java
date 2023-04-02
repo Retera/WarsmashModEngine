@@ -2,11 +2,11 @@ package com.etheller.warsmash.networking.uberserver;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
@@ -56,7 +56,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 		this.random = new Random();
 	}
 
-	public void disconnected(GamingNetworkServerToClientWriter writer) {
+	public void disconnected(final GamingNetworkServerToClientWriter writer) {
 		// TODO this is not efficient, and may make DDOS hit us badly
 		SessionImpl sessionToKill = null;
 		for (final SessionImpl session : this.tokenToSession.values()) {
@@ -184,7 +184,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
-	public void leaveGame(long sessionToken, GamingNetworkServerToClientWriter connectionContext) {
+	public void leaveGame(final long sessionToken, final GamingNetworkServerToClientWriter connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			removeSessionFromCurrentGame(session);
@@ -195,8 +195,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
-	public void uploadMapData(long sessionToken, int sequenceNumber, ByteBuffer data,
-			GamingNetworkServerToClientWriter connectionContext) {
+	public void uploadMapData(final long sessionToken, final int sequenceNumber, final ByteBuffer data,
+			final GamingNetworkServerToClientWriter connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			if (session.currentGameName == null) {
@@ -212,7 +212,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
-	public void mapDone(long sessionToken, int sequenceNumber, GamingNetworkServerToClientWriter connectionContext) {
+	public void mapDone(final long sessionToken, final int sequenceNumber,
+			final GamingNetworkServerToClientWriter connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			if (session.currentGameName == null) {
@@ -234,7 +235,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
-	public void requestMap(long sessionToken, GamingNetworkServerToClientWriter connectionContext) {
+	public void requestMap(final long sessionToken, final GamingNetworkServerToClientWriter connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			if (session.currentGameName == null) {
@@ -260,12 +261,12 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
-	private void sendSessionToDefaultChannel(SessionImpl session) {
+	private void sendSessionToDefaultChannel(final SessionImpl session) {
 		sendSessionToDefaultChannel(session.getToken(), session.mostRecentConnectionContext, session);
 	}
 
-	private void sendSessionToDefaultChannel(long sessionToken, GamingNetworkServerToClientListener connectionContext,
-			final SessionImpl session) {
+	private void sendSessionToDefaultChannel(final long sessionToken,
+			final GamingNetworkServerToClientListener connectionContext, final SessionImpl session) {
 		if (session.lastActiveChatChannel != null) {
 			joinChannel(sessionToken, session.lastActiveChatChannel, connectionContext);
 		}
@@ -276,8 +277,9 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
-	public void createGame(long sessionToken, String gameName, String mapName, int totalSlots, LobbyGameSpeed gameSpeed,
-			HostedGameVisibility visibility, long mapChecksum, GamingNetworkServerToClientWriter connectionContext) {
+	public void createGame(final long sessionToken, final String gameName, final String mapName, final int totalSlots,
+			final LobbyGameSpeed gameSpeed, final HostedGameVisibility visibility, final long mapChecksum,
+			final GamingNetworkServerToClientWriter connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 
@@ -304,8 +306,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
-	public void gameLobbySetPlayerSlot(long sessionToken, int slot, LobbyPlayerType lobbyPlayerType,
-			GamingNetworkServerToClientWriter connectionContext) {
+	public void gameLobbySetPlayerSlot(final long sessionToken, final int slot, final LobbyPlayerType lobbyPlayerType,
+			final GamingNetworkServerToClientWriter connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			if (session.currentGameName != null) {
@@ -332,8 +334,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
-	public void gameLobbySetPlayerRace(long sessionToken, int slot, int raceItemIndex,
-			GamingNetworkServerToClientWriter connectionContext) {
+	public void gameLobbySetPlayerRace(final long sessionToken, final int slot, final int raceItemIndex,
+			final GamingNetworkServerToClientWriter connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			if (session.currentGameName != null) {
@@ -360,7 +362,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 	}
 
-	public void gameLobbyStartGame(long sessionToken, GamingNetworkServerToClientWriter connectionContext) {
+	public void gameLobbyStartGame(final long sessionToken, final GamingNetworkServerToClientWriter connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			if (session.currentGameName != null) {
@@ -645,8 +647,8 @@ public class GamingNetworkServerBusinessLogicImpl {
 		private boolean mapFullyLoaded = false;
 		private WarsmashServer warsmashGameServer;
 
-		public HostedGame(User hostUser, final String gameName, String mapName, final int totalSlots,
-				LobbyGameSpeed gameSpeed, HostedGameVisibility visibility, long mapChecksum) {
+		public HostedGame(final User hostUser, final String gameName, final String mapName, final int totalSlots,
+				final LobbyGameSpeed gameSpeed, final HostedGameVisibility visibility, final long mapChecksum) {
 			this.hostUser = hostUser;
 			this.gameName = gameName;
 			this.mapName = mapName;
@@ -661,13 +663,13 @@ public class GamingNetworkServerBusinessLogicImpl {
 			}
 		}
 
-		public boolean mapDone(long sessionToken, int sequenceNumber) {
+		public boolean mapDone(final long sessionToken, final int sequenceNumber) {
 			final long finishedChecksum = this.mapDownloader.finish(sequenceNumber);
 			this.mapFullyLoaded = (finishedChecksum == this.mapChecksum) && this.mapDownloader.isSequenceNumberingOK();
 			return this.mapFullyLoaded;
 		}
 
-		public void sendMap(GamingNetworkServerToClientListener connectionContext) {
+		public void sendMap(final GamingNetworkServerToClientListener connectionContext) {
 			int sequenceNumber = 0;
 			connectionContext.beginSendMap();
 			try (FileChannel readerChannel = FileChannel.open(this.mapFile.toPath(), StandardOpenOption.READ)) {
@@ -688,7 +690,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 			return this.mapFullyLoaded;
 		}
 
-		public void writeMap(long sessionToken, int sequenceNumber, ByteBuffer data) {
+		public void writeMap(final long sessionToken, final int sequenceNumber, final ByteBuffer data) {
 			if (this.mapDownloader == null) {
 				final int id = this.hostUser.getId();
 				final String nameToStoreMap = id + "_" + sessionToken + "_";
@@ -755,11 +757,11 @@ public class GamingNetworkServerBusinessLogicImpl {
 			return returnIndex;
 		}
 
-		public void addPlayerAwaitingMap(SessionImpl session) {
+		public void addPlayerAwaitingMap(final SessionImpl session) {
 			this.userSessionsAwaitingMap.add(session);
 		}
 
-		public void resendLobby(GamingNetworkServerToClientListener connectionContext) {
+		public void resendLobby(final GamingNetworkServerToClientListener connectionContext) {
 			for (int i = 0; i < this.userSessionSlotsGameData.length; i++) {
 				connectionContext.gameLobbySlotSetPlayerType(i, this.userSessionSlotsGameData[i].type);
 				if (this.userSessionSlots[i] != null) {
@@ -835,7 +837,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 			}
 		}
 
-		public void setPlayerSlotType(int slot, LobbyPlayerType lobbyPlayerType) {
+		public void setPlayerSlotType(final int slot, final LobbyPlayerType lobbyPlayerType) {
 			if (lobbyPlayerType != LobbyPlayerType.USER) {
 				this.userSessionSlotsGameData[slot].type = lobbyPlayerType;
 				this.userSessionSlots[slot] = null;
@@ -848,13 +850,13 @@ public class GamingNetworkServerBusinessLogicImpl {
 			}
 		}
 
-		public boolean canSetRace(SessionImpl session, int slot) {
+		public boolean canSetRace(final SessionImpl session, final int slot) {
 			return ((session.getUser() == this.hostUser)
 					&& (this.userSessionSlotsGameData[slot].type != LobbyPlayerType.USER))
 					|| (session == this.userSessionSlots[slot]);
 		}
 
-		public void setPlayerRace(int slot, int raceItemIndex) {
+		public void setPlayerRace(final int slot, final int raceItemIndex) {
 			this.userSessionSlotsGameData[slot].raceItemIndex = raceItemIndex;
 			for (int i = 0; i < this.userSessionSlots.length; i++) {
 				if (this.userSessionSlots[i] != null) {
@@ -864,7 +866,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 			}
 		}
 
-		public void setPlayerSlot(SessionImpl session, int slot) {
+		public void setPlayerSlot(final SessionImpl session, final int slot) {
 			int returnIndex = -1;
 			for (int i = 0; i < this.userSessionSlots.length; i++) {
 				if (this.userSessionSlots[i] == session) {
@@ -934,14 +936,16 @@ public class GamingNetworkServerBusinessLogicImpl {
 					try {
 						localHost = getLocalHost();
 					}
-					catch (final SocketException e) {
+					catch (final Exception e) {
 						e.printStackTrace();
 						return;
 					}
-					if(localHost == null) {
-						System.err.println("Unable to find local host address in GamingNetworkServerBusinessLogicImpl!!!");
+					if (localHost == null) {
+						System.err.println(
+								"Unable to find local host address in GamingNetworkServerBusinessLogicImpl!!!");
 						return;
 					}
+					System.out.println("Game address: " + localHost);
 					final byte[] bytes = localHost.getAddress();
 					final short port = (short) localAddress.getPort();
 					for (int i = 0; i < this.userSessionSlots.length; i++) {
@@ -959,24 +963,24 @@ public class GamingNetworkServerBusinessLogicImpl {
 			}
 		}
 	}
-	
-	private static InetAddress getLocalHost() throws SocketException {
-	    Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
-	    InetAddress somePublicAddress = null;
-	    for (; n.hasMoreElements();)
-	    {
-	        NetworkInterface e = n.nextElement();
 
-	        if(!e.isLoopback() && e.isUp()) {
-	        	Enumeration<InetAddress> a = e.getInetAddresses();
-	        	for (; a.hasMoreElements();)
-	        	{
-	        		InetAddress addr = a.nextElement();
-	        		somePublicAddress = addr;
-	        	}
-	        }
-	    }
-	    return somePublicAddress;
+	private static InetAddress getLocalHost() throws SocketException {
+		final Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
+		InetAddress somePublicAddress = null;
+		for (; n.hasMoreElements();) {
+			final NetworkInterface e = n.nextElement();
+
+			if (!e.isLoopback() && e.isUp()) {
+				final Enumeration<InetAddress> a = e.getInetAddresses();
+				for (; a.hasMoreElements();) {
+					final InetAddress addr = a.nextElement();
+					if (addr instanceof Inet4Address) {
+						somePublicAddress = addr;
+					}
+				}
+			}
+		}
+		return somePublicAddress;
 	}
 
 }

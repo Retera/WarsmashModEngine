@@ -66,9 +66,9 @@ project(":core") {
     apply plugin: "java-library"
 
     dependencies {
-        implementation project(":shared")
-        implementation project(":fdfparser")
-        implementation project(":jassparser")
+        api project(":shared")
+        api project(":fdfparser")
+        api project(":jassparser")
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"

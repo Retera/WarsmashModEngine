@@ -122,6 +122,11 @@ public class MeleeUIAbilityActivationReceiver implements AbilityActivationReceiv
 		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
 	}
 
+	@Override
+	public void alreadyFullHealth() {
+		this.genericError.onClick(this.commandErrorListener, this.worldSceneAudioContext, this.commandedUnit);
+	}
+
 	public boolean isUseOk() {
 		return this.ok;
 	}

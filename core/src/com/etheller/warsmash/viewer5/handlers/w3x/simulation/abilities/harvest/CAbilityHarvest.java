@@ -125,6 +125,10 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 			final CUnit targetUnit = (CUnit) target;
 			for (final CAbility ability : targetUnit.getAbilities()) {
 				if (ability instanceof CAbilityGoldMinable) {
+					if(this.goldCapacity <= 0){
+						receiver.mustTargetResources();
+						return;
+					}
 					receiver.targetOk(target);
 					return;
 				}
@@ -140,6 +144,10 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 		}
 		else if (target instanceof CDestructable) {
 			if (target.canBeTargetedBy(game, unit, this.treeAttack.getTargetsAllowed())) {
+				if(this.lumberCapacity <= 0){
+					receiver.mustTargetResources();
+					return;
+				}
 				receiver.targetOk(target);
 			}
 			else {

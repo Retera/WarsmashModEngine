@@ -1,8 +1,7 @@
 {
 	"abilityList": [{
-		"id": "AHad",
+		"ids": [{"id":"AHad"}],
 		"type": "PASSIVE",
-		"active": false,
 		"onAddAbility": [{
 			"type": "createBuffFromId",
 			"abilityId": {
@@ -224,7 +223,7 @@
 			"delaySeconds": 0.4
 		}]
 	},{
-		"id": "BHad",
+		"ids": [{"id":"BHad"}],
 		"type": "BUFF",
 		"onAddAbility": [{
 			"type": "if",

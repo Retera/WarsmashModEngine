@@ -9,7 +9,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -17,9 +17,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 public class CAbilityTypeDefinitionAbilityBuilder
 		extends AbstractCAbilityTypeDefinition<CAbilityTypeAbilityBuilderLevelData> implements CAbilityTypeDefinition {
 
-	private AbilityBuilderParser parser;
+	private AbilityBuilderConfiguration parser;
 
-	public CAbilityTypeDefinitionAbilityBuilder(AbilityBuilderParser abilityBuilderParser) {
+	public CAbilityTypeDefinitionAbilityBuilder(AbilityBuilderConfiguration abilityBuilderParser) {
 		super();
 		this.parser = abilityBuilderParser;
 	}

@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
@@ -20,15 +20,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 public class CAbilityAbilityBuilderPassive extends AbstractGenericSingleIconActiveAbility {
 
 	List<CAbilityTypeAbilityBuilderLevelData> levelData;
-	private AbilityBuilderParser parser;
+	private AbilityBuilderConfiguration config;
 	private Map<String, Object> localStore;
 
 	public CAbilityAbilityBuilderPassive(int handleId, War3ID alias,
-			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderParser parser,
+			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
 			Map<String, Object> localStore) {
 		super(handleId, alias);
 		this.levelData = levelData;
-		this.parser = parser;
+		this.config = config;
 		this.localStore = localStore;
 	}
 
@@ -42,9 +42,9 @@ public class CAbilityAbilityBuilderPassive extends AbstractGenericSingleIconActi
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		System.err.println("Added ability");
-		if (parser.getOnAddAbility() != null) {
-			System.err.println("looping over " + parser.getOnAddAbility().size() + " items");
-			for (ABAction action : parser.getOnAddAbility()) {
+		if (config.getOnAddAbility() != null) {
+			System.err.println("looping over " + config.getOnAddAbility().size() + " items");
+			for (ABAction action : config.getOnAddAbility()) {
 				action.runAction(game, unit, localStore);
 			}
 		}
@@ -52,8 +52,8 @@ public class CAbilityAbilityBuilderPassive extends AbstractGenericSingleIconActi
 
 	@Override
 	public void onRemove(CSimulation game, CUnit unit) {
-		if (parser.getOnRemoveAbility() != null) {
-			for (ABAction action : parser.getOnRemoveAbility()) {
+		if (config.getOnRemoveAbility() != null) {
+			for (ABAction action : config.getOnRemoveAbility()) {
 				action.runAction(game, unit, localStore);
 			}
 		}
@@ -61,8 +61,8 @@ public class CAbilityAbilityBuilderPassive extends AbstractGenericSingleIconActi
 
 	@Override
 	public void onTick(CSimulation game, CUnit unit) {
-		if (parser.getOnTickPreCast() != null) {
-			for (ABAction action : parser.getOnTickPreCast()) {
+		if (config.getOnTickPreCast() != null) {
+			for (ABAction action : config.getOnTickPreCast()) {
 				action.runAction(game, unit, localStore);
 			}
 		}
@@ -70,8 +70,8 @@ public class CAbilityAbilityBuilderPassive extends AbstractGenericSingleIconActi
 
 	@Override
 	public void onDeath(CSimulation game, CUnit unit) {
-		if (parser.getOnDeathPreCast() != null) {
-			for (ABAction action : parser.getOnDeathPreCast()) {
+		if (config.getOnDeathPreCast() != null) {
+			for (ABAction action : config.getOnDeathPreCast()) {
 				action.runAction(game, unit, localStore);
 			}
 		}

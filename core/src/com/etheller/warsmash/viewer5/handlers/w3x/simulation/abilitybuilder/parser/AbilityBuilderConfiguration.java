@@ -4,10 +4,13 @@ import java.util.List;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.definitions.impl.CAbilityTypeDefinitionAbilityBuilder;
 
-public class AbilityBuilderParser {
-
-	private List<AbilityBuilderDupe> ids;
+public class AbilityBuilderConfiguration {
+	private String id;
+	
+	private String castId;
+	private String uncastId;
 
 	private AbilityBuilderType type;
 	private AbilityBuilderSpecialConfigFields specialFields;
@@ -27,12 +30,55 @@ public class AbilityBuilderParser {
 	private List<ABAction> onResetCasting;
 	private List<ABAction> onUpdateCasting;
 
-	public List<AbilityBuilderDupe> getIds() {
-		return ids;
+	public AbilityBuilderConfiguration(AbilityBuilderParser parser, AbilityBuilderDupe dupe) {
+		this.id = dupe.getId();
+		this.castId = dupe.getCastId();
+		this.uncastId = dupe.getUncastId();
+		this.type = parser.getType();
+		this.specialFields = parser.getSpecialFields();
+		
+		this.extraTargetConditions = parser.getExtraTargetConditions();
+		this.extraCastConditions = parser.getExtraCastConditions();
+		
+		this.onAddAbility = parser.getOnAddAbility();
+		this.onRemoveAbility = parser.getOnRemoveAbility();
+		this.onTickPreCast = parser.getOnTickPreCast();
+		this.onDeathPreCast = parser.getOnDeathPreCast();
+		this.onCancelPreCast = parser.getOnCancelPreCast();
+		this.onBeginCast = parser.getOnBeginCast();
+
+		this.onBeginCasting = parser.getOnBeginCasting();
+		this.onEndCasting = parser.getOnEndCasting();
+		this.onResetCasting = parser.getOnResetCasting();
+		this.onUpdateCasting = parser.getOnUpdateCasting();
+	}
+	
+	public CAbilityTypeDefinitionAbilityBuilder createDefinition() {
+		return new CAbilityTypeDefinitionAbilityBuilder(this);
 	}
 
-	public void setIds(List<AbilityBuilderDupe> ids) {
-		this.ids = ids;
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getCastId() {
+		return castId;
+	}
+
+	public void setCastId(String castId) {
+		this.castId = castId;
+	}
+
+	public String getUncastId() {
+		return uncastId;
+	}
+
+	public void setUncastId(String uncastId) {
+		this.uncastId = uncastId;
 	}
 
 	public AbilityBuilderType getType() {

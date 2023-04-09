@@ -47,7 +47,12 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		receiver.useOk();
+		if (unit.getLife() >= unit.getMaxLife()) {
+			receiver.alreadyFullHealth();
+		}
+		else {
+			receiver.useOk();
+		}
 	}
 
 	@Override

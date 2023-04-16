@@ -20,6 +20,38 @@ https://discord.com/invite/ucjftZ7x7H
 5. Remove the duplicate "META-INF/services/javax.imageio.spi.ImageReaderSpi" files that share the same name located in META-INF so that only the BLP related file is present
 6. Save the JAR and exit 7zip
 *(This process will hopefully become easier in the future)*
+   
+## How to debug your map in any IDE
+
+It can be useful to debug your map with Warsmash in your IDE using breakpoints and other debugging features to improve Warsmash:
+
+1. Install Warcraft from Blizzard.
+2. Install Java 17.
+3. Clone the Warsmash repository.
+4. Use a working directory (e. g. the project root directory of Warsmash) to run Warsmash from the IDE.
+5. Copy [warsmash.ini](./core/assets/warsmash.ini) file into the working directory and adapt all the file paths in section`[DataSources]` to your local Warcraft installation or other data sources and make sure that they all do exist and add the project directories [.\core\assets\resources](.\core\assets\resources) and [.\resources](.\resources) are included since they contain required files.
+All relative paths must work for your working directory.
+This is an example for Warcraft III: Reforged:
+
+````
+[DataSources]
+Count=4
+// Warcraft III: Reforged
+Type00=CASC
+Path00="C:\Program Files (x86)\Warcraft III"
+Prefixes00=war3.w3mod,war3.w3mod\_deprecated.w3mod,war3.w3mod\_locales\enus.w3mod
+// Warsmash
+Type01=Folder
+Path01=".\core\assets\"
+Type02=Folder
+Path02=".\resources\"
+// Working directory
+Type03=Folder
+Path03="."
+````
+
+7. Run/debug the method `com.etheller.warsmash.desktop.DesktopLauncher.main` with the options `-nolog -window -loadfile <path to your .w3x file>` from your IDE to load your custom map file in windowed mode and print the logs into the console instead of a log file.
+   If the path to your .w3x file is relative, it has to be found from your working directory. 
 
 ## Background and History
 My current codebase is running on Java 8 and the LibGDX game engine coupled with the port of the mdx-m3-viewer's engine. It contains:

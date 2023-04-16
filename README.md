@@ -20,6 +20,43 @@ https://discord.com/invite/ucjftZ7x7H
 5. Remove the duplicate "META-INF/services/javax.imageio.spi.ImageReaderSpi" files that share the same name located in META-INF so that only the BLP related file is present
 6. Save the JAR and exit 7zip
 *(This process will hopefully become easier in the future)*
+   
+## How to run/debug in IDE
+1. Use a working directory (e. g. the project root directory) to run Warsmash from the IDE.
+1. Copy [warsmash.ini](./core/assets/warsmash.ini) file into the working directory.
+2. Adapt all the file paths in section`[DataSources]` to your local Warcraft installation or other data sources and make sure that they all do exist and add the project directories [.\core\assets\resources](.\core\assets\resources) and [.\resources](.\resources) are included since they contain required files.
+All relative paths must work for your working directory:
+
+````
+[DataSources]
+Count=8
+// Reforged
+Type00=CASC
+Path00="C:\Program Files (x86)\Warcraft III"
+Prefixes00=war3.w3mod,war3.w3mod\_deprecated.w3mod,war3.w3mod\_locales\enus.w3mod
+// Warcraft III: Reign of Chaos
+Type01=MPQ
+Path01="D:\Warcraft III\war3.mpq"
+// Warcraft III: The Frozen Throne
+Type02=MPQ
+Path02="D:\Warcraft III\War3x.mpq"
+// Warcraft III: The Frozen Throne Language
+Type03=MPQ
+Path03="D:\Warcraft III\War3xlocal.mpq"
+// Warcraft III: The Frozen Throne Patch
+Type04=MPQ
+Path04="D:\Warcraft III\War3Patch.mpq"
+// Warsmash
+Type05=Folder
+Path05=".\core\assets\"
+Type06=Folder
+Path06=".\resources\"
+Type07=Folder
+Path07="."
+````
+
+4. Run/debug the method `com.etheller.warsmash.desktop.DesktopLauncher.main` with the options `-nolog -window -loadfile <path to your .w3x file>` from your IDE to load your custom map file in windowed mode and print the logs into the console instead of a log file.
+   If the path to your .w3x file is relative, it has to be found from your working directory.
 
 ## Background and History
 My current codebase is running on Java 8 and the LibGDX game engine coupled with the port of the mdx-m3-viewer's engine. It contains:

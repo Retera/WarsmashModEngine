@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.FloatBuffer;
 
+import com.etheller.warsmash.WarsmashGdxMapScreen;
+import com.etheller.warsmash.datasources.DataSource;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL;
 import org.lwjgl.opengl.GL11;
@@ -45,17 +47,13 @@ import com.etheller.warsmash.viewer5.gl.WireframeExtension;
 
 public class DesktopLauncher {
 	public static void main(final String[] arg) {
-		System.out.println("You ran it.");
+		System.out.println("You ran it in working directory " + System.getProperty("user.dir"));
 		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.useGL30 = true;
 		config.gles30ContextMajorVersion = 3;
 		config.gles30ContextMinorVersion = 3;
 //		config.samples = 16;
 //		config.vSyncEnabled = false;
-		config.addIcon("resources/Icon16.png", Files.FileType.Internal);
-		config.addIcon("resources/Icon32.png", Files.FileType.Internal);
-		config.addIcon("resources/Icon64.png", Files.FileType.Internal);
-		config.addIcon("resources/Icon128.png", Files.FileType.Internal);
 //		config.foregroundFPS = 0;
 //		config.backgroundFPS = 0;
 		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
@@ -100,7 +98,26 @@ public class DesktopLauncher {
 		}
 		loadExtensions();
 		final DataTable warsmashIni = loadWarsmashIni(iniPath);
+
+		// Load icons:
+		DataSource codebase = WarsmashGdxMapScreen.parseDataSources(warsmashIni);
+		try {
+			config.addIcon(codebase.getFile("resources/Icon16.png").getAbsolutePath(), Files.FileType.Internal);
+			config.addIcon(codebase.getFile("resources/Icon32.png").getAbsolutePath(), Files.FileType.Internal);
+			config.addIcon(codebase.getFile("resources/Icon64.png").getAbsolutePath(), Files.FileType.Internal);
+			config.addIcon(codebase.getFile("resources/Icon128.png").getAbsolutePath(), Files.FileType.Internal);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
 		final Element emulatorConstants = warsmashIni.get("Emulator");
+
+		if (emulatorConstants == null) {
+			System.err.println("Missing entry \"Emulator\" in .ini file.");
+
+			return;
+		}
+
 		WarsmashConstants.loadConstants(emulatorConstants, warsmashIni);
 
 		if (fileToLoad != null) {

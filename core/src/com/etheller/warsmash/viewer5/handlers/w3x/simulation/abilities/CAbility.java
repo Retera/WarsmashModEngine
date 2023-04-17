@@ -16,6 +16,8 @@ public interface CAbility extends CAbilityView {
 
 	void onTick(CSimulation game, CUnit unit);
 
+	default void onBeforeDeath(CSimulation game, CUnit cUnit) {};
+
 	void onDeath(CSimulation game, CUnit cUnit);
 
 	/*

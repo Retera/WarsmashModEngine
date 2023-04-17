@@ -1240,114 +1240,122 @@ public class CUnit extends CWidget {
 		}
 		killPathingInstance();
 		popoutWorker(simulation);
-		final CPlayer player = simulation.getPlayer(this.playerIndex);
-		if (this.foodMade != 0) {
-			player.setUnitFoodMade(this, 0);
-		}
-		if (this.foodUsed != 0) {
-			player.setUnitFoodUsed(this, 0);
-		}
-		if (getHeroData() == null) {
-			if (this.constructing) {
-				player.removeTechtreeInProgress(this.unitType.getTypeId());
-			}
-			else {
-				player.removeTechtreeUnlocked(this.unitType.getTypeId());
-			}
-		}
-		// else its a hero and techtree "remains unlocked" which is currently meaning
-		// the "limit of 1" remains limited
 
-		// Award hero experience
-		if (source != null) {
-			final CPlayer sourcePlayer = simulation.getPlayer(source.getPlayerIndex());
-			if (!sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
-				if (player.getPlayerState(simulation, CPlayerState.GIVES_BOUNTY) > 0) {
-					int goldBountyAwarded = this.unitType.getGoldBountyAwardedBase();
-					final int goldBountyAwardedDice = this.unitType.getGoldBountyAwardedDice();
-					final int goldBountyAwardedSides = this.unitType.getGoldBountyAwardedSides();
-					for (int i = 0; i < goldBountyAwardedDice; i++) {
-						goldBountyAwarded += simulation.getSeededRandom().nextInt(goldBountyAwardedSides) + 1;
-					}
-					if (goldBountyAwarded > 0) {
-						sourcePlayer.addGold(goldBountyAwarded);
-						simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.GOLD,
-								goldBountyAwarded);
-					}
-					int lumberBountyAwarded = this.unitType.getLumberBountyAwardedBase();
-					final int lumberBountyAwardedDice = this.unitType.getLumberBountyAwardedDice();
-					final int lumberBountyAwardedSides = this.unitType.getLumberBountyAwardedSides();
-					for (int i = 0; i < lumberBountyAwardedDice; i++) {
-						lumberBountyAwarded += simulation.getSeededRandom().nextInt(lumberBountyAwardedSides) + 1;
-					}
-					if (lumberBountyAwarded > 0) {
-						sourcePlayer.addLumber(lumberBountyAwarded);
-						simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.LUMBER,
-								lumberBountyAwarded);
-					}
+		for (int i = this.abilities.size() - 1; i >= 0; i--) {
+			// okay if it removes self from this during onBeforeDeath() because of reverse
+			// iteration order
+			this.abilities.get(i).onBeforeDeath(simulation, this);
+		}
+
+		// abilities could have prevented the death with Reincarnation
+		if (isDead()) {
+			final CPlayer player = simulation.getPlayer(this.playerIndex);
+			if (this.foodMade != 0) {
+				player.setUnitFoodMade(this, 0);
+			}
+			if (this.foodUsed != 0) {
+				player.setUnitFoodUsed(this, 0);
+			}
+			if (getHeroData() == null) {
+				if (this.constructing) {
+					player.removeTechtreeInProgress(this.unitType.getTypeId());
+				} else {
+					player.removeTechtreeUnlocked(this.unitType.getTypeId());
 				}
-				final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
-				if (gameplayConstants.isBuildingKillsGiveExp() || !source.isBuilding()) {
-					final CUnit killedUnit = this;
-					final CAbilityHero killedUnitHeroData = getHeroData();
-					final boolean killedUnitIsAHero = killedUnitHeroData != null;
-					int availableAwardXp;
-					if (killedUnitIsAHero) {
-						availableAwardXp = gameplayConstants.getGrantHeroXP(killedUnitHeroData.getHeroLevel());
+			}
+			// else its a hero and techtree "remains unlocked" which is currently meaning
+			// the "limit of 1" remains limited
+
+			// Award hero experience
+			if (source != null) {
+				final CPlayer sourcePlayer = simulation.getPlayer(source.getPlayerIndex());
+				if (!sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
+					if (player.getPlayerState(simulation, CPlayerState.GIVES_BOUNTY) > 0) {
+						int goldBountyAwarded = this.unitType.getGoldBountyAwardedBase();
+						final int goldBountyAwardedDice = this.unitType.getGoldBountyAwardedDice();
+						final int goldBountyAwardedSides = this.unitType.getGoldBountyAwardedSides();
+						for (int i = 0; i < goldBountyAwardedDice; i++) {
+							goldBountyAwarded += simulation.getSeededRandom().nextInt(goldBountyAwardedSides) + 1;
+						}
+						if (goldBountyAwarded > 0) {
+							sourcePlayer.addGold(goldBountyAwarded);
+							simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.GOLD,
+									goldBountyAwarded);
+						}
+						int lumberBountyAwarded = this.unitType.getLumberBountyAwardedBase();
+						final int lumberBountyAwardedDice = this.unitType.getLumberBountyAwardedDice();
+						final int lumberBountyAwardedSides = this.unitType.getLumberBountyAwardedSides();
+						for (int i = 0; i < lumberBountyAwardedDice; i++) {
+							lumberBountyAwarded += simulation.getSeededRandom().nextInt(lumberBountyAwardedSides) + 1;
+						}
+						if (lumberBountyAwarded > 0) {
+							sourcePlayer.addLumber(lumberBountyAwarded);
+							simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.LUMBER,
+									lumberBountyAwarded);
+						}
 					}
-					else {
-						availableAwardXp = gameplayConstants.getGrantNormalXP(this.unitType.getLevel());
-					}
-					final List<CUnit> xpReceivingHeroes = new ArrayList<>();
-					final int heroExpRange = gameplayConstants.getHeroExpRange();
-					simulation.getWorldCollision().enumUnitsInRect(new Rectangle(getX() - heroExpRange,
-							getY() - heroExpRange, heroExpRange * 2, heroExpRange * 2), new CUnitEnumFunction() {
-								@Override
-								public boolean call(final CUnit unit) {
-									if ((unit.distance(killedUnit) <= heroExpRange)
-											&& sourcePlayer.hasAlliance(unit.getPlayerIndex(), CAllianceType.SHARED_XP)
-											&& unit.isHero() && !unit.isDead()) {
-										xpReceivingHeroes.add(unit);
-									}
-									return false;
+					final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
+					if (gameplayConstants.isBuildingKillsGiveExp() || !source.isBuilding()) {
+						final CUnit killedUnit = this;
+						final CAbilityHero killedUnitHeroData = getHeroData();
+						final boolean killedUnitIsAHero = killedUnitHeroData != null;
+						int availableAwardXp;
+						if (killedUnitIsAHero) {
+							availableAwardXp = gameplayConstants.getGrantHeroXP(killedUnitHeroData.getHeroLevel());
+						} else {
+							availableAwardXp = gameplayConstants.getGrantNormalXP(this.unitType.getLevel());
+						}
+						final List<CUnit> xpReceivingHeroes = new ArrayList<>();
+						final int heroExpRange = gameplayConstants.getHeroExpRange();
+						simulation.getWorldCollision().enumUnitsInRect(new Rectangle(getX() - heroExpRange,
+								getY() - heroExpRange, heroExpRange * 2, heroExpRange * 2), new CUnitEnumFunction() {
+							@Override
+							public boolean call(final CUnit unit) {
+								if ((unit.distance(killedUnit) <= heroExpRange)
+										&& sourcePlayer.hasAlliance(unit.getPlayerIndex(), CAllianceType.SHARED_XP)
+										&& unit.isHero() && !unit.isDead()) {
+									xpReceivingHeroes.add(unit);
 								}
-							});
-					if (xpReceivingHeroes.isEmpty()) {
-						if (gameplayConstants.isGlobalExperience()) {
-							for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-								if (sourcePlayer.hasAlliance(i, CAllianceType.SHARED_XP)) {
-									xpReceivingHeroes.addAll(simulation.getPlayerHeroes(i));
+								return false;
+							}
+						});
+						if (xpReceivingHeroes.isEmpty()) {
+							if (gameplayConstants.isGlobalExperience()) {
+								for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+									if (sourcePlayer.hasAlliance(i, CAllianceType.SHARED_XP)) {
+										xpReceivingHeroes.addAll(simulation.getPlayerHeroes(i));
+									}
 								}
 							}
 						}
-					}
-					for (final CUnit receivingHero : xpReceivingHeroes) {
-						final CAbilityHero heroData = receivingHero.getHeroData();
-						heroData.addXp(simulation, receivingHero,
-								(int) (availableAwardXp * (1f / xpReceivingHeroes.size())
-										* gameplayConstants.getHeroFactorXp(heroData.getHeroLevel())));
+						for (final CUnit receivingHero : xpReceivingHeroes) {
+							final CAbilityHero heroData = receivingHero.getHeroData();
+							heroData.addXp(simulation, receivingHero,
+									(int) (availableAwardXp * (1f / xpReceivingHeroes.size())
+											* gameplayConstants.getHeroFactorXp(heroData.getHeroLevel())));
+						}
 					}
 				}
 			}
-		}
-		for (int i = this.abilities.size() - 1; i >= 0; i--) {
-			// okay if it removes self from this during onDeath() because of reverse
-			// iteration order
-			this.abilities.get(i).onDeath(simulation, this);
-		}
-		fireDeathEvents(simulation);
-		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
-		if (eventList != null) {
-			for (final CWidgetEvent event : eventList) {
-				event.fire(this, CommonTriggerExecutionScope.unitDeathScope(JassGameEventsWar3.EVENT_UNIT_DEATH,
-						event.getTrigger(), this, source));
+			for (int i = this.abilities.size() - 1; i >= 0; i--) {
+				// okay if it removes self from this during onDeath() because of reverse
+				// iteration order
+				this.abilities.get(i).onDeath(simulation, this);
 			}
-		}
-		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
-		if (isExplodesOnDeath()) {
-			setHidden(true);
-			simulation.createDeathExplodeEffect(this);
-			simulation.removeUnit(this);
+			fireDeathEvents(simulation);
+			final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
+			if (eventList != null) {
+				for (final CWidgetEvent event : eventList) {
+					event.fire(this, CommonTriggerExecutionScope.unitDeathScope(JassGameEventsWar3.EVENT_UNIT_DEATH,
+							event.getTrigger(), this, source));
+				}
+			}
+			simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
+			if (isExplodesOnDeath()) {
+				setHidden(true);
+				simulation.createDeathExplodeEffect(this);
+				simulation.removeUnit(this);
+			}
 		}
 	}
 

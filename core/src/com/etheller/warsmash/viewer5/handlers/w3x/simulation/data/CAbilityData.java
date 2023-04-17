@@ -22,6 +22,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilityBlizzard;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilitySummonWaterElemental;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.darkranger.CAbilityCharm;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.chieftain.CAbilityReincarnation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityFeralSpirit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
@@ -99,6 +100,8 @@ public class CAbilityData {
 		// ----Orc----
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOsf"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityFeralSpirit(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOre"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityReincarnation(handleId, alias)));
 
 		// Burrow:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Abun"), new CAbilityTypeDefinitionCargoHoldBurrow());
@@ -155,6 +158,7 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIma"), new CAbilityTypeDefinitionItemManaRegain());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIat"), new CAbilityTypeDefinitionItemAttackBonus());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIab"), new CAbilityTypeDefinitionItemStatBonus());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIrc"), new CAbilityTypeDefinitionItemStatBonus());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIim"),
 				new CAbilityTypeDefinitionItemPermanentStatGain());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIsm"),

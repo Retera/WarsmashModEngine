@@ -2645,7 +2645,10 @@ public class Jass2 {
 
 					final CItem newItem = CommonEnvironment.this.simulation.createItem(new War3ID(rawcode), unit.getX(),
 							unit.getY());
-					unit.getInventoryData().giveItem(CommonEnvironment.this.simulation, unit, newItem, false);
+					final CAbilityInventory inventoryData = unit.getInventoryData();
+					if (inventoryData != null) {
+						inventoryData.giveItem(CommonEnvironment.this.simulation, unit, newItem, false);
+					}
 
 					return new HandleJassValue(itemType, newItem);
 				}
@@ -2660,7 +2663,10 @@ public class Jass2 {
 
 					final CItem newItem = CommonEnvironment.this.simulation.createItem(new War3ID(rawcode), unit.getX(),
 							unit.getY());
-					unit.getInventoryData().giveItem(CommonEnvironment.this.simulation, unit, newItem, slot, false);
+					final CAbilityInventory inventoryData = unit.getInventoryData();
+					if (inventoryData != null) {
+						inventoryData.giveItem(CommonEnvironment.this.simulation, unit, newItem, slot, false);
+					}
 
 					return new HandleJassValue(itemType, newItem);
 				}

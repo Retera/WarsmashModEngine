@@ -30,4 +30,6 @@ public interface AbilityActivationReceiver {
 	void cooldownNotYetReady(float cooldownRemaining, float cooldown);
 
 	void noChargesRemaining();
+
+	void alreadyFullHealth();
 }

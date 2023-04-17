@@ -1095,10 +1095,16 @@ public class MenuUI {
 				"MapListContainer", this.dataSource, profileListText.getFrameFont());
 		mapListContainer.addSelectionListener(new ListBoxSelelectionListener() {
 			War3Map lastMapListMap;
+			String prevSelectedItem = "";
 
 			@Override
 			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
 				if (newSelectedItem != null) {
+					if (newSelectedItem.compareTo(prevSelectedItem) == 0) {
+						return;
+					}
+					prevSelectedItem = newSelectedItem;
+
 					try {
 						final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
 						if (this.lastMapListMap != null) {

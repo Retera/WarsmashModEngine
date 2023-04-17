@@ -378,10 +378,15 @@ public class Jass2 {
 				return new HandleJassValue(frameHandleType, simpleFrame);
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("FrameSetAnchor", (arguments, globalScope, triggerScope) -> {
-				final String templateName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-				final int createContext = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-				final UIFrame simpleFrame = JUIEnvironment.this.gameUI.getFrameByName(templateName, createContext);
-				return new HandleJassValue(frameHandleType, simpleFrame);
+				final UIFrame frame = arguments.get(0).visit(ObjectJassValueVisitor.<UIFrame>getInstance());
+				final FramePoint framePoint = arguments.get(1)
+						.visit(ObjectJassValueVisitor.<FramePoint>getInstance());
+				final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+
+				frame.addAnchor(new AnchorDefinition(framePoint, GameUI.convertX(uiViewport, (float) x),
+						GameUI.convertY(uiViewport, (float) y)));
+				return null;
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("FrameSetAbsPoint", (arguments, globalScope, triggerScope) -> {
 				final UIFrame frame = arguments.get(0).visit(ObjectJassValueVisitor.<UIFrame>getInstance());
@@ -947,7 +952,7 @@ public class Jass2 {
 				final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
 				final Rectangle rect = arguments.get(1).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
 				final TriggerBooleanExpression filter = nullable(arguments, 2, ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-				CommonEnvironment.this.simulation.getWorldCollision().enumBuildingsInRect(rect, (unit) -> {
+				CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(rect, (unit) -> {
 					if ((filter == null) || filter.evaluate(globalScope, CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
 						// TODO the trigger scope for evaluation here might need to be a clean one?
 						group.add(unit);
@@ -2430,6 +2435,7 @@ public class Jass2 {
 				return null;
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupGetField", (arguments, globalScope, triggerScope) -> {
+				// TODO NYI
 				return new RealJassValue(0.0f);
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("LeaderboardGetItemCount", (arguments, globalScope, triggerScope) -> {
@@ -2658,7 +2664,7 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("GetOrderPointY", (arguments, globalScope, triggerScope) -> {
 				return new RealJassValue(((CommonTriggerExecutionScope) triggerScope).getOrderPointY());
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetOrderPointLc", (arguments, globalScope, triggerScope) -> {
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderPointLoc", (arguments, globalScope, triggerScope) -> {
 				final CommonTriggerExecutionScope commonTriggerExecutionScope = (CommonTriggerExecutionScope) triggerScope;
 				final Point2D.Double jassLocation = new Point2D.Double(commonTriggerExecutionScope.getOrderPointX(), commonTriggerExecutionScope.getOrderPointY());
 				return new HandleJassValue(locationType, jassLocation);
@@ -4405,7 +4411,7 @@ public class Jass2 {
 			}
 			return new StringJassValue(decoratedString);
 		});
-		jassProgramVisitor.getJassNativeManager().createNative("GetLocalizedHotKey", (arguments, globalScope, triggerScope) -> {
+		jassProgramVisitor.getJassNativeManager().createNative("GetLocalizedHotkey", (arguments, globalScope, triggerScope) -> {
 			final String key = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 			// TODO this might be wrong, or a subset of the needed return values
 			final String decoratedString = gameUI.getTemplates().getDecoratedString(key);

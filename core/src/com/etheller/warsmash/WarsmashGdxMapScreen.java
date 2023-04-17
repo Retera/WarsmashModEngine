@@ -314,6 +314,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	@Override
 	public void dispose() {
 		this.meleeUI.dispose();
+		batch.dispose();
+		viewer.getGameUI().dispose();
 	}
 
 	@Override

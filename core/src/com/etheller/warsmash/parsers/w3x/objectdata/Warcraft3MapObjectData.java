@@ -105,10 +105,17 @@ public final class Warcraft3MapObjectData {
 		return this.wts;
 	}
 
-	public static WTS loadWTS(final DataSource dataSource) throws IOException {
-		final WTS wts = dataSource.has("war3map.wts") ? new WTSFile(dataSource.getResourceAsStream("war3map.wts"))
-				: WTS.DO_NOTHING;
+	private static WTS loadWTS(final DataSource dataSource, final String name) throws IOException {
+		final WTS wts = dataSource.has(name) ? new WTSFile(dataSource.getResourceAsStream(name)) : WTS.DO_NOTHING;
 		return wts;
+	}
+
+	public static WTS loadWTS(final DataSource dataSource) throws IOException {
+		return loadWTS(dataSource, "war3map.wts");
+	}
+
+	public static WTS loadCampaignWTS(final DataSource dataSource) throws IOException {
+		return loadWTS(dataSource, "war3campaign.wts");
 	}
 
 	public static Warcraft3MapObjectData load(final DataSource dataSource, final boolean inlineWTS) throws IOException {
@@ -118,6 +125,12 @@ public final class Warcraft3MapObjectData {
 
 	public static Warcraft3MapObjectData load(final DataSource dataSource, final boolean inlineWTS, final WTS wts)
 			throws IOException {
+		final WTS campaignWTS = loadCampaignWTS(dataSource);
+		return load(dataSource, inlineWTS, wts, campaignWTS);
+	}
+
+	public static Warcraft3MapObjectData load(final DataSource dataSource, final boolean inlineWTS, final WTS wts,
+			final WTS campaignWTS) throws IOException {
 
 		final StandardObjectData standardObjectData = new StandardObjectData(dataSource);
 		final WarcraftData standardUnits = standardObjectData.getStandardUnits();
@@ -173,6 +186,16 @@ public final class Warcraft3MapObjectData {
 			unitChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3u")), wts,
 					inlineWTS);
 		}
+		if (dataSource.has("war3campaign.w3u")) {
+			unitChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3campaign.w3u")),
+					campaignWTS, inlineWTS);
+		}
+		// ================== REMOVE LATER =====================
+		if (dataSource.has("war3mod.w3u")) {
+			unitChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mod.w3u")), wts,
+					inlineWTS);
+		}
+		// =====================================================
 		if (dataSource.has("war3map.w3t")) {
 			itemChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3t")), wts,
 					inlineWTS);
@@ -181,9 +204,17 @@ public final class Warcraft3MapObjectData {
 			itemChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3t")), wts,
 					inlineWTS);
 		}
+		if (dataSource.has("war3campaign.w3t")) {
+			itemChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3campaign.w3t")),
+					campaignWTS, inlineWTS);
+		}
 		if (dataSource.has("war3map.w3d")) {
 			doodadChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3d")), wts,
 					inlineWTS);
+		}
+		if (dataSource.has("war3campaign.w3d")) {
+			doodadChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3campaign.w3d")),
+					campaignWTS, inlineWTS);
 		}
 		if (dataSource.has("war3map.w3b")) {
 			destructableChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3b")),
@@ -193,6 +224,11 @@ public final class Warcraft3MapObjectData {
 			destructableChangeset.load(
 					new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3b")), wts, inlineWTS);
 		}
+		if (dataSource.has("war3campaign.w3b")) {
+			destructableChangeset.load(
+					new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3campaign.w3b")), campaignWTS,
+					inlineWTS);
+		}
 		if (dataSource.has("war3map.w3a")) {
 			abilityChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3a")), wts,
 					inlineWTS);
@@ -200,6 +236,10 @@ public final class Warcraft3MapObjectData {
 		if (dataSource.has("war3mapSkin.w3a")) {
 			abilityChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3a")),
 					wts, inlineWTS);
+		}
+		if (dataSource.has("war3campaign.w3a")) {
+			abilityChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3campaign.w3a")),
+					campaignWTS, inlineWTS);
 		}
 		if (dataSource.has("war3map.w3h")) {
 			buffChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3h")), wts,
@@ -209,6 +249,10 @@ public final class Warcraft3MapObjectData {
 			buffChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3h")), wts,
 					inlineWTS);
 		}
+		if (dataSource.has("war3campaign.w3h")) {
+			buffChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3campaign.w3h")),
+					campaignWTS, inlineWTS);
+		}
 		if (dataSource.has("war3map.w3q")) {
 			upgradeChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3map.w3q")), wts,
 					inlineWTS);
@@ -216,6 +260,10 @@ public final class Warcraft3MapObjectData {
 		if (dataSource.has("war3mapSkin.w3q")) {
 			upgradeChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3mapSkin.w3q")),
 					wts, inlineWTS);
+		}
+		if (dataSource.has("war3campaign.w3q")) {
+			upgradeChangeset.load(new LittleEndianDataInputStream(dataSource.getResourceAsStream("war3campaign.w3q")),
+					campaignWTS, inlineWTS);
 		}
 
 		final WorldEditStrings worldEditStrings = standardObjectData.getWorldEditStrings();

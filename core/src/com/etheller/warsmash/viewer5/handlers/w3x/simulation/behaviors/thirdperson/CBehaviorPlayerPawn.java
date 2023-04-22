@@ -189,7 +189,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			else {
 				if (walking != 0) {
 					this.unit.getUnitAnimationListener().playAnimation(false,
-							walking > 0 ? PrimaryTag.WALK : PrimaryTag.WALKBACKWARDS, SequenceUtils.FAST, 1.0f, true);
+							walking > 0 ? PrimaryTag.RUN : PrimaryTag.WALKBACKWARDS, SequenceUtils.EMPTY, 1.0f, true);
 				}
 				else {
 					switch (shuffle) {

@@ -23,6 +23,7 @@ import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WorldEditStrings;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
@@ -43,6 +44,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 import com.hiveworkshop.rms.util.BinaryReader;
 
 public class ThirdPersonUI implements WarsmashToggleableUI {
+	private static final boolean ALL_PLAYERS = false;
 	private static final Vector2 screenCoordsVector = new Vector2();
 	private ThirdPersonCameraManager cameraManager;
 	private final War3MapViewer war3MapViewer;
@@ -99,11 +101,19 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	@Override
 	public void main() {
 		final List<CUnit> pawnUnits = new ArrayList<>();
-		for (int i = 0; i < /* WarsmashConstants.MAX_PLAYERS */ 2; i++) {
-			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId, i, 1500, 11000, 0));
-		}
+		if (ALL_PLAYERS) {
+			for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+				pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId, i, 0, 0, 0));
+			}
 
-		this.pawnUnit = pawnUnits.get(this.war3MapViewer.getLocalPlayerIndex());
+			this.pawnUnit = pawnUnits.get(this.war3MapViewer.getLocalPlayerIndex());
+		}
+		else {
+			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+					this.war3MapViewer.getLocalPlayerIndex(), 0, 0, 0));
+
+			this.pawnUnit = pawnUnits.get(0);
+		}
 		this.abilityPlayerPawn = this.pawnUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
 
 		final RenderUnit pawnRenderUnit = this.war3MapViewer.getRenderPeer(this.pawnUnit);

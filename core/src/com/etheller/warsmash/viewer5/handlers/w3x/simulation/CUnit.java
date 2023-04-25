@@ -171,8 +171,8 @@ public class CUnit extends CWidget {
 	private boolean explodesOnDeath;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
-			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
-			final int maximumMana, final int speed, final CUnitType unitType) {
+				 final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
+				 final int maximumMana, final int speed, final CUnitType unitType) {
 		super(handleId, x, y, life);
 		this.playerIndex = playerIndex;
 		this.typeId = typeId;
@@ -432,12 +432,12 @@ public class CUnit extends CWidget {
 	public boolean update(final CSimulation game) {
 		for (final StateListenerUpdate update : this.stateListenersUpdates) {
 			switch (update.getUpdateType()) {
-			case ADD:
-				this.stateNotifier.subscribe(update.listener);
-				break;
-			case REMOVE:
-				this.stateNotifier.unsubscribe(update.listener);
-				break;
+				case ADD:
+					this.stateNotifier.subscribe(update.listener);
+					break;
+				case REMOVE:
+					this.stateNotifier.unsubscribe(update.listener);
+					break;
 			}
 		}
 		this.stateListenersUpdates.clear();
@@ -653,7 +653,7 @@ public class CUnit extends CWidget {
 								revivingHero.setMana(
 										(revivingHero.getMaximumMana() * gameplayConstants.getHeroReviveManaFactor())
 												+ (gameplayConstants.getHeroReviveManaStart()
-														* trainedUnitType.getManaInitial()));
+												* trainedUnitType.getManaInitial()));
 								// dont add food cost to player 2x
 								revivingHero.setFoodUsed(trainedUnitType.getFoodUsed());
 								final CPlayer player = game.getPlayer(this.playerIndex);
@@ -702,21 +702,21 @@ public class CUnit extends CWidget {
 						final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
 						boolean active = false;
 						switch (lifeRegenType) {
-						case ALWAYS:
-							active = true;
-							break;
-						case DAY:
-							active = game.isDay();
-							break;
-						case NIGHT:
-							active = game.isNight();
-							break;
-						case BLIGHT:
-							active = PathingFlags.isPathingFlag(game.getPathingGrid().getPathing(getX(), getY()),
-									PathingFlags.BLIGHTED);
-							break;
-						default:
-							active = false;
+							case ALWAYS:
+								active = true;
+								break;
+							case DAY:
+								active = game.isDay();
+								break;
+							case NIGHT:
+								active = game.isNight();
+								break;
+							case BLIGHT:
+								active = PathingFlags.isPathingFlag(game.getPathingGrid().getPathing(getX(), getY()),
+										PathingFlags.BLIGHTED);
+								break;
+							default:
+								active = false;
 						}
 						if (active) {
 							float lifePlusRegen = this.life + this.currentLifeRegenPerTick;
@@ -1072,7 +1072,7 @@ public class CUnit extends CWidget {
 	}
 
 	public void setPoint(final float newX, final float newY, final CWorldCollision collision,
-			final CRegionManager regionManager) {
+						 final CRegionManager regionManager) {
 		final float prevX = getX();
 		final float prevY = getY();
 		setX(newX);
@@ -1167,7 +1167,7 @@ public class CUnit extends CWidget {
 
 	@Override
 	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			final String weaponType, final float damage) {
+					   final String weaponType, final float damage) {
 		final boolean wasDead = isDead();
 		if (!this.invulnerable) {
 			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
@@ -1195,7 +1195,15 @@ public class CUnit extends CWidget {
 		simulation.unitDamageEvent(this, weaponType, this.unitType.getArmorType());
 		if (!this.invulnerable && isDead()) {
 			if (!wasDead) {
-				kill(simulation, source);
+				for (int i = this.abilities.size() - 1; i >= 0; i--) {
+					// okay if it removes self from this during onBeforeDeath() because of reverse
+					// iteration order
+					this.abilities.get(i).onBeforeDeath(simulation, this);
+				}
+
+				if (isDead()) {
+					kill(simulation, source);
+				}
 			}
 		}
 		else {
@@ -1240,122 +1248,114 @@ public class CUnit extends CWidget {
 		}
 		killPathingInstance();
 		popoutWorker(simulation);
-
-		for (int i = this.abilities.size() - 1; i >= 0; i--) {
-			// okay if it removes self from this during onBeforeDeath() because of reverse
-			// iteration order
-			this.abilities.get(i).onBeforeDeath(simulation, this);
+		final CPlayer player = simulation.getPlayer(this.playerIndex);
+		if (this.foodMade != 0) {
+			player.setUnitFoodMade(this, 0);
 		}
+		if (this.foodUsed != 0) {
+			player.setUnitFoodUsed(this, 0);
+		}
+		if (getHeroData() == null) {
+			if (this.constructing) {
+				player.removeTechtreeInProgress(this.unitType.getTypeId());
+			}
+			else {
+				player.removeTechtreeUnlocked(this.unitType.getTypeId());
+			}
+		}
+		// else its a hero and techtree "remains unlocked" which is currently meaning
+		// the "limit of 1" remains limited
 
-		// abilities could have prevented the death with Reincarnation
-		if (isDead()) {
-			final CPlayer player = simulation.getPlayer(this.playerIndex);
-			if (this.foodMade != 0) {
-				player.setUnitFoodMade(this, 0);
-			}
-			if (this.foodUsed != 0) {
-				player.setUnitFoodUsed(this, 0);
-			}
-			if (getHeroData() == null) {
-				if (this.constructing) {
-					player.removeTechtreeInProgress(this.unitType.getTypeId());
-				} else {
-					player.removeTechtreeUnlocked(this.unitType.getTypeId());
-				}
-			}
-			// else its a hero and techtree "remains unlocked" which is currently meaning
-			// the "limit of 1" remains limited
-
-			// Award hero experience
-			if (source != null) {
-				final CPlayer sourcePlayer = simulation.getPlayer(source.getPlayerIndex());
-				if (!sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
-					if (player.getPlayerState(simulation, CPlayerState.GIVES_BOUNTY) > 0) {
-						int goldBountyAwarded = this.unitType.getGoldBountyAwardedBase();
-						final int goldBountyAwardedDice = this.unitType.getGoldBountyAwardedDice();
-						final int goldBountyAwardedSides = this.unitType.getGoldBountyAwardedSides();
-						for (int i = 0; i < goldBountyAwardedDice; i++) {
-							goldBountyAwarded += simulation.getSeededRandom().nextInt(goldBountyAwardedSides) + 1;
-						}
-						if (goldBountyAwarded > 0) {
-							sourcePlayer.addGold(goldBountyAwarded);
-							simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.GOLD,
-									goldBountyAwarded);
-						}
-						int lumberBountyAwarded = this.unitType.getLumberBountyAwardedBase();
-						final int lumberBountyAwardedDice = this.unitType.getLumberBountyAwardedDice();
-						final int lumberBountyAwardedSides = this.unitType.getLumberBountyAwardedSides();
-						for (int i = 0; i < lumberBountyAwardedDice; i++) {
-							lumberBountyAwarded += simulation.getSeededRandom().nextInt(lumberBountyAwardedSides) + 1;
-						}
-						if (lumberBountyAwarded > 0) {
-							sourcePlayer.addLumber(lumberBountyAwarded);
-							simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.LUMBER,
-									lumberBountyAwarded);
-						}
+		// Award hero experience
+		if (source != null) {
+			final CPlayer sourcePlayer = simulation.getPlayer(source.getPlayerIndex());
+			if (!sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
+				if (player.getPlayerState(simulation, CPlayerState.GIVES_BOUNTY) > 0) {
+					int goldBountyAwarded = this.unitType.getGoldBountyAwardedBase();
+					final int goldBountyAwardedDice = this.unitType.getGoldBountyAwardedDice();
+					final int goldBountyAwardedSides = this.unitType.getGoldBountyAwardedSides();
+					for (int i = 0; i < goldBountyAwardedDice; i++) {
+						goldBountyAwarded += simulation.getSeededRandom().nextInt(goldBountyAwardedSides) + 1;
 					}
-					final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
-					if (gameplayConstants.isBuildingKillsGiveExp() || !source.isBuilding()) {
-						final CUnit killedUnit = this;
-						final CAbilityHero killedUnitHeroData = getHeroData();
-						final boolean killedUnitIsAHero = killedUnitHeroData != null;
-						int availableAwardXp;
-						if (killedUnitIsAHero) {
-							availableAwardXp = gameplayConstants.getGrantHeroXP(killedUnitHeroData.getHeroLevel());
-						} else {
-							availableAwardXp = gameplayConstants.getGrantNormalXP(this.unitType.getLevel());
-						}
-						final List<CUnit> xpReceivingHeroes = new ArrayList<>();
-						final int heroExpRange = gameplayConstants.getHeroExpRange();
-						simulation.getWorldCollision().enumUnitsInRect(new Rectangle(getX() - heroExpRange,
-								getY() - heroExpRange, heroExpRange * 2, heroExpRange * 2), new CUnitEnumFunction() {
-							@Override
-							public boolean call(final CUnit unit) {
-								if ((unit.distance(killedUnit) <= heroExpRange)
-										&& sourcePlayer.hasAlliance(unit.getPlayerIndex(), CAllianceType.SHARED_XP)
-										&& unit.isHero() && !unit.isDead()) {
-									xpReceivingHeroes.add(unit);
-								}
-								return false;
+					if (goldBountyAwarded > 0) {
+						sourcePlayer.addGold(goldBountyAwarded);
+						simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.GOLD,
+								goldBountyAwarded);
+					}
+					int lumberBountyAwarded = this.unitType.getLumberBountyAwardedBase();
+					final int lumberBountyAwardedDice = this.unitType.getLumberBountyAwardedDice();
+					final int lumberBountyAwardedSides = this.unitType.getLumberBountyAwardedSides();
+					for (int i = 0; i < lumberBountyAwardedDice; i++) {
+						lumberBountyAwarded += simulation.getSeededRandom().nextInt(lumberBountyAwardedSides) + 1;
+					}
+					if (lumberBountyAwarded > 0) {
+						sourcePlayer.addLumber(lumberBountyAwarded);
+						simulation.unitGainResourceEvent(this, sourcePlayer.getId(), ResourceType.LUMBER,
+								lumberBountyAwarded);
+					}
+				}
+				final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
+				if (gameplayConstants.isBuildingKillsGiveExp() || !source.isBuilding()) {
+					final CUnit killedUnit = this;
+					final CAbilityHero killedUnitHeroData = getHeroData();
+					final boolean killedUnitIsAHero = killedUnitHeroData != null;
+					int availableAwardXp;
+					if (killedUnitIsAHero) {
+						availableAwardXp = gameplayConstants.getGrantHeroXP(killedUnitHeroData.getHeroLevel());
+					}
+					else {
+						availableAwardXp = gameplayConstants.getGrantNormalXP(this.unitType.getLevel());
+					}
+					final List<CUnit> xpReceivingHeroes = new ArrayList<>();
+					final int heroExpRange = gameplayConstants.getHeroExpRange();
+					simulation.getWorldCollision().enumUnitsInRect(new Rectangle(getX() - heroExpRange,
+							getY() - heroExpRange, heroExpRange * 2, heroExpRange * 2), new CUnitEnumFunction() {
+						@Override
+						public boolean call(final CUnit unit) {
+							if ((unit.distance(killedUnit) <= heroExpRange)
+									&& sourcePlayer.hasAlliance(unit.getPlayerIndex(), CAllianceType.SHARED_XP)
+									&& unit.isHero() && !unit.isDead()) {
+								xpReceivingHeroes.add(unit);
 							}
-						});
-						if (xpReceivingHeroes.isEmpty()) {
-							if (gameplayConstants.isGlobalExperience()) {
-								for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-									if (sourcePlayer.hasAlliance(i, CAllianceType.SHARED_XP)) {
-										xpReceivingHeroes.addAll(simulation.getPlayerHeroes(i));
-									}
+							return false;
+						}
+					});
+					if (xpReceivingHeroes.isEmpty()) {
+						if (gameplayConstants.isGlobalExperience()) {
+							for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+								if (sourcePlayer.hasAlliance(i, CAllianceType.SHARED_XP)) {
+									xpReceivingHeroes.addAll(simulation.getPlayerHeroes(i));
 								}
 							}
 						}
-						for (final CUnit receivingHero : xpReceivingHeroes) {
-							final CAbilityHero heroData = receivingHero.getHeroData();
-							heroData.addXp(simulation, receivingHero,
-									(int) (availableAwardXp * (1f / xpReceivingHeroes.size())
-											* gameplayConstants.getHeroFactorXp(heroData.getHeroLevel())));
-						}
+					}
+					for (final CUnit receivingHero : xpReceivingHeroes) {
+						final CAbilityHero heroData = receivingHero.getHeroData();
+						heroData.addXp(simulation, receivingHero,
+								(int) (availableAwardXp * (1f / xpReceivingHeroes.size())
+										* gameplayConstants.getHeroFactorXp(heroData.getHeroLevel())));
 					}
 				}
 			}
-			for (int i = this.abilities.size() - 1; i >= 0; i--) {
-				// okay if it removes self from this during onDeath() because of reverse
-				// iteration order
-				this.abilities.get(i).onDeath(simulation, this);
+		}
+		for (int i = this.abilities.size() - 1; i >= 0; i--) {
+			// okay if it removes self from this during onDeath() because of reverse
+			// iteration order
+			this.abilities.get(i).onDeath(simulation, this);
+		}
+		fireDeathEvents(simulation);
+		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, CommonTriggerExecutionScope.unitDeathScope(JassGameEventsWar3.EVENT_UNIT_DEATH,
+						event.getTrigger(), this, source));
 			}
-			fireDeathEvents(simulation);
-			final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
-			if (eventList != null) {
-				for (final CWidgetEvent event : eventList) {
-					event.fire(this, CommonTriggerExecutionScope.unitDeathScope(JassGameEventsWar3.EVENT_UNIT_DEATH,
-							event.getTrigger(), this, source));
-				}
-			}
-			simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
-			if (isExplodesOnDeath()) {
-				setHidden(true);
-				simulation.createDeathExplodeEffect(this);
-				simulation.removeUnit(this);
-			}
+		}
+		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
+		if (isExplodesOnDeath()) {
+			setHidden(true);
+			simulation.createDeathExplodeEffect(this);
+			simulation.removeUnit(this);
 		}
 	}
 
@@ -1405,7 +1405,7 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean canReachToPathing(final float range, final float rotationForPathing,
-			final BufferedImage buildingPathingPixelMap, final float targetX, final float targetY) {
+									 final BufferedImage buildingPathingPixelMap, final float targetX, final float targetY) {
 		if (buildingPathingPixelMap == null) {
 			return canReach(targetX, targetY, range);
 		}
@@ -1456,28 +1456,28 @@ public class CUnit extends CWidget {
 	}
 
 	private int getRGBFromPixelData(final BufferedImage buildingPathingPixelMap, final int checkX, final int checkY,
-			final int rotation) {
+									final int rotation) {
 
 		// Below: y is downwards (:()
 		int x;
 		int y;
 		switch (rotation) {
-		case 90:
-			x = checkY;
-			y = buildingPathingPixelMap.getWidth() - 1 - checkX;
-			break;
-		case 180:
-			x = buildingPathingPixelMap.getWidth() - 1 - checkX;
-			y = buildingPathingPixelMap.getHeight() - 1 - checkY;
-			break;
-		case 270:
-			x = buildingPathingPixelMap.getHeight() - 1 - checkY;
-			y = checkX;
-			break;
-		default:
-		case 0:
-			x = checkX;
-			y = checkY;
+			case 90:
+				x = checkY;
+				y = buildingPathingPixelMap.getWidth() - 1 - checkX;
+				break;
+			case 180:
+				x = buildingPathingPixelMap.getWidth() - 1 - checkX;
+				y = buildingPathingPixelMap.getHeight() - 1 - checkY;
+				break;
+			case 270:
+				x = buildingPathingPixelMap.getHeight() - 1 - checkY;
+				y = checkX;
+				break;
+			default:
+			case 0:
+				x = checkX;
+				y = checkY;
 		}
 		return buildingPathingPixelMap.getRGB(x, buildingPathingPixelMap.getHeight() - 1 - y);
 	}
@@ -1500,7 +1500,7 @@ public class CUnit extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-			final EnumSet<CTargetType> targetsAllowed) {
+								   final EnumSet<CTargetType> targetsAllowed) {
 		if ((this == source) && targetsAllowed.contains(CTargetType.NOTSELF)
 				&& !targetsAllowed.contains(CTargetType.SELF)) {
 			return false;
@@ -1565,7 +1565,7 @@ public class CUnit extends CWidget {
 			return MovementType.DISABLED;
 		}
 		return getUnitType().getMovementType(); // later maybe it has unit instance override for windwalk, so this
-												// wrapper exists to later mod
+		// wrapper exists to later mod
 	}
 
 	public float getAcquisitionRange() {
@@ -1591,7 +1591,7 @@ public class CUnit extends CWidget {
 		private boolean foundAnyTarget;
 
 		private AutoAttackTargetFinderEnum reset(final CSimulation game, final CUnit source,
-				final boolean disableMove) {
+												 final boolean disableMove) {
 			this.game = game;
 			this.source = source;
 			this.disableMove = disableMove;
@@ -1776,7 +1776,15 @@ public class CUnit extends CWidget {
 		final boolean wasDead = isDead();
 		super.setLife(simulation, life);
 		if (isDead() && !wasDead) {
-			kill(simulation, null);
+			for (int i = this.abilities.size() - 1; i >= 0; i--) {
+				// okay if it removes self from this during onBeforeDeath() because of reverse
+				// iteration order
+				this.abilities.get(i).onBeforeDeath(simulation, this);
+			}
+
+			if (isDead()) {
+				kill(simulation, null);
+			}
 		}
 		this.stateNotifier.lifeChanged();
 	}
@@ -1808,23 +1816,23 @@ public class CUnit extends CWidget {
 			return 0;
 		}
 		switch (this.buildQueueTypes[0]) {
-		case RESEARCH: {
-			final War3ID rawcode = this.buildQueue[0];
-			final CUpgradeType trainedUnitType = simulation.getUpgradeData().getType(rawcode);
-			return trainedUnitType.getBuildTime(simulation.getPlayer(this.playerIndex).getTechtreeUnlocked(rawcode));
-		}
-		case UNIT: {
-			final CUnitType trainedUnitType = simulation.getUnitData().getUnitType(this.buildQueue[0]);
-			return trainedUnitType.getBuildTime();
-		}
-		case HERO_REVIVE: {
-			final CUnit hero = simulation.getUnit(this.buildQueue[0].getValue());
-			final CUnitType trainedUnitType = hero.getUnitType();
-			return simulation.getGameplayConstants().getHeroReviveTime(trainedUnitType.getBuildTime(),
-					hero.getHeroData().getHeroLevel());
-		}
-		default:
-			return 0;
+			case RESEARCH: {
+				final War3ID rawcode = this.buildQueue[0];
+				final CUpgradeType trainedUnitType = simulation.getUpgradeData().getType(rawcode);
+				return trainedUnitType.getBuildTime(simulation.getPlayer(this.playerIndex).getTechtreeUnlocked(rawcode));
+			}
+			case UNIT: {
+				final CUnitType trainedUnitType = simulation.getUnitData().getUnitType(this.buildQueue[0]);
+				return trainedUnitType.getBuildTime();
+			}
+			case HERO_REVIVE: {
+				final CUnit hero = simulation.getUnit(this.buildQueue[0].getValue());
+				final CUnitType trainedUnitType = hero.getUnitType();
+				return simulation.getGameplayConstants().getHeroReviveTime(trainedUnitType.getBuildTime(),
+						hero.getHeroData().getHeroLevel());
+			}
+			default:
+				return 0;
 		}
 	}
 
@@ -1836,51 +1844,51 @@ public class CUnit extends CWidget {
 				if (cancelIndex == 0) {
 					this.constructionProgress = 0.0f;
 					switch (cancelledType) {
+						case RESEARCH: {
+							break;
+						}
+						case UNIT: {
+							final CPlayer player = game.getPlayer(this.playerIndex);
+							final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
+							player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
+							break;
+						}
+						case HERO_REVIVE: {
+							final CPlayer player = game.getPlayer(this.playerIndex);
+							final CUnitType unitType = game.getUnit(this.buildQueue[cancelIndex].getValue()).getUnitType();
+							player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
+							break;
+						}
+					}
+				}
+				switch (cancelledType) {
 					case RESEARCH: {
+						final CPlayer player = game.getPlayer(this.playerIndex);
+						final CUpgradeType upgradeType = game.getUpgradeData().getType(this.buildQueue[cancelIndex]);
+						player.refundFor(upgradeType);
+						player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
 						break;
 					}
 					case UNIT: {
 						final CPlayer player = game.getPlayer(this.playerIndex);
 						final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
-						player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
+						player.refundFor(unitType);
+						player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
 						break;
 					}
 					case HERO_REVIVE: {
 						final CPlayer player = game.getPlayer(this.playerIndex);
-						final CUnitType unitType = game.getUnit(this.buildQueue[cancelIndex].getValue()).getUnitType();
-						player.setFoodUsed(player.getFoodUsed() - unitType.getFoodUsed());
+						final CUnit hero = game.getUnit(this.buildQueue[cancelIndex].getValue());
+						final CUnitType unitType = hero.getUnitType();
+						final CAbilityHero heroData = hero.getHeroData();
+						heroData.setReviving(false);
+						final CGameplayConstants gameplayConstants = game.getGameplayConstants();
+						player.refund(
+								gameplayConstants.getHeroReviveGoldCost(unitType.getGoldCost(), heroData.getHeroLevel()),
+								gameplayConstants.getHeroReviveLumberCost(unitType.getLumberCost(),
+										heroData.getHeroLevel()));
 						break;
 					}
-					}
-				}
-				switch (cancelledType) {
-				case RESEARCH: {
-					final CPlayer player = game.getPlayer(this.playerIndex);
-					final CUpgradeType upgradeType = game.getUpgradeData().getType(this.buildQueue[cancelIndex]);
-					player.refundFor(upgradeType);
-					player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
-					break;
-				}
-				case UNIT: {
-					final CPlayer player = game.getPlayer(this.playerIndex);
-					final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
-					player.refundFor(unitType);
-					player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
-					break;
-				}
-				case HERO_REVIVE: {
-					final CPlayer player = game.getPlayer(this.playerIndex);
-					final CUnit hero = game.getUnit(this.buildQueue[cancelIndex].getValue());
-					final CUnitType unitType = hero.getUnitType();
-					final CAbilityHero heroData = hero.getHeroData();
-					heroData.setReviving(false);
-					final CGameplayConstants gameplayConstants = game.getGameplayConstants();
-					player.refund(
-							gameplayConstants.getHeroReviveGoldCost(unitType.getGoldCost(), heroData.getHeroLevel()),
-							gameplayConstants.getHeroReviveLumberCost(unitType.getLumberCost(),
-									heroData.getHeroLevel()));
-					break;
-				}
 				}
 				for (int i = cancelIndex; i < (this.buildQueueTypes.length - 1); i++) {
 					setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
@@ -1892,7 +1900,7 @@ public class CUnit extends CWidget {
 	}
 
 	public void setBuildQueueItem(final CSimulation game, final int index, final War3ID rawcode,
-			final QueueItemType queueItemType) {
+								  final QueueItemType queueItemType) {
 		this.buildQueue[index] = rawcode;
 		this.buildQueueTypes[index] = queueItemType;
 		final CPlayer player = game.getPlayer(this.playerIndex);
@@ -2007,7 +2015,7 @@ public class CUnit extends CWidget {
 		private int rallyOrderId;
 
 		private UseAbilityOnTargetByIdVisitor reset(final CSimulation game, final CUnit trainedUnit,
-				final int rallyOrderId) {
+													final int rallyOrderId) {
 			this.game = game;
 			this.trainedUnit = trainedUnit;
 			this.rallyOrderId = rallyOrderId;
@@ -2042,7 +2050,7 @@ public class CUnit extends CWidget {
 		}
 
 		private Void acceptWidget(final CSimulation game, final CUnit trainedUnit, final int rallyOrderId,
-				final CWidget target) {
+								  final CWidget target) {
 			CAbility abilityToUse = null;
 			for (final CAbility ability : trainedUnit.getAbilities()) {
 				ability.checkCanUse(game, trainedUnit, rallyOrderId, BooleanAbilityActivationReceiver.INSTANCE);
@@ -2385,128 +2393,128 @@ public class CUnit extends CWidget {
 
 	public void setUnitState(final CSimulation game, final CUnitState whichUnitState, final float value) {
 		switch (whichUnitState) {
-		case LIFE:
-			setLife(game, value);
-			break;
-		case MANA:
-			setMana(value);
-			break;
-		case MAX_LIFE:
-			setMaximumLife((int) value);
-			break;
-		case MAX_MANA:
-			setMaximumMana((int) value);
-			break;
+			case LIFE:
+				setLife(game, value);
+				break;
+			case MANA:
+				setMana(value);
+				break;
+			case MAX_LIFE:
+				setMaximumLife((int) value);
+				break;
+			case MAX_MANA:
+				setMaximumMana((int) value);
+				break;
 		}
 	}
 
 	public float getUnitState(final CSimulation game, final CUnitState whichUnitState) {
 		switch (whichUnitState) {
-		case LIFE:
-			return getLife();
-		case MANA:
-			return getMana();
-		case MAX_LIFE:
-			return getMaximumLife();
-		case MAX_MANA:
-			return getMaximumMana();
+			case LIFE:
+				return getLife();
+			case MANA:
+				return getMana();
+			case MAX_LIFE:
+				return getMaximumLife();
+			case MAX_MANA:
+				return getMaximumMana();
 		}
 		return 0;
 	}
 
 	public boolean isUnitType(final CUnitTypeJass whichUnitType) {
 		switch (whichUnitType) {
-		case HERO:
-			return isHero();
-		case DEAD:
-			return isDead();
-		case STRUCTURE:
-			return isBuilding();
+			case HERO:
+				return isHero();
+			case DEAD:
+				return isDead();
+			case STRUCTURE:
+				return isBuilding();
 
-		case FLYING:
-			return getUnitType().getTargetedAs().contains(CTargetType.AIR);
-		case GROUND:
-			return getUnitType().getTargetedAs().contains(CTargetType.GROUND);
+			case FLYING:
+				return getUnitType().getTargetedAs().contains(CTargetType.AIR);
+			case GROUND:
+				return getUnitType().getTargetedAs().contains(CTargetType.GROUND);
 
-		case ATTACKS_FLYING:
-			for (final CUnitAttack attack : getCurrentAttacks()) {
-				if (attack.getTargetsAllowed().contains(CTargetType.AIR)) {
-					return true;
+			case ATTACKS_FLYING:
+				for (final CUnitAttack attack : getCurrentAttacks()) {
+					if (attack.getTargetsAllowed().contains(CTargetType.AIR)) {
+						return true;
+					}
 				}
-			}
-			return false;
-		case ATTACKS_GROUND:
-			for (final CUnitAttack attack : getCurrentAttacks()) {
-				if (attack.getTargetsAllowed().contains(CTargetType.GROUND)) {
-					return true;
+				return false;
+			case ATTACKS_GROUND:
+				for (final CUnitAttack attack : getCurrentAttacks()) {
+					if (attack.getTargetsAllowed().contains(CTargetType.GROUND)) {
+						return true;
+					}
 				}
-			}
-			return false;
+				return false;
 
-		case MELEE_ATTACKER:
-			boolean hasAttacks = false;
-			for (final CUnitAttack attack : getCurrentAttacks()) {
-				if (attack.getWeaponType() != CWeaponType.NORMAL) {
-					return false;
+			case MELEE_ATTACKER:
+				boolean hasAttacks = false;
+				for (final CUnitAttack attack : getCurrentAttacks()) {
+					if (attack.getWeaponType() != CWeaponType.NORMAL) {
+						return false;
+					}
+					hasAttacks = true;
 				}
-				hasAttacks = true;
-			}
-			return hasAttacks;
+				return hasAttacks;
 
-		case RANGED_ATTACKER:
-			for (final CUnitAttack attack : getCurrentAttacks()) {
-				if (attack.getWeaponType() != CWeaponType.NORMAL) {
-					return true;
+			case RANGED_ATTACKER:
+				for (final CUnitAttack attack : getCurrentAttacks()) {
+					if (attack.getWeaponType() != CWeaponType.NORMAL) {
+						return true;
+					}
 				}
-			}
-			return false;
+				return false;
 
-		case GIANT:
-			return getUnitType().getClassifications().contains(CUnitClassification.GIANT);
-		case SUMMONED:
-			return getUnitType().getClassifications().contains(CUnitClassification.SUMMONED);
-		case STUNNED:
-			return getCurrentBehavior().getHighlightOrderId() == OrderIds.stunned;
-		case PLAGUED:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is plagued: plague is not yet implemented");
-		case SNARED:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is snared: snare is not yet implemented");
+			case GIANT:
+				return getUnitType().getClassifications().contains(CUnitClassification.GIANT);
+			case SUMMONED:
+				return getUnitType().getClassifications().contains(CUnitClassification.SUMMONED);
+			case STUNNED:
+				return getCurrentBehavior().getHighlightOrderId() == OrderIds.stunned;
+			case PLAGUED:
+				throw new UnsupportedOperationException(
+						"cannot ask engine if unit is plagued: plague is not yet implemented");
+			case SNARED:
+				throw new UnsupportedOperationException(
+						"cannot ask engine if unit is snared: snare is not yet implemented");
 
-		case UNDEAD:
-			return getUnitType().getClassifications().contains(CUnitClassification.UNDEAD);
-		case MECHANICAL:
-			return getUnitType().getClassifications().contains(CUnitClassification.MECHANICAL);
-		case PEON:
-			return getUnitType().getClassifications().contains(CUnitClassification.PEON);
-		case SAPPER:
-			return getUnitType().getClassifications().contains(CUnitClassification.SAPPER);
-		case TOWNHALL:
-			return getUnitType().getClassifications().contains(CUnitClassification.TOWNHALL);
-		case ANCIENT:
-			return this.unitType.getClassifications().contains(CUnitClassification.ANCIENT);
+			case UNDEAD:
+				return getUnitType().getClassifications().contains(CUnitClassification.UNDEAD);
+			case MECHANICAL:
+				return getUnitType().getClassifications().contains(CUnitClassification.MECHANICAL);
+			case PEON:
+				return getUnitType().getClassifications().contains(CUnitClassification.PEON);
+			case SAPPER:
+				return getUnitType().getClassifications().contains(CUnitClassification.SAPPER);
+			case TOWNHALL:
+				return getUnitType().getClassifications().contains(CUnitClassification.TOWNHALL);
+			case ANCIENT:
+				return this.unitType.getClassifications().contains(CUnitClassification.ANCIENT);
 
-		case TAUREN:
-			return getUnitType().getClassifications().contains(CUnitClassification.TAUREN);
-		case POISONED:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is poisoned: poison is not yet implemented");
-		case POLYMORPHED:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is POLYMORPHED: POLYMORPHED is not yet implemented");
-		case SLEEPING:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is SLEEPING: SLEEPING is not yet implemented");
-		case RESISTANT:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is RESISTANT: RESISTANT is not yet implemented");
-		case ETHEREAL:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is ETHEREAL: ETHEREAL is not yet implemented");
-		case MAGIC_IMMUNE:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is MAGIC_IMMUNE: MAGIC_IMMUNE is not yet implemented");
+			case TAUREN:
+				return getUnitType().getClassifications().contains(CUnitClassification.TAUREN);
+			case POISONED:
+				throw new UnsupportedOperationException(
+						"cannot ask engine if unit is poisoned: poison is not yet implemented");
+			case POLYMORPHED:
+				throw new UnsupportedOperationException(
+						"cannot ask engine if unit is POLYMORPHED: POLYMORPHED is not yet implemented");
+			case SLEEPING:
+				throw new UnsupportedOperationException(
+						"cannot ask engine if unit is SLEEPING: SLEEPING is not yet implemented");
+			case RESISTANT:
+				throw new UnsupportedOperationException(
+						"cannot ask engine if unit is RESISTANT: RESISTANT is not yet implemented");
+			case ETHEREAL:
+				throw new UnsupportedOperationException(
+						"cannot ask engine if unit is ETHEREAL: ETHEREAL is not yet implemented");
+			case MAGIC_IMMUNE:
+				throw new UnsupportedOperationException(
+						"cannot ask engine if unit is MAGIC_IMMUNE: MAGIC_IMMUNE is not yet implemented");
 
 		}
 		return false;
@@ -2650,30 +2658,30 @@ public class CUnit extends CWidget {
 				if (carriedResourceAmount != 0) {
 					final ResourceType carriedResourceType = abilityHarvest.getCarriedResourceType();
 					switch (carriedResourceType) {
-					case GOLD:
-						if (carriedResourceAmount >= abilityHarvest.getGoldCapacity()) {
-							abilityHarvest.getBehaviorReturnResources().reset(game);
-							this.order(game, OrderIds.returnresources,
-									abilityHarvest.getBehaviorReturnResources().findNearestDropoffPoint(game));
-						}
-						else {
-							this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestMine(this, game));
-						}
-						return ResourceType.GOLD;
-					case LUMBER:
-						if (carriedResourceAmount >= abilityHarvest.getLumberCapacity()) {
-							abilityHarvest.getBehaviorReturnResources().reset(game);
-							this.order(game, OrderIds.returnresources,
-									abilityHarvest.getBehaviorReturnResources().findNearestDropoffPoint(game));
-						}
-						else {
-							this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestTree(this,
-									abilityHarvest, game, abilityHarvest.getLastHarvestTarget()));
-						}
-						return ResourceType.LUMBER;
-					default:
-						throw new IllegalStateException(
-								"Worker was carrying a resource of unsupported type: " + carriedResourceType);
+						case GOLD:
+							if (carriedResourceAmount >= abilityHarvest.getGoldCapacity()) {
+								abilityHarvest.getBehaviorReturnResources().reset(game);
+								this.order(game, OrderIds.returnresources,
+										abilityHarvest.getBehaviorReturnResources().findNearestDropoffPoint(game));
+							}
+							else {
+								this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestMine(this, game));
+							}
+							return ResourceType.GOLD;
+						case LUMBER:
+							if (carriedResourceAmount >= abilityHarvest.getLumberCapacity()) {
+								abilityHarvest.getBehaviorReturnResources().reset(game);
+								this.order(game, OrderIds.returnresources,
+										abilityHarvest.getBehaviorReturnResources().findNearestDropoffPoint(game));
+							}
+							else {
+								this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestTree(this,
+										abilityHarvest, game, abilityHarvest.getLastHarvestTarget()));
+							}
+							return ResourceType.LUMBER;
+						default:
+							throw new IllegalStateException(
+									"Worker was carrying a resource of unsupported type: " + carriedResourceType);
 					}
 				}
 				else {

@@ -161,4 +161,9 @@ public class CItem extends CWidget {
 		return this.containedUnit;
 	}
 
+	@Override
+	public double distance(final float x, final float y) {
+		return StrictMath.sqrt(distanceSquaredNoCollision(x, y));
+	}
+
 }

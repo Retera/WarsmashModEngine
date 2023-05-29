@@ -1300,15 +1300,23 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final CTimer fogUpdateTimer = new CTimer() {
 			@Override
 			public void onFire() {
+			}
+		};
+		fogUpdateTimer.setTimeoutTime(1.0f);
+		fogUpdateTimer.setRepeats(true);
+		fogUpdateTimer.start(this.simulation);
+		final CTimer fogGpuUpdateTimer = new CTimer() {
+			@Override
+			public void onFire() {
 				War3MapViewer.this.terrain.reloadFogOfWarDataToGPU();
 				for (final RenderDoodad doodad : War3MapViewer.this.decals) {
 					doodad.updateFog(War3MapViewer.this);
 				}
 			}
 		};
-		fogUpdateTimer.setTimeoutTime(1.0f);
-		fogUpdateTimer.setRepeats(true);
-		fogUpdateTimer.start(this.simulation);
+		fogGpuUpdateTimer.setTimeoutTime(0.03f);
+		fogGpuUpdateTimer.setRepeats(true);
+		fogGpuUpdateTimer.start(this.simulation);
 	}
 
 	private void loadDoodadsAndDestructibles(final Warcraft3MapObjectData modifications, final War3MapW3i w3iFile)
@@ -2967,5 +2975,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public CPlayerFogOfWar getFogOfWar() {
 		return this.simulation.getPlayer(this.localPlayerIndex).getFogOfWar();
+	}
+
+	public static byte fadeLineOfSightColor(final byte lastFogStateColor, final byte state) {
+		final short prevValue = (short) (lastFogStateColor & 0xFF);
+		final short newValue = (short) (state & 0xFF);
+		final short delta = (short) (newValue - prevValue);
+		final short appliedMagnitude = (short) Math.min(9, Math.abs(delta));
+
+		return (byte) ((prevValue + (appliedMagnitude * (delta < 0 ? -1 : 1))) & 0xFF);
 	}
 }

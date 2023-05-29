@@ -1,6 +1,5 @@
 package com.etheller.warsmash;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -29,7 +28,6 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.WarsmashUtils;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
@@ -178,16 +176,6 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 			System.out.println("Loaded");
 			Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1);
-			final DataTable musicSLK = new DataTable(StringBundle.EMPTY);
-			final String musicSLKPath = "UI\\SoundInfo\\Music.SLK";
-			if (this.viewer.dataSource.has(musicSLKPath)) {
-				try (InputStream miscDataTxtStream = this.viewer.dataSource.getResourceAsStream(musicSLKPath)) {
-					musicSLK.readSLK(miscDataTxtStream);
-				}
-				catch (final IOException e) {
-					e.printStackTrace();
-				}
-			}
 
 			String server;
 			String mapDownloadDir;

@@ -145,7 +145,7 @@ public abstract class Node extends GenericNode {
 	}
 
 	public Node rotateLocal(final Quaternion rotation) {
-		RenderMathUtils.mul(this.localRotation, rotation, this.localRotation);
+		this.localRotation.mulLeft(rotation);
 
 		this.dirty = true;
 
@@ -293,15 +293,14 @@ public abstract class Node extends GenericNode {
 		if (this.dirty || ((this.parent != null) && this.parent.wasDirty)) {
 			this.dirty = true; // in case this node isn't dirty, but the parent was
 			this.wasDirty = true;
-			this.recalculateTransformation();
+			recalculateTransformation();
 		}
 		else {
 			this.wasDirty = false;
 		}
 
-
-		this.updateObject(dt, scene);
-		this.updateChildren(dt, scene);
+		updateObject(dt, scene);
+		updateChildren(dt, scene);
 	}
 
 	protected abstract void updateObject(float dt, Scene scene);

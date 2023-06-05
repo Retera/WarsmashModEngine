@@ -11,5 +11,6 @@ public enum AbilityBuilderType {
 	SMART,
 	BUFF,
 	PASSIVE,
+	TEMPLATE,
 	HIDDEN;
 }

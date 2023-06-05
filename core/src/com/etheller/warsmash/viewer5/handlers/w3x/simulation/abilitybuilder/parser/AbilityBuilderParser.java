@@ -26,6 +26,13 @@ public class AbilityBuilderParser {
 	private List<ABAction> onEndCasting;
 	private List<ABAction> onResetCasting;
 	private List<ABAction> onUpdateCasting;
+	
+	//Template only
+	private AbilityBuilderTemplateType templateType;
+	//Aura template
+	private List<ABAction> addToAuraActions;
+	private List<ABAction> updateAuraLevelActions;
+	private List<ABAction> removeFromAuraActions;
 
 	public List<AbilityBuilderDupe> getIds() {
 		return ids;
@@ -145,5 +152,37 @@ public class AbilityBuilderParser {
 
 	public void setOnUpdateCasting(List<ABAction> onUpdateCasting) {
 		this.onUpdateCasting = onUpdateCasting;
+	}
+
+	public AbilityBuilderTemplateType getTemplateType() {
+		return templateType;
+	}
+
+	public void setTemplateType(AbilityBuilderTemplateType templateType) {
+		this.templateType = templateType;
+	}
+
+	public List<ABAction> getAddToAuraActions() {
+		return addToAuraActions;
+	}
+
+	public void setAddToAuraActions(List<ABAction> addToAuraActions) {
+		this.addToAuraActions = addToAuraActions;
+	}
+
+	public List<ABAction> getUpdateAuraLevelActions() {
+		return updateAuraLevelActions;
+	}
+
+	public void setUpdateAuraLevelActions(List<ABAction> updateAuraLevelActions) {
+		this.updateAuraLevelActions = updateAuraLevelActions;
+	}
+
+	public List<ABAction> getRemoveFromAuraActions() {
+		return removeFromAuraActions;
+	}
+
+	public void setRemoveFromAuraActions(List<ABAction> removeFromAuraActions) {
+		this.removeFromAuraActions = removeFromAuraActions;
 	}
 }

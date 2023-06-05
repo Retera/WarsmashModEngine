@@ -162,6 +162,15 @@
 							"type": "getEnumUnit"
 						}
 					}]
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "prevLevel"
+					},
+					"valueToStore": {
+						"type": "getSpellLevel"
+					}
 				}]
 			}],
 			"delaySeconds": 3

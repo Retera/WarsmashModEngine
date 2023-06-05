@@ -1150,6 +1150,7 @@ public class CUnit extends CWidget {
 		return groundDistance;
 	}
 
+	@Override
 	public double distance(final float x, final float y) {
 		double dx = Math.abs(x - getX());
 		double dy = Math.abs(y - getY());

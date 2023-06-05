@@ -47,7 +47,6 @@ public final class ImageUtils {
 
 	public static AnyExtensionImage getAnyExtensionImageFixRGB(final DataSource dataSource, final String path,
 			final String errorType) throws IOException {
-		System.out.println("getAnyExtensionImageFixRGB: " + path + " (" + errorType + ")");
 		if (path.toLowerCase().endsWith(".blp")) {
 			try (InputStream stream = dataSource.getResourceAsStream(path)) {
 				if (stream == null) {

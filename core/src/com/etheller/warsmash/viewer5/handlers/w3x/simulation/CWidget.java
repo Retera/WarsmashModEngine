@@ -138,4 +138,6 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 	public RemovableTriggerEvent addDeathEvent(final GlobalScope globalScope, final Trigger whichTrigger) {
 		return addEvent(globalScope, whichTrigger, JassGameEventsWar3.EVENT_WIDGET_DEATH);
 	}
+
+	public abstract double distance(float x, float y);
 }

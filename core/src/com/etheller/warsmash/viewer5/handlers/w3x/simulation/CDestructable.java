@@ -155,6 +155,7 @@ public class CDestructable extends CWidget {
 				game.getWorldCollision(), null);
 	}
 
+	@Override
 	public double distance(final float x, final float y) {
 		return StrictMath.sqrt(distanceSquaredNoCollision(x, y));
 	}

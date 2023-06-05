@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxNode;
@@ -77,8 +76,8 @@ public interface RenderWidget {
 			this.instance = instance;
 			this.animationWalkSpeed = animationWalkSpeed;
 			this.animationRunSpeed = animationRunSpeed;
-			turretBone = this.instance.inefficientlyGetNodeByNameSearch("bone_turret");
-			headBone = this.instance.inefficientlyGetNodeByNameSearch("bone_head");
+			this.turretBone = this.instance.inefficientlyGetNodeByNameSearch("bone_turret");
+			this.headBone = this.instance.inefficientlyGetNodeByNameSearch("bone_head");
 		}
 
 		@Override
@@ -213,8 +212,8 @@ public interface RenderWidget {
 					}
 				}
 			}
-			applyLock(turretBone, turretFacingLock);
-			applyLock(headBone, headFacingLock);
+			applyLock(this.turretBone, this.turretFacingLock);
+			applyLock(this.headBone, this.headFacingLock);
 		}
 
 		private static void applyLock(final MdxNode turretBone, final AbilityTarget turretFacingLock) {
@@ -228,11 +227,9 @@ public interface RenderWidget {
 					final float ang = (float) Math.atan2(turretFacingLock.getY() - turretBone.worldLocation.y,
 							turretFacingLock.getX() - turretBone.worldLocation.x);
 					if (turretBone.overrideWorldRotation == null) {
-						turretBone.setOverrideWorldRotation(new Quaternion(Vector3.Z, ang));
+						turretBone.setOverrideWorldRotation(new Quaternion());
 					}
-					else {
-						turretBone.overrideWorldRotation.setFromAxisRad(0, 0, 1, ang);
-					}
+					turretBone.overrideWorldRotation.setFromAxisRad(0, 0, 1, ang);
 				}
 			}
 		}

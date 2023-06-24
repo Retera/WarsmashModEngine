@@ -10,16 +10,15 @@ https://discord.com/invite/ucjftZ7x7H
 ## How to Install
 1. Clone the repo
 2. Open the repo as a Gradle Project with your Java IDE of choice (IntelliJ seems to be the easiest to get working)
-3. Run the Gradle target called "run"
+3. Manually modify the contents of `core/assets/warsmash.ini` to locate game assets (i.e. Warcraft 3) on your computer from some other directory
+4. Run the Gradle target called `runGame`
 
 ## How to Build
 1. Clone the repo
-2. Run ./gradlew desktop:dist
-3. Find "./desktop/build/libs/desktop-1.0.jar"
-4. Open this JAR with 7zip
-5. Remove the duplicate "META-INF/services/javax.imageio.spi.ImageReaderSpi" files that share the same name located in META-INF so that only the BLP related file is present
-6. Save the JAR and exit 7zip
-*(This process will hopefully become easier in the future)*
+2. Run ./gradlew desktop:runtime
+3. Find "./desktop/build/image"
+4. Inside the image folder, add any necessary game assets (i.e. Warcraft 3) and a relevant `warsmash.ini` file that describes where to find them
+5. From inside the "image" folder, run `./bin/warsmash.bat` on Windows (or `./bin/warsmash.sh` on other systems)
 
 ## Background and History
 My current codebase is running on Java 8 and the LibGDX game engine coupled with the port of the mdx-m3-viewer's engine. It contains:

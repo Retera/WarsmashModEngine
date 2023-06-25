@@ -41,7 +41,7 @@ So, when I copied the asset resolution from that system into Warsmash and expand
   - This patch has not been tested in a year or so on Warsmash and may experience unexpected issues from more recent code changes
 - Warcraft III: Frozen Throne: Patch 1.32
   - `[DataSources]` using CASC directly. The Warsmash INI has a special notation called "Prefixes" to designate which `.w3mod`'s to load, which is the new naming from 1.31 and onward, using subdirectories of the virtual file system to replace what had once been independent MPQ archives on older versions
-  - If you want to display the Reforged HD unit models, add the `war3.w3mod\_hd.w3mod` prefix and also `war3.w3mod\_hd.w3mod\_locales\enus.w3mod`, but you could use a different language instead of `enus` if you wanted (see `./core/assets/warsmashRF.ini` as an example). To see how this might look: https://youtu.be/-Oa3iOY6wU0
+  - If you want to display the Reforged HD unit models, add the `war3.w3mod\_hd.w3mod` prefix and also `war3.w3mod\_hd.w3mod\_locales\enus.w3mod`  (see `./core/assets/warsmashRF.ini` as an example), but you could use a different language instead of `enus` if you wanted. To see how use of `_hd.w3mod` might look: https://youtu.be/-Oa3iOY6wU0
   - Still also include the "resources" folder from Warsmash (it is a folder with some necessary, patch-agnostic custom Warsmash assets that need to be in this virtual file system)
   - The CASC parser in Warsmash is only working for Patch 1.32.10 and beyond, currently, but was tested and worked great on 1.32.10 for me for the last year or two
   - `[Emulator]` block required to have `MaxPlayers=28`

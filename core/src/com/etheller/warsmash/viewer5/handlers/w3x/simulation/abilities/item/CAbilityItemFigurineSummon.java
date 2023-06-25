@@ -28,15 +28,15 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_TYPE_1,
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.ItemFigurineSummon.SUMMON_1_UNIT_TYPE,
 				level);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_COUNT_1,
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemFigurineSummon.SUMMON_1_AMOUNT,
 				level);
-		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_TYPE_2,
+		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.ItemFigurineSummon.SUMMON_2_UNIT_TYPE,
 				level);
 		this.summonUnit2Id = unitTypeTwo.length() == 4 ? War3ID.fromString(unitTypeTwo) : War3ID.NONE;
-		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_COUNT_2,
+		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemFigurineSummon.SUMMON_2_AMOUNT,
 				level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);

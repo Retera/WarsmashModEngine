@@ -175,13 +175,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildingIntersector;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationErrorHandler;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.AbstractClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
@@ -1279,23 +1273,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
 
 		this.meleeUIAbilityActivationReceiver = new MeleeUIAbilityActivationReceiver(
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("NoGold"),
-						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoGoldSound"))),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("NoLumber"),
-						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoLumberSound"))),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("NoFood"),
-						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("Nomana"),
-						this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoManaSound"))),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(), "",
-						this.war3MapViewer.getUiSounds().getSound("InterfaceError")),
-				new AbilityActivationErrorHandler(this.war3MapViewer.getLocalPlayerIndex(),
-						this.rootFrame.getErrorString("Cooldown"),
-						this.war3MapViewer.getUiSounds().getSound("InterfaceError")));
+				this.war3MapViewer.getLocalPlayerIndex(), (this::getUiSoundForError));
 
 		final MdxModel rallyModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("RallyIndicatorDst"));
 		this.rallyPointInstance = (MdxComplexInstance) rallyModel.addInstance();
@@ -1424,15 +1402,44 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void showCommandError(final int playerIndex, final String message) {
+	public void showInterfaceError(final int playerIndex, final String externStringKey) {
 		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			this.rootFrame.setText(this.errorMessageFrame, message);
-			this.errorMessageFrame.setVisible(true);
-			final long millis = TimeUtils.millis();
-			this.lastErrorMessageExpireTime = millis + WORLD_FRAME_MESSAGE_EXPIRE_MILLIS;
-			this.lastErrorMessageFadeTime = millis + WORLD_FRAME_MESSAGE_FADEOUT_MILLIS;
-			this.errorMessageFrame.setAlpha(1.0f);
+			showLocalCommandErrorString(playerIndex, externStringKey);
+			getUiSoundForError(externStringKey).play(this.uiScene.audioContext, 0, 0, 0);
 		}
+	}
+
+	private UnitSound getUiSoundForError(String externStringKey) {
+		String sound = "InterfaceError";
+		String soundKey = externStringKey + "Sound";
+		if( rootFrame.hasSkinField(soundKey) ) {
+			sound = rootFrame.getSkinField(soundKey);
+		}
+		return this.war3MapViewer.getUiSounds().getSound(sound);
+	}
+
+	@Override
+	public void showCommandErrorWithoutSound(int playerIndex, String message) {
+		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
+			showLocalCommandErrorString(playerIndex, message);
+		}
+	}
+
+	private void showLocalCommandErrorString(int playerIndex, String message) {
+		String errorString = this.rootFrame.getErrorString(message);
+		if (errorString.isEmpty() && !message.isEmpty()) {
+			errorString = message; // this may show some NOTEXTERN engine garbage that we should fix later
+		}
+		innerShowLocalCommandErrorString(playerIndex, errorString);
+	}
+
+	private void innerShowLocalCommandErrorString(int playerIndex, String message) {
+		this.rootFrame.setText(this.errorMessageFrame, message);
+		this.errorMessageFrame.setVisible(true);
+		final long millis = TimeUtils.millis();
+		this.lastErrorMessageExpireTime = millis + WORLD_FRAME_MESSAGE_EXPIRE_MILLIS;
+		this.lastErrorMessageFadeTime = millis + WORLD_FRAME_MESSAGE_FADEOUT_MILLIS;
+		this.errorMessageFrame.setAlpha(1.0f);
 	}
 
 	public void showGameMessage(final String message, final float expireTime) {
@@ -1443,66 +1450,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.lastGameMessageExpireTime = millis + (long) (expireTime * 1000);
 		this.lastGameMessageFadeTime = millis + (long) (expireTime * 900);
 		this.gameMessagesFrame.setAlpha(1.0f);
-	}
-
-	@Override
-	public void showCantPlaceError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("Cantplace"));
-			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("CantPlaceSound"))
-					.play(this.uiScene.audioContext, 0, 0, 0);
-		}
-	}
-
-	@Override
-	public void showCantTransportError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("Canttransport"));
-			this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
-		}
-	}
-
-	@Override
-	public void showNoFoodError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("NoFood"));
-			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoFoodSound"))
-					.play(this.uiScene.audioContext, 0, 0, 0);
-		}
-	}
-
-	@Override
-	public void showNoManaError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("Nomana"));
-			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("NoManaSound"))
-					.play(this.uiScene.audioContext, 0, 0, 0);
-		}
-	}
-
-	@Override
-	public void showUnableToFindCoupleTargetError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("Cantfindcoupletarget"));
-			this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
-		}
-	}
-
-	@Override
-	public void showInventoryFullError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("InventoryFull"));
-			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("InventoryFullSound"))
-					.play(this.uiScene.audioContext, 0, 0, 0);
-		}
-	}
-
-	@Override
-	public void showBlightRingFullError(final int playerIndex) {
-		if (playerIndex == this.war3MapViewer.getLocalPlayerIndex()) {
-			showCommandError(playerIndex, this.rootFrame.getErrorString("Blightringfull"));
-			this.war3MapViewer.getUiSounds().getSound("InterfaceError").play(this.uiScene.audioContext, 0, 0, 0);
-		}
 	}
 
 	@Override
@@ -1522,7 +1469,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			else {
 				upgradeName = "NOTEXTERN Unknown ('" + queuedRawcode + "')";
 			}
-			showCommandError(playerIndex,
+			innerShowLocalCommandErrorString(playerIndex,
 					this.rootFrame.getTemplates().getDecoratedString("COLON_COMPLETED") + upgradeName);
 			this.war3MapViewer.getUiSounds().getSound(this.rootFrame.getSkinField("ResearchComplete"))
 					.play(this.uiScene.audioContext, 0, 0, 0);
@@ -2436,14 +2383,20 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private final class ActiveCommandUnitTargetFilter implements CWidgetFilterFunction {
+		private String lastFailureMessage = null;
 		@Override
 		public boolean call(final CWidget unit) {
-			final BooleanAbilityTargetCheckReceiver<CWidget> targetReceiver = BooleanAbilityTargetCheckReceiver
-					.<CWidget>getInstance();
+			final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = ExternStringMsgTargetCheckReceiver
+					.<CWidget>getInstance().reset();
 			MeleeUI.this.activeCommand.checkCanTarget(MeleeUI.this.war3MapViewer.simulation,
 					MeleeUI.this.activeCommandUnit.getSimulationUnit(), MeleeUI.this.activeCommandOrderId, unit,
 					targetReceiver);
-			return targetReceiver.isTargetable();
+			lastFailureMessage = targetReceiver.getExternStringKey();
+			return targetReceiver.getTarget() != null;
+		}
+
+		public void reset() {
+			lastFailureMessage = null;
 		}
 	}
 
@@ -3553,6 +3506,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				else if (button == Input.Buttons.LEFT) {
 					final boolean shiftDown = isShiftDown();
+					this.activeCommandUnitTargetFilter.reset();
 					final RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 							this.activeCommandUnitTargetFilter);
 					if (rayPickUnit != null) {
@@ -3582,10 +3536,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							clearAndRepopulateCommandCard();
 						}
 						else {
+							ExternStringMsgTargetCheckReceiver<AbilityPointTarget> pointTargetReceiver = ExternStringMsgTargetCheckReceiver.getInstance();
+							pointTargetReceiver.reset();
 							this.activeCommand.checkCanTarget(this.war3MapViewer.simulation,
 									this.activeCommandUnit.getSimulationUnit(), this.activeCommandOrderId,
-									clickLocationTemp2, PointAbilityTargetCheckReceiver.INSTANCE);
-							final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
+									clickLocationTemp2, pointTargetReceiver);
+							final Vector2 target = pointTargetReceiver.getTarget();
 							if (target != null) {
 								if ((this.activeCommand instanceof CAbilityAttack)
 										&& (this.activeCommandOrderId == OrderIds.attack)) {
@@ -3645,6 +3601,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									clearAndRepopulateCommandCard();
 								}
 
+							} else {
+								if(activeCommandUnitTargetFilter.lastFailureMessage != null && !activeCommandUnitTargetFilter.lastFailureMessage.isEmpty()) {
+									showInterfaceError(activeCommandUnit.getSimulationUnit().getPlayerIndex(), activeCommandUnitTargetFilter.lastFailureMessage);
+								} else {
+									String externStringKey = pointTargetReceiver.getExternStringKey();
+									if(externStringKey != null && !externStringKey.isEmpty()) {
+										showInterfaceError(activeCommandUnit.getSimulationUnit().getPlayerIndex(), externStringKey);
+									} else {
+										showInterfaceError(activeCommandUnit.getSimulationUnit().getPlayerIndex(), CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
+									}
+								}
 							}
 						}
 
@@ -4309,9 +4276,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			else {
 				final CSimulation game = MeleeUI.this.war3MapViewer.simulation;
-				final BooleanAbilityActivationReceiver receiver = BooleanAbilityActivationReceiver.INSTANCE;
+				final ExternStringMsgAbilityActivationReceiver receiver = ExternStringMsgAbilityActivationReceiver.INSTANCE;
+				receiver.reset();
 				inventoryData.checkCanUse(game, simulationUnit, orderId, receiver);
-				if (receiver.isOk()) {
+				if (receiver.isUseOk()) {
 					final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
 							.getInstance();
 					targetReceiver.reset();
@@ -4325,6 +4293,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						MeleeUI.this.activeCommandOrderId = orderId;
 						MeleeUI.this.activeCommandUnit = selectedUnit2;
 						clearAndRepopulateCommandCard();
+					}
+				} else {
+					String externStringKey = receiver.getExternStringKey();
+					if (externStringKey != null && !externStringKey.isEmpty()) {
+						showInterfaceError(simulationUnit.getPlayerIndex(), externStringKey);
 					}
 				}
 			}

@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmartActiveAbility implements CAbilitySpell {
@@ -97,7 +98,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 			receiver.cooldownNotYetReady(this.cooldownRemaining, this.cooldown);
 		}
 		else if (unit.getMana() < this.manaCost) {
-			receiver.notEnoughResources(ResourceType.MANA);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		}
 		else {
 			receiver.useOk();

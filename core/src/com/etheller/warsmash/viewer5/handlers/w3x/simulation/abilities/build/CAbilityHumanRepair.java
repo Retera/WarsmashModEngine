@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 import java.util.EnumSet;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -14,6 +15,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility {
 	private EnumSet<CTargetType> targetsAllowed;
@@ -37,11 +40,21 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target.canBeTargetedBy(game, unit, this.targetsAllowed) && (target.getLife() < target.getMaxLife())) {
-			receiver.targetOk(target);
-		}
-		else {
-			receiver.orderIdNotAccepted();
+		if(orderId == OrderIds.smart) {
+			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset()) && (target.getLife() < target.getMaxLife())) {
+				receiver.targetOk(target);
+			}
+			else {
+				receiver.orderIdNotAccepted();
+			}
+		} else {
+			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+				if(target.getLife() < target.getMaxLife()) {
+					receiver.targetOk(target);
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
+				}
+			}
 		}
 	}
 
@@ -54,7 +67,7 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		receiver.mustTargetType(AbilityTargetCheckReceiver.TargetType.UNIT);
+		receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 	}
 
 	@Override

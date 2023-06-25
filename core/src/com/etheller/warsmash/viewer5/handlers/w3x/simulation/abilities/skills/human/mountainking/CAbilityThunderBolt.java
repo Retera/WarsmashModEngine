@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityThunderBolt extends AbstractGenericSingleIconNoSmartActiveAbility {
@@ -99,14 +100,16 @@ public class CAbilityThunderBolt extends AbstractGenericSingleIconNoSmartActiveA
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target instanceof CUnit && target.canBeTargetedBy(game, unit, this.targetsAllowed)) {
-			if (!unit.isMovementDisabled() || unit.canReach(target, this.castRange)) {
-				receiver.targetOk(target);
-			} else {
-				receiver.targetOutsideRange();
+		if(target instanceof CUnit) {
+			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+				if (!unit.isMovementDisabled() || unit.canReach(target, this.castRange)) {
+					receiver.targetOk(target);
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
+				}
 			}
 		} else {
-			receiver.mustTargetType(TargetType.UNIT);
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 		}
 	}
 
@@ -128,7 +131,7 @@ public class CAbilityThunderBolt extends AbstractGenericSingleIconNoSmartActiveA
 		if (this.cooldownRemaining > 0) {
 			receiver.cooldownNotYetReady(this.cooldownRemaining, this.cooldown);
 		} else if (unit.getMana() < this.manaCost) {
-			receiver.notEnoughResources(ResourceType.MANA);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		} else {
 			receiver.useOk();
 		}

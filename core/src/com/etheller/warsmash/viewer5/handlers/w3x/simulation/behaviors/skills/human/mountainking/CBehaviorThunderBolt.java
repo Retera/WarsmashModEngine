@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorThunderBolt extends CAbstractRangedBehavior implements CAbilityProjectileListener {
 	private final CAbilityThunderBolt ability;
@@ -56,7 +57,7 @@ public class CBehaviorThunderBolt extends CAbstractRangedBehavior implements CAb
 		if (!this.doneEffect && ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks))) {
 			this.doneEffect = true;
 			if (!this.unit.chargeMana(this.ability.getManaCost())) {
-				simulation.getCommandErrorListener().showNoManaError(this.unit.getPlayerIndex());
+				simulation.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(), CommandStringErrorKeys.NOT_ENOUGH_MANA);
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
 			if (this.target instanceof CUnit) {

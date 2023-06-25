@@ -105,7 +105,7 @@ public class CAbilityHero extends AbstractCAbility {
 			}
 		}
 		else {
-			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
+			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
 					"NOTEXTERN: Ability is not yet programmed, unable to learn!");
 		}
 		return false;

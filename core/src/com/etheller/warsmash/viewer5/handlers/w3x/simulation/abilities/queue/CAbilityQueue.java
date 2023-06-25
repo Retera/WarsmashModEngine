@@ -21,6 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public final class CAbilityQueue extends AbstractCAbility {
@@ -76,15 +77,15 @@ public final class CAbilityQueue extends AbstractCAbility {
 								receiver.useOk();
 							}
 							else {
-								receiver.notEnoughResources(ResourceType.FOOD);
+								receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 							}
 						}
 						else {
-							receiver.notEnoughResources(ResourceType.LUMBER);
+							receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 						}
 					}
 					else {
-						receiver.notEnoughResources(ResourceType.GOLD);
+						receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 					}
 				}
 				else {
@@ -136,11 +137,11 @@ public final class CAbilityQueue extends AbstractCAbility {
 										receiver.useOk();
 									}
 									else {
-										receiver.notEnoughResources(ResourceType.LUMBER);
+										receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 									}
 								}
 								else {
-									receiver.notEnoughResources(ResourceType.GOLD);
+									receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 								}
 							}
 							else {

@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityCharm extends CAbilityTargetSpellBase {
 	private int maximumCreepLevel;
@@ -26,7 +27,7 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 
 	@Override
 	public void populateData(MutableGameObject worldEditorAbility, int level) {
-		this.maximumCreepLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.CHARM_MAX_CREEP_LEVEL, level);
+		this.maximumCreepLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.Charm.MAXIMUM_CREEP_LEVEL, level);
 	}
 
 	@Override
@@ -41,7 +42,7 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 			super.innerCheckCanTarget(game, unit, orderId, target, receiver);
 		}
 		else {
-			receiver.targetTooComplicated();
+			receiver.targetCheckFailed(CommandStringErrorKeys.THAT_CREATURE_IS_TOO_POWERFUL);
 		}
 	}
 

@@ -71,9 +71,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CUnitState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
 
 public class CUnit extends CWidget {
 	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
@@ -1205,7 +1203,7 @@ public class CUnit extends CWidget {
 				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(), CAllianceType.PASSIVE)
 						&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 					for (final CUnitAttack attack : getCurrentAttacks()) {
-						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
+						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 							this.currentBehavior = getAttackBehavior().reset(OrderIds.attack, attack, source, false,
 									CBehaviorAttackListener.DO_NOTHING);
 							this.currentBehavior.begin(simulation);
@@ -1493,9 +1491,10 @@ public class CUnit extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-			final EnumSet<CTargetType> targetsAllowed) {
+			final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
 		if ((this == source) && targetsAllowed.contains(CTargetType.NOTSELF)
 				&& !targetsAllowed.contains(CTargetType.SELF)) {
+			receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_SELF);
 			return false;
 		}
 		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND)
@@ -1519,25 +1518,68 @@ public class CUnit extends CWidget {
 											if (isDead()) {
 												if (this.unitType.isRaise() && this.unitType.isDecay()
 														&& isBoneCorpse()) {
-													return targetsAllowed.contains(CTargetType.DEAD);
+													if(targetsAllowed.contains(CTargetType.DEAD)) {
+														return true;
+													} else {
+														receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_MUST_BE_LIVING);
+													}
+												} else {
+													receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 												}
 											}
 											else {
-												return !targetsAllowed.contains(CTargetType.DEAD)
-														|| targetsAllowed.contains(CTargetType.ALIVE);
+												if(!targetsAllowed.contains(CTargetType.DEAD)
+														|| targetsAllowed.contains(CTargetType.ALIVE)) {
+													return true;
+												} else {
+													receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_CORPSE);
+												}
 											}
+										} else {
+											receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_HEROES);
 										}
+									} else {
+										receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_HERO);
 									}
+								} else {
+									receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ANCIENTS);
 								}
+							} else {
+								receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ANCIENT);
 							}
+						} else {
+							receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_ORGANIC_UNITS);
 						}
+					} else {
+						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ORGANIC_UNITS);
 					}
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_FRIENDLY_UNIT);
 				}
+			} else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ENEMY_UNIT);
 			}
 		}
 		else {
-			System.err.println("No targeting because " + targetsAllowed + " does not contain all of "
-					+ this.unitType.getTargetedAs());
+			if (this.unitType.getTargetedAs().contains(CTargetType.GROUND) && !targetsAllowed.contains(CTargetType.GROUND)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_GROUND_UNITS);
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.STRUCTURE)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BUILDINGS);
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.AIR) && !targetsAllowed.contains(CTargetType.AIR)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_AIR_UNITS);
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.WARD) && !targetsAllowed.contains(CTargetType.WARD)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WARDS);
+			} else if (targetsAllowed.contains(CTargetType.GROUND)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_GROUND_UNIT);
+			} else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_BUILDING);
+			} else if (targetsAllowed.contains(CTargetType.AIR)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_AIR_UNIT);
+			} else if (targetsAllowed.contains(CTargetType.WARD)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_WARD);
+			} else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
+			}
 		}
 		return false;
 	}
@@ -1598,7 +1640,7 @@ public class CUnit extends CWidget {
 					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()) {
 				for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
-							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
+							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())
 							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
 						if (this.source.currentBehavior != null) {
 							this.source.currentBehavior.end(this.game, false);
@@ -1901,7 +1943,7 @@ public class CUnit extends CWidget {
 						}
 						else {
 							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener().showNoFoodError(this.playerIndex);
+							game.getCommandErrorListener().showInterfaceError(this.playerIndex, CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 							player.removeTechtreeInProgress(rawcode);
 						}
 					}
@@ -1915,7 +1957,7 @@ public class CUnit extends CWidget {
 						}
 						else {
 							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener().showNoFoodError(this.playerIndex);
+							game.getCommandErrorListener().showInterfaceError(this.playerIndex, CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 						}
 					}
 				}

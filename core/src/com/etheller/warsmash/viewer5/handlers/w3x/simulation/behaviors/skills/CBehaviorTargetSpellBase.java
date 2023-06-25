@@ -9,6 +9,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
+
+import java.net.CookieManager;
 
 public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 	private final AbilityTargetStillAliveAndTargetableVisitor stillAliveVisitor;
@@ -61,7 +64,7 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 			if (!this.doneEffect) {
 				this.doneEffect = true;
 				if (!this.unit.chargeMana(this.ability.getManaCost())) {
-					simulation.getCommandErrorListener().showNoManaError(this.unit.getPlayerIndex());
+					simulation.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(), CommandStringErrorKeys.NOT_ENOUGH_MANA);
 					return this.unit.pollNextOrderBehavior(simulation);
 				}
 				this.ability.setCooldownRemaining(this.ability.getCooldown());

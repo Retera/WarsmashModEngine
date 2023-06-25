@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class CBuffImmolationCaster extends AbstractCBuff {
@@ -52,7 +53,7 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 				@Override
 				public boolean call(final CUnit enumUnit) {
 					if (caster.canReach(enumUnit, areaOfEffect) && enumUnit.canBeTargetedBy(game, caster,
-							CBuffImmolationCaster.this.abilityImmolation.getTargetsAllowed())) {
+							CBuffImmolationCaster.this.abilityImmolation.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 						enumUnit.damage(game, caster, CAttackType.SPELLS, CWeaponSoundTypeJass.WHOKNOWS.name(),
 								CBuffImmolationCaster.this.abilityImmolation.getDamagePerInterval());
 						game.createSpellEffectOnUnit(enumUnit, CBuffImmolationCaster.this.abilityImmolation.getBuffId(),

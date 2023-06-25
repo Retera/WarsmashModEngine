@@ -9,6 +9,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityPointTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -19,6 +20,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	private float buildingReduction;
@@ -42,13 +44,13 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.buildingReduction = worldEditorAbility.getFieldAsFloat(AbilityFields.BLIZZARD_BUILDING_REDUCTION, level);
-		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.BLIZZARD_DAMAGE, level);
-		this.damagePerSecond = worldEditorAbility.getFieldAsFloat(AbilityFields.BLIZZARD_DAMAGE_PER_SECOND, level);
-		this.maximumDamagePerWave = worldEditorAbility.getFieldAsFloat(AbilityFields.BLIZZARD_MAX_DAMAGE_PER_WAVE,
+		this.buildingReduction = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.BUILDING_REDUCTION, level);
+		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.DAMAGE, level);
+		this.damagePerSecond = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.DAMAGE_PER_SECOND, level);
+		this.maximumDamagePerWave = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.MAXIMUM_DAMAGE_PER_WAVE,
 				level);
-		this.shardCount = worldEditorAbility.getFieldAsInteger(AbilityFields.BLIZZARD_SHARD_COUNT, level);
-		this.waveCount = worldEditorAbility.getFieldAsInteger(AbilityFields.BLIZZARD_WAVE_COUNT, level);
+		this.shardCount = worldEditorAbility.getFieldAsInteger(AbilityFields.Blizzard.NUMBER_OF_SHARDS, level);
+		this.waveCount = worldEditorAbility.getFieldAsInteger(AbilityFields.Blizzard.NUMBER_OF_WAVES, level);
 
 		this.waveDelay = getCastingTime();
 		setCastingTime(0); // dont use the casting time field normally
@@ -89,7 +91,7 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 									public boolean call(final CUnit possibleTarget) {
 										if (possibleTarget.canReach(target, CAbilityBlizzard.this.areaOfEffect)
 												&& possibleTarget.canBeTargetedBy(simulation, unit,
-														getTargetsAllowed())) {
+														getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 											possibleTarget.damage(simulation, unit, CAttackType.SPELLS,
 													CWeaponSoundTypeJass.WHOKNOWS.name(), CAbilityBlizzard.this.damage);
 										}

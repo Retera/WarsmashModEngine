@@ -22,7 +22,7 @@ public class CAbilityItemManaBonus extends CAbilitySpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		manaBonus = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_MANA, level);
+		manaBonus = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemManaBonus.MAX_MANA_GAINED, level);
 	}
 
 	@Override

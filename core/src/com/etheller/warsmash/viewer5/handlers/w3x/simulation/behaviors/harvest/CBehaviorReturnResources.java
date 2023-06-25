@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstract
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CBehaviorReturnResources extends CAbstractRangedBehavior implements AbilityTargetVisitor<CBehavior> {
 	private final CAbilityHarvest abilityHarvest;
@@ -205,7 +206,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 		double nearestMineDistance = Float.MAX_VALUE;
 		for (final CDestructable unit : simulation.getDestructables()) {
 			if (!unit.isDead()
-					&& unit.canBeTargetedBy(simulation, worker, abilityHarvest.getTreeAttack().getTargetsAllowed())) {
+					&& unit.canBeTargetedBy(simulation, worker, abilityHarvest.getTreeAttack().getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 				// TODO maybe use distance squared, problem is that we're using this
 				// inefficient more complex distance function on unit
 				final double distance = unit.distanceSquaredNoCollision(toObject);

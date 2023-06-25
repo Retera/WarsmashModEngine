@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public final class CAbilitySellItems extends AbstractCAbility {
@@ -47,11 +48,11 @@ public final class CAbilitySellItems extends AbstractCAbility {
 						receiver.useOk();
 					}
 					else {
-						receiver.notEnoughResources(ResourceType.LUMBER);
+						receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 					}
 				}
 				else {
-					receiver.notEnoughResources(ResourceType.GOLD);
+					receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 				}
 			}
 			else {

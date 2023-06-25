@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 public abstract class CWidget implements AbilityTarget, CHandle {
 	protected static final Rectangle tempRect = new Rectangle();
@@ -80,7 +81,7 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 	}
 
 	public abstract boolean canBeTargetedBy(CSimulation simulation, CUnit source,
-			final EnumSet<CTargetType> targetsAllowed);
+											final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver);
 
 	public double distanceSquaredNoCollision(final AbilityTarget target) {
 		return distanceSquaredNoCollision(target.getX(), target.getY());

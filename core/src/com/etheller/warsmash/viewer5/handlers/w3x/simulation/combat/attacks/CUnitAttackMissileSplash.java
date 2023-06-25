@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 	private int areaOfEffectFullDamage;
@@ -153,7 +154,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 
 		@Override
 		public boolean call(final CUnit enumUnit) {
-			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
+			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 				damageTarget(enumUnit);
 				if (enumUnit == this.target) {
 					this.hitTarget = true;
@@ -164,7 +165,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 
 		@Override
 		public boolean call(final CDestructable enumDestructable) {
-			if (enumDestructable.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
+			if (enumDestructable.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 				damageTarget(enumDestructable);
 				if (enumDestructable == this.target) {
 					this.hitTarget = true;

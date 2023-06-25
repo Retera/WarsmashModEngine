@@ -105,9 +105,9 @@ public class CAbilityEntangledMine extends CAbilityOverlayedMine implements CAbi
 
 	@Override
 	public void populate(final MutableGameObject worldEditorAbility, final int level) {
-		this.goldPerInterval = worldEditorAbility.getFieldAsInteger(AbilityFields.ENTANGLE_MINE_GOLD_PER_INTERVAL,
+		this.goldPerInterval = worldEditorAbility.getFieldAsInteger(AbilityFields.EntangledGoldMineAbility.GOLD_PER_INTERVAL,
 				level);
-		this.intervalDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.ENTANGLE_MINE_INTERVAL_DURATION,
+		this.intervalDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.EntangledGoldMineAbility.INTERVAL_DURATION,
 				level);
 	}
 

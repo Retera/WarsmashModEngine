@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorNoTargetSpellBase implements CBehavior {
 	protected final CUnit unit;
@@ -41,7 +42,7 @@ public class CBehaviorNoTargetSpellBase implements CBehavior {
 			if (!this.doneEffect) {
 				this.doneEffect = true;
 				if (!this.unit.chargeMana(this.ability.getManaCost())) {
-					simulation.getCommandErrorListener().showNoManaError(this.unit.getPlayerIndex());
+					simulation.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(), CommandStringErrorKeys.NOT_ENOUGH_MANA);
 					return this.unit.pollNextOrderBehavior(simulation);
 				}
 				this.ability.setCooldownRemaining(this.ability.getCooldown());

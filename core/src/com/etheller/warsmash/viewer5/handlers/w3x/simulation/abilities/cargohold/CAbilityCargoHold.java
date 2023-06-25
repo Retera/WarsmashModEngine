@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	private int cargoCapacity;
@@ -94,7 +95,7 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 				receiver.targetOk(target);
 			}
 			else {
-				receiver.mustTargetType(TargetType.UNIT);
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_DROP_THIS_ITEM);
 			}
 		}
 		else {

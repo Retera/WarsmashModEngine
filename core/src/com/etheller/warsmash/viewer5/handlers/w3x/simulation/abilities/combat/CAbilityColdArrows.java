@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 /**
  * Represents an ability from the object data
@@ -102,7 +103,7 @@ public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getCurrentAttacks()) {
-			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
+			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 				behavior = caster.getAttackBehavior().reset(OrderIds.coldarrowstarg, attack, target, false,
 						CBehaviorAttackListener.DO_NOTHING);
 				break;

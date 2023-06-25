@@ -24,7 +24,7 @@ public class CAbilityItemPermanentLifeGain extends CAbilitySpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.lifeToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_LIFE_GAINED, level);
+		this.lifeToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemLifeBonus.MAX_LIFE_GAINED, level);
 	}
 
 	@Override

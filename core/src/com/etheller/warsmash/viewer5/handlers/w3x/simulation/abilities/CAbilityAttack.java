@@ -16,6 +16,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceTy
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityAttack extends AbstractCAbility {
 
@@ -38,7 +40,7 @@ public class CAbilityAttack extends AbstractCAbility {
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
 			final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (target == unit) {
-			receiver.mustTargetType(TargetType.UNIT);
+			receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_SELF);
 			return; // no attacking self ever
 		}
 		if (orderId == OrderIds.smart) {
@@ -59,18 +61,25 @@ public class CAbilityAttack extends AbstractCAbility {
 		}
 		if ((orderId == OrderIds.smart) || (orderId == OrderIds.attack)) {
 			boolean canTarget = false;
+			CUnitAttack lastUnavailableAttack = null;
 			for (final CUnitAttack attack : unit.getCurrentAttacks()) {
-				if (target.canBeTargetedBy(game, unit, attack.getTargetsAllowed())) {
+				if (target.canBeTargetedBy(game, unit, attack.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 					canTarget = true;
 					break;
+				} else {
+					lastUnavailableAttack = attack;
 				}
 			}
 			if (canTarget) {
 				receiver.targetOk(target);
 			}
 			else {
-				// TODO obviously we should later support better warnings here
-				receiver.mustTargetType(TargetType.UNIT);
+				if(lastUnavailableAttack != null) {
+					// a check known to fail, so it will populate our receiver
+					target.canBeTargetedBy(game, unit, lastUnavailableAttack.getTargetsAllowed(), receiver);
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
+				}
 			}
 		}
 		else {
@@ -115,7 +124,7 @@ public class CAbilityAttack extends AbstractCAbility {
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
-		receiver.mustTargetType(TargetType.UNIT);
+		receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 	}
 
 	@Override
@@ -138,7 +147,7 @@ public class CAbilityAttack extends AbstractCAbility {
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getCurrentAttacks()) {
-			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
+			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 				behavior = caster.getAttackBehavior().reset(OrderIds.attack, attack, target, false,
 						CBehaviorAttackListener.DO_NOTHING);
 				break;

@@ -26,8 +26,8 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 	@Override
 	public void populateData(MutableGameObject worldEditorAbility, int level) {
 		this.summonUnitId = War3ID
-				.fromString(worldEditorAbility.getFieldAsString(AbilityFields.WATER_ELEMENTAL_UNIT_TYPE, level));
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.WATER_ELEMENTAL_UNIT_COUNT, level);
+				.fromString(worldEditorAbility.getFieldAsString(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_TYPE, level));
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_COUNT, level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);

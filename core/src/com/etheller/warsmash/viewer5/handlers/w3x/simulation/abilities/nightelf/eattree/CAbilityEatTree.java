@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	private float ripDelay;
@@ -41,9 +42,9 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EAT_TREE_RIP_DELAY, level);
-		eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EAT_TREE_EAT_DELAY, level);
-		hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.EAT_TREE_HIT_POINTS_GAINED, level);
+		ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.RIP_DELAY, level);
+		eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.EAT_DELAY, level);
+		hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.HIT_POINTS_GAINED, level);
 		duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 		buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		setCastingSecondaryTags(SequenceUtils.SPELL_EATTREE);
@@ -76,7 +77,7 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (target.visit(AbilityTargetVisitor.DESTRUCTABLE) == null) {
-			receiver.mustTargetType(TargetType.UNIT/* DEST */);
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_TREE);
 		}
 		else {
 			super.innerCheckCanTarget(game, unit, orderId, target, receiver);

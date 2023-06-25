@@ -2,11 +2,9 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targetin
 
 import java.util.EnumSet;
 
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public final class AbilityTargetStillAliveAndTargetableVisitor implements AbilityTargetVisitor<Boolean> {
 	private CSimulation simulation;
@@ -29,18 +27,18 @@ public final class AbilityTargetStillAliveAndTargetableVisitor implements Abilit
 	@Override
 	public Boolean accept(final CUnit target) {
 		return !target.isDead() && !target.isHidden()
-				&& target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed);
+				&& target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset());
 	}
 
 	@Override
 	public Boolean accept(final CDestructable target) {
-		return !target.isDead() && target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed);
+		return !target.isDead() && target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset());
 	}
 
 	@Override
 	public Boolean accept(final CItem target) {
 		return !target.isDead() && !target.isHidden()
-				&& target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed);
+				&& target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset());
 	}
 
 }

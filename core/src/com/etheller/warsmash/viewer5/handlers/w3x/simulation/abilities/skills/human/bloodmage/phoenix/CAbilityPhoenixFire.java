@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 
@@ -55,7 +56,7 @@ public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 			game.getWorldCollision().enumUnitsInRect(new Rectangle(unit.getX() - this.areaOfEffect,
 					unit.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2), enumUnit -> {
 						if (unit.canReach(enumUnit, this.areaOfEffect)
-								&& enumUnit.canBeTargetedBy(game, unit, this.targetsAllowed)) {
+								&& enumUnit.canBeTargetedBy(game, unit, this.targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 							unit.getCurrentAttacks().get(0).launch(game, unit, enumUnit, this.initialDamage,
 									CUnitAttackListener.DO_NOTHING);
 							this.lastAttackTurnTick = gameTurnTick;

@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiveAbility {
@@ -100,7 +101,7 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 				possiblePairFinder);
 		final CUnit coupleTarget = possiblePairFinder.pairMatchFound;
 		if (coupleTarget == null) {
-			game.getCommandErrorListener().showUnableToFindCoupleTargetError(caster.getPlayerIndex());
+			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), CommandStringErrorKeys.UNABLE_TO_FIND_COUPLE_TARGET);
 			return caster.pollNextOrderBehavior(game);
 		}
 		coupleTarget.order(game, new COrderTargetWidget(possiblePairFinder.pairMatchAbility.getHandleId(),
@@ -135,11 +136,11 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 				receiver.useOk();
 			}
 			else {
-				receiver.notEnoughResources(ResourceType.LUMBER);
+				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 			}
 		}
 		else {
-			receiver.notEnoughResources(ResourceType.GOLD);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 		}
 	}
 

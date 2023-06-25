@@ -34,10 +34,10 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.FERAL_SPIRIT_SUMMON_UNIT_TYPE_1,
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.FeralSpirit.SUMMONED_UNIT,
 				level);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.FERAL_SPIRIT_SUMMON_UNIT_COUNT_1,
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.FeralSpirit.NUMBER_OF_SUMMONED_UNITS,
 				level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);

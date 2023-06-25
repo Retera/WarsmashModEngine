@@ -19,6 +19,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class CAbilityMoonWell extends CAbilitySpellBase {
@@ -113,7 +115,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 					@Override
 					public boolean call(final CUnit enumUnit) {
 						if (unit.canReach(enumUnit, castRange)
-								&& enumUnit.canBeTargetedBy(game, unit, getTargetsAllowed())) {
+								&& enumUnit.canBeTargetedBy(game, unit, getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 							unit.order(game, getBaseOrderId(), enumUnit);
 						}
 						return false;
@@ -166,13 +168,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_MANA_GAINED, level);
-		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_HIT_POINTS_GAINED, level);
-		this.autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_AUTOCAST_REQUIREMENT,
+		this.manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.ReplenishManaAndLife.MANA_GAINED, level);
+		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.ReplenishManaAndLife.HIT_POINTS_GAINED, level);
+		this.autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.ReplenishManaAndLife.AUTOCAST_REQUIREMENT,
 				level);
-		this.waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_WATER_HEIGHT, level);
+		this.waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.ReplenishManaAndLife.WATER_HEIGHT, level);
 		this.regenerateOnlyAtNight = worldEditorAbility
-				.getFieldAsBoolean(AbilityFields.MOON_WELL_REGENERATE_ONLY_AT_NIGHT, level);
+				.getFieldAsBoolean(AbilityFields.ReplenishManaAndLife.REGENERATE_ONLY_AT_NIGHT, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
 		setCastRange(this.areaOfEffect); // TODO use cast range as a smart right click interact radius
 	}
@@ -185,16 +187,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target.canBeTargetedBy(game, unit, getTargetsAllowed())) {
+		if (target.canBeTargetedBy(game, unit, getTargetsAllowed(), receiver)) {
 			if (!unit.isMovementDisabled() || unit.canReach(target, getCastRange())) {
 				receiver.targetOk(target);
 			}
 			else {
-				receiver.targetOutsideRange();
+				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 			}
-		}
-		else {
-			receiver.mustTargetType(TargetType.UNIT);
 		}
 	}
 

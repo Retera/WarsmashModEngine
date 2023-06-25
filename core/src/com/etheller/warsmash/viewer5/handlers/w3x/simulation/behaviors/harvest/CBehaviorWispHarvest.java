@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstract
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
@@ -142,7 +143,7 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 		double nearestMineDistance = abilityHarvest.getCastRange() * abilityHarvest.getCastRange();
 		for (final CDestructable unit : simulation.getDestructables()) {
 			if (!unit.isDead() && !simulation.isTreeOwned(unit)
-					&& unit.canBeTargetedBy(simulation, worker, CAbilityWispHarvest.TREE_ALIVE_TYPE_ONLY)) {
+					&& unit.canBeTargetedBy(simulation, worker, CAbilityWispHarvest.TREE_ALIVE_TYPE_ONLY, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
 				final double distance = unit.distanceSquaredNoCollision(toObject);
 				if (distance < nearestMineDistance) {
 					nearestMineDistance = distance;

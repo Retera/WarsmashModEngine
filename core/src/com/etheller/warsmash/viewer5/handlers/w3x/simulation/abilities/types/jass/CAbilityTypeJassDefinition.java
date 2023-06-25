@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
 
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
@@ -34,6 +35,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<CAbilityTypeLevelData>
@@ -405,18 +407,18 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 			receiver.noChargesRemaining();
 		}
 		else if (unit.getMana() < orderCommandCardIcon.manaCost) {
-			receiver.notEnoughResources(ResourceType.MANA);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		}
 		else {
 			final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 			if (player.getGold() < orderCommandCardIcon.goldCost) {
-				receiver.notEnoughResources(ResourceType.GOLD);
+				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 			}
 			else if (player.getLumber() < orderCommandCardIcon.lumberCost) {
-				receiver.notEnoughResources(ResourceType.LUMBER);
+				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 			}
 			else if ((player.getFoodUsed() + orderCommandCardIcon.foodCostDisplayOnly) < player.getFoodCap()) {
-				receiver.notEnoughResources(ResourceType.FOOD);
+				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 			}
 			else {
 				if (this.checkUseJass != null) {

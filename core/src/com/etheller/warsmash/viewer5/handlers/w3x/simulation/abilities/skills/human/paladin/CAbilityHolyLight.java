@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityHolyLight extends AbstractGenericSingleIconNoSmartActiveAbility {
@@ -91,30 +92,33 @@ public class CAbilityHolyLight extends AbstractGenericSingleIconNoSmartActiveAbi
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if ((target instanceof CUnit) && target.canBeTargetedBy(game, unit, this.targetsAllowed)) {
-			if (!unit.isMovementDisabled() || unit.canReach(target, this.castRange)) {
-				final CUnit targetUnit = (CUnit) target;
-				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
-				final boolean undead = targetUnit.getClassifications().contains(CUnitClassification.UNDEAD);
-				final boolean ally = player.hasAlliance(targetUnit.getPlayerIndex(), CAllianceType.PASSIVE);
-				if (undead != ally) {
-					if (ally && (targetUnit.getLife() >= targetUnit.getMaximumLife())) {
-						receiver.alreadyFullHealth();
+		if(target instanceof CUnit){
+			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+				if (!unit.isMovementDisabled() || unit.canReach(target, this.castRange)) {
+					final CUnit targetUnit = (CUnit) target;
+					final CPlayer player = game.getPlayer(unit.getPlayerIndex());
+					final boolean undead = targetUnit.getClassifications().contains(CUnitClassification.UNDEAD);
+					final boolean ally = player.hasAlliance(targetUnit.getPlayerIndex(), CAllianceType.PASSIVE);
+					if (undead != ally) {
+						if (ally && (targetUnit.getLife() >= targetUnit.getMaximumLife())) {
+							receiver.targetCheckFailed(CommandStringErrorKeys.ALREADY_AT_FULL_HEALTH);
+						}
+						else {
+							receiver.targetOk(targetUnit);
+						}
 					}
 					else {
-						receiver.targetOk(targetUnit);
+						receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_FRIENDLY_LIVING_UNITS_OR_ENEMY_UNDEAD_UNITS);
 					}
 				}
 				else {
-					receiver.notHolyBoltTarget();
+					receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 				}
 			}
-			else {
-				receiver.targetOutsideRange();
-			}
+			// else receiver called automatically by target.canBeTargetedBy(..., receiver)
 		}
 		else {
-			receiver.mustTargetType(TargetType.UNIT);
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 		}
 	}
 
@@ -137,7 +141,7 @@ public class CAbilityHolyLight extends AbstractGenericSingleIconNoSmartActiveAbi
 			receiver.cooldownNotYetReady(this.cooldownRemaining, this.cooldown);
 		}
 		else if (unit.getMana() < this.manaCost) {
-			receiver.notEnoughResources(ResourceType.MANA);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		}
 		else {
 			receiver.useOk();

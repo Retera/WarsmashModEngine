@@ -6,7 +6,7 @@ Some news websites and social media claimed that Warsmash was taken down in 2022
 
 The spread of the unverified false rumor of Warsmash's takedown vastly exceeded the rate of spread of any legitimate technology discussion, and so because of how the modern attention economy works there is not any digital megaphone through which this project and its author(s) can tell their true story to set things right. If you want to support Warsmash, do not hate Activision. Instead, love the Warcraft III modding. It really is probably that simple.
 ## Gameplay Example
-[![GAMEPLAY VIDEO](http://img.youtube.com/vi/2YDPQW7uyQ8/0.jpg)](http://www.youtube.com/watch?v=2YDPQW7uyQ8)
+[![GAMEPLAY VIDEO](http://img.youtube.com/vi/EO-FDeQhFWc/0.jpg)](https://www.youtube.com/watch?v=EO-FDeQhFWc)
 
 ## Discord
 https://discord.com/invite/ucjftZ7x7H

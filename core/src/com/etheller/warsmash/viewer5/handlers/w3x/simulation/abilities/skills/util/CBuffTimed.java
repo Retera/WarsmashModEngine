@@ -51,7 +51,7 @@ public abstract class CBuffTimed extends AbstractCBuff {
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
-//		cUnit.remove(game, this);
+		cUnit.remove(game, this);
 	}
 
 	@Override

@@ -319,11 +319,11 @@ public class CAbilityHero extends AbstractCAbility {
 		final int deltaStrength = currentStrength - prevStrength;
 		final int currentIntelligence = this.intelligence.getCurrent();
 		final int deltaIntelligence = currentIntelligence - prevIntelligence;
-		final int currentAgilityBase = this.agility.getBase();
+		final int currentAgilityBase = this.agility.getCurrentBase();
 		final int currentAgilityBonus = this.agility.getBonus();
 
 		final HeroStatValue primaryAttributeStat = getStat(unit.getUnitType().getPrimaryAttribute());
-		final int primaryAttributeBase = primaryAttributeStat.getBase();
+		final int primaryAttributeBase = primaryAttributeStat.getCurrentBase();
 		final int primaryAttributeBonus = primaryAttributeStat.getBonus();
 		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setPrimaryAttributePermanentDamageBonus(
@@ -383,6 +383,10 @@ public class CAbilityHero extends AbstractCAbility {
 
 		public int getBase() {
 			return this.base;
+		}
+
+		public int getCurrentBase() {
+			return this.currentBase;
 		}
 
 		public int getBonus() {

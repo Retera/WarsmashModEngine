@@ -21,6 +21,12 @@ public class CBuffTimedLife extends CBuffTimed {
 	}
 
 	@Override
+	public void onDeath(CSimulation game, CUnit cUnit) {
+		// do not remove this (avoid default behavior from CBuffTimed)
+		// TODO maybe do this in a smarter way later
+	}
+
+	@Override
 	public boolean isTimedLifeBar() {
 		return true;
 	}

@@ -922,7 +922,7 @@ public class Jass2 {
 						if (weaponType == null) {
 							weaponType = CWeaponSoundTypeJass.WHOKNOWS;
 						}
-						target.damage(CommonEnvironment.this.simulation, whichUnit, attackType, weaponType.name(), (float) amount);
+						target.damage(CommonEnvironment.this.simulation, whichUnit, attackType, damageType, weaponType.name(), (float) amount);
 					}
 				}
 				return BooleanJassValue.TRUE;

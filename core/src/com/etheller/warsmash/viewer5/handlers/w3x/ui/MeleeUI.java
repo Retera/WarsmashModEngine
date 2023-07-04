@@ -3243,12 +3243,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			for (int index = 0; index < attackTypes.length; index++) {
 				final CodeKeyType attackType = attackTypes[index];
 				String skinLookupKey = "InfoPanelIcon" + prefix + attackType.getCodeKey() + suffix;
+				if(!gameUI.hasSkinField(skinLookupKey) && attackType == CAttackType.SPELLS) {
+					skinLookupKey = "InfoPanelIcon" + prefix + CAttackType.MAGIC.getCodeKey() + suffix;
+				}
 				final Texture suffixTexture = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
 				if (suffixTexture != null) {
 					this.damageBackdropTextures[index] = suffixTexture;
 				}
 				else {
 					skinLookupKey = "InfoPanelIcon" + prefix + attackType.getCodeKey();
+					if(!gameUI.hasSkinField(skinLookupKey) && attackType == CAttackType.SPELLS) {
+						skinLookupKey = "InfoPanelIcon" + prefix + CAttackType.MAGIC.getCodeKey();
+					}
 					this.damageBackdropTextures[index] = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
 				}
 			}

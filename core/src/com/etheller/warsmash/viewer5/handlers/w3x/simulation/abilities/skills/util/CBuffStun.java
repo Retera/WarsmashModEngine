@@ -11,6 +11,11 @@ public class CBuffStun extends CBuffTimed {
 	}
 
 	@Override
+	public void onDeath(CSimulation game, CUnit cUnit) {
+		super.onDeath(game, cUnit);
+	}
+
+	@Override
 	protected void onBuffAdd(final CSimulation game, final CUnit unit) {
 		unit.setPaused(true);
 	}

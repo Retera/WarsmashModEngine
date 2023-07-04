@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CUnitAttackMissileSplash extends CUnitAttackMissile {
@@ -177,18 +178,18 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 		public void damageTarget(final CWidget enumUnit) {
 			final double distance = enumUnit.distance(this.x, this.y);
 			if (distance <= (this.attack.areaOfEffectFullDamage)) {
-				enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(), this.attack.getWeaponSound(),
-						this.damage);
+				enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(), CDamageType.NORMAL,
+						this.attack.getWeaponSound(), this.damage);
 				this.attackListener.onHit(enumUnit, this.damage);
 			}
 			else if (distance <= (this.attack.areaOfEffectMediumDamage)) {
-				enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(), this.attack.getWeaponSound(),
-						this.damage * this.attack.damageFactorMedium);
+				enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(), CDamageType.NORMAL,
+						this.attack.getWeaponSound(), this.damage * this.attack.damageFactorMedium);
 				this.attackListener.onHit(enumUnit, this.damage);
 			}
 			else if (distance <= (this.attack.areaOfEffectSmallDamage)) {
-				enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(), this.attack.getWeaponSound(),
-						this.damage * this.attack.damageFactorSmall);
+				enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(), CDamageType.NORMAL,
+						this.attack.getWeaponSound(), this.damage * this.attack.damageFactorSmall);
 				this.attackListener.onHit(enumUnit, this.damage);
 			}
 		}

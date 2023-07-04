@@ -14,6 +14,7 @@ public class CWorldCollision {
 	private final Quadtree<CUnit> airUnitCollision;
 	private final Quadtree<CUnit> seaUnitCollision;
 	private final Quadtree<CUnit> buildingUnitCollision;
+	private final Quadtree<CUnit> anyUnitEnumerableCollision;
 	private final Quadtree<CDestructable> destructablesForEnum;
 	private final float maxCollisionRadius;
 	private final AnyUnitExceptTwoIntersector anyUnitExceptTwoIntersector;
@@ -25,6 +26,7 @@ public class CWorldCollision {
 		this.airUnitCollision = new Quadtree<>(entireMapBounds);
 		this.seaUnitCollision = new Quadtree<>(entireMapBounds);
 		this.buildingUnitCollision = new Quadtree<>(entireMapBounds);
+		this.anyUnitEnumerableCollision = new Quadtree<>(entireMapBounds);
 		this.destructablesForEnum = new Quadtree<>(entireMapBounds);
 		this.maxCollisionRadius = maxCollisionRadius;
 		this.anyUnitExceptTwoIntersector = new AnyUnitExceptTwoIntersector();
@@ -41,6 +43,7 @@ public class CWorldCollision {
 					collisionSize * 2);
 			unit.setCollisionRectangle(bounds);
 		}
+		this.anyUnitEnumerableCollision.add(unit, bounds);
 		if (unit.isBuilding()) {
 			// buildings are here so that we can include them when enumerating all units in
 			// a rect, but they don't really move dynamically, this is kind of pointless
@@ -87,6 +90,7 @@ public class CWorldCollision {
 	public void removeUnit(final CUnit unit) {
 		final Rectangle bounds = unit.getCollisionRectangle();
 		if (bounds != null) {
+			this.anyUnitEnumerableCollision.remove(unit, bounds);
 			if (unit.isBuilding()) {
 				this.buildingUnitCollision.remove(unit, bounds);
 			}
@@ -122,10 +126,7 @@ public class CWorldCollision {
 
 	public void enumUnitsInRect(final Rectangle rect, final CUnitEnumFunction callback) {
 		this.eachUnitOnlyOnceIntersector.reset(callback);
-		this.groundUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
-		this.airUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
-		this.seaUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
-		this.buildingUnitCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
+		this.anyUnitEnumerableCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
 	}
 
 	public void enumBuildingsInRect(final Rectangle rect, final QuadtreeIntersector<CUnit> callback) {
@@ -185,11 +186,14 @@ public class CWorldCollision {
 		}
 		final MovementType movementType = unit.getMovementType();
 		final Rectangle bounds = unit.getCollisionRectangle();
+		final float oldX = bounds.x;
+		final float oldY = bounds.y;
+		this.anyUnitEnumerableCollision.translate(unit, bounds, xShift, yShift);
+		bounds.x = oldX;
+		bounds.y = oldY;
 		if (movementType != null) {
 			switch (movementType) {
 			case AMPHIBIOUS:
-				final float oldX = bounds.x;
-				final float oldY = bounds.y;
 				this.seaUnitCollision.translate(unit, bounds, xShift, yShift);
 				bounds.x = oldX;
 				bounds.y = oldY;

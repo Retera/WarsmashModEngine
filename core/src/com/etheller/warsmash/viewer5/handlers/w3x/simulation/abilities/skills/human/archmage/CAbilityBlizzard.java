@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -18,6 +20,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
@@ -36,6 +39,7 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	private int currentWave;
 	private int nextWaveTick;
 	private boolean waveForDamage = false;
+	private boolean effectStarted = false;
 	private final Rectangle recycleRect = new Rectangle();
 
 	public CAbilityBlizzard(final int handleId, final War3ID alias) {
@@ -66,23 +70,26 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
-		this.currentWave = 0;
-		this.waveForDamage = false;
-		// TODO below: stupid, needs to change to wait until doEffect first call to be
-		// set
-		this.nextWaveTick = game.getGameTurnTick()
-				+ (int) StrictMath.ceil(this.waveDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+		this.effectStarted = false;
 		return super.begin(game, caster, orderId, point);
 	}
 
 	@Override
 	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+		if(!this.effectStarted) {
+			this.currentWave = 0;
+			this.waveForDamage = false;
+			this.nextWaveTick =
+					simulation.getGameTurnTick() + (int) StrictMath.ceil(this.waveDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+			this.effectStarted = true;
+		}
 		if (simulation.getGameTurnTick() >= this.nextWaveTick) {
 			final float waveDelay;
 			if (this.waveForDamage) {
 				this.currentWave++;
 				waveDelay = this.waveDelay;
 				this.waveForDamage = false;
+				List<CUnit> damageTargets = new ArrayList<>();
 				simulation.getWorldCollision()
 						.enumUnitsInRect(this.recycleRect.set(target.getX() - this.areaOfEffect,
 								target.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2),
@@ -92,12 +99,27 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 										if (possibleTarget.canReach(target, CAbilityBlizzard.this.areaOfEffect)
 												&& possibleTarget.canBeTargetedBy(simulation, unit,
 														getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
-											possibleTarget.damage(simulation, unit, CAttackType.SPELLS,
-													CWeaponSoundTypeJass.WHOKNOWS.name(), CAbilityBlizzard.this.damage);
+											damageTargets.add(possibleTarget);
 										}
 										return false;
 									}
 								});
+				float damagePerTarget = this.damage;
+				if (damagePerTarget * damageTargets.size() > maximumDamagePerWave) {
+					damagePerTarget = maximumDamagePerWave / damageTargets.size();
+				}
+				float damagePerTargetBuilding = damagePerTarget * (buildingReduction);
+				for (CUnit damageTarget : damageTargets) {
+					float thisTargetDamage;
+					if (damageTarget.isBuilding()) {
+						thisTargetDamage = damagePerTargetBuilding;
+					}
+					else {
+						thisTargetDamage = damagePerTarget;
+					}
+					damageTarget.damage(simulation, unit, CAttackType.SPELLS, CDamageType.COLD,
+							CWeaponSoundTypeJass.WHOKNOWS.name(), thisTargetDamage);
+				}
 			}
 			else {
 				final Random seededRandom = simulation.getSeededRandom();

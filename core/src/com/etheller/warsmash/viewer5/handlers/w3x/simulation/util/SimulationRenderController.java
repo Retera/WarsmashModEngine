@@ -26,6 +26,9 @@ public interface SimulationRenderController {
 			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
 			CAbilityProjectileListener projectileListener);
 
+	SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source,
+													   CUnit target);
+
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);
 
@@ -70,9 +73,9 @@ public interface SimulationRenderController {
 
 	void spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
 
-	SimulationRenderComponent spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
+	SimulationRenderComponentModel spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
 
-	SimulationRenderComponent spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
+	SimulationRenderComponentModel spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
 			CEffectType effectType, int index);
 
 	void spawnUIUnitGetItemSound(CUnit cUnit, CItem item);
@@ -91,7 +94,7 @@ public interface SimulationRenderController {
 
 	void heroDeathEvent(CUnit cUnit);
 
-	SimulationRenderComponent createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias,
+	SimulationRenderComponentModel createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias,
 			float artAttachmentHeight);
 
 	void unitUpgradingEvent(CUnit unit, War3ID upgradeIdType);

@@ -13,7 +13,9 @@ public abstract class RenderBatch {
 	public List<ModelInstance> instances = new ArrayList<>();
 	public int count = 0;
 
-	public abstract void render();
+	public abstract void renderOpaque();
+
+	public abstract void renderTranslucent();
 
 	public RenderBatch(final Scene scene, final Model<?> model, final TextureMapper textureMapper) {
 		this.scene = scene;

@@ -35,6 +35,10 @@ public abstract class AbstractCAbilityTypeDefinition<TYPE_LEVEL_DATA extends CAb
 		return getBuffId(EFFECT, abilityEditorData, level);
 	}
 
+	public static final War3ID getLightningId(final MutableGameObject abilityEditorData, final int level) {
+		return getBuffId(LIGHTNING, abilityEditorData, level);
+	}
+
 	private static final War3ID getBuffId(final War3ID metaKey, final MutableGameObject abilityEditorData,
 			final int level) {
 		final String buffIdString = abilityEditorData.getFieldAsString(metaKey, level);

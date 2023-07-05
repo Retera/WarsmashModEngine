@@ -61,9 +61,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManag
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
 public class CSimulation implements CPlayerAPI {
@@ -353,6 +351,10 @@ public class CSimulation implements CPlayerAPI {
 		return projectile;
 	}
 
+	public SimulationRenderComponentLightning createLightning(CUnit source, War3ID lightningId, CUnit target) {
+		return this.simulationRenderController.createLightning(this, lightningId, source, target);
+	}
+
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
 		this.simulationRenderController.createInstantAttackEffect(this, source, attack, target);
 	}
@@ -631,7 +633,7 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType);
 	}
 
-	public SimulationRenderComponent createSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+	public SimulationRenderComponentModel createSpellEffectOnUnit(final CUnit unit, final War3ID alias,
 			final CEffectType effectType, final int index) {
 		return this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType, index);
 	}
@@ -689,14 +691,17 @@ public class CSimulation implements CPlayerAPI {
 		cItem.setLife(this, 0);
 	}
 
-	public SimulationRenderComponent createSpellEffectOverDestructable(final CUnit source, final CDestructable target,
-			final War3ID alias, final float artAttachmentHeight) {
+	public SimulationRenderComponentModel createSpellEffectOverDestructable(final CUnit source,
+																			final CDestructable target,
+																			final War3ID alias,
+																			final float artAttachmentHeight) {
 		return this.simulationRenderController.createSpellEffectOverDestructable(source, target, alias,
 				artAttachmentHeight);
 	}
 
-	public SimulationRenderComponent spawnSpellEffectOnPoint(final float x, final float y, final float facing,
-			final War3ID alias, final CEffectType effectType, final int index) {
+	public SimulationRenderComponentModel spawnSpellEffectOnPoint(final float x, final float y, final float facing,
+																  final War3ID alias, final CEffectType effectType,
+																  final int index) {
 		return this.simulationRenderController.spawnSpellEffectOnPoint(x, y, facing, alias, effectType, index);
 	}
 

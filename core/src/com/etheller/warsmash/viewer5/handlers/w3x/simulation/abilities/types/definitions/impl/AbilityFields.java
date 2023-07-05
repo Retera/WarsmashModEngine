@@ -21,6 +21,8 @@ public interface AbilityFields {
 	public static final War3ID PROJECTILE_SPEED = War3ID.fromString("amsp");
 	public static final War3ID PROJECTILE_HOMING_ENABLED = War3ID.fromString("amho");
 
+	public static final War3ID LIGHTNING = War3ID.fromString("alig");
+
 
 	final class FingerOfDeathArchimonde {
 		private FingerOfDeathArchimonde() {}

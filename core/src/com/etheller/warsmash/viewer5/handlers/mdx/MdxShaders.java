@@ -1031,4 +1031,25 @@ public class MdxShaders {
 			"      }\r\n" + //
 			"      gl_FragColor = color;\r\n" + //
 			"    }";
+
+	public static final String vsLightning = "\r\n" + //
+			"    uniform mat4 u_VP;\r\n" + //
+			"    attribute vec3 a_position;\r\n" + //
+			"    attribute vec2 a_uv;\r\n" + //
+			"    attribute float a_outwardHeight;\r\n" + //
+			"    uniform vec3 u_cameraZ;\r\n" + //
+			"    varying vec2 v_uv;\r\n" + //
+			"    void main() {\r\n" + //
+			"      v_uv = a_uv;\r\n" + //
+			"      gl_Position = u_VP * vec4(a_position, 1.0);\r\n" + //
+			"    }\r\n";
+
+	public static final String fsLightning = "\r\n" + //
+			"    precision mediump float;\r\n" + //
+			"    uniform sampler2D u_texture;\r\n" + //
+			"    varying vec2 v_uv;\r\n" + //
+			"    void main() {\r\n" + //
+			"      vec4 color = texture2D(u_texture, v_uv);\r\n" + //
+			"      gl_FragColor = color;\r\n" + //
+			"    }\r\n";
 }

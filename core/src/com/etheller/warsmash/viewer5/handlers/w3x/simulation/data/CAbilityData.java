@@ -111,6 +111,8 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AEim"), new CAbilityTypeDefinitionImmolation());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AEmb"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityManaBurn(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOcl"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityManaBurn(handleId, alias)));
 
 		// Entangled Mine:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aenc"),

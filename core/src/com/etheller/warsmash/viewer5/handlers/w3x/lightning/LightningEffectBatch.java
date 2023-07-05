@@ -21,11 +21,12 @@ import java.util.List;
 
 public class LightningEffectBatch extends RenderBatch {
 	private static final int LIGHTNING_EFFECT_STRIDE_BYTES = 24;
-	private static final int LIGHTNING_EFFECT_INSTANCE_BYTES = LIGHTNING_EFFECT_STRIDE_BYTES * 4;
+	private static final int LIGHTNING_EFFECT_INSTANCE_BYTES = LIGHTNING_EFFECT_STRIDE_BYTES * 6;
 	private static final int LIGHTNING_EFFECT_INDEX_STRIDE_BYTES = 3 * 2;
-	private static final int LIGHTNING_EFFECT_INDEX_INSTANCE_BYTES = LIGHTNING_EFFECT_INDEX_STRIDE_BYTES * 2;
+	private static final int LIGHTNING_EFFECT_INDEX_INSTANCE_BYTES = LIGHTNING_EFFECT_INDEX_STRIDE_BYTES * 4;
 	private static final Matrix4 transposeHeap = new Matrix4();
-	private static final Vector3 lineHeap = new Vector3();
+	protected static final Vector3 lineHeap = new Vector3();
+	private static final Vector3 crossHeap = new Vector3();
 	private static final Vector3 vertexHeap = new Vector3();
 	private ShortBuffer indexBuffer;
 	public LightningEffectBatch(Scene scene, Model<?> model, TextureMapper textureMapper) {
@@ -58,55 +59,85 @@ public class LightningEffectBatch extends RenderBatch {
 
 			lineHeap.set(target.worldLocation);
 			lineHeap.sub(source.worldLocation);
-			lineHeap.crs(this.scene.camera.billboardedVectors[6]);
+			float length = lineHeap.len();
+			crossHeap.set(lineHeap).crs(this.scene.camera.billboardedVectors[6]);
+			crossHeap.nor();
+			float maxWidth = Math.min(length/2, model.getWidth());
 			lineHeap.nor();
 
+			float texCoordScaleOffset = source.textureAnimationPosition;
+			float texCoordUOffset = maxWidth / length;
+
+			floatView.put(offset++, source.worldLocation.x);
+			floatView.put(offset++, source.worldLocation.y);
+			floatView.put(offset++, source.worldLocation.z);
+			floatView.put(offset++, -texCoordScaleOffset); // u
+			floatView.put(offset++, 0.5f); // v
+			floatView.put(offset++, 0);
+
 			vertexHeap.set(source.worldLocation);
-			vertexHeap.mulAdd(lineHeap, model.getWidth());
+			vertexHeap.mulAdd(lineHeap, maxWidth);
+			vertexHeap.mulAdd(crossHeap, maxWidth);
 
 			floatView.put(offset++, vertexHeap.x);
 			floatView.put(offset++, vertexHeap.y);
 			floatView.put(offset++, vertexHeap.z);
-			floatView.put(offset++, 0); // u
+			floatView.put(offset++, texCoordUOffset - texCoordScaleOffset); // u
 			floatView.put(offset++, 0); // v
-			floatView.put(offset++, model.getWidth());
+			floatView.put(offset++, maxWidth);
 
 			vertexHeap.set(source.worldLocation);
-			vertexHeap.mulAdd(lineHeap, -model.getWidth());
+			vertexHeap.mulAdd(lineHeap, maxWidth);
+			vertexHeap.mulAdd(crossHeap, -maxWidth);
 
 			floatView.put(offset++, vertexHeap.x);
 			floatView.put(offset++, vertexHeap.y);
 			floatView.put(offset++, vertexHeap.z);
-			floatView.put(offset++, 0); // u
+			floatView.put(offset++, texCoordUOffset - texCoordScaleOffset); // u
 			floatView.put(offset++, 1); // v
-			floatView.put(offset++, -model.getWidth());
+			floatView.put(offset++, -maxWidth);
 
 			vertexHeap.set(target.worldLocation);
-			vertexHeap.mulAdd(lineHeap, model.getWidth());
+			vertexHeap.mulAdd(lineHeap, -maxWidth);
+			vertexHeap.mulAdd(crossHeap, maxWidth);
 
 			floatView.put(offset++, vertexHeap.x);
 			floatView.put(offset++, vertexHeap.y);
 			floatView.put(offset++, vertexHeap.z);
-			floatView.put(offset++, 1); // u
+			floatView.put(offset++, 1 - texCoordUOffset - texCoordScaleOffset); // u
 			floatView.put(offset++, 0); // v
-			floatView.put(offset++, model.getWidth());
+			floatView.put(offset++, maxWidth);
 
 			vertexHeap.set(target.worldLocation);
-			vertexHeap.mulAdd(lineHeap, -model.getWidth());
+			vertexHeap.mulAdd(lineHeap, -maxWidth);
+			vertexHeap.mulAdd(crossHeap, -maxWidth);
 
 			floatView.put(offset++, vertexHeap.x);
 			floatView.put(offset++, vertexHeap.y);
 			floatView.put(offset++, vertexHeap.z);
-			floatView.put(offset++, 1); // u
+			floatView.put(offset++, 1 - texCoordUOffset - texCoordScaleOffset); // u
 			floatView.put(offset++, 1); // v
-			floatView.put(offset++, -model.getWidth());
+			floatView.put(offset++, -maxWidth);
 
-			int indexBufferGroupIdx = i * 4;
+			floatView.put(offset++, target.worldLocation.x);
+			floatView.put(offset++, target.worldLocation.y);
+			floatView.put(offset++, target.worldLocation.z);
+			floatView.put(offset++, 1 - texCoordScaleOffset); // u
+			floatView.put(offset++, 0.5f); // v
+			floatView.put(offset++, 0);
+
+			int indexBufferGroupIdx = i * 6;
 			indexBuffer.put((short) (indexBufferGroupIdx + 0));
 			indexBuffer.put((short) (indexBufferGroupIdx + 2));
 			indexBuffer.put((short) (indexBufferGroupIdx + 1));
-			indexBuffer.put((short) (indexBufferGroupIdx + 1));
 			indexBuffer.put((short) (indexBufferGroupIdx + 2));
+			indexBuffer.put((short) (indexBufferGroupIdx + 4));
+			indexBuffer.put((short) (indexBufferGroupIdx + 1));
+			indexBuffer.put((short) (indexBufferGroupIdx + 1));
+			indexBuffer.put((short) (indexBufferGroupIdx + 4));
+			indexBuffer.put((short) (indexBufferGroupIdx + 3));
+			indexBuffer.put((short) (indexBufferGroupIdx + 4));
+			indexBuffer.put((short) (indexBufferGroupIdx + 5));
 			indexBuffer.put((short) (indexBufferGroupIdx + 3));
 		}
 
@@ -122,10 +153,9 @@ public class LightningEffectBatch extends RenderBatch {
 	public void add(ModelInstance instance) {
 		final LightningEffectNode lightningEffectNode = (LightningEffectNode)instance;
 		LightningEffectNode source = lightningEffectNode.getSource();
-		if(!source.showing) {
+		if(!source.showing && !source.friend.showing) {
 			super.add(source);
-			source.showing = true;
-			source.friend.showing = true;
+			lightningEffectNode.showing = true;
 		}
 	}
 
@@ -196,7 +226,7 @@ public class LightningEffectBatch extends RenderBatch {
 
 			gl.glDepthMask(false);
 
-			gl.glDrawElements(GL20.GL_TRIANGLES, count * 6, GL20.GL_UNSIGNED_SHORT, 0);
+			gl.glDrawElements(GL20.GL_TRIANGLES, count * 12, GL20.GL_UNSIGNED_SHORT, 0);
 		}
 	}
 }

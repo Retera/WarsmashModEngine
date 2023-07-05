@@ -1275,14 +1275,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.terrain.createWaves();
 	}
 
-	private void createLightning(War3ID lightningId, RenderUnit renderPeerSource, RenderWidget renderPeerTarget) {
+	public void createLightning(War3ID lightningId, RenderUnit renderPeerSource, RenderWidget renderPeerTarget) {
 		LightningEffectModel lightningEffectModel = lightningTypeToModel.get(lightningId);
 		if(lightningEffectModel != null) {
 			LightningEffectNode source = (LightningEffectNode)lightningEffectModel.addInstance();
 			LightningEffectNode target = (LightningEffectNode)lightningEffectModel.addInstance();
 			source.setFriend(target);
 			target.setFriend(source);
-			target.paused = true; // target denotes where it is but is a paused thing
+			source.setSource(true);
 			source.setParent(renderPeerSource.getInstance());
 			source.setLocation(0, 0, simulation.getUnitData().getProjectileLaunchZ(renderPeerSource.getSimulationUnit().getTypeId()));
 			target.setParent(renderPeerTarget.getInstance());
@@ -1290,6 +1290,22 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			source.setScene(worldScene);
 			target.setScene(worldScene);
 		}
+	}
+
+	public SimulationRenderComponentLightningMovable createLightning(War3ID lightningId, float x1, float y1, float z1, float x2, float y2, float z2) {
+		LightningEffectModel lightningEffectModel = lightningTypeToModel.get(lightningId);
+		if(lightningEffectModel != null) {
+			LightningEffectNode source = (LightningEffectNode)lightningEffectModel.addInstance();
+			LightningEffectNode target = (LightningEffectNode)lightningEffectModel.addInstance();
+			source.setFriend(target);
+			target.setFriend(source);
+			source.setSource(true);
+			source.setLocation(x1, y1, z1);
+			target.setLocation(x2, y2, z2);
+			source.setScene(worldScene);
+			target.setScene(worldScene);
+		}
+		return SimulationRenderComponentLightningMovable.DO_NOTHING;
 	}
 
 	public void spawnFxOnOrigin(final RenderUnit renderUnit, final String heroLevelUpArt) {

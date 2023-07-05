@@ -2345,6 +2345,27 @@ public class Jass2 {
 				final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 				return new HandleJassValue(effectType, war3MapViewer.spawnSpellEffectEx((float) x, (float) y, 0 /* facing */, new War3ID(rawcode), whichEffectType, 0));
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("AddLightning", (arguments, globalScope, triggerScope) -> {
+				final String rawcode = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+				final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+				final double x2 = arguments.get(4).visit(RealJassValueVisitor.getInstance());
+				final double y2 = arguments.get(5).visit(RealJassValueVisitor.getInstance());
+				return new HandleJassValue(lightningType, war3MapViewer.createLightning(War3ID.fromString(rawcode), (float) x,
+						(float) y, war3MapViewer.terrain.getGroundHeight((float) x, (float) y), (float) x2, (float) y2,
+						war3MapViewer.terrain.getGroundHeight((float) x2, (float) y2)));
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("AddLightningEx", (arguments, globalScope, triggerScope) -> {
+				final String rawcode = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+				final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+				final double z = arguments.get(4).visit(RealJassValueVisitor.getInstance());
+				final double x2 = arguments.get(5).visit(RealJassValueVisitor.getInstance());
+				final double y2 = arguments.get(6).visit(RealJassValueVisitor.getInstance());
+				final double z2 = arguments.get(7).visit(RealJassValueVisitor.getInstance());
+				return new HandleJassValue(lightningType, war3MapViewer.createLightning(War3ID.fromString(rawcode), (float) x,
+						(float) y, (float) z, (float) x2, (float) y2, (float) z2));
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitFacing", (arguments, globalScope, triggerScope) -> {
 				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 				final double facing = arguments.get(1).visit(RealJassValueVisitor.getInstance());

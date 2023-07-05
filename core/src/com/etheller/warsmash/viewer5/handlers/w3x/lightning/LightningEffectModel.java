@@ -99,6 +99,7 @@ public class LightningEffectModel extends Model<LightningEffectModelHandler> {
 
 		try {
 			this.texture = (Texture) viewer.load(path, pathSolver, solverParams);
+			this.texture.setWrapS(true);
 
 			this.bounds.fromExtents(new float[]{-width, -width, -width}, new float[]{width, width, width}, width);
 

@@ -1,11 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain;
 
-import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityNoTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffStun;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -16,14 +14,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CAbilityWarStomp extends CAbilityNoTargetSpellBase {
 
 	private float damage;
 	private float areaOfEffect;
 	private War3ID buffId;
-	private float duration;
 
 	public CAbilityWarStomp(int handleId, War3ID alias) {
 		super(handleId, alias);
@@ -36,10 +32,9 @@ public class CAbilityWarStomp extends CAbilityNoTargetSpellBase {
 
 	@Override
 	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		damage = worldEditorAbility.getFieldAsFloat(AbilityFields.WarStompNeutralHostile.DAMAGE, level);
-		areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.WarStompNeutralHostile.DAMAGE, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 	}
 
 	@Override
@@ -47,7 +42,7 @@ public class CAbilityWarStomp extends CAbilityNoTargetSpellBase {
 		simulation.getWorldCollision().enumUnitsInRange(caster.getX(), caster.getY(), areaOfEffect, (enumUnit) -> {
 			if (!enumUnit.isUnitAlly(simulation.getPlayer(caster.getPlayerIndex())) && enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
 				enumUnit.add(simulation, new CBuffStun(simulation.getHandleIdAllocator().createId(),
-						CAbilityWarStomp.this.buffId, CAbilityWarStomp.this.duration));
+						CAbilityWarStomp.this.buffId, getDurationForTarget(enumUnit)));
 				enumUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.UNIVERSAL,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), CAbilityWarStomp.this.damage);
 			}

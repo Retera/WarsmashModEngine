@@ -12,13 +12,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmartActiveAbility implements CAbilitySpell {
 	private int manaCost;
@@ -29,6 +30,8 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	private float cooldownRemaining;
 	private PrimaryTag castingPrimaryTag;
 	private EnumSet<SecondaryTag> castingSecondaryTags;
+	private float duration;
+	private float heroDuration;
 
 	public CAbilitySpellBase(final int handleId, final War3ID alias) {
 		super(handleId, alias);
@@ -56,8 +59,30 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		if (this.castingSecondaryTags.isEmpty()) {
 			this.castingSecondaryTags = SequenceUtils.SPELL;
 		}
+		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, 0);
+		this.heroDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.HERO_DURATION, 0);
 
 		populateData(worldEditorAbility, level);
+	}
+
+	public float getDurationForTarget(CWidget target) {
+		CUnit unit = target.visit(AbilityTargetVisitor.UNIT);
+		return getDurationForTarget(unit);
+	}
+
+	public float getDurationForTarget(CUnit targetUnit) {
+		if(targetUnit != null && targetUnit.isHero()) {
+			return getHeroDuration();
+		}
+		return getDuration();
+	}
+
+	public float getDuration() {
+		return duration;
+	}
+
+	public float getHeroDuration() {
+		return heroDuration;
 	}
 
 	public abstract void populateData(MutableGameObject worldEditorAbility, int level);

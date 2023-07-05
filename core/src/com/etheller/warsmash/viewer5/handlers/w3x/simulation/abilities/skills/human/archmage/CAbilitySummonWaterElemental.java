@@ -65,7 +65,7 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 		return buffId;
 	}
 
-	public float getDuration() {
+	public float getDurationForTarget() {
 		return duration;
 	}
 

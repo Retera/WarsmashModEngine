@@ -86,7 +86,7 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 		return this.buffId;
 	}
 
-	public float getDuration() {
+	public float getDurationForTarget() {
 		return this.duration;
 	}
 

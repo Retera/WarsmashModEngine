@@ -118,7 +118,7 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 			if (enumUnit == this.target) {
 				return false;
 			}
-			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
 				if (this.launched) {
 					throw new IllegalStateException("already launched");
 				}

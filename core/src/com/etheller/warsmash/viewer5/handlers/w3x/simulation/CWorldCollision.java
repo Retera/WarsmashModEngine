@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Moveme
 
 public class CWorldCollision {
 	private static final float MINIMUM_COLLISION_SIZE = 0.001f /* THIS IS TO STOP QUADTREE FROM BUSTING */;
+	private static final Rectangle tempRect = new Rectangle();
 	private final Quadtree<CUnit> groundUnitCollision;
 	private final Quadtree<CUnit> airUnitCollision;
 	private final Quadtree<CUnit> seaUnitCollision;
@@ -125,8 +126,21 @@ public class CWorldCollision {
 	}
 
 	public void enumUnitsInRect(final Rectangle rect, final CUnitEnumFunction callback) {
-		this.eachUnitOnlyOnceIntersector.reset(callback);
-		this.anyUnitEnumerableCollision.intersect(rect, this.eachUnitOnlyOnceIntersector);
+		this.anyUnitEnumerableCollision.intersect(rect, (unit) -> {
+			if(unit.isHidden()) {
+				return false;
+			}
+			return callback.call(unit);
+		});
+	}
+
+	public void enumUnitsInRange(float x, float y, float radius, final CUnitEnumFunction callback) {
+		enumUnitsInRect(tempRect.set(x - radius, y - radius, radius * 2, radius * 2), (enumUnit) -> {
+			if (enumUnit.canReach(x, y, radius)) {
+				return callback.call(enumUnit);
+			}
+			return false;
+		});
 	}
 
 	public void enumBuildingsInRect(final Rectangle rect, final QuadtreeIntersector<CUnit> callback) {

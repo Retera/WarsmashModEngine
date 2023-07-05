@@ -63,7 +63,7 @@ public class CAbilityAttack extends AbstractCAbility {
 			boolean canTarget = false;
 			CUnitAttack lastUnavailableAttack = null;
 			for (final CUnitAttack attack : unit.getCurrentAttacks()) {
-				if (target.canBeTargetedBy(game, unit, attack.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+				if (target.canBeTargetedBy(game, unit, attack.getTargetsAllowed())) {
 					canTarget = true;
 					break;
 				} else {
@@ -147,7 +147,7 @@ public class CAbilityAttack extends AbstractCAbility {
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getCurrentAttacks()) {
-			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
 				behavior = caster.getAttackBehavior().reset(OrderIds.attack, attack, target, false,
 						CBehaviorAttackListener.DO_NOTHING);
 				break;

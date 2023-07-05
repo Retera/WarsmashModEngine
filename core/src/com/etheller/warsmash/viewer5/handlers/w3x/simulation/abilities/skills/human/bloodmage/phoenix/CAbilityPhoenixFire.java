@@ -56,7 +56,7 @@ public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 			game.getWorldCollision().enumUnitsInRect(new Rectangle(unit.getX() - this.areaOfEffect,
 					unit.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2), enumUnit -> {
 						if (unit.canReach(enumUnit, this.areaOfEffect)
-								&& enumUnit.canBeTargetedBy(game, unit, this.targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+								&& enumUnit.canBeTargetedBy(game, unit, this.targetsAllowed)) {
 							unit.getCurrentAttacks().get(0).launch(game, unit, enumUnit, this.initialDamage,
 									CUnitAttackListener.DO_NOTHING);
 							this.lastAttackTurnTick = gameTurnTick;

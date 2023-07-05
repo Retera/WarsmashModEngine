@@ -1206,7 +1206,7 @@ public class CUnit extends CWidget {
 				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(), CAllianceType.PASSIVE)
 						&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 					for (final CUnitAttack attack : getCurrentAttacks()) {
-						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
 							this.currentBehavior = getAttackBehavior().reset(OrderIds.attack, attack, source, false,
 									CBehaviorAttackListener.DO_NOTHING);
 							this.currentBehavior.begin(simulation);
@@ -1643,7 +1643,7 @@ public class CUnit extends CWidget {
 					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()) {
 				for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
-							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())
+							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
 							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
 						if (this.source.currentBehavior != null) {
 							this.source.currentBehavior.end(this.game, false);

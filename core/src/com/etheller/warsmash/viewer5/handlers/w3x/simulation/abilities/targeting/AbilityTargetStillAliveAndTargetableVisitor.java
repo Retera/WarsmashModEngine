@@ -27,18 +27,18 @@ public final class AbilityTargetStillAliveAndTargetableVisitor implements Abilit
 	@Override
 	public Boolean accept(final CUnit target) {
 		return !target.isDead() && !target.isHidden()
-				&& target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset());
+				&& target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed);
 	}
 
 	@Override
 	public Boolean accept(final CDestructable target) {
-		return !target.isDead() && target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset());
+		return !target.isDead() && target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed);
 	}
 
 	@Override
 	public Boolean accept(final CItem target) {
 		return !target.isDead() && !target.isHidden()
-				&& target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset());
+				&& target.canBeTargetedBy(this.simulation, this.unit, this.targetsAllowed);
 	}
 
 }

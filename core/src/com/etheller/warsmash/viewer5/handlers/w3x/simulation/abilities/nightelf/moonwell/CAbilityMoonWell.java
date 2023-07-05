@@ -112,7 +112,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 					@Override
 					public boolean call(final CUnit enumUnit) {
 						if (unit.canReach(enumUnit, castRange)
-								&& enumUnit.canBeTargetedBy(game, unit, getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+								&& enumUnit.canBeTargetedBy(game, unit, getTargetsAllowed())) {
 							unit.order(game, getBaseOrderId(), enumUnit);
 						}
 						return false;

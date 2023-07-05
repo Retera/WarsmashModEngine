@@ -155,7 +155,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 
 		@Override
 		public boolean call(final CUnit enumUnit) {
-			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
 				damageTarget(enumUnit);
 				if (enumUnit == this.target) {
 					this.hitTarget = true;
@@ -166,7 +166,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 
 		@Override
 		public boolean call(final CDestructable enumDestructable) {
-			if (enumDestructable.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+			if (enumDestructable.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
 				damageTarget(enumDestructable);
 				if (enumDestructable == this.target) {
 					this.hitTarget = true;

@@ -98,7 +98,7 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 									public boolean call(final CUnit possibleTarget) {
 										if (possibleTarget.canReach(target, CAbilityBlizzard.this.areaOfEffect)
 												&& possibleTarget.canBeTargetedBy(simulation, unit,
-														getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+														getTargetsAllowed())) {
 											damageTargets.add(possibleTarget);
 										}
 										return false;

@@ -138,7 +138,7 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 					new CUnitEnumFunction() {
 				@Override
 				public boolean call(final CUnit possibleTarget) {
-					if (possibleTarget.canReach(target, CAbilityClusterRockets.this.areaOfEffect) && possibleTarget.canBeTargetedBy(simulation, unit, getTargetsAllowed(), BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset())) {
+					if (possibleTarget.canReach(target, CAbilityClusterRockets.this.areaOfEffect) && possibleTarget.canBeTargetedBy(simulation, unit, getTargetsAllowed())) {
 						damageTargets.add(possibleTarget);
 					}
 					return false;

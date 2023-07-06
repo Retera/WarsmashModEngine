@@ -61,7 +61,9 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 		final int backswingTicks = (int) (this.unit.getUnitType().getCastBackswingPoint()
 				/ WarsmashConstants.SIMULATION_STEP_TIME);
 		if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
-			if (!this.doneEffect) {
+			boolean wasEffectDone = this.doneEffect;
+			boolean wasChanneling = this.channeling;
+			if (!wasEffectDone) {
 				this.doneEffect = true;
 				if (!this.unit.chargeMana(this.ability.getManaCost())) {
 					simulation.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(), CommandStringErrorKeys.NOT_ENOUGH_MANA);
@@ -70,8 +72,16 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 				this.ability.setCooldownRemaining(this.ability.getCooldown());
 				this.unit.fireCooldownsChangedEvent();
 				this.channeling = this.ability.doEffect(simulation, this.unit, this.target);
+				if (this.channeling) {
+					simulation.unitLoopSoundEffectEvent(this.unit, this.ability.getAlias());
+				} else {
+					simulation.unitSoundEffectEvent(this.unit, this.ability.getAlias());
+				}
 			}
 			this.channeling = this.channeling && this.ability.doChannelTick(simulation, this.unit, this.target);
+			if (wasEffectDone && wasChanneling && !this.channeling) {
+				simulation.unitStopSoundEffectEvent(this.unit, this.ability.getAlias());
+			}
 		}
 		if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
 			return this.unit.pollNextOrderBehavior(simulation);

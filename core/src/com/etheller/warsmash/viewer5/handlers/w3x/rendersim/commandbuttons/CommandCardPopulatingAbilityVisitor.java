@@ -31,6 +31,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
@@ -157,6 +158,18 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					ability.getHandleId(), ability.getBaseOrderId(),
 					autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn, false,
 					ability.getUIGoldCost(), ability.getUILumberCost(), 0, ability.getUIManaCost(), -1);
+		}
+		return null;
+	}
+
+	@Override
+	public Void accept(GenericSingleIconPassiveAbility ability) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
+			final AbilityUI abilityUI = this.abilityDataUI.getUI(ability.getAlias());
+			if (abilityUI != null) {
+				addCommandButton(ability, abilityUI.getOnIconUI(ability.getLevel() - 1), ability.getHandleId(), 0,
+						0, false, false);
+			}
 		}
 		return null;
 	}
@@ -477,7 +490,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	@Override
 	public Void accept(final CAbilitySellItems ability) {
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
-			int itemIndex = 0;
+			int itemIndex = 1;
 			for (final War3ID unitType : ability.getItemsSold()) {
 				final IconUI unitUI = this.abilityDataUI.getItemUI(unitType).getIconUI();
 				if (unitUI != null) {

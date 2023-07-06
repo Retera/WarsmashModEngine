@@ -20,7 +20,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnitId;
 	private int summonUnitCount;
 	private War3ID buffId;
-	private float duration;
 	private float areaOfEffect;
 
 	// TODO maybe "lastSummonHandleIds" instead, for ease of use with saving game,
@@ -40,7 +39,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.FeralSpirit.NUMBER_OF_SUMMONED_UNITS,
 				level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
 	}
 
@@ -66,7 +64,7 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration()));
 			summonedUnit.setExplodesOnDeath(true);
 			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.SPECIAL);
 			this.lastSummonUnits.add(summonedUnit);
@@ -86,10 +84,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 		return this.buffId;
 	}
 
-	public float getDurationForTarget() {
-		return this.duration;
-	}
-
 	public float getAreaOfEffect() {
 		return this.areaOfEffect;
 	}
@@ -104,10 +98,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 
 	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;
-	}
-
-	public void setDuration(final float duration) {
-		this.duration = duration;
 	}
 
 	public void setAreaOfEffect(final float areaOfEffect) {

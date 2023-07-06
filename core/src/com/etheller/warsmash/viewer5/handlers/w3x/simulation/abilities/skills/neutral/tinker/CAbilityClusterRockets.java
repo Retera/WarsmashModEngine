@@ -45,7 +45,6 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 	private int missileLaunchingEndTick;
 	private int missileLaunchDurationTicks;
 	private War3ID buffId;
-	private float duration;
 
 	public CAbilityClusterRockets(final int handleId, final War3ID alias) {
 		super(handleId, alias);
@@ -64,7 +63,6 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 		setCastingTime(0); // dont use the casting time field normally
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 	}
 
 	@Override
@@ -143,7 +141,7 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 				// stun
 				for (CUnit damageTarget : damageTargets) {
 					damageTarget.add(simulation, new CBuffStun(simulation.getHandleIdAllocator().createId(), buffId,
-							duration));
+							getDurationForTarget(damageTarget)));
 				}
 			} else {
 				float damagePerTarget = this.damage;

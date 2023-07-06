@@ -16,7 +16,6 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnitId;
 	private int summonUnitCount;
 	private War3ID buffId;
-	private float duration;
 	private float areaOfEffect;
 
 	public CAbilitySummonWaterElemental(int handleId, War3ID alias) {
@@ -29,7 +28,6 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 				.fromString(worldEditorAbility.getFieldAsString(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_TYPE, level));
 		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_COUNT, level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
 	}
 
@@ -48,7 +46,7 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 			CUnit summonedUnit = simulation.createUnitSimple(summonUnitId, unit.getPlayerIndex(), x, y, facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, duration));
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, getDuration()));
 		}
 		return false;
 	}
@@ -65,10 +63,6 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 		return buffId;
 	}
 
-	public float getDurationForTarget() {
-		return duration;
-	}
-
 	public float getAreaOfEffect() {
 		return areaOfEffect;
 	}
@@ -83,10 +77,6 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 
 	public void setBuffId(War3ID buffId) {
 		this.buffId = buffId;
-	}
-
-	public void setDuration(float duration) {
-		this.duration = duration;
 	}
 
 	public void setAreaOfEffect(float areaOfEffect) {

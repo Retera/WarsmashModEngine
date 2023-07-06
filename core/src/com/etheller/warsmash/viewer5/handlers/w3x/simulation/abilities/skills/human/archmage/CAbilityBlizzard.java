@@ -125,6 +125,7 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 							target.getX() + ((float) StrictMath.cos(randomAngle) * randomDistance),
 							target.getY() + ((float) StrictMath.sin(randomAngle) * randomDistance), 0, this.effectId,
 							CEffectType.EFFECT, 0).remove();
+					simulation.unitSoundEffectEvent(caster, this.effectId);
 				}
 				waveDelay = 0.80f;
 				this.waveForDamage = true;

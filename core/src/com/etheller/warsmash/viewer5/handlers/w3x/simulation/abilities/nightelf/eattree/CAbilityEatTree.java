@@ -24,7 +24,6 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	private float ripDelay;
 	private float eatDelay;
 	private float hitPointsGained;
-	private float duration;
 	private War3ID buffId;
 
 	private int ripEndTick = 0;
@@ -45,7 +44,6 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 		ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.RIP_DELAY, level);
 		eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.EAT_DELAY, level);
 		hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.HIT_POINTS_GAINED, level);
-		duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 		buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		setCastingSecondaryTags(SequenceUtils.SPELL_EATTREE);
 	}
@@ -100,8 +98,8 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 			if (!ripComplete) {
 				final CDestructable targetDest = target.visit(AbilityTargetVisitor.DESTRUCTABLE);
 				if (targetDest != null) {
-//					unit.add(simulation, new CBuffEatTree(simulation.getHandleIdAllocator().createId(), buffId, 1.0f,
-//							duration, hitPointsGained));
+					unit.add(simulation, new CBuffEatTree(simulation.getHandleIdAllocator().createId(), buffId, 1.0f,
+							getDuration(), hitPointsGained));
 					targetDest.setLife(simulation, 0);
 					simulation.createSpellEffectOnUnit(unit, getAlias(), CEffectType.SPECIAL);
 				}

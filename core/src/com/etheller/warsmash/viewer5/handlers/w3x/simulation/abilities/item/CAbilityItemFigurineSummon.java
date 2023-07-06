@@ -19,7 +19,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnit2Id;
 	private int summonUnit2Count;
 	private War3ID buffId;
-	private float duration;
 	private float areaOfEffect;
 
 	public CAbilityItemFigurineSummon(final int handleId, final War3ID alias) {
@@ -39,7 +38,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemFigurineSummon.SUMMON_2_AMOUNT,
 				level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
 	}
 
@@ -59,7 +57,7 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration()));
 			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
 		for (int i = 0; i < this.summonUnit2Count; i++) {
@@ -67,7 +65,7 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration()));
 			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
 		return false;
@@ -93,9 +91,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 		return this.buffId;
 	}
 
-	public float getDurationForTarget() {
-		return this.duration;
-	}
 
 	public float getAreaOfEffect() {
 		return this.areaOfEffect;
@@ -119,10 +114,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 
 	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;
-	}
-
-	public void setDuration(final float duration) {
-		this.duration = duration;
 	}
 
 	public void setAreaOfEffect(final float areaOfEffect) {

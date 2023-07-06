@@ -138,6 +138,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
@@ -2007,6 +2008,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public Void accept(final CAbilityGenericDoNothing ability) {
+			handleTargetCursor(ability);
+			return null;
+		}
+
+		@Override
+		public Void accept(GenericSingleIconPassiveAbility ability) {
 			handleTargetCursor(ability);
 			return null;
 		}

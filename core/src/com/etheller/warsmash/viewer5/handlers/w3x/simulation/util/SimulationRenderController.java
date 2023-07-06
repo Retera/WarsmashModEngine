@@ -67,7 +67,7 @@ public interface SimulationRenderController {
 
 	void unitRepositioned(CUnit cUnit);
 
-	void spawnGainResourceTextTag(CUnit gainingUnit, ResourceType resourceType, int amount);
+	void spawnTextTag(CUnit unit, TextTagConfigType configType, int displayAmount);
 
 	void spawnEffectOnUnit(CUnit unit, String effectPath);
 

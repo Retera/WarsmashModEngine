@@ -9,6 +9,13 @@ public interface SimulationRenderComponentLightning extends SimulationRenderComp
 		@Override
 		public void setColor(float r, float g, float b, float a) {
 		}
+
+		@Override
+		public boolean isRemoved() {
+			return true;
+		}
 	};
 	void setColor(float r, float g, float b, float a);
+
+	boolean isRemoved();
 }

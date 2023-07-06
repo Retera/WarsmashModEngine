@@ -46,7 +46,6 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 	private int missileLaunchDurationTicks;
 	private War3ID buffId;
 	private float duration;
-	private boolean effectStarted = false;
 
 	public CAbilityClusterRockets(final int handleId, final War3ID alias) {
 		super(handleId, alias);
@@ -74,37 +73,33 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-						   final AbilityPointTarget point) {
-		this.effectStarted = false;
-		return super.begin(game, caster, orderId, point);
+	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+		int gameTurnTick = simulation.getGameTurnTick();
+		this.currentWave = 0;
+		this.currentMissile = 0;
+		int missileTravelTicks =
+				(int) StrictMath.ceil(MISSILE_ARRIVAL_DELAY / WarsmashConstants.SIMULATION_STEP_TIME);
+		int durationTicks = (int) StrictMath.ceil(effectDuration / WarsmashConstants.SIMULATION_STEP_TIME);
+		this.nextWaveTick = gameTurnTick + missileTravelTicks;
+		this.nextMissileTick = gameTurnTick;
+		this.effectDurationEndTick = nextWaveTick + durationTicks;
+
+		int expectedMissileCount =
+				(int) StrictMath.ceil((effectDuration) / PER_ROCKET_DELAY);
+		missileLaunchingEndTick = gameTurnTick + durationTicks;
+		if (expectedMissileCount > this.missileCount) {
+			int shortenedDurationTicks =
+					this.missileCount * (int) StrictMath.ceil(PER_ROCKET_DELAY / WarsmashConstants.SIMULATION_STEP_TIME);
+			missileLaunchingEndTick = gameTurnTick + shortenedDurationTicks;
+			durationTicks = shortenedDurationTicks;
+		}
+		missileLaunchDurationTicks = durationTicks;
+		return true;
 	}
 
 	@Override
-	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+	public boolean doChannelTick(CSimulation simulation, CUnit unit, AbilityTarget target) {
 		int gameTurnTick = simulation.getGameTurnTick();
-		if (!effectStarted) {
-			this.currentWave = 0;
-			this.currentMissile = 0;
-			int missileTravelTicks =
-					(int) StrictMath.ceil(MISSILE_ARRIVAL_DELAY / WarsmashConstants.SIMULATION_STEP_TIME);
-			int durationTicks = (int) StrictMath.ceil(effectDuration / WarsmashConstants.SIMULATION_STEP_TIME);
-			this.nextWaveTick = gameTurnTick + missileTravelTicks;
-			this.nextMissileTick = gameTurnTick;
-			this.effectDurationEndTick = nextWaveTick + durationTicks;
-
-			int expectedMissileCount =
-					(int) StrictMath.ceil((effectDuration) / PER_ROCKET_DELAY);
-			missileLaunchingEndTick = gameTurnTick + durationTicks;
-			if (expectedMissileCount > this.missileCount) {
-				int shortenedDurationTicks =
-						this.missileCount * (int) StrictMath.ceil(PER_ROCKET_DELAY / WarsmashConstants.SIMULATION_STEP_TIME);
-				missileLaunchingEndTick = gameTurnTick + shortenedDurationTicks;
-				durationTicks = shortenedDurationTicks;
-			}
-			missileLaunchDurationTicks = durationTicks;
-			effectStarted = true;
-		}
 		if (gameTurnTick >= this.nextMissileTick && this.currentMissile < this.missileCount) {
 			final Random seededRandom = simulation.getSeededRandom();
 			float elapsedTimeRatio = 1.0f - (missileLaunchingEndTick - gameTurnTick) / (float) missileLaunchDurationTicks;
@@ -134,16 +129,16 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 			this.currentWave++;
 			List<CUnit> damageTargets = new ArrayList<>();
 			simulation.getWorldCollision().enumUnitsInRect(this.recycleRect.set(target.getX() - this.areaOfEffect,
-					target.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2),
+							target.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2),
 					new CUnitEnumFunction() {
-				@Override
-				public boolean call(final CUnit possibleTarget) {
-					if (possibleTarget.canReach(target, CAbilityClusterRockets.this.areaOfEffect) && possibleTarget.canBeTargetedBy(simulation, unit, getTargetsAllowed())) {
-						damageTargets.add(possibleTarget);
-					}
-					return false;
-				}
-			});
+						@Override
+						public boolean call(final CUnit possibleTarget) {
+							if (possibleTarget.canReach(target, CAbilityClusterRockets.this.areaOfEffect) && possibleTarget.canBeTargetedBy(simulation, unit, getTargetsAllowed())) {
+								damageTargets.add(possibleTarget);
+							}
+							return false;
+						}
+					});
 			if (currentWave == 1) {
 				// stun
 				for (CUnit damageTarget : damageTargets) {

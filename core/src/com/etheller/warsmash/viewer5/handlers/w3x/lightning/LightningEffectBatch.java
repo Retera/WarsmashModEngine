@@ -20,7 +20,7 @@ import java.nio.ShortBuffer;
 import java.util.List;
 
 public class LightningEffectBatch extends RenderBatch {
-	private static final int LIGHTNING_EFFECT_STRIDE_BYTES = 24;
+	private static final int LIGHTNING_EFFECT_STRIDE_BYTES = 40;
 	private static final int LIGHTNING_EFFECT_INSTANCE_BYTES = LIGHTNING_EFFECT_STRIDE_BYTES * 6;
 	private static final int LIGHTNING_EFFECT_INDEX_STRIDE_BYTES = 3 * 2;
 	private static final int LIGHTNING_EFFECT_INDEX_INSTANCE_BYTES = LIGHTNING_EFFECT_INDEX_STRIDE_BYTES * 4;
@@ -74,6 +74,10 @@ public class LightningEffectBatch extends RenderBatch {
 			floatView.put(offset++, -texCoordScaleOffset); // u
 			floatView.put(offset++, 0.5f); // v
 			floatView.put(offset++, 0);
+			floatView.put(offset++, source.color[0]);
+			floatView.put(offset++, source.color[1]);
+			floatView.put(offset++, source.color[2]);
+			floatView.put(offset++, source.color[3]);
 
 			vertexHeap.set(source.worldLocation);
 			vertexHeap.mulAdd(lineHeap, maxWidth);
@@ -85,6 +89,10 @@ public class LightningEffectBatch extends RenderBatch {
 			floatView.put(offset++, texCoordUOffset - texCoordScaleOffset); // u
 			floatView.put(offset++, 0); // v
 			floatView.put(offset++, maxWidth);
+			floatView.put(offset++, source.color[0]);
+			floatView.put(offset++, source.color[1]);
+			floatView.put(offset++, source.color[2]);
+			floatView.put(offset++, source.color[3]);
 
 			vertexHeap.set(source.worldLocation);
 			vertexHeap.mulAdd(lineHeap, maxWidth);
@@ -96,6 +104,10 @@ public class LightningEffectBatch extends RenderBatch {
 			floatView.put(offset++, texCoordUOffset - texCoordScaleOffset); // u
 			floatView.put(offset++, 1); // v
 			floatView.put(offset++, -maxWidth);
+			floatView.put(offset++, source.color[0]);
+			floatView.put(offset++, source.color[1]);
+			floatView.put(offset++, source.color[2]);
+			floatView.put(offset++, source.color[3]);
 
 			vertexHeap.set(target.worldLocation);
 			vertexHeap.mulAdd(lineHeap, -maxWidth);
@@ -107,6 +119,10 @@ public class LightningEffectBatch extends RenderBatch {
 			floatView.put(offset++, 1 - texCoordUOffset - texCoordScaleOffset); // u
 			floatView.put(offset++, 0); // v
 			floatView.put(offset++, maxWidth);
+			floatView.put(offset++, source.color[0]);
+			floatView.put(offset++, source.color[1]);
+			floatView.put(offset++, source.color[2]);
+			floatView.put(offset++, source.color[3]);
 
 			vertexHeap.set(target.worldLocation);
 			vertexHeap.mulAdd(lineHeap, -maxWidth);
@@ -118,6 +134,10 @@ public class LightningEffectBatch extends RenderBatch {
 			floatView.put(offset++, 1 - texCoordUOffset - texCoordScaleOffset); // u
 			floatView.put(offset++, 1); // v
 			floatView.put(offset++, -maxWidth);
+			floatView.put(offset++, source.color[0]);
+			floatView.put(offset++, source.color[1]);
+			floatView.put(offset++, source.color[2]);
+			floatView.put(offset++, source.color[3]);
 
 			floatView.put(offset++, target.worldLocation.x);
 			floatView.put(offset++, target.worldLocation.y);
@@ -125,6 +145,10 @@ public class LightningEffectBatch extends RenderBatch {
 			floatView.put(offset++, 1 - texCoordScaleOffset); // u
 			floatView.put(offset++, 0.5f); // v
 			floatView.put(offset++, 0);
+			floatView.put(offset++, source.color[0]);
+			floatView.put(offset++, source.color[1]);
+			floatView.put(offset++, source.color[2]);
+			floatView.put(offset++, source.color[3]);
 
 			int indexBufferGroupIdx = i * 6;
 			indexBuffer.put((short) (indexBufferGroupIdx + 0));
@@ -189,6 +213,7 @@ public class LightningEffectBatch extends RenderBatch {
 			final int position = shader.getAttributeLocation("a_position");
 			final int uv = shader.getAttributeLocation("a_uv");
 			final int outwardHeight = shader.getAttributeLocation("a_outwardHeight");
+			final int color = shader.getAttributeLocation("a_color");
 			final ClientBuffer buffer = viewer.buffer;
 			final TextureMapper textureMapper = this.textureMapper;
 
@@ -199,6 +224,7 @@ public class LightningEffectBatch extends RenderBatch {
 			shader.setVertexAttribute(position, 3, GL20.GL_FLOAT, false, LIGHTNING_EFFECT_STRIDE_BYTES, 0);
 			shader.setVertexAttribute(uv, 2, GL20.GL_FLOAT, false, LIGHTNING_EFFECT_STRIDE_BYTES, 12);
 			shader.setVertexAttribute(outwardHeight, 1, GL20.GL_FLOAT, false, LIGHTNING_EFFECT_STRIDE_BYTES, 20);
+			shader.setVertexAttribute(color, 4, GL20.GL_FLOAT, false, LIGHTNING_EFFECT_STRIDE_BYTES, 24);
 
 			transposeHeap.set(this.scene.camera.viewProjectionMatrix);
 			transposeHeap.tra();

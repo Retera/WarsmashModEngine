@@ -8,7 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 
-public abstract class CProjectile {
+public abstract class CProjectile implements CEffect {
 	private float x;
 	private float y;
 	private final float initialTargetX;
@@ -31,6 +31,7 @@ public abstract class CProjectile {
 		this.initialTargetY = target.getY();
 	}
 
+	@Override
 	public boolean update(final CSimulation game) {
 		final float tx = getTargetX();
 		final float ty = getTargetY();

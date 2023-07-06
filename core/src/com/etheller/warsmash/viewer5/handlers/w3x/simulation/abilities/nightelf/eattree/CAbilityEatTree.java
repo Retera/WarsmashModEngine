@@ -85,20 +85,17 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		ripEndTick = 0;
-		eatEndTick = 0;
+	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+		final int gameTurnTick = simulation.getGameTurnTick();
+		ripEndTick = gameTurnTick + (int) (ripDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+		eatEndTick = ripEndTick + (int) ((eatDelay) / WarsmashConstants.SIMULATION_STEP_TIME);
 		ripComplete = false;
-		return super.begin(game, caster, orderId, target);
+		return true;
 	}
 
 	@Override
-	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+	public boolean doChannelTick(CSimulation simulation, CUnit unit, AbilityTarget target) {
 		final int gameTurnTick = simulation.getGameTurnTick();
-		if (ripEndTick == 0) {
-			ripEndTick = gameTurnTick + (int) (ripDelay / WarsmashConstants.SIMULATION_STEP_TIME);
-			eatEndTick = ripEndTick + (int) ((eatDelay) / WarsmashConstants.SIMULATION_STEP_TIME);
-		}
 		if (gameTurnTick >= ripEndTick) {
 			if (!ripComplete) {
 				final CDestructable targetDest = target.visit(AbilityTargetVisitor.DESTRUCTABLE);
@@ -116,5 +113,4 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 		}
 		return true;
 	}
-
 }

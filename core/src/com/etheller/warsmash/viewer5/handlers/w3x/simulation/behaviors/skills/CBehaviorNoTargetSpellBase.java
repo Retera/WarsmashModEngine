@@ -47,8 +47,9 @@ public class CBehaviorNoTargetSpellBase implements CBehavior {
 				}
 				this.ability.setCooldownRemaining(this.ability.getCooldown());
 				this.unit.fireCooldownsChangedEvent();
+				this.channeling = this.ability.doEffect(simulation, this.unit, null);
 			}
-			this.channeling = this.channeling && this.ability.doEffect(simulation, this.unit, null);
+			this.channeling = this.channeling && this.ability.doChannelTick(simulation, this.unit, null);
 		}
 		if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
 			return this.unit.pollNextOrderBehavior(simulation);

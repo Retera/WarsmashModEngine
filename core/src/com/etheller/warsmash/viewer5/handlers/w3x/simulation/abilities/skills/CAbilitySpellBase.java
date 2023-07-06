@@ -87,7 +87,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 
 	public abstract void populateData(MutableGameObject worldEditorAbility, int level);
 
-	public abstract boolean doEffect(CSimulation simulation, CUnit unit, AbilityTarget target);
+	public abstract boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target);
+
+	public boolean doChannelTick(CSimulation simulation, CUnit caster, AbilityTarget target) {
+		return false;
+	}
 
 	@Override
 	public boolean isToggleOn() {

@@ -39,7 +39,6 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	private int currentWave;
 	private int nextWaveTick;
 	private boolean waveForDamage = false;
-	private boolean effectStarted = false;
 	private final Rectangle recycleRect = new Rectangle();
 
 	public CAbilityBlizzard(final int handleId, final War3ID alias) {
@@ -68,21 +67,16 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
-		this.effectStarted = false;
-		return super.begin(game, caster, orderId, point);
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
+		this.currentWave = 0;
+		this.waveForDamage = false;
+		this.nextWaveTick =
+				simulation.getGameTurnTick() + (int) StrictMath.ceil(this.waveDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+		return true;
 	}
 
 	@Override
-	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
-		if(!this.effectStarted) {
-			this.currentWave = 0;
-			this.waveForDamage = false;
-			this.nextWaveTick =
-					simulation.getGameTurnTick() + (int) StrictMath.ceil(this.waveDelay / WarsmashConstants.SIMULATION_STEP_TIME);
-			this.effectStarted = true;
-		}
+	public boolean doChannelTick(CSimulation simulation, CUnit caster, AbilityTarget target) {
 		if (simulation.getGameTurnTick() >= this.nextWaveTick) {
 			final float waveDelay;
 			if (this.waveForDamage) {
@@ -92,13 +86,13 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 				List<CUnit> damageTargets = new ArrayList<>();
 				simulation.getWorldCollision()
 						.enumUnitsInRect(this.recycleRect.set(target.getX() - this.areaOfEffect,
-								target.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2),
+										target.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2),
 								new CUnitEnumFunction() {
 									@Override
 									public boolean call(final CUnit possibleTarget) {
 										if (possibleTarget.canReach(target, CAbilityBlizzard.this.areaOfEffect)
-												&& possibleTarget.canBeTargetedBy(simulation, unit,
-														getTargetsAllowed())) {
+												&& possibleTarget.canBeTargetedBy(simulation, caster,
+												getTargetsAllowed())) {
 											damageTargets.add(possibleTarget);
 										}
 										return false;
@@ -117,7 +111,7 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 					else {
 						thisTargetDamage = damagePerTarget;
 					}
-					damageTarget.damage(simulation, unit, CAttackType.SPELLS, CDamageType.COLD,
+					damageTarget.damage(simulation, caster, CAttackType.SPELLS, CDamageType.COLD,
 							CWeaponSoundTypeJass.WHOKNOWS.name(), thisTargetDamage);
 				}
 			}

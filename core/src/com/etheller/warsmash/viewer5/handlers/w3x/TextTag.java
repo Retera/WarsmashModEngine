@@ -8,19 +8,23 @@ public class TextTag {
 	private float screenCoordsZHeight;
 	private final String text;
 	private final Color color;
+	private final float lifetimeDuration;
+	private final float fadeStart;
 	private float lifetime = 0;
 
-	public TextTag(final Vector3 position, final String text, final Color color) {
+	public TextTag(final Vector3 position, final String text, final Color color, final float lifetimeDuration, final float fadeStart) {
 		this.position = position;
 		this.text = text;
 		this.color = color;
+		this.lifetimeDuration = lifetimeDuration;
+		this.fadeStart = fadeStart;
 		position.z += 64f;
 	}
 
 	public boolean update(final float deltaTime) {
 		this.screenCoordsZHeight += 60.0f * deltaTime;
 		this.lifetime += deltaTime;
-		return this.lifetime > 2.5f;
+		return this.lifetime > this.lifetimeDuration;
 	}
 
 	public Vector3 getPosition() {
@@ -28,7 +32,7 @@ public class TextTag {
 	}
 
 	public float getRemainingLife() {
-		return 2.5f - this.lifetime;
+		return this.lifetimeDuration - this.lifetime;
 	}
 
 	public Color getColor() {
@@ -41,5 +45,13 @@ public class TextTag {
 
 	public float getScreenCoordsZHeight() {
 		return this.screenCoordsZHeight;
+	}
+
+	public float getFadeStart() {
+		return fadeStart;
+	}
+
+	public float getLifetimeDuration() {
+		return lifetimeDuration;
 	}
 }

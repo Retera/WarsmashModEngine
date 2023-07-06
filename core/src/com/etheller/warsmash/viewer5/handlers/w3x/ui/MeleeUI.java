@@ -1886,7 +1886,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					(Gdx.graphics.getHeight() - screenCoordsVector.y) + textTag.getScreenCoordsZHeight())) {
 				final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
 				final float remainingLife = textTag.getRemainingLife();
-				final float alpha = remainingLife > 1.0f ? 1.0f : remainingLife;
+				float fadeStart = textTag.getFadeStart();
+				float lifetimeDuration = textTag.getLifetimeDuration();
+				float fadingSeconds = lifetimeDuration - fadeStart;
+				final float alpha = remainingLife > fadingSeconds ? 1.0f : (remainingLife / fadingSeconds);
 				this.textTagFont.setColor(textTag.getColor().r, textTag.getColor().g, textTag.getColor().b,
 						textTag.getColor().a * alpha);
 				glyphLayout.setText(this.textTagFont, textTag.getText());

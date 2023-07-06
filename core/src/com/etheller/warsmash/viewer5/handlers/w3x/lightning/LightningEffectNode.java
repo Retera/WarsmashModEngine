@@ -1,7 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.lightning;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.*;
 
 public class LightningEffectNode extends BatchedInstance {
@@ -9,9 +9,12 @@ public class LightningEffectNode extends BatchedInstance {
 	protected boolean showing;
 	protected boolean source;
 	protected float textureAnimationPosition;
+	protected float[] color;
+	protected float lifeSpanRemaining;
 
 	public LightningEffectNode(LightningEffectModel model) {
 		super(model);
+		this.color = new float[4];
 	}
 
 	public void setFriend(LightningEffectNode friend) {
@@ -41,6 +44,20 @@ public class LightningEffectNode extends BatchedInstance {
 		this.source = source;
 	}
 
+	public void setColor(Color color) {
+		this.color[0] = color.r;
+		this.color[1] = color.g;
+		this.color[2] = color.b;
+		this.color[3] = color.a;
+	}
+
+	public void setColor(float r, float g, float b, float a) {
+		this.color[0] = r;
+		this.color[1] = g;
+		this.color[2] = b;
+		this.color[3] = a;
+	}
+
 	@Override
 	public void updateAnimations(float dt) {
 		if (this.showing && !this.friend.showing && this.friend.source) {
@@ -51,6 +68,13 @@ public class LightningEffectNode extends BatchedInstance {
 			float textureCoordinateSpeed = 3.5f;
 			textureAnimationPosition += dt * model.getTexCoordScale() * textureCoordinateSpeed;
 			textureAnimationPosition = (((textureAnimationPosition) % 1.0f) + 1.0f) % 1.0f;
+			if(lifeSpanRemaining > 0) {
+				lifeSpanRemaining -= dt;
+				if(lifeSpanRemaining <= 0) {
+					lifeSpanRemaining = 0;
+				}
+				color[3] = lifeSpanRemaining / model.getDuration();
+			}
 		}
 	}
 
@@ -74,7 +98,8 @@ public class LightningEffectNode extends BatchedInstance {
 
 	@Override
 	public void load() {
-
+		final LightningEffectModel model = (LightningEffectModel) this.model;
+		System.arraycopy(model.getColor(), 0, color, 0, color.length);
 	}
 
 	@Override
@@ -95,5 +120,9 @@ public class LightningEffectNode extends BatchedInstance {
 	@Override
 	protected void removeLights(Scene scene2) {
 
+	}
+
+	public void setLifeSpanRemaining(float duration) {
+		this.lifeSpanRemaining = duration;
 	}
 }

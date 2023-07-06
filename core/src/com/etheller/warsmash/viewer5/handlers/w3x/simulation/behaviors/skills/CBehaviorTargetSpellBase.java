@@ -69,8 +69,9 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 				}
 				this.ability.setCooldownRemaining(this.ability.getCooldown());
 				this.unit.fireCooldownsChangedEvent();
+				this.channeling = this.ability.doEffect(simulation, this.unit, this.target);
 			}
-			this.channeling = this.channeling && this.ability.doEffect(simulation, this.unit, this.target);
+			this.channeling = this.channeling && this.ability.doChannelTick(simulation, this.unit, this.target);
 		}
 		if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
 			return this.unit.pollNextOrderBehavior(simulation);

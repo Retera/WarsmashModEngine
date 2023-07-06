@@ -1037,10 +1037,13 @@ public class MdxShaders {
 			"    attribute vec3 a_position;\r\n" + //
 			"    attribute vec2 a_uv;\r\n" + //
 			"    attribute float a_outwardHeight;\r\n" + //
+			"    attribute vec4 a_color;\r\n" + //
 			"    uniform vec3 u_cameraZ;\r\n" + //
 			"    varying vec2 v_uv;\r\n" + //
+			"    varying vec4 v_color;\r\n" + //
 			"    void main() {\r\n" + //
 			"      v_uv = a_uv;\r\n" + //
+			"      v_color = a_color;\r\n" + //
 			"      gl_Position = u_VP * vec4(a_position, 1.0);\r\n" + //
 			"    }\r\n";
 
@@ -1048,8 +1051,9 @@ public class MdxShaders {
 			"    precision mediump float;\r\n" + //
 			"    uniform sampler2D u_texture;\r\n" + //
 			"    varying vec2 v_uv;\r\n" + //
+			"    varying vec4 v_color;\r\n" + //
 			"    void main() {\r\n" + //
 			"      vec4 color = texture2D(u_texture, v_uv);\r\n" + //
-			"      gl_FragColor = color;\r\n" + //
+			"      gl_FragColor = color * v_color;\r\n" + //
 			"    }\r\n";
 }

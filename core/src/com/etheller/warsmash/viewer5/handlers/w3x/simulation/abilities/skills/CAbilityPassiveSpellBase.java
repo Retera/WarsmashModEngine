@@ -83,4 +83,11 @@ public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconP
 		this.targetsAllowed = targetsAllowed;
 	}
 
+	public void setDuration(float duration) {
+		this.duration = duration;
+	}
+
+	public void setHeroDuration(float heroDuration) {
+		this.heroDuration = heroDuration;
+	}
 }

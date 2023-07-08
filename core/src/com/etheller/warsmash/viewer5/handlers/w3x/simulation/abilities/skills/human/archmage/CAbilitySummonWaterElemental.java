@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnitId;
@@ -46,7 +47,8 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 			CUnit summonedUnit = simulation.createUnitSimple(summonUnitId, unit.getPlayerIndex(), x, y, facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, getDuration()));
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, getDuration(), false));
+			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
 		return false;
 	}

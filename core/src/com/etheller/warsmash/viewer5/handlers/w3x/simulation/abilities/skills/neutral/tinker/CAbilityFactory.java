@@ -48,7 +48,7 @@ public class CAbilityFactory extends CAbilityPassiveSpellBase {
 			game.unitSoundEffectEvent(factory, getAlias());
 			spawnedUnit.addClassification(CUnitClassification.SUMMONED);
 			spawnedUnit.add(game, new CBuffTimedLife(game.getHandleIdAllocator().createId(), this.buffId,
-					getDuration()));
+					getDuration(), false));
 			AbilityTarget rallyPoint = factory.getRallyPoint();
 			if(rallyPoint != null) {
 				spawnedUnit.order(game, OrderIds.smart, rallyPoint);

@@ -1,4 +1,4 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.beastmaster;
 
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
@@ -13,29 +13,22 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
-public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
+public class CAbilitySummonGrizzly extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnitId;
 	private int summonUnitCount;
-	private War3ID summonUnit2Id;
-	private int summonUnit2Count;
 	private War3ID buffId;
 	private float areaOfEffect;
 
-	public CAbilityItemFigurineSummon(final int handleId, final War3ID alias) {
+	public CAbilitySummonGrizzly(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.ItemFigurineSummon.SUMMON_1_UNIT_TYPE,
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_TYPE,
 				level);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemFigurineSummon.SUMMON_1_AMOUNT,
-				level);
-		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.ItemFigurineSummon.SUMMON_2_UNIT_TYPE,
-				level);
-		this.summonUnit2Id = unitTypeTwo.length() == 4 ? War3ID.fromString(unitTypeTwo) : War3ID.NONE;
-		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemFigurineSummon.SUMMON_2_AMOUNT,
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_COUNT,
 				level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
@@ -43,7 +36,7 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 
 	@Override
 	public int getBaseOrderId() {
-		return OrderIds.itemfigurinesummon;
+		return OrderIds.summongrizzly;
 	}
 
 	@Override
@@ -54,14 +47,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 		final float y = unit.getY() + ((float) StrictMath.sin(facingRad) * this.areaOfEffect);
 		for (int i = 0; i < this.summonUnitCount; i++) {
 			final CUnit summonedUnit = simulation.createUnitSimple(this.summonUnitId, unit.getPlayerIndex(), x, y,
-					facing);
-			summonedUnit.addClassification(CUnitClassification.SUMMONED);
-			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration(), true));
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
-		}
-		for (int i = 0; i < this.summonUnit2Count; i++) {
-			final CUnit summonedUnit = simulation.createUnitSimple(this.summonUnit2Id, unit.getPlayerIndex(), x, y,
 					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
@@ -79,13 +64,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 		return this.summonUnitCount;
 	}
 
-	public War3ID getSummonUnit2Id() {
-		return this.summonUnit2Id;
-	}
-
-	public int getSummonUnit2Count() {
-		return this.summonUnit2Count;
-	}
 
 	public War3ID getBuffId() {
 		return this.buffId;
@@ -104,13 +82,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 		this.summonUnitCount = summonUnitCount;
 	}
 
-	public void setSummonUnit2Id(final War3ID summonUnit2Id) {
-		this.summonUnit2Id = summonUnit2Id;
-	}
-
-	public void setSummonUnit2Count(final int summonUnit2Count) {
-		this.summonUnit2Count = summonUnit2Count;
-	}
 
 	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;

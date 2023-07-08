@@ -168,6 +168,7 @@ public class CUnit extends CWidget {
 
 	private boolean constructionConsumesWorker;
 	private boolean explodesOnDeath;
+	private War3ID explodesOnDeathBuffId;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
@@ -1235,7 +1236,7 @@ public class CUnit extends CWidget {
 		this.currentBehavior = null;
 		this.orderQueue.clear();
 		if (this.constructing) {
-			simulation.createDeathExplodeEffect(this);
+			simulation.createDeathExplodeEffect(this, explodesOnDeathBuffId);
 		}
 		else {
 			this.deathTurnTick = simulation.getGameTurnTick();
@@ -1348,7 +1349,7 @@ public class CUnit extends CWidget {
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
 		if (isExplodesOnDeath()) {
 			setHidden(true);
-			simulation.createDeathExplodeEffect(this);
+			simulation.createDeathExplodeEffect(this, explodesOnDeathBuffId);
 			simulation.removeUnit(this);
 		}
 	}
@@ -2799,6 +2800,10 @@ public class CUnit extends CWidget {
 
 	public void setExplodesOnDeath(final boolean explodesOnDeath) {
 		this.explodesOnDeath = explodesOnDeath;
+	}
+
+	public void setExplodesOnDeathBuffId(War3ID explodesOnDeathBuffId) {
+		this.explodesOnDeathBuffId = explodesOnDeathBuffId;
 	}
 
 	public boolean isExplodesOnDeath() {

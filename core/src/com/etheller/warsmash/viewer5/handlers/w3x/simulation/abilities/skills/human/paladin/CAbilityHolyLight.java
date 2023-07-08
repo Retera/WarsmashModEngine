@@ -1,44 +1,25 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin;
 
-import java.util.EnumSet;
-
+import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.util.WarsmashConstants;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.skills.human.paladin.CBehaviorHolyLight;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityTargetSpellBase;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
-public class CAbilityHolyLight extends AbstractGenericSingleIconNoSmartActiveAbility {
-	private int manaCost;
-	private int healAmount;
-	private float castRange;
-	private float cooldown;
-	private EnumSet<CTargetType> targetsAllowed;
-	private float cooldownRemaining;
-	private CBehaviorHolyLight behaviorHolyLight;
+public class CAbilityHolyLight extends CAbilityTargetSpellBase {
 
-	public CAbilityHolyLight(final int handleId, final War3ID alias, final int manaCost, final int healAmount,
-			final float castRange, final float cooldown, final EnumSet<CTargetType> targetsAllowed) {
+	private float healAmount;
+
+	public CAbilityHolyLight(int handleId, War3ID alias) {
 		super(handleId, alias);
-		this.manaCost = manaCost;
-		this.healAmount = healAmount;
-		this.castRange = castRange;
-		this.cooldown = cooldown;
-		this.targetsAllowed = targetsAllowed;
 	}
 
 	@Override
@@ -47,158 +28,43 @@ public class CAbilityHolyLight extends AbstractGenericSingleIconNoSmartActiveAbi
 	}
 
 	@Override
-	public boolean isToggleOn() {
-		return false;
+	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
+		healAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.HolyLight.AMOUNT_HEALED_OR_DAMAGED, level);
 	}
 
 	@Override
-	public void onAdd(final CSimulation game, final CUnit unit) {
-		this.behaviorHolyLight = new CBehaviorHolyLight(unit, this);
-	}
-
-	@Override
-	public void onRemove(final CSimulation game, final CUnit unit) {
-
-	}
-
-	@Override
-	public void onTick(final CSimulation game, final CUnit unit) {
-		if (this.cooldownRemaining > 0) {
-			this.cooldownRemaining -= WarsmashConstants.SIMULATION_STEP_TIME;
-		}
-	}
-
-	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
-
-	}
-
-	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorHolyLight.reset(target);
-	}
-
-	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
-		return null;
-	}
-
-	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
-		return null;
-	}
-
-	@Override
-	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if(target instanceof CUnit){
-			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
-				if (!unit.isMovementDisabled() || unit.canReach(target, this.castRange)) {
-					final CUnit targetUnit = (CUnit) target;
-					final CPlayer player = game.getPlayer(unit.getPlayerIndex());
-					final boolean undead = targetUnit.getClassifications().contains(CUnitClassification.UNDEAD);
-					final boolean ally = player.hasAlliance(targetUnit.getPlayerIndex(), CAllianceType.PASSIVE);
-					if (undead != ally) {
-						if (ally && (targetUnit.getLife() >= targetUnit.getMaximumLife())) {
-							receiver.targetCheckFailed(CommandStringErrorKeys.ALREADY_AT_FULL_HEALTH);
-						}
-						else {
-							receiver.targetOk(targetUnit);
-						}
-					}
-					else {
-						receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_FRIENDLY_LIVING_UNITS_OR_ENEMY_UNDEAD_UNITS);
-					}
+	protected void innerCheckCanTarget(CSimulation game, CUnit caster, int orderId, CWidget target, AbilityTargetCheckReceiver<CWidget> receiver) {
+		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+		if (targetUnit != null) {
+			final boolean undead = targetUnit.getClassifications().contains(CUnitClassification.UNDEAD);
+			final boolean ally = targetUnit.isUnitAlly(game.getPlayer(caster.getPlayerIndex()));
+			if (undead != ally) {
+				if (ally && (targetUnit.getLife() >= targetUnit.getMaximumLife())) {
+					receiver.targetCheckFailed(CommandStringErrorKeys.ALREADY_AT_FULL_HEALTH);
 				}
 				else {
-					receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
+					receiver.targetOk(targetUnit);
 				}
 			}
-			// else receiver called automatically by target.canBeTargetedBy(..., receiver)
-		}
-		else {
+			else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_FRIENDLY_LIVING_UNITS_OR_ENEMY_UNDEAD_UNITS);
+			}
+		} else {
 			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 		}
 	}
 
 	@Override
-	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	protected void innerCheckCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
-		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
-		if (this.cooldownRemaining > 0) {
-			receiver.cooldownNotYetReady(this.cooldownRemaining, this.cooldown);
+	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
+		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+		if(targetUnit != null) {
+			if(targetUnit.getClassifications().contains(CUnitClassification.UNDEAD)) {
+				targetUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.DIVINE, null, healAmount * 0.5f);
+			} else {
+				targetUnit.heal(simulation, healAmount);
+			}
+			simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET, 0).remove();
 		}
-		else if (unit.getMana() < this.manaCost) {
-			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
-		}
-		else {
-			receiver.useOk();
-		}
+		return false;
 	}
-
-	public void setManaCost(final int manaCost) {
-		this.manaCost = manaCost;
-	}
-
-	public void setCastRange(final float castRange) {
-		this.castRange = castRange;
-	}
-
-	public void setCooldown(final float cooldown) {
-		this.cooldown = cooldown;
-	}
-
-	public void setHealAmount(final int healAmount) {
-		this.healAmount = healAmount;
-	}
-
-	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
-		this.targetsAllowed = targetsAllowed;
-	}
-
-	public void setCooldownRemaining(final float cooldownRemaining) {
-		this.cooldownRemaining = cooldownRemaining;
-	}
-
-	public int getManaCost() {
-		return this.manaCost;
-	}
-
-	@Override
-	public int getUIManaCost() {
-		return getManaCost();
-	}
-
-	public int getHealAmount() {
-		return this.healAmount;
-	}
-
-	public float getCastRange() {
-		return this.castRange;
-	}
-
-	public float getCooldown() {
-		return this.cooldown;
-	}
-
-	public EnumSet<CTargetType> getTargetsAllowed() {
-		return this.targetsAllowed;
-	}
-
-	public float getCooldownRemaining() {
-		return this.cooldownRemaining;
-	}
-
 }

@@ -928,13 +928,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public void spawnDeathExplodeEffect(final CUnit source) {
-						final CBuffTimedLife timedLife = source.getFirstAbilityOfType(CBuffTimedLife.class);
+					public void spawnDeathExplodeEffect(final CUnit source, War3ID explodesOnDeathBuffId) {
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
 						MdxComplexInstance modelInstance = null;
-						if (timedLife != null) {
-							final War3ID alias = timedLife.getAlias();
-							final EffectAttachmentUI effectAttachmentUI = getEffectAttachmentUI(alias,
+						if (explodesOnDeathBuffId != null) {
+							final EffectAttachmentUI effectAttachmentUI = getEffectAttachmentUI(explodesOnDeathBuffId,
 									CEffectType.EFFECT, 0);
 							final String modelPath = effectAttachmentUI.getModelPath();
 							final MdxModel spawnedEffectModel = loadModelMdx(modelPath);

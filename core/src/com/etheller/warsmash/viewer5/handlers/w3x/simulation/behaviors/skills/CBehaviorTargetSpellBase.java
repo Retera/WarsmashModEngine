@@ -69,8 +69,7 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 					simulation.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(), CommandStringErrorKeys.NOT_ENOUGH_MANA);
 					return this.unit.pollNextOrderBehavior(simulation);
 				}
-				this.ability.setCooldownRemaining(this.ability.getCooldown());
-				this.unit.fireCooldownsChangedEvent();
+				this.unit.beginCooldown(simulation, this.ability.getCode(), this.ability.getCooldown());
 				this.channeling = this.ability.doEffect(simulation, this.unit, this.target);
 				if (this.channeling) {
 					simulation.unitLoopSoundEffectEvent(this.unit, this.ability.getAlias());

@@ -27,11 +27,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	private float cooldown;
 	private float castingTime;
 	private EnumSet<CTargetType> targetsAllowed;
-	private float cooldownRemaining;
 	private PrimaryTag castingPrimaryTag;
 	private EnumSet<SecondaryTag> castingSecondaryTags;
 	private float duration;
 	private float heroDuration;
+	private War3ID code;
 
 	public CAbilitySpellBase(final int handleId, final War3ID alias) {
 		super(handleId, alias);
@@ -61,6 +61,8 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		}
 		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, 0);
 		this.heroDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.HERO_DURATION, 0);
+
+		this.code = worldEditorAbility.getCode();
 
 		populateData(worldEditorAbility, level);
 	}
@@ -108,12 +110,6 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 
 	@Override
 	public void onTick(final CSimulation game, final CUnit unit) {
-		// TODO instead of ability cooldown, unit should have a per-code cooldown
-		// pool probably so that when items are removed and added the item cooldown
-		// is retained
-		if (this.cooldownRemaining > 0) {
-			this.cooldownRemaining -= WarsmashConstants.SIMULATION_STEP_TIME;
-		}
 	}
 
 	@Override
@@ -123,8 +119,10 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 			receiver.useOk();
 			return;
 		}
-		if (this.cooldownRemaining > 0) {
-			receiver.cooldownNotYetReady(this.cooldownRemaining, this.cooldown);
+		float cooldownRemaining = getCooldownRemaining(game, unit);
+		if (cooldownRemaining > 0) {
+			float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCode()) * WarsmashConstants.SIMULATION_STEP_TIME;
+			receiver.cooldownNotYetReady(cooldownRemaining, cooldownLengthDisplay);
 		}
 		else if (unit.getMana() < this.manaCost) {
 			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
@@ -159,8 +157,8 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		return this.targetsAllowed;
 	}
 
-	public float getCooldownRemaining() {
-		return this.cooldownRemaining;
+	public float getCooldownRemaining(final CSimulation game, final CUnit caster) {
+		return caster.getCooldownRemainingTicks(game, getCode()) * WarsmashConstants.SIMULATION_STEP_TIME;
 	}
 
 	public void setManaCost(final int manaCost) {
@@ -183,9 +181,6 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		this.targetsAllowed = targetsAllowed;
 	}
 
-	public void setCooldownRemaining(final float cooldownRemaining) {
-		this.cooldownRemaining = cooldownRemaining;
-	}
 
 	public PrimaryTag getCastingPrimaryTag() {
 		return this.castingPrimaryTag;
@@ -203,4 +198,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		this.castingSecondaryTags = castingSecondaryTags;
 	}
 
+	public War3ID getCode() {
+		return code;
+	}
 }

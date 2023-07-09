@@ -1166,6 +1166,29 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							buildingShadowInstance = War3MapViewer.this.terrain.addShadow(buildingShadow, unitX, unitY);
 						}
 
+
+						if(renderPeer.shadow != null) {
+							renderPeer.shadow.destroy(Gdx.gl30, terrain.centerOffset);
+							renderPeer.shadow = null;
+						}
+						final String unitShadow = row.getFieldAsString(UNIT_SHADOW, 0);
+						if ((unitShadow != null) && !"_".equals(unitShadow)) {
+							String texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".blp";
+							final float shadowX = row.getFieldAsFloat(UNIT_SHADOW_X, 0);
+							final float shadowY = row.getFieldAsFloat(UNIT_SHADOW_Y, 0);
+							final float shadowWidth = row.getFieldAsFloat(UNIT_SHADOW_W, 0);
+							final float shadowHeight = row.getFieldAsFloat(UNIT_SHADOW_H, 0);
+							if (!mapMpq.has(texture)) {
+								texture = "ReplaceableTextures\\Shadows\\" + unitShadow + ".dds"; // fallback
+							}
+							if (mapMpq.has(texture)) {
+								final float x = unitX - shadowX;
+								final float y = unitY - shadowY;
+								renderPeer.shadow = terrain.addUnitShadowSplat(texture, x, y,
+											x + shadowWidth, y + shadowHeight, 3, 0.5f, false);
+							}
+						}
+
 						final String soundName = row.getFieldAsString(UNIT_SOUNDSET, 0);
 						UnitSoundset unitSoundset = War3MapViewer.this.soundsetNameToSoundset.get(soundName);
 						if (unitSoundset == null) {

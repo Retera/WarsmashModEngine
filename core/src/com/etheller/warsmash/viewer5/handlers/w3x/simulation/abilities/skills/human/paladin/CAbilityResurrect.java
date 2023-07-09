@@ -7,8 +7,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityNoTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
-public class CAbilityResurrect extends CAbilityNoTargetSpellBase  {
+import java.util.ArrayList;
+import java.util.List;
+
+public class CAbilityResurrect extends CAbilityNoTargetSpellBase {
 	private float areaOfEffect;
 	private int numberOfCorpsesRaised;
 
@@ -18,26 +23,37 @@ public class CAbilityResurrect extends CAbilityNoTargetSpellBase  {
 
 	@Override
 	public int getBaseOrderId() {
-		return 0;
+		return OrderIds.resurrection;
 	}
 
 	@Override
 	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		this.numberOfCorpsesRaised = worldEditorAbility.getFieldAsInteger(AbilityFields.Resurrection.NUMBER_OF_CORPSES_RAISED, level);
+		this.numberOfCorpsesRaised =
+				worldEditorAbility.getFieldAsInteger(AbilityFields.Resurrection.NUMBER_OF_CORPSES_RAISED, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
 	}
 
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
-		simulation.getWorldCollision().enumUnitsInRange(caster.getX(),
-				caster.getY(),
-				this.areaOfEffect,
+		List<CUnit> unitsToResurrect = new ArrayList<>(numberOfCorpsesRaised);
+		simulation.getWorldCollision().enumCorpsesInRange(caster.getX(), caster.getY(), this.areaOfEffect,
 				(enumUnit) -> {
-					if (!enumUnit.isUnitAlly(simulation.getPlayer(caster.getPlayerIndex())) && enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
-						// do a thing
-					}
-					return false;
-				});
+			if (unitsToResurrect.size() < numberOfCorpsesRaised) {
+				if (enumUnit.getUnitType().isRaise() && enumUnit.canBeTargetedBy(simulation, caster,
+						getTargetsAllowed())) {
+					unitsToResurrect.add(enumUnit);
+				}
+				return false;
+			}
+			else {
+				return true;
+			}
+		});
+		for(CUnit unit: unitsToResurrect) {
+			unit.resurrect(simulation);
+			simulation.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET);
+		}
+		simulation.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 		return false;
 	}
 }

@@ -3296,6 +3296,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			selectWidgets(newSelection);
 			this.war3MapViewer.doSelectUnit(newSelection);
+
+			// clear active commands
+			this.activeCommandUnit = null;
+			this.activeCommand = null;
+			this.activeCommandOrderId = -1;
+			if (this.draggingItem != null) {
+				setDraggingItem(null);
+			}
 		}
 		else {
 			final float lifeRatioRemaining = this.selectedUnit.getSimulationUnit().getLife()

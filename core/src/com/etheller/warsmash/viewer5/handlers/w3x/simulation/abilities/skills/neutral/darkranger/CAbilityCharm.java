@@ -38,11 +38,17 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 	@Override
 	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target.visit(AbilityTargetVisitor.UNIT).getUnitType().getLevel() <= maximumCreepLevel) {
-			super.innerCheckCanTarget(game, unit, orderId, target, receiver);
+		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+		if (targetUnit != null) {
+			if (targetUnit.getUnitType().getLevel() <= maximumCreepLevel) {
+				super.innerCheckCanTarget(game, unit, orderId, target, receiver);
+			}
+			else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.THAT_CREATURE_IS_TOO_POWERFUL);
+			}
 		}
 		else {
-			receiver.targetCheckFailed(CommandStringErrorKeys.THAT_CREATURE_IS_TOO_POWERFUL);
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 		}
 	}
 

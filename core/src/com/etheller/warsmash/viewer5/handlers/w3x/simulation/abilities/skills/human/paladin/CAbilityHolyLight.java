@@ -43,7 +43,7 @@ public class CAbilityHolyLight extends CAbilityTargetSpellBase {
 					receiver.targetCheckFailed(CommandStringErrorKeys.ALREADY_AT_FULL_HEALTH);
 				}
 				else {
-					receiver.targetOk(targetUnit);
+					super.innerCheckCanTarget(game, caster, orderId, target, receiver);
 				}
 			}
 			else {

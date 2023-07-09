@@ -23,6 +23,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringE
 public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 	private float missileSpeed;
 	private float healAmount;
+	private boolean projectilHomingEnabled;
 
 	public CAbilityDeathCoil(int handleId, War3ID alias) {
 		super(handleId, alias);
@@ -37,6 +38,7 @@ public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
 		healAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.DeathCoil.AMOUNT_HEALED_OR_DAMAGED, level);
 		missileSpeed = worldEditorAbility.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, level);
+		projectilHomingEnabled = worldEditorAbility.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, level);
 	}
 
 	@Override
@@ -66,7 +68,7 @@ public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
 		simulation.createProjectile(caster, getAlias(), caster.getX(), caster.getY(),
-				(float) caster.angleTo(target), missileSpeed, true, target, new CAbilityProjectileListener() {
+				(float) caster.angleTo(target), missileSpeed, projectilHomingEnabled, target, new CAbilityProjectileListener() {
 					@Override
 					public void onLaunch(CSimulation game, AbilityTarget target) {
 

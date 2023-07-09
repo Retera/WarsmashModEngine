@@ -17,6 +17,7 @@ public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconP
 	private EnumSet<CTargetType> targetsAllowed;
 	private float duration;
 	private float heroDuration;
+	private War3ID code;
 
 	public CAbilityPassiveSpellBase(int handleId, War3ID alias) {
 		super(alias, handleId);
@@ -31,6 +32,7 @@ public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconP
 
 		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, 0);
 		this.heroDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.HERO_DURATION, 0);
+		this.code = worldEditorAbility.getCode();
 
 		populateData(worldEditorAbility, level);
 	}
@@ -89,5 +91,9 @@ public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconP
 
 	public void setHeroDuration(float heroDuration) {
 		this.heroDuration = heroDuration;
+	}
+
+	public War3ID getCode() {
+		return code;
 	}
 }

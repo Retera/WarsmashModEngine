@@ -23,9 +23,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.hu
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilityBrilliance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilitySummonWaterElemental;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.bloodmage.phoenix.CAbilitySummonPhoenix;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.mountainking.CAbilityThunderBolt;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.mountainking.CAbilityThunderClap;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin.CAbilityDevotion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin.CAbilityDivineShield;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin.CAbilityHolyLight;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin.CAbilityResurrect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.beastmaster.CAbilitySummonGrizzly;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.beastmaster.CAbilitySummonHawk;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.beastmaster.CAbilitySummonQuilbeast;
@@ -38,6 +41,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityChainLightning;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityFeralSpirit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityWarStomp;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDeathCoil;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionAcolyteHarvest;
@@ -76,7 +80,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionShopSharing;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionStandDown;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionThunderBolt;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionWispHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
 
@@ -103,6 +106,8 @@ public class CAbilityData {
 				(handleId, alias) -> new CAbilityDivineShield(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHad"), new CAbilityTypeDefinitionSpellBase(
 				(handleId, alias) -> new CAbilityDevotion(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHre"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityResurrect(handleId, alias)));
 		// Archmage
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHwe"), new CAbilityTypeDefinitionSpellBase(
 				(handleId, alias) -> new CAbilitySummonWaterElemental(handleId, alias)));
@@ -111,8 +116,12 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHab"), new CAbilityTypeDefinitionSpellBase(
 				(handleId, alias) -> new CAbilityBrilliance(handleId, alias)));
 		// Mountain King:
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtb"), new CAbilityTypeDefinitionThunderBolt());
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANfb"), new CAbilityTypeDefinitionThunderBolt());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtb"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityThunderBolt(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtc"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityThunderClap(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANfb"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityThunderBolt(handleId, alias)));
 
 		// Blood Mage:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Apxf"), new CAbilityTypeDefinitionPhoenixFire());
@@ -139,6 +148,11 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AEim"), new CAbilityTypeDefinitionImmolation());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AEmb"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityManaBurn(handleId, alias)));
+
+		// ----Undead----
+		// Death Knight
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AUdc"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityDeathCoil(handleId, alias)));
 
 		// Entangled Mine:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aenc"),

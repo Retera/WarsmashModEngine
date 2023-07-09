@@ -24,9 +24,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
  * these attacks as best as possible.
  */
 public abstract class CUnitAttack {
+	private float animationBackswingPointBase;
 	private float animationBackswingPoint;
 	private float animationDamagePoint;
 	private CAttackType attackType;
+	private float cooldownTimeBase;
 	private float cooldownTime;
 	private int damageBase;
 	private int damageDice;
@@ -39,6 +41,8 @@ public abstract class CUnitAttack {
 	private String weaponSound;
 	private CWeaponType weaponType;
 
+	private float agiAttackSpeedBonus;
+	private float attackSpeedBonus;
 	private int primaryAttributePermanentDamageBonus;
 	private int primaryAttributeTemporaryDamageBonus;
 	private int permanentDamageBonus;
@@ -50,16 +54,17 @@ public abstract class CUnitAttack {
 	private int minDamageDisplay;
 	private int maxDamageDisplay;
 	private int totalTemporaryDamageBonus;
+	private float totalAttackSpeedPercent;
 
 	public CUnitAttack(final float animationBackswingPoint, final float animationDamagePoint,
 			final CAttackType attackType, final float cooldownTime, final int damageBase, final int damageDice,
 			final int damageSidesPerDie, final int damageUpgradeAmount, final int range, final float rangeMotionBuffer,
 			final boolean showUI, final EnumSet<CTargetType> targetsAllowed, final String weaponSound,
 			final CWeaponType weaponType) {
-		this.animationBackswingPoint = animationBackswingPoint;
+		this.animationBackswingPointBase = animationBackswingPoint;
 		this.animationDamagePoint = animationDamagePoint;
 		this.attackType = attackType;
-		this.cooldownTime = cooldownTime;
+		this.cooldownTimeBase = cooldownTime;
 		this.damageBase = damageBase;
 		this.damageDice = damageDice;
 		this.damageSidesPerDie = damageSidesPerDie;
@@ -74,10 +79,10 @@ public abstract class CUnitAttack {
 	}
 
 	public CUnitAttack(final CUnitAttack other) {
-		this.animationBackswingPoint = other.animationBackswingPoint;
+		this.animationBackswingPointBase = other.animationBackswingPointBase;
 		this.animationDamagePoint = other.animationDamagePoint;
 		this.attackType = other.attackType;
-		this.cooldownTime = other.cooldownTime;
+		this.cooldownTimeBase = other.cooldownTimeBase;
 		this.damageBase = other.damageBase;
 		this.damageDice = other.damageDice;
 		this.damageSidesPerDie = other.damageSidesPerDie;
@@ -89,6 +94,8 @@ public abstract class CUnitAttack {
 		this.weaponSound = other.weaponSound;
 		this.weaponType = other.weaponType;
 
+		this.agiAttackSpeedBonus = other.agiAttackSpeedBonus;
+		this.attackSpeedBonus = other.attackSpeedBonus;
 		this.primaryAttributePermanentDamageBonus = other.primaryAttributePermanentDamageBonus;
 		this.primaryAttributeTemporaryDamageBonus = other.primaryAttributeTemporaryDamageBonus;
 		this.permanentDamageBonus = other.permanentDamageBonus;
@@ -110,6 +117,15 @@ public abstract class CUnitAttack {
 			this.maxDamageDisplay = 0;
 		}
 		this.totalTemporaryDamageBonus = this.primaryAttributeTemporaryDamageBonus + this.temporaryDamageBonus;
+		float totalAttackSpeedBonus = this.agiAttackSpeedBonus + this.attackSpeedBonus;
+		float totalAttackSpeedPercent = 1.0f + totalAttackSpeedBonus;
+		// TODO there might be a gameplay constants value for this instead of 0.0001, didn't look
+		if (totalAttackSpeedPercent <= 0.0001f) {
+			totalAttackSpeedPercent = 0.0001f;
+		}
+		this.cooldownTime = this.cooldownTimeBase / totalAttackSpeedPercent;
+		this.totalAttackSpeedPercent = totalAttackSpeedPercent;
+		this.animationBackswingPoint = this.animationBackswingPointBase / totalAttackSpeedPercent;
 	}
 
 	public float getAnimationBackswingPoint() {
@@ -169,7 +185,7 @@ public abstract class CUnitAttack {
 	}
 
 	public void setAnimationBackswingPoint(final float animationBackswingPoint) {
-		this.animationBackswingPoint = animationBackswingPoint;
+		this.animationBackswingPointBase = animationBackswingPoint;
 	}
 
 	public void setAnimationDamagePoint(final float animationDamagePoint) {
@@ -255,6 +271,20 @@ public abstract class CUnitAttack {
 		computeDerivedFields();
 	}
 
+	public void setAgilityAttackSpeedBonus(float agiAttackSpeedBonus) {
+		this.agiAttackSpeedBonus = agiAttackSpeedBonus;
+		computeDerivedFields();
+	}
+
+	public void setAttackSpeedBonus(float attackSpeedBonus) {
+		this.attackSpeedBonus = attackSpeedBonus;
+		computeDerivedFields();
+	}
+
+	public float getAttackSpeedBonus() {
+		return attackSpeedBonus;
+	}
+
 	public int getPrimaryAttributePermanentDamageBonus() {
 		return this.primaryAttributePermanentDamageBonus;
 	}
@@ -283,8 +313,12 @@ public abstract class CUnitAttack {
 		return this.totalTemporaryDamageBonus;
 	}
 
+	public float getTotalAttackSpeedPercent() {
+		return totalAttackSpeedPercent;
+	}
+
 	public abstract void launch(CSimulation simulation, CUnit unit, AbilityTarget target, float damage,
-			CUnitAttackListener attackListener);
+								CUnitAttackListener attackListener);
 
 	public int roll(Random seededRandom) {
 		int damage = getTotalBaseDamage();

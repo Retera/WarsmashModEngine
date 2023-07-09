@@ -12,6 +12,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.IntIntMap;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -169,6 +170,8 @@ public class CUnit extends CWidget {
 	private boolean constructionConsumesWorker;
 	private boolean explodesOnDeath;
 	private War3ID explodesOnDeathBuffId;
+	private IntIntMap rawcodeToCooldownExpireTime = new IntIntMap();
+	private IntIntMap rawcodeToCooldownStartTime = new IntIntMap();
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
@@ -442,14 +445,14 @@ public class CUnit extends CWidget {
 		}
 		this.stateListenersUpdates.clear();
 		if (isDead()) {
-			if (this.collisionRectangle != null) {
-				// Moved this here because doing it on "kill" was able to happen in some cases
-				// while also iterating over the units that are in the collision system, and
-				// then it hit the "writing while iterating" problem.
-				game.getWorldCollision().removeUnit(this);
-			}
 			final int gameTurnTick = game.getGameTurnTick();
 			if (!this.corpse) {
+				if (this.collisionRectangle != null) {
+					// Moved this here because doing it on "kill" was able to happen in some cases
+					// while also iterating over the units that are in the collision system, and
+					// then it hit the "writing while iterating" problem.
+					game.getWorldCollision().removeUnit(this);
+				}
 				if (gameTurnTick > (this.deathTurnTick
 						+ (int) (this.unitType.getDeathTime() / WarsmashConstants.SIMULATION_STEP_TIME))) {
 					this.corpse = true;
@@ -475,6 +478,10 @@ public class CUnit extends CWidget {
 						/ WarsmashConstants.SIMULATION_STEP_TIME))) {
 					this.boneCorpse = true;
 					this.deathTurnTick = gameTurnTick;
+
+					if (this.unitType.isRaise()) {
+						game.getWorldCollision().addUnit(this);
+					}
 				}
 			}
 			else if (game.getGameTurnTick() > (this.deathTurnTick
@@ -1636,6 +1643,19 @@ public class CUnit extends CWidget {
 
 	public void restoreMana(final CSimulation game, final int manaToRegain) {
 		setMana(Math.min(getMana() + manaToRegain, getMaximumMana()));
+	}
+
+	public void resurrect(CSimulation simulation) {
+		simulation.getWorldCollision().removeUnit(this);
+		this.corpse = false;
+		this.boneCorpse = false;
+		this.deathTurnTick = 0;
+		this.explodesOnDeath = false;
+		this.explodesOnDeathBuffId = null;
+		setLife(simulation, getMaximumLife());
+		simulation.getWorldCollision().addUnit(this);
+		simulation.unitUpdatedType(this, typeId); // clear out some state
+		this.unitAnimationListener.playAnimation(true, PrimaryTag.STAND, SequenceUtils.EMPTY, 0.0f, true);
 	}
 
 	private static final class AutoAttackTargetFinderEnum implements CUnitEnumFunction {
@@ -2808,5 +2828,31 @@ public class CUnit extends CWidget {
 
 	public boolean isExplodesOnDeath() {
 		return this.explodesOnDeath;
+	}
+
+	public void beginCooldown(CSimulation game, War3ID abilityId, float cooldownDuration) {
+		int gameTurnTick = game.getGameTurnTick();
+		rawcodeToCooldownExpireTime.put(abilityId.getValue(),
+				gameTurnTick + (int) StrictMath.ceil(cooldownDuration / WarsmashConstants.SIMULATION_STEP_TIME));
+		rawcodeToCooldownStartTime.put(abilityId.getValue(), gameTurnTick);
+		fireCooldownsChangedEvent();
+	}
+
+	public int getCooldownRemainingTicks(CSimulation game, War3ID abilityId) {
+		int expireTime = rawcodeToCooldownExpireTime.get(abilityId.getValue(), -1);
+		int gameTurnTick = game.getGameTurnTick();
+		if (expireTime == -1 || expireTime <= gameTurnTick) {
+			return 0;
+		}
+		return expireTime - gameTurnTick;
+	}
+
+	public int getCooldownLengthDisplayTicks(CSimulation game, War3ID abilityId) {
+		int startTime = rawcodeToCooldownStartTime.get(abilityId.getValue(), -1);
+		int expireTime = rawcodeToCooldownExpireTime.get(abilityId.getValue(), -1);
+		if (startTime == -1 || expireTime == -1) {
+			return 0;
+		}
+		return expireTime - startTime;
 	}
 }

@@ -191,6 +191,15 @@ public class CWorldCollision {
 		this.destructablesForEnum.intersect(rect, this.destructableEnumIntersector.reset(callback));
 	}
 
+	public void enumDestructablesInRange(float x, float y, float radius, CDestructableEnumFunction callback) {
+		enumDestructablesInRect(new Rectangle(x - radius, y - radius, radius * 2, radius * 2), (enumUnit) -> {
+			if (enumUnit.distance(x, y) <= radius) {
+				return callback.call(enumUnit);
+			}
+			return false;
+		});
+	}
+
 	public boolean intersectsAnythingOtherThan(final Rectangle newPossibleRectangle, final CUnit sourceUnitToIgnore,
 			final MovementType movementType) {
 		return this.intersectsAnythingOtherThan(newPossibleRectangle, sourceUnitToIgnore, null, movementType);

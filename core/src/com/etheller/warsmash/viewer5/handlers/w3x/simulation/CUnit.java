@@ -149,6 +149,7 @@ public class CUnit extends CWidget {
 	private boolean paused = false;
 	private boolean acceptingOrders = true;
 	private boolean invulnerable = false;
+	private boolean magicImmune = false;
 	private CBehavior defaultBehavior;
 	private COrder lastStartedOrder = null;
 	private CUnit workerInside;
@@ -172,8 +173,8 @@ public class CUnit extends CWidget {
 	private boolean constructionConsumesWorker;
 	private boolean explodesOnDeath;
 	private War3ID explodesOnDeathBuffId;
-	private IntIntMap rawcodeToCooldownExpireTime = new IntIntMap();
-	private IntIntMap rawcodeToCooldownStartTime = new IntIntMap();
+	private final IntIntMap rawcodeToCooldownExpireTime = new IntIntMap();
+	private final IntIntMap rawcodeToCooldownStartTime = new IntIntMap();
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
@@ -420,6 +421,15 @@ public class CUnit extends CWidget {
 
 	public void setMaximumLife(final int maximumLife) {
 		this.maximumLife = maximumLife;
+	}
+
+	public void addMaxLifeRelative(CSimulation game, final int hitPointBonus) {
+		final int oldMaximumLife = getMaximumLife();
+		final float oldLife = getLife();
+		final int newMaximumLife = oldMaximumLife + hitPointBonus;
+		final float newLife = (oldLife * (newMaximumLife)) / oldMaximumLife;
+		setMaximumLife(newMaximumLife);
+		setLife(game, newLife);
 	}
 
 	public void setMaximumMana(final int maximumMana) {
@@ -1514,13 +1524,21 @@ public class CUnit extends CWidget {
 			receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_SELF);
 			return false;
 		}
+		if (targetsAllowed.contains(CTargetType.PLAYERUNITS) && source.getPlayerIndex() != getPlayerIndex()) {
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_ONE_OF_YOUR_OWN_UNITS);
+			return false;
+		}
+		if (targetsAllowed.contains(CTargetType.NON_MAGIC_IMMUNE) && isMagicImmune()) {
+			receiver.targetCheckFailed(CommandStringErrorKeys.THAT_UNIT_IS_IMMUNE_TO_MAGIC);
+			return false;
+		}
 		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND) && !targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR))) {
 			final int sourcePlayerIndex = source.getPlayerIndex();
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
 			if (!targetsAllowed.contains(CTargetType.ENEMIES) || !sourcePlayer.hasAlliance(this.playerIndex,
-					CAllianceType.PASSIVE)) {
+					CAllianceType.PASSIVE) || targetsAllowed.contains(CTargetType.FRIEND)) {
 				if (!targetsAllowed.contains(CTargetType.FRIEND) || sourcePlayer.hasAlliance(this.playerIndex,
-						CAllianceType.PASSIVE)) {
+						CAllianceType.PASSIVE) || targetsAllowed.contains(CTargetType.ENEMIES)) {
 					if (!targetsAllowed.contains(CTargetType.MECHANICAL) || this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
 						if (!targetsAllowed.contains(CTargetType.ORGANIC) || !this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
 							if (!targetsAllowed.contains(CTargetType.ANCIENT) || this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
@@ -2585,9 +2603,7 @@ public class CUnit extends CWidget {
 			throw new UnsupportedOperationException(
 					"cannot ask engine if unit is ETHEREAL: ETHEREAL is not yet implemented");
 		case MAGIC_IMMUNE:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is MAGIC_IMMUNE: MAGIC_IMMUNE is not yet implemented");
-
+			return isMagicImmune();
 		}
 		return false;
 	}
@@ -2876,5 +2892,13 @@ public class CUnit extends CWidget {
 
 	public void setDecays(boolean decays) {
 		this.decays = decays;
+	}
+
+	public void setMagicImmune(boolean magicImmune) {
+		this.magicImmune = magicImmune;
+	}
+
+	public boolean isMagicImmune() {
+		return magicImmune;
 	}
 }

@@ -22,6 +22,8 @@ public interface AbilityFields {
 	public static final War3ID PROJECTILE_HOMING_ENABLED = War3ID.fromString("amho");
 
 	public static final War3ID LIGHTNING = War3ID.fromString("alig");
+	public static final War3ID REQUIRED_LEVEL = War3ID.fromString("arlv");
+	public static final War3ID REQUIRED_LEVEL_SKIP = War3ID.fromString("alsk");
 
 
 	final class FingerOfDeathArchimonde {

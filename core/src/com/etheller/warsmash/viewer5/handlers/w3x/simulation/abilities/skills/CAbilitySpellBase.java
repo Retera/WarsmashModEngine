@@ -43,8 +43,16 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE, level);
 		this.cooldown = worldEditorAbility.readSLKTagFloat("Cool" + level);
 		this.castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME, level);
+		int requiredLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL, 0);
+
 		this.targetsAllowed = CTargetType
 				.parseTargetTypeSet(worldEditorAbility.getFieldAsString(AbilityFields.TARGETS_ALLOWED, level));
+		if (requiredLevel < 6 && !isPhysicalSpell() && !isUniversalSpell()) {
+			this.targetsAllowed.add(CTargetType.NON_MAGIC_IMMUNE);
+		}
+		if (isPhysicalSpell() && !isUniversalSpell()) {
+			this.targetsAllowed.add(CTargetType.NON_ETHEREAL);
+		}
 		final String animNames = worldEditorAbility.getFieldAsString(AbilityFields.ANIM_NAMES, 0);
 
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
@@ -93,6 +101,9 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 
 	public boolean doChannelTick(CSimulation simulation, CUnit caster, AbilityTarget target) {
 		return false;
+	}
+
+	public void doChannelEnd(CSimulation game, CUnit unit, AbilityTarget target, boolean interrupted) {
 	}
 
 	@Override
@@ -204,5 +215,13 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 
 	public War3ID getCode() {
 		return code;
+	}
+
+	public boolean isUniversalSpell() {
+		return false;
+	}
+
+	public boolean isPhysicalSpell() {
+		return false;
 	}
 }

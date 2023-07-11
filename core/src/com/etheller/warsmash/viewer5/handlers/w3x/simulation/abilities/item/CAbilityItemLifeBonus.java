@@ -20,12 +20,7 @@ public class CAbilityItemLifeBonus extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		final int oldMaximumLife = unit.getMaximumLife();
-		final float oldLife = unit.getLife();
-		final int newMaximumLife = StrictMath.round(oldMaximumLife + this.lifeBonus);
-		final float newLife = (oldLife * (newMaximumLife)) / oldMaximumLife;
-		unit.setMaximumLife(newMaximumLife);
-		unit.setLife(game, newLife);
+		unit.addMaxLifeRelative(game, this.lifeBonus);
 	}
 
 	@Override

@@ -41,7 +41,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityChainLightning;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityFeralSpirit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityWarStomp;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDarkRitual;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDeathCoil;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDeathPact;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionAcolyteHarvest;
@@ -153,6 +155,12 @@ public class CAbilityData {
 		// Death Knight
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AUdc"), new CAbilityTypeDefinitionSpellBase(
 				(handleId, alias) -> new CAbilityDeathCoil(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AUdp"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityDeathPact(handleId, alias)));
+
+		// Light
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AUdr"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityDarkRitual(handleId, alias)));
 
 		// Entangled Mine:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aenc"),

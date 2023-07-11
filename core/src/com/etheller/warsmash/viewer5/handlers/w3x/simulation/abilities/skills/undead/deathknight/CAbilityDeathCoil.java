@@ -81,12 +81,11 @@ public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 							if (!targetUnit.isUnitType(CUnitTypeJass.UNDEAD)) {
 								targetUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.DEATH, null,
 										healAmount * .5f);
-								simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET, 1).remove();
 							}
 							else {
 								targetUnit.heal(simulation, healAmount);
-								simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET, 0).remove();
 							}
+							simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.SPECIAL, 0).remove();
 						}
 					}
 				});

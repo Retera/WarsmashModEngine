@@ -128,8 +128,12 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		}
 		else {
-			receiver.useOk();
+			innerCheckCanUseSpell(game, unit, orderId, receiver);
 		}
+	}
+
+	protected void innerCheckCanUseSpell(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+		receiver.useOk();
 	}
 
 	public int getManaCost() {

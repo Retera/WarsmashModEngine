@@ -118,6 +118,8 @@ public class CUnit extends CWidget {
 	private final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
 
 	private int deathTurnTick;
+	private boolean raisable;
+	private boolean decays;
 	private boolean corpse;
 	private boolean boneCorpse;
 
@@ -194,6 +196,8 @@ public class CUnit extends CWidget {
 		this.structure = unitType.isBuilding();
 		this.stopBehavior = new CBehaviorStop(this);
 		this.defaultBehavior = this.stopBehavior;
+		this.raisable = unitType.isRaise();
+		this.decays = unitType.isDecay();
 		computeDerivedFields();
 	}
 
@@ -376,6 +380,8 @@ public class CUnit extends CWidget {
 		this.defenseType = this.unitType.getDefenseType();
 		this.acquisitionRange = this.unitType.getDefaultAcquisitionRange();
 		this.structure = this.unitType.isBuilding();
+		this.raisable = this.unitType.isRaise();
+		this.decays = this.unitType.isDecay();
 		final List<CAbility> persistedAbilities = new ArrayList<>();
 		final List<CAbility> removedAbilities = new ArrayList<>();
 		for (final CAbility ability : this.abilities) {
@@ -456,12 +462,12 @@ public class CUnit extends CWidget {
 				if (gameTurnTick > (this.deathTurnTick
 						+ (int) (this.unitType.getDeathTime() / WarsmashConstants.SIMULATION_STEP_TIME))) {
 					this.corpse = true;
-					if (!this.unitType.isRaise()) {
+					if (!this.isRaisable()) {
 						this.boneCorpse = true;
 						// start final phase immediately for "cant raise" case
 					}
 					if (!this.unitType.isHero()) {
-						if (!this.unitType.isDecay()) {
+						if (!this.isDecays()) {
 							// if we dont raise AND dont decay, then now that death anim is over
 							// we just delete the unit
 							return true;
@@ -479,7 +485,7 @@ public class CUnit extends CWidget {
 					this.boneCorpse = true;
 					this.deathTurnTick = gameTurnTick;
 
-					if (this.unitType.isRaise()) {
+					if (this.isRaisable()) {
 						game.getWorldCollision().addUnit(this);
 					}
 				}
@@ -1524,7 +1530,7 @@ public class CUnit extends CWidget {
 										if (!targetsAllowed.contains(CTargetType.HERO) || (getHeroData() != null)) {
 											if (!targetsAllowed.contains(CTargetType.NONHERO) || (getHeroData() == null)) {
 												if (isDead()) {
-													if (this.unitType.isRaise() && this.unitType.isDecay() && isBoneCorpse()) {
+													if (this.isRaisable() && this.isDecays() && isBoneCorpse()) {
 														if (targetsAllowed.contains(CTargetType.DEAD)) {
 															return true;
 														}
@@ -1641,7 +1647,7 @@ public class CUnit extends CWidget {
 		setLife(game, Math.min(getLife() + lifeToRegain, getMaximumLife()));
 	}
 
-	public void restoreMana(final CSimulation game, final int manaToRegain) {
+	public void restoreMana(final CSimulation game, final float manaToRegain) {
 		setMana(Math.min(getMana() + manaToRegain, getMaximumMana()));
 	}
 
@@ -2854,5 +2860,21 @@ public class CUnit extends CWidget {
 			return 0;
 		}
 		return expireTime - startTime;
+	}
+
+	public boolean isRaisable() {
+		return raisable;
+	}
+
+	public boolean isDecays() {
+		return decays;
+	}
+
+	public void setRaisable(boolean raisable) {
+		this.raisable = raisable;
+	}
+
+	public void setDecays(boolean decays) {
+		this.decays = decays;
 	}
 }

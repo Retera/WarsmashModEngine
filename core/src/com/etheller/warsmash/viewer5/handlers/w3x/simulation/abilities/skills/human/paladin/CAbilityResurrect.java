@@ -39,8 +39,7 @@ public class CAbilityResurrect extends CAbilityNoTargetSpellBase {
 		simulation.getWorldCollision().enumCorpsesInRange(caster.getX(), caster.getY(), this.areaOfEffect,
 				(enumUnit) -> {
 			if (unitsToResurrect.size() < numberOfCorpsesRaised) {
-				if (enumUnit.getUnitType().isRaise() && enumUnit.canBeTargetedBy(simulation, caster,
-						getTargetsAllowed())) {
+				if (enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
 					unitsToResurrect.add(enumUnit);
 				}
 				return false;

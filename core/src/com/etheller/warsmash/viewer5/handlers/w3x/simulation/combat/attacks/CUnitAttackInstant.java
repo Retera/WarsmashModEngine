@@ -48,7 +48,9 @@ public class CUnitAttackInstant extends CUnitAttack {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			simulation.createInstantAttackEffect(unit, this, widget);
-			widget.damage(simulation, unit, getAttackType(), getWeaponSound(), damage);
+			float modDamage = runPreDamageListeners(simulation, unit, target, damage);
+			float damageDealt = widget.damage(simulation, unit, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage);
+			runPostDamageListeners(simulation, unit, target, damageDealt);
 			attackListener.onHit(target, damage);
 		}
 	}

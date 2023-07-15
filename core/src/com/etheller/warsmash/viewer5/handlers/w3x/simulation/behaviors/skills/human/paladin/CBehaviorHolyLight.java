@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstract
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 
@@ -61,7 +62,7 @@ public class CBehaviorHolyLight extends CAbstractRangedBehavior {
 				final CUnit targetUnit = (CUnit) this.target;
 				final boolean undead = targetUnit.getClassifications().contains(CUnitClassification.UNDEAD);
 				if (undead) {
-					targetUnit.damage(simulation, this.unit, CAttackType.SPELLS, CWeaponSoundTypeJass.WHOKNOWS.name(),
+					targetUnit.damage(simulation, this.unit, CAttackType.SPELLS, CDamageType.MAGIC, CWeaponSoundTypeJass.WHOKNOWS.name(),
 							this.ability.getHealAmount() / 2);
 				} else {
 					float newLifeValue = targetUnit.getLife() + this.ability.getHealAmount();

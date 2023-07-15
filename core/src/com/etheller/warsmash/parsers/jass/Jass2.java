@@ -912,7 +912,7 @@ public class Jass2 {
 				final boolean attack = arguments.get(3).visit(BooleanJassValueVisitor.getInstance());
 				final boolean ranged = arguments.get(4).visit(BooleanJassValueVisitor.getInstance());
 				CAttackType attackType = nullable(arguments, 5, ObjectJassValueVisitor.getInstance());
-				final CDamageType damageType = nullable(arguments, 6, ObjectJassValueVisitor.getInstance());
+				CDamageType damageType = nullable(arguments, 6, ObjectJassValueVisitor.getInstance());
 				CWeaponSoundTypeJass weaponType = nullable(arguments, 7, ObjectJassValueVisitor.getInstance());
 				if (whichUnit != null) {
 					if (target != null) {
@@ -922,7 +922,10 @@ public class Jass2 {
 						if (weaponType == null) {
 							weaponType = CWeaponSoundTypeJass.WHOKNOWS;
 						}
-						target.damage(CommonEnvironment.this.simulation, whichUnit, attackType, weaponType.name(), (float) amount);
+						if (damageType == null) {
+							damageType = CDamageType.UNKNOWN;
+						}
+						target.damage(CommonEnvironment.this.simulation, whichUnit, attackType, damageType, weaponType.name(), (float) amount);
 					}
 				}
 				return BooleanJassValue.TRUE;

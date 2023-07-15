@@ -85,7 +85,9 @@ public class CUnitAttackMissile extends CUnitAttack {
 			final CUnitAttackListener attackListener) {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
-			widget.damage(cSimulation, source, getAttackType(), getWeaponSound(), damage);
+			float modDamage = runPreDamageListeners(cSimulation, source, target, damage);
+			float damageDealt = widget.damage(cSimulation, source, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage);
+			runPostDamageListeners(cSimulation, source, target, damageDealt);
 			attackListener.onHit(target, damage);
 		}
 	}

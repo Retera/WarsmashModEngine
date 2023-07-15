@@ -1,7 +1,10 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks;
 
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -9,6 +12,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackEffectListenerStacking;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPostDamageListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 
 /**
  * The base class for unit-data-based combat attacks.
@@ -43,6 +51,14 @@ public abstract class CUnitAttack {
 	private int primaryAttributeTemporaryDamageBonus;
 	private int permanentDamageBonus;
 	private int temporaryDamageBonus;
+	
+	private float attackSpeedModifier;
+	private float animationBackswingPointAS;
+	private float animationDamagePointAS;
+	private float cooldownTimeAS;
+	
+	private Map<String, Set<NonStackingStatBuff>> nonStackingFlatBuffs = new HashMap<>();
+	private Map<String, Set<NonStackingStatBuff>> nonStackingPctBuffs = new HashMap<>();
 
 	// calculate
 	private int totalBaseDamage;
@@ -98,18 +114,45 @@ public abstract class CUnitAttack {
 
 	public abstract CUnitAttack copy();
 
-	private void computeDerivedFields() {
+	public void computeDerivedFields() {
 		this.totalBaseDamage = this.damageBase + this.primaryAttributePermanentDamageBonus + this.permanentDamageBonus;
 		this.totalDamageDice = this.damageDice;
 		this.minDamageDisplay = this.totalBaseDamage + this.totalDamageDice;
 		this.maxDamageDisplay = this.totalBaseDamage + (this.totalDamageDice * this.damageSidesPerDie);
+		
+		int totalNSAtkBuff = 0;
+		for (String key : this.nonStackingFlatBuffs.keySet()) {
+			float buffForKey = 0;
+			for (NonStackingStatBuff buff : this.nonStackingFlatBuffs.get(key)) {
+				buffForKey = Math.max(buffForKey, buff.getValue());
+			}
+			totalNSAtkBuff += buffForKey;
+		}
+		int totalNSAtkPctBuff = 0;
+		for (String key : this.nonStackingPctBuffs.keySet()) {
+			float buffForKey = 0;
+			for (NonStackingStatBuff buff : this.nonStackingPctBuffs.get(key)) {
+				buffForKey = Math.max(buffForKey, buff.getValue());
+			}
+			int otherAtkBonus = (int)(this.totalBaseDamage * buffForKey) + (int)Math.ceil(this.totalDamageDice * (1+this.damageSidesPerDie) / 2 * buffForKey);    
+		    if (otherAtkBonus == 0) {
+		    	otherAtkBonus = (int)(buffForKey/Math.abs(buffForKey));
+		    }
+		    if (otherAtkBonus <= 0) {
+		    	otherAtkBonus = Math.max(otherAtkBonus, -1 * this.minDamageDisplay);
+		    }
+		    totalNSAtkPctBuff += otherAtkBonus;
+		}
+
 		if (this.minDamageDisplay < 0) {
 			this.minDamageDisplay = 0;
 		}
 		if (this.maxDamageDisplay < 0) {
 			this.maxDamageDisplay = 0;
 		}
-		this.totalTemporaryDamageBonus = this.primaryAttributeTemporaryDamageBonus + this.temporaryDamageBonus;
+
+		this.totalTemporaryDamageBonus = this.primaryAttributeTemporaryDamageBonus + this.temporaryDamageBonus
+				+ totalNSAtkBuff + totalNSAtkPctBuff;
 	}
 
 	public float getAnimationBackswingPoint() {
@@ -170,10 +213,12 @@ public abstract class CUnitAttack {
 
 	public void setAnimationBackswingPoint(final float animationBackswingPoint) {
 		this.animationBackswingPoint = animationBackswingPoint;
+		this.animationBackswingPointAS = this.animationBackswingPoint / (1 + this.attackSpeedModifier);
 	}
 
 	public void setAnimationDamagePoint(final float animationDamagePoint) {
 		this.animationDamagePoint = animationDamagePoint;
+		this.animationDamagePointAS = this.animationDamagePoint / (1 + this.attackSpeedModifier);
 	}
 
 	public void setAttackType(final CAttackType attackType) {
@@ -182,6 +227,7 @@ public abstract class CUnitAttack {
 
 	public void setCooldownTime(final float cooldownTime) {
 		this.cooldownTime = cooldownTime;
+		this.cooldownTimeAS = this.cooldownTime / (1 + this.attackSpeedModifier);
 	}
 
 	public void setDamageBase(final int damageBase) {
@@ -255,6 +301,45 @@ public abstract class CUnitAttack {
 		computeDerivedFields();
 	}
 
+	public float getAttackSpeedModifier() {
+		return this.attackSpeedModifier;
+	}
+
+	public void setAttackSpeedModifier(float attackSpeedModifier) {
+		this.attackSpeedModifier = Math.min(attackSpeedModifier, 4);
+		this.animationBackswingPointAS = this.animationBackswingPoint / (1 + this.attackSpeedModifier);
+		this.animationDamagePointAS = this.animationDamagePoint / (1 + this.attackSpeedModifier);
+		this.cooldownTimeAS = this.cooldownTime / (1 + this.attackSpeedModifier);
+	}
+
+	public float getAnimationBackswingPointAS() {
+		return animationBackswingPointAS;
+	}
+
+	public float getAnimationDamagePointAS() {
+		return animationDamagePointAS;
+	}
+
+	public float getCooldownTimeAS() {
+		return cooldownTimeAS;
+	}
+
+	public Map<String, Set<NonStackingStatBuff>> getNonStackingFlatBuffs() {
+		return nonStackingFlatBuffs;
+	}
+
+	public void setNonStackingFlatBuffs(Map<String, Set<NonStackingStatBuff>> nonStackingFlatBuffs) {
+		this.nonStackingFlatBuffs = nonStackingFlatBuffs;
+	}
+
+	public Map<String, Set<NonStackingStatBuff>> getNonStackingPctBuffs() {
+		return nonStackingPctBuffs;
+	}
+
+	public void setNonStackingPctBuffs(Map<String, Set<NonStackingStatBuff>> nonStackingPctBuffs) {
+		this.nonStackingPctBuffs = nonStackingPctBuffs;
+	}
+
 	public int getPrimaryAttributePermanentDamageBonus() {
 		return this.primaryAttributePermanentDamageBonus;
 	}
@@ -294,5 +379,29 @@ public abstract class CUnitAttack {
 			damage += seededRandom.nextInt(sidesPerDie) + 1;
 		}
 		return damage + getTotalTemporaryDamageBonus();
+	}
+
+	public float runPreDamageListeners(final CSimulation simulation, CUnit attacker, AbilityTarget target,
+			float damage) {
+		CUnitAttackPreDamageListenerDamageModResult result = new CUnitAttackPreDamageListenerDamageModResult(damage);
+		CUnitAttackEffectListenerStacking allowContinue = new CUnitAttackEffectListenerStacking();
+		for (int i = CUnitAttackPreDamageListener.PRIORITY_MIN; i <= CUnitAttackPreDamageListener.PRIORITY_MAX; i++) {
+			if (allowContinue.isAllowStacking()) {
+				for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(i)) {
+					if (allowContinue.isAllowSamePriorityStacking()) {
+						allowContinue = listener.onAttack(simulation, attacker, target, result);
+					}
+				}
+			}
+		}
+		return result.computeFinalDamage();
+	}
+
+	public void runPostDamageListeners(final CSimulation simulation, CUnit attacker, AbilityTarget target,
+			float actualDamage) {
+		for (CUnitAttackPostDamageListener listener : attacker.getPostDamageListeners()) {
+			listener.onHit(simulation, attacker, target, actualDamage);
+
+		}
 	}
 }

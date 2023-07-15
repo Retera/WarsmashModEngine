@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 
 public class CBehaviorThunderBolt extends CAbstractRangedBehavior implements CAbilityProjectileListener {
@@ -82,7 +83,7 @@ public class CBehaviorThunderBolt extends CAbstractRangedBehavior implements CAb
 	public void onHit(final CSimulation game, final AbilityTarget target) {
 		final CUnit unitTarget = target.visit(AbilityTargetUnitVisitor.INSTANCE);
 		if (unitTarget != null) {
-			unitTarget.damage(game, this.unit, CAttackType.SPELLS, CWeaponSoundTypeJass.WHOKNOWS.name(),
+			unitTarget.damage(game, this.unit, CAttackType.SPELLS, CDamageType.MAGIC, CWeaponSoundTypeJass.WHOKNOWS.name(),
 					this.ability.getDamage());
 			if (!unitTarget.isDead()) {
 				unitTarget.add(game, new CBuffStun(game.getHandleIdAllocator().createId(), ability.getBuffId(),

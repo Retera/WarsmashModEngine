@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
 public class CDestructable extends CWidget {
 
@@ -59,17 +60,24 @@ public class CDestructable extends CWidget {
 	}
 
 	@Override
-	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			final String weaponType, final float damage) {
+	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
+			final CDamageType damageType, final String weaponSoundType, final float damage) {
 		if (isInvulnerable()) {
-			return;
+			return 0;
 		}
 		final boolean wasDead = isDead();
 		this.life -= damage;
-		simulation.destructableDamageEvent(this, weaponType, this.destType.getArmorType());
+		simulation.destructableDamageEvent(this, weaponSoundType, this.destType.getArmorType());
 		if (!wasDead && isDead()) {
 			kill(simulation);
 		}
+		return damage;
+	}
+
+	@Override
+	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
+			final CDamageType damageType, final String weaponSoundType, final float damage, final float bonusDamage) {
+		return this.damage(simulation, source, attackType, damageType, weaponSoundType, damage + bonusDamage);
 	}
 
 	private void kill(final CSimulation simulation) {
@@ -97,12 +105,10 @@ public class CDestructable extends CWidget {
 		if (targetsAllowed.containsAll(this.destType.getTargetedAs())) {
 			if (isDead()) {
 				return targetsAllowed.contains(CTargetType.DEAD);
-			}
-			else {
+			} else {
 				return !targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE);
 			}
-		}
-		else {
+		} else {
 			System.err.println("Not targeting because " + targetsAllowed + " does not contain all of "
 					+ this.destType.getTargetedAs());
 		}

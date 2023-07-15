@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.abi
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +18,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -41,7 +42,11 @@ public class CAbilityAbilityBuilderSimpleAuraTemplate extends AbstractGenericSin
 
 	private CBuff buff;
 
-	private List<CAbility> abilitiesToAdd;
+	private Map<Integer,List<War3ID>> abilityIdsToAddPerLevel;
+	private List<War3ID> levellingAbilityIdsToAdd;
+
+	private Map<Integer,List<CAbility>> abilitiesToAddPerLevel;
+	private List<CLevelingAbility> levellingAbilitiesToAdd;
 	
 	private final int LEAVE_GROUP_TICKS = (int) (3 / WarsmashConstants.SIMULATION_STEP_TIME);
 	private final int ENTER_GROUP_TICKS = (int) (0.4 / WarsmashConstants.SIMULATION_STEP_TIME);
@@ -49,11 +54,13 @@ public class CAbilityAbilityBuilderSimpleAuraTemplate extends AbstractGenericSin
 	
 	public CAbilityAbilityBuilderSimpleAuraTemplate(int handleId, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, Map<String, Object> localStore,
-			List<ABAction> addToAuraActions, List<ABAction> updateAuraLevelActions,
-			List<ABAction> removeFromAuraActions) {
+			Map<Integer,List<War3ID>> abilityIdsToAddPerLevel, List<War3ID> levellingAbilityIdsToAdd) {
 		super(handleId, alias);
 		this.levelData = levelData;
 		this.localStore = localStore;
+		this.abilityIdsToAddPerLevel = abilityIdsToAddPerLevel;
+		this.levellingAbilityIdsToAdd = levellingAbilityIdsToAdd;
+		
 	}
 
 	@Override
@@ -66,9 +73,32 @@ public class CAbilityAbilityBuilderSimpleAuraTemplate extends AbstractGenericSin
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
+		game.getAbilityData().createAbility(getAlias(), game.getHandleIdAllocator().createId());
 		auraGroup = new HashSet<>();
 		localStore.put(ABLocalStoreKeys.AURAGROUP, auraGroup);
 		lastSeenLevel = getLevel();
+		this.abilitiesToAddPerLevel = new HashMap<>();
+		this.levellingAbilitiesToAdd = new ArrayList<>();
+		if (abilityIdsToAddPerLevel != null) {
+			for (Integer i : abilityIdsToAddPerLevel.keySet()) {
+				List<CAbility> list = new ArrayList<>();
+				abilitiesToAddPerLevel.put(i, list);
+				for (War3ID abilityId : abilityIdsToAddPerLevel.get(i)) {
+					list.add(game.getAbilityData().getAbilityType(abilityId)
+							.createAbility(game.getHandleIdAllocator().createId()));
+				}
+			}
+		}
+		if (levellingAbilityIdsToAdd != null) {
+			for (War3ID abilityId : levellingAbilityIdsToAdd) {
+				CAbility abil = game.getAbilityData().getAbilityType(abilityId)
+						.createAbility(game.getHandleIdAllocator().createId());
+				if (abil instanceof CLevelingAbility) {
+					levellingAbilitiesToAdd.add((CLevelingAbility) abil);
+				}
+			}
+		}
+		
 	}
 
 	@Override
@@ -123,27 +153,47 @@ public class CAbilityAbilityBuilderSimpleAuraTemplate extends AbstractGenericSin
 
 	public void addUnitToAura(CSimulation game, CUnit unit) {
 		auraGroup.add(unit);
-		if (addToAuraActions != null) {
-			for (ABAction action : addToAuraActions) {
-				action.runAction(game, unit, localStore);
+		if (abilitiesToAddPerLevel != null) {
+			for (CAbility ability : abilitiesToAddPerLevel.get(getLevel())) {
+				unit.add(game, ability);
+			}
+		}
+		if (levellingAbilitiesToAdd != null) {
+			for (CAbility ability : levellingAbilitiesToAdd) {
+				unit.add(game, ability);
 			}
 		}
 		unit.add(game, buff);
 	}
 
 	public void updateLevelOfAura(CSimulation game, CUnit unit, int prevLevel, int curLevel) {
-		if (updateAuraLevelActions != null) {
-			for (ABAction action : updateAuraLevelActions) {
-				action.runAction(game, unit, localStore);
+		if (abilitiesToAddPerLevel != null) {
+			for (CAbility ability : abilitiesToAddPerLevel.get(prevLevel)) {
+				unit.remove(game, ability);
+			}
+		}
+		if (abilitiesToAddPerLevel != null) {
+			for (CAbility ability : abilitiesToAddPerLevel.get(curLevel)) {
+				unit.add(game, ability);
+			}
+		}
+		if (levellingAbilitiesToAdd != null) {
+			for (CLevelingAbility ability : levellingAbilitiesToAdd) {
+				ability.setLevel(curLevel);
 			}
 		}
 	}
 
 	public void removeUnitFromAura(CSimulation game, CUnit unit) {
 		unit.remove(game, buff);
-		if (removeFromAuraActions != null) {
-			for (ABAction action : removeFromAuraActions) {
-				action.runAction(game, unit, localStore);
+		if (abilitiesToAddPerLevel != null) {
+			for (CAbility ability : abilitiesToAddPerLevel.get(getLevel())) {
+				unit.remove(game, ability);
+			}
+		}
+		if (levellingAbilitiesToAdd != null) {
+			for (CAbility ability : levellingAbilitiesToAdd) {
+				unit.remove(game, ability);
 			}
 		}
 		auraGroup.remove(unit);

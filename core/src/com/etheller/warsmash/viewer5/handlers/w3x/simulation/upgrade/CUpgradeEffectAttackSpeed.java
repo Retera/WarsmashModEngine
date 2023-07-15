@@ -1,41 +1,35 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade;
 
+import java.util.UUID;
+
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
 
 public class CUpgradeEffectAttackSpeed implements CUpgradeEffect {
 	private final float base;
 	private final float mod;
+	
+	private NonStackingStatBuff buff;
 
 	public CUpgradeEffectAttackSpeed(final float base, final float mod) {
 		this.base = base;
 		this.mod = mod;
+		this.buff = new NonStackingStatBuff(NonStackingStatBuffType.ATKSPD, UUID.randomUUID().toString(), base);
 	}
 
 	@Override
 	public void apply(final CSimulation simulation, final CUnit unit, final int level) {
-		int weaponIndex = 0;
-		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
-			final float attackCooldownReduction = StrictMath
-					.round(unit.getUnitType().getAttacks().get(weaponIndex).getCooldownTime()
-							* Util.levelValue(base, mod, level - 1));
-			attack.setCooldownTime(attack.getCooldownTime() - attackCooldownReduction);
-			weaponIndex++;
-		}
+		this.buff.setValue(base + mod * level);
+		unit.addNonStackingBuff(buff);
 		unit.notifyAttacksChanged(); // rebuild <min> - <max> ui for selected unit maybe
 	}
 
 	@Override
 	public void unapply(final CSimulation simulation, final CUnit unit, final int level) {
-		int weaponIndex = 0;
-		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
-			final float attackCooldownReduction = StrictMath
-					.round(unit.getUnitType().getAttacks().get(weaponIndex).getCooldownTime()
-							* Util.levelValue(base, mod, level - 1));
-			attack.setCooldownTime(attack.getCooldownTime() + attackCooldownReduction);
-			weaponIndex++;
-		}
+		this.buff.setValue(base + mod * level);
+		unit.removeNonStackingBuff(buff);
 		unit.notifyAttacksChanged(); // rebuild <min> - <max> ui for selected unit maybe
 	}
 }

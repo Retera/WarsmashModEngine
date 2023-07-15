@@ -9,6 +9,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
 public class CItem extends CWidget {
 	private final War3ID typeId;
@@ -38,18 +40,25 @@ public class CItem extends CWidget {
 	}
 
 	@Override
-	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			final String weaponType, final float damage) {
+	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage) {
 		if (this.invulnerable) {
-			return;
+			return 0;
 		}
 		final boolean wasDead = isDead();
 		this.life -= damage;
-		simulation.itemDamageEvent(this, weaponType, this.itemType.getArmorType());
+		simulation.itemDamageEvent(this, weaponSoundType, this.itemType.getArmorType());
 		if (isDead() && !wasDead) {
 			fireDeathEvents(simulation);
 			forceDropIfHeld(simulation);
 		}
+		return damage;
+	}
+
+	@Override
+	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage, final float bonusDamage) {
+		return this.damage(simulation, source, attackType, damageType, weaponSoundType, damage + bonusDamage);
 	}
 
 	public void forceDropIfHeld(final CSimulation simulation) {

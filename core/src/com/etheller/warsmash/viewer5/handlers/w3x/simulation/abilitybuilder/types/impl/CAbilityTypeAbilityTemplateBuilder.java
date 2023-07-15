@@ -10,6 +10,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.template.CAbilityAbilityBuilderAuraTemplate;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.template.CAbilityAbilityBuilderSimpleAuraTemplate;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.template.CAbilityAbilityBuilderStatAuraTemplate;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
 
@@ -30,8 +32,10 @@ public class CAbilityTypeAbilityTemplateBuilder extends CAbilityType<CAbilityTyp
 		localStore.put(ABLocalStoreKeys.ALIAS, getAlias());
 		
 		switch (parser.getTemplateType()) {
+		case AURA_STATS:
+			return new CAbilityAbilityBuilderStatAuraTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getStatBuffsFromDataFields(), parser.getMeleeRangeTargetOverride());
 		case AURA_SIMPLE:
-			return new CAbilityAbilityBuilderSimpleAuraTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getAddToAuraActions(), parser.getUpdateAuraLevelActions(), parser.getRemoveFromAuraActions());
+			return new CAbilityAbilityBuilderSimpleAuraTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getAbilityIdsToAddPerLevel(), parser.getLevellingAbilityIdsToAdd());
 		case AURA:
 		default:
 			return new CAbilityAbilityBuilderAuraTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getAddToAuraActions(), parser.getUpdateAuraLevelActions(), parser.getRemoveFromAuraActions());

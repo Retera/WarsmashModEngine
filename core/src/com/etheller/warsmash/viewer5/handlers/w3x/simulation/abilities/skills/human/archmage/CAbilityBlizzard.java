@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 
@@ -90,7 +91,7 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 										if (possibleTarget.canReach(target, CAbilityBlizzard.this.areaOfEffect)
 												&& possibleTarget.canBeTargetedBy(simulation, unit,
 														getTargetsAllowed())) {
-											possibleTarget.damage(simulation, unit, CAttackType.SPELLS,
+											possibleTarget.damage(simulation, unit, CAttackType.SPELLS, CDamageType.MAGIC,
 													CWeaponSoundTypeJass.WHOKNOWS.name(), CAbilityBlizzard.this.damage);
 										}
 										return false;

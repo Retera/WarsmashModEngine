@@ -1,9 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
 import java.util.List;
+import java.util.Map;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.MeleeRangeTargetOverride;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.StatBuffFromDataField;
 
 public class AbilityBuilderParser {
 
@@ -28,11 +32,7 @@ public class AbilityBuilderParser {
 	private List<ABAction> onUpdateCasting;
 	
 	//Template only
-	private AbilityBuilderTemplateType templateType;
-	//Aura template
-	private List<ABAction> addToAuraActions;
-	private List<ABAction> updateAuraLevelActions;
-	private List<ABAction> removeFromAuraActions;
+	private AbilityBuilderParserTemplateFields templateFields;
 
 	public List<AbilityBuilderDupe> getIds() {
 		return ids;
@@ -155,34 +155,66 @@ public class AbilityBuilderParser {
 	}
 
 	public AbilityBuilderTemplateType getTemplateType() {
-		return templateType;
+		return templateFields.getTemplateType();
 	}
 
 	public void setTemplateType(AbilityBuilderTemplateType templateType) {
-		this.templateType = templateType;
+		this.templateFields.setTemplateType(templateType);
 	}
 
 	public List<ABAction> getAddToAuraActions() {
-		return addToAuraActions;
+		return templateFields.getAddToAuraActions();
 	}
 
 	public void setAddToAuraActions(List<ABAction> addToAuraActions) {
-		this.addToAuraActions = addToAuraActions;
+		this.templateFields.setAddToAuraActions(addToAuraActions);
 	}
 
 	public List<ABAction> getUpdateAuraLevelActions() {
-		return updateAuraLevelActions;
+		return templateFields.getUpdateAuraLevelActions();
 	}
 
 	public void setUpdateAuraLevelActions(List<ABAction> updateAuraLevelActions) {
-		this.updateAuraLevelActions = updateAuraLevelActions;
+		this.templateFields.setUpdateAuraLevelActions(updateAuraLevelActions);
 	}
 
 	public List<ABAction> getRemoveFromAuraActions() {
-		return removeFromAuraActions;
+		return templateFields.getRemoveFromAuraActions();
 	}
 
 	public void setRemoveFromAuraActions(List<ABAction> removeFromAuraActions) {
-		this.removeFromAuraActions = removeFromAuraActions;
+		this.templateFields.setRemoveFromAuraActions(removeFromAuraActions);
+	}
+
+	public Map<Integer, List<War3ID>> getAbilityIdsToAddPerLevel() {
+		return templateFields.getAbilityIdsToAddPerLevel();
+	}
+
+	public void setAbilityIdsToAddPerLevel(Map<Integer, List<War3ID>> abilityIdsToAddPerLevel) {
+		this.setAbilityIdsToAddPerLevel(abilityIdsToAddPerLevel);
+	}
+
+	public List<War3ID> getLevellingAbilityIdsToAdd() {
+		return templateFields.getLevellingAbilityIdsToAdd();
+	}
+
+	public void setLevellingAbilityIdsToAdd(List<War3ID> levellingAbilityIdsToAdd) {
+		this.templateFields.setLevellingAbilityIdsToAdd(levellingAbilityIdsToAdd);
+	}
+
+	public List<StatBuffFromDataField> getStatBuffsFromDataFields() {
+		return templateFields.getStatBuffsFromDataFields();
+	}
+
+	public void setStatBuffsFromDataFields(List<StatBuffFromDataField> statBuffsFromDataFields) {
+		this.templateFields.setStatBuffsFromDataFields(statBuffsFromDataFields);
+	}
+
+	public MeleeRangeTargetOverride getMeleeRangeTargetOverride() {
+		return templateFields.getMeleeRangeTargetOverride();
+	}
+
+	public void setMeleeRangeTargetOverride(MeleeRangeTargetOverride meleeRangeTargetOverride) {
+		this.templateFields.setMeleeRangeTargetOverride(meleeRangeTargetOverride);
 	}
 }

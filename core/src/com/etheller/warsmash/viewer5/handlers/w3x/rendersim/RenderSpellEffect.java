@@ -33,6 +33,10 @@ public class RenderSpellEffect implements RenderEffect {
 		this.modelInstance.localRotation.setFromAxisRad(0, 0, 1, yaw);
 		this.modelInstance.sequenceEnded = true;
 		playNextAnimation();
+		if (this.modelInstance.sequence == -1 && model.getSequences().size() > 0) {
+			this.modelInstance.setSequence(0);
+			this.animationQueueIndex = 0;
+		}
 	}
 
 	@Override

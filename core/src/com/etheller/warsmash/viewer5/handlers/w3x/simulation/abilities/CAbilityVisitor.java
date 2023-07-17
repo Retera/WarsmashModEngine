@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
@@ -64,6 +65,8 @@ public interface CAbilityVisitor<T> {
 	T accept(CAbilityReturnResources ability);
 
 	T accept(GenericSingleIconActiveAbility ability);
+
+	T accept(GenericSingleIconPassiveAbility ability);
 
 	T accept(CAbilityRally ability);
 

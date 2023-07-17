@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility {
 	public static final EnumSet<CTargetType> TREE_ALIVE_TYPE_ONLY = EnumSet.of(CTargetType.TREE, CTargetType.ALIVE);
@@ -86,15 +87,12 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (target instanceof CDestructable) {
-			if (target.canBeTargetedBy(game, unit, TREE_ALIVE_TYPE_ONLY)) {
+			if (target.canBeTargetedBy(game, unit, TREE_ALIVE_TYPE_ONLY, receiver)) {
 				receiver.targetOk(target);
-			}
-			else {
-				receiver.mustTargetResources();
 			}
 		}
 		else {
-			receiver.mustTargetResources();
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_TREE);
 		}
 	}
 

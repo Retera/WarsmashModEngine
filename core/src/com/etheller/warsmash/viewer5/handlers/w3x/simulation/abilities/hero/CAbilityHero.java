@@ -105,7 +105,7 @@ public class CAbilityHero extends AbstractCAbility {
 			}
 		}
 		else {
-			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
+			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
 					"NOTEXTERN: Ability is not yet programmed, unable to learn!");
 		}
 		return false;
@@ -319,17 +319,20 @@ public class CAbilityHero extends AbstractCAbility {
 		final int deltaStrength = currentStrength - prevStrength;
 		final int currentIntelligence = this.intelligence.getCurrent();
 		final int deltaIntelligence = currentIntelligence - prevIntelligence;
-		final int currentAgilityBase = this.agility.getBase();
+		final int currentAgility = this.agility.getCurrent();
+		final int currentAgilityBase = this.agility.getCurrentBase();
 		final int currentAgilityBonus = this.agility.getBonus();
 
 		final HeroStatValue primaryAttributeStat = getStat(unit.getUnitType().getPrimaryAttribute());
-		final int primaryAttributeBase = primaryAttributeStat.getBase();
+		final int primaryAttributeBase = primaryAttributeStat.getCurrentBase();
 		final int primaryAttributeBonus = primaryAttributeStat.getBonus();
+		float agiAttackSpeedBonus = gameplayConstants.getAgiAttackSpeedBonus() * currentAgility;
 		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setPrimaryAttributePermanentDamageBonus(
 					(int) (primaryAttributeBase * gameplayConstants.getStrAttackBonus()));
 			attack.setPrimaryAttributeTemporaryDamageBonus(
 					(int) (primaryAttributeBonus * gameplayConstants.getStrAttackBonus()));
+			attack.setAgilityAttackSpeedBonus(agiAttackSpeedBonus);
 		}
 
 		final float hitPointIncrease = gameplayConstants.getStrHitPointBonus() * deltaStrength;
@@ -383,6 +386,10 @@ public class CAbilityHero extends AbstractCAbility {
 
 		public int getBase() {
 			return this.base;
+		}
+
+		public int getCurrentBase() {
+			return this.currentBase;
 		}
 
 		public int getBonus() {

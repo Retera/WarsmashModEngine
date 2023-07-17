@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
 	private EnumSet<CTargetType> targetsAllowed;
@@ -38,17 +39,28 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target.canBeTargetedBy(game, unit, this.targetsAllowed) && (target.getLife() < target.getMaxLife())) {
-			final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
-			if ((targetUnit != null) && targetUnit.isConstructing()) {
-				receiver.orderIdNotAccepted();
+		if(target.getLife() < target.getMaxLife()) {
+			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+				final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+				if ((targetUnit != null) && targetUnit.isConstructing()) {
+					if(orderId == OrderIds.smart) {
+						receiver.orderIdNotAccepted();
+					} else {
+						receiver.targetCheckFailed(CommandStringErrorKeys.THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION);
+					}
+				}
+				else {
+					receiver.targetOk(target);
+				}
 			}
-			else {
-				receiver.targetOk(target);
-			}
+			// else receiver called by canBeTargetedBy
 		}
 		else {
-			receiver.orderIdNotAccepted();
+			if(orderId == OrderIds.smart) {
+				receiver.orderIdNotAccepted();
+			} else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
+			}
 		}
 	}
 
@@ -61,7 +73,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		receiver.mustTargetType(AbilityTargetCheckReceiver.TargetType.UNIT);
+		receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 	}
 
 	@Override

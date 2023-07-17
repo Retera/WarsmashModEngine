@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 	private final CAbilityAcolyteHarvest abilityAcolyteHarvest;
@@ -34,7 +35,7 @@ public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 		if (!this.harvesting) {
 			final HarvestStartResult result = onStartHarvesting(simulation);
 			if (result == HarvestStartResult.DENIED) {
-				simulation.getCommandErrorListener().showBlightRingFullError(this.unit.getPlayerIndex());
+				simulation.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(), CommandStringErrorKeys.THAT_GOLD_MINE_CANT_SUPPORT_ANY_MORE_ACOLYTES);
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
 			else if (result == HarvestStartResult.ACCEPTED) {

@@ -92,18 +92,19 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 				}
 			}
 			else if (currentTurnTick >= cooldownEndTime) {
-				final float cooldownTime = this.unitAttack.getCooldownTimeAS();
-				final float animationBackswingPoint = this.unitAttack.getAnimationBackswingPointAS();
+				final float cooldownTime = this.unitAttack.getCooldownTime();
+				final float animationDamagePoint = this.unitAttack.getAnimationDamagePoint();
+				final float animationBackswingPoint = this.unitAttack.getAnimationBackswingPoint();
 				final int a1CooldownSteps = (int) (cooldownTime / WarsmashConstants.SIMULATION_STEP_TIME);
 				final int a1BackswingSteps = (int) (animationBackswingPoint / WarsmashConstants.SIMULATION_STEP_TIME);
-				final int a1DamagePointSteps = (int) (this.unitAttack.getAnimationDamagePointAS()
+				final int a1DamagePointSteps = (int) (animationDamagePoint
 						/ WarsmashConstants.SIMULATION_STEP_TIME);
 				this.unit.setCooldownEndTime(currentTurnTick + a1CooldownSteps);
 				this.thisOrderCooldownEndTime = currentTurnTick + a1CooldownSteps;
 				this.damagePointLaunchTime = currentTurnTick + a1DamagePointSteps;
 				this.backSwingTime = currentTurnTick + a1DamagePointSteps + a1BackswingSteps;
 				this.unit.getUnitAnimationListener().playAnimationWithDuration(true, PrimaryTag.ATTACK,
-						SequenceUtils.EMPTY, animationBackswingPoint + this.unitAttack.getAnimationDamagePointAS(), true);
+						SequenceUtils.EMPTY, animationBackswingPoint + animationDamagePoint, true);
 				this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.READY, false);
 			}
 			else if (currentTurnTick >= this.thisOrderCooldownEndTime) {

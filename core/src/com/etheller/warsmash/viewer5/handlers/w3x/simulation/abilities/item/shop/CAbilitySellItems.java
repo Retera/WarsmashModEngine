@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public final class CAbilitySellItems extends AbstractCAbility {
@@ -37,7 +38,7 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
-		final int itemIndex = (orderId & 0xFF00) >> 8;
+		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
 		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
 			final CItemType itemType = game.getItemData().getItemType(this.itemsSold.get(itemIndex));
 			if (itemType != null) {
@@ -47,11 +48,11 @@ public final class CAbilitySellItems extends AbstractCAbility {
 						receiver.useOk();
 					}
 					else {
-						receiver.notEnoughResources(ResourceType.LUMBER);
+						receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 					}
 				}
 				else {
-					receiver.notEnoughResources(ResourceType.GOLD);
+					receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 				}
 			}
 			else {
@@ -79,7 +80,7 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
-		final int itemIndex = (orderId & 0xFF00) >> 8;
+		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
 		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
 			receiver.targetOk(null);
 		}
@@ -122,7 +123,7 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
-		final int itemIndex = (orderId & 0xFF00) >> 8;
+		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
 		final CAbilityNeutralBuilding neutralBuildingData = caster.getNeutralBuildingData();
 		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
 			final War3ID itemTypeId = this.itemsSold.get(itemIndex);

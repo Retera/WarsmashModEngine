@@ -8,6 +8,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -156,11 +157,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CVersion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CHashtable;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialogButton;
@@ -2347,6 +2343,82 @@ public class Jass2 {
 				final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
 				final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 				return new HandleJassValue(effectType, war3MapViewer.spawnSpellEffectEx((float) x, (float) y, 0 /* facing */, new War3ID(rawcode), whichEffectType, 0));
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("AddLightning", (arguments, globalScope, triggerScope) -> {
+				final String rawcode = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+				final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+				final double x2 = arguments.get(4).visit(RealJassValueVisitor.getInstance());
+				final double y2 = arguments.get(5).visit(RealJassValueVisitor.getInstance());
+				return new HandleJassValue(lightningType, war3MapViewer.createLightning(War3ID.fromString(rawcode), (float) x,
+						(float) y, war3MapViewer.terrain.getGroundHeight((float) x, (float) y), (float) x2, (float) y2,
+						war3MapViewer.terrain.getGroundHeight((float) x2, (float) y2)));
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("AddLightningEx", (arguments, globalScope, triggerScope) -> {
+				final String rawcode = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+				final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+				final double z = arguments.get(4).visit(RealJassValueVisitor.getInstance());
+				final double x2 = arguments.get(5).visit(RealJassValueVisitor.getInstance());
+				final double y2 = arguments.get(6).visit(RealJassValueVisitor.getInstance());
+				final double z2 = arguments.get(7).visit(RealJassValueVisitor.getInstance());
+				return new HandleJassValue(lightningType, war3MapViewer.createLightning(War3ID.fromString(rawcode), (float) x,
+						(float) y, (float) z, (float) x2, (float) y2, (float) z2));
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("MoveLightning", (arguments, globalScope,
+																					 triggerScope) -> {
+				final SimulationRenderComponentLightningMovable lightning = nullable(arguments, 0,
+						ObjectJassValueVisitor.getInstance());
+				final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+				final double x2 = arguments.get(4).visit(RealJassValueVisitor.getInstance());
+				final double y2 = arguments.get(5).visit(RealJassValueVisitor.getInstance());
+				if (lightning != null && !lightning.isRemoved()) {
+					lightning.move((float) x, (float) y, (float) x2, (float) y2);
+					return BooleanJassValue.TRUE;
+				}
+				return BooleanJassValue.FALSE;
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("MoveLightningEx", (arguments, globalScope,
+																					   triggerScope) -> {
+				final SimulationRenderComponentLightningMovable lightning = nullable(arguments, 0,
+						ObjectJassValueVisitor.getInstance());
+				final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+				final double z = arguments.get(4).visit(RealJassValueVisitor.getInstance());
+				final double x2 = arguments.get(5).visit(RealJassValueVisitor.getInstance());
+				final double y2 = arguments.get(6).visit(RealJassValueVisitor.getInstance());
+				final double z2 = arguments.get(7).visit(RealJassValueVisitor.getInstance());
+				if (lightning != null && !lightning.isRemoved()) {
+					lightning.move((float) x, (float) y, (float) z, (float) x2, (float) y2, (float) z2);
+					return BooleanJassValue.TRUE;
+				}
+				return BooleanJassValue.FALSE;
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyLightning", (arguments, globalScope,
+																						triggerScope) -> {
+				final SimulationRenderComponentLightning lightning = nullable(arguments, 0,
+						ObjectJassValueVisitor.getInstance());
+				BooleanJassValue wasRemoved = BooleanJassValue.FALSE;
+				if (lightning != null && !lightning.isRemoved()) {
+					lightning.remove();
+					wasRemoved = BooleanJassValue.TRUE;
+				}
+				return wasRemoved;
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetLightningColor", (arguments, globalScope,
+																					 triggerScope) -> {
+				final SimulationRenderComponentLightningMovable lightning = nullable(arguments, 0,
+						ObjectJassValueVisitor.getInstance());
+				final double r = arguments.get(1).visit(RealJassValueVisitor.getInstance());
+				final double g = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double b = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+				final double a = arguments.get(4).visit(RealJassValueVisitor.getInstance());
+				if (lightning != null && !lightning.isRemoved()) {
+					lightning.setColor((float)r, (float)g, (float)b, (float)a);
+					return BooleanJassValue.TRUE;
+				}
+				return BooleanJassValue.FALSE;
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitFacing", (arguments, globalScope, triggerScope) -> {
 				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

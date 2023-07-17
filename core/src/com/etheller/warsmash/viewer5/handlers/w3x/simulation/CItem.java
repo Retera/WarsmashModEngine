@@ -11,6 +11,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CItem extends CWidget {
 	private final War3ID typeId;
@@ -70,8 +72,12 @@ public class CItem extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-			final EnumSet<CTargetType> targetsAllowed) {
-		return targetsAllowed.contains(CTargetType.ITEM);
+								   final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
+		if (targetsAllowed.contains(CTargetType.ITEM)) {
+			return true;
+		}
+		receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ITEMS);
+		return false;
 	}
 
 	public void setX(final float x, final CWorldCollision collision) {

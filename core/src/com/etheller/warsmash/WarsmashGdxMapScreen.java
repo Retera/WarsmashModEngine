@@ -240,6 +240,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 				dataSourcesList.add(new CascDataSourceDescriptor(path, parsedPrefixes));
 				break;
 			}
+			case "":
+				continue;
 			default:
 				throw new RuntimeException("Unknown data source type: " + type);
 			}

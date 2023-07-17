@@ -107,9 +107,9 @@ public class CUnit extends CWidget {
 	private int permanentDefenseBonus;
 	private float temporaryDefenseBonus;
 	private float totalTemporaryDefenseBonus;
-	
+
 	private int speedBonus;
-	
+
 	private CUnitDefaultThornsListener flatThornsListener = null;
 	private CUnitDefaultThornsListener percentThornsListener = null;
 	private CUnitDefaultLifestealListener lifestealListener = null;
@@ -118,6 +118,7 @@ public class CUnit extends CWidget {
 
 	private int currentDefenseDisplay;
 	private float currentDefense;
+	private float baseLifeRegenPerTick;
 	private float currentLifeRegenPerTick;
 	private float currentManaRegenPerTick;
 	private CDefenseType defenseType;
@@ -288,17 +289,30 @@ public class CUnit extends CWidget {
 			float totalNSDefBuff = 0;
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.DEF);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSDefBuff += buffForKey;
 			}
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.DEFPCT);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
-				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+				Float buffForKey = null;			for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSDefBuff += buffForKey * this.currentDefenseDisplay;
 			}
@@ -309,45 +323,106 @@ public class CUnit extends CWidget {
 			break;
 		case HPGEN:
 		case HPGENPCT:
+		case MAXHPGENPCT:
 			float totalNSHPGenBuff = 0;
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.HPGEN);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSHPGenBuff += buffForKey;
 			}
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.HPGENPCT);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSHPGenBuff += buffForKey * (this.lifeRegen + this.lifeRegenBonus + this.lifeRegenStrengthBonus);
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MAXHPGENPCT);
+			for (String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSHPGenBuff += buffForKey * (this.maximumLife);
 			}
 			this.currentLifeRegenPerTick = (this.lifeRegen + this.lifeRegenBonus + this.lifeRegenStrengthBonus
 					+ totalNSHPGenBuff) * WarsmashConstants.SIMULATION_STEP_TIME;
 			break;
 		case MPGEN:
 		case MPGENPCT:
+		case MAXMPGENPCT:
 			float totalNSMPGenBuff = 0;
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MPGEN);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSMPGenBuff += buffForKey;
 			}
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MPGENPCT);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSMPGenBuff += buffForKey
 						* (this.manaRegen + this.manaRegenBonus + this.manaRegenIntelligenceBonus);
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MAXMPGENPCT);
+			for (String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMPGenBuff += buffForKey * this.maximumMana;
+				System.err.println("Added max mana regen = " + (buffForKey * this.maximumMana));
 			}
 			this.currentManaRegenPerTick = (this.manaRegen + this.manaRegenBonus + this.manaRegenIntelligenceBonus
 					+ totalNSMPGenBuff) * WarsmashConstants.SIMULATION_STEP_TIME;
@@ -357,17 +432,31 @@ public class CUnit extends CWidget {
 			float totalNSMvSpdBuff = 0;
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MVSPD);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSMvSpdBuff += buffForKey;
 			}
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MVSPDPCT);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSMvSpdBuff += buffForKey * this.speed;
 			}
@@ -399,9 +488,16 @@ public class CUnit extends CWidget {
 			float totalNSAtkSpdBuff = 0;
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.ATKSPD);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSAtkSpdBuff += buffForKey;
 			}
@@ -414,9 +510,16 @@ public class CUnit extends CWidget {
 			float totalNSVampBuff = 0;
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.HPSTEAL);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSVampBuff += buffForKey;
 			}
@@ -431,9 +534,16 @@ public class CUnit extends CWidget {
 			float totalNSThornsBuff = 0;
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.THORNS);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSThornsBuff += buffForKey;
 			}
@@ -448,9 +558,16 @@ public class CUnit extends CWidget {
 			float totalNSThornsPctBuff = 0;
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.THORNSPCT);
 			for (String key : buffKeyMap.keySet()) {
-				float buffForKey = 0;
+				Float buffForKey = null;
 				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
+				}
+				if (buffForKey == null) {
+					continue;
 				}
 				totalNSThornsPctBuff += buffForKey;
 			}
@@ -465,26 +582,29 @@ public class CUnit extends CWidget {
 			break;
 		}
 	}
-	
+
 	private void initializeNonStackingBuffs() {
 		this.nonStackingBuffs.put(NonStackingStatBuffType.ATKSPD, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.DEF, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.DEFPCT, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.HPGEN, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.HPGENPCT, new HashMap<>());
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXHPGENPCT, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.HPSTEAL, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATK, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATKPCT, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.MPGEN, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.MPGENPCT, new HashMap<>());
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXMPGENPCT, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.MVSPDPCT, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.MVSPD, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATK, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATKPCT, new HashMap<>());
-		this.nonStackingBuffs.put(NonStackingStatBuffType.THORNS, new HashMap<>());;
+		this.nonStackingBuffs.put(NonStackingStatBuffType.THORNS, new HashMap<>());
+		;
 		this.nonStackingBuffs.put(NonStackingStatBuffType.THORNSPCT, new HashMap<>());
 	}
-	
+
 	private void initializeListenerLists() {
 		for (int i = CUnitAttackPreDamageListener.PRIORITY_MIN; i <= CUnitAttackPreDamageListener.PRIORITY_MAX; i++) {
 			preDamageListeners.put(i, new ArrayList<>());
@@ -495,18 +615,10 @@ public class CUnit extends CWidget {
 	}
 
 	private void computeAllDerivedFields() {
+		this.baseLifeRegenPerTick = this.lifeRegen * WarsmashConstants.SIMULATION_STEP_TIME;
 		computeDerivedFields(NonStackingStatBuffType.DEF);
 		computeDerivedFields(NonStackingStatBuffType.HPGEN);
 		computeDerivedFields(NonStackingStatBuffType.MPGEN);
-
-		this.currentDefenseDisplay = this.unitType.getDefense() + this.agilityDefensePermanentBonus
-				+ this.permanentDefenseBonus;
-		this.totalTemporaryDefenseBonus = this.temporaryDefenseBonus + this.agilityDefenseTemporaryBonus;
-		this.currentDefense = this.currentDefenseDisplay + this.totalTemporaryDefenseBonus;
-		this.currentLifeRegenPerTick = (this.lifeRegen + this.lifeRegenBonus + this.lifeRegenStrengthBonus)
-				* WarsmashConstants.SIMULATION_STEP_TIME;
-		this.currentManaRegenPerTick = (this.manaRegen + this.manaRegenBonus + this.manaRegenIntelligenceBonus)
-				* WarsmashConstants.SIMULATION_STEP_TIME;
 	}
 
 	public void setManaRegenIntelligenceBonus(final float manaRegenIntelligenceBonus) {
@@ -679,10 +791,12 @@ public class CUnit extends CWidget {
 
 	public void setMaximumLife(final int maximumLife) {
 		this.maximumLife = maximumLife;
+		computeDerivedFields(NonStackingStatBuffType.MAXHPGENPCT);
 	}
 
 	public void setMaximumMana(final int maximumMana) {
 		this.maximumMana = maximumMana;
+		computeDerivedFields(NonStackingStatBuffType.MAXMPGENPCT);
 	}
 
 	public void setSpeed(final int speed) {
@@ -982,6 +1096,13 @@ public class CUnit extends CWidget {
 						}
 						if (active) {
 							float lifePlusRegen = this.life + this.currentLifeRegenPerTick;
+							if (lifePlusRegen > this.maximumLife) {
+								lifePlusRegen = this.maximumLife;
+							}
+							this.life = lifePlusRegen;
+							this.stateNotifier.lifeChanged();
+						} else {
+							float lifePlusRegen = this.life + this.currentLifeRegenPerTick - this.baseLifeRegenPerTick;
 							if (lifePlusRegen > this.maximumLife) {
 								lifePlusRegen = this.maximumLife;
 							}
@@ -1422,14 +1543,14 @@ public class CUnit extends CWidget {
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage) {
+	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
+			final CDamageType damageType, final String weaponSoundType, final float damage) {
 		return this.damage(simulation, source, attackType, damageType, weaponSoundType, damage, 0);
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage, final float bonusDamage) {
+	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
+			final CDamageType damageType, final String weaponSoundType, final float damage, final float bonusDamage) {
 		final boolean wasDead = isDead();
 		float trueDamage = 0;
 		if (!this.invulnerable) {
@@ -3021,13 +3142,13 @@ public class CUnit extends CWidget {
 	public List<CUnitAttackPostDamageListener> getPostDamageListeners() {
 		return this.postDamageListeners;
 	}
-	
+
 	public void addPostDamageListener(CUnitAttackPostDamageListener listener) {
 		postDamageListeners.add(0, listener);
 	}
 
 	public void removePostDamageListener(CUnitAttackPostDamageListener listener) {
-			postDamageListeners.remove(listener);
+		postDamageListeners.remove(listener);
 	}
 
 	public void addDamageTakenListener(CUnitAttackDamageTakenListener listener) {

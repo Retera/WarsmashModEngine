@@ -7,7 +7,9 @@ public enum StatBuffType {
 	ATKSPD,
 	DEF,
 	HPGEN,
+	MAXHPGEN,
 	MPGEN,
+	MAXMPGEN,
 	MVSPD,
 	HPSTEAL,
 	THORNS;
@@ -26,6 +28,18 @@ public enum StatBuffType {
 				return NonStackingStatBuffType.HPGENPCT;
 			} else {
 				return NonStackingStatBuffType.HPGEN;
+			}
+		case MAXHPGEN:
+			if (percentage) {
+				return NonStackingStatBuffType.MAXHPGENPCT;
+			} else {
+				return NonStackingStatBuffType.HPGEN;
+			}
+		case MAXMPGEN:
+			if (percentage) {
+				return NonStackingStatBuffType.MAXMPGENPCT;
+			} else {
+				return NonStackingStatBuffType.MPGEN;
 			}
 		case MPGEN:
 			if (percentage) {

@@ -130,9 +130,16 @@ public abstract class CUnitAttack {
 		}
 		int totalNSAtkPctBuff = 0;
 		for (String key : this.nonStackingPctBuffs.keySet()) {
-			float buffForKey = 0;
+			Float buffForKey = null;
 			for (NonStackingStatBuff buff : this.nonStackingPctBuffs.get(key)) {
-				buffForKey = Math.max(buffForKey, buff.getValue());
+				if (buffForKey == null) {
+					buffForKey = buff.getValue();
+				} else {
+					buffForKey = Math.max(buffForKey, buff.getValue());
+				}
+			}
+			if (buffForKey == null) {
+				continue;
 			}
 			int otherAtkBonus = (int)(this.totalBaseDamage * buffForKey) + (int)Math.ceil(this.totalDamageDice * (1+this.damageSidesPerDie) / 2 * buffForKey);    
 		    if (otherAtkBonus == 0) {

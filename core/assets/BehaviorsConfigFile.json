@@ -1,6 +1,6 @@
 {
 	"abilityList": [{
-		"ids": [{"id":"AHad"},{"id":"ACav"},{"id":"AIad"}],
+		"ids": [{"id":"AHad"}],
 		"type": "TEMPLATE",
 		"templateFields": {
 			"templateType": "AURA_STATS",
@@ -11,7 +11,7 @@
 			}]
 		}
 	},{
-		"ids": [{"id":"AHab"},{"id":"ACba"},{"id":"AIba"}],
+		"ids": [{"id":"AHab"}],
 		"type": "TEMPLATE",
 		"templateFields": {
 			"templateType": "AURA_STATS",
@@ -22,7 +22,7 @@
 			}]
 		}
 	},{
-		"ids": [{"id":"AOae"},{"id":"AOr2"},{"id":"SCae"},{"id":"AIae"}],
+		"ids": [{"id":"AOae"},{"id":"Aasl"}],
 		"type": "TEMPLATE",
 		"templateFields": {
 			"templateType": "AURA_STATS",
@@ -36,7 +36,7 @@
 			}]
 		}
 	},{
-		"ids": [{"id":"AUau"},{"id":"ACua"},{"id":"AIau"}],
+		"ids": [{"id":"AUau"}],
 		"type": "TEMPLATE",
 		"templateFields": {
 			"templateType": "AURA_STATS",
@@ -51,7 +51,7 @@
 			}]
 		}
 	},{
-		"ids": [{"id":"AUav"},{"id":"ACvp"},{"id":"AIav"}],
+		"ids": [{"id":"AUav"}],
 		"type": "TEMPLATE",
 		"templateFields": {
 			"templateType": "AURA_STATS",
@@ -65,7 +65,7 @@
 			}]
 		}
 	},{
-		"ids": [{"id":"AEah"},{"id":"ACah"}],
+		"ids": [{"id":"AEah"}],
 		"type": "TEMPLATE",
 		"templateFields": {
 			"templateType": "AURA_STATS",
@@ -76,7 +76,7 @@
 			}]
 		}
 	},{
-		"ids": [{"id":"AEar"},{"id":"ACat"},{"id":"AIar"}],
+		"ids": [{"id":"AEar"},{"id":"AOac"},{"id":"Aakb"}],
 		"type": "TEMPLATE",
 		"templateFields": {
 			"templateType": "AURA_STATS",
@@ -89,16 +89,25 @@
 			}]
 		}
 	},{
-		"ids": [{"id":"ACac"},{"id":"AIcd"},{"id":"Aakb"}],
+		"ids": [{"id":"Aoar"},{"id":"Aabr"}],
 		"type": "TEMPLATE",
 		"templateFields": {
 			"templateType": "AURA_STATS",
 			"statBuffsFromDataFields": [{
-				"type": "ATK",
+				"type": "MAXHPGEN",
 				"dataField": "A",
-				"flatBooleanField": "D",
-				"targetMeleeField": "B",
-				"targetRangeField": "C"
+				"percentageBooleanField": "B"
+			}]
+		}
+	},{
+		"ids": [{"id":"Aarm"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "MAXMPGEN",
+				"dataField": "A",
+				"percentageBooleanField": "B"
 			}]
 		}
 	}]

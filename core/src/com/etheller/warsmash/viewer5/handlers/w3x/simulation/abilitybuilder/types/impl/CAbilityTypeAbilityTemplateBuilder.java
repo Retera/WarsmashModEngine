@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.template.CAbilityAbilityBuilderAuraTemplate;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.template.CAbilityAbilityBuilderSimpleAuraTemplate;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.template.CAbilityAbilityBuilderStatAuraTemplate;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.template.CAbilityAbilityBuilderStatPassiveTemplate;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
 
@@ -32,6 +33,8 @@ public class CAbilityTypeAbilityTemplateBuilder extends CAbilityType<CAbilityTyp
 		localStore.put(ABLocalStoreKeys.ALIAS, getAlias());
 		
 		switch (parser.getTemplateType()) {
+		case PASSIVE_STATS:
+			return new CAbilityAbilityBuilderStatPassiveTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getStatBuffsFromDataFields());
 		case AURA_STATS:
 			return new CAbilityAbilityBuilderStatAuraTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getStatBuffsFromDataFields(), parser.getMeleeRangeTargetOverride());
 		case AURA_SIMPLE:

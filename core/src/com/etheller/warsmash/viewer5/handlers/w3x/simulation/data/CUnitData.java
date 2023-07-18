@@ -248,11 +248,6 @@ public class CUnitData {
 
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, lifeRegen,
 				manaMaximum, speed, unitTypeInstance);
-		addDefaultAbilitiesToUnit(simulation, handleIdAllocator, unitTypeInstance, true, manaInitial, speed, unit);
-		applyPlayerUpgradesToUnit(simulation, playerIndex, unitTypeInstance, unit);
-		if (buildingPathingPixelMap != null) {
-			unit.regeneratePathingInstance(simulation, buildingPathingPixelMap);
-		}
 		return unit;
 	}
 

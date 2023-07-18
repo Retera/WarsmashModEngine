@@ -84,7 +84,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CUnit extends CWidget {
 	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
@@ -776,6 +780,7 @@ public class CUnit extends CWidget {
 		for (final CAbility removed : removedAbilities) {
 			this.abilities.remove(removed); // TODO remove inefficient O(N) search
 		}
+		game.unitUpdatedType(this, typeId);
 		game.getUnitData().addDefaultAbilitiesToUnit(game, game.getHandleIdAllocator(), this.unitType, false, -1,
 				this.speed, this);
 		computeAllDerivedFields();
@@ -783,7 +788,6 @@ public class CUnit extends CWidget {
 		for (final CAbility ability : persistedAbilities) {
 			ability.onSetUnitType(game, this);
 		}
-		game.unitUpdatedType(this, typeId);
 	}
 
 	public void setFacing(final float facing) {
@@ -802,7 +806,7 @@ public class CUnit extends CWidget {
 		computeDerivedFields(NonStackingStatBuffType.MAXHPGENPCT);
 	}
 
-	public void addMaxLifeRelative(CSimulation game, final int hitPointBonus) {
+	public void addMaxLifeRelative(final CSimulation game, final int hitPointBonus) {
 		final int oldMaximumLife = getMaximumLife();
 		final float oldLife = getLife();
 		final int newMaximumLife = oldMaximumLife + hitPointBonus;
@@ -1571,9 +1575,10 @@ public class CUnit extends CWidget {
 					getDefenseType());
 			final float damageRatioFromDefense;
 			final float defense = this.currentDefense;
-			if(damageType != CDamageType.NORMAL) {
+			if (damageType != CDamageType.NORMAL) {
 				damageRatioFromDefense = 1.0f;
-			} else if (defense >= 0) {
+			}
+			else if (defense >= 0) {
 				damageRatioFromDefense = 1f - ((defense * simulation.getGameplayConstants().getDefenseArmor())
 						/ (1 + (simulation.getGameplayConstants().getDefenseArmor() * defense)));
 			} else {
@@ -1890,13 +1895,13 @@ public class CUnit extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-			final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
+			final EnumSet<CTargetType> targetsAllowed, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if ((this == source) && targetsAllowed.contains(CTargetType.NOTSELF)
 				&& !targetsAllowed.contains(CTargetType.SELF)) {
 			receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_SELF);
 			return false;
 		}
-		if (targetsAllowed.contains(CTargetType.PLAYERUNITS) && source.getPlayerIndex() != getPlayerIndex()) {
+		if (targetsAllowed.contains(CTargetType.PLAYERUNITS) && (source.getPlayerIndex() != getPlayerIndex())) {
 			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_ONE_OF_YOUR_OWN_UNITS);
 			return false;
 		}
@@ -1904,45 +1909,60 @@ public class CUnit extends CWidget {
 			receiver.targetCheckFailed(CommandStringErrorKeys.THAT_UNIT_IS_IMMUNE_TO_MAGIC);
 			return false;
 		}
-		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND) && !targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR))) {
+		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND)
+				&& !targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR))) {
 			final int sourcePlayerIndex = source.getPlayerIndex();
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
-			if (!targetsAllowed.contains(CTargetType.ENEMIES) || !sourcePlayer.hasAlliance(this.playerIndex,
-					CAllianceType.PASSIVE) || targetsAllowed.contains(CTargetType.FRIEND)) {
-				if (!targetsAllowed.contains(CTargetType.FRIEND) || sourcePlayer.hasAlliance(this.playerIndex,
-						CAllianceType.PASSIVE) || targetsAllowed.contains(CTargetType.ENEMIES)) {
-					if (!targetsAllowed.contains(CTargetType.MECHANICAL) || this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
-						if (!targetsAllowed.contains(CTargetType.ORGANIC) || !this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
-							if (!targetsAllowed.contains(CTargetType.ANCIENT) || this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
-								if (!targetsAllowed.contains(CTargetType.NONANCIENT) || !this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
-									boolean invulnerable = this.isInvulnerable();
-									if ((!invulnerable && (targetsAllowed.contains(CTargetType.VULNERABLE) || !targetsAllowed.contains(CTargetType.INVULNERABLE))) || (invulnerable && targetsAllowed.contains(CTargetType.INVULNERABLE))) {
+			if (!targetsAllowed.contains(CTargetType.ENEMIES)
+					|| !sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)
+					|| targetsAllowed.contains(CTargetType.FRIEND)) {
+				if (!targetsAllowed.contains(CTargetType.FRIEND)
+						|| sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)
+						|| targetsAllowed.contains(CTargetType.ENEMIES)) {
+					if (!targetsAllowed.contains(CTargetType.MECHANICAL)
+							|| this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
+						if (!targetsAllowed.contains(CTargetType.ORGANIC)
+								|| !this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
+							if (!targetsAllowed.contains(CTargetType.ANCIENT)
+									|| this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
+								if (!targetsAllowed.contains(CTargetType.NONANCIENT)
+										|| !this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
+									final boolean invulnerable = this.isInvulnerable();
+									if ((!invulnerable && (targetsAllowed.contains(CTargetType.VULNERABLE)
+											|| !targetsAllowed.contains(CTargetType.INVULNERABLE)))
+											|| (invulnerable && targetsAllowed.contains(CTargetType.INVULNERABLE))) {
 										if (!targetsAllowed.contains(CTargetType.HERO) || (getHeroData() != null)) {
-											if (!targetsAllowed.contains(CTargetType.NONHERO) || (getHeroData() == null)) {
+											if (!targetsAllowed.contains(CTargetType.NONHERO)
+													|| (getHeroData() == null)) {
 												if (isDead()) {
 													if (this.isRaisable() && this.isDecays() && isBoneCorpse()) {
 														if (targetsAllowed.contains(CTargetType.DEAD)) {
 															return true;
 														}
 														else {
-															receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_MUST_BE_LIVING);
+															receiver.targetCheckFailed(
+																	CommandStringErrorKeys.TARGET_MUST_BE_LIVING);
 														}
 													}
 													else {
-														receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
+														receiver.targetCheckFailed(
+																CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 													}
 												}
 												else {
-													if (!targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE)) {
+													if (!targetsAllowed.contains(CTargetType.DEAD)
+															|| targetsAllowed.contains(CTargetType.ALIVE)) {
 														return true;
 													}
 													else {
-														receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_CORPSE);
+														receiver.targetCheckFailed(
+																CommandStringErrorKeys.MUST_TARGET_A_CORPSE);
 													}
 												}
 											}
 											else {
-												receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_HEROES);
+												receiver.targetCheckFailed(
+														CommandStringErrorKeys.UNABLE_TO_TARGET_HEROES);
 											}
 										}
 										else {
@@ -1951,10 +1971,12 @@ public class CUnit extends CWidget {
 									}
 									else {
 										if (invulnerable) {
-											receiver.targetCheckFailed(CommandStringErrorKeys.THAT_TARGET_IS_INVULNERABLE);
+											receiver.targetCheckFailed(
+													CommandStringErrorKeys.THAT_TARGET_IS_INVULNERABLE);
 										}
 										else {
-											receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
+											receiver.targetCheckFailed(
+													CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 										}
 									}
 								}
@@ -1983,23 +2005,35 @@ public class CUnit extends CWidget {
 			}
 		}
 		else {
-			if (this.unitType.getTargetedAs().contains(CTargetType.GROUND) && !targetsAllowed.contains(CTargetType.GROUND)) {
+			if (this.unitType.getTargetedAs().contains(CTargetType.GROUND)
+					&& !targetsAllowed.contains(CTargetType.GROUND)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_GROUND_UNITS);
-			} else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.STRUCTURE)) {
+			}
+			else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE)
+					&& !targetsAllowed.contains(CTargetType.STRUCTURE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BUILDINGS);
-			} else if (this.unitType.getTargetedAs().contains(CTargetType.AIR) && !targetsAllowed.contains(CTargetType.AIR)) {
+			}
+			else if (this.unitType.getTargetedAs().contains(CTargetType.AIR)
+					&& !targetsAllowed.contains(CTargetType.AIR)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_AIR_UNITS);
-			} else if (this.unitType.getTargetedAs().contains(CTargetType.WARD) && !targetsAllowed.contains(CTargetType.WARD)) {
+			}
+			else if (this.unitType.getTargetedAs().contains(CTargetType.WARD)
+					&& !targetsAllowed.contains(CTargetType.WARD)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WARDS);
-			} else if (targetsAllowed.contains(CTargetType.GROUND)) {
+			}
+			else if (targetsAllowed.contains(CTargetType.GROUND)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_GROUND_UNIT);
-			} else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
+			}
+			else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_BUILDING);
-			} else if (targetsAllowed.contains(CTargetType.AIR)) {
+			}
+			else if (targetsAllowed.contains(CTargetType.AIR)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_AIR_UNIT);
-			} else if (targetsAllowed.contains(CTargetType.WARD)) {
+			}
+			else if (targetsAllowed.contains(CTargetType.WARD)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_WARD);
-			} else {
+			}
+			else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 			}
 		}
@@ -2041,7 +2075,7 @@ public class CUnit extends CWidget {
 		setMana(Math.min(getMana() + manaToRegain, getMaximumMana()));
 	}
 
-	public void resurrect(CSimulation simulation) {
+	public void resurrect(final CSimulation simulation) {
 		simulation.getWorldCollision().removeUnit(this);
 		this.corpse = false;
 		this.boneCorpse = false;
@@ -2377,7 +2411,8 @@ public class CUnit extends CWidget {
 							player.setFoodUsed(newFoodUsed);
 						} else {
 							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener().showInterfaceError(this.playerIndex, CommandStringErrorKeys.NOT_ENOUGH_FOOD);
+							game.getCommandErrorListener().showInterfaceError(this.playerIndex,
+									CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 							player.removeTechtreeInProgress(rawcode);
 						}
 					}
@@ -2389,7 +2424,8 @@ public class CUnit extends CWidget {
 							player.setFoodUsed(newFoodUsed);
 						} else {
 							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener().showInterfaceError(this.playerIndex, CommandStringErrorKeys.NOT_ENOUGH_FOOD);
+							game.getCommandErrorListener().showInterfaceError(this.playerIndex,
+									CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 						}
 					}
 				}
@@ -3187,12 +3223,10 @@ public class CUnit extends CWidget {
 			final float angleIncrement = (float) StrictMath.PI / 6;
 			for (float angle = 0; angle < twoPi; angle += angleIncrement) {
 				for (float dist = 128; dist <= sightRadius; dist += 128) {
-					float x = myX + (float) (StrictMath.cos(angle) * dist);
-					float y = myY + (float) (StrictMath.sin(angle) * dist);
-					final int iterationIndexX = game.getPathingGrid()
-							.getFogOfWarIndexX(x);
-					final int iterationIndexY = game.getPathingGrid()
-							.getFogOfWarIndexY(y);
+					final float x = myX + (float) (StrictMath.cos(angle) * dist);
+					final float y = myY + (float) (StrictMath.sin(angle) * dist);
+					final int iterationIndexX = game.getPathingGrid().getFogOfWarIndexX(x);
+					final int iterationIndexY = game.getPathingGrid().getFogOfWarIndexY(y);
 					fogOfWar.setState(iterationIndexX, iterationIndexY, (byte) 0);
 				}
 			}
@@ -3203,7 +3237,7 @@ public class CUnit extends CWidget {
 		this.explodesOnDeath = explodesOnDeath;
 	}
 
-	public void setExplodesOnDeathBuffId(War3ID explodesOnDeathBuffId) {
+	public void setExplodesOnDeathBuffId(final War3ID explodesOnDeathBuffId) {
 		this.explodesOnDeathBuffId = explodesOnDeathBuffId;
 	}
 
@@ -3275,27 +3309,27 @@ public class CUnit extends CWidget {
 		}
 	}
 
-	public void beginCooldown(CSimulation game, War3ID abilityId, float cooldownDuration) {
-		int gameTurnTick = game.getGameTurnTick();
+	public void beginCooldown(final CSimulation game, final War3ID abilityId, final float cooldownDuration) {
+		final int gameTurnTick = game.getGameTurnTick();
 		rawcodeToCooldownExpireTime.put(abilityId.getValue(),
 				gameTurnTick + (int) StrictMath.ceil(cooldownDuration / WarsmashConstants.SIMULATION_STEP_TIME));
 		rawcodeToCooldownStartTime.put(abilityId.getValue(), gameTurnTick);
 		fireCooldownsChangedEvent();
 	}
 
-	public int getCooldownRemainingTicks(CSimulation game, War3ID abilityId) {
-		int expireTime = rawcodeToCooldownExpireTime.get(abilityId.getValue(), -1);
-		int gameTurnTick = game.getGameTurnTick();
-		if (expireTime == -1 || expireTime <= gameTurnTick) {
+	public int getCooldownRemainingTicks(final CSimulation game, final War3ID abilityId) {
+		final int expireTime = rawcodeToCooldownExpireTime.get(abilityId.getValue(), -1);
+		final int gameTurnTick = game.getGameTurnTick();
+		if ((expireTime == -1) || (expireTime <= gameTurnTick)) {
 			return 0;
 		}
 		return expireTime - gameTurnTick;
 	}
 
-	public int getCooldownLengthDisplayTicks(CSimulation game, War3ID abilityId) {
-		int startTime = rawcodeToCooldownStartTime.get(abilityId.getValue(), -1);
-		int expireTime = rawcodeToCooldownExpireTime.get(abilityId.getValue(), -1);
-		if (startTime == -1 || expireTime == -1) {
+	public int getCooldownLengthDisplayTicks(final CSimulation game, final War3ID abilityId) {
+		final int startTime = rawcodeToCooldownStartTime.get(abilityId.getValue(), -1);
+		final int expireTime = rawcodeToCooldownExpireTime.get(abilityId.getValue(), -1);
+		if ((startTime == -1) || (expireTime == -1)) {
 			return 0;
 		}
 		return expireTime - startTime;
@@ -3309,15 +3343,15 @@ public class CUnit extends CWidget {
 		return decays;
 	}
 
-	public void setRaisable(boolean raisable) {
+	public void setRaisable(final boolean raisable) {
 		this.raisable = raisable;
 	}
 
-	public void setDecays(boolean decays) {
+	public void setDecays(final boolean decays) {
 		this.decays = decays;
 	}
 
-	public void setMagicImmune(boolean magicImmune) {
+	public void setMagicImmune(final boolean magicImmune) {
 		this.magicImmune = magicImmune;
 	}
 

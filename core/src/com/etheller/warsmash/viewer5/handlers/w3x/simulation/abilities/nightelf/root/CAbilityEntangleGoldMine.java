@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import com.etheller.interpreter.ast.function.JassFunction;
@@ -24,11 +25,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUnderConstructionVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
@@ -58,12 +59,18 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String resultingType = worldEditorAbility.getFieldAsString(AbilityFields.EntangleGoldMine.RESULTING_UNIT_TYPE,
-				level);
+		final String resultingType = worldEditorAbility
+				.getFieldAsString(AbilityFields.EntangleGoldMine.RESULTING_UNIT_TYPE, level);
 		this.resultingTypeId = resultingType.length() == 4 ? War3ID.fromString(resultingType) : War3ID.NONE;
 
 		setCastingPrimaryTag(PrimaryTag.STAND);
 		setCastingSecondaryTags(SequenceUtils.EMPTY);
+
+		final EnumSet<CTargetType> targetsAllowed = getTargetsAllowed();
+		// this ability ignores vulnerabilities, and will target invulnerable mines
+		targetsAllowed.add(CTargetType.INVULNERABLE);
+		targetsAllowed.add(CTargetType.VULNERABLE);
+		setTargetsAllowed(targetsAllowed);
 	}
 
 	@Override

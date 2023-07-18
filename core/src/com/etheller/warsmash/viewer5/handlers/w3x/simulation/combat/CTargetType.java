@@ -33,7 +33,12 @@ public enum CTargetType {
 	NONANCIENT,
 	FRIEND,
 	BRIDGE,
-	DECORATION;
+	DECORATION,
+	// BELOW: internal values:
+	NON_MAGIC_IMMUNE,
+	NON_ETHEREAL
+
+	;
 
 	public static CTargetType parseTargetType(final String targetTypeString) {
 		if (targetTypeString == null) {

@@ -329,8 +329,8 @@ public class MdxComplexInstance extends ModelInstance {
 				final GenericObject.Variants variants = genericObject.variants;
 				final Vector3 localLocation = node.localLocation;
 				final Quaternion localRotation = node.localRotation;
-				final Vector3 localScale = node.localScale;
 				final Quaternion overrideWorldRotation = node.overrideWorldRotation;
+				final Vector3 localScale = node.localScale;
 
 				// Only update the local node data if there is a need to
 				if (forced || variants.generic[sequence]) {
@@ -362,6 +362,15 @@ public class MdxComplexInstance extends ModelInstance {
 						localScale.x = scaleHeap[0];
 						localScale.y = scaleHeap[1];
 						localScale.z = scaleHeap[2];
+					}
+				}
+				if (overrideWorldRotation != null) {
+					if (node.preOverrideLocalRotation != null) {
+						localRotation.set(node.preOverrideLocalRotation);
+					}
+					else {
+						localRotation.set(overrideWorldRotation);
+						localRotation.mulLeft(parent.inverseWorldRotation);
 					}
 				}
 

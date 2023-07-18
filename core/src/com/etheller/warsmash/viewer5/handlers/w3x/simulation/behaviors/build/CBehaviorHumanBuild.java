@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.AbstractCAbilityBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanRepair;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
@@ -22,6 +23,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildingIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 	private int highlightOrderId;
@@ -59,23 +61,8 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 			this.unitCreated = true;
 			final CUnitType unitTypeToCreate = simulation.getUnitData().getUnitType(this.orderId);
 			final BufferedImage buildingPathingPixelMap = unitTypeToCreate.getBuildingPathingPixelMap();
-			boolean buildLocationObstructed = false;
 			final boolean canBeBuiltOnThem = unitTypeToCreate.isCanBeBuiltOnThem();
-			if (canBeBuiltOnThem) {
-				simulation.getWorldCollision().enumBuildingsAtPoint(this.target.getX(), this.target.getY(),
-						this.buildOnBuildingIntersector.reset(this.target.getX(), this.target.getY()));
-				buildLocationObstructed = (this.buildOnBuildingIntersector.getUnitToBuildOn() == null);
-			}
-			else if (buildingPathingPixelMap != null) {
-				final EnumSet<CBuildingPathingType> preventedPathingTypes = unitTypeToCreate.getPreventedPathingTypes();
-				final EnumSet<CBuildingPathingType> requiredPathingTypes = unitTypeToCreate.getRequiredPathingTypes();
-
-				if (!simulation.getPathingGrid().checkPathingTexture(this.target.getX(), this.target.getY(),
-						(int) simulation.getGameplayConstants().getBuildingAngle(), buildingPathingPixelMap,
-						preventedPathingTypes, requiredPathingTypes, simulation.getWorldCollision(), this.unit)) {
-					buildLocationObstructed = true;
-				}
-			}
+			boolean buildLocationObstructed = AbstractCAbilityBuild.isBuildLocationObstructed(simulation, unitTypeToCreate, buildingPathingPixelMap, canBeBuiltOnThem, this.target.getX(), this.target.getY(), this.unit, this.buildOnBuildingIntersector);
 			final int playerIndex = this.unit.getPlayerIndex();
 			if (!buildLocationObstructed) {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX(),
@@ -142,7 +129,7 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 			else {
 				final CPlayer player = simulation.getPlayer(playerIndex);
 				refund(player, unitTypeToCreate);
-				simulation.getCommandErrorListener().showCantPlaceError(playerIndex);
+				simulation.getCommandErrorListener().showInterfaceError(playerIndex, CommandStringErrorKeys.UNABLE_TO_BUILD_THERE);
 			}
 		}
 		return this.unit.pollNextOrderBehavior(simulation);

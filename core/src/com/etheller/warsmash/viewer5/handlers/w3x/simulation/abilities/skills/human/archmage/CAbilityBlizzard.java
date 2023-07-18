@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -9,6 +11,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityPointTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -17,8 +20,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	private float buildingReduction;
@@ -42,13 +47,13 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.buildingReduction = worldEditorAbility.getFieldAsFloat(AbilityFields.BLIZZARD_BUILDING_REDUCTION, level);
-		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.BLIZZARD_DAMAGE, level);
-		this.damagePerSecond = worldEditorAbility.getFieldAsFloat(AbilityFields.BLIZZARD_DAMAGE_PER_SECOND, level);
-		this.maximumDamagePerWave = worldEditorAbility.getFieldAsFloat(AbilityFields.BLIZZARD_MAX_DAMAGE_PER_WAVE,
+		this.buildingReduction = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.BUILDING_REDUCTION, level);
+		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.DAMAGE, level);
+		this.damagePerSecond = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.DAMAGE_PER_SECOND, level);
+		this.maximumDamagePerWave = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.MAXIMUM_DAMAGE_PER_WAVE,
 				level);
-		this.shardCount = worldEditorAbility.getFieldAsInteger(AbilityFields.BLIZZARD_SHARD_COUNT, level);
-		this.waveCount = worldEditorAbility.getFieldAsInteger(AbilityFields.BLIZZARD_WAVE_COUNT, level);
+		this.shardCount = worldEditorAbility.getFieldAsInteger(AbilityFields.Blizzard.NUMBER_OF_SHARDS, level);
+		this.waveCount = worldEditorAbility.getFieldAsInteger(AbilityFields.Blizzard.NUMBER_OF_WAVES, level);
 
 		this.waveDelay = getCastingTime();
 		setCastingTime(0); // dont use the casting time field normally
@@ -62,40 +67,53 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		this.currentWave = 0;
 		this.waveForDamage = false;
-		// TODO below: stupid, needs to change to wait until doEffect first call to be
-		// set
-		this.nextWaveTick = game.getGameTurnTick()
-				+ (int) StrictMath.ceil(this.waveDelay / WarsmashConstants.SIMULATION_STEP_TIME);
-		return super.begin(game, caster, orderId, point);
+		this.nextWaveTick =
+				simulation.getGameTurnTick() + (int) StrictMath.ceil(this.waveDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+		return true;
 	}
 
 	@Override
-	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+	public boolean doChannelTick(CSimulation simulation, CUnit caster, AbilityTarget target) {
 		if (simulation.getGameTurnTick() >= this.nextWaveTick) {
 			final float waveDelay;
 			if (this.waveForDamage) {
 				this.currentWave++;
 				waveDelay = this.waveDelay;
 				this.waveForDamage = false;
+				List<CUnit> damageTargets = new ArrayList<>();
 				simulation.getWorldCollision()
 						.enumUnitsInRect(this.recycleRect.set(target.getX() - this.areaOfEffect,
-								target.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2),
+										target.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2),
 								new CUnitEnumFunction() {
 									@Override
 									public boolean call(final CUnit possibleTarget) {
 										if (possibleTarget.canReach(target, CAbilityBlizzard.this.areaOfEffect)
-												&& possibleTarget.canBeTargetedBy(simulation, unit,
-														getTargetsAllowed())) {
-											possibleTarget.damage(simulation, unit, CAttackType.SPELLS,
-													CWeaponSoundTypeJass.WHOKNOWS.name(), CAbilityBlizzard.this.damage);
+												&& possibleTarget.canBeTargetedBy(simulation, caster,
+												getTargetsAllowed())) {
+											damageTargets.add(possibleTarget);
 										}
 										return false;
 									}
 								});
+				float damagePerTarget = this.damage;
+				if (damagePerTarget * damageTargets.size() > maximumDamagePerWave) {
+					damagePerTarget = maximumDamagePerWave / damageTargets.size();
+				}
+				float damagePerTargetBuilding = damagePerTarget * (buildingReduction);
+				for (CUnit damageTarget : damageTargets) {
+					float thisTargetDamage;
+					if (damageTarget.isBuilding()) {
+						thisTargetDamage = damagePerTargetBuilding;
+					}
+					else {
+						thisTargetDamage = damagePerTarget;
+					}
+					damageTarget.damage(simulation, caster, CAttackType.SPELLS, CDamageType.COLD,
+							CWeaponSoundTypeJass.WHOKNOWS.name(), thisTargetDamage);
+				}
 			}
 			else {
 				final Random seededRandom = simulation.getSeededRandom();
@@ -107,6 +125,7 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 							target.getX() + ((float) StrictMath.cos(randomAngle) * randomDistance),
 							target.getY() + ((float) StrictMath.sin(randomAngle) * randomDistance), 0, this.effectId,
 							CEffectType.EFFECT, 0).remove();
+					simulation.unitSoundEffectEvent(caster, this.effectId);
 				}
 				waveDelay = 0.80f;
 				this.waveForDamage = true;

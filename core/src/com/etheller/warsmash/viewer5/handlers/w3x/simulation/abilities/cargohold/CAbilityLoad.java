@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TeamType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility {
 	private float castRange;
@@ -85,27 +86,32 @@ public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if ((target instanceof CUnit) && target.canBeTargetedBy(game, unit, unit.getCargoData().getTargetsAllowed())
-				&& (target != unit)) {
-			if (((CUnit) target).getPlayerIndex() == unit.getPlayerIndex()) {
-				if (this.allowedUnitTypes.isEmpty() || this.allowedUnitTypes.contains(((CUnit) target).getTypeId())) {
-					if (!unit.isMovementDisabled() || unit.canReach(target, unit.getCargoData().getCastRange())) {
-						receiver.targetOk(target);
+		if((target instanceof CUnit)) {
+			if (target.canBeTargetedBy(game, unit, unit.getCargoData().getTargetsAllowed(), receiver)) {
+				if(target != unit) {
+					if (((CUnit) target).getPlayerIndex() == unit.getPlayerIndex()) {
+						if (this.allowedUnitTypes.isEmpty() || this.allowedUnitTypes.contains(((CUnit) target).getTypeId())) {
+							if (!unit.isMovementDisabled() || unit.canReach(target, unit.getCargoData().getCastRange())) {
+								receiver.targetOk(target);
+							}
+							else {
+								receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
+							}
+						}
+						else {
+							receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_PEON);
+						}
 					}
 					else {
-						receiver.targetOutsideRange();
+						receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_ONE_OF_YOUR_OWN_UNITS);
 					}
-				}
-				else {
-					receiver.mustTargetPeon();
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_SELF);
 				}
 			}
-			else {
-				receiver.mustTargetTeamType(TeamType.PLAYER_UNITS);
-			}
-		}
-		else {
-			receiver.mustTargetType(TargetType.UNIT);
+			// else receiver called by canBeTargetedBy(...)
+		} else {
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 		}
 	}
 

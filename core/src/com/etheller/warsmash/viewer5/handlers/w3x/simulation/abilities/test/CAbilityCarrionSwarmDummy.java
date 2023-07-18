@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartActiveAbility {
 
@@ -77,11 +78,14 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (unit.canReach(target, this.castRange) && target.canBeTargetedBy(game, unit, this.targetsAllowed)) {
-			receiver.targetOk(target);
+		if (unit.canReach(target, this.castRange)) {
+			if(target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+				receiver.targetOk(target);
+			}
+			// else receiver called automatically
 		}
 		else {
-			receiver.targetOutsideRange();
+			receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 		}
 	}
 
@@ -92,7 +96,7 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 			receiver.targetOk(target);
 		}
 		else {
-			receiver.targetOutsideRange();
+			receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 		}
 	}
 

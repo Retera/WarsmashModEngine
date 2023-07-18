@@ -7,8 +7,6 @@ public interface AbilityActivationReceiver {
 
 	void unknownReasonUseNotOk();
 
-	void notEnoughResources(ResourceType resource);
-
 	void notAnActiveAbility();
 
 	void missingRequirement(War3ID type, int level);
@@ -16,10 +14,6 @@ public interface AbilityActivationReceiver {
 	void missingHeroLevelRequirement(int level);
 
 	void noHeroSkillPointsAvailable();
-
-	void casterMovementDisabled();
-
-	void cargoCapacityUnavailable();
 
 	void disabled();
 
@@ -31,5 +25,5 @@ public interface AbilityActivationReceiver {
 
 	void noChargesRemaining();
 
-	void alreadyFullHealth();
+	void activationCheckFailed(String commandStringErrorKey);
 }

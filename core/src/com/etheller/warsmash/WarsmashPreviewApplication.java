@@ -68,6 +68,7 @@ public class WarsmashPreviewApplication extends ApplicationAdapter implements Ca
 		this.viewer.enableAudio();
 
 		this.scene = this.viewer.addSimpleScene();
+		this.scene.backgroundColor.set(0.5f, 0.5f, 0.5f, 1);
 		this.scene.enableAudio();
 
 		this.cameraManager = new PortraitCameraManager();

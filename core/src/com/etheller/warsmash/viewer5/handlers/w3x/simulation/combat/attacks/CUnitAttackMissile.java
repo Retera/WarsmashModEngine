@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
 public class CUnitAttackMissile extends CUnitAttack {
 	private float projectileArc;
@@ -85,7 +86,7 @@ public class CUnitAttackMissile extends CUnitAttack {
 			final CUnitAttackListener attackListener) {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
-			widget.damage(cSimulation, source, getAttackType(), getWeaponSound(), damage);
+			widget.damage(cSimulation, source, getAttackType(), CDamageType.NORMAL, getWeaponSound(), damage);
 			attackListener.onHit(target, damage);
 		}
 	}

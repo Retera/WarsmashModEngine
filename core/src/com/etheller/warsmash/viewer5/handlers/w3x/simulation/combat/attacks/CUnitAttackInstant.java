@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
 public class CUnitAttackInstant extends CUnitAttack {
 	private String projectileArt;
@@ -48,7 +49,7 @@ public class CUnitAttackInstant extends CUnitAttack {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			simulation.createInstantAttackEffect(unit, this, widget);
-			widget.damage(simulation, unit, getAttackType(), getWeaponSound(), damage);
+			widget.damage(simulation, unit, getAttackType(), CDamageType.NORMAL, getWeaponSound(), damage);
 			attackListener.onHit(target, damage);
 		}
 	}

@@ -3,34 +3,15 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 public interface AbilityTargetCheckReceiver<TARGET_TYPE> {
 	void targetOk(TARGET_TYPE target);
 
-	void mustTargetTeamType(TeamType correctType);
-
-	void mustTargetType(TargetType correctType);
-
-	void mustTargetResources();
-
-	void mustTargetPeon();
-
-	void targetOutsideRange();
 
 	void notAnActiveAbility();
 
-	void notHolyBoltTarget();
-
-	void alreadyFullHealth();
-
-	void notDeathCoilTarget();
-
-	void targetNotVisible();
-
-	void targetTooComplicated();
-
-	void targetNotInPlayableMap();
-
 	void orderIdNotAccepted();
 
+	void targetCheckFailed(String commandStringErrorKey);
+
 	public static enum TeamType {
-		ALLIED, ENEMY, PLAYER_UNITS;
+		ALLIED, ENEMY, PLAYER_UNITS, CONTROL, NEUTRAL;
 	}
 
 	public static enum TargetType {

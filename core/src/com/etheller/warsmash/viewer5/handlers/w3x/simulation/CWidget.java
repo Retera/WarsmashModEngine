@@ -15,7 +15,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public abstract class CWidget implements AbilityTarget, CHandle {
 	protected static final Rectangle tempRect = new Rectangle();
@@ -66,8 +69,8 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 		this.life = life;
 	}
 
-	public abstract void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			final String weaponType, final float damage);
+	public abstract void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType, CDamageType damageType,
+								final String weaponType, final float damage);
 
 	public abstract float getFlyHeight();
 
@@ -80,7 +83,12 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 	}
 
 	public abstract boolean canBeTargetedBy(CSimulation simulation, CUnit source,
-			final EnumSet<CTargetType> targetsAllowed);
+											final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver);
+
+	public boolean canBeTargetedBy(CSimulation simulation, CUnit source, final EnumSet<CTargetType> targetsAllowed) {
+		return canBeTargetedBy(simulation, source, targetsAllowed,
+				BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset());
+	}
 
 	public double distanceSquaredNoCollision(final AbilityTarget target) {
 		return distanceSquaredNoCollision(target.getX(), target.getY());
@@ -138,4 +146,6 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 	public RemovableTriggerEvent addDeathEvent(final GlobalScope globalScope, final Trigger whichTrigger) {
 		return addEvent(globalScope, whichTrigger, JassGameEventsWar3.EVENT_WIDGET_DEATH);
 	}
+
+	public abstract double distance(float x, float y);
 }

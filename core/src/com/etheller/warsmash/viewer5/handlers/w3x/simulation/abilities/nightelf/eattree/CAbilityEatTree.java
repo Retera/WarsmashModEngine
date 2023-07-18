@@ -18,12 +18,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	private float ripDelay;
 	private float eatDelay;
 	private float hitPointsGained;
-	private float duration;
 	private War3ID buffId;
 
 	private int ripEndTick = 0;
@@ -41,10 +41,9 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EAT_TREE_RIP_DELAY, level);
-		eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EAT_TREE_EAT_DELAY, level);
-		hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.EAT_TREE_HIT_POINTS_GAINED, level);
-		duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
+		ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.RIP_DELAY, level);
+		eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.EAT_DELAY, level);
+		hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.HIT_POINTS_GAINED, level);
 		buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		setCastingSecondaryTags(SequenceUtils.SPELL_EATTREE);
 	}
@@ -76,7 +75,7 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (target.visit(AbilityTargetVisitor.DESTRUCTABLE) == null) {
-			receiver.mustTargetType(TargetType.UNIT/* DEST */);
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_TREE);
 		}
 		else {
 			super.innerCheckCanTarget(game, unit, orderId, target, receiver);
@@ -84,26 +83,23 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		ripEndTick = 0;
-		eatEndTick = 0;
+	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+		final int gameTurnTick = simulation.getGameTurnTick();
+		ripEndTick = gameTurnTick + (int) (ripDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+		eatEndTick = ripEndTick + (int) ((eatDelay) / WarsmashConstants.SIMULATION_STEP_TIME);
 		ripComplete = false;
-		return super.begin(game, caster, orderId, target);
+		return true;
 	}
 
 	@Override
-	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+	public boolean doChannelTick(CSimulation simulation, CUnit unit, AbilityTarget target) {
 		final int gameTurnTick = simulation.getGameTurnTick();
-		if (ripEndTick == 0) {
-			ripEndTick = gameTurnTick + (int) (ripDelay / WarsmashConstants.SIMULATION_STEP_TIME);
-			eatEndTick = ripEndTick + (int) ((eatDelay) / WarsmashConstants.SIMULATION_STEP_TIME);
-		}
 		if (gameTurnTick >= ripEndTick) {
 			if (!ripComplete) {
 				final CDestructable targetDest = target.visit(AbilityTargetVisitor.DESTRUCTABLE);
 				if (targetDest != null) {
-//					unit.add(simulation, new CBuffEatTree(simulation.getHandleIdAllocator().createId(), buffId, 1.0f,
-//							duration, hitPointsGained));
+					unit.add(simulation, new CBuffEatTree(simulation.getHandleIdAllocator().createId(), buffId, 1.0f,
+							getDuration(), hitPointsGained));
 					targetDest.setLife(simulation, 0);
 					simulation.createSpellEffectOnUnit(unit, getAlias(), CEffectType.SPECIAL);
 				}
@@ -115,5 +111,4 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 		}
 		return true;
 	}
-
 }

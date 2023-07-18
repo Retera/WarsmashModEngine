@@ -12,6 +12,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.IntIntMap;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -69,11 +70,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionEnumF
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CUnitState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
 
 public class CUnit extends CWidget {
 	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
@@ -118,6 +118,8 @@ public class CUnit extends CWidget {
 	private final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
 
 	private int deathTurnTick;
+	private boolean raisable;
+	private boolean decays;
 	private boolean corpse;
 	private boolean boneCorpse;
 
@@ -147,6 +149,7 @@ public class CUnit extends CWidget {
 	private boolean paused = false;
 	private boolean acceptingOrders = true;
 	private boolean invulnerable = false;
+	private boolean magicImmune = false;
 	private CBehavior defaultBehavior;
 	private COrder lastStartedOrder = null;
 	private CUnit workerInside;
@@ -169,6 +172,9 @@ public class CUnit extends CWidget {
 
 	private boolean constructionConsumesWorker;
 	private boolean explodesOnDeath;
+	private War3ID explodesOnDeathBuffId;
+	private final IntIntMap rawcodeToCooldownExpireTime = new IntIntMap();
+	private final IntIntMap rawcodeToCooldownStartTime = new IntIntMap();
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
@@ -191,6 +197,8 @@ public class CUnit extends CWidget {
 		this.structure = unitType.isBuilding();
 		this.stopBehavior = new CBehaviorStop(this);
 		this.defaultBehavior = this.stopBehavior;
+		this.raisable = unitType.isRaise();
+		this.decays = unitType.isDecay();
 		computeDerivedFields();
 	}
 
@@ -373,6 +381,8 @@ public class CUnit extends CWidget {
 		this.defenseType = this.unitType.getDefenseType();
 		this.acquisitionRange = this.unitType.getDefaultAcquisitionRange();
 		this.structure = this.unitType.isBuilding();
+		this.raisable = this.unitType.isRaise();
+		this.decays = this.unitType.isDecay();
 		final List<CAbility> persistedAbilities = new ArrayList<>();
 		final List<CAbility> removedAbilities = new ArrayList<>();
 		for (final CAbility ability : this.abilities) {
@@ -413,6 +423,15 @@ public class CUnit extends CWidget {
 		this.maximumLife = maximumLife;
 	}
 
+	public void addMaxLifeRelative(CSimulation game, final int hitPointBonus) {
+		final int oldMaximumLife = getMaximumLife();
+		final float oldLife = getLife();
+		final int newMaximumLife = oldMaximumLife + hitPointBonus;
+		final float newLife = (oldLife * (newMaximumLife)) / oldMaximumLife;
+		setMaximumLife(newMaximumLife);
+		setLife(game, newLife);
+	}
+
 	public void setMaximumMana(final int maximumMana) {
 		this.maximumMana = maximumMana;
 	}
@@ -442,23 +461,23 @@ public class CUnit extends CWidget {
 		}
 		this.stateListenersUpdates.clear();
 		if (isDead()) {
-			if (this.collisionRectangle != null) {
-				// Moved this here because doing it on "kill" was able to happen in some cases
-				// while also iterating over the units that are in the collision system, and
-				// then it hit the "writing while iterating" problem.
-				game.getWorldCollision().removeUnit(this);
-			}
 			final int gameTurnTick = game.getGameTurnTick();
 			if (!this.corpse) {
+				if (this.collisionRectangle != null) {
+					// Moved this here because doing it on "kill" was able to happen in some cases
+					// while also iterating over the units that are in the collision system, and
+					// then it hit the "writing while iterating" problem.
+					game.getWorldCollision().removeUnit(this);
+				}
 				if (gameTurnTick > (this.deathTurnTick
 						+ (int) (this.unitType.getDeathTime() / WarsmashConstants.SIMULATION_STEP_TIME))) {
 					this.corpse = true;
-					if (!this.unitType.isRaise()) {
+					if (!this.isRaisable()) {
 						this.boneCorpse = true;
 						// start final phase immediately for "cant raise" case
 					}
 					if (!this.unitType.isHero()) {
-						if (!this.unitType.isDecay()) {
+						if (!this.isDecays()) {
 							// if we dont raise AND dont decay, then now that death anim is over
 							// we just delete the unit
 							return true;
@@ -475,6 +494,10 @@ public class CUnit extends CWidget {
 						/ WarsmashConstants.SIMULATION_STEP_TIME))) {
 					this.boneCorpse = true;
 					this.deathTurnTick = gameTurnTick;
+
+					if (this.isRaisable()) {
+						game.getWorldCollision().addUnit(this);
+					}
 				}
 			}
 			else if (game.getGameTurnTick() > (this.deathTurnTick
@@ -1147,6 +1170,7 @@ public class CUnit extends CWidget {
 		return groundDistance;
 	}
 
+	@Override
 	public double distance(final float x, final float y) {
 		double dx = Math.abs(x - getX());
 		double dy = Math.abs(y - getY());
@@ -1167,14 +1191,16 @@ public class CUnit extends CWidget {
 
 	@Override
 	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			final String weaponType, final float damage) {
+			   CDamageType damageType, final String weaponType, final float damage) {
 		final boolean wasDead = isDead();
 		if (!this.invulnerable) {
 			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
 					getDefenseType());
 			final float damageRatioFromDefense;
 			final float defense = this.currentDefense;
-			if (defense >= 0) {
+			if(damageType != CDamageType.NORMAL) {
+				damageRatioFromDefense = 1.0f;
+			} else if (defense >= 0) {
 				damageRatioFromDefense = 1f - ((defense * simulation.getGameplayConstants().getDefenseArmor())
 						/ (1 + (simulation.getGameplayConstants().getDefenseArmor() * defense)));
 			}
@@ -1233,7 +1259,7 @@ public class CUnit extends CWidget {
 		this.currentBehavior = null;
 		this.orderQueue.clear();
 		if (this.constructing) {
-			simulation.createDeathExplodeEffect(this);
+			simulation.createDeathExplodeEffect(this, explodesOnDeathBuffId);
 		}
 		else {
 			this.deathTurnTick = simulation.getGameTurnTick();
@@ -1346,7 +1372,7 @@ public class CUnit extends CWidget {
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
 		if (isExplodesOnDeath()) {
 			setHidden(true);
-			simulation.createDeathExplodeEffect(this);
+			simulation.createDeathExplodeEffect(this, explodesOnDeathBuffId);
 			simulation.removeUnit(this);
 		}
 	}
@@ -1492,51 +1518,118 @@ public class CUnit extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-			final EnumSet<CTargetType> targetsAllowed) {
+			final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
 		if ((this == source) && targetsAllowed.contains(CTargetType.NOTSELF)
 				&& !targetsAllowed.contains(CTargetType.SELF)) {
+			receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_SELF);
 			return false;
 		}
-		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND)
-				&& !targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR))) {
+		if (targetsAllowed.contains(CTargetType.PLAYERUNITS) && source.getPlayerIndex() != getPlayerIndex()) {
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_ONE_OF_YOUR_OWN_UNITS);
+			return false;
+		}
+		if (targetsAllowed.contains(CTargetType.NON_MAGIC_IMMUNE) && isMagicImmune()) {
+			receiver.targetCheckFailed(CommandStringErrorKeys.THAT_UNIT_IS_IMMUNE_TO_MAGIC);
+			return false;
+		}
+		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND) && !targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR))) {
 			final int sourcePlayerIndex = source.getPlayerIndex();
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
-			if (!targetsAllowed.contains(CTargetType.ENEMIES)
-					|| !sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
-				if (!targetsAllowed.contains(CTargetType.FRIEND)
-						|| sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)) {
-					if (!targetsAllowed.contains(CTargetType.MECHANICAL)
-							|| this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
-						if (!targetsAllowed.contains(CTargetType.ORGANIC)
-								|| !this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
-							if (!targetsAllowed.contains(CTargetType.ANCIENT)
-									|| this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
-								if (!targetsAllowed.contains(CTargetType.NONANCIENT)
-										|| !this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
-									if (!targetsAllowed.contains(CTargetType.HERO) || (getHeroData() != null)) {
-										if (!targetsAllowed.contains(CTargetType.NONHERO) || (getHeroData() == null)) {
-											if (isDead()) {
-												if (this.unitType.isRaise() && this.unitType.isDecay()
-														&& isBoneCorpse()) {
-													return targetsAllowed.contains(CTargetType.DEAD);
+			if (!targetsAllowed.contains(CTargetType.ENEMIES) || !sourcePlayer.hasAlliance(this.playerIndex,
+					CAllianceType.PASSIVE) || targetsAllowed.contains(CTargetType.FRIEND)) {
+				if (!targetsAllowed.contains(CTargetType.FRIEND) || sourcePlayer.hasAlliance(this.playerIndex,
+						CAllianceType.PASSIVE) || targetsAllowed.contains(CTargetType.ENEMIES)) {
+					if (!targetsAllowed.contains(CTargetType.MECHANICAL) || this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
+						if (!targetsAllowed.contains(CTargetType.ORGANIC) || !this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
+							if (!targetsAllowed.contains(CTargetType.ANCIENT) || this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
+								if (!targetsAllowed.contains(CTargetType.NONANCIENT) || !this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
+									boolean invulnerable = this.isInvulnerable();
+									if ((!invulnerable && (targetsAllowed.contains(CTargetType.VULNERABLE) || !targetsAllowed.contains(CTargetType.INVULNERABLE))) || (invulnerable && targetsAllowed.contains(CTargetType.INVULNERABLE))) {
+										if (!targetsAllowed.contains(CTargetType.HERO) || (getHeroData() != null)) {
+											if (!targetsAllowed.contains(CTargetType.NONHERO) || (getHeroData() == null)) {
+												if (isDead()) {
+													if (this.isRaisable() && this.isDecays() && isBoneCorpse()) {
+														if (targetsAllowed.contains(CTargetType.DEAD)) {
+															return true;
+														}
+														else {
+															receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_MUST_BE_LIVING);
+														}
+													}
+													else {
+														receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
+													}
+												}
+												else {
+													if (!targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE)) {
+														return true;
+													}
+													else {
+														receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_CORPSE);
+													}
 												}
 											}
 											else {
-												return !targetsAllowed.contains(CTargetType.DEAD)
-														|| targetsAllowed.contains(CTargetType.ALIVE);
+												receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_HEROES);
 											}
+										}
+										else {
+											receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_HERO);
+										}
+									}
+									else {
+										if (invulnerable) {
+											receiver.targetCheckFailed(CommandStringErrorKeys.THAT_TARGET_IS_INVULNERABLE);
+										}
+										else {
+											receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 										}
 									}
 								}
+								else {
+									receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ANCIENTS);
+								}
+							}
+							else {
+								receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ANCIENT);
 							}
 						}
+						else {
+							receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_ORGANIC_UNITS);
+						}
+					}
+					else {
+						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ORGANIC_UNITS);
 					}
 				}
+				else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_FRIENDLY_UNIT);
+				}
+			}
+			else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ENEMY_UNIT);
 			}
 		}
 		else {
-			System.err.println("No targeting because " + targetsAllowed + " does not contain all of "
-					+ this.unitType.getTargetedAs());
+			if (this.unitType.getTargetedAs().contains(CTargetType.GROUND) && !targetsAllowed.contains(CTargetType.GROUND)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_GROUND_UNITS);
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.STRUCTURE)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BUILDINGS);
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.AIR) && !targetsAllowed.contains(CTargetType.AIR)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_AIR_UNITS);
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.WARD) && !targetsAllowed.contains(CTargetType.WARD)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WARDS);
+			} else if (targetsAllowed.contains(CTargetType.GROUND)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_GROUND_UNIT);
+			} else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_BUILDING);
+			} else if (targetsAllowed.contains(CTargetType.AIR)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_AIR_UNIT);
+			} else if (targetsAllowed.contains(CTargetType.WARD)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_WARD);
+			} else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
+			}
 		}
 		return false;
 	}
@@ -1572,8 +1665,21 @@ public class CUnit extends CWidget {
 		setLife(game, Math.min(getLife() + lifeToRegain, getMaximumLife()));
 	}
 
-	public void restoreMana(final CSimulation game, final int manaToRegain) {
+	public void restoreMana(final CSimulation game, final float manaToRegain) {
 		setMana(Math.min(getMana() + manaToRegain, getMaximumMana()));
+	}
+
+	public void resurrect(CSimulation simulation) {
+		simulation.getWorldCollision().removeUnit(this);
+		this.corpse = false;
+		this.boneCorpse = false;
+		this.deathTurnTick = 0;
+		this.explodesOnDeath = false;
+		this.explodesOnDeathBuffId = null;
+		setLife(simulation, getMaximumLife());
+		simulation.getWorldCollision().addUnit(this);
+		simulation.unitUpdatedType(this, typeId); // clear out some state
+		this.unitAnimationListener.playAnimation(true, PrimaryTag.STAND, SequenceUtils.EMPTY, 0.0f, true);
 	}
 
 	private static final class AutoAttackTargetFinderEnum implements CUnitEnumFunction {
@@ -1900,7 +2006,7 @@ public class CUnit extends CWidget {
 						}
 						else {
 							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener().showNoFoodError(this.playerIndex);
+							game.getCommandErrorListener().showInterfaceError(this.playerIndex, CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 							player.removeTechtreeInProgress(rawcode);
 						}
 					}
@@ -1914,7 +2020,7 @@ public class CUnit extends CWidget {
 						}
 						else {
 							this.queuedUnitFoodPaid = false;
-							game.getCommandErrorListener().showNoFoodError(this.playerIndex);
+							game.getCommandErrorListener().showInterfaceError(this.playerIndex, CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 						}
 					}
 				}
@@ -2497,9 +2603,7 @@ public class CUnit extends CWidget {
 			throw new UnsupportedOperationException(
 					"cannot ask engine if unit is ETHEREAL: ETHEREAL is not yet implemented");
 		case MAGIC_IMMUNE:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is MAGIC_IMMUNE: MAGIC_IMMUNE is not yet implemented");
-
+			return isMagicImmune();
 		}
 		return false;
 	}
@@ -2724,10 +2828,12 @@ public class CUnit extends CWidget {
 			final float angleIncrement = (float) StrictMath.PI / 6;
 			for (float angle = 0; angle < twoPi; angle += angleIncrement) {
 				for (float dist = 128; dist <= sightRadius; dist += 128) {
+					float x = myX + (float) (StrictMath.cos(angle) * dist);
+					float y = myY + (float) (StrictMath.sin(angle) * dist);
 					final int iterationIndexX = game.getPathingGrid()
-							.getFogOfWarIndexX(myX + (float) (StrictMath.cos(angle) * dist));
+							.getFogOfWarIndexX(x);
 					final int iterationIndexY = game.getPathingGrid()
-							.getFogOfWarIndexY(myY + (float) (StrictMath.sin(angle) * dist));
+							.getFogOfWarIndexY(y);
 					fogOfWar.setState(iterationIndexX, iterationIndexY, (byte) 0);
 				}
 			}
@@ -2738,7 +2844,61 @@ public class CUnit extends CWidget {
 		this.explodesOnDeath = explodesOnDeath;
 	}
 
+	public void setExplodesOnDeathBuffId(War3ID explodesOnDeathBuffId) {
+		this.explodesOnDeathBuffId = explodesOnDeathBuffId;
+	}
+
 	public boolean isExplodesOnDeath() {
 		return this.explodesOnDeath;
+	}
+
+	public void beginCooldown(CSimulation game, War3ID abilityId, float cooldownDuration) {
+		int gameTurnTick = game.getGameTurnTick();
+		rawcodeToCooldownExpireTime.put(abilityId.getValue(),
+				gameTurnTick + (int) StrictMath.ceil(cooldownDuration / WarsmashConstants.SIMULATION_STEP_TIME));
+		rawcodeToCooldownStartTime.put(abilityId.getValue(), gameTurnTick);
+		fireCooldownsChangedEvent();
+	}
+
+	public int getCooldownRemainingTicks(CSimulation game, War3ID abilityId) {
+		int expireTime = rawcodeToCooldownExpireTime.get(abilityId.getValue(), -1);
+		int gameTurnTick = game.getGameTurnTick();
+		if (expireTime == -1 || expireTime <= gameTurnTick) {
+			return 0;
+		}
+		return expireTime - gameTurnTick;
+	}
+
+	public int getCooldownLengthDisplayTicks(CSimulation game, War3ID abilityId) {
+		int startTime = rawcodeToCooldownStartTime.get(abilityId.getValue(), -1);
+		int expireTime = rawcodeToCooldownExpireTime.get(abilityId.getValue(), -1);
+		if (startTime == -1 || expireTime == -1) {
+			return 0;
+		}
+		return expireTime - startTime;
+	}
+
+	public boolean isRaisable() {
+		return raisable;
+	}
+
+	public boolean isDecays() {
+		return decays;
+	}
+
+	public void setRaisable(boolean raisable) {
+		this.raisable = raisable;
+	}
+
+	public void setDecays(boolean decays) {
+		this.decays = decays;
+	}
+
+	public void setMagicImmune(boolean magicImmune) {
+		this.magicImmune = magicImmune;
+	}
+
+	public boolean isMagicImmune() {
+		return magicImmune;
 	}
 }

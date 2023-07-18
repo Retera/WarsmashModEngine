@@ -19,11 +19,11 @@ public class CAbilityTypeDefinitionShopSharing
 			final int level) {
 		final String targetsAllowedAtLevelString = abilityEditorData.getFieldAsString(TARGETS_ALLOWED, level);
 		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE, level);
-		final float activationRadius = abilityEditorData.getFieldAsFloat(NEUTRAL_BUILDING_ACTIVATION_RADIUS, level);
-		final int interactionType = abilityEditorData.getFieldAsInteger(NEUTRAL_BUILDING_INTERACTION_TYPE, level);
+		final float activationRadius = abilityEditorData.getFieldAsFloat(NeutralBuilding.ACTIVATION_RADIUS, level);
+		final int interactionType = abilityEditorData.getFieldAsInteger(NeutralBuilding.INTERACTION_TYPE, level);
 		final boolean showSelectUnitButton = abilityEditorData
-				.getFieldAsBoolean(NEUTRAL_BUILDING_SHOW_SELECT_UNIT_BUTTON, level);
-		final boolean showUnitIndicator = abilityEditorData.getFieldAsBoolean(NEUTRAL_BUILDING_SHOW_UNIT_INDICATOR,
+				.getFieldAsBoolean(NeutralBuilding.SHOW_SELECT_UNIT_BUTTON, level);
+		final boolean showUnitIndicator = abilityEditorData.getFieldAsBoolean(NeutralBuilding.SHOW_UNIT_INDICATOR,
 				level);
 
 		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);

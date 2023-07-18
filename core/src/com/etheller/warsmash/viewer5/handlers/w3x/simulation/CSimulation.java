@@ -34,10 +34,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -61,9 +58,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManag
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
 public class CSimulation implements CPlayerAPI {
@@ -79,8 +74,8 @@ public class CSimulation implements CPlayerAPI {
 	private final List<CItem> items;
 	private final List<CPlayer> players;
 	private final List<CPlayerUnitOrderExecutor> defaultPlayerUnitOrderExecutors;
-	private final List<CProjectile> projectiles;
-	private final List<CProjectile> newProjectiles;
+	private final List<CEffect> projectiles;
+	private final List<CEffect> newProjectiles;
 	private final HandleIdAllocator handleIdAllocator;
 	private transient final SimulationRenderController simulationRenderController;
 	private int gameTurnTick = 0;
@@ -353,6 +348,14 @@ public class CSimulation implements CPlayerAPI {
 		return projectile;
 	}
 
+	public void registerEffect(CEffect effect) {
+		this.newProjectiles.add(effect);
+	}
+
+	public SimulationRenderComponentLightning createLightning(CUnit source, War3ID lightningId, CUnit target) {
+		return this.simulationRenderController.createLightning(this, lightningId, source, target);
+	}
+
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
 		this.simulationRenderController.createInstantAttackEffect(this, source, attack, target);
 	}
@@ -379,6 +382,7 @@ public class CSimulation implements CPlayerAPI {
 	protected void updateFogOfWar() {
 		for (final CPlayer player : this.players) {
 			player.getFogOfWar().convertVisibleToFogged();
+			player.updateFogModifiers(this);
 		}
 		for (final CUnit unit : this.units) {
 			unit.updateFogOfWar(this);
@@ -401,9 +405,9 @@ public class CSimulation implements CPlayerAPI {
 			}
 		}
 		finishAddingNewUnits();
-		final Iterator<CProjectile> projectileIterator = this.projectiles.iterator();
+		final Iterator<CEffect> projectileIterator = this.projectiles.iterator();
 		while (projectileIterator.hasNext()) {
-			final CProjectile projectile = projectileIterator.next();
+			final CEffect projectile = projectileIterator.next();
 			if (projectile.update(this)) {
 				projectileIterator.remove();
 			}
@@ -543,8 +547,8 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnUnitUpgradeFinishSound(constructedStructure);
 	}
 
-	public void createDeathExplodeEffect(final CUnit cUnit) {
-		this.simulationRenderController.spawnDeathExplodeEffect(cUnit);
+	public void createDeathExplodeEffect(final CUnit cUnit, War3ID explodesOnDeathBuffId) {
+		this.simulationRenderController.spawnDeathExplodeEffect(cUnit, explodesOnDeathBuffId);
 	}
 
 	public HandleIdAllocator getHandleIdAllocator() {
@@ -570,7 +574,20 @@ public class CSimulation implements CPlayerAPI {
 
 	public void unitGainResourceEvent(final CUnit unit, final int playerIndex, final ResourceType resourceType,
 			final int amount) {
-		this.simulationRenderController.spawnGainResourceTextTag(unit, resourceType, amount);
+		switch (resourceType) {
+			case GOLD: {
+				spawnTextTag(unit, playerIndex, TextTagConfigType.GOLD, amount);
+				break;
+			}
+			case LUMBER: {
+				spawnTextTag(unit, playerIndex, TextTagConfigType.LUMBER, amount);
+				break;
+			}
+		}
+	}
+
+	public void spawnTextTag(final CUnit unit, final int playerIndex, final TextTagConfigType type, final int amount) {
+		this.simulationRenderController.spawnTextTag(unit, type, amount);
 	}
 
 	public void unitGainLevelEvent(final CUnit unit) {
@@ -630,7 +647,7 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType);
 	}
 
-	public SimulationRenderComponent createSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+	public SimulationRenderComponentModel createSpellEffectOnUnit(final CUnit unit, final War3ID alias,
 			final CEffectType effectType, final int index) {
 		return this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType, index);
 	}
@@ -688,14 +705,17 @@ public class CSimulation implements CPlayerAPI {
 		cItem.setLife(this, 0);
 	}
 
-	public SimulationRenderComponent createSpellEffectOverDestructable(final CUnit source, final CDestructable target,
-			final War3ID alias, final float artAttachmentHeight) {
+	public SimulationRenderComponentModel createSpellEffectOverDestructable(final CUnit source,
+																			final CDestructable target,
+																			final War3ID alias,
+																			final float artAttachmentHeight) {
 		return this.simulationRenderController.createSpellEffectOverDestructable(source, target, alias,
 				artAttachmentHeight);
 	}
 
-	public SimulationRenderComponent spawnSpellEffectOnPoint(final float x, final float y, final float facing,
-			final War3ID alias, final CEffectType effectType, final int index) {
+	public SimulationRenderComponentModel spawnSpellEffectOnPoint(final float x, final float y, final float facing,
+																  final War3ID alias, final CEffectType effectType,
+																  final int index) {
 		return this.simulationRenderController.spawnSpellEffectOnPoint(x, y, facing, alias, effectType, index);
 	}
 

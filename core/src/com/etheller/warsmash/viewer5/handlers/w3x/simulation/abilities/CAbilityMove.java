@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityMove extends AbstractCAbility {
 
@@ -38,7 +39,7 @@ public class CAbilityMove extends AbstractCAbility {
 				receiver.targetOk(target);
 			}
 			else {
-				receiver.mustTargetType(TargetType.UNIT_OR_POINT);
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 			}
 			break;
 		default:

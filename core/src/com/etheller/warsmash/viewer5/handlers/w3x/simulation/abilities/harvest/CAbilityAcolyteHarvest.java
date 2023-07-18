@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TeamType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbility {
 	private float castRange;
@@ -87,15 +88,15 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 					receiver.targetOk(target);
 				}
 				else {
-					receiver.mustTargetTeamType(TeamType.PLAYER_UNITS);
+					receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_USE_A_MINE_CONTROLLED_BY_ANOTHER_PLAYER);
 				}
 			}
 			else {
-				receiver.mustTargetResources();
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_HAUNTED_GOLD_MINE);
 			}
 		}
 		else {
-			receiver.mustTargetResources();
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 		}
 	}
 

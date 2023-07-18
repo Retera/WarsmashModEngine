@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbility {
 	private final int lifeToRegain;
@@ -48,7 +49,7 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		if (unit.getLife() >= unit.getMaxLife()) {
-			receiver.alreadyFullHealth();
+			receiver.activationCheckFailed(CommandStringErrorKeys.ALREADY_AT_FULL_HEALTH);
 		}
 		else {
 			receiver.useOk();

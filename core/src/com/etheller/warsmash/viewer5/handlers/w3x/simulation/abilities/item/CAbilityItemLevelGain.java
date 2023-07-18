@@ -25,7 +25,7 @@ public class CAbilityItemLevelGain extends CAbilitySpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.levelsToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_LEVEL_GAINED, level);
+		this.levelsToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemLevelGain.LEVELS_GAINED, level);
 	}
 
 	@Override

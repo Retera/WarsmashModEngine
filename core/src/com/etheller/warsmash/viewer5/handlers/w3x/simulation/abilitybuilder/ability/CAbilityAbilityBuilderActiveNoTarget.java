@@ -19,7 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleIconNoSmartActiveAbility
 		implements AbilityBuilderAbility {
@@ -143,11 +143,11 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 
 	@Override
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
-		float cooldownRemaining = unit.getCooldownForId(this.orderId);
+		float cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 		if (cooldownRemaining > 0) {
 			receiver.cooldownNotYetReady(cooldownRemaining, this.cooldown);
 		} else if (unit.getMana() < this.manaCost) {
-			receiver.notEnoughResources(ResourceType.MANA);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		} else if (config.getExtraCastConditions() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getExtraCastConditions()) {
@@ -163,8 +163,8 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 		}
 	}
 	
-	public void startCooldown(CUnit unit) {
-		unit.addCooldown(this.orderId, this.cooldown);
+	public void startCooldown(CSimulation game, CUnit unit) {
+		unit.beginCooldown(game, getAlias(), this.cooldown);
 	}
 
 	@Override

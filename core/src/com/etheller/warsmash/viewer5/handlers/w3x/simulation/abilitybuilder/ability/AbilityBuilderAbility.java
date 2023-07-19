@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.SingleOrderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
@@ -20,5 +21,5 @@ public interface AbilityBuilderAbility extends SingleOrderAbility {
 
 	public War3ID getAlias();
 	
-	public void startCooldown(CUnit unit);
+	public void startCooldown(CSimulation game, CUnit unit);
 }

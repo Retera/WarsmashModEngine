@@ -22,14 +22,14 @@ public class CUpgradeEffectAttackSpeed implements CUpgradeEffect {
 	@Override
 	public void apply(final CSimulation simulation, final CUnit unit, final int level) {
 		this.buff.setValue(base + mod * level);
-		unit.addNonStackingBuff(buff);
+		unit.addNonStackingStatBuff(buff);
 		unit.notifyAttacksChanged(); // rebuild <min> - <max> ui for selected unit maybe
 	}
 
 	@Override
 	public void unapply(final CSimulation simulation, final CUnit unit, final int level) {
 		this.buff.setValue(base + mod * level);
-		unit.removeNonStackingBuff(buff);
+		unit.removeNonStackingStatBuff(buff);
 		unit.notifyAttacksChanged(); // rebuild <min> - <max> ui for selected unit maybe
 	}
 }

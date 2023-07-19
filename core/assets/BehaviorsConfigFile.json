@@ -110,5 +110,47 @@
 				"percentageBooleanField": "B"
 			}]
 		}
+	},{
+		"ids": [{"id":"AIva"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "PASSIVE_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "HPSTEAL",
+				"dataField": "A"
+			}]
+		}
+	},{
+		"ids": [{"id":"AIas"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "PASSIVE_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "ATKSPD",
+				"dataField": "A"
+			}]
+		}
+	},{
+		"ids": [{"id":"AIrm"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "PASSIVE_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "MPGEN",
+				"dataField": "A",
+				"percentageOverride": true
+			}]
+		}
+	},{
+		"ids": [{"id":"AIms"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "PASSIVE_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "MVSPD",
+				"dataField": "A",
+				"percentageOverride": false
+			}]
+		}
 	}]
 }

@@ -31,6 +31,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityV
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityCargoHold;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
@@ -80,8 +81,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManag
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CUnitState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -89,6 +92,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbility
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class CUnit extends CWidget {
 	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
@@ -118,6 +122,8 @@ public class CUnit extends CWidget {
 	private CUnitDefaultLifestealListener lifestealListener = null;
 
 	private Map<NonStackingStatBuffType, Map<String, Set<NonStackingStatBuff>>> nonStackingBuffs = new HashMap<>();
+	private Map<String, Set<NonStackingFx>> nonStackingFx = new HashMap<>();
+	private Map<String, Set<CBuff>> nonStackingDisplayBuffs = new HashMap<>();
 
 	private int currentDefenseDisplay;
 	private float currentDefense;
@@ -267,7 +273,7 @@ public class CUnit extends CWidget {
 		computeDerivedFields(NonStackingStatBuffType.HPGEN);
 	}
 
-	public void addNonStackingBuff(NonStackingStatBuff buff) {
+	public void addNonStackingStatBuff(NonStackingStatBuff buff) {
 		Map<String, Set<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
 		if (buffKeyMap == null) {
 			buffKeyMap = new HashMap<>();
@@ -282,9 +288,15 @@ public class CUnit extends CWidget {
 		computeDerivedFields(buff.getBuffType());
 	}
 
-	public void removeNonStackingBuff(NonStackingStatBuff buff) {
+	public void removeNonStackingStatBuff(NonStackingStatBuff buff) {
 		Map<String, Set<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
-		buffKeyMap.get(buff.getStackingKey()).remove(buff);
+		try {
+			buffKeyMap.get(buff.getStackingKey()).remove(buff);
+		} catch (Exception e) {
+			System.err.println(e.getLocalizedMessage());
+			System.err.println(e.getStackTrace().toString());
+			System.err.println("From: " + this.getTypeId().asStringValue());
+		}
 		computeDerivedFields(buff.getBuffType());
 	}
 
@@ -432,7 +444,6 @@ public class CUnit extends CWidget {
 					continue;
 				}
 				totalNSMPGenBuff += buffForKey * this.maximumMana;
-				System.err.println("Added max mana regen = " + (buffForKey * this.maximumMana));
 			}
 			this.currentManaRegenPerTick = (this.manaRegen + this.manaRegenBonus + this.manaRegenIntelligenceBonus
 					+ totalNSMPGenBuff) * WarsmashConstants.SIMULATION_STEP_TIME;
@@ -592,6 +603,71 @@ public class CUnit extends CWidget {
 			break;
 		}
 	}
+	
+	public NonStackingFx addNonStackingFx(CSimulation game, String stackingKey, War3ID id, CEffectType target) {
+		Set<NonStackingFx> existingArts = nonStackingFx.get(stackingKey);
+		NonStackingFx newFx = new NonStackingFx(stackingKey, id);
+		if (existingArts == null) {
+			existingArts = new HashSet<>();
+			nonStackingFx.put(stackingKey, existingArts);
+		}
+		if (existingArts.isEmpty()) {
+			SimulationRenderComponent fx = game.createSpellEffectOnUnit(this, id, target, 0);
+			newFx.setArt(fx);
+		} else {
+			newFx.setArt(existingArts.iterator().next().getArt());
+		}
+		existingArts.add(newFx);
+		return newFx;
+	}
+	
+	public void removeNonStackingFx(CSimulation game, NonStackingFx fx) {
+		Set<NonStackingFx> existingArts = nonStackingFx.get(fx.getStackingKey());
+		if (existingArts != null) {
+			existingArts.remove(fx);
+			if (existingArts.isEmpty()) {
+				fx.getArt().remove();
+			}
+		}
+	}
+	
+	public void addNonStackingDisplayBuff(CSimulation game, String stackingKey, CBuff buff) {
+		Set<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
+		if (existingBuffs == null) {
+			existingBuffs = new HashSet<>();
+			nonStackingDisplayBuffs.put(stackingKey, existingBuffs);
+		}
+		if (existingBuffs.isEmpty()) {
+			this.add(game, buff);
+		} else {
+			CBuff currentBuff = this.getFirstAbilityOfType(buff.getClass());
+			if (buff.getLevel() > currentBuff.getLevel()) {
+				this.remove(game, currentBuff);
+				this.add(game, buff);
+			}
+		}
+		existingBuffs.add(buff);
+	}
+	
+	public void removeNonStackingDisplayBuff(CSimulation game, String stackingKey, CBuff buff) {
+		Set<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
+		if (existingBuffs != null) {
+			existingBuffs.remove(buff);
+			CBuff currentBuff = this.getFirstAbilityOfType(buff.getClass());
+			if (currentBuff == buff) {
+				this.remove(game, currentBuff);
+				if (!existingBuffs.isEmpty()) {
+					currentBuff = null;
+					for (CBuff iterBuff : existingBuffs) {
+						if (currentBuff == null || currentBuff.getLevel() < iterBuff.getLevel()) {
+							currentBuff = iterBuff;
+						}
+					}
+					this.add(game, currentBuff);
+				}
+			}
+		}
+	}
 
 	private void initializeNonStackingBuffs() {
 		this.nonStackingBuffs.put(NonStackingStatBuffType.ATKSPD, new HashMap<>());
@@ -611,7 +687,6 @@ public class CUnit extends CWidget {
 		this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATK, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATKPCT, new HashMap<>());
 		this.nonStackingBuffs.put(NonStackingStatBuffType.THORNS, new HashMap<>());
-		;
 		this.nonStackingBuffs.put(NonStackingStatBuffType.THORNSPCT, new HashMap<>());
 	}
 

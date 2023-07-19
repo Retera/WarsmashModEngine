@@ -20,7 +20,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIconNoSmartActiveAbility
 		implements AbilityBuilderAbility {
@@ -176,7 +176,7 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 
 	public void deactivate(final CSimulation game, final CUnit caster) {
 		this.active = false;
-		this.startCooldown(caster);
+		this.startCooldown(game, caster);
 	}
 
 	@Override
@@ -225,11 +225,11 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 	@Override
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
 		if (!this.active) {
-			float cooldownRemaining = unit.getCooldownForId(this.orderId);
+			int cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 			if (cooldownRemaining > 0) {
 				receiver.cooldownNotYetReady(cooldownRemaining, this.cooldown);
 			} else if (unit.getMana() < (this.manaCost + this.bufferMana)) {
-				receiver.notEnoughResources(ResourceType.MANA);
+				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 			} else if (config.getExtraCastConditions() != null) {
 				boolean result = true;
 				for (ABCondition condition : config.getExtraCastConditions()) {
@@ -247,9 +247,9 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 			receiver.useOk();
 		}
 	}
-	
-	public void startCooldown(CUnit unit) {
-		unit.addCooldown(this.orderId, this.cooldown);
+
+	public void startCooldown(CSimulation game, CUnit unit) {
+		unit.beginCooldown(game, getAlias(), this.cooldown);
 	}
 
 	@Override

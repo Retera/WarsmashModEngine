@@ -167,10 +167,8 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 		return localStore;
 	}
 
-	@Override
-	public void startCooldown(CUnit unit) {
+	public void startCooldown(CSimulation game, CUnit unit) {
 		// TODO Auto-generated method stub
-		
 	}
 
 }

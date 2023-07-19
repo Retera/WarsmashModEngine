@@ -4,10 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -19,12 +17,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityAbilityBuilderActiveUnitTarget extends AbstractGenericSingleIconNoSmartActiveAbility implements AbilityBuilderAbility{
 
@@ -133,7 +128,6 @@ public class CAbilityAbilityBuilderActiveUnitTarget extends AbstractGenericSingl
 		if ((target instanceof CUnit) && target.canBeTargetedBy(game, unit, this.levelData.get(this.getLevel()).getTargetsAllowed())) {
 			if (!unit.isMovementDisabled() || unit.canReach(target, this.levelData.get(this.getLevel()).getCastRange())) {
 				final CUnit targetUnit = (CUnit) target;
-				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 				
 				if (this.config.getExtraTargetConditions() != null) {
 					boolean result = true;
@@ -143,18 +137,18 @@ public class CAbilityAbilityBuilderActiveUnitTarget extends AbstractGenericSingl
 					if (result) {
 						receiver.targetOk(targetUnit);
 					} else {
-						receiver.targetTooComplicated();
+						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 					}
 				} else {
 					receiver.targetOk(targetUnit);
 				}
 			}
 			else {
-				receiver.targetOutsideRange();
+				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 			}
 		}
 		else {
-			receiver.mustTargetType(TargetType.UNIT);
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 		}
 	}
 
@@ -172,11 +166,11 @@ public class CAbilityAbilityBuilderActiveUnitTarget extends AbstractGenericSingl
 
 	@Override
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
-		float cooldownRemaining = unit.getCooldownForId(this.orderId);
+		int cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 		if (cooldownRemaining > 0) {
 			receiver.cooldownNotYetReady(cooldownRemaining, this.cooldown);
 		} else if (unit.getMana() < this.manaCost) {
-			receiver.notEnoughResources(ResourceType.MANA);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		} else if (config.getExtraCastConditions() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getExtraCastConditions()) {
@@ -191,9 +185,9 @@ public class CAbilityAbilityBuilderActiveUnitTarget extends AbstractGenericSingl
 			receiver.useOk();
 		}
 	}
-	
-	public void startCooldown(CUnit unit) {
-		unit.addCooldown(this.orderId, this.cooldown);
+
+	public void startCooldown(CSimulation game, CUnit unit) {
+		unit.beginCooldown(game, getAlias(), this.cooldown);
 	}
 
 	@Override

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -20,7 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSingleIconNoSmartActiveAbility implements AbilityBuilderAbility {
 
@@ -141,14 +140,14 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 				if (result) {
 					receiver.targetOk(target);
 				} else {
-					receiver.targetTooComplicated();
+					receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THERE);
 				}
 			} else {
 				receiver.targetOk(target);
 			}
 		}
 		else {
-			receiver.targetOutsideRange();
+			receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 		}
 	}
 
@@ -160,11 +159,11 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 
 	@Override
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
-		float cooldownRemaining = unit.getCooldownForId(this.orderId);
+		int cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 		if (cooldownRemaining > 0) {
 			receiver.cooldownNotYetReady(cooldownRemaining, this.cooldown);
 		} else if (unit.getMana() < this.manaCost) {
-			receiver.notEnoughResources(ResourceType.MANA);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		} else if (config.getExtraCastConditions() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getExtraCastConditions()) {
@@ -179,9 +178,9 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 			receiver.useOk();
 		}
 	}
-	
-	public void startCooldown(CUnit unit) {
-		unit.addCooldown(this.orderId, this.cooldown);
+
+	public void startCooldown(CSimulation game, CUnit unit) {
+		unit.beginCooldown(game, getAlias(), this.cooldown);
 	}
 
 	@Override

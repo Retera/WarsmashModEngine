@@ -17,8 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.skills.human.paladin.CBehaviorHolyLight;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 	private final AbilityBuilderConfiguration parser;
@@ -82,14 +82,15 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 		if (!this.doneEffect  && (ticksSinceCast >= castPointTicks || ticksSinceCast >= backswingTicks)) {
 			this.doneEffect = true;
 			if (!this.unit.chargeMana(this.ability.getLevelData().get(ability.getLevel()).getManaCost())) {
-				game.getCommandErrorListener().showNoManaError(this.unit.getPlayerIndex());
+				game.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(),
+						CommandStringErrorKeys.NOT_ENOUGH_MANA);
 				return this.unit.pollNextOrderBehavior(game);
 			}
 			
 			for (ABAction action : parser.getOnUpdateCasting()) {
 				action.runAction(game, null, localStore);
 			}
-			this.ability.startCooldown(this.unit);
+			this.ability.startCooldown(game, this.unit);
 			this.unit.fireCooldownsChangedEvent();
 		}
 		if (ticksSinceCast >= backswingTicks) {

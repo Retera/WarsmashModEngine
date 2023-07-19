@@ -21,7 +21,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.MeleeRangeTargetOverride;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.StatBuffFromDataField;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.StatBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -68,18 +67,22 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbstractGenericSingl
 		super(handleId, alias);
 		this.levelData = levelData;
 		this.localStore = localStore;
-		this.statBuffDataFields = statBuffDataFields;
 		this.rangeOverride = meleeRangeTargetOverride;
 		this.targetsAllowed = levelData.get(getLevel() - 1).getTargetsAllowed();
 		this.range = levelData.get(getLevel() - 1).getArea();
 		this.auraStackingKey = "";
+
+		this.statBuffDataFields = new ArrayList<>();
+		for (StatBuffFromDataField statBuff : statBuffDataFields) {
+			this.statBuffDataFields.add(new StatBuffFromDataField(statBuff));
+		}
 
 		if (!this.levelData.get(getLevel() - 1).getBuffs().isEmpty()) {
 			buffId = this.levelData.get(getLevel() - 1).getBuffs().get(0);
 			this.auraStackingKey = buffId.asStringValue();
 		}
 
-		for (StatBuffFromDataField statBuff : statBuffDataFields) {
+		for (StatBuffFromDataField statBuff : this.statBuffDataFields) {
 			createNewBuffs(statBuff);
 		}
 
@@ -89,48 +92,26 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbstractGenericSingl
 		}
 	}
 
-	private NonStackingStatBuffType convertToNonStackingType(StatBuffFromDataField statBuff) {
-		boolean percentage = false;
-		if (statBuff.isPercentageOverride() != null) {
-			percentage = statBuff.isPercentageOverride();
-		} else {
-			if (statBuff.getPercentageBooleanField() != null) {
-				percentage = Integer.parseInt(levelData.get(getLevel() - 1).getData()
-						.get(statBuff.getPercentageBooleanField().getIndex())) == 1;
-			} else if (statBuff.getFlatBooleanField() != null) {
-				percentage = !(Integer.parseInt(
-						levelData.get(getLevel() - 1).getData().get(statBuff.getFlatBooleanField().getIndex())) == 1);
-			}
-		}
-		if (statBuff.getType() == StatBuffType.ATK) {
-			boolean targetMelee = false;
-			boolean targetRange = false;
-			if (statBuff.getTargetMeleeField() != null) {
-				targetMelee = Integer.parseInt(
-						levelData.get(getLevel() - 1).getData().get(statBuff.getTargetMeleeField().getIndex())) == 1;
-			}
-			if (statBuff.getTargetRangeField() != null) {
-				targetRange = Integer.parseInt(
-						levelData.get(getLevel() - 1).getData().get(statBuff.getTargetRangeField().getIndex())) == 1;
-			}
-
-			return statBuff.getType().toAtkNonStackingStatBuffType(percentage, targetMelee, targetRange);
-		} else {
-			return statBuff.getType().toNonStackingStatBuffType(percentage);
-		}
-	}
-
 	private void removeExistingBuffs(StatBuffFromDataField statBuff) {
 		for (CUnit unit : auraGroup) {
-			unit.removeNonStackingBuff(statBuff.getBuff());
+			unit.removeNonStackingStatBuff(statBuff.getBuff());
 			if (statBuff.getSecondAtkBuff() != null) {
-				unit.removeNonStackingBuff(statBuff.getSecondAtkBuff());
+				unit.removeNonStackingStatBuff(statBuff.getSecondAtkBuff());
+			}
+		}
+	}
+	
+	private void addNewBuffs(StatBuffFromDataField statBuff) {
+		for (CUnit unit : auraGroup) {
+			unit.addNonStackingStatBuff(statBuff.getBuff());
+			if (statBuff.getSecondAtkBuff() != null) {
+				unit.addNonStackingStatBuff(statBuff.getSecondAtkBuff());
 			}
 		}
 	}
 
 	private void createNewBuffs(StatBuffFromDataField parsedBuff) {
-		NonStackingStatBuffType type = convertToNonStackingType(parsedBuff);
+		NonStackingStatBuffType type = parsedBuff.convertToNonStackingType(levelData.get(getLevel() - 1));
 		NonStackingStatBuff newBuff = null;
 		switch (type) {
 		case RNGDATK:
@@ -185,7 +166,7 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbstractGenericSingl
 		this.targetMelee = false;
 		this.targetRange = false;
 		for (StatBuffFromDataField statBuff : this.statBuffDataFields) {
-			NonStackingStatBuffType type = convertToNonStackingType(statBuff);
+			NonStackingStatBuffType type = statBuff.convertToNonStackingType(levelData.get(getLevel() - 1));
 			if (type == null) {
 				continue;
 			}
@@ -194,9 +175,11 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbstractGenericSingl
 				if (statBuff.getSecondAtkBuff() == null) {
 					removeExistingBuffs(statBuff);
 					createNewBuffs(statBuff);
+					addNewBuffs(statBuff);
 				} else if (statBuff.getBuff().getBuffType() != NonStackingStatBuffType.MELEEATK) {
 					removeExistingBuffs(statBuff);
 					createNewBuffs(statBuff);
+					addNewBuffs(statBuff);
 				} else {
 					statBuff.getBuff().setValue(Float.parseFloat(
 							levelData.get(getLevel() - 1).getData().get(statBuff.getDataField().getIndex())));
@@ -208,9 +191,11 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbstractGenericSingl
 				if (statBuff.getSecondAtkBuff() == null) {
 					removeExistingBuffs(statBuff);
 					createNewBuffs(statBuff);
+					addNewBuffs(statBuff);
 				} else if (statBuff.getBuff().getBuffType() != NonStackingStatBuffType.MELEEATKPCT) {
 					removeExistingBuffs(statBuff);
 					createNewBuffs(statBuff);
+					addNewBuffs(statBuff);
 				} else {
 					statBuff.getBuff().setValue(Float.parseFloat(
 							levelData.get(getLevel() - 1).getData().get(statBuff.getDataField().getIndex())));
@@ -222,9 +207,11 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbstractGenericSingl
 				if (statBuff.getSecondAtkBuff() != null) {
 					removeExistingBuffs(statBuff);
 					createNewBuffs(statBuff);
+					addNewBuffs(statBuff);
 				} else if (type != statBuff.getBuff().getBuffType()) {
 					removeExistingBuffs(statBuff);
 					createNewBuffs(statBuff);
+					addNewBuffs(statBuff);
 				} else {
 					statBuff.getBuff().setValue(Float.parseFloat(
 							levelData.get(getLevel() - 1).getData().get(statBuff.getDataField().getIndex())));
@@ -246,35 +233,23 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbstractGenericSingl
 			this.targetMelee = this.rangeOverride.isTargetMelee();
 			this.targetRange = this.rangeOverride.isTargetRange();
 		}
-		System.out.println("Levelled Aura " + this.getAlias().asStringValue() + " to level " + getLevel());
-		System.out.println("Current Targets Melee? " + this.targetMelee);
-		System.out.println("Current Targets Range? " + this.targetRange);
-		System.out.println("Current Key: " + auraStackingKey);
-		System.out.println("Current Range: " + range);
-		System.out.println("Current Number of buffs: " + statBuffDataFields.size());
 	}
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		if (this.buffId != null) {
-			this.buff = new ABGenericAuraBuff(game.getHandleIdAllocator().createId(), this.buffId, unit, this.getAlias());
+			this.buff = new ABGenericAuraBuff(game.getHandleIdAllocator().createId(), this.buffId, unit);
 		}
 		game.getAbilityData().createAbility(getAlias(), game.getHandleIdAllocator().createId());
 		auraGroup = new HashSet<>();
 		localStore.put(ABLocalStoreKeys.AURAGROUP, auraGroup);
-		//this.fx = game.createSpellEffectOnUnit(unit, this.getAlias(), CEffectType.TARGET, 0);
-		System.out.println("Added Aura " + this.getAlias().asStringValue());
-		System.out.println("Current Targets Melee? " + this.targetMelee);
-		System.out.println("Current Targets Range? " + this.targetRange);
-		System.out.println("Current Key: " + auraStackingKey);
-		System.out.println("Current Range: " + range);
-		System.out.println("Current Number of buffs: " + statBuffDataFields.size());
+		this.fx = game.createSpellEffectOnUnit(unit, this.getAlias(), CEffectType.TARGET, 0);
 	}
 
 	@Override
 	public void onRemove(CSimulation game, CUnit unit) {
 		emptyAura(game, unit);
-		//this.fx.remove();
+		this.fx.remove();
 	}
 
 	@Override
@@ -315,21 +290,27 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbstractGenericSingl
 	}
 
 	public void addUnitToAura(CSimulation game, CUnit unit) {
-		auraGroup.add(unit);
 		for (StatBuffFromDataField statBuff : this.statBuffDataFields) {
-			unit.addNonStackingBuff(statBuff.getBuff());
+			unit.addNonStackingStatBuff(statBuff.getBuff());
+			if (statBuff.getSecondAtkBuff() != null) {
+				unit.addNonStackingStatBuff(statBuff.getSecondAtkBuff());
+			}
 		}
 		if (buff != null) {
-			unit.add(game, buff);
+			unit.addNonStackingDisplayBuff(game, auraStackingKey, buff);
 		}
+		auraGroup.add(unit);
 	}
 
 	public void removeUnitFromAura(CSimulation game, CUnit unit) {
 		if (buff != null) {
-			unit.remove(game, buff);
+			unit.removeNonStackingDisplayBuff(game, auraStackingKey, buff);
 		}
 		for (StatBuffFromDataField statBuff : this.statBuffDataFields) {
-			unit.removeNonStackingBuff(statBuff.getBuff());
+			unit.removeNonStackingStatBuff(statBuff.getBuff());
+			if (statBuff.getSecondAtkBuff() != null) {
+				unit.removeNonStackingStatBuff(statBuff.getSecondAtkBuff());
+			}
 		}
 		auraGroup.remove(unit);
 	}

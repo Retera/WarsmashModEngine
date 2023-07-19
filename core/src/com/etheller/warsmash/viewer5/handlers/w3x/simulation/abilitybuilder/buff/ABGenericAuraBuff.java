@@ -11,38 +11,35 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class ABGenericAuraBuff extends AbstractCBuff {
-	private Map<Integer, SimulationRenderComponent > fx;
+	private Map<Integer, NonStackingFx > fx;
 	
 	private CUnit caster;
-	private War3ID casterArt;
 
-	public ABGenericAuraBuff(int handleId, War3ID alias, CUnit caster, War3ID casterArt) {
+	public ABGenericAuraBuff(int handleId, War3ID alias, CUnit caster) {
 		super(handleId, alias);
 		this.caster = caster;
-		this.casterArt = casterArt;
 		this.fx = new HashMap<>();
 	}
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		if (unit == this.caster) {
-			this.fx.put(unit.getHandleId(), game.createSpellEffectOnUnit(unit, this.casterArt, CEffectType.TARGET, 0));
-		} else {
-			this.fx.put(unit.getHandleId(), game.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0));
+		if (unit != this.caster) {
+			this.fx.put(unit.getHandleId(), unit.addNonStackingFx(game, "aura", getAlias(), CEffectType.TARGET));
 		}
 	}
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-		SimulationRenderComponent theFx = this.fx.get(unit.getHandleId());
+		NonStackingFx theFx = this.fx.get(unit.getHandleId());
 		if (theFx != null) {
 			this.fx.remove(unit.getHandleId());
-			theFx.remove();
+			unit.removeNonStackingFx(game, theFx);
 		}
 	}
 

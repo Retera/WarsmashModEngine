@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
 
 public class StatBuffFromDataField {
 	private StatBuffType type;
@@ -14,6 +16,15 @@ public class StatBuffFromDataField {
 	private transient NonStackingStatBuff buff;
 	private transient NonStackingStatBuff secondAtkBuff;
 	
+	public StatBuffFromDataField(StatBuffFromDataField statBuff) {
+		this.type = statBuff.getType();
+		this.percentageBooleanField = statBuff.getPercentageBooleanField();
+		this.flatBooleanField = statBuff.getFlatBooleanField();
+		this.dataField = statBuff.getDataField();
+		this.percentageOverride = statBuff.isPercentageOverride();
+		this.targetMeleeField = statBuff.getTargetMeleeField();
+		this.targetRangeField = statBuff.getTargetRangeField();
+	}
 	public StatBuffType getType() {
 		return type;
 	}
@@ -67,5 +78,36 @@ public class StatBuffFromDataField {
 	}
 	public void setSecondAtkBuff(NonStackingStatBuff secondAtkBuff) {
 		this.secondAtkBuff = secondAtkBuff;
+	}
+	
+	public NonStackingStatBuffType convertToNonStackingType(CAbilityTypeAbilityBuilderLevelData abilityData) {
+		boolean percentage = false;
+		if (this.isPercentageOverride() != null) {
+			percentage = this.isPercentageOverride();
+		} else {
+			if (this.getPercentageBooleanField() != null) {
+				percentage = Integer.parseInt(abilityData.getData()
+						.get(this.getPercentageBooleanField().getIndex())) == 1;
+			} else if (this.getFlatBooleanField() != null) {
+				percentage = !(Integer.parseInt(
+						abilityData.getData().get(this.getFlatBooleanField().getIndex())) == 1);
+			}
+		}
+		if (this.getType() == StatBuffType.ATK) {
+			boolean targetMelee = false;
+			boolean targetRange = false;
+			if (this.getTargetMeleeField() != null) {
+				targetMelee = Integer.parseInt(
+						abilityData.getData().get(this.getTargetMeleeField().getIndex())) == 1;
+			}
+			if (this.getTargetRangeField() != null) {
+				targetRange = Integer.parseInt(
+						abilityData.getData().get(this.getTargetRangeField().getIndex())) == 1;
+			}
+
+			return this.getType().toAtkNonStackingStatBuffType(percentage, targetMelee, targetRange);
+		} else {
+			return this.getType().toNonStackingStatBuffType(percentage);
+		}
 	}
 }

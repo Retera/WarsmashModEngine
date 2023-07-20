@@ -75,20 +75,24 @@ public class ABGenericArtBuff extends AbstractCBuff {
 	@Override
 	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
+		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
 			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
 			AbilityTargetCheckReceiver<Void> receiver) {
+		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+		receiver.notAnActiveAbility();
 	}
 
 

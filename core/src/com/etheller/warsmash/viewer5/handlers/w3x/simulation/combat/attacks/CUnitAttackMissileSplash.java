@@ -180,16 +180,16 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 			float damageDealt = this.damage;
 			final double distance = enumUnit.distance(this.x, this.y);
 			if (distance <= (this.attack.areaOfEffectFullDamage)) {
-				damageDealt = enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
+				damageDealt = enumUnit.damage(this.simulation, this.source, true, true, this.attack.getAttackType(),
 						this.attack.getWeaponType().getDamageType(), this.attack.getWeaponSound(), this.damage);
 				this.attackListener.onHit(enumUnit, this.damage);
 			} else if (distance <= (this.attack.areaOfEffectMediumDamage)) {
-				damageDealt = enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
+				damageDealt = enumUnit.damage(this.simulation, this.source, true, true, this.attack.getAttackType(),
 						this.attack.getWeaponType().getDamageType(), this.attack.getWeaponSound(),
 						this.damage * this.attack.damageFactorMedium);
 				this.attackListener.onHit(enumUnit, this.damage);
 			} else if (distance <= (this.attack.areaOfEffectSmallDamage)) {
-				damageDealt = enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
+				damageDealt = enumUnit.damage(this.simulation, this.source, true, true, this.attack.getAttackType(),
 						this.attack.getWeaponType().getDamageType(), this.attack.getWeaponSound(),
 						this.damage * this.attack.damageFactorSmall);
 				this.attackListener.onHit(enumUnit, this.damage);

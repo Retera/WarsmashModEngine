@@ -70,10 +70,10 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 		this.life = life;
 	}
 
-	public abstract float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
+	public abstract float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType,
 			final CDamageType damageType, final String weaponSoundType, final float damage);
 
-	public abstract float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
+	public abstract float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType,
 			final CDamageType damageType, final String weaponSoundType, final float damage, final float bonusDamage);
 
 	public abstract float getFlyHeight();

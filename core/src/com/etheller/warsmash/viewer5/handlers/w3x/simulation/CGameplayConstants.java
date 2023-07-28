@@ -110,6 +110,9 @@ public class CGameplayConstants {
 	private final float maxUnitSpeed;
 	private final float minBldgSpeed;
 	private final float maxBldgSpeed;
+	
+	private final float chanceToMiss;
+	private final float missDamageReduction;
 
 	public CGameplayConstants(final DataTable parsedDataTable) {
 		final Element miscData = parsedDataTable.get("Misc");
@@ -253,6 +256,9 @@ public class CGameplayConstants {
 		this.maxUnitSpeed = miscData.getFieldFloatValue("MaxUnitSpeed");
 		this.minBldgSpeed = miscData.getFieldFloatValue("MinBldgSpeed");
 		this.maxBldgSpeed = miscData.getFieldFloatValue("MaxBldgSpeed");
+
+		this.chanceToMiss = miscData.getFieldFloatValue("ChanceToMiss");
+		this.missDamageReduction = miscData.getFieldFloatValue("MissDamageReduction");
 	}
 
 	public float getAttackHalfAngle() {
@@ -490,6 +496,14 @@ public class CGameplayConstants {
 
 	public float getMaxBldgSpeed() {
 		return maxBldgSpeed;
+	}
+
+	public float getChanceToMiss() {
+		return chanceToMiss;
+	}
+
+	public float getMissDamageReduction() {
+		return missDamageReduction;
 	}
 
 	private static int getTableValue(final int[] table, int level) {

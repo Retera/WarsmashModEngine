@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit;
 
 public class NonStackingStatBuff {
+	public static final String ALLOW_STACKING_KEY = "STACK";
+	
 	private NonStackingStatBuffType buffType;
 	private String stackingKey;
 	private float value;

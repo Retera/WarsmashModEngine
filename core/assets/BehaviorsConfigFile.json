@@ -27,12 +27,12 @@
 		"templateFields": {
 			"templateType": "AURA_STATS",
 			"statBuffsFromDataFields": [{
-				"type": "ATKSPD",
-				"dataField": "B"
-			},{
-				"type": "MVSPD",
-				"dataField": "A",
-				"percentageOverride": true
+					"type": "ATKSPD",
+					"dataField": "B"
+				},{
+					"type": "MVSPD",
+					"dataField": "A",
+					"percentageOverride": true
 			}]
 		}
 	},{
@@ -152,5 +152,205 @@
 				"percentageOverride": false
 			}]
 		}
+	},{
+		"ids": [{"id":"AUts"}],
+		"type": "PASSIVE",
+		"onAddAbility": [{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "DEF"
+					}
+				},
+				"stackingKey": {
+					"type": "getAllowStackingKey"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "C"
+				}
+			},{
+				"type": "addNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "dbuff"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				}
+			},{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "THORNSPCT"
+					}
+				},
+				"stackingKey": {
+					"type": "getAllowStackingKey"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "A"
+				}
+			},{
+				"type": "addNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "tbuff"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				}
+			},{
+				"type": "createDamageTakenModificationListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "and",
+						"condition1": {
+							"type": "isDamageTypeEqual",
+							"damageType1": {
+								"type": "getTriggeringDamageType"
+							},
+							"damageType2": {
+								"type": "getDamageTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "NORMAL"
+								}
+							}
+						},
+						"condition2": {
+							"type": "not",
+							"condition": {
+								"type": "bool",
+								"bool": {
+									"type": "isTriggeringDamageRanged"
+								}
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "multiplyDamageMultiplier",
+						"multiplier": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "B"
+						}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+		}],
+		"onLevelChange": [{
+				"type": "updateNonStackingStatBuff",
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "tbuff"
+					}
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "A"
+				}
+			},{
+				"type": "updateNonStackingStatBuff",
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "dbuff"
+					}
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "C"
+				}
+		},{
+				"type": "recomputeStatBuffsOnUnit",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "THORNSPCT"
+					}
+				}
+		},{
+				"type": "recomputeStatBuffsOnUnit",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "DEF"
+					}
+				}
+		}],
+		"onRemoveAbility": [{
+				"type": "removeNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "tbuff"
+					}
+				}
+			},{
+				"type": "removeNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "dbuff"
+					}
+				}
+			},{
+				"type": "removeDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+		}]
 	}]
 }

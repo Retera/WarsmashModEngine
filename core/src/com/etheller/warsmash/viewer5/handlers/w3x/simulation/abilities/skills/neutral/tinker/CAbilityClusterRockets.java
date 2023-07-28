@@ -157,7 +157,7 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 					else {
 						thisTargetDamage = damagePerTarget;
 					}
-					damageTarget.damage(simulation, unit, CAttackType.SPELLS, CDamageType.FIRE,
+					damageTarget.damage(simulation, unit, false, true, CAttackType.SPELLS, CDamageType.FIRE,
 							CWeaponSoundTypeJass.WHOKNOWS.name(), thisTargetDamage);
 				}
 			}

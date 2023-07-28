@@ -59,7 +59,7 @@ public class CAbilityHolyLight extends CAbilityTargetSpellBase {
 		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if(targetUnit != null) {
 			if(targetUnit.getClassifications().contains(CUnitClassification.UNDEAD)) {
-				targetUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.DIVINE, null, healAmount * 0.5f);
+				targetUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.DIVINE, null, healAmount * 0.5f);
 			} else {
 				targetUnit.heal(simulation, healAmount);
 			}

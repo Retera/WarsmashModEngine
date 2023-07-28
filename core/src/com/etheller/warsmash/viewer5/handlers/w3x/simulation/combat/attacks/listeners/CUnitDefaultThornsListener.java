@@ -16,13 +16,13 @@ public class CUnitDefaultThornsListener implements CUnitAttackDamageTakenListene
 	}
 	
 	@Override
-	public void onDamage(final CSimulation simulation, CUnit attacker, CUnit target, CDamageType damageType, float damage, float bonusDamage) {
-		if (damageType == CDamageType.NORMAL) {
+	public void onDamage(final CSimulation simulation, CUnit attacker, CUnit target, boolean isAttack, boolean isRanged, CDamageType damageType, float damage, float bonusDamage, float trueDamage) {
+		if (damageType == CDamageType.NORMAL && !isRanged) {
 			float thornsAmount = amount;
 			if (percentage) {
 				thornsAmount *= damage;
 			}
-			attacker.damage(simulation, target, CAttackType.SPELLS, CDamageType.MAGIC, CWeaponSoundTypeJass.WHOKNOWS.name(), thornsAmount);
+			attacker.damage(simulation, target, false, true, CAttackType.SPELLS, CDamageType.DEFENSIVE, CWeaponSoundTypeJass.WHOKNOWS.name(), thornsAmount);
 		}
 	}
 

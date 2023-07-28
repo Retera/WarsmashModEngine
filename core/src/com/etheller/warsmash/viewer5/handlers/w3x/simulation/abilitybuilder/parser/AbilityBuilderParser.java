@@ -26,6 +26,8 @@ public class AbilityBuilderParser {
 	private List<ABAction> onCancelPreCast;
 	private List<ABAction> onBeginCast;
 
+	private List<ABAction> onLevelChange;
+
 	private List<ABAction> onBeginCasting;
 	private List<ABAction> onEndCasting;
 	private List<ABAction> onResetCasting;
@@ -128,6 +130,14 @@ public class AbilityBuilderParser {
 
 	public void setOnBeginCasting(List<ABAction> onBeginCasting) {
 		this.onBeginCasting = onBeginCasting;
+	}
+
+	public List<ABAction> getOnLevelChange() {
+		return onLevelChange;
+	}
+
+	public void setOnLevelChange(List<ABAction> onLevelChange) {
+		this.onLevelChange = onLevelChange;
 	}
 
 	public List<ABAction> getOnEndCasting() {

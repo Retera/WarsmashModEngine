@@ -106,7 +106,7 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase {
 				if (enumUnit.isBuilding()) {
 					damageAmount *= buildingDamageFactor;
 				}
-				enumUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.DEMOLITION,
+				enumUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.DEMOLITION,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), damageAmount);
 			}
 			return false;

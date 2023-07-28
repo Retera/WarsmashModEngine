@@ -105,7 +105,7 @@ public class CAbilityManaBurn extends CAbilityTargetSpellBase {
 				float targetMana = targetUnit.getMana();
 				float manaDamage = StrictMath.min(targetMana, this.maxManaDrained);
 				targetUnit.setMana(targetMana - manaDamage);
-				targetUnit.damage(game, caster, CAttackType.SPELLS, CDamageType.FIRE,
+				targetUnit.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.FIRE,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), manaDamage);
 				game.spawnTextTag(targetUnit, caster.getPlayerIndex(), TextTagConfigType.MANA_BURN, (int) manaDamage);
 				this.boltDelayEndTick = Integer.MAX_VALUE;

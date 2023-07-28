@@ -60,10 +60,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenModificationListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenModificationListenerDamageModResult;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackEvasionListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPostDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerPriority;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultAccuracyCheckListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultLifestealListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultThornsListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
@@ -199,8 +204,10 @@ public class CUnit extends CWidget {
 
 	private Map<Integer, List<CUnitAttackPreDamageListener>> preDamageListeners = new HashMap<>();
 	private List<CUnitAttackPostDamageListener> postDamageListeners = new ArrayList<>();
+	private List<CUnitAttackDamageTakenModificationListener> damageTakenModificationListeners = new ArrayList<>();
 	private List<CUnitAttackDamageTakenListener> damageTakenListeners = new ArrayList<>();
 	private Map<Integer, List<CUnitDeathReplacementEffect>> deathReplacementEffects = new HashMap<>();
+	private List<CUnitAttackEvasionListener> evasionListeners = new ArrayList<>();
 
 	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
 	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
@@ -236,6 +243,8 @@ public class CUnit extends CWidget {
 		this.decays = unitType.isDecay();
 		initializeNonStackingBuffs();
 		initializeListenerLists();
+		this.addPreDamageListener(CUnitAttackPreDamageListenerPriority.ACCURACY.getPriority(),
+				new CUnitDefaultAccuracyCheckListener());
 		computeAllDerivedFields();
 	}
 
@@ -316,7 +325,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -326,11 +339,16 @@ public class CUnit extends CWidget {
 			}
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.DEFPCT);
 			for (String key : buffKeyMap.keySet()) {
-				Float buffForKey = null;			for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
+				Float buffForKey = null;
+				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -354,7 +372,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -369,7 +391,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -384,7 +410,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -406,7 +436,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -421,7 +455,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -437,7 +475,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -458,7 +500,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -473,7 +519,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -514,7 +564,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -536,7 +590,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -560,7 +618,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -584,7 +646,11 @@ public class CUnit extends CWidget {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
 					}
 				}
 				if (buffForKey == null) {
@@ -603,7 +669,7 @@ public class CUnit extends CWidget {
 			break;
 		}
 	}
-	
+
 	public NonStackingFx addNonStackingFx(CSimulation game, String stackingKey, War3ID id, CEffectType target) {
 		Set<NonStackingFx> existingArts = nonStackingFx.get(stackingKey);
 		NonStackingFx newFx = new NonStackingFx(stackingKey, id);
@@ -620,7 +686,7 @@ public class CUnit extends CWidget {
 		existingArts.add(newFx);
 		return newFx;
 	}
-	
+
 	public void removeNonStackingFx(CSimulation game, NonStackingFx fx) {
 		Set<NonStackingFx> existingArts = nonStackingFx.get(fx.getStackingKey());
 		if (existingArts != null) {
@@ -630,7 +696,7 @@ public class CUnit extends CWidget {
 			}
 		}
 	}
-	
+
 	public void addNonStackingDisplayBuff(CSimulation game, String stackingKey, CBuff buff) {
 		Set<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
 		if (existingBuffs == null) {
@@ -648,7 +714,7 @@ public class CUnit extends CWidget {
 		}
 		existingBuffs.add(buff);
 	}
-	
+
 	public void removeNonStackingDisplayBuff(CSimulation game, String stackingKey, CBuff buff) {
 		Set<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
 		if (existingBuffs != null) {
@@ -1634,35 +1700,56 @@ public class CUnit extends CWidget {
 		return groundDistance;
 	}
 
-	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			final CDamageType damageType, final String weaponSoundType, final float damage) {
-		return this.damage(simulation, source, attackType, damageType, weaponSoundType, damage, 0);
+	public boolean checkForMiss(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType, final float damage,
+			final float bonusDamage) {
+		boolean miss = false;
+		if (isAttack) {
+			for (CUnitAttackEvasionListener listener : evasionListeners) {
+				miss = miss || listener.onAttack(simulation, source, this, isAttack, isRanged, damageType);
+			}
+		}
+		return miss;
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			final CDamageType damageType, final String weaponSoundType, final float damage, final float bonusDamage) {
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage) {
+		return this.damage(simulation, source, isAttack, isRanged, attackType, damageType, weaponSoundType, damage, 0);
+	}
+
+	@Override
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage, final float bonusDamage) {
 		final boolean wasDead = isDead();
 		float trueDamage = 0;
 		if (!this.invulnerable) {
+
+			CUnitAttackDamageTakenModificationListenerDamageModResult result = new CUnitAttackDamageTakenModificationListenerDamageModResult(
+					damage, bonusDamage);
+			System.err.println("Reached mod listeners (" + damageTakenModificationListeners.size() + ")");
+			for (CUnitAttackDamageTakenModificationListener listener : damageTakenModificationListeners) {
+				listener.onDamage(simulation, source, this, isAttack, isRanged, attackType, damageType, result);
+			}
+
 			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
 					getDefenseType());
 			final float damageRatioFromDefense;
 			final float defense = this.currentDefense;
 			if (damageType != CDamageType.NORMAL) {
 				damageRatioFromDefense = 1.0f;
-			}
-			else if (defense >= 0) {
+			} else if (defense >= 0) {
 				damageRatioFromDefense = 1f - ((defense * simulation.getGameplayConstants().getDefenseArmor())
 						/ (1 + (simulation.getGameplayConstants().getDefenseArmor() * defense)));
 			} else {
 				damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -defense);
 			}
-			trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * (damage + bonusDamage);
+			trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * (result.computeFinalDamage());
 			final boolean wasAboveMax = this.life > this.maximumLife;
 			this.life -= trueDamage;
-			if (((damage + bonusDamage) < 0) && !wasAboveMax && (this.life > this.maximumLife)) {
+			if (((result.computeFinalDamage()) < 0) && !wasAboveMax && (this.life > this.maximumLife)) {
 				// NOTE wasAboveMax is for that weird life drain power to drain above max... to
 				// be honest that's a crazy mechanic anyway so I didn't test whether it works
 				// yet
@@ -1671,7 +1758,8 @@ public class CUnit extends CWidget {
 			this.stateNotifier.lifeChanged();
 		}
 		for (CUnitAttackDamageTakenListener listener : damageTakenListeners) {
-			listener.onDamage(simulation, source, this, damageType, damage, bonusDamage);
+			listener.onDamage(simulation, source, this, isAttack, isRanged, damageType, damage, bonusDamage,
+					trueDamage);
 		}
 		simulation.unitDamageEvent(this, weaponSoundType, this.unitType.getArmorType());
 		if (!this.invulnerable && isDead()) {
@@ -1715,8 +1803,7 @@ public class CUnit extends CWidget {
 		this.orderQueue.clear();
 		if (this.constructing) {
 			simulation.createDeathExplodeEffect(this, explodesOnDeathBuffId);
-		}
-		else {
+		} else {
 			this.deathTurnTick = simulation.getGameTurnTick();
 		}
 		killPathingInstance();
@@ -2013,102 +2100,79 @@ public class CUnit extends CWidget {
 													if (this.isRaisable() && this.isDecays() && isBoneCorpse()) {
 														if (targetsAllowed.contains(CTargetType.DEAD)) {
 															return true;
-														}
-														else {
+														} else {
 															receiver.targetCheckFailed(
 																	CommandStringErrorKeys.TARGET_MUST_BE_LIVING);
 														}
-													}
-													else {
+													} else {
 														receiver.targetCheckFailed(
 																CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 													}
-												}
-												else {
+												} else {
 													if (!targetsAllowed.contains(CTargetType.DEAD)
 															|| targetsAllowed.contains(CTargetType.ALIVE)) {
 														return true;
-													}
-													else {
+													} else {
 														receiver.targetCheckFailed(
 																CommandStringErrorKeys.MUST_TARGET_A_CORPSE);
 													}
 												}
-											}
-											else {
+											} else {
 												receiver.targetCheckFailed(
 														CommandStringErrorKeys.UNABLE_TO_TARGET_HEROES);
 											}
-										}
-										else {
+										} else {
 											receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_HERO);
 										}
-									}
-									else {
+									} else {
 										if (invulnerable) {
 											receiver.targetCheckFailed(
 													CommandStringErrorKeys.THAT_TARGET_IS_INVULNERABLE);
-										}
-										else {
+										} else {
 											receiver.targetCheckFailed(
 													CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 										}
 									}
-								}
-								else {
+								} else {
 									receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ANCIENTS);
 								}
-							}
-							else {
+							} else {
 								receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ANCIENT);
 							}
-						}
-						else {
+						} else {
 							receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_ORGANIC_UNITS);
 						}
-					}
-					else {
+					} else {
 						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ORGANIC_UNITS);
 					}
-				}
-				else {
+				} else {
 					receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_FRIENDLY_UNIT);
 				}
-			}
-			else {
+			} else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ENEMY_UNIT);
 			}
-		}
-		else {
+		} else {
 			if (this.unitType.getTargetedAs().contains(CTargetType.GROUND)
 					&& !targetsAllowed.contains(CTargetType.GROUND)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_GROUND_UNITS);
-			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE)
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE)
 					&& !targetsAllowed.contains(CTargetType.STRUCTURE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BUILDINGS);
-			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.AIR)
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.AIR)
 					&& !targetsAllowed.contains(CTargetType.AIR)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_AIR_UNITS);
-			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.WARD)
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.WARD)
 					&& !targetsAllowed.contains(CTargetType.WARD)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WARDS);
-			}
-			else if (targetsAllowed.contains(CTargetType.GROUND)) {
+			} else if (targetsAllowed.contains(CTargetType.GROUND)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_GROUND_UNIT);
-			}
-			else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
+			} else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_BUILDING);
-			}
-			else if (targetsAllowed.contains(CTargetType.AIR)) {
+			} else if (targetsAllowed.contains(CTargetType.AIR)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_AIR_UNIT);
-			}
-			else if (targetsAllowed.contains(CTargetType.WARD)) {
+			} else if (targetsAllowed.contains(CTargetType.WARD)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_WARD);
-			}
-			else {
+			} else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 			}
 		}
@@ -3354,6 +3418,14 @@ public class CUnit extends CWidget {
 		postDamageListeners.remove(listener);
 	}
 
+	public void addDamageTakenModificationListener(CUnitAttackDamageTakenModificationListener listener) {
+		damageTakenModificationListeners.add(0, listener);
+	}
+
+	public void removeDamageTakenModificationListener(CUnitAttackDamageTakenModificationListener listener) {
+		damageTakenModificationListeners.remove(listener);
+	}
+
 	public void addDamageTakenListener(CUnitAttackDamageTakenListener listener) {
 		damageTakenListeners.add(0, listener);
 	}
@@ -3382,6 +3454,14 @@ public class CUnit extends CWidget {
 		if (list != null) {
 			list.remove(listener);
 		}
+	}
+
+	public void addEvasionListener(CUnitAttackEvasionListener listener) {
+		evasionListeners.add(0, listener);
+	}
+
+	public void removeEvasionListener(CUnitAttackEvasionListener listener) {
+		evasionListeners.remove(listener);
 	}
 
 	public void beginCooldown(final CSimulation game, final War3ID abilityId, final float cooldownDuration) {

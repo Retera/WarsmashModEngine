@@ -111,7 +111,7 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 					else {
 						thisTargetDamage = damagePerTarget;
 					}
-					damageTarget.damage(simulation, caster, CAttackType.SPELLS, CDamageType.COLD,
+					damageTarget.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.COLD,
 							CWeaponSoundTypeJass.WHOKNOWS.name(), thisTargetDamage);
 				}
 			}

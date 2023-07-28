@@ -79,7 +79,7 @@ public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 						CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 						if (targetUnit != null) {
 							if (!targetUnit.isUnitType(CUnitTypeJass.UNDEAD)) {
-								targetUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.DEATH, null,
+								targetUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.DEATH, null,
 										healAmount * .5f);
 							}
 							else {

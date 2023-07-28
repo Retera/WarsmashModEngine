@@ -37,7 +37,7 @@ public class CUnitAttackNormal extends CUnitAttack {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			float modDamage = runPreDamageListeners(simulation, unit, target, damage);
-			float damageDealt = widget.damage(simulation, unit, getAttackType(), getWeaponType().getDamageType(),
+			float damageDealt = widget.damage(simulation, unit, true, false, getAttackType(), getWeaponType().getDamageType(),
 					getWeaponSound(), modDamage);
 			runPostDamageListeners(simulation, unit, target, damageDealt);
 			attackListener.onHit(target, damage);

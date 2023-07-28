@@ -68,7 +68,7 @@ public class CAbilityThunderBolt extends CAbilityTargetSpellBase {
 						public void onHit(CSimulation game, AbilityTarget target) {
 							final CUnit unitTarget = target.visit(AbilityTargetUnitVisitor.INSTANCE);
 							if (unitTarget != null) {
-								unitTarget.damage(game, caster, CAttackType.SPELLS, CDamageType.LIGHTNING,
+								unitTarget.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.LIGHTNING,
 										CWeaponSoundTypeJass.WHOKNOWS.name(), damage);
 								if (!unitTarget.isDead()) {
 									unitTarget.add(game, new CBuffStun(game.getHandleIdAllocator().createId(), getBuffId(),

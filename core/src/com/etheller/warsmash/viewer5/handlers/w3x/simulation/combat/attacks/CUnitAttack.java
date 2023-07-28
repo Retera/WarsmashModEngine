@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.list
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPostDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 
 /**
@@ -128,7 +129,11 @@ public abstract class CUnitAttack {
 		for (String key : this.nonStackingFlatBuffs.keySet()) {
 			float buffForKey = 0;
 			for (NonStackingStatBuff buff : this.nonStackingFlatBuffs.get(key)) {
-				buffForKey = Math.max(buffForKey, buff.getValue());
+				if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+					buffForKey += buff.getValue();
+				} else {
+					buffForKey = Math.max(buffForKey, buff.getValue());
+				}
 			}
 			totalNSAtkBuff += buffForKey;
 		}
@@ -139,7 +144,11 @@ public abstract class CUnitAttack {
 				if (buffForKey == null) {
 					buffForKey = buff.getValue();
 				} else {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+						buffForKey += buff.getValue();
+					} else {
+						buffForKey = Math.max(buffForKey, buff.getValue());
+					}
 				}
 			}
 			if (buffForKey == null) {
@@ -411,7 +420,7 @@ public abstract class CUnitAttack {
 			if (allowContinue.isAllowStacking()) {
 				for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(i)) {
 					if (allowContinue.isAllowSamePriorityStacking()) {
-						allowContinue = listener.onAttack(simulation, attacker, target, result);
+						allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
 					}
 				}
 			}

@@ -921,7 +921,7 @@ public class Jass2 {
 						if (damageType == null) {
 							damageType = CDamageType.UNKNOWN;
 						}
-						target.damage(CommonEnvironment.this.simulation, whichUnit, attackType, damageType, weaponType.name(), (float) amount);
+						target.damage(CommonEnvironment.this.simulation, whichUnit, attack, ranged, attackType, damageType, weaponType.name(), (float) amount);
 					}
 				}
 				return BooleanJassValue.TRUE;

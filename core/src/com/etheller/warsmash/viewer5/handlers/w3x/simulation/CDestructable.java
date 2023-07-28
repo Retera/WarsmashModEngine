@@ -62,7 +62,7 @@ public class CDestructable extends CWidget {
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType,
 			final CDamageType damageType, final String weaponSoundType, final float damage) {
 		if (isInvulnerable()) {
 			return 0;
@@ -77,9 +77,9 @@ public class CDestructable extends CWidget {
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType,
 			final CDamageType damageType, final String weaponSoundType, final float damage, final float bonusDamage) {
-		return this.damage(simulation, source, attackType, damageType, weaponSoundType, damage + bonusDamage);
+		return this.damage(simulation, source, isAttack, isRanged, attackType, damageType, weaponSoundType, damage + bonusDamage);
 	}
 
 	private void kill(final CSimulation simulation) {

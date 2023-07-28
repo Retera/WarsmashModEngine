@@ -55,7 +55,7 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 				public boolean call(final CUnit enumUnit) {
 					if (caster.canReach(enumUnit, areaOfEffect) && enumUnit.canBeTargetedBy(game, caster,
 							CBuffImmolationCaster.this.abilityImmolation.getTargetsAllowed())) {
-						enumUnit.damage(game, caster, CAttackType.SPELLS, CDamageType.FIRE, CWeaponSoundTypeJass.WHOKNOWS.name(),
+						enumUnit.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.FIRE, CWeaponSoundTypeJass.WHOKNOWS.name(),
 								CBuffImmolationCaster.this.abilityImmolation.getDamagePerInterval());
 						game.createSpellEffectOnUnit(enumUnit, CBuffImmolationCaster.this.abilityImmolation.getBuffId(),
 								CEffectType.SPECIAL, 0).remove();

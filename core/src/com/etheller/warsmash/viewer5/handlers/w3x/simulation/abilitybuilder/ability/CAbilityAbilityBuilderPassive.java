@@ -37,13 +37,21 @@ public class CAbilityAbilityBuilderPassive extends AbstractGenericSingleIconActi
 		super.setLevel(level);
 		System.err.println("Set passive level to " + level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
+		if (config.getOnLevelChange() != null) {
+			CSimulation game = (CSimulation) localStore.get(ABLocalStoreKeys.GAME);
+			CUnit unit = (CUnit) localStore.get(ABLocalStoreKeys.THISUNIT);
+			for (ABAction action : config.getOnLevelChange()) {
+				action.runAction(game, unit, localStore);
+			}
+		}
 	}
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
+		localStore.put(ABLocalStoreKeys.GAME, game);
+		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
 		System.err.println("Added ability");
 		if (config.getOnAddAbility() != null) {
-			System.err.println("looping over " + config.getOnAddAbility().size() + " items");
 			for (ABAction action : config.getOnAddAbility()) {
 				action.runAction(game, unit, localStore);
 			}

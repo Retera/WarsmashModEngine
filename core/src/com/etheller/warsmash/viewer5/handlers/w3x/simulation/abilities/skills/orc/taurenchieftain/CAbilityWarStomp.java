@@ -43,7 +43,7 @@ public class CAbilityWarStomp extends CAbilityNoTargetSpellBase {
 			if (!enumUnit.isUnitAlly(simulation.getPlayer(caster.getPlayerIndex())) && enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
 				enumUnit.add(simulation, new CBuffStun(simulation.getHandleIdAllocator().createId(),
 						CAbilityWarStomp.this.buffId, getDurationForTarget(enumUnit)));
-				enumUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.UNIVERSAL,
+				enumUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.UNIVERSAL,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), CAbilityWarStomp.this.damage);
 			}
 			return false;

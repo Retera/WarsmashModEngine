@@ -1,4 +1,4 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.comparison;
 
 import java.util.Map;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;

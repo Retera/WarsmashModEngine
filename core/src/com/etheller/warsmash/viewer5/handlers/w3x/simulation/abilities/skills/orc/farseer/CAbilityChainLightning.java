@@ -64,7 +64,7 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 					simulation.getGameTurnTick() + (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
 			int boltLifetimeEndTick =
 					simulation.getGameTurnTick() + (int) StrictMath.ceil(BOLT_LIFETIME_SECONDS / WarsmashConstants.SIMULATION_STEP_TIME);
-			targetUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.LIGHTNING,
+			targetUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.LIGHTNING,
 					CWeaponSoundTypeJass.WHOKNOWS.name(), damagePerTarget);
 			float remainingDamageJumpMultiplier = 1.0f - damageReductionPerTarget;
 			Set<CUnit> previousTargets = new HashSet<>();
@@ -137,7 +137,7 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 							gameTurnTick + (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
 					int boltLifetimeEndTick =
 							gameTurnTick + (int) StrictMath.ceil(BOLT_LIFETIME_SECONDS / WarsmashConstants.SIMULATION_STEP_TIME);
-					nextJumpTarget.damage(game, caster, CAttackType.SPELLS, CDamageType.LIGHTNING,
+					nextJumpTarget.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.LIGHTNING,
 							CWeaponSoundTypeJass.WHOKNOWS.name(), remainingDamage);
 					previousTargets.add(nextJumpTarget);
 					game.registerEffect(new CEffectChainLightningBolt(boltLifetimeEndTick, jumpDelayEndTick,

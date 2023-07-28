@@ -49,7 +49,7 @@ public class CUnitAttackInstant extends CUnitAttack {
 		if (widget != null) {
 			simulation.createInstantAttackEffect(unit, this, widget);
 			float modDamage = runPreDamageListeners(simulation, unit, target, damage);
-			float damageDealt = widget.damage(simulation, unit, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage);
+			float damageDealt = widget.damage(simulation, unit, true, true, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage);
 			runPostDamageListeners(simulation, unit, target, damageDealt);
 			attackListener.onHit(target, damage);
 		}

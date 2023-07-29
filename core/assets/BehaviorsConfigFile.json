@@ -502,7 +502,7 @@
 			},{
 				"type": "createEvasionListener",
 				"conditions": [{
-					"type": "floatlt",
+					"type": "floatLt",
 					"value1": {
 						"type": "randomFloat"
 					},
@@ -559,7 +559,7 @@
 		"onAddAbility": [{
 				"type": "createEvasionListener",
 				"conditions": [{
-					"type": "floatlt",
+					"type": "floatLt",
 					"value1": {
 						"type": "randomFloat"
 					},

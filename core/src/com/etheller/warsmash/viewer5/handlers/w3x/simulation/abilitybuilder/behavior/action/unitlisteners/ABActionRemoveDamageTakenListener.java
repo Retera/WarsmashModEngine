@@ -12,11 +12,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABActionRemoveDamageTakenListener implements ABAction {
 
 	private ABUnitCallback targetUnit;
-	private ABDamageTakenListenerCallback buff;
+	private ABDamageTakenListenerCallback listener;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
 		CUnit target = targetUnit.callback(game, caster, localStore);
 		
-		target.removeDamageTakenListener(buff.callback(game, caster, localStore));
+		target.removeDamageTakenListener(listener.callback(game, caster, localStore));
 	}
 }

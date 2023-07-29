@@ -12,11 +12,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABActionRemoveEvasionListener implements ABAction {
 
 	private ABUnitCallback targetUnit;
-	private ABEvasionListenerCallback buff;
+	private ABEvasionListenerCallback listener;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
 		CUnit target = targetUnit.callback(game, caster, localStore);
 		
-		target.removeEvasionListener(buff.callback(game, caster, localStore));
+		target.removeEvasionListener(listener.callback(game, caster, localStore));
 	}
 }

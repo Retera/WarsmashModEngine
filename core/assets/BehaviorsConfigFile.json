@@ -525,6 +525,10 @@
 				"targetUnit": {
 					"type": "getCastingUnit"
 				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "CRITBASH"
+				},
 				"listener": {
 					"type": "getStoredAttackPreDamageListenerByKey",
 					"key": {
@@ -536,6 +540,10 @@
 				"type": "removeAttackPreDamageListener",
 				"targetUnit": {
 					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "ACCURACY"
 				},
 				"listener": {
 					"type": "getStoredAttackPreDamageListenerByKey",

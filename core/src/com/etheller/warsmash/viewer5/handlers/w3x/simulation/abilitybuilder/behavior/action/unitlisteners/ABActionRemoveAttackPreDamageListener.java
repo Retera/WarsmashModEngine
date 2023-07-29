@@ -14,11 +14,11 @@ public class ABActionRemoveAttackPreDamageListener implements ABAction {
 
 	private ABUnitCallback targetUnit;
 	private ABAttackPreDamageListenerPriorityCallback priority;
-	private ABAttackPreDamageListenerCallback buff;
+	private ABAttackPreDamageListenerCallback listener;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
 		CUnit target = targetUnit.callback(game, caster, localStore);
 		
-		target.removePreDamageListener(priority.callback(game, caster, localStore), buff.callback(game, caster, localStore));
+		target.removePreDamageListener(priority.callback(game, caster, localStore), listener.callback(game, caster, localStore));
 	}
 }

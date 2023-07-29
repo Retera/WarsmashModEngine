@@ -23,7 +23,7 @@ public class ABAttackPostDamageListener implements CUnitAttackPostDamageListener
 	@Override
 	public void onHit(CSimulation simulation, CUnit attacker, AbilityTarget target, float damage) {
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT, attacker);
-		localStore.put(ABLocalStoreKeys.TARGETUNIT, target);
+		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT, target);
 		localStore.put(ABLocalStoreKeys.TOTALDAMAGEDEALT, damage);
 		if (actions != null) {
 			for (ABAction action : actions) {

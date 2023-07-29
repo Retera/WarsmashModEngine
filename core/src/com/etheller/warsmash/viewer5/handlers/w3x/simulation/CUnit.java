@@ -202,7 +202,7 @@ public class CUnit extends CWidget {
 	private List<CUnitAttack> unitSpecificCurrentAttacks;
 	private boolean disableAttacks;
 
-	private Map<Integer, List<CUnitAttackPreDamageListener>> preDamageListeners = new HashMap<>();
+	private Map<CUnitAttackPreDamageListenerPriority, List<CUnitAttackPreDamageListener>> preDamageListeners = new HashMap<>();
 	private List<CUnitAttackPostDamageListener> postDamageListeners = new ArrayList<>();
 	private List<CUnitAttackDamageTakenModificationListener> damageTakenModificationListeners = new ArrayList<>();
 	private List<CUnitAttackDamageTakenListener> damageTakenListeners = new ArrayList<>();
@@ -243,7 +243,7 @@ public class CUnit extends CWidget {
 		this.decays = unitType.isDecay();
 		initializeNonStackingBuffs();
 		initializeListenerLists();
-		this.addPreDamageListener(CUnitAttackPreDamageListenerPriority.ACCURACY.getPriority(),
+		this.addPreDamageListener(CUnitAttackPreDamageListenerPriority.ACCURACY,
 				new CUnitDefaultAccuracyCheckListener());
 		computeAllDerivedFields();
 	}
@@ -757,8 +757,8 @@ public class CUnit extends CWidget {
 	}
 
 	private void initializeListenerLists() {
-		for (int i = CUnitAttackPreDamageListener.PRIORITY_MIN; i <= CUnitAttackPreDamageListener.PRIORITY_MAX; i++) {
-			preDamageListeners.put(i, new ArrayList<>());
+		for (CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
+			preDamageListeners.put(priority, new ArrayList<>());
 		}
 		for (int i = CUnitDeathReplacementEffect.PRIORITY_MIN; i <= CUnitDeathReplacementEffect.PRIORITY_MAX; i++) {
 			deathReplacementEffects.put(i, new ArrayList<>());
@@ -1729,7 +1729,6 @@ public class CUnit extends CWidget {
 
 			CUnitAttackDamageTakenModificationListenerDamageModResult result = new CUnitAttackDamageTakenModificationListenerDamageModResult(
 					damage, bonusDamage);
-			System.err.println("Reached mod listeners (" + damageTakenModificationListeners.size() + ")");
 			for (CUnitAttackDamageTakenModificationListener listener : damageTakenModificationListeners) {
 				listener.onDamage(simulation, source, this, isAttack, isRanged, attackType, damageType, result);
 			}
@@ -3384,13 +3383,11 @@ public class CUnit extends CWidget {
 		return this.explodesOnDeath;
 	}
 
-	public List<CUnitAttackPreDamageListener> getPreDamageListenersForPriority(Integer priority) {
-		priority = Math.min(Math.max(priority, 10), 0);
+	public List<CUnitAttackPreDamageListener> getPreDamageListenersForPriority(CUnitAttackPreDamageListenerPriority priority) {
 		return preDamageListeners.get(priority);
 	}
 
-	public void addPreDamageListener(Integer priority, CUnitAttackPreDamageListener listener) {
-		priority = Math.min(Math.max(priority, 10), 0);
+	public void addPreDamageListener(CUnitAttackPreDamageListenerPriority priority, CUnitAttackPreDamageListener listener) {
 		List<CUnitAttackPreDamageListener> list = preDamageListeners.get(priority);
 		if (list == null) {
 			list = new ArrayList<>();
@@ -3398,8 +3395,7 @@ public class CUnit extends CWidget {
 		list.add(0, listener);
 	}
 
-	public void removePreDamageListener(Integer priority, CUnitAttackPreDamageListener listener) {
-		priority = Math.min(Math.max(priority, 10), 0);
+	public void removePreDamageListener(CUnitAttackPreDamageListenerPriority priority, CUnitAttackPreDamageListener listener) {
 		List<CUnitAttackPreDamageListener> list = preDamageListeners.get(priority);
 		if (list != null) {
 			list.remove(listener);

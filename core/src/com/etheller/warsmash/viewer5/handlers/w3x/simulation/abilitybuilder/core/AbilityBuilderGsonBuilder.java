@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionAddAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionAddStunBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateAbilityFromId;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateBuffFromId;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateSpellEffectOnUnit;
@@ -40,6 +41,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionRemoveEvasionListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionDamageTakenModificationMultiplyDamageMultiplier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionDamageTakenModificationSetDamageMultiplier;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionPreDamageListenerAddBonusDamage;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionPreDamageListenerAddDamageMultiplier;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionSetPreDamageStacking;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.ABCallbackGetTriggeringAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.ABCallbackGetTriggeringDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.ABCallbackIsTriggeringDamageAnAttack;
@@ -48,18 +52,25 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.ABCallbackGetLastCreatedAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.ABCallbackGetStoredAbilityByKey;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABCallbackGetAbilityDataAsBoolean;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABCallbackGetParentAbilityDataAsBoolean;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABCallbackRawBoolean;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABAttackPreDamageListenerPriorityCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABAttackTypeCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABCallbackGetAttackTypeFromString;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABCallbackGetDamageTypeFromString;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABCallbackGetNonStackingStatBuffTypeFromString;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABCallbackRawPreDamageListenerPriority;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABDamageTypeCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABNonStackingStatBuffTypeCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetAbilityArea;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetAbilityDataAsFloat;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetAbilityDuration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetParentAbilityDataAsFloat;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetStoredFloatByKey;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackRandomBoundedFloat;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackRandomFloat;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackRawFloat;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.ABCallbackGetLastCreatedSpellEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.ABCallbackGetStoredFXByKey;
@@ -75,6 +86,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABCallbackRawInteger;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABAttackPostDamageListenerCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABAttackPreDamageListenerCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetLastCreatedAttackPostDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetLastCreatedAttackPreDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetLastCreatedDamageTakenListener;
@@ -96,6 +108,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABCallbackGetUnitHandleAsString;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABCallbackRawString;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetAttackedUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetAttackingUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetCastingUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetEnumUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetParentCastingUnit;
@@ -115,6 +129,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.ABConditionNot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.ABConditionOr;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatEqual;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatGt;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatGte;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatLt;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatLte;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatNe;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatNe0;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionIntegerEqual;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.listener.ABAttackPreDamageListener;
 import com.google.gson.Gson;
@@ -147,6 +167,7 @@ public abstract class AbilityBuilderGsonBuilder {
 
 	private static void registerBooleanCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackRawBoolean.class, "rawBoolean")
+				.registerSubtype(ABCallbackGetAbilityDataAsBoolean.class, "getAbilityDataAsBoolean")
 				.registerSubtype(ABCallbackGetParentAbilityDataAsBoolean.class, "getParentAbilityDataAsBoolean")
 				.registerSubtype(ABCallbackIsTriggeringDamageAnAttack.class, "isTriggeringDamageAnAttack")
 				.registerSubtype(ABCallbackIsTriggeringDamageRanged.class, "isTriggeringDamageRanged");
@@ -176,9 +197,13 @@ public abstract class AbilityBuilderGsonBuilder {
 
 	private static void registerFloatCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackGetAbilityArea.class, "getAbilityArea")
+				.registerSubtype(ABCallbackGetAbilityDuration.class, "getAbilityDuration")
+				.registerSubtype(ABCallbackRawFloat.class, "rawFloat")
 				.registerSubtype(ABCallbackGetStoredFloatByKey.class, "getStoredFloatByKey")
 				.registerSubtype(ABCallbackGetAbilityDataAsFloat.class, "getAbilityDataAsFloat")
-				.registerSubtype(ABCallbackGetParentAbilityDataAsFloat.class, "getParentAbilityDataAsFloat");
+				.registerSubtype(ABCallbackGetParentAbilityDataAsFloat.class, "getParentAbilityDataAsFloat")
+				.registerSubtype(ABCallbackRandomFloat.class, "randomFloat")
+				.registerSubtype(ABCallbackRandomBoundedFloat.class, "randomBoundedFloat");
 	}
 
 	private static void registerFxCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
@@ -217,6 +242,8 @@ public abstract class AbilityBuilderGsonBuilder {
 	private static void registerUnitCallbacks(RuntimeTypeAdapterFactory unitCallbackTypeFactory) {
 		unitCallbackTypeFactory.registerSubtype(ABCallbackGetCastingUnit.class, "getCastingUnit")
 				.registerSubtype(ABCallbackGetEnumUnit.class, "getEnumUnit")
+				.registerSubtype(ABCallbackGetAttackedUnit.class, "getAttackedUnit")
+				.registerSubtype(ABCallbackGetAttackingUnit.class, "getAttackingUnit")
 				.registerSubtype(ABCallbackGetStoredUnitByKey.class, "getStoredUnitByKey")
 				.registerSubtype(ABCallbackGetParentCastingUnit.class, "getParentCastingUnit");
 	}
@@ -228,8 +255,14 @@ public abstract class AbilityBuilderGsonBuilder {
 
 	private static void registerConditions(RuntimeTypeAdapterFactory<ABCondition> conditionTypeFactory) {
 		conditionTypeFactory.registerSubtype(ABConditionAnd.class, "and").registerSubtype(ABConditionOr.class, "or")
-				.registerSubtype(ABConditionNot.class, "not")
-				.registerSubtype(ABConditionBool.class, "bool").registerSubtype(ABConditionFloatEqual.class, "floatEqual")
+				.registerSubtype(ABConditionNot.class, "not").registerSubtype(ABConditionBool.class, "bool")
+				.registerSubtype(ABConditionFloatEqual.class, "floatEqual")
+				.registerSubtype(ABConditionFloatGte.class, "floatGte")
+				.registerSubtype(ABConditionFloatGt.class, "floatGt")
+				.registerSubtype(ABConditionFloatLte.class, "floatLte")
+				.registerSubtype(ABConditionFloatLt.class, "floatLt")
+				.registerSubtype(ABConditionFloatNe.class, "floatNe")
+				.registerSubtype(ABConditionFloatNe0.class, "floatNe0")
 				.registerSubtype(ABConditionIntegerEqual.class, "integerEqual")
 				.registerSubtype(ABConditionIsValidTarget.class, "isValidTarget")
 				.registerSubtype(ABConditionIsUnitInRangeOfUnit.class, "isUnitInRangeOfUnit")
@@ -257,8 +290,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionAddUnitToGroup.class, "addUnitToGroup")
 				.registerSubtype(ABActionRemoveUnitFromGroup.class, "removeUnitFromGroup")
 				.registerSubtype(ABActionDamageTarget.class, "damageTarget")
-				
-				
+				.registerSubtype(ABActionAddStunBuff.class, "addStunBuff")
+
 				.registerSubtype(ABActionCreateNonStackingStatBuff.class, "createNonStackingStatBuff")
 				.registerSubtype(ABActionAddNonStackingStatBuff.class, "addNonStackingStatBuff")
 				.registerSubtype(ABActionRemoveNonStackingStatBuff.class, "removeNonStackingStatBuff")
@@ -274,16 +307,21 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionCreateDamageTakenListener.class, "createDamageTakenListener")
 				.registerSubtype(ABActionAddDamageTakenListener.class, "addDamageTakenListener")
 				.registerSubtype(ABActionRemoveDamageTakenListener.class, "removeDamageTakenListener")
-				.registerSubtype(ABActionCreateDamageTakenModificationListener.class, "createDamageTakenModificationListener")
+				.registerSubtype(ABActionCreateDamageTakenModificationListener.class,
+						"createDamageTakenModificationListener")
 				.registerSubtype(ABActionAddDamageTakenModificationListener.class, "addDamageTakenModificationListener")
-				.registerSubtype(ABActionRemoveDamageTakenModificationListener.class, "removeDamageTakenModificationListener")
+				.registerSubtype(ABActionRemoveDamageTakenModificationListener.class,
+						"removeDamageTakenModificationListener")
 				.registerSubtype(ABActionCreateEvasionListener.class, "createEvasionListener")
 				.registerSubtype(ABActionAddEvasionListener.class, "addEvasionListener")
 				.registerSubtype(ABActionRemoveEvasionListener.class, "removeEvasionListener")
 
-				.registerSubtype(ABActionDamageTakenModificationSetDamageMultiplier.class, "setDamageMultiplier")
-				.registerSubtype(ABActionDamageTakenModificationMultiplyDamageMultiplier.class, "multiplyDamageMultiplier")
-				;
+				.registerSubtype(ABActionDamageTakenModificationSetDamageMultiplier.class, "setDamageTakenMultiplier")
+				.registerSubtype(ABActionDamageTakenModificationMultiplyDamageMultiplier.class,
+						"multiplyDamageTakenMultiplier")
+				.registerSubtype(ABActionPreDamageListenerAddDamageMultiplier.class, "addDamageDealtMultiplier")
+				.registerSubtype(ABActionPreDamageListenerAddBonusDamage.class, "addBonusDamageDealt")
+				.registerSubtype(ABActionSetPreDamageStacking.class, "setStacking");
 	}
 
 	public static Gson create() {
@@ -323,8 +361,8 @@ public abstract class AbilityBuilderGsonBuilder {
 		registerAttackPostDamageListenerCallbacks(attackPostDamageListenerCallbackTypeFactory);
 		gsonBuilder.registerTypeAdapterFactory(attackPostDamageListenerCallbackTypeFactory);
 
-		final RuntimeTypeAdapterFactory<ABAttackPreDamageListener> attackPreDamageListenerCallbackTypeFactory = RuntimeTypeAdapterFactory
-				.of(ABAttackPreDamageListener.class, "type");
+		final RuntimeTypeAdapterFactory<ABAttackPreDamageListenerCallback> attackPreDamageListenerCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABAttackPreDamageListenerCallback.class, "type");
 		registerAttackPreDamageListenerCallbacks(attackPreDamageListenerCallbackTypeFactory);
 		gsonBuilder.registerTypeAdapterFactory(attackPreDamageListenerCallbackTypeFactory);
 
@@ -402,17 +440,20 @@ public abstract class AbilityBuilderGsonBuilder {
 
 		final RuntimeTypeAdapterFactory<ABAttackTypeCallback> atTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABAttackTypeCallback.class, "type");
-		atTypeFactory.registerSubtype(ABCallbackGetAttackTypeFromString.class,
-				"getAttackTypeFromString").registerSubtype(ABCallbackGetTriggeringAttackType.class,
-						"getTriggeringAttackType");
+		atTypeFactory.registerSubtype(ABCallbackGetAttackTypeFromString.class, "getAttackTypeFromString")
+				.registerSubtype(ABCallbackGetTriggeringAttackType.class, "getTriggeringAttackType");
 		gsonBuilder.registerTypeAdapterFactory(atTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABDamageTypeCallback> dtTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABDamageTypeCallback.class, "type");
-		dtTypeFactory.registerSubtype(ABCallbackGetDamageTypeFromString.class,
-				"getDamageTypeFromString").registerSubtype(ABCallbackGetTriggeringDamageType.class,
-						"getTriggeringDamageType");
+		dtTypeFactory.registerSubtype(ABCallbackGetDamageTypeFromString.class, "getDamageTypeFromString")
+				.registerSubtype(ABCallbackGetTriggeringDamageType.class, "getTriggeringDamageType");
 		gsonBuilder.registerTypeAdapterFactory(dtTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABAttackPreDamageListenerPriorityCallback> pdlpTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABAttackPreDamageListenerPriorityCallback.class, "type");
+		pdlpTypeFactory.registerSubtype(ABCallbackRawPreDamageListenerPriority.class, "rawPriority");
+		gsonBuilder.registerTypeAdapterFactory(pdlpTypeFactory);
 
 		return gsonBuilder.create();
 	}

@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,8 +17,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.list
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPostDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerPriority;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 
 /**
  * The base class for unit-data-based combat attacks.
@@ -416,14 +419,20 @@ public abstract class CUnitAttack {
 			float damage) {
 		CUnitAttackPreDamageListenerDamageModResult result = new CUnitAttackPreDamageListenerDamageModResult(damage);
 		CUnitAttackEffectListenerStacking allowContinue = new CUnitAttackEffectListenerStacking();
-		for (int i = CUnitAttackPreDamageListener.PRIORITY_MIN; i <= CUnitAttackPreDamageListener.PRIORITY_MAX; i++) {
+
+		for (CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
 			if (allowContinue.isAllowStacking()) {
-				for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(i)) {
+				for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(priority)) {
 					if (allowContinue.isAllowSamePriorityStacking()) {
 						allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
 					}
 				}
 			}
+		}
+		if (result.getDamageMultiplier() != 1 && result.getDamageMultiplier() != 0) {
+			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, Math.round(result.computeFinalDamage()));
+		} else if (result.getBonusDamage() != 0) {
+			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.BASH, Math.round(result.getBonusDamage()));
 		}
 		return result.computeFinalDamage();
 	}

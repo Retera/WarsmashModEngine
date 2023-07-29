@@ -27,7 +27,7 @@ public class ABDamageTakenModificationListener implements CUnitAttackDamageTaken
 			CUnit target, boolean isAttack, boolean isRanged, CAttackType attackType, CDamageType damageType,
 			CUnitAttackDamageTakenModificationListenerDamageModResult previousDamage) {
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT, attacker);
-		localStore.put(ABLocalStoreKeys.TARGETUNIT, target);
+		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT, target);
 		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK, isAttack);
 		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED, isRanged);
 		localStore.put(ABLocalStoreKeys.ATTACKTYPE, attackType);

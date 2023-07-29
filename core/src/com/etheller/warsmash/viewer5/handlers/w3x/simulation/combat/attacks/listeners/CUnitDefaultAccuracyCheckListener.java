@@ -33,6 +33,7 @@ public class CUnitDefaultAccuracyCheckListener implements CUnitAttackPreDamageLi
 				damageResult.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
 				
 			} else {
+				System.err.println("MISS!");
 				damageResult.setBaseDamage(0);
 				damageResult.setBonusDamage(0);
 				damageResult.setDamageMultiplier(0);

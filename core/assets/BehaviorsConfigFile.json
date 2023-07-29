@@ -251,7 +251,7 @@
 						}
 					},
 					"thenActions": [{
-						"type": "multiplyDamageMultiplier",
+						"type": "multiplyDamageTakenMultiplier",
 						"multiplier": {
 							"type": "getAbilityDataAsFloat",
 							"dataField": "B"
@@ -350,6 +350,240 @@
 				},
 				"listener": {
 					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+		}]
+	},{
+		"ids": [{"id":"AHbh"},{"id":"AOcr"},{"id":"ANdb"}],
+		"type": "PASSIVE",
+		"onAddAbility": [{
+				"type": "createAttackPreDamageListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "and",
+						"condition1": {
+							"type": "isValidTarget",
+							"target": {
+								"type": "getAttackedUnit"
+							}
+						},
+						"condition2": {
+							"type": "floatLt",
+							"value1": {
+								"type": "randomBoundedFloat",
+								"bound": {
+									"type": "rawFloat",
+									"value": 100
+								}
+							},
+							"value2": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							}
+						}
+					},
+					"thenActions": [{
+							"type": "if",
+							"condition": {
+								"type": "floatNe0",
+								"value": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "B"
+								}
+							},
+							"thenActions": [{
+								"type": "addDamageDealtMultiplier",
+								"value": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "B"
+								}
+								
+							}],
+							"elseActions": []
+						},{
+							"type": "addBonusDamageDealt",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							}
+						},{
+							"type": "addStunBuff",
+							"target": {
+								"type": "getAttackedUnit"
+							},
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"duration": {
+								"type": "getAbilityDuration",
+								"target": {
+									"type": "getAttackedUnit"
+								}
+							}
+						},{
+							"type": "setStacking",
+							"allowStacking": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"allowSamePriorityStacking": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "CRITBASH"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "crit"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "createAttackPreDamageListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "bool",
+						"bool": {
+							"type": "getAbilityDataAsBoolean",
+							"dataField": "E"
+						}
+					},
+					"thenActions": [{
+						"type": "setStacking",
+						"allowStacking": {
+							"type": "rawBoolean",
+							"value": "true"
+						},
+						"allowSamePriorityStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "ACCURACY"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "nomiss"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "createEvasionListener",
+				"conditions": [{
+					"type": "floatlt",
+					"value1": {
+						"type": "randomFloat"
+					},
+					"value2": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "D"
+					}
+				}]
+			},{
+				"type": "addEvasionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedEvasionListener"
+				}
+		}],
+		"onRemoveAbility": [{
+				"type": "removeAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredAttackPreDamageListenerByKey",
+					"key": {
+						"type": "rawString",
+						"value": "crit"
+					}
+				}
+			},{
+				"type": "removeAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredAttackPreDamageListenerByKey",
+					"key": {
+						"type": "rawString",
+						"value": "nomiss"
+					}
+				}
+			},{
+				"type": "removeEvasionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedEvasionListener"
+				}
+		}]
+	},{
+		"ids": [{"id":"AEev"}],
+		"type": "PASSIVE",
+		"onAddAbility": [{
+				"type": "createEvasionListener",
+				"conditions": [{
+					"type": "floatlt",
+					"value1": {
+						"type": "randomFloat"
+					},
+					"value2": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+				}]
+			},{
+				"type": "addEvasionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedEvasionListener"
+				}
+		}],
+		"onRemoveAbility": [{
+				"type": "removeEvasionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedEvasionListener"
 				}
 		}]
 	}]

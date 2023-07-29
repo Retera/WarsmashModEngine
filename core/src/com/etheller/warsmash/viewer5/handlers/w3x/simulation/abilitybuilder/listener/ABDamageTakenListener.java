@@ -24,7 +24,7 @@ public class ABDamageTakenListener implements CUnitAttackDamageTakenListener {
 	public void onDamage(CSimulation simulation, CUnit attacker, CUnit target, boolean isAttack, boolean isRanged,
 			CDamageType damageType, float damage, float bonusDamage, float trueDamage) {
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT, attacker);
-		localStore.put(ABLocalStoreKeys.TARGETUNIT, target);
+		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT, target);
 		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK, isAttack);
 		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED, isRanged);
 		localStore.put(ABLocalStoreKeys.DAMAGETYPE, damageType);

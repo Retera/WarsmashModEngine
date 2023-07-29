@@ -24,12 +24,13 @@ public class ABLocalStoreKeys {
 	// Ability Names
 	public static final String LASTCREATEDABILITY = "_lastCreatedAbility";
 	public static final String LASTADDEDABILITY = "_lastAddedAbility";
+	public static final String LASTADDEDBUFF = "_lastAddedBuff";
 	public static final String CURRENTLEVEL = "_currentLevel";
 	public static final String LASTCREATEDUNITGROUP = "_lastCreatedUnitGroup";
 	
 	//Generic Targetting
 	public static final String ATTACKINGUNIT = "_attackingUnit";
-	public static final String TARGETUNIT = "_targetUnit";
+	public static final String ATTACKEDUNIT = "_attackedUnit";
 	
 	//Generic Attacks
 	public static final String BASEDAMAGEDEALT = "_baseDamageDealt";

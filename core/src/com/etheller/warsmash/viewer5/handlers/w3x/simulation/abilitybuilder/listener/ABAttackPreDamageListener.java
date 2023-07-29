@@ -30,7 +30,7 @@ public class ABAttackPreDamageListener implements CUnitAttackPreDamageListener {
 			CWeaponType weaponType, CAttackType attackType, CDamageType damageType,
 			CUnitAttackPreDamageListenerDamageModResult damageResult) {
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT, attacker);
-		localStore.put(ABLocalStoreKeys.TARGETUNIT, target);
+		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT, target);
 		localStore.put(ABLocalStoreKeys.WEAPONTYPE, weaponType);
 		localStore.put(ABLocalStoreKeys.ATTACKTYPE, attackType);
 		localStore.put(ABLocalStoreKeys.DAMAGETYPE, damageType);

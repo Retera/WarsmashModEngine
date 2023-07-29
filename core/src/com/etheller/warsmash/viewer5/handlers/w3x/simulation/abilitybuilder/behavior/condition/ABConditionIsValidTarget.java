@@ -24,6 +24,10 @@ public class ABConditionIsValidTarget implements ABCondition {
 				.get(ABLocalStoreKeys.LEVELDATA);
 		EnumSet<CTargetType> targetsAllowed = levelData.get(((int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL))-1)
 				.getTargetsAllowed();
+		
+		if (targetsAllowed.isEmpty()) {
+			return true;
+		}
 
 		return target.callback(game, caster, localStore).canBeTargetedBy(game, caster, targetsAllowed);
 	}

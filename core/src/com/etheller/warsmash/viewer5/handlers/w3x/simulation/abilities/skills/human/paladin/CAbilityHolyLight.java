@@ -63,7 +63,7 @@ public class CAbilityHolyLight extends CAbilityTargetSpellBase {
 			} else {
 				targetUnit.heal(simulation, healAmount);
 			}
-			simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET, 0).remove();
+			simulation.createPersistentSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET, 0).remove();
 		}
 		return false;
 	}

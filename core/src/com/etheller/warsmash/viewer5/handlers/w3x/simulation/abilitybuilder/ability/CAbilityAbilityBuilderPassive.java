@@ -50,7 +50,6 @@ public class CAbilityAbilityBuilderPassive extends AbstractGenericSingleIconActi
 	public void onAdd(CSimulation game, CUnit unit) {
 		localStore.put(ABLocalStoreKeys.GAME, game);
 		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
-		System.err.println("Added ability");
 		if (config.getOnAddAbility() != null) {
 			for (ABAction action : config.getOnAddAbility()) {
 				action.runAction(game, unit, localStore);
@@ -69,11 +68,6 @@ public class CAbilityAbilityBuilderPassive extends AbstractGenericSingleIconActi
 
 	@Override
 	public void onTick(CSimulation game, CUnit unit) {
-		if (config.getOnTickPreCast() != null) {
-			for (ABAction action : config.getOnTickPreCast()) {
-				action.runAction(game, unit, localStore);
-			}
-		}
 	}
 
 	@Override

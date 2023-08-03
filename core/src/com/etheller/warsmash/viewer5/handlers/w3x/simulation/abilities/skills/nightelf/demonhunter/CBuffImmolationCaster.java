@@ -32,7 +32,7 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		this.fx = game.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
+		this.fx = game.createPersistentSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 							CBuffImmolationCaster.this.abilityImmolation.getTargetsAllowed())) {
 						enumUnit.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.FIRE, CWeaponSoundTypeJass.WHOKNOWS.name(),
 								CBuffImmolationCaster.this.abilityImmolation.getDamagePerInterval());
-						game.createSpellEffectOnUnit(enumUnit, CBuffImmolationCaster.this.abilityImmolation.getBuffId(),
+						game.createPersistentSpellEffectOnUnit(enumUnit, CBuffImmolationCaster.this.abilityImmolation.getBuffId(),
 								CEffectType.SPECIAL, 0).remove();
 					}
 					return false;

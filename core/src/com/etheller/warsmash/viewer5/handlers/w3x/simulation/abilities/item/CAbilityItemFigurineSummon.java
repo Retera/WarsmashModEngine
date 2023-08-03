@@ -58,7 +58,7 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
 					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration(), true));
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
+			simulation.createTemporarySpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
 		for (int i = 0; i < this.summonUnit2Count; i++) {
 			final CUnit summonedUnit = simulation.createUnitSimple(this.summonUnit2Id, unit.getPlayerIndex(), x, y,
@@ -66,7 +66,7 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
 					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration(), true));
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
+			simulation.createTemporarySpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
 		return false;
 	}

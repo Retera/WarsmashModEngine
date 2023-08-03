@@ -62,7 +62,7 @@ public class CAbilitySummonPhoenix extends CAbilityNoTargetSpellBase {
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
 					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, getDuration(), false));
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
+			simulation.createTemporarySpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 			this.lastSummonUnits.add(summonedUnit);
 		}
 		return false;

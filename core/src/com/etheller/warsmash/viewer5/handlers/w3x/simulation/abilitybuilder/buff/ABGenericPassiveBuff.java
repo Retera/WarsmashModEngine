@@ -15,13 +15,18 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRend
 public class ABGenericPassiveBuff extends AbstractCBuff {
 	private SimulationRenderComponent fx;
 
+	public ABGenericPassiveBuff(int handleId, War3ID alias, boolean showIcon) {
+		super(handleId, alias);
+		this.setIconShowing(showIcon);
+	}
+	
 	public ABGenericPassiveBuff(int handleId, War3ID alias) {
 		super(handleId, alias);
 	}
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		this.fx = game.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
+		this.fx = game.createPersistentSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET);
 	}
 
 	@Override

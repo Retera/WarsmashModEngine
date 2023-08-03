@@ -68,6 +68,6 @@ public class CUnitAttackPreDamageListenerDamageModResult {
 	}
 
 	public float computeFinalDamage() {
-		return (baseDamage * damageMultiplier) + bonusDamage;
+		return (baseDamage * damageMultiplier);
 	}
 }

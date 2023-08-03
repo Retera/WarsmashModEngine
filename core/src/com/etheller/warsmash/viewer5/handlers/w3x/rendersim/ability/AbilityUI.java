@@ -85,4 +85,28 @@ public class AbilityUI {
 		}
 		return items.get(items.size() - 1);
 	}
+
+	public List<EffectAttachmentUI> getCasterArt() {
+		return casterArt;
+	}
+
+	public List<EffectAttachmentUI> getTargetArt() {
+		return targetArt;
+	}
+
+	public List<EffectAttachmentUI> getSpecialArt() {
+		return specialArt;
+	}
+
+	public List<EffectAttachmentUI> getEffectArt() {
+		return effectArt;
+	}
+
+	public List<EffectAttachmentUI> getAreaEffectArt() {
+		return areaEffectArt;
+	}
+
+	public List<EffectAttachmentUIMissile> getMissileArt() {
+		return missileArt;
+	}
 }

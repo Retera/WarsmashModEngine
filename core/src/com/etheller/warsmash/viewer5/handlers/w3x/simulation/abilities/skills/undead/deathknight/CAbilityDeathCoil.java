@@ -85,7 +85,7 @@ public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 							else {
 								targetUnit.heal(simulation, healAmount);
 							}
-							simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.SPECIAL, 0).remove();
+							simulation.createPersistentSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.SPECIAL, 0).remove();
 						}
 					}
 				});

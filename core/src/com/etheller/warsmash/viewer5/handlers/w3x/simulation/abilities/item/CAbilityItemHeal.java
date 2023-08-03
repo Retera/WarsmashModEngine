@@ -91,7 +91,7 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 			final AbilityTarget target) {
 		if ((target == null) && (orderId == getBaseOrderId())) {
 			caster.heal(game, this.lifeToRegain);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.TARGET);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.TARGET);
 			return false;
 		}
 		return super.checkBeforeQueue(game, caster, orderId, target);

@@ -319,8 +319,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				}
 			}
 			else {
-				this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
-						iconUI.getUberTip());
+				if (buff.isIconShowing()) {
+					this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
+							iconUI.getUberTip());
+				}
 			}
 		}
 	}

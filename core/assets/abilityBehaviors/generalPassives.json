@@ -1,161 +1,25 @@
 {
 	"abilityList": [{
-		"ids": [{"id":"AHad"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "AURA_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "DEF",
-				"dataField": "A",
-				"percentageBooleanField": "B"
-			}]
-		}
-	},{
-		"ids": [{"id":"AHab"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "AURA_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "MPGEN",
-				"dataField": "A",
-				"percentageBooleanField": "B"
-			}]
-		}
-	},{
-		"ids": [{"id":"AOae"},{"id":"Aasl"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "AURA_STATS",
-			"statBuffsFromDataFields": [{
-					"type": "ATKSPD",
-					"dataField": "B"
-				},{
-					"type": "MVSPD",
-					"dataField": "A",
-					"percentageOverride": true
-			}]
-		}
-	},{
-		"ids": [{"id":"AUau"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "AURA_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "MVSPD",
-				"dataField": "A",
-				"percentageOverride": true
-			},{
-				"type": "HPGEN",
-				"dataField": "B",
-				"percentageBooleanField": "C"
-			}]
-		}
-	},{
-		"ids": [{"id":"AUav"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "AURA_STATS",
-			"meleeRangeTargetOverride": {
-				"targetMelee": true,
-				"targetRange": false
-			},
-			"statBuffsFromDataFields": [{
-				"type": "HPSTEAL",
-				"dataField": "A"
-			}]
-		}
-	},{
-		"ids": [{"id":"AEah"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "AURA_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "THORNS",
-				"dataField": "A",
-				"percentageBooleanField": "B"
-			}]
-		}
-	},{
-		"ids": [{"id":"AEar"},{"id":"AOac"},{"id":"Aakb"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "AURA_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "ATK",
-				"dataField": "A",
-				"flatBooleanField": "D",
-				"targetMeleeField": "B",
-				"targetRangeField": "C"
-			}]
-		}
-	},{
-		"ids": [{"id":"Aoar"},{"id":"Aabr"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "AURA_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "MAXHPGEN",
-				"dataField": "A",
-				"percentageBooleanField": "B"
-			}]
-		}
-	},{
-		"ids": [{"id":"Aarm"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "AURA_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "MAXMPGEN",
-				"dataField": "A",
-				"percentageBooleanField": "B"
-			}]
-		}
-	},{
-		"ids": [{"id":"AIva"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "PASSIVE_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "HPSTEAL",
-				"dataField": "A"
-			}]
-		}
-	},{
-		"ids": [{"id":"AIas"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "PASSIVE_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "ATKSPD",
-				"dataField": "A"
-			}]
-		}
-	},{
-		"ids": [{"id":"AIrm"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "PASSIVE_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "MPGEN",
-				"dataField": "A",
-				"percentageOverride": true
-			}]
-		}
-	},{
-		"ids": [{"id":"AIms"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "PASSIVE_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "MVSPD",
-				"dataField": "A",
-				"percentageOverride": false
-			}]
-		}
-	},{
 		"ids": [{"id":"AUts"}],
 		"type": "PASSIVE",
 		"onAddAbility": [{
+				"type": "createPassiveBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"showIcon": {
+					"type": "rawBoolean",
+					"value": "false"
+				}
+			},{
+				"type": "addBuff",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+			},{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
 					"type": "getNonStackingStatBuffTypeFromString",
@@ -294,7 +158,7 @@
 					"type": "getAbilityDataAsFloat",
 					"dataField": "C"
 				}
-		},{
+			},{
 				"type": "recomputeStatBuffsOnUnit",
 				"targetUnit": {
 					"type": "getCastingUnit"
@@ -306,7 +170,7 @@
 						"value": "THORNSPCT"
 					}
 				}
-		},{
+			},{
 				"type": "recomputeStatBuffsOnUnit",
 				"targetUnit": {
 					"type": "getCastingUnit"
@@ -350,6 +214,14 @@
 				},
 				"listener": {
 					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+			},{
+				"type": "removeBuff",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
 				}
 		}]
 	},{
@@ -592,6 +464,97 @@
 				},
 				"listener": {
 					"type": "getLastCreatedEvasionListener"
+				}
+		}]
+	},{
+		"ids": [{"id":"AOre"},{"id":"ACrn"}],
+		"type": "PASSIVE",
+		"onAddAbility": [{
+				"type": "createDeathReplacementEffect",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "not",
+						"condition": {
+							"type": "isOnCooldown"
+						}
+					},
+					"thenActions": [{
+							"type": "setReincarnating"
+						},{
+							"type": "startCooldown"
+						},{
+							"type": "createSpellEffectAtLocation",
+							"x": {
+								"type": "getUnitLocationX",
+								"unit": {
+									"type": "getCastingUnit"
+								}
+							},
+							"y": {
+								"type": "getUnitLocationY",
+								"unit": {
+									"type": "getCastingUnit"
+								}
+							},
+							"facing": {
+								"type": "rawFloat",
+								"value": 0
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "EFFECT"
+						},{
+							"type": "createTimer",
+							"timeout": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							},
+							"actions": [{
+									"type": "setHp",
+									"target": {
+										"type": "getCastingUnit"
+									},
+									"amount": {
+										"type": "rawFloat",
+										"value": 100
+									},
+									"isPercent": {
+										"type": "rawBoolean",
+										"value": "true"
+									}
+								},{
+									"type": "removeSpellEffect",
+									"effectToRemove": {
+										"type": "getLastCreatedSpellEffect"
+									}
+								}, {
+									"type": "finishReincarnating"
+							}]
+						}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addDeathReplacementEffect",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "ABILITYREINCARNATION"
+				},
+				"listener": {
+					"type": "getLastCreatedDeathReplacement"
+				}
+		}],
+		"onRemoveAbility": [{
+				"type": "removeDeathReplacementEffect",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedDeathReplacement"
 				}
 		}]
 	}]

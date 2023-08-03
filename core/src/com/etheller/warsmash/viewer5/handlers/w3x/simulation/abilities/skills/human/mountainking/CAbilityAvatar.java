@@ -39,7 +39,7 @@ public class CAbilityAvatar extends CAbilityNoTargetSpellBase {
 
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
-		simulation.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+		simulation.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 		caster.add(simulation, new CBuffAvatar(simulation.getHandleIdAllocator().createId(), AVATAR_BUFF,
 				getDuration(), hitPointBonus, damageBonus, defenseBonus));
 		return false;

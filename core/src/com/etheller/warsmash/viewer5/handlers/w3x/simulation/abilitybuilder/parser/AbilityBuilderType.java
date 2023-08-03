@@ -10,6 +10,7 @@ public enum AbilityBuilderType {
 	TOGGLE,
 	SMART,
 	BUFF,
+	TICKING_PASSIVE,
 	PASSIVE,
 	TEMPLATE,
 	HIDDEN;

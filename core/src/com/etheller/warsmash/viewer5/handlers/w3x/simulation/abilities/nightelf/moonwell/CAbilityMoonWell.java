@@ -145,8 +145,8 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 			}
 			if (availableCasterMana != caster.getMana()) {
 				caster.setMana(availableCasterMana);
-				game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
-				game.createSpellEffectOnUnit(unitTarget, getAlias(), CEffectType.SPECIAL);
+				game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+				game.createTemporarySpellEffectOnUnit(unitTarget, getAlias(), CEffectType.SPECIAL);
 			}
 		}
 		return caster.pollNextOrderBehavior(game);

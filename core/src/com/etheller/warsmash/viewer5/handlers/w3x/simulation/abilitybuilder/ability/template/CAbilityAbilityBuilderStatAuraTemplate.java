@@ -243,7 +243,7 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbstractGenericSingl
 		game.getAbilityData().createAbility(getAlias(), game.getHandleIdAllocator().createId());
 		auraGroup = new HashSet<>();
 		localStore.put(ABLocalStoreKeys.AURAGROUP, auraGroup);
-		this.fx = game.createSpellEffectOnUnit(unit, this.getAlias(), CEffectType.TARGET, 0);
+		this.fx = game.createPersistentSpellEffectOnUnit(unit, this.getAlias(), CEffectType.TARGET);
 	}
 
 	@Override

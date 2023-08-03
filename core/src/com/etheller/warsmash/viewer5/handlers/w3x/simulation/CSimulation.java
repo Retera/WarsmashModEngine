@@ -650,13 +650,18 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnEffectOnUnit(unit, effectPath);
 	}
 
-	public void createSpellEffectOnUnit(final CUnit unit, final War3ID alias, final CEffectType effectType) {
-		this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType);
+	public void createTemporarySpellEffectOnUnit(final CUnit unit, final War3ID alias, final CEffectType effectType) {
+		this.simulationRenderController.spawnTemporarySpellEffectOnUnit(unit, alias, effectType);
 	}
 
-	public SimulationRenderComponentModel createSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+	public SimulationRenderComponentModel createPersistentSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+			final CEffectType effectType) {
+		return this.simulationRenderController.spawnPersistentSpellEffectOnUnit(unit, alias, effectType);
+	}
+
+	public SimulationRenderComponentModel createPersistentSpellEffectOnUnit(final CUnit unit, final War3ID alias,
 			final CEffectType effectType, final int index) {
-		return this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType, index);
+		return this.simulationRenderController.spawnPersistentSpellEffectOnUnit(unit, alias, effectType, index);
 	}
 
 	public void unitSoundEffectEvent(final CUnit caster, final War3ID alias) {

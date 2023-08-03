@@ -68,7 +68,7 @@ public class CAbilityManaBurn extends CAbilityTargetSpellBase {
 		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
 			SimulationRenderComponentLightning lightning = simulation.createLightning(caster, lightningId, targetUnit);
-			simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
+			simulation.createTemporarySpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
 			int boltDelayEndTick =
 					simulation.getGameTurnTick() + (int) StrictMath.ceil(boltDelay / WarsmashConstants.SIMULATION_STEP_TIME);
 			int boltLifetimeEndTick =

@@ -1018,14 +1018,38 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public void spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+					public void spawnTemporarySpellEffectOnUnit(final CUnit unit, final War3ID alias,
 							final CEffectType effectType) {
 						final RenderSpellEffect spellEffect = spawnSpellEffectOnUnitEx(unit, alias, effectType, 0);
 						spellEffect.setKillWhenDone(true);
 					}
 
 					@Override
-					public SimulationRenderComponentModel spawnSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+					public SimulationRenderComponentModel spawnPersistentSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+							final CEffectType effectType) {
+						final List<RenderSpellEffect> specialEffects = spawnSpellEffectOnUnitEx(unit, alias, effectType);
+						if (specialEffects == null || specialEffects.isEmpty()) {
+							return SimulationRenderComponentModel.DO_NOTHING;
+						}
+						return new SimulationRenderComponentModel() {
+							@Override
+							public void remove() {
+								for (RenderSpellEffect effect : specialEffects) {
+									effect.setAnimations(RenderSpellEffect.DEATH_ONLY, true);
+								}
+							}
+
+							@Override
+							public void setHeight(final float height) {
+								for (RenderSpellEffect effect : specialEffects) {
+									effect.setHeight(height);
+								}
+							}
+						};
+					}
+
+					@Override
+					public SimulationRenderComponentModel spawnPersistentSpellEffectOnUnit(final CUnit unit, final War3ID alias,
 							final CEffectType effectType, final int index) {
 						final RenderSpellEffect specialEffect = spawnSpellEffectOnUnitEx(unit, alias, effectType,
 								index);
@@ -2877,6 +2901,22 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return specialEffect;
 	}
 
+	public List<RenderSpellEffect> spawnSpellEffectOnUnitEx(final CUnit unit, final War3ID alias,
+			final CEffectType effectType) {
+		final List<EffectAttachmentUI> effectAttachmentUI = getEffectAttachmentUIList(alias, effectType);
+		if (effectAttachmentUI == null) {
+			return null;
+		}
+		List<RenderSpellEffect> renderEffects = new ArrayList<>();
+		for (EffectAttachmentUI effect : effectAttachmentUI) {
+			final String modelPath = effect.getModelPath();
+			final List<String> attachmentPoint = effect.getAttachmentPoint();
+			final RenderSpellEffect specialEffect = addSpecialEffectTarget(modelPath, unit, attachmentPoint);
+			renderEffects.add(specialEffect);
+		}
+		return renderEffects;
+	}
+
 	public RenderSpellEffect spawnSpellEffectEx(final float x, final float y, final float facing, final War3ID alias,
 			final CEffectType effectType, final int index) {
 		final EffectAttachmentUI effectAttachmentUI = getEffectAttachmentUI(alias, effectType, index);
@@ -2887,6 +2927,60 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final List<String> attachmentPoint = effectAttachmentUI.getAttachmentPoint();
 		final RenderSpellEffect specialEffect = addSpecialEffect(modelPath, x, y, (float) StrictMath.toRadians(facing));
 		return specialEffect;
+	}
+	
+	public List<EffectAttachmentUI> getEffectAttachmentUIList(final War3ID alias, final CEffectType effectType) {
+		final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
+		List<EffectAttachmentUI> effectAttachmentUI = null;
+		if (abilityUI != null) {
+			switch (effectType) {
+			case EFFECT:
+				effectAttachmentUI = abilityUI.getEffectArt();
+				break;
+			case TARGET:
+				effectAttachmentUI = abilityUI.getTargetArt();
+				break;
+			case CASTER:
+				effectAttachmentUI = abilityUI.getCasterArt();
+				break;
+			case SPECIAL:
+				effectAttachmentUI = abilityUI.getSpecialArt();
+				break;
+			case AREA_EFFECT:
+				effectAttachmentUI = abilityUI.getAreaEffectArt();
+				break;
+			case MISSILE:
+				effectAttachmentUI = new ArrayList<>(abilityUI.getMissileArt());
+				break;
+			default:
+				throw new IllegalArgumentException("Unsupported effect type: " + effectType);
+			}
+		}
+		else {
+			final BuffUI buffUI = War3MapViewer.this.abilityDataUI.getBuffUI(alias);
+			if (buffUI != null) {
+				switch (effectType) {
+				case EFFECT:
+					effectAttachmentUI = buffUI.getEffectArt();
+					break;
+				case TARGET:
+					effectAttachmentUI = buffUI.getTargetArt();
+					break;
+				case SPECIAL:
+					effectAttachmentUI = buffUI.getSpecialArt();
+					break;
+				case MISSILE:
+					effectAttachmentUI = buffUI.getMissileArt();
+					break;
+				default:
+					throw new IllegalArgumentException("Unsupported effect type: " + effectType);
+				}
+			}
+			else {
+				return null;
+			}
+		}
+		return effectAttachmentUI;
 	}
 
 	public EffectAttachmentUI getEffectAttachmentUI(final War3ID alias, final CEffectType effectType, final int index) {

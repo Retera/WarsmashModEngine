@@ -13,13 +13,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRend
 
 public class ABActionCreateSpellEffectOnUnit implements ABAction {
 
-	private ABUnitCallback targetUnit;
-	private ABIDCallback effectToAdd;
+	private ABUnitCallback target;
+	private ABIDCallback id;
 	private CEffectType effectType;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		SimulationRenderComponent ret = game.createSpellEffectOnUnit((targetUnit.callback(game, caster, localStore)),
-				this.effectToAdd.callback(game, caster, localStore), this.effectType, 0);
+		SimulationRenderComponent ret = game.createPersistentSpellEffectOnUnit((target.callback(game, caster, localStore)),
+				this.id.callback(game, caster, localStore), this.effectType);
 		localStore.put(ABLocalStoreKeys.LASTCREATEDFX, ret);
 	}
 }

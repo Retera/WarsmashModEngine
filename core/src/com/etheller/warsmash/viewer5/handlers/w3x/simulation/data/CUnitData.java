@@ -465,16 +465,18 @@ public class CUnitData {
 				final EnumSet<CTargetType> targetsAllowed = CTargetType
 						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK1_TARGETS_ALLOWED, 0));
 				final String weaponSound = unitType.getFieldAsString(ATTACK1_WEAPON_SOUND, 0);
-				final CWeaponType weaponType = CWeaponType
-						.parseWeaponType(unitType.getFieldAsString(ATTACK1_WEAPON_TYPE, 0));
+				String weapon_type_temp = unitType.getFieldAsString(ATTACK1_WEAPON_TYPE, 0);
+				CWeaponType weaponType = CWeaponType.NONE;
+				if (!"_".equals(weapon_type_temp)) {
+					weaponType = CWeaponType.parseWeaponType(weapon_type_temp);
+				}
 				attacks.add(createAttack(animationBackswingPoint, animationDamagePoint, areaOfEffectFullDamage,
 						areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, attackType,
 						cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice,
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			}
-			catch (final Exception exc) {
+			} catch (final Exception exc) {
 				System.err.println("Attack 1 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			try {
@@ -515,8 +517,11 @@ public class CUnitData {
 				final EnumSet<CTargetType> targetsAllowed = CTargetType
 						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK2_TARGETS_ALLOWED, 0));
 				final String weaponSound = unitType.getFieldAsString(ATTACK2_WEAPON_SOUND, 0);
-				final CWeaponType weaponType = CWeaponType
-						.parseWeaponType(unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0));
+				String weapon_type_temp = unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0);
+				CWeaponType weaponType = CWeaponType.NONE;
+				if (!"_".equals(weapon_type_temp)) {
+					weaponType = CWeaponType.parseWeaponType(weapon_type_temp);
+				}
 				if (!attacks.isEmpty()) {
 					final CUnitAttack otherAttack = attacks.get(0);
 					if ((otherAttack.getAttackType() == attackType) && (targetsAllowed.size() == 1)
@@ -534,8 +539,7 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			}
-			catch (final Exception exc) {
+			} catch (final Exception exc) {
 				System.err.println("Attack 2 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			final List<CUnitAttack> enabledAttacks = getEnabledAttacks(attacks, attacksEnabled);
@@ -689,32 +693,26 @@ public class CUnitData {
 				if (i < requirementsLevelsStringItems.length) {
 					if (requirementsLevelsStringItems[i].isEmpty()) {
 						level = 1;
-					}
-					else {
+					} else {
 						try {
 							level = Integer.parseInt(requirementsLevelsStringItems[i]);
-						}
-						catch (final NumberFormatException exc) {
+						} catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				}
-				else if (requirementsLevelsStringItems.length > 0) {
+				} else if (requirementsLevelsStringItems.length > 0) {
 					final String requirementLevel = requirementsLevelsStringItems[requirementsLevelsStringItems.length
 							- 1];
 					if (requirementLevel.isEmpty()) {
 						level = 1;
-					}
-					else {
+					} else {
 						try {
 							level = Integer.parseInt(requirementLevel);
-						}
-						catch (final NumberFormatException exc) {
+						} catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				}
-				else {
+				} else {
 					level = 1;
 				}
 				requirements.add(new CUnitTypeRequirement(War3ID.fromString(item), level));
@@ -734,8 +732,7 @@ public class CUnitData {
 			final float newSumBonusAtLevel = sumBonusAtLevel + statPerLevel;
 			if (i == 0) {
 				table[i] = (int) newSumBonusAtLevel;
-			}
-			else {
+			} else {
 				table[i] = (int) newSumBonusAtLevel - table[i - 1];
 			}
 			sumBonusAtLevel = newSumBonusAtLevel;

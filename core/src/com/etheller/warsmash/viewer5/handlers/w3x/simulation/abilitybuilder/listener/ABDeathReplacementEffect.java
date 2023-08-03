@@ -3,30 +3,38 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.lis
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementResult;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementStacking;
 
 public class ABDeathReplacementEffect implements CUnitDeathReplacementEffect {
 
-	private AbilityBuilderAbility ability;
 	private Map<String, Object> localStore;
 	private List<ABAction> actions;
 	
-	public ABDeathReplacementEffect(AbilityBuilderAbility ability, Map<String, Object> localStore, List<ABAction> actions) {
-		this.ability = ability;
+	public ABDeathReplacementEffect(Map<String, Object> localStore, List<ABAction> actions) {
 		this.localStore = localStore;
 		this.actions = actions;
 	}
 
 	@Override
-	public boolean onAttack(CUnit unit, AbilityTarget target,
-			CUnitAttackPreDamageListenerDamageModResult damageResult) {
-		// TODO Auto-generated method stub
-		return false;
+	public CUnitDeathReplacementStacking onDeath(CSimulation simulation, CUnit unit, CUnit killer,
+			CUnitDeathReplacementResult result) {
+		localStore.put(ABLocalStoreKeys.KILLINGUNIT, killer);
+		localStore.put(ABLocalStoreKeys.DYINGUNIT, unit);
+		localStore.put(ABLocalStoreKeys.DEATHRESULT, result);
+		CUnitDeathReplacementStacking stacking = new CUnitDeathReplacementStacking();
+		localStore.put(ABLocalStoreKeys.DEATHSTACKING, stacking);
+		if (actions != null) {
+			for (ABAction action : actions) {
+				action.runAction(simulation, unit, localStore);
+			}
+		}
+		return stacking;
 	}
 
 }

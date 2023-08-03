@@ -38,7 +38,7 @@ public class CAbilityItemExperienceGain extends CAbilitySpellBase {
 		if (orderId == OrderIds.itemxpgain) {
 			final CAbilityHero heroData = caster.getHeroData();
 			heroData.addXp(game, caster, xpToGain);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			return false;
 		}
 		else {

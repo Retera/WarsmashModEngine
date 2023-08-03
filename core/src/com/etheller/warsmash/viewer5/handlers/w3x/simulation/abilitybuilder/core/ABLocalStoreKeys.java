@@ -23,6 +23,7 @@ public class ABLocalStoreKeys {
 	
 	// Ability Names
 	public static final String LASTCREATEDABILITY = "_lastCreatedAbility";
+	public static final String LASTCREATEDBUFF = "_lastCreatedBuff";
 	public static final String LASTADDEDABILITY = "_lastAddedAbility";
 	public static final String LASTADDEDBUFF = "_lastAddedBuff";
 	public static final String CURRENTLEVEL = "_currentLevel";
@@ -31,6 +32,7 @@ public class ABLocalStoreKeys {
 	//Generic Targetting
 	public static final String ATTACKINGUNIT = "_attackingUnit";
 	public static final String ATTACKEDUNIT = "_attackedUnit";
+	public static final String ABILITYTARGETEDUNIT = "_abilityTargetedUnit";
 	
 	//Generic Attacks
 	public static final String BASEDAMAGEDEALT = "_baseDamageDealt";
@@ -39,6 +41,12 @@ public class ABLocalStoreKeys {
 	public static final String WEAPONTYPE = "_weaponType";
 	public static final String ATTACKTYPE = "_attackType";
 	public static final String DAMAGETYPE = "_damageType";
+	
+	//Timers
+	public static final String LASTCREATEDTIMER = "_lastCreatedTimer";
+	public static final String FIRINGTIMER = "_firingTimer";
+	
+	
 	
 
 	// NonStackingStatBuff Names
@@ -63,4 +71,11 @@ public class ABLocalStoreKeys {
 	// DamageTakenModificationListener Names
 	public static final String LASTCREATEDDTML = "_lastCreatedDTML";
 	public static final String DAMAGEMODRESULT = "_damageModResult";
+	
+	// DeathReplacementEffect Names
+	public static final String LASTCREATEDDRE = "_lastCreatedDRE";
+	public static final String KILLINGUNIT = "_killingUnit";
+	public static final String DYINGUNIT = "_dyingUnit";
+	public static final String DEATHRESULT = "_deathResult";
+	public static final String DEATHSTACKING = "_deathStacking";
 }

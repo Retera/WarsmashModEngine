@@ -59,7 +59,7 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 		if (targetUnit != null) {
 			SimulationRenderComponentLightning lightning = simulation.createLightning(caster, lightningIdPrimary,
 					targetUnit);
-			simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
+			simulation.createTemporarySpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
 			int jumpDelayEndTick =
 					simulation.getGameTurnTick() + (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
 			int boltLifetimeEndTick =
@@ -132,7 +132,7 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 
 					SimulationRenderComponentLightning lightning = game.createLightning(targetUnit, jumpLightningId,
 							nextJumpTarget);
-					game.createSpellEffectOnUnit(nextJumpTarget, abilityId, CEffectType.TARGET);
+					game.createTemporarySpellEffectOnUnit(nextJumpTarget, abilityId, CEffectType.TARGET);
 					int jumpDelayEndTick =
 							gameTurnTick + (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
 					int boltLifetimeEndTick =

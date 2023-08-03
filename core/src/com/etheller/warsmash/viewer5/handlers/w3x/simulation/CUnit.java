@@ -62,12 +62,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenModificationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenModificationListenerDamageModResult;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackEffectListenerStacking;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackEvasionListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPostDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerPriority;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementResult;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementStacking;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementEffectPriority;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultAccuracyCheckListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultLifestealListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultThornsListener;
@@ -157,6 +162,7 @@ public class CUnit extends CWidget {
 	private boolean decays;
 	private boolean corpse;
 	private boolean boneCorpse;
+	private boolean falseDeath;
 
 	private transient CUnitAnimationListener unitAnimationListener;
 
@@ -206,7 +212,7 @@ public class CUnit extends CWidget {
 	private List<CUnitAttackPostDamageListener> postDamageListeners = new ArrayList<>();
 	private List<CUnitAttackDamageTakenModificationListener> damageTakenModificationListeners = new ArrayList<>();
 	private List<CUnitAttackDamageTakenListener> damageTakenListeners = new ArrayList<>();
-	private Map<Integer, List<CUnitDeathReplacementEffect>> deathReplacementEffects = new HashMap<>();
+	private Map<CUnitDeathReplacementEffectPriority, List<CUnitDeathReplacementEffect>> deathReplacementEffects = new HashMap<>();
 	private List<CUnitAttackEvasionListener> evasionListeners = new ArrayList<>();
 
 	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
@@ -678,7 +684,7 @@ public class CUnit extends CWidget {
 			nonStackingFx.put(stackingKey, existingArts);
 		}
 		if (existingArts.isEmpty()) {
-			SimulationRenderComponent fx = game.createSpellEffectOnUnit(this, id, target, 0);
+			SimulationRenderComponent fx = game.createPersistentSpellEffectOnUnit(this, id, target);
 			newFx.setArt(fx);
 		} else {
 			newFx.setArt(existingArts.iterator().next().getArt());
@@ -760,8 +766,8 @@ public class CUnit extends CWidget {
 		for (CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
 			preDamageListeners.put(priority, new ArrayList<>());
 		}
-		for (int i = CUnitDeathReplacementEffect.PRIORITY_MIN; i <= CUnitDeathReplacementEffect.PRIORITY_MAX; i++) {
-			deathReplacementEffects.put(i, new ArrayList<>());
+		for (CUnitDeathReplacementEffectPriority priority : CUnitDeathReplacementEffectPriority.values()) {
+			deathReplacementEffects.put(priority, new ArrayList<>());
 		}
 	}
 
@@ -987,53 +993,55 @@ public class CUnit extends CWidget {
 		}
 		this.stateListenersUpdates.clear();
 		if (isDead()) {
-			final int gameTurnTick = game.getGameTurnTick();
-			if (!this.corpse) {
-				if (this.collisionRectangle != null) {
-					// Moved this here because doing it on "kill" was able to happen in some cases
-					// while also iterating over the units that are in the collision system, and
-					// then it hit the "writing while iterating" problem.
-					game.getWorldCollision().removeUnit(this);
-				}
-				if (gameTurnTick > (this.deathTurnTick
-						+ (int) (this.unitType.getDeathTime() / WarsmashConstants.SIMULATION_STEP_TIME))) {
-					this.corpse = true;
-					if (!this.isRaisable()) {
-						this.boneCorpse = true;
-						// start final phase immediately for "cant raise" case
+			if (!falseDeath) {
+				final int gameTurnTick = game.getGameTurnTick();
+				if (!this.corpse) {
+					if (this.collisionRectangle != null) {
+						// Moved this here because doing it on "kill" was able to happen in some cases
+						// while also iterating over the units that are in the collision system, and
+						// then it hit the "writing while iterating" problem.
+						game.getWorldCollision().removeUnit(this);
 					}
-					if (!this.unitType.isHero()) {
-						if (!this.isDecays()) {
-							// if we dont raise AND dont decay, then now that death anim is over
-							// we just delete the unit
-							return true;
+					if (gameTurnTick > (this.deathTurnTick
+							+ (int) (this.unitType.getDeathTime() / WarsmashConstants.SIMULATION_STEP_TIME))) {
+						this.corpse = true;
+						if (!this.isRaisable()) {
+							this.boneCorpse = true;
+							// start final phase immediately for "cant raise" case
 						}
-					} else {
-						game.heroDeathEvent(this);
+						if (!this.unitType.isHero()) {
+							if (!this.isDecays()) {
+								// if we dont raise AND dont decay, then now that death anim is over
+								// we just delete the unit
+								return true;
+							}
+						} else {
+							game.heroDeathEvent(this);
+						}
+						this.deathTurnTick = gameTurnTick;
 					}
-					this.deathTurnTick = gameTurnTick;
-				}
-			} else if (!this.boneCorpse) {
-				if (game.getGameTurnTick() > (this.deathTurnTick + (int) (game.getGameplayConstants().getDecayTime()
-						/ WarsmashConstants.SIMULATION_STEP_TIME))) {
-					this.boneCorpse = true;
-					this.deathTurnTick = gameTurnTick;
-
-					if (this.isRaisable()) {
-						game.getWorldCollision().addUnit(this);
+				} else if (!this.boneCorpse) {
+					if (game.getGameTurnTick() > (this.deathTurnTick + (int) (game.getGameplayConstants().getDecayTime()
+							/ WarsmashConstants.SIMULATION_STEP_TIME))) {
+						this.boneCorpse = true;
+						this.deathTurnTick = gameTurnTick;
+	
+						if (this.isRaisable()) {
+							game.getWorldCollision().addUnit(this);
+						}
 					}
-				}
-			} else if (game.getGameTurnTick() > (this.deathTurnTick
-					+ (int) (getEndingDecayTime(game) / WarsmashConstants.SIMULATION_STEP_TIME))) {
-				if (this.unitType.isHero()) {
-					if (!getHeroData().isAwaitingRevive()) {
-						setHidden(true);
-						getHeroData().setAwaitingRevive(true);
-						game.heroDissipateEvent(this);
+				} else if (game.getGameTurnTick() > (this.deathTurnTick
+						+ (int) (getEndingDecayTime(game) / WarsmashConstants.SIMULATION_STEP_TIME))) {
+					if (this.unitType.isHero()) {
+						if (!getHeroData().isAwaitingRevive()) {
+							setHidden(true);
+							getHeroData().setAwaitingRevive(true);
+							game.heroDissipateEvent(this);
+						}
+						return false;
 					}
-					return false;
+					return true;
 				}
-				return true;
 			}
 		} else {
 			if (!this.paused) {
@@ -1799,14 +1807,41 @@ public class CUnit extends CWidget {
 			this.currentBehavior.end(simulation, true);
 		}
 		this.currentBehavior = null;
+		
+		CUnitDeathReplacementResult result = new CUnitDeathReplacementResult();
+		CUnitDeathReplacementStacking allowContinue = new CUnitDeathReplacementStacking();
+		for (CUnitDeathReplacementEffectPriority priority : CUnitDeathReplacementEffectPriority.values()) {
+			if (allowContinue.isAllowStacking()) {
+				for (CUnitDeathReplacementEffect effect : deathReplacementEffects.get(priority)) {
+					if (allowContinue.isAllowSamePriorityStacking()) {
+						allowContinue = effect.onDeath(simulation, this, source, result);
+					}
+				}
+			}
+		}
+		if (result.isReviving()) {
+			return;
+		}
+
 		this.orderQueue.clear();
+		killPathingInstance();
+		popoutWorker(simulation);
+		for (int i = this.abilities.size() - 1; i >= 0; i--) {
+			// okay if it removes self from this during onDeath() because of reverse
+			// iteration order
+			this.abilities.get(i).onDeath(simulation, this);
+		}
+		
+		if (result.isReincarnating()) {
+			return;
+		}
+
 		if (this.constructing) {
 			simulation.createDeathExplodeEffect(this, explodesOnDeathBuffId);
 		} else {
 			this.deathTurnTick = simulation.getGameTurnTick();
 		}
-		killPathingInstance();
-		popoutWorker(simulation);
+		
 		final CPlayer player = simulation.getPlayer(this.playerIndex);
 		if (this.foodMade != 0) {
 			player.setUnitFoodMade(this, 0);
@@ -1894,11 +1929,6 @@ public class CUnit extends CWidget {
 					}
 				}
 			}
-		}
-		for (int i = this.abilities.size() - 1; i >= 0; i--) {
-			// okay if it removes self from this during onDeath() because of reverse
-			// iteration order
-			this.abilities.get(i).onDeath(simulation, this);
 		}
 		fireDeathEvents(simulation);
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
@@ -2203,6 +2233,10 @@ public class CUnit extends CWidget {
 
 	public void setAcquisitionRange(final float acquisitionRange) {
 		this.acquisitionRange = acquisitionRange;
+	}
+
+	public void setCurrentHp(final CSimulation game, final float hpValue) {
+		setLife(game, Math.min(hpValue, getMaximumLife()));
 	}
 
 	public void heal(final CSimulation game, final float lifeToRegain) {
@@ -3430,13 +3464,11 @@ public class CUnit extends CWidget {
 		damageTakenListeners.remove(listener);
 	}
 
-	public List<CUnitDeathReplacementEffect> getDeathReplacementEffectsForPriority(Integer priority) {
-		priority = Math.min(Math.max(priority, 10), 0);
+	public List<CUnitDeathReplacementEffect> getDeathReplacementEffectsForPriority(CUnitDeathReplacementEffectPriority priority) {
 		return deathReplacementEffects.get(priority);
 	}
 
-	public void addDeathReplacementEffect(Integer priority, CUnitDeathReplacementEffect listener) {
-		priority = Math.min(Math.max(priority, 10), 0);
+	public void addDeathReplacementEffect(CUnitDeathReplacementEffectPriority priority, CUnitDeathReplacementEffect listener) {
 		List<CUnitDeathReplacementEffect> list = deathReplacementEffects.get(priority);
 		if (list == null) {
 			list = new ArrayList<>();
@@ -3444,8 +3476,7 @@ public class CUnit extends CWidget {
 		list.add(0, listener);
 	}
 
-	public void removeDeathReplacementEffect(Integer priority, CUnitDeathReplacementEffect listener) {
-		priority = Math.min(Math.max(priority, 10), 0);
+	public void removeDeathReplacementEffect(CUnitDeathReplacementEffectPriority priority, CUnitDeathReplacementEffect listener) {
 		List<CUnitDeathReplacementEffect> list = deathReplacementEffects.get(priority);
 		if (list != null) {
 			list.remove(listener);
@@ -3508,5 +3539,13 @@ public class CUnit extends CWidget {
 
 	public boolean isMagicImmune() {
 		return magicImmune;
+	}
+
+	public boolean isFalseDeath() {
+		return falseDeath;
+	}
+
+	public void setFalseDeath(boolean falseDeath) {
+		this.falseDeath = falseDeath;
 	}
 }

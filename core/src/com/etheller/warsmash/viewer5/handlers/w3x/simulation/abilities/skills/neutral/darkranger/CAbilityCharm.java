@@ -55,7 +55,7 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit unit, AbilityTarget target) {
 		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
-		simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
+		simulation.createTemporarySpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
 		List<War3ID> targetUpgradesUsed = targetUnit.getUnitType().getUpgradesUsed();
 		CPlayer targetPlayer = simulation.getPlayer(targetUnit.getPlayerIndex());
 		CPlayer castingUnitPlayer = simulation.getPlayer(unit.getPlayerIndex());

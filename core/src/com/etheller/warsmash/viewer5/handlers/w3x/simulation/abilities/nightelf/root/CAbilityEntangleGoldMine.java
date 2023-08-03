@@ -128,7 +128,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 				// to a common subroutine later) ==
 
 				this.entangledMine.getOverlayedGoldMineData().setParentMine(unitTarget, goldMineData);
-				this.unitRootsRenderComponent = simulation.createSpellEffectOnUnit(unit, getAlias(), CEffectType.CASTER,
+				this.unitRootsRenderComponent = simulation.createPersistentSpellEffectOnUnit(unit, getAlias(), CEffectType.CASTER,
 						0);
 
 				setIconShowing(false);

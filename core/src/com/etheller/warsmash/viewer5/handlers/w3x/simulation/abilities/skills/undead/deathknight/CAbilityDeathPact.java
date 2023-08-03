@@ -129,7 +129,7 @@ public class CAbilityDeathPact extends CAbilityTargetSpellBase {
 
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
-		simulation.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+		simulation.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
 			float targetUnitLife = targetUnit.getLife();
@@ -160,7 +160,7 @@ public class CAbilityDeathPact extends CAbilityTargetSpellBase {
 				targetUnit.setDecays(false);
 				targetUnit.kill(simulation);
 			}
-			simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
+			simulation.createTemporarySpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
 		}
 		return false;
 	}

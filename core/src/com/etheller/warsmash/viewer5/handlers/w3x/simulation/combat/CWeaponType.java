@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
 public enum CWeaponType {
+	NONE(CDamageType.UNKNOWN, false),
 	NORMAL(CDamageType.NORMAL, false),
 	INSTANT(CDamageType.NORMAL, true),
 	ARTILLERY(CDamageType.NORMAL, true),

@@ -71,9 +71,11 @@ public interface SimulationRenderController {
 
 	void spawnEffectOnUnit(CUnit unit, String effectPath);
 
-	void spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
+	void spawnTemporarySpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
 
-	SimulationRenderComponentModel spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
+	SimulationRenderComponentModel spawnPersistentSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
+
+	SimulationRenderComponentModel spawnPersistentSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
 
 	SimulationRenderComponentModel spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
 			CEffectType effectType, int index);

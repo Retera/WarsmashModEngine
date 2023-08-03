@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
+import java.io.File;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
@@ -254,24 +255,30 @@ public class CAbilityData {
 
 		AbilityBuilderFile behaviors = null;
 		try {
-			behaviors = gson.fromJson(new FileReader("BehaviorsConfigFile.json"), AbilityBuilderFile.class);
-			for (AbilityBuilderParser behavior : behaviors.getAbilityList()) {
-				if (behavior.getType().equals(AbilityBuilderType.BUFF)) {
-					for (AbilityBuilderDupe dupe : behavior.getIds()) {
-						AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
-						this.codeToBuffTypeDefinition.put(War3ID.fromString(config.getId()),
-								config.createDefinition());
-					}
-				} else if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
-					for (AbilityBuilderDupe dupe : behavior.getIds()) {
-						this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
-								new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
-					}
-				} else {
-					for (AbilityBuilderDupe dupe : behavior.getIds()) {
-						AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
-						this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
-								config.createDefinition());
+			File abilityBehaviorsDir = new File("abilityBehaviors");
+			File[] abilityBehaviorFiles = abilityBehaviorsDir.listFiles();
+			if (abilityBehaviorFiles != null) {
+				for (File abilityBehaviorFile : abilityBehaviorFiles) {
+					behaviors = gson.fromJson(new FileReader(abilityBehaviorFile), AbilityBuilderFile.class);
+					for (AbilityBuilderParser behavior : behaviors.getAbilityList()) {
+						if (behavior.getType().equals(AbilityBuilderType.BUFF)) {
+							for (AbilityBuilderDupe dupe : behavior.getIds()) {
+								AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
+								this.codeToBuffTypeDefinition.put(War3ID.fromString(config.getId()),
+										config.createDefinition());
+							}
+						} else if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
+							for (AbilityBuilderDupe dupe : behavior.getIds()) {
+								this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
+										new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
+							}
+						} else {
+							for (AbilityBuilderDupe dupe : behavior.getIds()) {
+								AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
+								this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
+										config.createDefinition());
+							}
+						}
 					}
 				}
 			}

@@ -55,7 +55,7 @@ public class CAbilityMassTeleport extends CAbilityTargetSpellBase {
 				CEffectType.AREA_EFFECT, 0);
 		targetAreaEffectRenderComponent = simulation.spawnSpellEffectOnPoint(target.getX(), target.getY(), 0, getAlias(),
 				CEffectType.AREA_EFFECT, 0);
-		simulation.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+		simulation.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if(targetUnit != null) {
 			targetUnit.setPaused(true);

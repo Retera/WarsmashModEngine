@@ -56,7 +56,7 @@ public class CAbilityThunderClap extends CAbilityNoTargetSpellBase {
 			}
 			return false;
 		});
-		simulation.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+		simulation.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 		return false;
 	}
 }

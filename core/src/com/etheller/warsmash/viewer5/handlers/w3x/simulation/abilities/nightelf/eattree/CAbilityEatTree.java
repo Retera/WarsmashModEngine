@@ -101,7 +101,7 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 					unit.add(simulation, new CBuffEatTree(simulation.getHandleIdAllocator().createId(), buffId, 1.0f,
 							getDuration(), hitPointsGained));
 					targetDest.setLife(simulation, 0);
-					simulation.createSpellEffectOnUnit(unit, getAlias(), CEffectType.SPECIAL);
+					simulation.createTemporarySpellEffectOnUnit(unit, getAlias(), CEffectType.SPECIAL);
 				}
 				ripComplete = true;
 			}

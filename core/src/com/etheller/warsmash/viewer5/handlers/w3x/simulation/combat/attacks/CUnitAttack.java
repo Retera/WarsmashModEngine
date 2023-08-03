@@ -415,7 +415,7 @@ public abstract class CUnitAttack {
 		return damage + getTotalTemporaryDamageBonus();
 	}
 
-	public float runPreDamageListeners(final CSimulation simulation, CUnit attacker, AbilityTarget target,
+	public CUnitAttackPreDamageListenerDamageModResult runPreDamageListeners(final CSimulation simulation, CUnit attacker, AbilityTarget target,
 			float damage) {
 		CUnitAttackPreDamageListenerDamageModResult result = new CUnitAttackPreDamageListenerDamageModResult(damage);
 		CUnitAttackEffectListenerStacking allowContinue = new CUnitAttackEffectListenerStacking();
@@ -434,7 +434,7 @@ public abstract class CUnitAttack {
 		} else if (result.getBonusDamage() != 0) {
 			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.BASH, Math.round(result.getBonusDamage()));
 		}
-		return result.computeFinalDamage();
+		return result;
 	}
 
 	public void runPostDamageListeners(final CSimulation simulation, CUnit attacker, AbilityTarget target,

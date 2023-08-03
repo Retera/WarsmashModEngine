@@ -33,7 +33,7 @@ public abstract class CAbilityAuraBase extends CAbilityPassiveSpellBase {
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
-		this.fx = game.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
+		this.fx = game.createPersistentSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
 	}
 
 	@Override

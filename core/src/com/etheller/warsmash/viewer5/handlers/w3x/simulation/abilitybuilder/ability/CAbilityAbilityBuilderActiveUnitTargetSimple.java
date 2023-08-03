@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
@@ -21,6 +22,10 @@ public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTarget
 	private AbilityBuilderConfiguration config;
 	private Map<String, Object> localStore;
 	private int orderId;
+	private int autoCastOnId = 0;
+	private int autoCastOffId = 0;
+	private boolean autocasting = false;
+	private boolean initialized;
 
 	public CAbilityAbilityBuilderActiveUnitTargetSimple(int handleId, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -30,6 +35,12 @@ public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTarget
 		this.config = config;
 		this.localStore = localStore;
 		orderId = OrderIdUtils.getOrderId(config.getCastId());
+		if (config.getAutoCastOnId() != null) {
+			autoCastOnId = OrderIdUtils.getOrderId(config.getAutoCastOnId());
+		}
+		if (config.getAutoCastOffId() != null) {
+			autoCastOffId = OrderIdUtils.getOrderId(config.getAutoCastOffId());
+		}
 	}
 
 	@Override
@@ -37,37 +48,86 @@ public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTarget
 		super.setLevel(level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 	}
+	
+	@Override
+	public void populateData(MutableGameObject worldEditorAbility, int level) {
+		if (this.initialized) {
+			if (config.getOnLevelChange() != null) {
+				CSimulation game = (CSimulation) this.localStore.get(ABLocalStoreKeys.GAME);
+				CUnit unit = (CUnit) this.localStore.get(ABLocalStoreKeys.THISUNIT);
+				for (ABAction action : config.getOnLevelChange()) {
+					action.runAction(game, unit, this.localStore);
+				}
+			}
+		}
+		this.initialized = true;
+	}
 
 	@Override
 	public int getBaseOrderId() {
-		return orderId;
+		return this.orderId;
 	}
 
 	public List<CAbilityTypeAbilityBuilderLevelData> getLevelData() {
-		return levelData;
+		return this.levelData;
 	}
 
 	public AbilityBuilderConfiguration getConfig() {
-		return config;
+		return this.config;
 	}
 
 	public Map<String, Object> getLocalStore() {
-		return localStore;
+		return this.localStore;
 	}
 
 	@Override
-	public void populateData(MutableGameObject worldEditorAbility, int level) {
-		
+	public void onAdd(CSimulation game, CUnit unit) {
+		super.onAdd(game, unit);
+		localStore.put(ABLocalStoreKeys.GAME, game);
+		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
+		if (config.getOnAddAbility() != null) {
+			for (ABAction action : config.getOnAddAbility()) {
+				action.runAction(game, unit, localStore);
+			}
+		}
 	}
 
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit unit, AbilityTarget target) {
-		if (config.getOnBeginCasting() != null) {
-			for (ABAction action : config.getOnBeginCasting()) {
-				action.runAction(simulation, unit, localStore);
+		System.err.println("Casting Ability");
+		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+		if (targetUnit != null) {
+			System.err.println("Target Acquired");
+			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT, targetUnit);
+			if (this.config.getOnBeginCasting() != null) {
+				System.err.println("Have Actions");
+				for (ABAction action : this.config.getOnBeginCasting()) {
+					action.runAction(simulation, unit, this.localStore);
+					System.err.println("Ran Action");
+				}
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public int getAutoCastOnOrderId() {
+		return this.autoCastOnId;
+	}
+
+	@Override
+	public int getAutoCastOffOrderId() {
+		return this.autoCastOffId;
+	}
+
+	@Override
+	public boolean isAutoCastOn() {
+		return this.autocasting;
+	}
+
+	@Override
+	public void setAutoCastOn(final boolean autoCastOn) {
+		this.autocasting = autoCastOn;
 	}
 
 }

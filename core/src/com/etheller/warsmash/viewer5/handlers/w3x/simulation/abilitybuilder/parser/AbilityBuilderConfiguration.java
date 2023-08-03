@@ -11,6 +11,8 @@ public class AbilityBuilderConfiguration {
 	
 	private String castId;
 	private String uncastId;
+	private String autoCastOnId;
+	private String autoCastOffId;
 
 	private AbilityBuilderType type;
 	private AbilityBuilderSpecialConfigFields specialFields;
@@ -36,6 +38,8 @@ public class AbilityBuilderConfiguration {
 		this.id = dupe.getId();
 		this.castId = dupe.getCastId();
 		this.uncastId = dupe.getUncastId();
+		this.autoCastOnId = dupe.getAutoCastOnId();
+		this.autoCastOffId = dupe.getAutoCastOffId();
 		this.type = parser.getType();
 		this.specialFields = parser.getSpecialFields();
 		
@@ -83,6 +87,22 @@ public class AbilityBuilderConfiguration {
 
 	public void setUncastId(String uncastId) {
 		this.uncastId = uncastId;
+	}
+
+	public String getAutoCastOnId() {
+		return autoCastOnId;
+	}
+
+	public void setAutoCastOnId(String autoCastOnId) {
+		this.autoCastOnId = autoCastOnId;
+	}
+
+	public String getAutoCastOffId() {
+		return autoCastOffId;
+	}
+
+	public void setAutoCastOffId(String autoCastOffId) {
+		this.autoCastOffId = autoCastOffId;
 	}
 
 	public AbilityBuilderType getType() {

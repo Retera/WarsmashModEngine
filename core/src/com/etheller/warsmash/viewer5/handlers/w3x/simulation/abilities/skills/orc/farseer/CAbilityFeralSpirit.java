@@ -65,7 +65,7 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
 					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration(), true));
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.SPECIAL);
+			simulation.createTemporarySpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.SPECIAL);
 			this.lastSummonUnits.add(summonedUnit);
 		}
 		return false;

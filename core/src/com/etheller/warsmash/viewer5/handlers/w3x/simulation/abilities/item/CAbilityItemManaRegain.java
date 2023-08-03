@@ -91,7 +91,7 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 			final AbilityTarget target) {
 		if ((target == null) && (orderId == getBaseOrderId())) {
 			caster.restoreMana(game, this.manaToRegain);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			return false;
 		}
 		return super.checkBeforeQueue(game, caster, orderId, target);

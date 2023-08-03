@@ -12,11 +12,15 @@
 					}
 				},
 				"stackingKey": {
-					"type": "getAllowStackingKey"
+					"type": "rawString",
+					"value": "slow"
 				},
 				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "B"
+					"type": "negativeFloat",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
 				}
 			},{
 				"type": "storeValueLocally",
@@ -37,11 +41,15 @@
 					}
 				},
 				"stackingKey": {
-					"type": "getAllowStackingKey"
+					"type": "rawString",
+					"value": "slow"
 				},
 				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "A"
+					"type": "negativeFloat",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
 				}
 			},{
 				"type": "storeValueLocally",
@@ -185,8 +193,11 @@
 					}
 				},
 				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "A"
+					"type": "negativeFloat",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
 				}
 			},{
 				"type": "updateNonStackingStatBuff",
@@ -198,8 +209,11 @@
 					}
 				},
 				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "B"
+					"type": "negativeFloat",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
 				}
 		}]
 	}]

@@ -9,5 +9,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRend
 
 public abstract class ABFXCallback implements ABCallback {
 
-	abstract public SimulationRenderComponent callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	abstract public SimulationRenderComponent callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

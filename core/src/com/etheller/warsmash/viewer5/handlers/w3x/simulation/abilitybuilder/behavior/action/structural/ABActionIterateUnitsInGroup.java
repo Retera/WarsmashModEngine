@@ -16,14 +16,15 @@ public class ABActionIterateUnitsInGroup implements ABAction {
 	private ABUnitGroupCallback unitGroup;
 	private List<ABAction> iterationActions;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		Set<CUnit> unitSet = unitGroup.callback(game, caster, localStore);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		Set<CUnit> unitSet = unitGroup.callback(game, caster, localStore, castId);
 		List<CUnit> unitList = new ArrayList<>(unitSet); 
 		for(CUnit enumUnit : unitList) {
-			localStore.put(ABLocalStoreKeys.ENUMUNIT, enumUnit);
+			localStore.put(ABLocalStoreKeys.ENUMUNIT+castId, enumUnit);
 			for (ABAction iterationAction : iterationActions) {
-				iterationAction.runAction(game, caster, localStore);
+				iterationAction.runAction(game, caster, localStore, castId);
 			}
 		}
+		localStore.remove(ABLocalStoreKeys.ENUMUNIT+castId);
 	}
 }

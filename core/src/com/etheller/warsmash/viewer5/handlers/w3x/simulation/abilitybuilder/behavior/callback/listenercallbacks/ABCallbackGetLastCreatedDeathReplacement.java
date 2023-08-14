@@ -10,7 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.list
 public class ABCallbackGetLastCreatedDeathReplacement extends ABDeathReplacementCallback {
 
 	@Override
-	public ABDeathReplacementEffect callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public ABDeathReplacementEffect callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return (ABDeathReplacementEffect) localStore.get(ABLocalStoreKeys.LASTCREATEDDRE);
 	}
 

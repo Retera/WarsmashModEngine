@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -27,6 +26,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Pathin
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
@@ -43,6 +43,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABGenericTimedBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
@@ -62,12 +63,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenModificationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenModificationListenerDamageModResult;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackEffectListenerStacking;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackEvasionListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackFinalDamageTakenModificationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPostDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerPriority;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementResult;
@@ -97,6 +97,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
@@ -131,9 +132,9 @@ public class CUnit extends CWidget {
 	private CUnitDefaultThornsListener percentThornsListener = null;
 	private CUnitDefaultLifestealListener lifestealListener = null;
 
-	private Map<NonStackingStatBuffType, Map<String, Set<NonStackingStatBuff>>> nonStackingBuffs = new HashMap<>();
-	private Map<String, Set<NonStackingFx>> nonStackingFx = new HashMap<>();
-	private Map<String, Set<CBuff>> nonStackingDisplayBuffs = new HashMap<>();
+	private Map<NonStackingStatBuffType, Map<String, List<NonStackingStatBuff>>> nonStackingBuffs = new HashMap<>();
+	private Map<String, List<NonStackingFx>> nonStackingFx = new HashMap<>();
+	private Map<String, List<CBuff>> nonStackingDisplayBuffs = new HashMap<>();
 
 	private int currentDefenseDisplay;
 	private float currentDefense;
@@ -211,6 +212,7 @@ public class CUnit extends CWidget {
 	private Map<CUnitAttackPreDamageListenerPriority, List<CUnitAttackPreDamageListener>> preDamageListeners = new HashMap<>();
 	private List<CUnitAttackPostDamageListener> postDamageListeners = new ArrayList<>();
 	private List<CUnitAttackDamageTakenModificationListener> damageTakenModificationListeners = new ArrayList<>();
+	private List<CUnitAttackFinalDamageTakenModificationListener> finalDamageTakenModificationListeners = new ArrayList<>();
 	private List<CUnitAttackDamageTakenListener> damageTakenListeners = new ArrayList<>();
 	private Map<CUnitDeathReplacementEffectPriority, List<CUnitDeathReplacementEffect>> deathReplacementEffects = new HashMap<>();
 	private List<CUnitAttackEvasionListener> evasionListeners = new ArrayList<>();
@@ -289,34 +291,145 @@ public class CUnit extends CWidget {
 	}
 
 	public void addNonStackingStatBuff(NonStackingStatBuff buff) {
-		Map<String, Set<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
-		if (buffKeyMap == null) {
-			buffKeyMap = new HashMap<>();
-			this.nonStackingBuffs.put(buff.getBuffType(), buffKeyMap);
+		if (buff.getBuffType() == NonStackingStatBuffType.ALLATK) {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATK);
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATK, buffKeyMap);
+			}
+			List<NonStackingStatBuff> theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
+			
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK);
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATK, buffKeyMap);
+			}
+			theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
+		} else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATKPCT);
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATKPCT, buffKeyMap);
+			}
+			List<NonStackingStatBuff> theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
+			
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT);
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATKPCT, buffKeyMap);
+			}
+			theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
+		} else {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(buff.getBuffType(), buffKeyMap);
+			}
+			List<NonStackingStatBuff> theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
 		}
-		Set<NonStackingStatBuff> theSet = buffKeyMap.get(buff.getStackingKey());
-		if (theSet == null) {
-			theSet = new HashSet<>();
-			buffKeyMap.put(buff.getStackingKey(), theSet);
-		}
-		theSet.add(buff);
 		computeDerivedFields(buff.getBuffType());
 	}
 
 	public void removeNonStackingStatBuff(NonStackingStatBuff buff) {
-		Map<String, Set<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
-		try {
-			buffKeyMap.get(buff.getStackingKey()).remove(buff);
-		} catch (Exception e) {
-			System.err.println(e.getLocalizedMessage());
-			System.err.println(e.getStackTrace().toString());
-			System.err.println("From: " + this.getTypeId().asStringValue());
+		if (buff.getBuffType() == NonStackingStatBuffType.ALLATK) {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATK);
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
+			
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK);
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
+		} else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATKPCT);
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
+			
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT);
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
+		} else {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
 		}
 		computeDerivedFields(buff.getBuffType());
 	}
-
+	
+	public void computeUnitState(StateModBuffType type) {
+		switch (type) {
+		case DISABLE_ATTACK:
+			CAbility attack = this.getFirstAbilityOfType(CAbilityAttack.class);
+			attack.setDisabled(disableAttacks);
+			break;
+		case DISABLE_AUTO_ATTACK:
+			break;
+		case ETHEREAL:
+			break;
+		case MAGIC_IMMUNE:
+			break;
+		case RESISTANT:
+			break;
+		case SLEEPING:
+			break;
+		case SNARED:
+			break;
+		default:
+			break;
+		}
+	}
+	
 	public void computeDerivedFields(NonStackingStatBuffType type) {
-		Map<String, Set<NonStackingStatBuff>> buffKeyMap;
+		Map<String, List<NonStackingStatBuff>> buffKeyMap;
 		switch (type) {
 		case DEF:
 		case DEFPCT:
@@ -561,6 +674,24 @@ public class CUnit extends CWidget {
 			}
 			this.notifyAttacksChanged();
 			break;
+		case ALLATK:
+		case ALLATKPCT:
+			for (CUnitAttack attack : getUnitSpecificAttacks()) {
+				if (attack.getWeaponType() != null && attack.getWeaponType() == CWeaponType.NORMAL) {
+					attack.setNonStackingFlatBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATK));
+					attack.setNonStackingPctBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATKPCT));
+					attack.computeDerivedFields();
+				}
+			}
+			for (CUnitAttack attack : getUnitSpecificAttacks()) {
+				if (attack.getWeaponType() != null && attack.getWeaponType() != CWeaponType.NORMAL) {
+					attack.setNonStackingFlatBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK));
+					attack.setNonStackingPctBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT));
+					attack.computeDerivedFields();
+				}
+			}
+			this.notifyAttacksChanged();
+			break;
 		case ATKSPD:
 			float totalNSAtkSpdBuff = 0;
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.ATKSPD);
@@ -677,10 +808,10 @@ public class CUnit extends CWidget {
 	}
 
 	public NonStackingFx addNonStackingFx(CSimulation game, String stackingKey, War3ID id, CEffectType target) {
-		Set<NonStackingFx> existingArts = nonStackingFx.get(stackingKey);
+		List<NonStackingFx> existingArts = nonStackingFx.get(stackingKey);
 		NonStackingFx newFx = new NonStackingFx(stackingKey, id);
 		if (existingArts == null) {
-			existingArts = new HashSet<>();
+			existingArts = new ArrayList<>();
 			nonStackingFx.put(stackingKey, existingArts);
 		}
 		if (existingArts.isEmpty()) {
@@ -694,7 +825,7 @@ public class CUnit extends CWidget {
 	}
 
 	public void removeNonStackingFx(CSimulation game, NonStackingFx fx) {
-		Set<NonStackingFx> existingArts = nonStackingFx.get(fx.getStackingKey());
+		List<NonStackingFx> existingArts = nonStackingFx.get(fx.getStackingKey());
 		if (existingArts != null) {
 			existingArts.remove(fx);
 			if (existingArts.isEmpty()) {
@@ -704,25 +835,31 @@ public class CUnit extends CWidget {
 	}
 
 	public void addNonStackingDisplayBuff(CSimulation game, String stackingKey, CBuff buff) {
-		Set<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
+		List<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
 		if (existingBuffs == null) {
-			existingBuffs = new HashSet<>();
+			existingBuffs = new ArrayList<>();
 			nonStackingDisplayBuffs.put(stackingKey, existingBuffs);
 		}
 		if (existingBuffs.isEmpty()) {
 			this.add(game, buff);
 		} else {
 			CBuff currentBuff = this.getFirstAbilityOfType(buff.getClass());
-			if (buff.getLevel() > currentBuff.getLevel()) {
-				this.remove(game, currentBuff);
+			if (currentBuff == null) {
+				existingBuffs.clear();
 				this.add(game, buff);
+			} else {
+				if (buff.getLevel() >= currentBuff.getLevel()) {
+					this.remove(game, currentBuff);
+					this.add(game, buff);
+				}
+				
 			}
 		}
 		existingBuffs.add(buff);
 	}
 
 	public void removeNonStackingDisplayBuff(CSimulation game, String stackingKey, CBuff buff) {
-		Set<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
+		List<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
 		if (existingBuffs != null) {
 			existingBuffs.remove(buff);
 			CBuff currentBuff = this.getFirstAbilityOfType(buff.getClass());
@@ -857,11 +994,23 @@ public class CUnit extends CWidget {
 		ability.onAdd(simulation, this);
 		this.stateNotifier.abilitiesChanged();
 	}
+	
+	public void add(final CSimulation simulation, final CBuff ability) {
+		if (this.abilities.contains(ability) && ability instanceof ABGenericTimedBuff) {
+			((ABGenericTimedBuff)ability).updateExpiration(simulation, this);
+		} else {
+			this.abilities.add(ability);
+			simulation.onAbilityAddedToUnit(this, ability);
+			ability.onAdd(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		}
+	}
 
 	public void remove(final CSimulation simulation, final CAbility ability) {
 		this.abilities.remove(ability);
 		simulation.onAbilityRemovedFromUnit(this, ability);
 		ability.onRemove(simulation, this);
+		//this.stateNotifier.abilitiesChanged();
 	}
 
 	public War3ID getTypeId() {
@@ -1754,6 +1903,11 @@ public class CUnit extends CWidget {
 				damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -defense);
 			}
 			trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * (result.computeFinalDamage());
+
+			for (CUnitAttackFinalDamageTakenModificationListener listener : new ArrayList<>(finalDamageTakenModificationListeners)) {
+				trueDamage = listener.onDamage(simulation, source, this, isAttack, isRanged, attackType, damageType, trueDamage);
+			}
+			
 			final boolean wasAboveMax = this.life > this.maximumLife;
 			this.life -= trueDamage;
 			if (((result.computeFinalDamage()) < 0) && !wasAboveMax && (this.life > this.maximumLife)) {
@@ -3454,6 +3608,14 @@ public class CUnit extends CWidget {
 
 	public void removeDamageTakenModificationListener(CUnitAttackDamageTakenModificationListener listener) {
 		damageTakenModificationListeners.remove(listener);
+	}
+
+	public void addFinalDamageTakenModificationListener(CUnitAttackFinalDamageTakenModificationListener listener) {
+		finalDamageTakenModificationListeners.add(0, listener);
+	}
+
+	public void removeFinalDamageTakenModificationListener(CUnitAttackFinalDamageTakenModificationListener listener) {
+		finalDamageTakenModificationListeners.remove(listener);
 	}
 
 	public void addDamageTakenListener(CUnitAttackDamageTakenListener listener) {

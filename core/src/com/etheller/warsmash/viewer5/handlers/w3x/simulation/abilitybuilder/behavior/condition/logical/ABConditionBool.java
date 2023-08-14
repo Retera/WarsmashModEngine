@@ -12,8 +12,8 @@ public class ABConditionBool implements ABCondition {
 	private ABBooleanCallback bool;
 	
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return bool.callback(game, caster, localStore);
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return bool.callback(game, caster, localStore, castId);
 	}
 
 }

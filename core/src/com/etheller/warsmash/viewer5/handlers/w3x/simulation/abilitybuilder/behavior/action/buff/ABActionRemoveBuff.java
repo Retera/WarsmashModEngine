@@ -13,7 +13,7 @@ public class ABActionRemoveBuff implements ABAction {
 	private ABUnitCallback target;
 	private ABBuffCallback buff;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		(target.callback(game, caster, localStore)).remove(game, buff.callback(game, caster, localStore));
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		(target.callback(game, caster, localStore, castId)).remove(game, buff.callback(game, caster, localStore, castId));
 	}
 }

@@ -23,7 +23,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIconNoSmartActiveAbility
-		implements AbilityBuilderAbility {
+		implements AbilityBuilderAbility, AbilityBuilderToggleAbility {
 
 	private List<CAbilityTypeAbilityBuilderLevelData> levelData;
 	private AbilityBuilderConfiguration config;
@@ -40,6 +40,8 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 	private float duration = 0;
 	private float cooldown = 0;
 	private int manaCost = 0;
+	
+	private int castId = 0;
 
 	public CAbilityAbilityBuilderActiveToggle(int handleId, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -52,9 +54,12 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 		unorderId = OrderIdUtils.getOrderId(config.getUncastId());
 		active = false;
 
+		CAbilityTypeAbilityBuilderLevelData levelDataLevel = levelData.get(this.getLevel() - 1);
+		this.duration = levelDataLevel.getDurationNormal();
+		this.manaCost = levelDataLevel.getManaCost();
+		this.cooldown = levelDataLevel.getCooldown();
 		if (config.getSpecialFields() != null && config.getSpecialFields().getBufferManaRequired() != null) {
 			try {
-				CAbilityTypeAbilityBuilderLevelData levelDataLevel = levelData.get(this.getLevel() - 1);
 				String bufferManaStr = levelDataLevel.getData().get(config.getSpecialFields().getBufferManaRequired());
 				String perSecManaStr = levelDataLevel.getData()
 						.get(config.getSpecialFields().getManaDrainedPerSecond());
@@ -93,7 +98,7 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 
 	@Override
 	public int getUIManaCost() {
-		return this.manaCost;
+		return this.active ? 0 :this.manaCost;
 	}
 
 	@Override
@@ -103,9 +108,10 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
+		localStore.put(ABLocalStoreKeys.TOGGLEDABILITY, this);
 		if (this.config.getOnAddAbility() != null) {
 			for (ABAction action : this.config.getOnAddAbility()) {
-				action.runAction(game, unit, this.localStore);
+				action.runAction(game, unit, this.localStore, castId);
 			}
 		}
 	}
@@ -117,7 +123,7 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 		}
 		if (this.config.getOnRemoveAbility() != null) {
 			for (ABAction action : this.config.getOnRemoveAbility()) {
-				action.runAction(game, unit, this.localStore);
+				action.runAction(game, unit, this.localStore, castId);
 			}
 		}
 	}
@@ -136,11 +142,6 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 				}
 			}
 		}
-		if (config.getOnTickPreCast() != null) {
-			for (ABAction action : config.getOnTickPreCast()) {
-				action.runAction(game, unit, localStore);
-			}
-		}
 	}
 
 	@Override
@@ -150,7 +151,7 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 		}
 		if (config.getOnDeathPreCast() != null) {
 			for (ABAction action : config.getOnDeathPreCast()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -170,13 +171,26 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 		return super.checkBeforeQueue(game, caster, orderId, target);
 	}
 
+	@Override
 	public void activate(final CSimulation game, final CUnit caster) {
+		this.castId++;
 		this.active = true;
+		if (config.getOnBeginCasting() != null) {
+			for (ABAction action : config.getOnBeginCasting()) {
+				action.runAction(game, caster, localStore, castId);
+			}
+		}
 	}
 
+	@Override
 	public void deactivate(final CSimulation game, final CUnit caster) {
 		this.active = false;
 		this.startCooldown(game, caster);
+		if (config.getOnEndCasting() != null) {
+			for (ABAction action : config.getOnEndCasting()) {
+				action.runAction(game, caster, localStore, castId);
+			}
+		}
 	}
 
 	@Override
@@ -233,7 +247,7 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 			} else if (config.getExtraCastConditions() != null) {
 				boolean result = true;
 				for (ABCondition condition : config.getExtraCastConditions()) {
-					result = result && condition.evaluate(game, unit, localStore);
+					result = result && condition.evaluate(game, unit, localStore, castId);
 				}
 				if (result) {
 					receiver.useOk();

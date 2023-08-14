@@ -15,6 +15,8 @@ public class ABAttackEvasionListener implements CUnitAttackEvasionListener {
 	private Map<String, Object> localStore;
 	private List<ABCondition> conditions;
 	
+	private int triggerId = 0;
+	
 	public ABAttackEvasionListener(Map<String, Object> localStore, List<ABCondition> conditions) {
 		this.localStore = localStore;
 		this.conditions = conditions;
@@ -23,17 +25,23 @@ public class ABAttackEvasionListener implements CUnitAttackEvasionListener {
 	@Override
 	public boolean onAttack(CSimulation simulation, CUnit attacker, CUnit target, boolean isAttack, boolean isRanged,
 			CDamageType damageType) {
+		this.triggerId++;
 		boolean evade = false;
-		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT, attacker);
-		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT, target);
-		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK, isAttack);
-		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED, isRanged);
-		localStore.put(ABLocalStoreKeys.DAMAGETYPE, damageType);
+		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
+		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
+		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, isAttack);
+		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED+triggerId, isRanged);
+		localStore.put(ABLocalStoreKeys.DAMAGETYPE+triggerId, damageType);
 		if (conditions != null) {
 			for (ABCondition condition : conditions) {
-				evade = evade || condition.evaluate(simulation, target, localStore);
+				evade = evade || condition.evaluate(simulation, target, localStore, triggerId);
 			}
 		}
+		localStore.remove(ABLocalStoreKeys.ATTACKINGUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.ATTACKEDUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGEISATTACK+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGEISRANGED+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGETYPE+triggerId);
 		return evade;
 	}
 

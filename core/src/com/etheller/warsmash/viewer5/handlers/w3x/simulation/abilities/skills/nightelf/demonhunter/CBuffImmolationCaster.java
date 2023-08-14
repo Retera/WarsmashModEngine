@@ -116,7 +116,7 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 	}
 
 	@Override
-	public float getDurationRemaining(final CSimulation game) {
+	public float getDurationRemaining(final CSimulation game, final CUnit unit) {
 		return 0;
 	}
 

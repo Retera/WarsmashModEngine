@@ -7,5 +7,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
 public interface ABCallback {
 
-	public Object callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	public Object callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

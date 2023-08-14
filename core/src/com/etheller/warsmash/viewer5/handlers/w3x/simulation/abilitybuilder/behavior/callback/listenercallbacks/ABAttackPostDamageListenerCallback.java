@@ -9,5 +9,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.list
 
 public abstract class ABAttackPostDamageListenerCallback implements ABCallback {
 
-	abstract public ABAttackPostDamageListener callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	abstract public ABAttackPostDamageListener callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

@@ -10,7 +10,7 @@ public class ABCallbackRawString extends ABStringCallback {
 	private String value;
 	
 	@Override
-	public String callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public String callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return value;
 	}
 

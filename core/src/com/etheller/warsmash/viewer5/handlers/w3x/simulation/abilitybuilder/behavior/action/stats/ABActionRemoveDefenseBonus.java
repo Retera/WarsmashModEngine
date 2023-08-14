@@ -15,16 +15,16 @@ public class ABActionRemoveDefenseBonus implements ABAction {
 	private ABFloatCallback defenseValue;
 	private ABBooleanCallback percentage;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CUnit target = targetUnit.callback(game, caster, localStore);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CUnit target = targetUnit.callback(game, caster, localStore, castId);
 
-		if (percentage.callback(game, caster, localStore)) {
+		if (percentage.callback(game, caster, localStore, castId)) {
 			//TODO need to fix percents
 			target.setTemporaryDefenseBonus(
-					target.getTemporaryDefenseBonus() - defenseValue.callback(game, caster, localStore));
+					target.getTemporaryDefenseBonus() - defenseValue.callback(game, caster, localStore, castId));
 		} else {
 			target.setTemporaryDefenseBonus(
-					target.getTemporaryDefenseBonus() - defenseValue.callback(game, caster, localStore));
+					target.getTemporaryDefenseBonus() - defenseValue.callback(game, caster, localStore, castId));
 		}
 	}
 }

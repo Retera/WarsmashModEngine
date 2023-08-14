@@ -9,5 +9,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 
 public abstract class ABAttackTypeCallback implements ABCallback {
 
-	abstract public CAttackType callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	abstract public CAttackType callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

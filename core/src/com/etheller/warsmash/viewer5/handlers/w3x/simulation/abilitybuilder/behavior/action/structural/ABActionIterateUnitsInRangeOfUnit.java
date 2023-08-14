@@ -20,9 +20,9 @@ public class ABActionIterateUnitsInRangeOfUnit implements ABAction {
 	private ABUnitCallback originUnit;
 	private ABFloatCallback range;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CUnit originUnitTarget = originUnit.callback(game, caster, localStore);
-		Float rangeVal = range.callback(game, caster, localStore);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CUnit originUnitTarget = originUnit.callback(game, caster, localStore, castId);
+		Float rangeVal = range.callback(game, caster, localStore, castId);
 		
 		recycleRect.set(originUnitTarget.getX() - rangeVal, originUnitTarget.getY() - rangeVal, rangeVal * 2,
 				rangeVal * 2);
@@ -30,13 +30,14 @@ public class ABActionIterateUnitsInRangeOfUnit implements ABAction {
 			@Override
 			public boolean call(final CUnit enumUnit) {
 				if (originUnitTarget.canReach(enumUnit, rangeVal)) {
-					localStore.put(ABLocalStoreKeys.ENUMUNIT, enumUnit);
+					localStore.put(ABLocalStoreKeys.ENUMUNIT+castId, enumUnit);
 					for (ABAction iterationAction : iterationActions) {
-						iterationAction.runAction(game, caster, localStore);
+						iterationAction.runAction(game, caster, localStore, castId);
 					}
 				}
 				return false;
 			}
 		});
+		localStore.remove(ABLocalStoreKeys.ENUMUNIT+castId);
 	}
 }

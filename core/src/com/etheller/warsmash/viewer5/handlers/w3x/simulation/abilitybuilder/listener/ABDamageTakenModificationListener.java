@@ -17,6 +17,8 @@ public class ABDamageTakenModificationListener implements CUnitAttackDamageTaken
 	private Map<String, Object> localStore;
 	private List<ABAction> actions;
 	
+	private int triggerId = 0;
+	
 	public ABDamageTakenModificationListener(Map<String, Object> localStore, List<ABAction> actions) {
 		this.localStore = localStore;
 		this.actions = actions;
@@ -26,22 +28,30 @@ public class ABDamageTakenModificationListener implements CUnitAttackDamageTaken
 	public CUnitAttackDamageTakenModificationListenerDamageModResult onDamage(CSimulation simulation, CUnit attacker,
 			CUnit target, boolean isAttack, boolean isRanged, CAttackType attackType, CDamageType damageType,
 			CUnitAttackDamageTakenModificationListenerDamageModResult previousDamage) {
-		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT, attacker);
-		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT, target);
-		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK, isAttack);
-		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED, isRanged);
-		localStore.put(ABLocalStoreKeys.ATTACKTYPE, attackType);
-		localStore.put(ABLocalStoreKeys.DAMAGETYPE, damageType);
-		localStore.put(ABLocalStoreKeys.BASEDAMAGEDEALT, previousDamage.getBaseDamage());
-		localStore.put(ABLocalStoreKeys.BONUSDAMAGEDEALT, previousDamage.getBonusDamage());
-		localStore.put(ABLocalStoreKeys.DAMAGEMODRESULT, previousDamage);
-		System.err.println("In the listener (Rng:"+isRanged+",");
+		this.triggerId++;
+		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
+		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
+		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, isAttack);
+		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED+triggerId, isRanged);
+		localStore.put(ABLocalStoreKeys.ATTACKTYPE+triggerId, attackType);
+		localStore.put(ABLocalStoreKeys.DAMAGETYPE+triggerId, damageType);
+		localStore.put(ABLocalStoreKeys.BASEDAMAGEDEALT+triggerId, previousDamage.getBaseDamage());
+		localStore.put(ABLocalStoreKeys.BONUSDAMAGEDEALT+triggerId, previousDamage.getBonusDamage());
+		localStore.put(ABLocalStoreKeys.DAMAGEMODRESULT+triggerId, previousDamage);
 		if (actions != null) {
-			System.err.println("There are " + actions.size() + " actions");
 			for (ABAction action : actions) {
-				action.runAction(simulation, target, localStore);
+				action.runAction(simulation, target, localStore, triggerId);
 			}
 		}
+		localStore.remove(ABLocalStoreKeys.ATTACKINGUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.ATTACKEDUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGEISATTACK+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGEISRANGED+triggerId);
+		localStore.remove(ABLocalStoreKeys.ATTACKTYPE+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGETYPE+triggerId);
+		localStore.remove(ABLocalStoreKeys.BASEDAMAGEDEALT+triggerId);
+		localStore.remove(ABLocalStoreKeys.BONUSDAMAGEDEALT+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGEMODRESULT+triggerId);
 		return previousDamage;
 	}
 

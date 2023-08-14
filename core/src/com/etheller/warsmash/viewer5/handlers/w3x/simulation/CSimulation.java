@@ -437,6 +437,10 @@ public class CSimulation implements CPlayerAPI {
 			internalRegisterTimer(timer);
 		}
 		this.addedTimers.clear();
+		for (final CTimer timer : this.removedTimers) {
+			internalUnregisterTimer(timer);
+		}
+		this.removedTimers.clear();
 		final Set<CTimer> timers = new HashSet<>();
 		for (final CTimer timer : this.activeTimers) {
 			if (!timers.add(timer)) {
@@ -446,10 +450,6 @@ public class CSimulation implements CPlayerAPI {
 		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
 		}
-		for (final CTimer timer : this.removedTimers) {
-			internalUnregisterTimer(timer);
-		}
-		this.removedTimers.clear();
 		for (final TimeOfDayVariableEvent timeOfDayEvent : this.timeOfDayVariableEvents) {
 			if (!timeOfDayEvent.isMatching(timeOfDayBefore) && timeOfDayEvent.isMatching(timeOfDayAfter)) {
 				timeOfDayEvent.fire();
@@ -726,6 +726,11 @@ public class CSimulation implements CPlayerAPI {
 	public SimulationRenderComponentModel spawnSpellEffectOnPoint(final float x, final float y, final float facing,
 			final War3ID alias, final CEffectType effectType, final int index) {
 		return this.simulationRenderController.spawnSpellEffectOnPoint(x, y, facing, alias, effectType, index);
+	}
+
+	public void spawnTemporarySpellEffectOnPoint(final float x, final float y, final float facing,
+			final War3ID alias, final CEffectType effectType, final int index) {
+		this.simulationRenderController.spawnTemporarySpellEffectOnPoint(x, y, facing, alias, effectType, index);
 	}
 
 	public void tagTreeOwned(final CDestructable target) {

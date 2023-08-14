@@ -8,5 +8,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public abstract class ABStringCallback implements ABCallback {
 
-	abstract public String callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	abstract public String callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

@@ -25,6 +25,8 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	private AbilityBuilderConfiguration config;
 	private Map<String, Object> localStore;
 	private CBehaviorAbilityBuilderBase behavior;
+	
+	private int castId = 0;
 
 	public CAbilityAbilityBuilderActiveSmart(int handleId, War3ID alias, List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config, Map<String, Object> localStore) {
 		super(handleId, alias);
@@ -44,7 +46,7 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 		this.behavior = new CBehaviorAbilityBuilderBase(unit, config, localStore, this);
 		if (config.getOnAddAbility() != null) {
 			for (ABAction action : config.getOnAddAbility()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -53,7 +55,7 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	public void onRemove(CSimulation game, CUnit unit) {
 		if (config.getOnRemoveAbility() != null) {
 			for (ABAction action : config.getOnRemoveAbility()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -62,7 +64,7 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	public void onTick(CSimulation game, CUnit unit) {
 		if (config.getOnTickPreCast() != null) {
 			for (ABAction action : config.getOnTickPreCast()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -71,7 +73,7 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	public void onDeath(CSimulation game, CUnit unit) {
 		if (config.getOnDeathPreCast() != null) {
 			for (ABAction action : config.getOnDeathPreCast()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -84,6 +86,7 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 
 	@Override
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+		this.castId++;
 		return this.behavior.reset();
 	}
 

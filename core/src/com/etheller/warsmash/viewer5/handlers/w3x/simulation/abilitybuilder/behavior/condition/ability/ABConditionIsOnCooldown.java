@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABConditionIsOnCooldown implements ABCondition {
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		War3ID alias = (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
 
 		return caster.getCooldownRemainingTicks(game, alias) > 0;

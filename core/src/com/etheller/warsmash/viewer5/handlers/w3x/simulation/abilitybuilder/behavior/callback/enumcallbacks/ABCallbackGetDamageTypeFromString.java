@@ -12,8 +12,8 @@ public class ABCallbackGetDamageTypeFromString extends ABDamageTypeCallback {
 	private ABStringCallback id;
 	
 	@Override
-	public CDamageType callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return CDamageType.valueOf(id.callback(game, caster, localStore));
+	public CDamageType callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return CDamageType.valueOf(id.callback(game, caster, localStore, castId));
 	}
 
 }

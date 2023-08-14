@@ -9,7 +9,7 @@ public class ABCallbackRandomFloat extends ABFloatCallback {
 
 	
 	@Override
-	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return game.getSeededRandom().nextFloat();
 	}
 

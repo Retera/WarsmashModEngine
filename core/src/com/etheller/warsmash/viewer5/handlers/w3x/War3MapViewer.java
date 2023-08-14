@@ -1129,6 +1129,16 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
+					public void spawnTemporarySpellEffectOnPoint(final float x, final float y,
+							final float facing, final War3ID alias, final CEffectType effectType, final int index) {
+						final RenderSpellEffect specialEffect = spawnSpellEffectEx(x, y, facing, alias, effectType,
+								index);
+						if (specialEffect != null) {
+							specialEffect.setKillWhenDone(true);
+						}
+					}
+
+					@Override
 					public void spawnUnitReadySound(final CUnit trainedUnit) {
 						if (trainedUnit.getPlayerIndex() == War3MapViewer.this.localPlayerIndex) {
 							final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(trainedUnit);
@@ -3128,6 +3138,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public static MdxModel loadModelMdx(final DataSource dataSource, final ModelViewer modelViewer, final String path,
 			final PathSolver pathSolver, final Object solverParams) {
+		if ("".equals(path)) {
+			return null;
+		}
 		final String mdxPath = mdx(path);
 		if (dataSource.has(mdxPath)) {
 			return (MdxModel) modelViewer.load(mdxPath, pathSolver, solverParams);

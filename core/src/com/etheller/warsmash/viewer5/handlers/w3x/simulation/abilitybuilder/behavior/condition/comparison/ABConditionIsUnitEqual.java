@@ -12,9 +12,9 @@ public class ABConditionIsUnitEqual implements ABCondition {
 	private ABUnitCallback unit2;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		CUnit lUnit = unit1.callback(game, caster, localStore);
-		CUnit rUnit = unit2.callback(game, caster, localStore);
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		CUnit lUnit = unit1.callback(game, caster, localStore, castId);
+		CUnit rUnit = unit2.callback(game, caster, localStore, castId);
 		if (lUnit == null) {
 			if (rUnit == null) {
 				return true;

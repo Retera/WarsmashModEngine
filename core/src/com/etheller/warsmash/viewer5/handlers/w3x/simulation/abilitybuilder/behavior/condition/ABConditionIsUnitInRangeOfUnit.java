@@ -15,9 +15,9 @@ public class ABConditionIsUnitInRangeOfUnit implements ABCondition {
 	private ABFloatCallback range;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit casterUnit, Map<String, Object> localStore) {
-		return caster.callback(game, casterUnit, localStore).canReach(target.callback(game, casterUnit, localStore),
-				range.callback(game, casterUnit, localStore));
+	public boolean evaluate(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
+		return caster.callback(game, casterUnit, localStore, castId).canReach(target.callback(game, casterUnit, localStore, castId),
+				range.callback(game, casterUnit, localStore, castId));
 	}
 
 }

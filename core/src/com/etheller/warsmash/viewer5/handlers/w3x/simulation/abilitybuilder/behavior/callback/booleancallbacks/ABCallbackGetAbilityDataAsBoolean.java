@@ -15,7 +15,7 @@ public class ABCallbackGetAbilityDataAsBoolean extends ABBooleanCallback {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		List<CAbilityTypeAbilityBuilderLevelData> levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore
 				.get(ABLocalStoreKeys.LEVELDATA);
 		int level = (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);

@@ -16,6 +16,8 @@ public class ABDeathReplacementEffect implements CUnitDeathReplacementEffect {
 	private Map<String, Object> localStore;
 	private List<ABAction> actions;
 	
+	private int triggerId = 0;
+	
 	public ABDeathReplacementEffect(Map<String, Object> localStore, List<ABAction> actions) {
 		this.localStore = localStore;
 		this.actions = actions;
@@ -24,16 +26,21 @@ public class ABDeathReplacementEffect implements CUnitDeathReplacementEffect {
 	@Override
 	public CUnitDeathReplacementStacking onDeath(CSimulation simulation, CUnit unit, CUnit killer,
 			CUnitDeathReplacementResult result) {
-		localStore.put(ABLocalStoreKeys.KILLINGUNIT, killer);
-		localStore.put(ABLocalStoreKeys.DYINGUNIT, unit);
-		localStore.put(ABLocalStoreKeys.DEATHRESULT, result);
+		this.triggerId++;
+		localStore.put(ABLocalStoreKeys.KILLINGUNIT+triggerId, killer);
+		localStore.put(ABLocalStoreKeys.DYINGUNIT+triggerId, unit);
+		localStore.put(ABLocalStoreKeys.DEATHRESULT+triggerId, result);
 		CUnitDeathReplacementStacking stacking = new CUnitDeathReplacementStacking();
-		localStore.put(ABLocalStoreKeys.DEATHSTACKING, stacking);
+		localStore.put(ABLocalStoreKeys.DEATHSTACKING+triggerId, stacking);
 		if (actions != null) {
 			for (ABAction action : actions) {
-				action.runAction(simulation, unit, localStore);
+				action.runAction(simulation, unit, localStore, triggerId);
 			}
 		}
+		localStore.remove(ABLocalStoreKeys.KILLINGUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.DYINGUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.DEATHRESULT+triggerId);
+		localStore.remove(ABLocalStoreKeys.DEATHSTACKING+triggerId);
 		return stacking;
 	}
 

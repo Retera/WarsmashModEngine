@@ -55,6 +55,8 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 			return new CAbilityAbilityBuilderNoIcon(handleId, getAlias(), getLevelData(), parser, localStore);
 		case TOGGLE:
 			return new CAbilityAbilityBuilderActiveToggle(handleId, getAlias(), getLevelData(), parser, localStore);
+		case TOGGLE_TICKING:
+			return new CAbilityAbilityBuilderActiveToggle(handleId, getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_NOTARGET_SIMPLE:
 			ability = new CAbilityAbilityBuilderActiveNoTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
 			ability.populate(this.abilityEditorData, 1);

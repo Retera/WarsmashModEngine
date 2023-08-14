@@ -28,6 +28,9 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 	
 	private int castStartTick = 0;
 	private boolean doneEffect = false;
+	private boolean casting = false;
+	
+	private int castId = 0;
 
 	public CBehaviorAbilityBuilderBase(final CUnit unit, final AbilityBuilderConfiguration parser,
 			final Map<String, Object> localStore, AbilityBuilderAbility ability) {
@@ -41,9 +44,12 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 	public CBehaviorAbilityBuilderBase reset(final CWidget target) {
 		innerReset(target, false);
 		this.doneEffect = false;
+		this.casting = false;
 		this.castStartTick = 0;
-		for (ABAction action : parser.getOnResetCasting()) {
-			action.runAction(null, null, localStore);
+		if (parser.getOnResetCasting() != null) {
+			for (ABAction action : parser.getOnResetCasting()) {
+				action.runAction(null, this.unit, localStore, castId);
+			}
 		}
 		return this;
 	}
@@ -51,9 +57,12 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 	public CBehaviorAbilityBuilderBase reset(final AbilityPointTarget target) {
 		innerReset(target, false);
 		this.doneEffect = false;
+		this.casting = false;
 		this.castStartTick = 0;
-		for (ABAction action : parser.getOnResetCasting()) {
-			action.runAction(null, null, localStore);
+		if (parser.getOnResetCasting() != null) {
+			for (ABAction action : parser.getOnResetCasting()) {
+				action.runAction(null, this.unit, localStore, castId);
+			}
 		}
 		return this;
 	}
@@ -61,9 +70,12 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 	public CBehaviorAbilityBuilderBase reset() {
 		innerReset(null, false);
 		this.doneEffect = false;
+		this.casting = false;
 		this.castStartTick = 0;
-		for (ABAction action : parser.getOnResetCasting()) {
-			action.runAction(null, null, localStore);
+		if (parser.getOnResetCasting() != null) {
+			for (ABAction action : parser.getOnResetCasting()) {
+				action.runAction(null, this.unit, localStore, castId);
+			}
 		}
 		return this;
 	}
@@ -86,9 +98,11 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 						CommandStringErrorKeys.NOT_ENOUGH_MANA);
 				return this.unit.pollNextOrderBehavior(game);
 			}
-			
-			for (ABAction action : parser.getOnUpdateCasting()) {
-				action.runAction(game, null, localStore);
+
+			if (parser.getOnUpdateCasting() != null) {
+				for (ABAction action : parser.getOnUpdateCasting()) {
+					action.runAction(game, this.unit, localStore, castId);
+				}
 			}
 			this.ability.startCooldown(game, this.unit);
 			this.unit.fireCooldownsChangedEvent();
@@ -101,16 +115,24 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
-		for (ABAction action : parser.getOnBeginCasting()) {
-			action.runAction(game, null, localStore);
+		this.casting = true;
+		if (parser.getOnBeginCasting() != null) {
+			for (ABAction action : parser.getOnBeginCasting()) {
+				action.runAction(game, this.unit, localStore, castId);
+			}
 		}
 	}
 
 	@Override
 	public void end(final CSimulation game, boolean interrupted) {
-		for (ABAction action : parser.getOnEndCasting()) {
-			action.runAction(game, null, localStore);
+		if (this.casting) {
+			if (parser.getOnEndCasting() != null) {
+				for (ABAction action : parser.getOnEndCasting()) {
+					action.runAction(game, this.unit, localStore, castId);
+				}
+			}
 		}
+		this.casting = false;
 	}
 
 	@Override
@@ -143,6 +165,11 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 
 	@Override
 	protected void resetBeforeMoving(CSimulation simulation) {
+		this.castStartTick = 0;
+	}
+	
+	public void setCastId(int castId) {
+		this.castId = castId;
 	}
 
 }

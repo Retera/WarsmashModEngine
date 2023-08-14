@@ -10,7 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABCallbackGetAlias extends ABIDCallback {
 
 	@Override
-	public War3ID callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public War3ID callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
 	}
 

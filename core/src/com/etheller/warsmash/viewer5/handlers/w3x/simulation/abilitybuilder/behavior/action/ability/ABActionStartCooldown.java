@@ -13,7 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.type
 public class ABActionStartCooldown implements ABAction {
 
 	@SuppressWarnings("unchecked")
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		War3ID alias = (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
 		List<CAbilityTypeAbilityBuilderLevelData>  levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore.get(ABLocalStoreKeys.LEVELDATA);
 		

@@ -10,7 +10,7 @@ public class ABCallbackRawInteger extends ABIntegerCallback {
 	private Integer value;
 	
 	@Override
-	public Integer callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public Integer callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return value;
 	}
 

@@ -13,9 +13,9 @@ public class ABConditionIsDamageTypeEqual implements ABCondition {
 	private ABDamageTypeCallback damageType2;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		CDamageType lD = damageType1.callback(game, caster, localStore);
-		CDamageType rD = damageType2.callback(game, caster, localStore);
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		CDamageType lD = damageType1.callback(game, caster, localStore, castId);
+		CDamageType rD = damageType2.callback(game, caster, localStore, castId);
 		if (lD == null) {
 			if (rD == null) {
 				return true;

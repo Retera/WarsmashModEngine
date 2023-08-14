@@ -10,8 +10,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABCallbackIsTriggeringDamageAnAttack extends ABBooleanCallback {
 	
 	@Override
-	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return (boolean) localStore.get(ABLocalStoreKeys.DAMAGEISATTACK);
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return (boolean) localStore.get(ABLocalStoreKeys.DAMAGEISATTACK+castId);
 	}
 
 }

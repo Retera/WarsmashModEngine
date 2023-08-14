@@ -21,6 +21,8 @@ public class CAbilityAbilityBuilderActivePointTargetSimple extends CAbilityPoint
 	private AbilityBuilderConfiguration config;
 	private Map<String, Object> localStore;
 	private int orderId;
+	
+	private int castId = 0;
 
 	public CAbilityAbilityBuilderActivePointTargetSimple(int handleId, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -50,9 +52,10 @@ public class CAbilityAbilityBuilderActivePointTargetSimple extends CAbilityPoint
 
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit unit, AbilityTarget target) {
+		this.castId++;
 		if (config.getOnBeginCasting() != null) {
 			for (ABAction action : config.getOnBeginCasting()) {
-				action.runAction(simulation, unit, localStore);
+				action.runAction(simulation, unit, localStore, castId);
 			}
 		}
 		return false;

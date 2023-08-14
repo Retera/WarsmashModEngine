@@ -26,6 +26,8 @@ public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTarget
 	private int autoCastOffId = 0;
 	private boolean autocasting = false;
 	private boolean initialized;
+	
+	private int castId = 0;
 
 	public CAbilityAbilityBuilderActiveUnitTargetSimple(int handleId, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -56,7 +58,7 @@ public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTarget
 				CSimulation game = (CSimulation) this.localStore.get(ABLocalStoreKeys.GAME);
 				CUnit unit = (CUnit) this.localStore.get(ABLocalStoreKeys.THISUNIT);
 				for (ABAction action : config.getOnLevelChange()) {
-					action.runAction(game, unit, this.localStore);
+					action.runAction(game, unit, this.localStore, castId);
 				}
 			}
 		}
@@ -87,25 +89,23 @@ public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTarget
 		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
 		if (config.getOnAddAbility() != null) {
 			for (ABAction action : config.getOnAddAbility()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
 
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit unit, AbilityTarget target) {
-		System.err.println("Casting Ability");
+		this.castId++;
 		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
-			System.err.println("Target Acquired");
-			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT, targetUnit);
+			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT+castId, targetUnit);
 			if (this.config.getOnBeginCasting() != null) {
-				System.err.println("Have Actions");
 				for (ABAction action : this.config.getOnBeginCasting()) {
-					action.runAction(simulation, unit, this.localStore);
-					System.err.println("Ran Action");
+					action.runAction(simulation, unit, this.localStore, castId);
 				}
 			}
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT+castId);
 		}
 		return false;
 	}

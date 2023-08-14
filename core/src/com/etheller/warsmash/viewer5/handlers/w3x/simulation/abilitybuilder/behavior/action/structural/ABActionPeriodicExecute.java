@@ -15,13 +15,13 @@ public class ABActionPeriodicExecute implements ABAction {
 
 	private int nextActiveTick = 0;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		final int currentTick = game.getGameTurnTick();
 		if (currentTick >= this.nextActiveTick) {
 			final int delayTicks = (int) (this.delaySeconds / WarsmashConstants.SIMULATION_STEP_TIME);
 			this.nextActiveTick = currentTick + delayTicks;
 			for (ABAction periodicAction : periodicActions) {
-				periodicAction.runAction(game, caster, localStore);
+				periodicAction.runAction(game, caster, localStore, castId);
 			}
 		}
 	}

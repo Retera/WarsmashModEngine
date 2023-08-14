@@ -17,9 +17,11 @@ public class ABActionCreateSpellEffectOnUnit implements ABAction {
 	private ABIDCallback id;
 	private CEffectType effectType;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		SimulationRenderComponent ret = game.createPersistentSpellEffectOnUnit((target.callback(game, caster, localStore)),
-				this.id.callback(game, caster, localStore), this.effectType);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
+			final int castId) {
+		SimulationRenderComponent ret = game.createPersistentSpellEffectOnUnit(
+				(target.callback(game, caster, localStore, castId)), this.id.callback(game, caster, localStore, castId),
+				this.effectType);
 		localStore.put(ABLocalStoreKeys.LASTCREATEDFX, ret);
 	}
 }

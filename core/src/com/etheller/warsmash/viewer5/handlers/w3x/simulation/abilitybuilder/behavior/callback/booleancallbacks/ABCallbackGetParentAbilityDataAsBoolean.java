@@ -15,11 +15,11 @@ public class ABCallbackGetParentAbilityDataAsBoolean extends ABBooleanCallback {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		List<CAbilityTypeAbilityBuilderLevelData>  levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore.get(ABLocalStoreKeys.PARENTLEVELDATA);
 		int parentLevel = (int) ((Map<String, Object>)localStore.get(ABLocalStoreKeys.PARENTLOCALSTORE)).get(ABLocalStoreKeys.CURRENTLEVEL);
 		
-		String data = levelData.get(parentLevel-1).getData().get(dataField.callback(game, caster, localStore));
+		String data = levelData.get(parentLevel-1).getData().get(dataField.callback(game, caster, localStore, castId));
 		int parsedData = Integer.parseInt(data);
 		return parsedData == 1;
 	}

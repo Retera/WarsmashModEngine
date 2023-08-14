@@ -15,7 +15,7 @@ public class ABCallbackGetParentAbilityDataAsFloat extends ABFloatCallback {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		List<CAbilityTypeAbilityBuilderLevelData>  levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore.get(ABLocalStoreKeys.PARENTLEVELDATA);
 		int parentLevel = (int) ((Map<String, Object>)localStore.get(ABLocalStoreKeys.PARENTLOCALSTORE)).get(ABLocalStoreKeys.CURRENTLEVEL);
 		

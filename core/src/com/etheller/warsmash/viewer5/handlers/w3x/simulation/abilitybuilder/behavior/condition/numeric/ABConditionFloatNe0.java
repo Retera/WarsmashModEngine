@@ -12,8 +12,8 @@ public class ABConditionFloatNe0 implements ABCondition {
 	private ABFloatCallback value;
 	
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		Float v = value.callback(game, caster, localStore);
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		Float v = value.callback(game, caster, localStore, castId);
 
 		System.err.println("Checking value for non-zero: " + v + " and got " + (v!=0));
 		return v!=0;

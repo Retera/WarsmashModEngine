@@ -12,9 +12,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.list
 
 public class ABActionDeathReplacementSetReincarnating implements ABAction {
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CUnitDeathReplacementResult result = (CUnitDeathReplacementResult)localStore.get(ABLocalStoreKeys.DEATHRESULT);
-		CUnitDeathReplacementStacking stacking = (CUnitDeathReplacementStacking)localStore.get(ABLocalStoreKeys.DEATHSTACKING);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CUnitDeathReplacementResult result = (CUnitDeathReplacementResult)localStore.get(ABLocalStoreKeys.DEATHRESULT+castId);
+		CUnitDeathReplacementStacking stacking = (CUnitDeathReplacementStacking)localStore.get(ABLocalStoreKeys.DEATHSTACKING+castId);
 		
 		stacking.setAllowStacking(false);
 		stacking.setAllowSamePriorityStacking(false);

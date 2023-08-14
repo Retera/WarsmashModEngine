@@ -10,8 +10,8 @@ public class ABCallbackRandomBoundedFloat extends ABFloatCallback {
 	private ABFloatCallback bound;
 	
 	@Override
-	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return game.getSeededRandom().nextFloat(bound.callback(game, caster, localStore));
+	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return game.getSeededRandom().nextFloat(bound.callback(game, caster, localStore, castId));
 	}
 
 }

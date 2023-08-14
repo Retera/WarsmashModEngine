@@ -10,8 +10,8 @@ public class ABCallbackNegativeFloat extends ABFloatCallback {
 	private ABFloatCallback value;
 	
 	@Override
-	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return -1 * value.callback(game, caster, localStore);
+	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return -1 * value.callback(game, caster, localStore, castId);
 	}
 
 }

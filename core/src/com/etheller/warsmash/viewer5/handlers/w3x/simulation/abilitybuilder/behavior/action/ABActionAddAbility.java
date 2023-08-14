@@ -15,9 +15,9 @@ public class ABActionAddAbility implements ABAction {
 	private ABUnitCallback targetUnit;
 	private ABAbilityCallback abilityToAdd;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CAbility ability = abilityToAdd.callback(game, caster, localStore);
-		targetUnit.callback(game, caster, localStore).add(game, ability);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CAbility ability = abilityToAdd.callback(game, caster, localStore, castId);
+		targetUnit.callback(game, caster, localStore, castId).add(game, ability);
 		localStore.put(ABLocalStoreKeys.LASTADDEDABILITY, ability);
 	}
 }

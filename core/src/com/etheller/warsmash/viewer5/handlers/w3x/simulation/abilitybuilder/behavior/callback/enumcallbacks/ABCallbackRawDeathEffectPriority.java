@@ -11,7 +11,7 @@ public class ABCallbackRawDeathEffectPriority extends ABDeathReplacementPriority
 	private CUnitDeathReplacementEffectPriority priority;
 	
 	@Override
-	public CUnitDeathReplacementEffectPriority callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public CUnitDeathReplacementEffectPriority callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return priority;
 	}
 

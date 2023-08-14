@@ -107,7 +107,7 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	}
 
 	@Override
-	public float getDurationRemaining(CSimulation game) {
+	public float getDurationRemaining(CSimulation game, final CUnit unit) {
 		return 0;
 	}
 

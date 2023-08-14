@@ -31,6 +31,8 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 
 	private float cooldown = 0;
 	private int manaCost = 0;
+	
+	private int castId = 0;
 
 	public CAbilityAbilityBuilderActivePointTarget(int handleId, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -40,6 +42,9 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 		this.config = config;
 		this.localStore = localStore;
 		orderId = OrderIdUtils.getOrderId(config.getCastId());
+		CAbilityTypeAbilityBuilderLevelData levelDataLevel = this.levelData.get(this.getLevel() - 1);
+		this.manaCost = levelDataLevel.getManaCost();
+		this.cooldown = levelDataLevel.getCooldown();
 	}
 
 	@Override
@@ -71,7 +76,7 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 		this.behavior = new CBehaviorAbilityBuilderBase(unit, config, localStore, this);
 		if (config.getOnAddAbility() != null) {
 			for (ABAction action : config.getOnAddAbility()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -80,7 +85,7 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 	public void onRemove(CSimulation game, CUnit unit) {
 		if (config.getOnRemoveAbility() != null) {
 			for (ABAction action : config.getOnRemoveAbility()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -89,7 +94,7 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 	public void onTick(CSimulation game, CUnit unit) {
 		if (config.getOnTickPreCast() != null) {
 			for (ABAction action : config.getOnTickPreCast()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -98,7 +103,7 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 	public void onDeath(CSimulation game, CUnit unit) {
 		if (config.getOnDeathPreCast() != null) {
 			for (ABAction action : config.getOnDeathPreCast()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -114,6 +119,9 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 
 	@Override
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+		this.castId++;
+		this.behavior.setCastId(castId);
+		localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
 		return this.behavior.reset(point);
 	}
 
@@ -131,11 +139,11 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 	@Override
 	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
 			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		if (!unit.isMovementDisabled() || unit.canReach(target, this.levelData.get(this.getLevel()).getCastRange())) {
+		if (!unit.isMovementDisabled() || unit.canReach(target, this.levelData.get(this.getLevel() -1).getCastRange())) {
 			if (this.config.getExtraTargetConditions() != null) {
 				boolean result = true;
 				for (ABCondition condition : config.getExtraTargetConditions()) {
-					result = result && condition.evaluate(game, unit, localStore);
+					result = result && condition.evaluate(game, unit, localStore, castId);
 				}
 				if (result) {
 					receiver.targetOk(target);
@@ -167,7 +175,7 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 		} else if (config.getExtraCastConditions() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getExtraCastConditions()) {
-				result = result && condition.evaluate(game, unit, localStore);
+				result = result && condition.evaluate(game, unit, localStore, castId);
 			}
 			if (result) {
 				receiver.useOk();

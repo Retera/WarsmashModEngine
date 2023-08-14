@@ -15,9 +15,9 @@ public class ABActionUpdateNonStackingStatBuff implements ABAction {
 	private ABNonStackingStatBuffCallback buff;
 	private ABFloatCallback value;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		NonStackingStatBuff buffObj = buff.callback(game, caster, localStore);
-		System.err.println("Updating Stat buff to: " + value.callback(game, caster, localStore));
-		buffObj.setValue(value.callback(game, caster, localStore));
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		NonStackingStatBuff buffObj = buff.callback(game, caster, localStore, castId);
+		System.err.println("Updating Stat buff to: " + value.callback(game, caster, localStore, castId));
+		buffObj.setValue(value.callback(game, caster, localStore, castId));
 	}
 }

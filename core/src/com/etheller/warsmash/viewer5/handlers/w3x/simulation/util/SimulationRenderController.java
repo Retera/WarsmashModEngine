@@ -80,6 +80,9 @@ public interface SimulationRenderController {
 	SimulationRenderComponentModel spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
 			CEffectType effectType, int index);
 
+	void spawnTemporarySpellEffectOnPoint(float x, float y, float facing, War3ID alias,
+			CEffectType effectType, int index);
+	
 	void spawnUIUnitGetItemSound(CUnit cUnit, CItem item);
 
 	void spawnUIUnitDropItemSound(CUnit cUnit, CItem item);

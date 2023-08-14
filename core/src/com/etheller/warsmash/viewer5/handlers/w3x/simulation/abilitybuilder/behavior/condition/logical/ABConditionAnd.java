@@ -12,8 +12,8 @@ public class ABConditionAnd implements ABCondition {
 	private ABCondition condition2;
 	
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return condition1.evaluate(game, caster, localStore) && condition2.evaluate(game, caster, localStore);
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return condition1.evaluate(game, caster, localStore, castId) && condition2.evaluate(game, caster, localStore, castId);
 	}
 
 }

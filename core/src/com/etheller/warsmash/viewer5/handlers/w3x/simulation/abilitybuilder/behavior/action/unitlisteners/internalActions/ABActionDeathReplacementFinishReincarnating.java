@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public class ABActionDeathReplacementFinishReincarnating implements ABAction {
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		caster.setFalseDeath(false);
 		game.getWorldCollision().addUnit(caster);
 		caster.getUnitAnimationListener().playAnimation(true, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, true);

@@ -18,7 +18,7 @@ public class ABConditionIsValidTarget implements ABCondition {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 
 		List<CAbilityTypeAbilityBuilderLevelData> levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore
 				.get(ABLocalStoreKeys.LEVELDATA);
@@ -29,7 +29,7 @@ public class ABConditionIsValidTarget implements ABCondition {
 			return true;
 		}
 
-		return target.callback(game, caster, localStore).canBeTargetedBy(game, caster, targetsAllowed);
+		return target.callback(game, caster, localStore, castId).canBeTargetedBy(game, caster, targetsAllowed);
 	}
 
 }

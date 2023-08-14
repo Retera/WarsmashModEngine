@@ -16,9 +16,9 @@ public class ABActionAddAttackPreDamageListener implements ABAction {
 	private ABAttackPreDamageListenerPriorityCallback priority;
 	private ABAttackPreDamageListenerCallback listener;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CUnit target = targetUnit.callback(game, caster, localStore);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CUnit target = targetUnit.callback(game, caster, localStore, castId);
 		
-		target.addPreDamageListener(priority.callback(game, caster, localStore), listener.callback(game, caster, localStore));
+		target.addPreDamageListener(priority.callback(game, caster, localStore, castId), listener.callback(game, caster, localStore, castId));
 	}
 }

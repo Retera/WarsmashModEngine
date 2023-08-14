@@ -18,8 +18,8 @@ public class ABActionCreateNonStackingStatBuff implements ABAction {
 	private ABStringCallback stackingKey;
 	private ABFloatCallback value;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		NonStackingStatBuff buff = new NonStackingStatBuff(buffType.callback(game, caster, localStore), stackingKey.callback(game, caster, localStore), value.callback(game, caster, localStore));
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		NonStackingStatBuff buff = new NonStackingStatBuff(buffType.callback(game, caster, localStore, castId), stackingKey.callback(game, caster, localStore, castId), value.callback(game, caster, localStore, castId));
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDNSSB, buff);
 	}

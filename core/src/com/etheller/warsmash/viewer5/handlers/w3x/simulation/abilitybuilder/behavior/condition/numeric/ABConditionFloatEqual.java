@@ -13,9 +13,9 @@ public class ABConditionFloatEqual implements ABCondition {
 	private ABFloatCallback value2;
 	
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		Float v1 = value1.callback(game, caster, localStore);
-		Float v2 = value2.callback(game, caster, localStore);
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		Float v1 = value1.callback(game, caster, localStore, castId);
+		Float v2 = value2.callback(game, caster, localStore, castId);
 		
 		return v1.equals(v2);
 	}

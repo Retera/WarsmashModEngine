@@ -315,7 +315,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			if (buff.isTimedLifeBar()) {
 				if (this.unit.getPlayerIndex() == this.localPlayerIndex) {
 					this.commandButtonListener.timedLifeBar(buff.getLevel(), iconUI.getToolTip(),
-							buff.getDurationRemaining(this.game), buff.getDurationMax());
+							buff.getDurationRemaining(this.game, this.unit), buff.getDurationMax());
 				}
 			}
 			else {

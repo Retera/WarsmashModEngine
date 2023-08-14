@@ -9,5 +9,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingSta
 
 public abstract class ABNonStackingStatBuffCallback implements ABCallback {
 
-	abstract public NonStackingStatBuff callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	abstract public NonStackingStatBuff callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

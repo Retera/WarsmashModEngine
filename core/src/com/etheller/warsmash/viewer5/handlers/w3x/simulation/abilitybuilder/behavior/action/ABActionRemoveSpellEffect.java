@@ -11,7 +11,7 @@ public class ABActionRemoveSpellEffect implements ABAction {
 
 	private ABFXCallback effectToRemove;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		effectToRemove.callback(game, caster, localStore).remove();
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		effectToRemove.callback(game, caster, localStore, castId).remove();
 	}
 }

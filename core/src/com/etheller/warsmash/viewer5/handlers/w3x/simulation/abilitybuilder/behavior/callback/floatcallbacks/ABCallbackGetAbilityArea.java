@@ -12,7 +12,7 @@ public class ABCallbackGetAbilityArea extends ABFloatCallback {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		List<CAbilityTypeAbilityBuilderLevelData>  levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore.get(ABLocalStoreKeys.LEVELDATA);
 		return levelData.get(((int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL))-1).getArea();
 	}

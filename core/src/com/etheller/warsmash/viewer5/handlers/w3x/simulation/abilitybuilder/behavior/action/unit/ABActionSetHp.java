@@ -16,16 +16,16 @@ public class ABActionSetHp implements ABAction {
 	private ABBooleanCallback isPercent;
 
 	@Override
-	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		boolean percent = false;
 		if (isPercent != null) {
-			percent = isPercent.callback(game, caster, localStore);
+			percent = isPercent.callback(game, caster, localStore, castId);
 		}
 		if (percent) {
-			CUnit targetUnit = target.callback(game, caster, localStore);
-			targetUnit.setCurrentHp(game, amount.callback(game, caster, localStore) * targetUnit.getMaximumLife());
+			CUnit targetUnit = target.callback(game, caster, localStore, castId);
+			targetUnit.setCurrentHp(game, amount.callback(game, caster, localStore, castId) * targetUnit.getMaximumLife());
 		} else {
-			target.callback(game, caster, localStore).setCurrentHp(game, amount.callback(game, caster, localStore));
+			target.callback(game, caster, localStore, castId).setCurrentHp(game, amount.callback(game, caster, localStore, castId));
 		}
 	}
 

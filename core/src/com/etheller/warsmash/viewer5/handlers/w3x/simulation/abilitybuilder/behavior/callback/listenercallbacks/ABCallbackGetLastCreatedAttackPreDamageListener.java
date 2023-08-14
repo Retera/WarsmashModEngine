@@ -10,7 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.list
 public class ABCallbackGetLastCreatedAttackPreDamageListener extends ABAttackPreDamageListenerCallback {
 
 	@Override
-	public ABAttackPreDamageListener callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public ABAttackPreDamageListener callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return (ABAttackPreDamageListener) localStore.get(ABLocalStoreKeys.LASTCREATEDAPrDL);
 	}
 

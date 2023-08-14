@@ -13,8 +13,8 @@ public class ABActionRemoveAbility implements ABAction {
 	private ABUnitCallback targetUnit;
 	private ABAbilityCallback abilityToRemove;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		(targetUnit.callback(game, caster, localStore)).remove(game,
-				abilityToRemove.callback(game, caster, localStore));
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		(targetUnit.callback(game, caster, localStore, castId)).remove(game,
+				abilityToRemove.callback(game, caster, localStore, castId));
 	}
 }

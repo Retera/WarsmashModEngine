@@ -10,8 +10,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABCallbackIsTriggeringDamageRanged extends ABBooleanCallback {
 	
 	@Override
-	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return (boolean) localStore.get(ABLocalStoreKeys.DAMAGEISRANGED);
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return (boolean) localStore.get(ABLocalStoreKeys.DAMAGEISRANGED+castId);
 	}
 
 }

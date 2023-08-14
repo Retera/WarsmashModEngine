@@ -13,14 +13,14 @@ public class ABTimedTickingBuff extends ABTimedBuff {
 	private List<ABAction> onTickActions;
 
 	public ABTimedTickingBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onTickActions, boolean showIcon) {
-		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onTickActions);
+			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onTickActions, boolean showIcon, final int castId) {
+		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onTickActions, castId);
 		this.setIconShowing(showIcon);
 	}
 	
 	public ABTimedTickingBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onTickActions) {
-		super(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions);
+			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onTickActions, final int castId) {
+		super(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, castId);
 		this.onTickActions = onTickActions;
 	}
 
@@ -28,7 +28,7 @@ public class ABTimedTickingBuff extends ABTimedBuff {
 	public void onTick(CSimulation game, CUnit unit) {
 		if (onTickActions != null) {
 			for (ABAction action : onTickActions) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 		super.onTick(game, unit);

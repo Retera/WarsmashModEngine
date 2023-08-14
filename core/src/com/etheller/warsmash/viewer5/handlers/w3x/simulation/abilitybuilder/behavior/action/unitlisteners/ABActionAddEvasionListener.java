@@ -14,9 +14,9 @@ public class ABActionAddEvasionListener implements ABAction {
 	private ABUnitCallback targetUnit;
 	private ABEvasionListenerCallback listener;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CUnit target = targetUnit.callback(game, caster, localStore);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CUnit target = targetUnit.callback(game, caster, localStore, castId);
 		
-		target.addEvasionListener(listener.callback(game, caster, localStore));
+		target.addEvasionListener(listener.callback(game, caster, localStore, castId));
 	}
 }

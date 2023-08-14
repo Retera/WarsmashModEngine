@@ -9,7 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABCallbackGetSpellLevel extends ABIntegerCallback {
 	
 	@Override
-	public Integer callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public Integer callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);
 	}
 

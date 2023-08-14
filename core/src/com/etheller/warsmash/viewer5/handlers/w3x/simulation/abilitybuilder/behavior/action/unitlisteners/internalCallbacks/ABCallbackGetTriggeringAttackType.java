@@ -11,8 +11,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 public class ABCallbackGetTriggeringAttackType extends ABAttackTypeCallback {
 	
 	@Override
-	public CAttackType callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return (CAttackType) localStore.get(ABLocalStoreKeys.ATTACKTYPE);
+	public CAttackType callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return (CAttackType) localStore.get(ABLocalStoreKeys.ATTACKTYPE+castId);
 	}
 
 }

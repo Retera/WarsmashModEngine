@@ -9,5 +9,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public abstract class ABIDCallback  implements ABCallback{
 
-	abstract public War3ID callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	abstract public War3ID callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

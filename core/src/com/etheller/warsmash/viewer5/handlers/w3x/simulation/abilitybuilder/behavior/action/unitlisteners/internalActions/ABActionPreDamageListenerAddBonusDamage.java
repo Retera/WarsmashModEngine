@@ -14,9 +14,9 @@ public class ABActionPreDamageListenerAddBonusDamage implements ABAction {
 
 	private ABFloatCallback value;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		CUnitAttackPreDamageListenerDamageModResult result = (CUnitAttackPreDamageListenerDamageModResult) localStore
-				.get(ABLocalStoreKeys.PREDAMAGERESULT);
-		result.addBonusDamage(value.callback(game, caster, localStore));
+				.get(ABLocalStoreKeys.PREDAMAGERESULT+castId);
+		result.addBonusDamage(value.callback(game, caster, localStore, castId));
 	}
 }

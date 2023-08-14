@@ -15,8 +15,8 @@ public class ABActionCreateTemporarySpellEffectOnUnit implements ABAction {
 	private ABIDCallback id;
 	private CEffectType effectType;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		game.createTemporarySpellEffectOnUnit((target.callback(game, caster, localStore)),
-				this.id.callback(game, caster, localStore), this.effectType);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		game.createTemporarySpellEffectOnUnit((target.callback(game, caster, localStore, castId)),
+				this.id.callback(game, caster, localStore, castId), this.effectType);
 	}
 }

@@ -11,8 +11,8 @@ public class ABConditionNot implements ABCondition {
 	private ABCondition condition;
 	
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return !condition.evaluate(game, caster, localStore);
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return !condition.evaluate(game, caster, localStore, castId);
 	}
 
 }

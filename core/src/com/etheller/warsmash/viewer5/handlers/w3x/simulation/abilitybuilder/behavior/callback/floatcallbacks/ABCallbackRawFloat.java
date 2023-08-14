@@ -10,7 +10,7 @@ public class ABCallbackRawFloat extends ABFloatCallback {
 	private Float value;
 	
 	@Override
-	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return value;
 	}
 

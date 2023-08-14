@@ -13,9 +13,9 @@ public class ABConditionIsAttackTypeEqual implements ABCondition {
 	private ABAttackTypeCallback attackType2;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		CAttackType lA = attackType1.callback(game, caster, localStore);
-		CAttackType rA = attackType2.callback(game, caster, localStore);
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		CAttackType lA = attackType1.callback(game, caster, localStore, castId);
+		CAttackType rA = attackType2.callback(game, caster, localStore, castId);
 		if (lA == null) {
 			if (rA == null) {
 				return true;

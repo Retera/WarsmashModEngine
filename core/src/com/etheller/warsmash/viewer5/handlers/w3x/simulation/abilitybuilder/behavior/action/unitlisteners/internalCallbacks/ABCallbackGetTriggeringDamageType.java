@@ -11,8 +11,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 public class ABCallbackGetTriggeringDamageType extends ABDamageTypeCallback {
 	
 	@Override
-	public CDamageType callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return (CDamageType) localStore.get(ABLocalStoreKeys.DAMAGETYPE);
+	public CDamageType callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return (CDamageType) localStore.get(ABLocalStoreKeys.DAMAGETYPE+castId);
 	}
 
 }

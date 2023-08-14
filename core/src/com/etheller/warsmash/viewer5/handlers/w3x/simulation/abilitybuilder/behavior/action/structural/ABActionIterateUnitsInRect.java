@@ -19,17 +19,18 @@ public class ABActionIterateUnitsInRect implements ABAction {
 	private Integer y2;
 	private List<ABAction> iterationActions;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		recycleRect.set(x1, y1, x2, y2);
 		game.getWorldCollision().enumUnitsInRect(recycleRect, new CUnitEnumFunction() {
 			@Override
 			public boolean call(final CUnit enumUnit) {
-				localStore.put(ABLocalStoreKeys.ENUMUNIT, enumUnit);
+				localStore.put(ABLocalStoreKeys.ENUMUNIT+castId, enumUnit);
 				for (ABAction iterationAction : iterationActions) {
-					iterationAction.runAction(game, caster, localStore);
+					iterationAction.runAction(game, caster, localStore, castId);
 				}
 				return false;
 			}
 		});
+		localStore.remove(ABLocalStoreKeys.ENUMUNIT+castId);
 	}
 }

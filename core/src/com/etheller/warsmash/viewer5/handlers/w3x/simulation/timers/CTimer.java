@@ -37,6 +37,14 @@ public abstract class CTimer {
 		innerStart(this.timeoutTime, simulation, currentTick);
 	}
 
+	public void startRepeatingTimerWithDelay(final CSimulation simulation, final float delay) {
+		this.running = true;
+		this.repeats = true;
+		final int currentTick = simulation.getGameTurnTick();
+		this.scheduleTick = currentTick;
+		innerStart(delay, simulation, currentTick);
+	}
+
 	private void innerStart(final float timeoutTime, final CSimulation simulation, final int currentTick) {
 		final int ticks = (int) (timeoutTime / WarsmashConstants.SIMULATION_STEP_TIME);
 		this.engineFireTick = currentTick + ticks;

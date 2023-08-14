@@ -16,8 +16,8 @@ public class ABActionRemoveDeathReplacementEffect implements ABAction {
 	private ABDeathReplacementPriorityCallback priority;
 	private ABDeathReplacementCallback listener;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		target.callback(game, caster, localStore).removeDeathReplacementEffect(
-				priority.callback(game, caster, localStore), listener.callback(game, caster, localStore));
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		target.callback(game, caster, localStore, castId).removeDeathReplacementEffect(
+				priority.callback(game, caster, localStore, castId), listener.callback(game, caster, localStore, castId));
 	}
 }

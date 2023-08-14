@@ -9,8 +9,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABCallbackGetDyingUnit extends ABUnitCallback {
 
 	@Override
-	public CUnit callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return (CUnit) localStore.get(ABLocalStoreKeys.DYINGUNIT);
+	public CUnit callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return (CUnit) localStore.get(ABLocalStoreKeys.DYINGUNIT+castId);
 	}
 
 }

@@ -10,7 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.list
 public class ABCallbackGetLastCreatedDamageTakenModificationListener extends ABDamageTakenModificationListenerCallback {
 
 	@Override
-	public ABDamageTakenModificationListener callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public ABDamageTakenModificationListener callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return (ABDamageTakenModificationListener) localStore.get(ABLocalStoreKeys.LASTCREATEDDTML);
 	}
 

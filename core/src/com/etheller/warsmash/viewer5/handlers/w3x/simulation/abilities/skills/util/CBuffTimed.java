@@ -104,7 +104,7 @@ public abstract class CBuffTimed extends AbstractCBuff {
 	}
 
 	@Override
-	public float getDurationRemaining(final CSimulation game) {
+	public float getDurationRemaining(final CSimulation game, final CUnit unit) {
 		final int currentTick = game.getGameTurnTick();
 		final int remaining = Math.max(0, this.expireTick - currentTick);
 		return remaining * WarsmashConstants.SIMULATION_STEP_TIME;

@@ -14,8 +14,8 @@ public class ABActionRecomputeStatBuffsOnUnit implements ABAction {
 	private ABUnitCallback targetUnit;
 	private ABNonStackingStatBuffTypeCallback buffType;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CUnit unit = targetUnit.callback(game, caster, localStore);
-		unit.computeDerivedFields(buffType.callback(game, caster, localStore));
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CUnit unit = targetUnit.callback(game, caster, localStore, castId);
+		unit.computeDerivedFields(buffType.callback(game, caster, localStore, castId));
 	}
 }

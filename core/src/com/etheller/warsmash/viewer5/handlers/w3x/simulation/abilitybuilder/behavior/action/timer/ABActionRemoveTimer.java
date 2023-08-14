@@ -11,7 +11,7 @@ public class ABActionRemoveTimer implements ABAction {
 
 	private ABTimerCallback timer;
 	
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		game.unregisterTimer(timer.callback(game, caster, localStore));
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		timer.callback(game, caster, localStore, castId).pause(game);
 	}
 }

@@ -9,5 +9,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.list
 
 public abstract class ABDeathReplacementPriorityCallback implements ABCallback {
 
-	abstract public CUnitDeathReplacementEffectPriority callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	abstract public CUnitDeathReplacementEffectPriority callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

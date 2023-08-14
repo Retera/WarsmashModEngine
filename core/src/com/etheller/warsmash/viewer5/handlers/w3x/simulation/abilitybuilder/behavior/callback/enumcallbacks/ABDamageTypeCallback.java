@@ -9,5 +9,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 
 public abstract class ABDamageTypeCallback implements ABCallback {
 
-	abstract public CDamageType callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	abstract public CDamageType callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

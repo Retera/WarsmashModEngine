@@ -17,16 +17,30 @@ public class ABActionCreateTimer implements ABAction {
 	private ABFloatCallback timeout;
 	private ABBooleanCallback repeats;
 	private List<ABAction> actions;
+	private ABBooleanCallback startTimer;
+	private ABFloatCallback delay;
 	
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		
-		CTimer timer = new ABTimer(caster, localStore, actions);
-		if (repeats != null) {
-			timer.setRepeats(repeats.callback(game, caster, localStore));
-		}
-		timer.setTimeoutTime(timeout.callback(game, caster, localStore));
-		timer.start(game);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 
+		CTimer timer = new ABTimer(caster, localStore, actions, castId);
+		timer.setTimeoutTime(timeout.callback(game, caster, localStore, castId));
 		localStore.put(ABLocalStoreKeys.LASTCREATEDTIMER, timer);
+		
+		if (repeats != null && repeats.callback(game, caster, localStore, castId)) {
+			timer.setRepeats(true);
+			if (startTimer == null || startTimer.callback(game, caster, localStore, castId)) {
+				if (delay != null) {
+					timer.startRepeatingTimerWithDelay(game, delay.callback(game, caster, localStore, castId));
+				} else {
+					timer.start(game);
+				}
+				localStore.put(ABLocalStoreKeys.LASTSTARTEDTIMER, timer);
+			}
+		} else {
+			if (startTimer == null || startTimer.callback(game, caster, localStore, castId)) {
+				timer.start(game);
+				localStore.put(ABLocalStoreKeys.LASTSTARTEDTIMER, timer);
+			}
+		}
 	}
 }

@@ -11,7 +11,7 @@ public class ABCallbackGetParentAlias extends ABIDCallback {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public War3ID callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public War3ID callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return (War3ID) ((Map<String, Object>)localStore.get(ABLocalStoreKeys.PARENTLOCALSTORE)).get(ABLocalStoreKeys.ALIAS);
 	}
 

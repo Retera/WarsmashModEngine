@@ -484,7 +484,7 @@
 						},{
 							"type": "startCooldown"
 						},{
-							"type": "createSpellEffectAtLocation",
+							"type": "createSpellEffectAtPoint",
 							"x": {
 								"type": "getUnitLocationX",
 								"unit": {

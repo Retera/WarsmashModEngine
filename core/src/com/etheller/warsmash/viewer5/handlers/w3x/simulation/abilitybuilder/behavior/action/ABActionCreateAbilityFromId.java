@@ -13,8 +13,8 @@ public class ABActionCreateAbilityFromId implements ABAction {
 
 	private ABIDCallback abilityId;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CAbility ability = game.getAbilityData().getAbilityType(abilityId.callback(game, caster, localStore))
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CAbility ability = game.getAbilityData().getAbilityType(abilityId.callback(game, caster, localStore, castId))
 				.createAbility(game.getHandleIdAllocator().createId());
 		localStore.put(ABLocalStoreKeys.LASTCREATEDABILITY, ability);
 	}

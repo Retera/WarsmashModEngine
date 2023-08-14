@@ -10,7 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 public class ABCallbackGetFiringTimer extends ABTimerCallback {
 
 	@Override
-	public CTimer callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public CTimer callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return (CTimer) localStore.get(ABLocalStoreKeys.FIRINGTIMER);
 	}
 

@@ -8,5 +8,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public abstract class ABBooleanCallback implements ABCallback {
 
-	abstract public Boolean callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore);
+	abstract public Boolean callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId);
 }

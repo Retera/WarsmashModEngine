@@ -12,8 +12,8 @@ public class ABCallbackGetNonStackingStatBuffTypeFromString extends ABNonStackin
 	private ABStringCallback id;
 	
 	@Override
-	public NonStackingStatBuffType callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return NonStackingStatBuffType.valueOf(id.callback(game, caster, localStore));
+	public NonStackingStatBuffType callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return NonStackingStatBuffType.valueOf(id.callback(game, caster, localStore, castId));
 	}
 
 }

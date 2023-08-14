@@ -11,7 +11,7 @@ public class ABCallbackGetWar3IDFromString extends ABIDCallback {
 	private String id;
 	
 	@Override
-	public War3ID callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public War3ID callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return War3ID.fromString(this.id);
 	}
 

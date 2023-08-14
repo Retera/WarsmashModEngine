@@ -11,8 +11,8 @@ public class ABCallbackGetUnitLocationY extends ABFloatCallback {
 	private ABUnitCallback unit;
 	
 	@Override
-	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return unit.callback(game, caster, localStore).getY();
+	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return unit.callback(game, caster, localStore, castId).getY();
 	}
 
 }

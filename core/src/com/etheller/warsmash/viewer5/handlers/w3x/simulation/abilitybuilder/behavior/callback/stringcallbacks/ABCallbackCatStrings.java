@@ -11,10 +11,10 @@ public class ABCallbackCatStrings extends ABStringCallback {
 	private List<ABStringCallback> stringList;
 	
 	@Override
-	public String callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public String callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		String output = "";
 		for (ABStringCallback callB : stringList) {
-			output += callB.callback(game, caster, localStore);
+			output += callB.callback(game, caster, localStore, castId);
 		}
 		return output;
 	}

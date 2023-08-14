@@ -1,11 +1,10 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -18,7 +17,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.list
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerPriority;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 
@@ -62,8 +60,8 @@ public abstract class CUnitAttack {
 	
 	private float attackSpeedModifier;
 	
-	private Map<String, Set<NonStackingStatBuff>> nonStackingFlatBuffs = new HashMap<>();
-	private Map<String, Set<NonStackingStatBuff>> nonStackingPctBuffs = new HashMap<>();
+	private Map<String, List<NonStackingStatBuff>> nonStackingFlatBuffs = new HashMap<>();
+	private Map<String, List<NonStackingStatBuff>> nonStackingPctBuffs = new HashMap<>();
 
 	// calculate
 	private int totalBaseDamage;
@@ -340,19 +338,19 @@ public abstract class CUnitAttack {
 		computeDerivedFields();
 	}
 
-	public Map<String, Set<NonStackingStatBuff>> getNonStackingFlatBuffs() {
+	public Map<String, List<NonStackingStatBuff>> getNonStackingFlatBuffs() {
 		return nonStackingFlatBuffs;
 	}
 
-	public void setNonStackingFlatBuffs(Map<String, Set<NonStackingStatBuff>> nonStackingFlatBuffs) {
+	public void setNonStackingFlatBuffs(Map<String, List<NonStackingStatBuff>> nonStackingFlatBuffs) {
 		this.nonStackingFlatBuffs = nonStackingFlatBuffs;
 	}
 
-	public Map<String, Set<NonStackingStatBuff>> getNonStackingPctBuffs() {
+	public Map<String, List<NonStackingStatBuff>> getNonStackingPctBuffs() {
 		return nonStackingPctBuffs;
 	}
 
-	public void setNonStackingPctBuffs(Map<String, Set<NonStackingStatBuff>> nonStackingPctBuffs) {
+	public void setNonStackingPctBuffs(Map<String, List<NonStackingStatBuff>> nonStackingPctBuffs) {
 		this.nonStackingPctBuffs = nonStackingPctBuffs;
 	}
 	

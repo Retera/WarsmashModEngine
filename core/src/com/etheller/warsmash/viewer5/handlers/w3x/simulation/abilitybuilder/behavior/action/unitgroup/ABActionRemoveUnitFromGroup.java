@@ -15,9 +15,9 @@ public class ABActionRemoveUnitFromGroup implements ABAction {
 	private ABUnitGroupCallback group;
 	private ABUnitCallback unit;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		Set<CUnit> groupSet = group.callback(game, caster, localStore);
-		CUnit rUnit = unit.callback(game, caster, localStore);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		Set<CUnit> groupSet = group.callback(game, caster, localStore, castId);
+		CUnit rUnit = unit.callback(game, caster, localStore, castId);
 		groupSet.remove(rUnit);
 		localStore.put(ABLocalStoreKeys.LASTREMOVEDDUNIT, rUnit);
 	}

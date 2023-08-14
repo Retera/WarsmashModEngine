@@ -15,9 +15,9 @@ public class ABConditionIsUnitInGroup implements ABCondition {
 	private ABUnitCallback unit;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		Set<CUnit> groupSet = group.callback(game, caster, localStore);
-		CUnit rUnit = unit.callback(game, caster, localStore);
+	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		Set<CUnit> groupSet = group.callback(game, caster, localStore, castId);
+		CUnit rUnit = unit.callback(game, caster, localStore, castId);
 		return groupSet.contains(rUnit);
 	}
 

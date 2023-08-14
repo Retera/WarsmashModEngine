@@ -14,8 +14,8 @@ public class ABActionDamageTakenModificationMultiplyDamageMultiplier implements 
 
 	private ABFloatCallback multiplier;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CUnitAttackDamageTakenModificationListenerDamageModResult result = (CUnitAttackDamageTakenModificationListenerDamageModResult) localStore.get(ABLocalStoreKeys.DAMAGEMODRESULT);
-		result.addDamageMultiplier(multiplier.callback(game, caster, localStore));
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CUnitAttackDamageTakenModificationListenerDamageModResult result = (CUnitAttackDamageTakenModificationListenerDamageModResult) localStore.get(ABLocalStoreKeys.DAMAGEMODRESULT+castId);
+		result.addDamageMultiplier(multiplier.callback(game, caster, localStore, castId));
 	}
 }

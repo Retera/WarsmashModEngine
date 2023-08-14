@@ -10,7 +10,7 @@ public class ABCallbackRawBoolean extends ABBooleanCallback {
 	private Boolean value;
 	
 	@Override
-	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return value;
 	}
 

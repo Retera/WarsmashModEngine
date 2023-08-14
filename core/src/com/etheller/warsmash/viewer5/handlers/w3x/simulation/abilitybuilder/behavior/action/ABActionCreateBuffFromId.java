@@ -17,8 +17,8 @@ public class ABActionCreateBuffFromId implements ABAction {
 	private ABIDCallback abilityId;
 
 	@SuppressWarnings("unchecked")
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CAbility ability = game.getAbilityData().getBuffType(abilityId.callback(game, caster, localStore))
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CAbility ability = game.getAbilityData().getBuffType(abilityId.callback(game, caster, localStore, castId))
 				.createAbility(game.getHandleIdAllocator().createId());
 		((CAbilityAbilityBuilderBuff) ability).setParentLevelData(
 				(List<CAbilityTypeAbilityBuilderLevelData>) localStore.get(ABLocalStoreKeys.LEVELDATA));

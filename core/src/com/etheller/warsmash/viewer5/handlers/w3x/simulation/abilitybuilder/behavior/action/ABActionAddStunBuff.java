@@ -18,10 +18,10 @@ public class ABActionAddStunBuff implements ABAction {
 	private ABIDCallback buffId;
 	private ABFloatCallback duration;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		CAbility ability = new CBuffStun(game.getHandleIdAllocator().createId(),
-				buffId.callback(game, caster, localStore), duration.callback(game, caster, localStore));
-		target.callback(game, caster, localStore).add(game, ability);
+				buffId.callback(game, caster, localStore, castId), duration.callback(game, caster, localStore, castId));
+		target.callback(game, caster, localStore, castId).add(game, ability);
 		localStore.put(ABLocalStoreKeys.LASTADDEDBUFF, ability);
 	}
 }

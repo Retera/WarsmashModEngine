@@ -11,8 +11,8 @@ public class ABCallbackGetUnitHandleAsString extends ABStringCallback {
 	private ABUnitCallback unit;
 	
 	@Override
-	public String callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return "" + unit.callback(game, caster, localStore).getHandleId();
+	public String callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return "" + unit.callback(game, caster, localStore, castId).getHandleId();
 	}
 
 }

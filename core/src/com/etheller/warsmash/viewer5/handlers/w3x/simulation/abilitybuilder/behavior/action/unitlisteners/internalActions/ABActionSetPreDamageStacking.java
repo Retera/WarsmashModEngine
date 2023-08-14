@@ -15,10 +15,10 @@ public class ABActionSetPreDamageStacking implements ABAction {
 	private ABBooleanCallback allowStacking;
 	private ABBooleanCallback allowSamePriorityStacking;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CUnitAttackEffectListenerStacking stacking = (CUnitAttackEffectListenerStacking) localStore.get(ABLocalStoreKeys.PREDAMAGESTACKING);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CUnitAttackEffectListenerStacking stacking = (CUnitAttackEffectListenerStacking) localStore.get(ABLocalStoreKeys.PREDAMAGESTACKING+castId);
 		
-		stacking.setAllowStacking(allowStacking.callback(game, caster, localStore));
-		stacking.setAllowSamePriorityStacking(allowSamePriorityStacking.callback(game, caster, localStore));
+		stacking.setAllowStacking(allowStacking.callback(game, caster, localStore, castId));
+		stacking.setAllowSamePriorityStacking(allowSamePriorityStacking.callback(game, caster, localStore, castId));
 	}
 }

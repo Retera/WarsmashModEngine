@@ -10,5 +10,5 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.list
 public abstract class ABEvasionListenerCallback implements ABCallback {
 
 	abstract public ABAttackEvasionListener callback(final CSimulation game, final CUnit caster,
-			final Map<String, Object> localStore);
+			final Map<String, Object> localStore, final int castId);
 }

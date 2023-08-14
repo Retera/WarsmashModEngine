@@ -41,7 +41,7 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility {
 	public void onAdd(CSimulation game, CUnit unit) {
 		if (config.getOnAddAbility() != null) {
 			for (ABAction action : config.getOnAddAbility()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, 0);
 			}
 		}
 	}
@@ -50,7 +50,7 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility {
 	public void onRemove(CSimulation game, CUnit unit) {
 		if (config.getOnRemoveAbility() != null) {
 			for (ABAction action : config.getOnRemoveAbility()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, 0);
 			}
 		}
 	}
@@ -59,7 +59,7 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility {
 	public void onTick(CSimulation game, CUnit unit) {
 		if (config.getOnTickPreCast() != null) {
 			for (ABAction action : config.getOnTickPreCast()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, 0);
 			}
 		}
 	}
@@ -68,7 +68,7 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility {
 	public void onDeath(CSimulation game, CUnit unit) {
 		if (config.getOnDeathPreCast() != null) {
 			for (ABAction action : config.getOnDeathPreCast()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, 0);
 			}
 		}
 	}

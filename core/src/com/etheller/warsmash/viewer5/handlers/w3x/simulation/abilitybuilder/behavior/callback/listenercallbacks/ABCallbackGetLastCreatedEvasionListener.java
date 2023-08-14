@@ -10,7 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.list
 public class ABCallbackGetLastCreatedEvasionListener extends ABEvasionListenerCallback {
 
 	@Override
-	public ABAttackEvasionListener callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public ABAttackEvasionListener callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return (ABAttackEvasionListener) localStore.get(ABLocalStoreKeys.LASTCREATEDAEL);
 	}
 

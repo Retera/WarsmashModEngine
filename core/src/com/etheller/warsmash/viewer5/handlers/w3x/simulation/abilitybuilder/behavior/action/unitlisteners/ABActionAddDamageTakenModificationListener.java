@@ -14,9 +14,9 @@ public class ABActionAddDamageTakenModificationListener implements ABAction {
 	private ABUnitCallback targetUnit;
 	private ABDamageTakenModificationListenerCallback listener;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
-		CUnit target = targetUnit.callback(game, caster, localStore);
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		CUnit target = targetUnit.callback(game, caster, localStore, castId);
 		
-		target.addDamageTakenModificationListener(listener.callback(game, caster, localStore));
+		target.addDamageTakenModificationListener(listener.callback(game, caster, localStore, castId));
 	}
 }

@@ -1,181 +1,37 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core;
 
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionAddAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionAddStunBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateAbilityFromId;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateBuffFromId;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateSpellEffectAtLocation;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateSpellEffectOnUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionCreateTemporarySpellEffectOnUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionRemoveAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ABActionRemoveSpellEffect;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ability.ABActionStartCooldown;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.ABActionAddBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.ABActionCreatePassiveBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.ABActionCreateTimedBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.ABActionCreateTimedTickingBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.ABActionCreateTimedTickingPostDeathBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.ABActionRemoveBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.ABActionAddDefenseBonus;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.ABActionAddNonStackingStatBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.ABActionCreateNonStackingStatBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.ABActionRecomputeStatBuffsOnUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.ABActionRemoveDefenseBonus;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.ABActionRemoveNonStackingStatBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.ABActionUpdateNonStackingStatBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionIf;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionIterateUnitsInGroup;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionIterateUnitsInRangeOfUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionIterateUnitsInRect;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionPeriodicExecute;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.ABActionStoreValueLocally;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.timer.ABActionCreateTimer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.timer.ABActionRemoveTimer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unit.ABActionDamageTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unit.ABActionHeal;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unit.ABActionResurrect;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unit.ABActionSetHp;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitgroup.ABActionAddUnitToGroup;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitgroup.ABActionCreateUnitGroup;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitgroup.ABActionRemoveUnitFromGroup;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionAddAttackPostDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionAddAttackPreDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionAddDamageTakenListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionAddDamageTakenModificationListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionAddDeathReplacementEffect;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionAddEvasionListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionCreateAttackPostDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionCreateAttackPreDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionCreateDamageTakenListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionCreateDamageTakenModificationListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionCreateDeathReplacementEffect;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionCreateEvasionListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionRemoveAttackPostDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionRemoveAttackPreDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionRemoveDamageTakenListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionRemoveDamageTakenModificationListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionRemoveDeathReplacementEffect;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.ABActionRemoveEvasionListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionDamageTakenModificationMultiplyDamageMultiplier;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionDamageTakenModificationSetDamageMultiplier;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionDeathReplacementFinishReincarnating;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionDeathReplacementSetReincarnating;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionDeathReplacementSetReviving;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionPreDamageListenerAddBonusDamage;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionPreDamageListenerAddDamageMultiplier;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.ABActionSetPreDamageStacking;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.ABCallbackGetTriggeringAttackType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.ABCallbackGetTriggeringDamageType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.ABCallbackIsTriggeringDamageAnAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.ABCallbackIsTriggeringDamageRanged;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.ABAbilityCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.ABCallbackGetLastCreatedAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.ABCallbackGetStoredAbilityByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABCallbackGetAbilityDataAsBoolean;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABCallbackGetParentAbilityDataAsBoolean;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABCallbackRawBoolean;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.ABBuffCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.ABCallbackGetLastCreatedBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.ABCallbackGetStoredBuffByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABAttackPreDamageListenerPriorityCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABAttackTypeCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABCallbackGetAttackTypeFromString;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABCallbackGetDamageTypeFromString;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABCallbackGetNonStackingStatBuffTypeFromString;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABCallbackRawDeathEffectPriority;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABCallbackRawPreDamageListenerPriority;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABDamageTypeCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABDeathReplacementPriorityCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABNonStackingStatBuffTypeCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetAbilityArea;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetAbilityDataAsFloat;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetAbilityDuration;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetParentAbilityDataAsFloat;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetStoredFloatByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetUnitFacing;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetUnitLocationX;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackGetUnitLocationY;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackNegativeFloat;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackRandomBoundedFloat;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackRandomFloat;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABCallbackRawFloat;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.ABCallbackGetLastCreatedSpellEffect;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.ABCallbackGetStoredFXByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.ABFXCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABCallbackGetAlias;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABCallbackGetFirstBuffId;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABCallbackGetParentAlias;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABCallbackGetStoredIDByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABCallbackGetWar3IDFromString;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABCallbackGetSpellLevel;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABCallbackGetStoredIntegerByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABCallbackRawInteger;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABAttackPostDamageListenerCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABAttackPreDamageListenerCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetLastCreatedAttackPostDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetLastCreatedAttackPreDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetLastCreatedDamageTakenListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetLastCreatedDamageTakenModificationListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetLastCreatedDeathReplacement;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetLastCreatedEvasionListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetStoredAttackPostDamageListenerByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetStoredAttackPreDamageListenerByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetStoredDamageTakenListenerByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetStoredDamageTakenModificationListenerByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetStoredDeathReplacementByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABCallbackGetStoredEvasionListenerByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABDamageTakenListenerCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABDamageTakenModificationListenerCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABDeathReplacementCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.ABEvasionListenerCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statbuffcallbacks.ABCallbackGetLastCreatedNonStackingStatBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statbuffcallbacks.ABCallbackGetStoredNonStackingStatBuffByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statbuffcallbacks.ABNonStackingStatBuffCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABCallbackCatStrings;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABCallbackGetAllowStackingKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABCallbackGetUnitHandleAsString;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABCallbackRawString;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.timercallbacks.ABCallbackGetFiringTimer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.timercallbacks.ABCallbackGetLastCreatedTimer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.timercallbacks.ABCallbackGetStoredTimerByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.timercallbacks.ABTimerCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetAbilityTargetedUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetAttackedUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetAttackingUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetCastingUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetDyingUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetEnumUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetKillingUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetParentCastingUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABCallbackGetStoredUnitByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitgroupcallbacks.ABCallbackGetLastCreatedUnitGroup;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitgroupcallbacks.ABCallbackGetUnitGroupByName;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitgroupcallbacks.ABUnitGroupCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ABConditionIsUnitInGroup;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ABConditionIsUnitInRangeOfUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ABConditionIsValidTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ability.ABConditionIsOnCooldown;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.comparison.ABConditionIsAttackTypeEqual;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.comparison.ABConditionIsDamageTypeEqual;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.comparison.ABConditionIsUnitEqual;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.ABConditionAnd;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.ABConditionBool;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.ABConditionNot;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.ABConditionOr;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatEqual;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatGt;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatGte;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatLt;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatLte;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatNe;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionFloatNe0;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.ABConditionIntegerEqual;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ability.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.timer.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unit.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitgroup.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.locationcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statbuffcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.timercallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitgroupcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ability.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.comparison.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.unit.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
@@ -245,11 +101,24 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetStoredEvasionListenerByKey.class, "getStoredEvasionListenerByKey");
 	}
 
+	private static void registerFinalDamageTakenModificationListenerCallbacks(
+			RuntimeTypeAdapterFactory callbackTypeFactory) {
+		callbackTypeFactory
+				.registerSubtype(ABCallbackGetLastCreatedFinalDamageTakenModificationListener.class,
+						"getLastCreatedFinalDamageTakenModificationListener")
+				.registerSubtype(ABCallbackGetStoredFinalDamageTakenModificationListenerByKey.class,
+						"getStoredFinalDamageTakenModificationListenerByKey");
+	}
+
 	private static void registerFloatCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackGetAbilityArea.class, "getAbilityArea")
 				.registerSubtype(ABCallbackGetAbilityDuration.class, "getAbilityDuration")
+				.registerSubtype(ABCallbackGetAbilityHeroDuration.class, "getAbilityHeroDuration")
 				.registerSubtype(ABCallbackRawFloat.class, "rawFloat")
+				.registerSubtype(ABCallbackIntToFloat.class, "intToFloat")
 				.registerSubtype(ABCallbackNegativeFloat.class, "negativeFloat")
+				.registerSubtype(ABCallbackPi.class, "pi").registerSubtype(ABCallbackCos.class, "cos")
+				.registerSubtype(ABCallbackSin.class, "sin")
 				.registerSubtype(ABCallbackGetStoredFloatByKey.class, "getStoredFloatByKey")
 				.registerSubtype(ABCallbackGetAbilityDataAsFloat.class, "getAbilityDataAsFloat")
 				.registerSubtype(ABCallbackGetParentAbilityDataAsFloat.class, "getParentAbilityDataAsFloat")
@@ -257,7 +126,28 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackRandomBoundedFloat.class, "randomBoundedFloat")
 				.registerSubtype(ABCallbackGetUnitLocationX.class, "getUnitLocationX")
 				.registerSubtype(ABCallbackGetUnitLocationY.class, "getUnitLocationY")
-				.registerSubtype(ABCallbackGetUnitFacing.class, "getUnitFacing");
+				.registerSubtype(ABCallbackGetLocationX.class, "getLocationX")
+				.registerSubtype(ABCallbackGetLocationY.class, "getLocationY")
+				.registerSubtype(ABCallbackGetUnitFacing.class, "getUnitFacing")
+				.registerSubtype(ABCallbackGetUnitCurrentMana.class, "getUnitCurrentMana")
+
+				.registerSubtype(ABCallbackGetTotalDamageDealt.class, "getTotalDamageDealt");
+	}
+
+	private static void registerGenericFloatCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
+		callbackTypeFactory.registerSubtype(ABCallbackAddFloat.class, "addFloat")
+				.registerSubtype(ABCallbackSubtractFloat.class, "subtractFloat")
+				.registerSubtype(ABCallbackMultiplyFloat.class, "multiplyFloat")
+				.registerSubtype(ABCallbackDivideFloat.class, "divideFloat")
+				.registerSubtype(ABCallbackMinFloat.class, "minFloat")
+				.registerSubtype(ABCallbackMaxFloat.class, "maxFloat");
+	}
+
+	private static void registerSpecialFloatCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
+		callbackTypeFactory.registerSubtype(ABCallbackAddFloat.class, "+")
+				.registerSubtype(ABCallbackSubtractFloat.class, "-").registerSubtype(ABCallbackMultiplyFloat.class, "*")
+				.registerSubtype(ABCallbackDivideFloat.class, "/")
+				.registerSubtype(ABCallbackMinFloat.class, "min").registerSubtype(ABCallbackMaxFloat.class, "max");
 	}
 
 	private static void registerFxCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
@@ -270,13 +160,22 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetWar3IDFromString.class, "getWar3IDFromString")
 				.registerSubtype(ABCallbackGetAlias.class, "getAlias")
 				.registerSubtype(ABCallbackGetParentAlias.class, "getParentAlias")
-				.registerSubtype(ABCallbackGetFirstBuffId.class, "getFirstBuffId");
+				.registerSubtype(ABCallbackGetFirstBuffId.class, "getFirstBuffId")
+				.registerSubtype(ABCallbackGetFirstEffectId.class, "getFirstEffectId");
 	}
 
 	private static void registerIntegerCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackRawInteger.class, "rawInteger")
 				.registerSubtype(ABCallbackGetStoredIntegerByKey.class, "getStoredIntegerByKey")
+				.registerSubtype(ABCallbackCountUnitsInRangeOfUnit.class, "countUnitsInRangeOfUnit")
+				.registerSubtype(ABCallbackCountUnitsInRangeOfLocation.class, "countUnitsInRangeOfLocation")
 				.registerSubtype(ABCallbackGetSpellLevel.class, "getSpellLevel");
+	}
+
+	private static void registerLocationCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
+		callbackTypeFactory.registerSubtype(ABCallbackCreateLocationFromXY.class, "createLocationFromXY")
+				.registerSubtype(ABCallbackGetStoredLocationByKey.class, "getStoredLocationByKey")
+				.registerSubtype(ABCallbackGetTargetedLocation.class, "getTargetedLocation");
 	}
 
 	private static void registerStatBuffCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
@@ -295,6 +194,7 @@ public abstract class AbilityBuilderGsonBuilder {
 
 	private static void registerTimerCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackGetLastCreatedTimer.class, "getLastCreatedTimer")
+				.registerSubtype(ABCallbackGetLastStartedTimer.class, "getLastStartedTimer")
 				.registerSubtype(ABCallbackGetFiringTimer.class, "getFiringTimer")
 				.registerSubtype(ABCallbackGetStoredTimerByKey.class, "getStoredTimerByKey");
 	}
@@ -334,17 +234,28 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsAttackTypeEqual.class, "isAttackTypeEqual")
 				.registerSubtype(ABConditionIsDamageTypeEqual.class, "isDamageTypeEqual")
 
-				.registerSubtype(ABConditionIsOnCooldown.class, "isOnCooldown");
+				.registerSubtype(ABConditionIsOnCooldown.class, "isOnCooldown")
+
+				.registerSubtype(ABConditionIsUnitBuilding.class, "isUnitBuilding");
 	}
 
 	private static void registerActions(RuntimeTypeAdapterFactory<ABAction> factory) {
-		factory.registerSubtype(ABActionIf.class, "if").registerSubtype(ABActionAddAbility.class, "addAbility")
+		factory.registerSubtype(ABActionIf.class, "if")
+				.registerSubtype(ABActionIterateUnitsInRangeOfUnit.class, "iterateUnitsInRangeOfUnit")
+				.registerSubtype(ABActionIterateUnitsInRangeOfLocation.class, "iterateUnitsInRangeOfLocation")
+				.registerSubtype(ABActionIterateUnitsInRect.class, "iterateUnitsInRect")
+				.registerSubtype(ABActionPeriodicExecute.class, "periodicExecute")
+				.registerSubtype(ABActionIterateActions.class, "iterateActions")
+
 				.registerSubtype(ABActionCreateSpellEffectOnUnit.class, "createSpellEffectOnUnit")
 				.registerSubtype(ABActionCreateTemporarySpellEffectOnUnit.class, "createTemporarySpellEffectOnUnit")
 				.registerSubtype(ABActionCreateSpellEffectAtLocation.class, "createSpellEffectAtLocation")
-				.registerSubtype(ABActionIterateUnitsInRangeOfUnit.class, "iterateUnitsInRangeOfUnit")
-				.registerSubtype(ABActionIterateUnitsInRect.class, "iterateUnitsInRect")
-				.registerSubtype(ABActionPeriodicExecute.class, "periodicExecute")
+				.registerSubtype(ABActionCreateTemporarySpellEffectAtLocation.class,
+						"createTemporarySpellEffectAtLocation")
+				.registerSubtype(ABActionCreateSpellEffectAtPoint.class, "createSpellEffectAtPoint")
+				.registerSubtype(ABActionCreateTemporarySpellEffectAtPoint.class, "createTemporarySpellEffectAtPoint")
+
+				.registerSubtype(ABActionAddAbility.class, "addAbility")
 				.registerSubtype(ABActionRemoveAbility.class, "removeAbility")
 				.registerSubtype(ABActionStoreValueLocally.class, "storeValueLocally")
 				.registerSubtype(ABActionRemoveSpellEffect.class, "removeSpellEffect")
@@ -352,22 +263,29 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionCreateBuffFromId.class, "createBuffFromId")
 				.registerSubtype(ABActionAddDefenseBonus.class, "addDefenseBonus")
 				.registerSubtype(ABActionRemoveDefenseBonus.class, "removeDefenseBonus")
+				
 				.registerSubtype(ABActionCreateUnitGroup.class, "createUnitGroup")
 				.registerSubtype(ABActionIterateUnitsInGroup.class, "iterateUnitsInGroup")
 				.registerSubtype(ABActionAddUnitToGroup.class, "addUnitToGroup")
 				.registerSubtype(ABActionRemoveUnitFromGroup.class, "removeUnitFromGroup")
 				.registerSubtype(ABActionDamageTarget.class, "damageTarget").registerSubtype(ABActionHeal.class, "heal")
-				.registerSubtype(ABActionSetHp.class, "setHp")
-				.registerSubtype(ABActionResurrect.class, "resurrect").registerSubtype(ABActionAddStunBuff.class, "addStunBuff")
+				.registerSubtype(ABActionSetHp.class, "setHp").registerSubtype(ABActionResurrect.class, "resurrect")
+				.registerSubtype(ABActionSetMp.class, "setMp")
+				.registerSubtype(ABActionSubtractMp.class, "subtractMp")
+				.registerSubtype(ABActionAddStunBuff.class, "addStunBuff")
 				.registerSubtype(ABActionStartCooldown.class, "startCooldown")
+				.registerSubtype(ABActionDeactivateToggledAbility.class, "deactivateToggledAbility")
 
 				.registerSubtype(ABActionCreateTimer.class, "createTimer")
+				.registerSubtype(ABActionStartTimer.class, "startTimer")
 				.registerSubtype(ABActionRemoveTimer.class, "removeTimer")
 
 				.registerSubtype(ABActionAddBuff.class, "addBuff")
+				.registerSubtype(ABActionAddNonStackingDisplayBuff.class, "addNonStackingDisplayBuff")
 				.registerSubtype(ABActionRemoveBuff.class, "removeBuff")
 				.registerSubtype(ABActionCreatePassiveBuff.class, "createPassiveBuff")
 				.registerSubtype(ABActionCreateTimedBuff.class, "createTimedBuff")
+				.registerSubtype(ABActionCreateTimedArtBuff.class, "createTimedArtBuff")
 				.registerSubtype(ABActionCreateTimedTickingBuff.class, "createTimedTickingBuff")
 				.registerSubtype(ABActionCreateTimedTickingPostDeathBuff.class, "createTimedTickingPostDeathBuff")
 
@@ -391,6 +309,11 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionAddDamageTakenModificationListener.class, "addDamageTakenModificationListener")
 				.registerSubtype(ABActionRemoveDamageTakenModificationListener.class,
 						"removeDamageTakenModificationListener")
+				.registerSubtype(ABActionCreateFinalDamageTakenModificationListener.class,
+						"createFinalDamageTakenModificationListener")
+				.registerSubtype(ABActionAddFinalDamageTakenModificationListener.class, "addFinalDamageTakenModificationListener")
+				.registerSubtype(ABActionRemoveFinalDamageTakenModificationListener.class,
+						"removeFinalDamageTakenModificationListener")
 				.registerSubtype(ABActionCreateEvasionListener.class, "createEvasionListener")
 				.registerSubtype(ABActionAddEvasionListener.class, "addEvasionListener")
 				.registerSubtype(ABActionRemoveEvasionListener.class, "removeEvasionListener")
@@ -406,7 +329,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionSetPreDamageStacking.class, "setStacking")
 				.registerSubtype(ABActionDeathReplacementSetReviving.class, "setReviving")
 				.registerSubtype(ABActionDeathReplacementSetReincarnating.class, "setReincarnating")
-				.registerSubtype(ABActionDeathReplacementFinishReincarnating.class, "finishReincarnating");
+				.registerSubtype(ABActionDeathReplacementFinishReincarnating.class, "finishReincarnating")
+				.registerSubtype(ABActionSubtractTotalDamageDealt.class, "subtractTotalDamageDealt");
 	}
 
 	public static Gson create() {
@@ -428,10 +352,13 @@ public abstract class AbilityBuilderGsonBuilder {
 		registerDamageTakenModificationListenerCallbacks(callbackTypeFactory);
 		registerDeathReplacementEffectCallbacks(callbackTypeFactory);
 		registerEvasionListenerCallbacks(callbackTypeFactory);
+		registerFinalDamageTakenModificationListenerCallbacks(callbackTypeFactory);
 		registerFloatCallbacks(callbackTypeFactory);
+		registerGenericFloatCallbacks(callbackTypeFactory);
 		registerFxCallbacks(callbackTypeFactory);
 		registerIdCallbacks(callbackTypeFactory);
 		registerIntegerCallbacks(callbackTypeFactory);
+		registerLocationCallbacks(callbackTypeFactory);
 		registerStatBuffCallbacks(callbackTypeFactory);
 		registerStringCallbacks(callbackTypeFactory);
 		registerTimerCallbacks(callbackTypeFactory);
@@ -484,9 +411,15 @@ public abstract class AbilityBuilderGsonBuilder {
 		registerEvasionListenerCallbacks(evasionListenerCallbackTypeFactory);
 		gsonBuilder.registerTypeAdapterFactory(evasionListenerCallbackTypeFactory);
 
+		final RuntimeTypeAdapterFactory<ABFinalDamageTakenModificationListenerCallback> finalDamageTakenModificationListenerCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABFinalDamageTakenModificationListenerCallback.class, "type");
+		registerFinalDamageTakenModificationListenerCallbacks(finalDamageTakenModificationListenerCallbackTypeFactory);
+		gsonBuilder.registerTypeAdapterFactory(finalDamageTakenModificationListenerCallbackTypeFactory);
+
 		final RuntimeTypeAdapterFactory<ABFloatCallback> floatCallbackTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABFloatCallback.class, "type");
 		registerFloatCallbacks(floatCallbackTypeFactory);
+		registerSpecialFloatCallbacks(floatCallbackTypeFactory);
 		gsonBuilder.registerTypeAdapterFactory(floatCallbackTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABFXCallback> fxCallbackTypeFactory = RuntimeTypeAdapterFactory
@@ -503,6 +436,11 @@ public abstract class AbilityBuilderGsonBuilder {
 				.of(ABIntegerCallback.class, "type");
 		registerIntegerCallbacks(integerCallbackTypeFactory);
 		gsonBuilder.registerTypeAdapterFactory(integerCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABLocationCallback> locationCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABLocationCallback.class, "type");
+		registerLocationCallbacks(locationCallbackTypeFactory);
+		gsonBuilder.registerTypeAdapterFactory(locationCallbackTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABNonStackingStatBuffCallback> statBuffCallbackTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABNonStackingStatBuffCallback.class, "type");

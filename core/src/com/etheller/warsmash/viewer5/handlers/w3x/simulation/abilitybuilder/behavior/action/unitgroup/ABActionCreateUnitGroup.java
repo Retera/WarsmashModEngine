@@ -13,7 +13,7 @@ public class ABActionCreateUnitGroup implements ABAction {
 
 	private String name;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		Set<CUnit> group = new HashSet<>();
 		localStore.put("_unitgroup_" + name, group);
 		localStore.put(ABLocalStoreKeys.LASTCREATEDUNITGROUP, group);

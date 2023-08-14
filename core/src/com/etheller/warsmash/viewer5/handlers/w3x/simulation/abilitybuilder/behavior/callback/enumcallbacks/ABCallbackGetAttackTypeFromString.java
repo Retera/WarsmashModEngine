@@ -12,8 +12,8 @@ public class ABCallbackGetAttackTypeFromString extends ABAttackTypeCallback {
 	private ABStringCallback id;
 	
 	@Override
-	public CAttackType callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		return CAttackType.valueOf(id.callback(game, caster, localStore));
+	public CAttackType callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		return CAttackType.valueOf(id.callback(game, caster, localStore, castId));
 	}
 
 }

@@ -12,8 +12,8 @@ public class ABActionResurrect implements ABAction {
 	private ABUnitCallback target;
 
 	@Override
-	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore) {
-		CUnit targetUnit = target.callback(game, caster, localStore);
+	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		CUnit targetUnit = target.callback(game, caster, localStore, castId);
 		if (targetUnit.isDead()) {
 			targetUnit.resurrect(game);
 		}

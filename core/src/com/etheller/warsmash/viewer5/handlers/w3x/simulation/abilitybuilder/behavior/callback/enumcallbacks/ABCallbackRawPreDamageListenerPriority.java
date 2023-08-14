@@ -11,7 +11,7 @@ public class ABCallbackRawPreDamageListenerPriority extends ABAttackPreDamageLis
 	private CUnitAttackPreDamageListenerPriority priority;
 	
 	@Override
-	public CUnitAttackPreDamageListenerPriority callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public CUnitAttackPreDamageListenerPriority callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		return priority;
 	}
 

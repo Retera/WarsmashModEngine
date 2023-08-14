@@ -32,6 +32,8 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 
 	private float cooldown = 0;
 	private int manaCost = 0;
+	
+	private int castId = 0;
 
 	public CAbilityAbilityBuilderActiveNoTarget(int handleId, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -72,7 +74,7 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 		this.behavior = new CBehaviorAbilityBuilderBase(unit, config, localStore, this);
 		if (config.getOnAddAbility() != null) {
 			for (ABAction action : config.getOnAddAbility()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -81,7 +83,7 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 	public void onRemove(CSimulation game, CUnit unit) {
 		if (config.getOnRemoveAbility() != null) {
 			for (ABAction action : config.getOnRemoveAbility()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -90,7 +92,7 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 	public void onTick(CSimulation game, CUnit unit) {
 		if (config.getOnTickPreCast() != null) {
 			for (ABAction action : config.getOnTickPreCast()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -99,7 +101,7 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 	public void onDeath(CSimulation game, CUnit unit) {
 		if (config.getOnDeathPreCast() != null) {
 			for (ABAction action : config.getOnDeathPreCast()) {
-				action.runAction(game, unit, localStore);
+				action.runAction(game, unit, localStore, castId);
 			}
 		}
 	}
@@ -120,6 +122,7 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 
 	@Override
 	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+		this.castId++;
 		return this.behavior.reset();
 	}
 
@@ -151,7 +154,7 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 		} else if (config.getExtraCastConditions() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getExtraCastConditions()) {
-				result = result && condition.evaluate(game, unit, localStore);
+				result = result && condition.evaluate(game, unit, localStore, castId);
 			}
 			if (result) {
 				receiver.useOk();

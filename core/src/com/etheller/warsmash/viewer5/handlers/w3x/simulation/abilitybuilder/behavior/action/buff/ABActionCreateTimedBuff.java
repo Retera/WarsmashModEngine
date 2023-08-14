@@ -22,23 +22,25 @@ public class ABActionCreateTimedBuff implements ABAction {
 	private List<ABAction> onRemoveActions;
 	private ABBooleanCallback showIcon;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
+			final int castId) {
 		boolean showTimedLife = false;
 		if (showTimedLifeBar != null) {
-			showTimedLife = showTimedLifeBar.callback(game, caster, localStore);
+			showTimedLife = showTimedLifeBar.callback(game, caster, localStore, castId);
 		}
 
 		if (showIcon != null) {
 			CBuff ability = new ABTimedBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore), duration.callback(game, caster, localStore),
-					showTimedLife, localStore, onAddActions, onRemoveActions,
-					showIcon.callback(game, caster, localStore));
+					buffId.callback(game, caster, localStore, castId),
+					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
+					onRemoveActions, showIcon.callback(game, caster, localStore, castId), castId);
 
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		} else {
 			CBuff ability = new ABTimedBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore), duration.callback(game, caster, localStore),
-					showTimedLife, localStore, onAddActions, onRemoveActions);
+					buffId.callback(game, caster, localStore, castId),
+					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
+					onRemoveActions, castId);
 
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		}

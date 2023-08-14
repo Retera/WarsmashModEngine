@@ -41,23 +41,20 @@ public class RenderSpellEffect implements RenderEffect {
 
 	@Override
 	public boolean updateAnimations(final War3MapViewer war3MapViewer, final float deltaTime) {
-		playNextAnimation();
-		if (this.killWhenDone) {
-			final boolean everythingDone = this.animationQueueIndex >= this.animationQueue.length;
-			if (everythingDone) {
+		final boolean everythingDone = this.modelInstance.sequenceEnded && this.animationQueueIndex >= this.animationQueue.length;
+		if (everythingDone) {
+			if (this.killWhenDone) {
 				if (this.modelInstance.parent != null) {
 					this.modelInstance.setParent(null);
 				}
 				war3MapViewer.worldScene.removeInstance(this.modelInstance);
+			} else {
+				this.animationQueueIndex = 0;
+				return false;
 			}
-			return everythingDone;
 		}
-		else {
-			this.animationQueueIndex = 0;
-			playNextAnimation();
-			;
-			return false;
-		}
+		playNextAnimation();
+		return everythingDone;
 	}
 
 	private void playNextAnimation() {

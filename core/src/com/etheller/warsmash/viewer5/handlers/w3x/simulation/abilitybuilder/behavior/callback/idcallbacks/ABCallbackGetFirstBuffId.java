@@ -13,7 +13,7 @@ public class ABCallbackGetFirstBuffId extends ABIDCallback {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public War3ID callback(CSimulation game, CUnit caster, Map<String, Object> localStore) {
+	public War3ID callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		List<War3ID> buffs = ((List<CAbilityTypeAbilityBuilderLevelData>) localStore.get(ABLocalStoreKeys.LEVELDATA))
 				.get(((int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL)) - 1).getBuffs();
 		if (buffs != null && !buffs.isEmpty()) {

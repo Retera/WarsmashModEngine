@@ -1,0 +1,150 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"ANms", "castId": "manashieldon", "uncastId": "manashieldoff"}],
+		"type": "TOGGLE",
+		"onAddAbility": [{
+				"type": "createFinalDamageTakenModificationListener",
+				"actions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "maxAbsorb"
+						},
+						"valueToStore": {
+							"type": "divideFloat",
+							"value1": {
+								"type": "getUnitCurrentMana",
+								"unit": {
+									"type": "getCastingUnit"
+								}
+							},
+							"value2": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							}
+						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "floatGt",
+							"value1": {
+								"type": "*",
+								"value1": {
+									"type": "getTotalDamageDealt"
+								},
+								"value2": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "B"
+								}
+							},
+							"value2": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "maxAbsorb"
+								}
+							}
+						},
+						"thenActions": [{
+								"type": "setMp",
+								"target": {
+									"type": "getCastingUnit"
+								},
+								"amount": {
+									"type": "rawFloat",
+									"value": 0
+								}
+							},{
+								"type": "subtractTotalDamageDealt",
+								"amount": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "rawString",
+										"value": "maxAbsorb"
+									}
+								}
+							},{
+								"type": "deactivateToggledAbility"
+						}],
+						"elseActions": [{
+								"type": "subtractMp",
+								"target": {
+									"type": "getCastingUnit"
+								},
+								"amount": {
+									"type": "*",
+									"value1": {
+										"type": "*",
+										"value1": {
+											"type": "getTotalDamageDealt"
+										},
+										"value2": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "B"
+										}
+									},
+									"value2": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "A"
+									}
+								}
+							},{
+								"type": "subtractTotalDamageDealt",
+								"amount": {
+									"type": "*",
+									"value1": {
+										"type": "getTotalDamageDealt"
+									},
+									"value2": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "B"
+									}
+								}
+						}]
+				}]
+		}],
+		"onBeginCasting": [{
+				"type": "createPassiveBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"showIcon": {
+					"type": "rawBoolean",
+					"value": "false"
+				}
+			},{
+				"type": "addBuff",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+			},{
+				"type": "addFinalDamageTakenModificationListener",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedFinalDamageTakenModificationListener"
+				}
+		}],
+		"onEndCasting": [{
+				"type": "removeBuff",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+			},{
+				"type": "removeFinalDamageTakenModificationListener",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedFinalDamageTakenModificationListener"
+				}
+		}]
+	}]
+}

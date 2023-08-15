@@ -11,10 +11,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class CBuffImmolationCaster extends AbstractCBuff {
@@ -30,7 +32,7 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		this.fx = game.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
+		this.fx = game.createPersistentSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
 	}
 
 	@Override
@@ -53,9 +55,9 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 				public boolean call(final CUnit enumUnit) {
 					if (caster.canReach(enumUnit, areaOfEffect) && enumUnit.canBeTargetedBy(game, caster,
 							CBuffImmolationCaster.this.abilityImmolation.getTargetsAllowed())) {
-						enumUnit.damage(game, caster, CAttackType.SPELLS, CWeaponSoundTypeJass.WHOKNOWS.name(),
+						enumUnit.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.FIRE, CWeaponSoundTypeJass.WHOKNOWS.name(),
 								CBuffImmolationCaster.this.abilityImmolation.getDamagePerInterval());
-						game.createSpellEffectOnUnit(enumUnit, CBuffImmolationCaster.this.abilityImmolation.getBuffId(),
+						game.createPersistentSpellEffectOnUnit(enumUnit, CBuffImmolationCaster.this.abilityImmolation.getBuffId(),
 								CEffectType.SPECIAL, 0).remove();
 					}
 					return false;
@@ -114,7 +116,7 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 	}
 
 	@Override
-	public float getDurationRemaining(final CSimulation game) {
+	public float getDurationRemaining(final CSimulation game, final CUnit unit) {
 		return 0;
 	}
 

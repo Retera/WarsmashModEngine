@@ -24,7 +24,6 @@ import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
-import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
@@ -37,7 +36,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -62,8 +61,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
 public class CSimulation implements CPlayerAPI {
@@ -79,8 +80,8 @@ public class CSimulation implements CPlayerAPI {
 	private final List<CItem> items;
 	private final List<CPlayer> players;
 	private final List<CPlayerUnitOrderExecutor> defaultPlayerUnitOrderExecutors;
-	private final List<CProjectile> projectiles;
-	private final List<CProjectile> newProjectiles;
+	private final List<CEffect> projectiles;
+	private final List<CEffect> newProjectiles;
 	private final HandleIdAllocator handleIdAllocator;
 	private transient final SimulationRenderController simulationRenderController;
 	private int gameTurnTick = 0;
@@ -250,10 +251,6 @@ public class CSimulation implements CPlayerAPI {
 				this.handleIdAllocator);
 		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
-		this.worldCollision.addUnit(unit);
-		if (unit.isHero()) {
-			heroCreateEvent(unit);
-		}
 		return unit;
 	}
 
@@ -282,8 +279,12 @@ public class CSimulation implements CPlayerAPI {
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		final CUnit createdUnit = this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
-		createdUnit.performDefaultBehavior(this);
 		setupCreatedUnit(createdUnit);
+		createdUnit.performDefaultBehavior(this);
+		this.worldCollision.addUnit(createdUnit);
+		if (createdUnit.isHero()) {
+			heroCreateEvent(createdUnit);
+		}
 		return createdUnit;
 	}
 
@@ -353,6 +354,15 @@ public class CSimulation implements CPlayerAPI {
 		return projectile;
 	}
 
+	public void registerEffect(final CEffect effect) {
+		this.newProjectiles.add(effect);
+	}
+
+	public SimulationRenderComponentLightning createLightning(final CUnit source, final War3ID lightningId,
+			final CUnit target) {
+		return this.simulationRenderController.createLightning(this, lightningId, source, target);
+	}
+
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
 		this.simulationRenderController.createInstantAttackEffect(this, source, attack, target);
 	}
@@ -379,6 +389,7 @@ public class CSimulation implements CPlayerAPI {
 	protected void updateFogOfWar() {
 		for (final CPlayer player : this.players) {
 			player.getFogOfWar().convertVisibleToFogged();
+			player.updateFogModifiers(this);
 		}
 		for (final CUnit unit : this.units) {
 			unit.updateFogOfWar(this);
@@ -401,9 +412,9 @@ public class CSimulation implements CPlayerAPI {
 			}
 		}
 		finishAddingNewUnits();
-		final Iterator<CProjectile> projectileIterator = this.projectiles.iterator();
+		final Iterator<CEffect> projectileIterator = this.projectiles.iterator();
 		while (projectileIterator.hasNext()) {
-			final CProjectile projectile = projectileIterator.next();
+			final CEffect projectile = projectileIterator.next();
 			if (projectile.update(this)) {
 				projectileIterator.remove();
 			}
@@ -426,6 +437,10 @@ public class CSimulation implements CPlayerAPI {
 			internalRegisterTimer(timer);
 		}
 		this.addedTimers.clear();
+		for (final CTimer timer : this.removedTimers) {
+			internalUnregisterTimer(timer);
+		}
+		this.removedTimers.clear();
 		final Set<CTimer> timers = new HashSet<>();
 		for (final CTimer timer : this.activeTimers) {
 			if (!timers.add(timer)) {
@@ -435,10 +450,6 @@ public class CSimulation implements CPlayerAPI {
 		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
 		}
-		for (final CTimer timer : this.removedTimers) {
-			internalUnregisterTimer(timer);
-		}
-		this.removedTimers.clear();
 		for (final TimeOfDayVariableEvent timeOfDayEvent : this.timeOfDayVariableEvents) {
 			if (!timeOfDayEvent.isMatching(timeOfDayBefore) && timeOfDayEvent.isMatching(timeOfDayAfter)) {
 				timeOfDayEvent.fire();
@@ -543,8 +554,8 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnUnitUpgradeFinishSound(constructedStructure);
 	}
 
-	public void createDeathExplodeEffect(final CUnit cUnit) {
-		this.simulationRenderController.spawnDeathExplodeEffect(cUnit);
+	public void createDeathExplodeEffect(final CUnit cUnit, final War3ID explodesOnDeathBuffId) {
+		this.simulationRenderController.spawnDeathExplodeEffect(cUnit, explodesOnDeathBuffId);
 	}
 
 	public HandleIdAllocator getHandleIdAllocator() {
@@ -570,7 +581,20 @@ public class CSimulation implements CPlayerAPI {
 
 	public void unitGainResourceEvent(final CUnit unit, final int playerIndex, final ResourceType resourceType,
 			final int amount) {
-		this.simulationRenderController.spawnGainResourceTextTag(unit, resourceType, amount);
+		switch (resourceType) {
+		case GOLD: {
+			spawnTextTag(unit, playerIndex, TextTagConfigType.GOLD, amount);
+			break;
+		}
+		case LUMBER: {
+			spawnTextTag(unit, playerIndex, TextTagConfigType.LUMBER, amount);
+			break;
+		}
+		}
+	}
+
+	public void spawnTextTag(final CUnit unit, final int playerIndex, final TextTagConfigType type, final int amount) {
+		this.simulationRenderController.spawnTextTag(unit, type, amount);
 	}
 
 	public void unitGainLevelEvent(final CUnit unit) {
@@ -626,13 +650,18 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnEffectOnUnit(unit, effectPath);
 	}
 
-	public void createSpellEffectOnUnit(final CUnit unit, final War3ID alias, final CEffectType effectType) {
-		this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType);
+	public void createTemporarySpellEffectOnUnit(final CUnit unit, final War3ID alias, final CEffectType effectType) {
+		this.simulationRenderController.spawnTemporarySpellEffectOnUnit(unit, alias, effectType);
 	}
 
-	public SimulationRenderComponent createSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+	public SimulationRenderComponentModel createPersistentSpellEffectOnUnit(final CUnit unit, final War3ID alias,
+			final CEffectType effectType) {
+		return this.simulationRenderController.spawnPersistentSpellEffectOnUnit(unit, alias, effectType);
+	}
+
+	public SimulationRenderComponentModel createPersistentSpellEffectOnUnit(final CUnit unit, final War3ID alias,
 			final CEffectType effectType, final int index) {
-		return this.simulationRenderController.spawnSpellEffectOnUnit(unit, alias, effectType, index);
+		return this.simulationRenderController.spawnPersistentSpellEffectOnUnit(unit, alias, effectType, index);
 	}
 
 	public void unitSoundEffectEvent(final CUnit caster, final War3ID alias) {
@@ -688,15 +717,20 @@ public class CSimulation implements CPlayerAPI {
 		cItem.setLife(this, 0);
 	}
 
-	public SimulationRenderComponent createSpellEffectOverDestructable(final CUnit source, final CDestructable target,
-			final War3ID alias, final float artAttachmentHeight) {
+	public SimulationRenderComponentModel createSpellEffectOverDestructable(final CUnit source,
+			final CDestructable target, final War3ID alias, final float artAttachmentHeight) {
 		return this.simulationRenderController.createSpellEffectOverDestructable(source, target, alias,
 				artAttachmentHeight);
 	}
 
-	public SimulationRenderComponent spawnSpellEffectOnPoint(final float x, final float y, final float facing,
+	public SimulationRenderComponentModel spawnSpellEffectOnPoint(final float x, final float y, final float facing,
 			final War3ID alias, final CEffectType effectType, final int index) {
 		return this.simulationRenderController.spawnSpellEffectOnPoint(x, y, facing, alias, effectType, index);
+	}
+
+	public void spawnTemporarySpellEffectOnPoint(final float x, final float y, final float facing,
+			final War3ID alias, final CEffectType effectType, final int index) {
+		this.simulationRenderController.spawnTemporarySpellEffectOnPoint(x, y, facing, alias, effectType, index);
 	}
 
 	public void tagTreeOwned(final CDestructable target) {
@@ -770,12 +804,17 @@ public class CSimulation implements CPlayerAPI {
 
 	public void unitUpdatedType(final CUnit unit, final War3ID typeId) {
 		this.simulationRenderController.unitUpdatedType(unit, typeId);
-		setupCreatedUnit(unit);
 	}
 
 	private void setupCreatedUnit(final CUnit unit) {
-		if (unit.getRootData() != null) {
-			unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
+		final CUnitType unitTypeInstance = unit.getUnitType();
+		final int manaInitial = unitTypeInstance.getManaInitial();
+		final int speed = unitTypeInstance.getSpeed();
+		unitData.addDefaultAbilitiesToUnit(this, handleIdAllocator, unitTypeInstance, true, manaInitial, speed, unit);
+		unitData.applyPlayerUpgradesToUnit(this, unit.getPlayerIndex(), unitTypeInstance, unit);
+		final BufferedImage buildingPathingPixelMap = unitTypeInstance.getBuildingPathingPixelMap();
+		if (buildingPathingPixelMap != null) {
+			unit.regeneratePathingInstance(this, buildingPathingPixelMap);
 		}
 	}
 

@@ -39,7 +39,7 @@ public class CAbilityItemPermanentStatGain extends AbstractGenericNoIconAbility 
 			heroData.addStrengthBase(game, caster, this.strength);
 			heroData.addAgilityBase(game, caster, this.agility);
 			heroData.addIntelligenceBase(game, caster, this.intelligence);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.TARGET);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.TARGET);
 			return false;
 		}
 		else {

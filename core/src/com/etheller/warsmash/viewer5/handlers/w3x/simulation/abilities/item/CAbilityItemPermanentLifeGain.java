@@ -24,7 +24,7 @@ public class CAbilityItemPermanentLifeGain extends CAbilitySpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.lifeToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_LIFE_GAINED, level);
+		this.lifeToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemLifeBonus.MAX_LIFE_GAINED, level);
 	}
 
 	@Override
@@ -39,7 +39,7 @@ public class CAbilityItemPermanentLifeGain extends CAbilitySpellBase {
 			final int maximumLife = caster.getMaximumLife();
 			caster.setMaximumLife(maximumLife + lifeToGain);
 			caster.setLife(game, (life / maximumLife) * caster.getMaximumLife());
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			return false;
 		}
 		else {

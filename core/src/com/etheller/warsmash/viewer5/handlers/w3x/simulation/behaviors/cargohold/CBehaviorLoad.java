@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorLoad extends CAbstractRangedBehavior {
 	private final CAbilityLoad ability;
@@ -43,7 +44,7 @@ public class CBehaviorLoad extends CAbstractRangedBehavior {
 			targetUnit.setPaused(true);
 		}
 		else {
-			simulation.getCommandErrorListener().showCantTransportError(this.unit.getPlayerIndex());
+			simulation.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(), CommandStringErrorKeys.UNABLE_TO_LOAD_TARGET);
 		}
 		return this.unit.pollNextOrderBehavior(simulation);
 	}

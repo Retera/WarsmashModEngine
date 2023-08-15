@@ -25,7 +25,7 @@ public class CAbilityItemLevelGain extends CAbilitySpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.levelsToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_LEVEL_GAINED, level);
+		this.levelsToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemLevelGain.LEVELS_GAINED, level);
 	}
 
 	@Override
@@ -38,7 +38,7 @@ public class CAbilityItemLevelGain extends CAbilitySpellBase {
 		if (orderId == getBaseOrderId()) {
 			final CAbilityHero heroData = caster.getHeroData();
 			heroData.setHeroLevel(game, caster, heroData.getHeroLevel() + levelsToGain, true);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			return false;
 		}
 		else {

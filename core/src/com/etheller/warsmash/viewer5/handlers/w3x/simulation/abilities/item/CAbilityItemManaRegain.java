@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActiveAbility {
 	private final int manaToRegain;
@@ -47,7 +48,12 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		receiver.useOk();
+		if (unit.getMana() >= unit.getMaximumMana()) {
+			receiver.activationCheckFailed(CommandStringErrorKeys.ALREADY_AT_FULL_MANA);
+		}
+		else {
+			receiver.useOk();
+		}
 	}
 
 	@Override
@@ -85,7 +91,7 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 			final AbilityTarget target) {
 		if ((target == null) && (orderId == getBaseOrderId())) {
 			caster.restoreMana(game, this.manaToRegain);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			return false;
 		}
 		return super.checkBeforeQueue(game, caster, orderId, target);

@@ -11,12 +11,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnitId;
 	private int summonUnitCount;
 	private War3ID buffId;
-	private float duration;
 	private float areaOfEffect;
 
 	public CAbilitySummonWaterElemental(int handleId, War3ID alias) {
@@ -26,10 +26,9 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 	@Override
 	public void populateData(MutableGameObject worldEditorAbility, int level) {
 		this.summonUnitId = War3ID
-				.fromString(worldEditorAbility.getFieldAsString(AbilityFields.WATER_ELEMENTAL_UNIT_TYPE, level));
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.WATER_ELEMENTAL_UNIT_COUNT, level);
+				.fromString(worldEditorAbility.getFieldAsString(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_TYPE, level));
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_COUNT, level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
 	}
 
@@ -48,7 +47,8 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 			CUnit summonedUnit = simulation.createUnitSimple(summonUnitId, unit.getPlayerIndex(), x, y, facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, duration));
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, getDuration(), false));
+			simulation.createTemporarySpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
 		return false;
 	}
@@ -65,10 +65,6 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 		return buffId;
 	}
 
-	public float getDuration() {
-		return duration;
-	}
-
 	public float getAreaOfEffect() {
 		return areaOfEffect;
 	}
@@ -83,10 +79,6 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 
 	public void setBuffId(War3ID buffId) {
 		this.buffId = buffId;
-	}
-
-	public void setDuration(float duration) {
-		this.duration = duration;
 	}
 
 	public void setAreaOfEffect(float areaOfEffect) {

@@ -6,7 +6,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.StringMsgTargetCheckReceiver;
 
 public class COrderDropItemAtPoint implements COrder {
 	private final int abilityHandleId;
@@ -48,18 +47,17 @@ public class COrderDropItemAtPoint implements COrder {
 	public CBehavior begin(final CSimulation game, final CUnit caster) {
 		final CAbilityInventory ability = (CAbilityInventory) game.getAbility(this.abilityHandleId);
 		if (ability == null) {
-			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
+			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
 			return caster.pollNextOrderBehavior(game);
 		}
 		ability.checkCanUse(game, caster, this.orderId, this.abilityActivationReceiver.reset());
 		if (this.abilityActivationReceiver.isUseOk()) {
-			final StringMsgTargetCheckReceiver<AbilityPointTarget> targetReceiver = (StringMsgTargetCheckReceiver<AbilityPointTarget>) targetCheckReceiver;
 			final CItem itemToDrop = (CItem) game.getWidget(this.itemHandleId);
 			return ability.beginDropItem(game, caster, this.orderId, itemToDrop, this.target);
 		}
 		else {
-			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
-					this.abilityActivationReceiver.getMessage());
+			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
+					this.abilityActivationReceiver.getExternStringKey());
 			return caster.pollNextOrderBehavior(game);
 		}
 

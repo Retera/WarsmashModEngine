@@ -42,6 +42,7 @@ public class CPlayer extends CBasePlayer {
 	private final Map<War3ID, Integer> rawcodeToTechtreeInProgress = new HashMap<>();
 	private final Map<War3ID, Integer> rawcodeToTechtreeMaxAllowed = new HashMap<>();
 	private final List<CUnit> heroes = new ArrayList<>();
+	private final List<CFogModifier> fogModifiers = new ArrayList<>();
 	private final EnumMap<JassGameEventsWar3, List<CPlayerEvent>> eventTypeToEvents = new EnumMap<>(
 			JassGameEventsWar3.class);
 
@@ -77,7 +78,7 @@ public class CPlayer extends CBasePlayer {
 	}
 
 	public CPlayerFogOfWar getFogOfWar() {
-		return fogOfWar;
+		return this.fogOfWar;
 	}
 
 	public void setAlliance(final CPlayer other, final CAllianceType alliance, final boolean flag) {
@@ -185,7 +186,7 @@ public class CPlayer extends CBasePlayer {
 	}
 
 	public void setTechtreeUnlocked(final War3ID rawcode, final int setToLevel) {
-		rawcodeToTechtreeUnlocked.put(rawcode, setToLevel);
+		this.rawcodeToTechtreeUnlocked.put(rawcode, setToLevel);
 	}
 
 	public void removeTechtreeUnlocked(final War3ID rawcode) {
@@ -663,6 +664,16 @@ public class CPlayer extends CBasePlayer {
 			if (setToLevel != 0) {
 				upgradeType.apply(simulation, getId(), setToLevel);
 			}
+		}
+	}
+
+	public void addFogModifer(final CFogModifier fogModifier) {
+		this.fogModifiers.add(fogModifier);
+	}
+
+	public void updateFogModifiers(final CSimulation game) {
+		for (final CFogModifier fogModifier : this.fogModifiers) {
+			fogModifier.update(game.getPathingGrid(), this.fogOfWar);
 		}
 	}
 }

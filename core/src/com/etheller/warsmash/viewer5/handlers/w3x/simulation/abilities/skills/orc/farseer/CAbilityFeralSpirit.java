@@ -20,7 +20,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnitId;
 	private int summonUnitCount;
 	private War3ID buffId;
-	private float duration;
 	private float areaOfEffect;
 
 	// TODO maybe "lastSummonHandleIds" instead, for ease of use with saving game,
@@ -34,13 +33,12 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 
 	@Override
 	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.FERAL_SPIRIT_SUMMON_UNIT_TYPE_1,
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.FeralSpirit.SUMMONED_UNIT,
 				level);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.FERAL_SPIRIT_SUMMON_UNIT_COUNT_1,
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.FeralSpirit.NUMBER_OF_SUMMONED_UNITS,
 				level);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
 	}
 
@@ -66,9 +64,8 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
-			summonedUnit.setExplodesOnDeath(true);
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.SPECIAL);
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration(), true));
+			simulation.createTemporarySpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.SPECIAL);
 			this.lastSummonUnits.add(summonedUnit);
 		}
 		return false;
@@ -86,10 +83,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 		return this.buffId;
 	}
 
-	public float getDuration() {
-		return this.duration;
-	}
-
 	public float getAreaOfEffect() {
 		return this.areaOfEffect;
 	}
@@ -104,10 +97,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 
 	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;
-	}
-
-	public void setDuration(final float duration) {
-		this.duration = duration;
 	}
 
 	public void setAreaOfEffect(final float areaOfEffect) {

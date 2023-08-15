@@ -106,6 +106,13 @@ public class CGameplayConstants {
 	private final float spellCastRangeBuffer;
 
 	private final boolean relativeUpgradeCosts;
+	private final float minUnitSpeed;
+	private final float maxUnitSpeed;
+	private final float minBldgSpeed;
+	private final float maxBldgSpeed;
+	
+	private final float chanceToMiss;
+	private final float missDamageReduction;
 
 	public CGameplayConstants(final DataTable parsedDataTable) {
 		final Element miscData = parsedDataTable.get("Misc");
@@ -133,7 +140,11 @@ public class CGameplayConstants {
 		for (int i = 0; i < CAttackType.VALUES.length; i++) {
 			Arrays.fill(this.damageBonusTable[i], 1.0f);
 			final CAttackType attackType = CAttackType.VALUES[i];
-			final String damageBonus = miscData.getField("DamageBonus" + attackType.getDamageKey());
+			String fieldName = "DamageBonus" + attackType.getDamageKey();
+			if (!miscData.hasField(fieldName) && attackType == CAttackType.SPELLS) {
+				fieldName = "DamageBonus" + CAttackType.MAGIC.getDamageKey();
+			}
+			final String damageBonus = miscData.getField(fieldName);
 			final String[] damageComponents = damageBonus.split(",");
 			for (int j = 0; j < damageComponents.length; j++) {
 				if (damageComponents[j].length() > 0) {
@@ -143,7 +154,7 @@ public class CGameplayConstants {
 //						System.out.println(attackType + ":" + defenseType + ": " + damageComponents[j]);
 					}
 					catch (final NumberFormatException e) {
-						throw new RuntimeException("DamageBonus" + attackType.getDamageKey(), e);
+						throw new RuntimeException(fieldName, e);
 					}
 				}
 			}
@@ -240,6 +251,14 @@ public class CGameplayConstants {
 		this.spellCastRangeBuffer = miscData.getFieldFloatValue("SpellCastRangeBuffer");
 
 		this.relativeUpgradeCosts = miscData.getFieldValue("RelativeUpgradeCost") == 0;
+
+		this.minUnitSpeed = miscData.getFieldFloatValue("MinUnitSpeed");
+		this.maxUnitSpeed = miscData.getFieldFloatValue("MaxUnitSpeed");
+		this.minBldgSpeed = miscData.getFieldFloatValue("MinBldgSpeed");
+		this.maxBldgSpeed = miscData.getFieldFloatValue("MaxBldgSpeed");
+
+		this.chanceToMiss = miscData.getFieldFloatValue("ChanceToMiss");
+		this.missDamageReduction = miscData.getFieldFloatValue("MissDamageReduction");
 	}
 
 	public float getAttackHalfAngle() {
@@ -461,6 +480,30 @@ public class CGameplayConstants {
 
 	public boolean isRelativeUpgradeCosts() {
 		return this.relativeUpgradeCosts;
+	}
+
+	public float getMinUnitSpeed() {
+		return minUnitSpeed;
+	}
+
+	public float getMaxUnitSpeed() {
+		return maxUnitSpeed;
+	}
+
+	public float getMinBldgSpeed() {
+		return minBldgSpeed;
+	}
+
+	public float getMaxBldgSpeed() {
+		return maxBldgSpeed;
+	}
+
+	public float getChanceToMiss() {
+		return chanceToMiss;
+	}
+
+	public float getMissDamageReduction() {
+		return missDamageReduction;
 	}
 
 	private static int getTableValue(final int[] table, int level) {

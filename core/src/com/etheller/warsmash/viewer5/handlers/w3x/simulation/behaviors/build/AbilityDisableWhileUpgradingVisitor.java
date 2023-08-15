@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
@@ -138,6 +139,11 @@ public class AbilityDisableWhileUpgradingVisitor implements CAbilityVisitor<Void
 	public Void accept(final GenericSingleIconActiveAbility ability) {
 		ability.setDisabled(true);
 		ability.setIconShowing(false);
+		return null;
+	}
+
+	@Override
+	public Void accept(GenericSingleIconPassiveAbility ability) {
 		return null;
 	}
 

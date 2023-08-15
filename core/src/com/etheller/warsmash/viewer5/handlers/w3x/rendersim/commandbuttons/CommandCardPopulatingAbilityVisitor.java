@@ -31,6 +31,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
@@ -48,6 +49,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void> {
@@ -156,6 +158,18 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					ability.getHandleId(), ability.getBaseOrderId(),
 					autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn, false,
 					ability.getUIGoldCost(), ability.getUILumberCost(), 0, ability.getUIManaCost(), -1);
+		}
+		return null;
+	}
+
+	@Override
+	public Void accept(GenericSingleIconPassiveAbility ability) {
+		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
+			final AbilityUI abilityUI = this.abilityDataUI.getUI(ability.getAlias());
+			if (abilityUI != null) {
+				addCommandButton(ability, abilityUI.getOnIconUI(ability.getLevel() - 1), ability.getHandleId(), 0,
+						0, false, false);
+			}
 		}
 		return null;
 	}
@@ -301,12 +315,14 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			if (buff.isTimedLifeBar()) {
 				if (this.unit.getPlayerIndex() == this.localPlayerIndex) {
 					this.commandButtonListener.timedLifeBar(buff.getLevel(), iconUI.getToolTip(),
-							buff.getDurationRemaining(this.game), buff.getDurationMax());
+							buff.getDurationRemaining(this.game, this.unit), buff.getDurationMax());
 				}
 			}
 			else {
-				this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
-						iconUI.getUberTip());
+				if (buff.isIconShowing()) {
+					this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
+							iconUI.getUberTip());
+				}
 			}
 		}
 	}
@@ -476,7 +492,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	@Override
 	public Void accept(final CAbilitySellItems ability) {
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
-			int itemIndex = 0;
+			int itemIndex = 1;
 			for (final War3ID unitType : ability.getItemsSold()) {
 				final IconUI unitUI = this.abilityDataUI.getItemUI(unitType).getIconUI();
 				if (unitUI != null) {
@@ -555,13 +571,6 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		}
 
 		@Override
-		public void notEnoughResources(final ResourceType resource) {
-			if (resource == ResourceType.MANA) {
-				this.notEnoughMana = true;
-			}
-		}
-
-		@Override
 		public void notAnActiveAbility() {
 
 		}
@@ -628,16 +637,12 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		}
 
 		@Override
-		public void casterMovementDisabled() {
-
-		}
-
-		@Override
-		public void cargoCapacityUnavailable() {
-		}
-
-		@Override
-		public void alreadyFullHealth() {
+		public void activationCheckFailed(String commandStringErrorKey) {
+			// TODO below we check == and not .equals(...) intentionally for performance
+			// but maybe it should be an entirely different method instead
+			if(commandStringErrorKey == CommandStringErrorKeys.NOT_ENOUGH_MANA) {
+				this.notEnoughMana = true;
+			}
 		}
 
 		@Override

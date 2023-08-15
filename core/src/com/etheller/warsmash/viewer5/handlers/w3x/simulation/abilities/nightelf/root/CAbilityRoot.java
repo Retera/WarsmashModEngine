@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -100,6 +101,7 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 		}
 		unit.setFacing(game.getGameplayConstants().getRootAngle());
 		unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
+		unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
 	}
 
 	@Override
@@ -130,6 +132,7 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 			unit.setAttackMoveBehavior(null);
 			unit.setFacing(game.getGameplayConstants().getRootAngle());
 			unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
+			unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
 		}
 		else {
 			for (final CAbility ability : this.rootedAbilities) {

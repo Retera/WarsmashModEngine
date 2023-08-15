@@ -29,7 +29,7 @@ public class CBehaviorChannelTest implements CBehavior {
 		this.unit.getUnitAnimationListener().playAnimation(false, null, SequenceUtils.SPELL, 1.0f, true);
 		final int gameTurnTick = game.getGameTurnTick();
 		if (gameTurnTick >= this.nextArtTick) {
-			game.createSpellEffectOnUnit(this.unit, this.abilityChannelTest.getAlias(), CEffectType.CASTER);
+			game.createTemporarySpellEffectOnUnit(this.unit, this.abilityChannelTest.getAlias(), CEffectType.CASTER);
 			this.nextArtTick = gameTurnTick
 					+ (int) (this.abilityChannelTest.getArtDuration() / WarsmashConstants.SIMULATION_STEP_TIME);
 		}

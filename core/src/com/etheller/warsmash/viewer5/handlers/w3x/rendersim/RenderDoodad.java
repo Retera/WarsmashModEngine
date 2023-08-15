@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 public class RenderDoodad {
 	private static final int SAMPLE_RADIUS = 4;
 	private static final float[] VERTEX_COLOR_BLACK = { 0f, 0f, 0f, 1f };
+	private static final float[] VERTEX_COLOR_HEAP = { 0f, 0f, 0f, 1f };
 	private static final float[] VERTEX_COLOR_UNEXPLORED = VERTEX_COLOR_BLACK; // later optionally gray
 	public final ModelInstance instance;
 	private final MutableGameObject row;
@@ -69,9 +70,10 @@ public class RenderDoodad {
 				applyColor(row, doodadVariation + 1, instance);
 			}
 		}
-		vertexColorBase = new float[] { ((MdxComplexInstance) instance).vertexColor[0],
+		this.vertexColorBase = new float[] { ((MdxComplexInstance) instance).vertexColor[0],
 				((MdxComplexInstance) instance).vertexColor[1], ((MdxComplexInstance) instance).vertexColor[2] };
-		vertexColorFogged = new float[] { vertexColorBase[0] / 2, vertexColorBase[1] / 2, vertexColorBase[2] / 2 };
+		this.vertexColorFogged = new float[] { this.vertexColorBase[0] / 2, this.vertexColorBase[1] / 2,
+				this.vertexColorBase[2] / 2 };
 		final float pitchSampleForwardX = this.x + (SAMPLE_RADIUS * (float) Math.cos(facingRadians));
 		final float pitchSampleForwardY = this.y + (SAMPLE_RADIUS * (float) Math.sin(facingRadians));
 		final float pitchSampleBackwardX = this.x - (SAMPLE_RADIUS * (float) Math.cos(facingRadians));
@@ -116,11 +118,13 @@ public class RenderDoodad {
 		return PrimaryTag.STAND;
 	}
 
+	private byte lastFogStateColor;
+
 	public void updateFog(final War3MapViewer war3MapViewer) {
 		final CPlayerFogOfWar fogOfWar = war3MapViewer.getFogOfWar();
 		final PathingGrid pathingGrid = war3MapViewer.simulation.getPathingGrid();
-		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(x);
-		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(y);
+		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
+		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
 		final byte state = fogOfWar.getState(fogOfWarIndexX, fogOfWarIndexY);
 		CFogState newFogState = CFogState.MASKED;
 		if (state < 0) {
@@ -132,19 +136,15 @@ public class RenderDoodad {
 		else {
 			newFogState = CFogState.FOGGED;
 		}
-		if (newFogState != fogState) {
+		if (newFogState != this.fogState) {
 			this.fogState = newFogState;
-			switch (newFogState) {
-			case MASKED:
-				((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
-				break;
-			case FOGGED:
-				((MdxComplexInstance) instance).setVertexColor(vertexColorFogged);
-				break;
-			case VISIBLE:
-				((MdxComplexInstance) instance).setVertexColor(vertexColorBase);
-				break;
+		}
+		if (state != this.lastFogStateColor) {
+			this.lastFogStateColor = War3MapViewer.fadeLineOfSightColor(this.lastFogStateColor, state);
+			for (int i = 0; i < this.vertexColorBase.length; i++) {
+				VERTEX_COLOR_HEAP[i] = (this.vertexColorBase[i] * (255 - (this.lastFogStateColor & 0xFF))) / 255f;
 			}
+			((MdxComplexInstance) this.instance).setVertexColor(VERTEX_COLOR_HEAP);
 		}
 	}
 }

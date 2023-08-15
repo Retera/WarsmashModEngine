@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 
 public class SequenceUtils {
+	private static final int SECONDARY_TAGS_DECLARED_COUNT = AnimationTokens.SecondaryTag.values().length;
 	public static final EnumSet<SecondaryTag> EMPTY = EnumSet.noneOf(SecondaryTag.class);
 	public static final EnumSet<SecondaryTag> READY = EnumSet.of(SecondaryTag.READY);
 	public static final EnumSet<SecondaryTag> FLESH = EnumSet.of(SecondaryTag.FLESH);
@@ -102,6 +103,18 @@ public class SequenceUtils {
 		return matches;
 	}
 
+	public static int matchRank(final EnumSet<AnimationTokens.SecondaryTag> goalTagSet,
+			final EnumSet<AnimationTokens.SecondaryTag> tagsToTest) {
+		int matchRank = 0;
+		for (final AnimationTokens.SecondaryTag goalTag : goalTagSet) {
+			if (tagsToTest.contains(goalTag)) {
+				matchRank += (SECONDARY_TAGS_DECLARED_COUNT - goalTag.ordinal()) + 1;
+				matchRank += 200000;
+			}
+		}
+		return matchRank;
+	}
+
 	public static IndexedSequence selectSequence(final AnimationTokens.PrimaryTag type,
 			final EnumSet<AnimationTokens.SecondaryTag> tags, final List<Sequence> sequences,
 			final boolean allowRarityVariations) {
@@ -118,7 +131,7 @@ public class SequenceUtils {
 			for (int i = 0, l = sequences.size(); i < l; i++) {
 				final Sequence sequence = sequences.get(i);
 				if (sequence.getPrimaryTags().contains(type) || (type == null)) {
-					final int matchCount = matchCount(tags, sequence.getSecondaryTags());
+					final int matchCount = matchRank(tags, sequence.getSecondaryTags());
 					if ((matchCount > fallbackTagsMatchCount)
 							|| ((matchCount > 0) && (matchCount == fallbackTagsMatchCount)
 									&& (fallbackTags.size() > sequence.getSecondaryTags().size()))) {

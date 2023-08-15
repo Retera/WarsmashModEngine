@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.cargohold
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility {
 	private float castRange;
@@ -88,7 +89,7 @@ public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility 
 			receiver.targetOk(target);
 		}
 		else {
-			receiver.targetOutsideRange();
+			receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 		}
 	}
 

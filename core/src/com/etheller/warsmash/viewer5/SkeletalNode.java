@@ -29,6 +29,7 @@ public abstract class SkeletalNode extends GenericNode {
 	public Vector3 localBlendScale;
 
 	public Quaternion overrideWorldRotation;
+	public Quaternion preOverrideLocalRotation;
 
 	public SkeletalNode() {
 		this.pivot = new Vector3();
@@ -155,7 +156,7 @@ public abstract class SkeletalNode extends GenericNode {
 				final float angle = (float) Math.atan2(cameraRayHeap.z, cameraRayHeap.y);
 				rotationHeap2.setFromAxisRad(billboardAxisHeap, angle);
 
-				RenderMathUtils.mul(computedRotation, computedRotation, rotationHeap2);
+				computedRotation.mul(rotationHeap2);
 			}
 			else if (this.billboardedY) {
 				final Camera camera = scene.camera;
@@ -175,7 +176,7 @@ public abstract class SkeletalNode extends GenericNode {
 				final float angle = (float) Math.atan2(-cameraRayHeap.z, cameraRayHeap.x);
 				rotationHeap2.setFromAxisRad(billboardAxisHeap, angle);
 
-				RenderMathUtils.mul(computedRotation, computedRotation, rotationHeap2);
+				computedRotation.mul(rotationHeap2);
 			}
 			else if (this.billboardedZ) {
 				final Camera camera = scene.camera;
@@ -195,15 +196,10 @@ public abstract class SkeletalNode extends GenericNode {
 				final float angle = (float) Math.atan2(cameraRayHeap.y, cameraRayHeap.x);
 				rotationHeap2.setFromAxisRad(billboardAxisHeap, angle);
 
-				RenderMathUtils.mul(computedRotation, computedRotation, rotationHeap2);
+				computedRotation.mul(rotationHeap2);
 			}
 			else if (this.dontInheritRotation) {
-				RenderMathUtils.mul(computedRotation, this.parent.inverseWorldRotation, computedRotation);
-			}
-			else if (this.overrideWorldRotation != null) {
-				RenderMathUtils.mul(computedRotation, this.parent.inverseWorldRotation, computedRotation);
-				RenderMathUtils.mul(computedRotation, overrideWorldRotation, computedRotation);
-
+				computedRotation.mulLeft(this.parent.inverseWorldRotation);
 			}
 		}
 
@@ -251,7 +247,13 @@ public abstract class SkeletalNode extends GenericNode {
 
 	public void beginBlending() {
 		this.localBlendLocation.set(this.localLocation);
-		this.localBlendRotation.set(this.localRotation);
+		if (this.preOverrideLocalRotation != null) {
+			this.localBlendRotation.set(this.preOverrideLocalRotation);
+			this.preOverrideLocalRotation = null;
+		}
+		else {
+			this.localBlendRotation.set(this.localRotation);
+		}
 		this.localBlendScale.set(this.localScale);
 	}
 
@@ -261,8 +263,10 @@ public abstract class SkeletalNode extends GenericNode {
 		}
 	}
 
-	public void setOverrideWorldRotation(final Quaternion overrideWorldRotation) {
-		this.overrideWorldRotation = overrideWorldRotation;
+	public void setOverrideWorldRotation(final Quaternion overrideLocalRotation) {
+		this.overrideWorldRotation = overrideLocalRotation;
+		this.preOverrideLocalRotation = new Quaternion();
+		this.preOverrideLocalRotation.set(this.localRotation);
 	}
 
 	protected abstract void convertBasis(Quaternion computedRotation);

@@ -26,6 +26,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	private final boolean canDropItems;
@@ -462,7 +463,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					}
 				}
 				if (playUserUISounds) {
-					simulation.getCommandErrorListener().showInventoryFullError(hero.getPlayerIndex());
+					simulation.getCommandErrorListener().showInterfaceError(hero.getPlayerIndex(), CommandStringErrorKeys.INVENTORY_IS_FULL);
 				}
 			}
 		}

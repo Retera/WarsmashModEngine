@@ -508,6 +508,12 @@ public final class War3ObjectDataChangeset {
 					existingObject = new ObjectDataChangeEntry(origid, newid);
 				}
 			}
+			if (this.version >= 3) {
+				final int reforged133JunkCount = stream.readInt();
+				for (int reforged133JunkIndex = 0; reforged133JunkIndex < reforged133JunkCount; reforged133JunkIndex++) {
+					final int reforgedJunk = stream.readInt();
+				}
+			}
 			final int ccount = stream.readInt();// Retera: I assume this is change count?
 			if ((ccount == 0) && isOriginal) {
 				// throw new IOException("we seem to have reached the end of the stream and get
@@ -640,7 +646,7 @@ public final class War3ObjectDataChangeset {
 			throws IOException {
 		this.detected = false;
 		this.version = stream.readInt();
-		if ((this.version != 1) && (this.version != 2)) {
+		if ((this.version != 1) && (this.version != 2) && (this.version != 3)) {
 			return false;
 		}
 		ObjectMap backup = this.original.clone();

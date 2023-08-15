@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.skills.CBehaviorTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public abstract class CAbilityTargetSpellBase extends CAbilitySpellBase {
 	private CBehaviorTargetSpellBase behavior;
@@ -41,16 +42,13 @@ public abstract class CAbilityTargetSpellBase extends CAbilitySpellBase {
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target.canBeTargetedBy(game, unit, getTargetsAllowed())) {
+		if (target.canBeTargetedBy(game, unit, getTargetsAllowed(), receiver)) {
 			if (!unit.isMovementDisabled() || unit.canReach(target, getCastRange())) {
 				receiver.targetOk(target);
 			}
 			else {
-				receiver.targetOutsideRange();
+				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 			}
-		}
-		else {
-			receiver.mustTargetType(TargetType.UNIT);
 		}
 	}
 

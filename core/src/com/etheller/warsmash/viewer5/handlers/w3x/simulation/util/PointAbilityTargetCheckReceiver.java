@@ -18,67 +18,17 @@ public class PointAbilityTargetCheckReceiver implements AbilityTargetCheckReceiv
 	}
 
 	@Override
-	public void mustTargetTeamType(final TeamType correctType) {
-		this.target = null;
-	}
-
-	@Override
-	public void mustTargetType(final TargetType correctType) {
-		this.target = null;
-	}
-
-	@Override
-	public void mustTargetResources() {
-		this.target = null;
-	}
-
-	@Override
-	public void mustTargetPeon() {
-		this.target = null;
-	}
-
-	@Override
-	public void notHolyBoltTarget() {
-		this.target = null;
-	}
-
-	@Override
-	public void alreadyFullHealth() {
-		this.target = null;
-	}
-
-	@Override
-	public void notDeathCoilTarget() {
-		this.target = null;
-	}
-
-	@Override
-	public void targetOutsideRange() {
-		this.target = null;
-	}
-
-	@Override
 	public void notAnActiveAbility() {
 		this.target = null;
 	}
 
 	@Override
-	public void targetNotVisible() {
-		this.target = null;
-	}
-
-	@Override
-	public void targetTooComplicated() {
-		this.target = null;
-	}
-
-	@Override
-	public void targetNotInPlayableMap() {
-		this.target = null;
-	}
-
-	@Override
 	public void orderIdNotAccepted() {
+		this.target = null;
+	}
+
+	@Override
+	public void targetCheckFailed(String commandStringErrorKey) {
 		this.target = null;
 	}
 

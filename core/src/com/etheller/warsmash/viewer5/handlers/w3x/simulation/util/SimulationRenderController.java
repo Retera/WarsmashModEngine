@@ -26,6 +26,9 @@ public interface SimulationRenderController {
 			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
 			CAbilityProjectileListener projectileListener);
 
+	SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source,
+													   CUnit target);
+
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);
 
@@ -56,7 +59,7 @@ public interface SimulationRenderController {
 
 	void spawnUnitUpgradeFinishSound(CUnit constructedStructure);
 
-	void spawnDeathExplodeEffect(CUnit cUnit);
+	void spawnDeathExplodeEffect(CUnit cUnit, War3ID explodesOnDeathBuffId);
 
 	void spawnGainLevelEffect(CUnit cUnit);
 
@@ -64,17 +67,22 @@ public interface SimulationRenderController {
 
 	void unitRepositioned(CUnit cUnit);
 
-	void spawnGainResourceTextTag(CUnit gainingUnit, ResourceType resourceType, int amount);
+	void spawnTextTag(CUnit unit, TextTagConfigType configType, int displayAmount);
 
 	void spawnEffectOnUnit(CUnit unit, String effectPath);
 
-	void spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
+	void spawnTemporarySpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
 
-	SimulationRenderComponent spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
+	SimulationRenderComponentModel spawnPersistentSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
 
-	SimulationRenderComponent spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
+	SimulationRenderComponentModel spawnPersistentSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
+
+	SimulationRenderComponentModel spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
 			CEffectType effectType, int index);
 
+	void spawnTemporarySpellEffectOnPoint(float x, float y, float facing, War3ID alias,
+			CEffectType effectType, int index);
+	
 	void spawnUIUnitGetItemSound(CUnit cUnit, CItem item);
 
 	void spawnUIUnitDropItemSound(CUnit cUnit, CItem item);
@@ -91,7 +99,7 @@ public interface SimulationRenderController {
 
 	void heroDeathEvent(CUnit cUnit);
 
-	SimulationRenderComponent createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias,
+	SimulationRenderComponentModel createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias,
 			float artAttachmentHeight);
 
 	void unitUpgradingEvent(CUnit unit, War3ID upgradeIdType);

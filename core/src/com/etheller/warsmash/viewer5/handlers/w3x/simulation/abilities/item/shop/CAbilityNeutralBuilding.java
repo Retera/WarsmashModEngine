@@ -249,7 +249,7 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	private void selectUnit(final CSimulation game, final CUnit enumUnit, final int playerIndex) {
 		selectedPlayerUnit[playerIndex] = enumUnit;
 		if (showUnitIndicator) {
-			selectedPlayerUnitFx[playerIndex] = game.createSpellEffectOnUnit(enumUnit, getAlias(), CEffectType.TARGET,
+			selectedPlayerUnitFx[playerIndex] = game.createPersistentSpellEffectOnUnit(enumUnit, getAlias(), CEffectType.TARGET,
 					0);
 		}
 	}

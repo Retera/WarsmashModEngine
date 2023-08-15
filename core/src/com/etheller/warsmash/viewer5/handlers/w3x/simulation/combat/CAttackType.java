@@ -19,13 +19,7 @@ public enum CAttackType implements CodeKeyType, CHandle {
 
 	private CAttackType() {
 		final String name = name();
-		final String computedCodeKey = name.charAt(0) + name.substring(1).toLowerCase();
-		if (computedCodeKey.equals("Spells")) {
-			this.codeKey = "Magic";
-		}
-		else {
-			this.codeKey = computedCodeKey;
-		}
+		this.codeKey = name.charAt(0) + name.substring(1).toLowerCase();
 		this.damageKey = this.codeKey;
 	}
 

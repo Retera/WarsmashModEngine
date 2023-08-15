@@ -11,6 +11,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CDestructable extends CWidget {
 
@@ -59,17 +62,24 @@ public class CDestructable extends CWidget {
 	}
 
 	@Override
-	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			final String weaponType, final float damage) {
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType,
+			final CDamageType damageType, final String weaponSoundType, final float damage) {
 		if (isInvulnerable()) {
-			return;
+			return 0;
 		}
 		final boolean wasDead = isDead();
 		this.life -= damage;
-		simulation.destructableDamageEvent(this, weaponType, this.destType.getArmorType());
+		simulation.destructableDamageEvent(this, weaponSoundType, this.destType.getArmorType());
 		if (!wasDead && isDead()) {
 			kill(simulation);
 		}
+		return damage;
+	}
+
+	@Override
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType,
+			final CDamageType damageType, final String weaponSoundType, final float damage, final float bonusDamage) {
+		return this.damage(simulation, source, isAttack, isRanged, attackType, damageType, weaponSoundType, damage + bonusDamage);
 	}
 
 	private void kill(final CSimulation simulation) {
@@ -93,18 +103,31 @@ public class CDestructable extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-			final EnumSet<CTargetType> targetsAllowed) {
+								   final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (targetsAllowed.containsAll(this.destType.getTargetedAs())) {
 			if (isDead()) {
-				return targetsAllowed.contains(CTargetType.DEAD);
+				if (targetsAllowed.contains(CTargetType.DEAD)) {
+					return true;
+				}
+				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_MUST_BE_LIVING);
+			} else {
+				if (!targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE)) {
+					return true;
+				}
+				receiver.targetCheckFailed(CommandStringErrorKeys.SOMETHING_IS_BLOCKING_THAT_TREE_STUMP);
 			}
-			else {
-				return !targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE);
+		} else {
+			if (this.destType.getTargetedAs().contains(CTargetType.TREE) && !targetsAllowed.contains(CTargetType.TREE)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_TREES);
+			} else if (this.destType.getTargetedAs().contains(CTargetType.DEBRIS) && !targetsAllowed.contains(CTargetType.DEBRIS)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_DEBRIS);
+			} else if (this.destType.getTargetedAs().contains(CTargetType.WALL) && !targetsAllowed.contains(CTargetType.WALL)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WALLS);
+			} else if (this.destType.getTargetedAs().contains(CTargetType.BRIDGE) && !targetsAllowed.contains(CTargetType.BRIDGE)) {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BRIDGES);
+			} else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 			}
-		}
-		else {
-			System.err.println("Not targeting because " + targetsAllowed + " does not contain all of "
-					+ this.destType.getTargetedAs());
 		}
 		return false;
 	}
@@ -155,6 +178,7 @@ public class CDestructable extends CWidget {
 				game.getWorldCollision(), null);
 	}
 
+	@Override
 	public double distance(final float x, final float y) {
 		return StrictMath.sqrt(distanceSquaredNoCollision(x, y));
 	}

@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityCharm extends CAbilityTargetSpellBase {
 	private int maximumCreepLevel;
@@ -26,7 +27,7 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 
 	@Override
 	public void populateData(MutableGameObject worldEditorAbility, int level) {
-		this.maximumCreepLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.CHARM_MAX_CREEP_LEVEL, level);
+		this.maximumCreepLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.Charm.MAXIMUM_CREEP_LEVEL, level);
 	}
 
 	@Override
@@ -37,18 +38,24 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 	@Override
 	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target.visit(AbilityTargetVisitor.UNIT).getUnitType().getLevel() <= maximumCreepLevel) {
-			super.innerCheckCanTarget(game, unit, orderId, target, receiver);
+		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+		if (targetUnit != null) {
+			if (targetUnit.getUnitType().getLevel() <= maximumCreepLevel) {
+				super.innerCheckCanTarget(game, unit, orderId, target, receiver);
+			}
+			else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.THAT_CREATURE_IS_TOO_POWERFUL);
+			}
 		}
 		else {
-			receiver.targetTooComplicated();
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 		}
 	}
 
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit unit, AbilityTarget target) {
 		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
-		simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
+		simulation.createTemporarySpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
 		List<War3ID> targetUpgradesUsed = targetUnit.getUnitType().getUpgradesUsed();
 		CPlayer targetPlayer = simulation.getPlayer(targetUnit.getPlayerIndex());
 		CPlayer castingUnitPlayer = simulation.getPlayer(unit.getPlayerIndex());

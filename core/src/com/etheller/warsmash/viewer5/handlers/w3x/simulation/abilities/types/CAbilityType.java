@@ -39,6 +39,10 @@ public abstract class CAbilityType<TYPE_LEVEL_DATA extends CAbilityTypeLevelData
 		return levelData.size();
 	}
 
+	protected final List<TYPE_LEVEL_DATA> getLevelData() {
+		return this.levelData;
+	}
+
 	protected final TYPE_LEVEL_DATA getLevelData(final int level) {
 		return this.levelData.get(level);
 	}

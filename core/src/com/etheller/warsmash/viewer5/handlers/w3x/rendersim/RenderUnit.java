@@ -644,5 +644,4 @@ public class RenderUnit implements RenderWidget {
 				|| (this.simulationUnit.getMovementType() == MovementType.HOVER)
 				|| (this.simulationUnit.getMovementType() == MovementType.FLY);
 	}
-
 }

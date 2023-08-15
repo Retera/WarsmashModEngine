@@ -35,7 +35,6 @@ public class CAbilityAbilityBuilderTickingPassive extends AbstractGenericSingleI
 	@Override
 	public void setLevel(int level) {
 		super.setLevel(level);
-		System.err.println("Set passive level to " + level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 		if (config.getOnLevelChange() != null) {
 			CSimulation game = (CSimulation) localStore.get(ABLocalStoreKeys.GAME);
@@ -50,7 +49,6 @@ public class CAbilityAbilityBuilderTickingPassive extends AbstractGenericSingleI
 	public void onAdd(CSimulation game, CUnit unit) {
 		localStore.put(ABLocalStoreKeys.GAME, game);
 		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
-		System.err.println("Added ability");
 		if (config.getOnAddAbility() != null) {
 			for (ABAction action : config.getOnAddAbility()) {
 				action.runAction(game, unit, localStore, 0);

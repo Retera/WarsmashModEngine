@@ -35,7 +35,6 @@ public class CAbilityAbilityBuilderPassive extends AbstractGenericSingleIconActi
 	@Override
 	public void setLevel(int level) {
 		super.setLevel(level);
-		System.err.println("Set passive level to " + level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 		if (config.getOnLevelChange() != null) {
 			CSimulation game = (CSimulation) localStore.get(ABLocalStoreKeys.GAME);

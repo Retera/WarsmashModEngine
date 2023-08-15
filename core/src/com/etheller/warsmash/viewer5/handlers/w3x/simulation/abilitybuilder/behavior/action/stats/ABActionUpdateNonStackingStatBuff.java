@@ -17,7 +17,6 @@ public class ABActionUpdateNonStackingStatBuff implements ABAction {
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		NonStackingStatBuff buffObj = buff.callback(game, caster, localStore, castId);
-		System.err.println("Updating Stat buff to: " + value.callback(game, caster, localStore, castId));
 		buffObj.setValue(value.callback(game, caster, localStore, castId));
 	}
 }

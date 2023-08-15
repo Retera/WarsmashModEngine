@@ -19,10 +19,8 @@ public class ABActionAddNonStackingDisplayBuff implements ABAction {
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		CBuff ability = buff.callback(game, caster, localStore, castId);
-		System.err.println(game.getGameTurnTick() + " Trying to add " + ability.getHandleId());
 		target.callback(game, caster, localStore, castId).addNonStackingDisplayBuff(game,
 				key.callback(game, caster, localStore, castId), ability);
-		System.err.println(game.getGameTurnTick() + " Tried to add " + ability.getHandleId());
 		localStore.put(ABLocalStoreKeys.LASTADDEDBUFF, ability);
 	}
 }

@@ -28,6 +28,10 @@
 					"type": "rawString",
 					"value": "asbuff"
 				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
 				"valueToStore": {
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
@@ -56,6 +60,10 @@
 				"key": {
 					"type": "rawString",
 					"value": "mvbuff"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
 				},
 				"valueToStore": {
 					"type": "getLastCreatedNonStackingStatBuff"
@@ -88,6 +96,10 @@
 						},
 						"buff": {
 							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
 							"key": {
 								"type": "rawString",
 								"value": "mvbuff"
@@ -100,6 +112,10 @@
 						},
 						"buff": {
 							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
 							"key": {
 								"type": "rawString",
 								"value": "asbuff"
@@ -156,6 +172,10 @@
 						},
 						"buff": {
 							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
 							"key": {
 								"type": "rawString",
 								"value": "mvbuff"
@@ -168,6 +188,10 @@
 						},
 						"buff": {
 							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
 							"key": {
 								"type": "rawString",
 								"value": "asbuff"
@@ -187,6 +211,10 @@
 				"type": "updateNonStackingStatBuff",
 				"buff": {
 					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"key": {
 						"type": "rawString",
 						"value": "mvbuff"
@@ -203,6 +231,10 @@
 				"type": "updateNonStackingStatBuff",
 				"buff": {
 					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"key": {
 						"type": "rawString",
 						"value": "asbuff"

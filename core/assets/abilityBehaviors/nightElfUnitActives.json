@@ -25,6 +25,10 @@
 					"type": "rawString",
 					"value": "atkbuff"
 				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
 				"valueToStore": {
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
@@ -50,6 +54,10 @@
 				"key": {
 					"type": "rawString",
 					"value": "defbuff"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
 				},
 				"valueToStore": {
 					"type": "getLastCreatedNonStackingStatBuff"
@@ -77,6 +85,10 @@
 					"type": "rawString",
 					"value": "hpbuff"
 				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
 				"valueToStore": {
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
@@ -102,6 +114,10 @@
 				"key": {
 					"type": "rawString",
 					"value": "mpbuff"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
 				},
 				"valueToStore": {
 					"type": "getLastCreatedNonStackingStatBuff"
@@ -136,6 +152,10 @@
 							},
 							"buff": {
 								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
 								"key": {
 									"type": "rawString",
 									"value": "atkbuff"
@@ -148,6 +168,10 @@
 							},
 							"buff": {
 								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
 								"key": {
 									"type": "rawString",
 									"value": "defbuff"
@@ -160,6 +184,10 @@
 							},
 							"buff": {
 								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
 								"key": {
 									"type": "rawString",
 									"value": "hpbuff"
@@ -172,6 +200,10 @@
 							},
 							"buff": {
 								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
 								"key": {
 									"type": "rawString",
 									"value": "mpbuff"
@@ -228,6 +260,10 @@
 							},
 							"buff": {
 								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
 								"key": {
 									"type": "rawString",
 									"value": "atkbuff"
@@ -240,6 +276,10 @@
 							},
 							"buff": {
 								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
 								"key": {
 									"type": "rawString",
 									"value": "defbuff"
@@ -252,6 +292,10 @@
 							},
 							"buff": {
 								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
 								"key": {
 									"type": "rawString",
 									"value": "hpbuff"
@@ -264,6 +308,10 @@
 							},
 							"buff": {
 								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
 								"key": {
 									"type": "rawString",
 									"value": "mpbuff"
@@ -290,6 +338,10 @@
 				"type": "updateNonStackingStatBuff",
 				"buff": {
 					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"key": {
 						"type": "rawString",
 						"value": "atkbuff"
@@ -306,6 +358,10 @@
 				"type": "updateNonStackingStatBuff",
 				"buff": {
 					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"key": {
 						"type": "rawString",
 						"value": "defbuff"
@@ -322,6 +378,10 @@
 				"type": "updateNonStackingStatBuff",
 				"buff": {
 					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"key": {
 						"type": "rawString",
 						"value": "hpbuff"
@@ -338,6 +398,10 @@
 				"type": "updateNonStackingStatBuff",
 				"buff": {
 					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"key": {
 						"type": "rawString",
 						"value": "mpbuff"

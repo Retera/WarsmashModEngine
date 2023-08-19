@@ -347,8 +347,19 @@ public class MenuUI {
 					@Override
 					public void run() {
 						MenuUI.this.battleNetConnectDialog.setVisible(true);
+						String msg;
+						switch (reason) {
+							case BAD_GAME_VERSION: {
+								msg = "ERROR_ID_VERSION_BAD";
+								break;
+							}
+							default: {
+								msg = "NETERROR_DEFAULTERROR";
+								break;
+							}
+						}
 						MenuUI.this.rootFrame.setDecoratedText(MenuUI.this.battleNetConnectInfoText,
-								"NETERROR_DEFAULTERROR");
+								msg);
 					}
 				});
 			}

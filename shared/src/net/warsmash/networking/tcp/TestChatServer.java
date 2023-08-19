@@ -9,6 +9,7 @@ import java.util.Set;
 import net.warsmash.nio.channels.SelectableChannelOpener;
 import net.warsmash.nio.channels.SocketChannelCallback;
 import net.warsmash.nio.channels.WritableOutput;
+import net.warsmash.nio.channels.WritableSocketOutput;
 import net.warsmash.nio.channels.tcp.TCPClientParser;
 import net.warsmash.nio.util.ExceptionListener;
 
@@ -20,7 +21,7 @@ public class TestChatServer {
 		final Set<WritableOutput> outputs = new HashSet<>();
 		selectableChannelOpener.openTCPServerChannel(PORT, new SocketChannelCallback() {
 			@Override
-			public TCPClientParser onConnect(final WritableOutput writableOpenedChannel,
+			public TCPClientParser onConnect(final WritableSocketOutput writableOpenedChannel,
 					final SocketAddress remoteAddress) {
 				System.out.println("Received connection from " + remoteAddress);
 				outputs.add(writableOpenedChannel);

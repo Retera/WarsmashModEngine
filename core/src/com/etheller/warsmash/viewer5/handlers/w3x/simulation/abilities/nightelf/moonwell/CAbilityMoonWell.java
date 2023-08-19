@@ -55,6 +55,11 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 		enableManaRegen(unit);
 	}
 
+	@Override
+	public void onDeath(CSimulation game, CUnit cUnit) {
+		this.waterRenderComponent.remove();
+	}
+
 	private void disableManaRegen(final CUnit unit) {
 		if (this.manaRegenActive) {
 			unit.setManaRegen(0);

@@ -17,7 +17,7 @@ import net.warsmash.uberserver.GamingNetwork;
 
 public class WarsmashServer implements ClientToServerListener {
 	private static final boolean VERBOSE_LOGGING = false;
-	private static final int MAGIC_DELAY_OFFSET = 4;
+	private static final int MAGIC_DELAY_OFFSET = 0; //4
 	private final OrderedUdpServer udpServer;
 	private final Set<SocketAddress> socketAddressesKnown = new HashSet<>();
 	private final Map<Long, Integer> sessionTokenToPermittedSlot;
@@ -241,8 +241,11 @@ public class WarsmashServer implements ClientToServerListener {
 
 	public static void main(final String[] args) {
 		try {
+			final Map<Long, Integer> sessionTokenToPermittedSlot = new HashMap<>();
+			sessionTokenToPermittedSlot.put(1337001L, 0);
+			sessionTokenToPermittedSlot.put(1337002L, 1);
 			final WarsmashServer server = new WarsmashServer(GamingNetwork.UDP_SINGLE_GAME_PORT,
-					Collections.emptyMap());
+					sessionTokenToPermittedSlot);
 			server.startThread();
 
 			final Scanner scanner = new Scanner(System.in);

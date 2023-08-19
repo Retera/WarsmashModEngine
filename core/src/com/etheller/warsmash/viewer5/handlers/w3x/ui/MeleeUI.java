@@ -103,6 +103,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.UnitIconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandCardActivationReceiverPreviewCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CGameplayConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
@@ -399,6 +400,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private float simpleProgressIndicatorDurationRemaining;
 	private float simpleProgressIndicatorDurationMax;
 	private StringFrame smashBuffStatusBar;
+
+	private CommandCardActivationReceiverPreviewCallback activationReceiverPreviewCallback = new CommandCardActivationReceiverPreviewCallback();
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -3091,6 +3094,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		this.inventoryCover.setVisible(inventory == null);
+		this.activationReceiverPreviewCallback.setup(this.war3MapViewer.simulation.getUnitData(),
+				this.war3MapViewer.simulation.getUpgradeData(), this.rootFrame.getTemplates());
 		if (inventory != null) {
 			this.inventoryBarFrame.setVisible(true);
 			int index = 0;
@@ -3117,6 +3122,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									.append(this.rootFrame.getTemplates().getDecoratedString("ITEM_USE_TOOLTIP"));
 							this.recycleStringBuilder.append("|n");
 						}
+						inventory.checkCanUse(war3MapViewer.simulation, this.selectedUnit.getSimulationUnit(),
+								OrderIds.itemuse00 + index, this.activationReceiverPreviewCallback.reset());
 						this.recycleStringBuilder.append(uberTip);
 						inventoryIcon.setCommandButtonData(
 								inventoryEnabled ? iconUI.getIcon() : iconUI.getIconDisabled(), 0,
@@ -3124,7 +3131,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 								itemUI.getName(), this.recycleStringBuilder.toString(), '\0',
 								(int) StrictMath.ceil(itemType.getGoldCost()
 										* this.war3MapViewer.simulation.getGameplayConstants().getPawnItemRate()),
-								itemType.getLumberCost(), 0, 0, false, 0, 0,
+								itemType.getLumberCost(), 0, 0, false,
+								this.activationReceiverPreviewCallback.getCooldownRemaining(),
+								this.activationReceiverPreviewCallback.getCooldownMax(),
 								item.getCharges() > 0 ? item.getCharges() : -1);
 					}
 					else {

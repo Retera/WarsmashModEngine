@@ -11,6 +11,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitstate.ABActionAddStateModBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitstate.ABActionCreateStateModBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitstate.ABActionRemoveStateModBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.*;
@@ -22,6 +25,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.locationcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statbuffcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.ABCallbackGetLastCreatedStateModBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.ABCallbackGetStoredStateModBuffByKey;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.ABStateModBuffCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.timercallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.*;
@@ -161,12 +167,14 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetAlias.class, "getAlias")
 				.registerSubtype(ABCallbackGetParentAlias.class, "getParentAlias")
 				.registerSubtype(ABCallbackGetFirstBuffId.class, "getFirstBuffId")
+				.registerSubtype(ABCallbackGetSecondBuffId.class, "getSecondBuffId")
 				.registerSubtype(ABCallbackGetFirstEffectId.class, "getFirstEffectId");
 	}
 
 	private static void registerIntegerCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackRawInteger.class, "rawInteger")
 				.registerSubtype(ABCallbackGetStoredIntegerByKey.class, "getStoredIntegerByKey")
+				.registerSubtype(ABCallbackGetAbilityDataAsInteger.class, "getAbilityDataAsInteger")
 				.registerSubtype(ABCallbackCountUnitsInRangeOfUnit.class, "countUnitsInRangeOfUnit")
 				.registerSubtype(ABCallbackCountUnitsInRangeOfLocation.class, "countUnitsInRangeOfLocation")
 				.registerSubtype(ABCallbackGetSpellLevel.class, "getSpellLevel");
@@ -185,9 +193,18 @@ public abstract class AbilityBuilderGsonBuilder {
 						"getStoredNonStackingStatBuffByKey");
 	}
 
+	private static void registerStateModBuffCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
+		callbackTypeFactory
+				.registerSubtype(ABCallbackGetLastCreatedStateModBuff.class, "getLastCreatedStateModBuff")
+				.registerSubtype(ABCallbackGetStoredStateModBuffByKey.class,
+						"getStoredStateModBuffByKey");
+	}
+
 	private static void registerStringCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackRawString.class, "rawString")
 				.registerSubtype(ABCallbackCatStrings.class, "catStrings")
+				.registerSubtype(ABCallbackGetAliasAsString.class, "getAliasAsString")
+				.registerSubtype(ABCallbackGetCodeAsString.class, "getCodeAsString")
 				.registerSubtype(ABCallbackGetUnitHandleAsString.class, "getUnitHandleAsString")
 				.registerSubtype(ABCallbackGetAllowStackingKey.class, "getAllowStackingKey");
 	}
@@ -220,13 +237,20 @@ public abstract class AbilityBuilderGsonBuilder {
 		conditionTypeFactory.registerSubtype(ABConditionAnd.class, "and").registerSubtype(ABConditionOr.class, "or")
 				.registerSubtype(ABConditionNot.class, "not").registerSubtype(ABConditionBool.class, "bool")
 				.registerSubtype(ABConditionFloatEqual.class, "floatEq")
+				.registerSubtype(ABConditionFloatEq0.class, "floatEq0")
 				.registerSubtype(ABConditionFloatGte.class, "floatGte")
 				.registerSubtype(ABConditionFloatGt.class, "floatGt")
 				.registerSubtype(ABConditionFloatLte.class, "floatLte")
 				.registerSubtype(ABConditionFloatLt.class, "floatLt")
 				.registerSubtype(ABConditionFloatNe.class, "floatNe")
 				.registerSubtype(ABConditionFloatNe0.class, "floatNe0")
+				
 				.registerSubtype(ABConditionIntegerEqual.class, "integerEqual")
+				.registerSubtype(ABConditionIntegerGt.class, "i>")
+				.registerSubtype(ABConditionIntegerIsOdd.class, "integerIsOdd")
+
+				.registerSubtype(ABConditionSetCantUseReasonOnFailure.class, "setCantUseReasonOnFailure")
+				
 				.registerSubtype(ABConditionIsValidTarget.class, "isValidTarget")
 				.registerSubtype(ABConditionIsUnitInRangeOfUnit.class, "isUnitInRangeOfUnit")
 				.registerSubtype(ABConditionIsUnitInGroup.class, "isUnitInGroup")
@@ -235,7 +259,13 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsDamageTypeEqual.class, "isDamageTypeEqual")
 
 				.registerSubtype(ABConditionIsOnCooldown.class, "isOnCooldown")
+				.registerSubtype(ABConditionIsFlexAbilityTargeted.class, "isFlexAbilityTargeted")
+				.registerSubtype(ABConditionIsFlexAbilityNonTargeted.class, "isFlexAbilityNonTargeted")
+				.registerSubtype(ABConditionIsFlexAbilityPointTarget.class, "isFlexAbilityPointTarget")
+				.registerSubtype(ABConditionIsFlexAbilityNonPointTarget.class, "isFlexAbilityNonPointTarget")
 
+				.registerSubtype(ABConditionIsUnitMaxHp.class, "isUnitMaxHp")
+				.registerSubtype(ABConditionIsUnitMaxMp.class, "isUnitMaxMp")
 				.registerSubtype(ABConditionIsUnitBuilding.class, "isUnitBuilding");
 	}
 
@@ -271,6 +301,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionDamageTarget.class, "damageTarget").registerSubtype(ABActionHeal.class, "heal")
 				.registerSubtype(ABActionSetHp.class, "setHp").registerSubtype(ABActionResurrect.class, "resurrect")
 				.registerSubtype(ABActionSetMp.class, "setMp")
+				.registerSubtype(ABActionAddMp.class, "addMp")
 				.registerSubtype(ABActionSubtractMp.class, "subtractMp")
 				.registerSubtype(ABActionAddStunBuff.class, "addStunBuff")
 				.registerSubtype(ABActionStartCooldown.class, "startCooldown")
@@ -288,6 +319,10 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionCreateTimedArtBuff.class, "createTimedArtBuff")
 				.registerSubtype(ABActionCreateTimedTickingBuff.class, "createTimedTickingBuff")
 				.registerSubtype(ABActionCreateTimedTickingPostDeathBuff.class, "createTimedTickingPostDeathBuff")
+
+				.registerSubtype(ABActionCreateStateModBuff.class, "createStateModBuff")
+				.registerSubtype(ABActionAddStateModBuff.class, "addStateModBuff")
+				.registerSubtype(ABActionRemoveStateModBuff.class, "removeStateModBuff")
 
 				.registerSubtype(ABActionCreateNonStackingStatBuff.class, "createNonStackingStatBuff")
 				.registerSubtype(ABActionAddNonStackingStatBuff.class, "addNonStackingStatBuff")
@@ -360,6 +395,7 @@ public abstract class AbilityBuilderGsonBuilder {
 		registerIntegerCallbacks(callbackTypeFactory);
 		registerLocationCallbacks(callbackTypeFactory);
 		registerStatBuffCallbacks(callbackTypeFactory);
+		registerStateModBuffCallbacks(callbackTypeFactory);
 		registerStringCallbacks(callbackTypeFactory);
 		registerTimerCallbacks(callbackTypeFactory);
 		registerUnitCallbacks(callbackTypeFactory);
@@ -446,6 +482,11 @@ public abstract class AbilityBuilderGsonBuilder {
 				.of(ABNonStackingStatBuffCallback.class, "type");
 		registerStatBuffCallbacks(statBuffCallbackTypeFactory);
 		gsonBuilder.registerTypeAdapterFactory(statBuffCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABStateModBuffCallback> stateModBuffCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABStateModBuffCallback.class, "type");
+		registerStateModBuffCallbacks(stateModBuffCallbackTypeFactory);
+		gsonBuilder.registerTypeAdapterFactory(stateModBuffCallbackTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABStringCallback> stringCallbackTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABStringCallback.class, "type");

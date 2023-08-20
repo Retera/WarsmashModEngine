@@ -7,12 +7,16 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
 
 public class ABTimedBuff extends ABGenericTimedBuff {
 
 	protected Map<String, Object> localStore;
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
+	
+	private NonStackingFx fx;
 	
 	protected int castId = 0;
 
@@ -33,6 +37,12 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 
 	@Override
 	protected void onBuffAdd(CSimulation game, CUnit unit) {
+		if(this.fx != null) {
+			unit.removeNonStackingFx(game, this.fx);
+		}
+		if (this.getAlias() != null) {
+			this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), CEffectType.TARGET);
+		}
 		if (onAddActions != null) {
 			for (ABAction action : onAddActions) {
 				action.runAction(game, unit, localStore, castId);
@@ -42,6 +52,9 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 
 	@Override
 	protected void onBuffRemove(CSimulation game, CUnit unit) {
+		if (this.fx != null) {
+			unit.removeNonStackingFx(game, this.fx);
+		}
 		if (onRemoveActions != null) {
 			for (ABAction action : onRemoveActions) {
 				action.runAction(game, unit, localStore, castId);

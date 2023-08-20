@@ -148,7 +148,12 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 				if (result) {
 					receiver.targetOk(target);
 				} else {
-					receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THERE);
+					String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+					if (failReason != null) {
+						receiver.targetCheckFailed(failReason);
+					} else {
+						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THERE);
+					}
 				}
 			} else {
 				receiver.targetOk(target);
@@ -180,7 +185,12 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 			if (result) {
 				receiver.useOk();
 			} else {
-				receiver.unknownReasonUseNotOk();
+				String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+				if (failReason != null) {
+					receiver.activationCheckFailed(failReason);
+				} else {
+					receiver.unknownReasonUseNotOk();
+				}
 			}
 		} else {
 			receiver.useOk();

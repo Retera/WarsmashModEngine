@@ -177,7 +177,9 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	@Override
 	public Void accept(final CBuff ability) {
 		final BuffUI buffUI = this.abilityDataUI.getBuffUI(ability.getAlias());
-		addBuffIcon(ability, buffUI.getOnIconUI());
+		if (buffUI != null) {
+			addBuffIcon(ability, buffUI.getOnIconUI());
+		}
 		return null;
 	}
 

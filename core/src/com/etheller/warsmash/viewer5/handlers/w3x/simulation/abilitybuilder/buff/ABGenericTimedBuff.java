@@ -5,7 +5,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
-public class ABGenericTimedBuff extends ABBuff {
+public abstract class ABGenericTimedBuff extends ABBuff {
 	private boolean showTimedLifeBar;
 	private final float duration;
 	private int expireTick;
@@ -28,16 +28,14 @@ public class ABGenericTimedBuff extends ABBuff {
 		expireTick = game.getGameTurnTick() + durationTicks;
 	}
 
-	protected void onBuffAdd(CSimulation game, CUnit unit) {
-	}
+	protected abstract void onBuffAdd(CSimulation game, CUnit unit);
 
 	@Override
 	public void onRemove(CSimulation game, CUnit unit) {
 		this.onBuffRemove(game, unit);
 	}
 	
-	protected void onBuffRemove(CSimulation game, CUnit unit) {
-	}
+	protected abstract void onBuffRemove(CSimulation game, CUnit unit);
 
 	@Override
 	public float getDurationMax() {
@@ -54,7 +52,7 @@ public class ABGenericTimedBuff extends ABBuff {
 	@Override
 	public void onTick(final CSimulation game, final CUnit caster) {
 		final int currentTick = game.getGameTurnTick();
-		if (currentTick >= this.expireTick) {
+		if (currentTick > this.expireTick) {
 			caster.remove(game, this);
 		}
 	}

@@ -23,7 +23,9 @@ public class ABTimedArtBuff extends ABGenericTimedBuff {
 		if(this.fx != null) {
 			unit.removeNonStackingFx(game, this.fx);
 		}
-		this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), CEffectType.TARGET);
+		if (this.getAlias() != null) {
+			this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), CEffectType.TARGET);
+		}
 	}
 
 	@Override

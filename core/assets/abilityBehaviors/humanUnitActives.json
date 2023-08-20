@@ -121,51 +121,8 @@
 								"value": "asbuff"
 							}
 						}
-					},{
-						"type": "createSpellEffectOnUnit",
-						"target": {
-							"type": "getCastingUnit"
-						},
-						"id": {
-							"type": "getFirstBuffId"
-						},
-						"effectType": "TARGET"
-				},{
-					"type": "storeValueLocally",
-					"key": {
-						"type": "catStrings",
-						"stringList": [{
-							"type": "rawString",
-							"value": "fxid"
-						},{
-							"type": "getUnitHandleAsString",
-							"unit": {
-								"type": "getCastingUnit"
-							}
-						}]
-					},
-					"valueToStore": {
-						"type": "getLastCreatedSpellEffect"
-					}
 				}],
 				"onRemoveActions": [{
-						"type": "removeSpellEffect",
-						"effectToRemove": {
-							"type": "getStoredFXByKey",
-							"key": {
-								"type": "catStrings",
-								"stringList": [{
-									"type": "rawString",
-									"value": "fxid"
-								},{
-									"type": "getUnitHandleAsString",
-									"unit": {
-										"type": "getCastingUnit"
-									}
-								}]
-							}
-						}
-					},{
 						"type": "removeNonStackingStatBuff",
 						"targetUnit": {
 							"type": "getCastingUnit"

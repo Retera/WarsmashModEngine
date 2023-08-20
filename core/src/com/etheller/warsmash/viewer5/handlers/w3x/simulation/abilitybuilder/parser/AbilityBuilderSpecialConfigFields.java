@@ -1,8 +1,15 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
+import java.util.List;
+
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
+
 public class AbilityBuilderSpecialConfigFields {
 	private Integer bufferManaRequired;
 	private Integer manaDrainedPerSecond;
+	
+	private List<ABCondition> pointTargeted;
+	private List<ABCondition> targetedSpell;
 
 	public Integer getBufferManaRequired() {
 		return bufferManaRequired;
@@ -18,5 +25,21 @@ public class AbilityBuilderSpecialConfigFields {
 
 	public void setManaDrainedPerSecond(Integer manaDrainedPerSecond) {
 		this.manaDrainedPerSecond = manaDrainedPerSecond;
+	}
+
+	public List<ABCondition> getPointTargeted() {
+		return pointTargeted;
+	}
+
+	public void setPointTargeted(List<ABCondition> pointTargeted) {
+		this.pointTargeted = pointTargeted;
+	}
+
+	public List<ABCondition> getTargetedSpell() {
+		return targetedSpell;
+	}
+
+	public void setTargetedSpell(List<ABCondition> targetedSpell) {
+		this.targetedSpell = targetedSpell;
 	}
 }

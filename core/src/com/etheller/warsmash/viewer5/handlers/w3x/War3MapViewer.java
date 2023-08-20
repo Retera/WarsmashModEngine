@@ -1014,14 +1014,18 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void spawnEffectOnUnit(final CUnit unit, final String effectPath) {
 						final RenderSpellEffect spellEffect = addSpecialEffectTarget(effectPath, unit, "");
-						spellEffect.setKillWhenDone(true);
+						if (spellEffect != null) {
+							spellEffect.setKillWhenDone(true);
+						}
 					}
 
 					@Override
 					public void spawnTemporarySpellEffectOnUnit(final CUnit unit, final War3ID alias,
 							final CEffectType effectType) {
 						final RenderSpellEffect spellEffect = spawnSpellEffectOnUnitEx(unit, alias, effectType, 0);
-						spellEffect.setKillWhenDone(true);
+						if (spellEffect != null) {
+							spellEffect.setKillWhenDone(true);
+						}
 					}
 
 					@Override

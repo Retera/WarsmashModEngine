@@ -60,8 +60,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		Sequence.populateTags(primaryTags, this.castingSecondaryTags, animNames);
 		if (primaryTags.isEmpty()) {
 			this.castingPrimaryTag = null;
-		}
-		else {
+		} else {
 			this.castingPrimaryTag = primaryTags.iterator().next();
 		}
 		if (this.castingSecondaryTags.isEmpty()) {
@@ -81,7 +80,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	public float getDurationForTarget(CUnit targetUnit) {
-		if(targetUnit != null && targetUnit.isHero()) {
+		if (targetUnit != null && targetUnit.isHero()) {
 			return getHeroDuration();
 		}
 		return getDuration();
@@ -132,18 +131,18 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		}
 		float cooldownRemaining = getCooldownRemaining(game, unit);
 		if (cooldownRemaining > 0) {
-			float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCode()) * WarsmashConstants.SIMULATION_STEP_TIME;
+			float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCode())
+					* WarsmashConstants.SIMULATION_STEP_TIME;
 			receiver.cooldownNotYetReady(cooldownRemaining, cooldownLengthDisplay);
-		}
-		else if (unit.getMana() < this.manaCost) {
+		} else if (unit.getMana() < this.manaCost) {
 			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
-		}
-		else {
+		} else {
 			innerCheckCanUseSpell(game, unit, orderId, receiver);
 		}
 	}
 
-	protected void innerCheckCanUseSpell(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUseSpell(CSimulation game, CUnit unit, int orderId,
+			AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
@@ -195,7 +194,6 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
 		this.targetsAllowed = targetsAllowed;
 	}
-
 
 	public PrimaryTag getCastingPrimaryTag() {
 		return this.castingPrimaryTag;

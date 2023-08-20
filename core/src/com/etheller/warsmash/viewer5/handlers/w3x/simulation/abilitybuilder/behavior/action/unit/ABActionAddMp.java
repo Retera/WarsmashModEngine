@@ -9,7 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 
-public class ABActionSetMp implements ABAction {
+public class ABActionAddMp implements ABAction {
 
 	private ABUnitCallback target;
 	private ABFloatCallback amount;
@@ -23,9 +23,9 @@ public class ABActionSetMp implements ABAction {
 		}
 		CUnit targetUnit = target.callback(game, caster, localStore, castId);
 		if (percent) {
-			targetUnit.setMana(Math.max(Math.min(amount.callback(game, caster, localStore, castId) * targetUnit.getMaximumMana(), targetUnit.getMaximumMana()), 0));
+			targetUnit.setMana(Math.max(Math.min(targetUnit.getMana() + amount.callback(game, caster, localStore, castId) * targetUnit.getMaximumMana(), targetUnit.getMaximumMana()), 0));
 		} else {
-			targetUnit.setMana(Math.max(Math.min(amount.callback(game, caster, localStore, castId), targetUnit.getMaximumMana()), 0));
+			targetUnit.setMana(Math.max(Math.min(targetUnit.getMana() + amount.callback(game, caster, localStore, castId), targetUnit.getMaximumMana()), 0));
 		}
 	}
 

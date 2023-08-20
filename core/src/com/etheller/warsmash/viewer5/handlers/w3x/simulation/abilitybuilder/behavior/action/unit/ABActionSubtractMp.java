@@ -23,9 +23,9 @@ public class ABActionSubtractMp implements ABAction {
 		}
 		CUnit targetUnit = target.callback(game, caster, localStore, castId);
 		if (percent) {
-			targetUnit.setMana(targetUnit.getMana() - amount.callback(game, caster, localStore, castId) * targetUnit.getMaximumMana());
+			targetUnit.setMana(Math.max(Math.min(targetUnit.getMana() - amount.callback(game, caster, localStore, castId) * targetUnit.getMaximumMana(), targetUnit.getMaximumMana()), 0));
 		} else {
-			targetUnit.setMana(targetUnit.getMana() - amount.callback(game, caster, localStore, castId));
+			targetUnit.setMana(Math.max(Math.min(targetUnit.getMana() - amount.callback(game, caster, localStore, castId), targetUnit.getMaximumMana()), 0));
 		}
 	}
 

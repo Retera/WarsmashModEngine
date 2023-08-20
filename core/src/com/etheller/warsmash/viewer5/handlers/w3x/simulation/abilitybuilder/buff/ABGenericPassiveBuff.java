@@ -25,7 +25,9 @@ public class ABGenericPassiveBuff extends ABBuff {
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-		this.fx.remove();
+		if (this.fx != null) {
+			this.fx.remove();
+		}
 	}
 
 	@Override

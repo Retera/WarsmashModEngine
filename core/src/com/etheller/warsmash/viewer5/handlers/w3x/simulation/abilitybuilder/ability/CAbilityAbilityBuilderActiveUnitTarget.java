@@ -141,7 +141,12 @@ public class CAbilityAbilityBuilderActiveUnitTarget extends AbstractGenericSingl
 					if (result) {
 						receiver.targetOk(targetUnit);
 					} else {
-						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
+						String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+						if (failReason != null) {
+							receiver.targetCheckFailed(failReason);
+						} else {
+							receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
+						}
 					}
 				} else {
 					receiver.targetOk(targetUnit);
@@ -183,7 +188,12 @@ public class CAbilityAbilityBuilderActiveUnitTarget extends AbstractGenericSingl
 			if (result) {
 				receiver.useOk();
 			} else {
-				receiver.unknownReasonUseNotOk();
+				String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+				if (failReason != null) {
+					receiver.activationCheckFailed(failReason);
+				} else {
+					receiver.unknownReasonUseNotOk();
+				}
 			}
 		} else {
 			receiver.useOk();

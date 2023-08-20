@@ -252,7 +252,12 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 				if (result) {
 					receiver.useOk();
 				} else {
-					receiver.unknownReasonUseNotOk();
+					String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+					if (failReason != null) {
+						receiver.activationCheckFailed(failReason);
+					} else {
+						receiver.unknownReasonUseNotOk();
+					}
 				}
 			} else {
 				receiver.useOk();

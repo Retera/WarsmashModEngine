@@ -3243,9 +3243,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void manaChanged() {
-		this.rootFrame.setText(this.unitManaText,
-				FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMana()) + " / "
-						+ FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMaximumMana()));
+		final int maximumMana = this.selectedUnit.getSimulationUnit().getMaximumMana();
+		if (maximumMana > 0) {
+			this.rootFrame.setText(this.unitManaText,
+					FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMana()) + " / " + maximumMana);
+		} else {
+			this.rootFrame.setText(this.unitManaText, "");
+		}
 	}
 
 	@Override

@@ -21,11 +21,11 @@ public class ABActionSetMp implements ABAction {
 		if (isPercent != null) {
 			percent = isPercent.callback(game, caster, localStore, castId);
 		}
+		CUnit targetUnit = target.callback(game, caster, localStore, castId);
 		if (percent) {
-			CUnit targetUnit = target.callback(game, caster, localStore, castId);
-			targetUnit.setMana(amount.callback(game, caster, localStore, castId) * targetUnit.getMaximumMana());
+			targetUnit.setMana(Math.max(Math.min(amount.callback(game, caster, localStore, castId) * targetUnit.getMaximumMana(), targetUnit.getMaximumMana()), 0));
 		} else {
-			target.callback(game, caster, localStore, castId).setMana(amount.callback(game, caster, localStore, castId));
+			targetUnit.setMana(Math.max(Math.min(amount.callback(game, caster, localStore, castId), targetUnit.getMaximumMana()), 0));
 		}
 	}
 

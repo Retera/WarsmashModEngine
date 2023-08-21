@@ -7,17 +7,26 @@ public class ABLocalStoreKeys {
 	public static final String PARENTCASTER = "_parentCaster";
 	public static final String PARENTLOCALSTORE = "_parentLocalStore";
 	public static final String ALIAS = "_alias";
+	public static final String CODE = "_code";
 	public static final String GAME = "_game";
 	public static final String THISUNIT = "_thisUnit";
 	public static final String ITERATORCOUNT = "_i";
 
+	public static final String CHANNELING = "_channeling#";
+	public static final String INTERRUPTED = "_interrupted#";
+	public static final String PERIODICNEXTTICK = "_periodicNextTick#";
+
+	public static final String CANTUSEREASON = "_cantUseReason";
+
 	public static final String TOGGLEDABILITY = "_toggledAbility";
+	public static final String FLEXABILITY = "_flexAbility";
 	
 	// Aura Template
 	public static final String AURAGROUP = "_auraGroup";
 	
 	// FX names
 	public static final String LASTCREATEDFX = "_lastCreatedFx";
+	public static final String LASTCREATEDLIGHTNING = "_lastCreatedLtng";
 	
 	// Unit Names
 	public static final String ENUMUNIT = "_enumUnit#";
@@ -56,6 +65,9 @@ public class ABLocalStoreKeys {
 
 	// NonStackingStatBuff Names
 	public static final String LASTCREATEDNSSB = "_lastCreatedNSSB";
+	
+	// StateModBuff Names
+	public static final String LASTCREATEDSMB = "_lastCreatedSMB";
 
 	// AttackEvasionListener Names
 	public static final String LASTCREATEDAEL = "_lastCreatedAEL";

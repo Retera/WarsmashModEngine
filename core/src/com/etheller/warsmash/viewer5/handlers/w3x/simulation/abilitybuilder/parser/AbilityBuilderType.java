@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
 public enum AbilityBuilderType {
+	NORMAL_FLEXTARGET_SIMPLE,
 	NORMAL_UNITTARGET_SIMPLE,
 	NORMAL_POINTTARGET_SIMPLE,
 	NORMAL_NOTARGET_SIMPLE,

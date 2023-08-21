@@ -10,10 +10,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityNoTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 
 public class CAbilityAbilityBuilderActiveNoTargetSimple extends CAbilityNoTargetSpellBase {
 
@@ -90,6 +92,28 @@ public class CAbilityAbilityBuilderActiveNoTargetSimple extends CAbilityNoTarget
 			}
 		}
 		return false;
+	}
+
+	@Override
+	protected void innerCheckCanUseSpell(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+		if (config.getExtraCastConditions() != null) {
+			boolean result = true;
+			for (ABCondition condition : config.getExtraCastConditions()) {
+				result = result && condition.evaluate(game, unit, localStore, castId);
+			}
+			if (result) {
+				receiver.useOk();
+			} else {
+				String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+				if (failReason != null) {
+					receiver.activationCheckFailed(failReason);
+				} else {
+					receiver.unknownReasonUseNotOk();
+				}
+			}
+		} else {
+			receiver.useOk();
+		}
 	}
 
 	@Override

@@ -48,11 +48,15 @@ public abstract class CAbilityPointTargetSpellBase extends CAbilitySpellBase {
 	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
 			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (!unit.isMovementDisabled() || unit.canReach(target, getCastRange())) {
-			receiver.targetOk(target);
-		}
-		else {
+			this.innerCheckCanTargetSpell(game, unit, orderId, target, receiver);
+		} else {
 			receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 		}
+	}
+
+	protected void innerCheckCanTargetSpell(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.targetOk(target);
 	}
 
 	@Override

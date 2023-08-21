@@ -630,20 +630,22 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								projectileSpeed, target, source, damage, unitAttack, bounceIndex, attackListener);
 
 						final MdxModel model = loadModelMdx(missileArt);
-						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
-						modelInstance.setTeamColor(getRenderPeer(source).playerIndex);
-						modelInstance.setScene(War3MapViewer.this.worldScene);
-						if (bounceIndex == 0) {
-							SequenceUtils.randomBirthSequence(modelInstance);
+						if (model != null) {
+							final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
+							modelInstance.setTeamColor(getRenderPeer(source).playerIndex);
+							modelInstance.setScene(War3MapViewer.this.worldScene);
+							if (bounceIndex == 0) {
+								SequenceUtils.randomBirthSequence(modelInstance);
+							}
+							else {
+								SequenceUtils.randomStandSequence(modelInstance);
+							}
+							modelInstance.setLocation(x, y, height);
+							final RenderProjectile renderAttackProjectile = new RenderProjectile(simulationAttackProjectile,
+									modelInstance, height, projectileArc, War3MapViewer.this);
+	
+							War3MapViewer.this.projectiles.add(renderAttackProjectile);
 						}
-						else {
-							SequenceUtils.randomStandSequence(modelInstance);
-						}
-						modelInstance.setLocation(x, y, height);
-						final RenderProjectile renderAttackProjectile = new RenderProjectile(simulationAttackProjectile,
-								modelInstance, height, projectileArc, War3MapViewer.this);
-
-						War3MapViewer.this.projectiles.add(renderAttackProjectile);
 
 						return simulationAttackProjectile;
 					}
@@ -732,6 +734,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final RenderUnit renderPeerSource = War3MapViewer.this.getRenderPeer(source);
 						final RenderWidget renderPeerTarget = War3MapViewer.this.getRenderPeer(target);
 						return War3MapViewer.this.createLightning(lightningId, renderPeerSource, renderPeerTarget);
+					}
+
+					@Override
+					public SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source, CUnit target, Float duration) {
+						final RenderUnit renderPeerSource = War3MapViewer.this.getRenderPeer(source);
+						final RenderWidget renderPeerTarget = War3MapViewer.this.getRenderPeer(target);
+						return War3MapViewer.this.createLightning(lightningId, renderPeerSource, renderPeerTarget, duration);
 					}
 
 					@Override
@@ -1014,14 +1023,18 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void spawnEffectOnUnit(final CUnit unit, final String effectPath) {
 						final RenderSpellEffect spellEffect = addSpecialEffectTarget(effectPath, unit, "");
-						spellEffect.setKillWhenDone(true);
+						if (spellEffect != null) {
+							spellEffect.setKillWhenDone(true);
+						}
 					}
 
 					@Override
 					public void spawnTemporarySpellEffectOnUnit(final CUnit unit, final War3ID alias,
 							final CEffectType effectType) {
 						final RenderSpellEffect spellEffect = spawnSpellEffectOnUnitEx(unit, alias, effectType, 0);
-						spellEffect.setKillWhenDone(true);
+						if (spellEffect != null) {
+							spellEffect.setKillWhenDone(true);
+						}
 					}
 
 					@Override
@@ -1296,25 +1309,45 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public void spawnAbilitySoundEffect(final CUnit caster, final War3ID alias) {
+					public SimulationRenderComponent spawnAbilitySoundEffect(final CUnit caster, final War3ID alias) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
 						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
-						if (abilityUi.getEffectSound() != null) {
-							War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound()).play(
+						if (abilityUi.getEffectSound() == null) {
+							return SimulationRenderComponent.DO_NOTHING;
+						}
+						final long soundId = War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound()).play(
 									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
 									renderPeer.getZ());
+						if (soundId == -1) {
+							return SimulationRenderComponent.DO_NOTHING;
 						}
+						return new SimulationRenderComponent() {
+							@Override
+							public void remove() {
+								War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped()).stop(soundId);;
+							}
+						};
 					}
 
 					@Override
-					public void loopAbilitySoundEffect(final CUnit caster, final War3ID alias) {
+					public SimulationRenderComponent loopAbilitySoundEffect(final CUnit caster, final War3ID alias) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
 						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
-						if (abilityUi.getEffectSoundLooped() != null) {
-							War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped()).play(
-									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
-									renderPeer.getZ());
+						if (abilityUi.getEffectSound() == null) {
+							return SimulationRenderComponent.DO_NOTHING;
 						}
+						final long soundId = War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped()).play(
+									War3MapViewer.this.worldScene.audioContext, renderPeer.getX(), renderPeer.getY(),
+									renderPeer.getZ(), true);
+						if (soundId == -1) {
+							return SimulationRenderComponent.DO_NOTHING;
+						}
+						return new SimulationRenderComponent() {
+							@Override
+							public void remove() {
+								War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped()).stop(soundId);;
+							}
+						};
 					}
 
 					@Override
@@ -1356,6 +1389,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public SimulationRenderComponentLightning createLightning(War3ID lightningId, RenderUnit renderPeerSource, RenderWidget renderPeerTarget) {
+		return this.createLightning(lightningId, renderPeerSource, renderPeerTarget, null);
+	}
+
+	public SimulationRenderComponentLightning createLightning(War3ID lightningId, RenderUnit renderPeerSource, RenderWidget renderPeerTarget, Float duration) {
 		LightningEffectModel lightningEffectModel = lightningTypeToModel.get(lightningId);
 		if(lightningEffectModel != null) {
 			LightningEffectNode source = (LightningEffectNode)lightningEffectModel.addInstance();
@@ -1365,8 +1402,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			// on the other arbitrary (non-unit-bound) createLightning func.
 			// Later on we might want a user API for creating unit-attached lightnings that have a duration specified
 			// by user code
-			source.setLifeSpanRemaining(lightningEffectModel.getDuration());
-			target.setLifeSpanRemaining(lightningEffectModel.getDuration());
+			if (duration != null) {
+				if (duration >= 0) {
+					source.setLifeSpanRemaining(duration);
+					target.setLifeSpanRemaining(duration);
+				}
+			} else {
+				source.setLifeSpanRemaining(lightningEffectModel.getDuration());
+				target.setLifeSpanRemaining(lightningEffectModel.getDuration());
+			}
 			source.setFriend(target);
 			target.setFriend(source);
 			source.setSource(true);
@@ -2922,7 +2966,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final String modelPath = effect.getModelPath();
 			final List<String> attachmentPoint = effect.getAttachmentPoint();
 			final RenderSpellEffect specialEffect = addSpecialEffectTarget(modelPath, unit, attachmentPoint);
-			renderEffects.add(specialEffect);
+			if (specialEffect != null) {
+				renderEffects.add(specialEffect);
+			}
 		}
 		return renderEffects;
 	}

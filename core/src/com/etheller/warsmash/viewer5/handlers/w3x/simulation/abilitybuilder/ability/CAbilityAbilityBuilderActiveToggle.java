@@ -21,6 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbilityActivationReceiver;
 
 public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIconNoSmartActiveAbility
 		implements AbilityBuilderAbility, AbilityBuilderToggleAbility {
@@ -175,6 +176,7 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 	public void activate(final CSimulation game, final CUnit caster) {
 		this.castId++;
 		this.active = true;
+		this.startCooldown(game, caster);
 		if (config.getOnBeginCasting() != null) {
 			for (ABAction action : config.getOnBeginCasting()) {
 				action.runAction(game, caster, localStore, castId);
@@ -185,7 +187,6 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 	@Override
 	public void deactivate(final CSimulation game, final CUnit caster) {
 		this.active = false;
-		this.startCooldown(game, caster);
 		if (config.getOnEndCasting() != null) {
 			for (ABAction action : config.getOnEndCasting()) {
 				action.runAction(game, caster, localStore, castId);
@@ -238,10 +239,12 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 
 	@Override
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+		int cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 		if (!this.active) {
-			int cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 			if (cooldownRemaining > 0) {
-				receiver.cooldownNotYetReady(cooldownRemaining, this.cooldown);
+				float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getAlias())
+						* WarsmashConstants.SIMULATION_STEP_TIME;
+				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME, cooldownLengthDisplay);
 			} else if (unit.getMana() < (this.manaCost + this.bufferMana)) {
 				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 			} else if (config.getExtraCastConditions() != null) {
@@ -252,12 +255,22 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 				if (result) {
 					receiver.useOk();
 				} else {
-					receiver.unknownReasonUseNotOk();
+					String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+					if (failReason != null) {
+						receiver.activationCheckFailed(failReason);
+					} else {
+						receiver.unknownReasonUseNotOk();
+					}
 				}
 			} else {
 				receiver.useOk();
 			}
 		} else {
+			if (cooldownRemaining > 0 && !(receiver instanceof MeleeUIAbilityActivationReceiver)) {
+				float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getAlias())
+						* WarsmashConstants.SIMULATION_STEP_TIME;
+				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME, cooldownLengthDisplay);
+			}
 			receiver.useOk();
 		}
 	}

@@ -61,6 +61,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
@@ -361,6 +362,11 @@ public class CSimulation implements CPlayerAPI {
 	public SimulationRenderComponentLightning createLightning(final CUnit source, final War3ID lightningId,
 			final CUnit target) {
 		return this.simulationRenderController.createLightning(this, lightningId, source, target);
+	}
+
+	public SimulationRenderComponentLightning createLightning(final CUnit source, final War3ID lightningId,
+			final CUnit target, final Float duration) {
+		return this.simulationRenderController.createLightning(this, lightningId, source, target, duration);
 	}
 
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
@@ -664,12 +670,12 @@ public class CSimulation implements CPlayerAPI {
 		return this.simulationRenderController.spawnPersistentSpellEffectOnUnit(unit, alias, effectType, index);
 	}
 
-	public void unitSoundEffectEvent(final CUnit caster, final War3ID alias) {
-		this.simulationRenderController.spawnAbilitySoundEffect(caster, alias);
+	public SimulationRenderComponent unitSoundEffectEvent(final CUnit caster, final War3ID alias) {
+		return this.simulationRenderController.spawnAbilitySoundEffect(caster, alias);
 	}
 
-	public void unitLoopSoundEffectEvent(final CUnit caster, final War3ID alias) {
-		this.simulationRenderController.loopAbilitySoundEffect(caster, alias);
+	public SimulationRenderComponent unitLoopSoundEffectEvent(final CUnit caster, final War3ID alias) {
+		return this.simulationRenderController.loopAbilitySoundEffect(caster, alias);
 	}
 
 	public void unitStopSoundEffectEvent(final CUnit caster, final War3ID alias) {

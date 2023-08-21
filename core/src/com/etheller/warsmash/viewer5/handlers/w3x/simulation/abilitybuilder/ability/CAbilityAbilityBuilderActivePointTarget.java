@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -148,7 +149,12 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 				if (result) {
 					receiver.targetOk(target);
 				} else {
-					receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THERE);
+					String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+					if (failReason != null) {
+						receiver.targetCheckFailed(failReason);
+					} else {
+						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THERE);
+					}
 				}
 			} else {
 				receiver.targetOk(target);
@@ -169,7 +175,9 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
 		int cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 		if (cooldownRemaining > 0) {
-			receiver.cooldownNotYetReady(cooldownRemaining, this.cooldown);
+			float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getAlias())
+					* WarsmashConstants.SIMULATION_STEP_TIME;
+			receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME, cooldownLengthDisplay);
 		} else if (unit.getMana() < this.manaCost) {
 			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		} else if (config.getExtraCastConditions() != null) {
@@ -180,7 +188,12 @@ public class CAbilityAbilityBuilderActivePointTarget extends AbstractGenericSing
 			if (result) {
 				receiver.useOk();
 			} else {
-				receiver.unknownReasonUseNotOk();
+				String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+				if (failReason != null) {
+					receiver.activationCheckFailed(failReason);
+				} else {
+					receiver.unknownReasonUseNotOk();
+				}
 			}
 		} else {
 			receiver.useOk();

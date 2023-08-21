@@ -53,6 +53,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStun;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUpgradingVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -74,7 +75,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.list
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementStacking;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementEffectPriority;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultAccuracyCheckListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultEtherealDamageModListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultLifestealListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultSleepListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultThornsListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
@@ -97,6 +100,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
@@ -132,6 +136,7 @@ public class CUnit extends CWidget {
 	private CUnitDefaultThornsListener percentThornsListener = null;
 	private CUnitDefaultLifestealListener lifestealListener = null;
 
+	private List<StateModBuff> stateModBuffs = new ArrayList<>();
 	private Map<NonStackingStatBuffType, Map<String, List<NonStackingStatBuff>>> nonStackingBuffs = new HashMap<>();
 	private Map<String, List<NonStackingFx>> nonStackingFx = new HashMap<>();
 	private Map<String, List<CBuff>> nonStackingDisplayBuffs = new HashMap<>();
@@ -192,6 +197,9 @@ public class CUnit extends CWidget {
 	private boolean acceptingOrders = true;
 	private boolean invulnerable = false;
 	private boolean magicImmune = false;
+	private boolean resistant = false;
+	private boolean autoAttack = true;
+	private boolean moveDisabled = false;
 	private CBehavior defaultBehavior;
 	private COrder lastStartedOrder = null;
 	private CUnit workerInside;
@@ -292,7 +300,8 @@ public class CUnit extends CWidget {
 
 	public void addNonStackingStatBuff(NonStackingStatBuff buff) {
 		if (buff.getBuffType() == NonStackingStatBuffType.ALLATK) {
-			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATK);
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
+					.get(NonStackingStatBuffType.MELEEATK);
 			if (buffKeyMap == null) {
 				buffKeyMap = new HashMap<>();
 				this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATK, buffKeyMap);
@@ -303,7 +312,7 @@ public class CUnit extends CWidget {
 				buffKeyMap.put(buff.getStackingKey(), theList);
 			}
 			theList.add(buff);
-			
+
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK);
 			if (buffKeyMap == null) {
 				buffKeyMap = new HashMap<>();
@@ -316,7 +325,8 @@ public class CUnit extends CWidget {
 			}
 			theList.add(buff);
 		} else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
-			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATKPCT);
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
+					.get(NonStackingStatBuffType.MELEEATKPCT);
 			if (buffKeyMap == null) {
 				buffKeyMap = new HashMap<>();
 				this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATKPCT, buffKeyMap);
@@ -327,7 +337,7 @@ public class CUnit extends CWidget {
 				buffKeyMap.put(buff.getStackingKey(), theList);
 			}
 			theList.add(buff);
-			
+
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT);
 			if (buffKeyMap == null) {
 				buffKeyMap = new HashMap<>();
@@ -357,7 +367,8 @@ public class CUnit extends CWidget {
 
 	public void removeNonStackingStatBuff(NonStackingStatBuff buff) {
 		if (buff.getBuffType() == NonStackingStatBuffType.ALLATK) {
-			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATK);
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
+					.get(NonStackingStatBuffType.MELEEATK);
 			try {
 				buffKeyMap.get(buff.getStackingKey()).remove(buff);
 			} catch (Exception e) {
@@ -365,7 +376,7 @@ public class CUnit extends CWidget {
 				System.err.println(e.getStackTrace().toString());
 				System.err.println("From: " + this.getTypeId().asStringValue());
 			}
-			
+
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK);
 			try {
 				buffKeyMap.get(buff.getStackingKey()).remove(buff);
@@ -375,7 +386,8 @@ public class CUnit extends CWidget {
 				System.err.println("From: " + this.getTypeId().asStringValue());
 			}
 		} else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
-			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATKPCT);
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
+					.get(NonStackingStatBuffType.MELEEATKPCT);
 			try {
 				buffKeyMap.get(buff.getStackingKey()).remove(buff);
 			} catch (Exception e) {
@@ -383,7 +395,7 @@ public class CUnit extends CWidget {
 				System.err.println(e.getStackTrace().toString());
 				System.err.println("From: " + this.getTypeId().asStringValue());
 			}
-			
+
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT);
 			try {
 				buffKeyMap.get(buff.getStackingKey()).remove(buff);
@@ -404,30 +416,174 @@ public class CUnit extends CWidget {
 		}
 		computeDerivedFields(buff.getBuffType());
 	}
-	
-	public void computeUnitState(StateModBuffType type) {
+
+	public void addStateModBuff(StateModBuff listener) {
+		stateModBuffs.add(0, listener);
+	}
+
+	public void removeStateModBuff(StateModBuff listener) {
+		stateModBuffs.remove(listener);
+	}
+
+	public void removeAllStateModBuffs(StateModBuffType type) {
+		for (int i = stateModBuffs.size() - 1; i >= 0; i--) {
+			if (stateModBuffs.get(i).getBuffType() == type) {
+				stateModBuffs.remove(i);
+			}
+		}
+	}
+
+	public void computeUnitState(CSimulation game, StateModBuffType type) {
 		switch (type) {
 		case DISABLE_ATTACK:
+		case ETHEREAL:
+			boolean isDisableAttack = false;
+			boolean isEthereal = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.DISABLE_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.ETHEREAL) {
+					if (buff.getValue() != 0) {
+						isEthereal = true;
+						isDisableAttack = true;
+					}
+				}
+			}
 			CAbility attack = this.getFirstAbilityOfType(CAbilityAttack.class);
-			attack.setDisabled(disableAttacks);
+			attack.setDisabled(isDisableAttack);
+
+			if (isEthereal) {
+				if (!this.damageTakenModificationListeners.contains(CUnitDefaultEtherealDamageModListener.INSTANCE)) {
+					this.addDamageTakenModificationListener(CUnitDefaultEtherealDamageModListener.INSTANCE);
+				}
+				//Disable physical skills
+//				for (CAbility ability : this.abilities) {
+//					if (ability.isPhysical()) {
+//						ability.setDisabled(true);
+//					}
+//				}
+			} else {
+				if (this.damageTakenModificationListeners.contains(CUnitDefaultEtherealDamageModListener.INSTANCE)) {
+					this.removeDamageTakenModificationListener(CUnitDefaultEtherealDamageModListener.INSTANCE);
+				}
+				//Enable physical skills
+//				for (CAbility ability : this.abilities) {
+//					if (ability.isPhysical()) {
+//						ability.setDisabled(false);
+//					}
+//				}
+			}
 			break;
 		case DISABLE_AUTO_ATTACK:
-			break;
-		case ETHEREAL:
+			boolean isDisableAutoAttack = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.DISABLE_AUTO_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableAutoAttack = true;
+					}
+				}
+			}
+			this.autoAttack = !isDisableAutoAttack;
 			break;
 		case MAGIC_IMMUNE:
+			boolean isMagicImmune = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.MAGIC_IMMUNE) {
+					if (buff.getValue() != 0) {
+						isMagicImmune = true;
+					}
+				}
+			}
+			this.setMagicImmune(isMagicImmune);
 			break;
 		case RESISTANT:
+			boolean isResistant = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.RESISTANT) {
+					if (buff.getValue() != 0) {
+						isResistant = true;
+					}
+				}
+			}
+			this.resistant = isResistant;
 			break;
 		case SLEEPING:
+		case STUN:
+			boolean isSleeping = false;
+			boolean isStun = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.SLEEPING) {
+					if (buff.getValue() != 0) {
+						isSleeping = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.STUN) {
+					if (buff.getValue() != 0) {
+						isStun = true;
+					}
+				}
+			}
+			if (isSleeping || isStun) {
+				if (this.currentBehavior != null) {
+					this.currentBehavior.end(game, true);
+				}
+				this.currentBehavior = new CBehaviorStun(this);
+				this.currentBehavior.begin(game);
+				this.setAcceptingOrders(false);
+				this.stateNotifier.ordersChanged();
+			} else {
+				this.setAcceptingOrders(true);
+				this.currentBehavior = this.pollNextOrderBehavior(game);
+				this.stateNotifier.ordersChanged();
+			}
+			
+			if (isSleeping) {
+				if (!this.damageTakenListeners.contains(CUnitDefaultSleepListener.INSTANCE)) {
+					this.addDamageTakenListener(CUnitDefaultSleepListener.INSTANCE);
+				}
+			} else {
+				if (this.damageTakenListeners.contains(CUnitDefaultSleepListener.INSTANCE)) {
+					this.removeDamageTakenListener(CUnitDefaultSleepListener.INSTANCE);
+				}
+			}
 			break;
 		case SNARED:
+			boolean isSnared = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.SNARED) {
+					if (buff.getValue() != 0) {
+						isSnared = true;
+					}
+				}
+			}
+			if (isSnared) {
+				this.setFlyHeight(0);
+				this.moveDisabled = true;
+			} else {
+				this.setFlyHeight(this.unitType.getDefaultFlyingHeight());
+				this.moveDisabled = false;
+			}
+			break;
+		case INVULNERABLE:
+			boolean isInvuln = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.INVULNERABLE) {
+					if (buff.getValue() != 0) {
+						isInvuln = true;
+					}
+				}
+			}
+			this.setInvulnerable(isInvuln);
+			this.stateNotifier.abilitiesChanged();
 			break;
 		default:
 			break;
 		}
 	}
-	
+
 	public void computeDerivedFields(NonStackingStatBuffType type) {
 		Map<String, List<NonStackingStatBuff>> buffKeyMap;
 		switch (type) {
@@ -852,7 +1008,7 @@ public class CUnit extends CWidget {
 					this.remove(game, currentBuff);
 					this.add(game, buff);
 				}
-				
+
 			}
 		}
 		existingBuffs.add(buff);
@@ -994,10 +1150,10 @@ public class CUnit extends CWidget {
 		ability.onAdd(simulation, this);
 		this.stateNotifier.abilitiesChanged();
 	}
-	
+
 	public void add(final CSimulation simulation, final CBuff ability) {
 		if (this.abilities.contains(ability) && ability instanceof ABGenericTimedBuff) {
-			((ABGenericTimedBuff)ability).updateExpiration(simulation, this);
+			((ABGenericTimedBuff) ability).updateExpiration(simulation, this);
 		} else {
 			this.abilities.add(ability);
 			simulation.onAbilityAddedToUnit(this, ability);
@@ -1010,7 +1166,14 @@ public class CUnit extends CWidget {
 		this.abilities.remove(ability);
 		simulation.onAbilityRemovedFromUnit(this, ability);
 		ability.onRemove(simulation, this);
-		//this.stateNotifier.abilitiesChanged();
+		// this.stateNotifier.abilitiesChanged();
+	}
+
+	public void remove(final CSimulation simulation, final CBuff ability) {
+		this.abilities.remove(ability);
+		simulation.onAbilityRemovedFromUnit(this, ability);
+		ability.onRemove(simulation, this);
+		this.stateNotifier.abilitiesChanged();
 	}
 
 	public War3ID getTypeId() {
@@ -1174,7 +1337,7 @@ public class CUnit extends CWidget {
 							/ WarsmashConstants.SIMULATION_STEP_TIME))) {
 						this.boneCorpse = true;
 						this.deathTurnTick = gameTurnTick;
-	
+
 						if (this.isRaisable()) {
 							game.getWorldCollision().addUnit(this);
 						}
@@ -1449,7 +1612,9 @@ public class CUnit extends CWidget {
 						}
 					} else {
 						// check to auto acquire targets
-						autoAcquireAttackTargets(game, false);
+						if (autoAttack) {
+							autoAcquireAttackTargets(game, false);
+						}
 					}
 				}
 			}
@@ -1904,10 +2069,12 @@ public class CUnit extends CWidget {
 			}
 			trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * (result.computeFinalDamage());
 
-			for (CUnitAttackFinalDamageTakenModificationListener listener : new ArrayList<>(finalDamageTakenModificationListeners)) {
-				trueDamage = listener.onDamage(simulation, source, this, isAttack, isRanged, attackType, damageType, trueDamage);
+			for (CUnitAttackFinalDamageTakenModificationListener listener : new ArrayList<>(
+					finalDamageTakenModificationListeners)) {
+				trueDamage = listener.onDamage(simulation, source, this, isAttack, isRanged, attackType, damageType,
+						trueDamage);
 			}
-			
+
 			final boolean wasAboveMax = this.life > this.maximumLife;
 			this.life -= trueDamage;
 			if (((result.computeFinalDamage()) < 0) && !wasAboveMax && (this.life > this.maximumLife)) {
@@ -1918,7 +2085,7 @@ public class CUnit extends CWidget {
 			}
 			this.stateNotifier.lifeChanged();
 		}
-		for (CUnitAttackDamageTakenListener listener : damageTakenListeners) {
+		for (CUnitAttackDamageTakenListener listener : new ArrayList<>(damageTakenListeners)) {
 			listener.onDamage(simulation, source, this, isAttack, isRanged, damageType, damage, bonusDamage,
 					trueDamage);
 		}
@@ -1961,7 +2128,7 @@ public class CUnit extends CWidget {
 			this.currentBehavior.end(simulation, true);
 		}
 		this.currentBehavior = null;
-		
+
 		CUnitDeathReplacementResult result = new CUnitDeathReplacementResult();
 		CUnitDeathReplacementStacking allowContinue = new CUnitDeathReplacementStacking();
 		for (CUnitDeathReplacementEffectPriority priority : CUnitDeathReplacementEffectPriority.values()) {
@@ -1985,7 +2152,7 @@ public class CUnit extends CWidget {
 			// iteration order
 			this.abilities.get(i).onDeath(simulation, this);
 		}
-		
+
 		if (result.isReincarnating()) {
 			return;
 		}
@@ -1995,7 +2162,7 @@ public class CUnit extends CWidget {
 		} else {
 			this.deathTurnTick = simulation.getGameTurnTick();
 		}
-		
+
 		final CPlayer player = simulation.getPlayer(this.playerIndex);
 		if (this.foodMade != 0) {
 			player.setUnitFoodMade(this, 0);
@@ -2363,7 +2530,7 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean isMovementDisabled() {
-		return this.moveBehavior == null;
+		return this.moveBehavior == null || this.moveDisabled;
 		// TODO this used to directly return the state of whether our unit was a
 		// building. Will it be a problem that I changed it?
 		// I was trying to fix attack move on stationary units which was crashing
@@ -2432,7 +2599,7 @@ public class CUnit extends CWidget {
 		@Override
 		public boolean call(final CUnit unit) {
 			if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
-					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()) {
+					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable() && !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
 				for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
@@ -3295,9 +3462,15 @@ public class CUnit extends CWidget {
 			throw new UnsupportedOperationException(
 					"cannot ask engine if unit is plagued: plague is not yet implemented");
 		case SNARED:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is snared: snare is not yet implemented");
-
+			boolean isSnared = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.SNARED) {
+					if (buff.getValue() != 0) {
+						isSnared = true;
+					}
+				}
+			}
+			return isSnared;
 		case UNDEAD:
 			return getUnitType().getClassifications().contains(CUnitClassification.UNDEAD);
 		case MECHANICAL:
@@ -3320,14 +3493,27 @@ public class CUnit extends CWidget {
 			throw new UnsupportedOperationException(
 					"cannot ask engine if unit is POLYMORPHED: POLYMORPHED is not yet implemented");
 		case SLEEPING:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is SLEEPING: SLEEPING is not yet implemented");
+			boolean isSleeping = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.SLEEPING) {
+					if (buff.getValue() != 0) {
+						isSleeping = true;
+					}
+				}
+			}
+			return isSleeping;
 		case RESISTANT:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is RESISTANT: RESISTANT is not yet implemented");
+			return this.resistant;
 		case ETHEREAL:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is ETHEREAL: ETHEREAL is not yet implemented");
+			boolean isEthereal = false;
+			for (StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.ETHEREAL) {
+					if (buff.getValue() != 0) {
+						isEthereal = true;
+					}
+				}
+			}
+			return isEthereal;
 		case MAGIC_IMMUNE:
 			return isMagicImmune();
 		}
@@ -3571,11 +3757,13 @@ public class CUnit extends CWidget {
 		return this.explodesOnDeath;
 	}
 
-	public List<CUnitAttackPreDamageListener> getPreDamageListenersForPriority(CUnitAttackPreDamageListenerPriority priority) {
+	public List<CUnitAttackPreDamageListener> getPreDamageListenersForPriority(
+			CUnitAttackPreDamageListenerPriority priority) {
 		return preDamageListeners.get(priority);
 	}
 
-	public void addPreDamageListener(CUnitAttackPreDamageListenerPriority priority, CUnitAttackPreDamageListener listener) {
+	public void addPreDamageListener(CUnitAttackPreDamageListenerPriority priority,
+			CUnitAttackPreDamageListener listener) {
 		List<CUnitAttackPreDamageListener> list = preDamageListeners.get(priority);
 		if (list == null) {
 			list = new ArrayList<>();
@@ -3583,7 +3771,8 @@ public class CUnit extends CWidget {
 		list.add(0, listener);
 	}
 
-	public void removePreDamageListener(CUnitAttackPreDamageListenerPriority priority, CUnitAttackPreDamageListener listener) {
+	public void removePreDamageListener(CUnitAttackPreDamageListenerPriority priority,
+			CUnitAttackPreDamageListener listener) {
 		List<CUnitAttackPreDamageListener> list = preDamageListeners.get(priority);
 		if (list != null) {
 			list.remove(listener);
@@ -3626,11 +3815,13 @@ public class CUnit extends CWidget {
 		damageTakenListeners.remove(listener);
 	}
 
-	public List<CUnitDeathReplacementEffect> getDeathReplacementEffectsForPriority(CUnitDeathReplacementEffectPriority priority) {
+	public List<CUnitDeathReplacementEffect> getDeathReplacementEffectsForPriority(
+			CUnitDeathReplacementEffectPriority priority) {
 		return deathReplacementEffects.get(priority);
 	}
 
-	public void addDeathReplacementEffect(CUnitDeathReplacementEffectPriority priority, CUnitDeathReplacementEffect listener) {
+	public void addDeathReplacementEffect(CUnitDeathReplacementEffectPriority priority,
+			CUnitDeathReplacementEffect listener) {
 		List<CUnitDeathReplacementEffect> list = deathReplacementEffects.get(priority);
 		if (list == null) {
 			list = new ArrayList<>();
@@ -3638,7 +3829,8 @@ public class CUnit extends CWidget {
 		list.add(0, listener);
 	}
 
-	public void removeDeathReplacementEffect(CUnitDeathReplacementEffectPriority priority, CUnitDeathReplacementEffect listener) {
+	public void removeDeathReplacementEffect(CUnitDeathReplacementEffectPriority priority,
+			CUnitDeathReplacementEffect listener) {
 		List<CUnitDeathReplacementEffect> list = deathReplacementEffects.get(priority);
 		if (list != null) {
 			list.remove(listener);

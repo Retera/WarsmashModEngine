@@ -30,8 +30,8 @@ public class AbilityBuilderParser {
 
 	private List<ABAction> onBeginCasting;
 	private List<ABAction> onEndCasting;
-	private List<ABAction> onResetCasting;
-	private List<ABAction> onUpdateCasting;
+	private List<ABAction> onChannelTick;
+	private List<ABAction> onEndChannel;
 	
 	//Template only
 	private AbilityBuilderParserTemplateFields templateFields;
@@ -148,20 +148,20 @@ public class AbilityBuilderParser {
 		this.onEndCasting = onEndCasting;
 	}
 
-	public List<ABAction> getOnResetCasting() {
-		return onResetCasting;
+	public List<ABAction> getOnChannelTick() {
+		return onChannelTick;
 	}
 
-	public void setOnResetCasting(List<ABAction> onResetCasting) {
-		this.onResetCasting = onResetCasting;
+	public void setOnChannelTick(List<ABAction> onChannelTick) {
+		this.onChannelTick = onChannelTick;
 	}
 
-	public List<ABAction> getOnUpdateCasting() {
-		return onUpdateCasting;
+	public List<ABAction> getOnEndChannel() {
+		return onEndChannel;
 	}
 
-	public void setOnUpdateCasting(List<ABAction> onUpdateCasting) {
-		this.onUpdateCasting = onUpdateCasting;
+	public void setOnEndChannel(List<ABAction> onEndChannel) {
+		this.onEndChannel = onEndChannel;
 	}
 
 	public AbilityBuilderTemplateType getTemplateType() {

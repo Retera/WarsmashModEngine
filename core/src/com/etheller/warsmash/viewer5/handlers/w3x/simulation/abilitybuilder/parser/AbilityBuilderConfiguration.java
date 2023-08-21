@@ -31,8 +31,8 @@ public class AbilityBuilderConfiguration {
 
 	private List<ABAction> onBeginCasting;
 	private List<ABAction> onEndCasting;
-	private List<ABAction> onResetCasting;
-	private List<ABAction> onUpdateCasting;
+	private List<ABAction> onChannelTick;
+	private List<ABAction> onEndChannel;
 
 	public AbilityBuilderConfiguration(AbilityBuilderParser parser, AbilityBuilderDupe dupe) {
 		this.id = dupe.getId();
@@ -57,8 +57,8 @@ public class AbilityBuilderConfiguration {
 
 		this.onBeginCasting = parser.getOnBeginCasting();
 		this.onEndCasting = parser.getOnEndCasting();
-		this.onResetCasting = parser.getOnResetCasting();
-		this.onUpdateCasting = parser.getOnUpdateCasting();
+		this.onChannelTick = parser.getOnChannelTick();
+		this.onEndChannel = parser.getOnEndChannel();
 	}
 	
 	public CAbilityTypeDefinitionAbilityBuilder createDefinition() {
@@ -209,19 +209,20 @@ public class AbilityBuilderConfiguration {
 		this.onEndCasting = onEndCasting;
 	}
 
-	public List<ABAction> getOnResetCasting() {
-		return onResetCasting;
+	public List<ABAction> getOnChannelTick() {
+		return onChannelTick;
 	}
 
-	public void setOnResetCasting(List<ABAction> onResetCasting) {
-		this.onResetCasting = onResetCasting;
+	public void setOnChannelTick(List<ABAction> onChannelTick) {
+		this.onChannelTick = onChannelTick;
 	}
 
-	public List<ABAction> getOnUpdateCasting() {
-		return onUpdateCasting;
+	public List<ABAction> getOnEndChannel() {
+		return onEndChannel;
 	}
 
-	public void setOnUpdateCasting(List<ABAction> onUpdateCasting) {
-		this.onUpdateCasting = onUpdateCasting;
+	public void setOnEndChannel(List<ABAction> onEndChannel) {
+		this.onEndChannel = onEndChannel;
 	}
+
 }

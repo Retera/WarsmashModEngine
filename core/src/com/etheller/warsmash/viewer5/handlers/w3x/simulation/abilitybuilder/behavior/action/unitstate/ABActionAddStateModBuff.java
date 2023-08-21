@@ -20,6 +20,6 @@ public class ABActionAddStateModBuff implements ABAction {
 		StateModBuff theBuff = buff.callback(game, caster, localStore, castId);
 		
 		target.addStateModBuff(theBuff);
-		target.computeUnitState(theBuff.getBuffType());
+		target.computeUnitState(game, theBuff.getBuffType());
 	}
 }

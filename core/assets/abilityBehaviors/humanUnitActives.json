@@ -206,528 +206,261 @@
 				}
 		}]
 	},{
-		"ids": [{"id":"AHfs", "castId": "flamestrike"}],
-		"type": "NORMAL_POINTTARGET",
+		"ids": [{"id":"Amls", "castId": "magicleash"}],
+		"type": "NORMAL_UNITTARGET",
+		"extraTargetConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "not",
+				"condition": {
+					"type": "doesUnitHaveBuff",
+					"unit": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"id": {
+						"type": "getSecondBuffId"
+					}
+				}
+			},
+			"reason": "THAT_UNIT_IS_ALREADY_LEASHED"
+		}],
+		"onAddAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "STUN"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "stun"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+		}],
 		"onBeginCasting": [{
-				"type": "createTemporarySpellEffectAtLocation",
-				"location": {
-					"type": "getTargetedLocation"
+				"type": "createTargetingBuff",
+				"buffId": {
+					"type": "getSecondBuffId"
+				}
+			},{
+				"type": "addBuff",
+				"target": {
+					"type": "getAbilityTargetedUnit"
 				},
-				"id": {
-					"type": "getAlias"
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "targetBuff"
 				},
-				"effectType": "EFFECT"
+				"valueToStore": {
+					"type": "getLastCreatedBuff"
+				}
 		}],
 		"onEndCasting": [{
-				"type": "createTemporarySpellEffectAtLocation",
-				"location": {
-					"type": "getTargetedLocation"
+				"type": "beginChanneling"
+			},{
+				"type": "createLightningEffect",
+				"origin": {
+					"type": "getCastingUnit"
 				},
 				"id": {
-					"type": "getAlias"
+					"type": "getWar3IDFromString",
+					"id": "LEAS"
 				},
-				"effectType": "SPECIAL"
-			},{
-				"type": "createTimer",
-				"timeout": {
-					"type": "rawFloat",
-					"value": 0.33
+				"target": {
+					"type": "getAbilityTargetedUnit"
 				},
-				"repeats": {
-					"type": "rawBoolean",
-					"value": "true"
-				},
-				"delay": {
-					"type": "rawFloat",
-					"value": 0
-				},
-				"actions": [{
-						"type": "iterateActions",
-						"times": {
-							"type": "rawInteger",
-							"value": 10
-						},
-						"iterationActions": [{
-									"type": "storeValueLocally",
-									"key": {
-										"type": "rawString",
-										"value": "randAngle"
-									},
-									"valueToStore": {
-										"type": "randomBoundedFloat",
-										"bound": {
-											"type": "*",
-											"value1": {
-												"type": "pi"
-											},
-											"value2": {
-												"type": "rawFloat",
-												"value": 2
-											}
-										}
-									}
-							},{
-									"type": "storeValueLocally",
-									"key": {
-										"type": "rawString",
-										"value": "randDist"
-									},
-									"valueToStore": {
-										"type": "multiplyFloat",
-										"value1": {
-											"type": "randomFloat"
-										},
-										"value2": {
-											"type": "getAbilityArea"
-										}
-									}
-							},{
-								"type": "createTemporarySpellEffectAtPoint",
-								"x": {
-									"type": "+",
-									"value1": {
-										"type": "getLocationX",
-										"location": {
-											"type": "getTargetedLocation"
-										}
-									},
-									"value2": {
-										"type": "*",
-										"value1": {
-											"type": "cos",
-											"angle": {
-												"type": "getStoredFloatByKey",
-												"key": {
-													"type": "rawString",
-													"value": "randAngle"
-												}
-											}
-										},
-										"value2": {
-											"type": "getStoredFloatByKey",
-											"key": {
-												"type": "rawString",
-												"value": "randDist"
-											}
-										}
-									}
-								},
-								"y": {
-									"type": "+",
-									"value1": {
-										"type": "getLocationY",
-										"location": {
-											"type": "getTargetedLocation"
-										}
-									},
-									"value2": {
-										"type": "*",
-										"value1": {
-											"type": "sin",
-											"angle": {
-												"type": "getStoredFloatByKey",
-												"key": {
-													"type": "rawString",
-													"value": "randAngle"
-												}
-											}
-										},
-										"value2": {
-											"type": "getStoredFloatByKey",
-											"key": {
-												"type": "rawString",
-												"value": "randDist"
-											}
-										}
-									}
-								},
-								"id": {
-									"type": "getFirstEffectId"
-								},
-								"effectType": "EFFECT"
-						}]
-				}]
-			},{
-				"type": "storeValueLocally",
-				"key": {
-					"type": "rawString",
-					"value": "artTimer"
-				},
-				"valueToStore": {
-					"type": "getLastCreatedTimer"
-				}
-			},{
-				"type": "createTimer",
-				"timeout": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "B"
-				},
-				"repeats": {
-					"type": "rawBoolean",
-					"value": "true"
-				},
-				"delay": {
-					"type": "rawFloat",
-					"value": 0
-				},
-				"actions": [{
-						"type": "storeValueLocally",
-						"key": {
-							"type": "rawString",
-							"value": "damageDealt"
-						},
-						"valueToStore": {
-							"type": "minFloat",
-							"value1": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "A"
-							},
-							"value2": {
-								"type": "/",
-								"value1": {
-									"type": "getAbilityDataAsFloat",
-									"dataField": "F"
-								},
-								"value2": {
-									"type": "intToFloat",
-									"value": {
-										"type": "countUnitsInRangeOfLocation",
-										"location": {
-											"type": "getTargetedLocation"
-										},
-										"range": {
-											"type": "getAbilityArea"
-										}
-									}
-								}
-							}
-						}
-					},{
-						"type": "storeValueLocally",
-						"key": {
-							"type": "rawString",
-							"value": "buildingDamageDealt"
-						},
-						"valueToStore": {
-							"type": "multiplyFloat",
-							"value1": {
-								"type": "getStoredFloatByKey",
-								"key": {
-									"type": "rawString",
-									"value": "damageDealt"
-								}
-							},
-							"value2": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "E"
-							}
-						}
-					},{
-						"type": "iterateUnitsInRangeOfLocation",
-						"location": {
-							"type": "getTargetedLocation"
-						},
-						"range": {
-							"type": "getAbilityArea"
-						},
-						"iterationActions": [{
-								"type": "createTimedArtBuff",
-								"buffId": {
-									"type": "getFirstBuffId"
-								},
-								"duration": {
-									"type": "getAbilityDataAsFloat",
-									"dataField": "B"
-								}
-							},{
-								"type": "addNonStackingDisplayBuff",
-								"target": {
-									"type": "getEnumUnit"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "flamestrike"
-								},
-								"buff": {
-									"type": "getLastCreatedBuff"
-								}
-							},{
-								"type": "if",
-								"condition": {
-									"type": "isUnitBuilding",
-									"unit": {
-										"type": "getEnumUnit"
-									}
-								},
-								"thenActions": [{
-									"type": "damageTarget",
-									"source": {
-										"type": "getCastingUnit"
-									},
-									"target": {
-										"type": "getEnumUnit"
-									},
-									"damageType": {
-										"type": "getDamageTypeFromString",
-										"id": {
-											"type": "rawString",
-											"value": "FIRE"
-										}
-									},
-									"damage": {
-										"type": "getStoredFloatByKey",
-										"key": {
-											"type": "rawString",
-											"value": "buildingDamageDealt"
-										}
-									}
-								}],
-								"elseActions": [{
-									"type": "damageTarget",
-									"source": {
-										"type": "getCastingUnit"
-									},
-									"target": {
-										"type": "getEnumUnit"
-									},
-									"damageType": {
-										"type": "getDamageTypeFromString",
-										"id": {
-											"type": "rawString",
-											"value": "FIRE"
-										}
-									},
-									"damage": {
-										"type": "getStoredFloatByKey",
-										"key": {
-											"type": "rawString",
-											"value": "damageDealt"
-										}
-									}
-								}]
-						}]
-				}]
-			},{
-				"type": "storeValueLocally",
-				"key": {
-					"type": "rawString",
-					"value": "mainDmgTimer"
-				},
-				"valueToStore": {
-					"type": "getLastCreatedTimer"
-				}
-			},{
-				"type": "createTimer",
-				"timeout": {
-					"type": "getAbilityHeroDuration"
-				},
-				"actions": [{
-					"type": "removeTimer",
-					"timer": {
-						"type": "getStoredTimerByKey",
-						"key": {
-							"type": "rawString",
-							"value": "mainDmgTimer"
-						}
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getAbilityTargetedUnit"
 					}
-				}]
+				}
 			},{
-				"type": "createTimer",
-				"timeout": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getAbilityTargetedUnit"
 				},
-				"repeats": {
-					"type": "rawBoolean",
-					"value": "true"
-				},
-				"delay": {
-					"type": "+",
-					"value1": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "D"
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
 					},
-					"value2": {
-						"type": "getAbilityHeroDuration"
+					"key": {
+						"type": "rawString",
+						"value": "stun"
 					}
+				}
+			},{
+				"type": "createTimedArtBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
 				},
-				"actions": [{
-						"type": "storeValueLocally",
-						"key": {
-							"type": "rawString",
-							"value": "damageDealt"
-						},
-						"valueToStore": {
-							"type": "minFloat",
-							"value1": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "C"
-							},
-							"value2": {
-								"type": "/",
-								"value1": {
-									"type": "getAbilityDataAsFloat",
-									"dataField": "F"
-								},
-								"value2": {
-									"type": "intToFloat",
-									"value": {
-										"type": "countUnitsInRangeOfLocation",
-										"location": {
-											"type": "getTargetedLocation"
-										},
-										"range": {
-											"type": "getAbilityArea"
-										}
-									}
-								}
-							}
-						}
-					},{
-						"type": "storeValueLocally",
-						"key": {
-							"type": "rawString",
-							"value": "buildingDamageDealt"
-						},
-						"valueToStore": {
-							"type": "multiplyFloat",
-							"value1": {
-								"type": "getStoredFloatByKey",
-								"key": {
-									"type": "rawString",
-									"value": "damageDealt"
-								}
-							},
-							"value2": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "E"
-							}
-						}
-					},{
-						"type": "iterateUnitsInRangeOfLocation",
-						"location": {
-							"type": "getTargetedLocation"
-						},
-						"range": {
-							"type": "getAbilityArea"
-						},
-						"iterationActions": [{
-								"type": "createTimedArtBuff",
-								"buffId": {
-									"type": "getFirstBuffId"
-								},
-								"duration": {
-									"type": "getAbilityDataAsFloat",
-									"dataField": "D"
-								}
-							},{
-								"type": "addNonStackingDisplayBuff",
-								"target": {
-									"type": "getEnumUnit"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "flamestrike"
-								},
-								"buff": {
-									"type": "getLastCreatedBuff"
-								}
-							},{
-								"type": "if",
-								"condition": {
-									"type": "isUnitBuilding",
-									"unit": {
-										"type": "getEnumUnit"
-									
-									}
-								},
-								"thenActions": [{
-									"type": "damageTarget",
-									"source": {
-										"type": "getCastingUnit"
-									},
-									"target": {
-										"type": "getEnumUnit"
-									},
-									"damageType": {
-										"type": "getDamageTypeFromString",
-										"id": {
-											"type": "rawString",
-											"value": "FIRE"
-										}
-									},
-									"damage": {
-										"type": "getStoredFloatByKey",
-										"key": {
-											"type": "rawString",
-											"value": "buildingDamageDealt"
-										}
-									}
-								}],
-								"elseActions": [{
-									"type": "damageTarget",
-									"source": {
-										"type": "getCastingUnit"
-									},
-									"target": {
-										"type": "getEnumUnit"
-									},
-									"damageType": {
-										"type": "getDamageTypeFromString",
-										"id": {
-											"type": "rawString",
-											"value": "FIRE"
-										}
-									},
-									"damage": {
-										"type": "getStoredFloatByKey",
-										"key": {
-											"type": "rawString",
-											"value": "damageDealt"
-										}
-									}
-								}]
-						}]
-				}]
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					}
+				}
+			},{
+				"type": "addNonStackingDisplayBuff",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"key": {
+					"type": "rawString",
+					"value": "ashackles"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
 			},{
 				"type": "storeValueLocally",
 				"key": {
 					"type": "rawString",
-					"value": "subDmgTimer"
+					"value": "ashackles"
 				},
 				"valueToStore": {
-					"type": "getLastCreatedTimer"
+					"type": "getLastCreatedBuff"
 				}
 			},{
-				"type": "createTimer",
-				"timeout": {
-					"type": "getAbilityDuration"
+				"type": "createTimedArtBuff",
+				"buffId": {
+					"type": "getSecondBuffId"
 				},
-				"actions": [{
-						"type": "removeTimer",
-						"timer": {
-							"type": "getStoredTimerByKey",
-							"key": {
-								"type": "rawString",
-								"value": "artTimer"
-							}
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					}
+				}
+			},{
+				"type": "addNonStackingDisplayBuff",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"key": {
+					"type": "rawString",
+					"value": "ashacklesTar"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "ashacklesTar"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedBuff"
+				}
+		}],
+		"onChannelTick": [{
+				"type": "periodicExecute",
+				"periodicActions": [{
+						"type": "damageTarget",
+						"source": {
+							"type": "getCastingUnit"
+						},
+						"target": {
+							"type": "getAbilityTargetedUnit"
+						},
+						"damage": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
 						}
-					},{
-						"type": "removeTimer",
-						"timer": {
-							"type": "getStoredTimerByKey",
-							"key": {
-								"type": "rawString",
-								"value": "subDmgTimer"
-							}
-						}
-				}]
-			}
-						
-						
-						
-						
-						
-		]
+					}],
+				"delaySeconds": {
+					"type": "rawFloat",
+					"value": 1
+				}
+			},{
+				"type": "periodicExecute",
+				"periodicActions": [{
+						"type": "finishChanneling"
+					}],
+				"delaySeconds": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					}
+				}
+		}],
+		"onEndChannel": [{
+				"type": "removeLightningEffect",
+				"effect": {
+					"type": "getLastCreatedLightningEffect"
+				}
+			},{
+				"type": "removeStateModBuff",
+				"targetUnit": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "stun"
+					}
+				}
+			},{
+				"type": "removeNonStackingDisplayBuff",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"key": {
+					"type": "rawString",
+					"value": "ashackles"
+				},
+				"buff": {
+					"type": "getStoredBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "ashackles"
+					}
+				}
+			},{
+				"type": "removeNonStackingDisplayBuff",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"key": {
+					"type": "rawString",
+					"value": "ashacklesTar"
+				},
+				"buff": {
+					"type": "getStoredBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "ashacklesTar"
+					}
+				}
+			},{
+				"type": "removeBuff",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"buff": {
+					"type": "getStoredBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "targetBuff"
+					}
+				}
+		}]
 	}]
 }

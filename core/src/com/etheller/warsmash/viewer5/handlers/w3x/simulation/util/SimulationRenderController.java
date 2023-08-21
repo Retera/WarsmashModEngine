@@ -29,6 +29,9 @@ public interface SimulationRenderController {
 	SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source,
 													   CUnit target);
 
+	SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source,
+													   CUnit target, Float duration);
+
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);
 
@@ -87,9 +90,9 @@ public interface SimulationRenderController {
 
 	void spawnUIUnitDropItemSound(CUnit cUnit, CItem item);
 
-	void spawnAbilitySoundEffect(CUnit caster, War3ID alias);
+	SimulationRenderComponent spawnAbilitySoundEffect(CUnit caster, War3ID alias);
 
-	void loopAbilitySoundEffect(CUnit caster, War3ID alias);
+	SimulationRenderComponent loopAbilitySoundEffect(CUnit caster, War3ID alias);
 
 	void stopAbilitySoundEffect(CUnit caster, War3ID alias);
 

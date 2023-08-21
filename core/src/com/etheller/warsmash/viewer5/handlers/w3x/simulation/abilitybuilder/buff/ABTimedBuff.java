@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class ABTimedBuff extends ABGenericTimedBuff {
 
@@ -17,6 +18,8 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 	private List<ABAction> onRemoveActions;
 	
 	private NonStackingFx fx;
+	private SimulationRenderComponent sfx;
+	private SimulationRenderComponent lsfx;
 	
 	protected int castId = 0;
 
@@ -42,6 +45,8 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 		}
 		if (this.getAlias() != null) {
 			this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), CEffectType.TARGET);
+			this.sfx = game.unitSoundEffectEvent(unit, getAlias());
+			this.lsfx = game.unitLoopSoundEffectEvent(unit, getAlias());
 		}
 		if (onAddActions != null) {
 			for (ABAction action : onAddActions) {
@@ -54,6 +59,12 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 	protected void onBuffRemove(CSimulation game, CUnit unit) {
 		if (this.fx != null) {
 			unit.removeNonStackingFx(game, this.fx);
+		}
+		if (this.sfx != null) {
+			this.sfx.remove();
+		}
+		if (this.lsfx != null) {
+			this.lsfx.remove();
 		}
 		if (onRemoveActions != null) {
 			for (ABAction action : onRemoveActions) {

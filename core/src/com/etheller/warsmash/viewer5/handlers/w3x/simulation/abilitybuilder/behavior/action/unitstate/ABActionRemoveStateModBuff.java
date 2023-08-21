@@ -20,6 +20,6 @@ public class ABActionRemoveStateModBuff implements ABAction {
 		StateModBuff theBuff = buff.callback(game, caster, localStore, castId);
 		
 		target.removeStateModBuff(theBuff);
-		target.computeUnitState(theBuff.getBuffType());
+		target.computeUnitState(game, theBuff.getBuffType());
 	}
 }

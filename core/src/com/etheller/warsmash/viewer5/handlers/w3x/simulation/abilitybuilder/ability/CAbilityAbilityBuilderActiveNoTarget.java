@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -146,9 +147,11 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 
 	@Override
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
-		float cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
+		int cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 		if (cooldownRemaining > 0) {
-			receiver.cooldownNotYetReady(cooldownRemaining, this.cooldown);
+			float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getAlias())
+					* WarsmashConstants.SIMULATION_STEP_TIME;
+			receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME, cooldownLengthDisplay);
 		} else if (unit.getMana() < this.manaCost) {
 			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		} else if (config.getExtraCastConditions() != null) {

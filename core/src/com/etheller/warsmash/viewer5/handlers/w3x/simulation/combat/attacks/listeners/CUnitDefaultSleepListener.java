@@ -14,7 +14,7 @@ public class CUnitDefaultSleepListener implements CUnitAttackDamageTakenListener
 	@Override
 	public void onDamage(final CSimulation simulation, CUnit attacker, CUnit target, boolean isAttack, boolean isRanged, CDamageType damageType, float damage, float bonusDamage, float trueDamage) {
 		target.removeAllStateModBuffs(StateModBuffType.SLEEPING);
-		target.computeUnitState(StateModBuffType.SLEEPING);
+		target.computeUnitState(simulation, StateModBuffType.SLEEPING);
 	}
 
 }

@@ -226,7 +226,6 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 			} else {
 				receiver.targetOk(targetUnit);
 			}
-			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
 		}
 	}
 

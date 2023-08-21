@@ -68,8 +68,10 @@ public abstract class AbilityBuilderGsonBuilder {
 
 	private static void registerBooleanCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackRawBoolean.class, "rawBoolean")
+				.registerSubtype(ABCallbackGetStoredBooleanByKey.class, "getStoredBooleanByKey")
 				.registerSubtype(ABCallbackGetAbilityDataAsBoolean.class, "getAbilityDataAsBoolean")
 				.registerSubtype(ABCallbackGetParentAbilityDataAsBoolean.class, "getParentAbilityDataAsBoolean")
+				.registerSubtype(ABCallbackWasCastingInterrupted.class, "wasCastingInterrupted")
 				.registerSubtype(ABCallbackIsTriggeringDamageAnAttack.class, "isTriggeringDamageAnAttack")
 				.registerSubtype(ABCallbackIsTriggeringDamageRanged.class, "isTriggeringDamageRanged");
 	}
@@ -180,6 +182,11 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetSpellLevel.class, "getSpellLevel");
 	}
 
+	private static void registerLightningCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
+		callbackTypeFactory.registerSubtype(ABCallbackGetLastCreatedLightningEffect.class, "getLastCreatedLightningEffect")
+				.registerSubtype(ABCallbackGetStoredLightningByKey.class, "getStoredLightningByKey");
+	}
+
 	private static void registerLocationCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackCreateLocationFromXY.class, "createLocationFromXY")
 				.registerSubtype(ABCallbackGetStoredLocationByKey.class, "getStoredLocationByKey")
@@ -264,6 +271,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsFlexAbilityPointTarget.class, "isFlexAbilityPointTarget")
 				.registerSubtype(ABConditionIsFlexAbilityNonPointTarget.class, "isFlexAbilityNonPointTarget")
 
+				.registerSubtype(ABConditionDoesUnitHaveBuff.class, "doesUnitHaveBuff")
 				.registerSubtype(ABConditionIsUnitMaxHp.class, "isUnitMaxHp")
 				.registerSubtype(ABConditionIsUnitMaxMp.class, "isUnitMaxMp")
 				.registerSubtype(ABConditionIsUnitBuilding.class, "isUnitBuilding");
@@ -284,6 +292,8 @@ public abstract class AbilityBuilderGsonBuilder {
 						"createTemporarySpellEffectAtLocation")
 				.registerSubtype(ABActionCreateSpellEffectAtPoint.class, "createSpellEffectAtPoint")
 				.registerSubtype(ABActionCreateTemporarySpellEffectAtPoint.class, "createTemporarySpellEffectAtPoint")
+				.registerSubtype(ABActionCreateLightningEffect.class, "createLightningEffect")
+				.registerSubtype(ABActionRemoveLightningEffect.class, "removeLightningEffect")
 
 				.registerSubtype(ABActionAddAbility.class, "addAbility")
 				.registerSubtype(ABActionRemoveAbility.class, "removeAbility")
@@ -306,6 +316,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionAddStunBuff.class, "addStunBuff")
 				.registerSubtype(ABActionStartCooldown.class, "startCooldown")
 				.registerSubtype(ABActionDeactivateToggledAbility.class, "deactivateToggledAbility")
+				.registerSubtype(ABActionBeginChanneling.class, "beginChanneling")
+				.registerSubtype(ABActionFinishChanneling.class, "finishChanneling")
 
 				.registerSubtype(ABActionCreateTimer.class, "createTimer")
 				.registerSubtype(ABActionStartTimer.class, "startTimer")
@@ -314,8 +326,11 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionAddBuff.class, "addBuff")
 				.registerSubtype(ABActionAddNonStackingDisplayBuff.class, "addNonStackingDisplayBuff")
 				.registerSubtype(ABActionRemoveBuff.class, "removeBuff")
+				.registerSubtype(ABActionRemoveNonStackingDisplayBuff.class, "removeNonStackingDisplayBuff")
 				.registerSubtype(ABActionCreatePassiveBuff.class, "createPassiveBuff")
+				.registerSubtype(ABActionCreateTargetingBuff.class, "createTargetingBuff")
 				.registerSubtype(ABActionCreateTimedBuff.class, "createTimedBuff")
+				.registerSubtype(ABActionCreateTimedTargetingBuff.class, "createTimedTargetingBuff")
 				.registerSubtype(ABActionCreateTimedArtBuff.class, "createTimedArtBuff")
 				.registerSubtype(ABActionCreateTimedTickingBuff.class, "createTimedTickingBuff")
 				.registerSubtype(ABActionCreateTimedTickingPostDeathBuff.class, "createTimedTickingPostDeathBuff")
@@ -393,6 +408,7 @@ public abstract class AbilityBuilderGsonBuilder {
 		registerFxCallbacks(callbackTypeFactory);
 		registerIdCallbacks(callbackTypeFactory);
 		registerIntegerCallbacks(callbackTypeFactory);
+		registerLightningCallbacks(callbackTypeFactory);
 		registerLocationCallbacks(callbackTypeFactory);
 		registerStatBuffCallbacks(callbackTypeFactory);
 		registerStateModBuffCallbacks(callbackTypeFactory);
@@ -472,6 +488,11 @@ public abstract class AbilityBuilderGsonBuilder {
 				.of(ABIntegerCallback.class, "type");
 		registerIntegerCallbacks(integerCallbackTypeFactory);
 		gsonBuilder.registerTypeAdapterFactory(integerCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABLightningCallback> lightningCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABLightningCallback.class, "type");
+		registerLightningCallbacks(lightningCallbackTypeFactory);
+		gsonBuilder.registerTypeAdapterFactory(lightningCallbackTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABLocationCallback> locationCallbackTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABLocationCallback.class, "type");

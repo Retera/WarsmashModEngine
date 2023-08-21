@@ -53,6 +53,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStun;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUpgradingVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -432,7 +433,7 @@ public class CUnit extends CWidget {
 		}
 	}
 
-	public void computeUnitState(StateModBuffType type) {
+	public void computeUnitState(CSimulation game, StateModBuffType type) {
 		switch (type) {
 		case DISABLE_ATTACK:
 		case ETHEREAL:
@@ -444,8 +445,6 @@ public class CUnit extends CWidget {
 						isDisableAttack = true;
 					}
 				}
-			}
-			for (StateModBuff buff : stateModBuffs) {
 				if (buff.getBuffType() == StateModBuffType.ETHEREAL) {
 					if (buff.getValue() != 0) {
 						isEthereal = true;
@@ -512,21 +511,40 @@ public class CUnit extends CWidget {
 			this.resistant = isResistant;
 			break;
 		case SLEEPING:
+		case STUN:
 			boolean isSleeping = false;
+			boolean isStun = false;
 			for (StateModBuff buff : stateModBuffs) {
 				if (buff.getBuffType() == StateModBuffType.SLEEPING) {
 					if (buff.getValue() != 0) {
 						isSleeping = true;
 					}
 				}
+				if (buff.getBuffType() == StateModBuffType.STUN) {
+					if (buff.getValue() != 0) {
+						isStun = true;
+					}
+				}
 			}
+			if (isSleeping || isStun) {
+				if (this.currentBehavior != null) {
+					this.currentBehavior.end(game, true);
+				}
+				this.currentBehavior = new CBehaviorStun(this);
+				this.currentBehavior.begin(game);
+				this.setAcceptingOrders(false);
+				this.stateNotifier.ordersChanged();
+			} else {
+				this.setAcceptingOrders(true);
+				this.currentBehavior = this.pollNextOrderBehavior(game);
+				this.stateNotifier.ordersChanged();
+			}
+			
 			if (isSleeping) {
-				this.setPaused(true);
 				if (!this.damageTakenListeners.contains(CUnitDefaultSleepListener.INSTANCE)) {
 					this.addDamageTakenListener(CUnitDefaultSleepListener.INSTANCE);
 				}
 			} else {
-				this.setPaused(false);
 				if (this.damageTakenListeners.contains(CUnitDefaultSleepListener.INSTANCE)) {
 					this.removeDamageTakenListener(CUnitDefaultSleepListener.INSTANCE);
 				}

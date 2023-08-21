@@ -106,7 +106,7 @@ public final class UnitSound {
 		if (millisTime < unit.lastUnitResponseEndTimeMillis) {
 			return false;
 		}
-		if (play(audioContext, unit.location[0], unit.location[1], unit.location[2], index)) {
+		if (play(audioContext, unit.location[0], unit.location[1], unit.location[2], index) != -1) {
 			final float duration = Extensions.audio.getDuration(this.lastPlayedSound);
 			unit.lastUnitResponseEndTimeMillis = millisTime + (long) (1000 * duration);
 			return true;
@@ -114,17 +114,25 @@ public final class UnitSound {
 		return false;
 	}
 
-	public boolean play(final AudioContext audioContext, final float x, final float y, final float z) {
+	public long play(final AudioContext audioContext, final float x, final float y, final float z, final boolean loopOverride) {
+		return play(audioContext, x, y, z, (int) (Math.random() * this.sounds.size()), loopOverride);
+	}
+
+	public long play(final AudioContext audioContext, final float x, final float y, final float z) {
 		return play(audioContext, x, y, z, (int) (Math.random() * this.sounds.size()));
 	}
 
-	public boolean play(final AudioContext audioContext, final float x, final float y, final float z, final int index) {
+	public long play(final AudioContext audioContext, final float x, final float y, final float z, final int index) {
+		return play(audioContext, x, y, z, index, null);
+	}
+
+	public long play(final AudioContext audioContext, final float x, final float y, final float z, final int index, final Boolean loopOverride) {
 		if (this.sounds.isEmpty()) {
-			return false;
+			return -1;
 		}
 
 		if (audioContext == null) {
-			return true;
+			return -1;
 		}
 		final AudioPanner panner = audioContext.createPanner();
 		final AudioBufferSource source = audioContext.createBufferSource();
@@ -139,10 +147,16 @@ public final class UnitSound {
 		source.connect(panner);
 
 		// Make a sound.
-		source.start(0, this.volume,
-				(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance, this.looping);
+		long soundId = -1;
+		if (loopOverride == null) {
+			soundId = source.start(0, this.volume,
+					(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance, this.looping);
+		} else {
+			soundId = source.start(0, this.volume,
+					(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance, loopOverride);
+		}
 		this.lastPlayedSound = source.buffer;
-		return true;
+		return soundId;
 	}
 
 	public int getSoundCount() {
@@ -152,6 +166,14 @@ public final class UnitSound {
 	public void stop() {
 		for (final Sound sound : this.sounds) {
 			sound.stop();
+		}
+	}
+
+	public void stop(long soundId) {
+		// This may misbehave if called for a list longer than 1, due to the random index used when starting?
+		// Not sure if IDs are unique per source
+		for (final Sound sound : this.sounds) {
+			sound.stop(soundId);
 		}
 	}
 }

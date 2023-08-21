@@ -235,7 +235,9 @@ public class CAbilityAbilityBuilderActiveToggleTicking extends AbstractGenericSi
 		if (!this.active) {
 			int cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 			if (cooldownRemaining > 0) {
-				receiver.cooldownNotYetReady(cooldownRemaining, this.cooldown);
+				float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getAlias())
+						* WarsmashConstants.SIMULATION_STEP_TIME;
+				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME, cooldownLengthDisplay);
 			} else if (unit.getMana() < (this.manaCost + this.bufferMana)) {
 				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 			} else if (config.getExtraCastConditions() != null) {

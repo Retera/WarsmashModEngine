@@ -163,7 +163,6 @@ public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTarget
 			} else {
 				receiver.targetOk(targetUnit);
 			}
-			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
 		}
 	}
 

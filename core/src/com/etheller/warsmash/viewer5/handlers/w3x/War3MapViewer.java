@@ -744,6 +744,22 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
+					public SimulationRenderComponentLightning createAbilityLightning(CSimulation simulation, War3ID lightningId, CUnit source, CUnit target, int index) {
+						final RenderUnit renderPeerSource = War3MapViewer.this.getRenderPeer(source);
+						final RenderWidget renderPeerTarget = War3MapViewer.this.getRenderPeer(target);
+						List<War3ID> lightnings = getLightningEffectList(lightningId);
+						return War3MapViewer.this.createLightning(lightnings.get(index), renderPeerSource, renderPeerTarget);
+					}
+
+					@Override
+					public SimulationRenderComponentLightning createAbilityLightning(CSimulation simulation, War3ID lightningId, CUnit source, CUnit target, int index, Float duration) {
+						final RenderUnit renderPeerSource = War3MapViewer.this.getRenderPeer(source);
+						final RenderWidget renderPeerTarget = War3MapViewer.this.getRenderPeer(target);
+						List<War3ID> lightnings = getLightningEffectList(lightningId);
+						return War3MapViewer.this.createLightning(lightnings.get(index), renderPeerSource, renderPeerTarget, duration);
+					}
+
+					@Override
 					public void spawnDamageSound(final CWidget damagedDestructable, final String weaponSound,
 							final String armorType) {
 						final RenderWidget damagedWidget = War3MapViewer.this.getRenderPeer(damagedDestructable);
@@ -3091,6 +3107,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 		}
 		return effectAttachmentUI;
+	}
+	
+	public List<War3ID> getLightningEffectList(final War3ID alias) {
+		final AbilityUI abilityUI = War3MapViewer.this.abilityDataUI.getUI(alias);
+		return abilityUI.getLightningEffects();
 	}
 
 	public RenderSpellEffect addSpecialEffectTarget(final String modelName, final CWidget targetWidget,

@@ -58,6 +58,7 @@ public class AbilityDataUI {
 	private static final War3ID AREA_EFFECT_ART = War3ID.fromString("aaea");
 	private static final War3ID MISSILE_ART = War3ID.fromString("amat");
 	private static final War3ID MISSILE_ARC = War3ID.fromString("amac");
+	private static final War3ID LIGHTNING_EFFECTS = War3ID.fromString("alig");
 
 	// Standard buff icon fields
 	private static final War3ID BUFF_ICON_NORMAL = War3ID.fromString("fart");
@@ -238,6 +239,16 @@ public class AbilityDataUI {
 				missileArt.add(new EffectAttachmentUIMissile(missileArtPath, Collections.emptyList(), missileArc));
 			}
 
+			final List<String> LightningEffectList = Arrays
+					.asList(abilityTypeData.getFieldAsString(LIGHTNING_EFFECTS, 0).split(","));
+			final List<War3ID> LightningEffects = new ArrayList<>();
+
+			for (final String lightning : LightningEffectList) {
+				if (lightning != null && !lightning.isBlank()) {
+					LightningEffects.add(War3ID.fromString(lightning));
+				}
+			}
+
 			final String effectSound = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND, 0);
 			final String effectSoundLooped = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND_LOOPED, 0);
 
@@ -245,7 +256,7 @@ public class AbilityDataUI {
 					new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY, iconResearchTip,
 							iconResearchUberTip, iconResearchHotkey),
 					normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
-					missileArt, effectSound, effectSoundLooped));
+					missileArt, LightningEffects, effectSound, effectSoundLooped));
 		}
 		for (final War3ID alias : buffData.keySet()) {
 			// TODO pretty sure that in WC3 the buffs and abilities are stored in the same

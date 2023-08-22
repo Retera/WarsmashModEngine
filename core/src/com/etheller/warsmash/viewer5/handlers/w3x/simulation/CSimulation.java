@@ -369,6 +369,16 @@ public class CSimulation implements CPlayerAPI {
 		return this.simulationRenderController.createLightning(this, lightningId, source, target, duration);
 	}
 
+	public SimulationRenderComponentLightning createAbilityLightning(final CUnit source, final War3ID lightningId, int lightningIndex,
+			final CUnit target) {
+		return this.simulationRenderController.createAbilityLightning(this, lightningId, source, target, lightningIndex);
+	}
+
+	public SimulationRenderComponentLightning createAbilityLightning(final CUnit source, final War3ID lightningId, int lightningIndex,
+			final CUnit target, final Float duration) {
+		return this.simulationRenderController.createAbilityLightning(this, lightningId, source, target, lightningIndex, duration);
+	}
+
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
 		this.simulationRenderController.createInstantAttackEffect(this, source, attack, target);
 	}

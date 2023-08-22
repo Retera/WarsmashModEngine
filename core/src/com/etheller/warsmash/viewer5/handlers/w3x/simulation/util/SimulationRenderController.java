@@ -32,6 +32,12 @@ public interface SimulationRenderController {
 	SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source,
 													   CUnit target, Float duration);
 
+	SimulationRenderComponentLightning createAbilityLightning(CSimulation simulation, War3ID lightningId, CUnit source,
+			CUnit target, int index);
+	
+	SimulationRenderComponentLightning createAbilityLightning(CSimulation simulation, War3ID lightningId, CUnit source,
+			CUnit target, int index, Float duration);
+
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);
 
@@ -114,4 +120,5 @@ public interface SimulationRenderController {
 	void unitUpdatedType(CUnit unit, War3ID typeId);
 
 	void changeUnitColor(CUnit unit, int playerIndex);
+
 }

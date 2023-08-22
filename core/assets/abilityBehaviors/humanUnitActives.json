@@ -272,8 +272,7 @@
 					"type": "getCastingUnit"
 				},
 				"id": {
-					"type": "getWar3IDFromString",
-					"id": "LEAS"
+					"type": "getAlias"
 				},
 				"target": {
 					"type": "getAbilityTargetedUnit"

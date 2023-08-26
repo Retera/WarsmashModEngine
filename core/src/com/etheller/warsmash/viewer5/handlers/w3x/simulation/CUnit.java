@@ -2046,6 +2046,9 @@ public class CUnit extends CWidget {
 			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
 			final String weaponSoundType, final float damage, final float bonusDamage) {
 		final boolean wasDead = isDead();
+		if (wasDead) {
+			return 0;
+		}
 		float trueDamage = 0;
 		if (!this.invulnerable) {
 

@@ -460,6 +460,8 @@
 						"value": "targetBuff"
 					}
 				}
+			},{
+				"type": "cleanUpCastInstance"
 		}]
 	}]
 }

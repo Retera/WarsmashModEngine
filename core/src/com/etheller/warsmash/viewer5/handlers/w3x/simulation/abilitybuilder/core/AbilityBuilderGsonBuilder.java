@@ -284,6 +284,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionIterateUnitsInRect.class, "iterateUnitsInRect")
 				.registerSubtype(ABActionPeriodicExecute.class, "periodicExecute")
 				.registerSubtype(ABActionIterateActions.class, "iterateActions")
+				.registerSubtype(ABActionCleanUpCastInstance.class, "cleanUpCastInstance")
 
 				.registerSubtype(ABActionCreateSpellEffectOnUnit.class, "createSpellEffectOnUnit")
 				.registerSubtype(ABActionCreateTemporarySpellEffectOnUnit.class, "createTemporarySpellEffectOnUnit")

@@ -658,6 +658,9 @@
 									"type": "getCastingUnit"
 								}
 							}
+					}],
+					"onRemoveActions": [{
+						"type": "cleanUpCastInstance"
 					}]
 				},{
 					"type": "addNonStackingDisplayBuff",
@@ -749,296 +752,317 @@
 					}
 				},
 				"thenActions": [{
-					"type": "iterateUnitsInRangeOfUnit",
-					"iterationActions": [{
-						"type": "if",
-						"condition": {
-							"type": "not",
+						"type": "iterateUnitsInRangeOfUnit",
+						"iterationActions": [{
+							"type": "if",
 							"condition": {
-								"type": "and",
-								"condition1": {
-									"type": "not",
-									"condition": {
-										"type": "or",
-										"condition1": {
-											"type": "floatEq0",
-											"value": {
-												"type": "getAbilityDataAsFloat",
-												"dataField": "B"
-											}
-										},
-										"condition2": {
-											"type": "or",
-											"condition1": {
-												"type": "not",
-												"condition": {
-													"type": "isUnitMaxMp",
-													"unit": {
-														"type": "getEnumUnit"
-													}
-												}
-											},
-											"condition2": {
-												"type": "setCantUseReasonOnFailure",
-												"condition": {
-													"type": "i>",
-													"value1": {
-														"type": "getAbilityDataAsInteger",
-														"dataField": "C"
-													},
-													"value2": {
-														"type": "rawInteger",
-														"value": 1
-													}
-												},
-												"reason": "ALREADY_AT_FULL_MANA"
-											}
-										}
-									}
-								},
-								"condition2": {
-									"type": "not",
-									"condition": {
-										"type": "or",
-										"condition1": {
-											"type": "floatEq0",
-											"value": {
-												"type": "getAbilityDataAsFloat",
-												"dataField": "A"
-											}
-										},
-										"condition2": {
-											"type": "or",
-											"condition1": {
-												"type": "not",
-												"condition": {
-													"type": "isUnitMaxHp",
-													"unit": {
-														"type": "getEnumUnit"
-													}
-												}
-											},
-											"condition2": {
-												"type": "setCantUseReasonOnFailure",
-												"condition": {
-													"type": "integerIsOdd",
-													"value": {
-														"type": "getAbilityDataAsInteger",
-														"dataField": "C"
-													}
-												},
-												"reason": "ALREADY_AT_FULL_HEALTH"
-											}
-										}
-									}
-								}
-							}
-						},
-						"thenActions": [{
-								"type": "createTimedTickingBuff",
-								"buffId": {
-									"type": "getFirstBuffId"
-								},
-								"duration": {
-									"type": "getAbilityDuration",
-									"target": {
-										"type": "getEnumUnit"
-									}
-								},
-								"onAddActions": [{
-										"type": "storeValueLocally",
-										"key": {
-											"type": "rawString",
-											"value": "hpPerSec"
-										},
-										"valueToStore": {
-											"type": "divideFloat",
-											"value1": {
-												"type": "getAbilityDataAsFloat",
-												"dataField": "A"
-											},
-											"value2": {
-												"type": "getAbilityDuration",
-												"target": {
-													"type": "getCastingUnit"
-												}
-											}
-										}
-									},{
-										"type": "storeValueLocally",
-										"key": {
-											"type": "rawString",
-											"value": "mpPerSec"
-										},
-										"valueToStore": {
-											"type": "divideFloat",
-											"value1": {
-												"type": "getAbilityDataAsFloat",
-												"dataField": "B"
-											},
-											"value2": {
-												"type": "getAbilityDuration",
-												"target": {
-													"type": "getCastingUnit"
-												}
-											}
-										}
-								}],
-								"onTickActions": [{
-										"type": "periodicExecute",
-										"periodicActions": [{
-												"type": "heal",
-												"target": {
-													"type": "getCastingUnit"
-												},
-												"amount": {
-													"type": "getStoredFloatByKey",
-													"key": {
-														"type": "rawString",
-														"value": "hpPerSec"
-													}
-												}
-											},{
-												"type": "addMp",
-												"target": {
-													"type": "getCastingUnit"
-												},
-												"amount": {
-													"type": "getStoredFloatByKey",
-													"key": {
-														"type": "rawString",
-														"value": "mpPerSec"
-													}
-												}
-										}],
-										"delaySeconds": {
-											"type": "rawFloat",
-											"value": 1
-										},
-										"unique": {
-											"type": "getUnitHandleAsString",
-											"unit": {
-												"type": "getCastingUnit"
-											}
-										}
-								}]
-							},{
-								"type": "addNonStackingDisplayBuff",
-								"target": {
-									"type": "getEnumUnit"
-								},
-								"buff": {
-									"type": "getLastCreatedBuff"
-								},
-								"key": {
-									"type": "getCodeAsString"
-								}
-							},{
-								"type": "storeValueLocally",
-								"key": {
-									"type": "catStrings",
-									"stringList": [{
-										"type": "rawString",
-										"value": "regenBuff"
-									},{
-										"type": "getUnitHandleAsString",
-										"unit": {
-											"type": "getEnumUnit"
-										}
-									}]
-								},
-								"valueToStore": {
-									"type": "getLastCreatedBuff"
-								}
-							},{
-								"type": "if",
+								"type": "not",
 								"condition": {
-									"type": "bool",
-									"bool": {
-										"type": "getAbilityDataAsBoolean",
-										"dataField": "E"
-									}
-								},
-								"thenActions": [{
-										"type": "createDamageTakenListener",
-										"actions": [{
-												"type": "removeDamageTakenListener",
-												"targetUnit": {
-													"type": "getCastingUnit"
-												},
-												"listener": {
-													"type": "getStoredDamageTakenListenerByKey",
-													"key": {
-														"type": "catStrings",
-														"stringList": [{
-															"type": "rawString",
-															"value": "breakHeal"
-														},{
-															"type": "getUnitHandleAsString",
-															"unit": {
-																"type": "getCastingUnit"
-															}
-														}]
-													}
+									"type": "and",
+									"condition1": {
+										"type": "not",
+										"condition": {
+											"type": "or",
+											"condition1": {
+												"type": "floatEq0",
+												"value": {
+													"type": "getAbilityDataAsFloat",
+													"dataField": "B"
 												}
-											
-											},{
-												"type": "removeBuff",
-												"target": {
-													"type": "getCastingUnit"
-												},
-												"buff": {
-													"type": "getStoredBuffByKey",
-													"key": {
-														"type": "catStrings",
-														"stringList": [{
-															"type": "rawString",
-															"value": "regenBuff"
-														},{
-															"type": "getUnitHandleAsString",
-															"unit": {
-																"type": "getCastingUnit"
-															}
-														}]
+											},
+											"condition2": {
+												"type": "or",
+												"condition1": {
+													"type": "not",
+													"condition": {
+														"type": "isUnitMaxMp",
+														"unit": {
+															"type": "getEnumUnit"
+														}
 													}
+												},
+												"condition2": {
+													"type": "setCantUseReasonOnFailure",
+													"condition": {
+														"type": "i>",
+														"value1": {
+															"type": "getAbilityDataAsInteger",
+															"dataField": "C"
+														},
+														"value2": {
+															"type": "rawInteger",
+															"value": 1
+														}
+													},
+													"reason": "ALREADY_AT_FULL_MANA"
 												}
-										}]
-									},{
-										"type": "addDamageTakenListener",
-										"targetUnit": {
-											"type": "getEnumUnit"
-										},
-										"listener": {
-											"type": "getLastCreatedDamageTakenListener"
+											}
 										}
-									},{
-										"type": "storeValueLocally",
-										"key": {
-											"type": "catStrings",
-											"stringList": [{
+									},
+									"condition2": {
+										"type": "not",
+										"condition": {
+											"type": "or",
+											"condition1": {
+												"type": "floatEq0",
+												"value": {
+													"type": "getAbilityDataAsFloat",
+													"dataField": "A"
+												}
+											},
+											"condition2": {
+												"type": "or",
+												"condition1": {
+													"type": "not",
+													"condition": {
+														"type": "isUnitMaxHp",
+														"unit": {
+															"type": "getEnumUnit"
+														}
+													}
+												},
+												"condition2": {
+													"type": "setCantUseReasonOnFailure",
+													"condition": {
+														"type": "integerIsOdd",
+														"value": {
+															"type": "getAbilityDataAsInteger",
+															"dataField": "C"
+														}
+													},
+													"reason": "ALREADY_AT_FULL_HEALTH"
+												}
+											}
+										}
+									}
+								}
+							},
+							"thenActions": [{
+									"type": "createTimedTickingBuff",
+									"buffId": {
+										"type": "getFirstBuffId"
+									},
+									"duration": {
+										"type": "getAbilityDuration",
+										"target": {
+											"type": "getEnumUnit"
+										}
+									},
+									"onAddActions": [{
+											"type": "storeValueLocally",
+											"key": {
 												"type": "rawString",
-												"value": "breakHeal"
-											},{
+												"value": "hpPerSec"
+											},
+											"valueToStore": {
+												"type": "divideFloat",
+												"value1": {
+													"type": "getAbilityDataAsFloat",
+													"dataField": "A"
+												},
+												"value2": {
+													"type": "getAbilityDuration",
+													"target": {
+														"type": "getCastingUnit"
+													}
+												}
+											}
+										},{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "mpPerSec"
+											},
+											"valueToStore": {
+												"type": "divideFloat",
+												"value1": {
+													"type": "getAbilityDataAsFloat",
+													"dataField": "B"
+												},
+												"value2": {
+													"type": "getAbilityDuration",
+													"target": {
+														"type": "getCastingUnit"
+													}
+												}
+											}
+									}],
+									"onTickActions": [{
+											"type": "periodicExecute",
+											"periodicActions": [{
+													"type": "heal",
+													"target": {
+														"type": "getCastingUnit"
+													},
+													"amount": {
+														"type": "getStoredFloatByKey",
+														"key": {
+															"type": "rawString",
+															"value": "hpPerSec"
+														}
+													}
+												},{
+													"type": "addMp",
+													"target": {
+														"type": "getCastingUnit"
+													},
+													"amount": {
+														"type": "getStoredFloatByKey",
+														"key": {
+															"type": "rawString",
+															"value": "mpPerSec"
+														}
+													}
+											}],
+											"delaySeconds": {
+												"type": "rawFloat",
+												"value": 1
+											},
+											"unique": {
 												"type": "getUnitHandleAsString",
 												"unit": {
-													"type": "getEnumUnit"
+													"type": "getCastingUnit"
 												}
-											}]
-										},
-										"valueToStore": {
-											"type": "getLastCreatedDamageTakenListener"
+											}
+									}]
+								},{
+									"type": "addNonStackingDisplayBuff",
+									"target": {
+										"type": "getEnumUnit"
+									},
+									"buff": {
+										"type": "getLastCreatedBuff"
+									},
+									"key": {
+										"type": "getCodeAsString"
+									}
+								},{
+									"type": "storeValueLocally",
+									"key": {
+										"type": "catStrings",
+										"stringList": [{
+											"type": "rawString",
+											"value": "regenBuff"
+										},{
+											"type": "getUnitHandleAsString",
+											"unit": {
+												"type": "getEnumUnit"
+											}
+										}]
+									},
+									"valueToStore": {
+										"type": "getLastCreatedBuff"
+									}
+								},{
+									"type": "if",
+									"condition": {
+										"type": "bool",
+										"bool": {
+											"type": "getAbilityDataAsBoolean",
+											"dataField": "E"
 										}
-								}],
-								"elseActions": []
+									},
+									"thenActions": [{
+											"type": "createDamageTakenListener",
+											"actions": [{
+													"type": "removeDamageTakenListener",
+													"targetUnit": {
+														"type": "getCastingUnit"
+													},
+													"listener": {
+														"type": "getStoredDamageTakenListenerByKey",
+														"key": {
+															"type": "catStrings",
+															"stringList": [{
+																"type": "rawString",
+																"value": "breakHeal"
+															},{
+																"type": "getUnitHandleAsString",
+																"unit": {
+																	"type": "getCastingUnit"
+																}
+															}]
+														}
+													}
+												
+												},{
+													"type": "removeBuff",
+													"target": {
+														"type": "getCastingUnit"
+													},
+													"buff": {
+														"type": "getStoredBuffByKey",
+														"key": {
+															"type": "catStrings",
+															"stringList": [{
+																"type": "rawString",
+																"value": "regenBuff"
+															},{
+																"type": "getUnitHandleAsString",
+																"unit": {
+																	"type": "getCastingUnit"
+																}
+															}]
+														}
+													}
+											}]
+										},{
+											"type": "addDamageTakenListener",
+											"targetUnit": {
+												"type": "getEnumUnit"
+											},
+											"listener": {
+												"type": "getLastCreatedDamageTakenListener"
+											}
+										},{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "catStrings",
+												"stringList": [{
+													"type": "rawString",
+													"value": "breakHeal"
+												},{
+													"type": "getUnitHandleAsString",
+													"unit": {
+														"type": "getEnumUnit"
+													}
+												}]
+											},
+											"valueToStore": {
+												"type": "getLastCreatedDamageTakenListener"
+											}
+									}],
+									"elseActions": []
+							}],
+							"elseActions": []
 						}],
-						"elseActions": []
-					}],
-					"originUnit": {
-						"type": "getCastingUnit"
-					},
-					"range": {
-						"type": "getAbilityArea"
-					}
+						"originUnit": {
+							"type": "getCastingUnit"
+						},
+						"range": {
+							"type": "getAbilityArea"
+						}
+					},{
+						"type": "createTimer",
+						"timeout": {
+							"type": "+",
+							"value1": {
+								"type": "max",
+								"value1": {
+									"type": "getAbilityDuration"
+								},
+								"value2": {
+									"type": "getAbilityHeroDuration"
+								}
+							},
+							"value2": {
+								"type": "rawFloat",
+								"value": 1
+							}
+						},
+						"actions": [{
+								"type": "cleanUpCastInstance"
+						}]
 				}],
 				"elseActions": [{
 						"type": "createTimedTickingBuff",
@@ -1127,6 +1151,9 @@
 										"type": "getCastingUnit"
 									}
 								}
+						}],
+						"onRemoveActions": [{
+							"type": "cleanUpCastInstance"
 						}]
 					},{
 						"type": "addNonStackingDisplayBuff",

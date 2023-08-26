@@ -515,13 +515,9 @@
 								"value": "subDmgTimer"
 							}
 						}
+					},{
+						"type": "cleanUpCastInstance"
 				}]
-			}
-						
-						
-						
-						
-						
-		]
+		}]
 	}]
 }

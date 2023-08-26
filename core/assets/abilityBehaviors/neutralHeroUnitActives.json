@@ -107,10 +107,6 @@
 				"type": "createPassiveBuff",
 				"buffId": {
 					"type": "getFirstBuffId"
-				},
-				"showIcon": {
-					"type": "rawBoolean",
-					"value": "false"
 				}
 			},{
 				"type": "addBuff",

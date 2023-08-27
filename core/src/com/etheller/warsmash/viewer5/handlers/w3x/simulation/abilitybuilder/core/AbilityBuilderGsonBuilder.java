@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.cor
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ability.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.destructable.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.timer.*;
@@ -11,12 +12,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalActions.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitlisteners.internalCallbacks.*;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitstate.ABActionAddStateModBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitstate.ABActionCreateStateModBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitstate.ABActionRemoveStateModBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitstate.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.destructable.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.destructablebuff.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.fxcallbacks.*;
@@ -25,9 +26,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.listenercallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.locationcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statbuffcallbacks.*;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.ABCallbackGetLastCreatedStateModBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.ABCallbackGetStoredStateModBuffByKey;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.ABStateModBuffCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.timercallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.*;
@@ -101,6 +100,17 @@ public abstract class AbilityBuilderGsonBuilder {
 		callbackTypeFactory
 				.registerSubtype(ABCallbackGetLastCreatedDeathReplacement.class, "getLastCreatedDeathReplacement")
 				.registerSubtype(ABCallbackGetStoredDeathReplacementByKey.class, "getStoredDeathReplacementByKey");
+	}
+
+	private static void registerDestructableCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
+		callbackTypeFactory
+				.registerSubtype(ABCallbackGetEnumDestructable.class, "getEnumDestructable");
+	}
+
+	private static void registerDestructableBuffCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
+		callbackTypeFactory
+				.registerSubtype(ABCallbackGetLastCreatedDestructableBuff.class, "getLastCreatedDestructableBuff")
+				.registerSubtype(ABCallbackGetStoredDestructableBuffByKey.class, "getStoredDestructableBuffByKey");
 	}
 
 	private static void registerEvasionListenerCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
@@ -259,6 +269,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionSetCantUseReasonOnFailure.class, "setCantUseReasonOnFailure")
 				
 				.registerSubtype(ABConditionIsValidTarget.class, "isValidTarget")
+				.registerSubtype(ABConditionIsDestructableValidTarget.class, "isDestructableValidTarget")
 				.registerSubtype(ABConditionIsUnitInRangeOfUnit.class, "isUnitInRangeOfUnit")
 				.registerSubtype(ABConditionIsUnitInGroup.class, "isUnitInGroup")
 				.registerSubtype(ABConditionIsUnitEqual.class, "isUnitEqual")
@@ -381,7 +392,16 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionDeathReplacementSetReviving.class, "setReviving")
 				.registerSubtype(ABActionDeathReplacementSetReincarnating.class, "setReincarnating")
 				.registerSubtype(ABActionDeathReplacementFinishReincarnating.class, "finishReincarnating")
-				.registerSubtype(ABActionSubtractTotalDamageDealt.class, "subtractTotalDamageDealt");
+				.registerSubtype(ABActionSubtractTotalDamageDealt.class, "subtractTotalDamageDealt")
+
+				.registerSubtype(ABActionAddDestructableBuff.class, "addDestructableBuff")
+				.registerSubtype(ABActionCreateDestructableBuff.class, "createDestructableBuff")
+				.registerSubtype(ABActionRemoveDestructableBuff.class, "removeDestructableBuff")
+				.registerSubtype(ABActionIterateDestructablesInRangeOfLocation.class, "iterateDestructablesInRangeOfLocation")
+				.registerSubtype(ABActionDamageDestructable.class, "damageDestructable")
+				
+				
+				;
 	}
 
 	public static Gson create() {
@@ -402,6 +422,8 @@ public abstract class AbilityBuilderGsonBuilder {
 		registerDamageTakenListenerCallbacks(callbackTypeFactory);
 		registerDamageTakenModificationListenerCallbacks(callbackTypeFactory);
 		registerDeathReplacementEffectCallbacks(callbackTypeFactory);
+		registerDestructableCallbacks(callbackTypeFactory);
+		registerDestructableBuffCallbacks(callbackTypeFactory);
 		registerEvasionListenerCallbacks(callbackTypeFactory);
 		registerFinalDamageTakenModificationListenerCallbacks(callbackTypeFactory);
 		registerFloatCallbacks(callbackTypeFactory);
@@ -458,6 +480,16 @@ public abstract class AbilityBuilderGsonBuilder {
 				.of(ABDeathReplacementCallback.class, "type");
 		registerDeathReplacementEffectCallbacks(deathReplacementEffectCallbackTypeFactory);
 		gsonBuilder.registerTypeAdapterFactory(deathReplacementEffectCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABDestructableCallback> destructableCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABDestructableCallback.class, "type");
+		registerDestructableCallbacks(destructableCallbackTypeFactory);
+		gsonBuilder.registerTypeAdapterFactory(destructableCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABDestructableBuffCallback> destructableBuffCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABDestructableBuffCallback.class, "type");
+		registerDestructableBuffCallbacks(destructableBuffCallbackTypeFactory);
+		gsonBuilder.registerTypeAdapterFactory(destructableBuffCallbackTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABEvasionListenerCallback> evasionListenerCallbackTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABEvasionListenerCallback.class, "type");

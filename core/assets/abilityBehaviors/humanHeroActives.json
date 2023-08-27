@@ -22,6 +22,37 @@
 				},
 				"effectType": "SPECIAL"
 			},{
+				"type": "iterateDestructablesInRangeOfLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"range": {
+					"type": "getAbilityArea"
+				},
+				"iterationActions": [{
+					"type": "if",
+					"condition": {
+						"type": "isDestructableValidTarget",
+						"target": {
+							"type": "getEnumDestructable"
+						}
+					},
+					"thenActions": [{
+						"type": "damageDestructable",
+						"source": {
+							"type": "getCastingUnit"
+						},
+						"target": {
+							"type": "getEnumDestructable"
+						},
+						"damage": {
+							"type": "rawFloat",
+							"value": 512
+						}
+					}],
+					"elseActions": []
+				}]
+			},{
 				"type": "createTimer",
 				"timeout": {
 					"type": "rawFloat",

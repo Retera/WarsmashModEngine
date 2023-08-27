@@ -40,6 +40,8 @@ public class ABLocalStoreKeys {
 	public static final String LASTADDEDBUFF = "_lastAddedBuff";
 	public static final String CURRENTLEVEL = "_currentLevel";
 	public static final String LASTCREATEDUNITGROUP = "_lastCreatedUnitGroup";
+
+	public static final String LASTCREATEDDESTBUFF = "_lastCreatedDestBuff";
 	
 	//Generic Targetting
 	public static final String ATTACKINGUNIT = "_attackingUnit#";
@@ -59,6 +61,10 @@ public class ABLocalStoreKeys {
 	public static final String LASTCREATEDTIMER = "_lastCreatedTimer";
 	public static final String LASTSTARTEDTIMER = "_lastCreatedTimer";
 	public static final String FIRINGTIMER = "_firingTimer";
+
+	// Dest Names
+	public static final String BUFFEDDEST = "_buffedDest#";
+	public static final String ENUMDESTRUCTABLE = "_enumDest#";
 	
 	
 	

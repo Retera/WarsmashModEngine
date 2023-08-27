@@ -345,6 +345,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionCreateTimedTargetingBuff.class, "createTimedTargetingBuff")
 				.registerSubtype(ABActionCreateTimedArtBuff.class, "createTimedArtBuff")
 				.registerSubtype(ABActionCreateTimedTickingBuff.class, "createTimedTickingBuff")
+				.registerSubtype(ABActionCreateTimedTickingPausedBuff.class, "createTimedTickingPausedBuff")
 				.registerSubtype(ABActionCreateTimedTickingPostDeathBuff.class, "createTimedTickingPostDeathBuff")
 
 				.registerSubtype(ABActionCreateStateModBuff.class, "createStateModBuff")

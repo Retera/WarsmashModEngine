@@ -572,7 +572,7 @@
 				"type": "isFlexAbilityTargeted"
 			},
 			"thenActions": [{
-					"type": "createTimedTickingBuff",
+					"type": "createTimedTickingPausedBuff",
 					"buffId": {
 						"type": "getFirstBuffId"
 					},
@@ -838,7 +838,7 @@
 								}
 							},
 							"thenActions": [{
-									"type": "createTimedTickingBuff",
+									"type": "createTimedTickingPausedBuff",
 									"buffId": {
 										"type": "getFirstBuffId"
 									},
@@ -1065,7 +1065,7 @@
 						}]
 				}],
 				"elseActions": [{
-						"type": "createTimedTickingBuff",
+						"type": "createTimedTickingPausedBuff",
 						"buffId": {
 							"type": "getFirstBuffId"
 						},

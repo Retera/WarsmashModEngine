@@ -27,6 +27,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 
 public class RenderUnit implements RenderWidget {
 	public static final Quaternion tempQuat = new Quaternion();
@@ -167,7 +169,10 @@ public class RenderUnit implements RenderWidget {
 				.reset(game, gameUI, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId,
 						multiSelect, localPlayerIndex);
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
-			ability.visit(commandCardPopulatingVisitor);
+			if (!this.simulationUnit.isPaused() || ability instanceof CBuff || 
+					ability instanceof AbilityGenericSingleIconPassiveAbility) {
+				ability.visit(commandCardPopulatingVisitor);
+			}
 		}
 	}
 

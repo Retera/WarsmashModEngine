@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 public abstract class ABGenericTimedBuff extends ABBuff {
 	private boolean showTimedLifeBar;
 	private final float duration;
+	private int currentTick = 0;
 	private int expireTick;
 	
 	public ABGenericTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar) {
@@ -25,7 +26,7 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	public void onAdd(CSimulation game, CUnit unit) {
 		this.onBuffAdd(game, unit);
 		final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
-		expireTick = game.getGameTurnTick() + durationTicks;
+		expireTick = durationTicks;
 	}
 
 	protected abstract void onBuffAdd(CSimulation game, CUnit unit);
@@ -51,8 +52,8 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 
 	@Override
 	public void onTick(final CSimulation game, final CUnit caster) {
-		final int currentTick = game.getGameTurnTick();
-		if (currentTick > this.expireTick) {
+		this.currentTick++;
+		if (this.currentTick > this.expireTick) {
 			caster.remove(game, this);
 		}
 	}

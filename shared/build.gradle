@@ -3,7 +3,11 @@
 sourceCompatibility = 1.17
 
 sourceSets.main.java.srcDirs = [ "src/" ]
+sourceSets.test.java.srcDirs = [ "test/" ]
 
+configurations {
+    testImplementation.extendsFrom implementation
+}
 
 eclipse.project {
     name = appName + "-shared"

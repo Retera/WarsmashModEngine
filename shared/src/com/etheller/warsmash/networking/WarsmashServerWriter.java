@@ -8,7 +8,7 @@ import java.util.Set;
 
 import net.warsmash.networking.udp.OrderedUdpServer;
 
-public class WarsmashServerWriter implements ServerToClientListener {
+public class WarsmashServerWriter implements SendableServerToClientListener {
 	private final OrderedUdpServer server;
 	private final ByteBuffer sendBuffer = ByteBuffer.allocate(1024).order(ByteOrder.BIG_ENDIAN);
 	private final Set<SocketAddress> allKnownAddressesToSend;

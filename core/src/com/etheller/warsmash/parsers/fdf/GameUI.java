@@ -1453,7 +1453,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				width = frameDefinition.getFloat("TextLength");
 				if (width != null) {
 					if (frameFont != null) {
-						inflatedFrame.setWidth(convertX(viewport2, width * frameFont.getSpaceWidth()));
+						inflatedFrame.setWidth(convertX(viewport2, width * frameFont.getSpaceXadvance()));
 					}
 				}
 			}

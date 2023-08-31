@@ -405,8 +405,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
-		this.meleeUI.scrolled(amount);
+	public boolean scrolled(final float amountX, final float amountY) {
+		this.meleeUI.scrolled((int)Math.ceil(amountY));
 		return true;
 	}
 

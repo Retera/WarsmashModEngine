@@ -1,8 +1,5 @@
 package com.etheller.warsmash.desktop;
 
-import static org.lwjgl.openal.AL10.AL_ORIENTATION;
-import static org.lwjgl.openal.AL10.AL_POSITION;
-import static org.lwjgl.openal.AL10.alListener;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,13 +20,11 @@ import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
-import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.badlogic.gdx.backends.lwjgl.LwjglNativesLoader;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.etheller.warsmash.WarsmashGdxFDFTestRenderScreen;
 import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
-import com.etheller.warsmash.audio.OpenALSound;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.StringBundle;
@@ -46,28 +41,18 @@ import com.etheller.warsmash.viewer5.gl.WireframeExtension;
 public class DesktopLauncher {
 	public static void main(final String[] arg) {
 		System.out.println("Warsmash engine is starting...");
-		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.useGL30 = true;
-		config.gles30ContextMajorVersion = 3;
-		config.gles30ContextMinorVersion = 3;
-//		config.samples = 16;
-//		config.vSyncEnabled = false;
-		config.addIcon("resources/Icon16.png", Files.FileType.Internal);
-		config.addIcon("resources/Icon32.png", Files.FileType.Internal);
-		config.addIcon("resources/Icon64.png", Files.FileType.Internal);
-		config.addIcon("resources/Icon128.png", Files.FileType.Internal);
-//		config.foregroundFPS = 0;
-//		config.backgroundFPS = 0;
-		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
-		config.width = desktopDisplayMode.width;
-		config.height = desktopDisplayMode.height;
-		config.fullscreen = true;
+		final Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
+		config.setTitle("Warsmash");
+		config.useOpenGL3(true, 2, 0);
+		config.setWindowIcon("resources/Icon128.png","resources/Icon64.png","resources/Icon32.png","resources/Icon16.png");
+		final DisplayMode desktopDisplayMode = Lwjgl3ApplicationConfiguration.getDisplayMode();
+		config.setFullscreenMode(desktopDisplayMode);
 		String fileToLoad = null;
 		String iniPath = null;
 		boolean noLogs = false;
 		for (int argIndex = 0; argIndex < arg.length; argIndex++) {
 			if ("-window".equals(arg[argIndex])) {
-				config.fullscreen = false;
+				config.setWindowedMode(desktopDisplayMode.width, desktopDisplayMode.height);
 			}
 			else if ("-nolog".equals(arg[argIndex])) {
 				noLogs = true;
@@ -106,26 +91,27 @@ public class DesktopLauncher {
 		if (fileToLoad != null) {
 			System.out.println("About to run loading file: " + fileToLoad);
 		}
-		final WarsmashGdxMultiScreenGame warsmashGdxMultiScreenGame = new WarsmashGdxMultiScreenGame();
-		new LwjglApplication(warsmashGdxMultiScreenGame, config);
 		final String finalFileToLoad = fileToLoad;
-		Gdx.app.postRunnable(new Runnable() {
-			@Override
-			public void run() {
-				if ((finalFileToLoad != null) && finalFileToLoad.toLowerCase().endsWith(".toc")) {
-					warsmashGdxMultiScreenGame.setScreen(new WarsmashGdxFDFTestRenderScreen(warsmashIni,
-							warsmashGdxMultiScreenGame, finalFileToLoad));
-				}
-				else {
-					final WarsmashGdxMenuScreen menuScreen = new WarsmashGdxMenuScreen(warsmashIni,
-							warsmashGdxMultiScreenGame);
-					warsmashGdxMultiScreenGame.setScreen(menuScreen);
-					if (finalFileToLoad != null) {
-						menuScreen.startMap(finalFileToLoad);
+		final WarsmashGdxMultiScreenGame warsmashGdxMultiScreenGame = new WarsmashGdxMultiScreenGame((game) -> {
+			Gdx.app.postRunnable(new Runnable() {
+				@Override
+				public void run() {
+					if ((finalFileToLoad != null) && finalFileToLoad.toLowerCase().endsWith(".toc")) {
+						game.setScreen(new WarsmashGdxFDFTestRenderScreen(warsmashIni,
+								game, finalFileToLoad));
+					}
+					else {
+						final WarsmashGdxMenuScreen menuScreen = new WarsmashGdxMenuScreen(warsmashIni,
+								game);
+						game.setScreen(menuScreen);
+						if (finalFileToLoad != null) {
+							menuScreen.startMap(finalFileToLoad);
+						}
 					}
 				}
-			}
+			});
 		});
+		new Lwjgl3Application(warsmashGdxMultiScreenGame, config);
 	}
 
 	public static DataTable loadWarsmashIni(final String iniPath) {
@@ -147,7 +133,6 @@ public class DesktopLauncher {
 	}
 
 	public static void loadExtensions() {
-		LwjglNativesLoader.load();
 		Extensions.angleInstancedArrays = new ANGLEInstancedArrays() {
 			@Override
 			public void glVertexAttribDivisorANGLE(final int index, final int divisor) {
@@ -193,72 +178,21 @@ public class DesktopLauncher {
 				if (sound == null) {
 					return 1;
 				}
-				return ((OpenALSound) sound).duration();
+				return 2.0f; // ((OpenALSound) sound).duration();
 			}
 
 			@Override
 			public void play(final Sound buffer, final float volume, final float pitch, final float x, final float y,
 					final float z, final boolean is3dSound, final float maxDistance, final float refDistance,
 					final boolean looping) {
-				((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance, looping);
+				buffer.play(volume, pitch, 0.0f);
+				//((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance, looping);
 			}
 
 			@Override
 			public AudioContext createContext(final boolean world) {
-				Listener listener;
-				if (world && AL.isCreated()) {
-					listener = new Listener() {
-						private float x;
-						private float y;
-						private float z;
-
-						@Override
-						public void setPosition(final float x, final float y, final float z) {
-							this.x = x;
-							this.y = y;
-							this.z = z;
-							position.put(0, x);
-							position.put(1, y);
-							position.put(2, z);
-							alListener(AL_POSITION, position);
-						}
-
-						@Override
-						public float getX() {
-							return this.x;
-						}
-
-						@Override
-						public float getY() {
-							return this.y;
-						}
-
-						@Override
-						public float getZ() {
-							return this.z;
-						}
-
-						@Override
-						public void setOrientation(final float forwardX, final float forwardY, final float forwardZ,
-								final float upX, final float upY, final float upZ) {
-							orientation.put(0, forwardX);
-							orientation.put(1, forwardY);
-							orientation.put(2, forwardZ);
-							orientation.put(3, upX);
-							orientation.put(4, upY);
-							orientation.put(5, upZ);
-							alListener(AL_ORIENTATION, orientation);
-						}
-
-						@Override
-						public boolean is3DSupported() {
-							return true;
-						}
-					};
-				}
-				else {
+				AudioContext.Listener listener;
 					listener = Listener.DO_NOTHING;
-				}
 
 				return new AudioContext(listener, new AudioDestination() {
 				});

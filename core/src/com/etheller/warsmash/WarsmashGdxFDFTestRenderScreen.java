@@ -737,7 +737,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
+	public boolean scrolled(final float amountX, final float amountY) {
 		// TODO Auto-generated method stub
 		return false;
 	}

@@ -19,7 +19,7 @@ allprojects {
     version = '1.0'
     ext {
         appName = "warsmash"
-        gdxVersion = '1.9.8'
+        gdxVersion = '1.9.12'
         antlrVersion = '4.7'
         xstreamVersion = '1.4.19'
     }
@@ -52,7 +52,7 @@ project(":desktop") {
 
     dependencies {
         implementation project(":core")
-        api "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
@@ -83,6 +83,7 @@ project(":shared") {
     apply plugin: "java-library"
 
     dependencies {
+    	testImplementation 'junit:junit:4.13.2'
     }
 }
 

@@ -55,6 +55,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashUI;
 
 public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	public static final boolean ENABLE_AUDIO = true;
@@ -74,7 +75,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	private MdxModel timeIndicator;
 
 	private Scene uiScene;
-	private MeleeUI meleeUI;
+	private WarsmashUI meleeUI;
 
 	private Music currentMusic;
 	private final WarsmashGdxMultiScreenGame screenManager;
@@ -314,8 +315,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	@Override
 	public void dispose() {
 		this.meleeUI.dispose();
-		batch.dispose();
-		viewer.getGameUI().dispose();
+		this.batch.dispose();
+		this.viewer.getGameUI().dispose();
 	}
 
 	@Override
@@ -325,19 +326,9 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		this.uiViewport.update(width, height);
 		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
 
-		this.meleeUI.resize(setupWorldFrameViewport(width, height));
+		this.meleeUI.resize(width, height);
 		updateUIScene();
 
-	}
-
-	private Rectangle setupWorldFrameViewport(final int width, final int height) {
-		this.tempRect.x = 0;
-		this.tempRect.width = width;
-		final float topHeight = 0.02666f * height;
-		final float bottomHeight = 0.21333f * height;
-		this.tempRect.y = (int) bottomHeight;
-		this.tempRect.height = height - (int) (topHeight + bottomHeight);
-		return this.tempRect;
 	}
 
 	@Override

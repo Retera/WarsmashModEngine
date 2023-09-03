@@ -164,7 +164,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbility
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightningMovable;
-import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialogButton;
 
@@ -172,7 +172,7 @@ public class Jass2 {
 	public static final boolean REPORT_SYNTAX_ERRORS = true;
 
 	public static CommonEnvironment loadCommon(final DataSource dataSource, final Viewport uiViewport,
-			final Scene uiScene, final War3MapViewer war3MapViewer, final MeleeUI meleeUI, final String... files) {
+			final Scene uiScene, final War3MapViewer war3MapViewer, final WarsmashUI meleeUI, final String... files) {
 
 		final JassProgramVisitor jassProgramVisitor = new JassProgramVisitor();
 		final CommonEnvironment environment = new CommonEnvironment(jassProgramVisitor, dataSource, uiViewport, uiScene,
@@ -482,7 +482,7 @@ public class Jass2 {
 
 		private CommonEnvironment(final JassProgramVisitor jassProgramVisitor, final DataSource dataSource,
 				final Viewport uiViewport, final Scene uiScene, final War3MapViewer war3MapViewer,
-				final MeleeUI meleeUI) {
+				final WarsmashUI meleeUI) {
 			this.jassProgramVisitor = jassProgramVisitor;
 			this.gameUI = war3MapViewer.getGameUI();
 			final Rectangle tempRect = new Rectangle();

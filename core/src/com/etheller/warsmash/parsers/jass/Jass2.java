@@ -2394,6 +2394,16 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SelectHeroSkill",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int skill = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final CAbilityHero heroData = whichUnit.getHeroData();
+						if (heroData != null) {
+							heroData.selectHeroSkill(this.simulation, whichUnit, new War3ID(skill));
+						}
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnitType",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

@@ -62,7 +62,7 @@ public class CUpgradeData {
 	private final Map<War3ID, CUpgradeType> idToType = new HashMap<>();
 
 	public CUpgradeData(final CGameplayConstants gameplayConstants, final MutableObjectData upgradeData,
-			DataTable standardUpgradeEffectMeta) {
+			final DataTable standardUpgradeEffectMeta) {
 		this.gameplayConstants = gameplayConstants;
 		this.upgradeData = upgradeData;
 		this.standardUpgradeEffectMeta = standardUpgradeEffectMeta;
@@ -79,17 +79,17 @@ public class CUpgradeData {
 	private CUpgradeType getUpgradeTypeInstance(final War3ID typeId, final MutableGameObject upgradeType) {
 		CUpgradeType upgradeTypeInstance = this.idToType.get(typeId);
 		if (upgradeTypeInstance == null) {
-			List<CUpgradeEffect> upgradeEffects = new ArrayList<>();
+			final List<CUpgradeEffect> upgradeEffects = new ArrayList<>();
 			for (int i = 0; i < EFFECT.length; i++) {
-				War3ID effectMetaKey = EFFECT[i];
-				War3ID effectBaseMetaKey = EFFECT_BASE[i];
-				War3ID effectModMetaKey = EFFECT_MOD[i];
-				War3ID effectCodeMetaKey = EFFECT_CODE[i];
+				final War3ID effectMetaKey = EFFECT[i];
+				final War3ID effectBaseMetaKey = EFFECT_BASE[i];
+				final War3ID effectModMetaKey = EFFECT_MOD[i];
+				final War3ID effectCodeMetaKey = EFFECT_CODE[i];
 
 				/* This effectId defines what type of benefit the upgrade will provide */
-				String effectIdString = upgradeType.getFieldAsString(effectMetaKey, 0);
+				final String effectIdString = upgradeType.getFieldAsString(effectMetaKey, 0);
 				if (effectIdString.length() == 4) {
-					War3ID effectId = War3ID.fromString(effectIdString);
+					final War3ID effectId = War3ID.fromString(effectIdString);
 					// NOTE: maybe a string switch is not performant, if it's a problem maybe change
 					// it later but the syntax is pretty nice and the calculation is cached and only
 					// runs once per upgrade
@@ -100,10 +100,13 @@ public class CUpgradeData {
 										upgradeType.getFieldAsInteger(effectModMetaKey, 0)));
 						break;
 					case "rlev":
-						upgradeEffects
-								.add(new CUpgradeEffectSpellLevel(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
-										upgradeType.getFieldAsInteger(effectModMetaKey, 0),
-										War3ID.fromString(upgradeType.getFieldAsString(effectCodeMetaKey, 0))));
+						final String spellIdField = upgradeType.getFieldAsString(effectCodeMetaKey, 0);
+						if (spellIdField.length() == 4) {
+							upgradeEffects.add(
+									new CUpgradeEffectSpellLevel(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+											upgradeType.getFieldAsInteger(effectModMetaKey, 0),
+											War3ID.fromString(spellIdField)));
+						}
 						break;
 					case "rhpx":
 						upgradeEffects
@@ -175,28 +178,28 @@ public class CUpgradeData {
 				}
 			}
 
-			boolean appliesToAllUnits = upgradeType.getFieldAsBoolean(APPLIES_TO_ALL_UNITS, 0);
+			final boolean appliesToAllUnits = upgradeType.getFieldAsBoolean(APPLIES_TO_ALL_UNITS, 0);
 
 			final String classString = upgradeType.getFieldAsString(CLASS, 0);
 			final CUpgradeClass upgradeClass = CUpgradeClass.parseUpgradeClass(classString);
 
-			int goldBase = upgradeType.getFieldAsInteger(GOLD_BASE, 0);
-			int goldIncrement = upgradeType.getFieldAsInteger(GOLD_INCREMENT, 0);
+			final int goldBase = upgradeType.getFieldAsInteger(GOLD_BASE, 0);
+			final int goldIncrement = upgradeType.getFieldAsInteger(GOLD_INCREMENT, 0);
 
-			int levelCount = upgradeType.getFieldAsInteger(LEVELS, 0);
+			final int levelCount = upgradeType.getFieldAsInteger(LEVELS, 0);
 
-			int lumberBase = upgradeType.getFieldAsInteger(LUMBER_BASE, 0);
-			int lumberIncrement = upgradeType.getFieldAsInteger(LUMBER_INCREMENT, 0);
+			final int lumberBase = upgradeType.getFieldAsInteger(LUMBER_BASE, 0);
+			final int lumberIncrement = upgradeType.getFieldAsInteger(LUMBER_INCREMENT, 0);
 
 			final String raceString = upgradeType.getFieldAsString(RACE, 0);
 			final CUnitRace unitRace = CUnitRace.parseRace(raceString);
 
-			int timeBase = (int) Math
+			final int timeBase = (int) Math
 					.ceil(upgradeType.getFieldAsInteger(TIME_BASE, 0) * WarsmashConstants.GAME_SPEED_TIME_FACTOR);
-			int timeIncrement = (int) Math
+			final int timeIncrement = (int) Math
 					.ceil(upgradeType.getFieldAsInteger(TIME_INCREMENT, 0) * WarsmashConstants.GAME_SPEED_TIME_FACTOR);
 
-			boolean transferWithUnitOwnership = upgradeType.getFieldAsBoolean(TRANSFER_WITH_UNIT_OWNERSHIP, 0);
+			final boolean transferWithUnitOwnership = upgradeType.getFieldAsBoolean(TRANSFER_WITH_UNIT_OWNERSHIP, 0);
 
 			final List<CUpgradeType.UpgradeLevel> upgradeLevels = new ArrayList<>();
 			for (int i = 1; i <= levelCount; i++) {

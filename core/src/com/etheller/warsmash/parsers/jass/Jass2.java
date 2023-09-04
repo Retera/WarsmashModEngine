@@ -970,7 +970,10 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IssueImmediateOrder",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichUnit == null) {
+							return BooleanJassValue.FALSE;
+						}
 						final String orderString = arguments.get(1).visit(StringJassValueVisitor.getInstance());
 						final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
 								.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
@@ -996,7 +999,10 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IssueImmediateOrderById",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichUnit == null) {
+							return BooleanJassValue.FALSE;
+						}
 						final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
 								.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());

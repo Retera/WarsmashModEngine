@@ -56,6 +56,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.toggle.MeleeToggleUI;
 
 public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	public static final boolean ENABLE_AUDIO = true;
@@ -183,8 +184,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 				cameraRatesElement.getFieldFloatValue("FOV"), cameraRatesElement.getFieldFloatValue("Rotation"),
 				cameraRatesElement.getFieldFloatValue("Distance"), cameraRatesElement.getFieldFloatValue("Forward"),
 				cameraRatesElement.getFieldFloatValue("Strafe"));
-		this.meleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, this.uiScene, portraitScene, cameraPresets,
-				cameraRates, this.viewer, new RootFrameListener() {
+		final MeleeUI baseMeleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, this.uiScene, portraitScene,
+				cameraPresets, cameraRates, this.viewer, new RootFrameListener() {
 					@Override
 					public void onCreate(final GameUI rootFrame) {
 						WarsmashGdxMapScreen.this.viewer.setGameUI(rootFrame);
@@ -196,12 +197,15 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 						WarsmashGdxMapScreen.this.screenManager.setScreen(WarsmashGdxMapScreen.this.menuScreen);
 					}
 				});
+		final MeleeToggleUI toggleUI = new MeleeToggleUI(baseMeleeUI, Arrays.asList(baseMeleeUI));
+		this.meleeUI = toggleUI;
 		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 				this.viewer.mapPathSolver, "").addInstance();
 		libgdxContentInstance.setLocation(0f, 0f, -0.5f);
 		libgdxContentInstance.setScene(this.uiScene);
 		this.meleeUI.main();
+		toggleUI.setCurrentUI(0);
 
 		updateUIScene();
 

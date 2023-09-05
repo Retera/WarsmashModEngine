@@ -459,6 +459,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void removeUnit(final CUnit unit) {
+		unit.setHidden(true);
 		this.removedUnits.add(unit);
 	}
 

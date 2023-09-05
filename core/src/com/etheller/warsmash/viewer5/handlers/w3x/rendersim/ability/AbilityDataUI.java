@@ -347,8 +347,7 @@ public class AbilityDataUI {
 			final int iconNormalX = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_X, 0);
 			final int iconNormalY = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_Y, 0);
 			final List<IconUI> upgradeIconsByLevel = new ArrayList<>();
-			for (int i = 0; i < upgradeLevels; i++) {
-				final int upgradeLevelValue = i + 1;
+			for (int upgradeLevelValue = 1; upgradeLevelValue <= upgradeLevels; upgradeLevelValue++) {
 				final String iconTip = upgradeTypeData.getFieldAsString(UPGRADE_TIP, upgradeLevelValue);
 				final String iconUberTip = parseUbertip(allObjectData,
 						upgradeTypeData.getFieldAsString(UPGRADE_UBER_TIP, upgradeLevelValue));

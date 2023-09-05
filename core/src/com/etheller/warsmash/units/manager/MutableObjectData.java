@@ -604,11 +604,7 @@ public final class MutableObjectData {
 				return matchingChange.getStrval();
 			}
 			// no luck with custom data, look at the standard data
-			int slkLevel = level;
-			if (MutableObjectData.this.worldEditorDataType == WorldEditorDataType.UPGRADES) {
-				slkLevel -= 1;
-			}
-			return getFieldStringFromSLKs(field, slkLevel);
+			return getFieldStringFromSLKs(field, level);
 		}
 
 		private Change getMatchingChange(final War3ID field, final int level) {
@@ -859,17 +855,10 @@ public final class MutableObjectData {
 				throw new IllegalStateException("corrupted unit, no parent unit id");
 			}
 			int index = metaData.getFieldValue("index");
-			final String upgradeHack = metaData.getField("appendIndex");
-			if ("0".equals(upgradeHack)) {
-				// Engage magic upgrade hack to replace index with level
-				if (!field.toString().equals("gbpx") && !field.toString().equals("gbpy")) {
-					index = level;
-				}
-			}
-			else if ((index != -1) && (level > 0)) {
-				index = level - 1;
-			}
 			if (index != -1) {
+				if (level > 0) {
+					index = level - 1;
+				}
 				final String fieldStringValue = this.parentWC3Object
 						.getField(getEditorMetaDataDisplayKey(level, metaData), index);
 				return fieldStringValue;

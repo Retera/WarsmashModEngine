@@ -68,6 +68,15 @@ public class CAbilityBlightedGoldMine extends CAbilityOverlayedMine {
 	}
 
 	@Override
+	public void onDeath(CSimulation game, CUnit cUnit) {
+		super.onDeath(game, cUnit);
+		for (final SimulationRenderComponent spellEffect : this.spellEffects) {
+			spellEffect.remove();
+		}
+		this.spellEffects.clear();
+	}
+
+	@Override
 	public void onTick(final CSimulation game, final CUnit unit) {
 		if (this.currentActiveMinerCount > 0) {
 			final float currentInterval = this.intervalDuration

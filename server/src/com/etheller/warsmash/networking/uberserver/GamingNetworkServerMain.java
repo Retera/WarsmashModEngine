@@ -1,5 +1,9 @@
 package com.etheller.warsmash.networking.uberserver;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,13 +20,17 @@ public class GamingNetworkServerMain {
 		acceptedGames.add(new AcceptedGameListKey(GamingNetwork.GAME_ID_XPAC, GamingNetwork.GAME_VERSION_DATA));
 		final InRAMUserManager inRAMUserManager = new InRAMUserManager();
 		final String welcomeMessage = "Thank you for connecting to the first draft of the Warsmash game server.";
-		final TCPGamingNetworkServer tcpGamingNetworkServer = new TCPGamingNetworkServer(channelOpener,
+		try(final PrintStream logWriter = new PrintStream(new FileOutputStream("CommandLog.log", true), true, Charset.defaultCharset())) {
+			final TCPGamingNetworkServer tcpGamingNetworkServer = new TCPGamingNetworkServer(channelOpener,
 				new DefaultGamingNetworkServerClientBuilder(
-						new GamingNetworkServerBusinessLogicImpl(acceptedGames, inRAMUserManager, welcomeMessage)));
-		tcpGamingNetworkServer.start();
+						new GamingNetworkServerBusinessLogicImpl(acceptedGames, inRAMUserManager, welcomeMessage, new LoggingGamingNetworkServerTracker(logWriter))));
+			tcpGamingNetworkServer.start();
 
-		while (true) {
-			channelOpener.select(100);
-		}
-	}
+			while (true) {
+				channelOpener.select(100);
+			}
+		} catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

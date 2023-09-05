@@ -481,7 +481,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public static War3Map beginLoadingMap(final DataSource gameDataSource, final String mapFilePath)
 			throws IOException {
-		if (!gameDataSource.has(mapFilePath)) {
+		if (mapFilePath.startsWith("/") || !gameDataSource.has(mapFilePath)) {
 			final File mapFile = new File(mapFilePath);
 			if (mapFile.exists()) {
 				return new War3Map(gameDataSource, mapFile);

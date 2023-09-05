@@ -463,4 +463,6 @@ public class OrderIds {
 	public static final int itemxpgain = 852214003;
 	public static final int itemlifegain = 852214004;
 	public static final int itemlevelgain = 852214005;
+	public static final int itemhealingpotion = 852214006;
+	public static final int itemmanapotion = 852214007;
 }

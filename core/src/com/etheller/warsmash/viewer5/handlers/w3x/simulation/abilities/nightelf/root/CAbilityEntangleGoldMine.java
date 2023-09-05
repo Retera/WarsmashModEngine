@@ -24,6 +24,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUnderConstructionVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -40,6 +41,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	private final Trigger mineDeathTrigger = new Trigger();
 	private CUnit entangledMine;
 	private SimulationRenderComponent unitRootsRenderComponent;
+	private boolean instant;
 
 	public CAbilityEntangleGoldMine(final int handleId, final War3ID alias) {
 		super(handleId, alias);
@@ -74,6 +76,14 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
+	public void checkCanTarget(final CSimulation game, final CUnit unit, int orderId, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		if (orderId == OrderIds.entangleinstant) {
+			orderId = getBaseOrderId();
+		}
+		super.checkCanTarget(game, unit, orderId, target, receiver);
+	}
+
+	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
@@ -102,6 +112,12 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+		instant = (orderId == OrderIds.entangleinstant);
+		return super.begin(game, caster, orderId, target);
+	}
+
+	@Override
 	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
@@ -113,15 +129,17 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 				this.entangledMine = simulation.createUnit(this.resultingTypeId, unit.getPlayerIndex(),
 						unitTarget.getX(), unitTarget.getY(), simulation.getGameplayConstants().getBuildingAngle());
 
-				this.entangledMine.setConstructing(true);
-				this.entangledMine.setLife(simulation,
-						this.entangledMine.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
-				this.entangledMine.setFoodUsed(this.entangledMine.getUnitType().getFoodUsed());
-				this.entangledMine.add(simulation,
-						new CAbilityBuildInProgress(simulation.getHandleIdAllocator().createId()));
-				for (final CAbility ability : this.entangledMine.getAbilities()) {
-					ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
+				if (!instant) {
+					this.entangledMine.setConstructing(true);
+					this.entangledMine.setLife(simulation,
+							this.entangledMine.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
+					this.entangledMine.add(simulation,
+							new CAbilityBuildInProgress(simulation.getHandleIdAllocator().createId()));
+					for (final CAbility ability : this.entangledMine.getAbilities()) {
+						ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
+					}
 				}
+				this.entangledMine.setFoodUsed(this.entangledMine.getUnitType().getFoodUsed());
 				simulation.getPlayer(unit.getPlayerIndex()).addTechtreeInProgress(this.resultingTypeId);
 				simulation.unitConstructedEvent(unit, this.entangledMine);
 				// == end stuff copied from build behavior (this was noted in case it refactors

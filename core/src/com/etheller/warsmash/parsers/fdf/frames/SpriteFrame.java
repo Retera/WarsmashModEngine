@@ -151,4 +151,10 @@ public class SpriteFrame extends AbstractUIFrame {
 		}
 	}
 
+	public void setModelScale(float scale) {
+		if (this.instance != null) {
+			this.instance.setUniformScale(scale);
+		}
+	}
+
 }

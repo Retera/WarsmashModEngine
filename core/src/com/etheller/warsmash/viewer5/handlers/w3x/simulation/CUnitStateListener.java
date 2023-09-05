@@ -23,7 +23,9 @@ public interface CUnitStateListener {
 
 	void abilitiesChanged();
 
-	public static final class CUnitStateNotifier extends SubscriberSetNotifier<CUnitStateListener>
+    void hideStateChanged();
+
+    public static final class CUnitStateNotifier extends SubscriberSetNotifier<CUnitStateListener>
 			implements CUnitStateListener {
 		@Override
 		public void lifeChanged() {
@@ -92,6 +94,13 @@ public interface CUnitStateListener {
 		public void abilitiesChanged() {
 			for (final CUnitStateListener listener : set) {
 				listener.abilitiesChanged();
+			}
+		}
+
+		@Override
+		public void hideStateChanged() {
+			for (final CUnitStateListener listener : set) {
+				listener.hideStateChanged();
 			}
 		}
 	}

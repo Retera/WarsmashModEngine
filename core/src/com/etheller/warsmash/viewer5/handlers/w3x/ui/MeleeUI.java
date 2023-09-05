@@ -1111,6 +1111,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.rootFrame.setSpriteFrameModel(cooldownFrame, this.rootFrame.getSkinField("CommandButtonCooldown"));
 				cooldownFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
 				cooldownFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
+				cooldownFrame.setModelScale(DEFAULT_INVENTORY_ICON_WIDTH / DEFAULT_COMMAND_CARD_ICON_WIDTH);
 
 				numberOverlayFrame.addSetPoint(
 						new SetPoint(FramePoint.BOTTOMRIGHT, commandCardIcon, FramePoint.BOTTOMRIGHT, 0, 0));
@@ -3320,23 +3321,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			return;
 		}
 		if (this.selectedUnit.getSimulationUnit().isDead()) {
-			final RenderUnit preferredSelectionReplacement = this.selectedUnit.getPreferredSelectionReplacement();
-			final List<RenderWidget> newSelection;
-			newSelection = new ArrayList<>(this.selectedUnits);
-			newSelection.remove(this.selectedUnit);
-			if (preferredSelectionReplacement != null) {
-				newSelection.add(preferredSelectionReplacement);
-			}
-			selectWidgets(newSelection);
-			this.war3MapViewer.doSelectUnit(newSelection);
-
-			// clear active commands
-			this.activeCommandUnit = null;
-			this.activeCommand = null;
-			this.activeCommandOrderId = -1;
-			if (this.draggingItem != null) {
-				setDraggingItem(null);
-			}
+			removeSubGroupHighlightSelectedUnitFromSelection();
 		}
 		else {
 			final float lifeRatioRemaining = this.selectedUnit.getSimulationUnit().getLife()
@@ -3346,6 +3331,36 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							+ FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMaxLife()));
 			this.unitLifeText.setColor(new Color(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
 					Math.min(1.0f, lifeRatioRemaining * 2), 0, 1.0f));
+		}
+	}
+
+	@Override
+	public void hideStateChanged() {
+		if (this.selectedUnit == null) {
+			return;
+		}
+		if (this.selectedUnit.getSimulationUnit().isHidden()) {
+			removeSubGroupHighlightSelectedUnitFromSelection();
+		}
+	}
+
+	private void removeSubGroupHighlightSelectedUnitFromSelection() {
+		final RenderUnit preferredSelectionReplacement = this.selectedUnit.getPreferredSelectionReplacement();
+		final List<RenderWidget> newSelection;
+		newSelection = new ArrayList<>(this.selectedUnits);
+		newSelection.remove(this.selectedUnit);
+		if (preferredSelectionReplacement != null) {
+			newSelection.add(preferredSelectionReplacement);
+		}
+		selectWidgets(newSelection);
+		this.war3MapViewer.doSelectUnit(newSelection);
+
+		// clear active commands
+		this.activeCommandUnit = null;
+		this.activeCommand = null;
+		this.activeCommandOrderId = -1;
+		if (this.draggingItem != null) {
+			setDraggingItem(null);
 		}
 	}
 
@@ -4406,20 +4421,34 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				return;
 			}
 			if (this.sourceUnit.getSimulationUnit().isDead()) {
-				MeleeUI.this.selectedUnits.remove(this.sourceUnit);
-				MeleeUI.this.war3MapViewer.doUnselectUnit(this.sourceUnit);
-				MeleeUI.this.multiSelectUnitStateListeners.remove(this.index);
-				for (int i = this.index; i < MeleeUI.this.multiSelectUnitStateListeners.size(); i++) {
-					MeleeUI.this.multiSelectUnitStateListeners.get(i).index--;
-				}
-				dispose();
-				reloadSelectedUnitUI(MeleeUI.this.selectedUnit);
+				removeSourceUnitFromSelection();
 			}
 			else {
 				MeleeUI.this.selectedUnitFrames[this.index]
 						.setLifeRatioRemaining(this.sourceUnit.getSimulationUnit().getLife()
 								/ this.sourceUnit.getSimulationUnit().getMaximumLife());
 			}
+		}
+
+		@Override
+		public void hideStateChanged() {
+			if (this.disposed) {
+				return;
+			}
+			if (this.sourceUnit.getSimulationUnit().isHidden()) {
+				removeSourceUnitFromSelection();
+			}
+		}
+
+		private void removeSourceUnitFromSelection() {
+			MeleeUI.this.selectedUnits.remove(this.sourceUnit);
+			MeleeUI.this.war3MapViewer.doUnselectUnit(this.sourceUnit);
+			MeleeUI.this.multiSelectUnitStateListeners.remove(this.index);
+			for (int i = this.index; i < MeleeUI.this.multiSelectUnitStateListeners.size(); i++) {
+				MeleeUI.this.multiSelectUnitStateListeners.get(i).index--;
+			}
+			dispose();
+			reloadSelectedUnitUI(MeleeUI.this.selectedUnit);
 		}
 
 		@Override

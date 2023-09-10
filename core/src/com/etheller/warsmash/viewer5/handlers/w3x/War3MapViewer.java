@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,11 +22,6 @@ import java.util.function.Consumer;
 
 import javax.imageio.ImageIO;
 
-import com.etheller.warsmash.viewer5.handlers.w3x.lightning.LightningEffectModel;
-import com.etheller.warsmash.viewer5.handlers.w3x.lightning.LightningEffectModelHandler;
-import com.etheller.warsmash.viewer5.handlers.w3x.lightning.LightningEffectNode;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.*;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 
@@ -97,6 +93,20 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Remova
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.RenderCorner;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain.Splat;
+import com.etheller.warsmash.viewer5.handlers.w3x.lightning.LightningEffectModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.lightning.LightningEffectModelHandler;
+import com.etheller.warsmash.viewer5.handlers.w3x.lightning.LightningEffectNode;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderAttackInstant;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDoodad;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderLightningEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderSpellEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitTypeData;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.BuffUI;
@@ -110,7 +120,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffTimedLife;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
@@ -124,6 +133,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightningMovable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentModel;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 
@@ -212,7 +226,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private DataTable unitCombatSoundsTable;
 	public DataTable miscData;
 	private Element misc;
-	private Map<String, TextTagConfig> keyToTextTagConfig = new HashMap<>();
+	private final Map<String, TextTagConfig> keyToTextTagConfig = new HashMap<>();
 	private DataTable unitGlobalStrings;
 	public DataTable uiSoundsTable;
 	private DataTable lightningDataTable;
@@ -416,7 +430,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 	}
 
-	private TextTagConfig getTextTagConfig(String key) {
+	private TextTagConfig getTextTagConfig(final String key) {
 		TextTagConfig textTagConfig = keyToTextTagConfig.get(key);
 		if (textTagConfig == null) {
 			textTagConfig = parseTextTagConfig(misc, key);
@@ -425,41 +439,42 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return textTagConfig;
 	}
 
-	private static TextTagConfig parseTextTagConfig(Element misc, String name) {
-		Color color = parseColor(misc, name + "TextColor");
-		String velocityKey = name + "TextVelocity";
-		float[] velocity = {misc.getFieldFloatValue(velocityKey, 0), misc.getFieldFloatValue(velocityKey, 1),
-				misc.getFieldFloatValue(velocityKey, 2)};
-		float lifetime = misc.getFieldFloatValue(name + "TextLifetime");
-		float fadeStart = misc.getFieldFloatValue(name + "TextFadeStart");
+	private static TextTagConfig parseTextTagConfig(final Element misc, final String name) {
+		final Color color = parseColor(misc, name + "TextColor");
+		final String velocityKey = name + "TextVelocity";
+		final float[] velocity = { misc.getFieldFloatValue(velocityKey, 0), misc.getFieldFloatValue(velocityKey, 1),
+				misc.getFieldFloatValue(velocityKey, 2) };
+		final float lifetime = misc.getFieldFloatValue(name + "TextLifetime");
+		final float fadeStart = misc.getFieldFloatValue(name + "TextFadeStart");
 		return new TextTagConfig(color, velocity, lifetime, fadeStart);
 	}
 
-	private void loadLightningData(WorldEditStrings worldEditStrings) throws IOException {
+	private void loadLightningData(final WorldEditStrings worldEditStrings) throws IOException {
 		this.lightningDataTable = new DataTable(worldEditStrings);
 		try (InputStream slkStream = this.dataSource.getResourceAsStream("Splats\\LightningData.slk")) {
 			this.lightningDataTable.readSLK(slkStream);
 		}
 		this.lightningTypeToModel = new HashMap<>();
-		LightningEffectModelHandler lightningEffectModelHandler = new LightningEffectModelHandler();
+		final LightningEffectModelHandler lightningEffectModelHandler = new LightningEffectModelHandler();
 		lightningEffectModelHandler.load(this);
-		for(String key: lightningDataTable.keySet()) {
-			War3ID typeId = War3ID.fromString(key);
-			Element element = lightningDataTable.get(key);
-			String textureFilePath = element.getField("Dir") + "\\" + element.getField("file");
-			float avgSegLen = element.getFieldFloatValue("AvgSegLen");
-			float width = element.getFieldFloatValue("Width");
-			float r = element.getFieldFloatValue("R");
-			float g = element.getFieldFloatValue("G");
-			float b = element.getFieldFloatValue("B");
-			float a = element.getFieldFloatValue("A");
-			float noiseScale = element.getFieldFloatValue("NoiseScale");
-			float texCoordScale = element.getFieldFloatValue("TexCoordScale");
-			float duration = element.getFieldFloatValue("Duration");
-			int version = element.getFieldValue("version");
-			LightningEffectModel lightningEffectModel = new LightningEffectModel(lightningEffectModelHandler, this,
-					".lightning", this.mapPathSolver, "<lightning:" + key + ">", typeId, textureFilePath, avgSegLen, width,
-					new float[]{r / 255f, g / 255f, b / 255f, a / 255f}, noiseScale, texCoordScale, duration, version);
+		for (final String key : lightningDataTable.keySet()) {
+			final War3ID typeId = War3ID.fromString(key);
+			final Element element = lightningDataTable.get(key);
+			final String textureFilePath = element.getField("Dir") + "\\" + element.getField("file");
+			final float avgSegLen = element.getFieldFloatValue("AvgSegLen");
+			final float width = element.getFieldFloatValue("Width");
+			final float r = element.getFieldFloatValue("R");
+			final float g = element.getFieldFloatValue("G");
+			final float b = element.getFieldFloatValue("B");
+			final float a = element.getFieldFloatValue("A");
+			final float noiseScale = element.getFieldFloatValue("NoiseScale");
+			final float texCoordScale = element.getFieldFloatValue("TexCoordScale");
+			final float duration = element.getFieldFloatValue("Duration");
+			final int version = element.getFieldValue("version");
+			final LightningEffectModel lightningEffectModel = new LightningEffectModel(lightningEffectModelHandler,
+					this, ".lightning", this.mapPathSolver, "<lightning:" + key + ">", typeId, textureFilePath,
+					avgSegLen, width, new float[] { r / 255f, g / 255f, b / 255f, a / 255f }, noiseScale, texCoordScale,
+					duration, version);
 			lightningEffectModel.loadData(null, null);
 			lightningTypeToModel.put(typeId, lightningEffectModel);
 		}
@@ -728,7 +743,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source, CUnit target) {
+					public SimulationRenderComponentLightning createLightning(final CSimulation simulation,
+							final War3ID lightningId, final CUnit source, final CUnit target) {
 						final RenderUnit renderPeerSource = War3MapViewer.this.getRenderPeer(source);
 						final RenderWidget renderPeerTarget = War3MapViewer.this.getRenderPeer(target);
 						return War3MapViewer.this.createLightning(lightningId, renderPeerSource, renderPeerTarget);
@@ -773,8 +789,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// RenderUnit class:
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -786,8 +801,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -806,8 +820,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -819,8 +832,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -928,7 +940,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public void spawnDeathExplodeEffect(final CUnit source, War3ID explodesOnDeathBuffId) {
+					public void spawnDeathExplodeEffect(final CUnit source, final War3ID explodesOnDeathBuffId) {
 						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
 						MdxComplexInstance modelInstance = null;
 						if (explodesOnDeathBuffId != null) {
@@ -1064,7 +1076,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									startingHeight);
 							modelInstance.setScene(War3MapViewer.this.worldScene);
 							final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance,
-									War3MapViewer.this, 0, RenderSpellEffect.STAND_ONLY);
+									War3MapViewer.this, 0, RenderSpellEffect.STAND_ONLY, SequenceUtils.EMPTY);
 							renderAttackInstant.setAnimations(RenderSpellEffect.STAND_ONLY, false);
 							War3MapViewer.this.projectiles.add(renderAttackInstant);
 							return new SimulationRenderComponentModel() {
@@ -1166,8 +1178,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							buildingShadowInstance = War3MapViewer.this.terrain.addShadow(buildingShadow, unitX, unitY);
 						}
 
-
-						if(renderPeer.shadow != null) {
+						if (renderPeer.shadow != null) {
 							renderPeer.shadow.destroy(Gdx.gl30, terrain.centerOffset);
 							renderPeer.shadow = null;
 						}
@@ -1184,8 +1195,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							if (mapMpq.has(texture)) {
 								final float x = unitX - shadowX;
 								final float y = unitY - shadowY;
-								renderPeer.shadow = terrain.addUnitShadowSplat(texture, x, y,
-											x + shadowWidth, y + shadowHeight, 3, 0.5f, false);
+								renderPeer.shadow = terrain.addUnitShadowSplat(texture, x, y, x + shadowWidth,
+										y + shadowHeight, 3, 0.5f, false);
 							}
 						}
 
@@ -1212,30 +1223,31 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public void spawnTextTag(CUnit unit, TextTagConfigType configType, int displayAmount) {
+					public void spawnTextTag(final CUnit unit, final TextTagConfigType configType,
+							final int displayAmount) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
-						TextTagConfig textTagConfig = getTextTagConfig(configType.getKey());
+						final TextTagConfig textTagConfig = getTextTagConfig(configType.getKey());
 						String text;
 						switch (configType) {
-							case GOLD:
-							case GOLD_BOUNTY:
-							case LUMBER:
-							case LUMBER_BOUNTY:
-							case XP: {
-								text = "+" + displayAmount;
-								break;
-							}
-							case MISS_TEXT:
-								text = "miss!";
-								break;
-							default:
-							case MANA_BURN:
-							case CRITICAL_STRIKE:
-							case SHADOW_STRIKE:
-							case BASH: {
-								text = displayAmount + "!";
-								break;
-							}
+						case GOLD:
+						case GOLD_BOUNTY:
+						case LUMBER:
+						case LUMBER_BOUNTY:
+						case XP: {
+							text = "+" + displayAmount;
+							break;
+						}
+						case MISS_TEXT:
+							text = "miss!";
+							break;
+						default:
+						case MANA_BURN:
+						case CRITICAL_STRIKE:
+						case SHADOW_STRIKE:
+						case BASH: {
+							text = displayAmount + "!";
+							break;
+						}
 						}
 						War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), text,
 								textTagConfig.getColor(), textTagConfig.getLifetime(), textTagConfig.getFadeStart()));
@@ -1321,15 +1333,18 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.terrain.createWaves();
 	}
 
-	public SimulationRenderComponentLightning createLightning(War3ID lightningId, RenderUnit renderPeerSource, RenderWidget renderPeerTarget) {
-		LightningEffectModel lightningEffectModel = lightningTypeToModel.get(lightningId);
-		if(lightningEffectModel != null) {
-			LightningEffectNode source = (LightningEffectNode)lightningEffectModel.addInstance();
-			LightningEffectNode target = (LightningEffectNode)lightningEffectModel.addInstance();
+	public SimulationRenderComponentLightning createLightning(final War3ID lightningId,
+			final RenderUnit renderPeerSource, final RenderWidget renderPeerTarget) {
+		final LightningEffectModel lightningEffectModel = lightningTypeToModel.get(lightningId);
+		if (lightningEffectModel != null) {
+			final LightningEffectNode source = (LightningEffectNode) lightningEffectModel.addInstance();
+			final LightningEffectNode target = (LightningEffectNode) lightningEffectModel.addInstance();
 			// ----- NOTE -----
-			// Automatic ingame lightnings apply their builtin durations below. For user code, we DONT do the same
+			// Automatic ingame lightnings apply their builtin durations below. For user
+			// code, we DONT do the same
 			// on the other arbitrary (non-unit-bound) createLightning func.
-			// Later on we might want a user API for creating unit-attached lightnings that have a duration specified
+			// Later on we might want a user API for creating unit-attached lightnings that
+			// have a duration specified
 			// by user code
 			source.setLifeSpanRemaining(lightningEffectModel.getDuration());
 			target.setLifeSpanRemaining(lightningEffectModel.getDuration());
@@ -1337,7 +1352,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			target.setFriend(source);
 			source.setSource(true);
 			source.setParent(renderPeerSource.getInstance());
-			source.setLocation(0, 0, simulation.getUnitData().getProjectileLaunchZ(renderPeerSource.getSimulationUnit().getTypeId()));
+			source.setLocation(0, 0,
+					simulation.getUnitData().getProjectileLaunchZ(renderPeerSource.getSimulationUnit().getTypeId()));
 			target.setParent(renderPeerTarget.getInstance());
 			target.setLocation(0, 0, renderPeerTarget.getSimulationWidget().getImpactZ());
 			source.setScene(worldScene);
@@ -1347,11 +1363,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return SimulationRenderComponentLightning.DO_NOTHING;
 	}
 
-	public SimulationRenderComponentLightningMovable createLightning(War3ID lightningId, float x1, float y1, float z1, float x2, float y2, float z2) {
-		LightningEffectModel lightningEffectModel = lightningTypeToModel.get(lightningId);
-		if(lightningEffectModel != null) {
-			LightningEffectNode source = (LightningEffectNode)lightningEffectModel.addInstance();
-			LightningEffectNode target = (LightningEffectNode)lightningEffectModel.addInstance();
+	public SimulationRenderComponentLightningMovable createLightning(final War3ID lightningId, final float x1,
+			final float y1, final float z1, final float x2, final float y2, final float z2) {
+		final LightningEffectModel lightningEffectModel = lightningTypeToModel.get(lightningId);
+		if (lightningEffectModel != null) {
+			final LightningEffectNode source = (LightningEffectNode) lightningEffectModel.addInstance();
+			final LightningEffectNode target = (LightningEffectNode) lightningEffectModel.addInstance();
 			source.setFriend(target);
 			target.setFriend(source);
 			source.setSource(true);
@@ -2059,11 +2076,23 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			if ("_".equals(buildingShadow)) {
 				buildingShadow = null;
 			}
+			final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments = EnumSet.noneOf(SecondaryTag.class);
+			final String requiredAnimationNamesForAttachmentsString = row
+					.getFieldAsString(RenderUnit.ATTACHMENT_ANIM_PROPS, 0);
+			TokenLoop: for (final String animationName : requiredAnimationNamesForAttachmentsString.split(",")) {
+				final String upperCaseToken = animationName.toUpperCase();
+				for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
+					if (upperCaseToken.equals(secondaryTag.name())) {
+						requiredAnimationNamesForAttachments.add(secondaryTag);
+						continue TokenLoop;
+					}
+				}
+			}
 			unitTypeData = new RenderUnitTypeData(row.getFieldAsFloat(MAX_PITCH, 0), row.getFieldAsFloat(MAX_ROLL, 0),
 					row.getFieldAsFloat(ELEVATION_SAMPLE_RADIUS, 0), row.getFieldAsBoolean(ALLOW_CUSTOM_TEAM_COLOR, 0),
 					row.getFieldAsInteger(TEAM_COLOR, 0), row.getFieldAsFloat(ANIMATION_RUN_SPEED, 0),
 					row.getFieldAsFloat(ANIMATION_WALK_SPEED, 0), row.getFieldAsFloat(MODEL_SCALE, 0), buildingShadow,
-					uberSplatTexturePath, uberSplatScaleValue);
+					uberSplatTexturePath, uberSplatScaleValue, requiredAnimationNamesForAttachments);
 			this.unitIdToTypeData.put(key, unitTypeData);
 		}
 		return unitTypeData;
@@ -2995,7 +3024,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				}
 				modelInstance.setScene(War3MapViewer.this.worldScene);
 				final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance, War3MapViewer.this,
-						yaw, RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
+						yaw, RenderSpellEffect.DEFAULT_ANIMATION_QUEUE,
+						renderUnit.getTypeData().getRequiredAnimationNamesForAttachments());
 				War3MapViewer.this.projectiles.add(renderAttackInstant);
 				return renderAttackInstant;
 			}
@@ -3021,7 +3051,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 			modelInstance.setScene(War3MapViewer.this.worldScene);
 			final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance, War3MapViewer.this, yaw,
-					RenderSpellEffect.DEFAULT_ANIMATION_QUEUE);
+					RenderSpellEffect.DEFAULT_ANIMATION_QUEUE, SequenceUtils.EMPTY);
 			War3MapViewer.this.projectiles.add(renderAttackInstant);
 			return renderAttackInstant;
 		}

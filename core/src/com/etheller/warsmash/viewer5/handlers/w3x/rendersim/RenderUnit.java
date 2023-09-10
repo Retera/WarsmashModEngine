@@ -36,6 +36,7 @@ public class RenderUnit implements RenderWidget {
 	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
 	private static final War3ID ORIENTATION_INTERPOLATION = War3ID.fromString("uori");
 	public static final War3ID ANIM_PROPS = War3ID.fromString("uani");
+	public static final War3ID ATTACHMENT_ANIM_PROPS = War3ID.fromString("uaap");
 	private static final War3ID BLEND_TIME = War3ID.fromString("uble");
 	private static final War3ID BUILD_SOUND_LABEL = War3ID.fromString("ubsl");
 	private static final War3ID UNIT_SELECT_HEIGHT = War3ID.fromString("uslz");
@@ -643,5 +644,9 @@ public class RenderUnit implements RenderWidget {
 		return this.simulationUnit.isMovementOnWaterAllowed()
 				|| (this.simulationUnit.getMovementType() == MovementType.HOVER)
 				|| (this.simulationUnit.getMovementType() == MovementType.FLY);
+	}
+
+	public RenderUnitTypeData getTypeData() {
+		return typeData;
 	}
 }

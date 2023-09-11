@@ -20,6 +20,9 @@ public class ABActionCreateTargetingBuff implements ABAction {
 				buffId.callback(game, caster, localStore, castId));
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
+		if (!localStore.containsKey(ABLocalStoreKeys.BUFFCASTINGUNIT)) {
+			localStore.put(ABLocalStoreKeys.BUFFCASTINGUNIT, caster);
+		}
 
 	}
 }

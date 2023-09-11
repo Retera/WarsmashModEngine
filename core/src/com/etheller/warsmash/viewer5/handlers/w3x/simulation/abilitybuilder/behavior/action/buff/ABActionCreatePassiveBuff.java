@@ -28,5 +28,8 @@ public class ABActionCreatePassiveBuff implements ABAction {
 
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		}
+		if (!localStore.containsKey(ABLocalStoreKeys.BUFFCASTINGUNIT)) {
+			localStore.put(ABLocalStoreKeys.BUFFCASTINGUNIT, caster);
+		}
 	}
 }

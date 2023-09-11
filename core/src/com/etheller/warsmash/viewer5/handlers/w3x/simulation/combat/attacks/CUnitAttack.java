@@ -427,7 +427,7 @@ public abstract class CUnitAttack {
 				}
 			}
 		}
-		if (result.getDamageMultiplier() != 1 && result.getDamageMultiplier() != 0) {
+		if (!result.isMiss() && result.getDamageMultiplier() != 1 && result.getDamageMultiplier() != 0) {
 			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, Math.round(result.computeFinalDamage()));
 		} else if (result.getBonusDamage() != 0) {
 			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.BASH, Math.round(result.getBonusDamage()));

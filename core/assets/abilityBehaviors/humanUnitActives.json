@@ -92,7 +92,7 @@
 				"onAddActions": [{
 						"type": "addNonStackingStatBuff",
 						"targetUnit": {
-							"type": "getCastingUnit"
+							"type": "getBuffedUnit"
 						},
 						"buff": {
 							"type": "getStoredNonStackingStatBuffByKey",
@@ -108,7 +108,7 @@
 					},{
 						"type": "addNonStackingStatBuff",
 						"targetUnit": {
-							"type": "getCastingUnit"
+							"type": "getBuffedUnit"
 						},
 						"buff": {
 							"type": "getStoredNonStackingStatBuffByKey",
@@ -125,7 +125,7 @@
 				"onRemoveActions": [{
 						"type": "removeNonStackingStatBuff",
 						"targetUnit": {
-							"type": "getCastingUnit"
+							"type": "getBuffedUnit"
 						},
 						"buff": {
 							"type": "getStoredNonStackingStatBuffByKey",
@@ -141,7 +141,7 @@
 					},{
 						"type": "removeNonStackingStatBuff",
 						"targetUnit": {
-							"type": "getCastingUnit"
+							"type": "getBuffedUnit"
 						},
 						"buff": {
 							"type": "getStoredNonStackingStatBuffByKey",

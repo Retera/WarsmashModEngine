@@ -234,7 +234,7 @@
 					"condition": {
 						"type": "and",
 						"condition1": {
-							"type": "isValidTarget",
+							"type": "isUnitValidTarget",
 							"target": {
 								"type": "getAttackedUnit"
 							}
@@ -514,7 +514,7 @@
 							"actions": [{
 									"type": "setHp",
 									"target": {
-										"type": "getCastingUnit"
+										"type": "getListenerUnit"
 									},
 									"amount": {
 										"type": "rawFloat",

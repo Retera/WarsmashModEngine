@@ -77,9 +77,9 @@ public class CAbilityTypeDefinitionAbilityTemplateBuilder
 	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final MutableGameObject abilityEditorData,
 			final List<CAbilityTypeAbilityBuilderLevelData> levelData) {
 		if (abilityEditorData != null) {
-			return new CAbilityTypeAbilityTemplateBuilder(alias, abilityEditorData.getCode(), levelData, parser);
+			return new CAbilityTypeAbilityTemplateBuilder(alias, abilityEditorData.getCode(), abilityEditorData, levelData, parser);
 		} else {
-			return new CAbilityTypeAbilityTemplateBuilder(alias, alias, null, parser);
+			return new CAbilityTypeAbilityTemplateBuilder(alias, alias, null, null, parser);
 		}
 	}
 

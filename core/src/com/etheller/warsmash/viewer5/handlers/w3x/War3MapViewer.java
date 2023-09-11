@@ -112,12 +112,16 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffTimedLife;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityCollisionProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -681,6 +685,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final MdxModel model = loadModelMdx(missileArt);
 						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
+						
 						final RenderUnit renderPeer = getRenderPeer(source);
 						modelInstance.setTeamColor(renderPeer.playerIndex);
 						modelInstance.setScene(War3MapViewer.this.worldScene);
@@ -690,6 +695,77 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								modelInstance, height, projectileArc, War3MapViewer.this);
 
 						War3MapViewer.this.projectiles.add(renderProjectile);
+
+						return simulationAbilityProjectile;
+					}
+
+					@Override
+					public CCollisionProjectile createCollisionProjectile(final CSimulation cSimulation, final float launchX,
+							final float launchY, final float launchFacing, final float projectileSpeed,
+							final boolean homing, final CUnit source, final War3ID spellAlias,
+							final AbilityTarget target, final int maxHits, final int hitsPerTarget,
+							final float startingRadius, final float finalRadius, final float collisionInterval, final CAbilityCollisionProjectileListener projectileListener, boolean provideCounts) {
+						final War3ID typeId = source.getTypeId();
+						final AbilityUI spellDataUI = War3MapViewer.this.abilityDataUI.getUI(spellAlias);
+						final EffectAttachmentUIMissile abilityMissileArt = spellDataUI.getMissileArt(0);
+						final float projectileArc = abilityMissileArt == null ? 0 : abilityMissileArt.getArc();
+						final String missileArt = abilityMissileArt == null ? "" : abilityMissileArt.getModelPath();
+						final float projectileLaunchX = War3MapViewer.this.simulation.getUnitData()
+								.getProjectileLaunchX(typeId);
+						final float projectileLaunchY = War3MapViewer.this.simulation.getUnitData()
+								.getProjectileLaunchY(typeId);
+						final float projectileLaunchZ = War3MapViewer.this.simulation.getUnitData()
+								.getProjectileLaunchZ(typeId);
+
+						final float facing = launchFacing;
+						final float sinFacing = (float) Math.sin(facing);
+						final float cosFacing = (float) Math.cos(facing);
+						final float x = launchX + (projectileLaunchY * cosFacing) + (projectileLaunchX * sinFacing);
+						final float y = (launchY + (projectileLaunchY * sinFacing)) - (projectileLaunchX * cosFacing);
+
+						final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight()
+								+ projectileLaunchZ;
+						final CCollisionProjectile simulationAbilityProjectile = new CCollisionProjectile(x, y,
+								projectileSpeed, target, homing, source, maxHits, hitsPerTarget, startingRadius, finalRadius, collisionInterval, projectileListener, provideCounts);
+
+						final MdxModel model = loadModelMdx(missileArt);
+						final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
+						
+						final RenderUnit renderPeer = getRenderPeer(source);
+						modelInstance.setTeamColor(renderPeer.playerIndex);
+						modelInstance.setScene(War3MapViewer.this.worldScene);
+						SequenceUtils.randomBirthSequence(modelInstance);
+						modelInstance.setLocation(x, y, height);
+						final RenderProjectile renderProjectile = new RenderProjectile(simulationAbilityProjectile,
+								modelInstance, height, projectileArc, War3MapViewer.this);
+
+						War3MapViewer.this.projectiles.add(renderProjectile);
+
+						return simulationAbilityProjectile;
+					}
+
+					@Override
+					public CPsuedoProjectile createPseudoProjectile(final CSimulation cSimulation, final float launchX,
+							final float launchY, final float launchFacing, final float projectileSpeed, final float projectileStepInterval, final int projectileArtSkip,
+							final boolean homing, final CUnit source, final War3ID spellAlias, final CEffectType effectType, final int effectArtIndex,
+							final AbilityTarget target, final int maxHits, final int hitsPerTarget,
+							final float startingRadius, final float finalRadius, final CAbilityCollisionProjectileListener projectileListener, boolean provideCounts) {
+
+						final War3ID typeId = source.getTypeId();
+						final float projectileLaunchX = War3MapViewer.this.simulation.getUnitData()
+								.getProjectileLaunchX(typeId);
+						final float projectileLaunchY = War3MapViewer.this.simulation.getUnitData()
+								.getProjectileLaunchY(typeId);
+
+						final float facing = launchFacing;
+						final float sinFacing = (float) Math.sin(facing);
+						final float cosFacing = (float) Math.cos(facing);
+						final float x = launchX + (projectileLaunchY * cosFacing) + (projectileLaunchX * sinFacing);
+						final float y = (launchY + (projectileLaunchY * sinFacing)) - (projectileLaunchX * cosFacing);
+						
+
+						final CPsuedoProjectile simulationAbilityProjectile = new CPsuedoProjectile(x, y,
+								projectileSpeed, projectileStepInterval, projectileArtSkip, target, homing, source, spellAlias, effectType, effectArtIndex, maxHits, hitsPerTarget, startingRadius, finalRadius, projectileListener, provideCounts);
 
 						return simulationAbilityProjectile;
 					}
@@ -1301,6 +1377,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							}
 						}
 						War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), text,
+								textTagConfig.getColor(), textTagConfig.getLifetime(), textTagConfig.getFadeStart()));
+					}
+
+					@Override
+					public void spawnTextTag(CUnit unit, TextTagConfigType configType, String message) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
+						TextTagConfig textTagConfig = getTextTagConfig(configType.getKey());
+						War3MapViewer.this.textTags.add(new TextTag(new Vector3(renderPeer.location), message,
 								textTagConfig.getColor(), textTagConfig.getLifetime(), textTagConfig.getFadeStart()));
 					}
 

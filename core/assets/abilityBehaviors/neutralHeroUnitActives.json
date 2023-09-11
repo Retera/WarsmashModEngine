@@ -15,7 +15,7 @@
 							"value1": {
 								"type": "getUnitCurrentMana",
 								"unit": {
-									"type": "getCastingUnit"
+									"type": "getListenerUnit"
 								}
 							},
 							"value2": {
@@ -48,7 +48,7 @@
 						"thenActions": [{
 								"type": "setMp",
 								"target": {
-									"type": "getCastingUnit"
+									"type": "getListenerUnit"
 								},
 								"amount": {
 									"type": "rawFloat",
@@ -69,7 +69,7 @@
 						"elseActions": [{
 								"type": "subtractMp",
 								"target": {
-									"type": "getCastingUnit"
+									"type": "getListenerUnit"
 								},
 								"amount": {
 									"type": "*",

@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.cor
 
 public class ABLocalStoreKeys {
 	// Core values
+	public static final String ABILITYEDITORDATA = "_abilityEditorData";
 	public static final String LEVELDATA = "_levelData";
 	public static final String PARENTLEVELDATA = "_parentLevelData";
 	public static final String PARENTCASTER = "_parentCaster";
@@ -11,6 +12,7 @@ public class ABLocalStoreKeys {
 	public static final String GAME = "_game";
 	public static final String THISUNIT = "_thisUnit";
 	public static final String ITERATORCOUNT = "_i";
+	public static final String BUFFCASTINGUNIT = "_buffCastingUnit";
 
 	public static final String CHANNELING = "_channeling#";
 	public static final String INTERRUPTED = "_interrupted#";
@@ -47,6 +49,7 @@ public class ABLocalStoreKeys {
 	public static final String ATTACKINGUNIT = "_attackingUnit#";
 	public static final String ATTACKEDUNIT = "_attackedUnit#";
 	public static final String ABILITYTARGETEDUNIT = "_abilityTargetedUnit#";
+	public static final String ABILITYTARGETEDDESTRUCTABLE = "_abilityTargetedDestructable#";
 	public static final String ABILITYTARGETEDLOCATION = "_abilityTargetedLocation#";
 	
 	//Generic Attacks
@@ -66,6 +69,13 @@ public class ABLocalStoreKeys {
 	public static final String BUFFEDDEST = "_buffedDest#";
 	public static final String ENUMDESTRUCTABLE = "_enumDest#";
 	
+	//Projectiles
+	public static final String LASTCREATEDPROJECTILE = "_lastCreatedProjectile";
+	public static final String PROJECTILEUNITTARGETS = "_projUnitTargets#";
+	public static final String PROJECTILEDESTTARGETS = "_projDestTargets#";
+	public static final String PROJECTILECURRENTLOC = "_projCurrentLoc#";
+	public static final String PROJECTILEHITUNIT = "_projHitUnit#";
+	public static final String PROJECTILEHITDEST = "_projHitDest#";
 	
 	
 

@@ -146,7 +146,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 			this.damage = damage;
 			this.attackListener = attackListener;
 			this.hitTarget = false;
-			final float doubleMaxArea = (attack.areaOfEffectSmallDamage) * 2;
+			final float doubleMaxArea = Math.max(Math.max(attack.areaOfEffectFullDamage, attack.areaOfEffectMediumDamage), attack.areaOfEffectSmallDamage) * 2;
 			final float maxArea = doubleMaxArea / 2;
 			this.rect.set(x - maxArea, y - maxArea, doubleMaxArea, doubleMaxArea);
 			CUnitAttackPreDamageListenerDamageModResult result = this.attack.runPreDamageListeners(simulation, this.source, this.target, this.damage);
@@ -158,7 +158,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 
 		@Override
 		public boolean call(final CUnit enumUnit) {
-			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
+			if (enumUnit != this.source && enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
 				float damageDealt = damageTarget(enumUnit);
 				if (enumUnit == this.target) {
 					this.hitTarget = true;

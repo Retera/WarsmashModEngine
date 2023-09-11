@@ -40,6 +40,7 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 	@Override
 	public CAbility createAbility(int handleId) {
 		Map<String, Object> localStore = new HashMap<>();
+		localStore.put(ABLocalStoreKeys.ABILITYEDITORDATA, this.abilityEditorData);
 		localStore.put(ABLocalStoreKeys.LEVELDATA, getLevelData());
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, 1);
 		localStore.put(ABLocalStoreKeys.ALIAS, getAlias());

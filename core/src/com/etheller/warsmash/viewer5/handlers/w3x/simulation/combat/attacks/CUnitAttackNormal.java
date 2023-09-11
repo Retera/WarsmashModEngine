@@ -39,7 +39,7 @@ public class CUnitAttackNormal extends CUnitAttack {
 		if (widget != null) {
 			CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(simulation, unit, target, damage);
 			float damageDealt = widget.damage(simulation, unit, true, false, getAttackType(), getWeaponType().getDamageType(),
-					getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
+					modDamage.isMiss() ? null : getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
 			runPostDamageListeners(simulation, unit, target, damageDealt);
 			attackListener.onHit(target, damage);
 		}

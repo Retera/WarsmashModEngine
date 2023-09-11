@@ -17,6 +17,7 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 	
+	private CEffectType artType = CEffectType.TARGET;
 	private NonStackingFx fx;
 	private SimulationRenderComponent sfx;
 	private SimulationRenderComponent lsfx;
@@ -37,6 +38,10 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 		this.onRemoveActions = onRemoveActions;
 		this.castId = castId;
 	}
+	
+	public void setArtType(CEffectType artType) {
+		this.artType = artType;
+	}
 
 	@Override
 	protected void onBuffAdd(CSimulation game, CUnit unit) {
@@ -44,7 +49,7 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 			unit.removeNonStackingFx(game, this.fx);
 		}
 		if (this.getAlias() != null) {
-			this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), CEffectType.TARGET);
+			this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), artType);
 			this.sfx = game.unitSoundEffectEvent(unit, getAlias());
 			this.lsfx = game.unitLoopSoundEffectEvent(unit, getAlias());
 		}

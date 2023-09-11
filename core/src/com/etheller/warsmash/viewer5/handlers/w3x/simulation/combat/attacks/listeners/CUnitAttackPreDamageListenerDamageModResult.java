@@ -4,6 +4,8 @@ public class CUnitAttackPreDamageListenerDamageModResult {
 	private float baseDamage;
 	private float bonusDamage;
 	private float damageMultiplier;
+	
+	private boolean miss = false;
 
 	private boolean unlockBonus;
 	private boolean unlockMultiplier;
@@ -69,5 +71,13 @@ public class CUnitAttackPreDamageListenerDamageModResult {
 
 	public float computeFinalDamage() {
 		return (baseDamage * damageMultiplier);
+	}
+
+	public boolean isMiss() {
+		return miss;
+	}
+
+	public void setMiss(boolean miss) {
+		this.miss = miss;
 	}
 }

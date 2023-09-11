@@ -19,6 +19,7 @@ public class CUnitDefaultAccuracyCheckListener implements CUnitAttackPreDamageLi
 			CUnitAttackPreDamageListenerDamageModResult damageResult) {
 		boolean miss = false;
 		if (target instanceof CUnit) {
+			// TODO
 			//if (attacker.getTerrainHeight() < target.getTerrainHeight()) {
 			//	Random random = simulation.getSeededRandom();
 			//	if (random.nextFloat(1f) > simulation.getGameplayConstants().getChanceToMiss()) {
@@ -29,15 +30,20 @@ public class CUnitDefaultAccuracyCheckListener implements CUnitAttackPreDamageLi
 			
 		}
 		if (miss) {
-			if (weaponType == CWeaponType.MSPLASH || weaponType == CWeaponType.ARTILLERY) {
+			if (weaponType == CWeaponType.ARTILLERY) {
 				damageResult.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
-				
+				damageResult.setMiss(true);
+			} else if (weaponType == CWeaponType.MSPLASH) {
+				damageResult.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
+				damageResult.setMiss(true);
+				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss");
 			} else {
 				System.err.println("MISS!");
 				damageResult.setBaseDamage(0);
 				damageResult.setBonusDamage(0);
 				damageResult.setDamageMultiplier(0);
-				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.MISS_TEXT, 0);
+				damageResult.setMiss(true);
+				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss"); //TODO Technically cheating here
 				
 			}
 			return new CUnitAttackEffectListenerStacking(false, false);

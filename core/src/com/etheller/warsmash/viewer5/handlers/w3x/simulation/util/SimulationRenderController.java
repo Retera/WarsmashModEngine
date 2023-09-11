@@ -12,9 +12,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityCollisionProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public interface SimulationRenderController {
@@ -25,6 +28,16 @@ public interface SimulationRenderController {
 	CAbilityProjectile createProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
 			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
 			CAbilityProjectileListener projectileListener);
+
+	CCollisionProjectile createCollisionProjectile(CSimulation cSimulation, float launchX, float launchY,
+			float launchFacing, float projectileSpeed, boolean homing, CUnit source, War3ID spellAlias,
+			AbilityTarget target, int maxHits, int hitsPerTarget, float startingRadius, float finalRadius,
+			float collisionInterval, CAbilityCollisionProjectileListener projectileListener, boolean provideCounts);
+
+	CPsuedoProjectile createPseudoProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
+			float projectileSpeed, float projectileStepInterval, int projectileArtSkip, boolean homing, CUnit source, War3ID spellAlias,
+			CEffectType effectType, int effectArtIndex, AbilityTarget target, int maxHits, int hitsPerTarget,
+			float startingRadius, float finalRadius, CAbilityCollisionProjectileListener projectileListener, boolean provideCounts);
 
 	SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source,
 													   CUnit target);
@@ -77,6 +90,8 @@ public interface SimulationRenderController {
 	void unitRepositioned(CUnit cUnit);
 
 	void spawnTextTag(CUnit unit, TextTagConfigType configType, int displayAmount);
+
+	void spawnTextTag(CUnit unit, TextTagConfigType configType, String message);
 
 	void spawnEffectOnUnit(CUnit unit, String effectPath);
 

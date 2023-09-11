@@ -13,13 +13,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
 public class CAbilityTypeDefinitionItemLifeBonus
 		extends AbstractCAbilityTypeDefinition<CAbilityTypeItemLifeBonusLevelData> implements CAbilityTypeDefinition {
-	protected static final War3ID LIFE_BONUS = War3ID.fromString("Ilif");
 
 	@Override
 	protected CAbilityTypeItemLifeBonusLevelData createLevelData(final MutableGameObject abilityEditorData,
 			final int level) {
 		final String targetsAllowedAtLevelString = abilityEditorData.getFieldAsString(TARGETS_ALLOWED, level);
-		final int lifeBonus = abilityEditorData.getFieldAsInteger(LIFE_BONUS, level);
+		final int lifeBonus = abilityEditorData.getFieldAsInteger(AbilityFields.ItemHealingLesser.HIT_POINTS_GAINED,
+				level);
 		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
 		return new CAbilityTypeItemLifeBonusLevelData(targetsAllowedAtLevel, lifeBonus);
 	}

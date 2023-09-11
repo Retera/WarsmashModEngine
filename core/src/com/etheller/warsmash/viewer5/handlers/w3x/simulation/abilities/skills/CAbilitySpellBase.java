@@ -43,11 +43,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE, level);
 		this.cooldown = worldEditorAbility.readSLKTagFloat("Cool" + level);
 		this.castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME, level);
-		int requiredLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL, 0);
+		final int requiredLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL, 0);
 
 		this.targetsAllowed = CTargetType
 				.parseTargetTypeSet(worldEditorAbility.getFieldAsString(AbilityFields.TARGETS_ALLOWED, level));
-		if (requiredLevel < 6 && !isPhysicalSpell() && !isUniversalSpell()) {
+		if ((requiredLevel < 6) && !isPhysicalSpell() && !isUniversalSpell()) {
 			this.targetsAllowed.add(CTargetType.NON_MAGIC_IMMUNE);
 		}
 		if (isPhysicalSpell() && !isUniversalSpell()) {
@@ -75,13 +75,13 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		populateData(worldEditorAbility, level);
 	}
 
-	public float getDurationForTarget(CWidget target) {
-		CUnit unit = target.visit(AbilityTargetVisitor.UNIT);
+	public float getDurationForTarget(final CWidget target) {
+		final CUnit unit = target.visit(AbilityTargetVisitor.UNIT);
 		return getDurationForTarget(unit);
 	}
 
-	public float getDurationForTarget(CUnit targetUnit) {
-		if(targetUnit != null && targetUnit.isHero()) {
+	public float getDurationForTarget(final CUnit targetUnit) {
+		if ((targetUnit != null) && targetUnit.isHero()) {
 			return getHeroDuration();
 		}
 		return getDuration();
@@ -99,11 +99,12 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 
 	public abstract boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target);
 
-	public boolean doChannelTick(CSimulation simulation, CUnit caster, AbilityTarget target) {
+	public boolean doChannelTick(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		return false;
 	}
 
-	public void doChannelEnd(CSimulation game, CUnit unit, AbilityTarget target, boolean interrupted) {
+	public void doChannelEnd(final CSimulation game, final CUnit unit, final AbilityTarget target,
+			final boolean interrupted) {
 	}
 
 	@Override
@@ -130,9 +131,10 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 			receiver.useOk();
 			return;
 		}
-		float cooldownRemaining = getCooldownRemaining(game, unit);
+		final float cooldownRemaining = getCooldownRemaining(game, unit);
 		if (cooldownRemaining > 0) {
-			float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCode()) * WarsmashConstants.SIMULATION_STEP_TIME;
+			final float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCode())
+					* WarsmashConstants.SIMULATION_STEP_TIME;
 			receiver.cooldownNotYetReady(cooldownRemaining, cooldownLengthDisplay);
 		}
 		else if (unit.getMana() < this.manaCost) {
@@ -143,7 +145,8 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		}
 	}
 
-	protected void innerCheckCanUseSpell(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUseSpell(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
@@ -173,7 +176,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	public float getCooldownRemaining(final CSimulation game, final CUnit caster) {
-		return caster.getCooldownRemainingTicks(game, getCode()) * WarsmashConstants.SIMULATION_STEP_TIME;
+		return getCooldownRemaining(game, caster, getCode());
+	}
+
+	public static float getCooldownRemaining(final CSimulation game, final CUnit caster, final War3ID code) {
+		return caster.getCooldownRemainingTicks(game, code) * WarsmashConstants.SIMULATION_STEP_TIME;
 	}
 
 	public void setManaCost(final int manaCost) {
@@ -195,7 +202,6 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
 		this.targetsAllowed = targetsAllowed;
 	}
-
 
 	public PrimaryTag getCastingPrimaryTag() {
 		return this.castingPrimaryTag;

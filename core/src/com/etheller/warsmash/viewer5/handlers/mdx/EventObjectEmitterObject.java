@@ -117,15 +117,14 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 
 		final ModelViewer viewer = model.viewer;
 		final String name = eventObject.getName();
-		String type = name.substring(0, 3);
+		final String type = name.substring(0, 3);
 		final String id = name.substring(4);
 
 		// Same thing
 		if ("FPT".equals(type)) {
-			type = "SPL";
+			this.geometryEmitterType = GeometryEmitterFuncs.EMITTER_SPLAT;
 		}
-
-		if ("SPL".equals(type)) {
+		else if ("SPL".equals(type)) {
 			this.geometryEmitterType = GeometryEmitterFuncs.EMITTER_SPLAT;
 		}
 		else if ("UBR".equals(type)) {
@@ -153,6 +152,10 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 					FetchDataTypeName.SLK, mappedDataCallback));
 		}
 		else if ("SPL".equals(type)) {
+			tables.add(viewer.loadGeneric(pathSolver.solve("Splats\\SplatData.slk", solverParams).finalSrc,
+					FetchDataTypeName.SLK, mappedDataCallback));
+		}
+		else if ("FPT".equals(type)) {
 			tables.add(viewer.loadGeneric(pathSolver.solve("Splats\\SplatData.slk", solverParams).finalSrc,
 					FetchDataTypeName.SLK, mappedDataCallback));
 		}
@@ -229,7 +232,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 					this.ok = this.internalModel.ok;
 				}
 			}
-			else if ("SPL".equals(this.type) || "UBR".equals(this.type)) {
+			else if ("SPL".equals(this.type) || "FPT".equals(this.type) || "UBR".equals(this.type)) {
 				final String texturesExt = model.reforged ? ".dds" : ".blp";
 
 				this.internalTexture = (Texture) viewer.load(row.get("Dir") + "\\" + row.get("file") + texturesExt,
@@ -244,7 +247,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 						{ getFloat(row, "EndR"), getFloat(row, "EndG"), getFloat(row, "EndB"),
 								getFloat(row, "EndA") } };
 
-				if ("SPL".equals(this.type)) {
+				if ("SPL".equals(this.type) || "FPT".equals(this.type)) {
 					this.columns = getInt(row, "Columns");
 					this.rows = getInt(row, "Rows");
 					this.lifeSpan = getFloat(row, "Lifespan") + getFloat(row, "Decay");

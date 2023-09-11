@@ -176,7 +176,7 @@ public class MdxComplexInstance extends ModelInstance {
 			if ("SPN".equals(type)) {
 				emitter = new EventObjectSpnEmitter(this, emitterObject);
 			}
-			else if ("SPL".equals(type)) {
+			else if ("SPL".equals(type) || "FPT".equals(type)) {
 				emitter = new EventObjectSplEmitter(this, emitterObject);
 			}
 			else if ("UBR".equals(type)) {

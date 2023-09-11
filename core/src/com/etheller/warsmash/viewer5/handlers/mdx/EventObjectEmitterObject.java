@@ -20,6 +20,7 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxEventObject;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter2;
 
@@ -219,7 +220,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 			final PathSolver pathSolver = model.pathSolver;
 
 			if ("SPN".equals(this.type)) {
-				this.internalModel = (MdxModel) viewer.load(((String) row.get("Model")).replace(".mdl", ".mdx"),
+				this.internalModel = War3MapViewer.loadModelMdx(viewer.dataSource, viewer, (String) row.get("Model"),
 						pathSolver, model.solverParams);
 
 				if (this.internalModel != null) {
@@ -231,9 +232,8 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 			else if ("SPL".equals(this.type) || "UBR".equals(this.type)) {
 				final String texturesExt = model.reforged ? ".dds" : ".blp";
 
-				this.internalTexture = (Texture) viewer.load(
-						"ReplaceableTextures\\Splats\\" + row.get("file") + texturesExt, pathSolver,
-						model.solverParams);
+				this.internalTexture = (Texture) viewer.load(row.get("Dir") + "\\" + row.get("file") + texturesExt,
+						pathSolver, model.solverParams);
 
 				this.scale = getFloat(row, "Scale");
 				this.colors = new float[][] {

@@ -31,4 +31,10 @@ public class ParticleEmitter extends MdxEmitter<MdxComplexInstance, ParticleEmit
 		return new Particle(this);
 	}
 
+	public void onRemove() {
+		for (final Particle particle : this.objects) {
+			particle.onRemove();
+		}
+	}
+
 }

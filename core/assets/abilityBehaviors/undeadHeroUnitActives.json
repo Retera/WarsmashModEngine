@@ -210,7 +210,7 @@
 				}
 		}]
 	},{
-		"ids": [{"id":"AUcs", "castId": "carrionswarm"}],
+		"ids": [{"id":"AUcs", "castId": "carrionswarm"},{"id":"AOsh", "castId": "shockwave"}],
 		"type": "NORMAL_POINTTARGET_SIMPLE",
 		"onBeginCasting": [{
 			"type": "createLocationTargetedCollisionProjectile",
@@ -386,39 +386,39 @@
 						}
 					},
 					"thenActions": [{
-						"type": "createTemporarySpellEffectOnUnit",
-						"target": {
-							"type": "getProjectileHitUnit"
-						},
-						"id": {
-							"type": "getAlias"
-						},
-						"effectType": "SPECIAL"
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getProjectileHitUnit"
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "SPECIAL"
+						},{
+							"type": "damageTarget",
+							"source": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getProjectileHitUnit"
+							},
+							"damageType": {
+								"type": "getDamageTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "DISEASE"
+								}
+							},
+							"damage": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "dpt"
+								}
+							}
 					}],
 					"elseActions": []
-				},{
-					"type": "damageTarget",
-					"source": {
-						"type": "getCastingUnit"
-					},
-					"target": {
-						"type": "getProjectileHitUnit"
-					},
-					"damageType": {
-						"type": "getDamageTypeFromString",
-						"id": {
-							"type": "rawString",
-							"value": "DISEASE"
-						}
-					},
-					"damage": {
-						"type": "getStoredFloatByKey",
-						"key": {
-							"type": "rawString",
-							"value": "dpt"
-						}
-					}
-			}]
+				}]
 		}]
 		
 	},{

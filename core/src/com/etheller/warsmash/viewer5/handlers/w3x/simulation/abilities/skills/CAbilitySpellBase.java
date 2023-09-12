@@ -41,7 +41,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	public final void populate(final MutableGameObject worldEditorAbility, final int level) {
 		this.manaCost = worldEditorAbility.getFieldAsInteger(AbilityFields.MANA_COST, level);
 		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE, level);
-		this.cooldown = worldEditorAbility.readSLKTagFloat("Cool" + level);
+		this.cooldown = worldEditorAbility.getFieldAsFloat(AbilityFields.COOLDOWN, level);
 		this.castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME, level);
 		int requiredLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL, 0);
 

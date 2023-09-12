@@ -81,12 +81,12 @@ public class CPsuedoProjectile extends CProjectile {
 
 		final float d1x = dtsx / this.distanceToTarget;
 		final float d1y = dtsy / this.distanceToTarget;
+		this.steps = ((int)Math.round(this.distanceToTarget) / (int)speed) + 1;
 
-		float travelDistance = Math.min(speed, distanceToTarget);
+		float travelDistance = Math.min(speed, distanceToTarget/this.steps);
 
 		this.dx = d1x * travelDistance;
 		this.dy = d1y * travelDistance;
-		this.steps = ((int)Math.round(this.distanceToTarget) / (int)speed) + 1;
 
 		this.stepInterval = (int) (projectileStepInterval / WarsmashConstants.SIMULATION_STEP_TIME);
 		this.artSkip = projectileArtSkip;

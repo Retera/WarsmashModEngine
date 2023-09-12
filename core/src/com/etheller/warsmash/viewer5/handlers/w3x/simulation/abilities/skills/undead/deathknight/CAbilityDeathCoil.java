@@ -1,10 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityTargetSpellBase;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
@@ -18,14 +19,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 /**
- * Thanks to Spellbound for making this ability (some edits were later made by Retera)
+ * Thanks to Spellbound for making this ability (some edits were later made by
+ * Retera)
  */
 public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 	private float missileSpeed;
 	private float healAmount;
 	private boolean projectilHomingEnabled;
 
-	public CAbilityDeathCoil(int handleId, War3ID alias) {
+	public CAbilityDeathCoil(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -35,15 +37,15 @@ public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		healAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.DeathCoil.AMOUNT_HEALED_OR_DAMAGED, level);
-		missileSpeed = worldEditorAbility.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, level);
-		projectilHomingEnabled = worldEditorAbility.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		healAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		missileSpeed = worldEditorAbility.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, 0);
+		projectilHomingEnabled = worldEditorAbility.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, 0);
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-									   AbilityTargetCheckReceiver<CWidget> receiver) {
+	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (validDeathCoilTarget(game, unit, target)) {
 			super.innerCheckCanTarget(game, unit, orderId, target, receiver);
 		}
@@ -52,8 +54,8 @@ public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 		}
 	}
 
-	private boolean validDeathCoilTarget(CSimulation game, CUnit caster, CWidget target) {
-		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+	private boolean validDeathCoilTarget(final CSimulation game, final CUnit caster, final CWidget target) {
+		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
 			if (targetUnit.isUnitType(CUnitTypeJass.UNDEAD)) {
 				return targetUnit.isUnitAlly(game.getPlayer(caster.getPlayerIndex()));
@@ -66,17 +68,17 @@ public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
-		simulation.createProjectile(caster, getAlias(), caster.getX(), caster.getY(),
-				(float) caster.angleTo(target), missileSpeed, projectilHomingEnabled, target, new CAbilityProjectileListener() {
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
+		simulation.createProjectile(caster, getAlias(), caster.getX(), caster.getY(), (float) caster.angleTo(target),
+				missileSpeed, projectilHomingEnabled, target, new CAbilityProjectileListener() {
 					@Override
-					public void onLaunch(CSimulation game, AbilityTarget target) {
+					public void onLaunch(final CSimulation game, final AbilityTarget target) {
 
 					}
 
 					@Override
-					public void onHit(CSimulation game, AbilityTarget abilTarget) {
-						CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+					public void onHit(final CSimulation game, final AbilityTarget abilTarget) {
+						final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 						if (targetUnit != null) {
 							if (!targetUnit.isUnitType(CUnitTypeJass.UNDEAD)) {
 								targetUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.DEATH, null,

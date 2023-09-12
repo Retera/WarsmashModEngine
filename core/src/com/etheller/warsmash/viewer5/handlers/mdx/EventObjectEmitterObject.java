@@ -100,6 +100,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 	public float pitch;
 	public float pitchVariance;
 	public float volume;
+	public boolean footprint;
 	public List<Sound> decodedBuffers = new ArrayList<>();
 	/**
 	 * If this is an SPL/UBR emitter object, ok will be set to true if the tables
@@ -248,6 +249,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 								getFloat(row, "EndA") } };
 
 				if ("SPL".equals(this.type) || "FPT".equals(this.type)) {
+					this.footprint = "FPT".equals(this.type);
 					this.columns = getInt(row, "Columns");
 					this.rows = getInt(row, "Rows");
 					this.lifeSpan = getFloat(row, "Lifespan") + getFloat(row, "Decay");

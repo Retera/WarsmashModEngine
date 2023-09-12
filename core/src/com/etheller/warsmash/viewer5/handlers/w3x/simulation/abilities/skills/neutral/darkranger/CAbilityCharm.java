@@ -2,7 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.n
 
 import java.util.List;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -21,13 +21,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringE
 public class CAbilityCharm extends CAbilityTargetSpellBase {
 	private int maximumCreepLevel;
 
-	public CAbilityCharm(int handleId, War3ID alias) {
+	public CAbilityCharm(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
 	@Override
-	public void populateData(MutableGameObject worldEditorAbility, int level) {
-		this.maximumCreepLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.Charm.MAXIMUM_CREEP_LEVEL, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.maximumCreepLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
 	}
 
 	@Override
@@ -36,9 +36,9 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
-		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
 			if (targetUnit.getUnitType().getLevel() <= maximumCreepLevel) {
 				super.innerCheckCanTarget(game, unit, orderId, target, receiver);
@@ -53,17 +53,17 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit unit, AbilityTarget target) {
-		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
-		List<War3ID> targetUpgradesUsed = targetUnit.getUnitType().getUpgradesUsed();
-		CPlayer targetPlayer = simulation.getPlayer(targetUnit.getPlayerIndex());
-		CPlayer castingUnitPlayer = simulation.getPlayer(unit.getPlayerIndex());
-		for (War3ID targetUpgradeUsed : targetUpgradesUsed) {
-			CUpgradeType upgradeType = simulation.getUpgradeData().getType(targetUpgradeUsed);
+		final List<War3ID> targetUpgradesUsed = targetUnit.getUnitType().getUpgradesUsed();
+		final CPlayer targetPlayer = simulation.getPlayer(targetUnit.getPlayerIndex());
+		final CPlayer castingUnitPlayer = simulation.getPlayer(unit.getPlayerIndex());
+		for (final War3ID targetUpgradeUsed : targetUpgradesUsed) {
+			final CUpgradeType upgradeType = simulation.getUpgradeData().getType(targetUpgradeUsed);
 			if (upgradeType.isTransferWithUnitOwnership()) {
-				int targetPlayerTechUnlocked = targetPlayer.getTechtreeUnlocked(targetUpgradeUsed);
-				int castingUnitPlayerTechUnlocked = castingUnitPlayer.getTechtreeUnlocked(targetUpgradeUsed);
+				final int targetPlayerTechUnlocked = targetPlayer.getTechtreeUnlocked(targetUpgradeUsed);
+				final int castingUnitPlayerTechUnlocked = castingUnitPlayer.getTechtreeUnlocked(targetUpgradeUsed);
 				if (targetPlayerTechUnlocked > castingUnitPlayerTechUnlocked) {
 					castingUnitPlayer.setTechResearched(simulation, targetUpgradeUsed, targetPlayerTechUnlocked);
 				}
@@ -71,7 +71,7 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 		}
 		simulation.getUnitData().unapplyPlayerUpgradesToUnit(simulation, targetUnit.getPlayerIndex(),
 				targetUnit.getUnitType(), targetUnit);
-		int oldFoodUsed = targetUnit.getFoodUsed();
+		final int oldFoodUsed = targetUnit.getFoodUsed();
 		targetPlayer.setUnitFoodUsed(targetUnit, 0);
 		targetUnit.setPlayerIndex(simulation, unit.getPlayerIndex(), true);
 		simulation.getUnitData().applyPlayerUpgradesToUnit(simulation, targetUnit.getPlayerIndex(),
@@ -85,7 +85,7 @@ public class CAbilityCharm extends CAbilityTargetSpellBase {
 		return maximumCreepLevel;
 	}
 
-	public void setMaximumCreepLevel(int maximumCreepLevel) {
+	public void setMaximumCreepLevel(final int maximumCreepLevel) {
 		this.maximumCreepLevel = maximumCreepLevel;
 	}
 }

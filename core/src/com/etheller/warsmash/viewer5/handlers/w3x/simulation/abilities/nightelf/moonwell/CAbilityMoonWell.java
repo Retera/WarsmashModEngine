@@ -1,7 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.moonwell;
 
 import com.badlogic.gdx.math.Rectangle;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -17,8 +17,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentModel;
 
 public class CAbilityMoonWell extends CAbilitySpellBase {
 	private boolean autoCastActive = false;
@@ -56,7 +57,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	}
 
 	@Override
-	public void onDeath(CSimulation game, CUnit cUnit) {
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
 		this.waterRenderComponent.remove();
 	}
 
@@ -169,15 +170,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.ReplenishManaAndLife.MANA_GAINED, level);
-		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.ReplenishManaAndLife.HIT_POINTS_GAINED, level);
-		this.autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.ReplenishManaAndLife.AUTOCAST_REQUIREMENT,
-				level);
-		this.waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.ReplenishManaAndLife.WATER_HEIGHT, level);
-		this.regenerateOnlyAtNight = worldEditorAbility
-				.getFieldAsBoolean(AbilityFields.ReplenishManaAndLife.REGENERATE_ONLY_AT_NIGHT, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
+		this.waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_D + level, 0);
+		this.regenerateOnlyAtNight = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_E + level, 0);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 		setCastRange(this.areaOfEffect); // TODO use cast range as a smart right click interact radius
 	}
 

@@ -65,7 +65,7 @@ import com.etheller.warsmash.parsers.jass.triggers.TriggerAction;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerCondition;
 import com.etheller.warsmash.parsers.jass.triggers.UnitGroup;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
@@ -666,7 +666,7 @@ public class Jass2 {
 						}
 						// TODO for now this looks in the ability editor data, not the fast symbol table
 						// layer on top, because the layer on top forgot to have a name value...
-						final MutableGameObject abilityEditorData = war3MapViewer.getAllObjectData().getAbilities()
+						final GameObject abilityEditorData = war3MapViewer.getAllObjectData().getAbilities()
 								.get(war3id);
 						if (abilityEditorData != null) {
 							return new StringJassValue(abilityEditorData.getName());

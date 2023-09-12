@@ -2,7 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills;
 
 import java.util.EnumSet;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
@@ -38,22 +38,22 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	@Override
-	public final void populate(final MutableGameObject worldEditorAbility, final int level) {
-		this.manaCost = worldEditorAbility.getFieldAsInteger(AbilityFields.MANA_COST, level);
-		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE, level);
-		this.cooldown = worldEditorAbility.readSLKTagFloat("Cool" + level);
-		this.castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME, level);
+	public final void populate(final GameObject worldEditorAbility, final int level) {
+		this.manaCost = worldEditorAbility.getFieldAsInteger(AbilityFields.MANA_COST + level, 0);
+		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE + level, 0);
+		this.cooldown = worldEditorAbility.getFieldAsFloat(AbilityFields.COOLDOWN + level, 0);
+		this.castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME + level, 0);
 		final int requiredLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL, 0);
 
 		this.targetsAllowed = CTargetType
-				.parseTargetTypeSet(worldEditorAbility.getFieldAsString(AbilityFields.TARGETS_ALLOWED, level));
+				.parseTargetTypeSet(worldEditorAbility.getFieldAsList(AbilityFields.TARGETS_ALLOWED + level));
 		if ((requiredLevel < 6) && !isPhysicalSpell() && !isUniversalSpell()) {
 			this.targetsAllowed.add(CTargetType.NON_MAGIC_IMMUNE);
 		}
 		if (isPhysicalSpell() && !isUniversalSpell()) {
 			this.targetsAllowed.add(CTargetType.NON_ETHEREAL);
 		}
-		final String animNames = worldEditorAbility.getFieldAsString(AbilityFields.ANIM_NAMES, 0);
+		final String animNames = worldEditorAbility.getField(AbilityFields.ANIM_NAMES);
 
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
 		this.castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
@@ -67,10 +67,10 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		if (this.castingSecondaryTags.isEmpty()) {
 			this.castingSecondaryTags = SequenceUtils.SPELL;
 		}
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, 0);
-		this.heroDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.HERO_DURATION, 0);
+		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION + level, 0);
+		this.heroDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.HERO_DURATION + level, 0);
 
-		this.code = worldEditorAbility.getCode();
+		this.code = worldEditorAbility.getFieldAsWar3ID(AbilityFields.CODE, -1);
 
 		populateData(worldEditorAbility, level);
 	}
@@ -95,7 +95,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		return heroDuration;
 	}
 
-	public abstract void populateData(MutableGameObject worldEditorAbility, int level);
+	public abstract void populateData(GameObject worldEditorAbility, int level);
 
 	public abstract boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target);
 

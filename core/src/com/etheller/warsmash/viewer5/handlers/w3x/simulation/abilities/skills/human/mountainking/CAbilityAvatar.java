@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.mountainking;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -18,7 +18,7 @@ public class CAbilityAvatar extends CAbilityNoTargetSpellBase {
 	private int damageBonus;
 	private float defenseBonus;
 
-	public CAbilityAvatar(int handleId, War3ID alias) {
+	public CAbilityAvatar(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -28,20 +28,18 @@ public class CAbilityAvatar extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		hitPointBonus = (int) StrictMath.floor(worldEditorAbility.getFieldAsFloat(AbilityFields.Avatar.HIT_POINT_BONUS
-				, level));
-		damageBonus = (int) StrictMath.floor(worldEditorAbility.getFieldAsFloat(AbilityFields.Avatar.DAMAGE_BONUS,
-				level));
-		defenseBonus = worldEditorAbility.getFieldAsFloat(AbilityFields.Avatar.DEFENSE_BONUS, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		hitPointBonus = (int) StrictMath.floor(worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0));
+		damageBonus = (int) StrictMath.floor(worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0));
+		defenseBonus = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
 		setCastingPrimaryTag(AnimationTokens.PrimaryTag.MORPH);
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		simulation.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
-		caster.add(simulation, new CBuffAvatar(simulation.getHandleIdAllocator().createId(), AVATAR_BUFF,
-				getDuration(), hitPointBonus, damageBonus, defenseBonus));
+		caster.add(simulation, new CBuffAvatar(simulation.getHandleIdAllocator().createId(), AVATAR_BUFF, getDuration(),
+				hitPointBonus, damageBonus, defenseBonus));
 		return false;
 	}
 }

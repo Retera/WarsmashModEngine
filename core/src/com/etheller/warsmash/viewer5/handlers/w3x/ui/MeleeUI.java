@@ -60,7 +60,7 @@ import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.FastNumberFormat;
 import com.etheller.warsmash.util.ImageUtils;
@@ -2174,7 +2174,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			boolean justLoaded = false;
 			final War3MapViewer viewer = MeleeUI.this.war3MapViewer;
 			if (MeleeUI.this.cursorModelInstance == null) {
-				final MutableObjectData unitData = viewer.getAllObjectData().getUnits();
+				final ObjectData unitData = viewer.getAllObjectData().getUnits();
 				final War3ID buildingTypeId = new War3ID(previewBuildUnitId);
 				MeleeUI.this.cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
 				final String unitModelPath = viewer.getUnitModelPath(unitData.get(buildingTypeId));
@@ -3199,7 +3199,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
 		while ((x >= 0) && (y >= 0) && this.commandCard[y][x].isVisible()) {
 			x--;
-			if (x < 0) {
+			if ((x < 0) && (y != 0)) {
 				x = COMMAND_CARD_WIDTH - 1;
 				y--;
 			}

@@ -3,7 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.de
 import java.util.ArrayList;
 import java.util.List;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -21,7 +21,7 @@ public class CAbilityTypeDefinitionSpellBase implements CAbilityTypeDefinition {
 	}
 
 	@Override
-	public CAbilityType<?> createAbilityType(final War3ID alias, final MutableGameObject abilityEditorData) {
+	public CAbilityType<?> createAbilityType(final War3ID alias, final GameObject abilityEditorData) {
 		final List<CAbilityTypeLevelData> emptyLevelDatas = new ArrayList<>();
 		final int levels = abilityEditorData.getFieldAsInteger(AbilityFields.LEVELS, 0);
 		for (int i = 0; i < levels; i++) {
@@ -29,7 +29,8 @@ public class CAbilityTypeDefinitionSpellBase implements CAbilityTypeDefinition {
 			// heroes
 			emptyLevelDatas.add(null);
 		}
-		return new CAbilityType<CAbilityTypeLevelData>(alias, abilityEditorData.getCode(), emptyLevelDatas) {
+		return new CAbilityType<CAbilityTypeLevelData>(alias,
+				abilityEditorData.getFieldAsWar3ID(AbilityFields.CODE, -1), emptyLevelDatas) {
 			@Override
 			public CAbility createAbility(final int handleId) {
 				final CAbilitySpell spellAbility = CAbilityTypeDefinitionSpellBase.this.abilityConstructor

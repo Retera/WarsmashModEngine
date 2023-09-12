@@ -1,6 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -10,14 +13,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class CAbilityResurrect extends CAbilityNoTargetSpellBase {
 	private float areaOfEffect;
 	private int numberOfCorpsesRaised;
 
-	public CAbilityResurrect(int handleId, War3ID alias) {
+	public CAbilityResurrect(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -27,28 +27,27 @@ public class CAbilityResurrect extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		this.numberOfCorpsesRaised =
-				worldEditorAbility.getFieldAsInteger(AbilityFields.Resurrection.NUMBER_OF_CORPSES_RAISED, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.numberOfCorpsesRaised = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
-		List<CUnit> unitsToResurrect = new ArrayList<>(numberOfCorpsesRaised);
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
+		final List<CUnit> unitsToResurrect = new ArrayList<>(numberOfCorpsesRaised);
 		simulation.getWorldCollision().enumCorpsesInRange(caster.getX(), caster.getY(), this.areaOfEffect,
 				(enumUnit) -> {
-			if (unitsToResurrect.size() < numberOfCorpsesRaised) {
-				if (enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
-					unitsToResurrect.add(enumUnit);
-				}
-				return false;
-			}
-			else {
-				return true;
-			}
-		});
-		for(CUnit unit: unitsToResurrect) {
+					if (unitsToResurrect.size() < numberOfCorpsesRaised) {
+						if (enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
+							unitsToResurrect.add(enumUnit);
+						}
+						return false;
+					}
+					else {
+						return true;
+					}
+				});
+		for (final CUnit unit : unitsToResurrect) {
 			unit.resurrect(simulation);
 			simulation.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET);
 		}

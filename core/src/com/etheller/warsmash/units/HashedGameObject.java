@@ -19,6 +19,10 @@ public abstract class HashedGameObject implements GameObject {
 	}
 
 	@Override
+	public void setField(final String slk, final String field, final String value) {
+		setField(field, value);
+	}
+
 	public void setField(final String field, final String value) {
 		final StringKey key = new StringKey(field);
 		List<String> list = this.fields.get(key);
@@ -61,6 +65,11 @@ public abstract class HashedGameObject implements GameObject {
 		return value;
 	}
 
+	@Override
+	public List<String> getFieldAsList(final String field) {
+		return this.fields.get(new StringKey(field));
+	}
+
 	public boolean hasField(final String field) {
 		return this.fields.containsKey(new StringKey(field));
 	}
@@ -91,17 +100,38 @@ public abstract class HashedGameObject implements GameObject {
 
 	@Override
 	public float getFieldFloatValue(final String field, final int index) {
-		float i = 0;
-		try {
-			i = Float.parseFloat(getField(field, index).trim());
-		}
-		catch (final NumberFormatException e) {
+		return getFieldWithDefaultValue(field, index, 0f);
+	}
 
+	public float getFieldWithDefaultValue(final String field, int index, final float defaultValue) {
+		float i = defaultValue;
+		{
+			if (index < 0) {
+				index = 0;
+			}
+			final List<String> fieldList = this.fields.get(new StringKey(field));
+			if (fieldList != null) {
+				final List<String> list = fieldList;
+				if (list != null) {
+					if (list.size() > index) {
+						try {
+							i = Float.parseFloat(list.get(index).trim());
+						}
+						catch (final NumberFormatException e) {
+
+						}
+					}
+				}
+			}
 		}
 		return i;
 	}
 
 	@Override
+	public void setField(final String slk, final String field, final String value, final int index) {
+		setField(field, value, index);
+	}
+
 	public void setField(final String field, final String value, final int index) {
 		final StringKey key = new StringKey(field);
 		List<String> list = this.fields.get(key);
@@ -112,7 +142,11 @@ public abstract class HashedGameObject implements GameObject {
 				list.add(value);
 			}
 			else {
-				throw new IndexOutOfBoundsException();
+				list = new ArrayList<>();
+				for (int k = 0; k < index; k++) {
+					list.add("");
+				}
+				list.add(value);
 			}
 		}
 		else {
@@ -120,13 +154,24 @@ public abstract class HashedGameObject implements GameObject {
 				list.add(value);
 			}
 			else {
+				for (int k = list.size(); k <= index; k++) {
+					list.add("");
+				}
 				list.set(index, value);
 			}
 		}
 	}
 
 	@Override
-	public String getField(final String field, final int index) {
+	public void clearFieldList(final String slk, final String field) {
+		this.fields.remove(new StringKey(field));
+	}
+
+	@Override
+	public String getField(final String field, int index) {
+		if (index < 0) {
+			index = 0;
+		}
 		String value = "";
 		if (this.fields.get(new StringKey(field)) != null) {
 			final List<String> list = this.fields.get(new StringKey(field));
@@ -144,12 +189,34 @@ public abstract class HashedGameObject implements GameObject {
 
 	@Override
 	public int getFieldValue(final String field, final int index) {
-		int i = 0;
-		try {
-			i = Integer.parseInt(getField(field, index).trim());
-		}
-		catch (final NumberFormatException e) {
+		return getFieldWithDefaultValue(field, index, 0);
+	}
 
+	public int getFieldWithDefaultValue(final String field, int index, final int defaultValue) {
+		int i = defaultValue;
+		{
+			if (index < 0) {
+				index = 0;
+			}
+			final List<String> fieldList = this.fields.get(new StringKey(field));
+			if (fieldList != null) {
+				final List<String> list = fieldList;
+				if (list != null) {
+					if (list.size() > index) {
+						try {
+							i = Integer.parseInt(list.get(index).trim());
+						}
+						catch (final NumberFormatException e) {
+							try {
+								i = (int) Float.parseFloat(list.get(index).trim());
+							}
+							catch (final NumberFormatException e2) {
+
+							}
+						}
+					}
+				}
+			}
 		}
 		return i;
 	}

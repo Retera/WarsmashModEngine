@@ -46,16 +46,17 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.w3x.War3Map;
 import com.etheller.warsmash.parsers.w3x.doo.War3MapDoo;
 import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
+import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapRuntimeObjectData;
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.units.GameObject;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.units.StandardObjectData;
 import com.etheller.warsmash.units.custom.WTS;
-import com.etheller.warsmash.units.manager.MutableObjectData;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
 import com.etheller.warsmash.util.MappedData;
 import com.etheller.warsmash.util.Quadtree;
@@ -153,29 +154,29 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private static final War3ID ABILITY_REVIVE_RAWCODE = War3ID.fromString("Arev");
 	private static final Color PLACEHOLDER_LUMBER_COLOR = new Color(0.0f, 200f / 255f, 80f / 255f, 1.0f);
 	private static final Color PLACEHOLDER_GOLD_COLOR = new Color(1.0f, 220f / 255f, 0f, 1.0f);
-	private static final War3ID UNIT_FILE = War3ID.fromString("umdl");
-	private static final War3ID UNIT_SPECIAL = War3ID.fromString("uspa");
-	private static final War3ID UBER_SPLAT = War3ID.fromString("uubs");
-	private static final War3ID UNIT_SHADOW = War3ID.fromString("ushu");
-	private static final War3ID UNIT_SHADOW_X = War3ID.fromString("ushx");
-	private static final War3ID UNIT_SHADOW_Y = War3ID.fromString("ushy");
-	private static final War3ID UNIT_SHADOW_W = War3ID.fromString("ushw");
-	private static final War3ID UNIT_SHADOW_H = War3ID.fromString("ushh");
-	private static final War3ID BUILDING_SHADOW = War3ID.fromString("ushb");
-	public static final War3ID UNIT_SELECT_SCALE = War3ID.fromString("ussc");
-	private static final War3ID UNIT_SOUNDSET = War3ID.fromString("usnd");
-	private static final War3ID ITEM_FILE = War3ID.fromString("ifil");
-	private static final War3ID UNIT_PATHING = War3ID.fromString("upat");
-	private static final War3ID DESTRUCTABLE_PATHING = War3ID.fromString("bptx");
-	private static final War3ID DESTRUCTABLE_PATHING_DEATH = War3ID.fromString("bptd");
-	private static final War3ID ELEVATION_SAMPLE_RADIUS = War3ID.fromString("uerd");
-	private static final War3ID MAX_PITCH = War3ID.fromString("umxp");
-	private static final War3ID ALLOW_CUSTOM_TEAM_COLOR = War3ID.fromString("utcc");
-	private static final War3ID TEAM_COLOR = War3ID.fromString("utco");
-	private static final War3ID MAX_ROLL = War3ID.fromString("umxr");
-	private static final War3ID ANIMATION_RUN_SPEED = War3ID.fromString("urun");
-	private static final War3ID ANIMATION_WALK_SPEED = War3ID.fromString("uwal");
-	private static final War3ID MODEL_SCALE = War3ID.fromString("usca");
+	private static final String UNIT_FILE = "file"; // replaced from 'umdl'
+	private static final String UNIT_SPECIAL = "Specialart"; // replaced from 'uspa'
+	private static final String UBER_SPLAT = "uberSplat"; // replaced from 'uubs'
+	private static final String UNIT_SHADOW = "unitShadow"; // replaced from 'ushu'
+	private static final String UNIT_SHADOW_X = "shadowX"; // replaced from 'ushx'
+	private static final String UNIT_SHADOW_Y = "shadowY"; // replaced from 'ushy'
+	private static final String UNIT_SHADOW_W = "shadowW"; // replaced from 'ushw'
+	private static final String UNIT_SHADOW_H = "shadowH"; // replaced from 'ushh'
+	private static final String BUILDING_SHADOW = "buildingShadow"; // replaced from 'ushb'
+	public static final String UNIT_SELECT_SCALE = "scale"; // replaced from 'ussc'
+	private static final String UNIT_SOUNDSET = "unitSound"; // replaced from 'usnd'
+	private static final String ITEM_FILE = "file"; // replaced from 'ifil'
+	private static final String UNIT_PATHING = "pathTex"; // replaced from 'upat'
+	private static final String DESTRUCTABLE_PATHING = "pathTex"; // replaced from 'bptx'
+	private static final String DESTRUCTABLE_PATHING_DEATH = "pathTexDeath"; // replaced from 'bptd'
+	private static final String ELEVATION_SAMPLE_RADIUS = "elevRad"; // replaced from 'uerd'
+	private static final String MAX_PITCH = "maxPitch"; // replaced from 'umxp'
+	private static final String ALLOW_CUSTOM_TEAM_COLOR = "customTeamColor"; // replaced from 'utcc'
+	private static final String TEAM_COLOR = "teamColor"; // replaced from 'utco'
+	private static final String MAX_ROLL = "maxRoll"; // replaced from 'umxr'
+	private static final String ANIMATION_RUN_SPEED = "run"; // replaced from 'urun'
+	private static final String ANIMATION_WALK_SPEED = "walk"; // replaced from 'uwal'
+	private static final String MODEL_SCALE = "modelScale"; // replaced from 'usca'
 	private static final War3ID sloc = War3ID.fromString("sloc");
 	private static final LoadGenericCallback stringDataCallback = new StringDataCallbackImplementation();
 	private static final float[] rayHeap = new float[6];
@@ -782,8 +783,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void unitUpgradingEvent(final CUnit unit, final War3ID upgradeIdType) {
 //						final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(unit);
-						final MutableGameObject upgrade = War3MapViewer.this.allObjectData.getUnits()
-								.get(upgradeIdType);
+						final GameObject upgrade = War3MapViewer.this.allObjectData.getUnits().get(upgradeIdType);
 
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
@@ -814,8 +814,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 					@Override
 					public void unitCancelUpgradingEvent(final CUnit unit, final War3ID upgradeIdType) {
-						final MutableGameObject upgrade = War3MapViewer.this.allObjectData.getUnits()
-								.get(upgradeIdType);
+						final GameObject upgrade = War3MapViewer.this.allObjectData.getUnits().get(upgradeIdType);
 
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
@@ -923,7 +922,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public CDestructable createDestructableZ(final War3ID typeId, final float x, final float y,
 							final float z, final float facing, final float scale, final int variation) {
-						final MutableGameObject row = War3MapViewer.this.allObjectData.getDestructibles().get(typeId);
+						final GameObject row = War3MapViewer.this.allObjectData.getDestructibles().get(typeId);
 						final float[] location3d = { x, y, z };
 						final float[] scale3d = { scale, scale, scale };
 						final RenderDestructable newDestructable = War3MapViewer.this.createNewDestructable(typeId, row,
@@ -985,8 +984,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						final String heroReviveArt = reviveUI.getTargetArt(player.getRace().ordinal()).getModelPath();
 						// TODO use addSpellEffectTarget, maybe?
 						War3MapViewer.this.spawnFxOnOrigin(renderUnit, heroReviveArt);
-						final MutableGameObject row = War3MapViewer.this.allObjectData.getUnits()
-								.get(source.getTypeId());
+						final GameObject row = War3MapViewer.this.allObjectData.getUnits().get(source.getTypeId());
 
 						// Recreate unit shadow.... is needed here
 
@@ -1134,7 +1132,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void unitUpdatedType(final CUnit simulationUnit, final War3ID typeId) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(simulationUnit);
-						final MutableGameObject row = War3MapViewer.this.allObjectData.getUnits().get(typeId);
+						final GameObject row = War3MapViewer.this.allObjectData.getUnits().get(typeId);
 						final String path = getUnitModelPath(row);
 
 						final String unitSpecialArtPath = row.getFieldAsString(UNIT_SPECIAL, 0);
@@ -1411,11 +1409,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 	}
 
-	protected BufferedImage getDestructablePathingPixelMap(final MutableGameObject row) {
+	protected BufferedImage getDestructablePathingPixelMap(final GameObject row) {
 		return loadPathingTexture(row.getFieldAsString(DESTRUCTABLE_PATHING, 0));
 	}
 
-	protected BufferedImage getDestructablePathingDeathPixelMap(final MutableGameObject row) {
+	protected BufferedImage getDestructablePathingDeathPixelMap(final GameObject row) {
 		return loadPathingTexture(row.getFieldAsString(DESTRUCTABLE_PATHING_DEATH, 0));
 	}
 
@@ -1466,8 +1464,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		fogGpuUpdateTimer.start(this.simulation);
 	}
 
-	private void loadDoodadsAndDestructibles(final Warcraft3MapObjectData modifications, final War3MapW3i w3iFile)
-			throws IOException {
+	private void loadDoodadsAndDestructibles(final Warcraft3MapRuntimeObjectData modifications,
+			final War3MapW3i w3iFile) throws IOException {
 		applyModificationFile(this.doodadsData, this.doodadMetaData, modifications.getDoodads(),
 				WorldEditorDataType.DOODADS);
 		applyModificationFile(this.doodadsData, this.destructableMetaData, modifications.getDestructibles(),
@@ -1491,7 +1489,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		// Cliff/Terrain doodads.
 		for (final com.etheller.warsmash.parsers.w3x.doo.TerrainDoodad doodad : doo.getTerrainDoodads()) {
-			final MutableGameObject row = modifications.getDoodads().get(doodad.getId());
+			final GameObject row = modifications.getDoodads().get(doodad.getId());
 			String file = row.readSLKTag("file");//
 			if ("".equals(file)) {
 				final String blaBla = row.readSLKTag("file");
@@ -1552,7 +1550,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.anyReady = true;
 	}
 
-	private void createDoodad(final MutableGameObject row, final int doodadVariation, final float[] location,
+	private void createDoodad(final GameObject row, final int doodadVariation, final float[] location,
 			final float facingRadians, final float[] scale) {
 		final MdxModel model = getDoodadModel(doodadVariation, row);
 		final float maxPitch = row.readSLKTagFloat("maxPitch");
@@ -1565,7 +1563,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.decals.add(renderDoodad);
 	}
 
-	private RenderDestructable createNewDestructable(final War3ID doodadId, final MutableGameObject row,
+	private RenderDestructable createNewDestructable(final War3ID doodadId, final GameObject row,
 			final int doodadVariation, final float[] location, final float facingRadians, final short lifePercent,
 			final float[] scale) {
 		BuildingShadow destructableShadow = null;
@@ -1598,8 +1596,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 		final float x = location[0];
 		final float y = location[1];
-		final CDestructable simulationDestructable = this.simulation.internalCreateDestructable(row.getAlias(), x, y,
-				destructablePathing, destructablePathingDeath);
+		final CDestructable simulationDestructable = this.simulation.internalCreateDestructable(
+				War3ID.fromString(row.getId()), x, y, destructablePathing, destructablePathingDeath);
 		// Used to be this, but why: (float) Math.sqrt((scale[0]) * (scale[1]) *
 		// (scale[2]));
 		final float selectionScale = 1.0f;
@@ -1624,10 +1622,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return renderDestructable;
 	}
 
-	private void createDestructableOrDoodad(final War3ID doodadId, final Warcraft3MapObjectData modifications,
+	private void createDestructableOrDoodad(final War3ID doodadId, final Warcraft3MapRuntimeObjectData modifications,
 			final int doodadVariation, final float[] location, final float facingRadians, final short lifePercent,
 			final float[] scale) {
-		MutableGameObject row = modifications.getDoodads().get(doodadId);
+		GameObject row = modifications.getDoodads().get(doodadId);
 		if (row == null) {
 			row = modifications.getDestructibles().get(doodadId);
 			if (row != null) {
@@ -1639,7 +1637,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		}
 	}
 
-	private MdxModel getDoodadModel(final int doodadVariation, final MutableGameObject row) {
+	private MdxModel getDoodadModel(final int doodadVariation, final GameObject row) {
 		String file = row.readSLKTag("file");
 		final int numVar = row.readSLKTagInt("numVar");
 
@@ -1711,13 +1709,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	private void applyModificationFile(final MappedData doodadsData2, final MappedData doodadMetaData2,
-			final MutableObjectData destructibles, final WorldEditorDataType dataType) {
+			final ObjectData destructibles, final WorldEditorDataType dataType) {
 		// TODO condense ported MappedData from Ghostwolf and MutableObjectData from
 		// Retera
 
 	}
 
-	private void loadUnitsAndItems(final Warcraft3MapObjectData modifications, final War3MapW3i mapInformation)
+	private void loadUnitsAndItems(final Warcraft3MapRuntimeObjectData modifications, final War3MapW3i mapInformation)
 			throws IOException {
 		final War3Map mpq = this.mapMpq;
 		this.unitsReady = false;
@@ -1760,10 +1758,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.anyReady = true;
 	}
 
-	private CWidget createNewUnit(final Warcraft3MapObjectData modifications, final War3ID unitId, float unitX,
+	private CWidget createNewUnit(final Warcraft3MapRuntimeObjectData modifications, final War3ID unitId, float unitX,
 			float unitY, final int playerIndex, int customTeamColor, final float unitAngle) {
 		UnitSoundset soundset = null;
-		MutableGameObject row = null;
+		GameObject row = null;
 		String path = null;
 		Splat unitShadowSplat = null;
 		SplatMover unitShadowSplatDynamicIngame = null;
@@ -1897,8 +1895,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 			if (type == WorldEditorDataType.UNITS) {
 				final float angle = (float) Math.toDegrees(unitAngle);
-				final CUnit simulationUnit = this.simulation.internalCreateUnit(row.getAlias(), playerIndex, unitX,
-						unitY, angle, buildingPathingPixelMap);
+				final CUnit simulationUnit = this.simulation.internalCreateUnit(War3ID.fromString(row.getId()),
+						playerIndex, unitX, unitY, angle, buildingPathingPixelMap);
 				unitX = simulationUnit.getX();
 				unitY = simulationUnit.getY();
 				final RenderUnitTypeData typeData = getUnitTypeData(unitId, row);
@@ -1969,7 +1967,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 			else {
 
-				final CItem simulationItem = this.simulation.internalCreateItem(row.getAlias(), unitX, unitY);
+				final CItem simulationItem = this.simulation.internalCreateItem(War3ID.fromString(row.getId()), unitX,
+						unitY);
 				final float unitZ = Math.max(getWalkableRenderHeight(unitX, unitY),
 						War3MapViewer.this.terrain.getGroundHeight(unitX, unitY));
 				final RenderItem renderItem = new RenderItem(this, model, row, unitX, unitY, unitZ, unitAngle, soundset,
@@ -2005,7 +2004,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return buildingUberSplatDynamicIngame;
 	}
 
-	public String getUnitModelPath(final MutableGameObject row) {
+	public String getUnitModelPath(final GameObject row) {
 		String path;
 		path = row.getFieldAsString(UNIT_FILE, 0);
 
@@ -2020,7 +2019,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return path;
 	}
 
-	private BufferedImage getBuildingPathingPixelMap(final MutableGameObject row) {
+	private BufferedImage getBuildingPathingPixelMap(final GameObject row) {
 		final String pathingTexture = row.getFieldAsString(UNIT_PATHING, 0);
 		final BufferedImage buildingPathingPixelMap = loadPathingTexture(pathingTexture);
 		return buildingPathingPixelMap;
@@ -2052,7 +2051,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return buildingPathingPixelMap;
 	}
 
-	public RenderUnitTypeData getUnitTypeData(final War3ID key, MutableGameObject row) {
+	public RenderUnitTypeData getUnitTypeData(final War3ID key, GameObject row) {
 		RenderUnitTypeData unitTypeData = this.unitIdToTypeData.get(key);
 		if (unitTypeData == null) {
 			if (row == null) {
@@ -2636,7 +2635,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private float selectionCircleScaleFactor;
 	private DataTable worldEditData;
 	private WorldEditStrings worldEditStrings;
-	private Warcraft3MapObjectData allObjectData;
+	private Warcraft3MapRuntimeObjectData allObjectData;
 	private AbilityDataUI abilityDataUI;
 	private Map<String, UnitSoundset> soundsetNameToSoundset;
 	public int imageWalkableZOffset;
@@ -2759,7 +2758,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return this.uiSounds;
 	}
 
-	public Warcraft3MapObjectData getAllObjectData() {
+	public Warcraft3MapRuntimeObjectData getAllObjectData() {
 		return this.allObjectData;
 	}
 

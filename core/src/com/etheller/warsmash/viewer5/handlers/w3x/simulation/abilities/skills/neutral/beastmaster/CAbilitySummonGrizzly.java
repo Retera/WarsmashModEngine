@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.beastmaster;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -24,14 +24,12 @@ public class CAbilitySummonGrizzly extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_TYPE,
-				level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.UNIT_ID + level, 0);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_COUNT,
-				level);
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
@@ -64,11 +62,9 @@ public class CAbilitySummonGrizzly extends CAbilityNoTargetSpellBase {
 		return this.summonUnitCount;
 	}
 
-
 	public War3ID getBuffId() {
 		return this.buffId;
 	}
-
 
 	public float getAreaOfEffect() {
 		return this.areaOfEffect;
@@ -81,7 +77,6 @@ public class CAbilitySummonGrizzly extends CAbilityNoTargetSpellBase {
 	public void setSummonUnitCount(final int summonUnitCount) {
 		this.summonUnitCount = summonUnitCount;
 	}
-
 
 	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;

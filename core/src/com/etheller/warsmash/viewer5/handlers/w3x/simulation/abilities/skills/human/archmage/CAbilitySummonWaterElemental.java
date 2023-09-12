@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -19,17 +19,16 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 	private War3ID buffId;
 	private float areaOfEffect;
 
-	public CAbilitySummonWaterElemental(int handleId, War3ID alias) {
+	public CAbilitySummonWaterElemental(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
 	@Override
-	public void populateData(MutableGameObject worldEditorAbility, int level) {
-		this.summonUnitId = War3ID
-				.fromString(worldEditorAbility.getFieldAsString(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_TYPE, level));
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.SummonWaterElemental.SUMMONED_UNIT_COUNT, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.summonUnitId = War3ID.fromString(worldEditorAbility.getFieldAsString(AbilityFields.UNIT_ID + level, 0));
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
@@ -38,13 +37,13 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit unit, AbilityTarget target) {
-		float facing = unit.getFacing();
-		float facingRad = (float) StrictMath.toRadians(facing);
-		float x = unit.getX() + ((float) StrictMath.cos(facingRad) * areaOfEffect);
-		float y = unit.getY() + ((float) StrictMath.sin(facingRad) * areaOfEffect);
+	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
+		final float facing = unit.getFacing();
+		final float facingRad = (float) StrictMath.toRadians(facing);
+		final float x = unit.getX() + ((float) StrictMath.cos(facingRad) * areaOfEffect);
+		final float y = unit.getY() + ((float) StrictMath.sin(facingRad) * areaOfEffect);
 		for (int i = 0; i < summonUnitCount; i++) {
-			CUnit summonedUnit = simulation.createUnitSimple(summonUnitId, unit.getPlayerIndex(), x, y, facing);
+			final CUnit summonedUnit = simulation.createUnitSimple(summonUnitId, unit.getPlayerIndex(), x, y, facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
 					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, getDuration(), false));
@@ -69,19 +68,19 @@ public class CAbilitySummonWaterElemental extends CAbilityNoTargetSpellBase {
 		return areaOfEffect;
 	}
 
-	public void setSummonUnitId(War3ID summonUnitId) {
+	public void setSummonUnitId(final War3ID summonUnitId) {
 		this.summonUnitId = summonUnitId;
 	}
 
-	public void setSummonUnitCount(int summonUnitCount) {
+	public void setSummonUnitCount(final int summonUnitCount) {
 		this.summonUnitCount = summonUnitCount;
 	}
 
-	public void setBuffId(War3ID buffId) {
+	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;
 	}
 
-	public void setAreaOfEffect(float areaOfEffect) {
+	public void setAreaOfEffect(final float areaOfEffect) {
 		this.areaOfEffect = areaOfEffect;
 	}
 

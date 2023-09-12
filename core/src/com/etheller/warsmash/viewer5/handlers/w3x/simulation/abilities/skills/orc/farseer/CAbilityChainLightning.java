@@ -1,6 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -19,8 +25,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
 
-import java.util.*;
-
 public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 	private static final float SECONDS_BETWEEN_JUMPS = 0.25f;
 	private static final float BOLT_LIFETIME_SECONDS = 2.00f;
@@ -31,7 +35,7 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 	private int numberOfTargetsHit;
 	private float areaOfEffect;
 
-	public CAbilityChainLightning(int handleId, War3ID alias) {
+	public CAbilityChainLightning(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -41,37 +45,34 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
+	public void populateData(final GameObject worldEditorAbility, final int level) {
 		this.lightningIdPrimary = AbstractCAbilityTypeDefinition.getLightningId(worldEditorAbility, level, 0);
 		this.lightningIdSecondary = AbstractCAbilityTypeDefinition.getLightningId(worldEditorAbility, level, 1);
-		this.damagePerTarget = worldEditorAbility.getFieldAsFloat(AbilityFields.ChainLightning.DAMAGE_PER_TARGET,
-				level);
-		this.damageReductionPerTarget =
-				worldEditorAbility.getFieldAsFloat(AbilityFields.ChainLightning.DAMAGE_REDUCTION_PER_TARGET, level);
-		this.numberOfTargetsHit =
-				worldEditorAbility.getFieldAsInteger(AbilityFields.ChainLightning.NUMBER_OF_TARGETS_HIT, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		this.damagePerTarget = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		this.damageReductionPerTarget = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
+		this.numberOfTargetsHit = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_B + level, 0);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
-		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
+		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
-			SimulationRenderComponentLightning lightning = simulation.createLightning(caster, lightningIdPrimary,
+			final SimulationRenderComponentLightning lightning = simulation.createLightning(caster, lightningIdPrimary,
 					targetUnit);
 			simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
-			int jumpDelayEndTick =
-					simulation.getGameTurnTick() + (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
-			int boltLifetimeEndTick =
-					simulation.getGameTurnTick() + (int) StrictMath.ceil(BOLT_LIFETIME_SECONDS / WarsmashConstants.SIMULATION_STEP_TIME);
+			final int jumpDelayEndTick = simulation.getGameTurnTick()
+					+ (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
+			final int boltLifetimeEndTick = simulation.getGameTurnTick()
+					+ (int) StrictMath.ceil(BOLT_LIFETIME_SECONDS / WarsmashConstants.SIMULATION_STEP_TIME);
 			targetUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.LIGHTNING,
 					CWeaponSoundTypeJass.WHOKNOWS.name(), damagePerTarget);
-			float remainingDamageJumpMultiplier = 1.0f - damageReductionPerTarget;
-			Set<CUnit> previousTargets = new HashSet<>();
+			final float remainingDamageJumpMultiplier = 1.0f - damageReductionPerTarget;
+			final Set<CUnit> previousTargets = new HashSet<>();
 			previousTargets.add(targetUnit);
 			simulation.registerEffect(new CEffectChainLightningBolt(boltLifetimeEndTick, jumpDelayEndTick,
-					damagePerTarget * remainingDamageJumpMultiplier, remainingDamageJumpMultiplier, caster, targetUnit
-					, lightning, getAlias(), lightningIdSecondary, getTargetsAllowed(), this.areaOfEffect,
+					damagePerTarget * remainingDamageJumpMultiplier, remainingDamageJumpMultiplier, caster, targetUnit,
+					lightning, getAlias(), lightningIdSecondary, getTargetsAllowed(), this.areaOfEffect,
 					this.numberOfTargetsHit - 1, previousTargets));
 		}
 		return false;
@@ -94,11 +95,11 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 
 		private final Set<CUnit> previousTargets;
 
-		public CEffectChainLightningBolt(int boltLifetimeEndTick, int jumpDelayEndTick, float remainingDamage,
-										 float remainingDamageJumpMultiplier, CUnit caster, CUnit targetUnit,
-										 SimulationRenderComponentLightning boltFx, War3ID abilityId,
-										 War3ID jumpLightningId, EnumSet<CTargetType> jumpTargetsAllowed,
-										 float jumpRadius, int remainingJumps, Set<CUnit> previousTargets) {
+		public CEffectChainLightningBolt(final int boltLifetimeEndTick, final int jumpDelayEndTick,
+				final float remainingDamage, final float remainingDamageJumpMultiplier, final CUnit caster,
+				final CUnit targetUnit, final SimulationRenderComponentLightning boltFx, final War3ID abilityId,
+				final War3ID jumpLightningId, final EnumSet<CTargetType> jumpTargetsAllowed, final float jumpRadius,
+				final int remainingJumps, final Set<CUnit> previousTargets) {
 			this.boltLifetimeEndTick = boltLifetimeEndTick;
 			this.jumpDelayEndTick = jumpDelayEndTick;
 			this.remainingDamage = remainingDamage;
@@ -115,28 +116,29 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 		}
 
 		@Override
-		public boolean update(CSimulation game) {
-			int gameTurnTick = game.getGameTurnTick();
-			if (gameTurnTick >= jumpDelayEndTick && remainingJumps > 0) {
-				List<CUnit> possibleJumpTargets = new ArrayList<>();
+		public boolean update(final CSimulation game) {
+			final int gameTurnTick = game.getGameTurnTick();
+			if ((gameTurnTick >= jumpDelayEndTick) && (remainingJumps > 0)) {
+				final List<CUnit> possibleJumpTargets = new ArrayList<>();
 				game.getWorldCollision().enumUnitsInRange(targetUnit.getX(), targetUnit.getY(), jumpRadius,
 						(enumUnit) -> {
-					if (enumUnit.canBeTargetedBy(game, caster, jumpTargetsAllowed) && !previousTargets.contains(enumUnit)) {
-						possibleJumpTargets.add(enumUnit);
-					}
-					return false;
-				});
+							if (enumUnit.canBeTargetedBy(game, caster, jumpTargetsAllowed)
+									&& !previousTargets.contains(enumUnit)) {
+								possibleJumpTargets.add(enumUnit);
+							}
+							return false;
+						});
 				if (!possibleJumpTargets.isEmpty()) {
-					CUnit nextJumpTarget =
-							possibleJumpTargets.get(game.getSeededRandom().nextInt(possibleJumpTargets.size()));
+					final CUnit nextJumpTarget = possibleJumpTargets
+							.get(game.getSeededRandom().nextInt(possibleJumpTargets.size()));
 
-					SimulationRenderComponentLightning lightning = game.createLightning(targetUnit, jumpLightningId,
-							nextJumpTarget);
+					final SimulationRenderComponentLightning lightning = game.createLightning(targetUnit,
+							jumpLightningId, nextJumpTarget);
 					game.createSpellEffectOnUnit(nextJumpTarget, abilityId, CEffectType.TARGET);
-					int jumpDelayEndTick =
-							gameTurnTick + (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
-					int boltLifetimeEndTick =
-							gameTurnTick + (int) StrictMath.ceil(BOLT_LIFETIME_SECONDS / WarsmashConstants.SIMULATION_STEP_TIME);
+					final int jumpDelayEndTick = gameTurnTick
+							+ (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
+					final int boltLifetimeEndTick = gameTurnTick
+							+ (int) StrictMath.ceil(BOLT_LIFETIME_SECONDS / WarsmashConstants.SIMULATION_STEP_TIME);
 					nextJumpTarget.damage(game, caster, CAttackType.SPELLS, CDamageType.LIGHTNING,
 							CWeaponSoundTypeJass.WHOKNOWS.name(), remainingDamage);
 					previousTargets.add(nextJumpTarget);
@@ -147,7 +149,7 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 				}
 				this.jumpDelayEndTick = Integer.MAX_VALUE;
 			}
-			boolean done = gameTurnTick >= boltLifetimeEndTick;
+			final boolean done = gameTurnTick >= boltLifetimeEndTick;
 			if (done) {
 				boltFx.remove();
 			}

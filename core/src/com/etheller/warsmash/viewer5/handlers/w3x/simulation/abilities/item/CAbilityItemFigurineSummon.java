@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -26,19 +26,15 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.ItemFigurineSummon.SUMMON_1_UNIT_TYPE,
-				level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.DATA_C + level, 0);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemFigurineSummon.SUMMON_1_AMOUNT,
-				level);
-		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.ItemFigurineSummon.SUMMON_2_UNIT_TYPE,
-				level);
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
+		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.DATA_D + level, 0);
 		this.summonUnit2Id = unitTypeTwo.length() == 4 ? War3ID.fromString(unitTypeTwo) : War3ID.NONE;
-		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.ItemFigurineSummon.SUMMON_2_AMOUNT,
-				level);
+		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_B + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
@@ -90,7 +86,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 	public War3ID getBuffId() {
 		return this.buffId;
 	}
-
 
 	public float getAreaOfEffect() {
 		return this.areaOfEffect;

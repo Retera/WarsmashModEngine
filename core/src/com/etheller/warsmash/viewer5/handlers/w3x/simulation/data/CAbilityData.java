@@ -3,8 +3,8 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -95,11 +95,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jas
 
 public class CAbilityData {
 
-	private final MutableObjectData abilityData;
+	private final ObjectData abilityData;
 	private Map<War3ID, CAbilityType<?>> aliasToAbilityType = new HashMap<>();
 	private final Map<War3ID, CAbilityTypeDefinition> codeToAbilityTypeDefinition = new HashMap<>();
 
-	public CAbilityData(final MutableObjectData abilityData) {
+	public CAbilityData(final ObjectData abilityData) {
 		this.abilityData = abilityData;
 		this.aliasToAbilityType = new HashMap<>();
 		registerCodes();
@@ -282,14 +282,14 @@ public class CAbilityData {
 	public CAbilityType<?> getAbilityType(final War3ID alias) {
 		CAbilityType<?> abilityType = this.aliasToAbilityType.get(alias);
 		if (abilityType == null) {
-			final MutableGameObject mutableGameObject = this.abilityData.get(alias);
-			if (mutableGameObject == null) {
+			final GameObject gameObject = this.abilityData.get(alias);
+			if (gameObject == null) {
 				return null;
 			}
-			final War3ID code = War3ID.fromString(mutableGameObject.readSLKTag("code"));
+			final War3ID code = War3ID.fromString(gameObject.readSLKTag("code"));
 			final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
 			if (abilityTypeDefinition != null) {
-				abilityType = abilityTypeDefinition.createAbilityType(alias, mutableGameObject);
+				abilityType = abilityTypeDefinition.createAbilityType(alias, gameObject);
 				this.aliasToAbilityType.put(alias, abilityType);
 			}
 		}
@@ -301,7 +301,7 @@ public class CAbilityData {
 		// fast symbol table resolution.
 		// (i.e. like all other fields of CAbilityType). For now I didn't bother because
 		// I wanted to just have this working.
-		final MutableGameObject mutableGameObject = this.abilityData.get(alias);
+		final GameObject mutableGameObject = this.abilityData.get(alias);
 		int levelSkip = mutableGameObject.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL_SKIP, 0);
 		if (levelSkip == 0) {
 			levelSkip = game.getGameplayConstants().getHeroAbilityLevelSkip();

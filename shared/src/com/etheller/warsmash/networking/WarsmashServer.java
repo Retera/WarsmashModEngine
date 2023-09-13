@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +16,7 @@ import net.warsmash.uberserver.GamingNetwork;
 
 public class WarsmashServer implements ClientToServerListener {
 	private static final boolean VERBOSE_LOGGING = false;
-	private static final int MAGIC_DELAY_OFFSET = 0; //4
+	private static final int MAGIC_DELAY_OFFSET = 4; // 4
 	private final OrderedUdpServer udpServer;
 	private final Set<SocketAddress> socketAddressesKnown = new HashSet<>();
 	private final Map<Long, Integer> sessionTokenToPermittedSlot;

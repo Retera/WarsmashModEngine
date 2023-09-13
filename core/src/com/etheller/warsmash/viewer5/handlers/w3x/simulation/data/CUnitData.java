@@ -419,11 +419,10 @@ public class CUnitData {
 			final float minimumAttackRange = unitType.getFieldAsInteger(MINIMUM_ATTACK_RANGE, 0);
 			final EnumSet<CTargetType> targetedAs = CTargetType
 					.parseTargetTypeSet(unitType.getFieldAsString(TARGETED_AS, 0));
-			final String classificationString = unitType.getFieldAsString(CLASSIFICATION, 0);
+			final List<String> classificationStringList = unitType.getFieldAsList(CLASSIFICATION);
 			final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
-			if (classificationString != null) {
-				final String[] classificationValues = classificationString.split(",");
-				for (final String unitEditorKey : classificationValues) {
+			if (!classificationStringList.isEmpty()) {
+				for (final String unitEditorKey : classificationStringList) {
 					final CUnitClassification unitClassification = CUnitClassification
 							.parseUnitClassification(unitEditorKey);
 					if (unitClassification != null) {
@@ -464,9 +463,9 @@ public class CUnitData {
 				final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK1_RANGE_MOTION_BUFFER, 0);
 				final boolean showUI = unitType.getFieldAsBoolean(ATTACK1_SHOW_UI, 0);
 				final EnumSet<CTargetType> targetsAllowed = CTargetType
-						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK1_TARGETS_ALLOWED, 0));
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK1_TARGETS_ALLOWED));
 				final String weaponSound = unitType.getFieldAsString(ATTACK1_WEAPON_SOUND, 0);
-				String weapon_type_temp = unitType.getFieldAsString(ATTACK1_WEAPON_TYPE, 0);
+				final String weapon_type_temp = unitType.getFieldAsString(ATTACK1_WEAPON_TYPE, 0);
 				CWeaponType weaponType = CWeaponType.NONE;
 				if (!"_".equals(weapon_type_temp)) {
 					weaponType = CWeaponType.parseWeaponType(weapon_type_temp);
@@ -477,7 +476,8 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			} catch (final Exception exc) {
+			}
+			catch (final Exception exc) {
 				System.err.println("Attack 1 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			try {
@@ -516,9 +516,9 @@ public class CUnitData {
 				final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK2_RANGE_MOTION_BUFFER, 0);
 				boolean showUI = unitType.getFieldAsBoolean(ATTACK2_SHOW_UI, 0);
 				final EnumSet<CTargetType> targetsAllowed = CTargetType
-						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK2_TARGETS_ALLOWED, 0));
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK1_TARGETS_ALLOWED));
 				final String weaponSound = unitType.getFieldAsString(ATTACK2_WEAPON_SOUND, 0);
-				String weapon_type_temp = unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0);
+				final String weapon_type_temp = unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0);
 				CWeaponType weaponType = CWeaponType.NONE;
 				if (!"_".equals(weapon_type_temp)) {
 					weaponType = CWeaponType.parseWeaponType(weapon_type_temp);
@@ -540,7 +540,8 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			} catch (final Exception exc) {
+			}
+			catch (final Exception exc) {
 				System.err.println("Attack 2 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			final List<CUnitAttack> enabledAttacks = getEnabledAttacks(attacks, attacksEnabled);
@@ -691,7 +692,8 @@ public class CUnitData {
 				if (i < requirementsLevelsString.size()) {
 					if (requirementsLevelsString.get(i).isEmpty()) {
 						level = 1;
-					} else {
+					}
+					else {
 						try {
 							level = Integer.parseInt(requirementsLevelsString.get(i));
 						}
@@ -704,14 +706,17 @@ public class CUnitData {
 					final String requirementLevel = requirementsLevelsString.get(requirementsLevelsString.size() - 1);
 					if (requirementLevel.isEmpty()) {
 						level = 1;
-					} else {
+					}
+					else {
 						try {
 							level = Integer.parseInt(requirementLevel);
-						} catch (final NumberFormatException exc) {
+						}
+						catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				} else {
+				}
+				else {
 					level = 1;
 				}
 				requirements.add(new CUnitTypeRequirement(War3ID.fromString(item), level));
@@ -731,7 +736,8 @@ public class CUnitData {
 			final float newSumBonusAtLevel = sumBonusAtLevel + statPerLevel;
 			if (i == 0) {
 				table[i] = (int) newSumBonusAtLevel;
-			} else {
+			}
+			else {
 				table[i] = (int) newSumBonusAtLevel - table[i - 1];
 			}
 			sumBonusAtLevel = newSumBonusAtLevel;

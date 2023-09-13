@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -104,11 +104,9 @@ public class CAbilityEntangledMine extends CAbilityOverlayedMine implements CAbi
 	}
 
 	@Override
-	public void populate(final MutableGameObject worldEditorAbility, final int level) {
-		this.goldPerInterval = worldEditorAbility.getFieldAsInteger(AbilityFields.EntangledGoldMineAbility.GOLD_PER_INTERVAL,
-				level);
-		this.intervalDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.EntangledGoldMineAbility.INTERVAL_DURATION,
-				level);
+	public void populate(final GameObject worldEditorAbility, final int level) {
+		this.goldPerInterval = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
+		this.intervalDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
 	}
 
 	@Override

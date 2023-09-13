@@ -20,7 +20,7 @@ import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
 import com.etheller.warsmash.units.DataTable;
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
@@ -110,9 +110,9 @@ public class CSimulation implements CPlayerAPI {
 	private final Set<CDestructable> ownedTreeSet = new HashSet<>();
 	private GlobalScope globalScope;
 
-	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
-			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
-			final MutableObjectData parsedAbilityData, final MutableObjectData parsedUpgradeData,
+	public CSimulation(final War3MapConfig config, final DataTable miscData, final ObjectData parsedUnitData,
+			final ObjectData parsedItemData, final ObjectData parsedDestructableData,
+			final ObjectData parsedAbilityData, final ObjectData parsedUpgradeData,
 			final DataTable standardUpgradeEffectMeta, final SimulationRenderController simulationRenderController,
 			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
 			final CommandErrorListener commandErrorListener) {
@@ -504,6 +504,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void removeUnit(final CUnit unit) {
+		unit.setHidden(true);
 		this.removedUnits.add(unit);
 	}
 

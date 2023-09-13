@@ -46,16 +46,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABGenericTimedBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTickingPausedBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackMove;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStun;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUpgradingVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -189,6 +180,7 @@ public class CUnit extends CWidget {
 	private transient CBehaviorPatrol patrolBehavior;
 	private transient CBehaviorStop stopBehavior;
 	private transient CBehaviorHoldPosition holdPositionBehavior;
+	private transient CBehaviorBoardTransport boardTransportBehavior;
 	private boolean constructing = false;
 	private boolean constructingPaused = false;
 	private boolean structure;
@@ -2727,6 +2719,10 @@ public class CUnit extends CWidget {
 		this.holdPositionBehavior = holdPositionBehavior;
 	}
 
+	public void setBoardTransportBehavior(CBehaviorBoardTransport boardTransportBehavior) {
+		this.boardTransportBehavior = boardTransportBehavior;
+	}
+
 	public CBehaviorFollow getFollowBehavior() {
 		return this.followBehavior;
 	}
@@ -2737,6 +2733,10 @@ public class CUnit extends CWidget {
 
 	public CBehaviorHoldPosition getHoldPositionBehavior() {
 		return this.holdPositionBehavior;
+	}
+
+	public CBehaviorBoardTransport getBoardTransportBehavior() {
+		return boardTransportBehavior;
 	}
 
 	public CBehavior pollNextOrderBehavior(final CSimulation game) {
@@ -2799,6 +2799,7 @@ public class CUnit extends CWidget {
 
 	public void setHidden(final boolean hidden) {
 		this.hidden = hidden;
+		this.stateNotifier.hideStateChanged();
 	}
 
 	public void setPaused(final boolean paused) {
@@ -2851,6 +2852,10 @@ public class CUnit extends CWidget {
 		for (int i = 0; i < this.buildQueue.length; i++) {
 			if (this.buildQueue[i] == null) {
 				setBuildQueueItem(game, i, rawcode, queueItemType);
+				if ((queueItemType == QueueItemType.UNIT) || (queueItemType == QueueItemType.RESEARCH)) {
+					final CPlayer player = game.getPlayer(this.playerIndex);
+					player.addTechtreeInProgress(rawcode);
+				}
 				return true;
 			}
 		}
@@ -2992,9 +2997,6 @@ public class CUnit extends CWidget {
 					}
 				}
 			}
-		}
-		if ((queueItemType == QueueItemType.UNIT) || (queueItemType == QueueItemType.RESEARCH)) {
-			player.addTechtreeInProgress(rawcode);
 		}
 	}
 

@@ -3,7 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.o
 import java.util.ArrayList;
 import java.util.List;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -32,14 +32,12 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.FeralSpirit.SUMMONED_UNIT,
-				level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.UNIT_ID + level, 0);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.FeralSpirit.NUMBER_OF_SUMMONED_UNITS,
-				level);
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_B + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override

@@ -1,8 +1,10 @@
 package com.etheller.warsmash.util;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * A structure that holds mapped data from INI and SLK files.
@@ -10,7 +12,7 @@ import java.util.Map;
  * In the case of SLK files, the first row is expected to hold the names of the
  * columns.
  */
-public class MappedData {
+public class MappedData implements Iterable<Map.Entry<String, MappedDataRow>> {
 	private final Map<String, MappedDataRow> map = new HashMap<>();
 
 	public MappedData() {
@@ -100,5 +102,10 @@ public class MappedData {
 
 	public void setRow(final String key, final MappedDataRow values) {
 		this.map.put(key.toLowerCase(), values);
+	}
+
+	@Override
+	public Iterator<Entry<String, MappedDataRow>> iterator() {
+		return this.map.entrySet().iterator();
 	}
 }

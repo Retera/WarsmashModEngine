@@ -3,7 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 import java.util.List;
 import java.util.Map;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -102,18 +102,18 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABAction {
 		}
 		
 
-		MutableGameObject editorData = (MutableGameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
 		int level = (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);
 
 		if (speed != null) {
 			theSpeed = speed.callback(game, caster, localStore, castId);
 		} else {
-			theSpeed = editorData.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, level);
+			theSpeed = editorData.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, 0);
 		}
 		if (homing != null) {
 			isHoming = homing.callback(game, caster, localStore, castId);
 		} else {
-			isHoming = editorData.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, level);
+			isHoming = editorData.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, 0);
 		}
 
 		CUnit theTarget = target.callback(game, caster, localStore, castId);

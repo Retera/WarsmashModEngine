@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.eattree;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
@@ -13,11 +13,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityEatTree extends CAbilityTargetSpellBase {
@@ -40,10 +38,10 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.RIP_DELAY, level);
-		eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.EAT_DELAY, level);
-		hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.EatTree.HIT_POINTS_GAINED, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
 		buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		setCastingSecondaryTags(SequenceUtils.SPELL_EATTREE);
 	}
@@ -92,7 +90,7 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public boolean doChannelTick(CSimulation simulation, CUnit unit, AbilityTarget target) {
+	public boolean doChannelTick(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
 		final int gameTurnTick = simulation.getGameTurnTick();
 		if (gameTurnTick >= ripEndTick) {
 			if (!ripComplete) {

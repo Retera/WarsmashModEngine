@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
+import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -105,7 +106,10 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 			final CUnitType unitTypeToCreate = game.getUnitData().getUnitType(orderIdAsWar3ID);
 			final BufferedImage buildingPathingPixelMap = unitTypeToCreate.getBuildingPathingPixelMap();
 			final boolean canBeBuiltOnThem = unitTypeToCreate.isCanBeBuiltOnThem();
-			boolean buildLocationObstructed = AbstractCAbilityBuild.isBuildLocationObstructed(game, unitTypeToCreate, buildingPathingPixelMap, canBeBuiltOnThem, target.getX(), target.getY(), unit, BuildOnBuildingIntersector.INSTANCE.reset(target.getX(), target.getY()));
+			roundTargetPoint(target, unitTypeToCreate);
+			float x = target.getX();
+			float y = target.getY();
+			boolean buildLocationObstructed = AbstractCAbilityBuild.isBuildLocationObstructed(game, unitTypeToCreate, buildingPathingPixelMap, canBeBuiltOnThem, x, y, unit, BuildOnBuildingIntersector.INSTANCE.reset(x, y));
 			if(buildLocationObstructed) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_BUILD_THERE);
 			} else {
@@ -167,5 +171,19 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 			}
 		}
 		return buildLocationObstructed;
+	}
+
+	public static void roundTargetPoint(Vector2 point, CUnitType unitType) {
+		final BufferedImage buildingPathingPixelMap = unitType.getBuildingPathingPixelMap();
+		if (buildingPathingPixelMap != null) {
+			point.x = (float) Math.floor(point.x / 64f) * 64f;
+			point.y = (float) Math.floor(point.y / 64f) * 64f;
+			if (((buildingPathingPixelMap.getWidth() / 2) % 2) == 1) {
+				point.x += 32f;
+			}
+			if (((buildingPathingPixelMap.getHeight() / 2) % 2) == 1) {
+				point.y += 32f;
+			}
+		}
 	}
 }

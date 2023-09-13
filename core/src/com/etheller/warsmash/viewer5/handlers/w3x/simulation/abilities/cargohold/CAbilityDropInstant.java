@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -95,6 +95,6 @@ public class CAbilityDropInstant extends AbstractGenericSingleIconNoSmartActiveA
 	}
 
 	@Override
-	public void populate(final MutableGameObject worldEditorAbility, final int level) {
+	public void populate(final GameObject worldEditorAbility, final int level) {
 	}
 }

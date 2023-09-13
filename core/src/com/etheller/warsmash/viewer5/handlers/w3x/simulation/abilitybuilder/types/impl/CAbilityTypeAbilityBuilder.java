@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -29,9 +29,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbilityBuilderLevelData>  {
 
 	private AbilityBuilderConfiguration parser;
-	private MutableGameObject abilityEditorData;
+	private GameObject abilityEditorData;
 	
-	public CAbilityTypeAbilityBuilder(War3ID alias, War3ID code, MutableGameObject abilityEditorData, List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration parser) {
+	public CAbilityTypeAbilityBuilder(War3ID alias, War3ID code, GameObject abilityEditorData, List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration parser) {
 		super(alias, code, levelData);
 		this.parser = parser;
 		this.abilityEditorData = abilityEditorData;

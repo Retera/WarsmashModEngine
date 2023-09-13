@@ -163,10 +163,11 @@ public class SetupGroups {
 			}
 		});
 
-		// Event objects have no priority planes, so they might as well always be last.
+		// Event objects have no priority planes, so they might as well always be
+		// first/last.
 		final List<Object> objects = new ArrayList<>();
-		objects.addAll(sorted);
 		objects.addAll(model.eventObjects);
+		objects.addAll(sorted);
 
 		currentGroup = null;
 

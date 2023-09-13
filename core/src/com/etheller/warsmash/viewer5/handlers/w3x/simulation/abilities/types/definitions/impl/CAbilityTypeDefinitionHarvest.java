@@ -1,39 +1,32 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl;
 
-import java.util.EnumSet;
 import java.util.List;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeHarvestLevelData;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
 public class CAbilityTypeDefinitionHarvest extends AbstractCAbilityTypeDefinition<CAbilityTypeHarvestLevelData>
 		implements CAbilityTypeDefinition {
-	protected static final War3ID DAMAGE_TO_TREE = War3ID.fromString("Har1");
-	protected static final War3ID LUMBER_CAPACITY = War3ID.fromString("Har2");
-	protected static final War3ID GOLD_CAPACITY = War3ID.fromString("Har3");
 
 	@Override
-	protected CAbilityTypeHarvestLevelData createLevelData(final MutableGameObject abilityEditorData, final int level) {
-		final String targetsAllowedAtLevelString = abilityEditorData.getFieldAsString(TARGETS_ALLOWED, level);
-		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
-		final int damageToTree = abilityEditorData.getFieldAsInteger(DAMAGE_TO_TREE, level);
-		final int goldCapacity = abilityEditorData.getFieldAsInteger(GOLD_CAPACITY, level);
-		final int lumberCapacity = abilityEditorData.getFieldAsInteger(LUMBER_CAPACITY, level);
-		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE, level);
-		final float duration = abilityEditorData.getFieldAsFloat(DURATION, level);
-		return new CAbilityTypeHarvestLevelData(targetsAllowedAtLevel, damageToTree, goldCapacity, lumberCapacity,
-				castRange, duration);
+	protected CAbilityTypeHarvestLevelData createLevelData(final GameObject abilityEditorData, final int level) {
+		final int damageToTree = abilityEditorData.getFieldAsInteger(DATA_A + level, 0);
+		final int goldCapacity = abilityEditorData.getFieldAsInteger(DATA_B + level, 0);
+		final int lumberCapacity = abilityEditorData.getFieldAsInteger(DATA_C + level, 0);
+		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE + level, 0);
+		final float duration = abilityEditorData.getFieldAsFloat(DURATION + level, 0);
+		return new CAbilityTypeHarvestLevelData(getTargetsAllowed(abilityEditorData, level), damageToTree, goldCapacity,
+				lumberCapacity, castRange, duration);
 	}
 
 	@Override
-	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final MutableGameObject abilityEditorData,
+	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final GameObject abilityEditorData,
 			final List<CAbilityTypeHarvestLevelData> levelData) {
-		return new CAbilityTypeHarvest(alias, abilityEditorData.getCode(), levelData);
+		return new CAbilityTypeHarvest(alias, abilityEditorData.getFieldAsWar3ID(CODE, -1), levelData);
 	}
 
 }

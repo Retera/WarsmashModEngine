@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -21,7 +21,7 @@ public class CAbilityWarStomp extends CAbilityNoTargetSpellBase {
 	private float areaOfEffect;
 	private War3ID buffId;
 
-	public CAbilityWarStomp(int handleId, War3ID alias) {
+	public CAbilityWarStomp(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -31,16 +31,17 @@ public class CAbilityWarStomp extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.WarStompNeutralHostile.DAMAGE, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		simulation.getWorldCollision().enumUnitsInRange(caster.getX(), caster.getY(), areaOfEffect, (enumUnit) -> {
-			if (!enumUnit.isUnitAlly(simulation.getPlayer(caster.getPlayerIndex())) && enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
+			if (!enumUnit.isUnitAlly(simulation.getPlayer(caster.getPlayerIndex()))
+					&& enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
 				enumUnit.add(simulation, new CBuffStun(simulation.getHandleIdAllocator().createId(),
 						CAbilityWarStomp.this.buffId, getDurationForTarget(enumUnit)));
 				enumUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.UNIVERSAL,

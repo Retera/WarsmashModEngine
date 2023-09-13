@@ -66,6 +66,7 @@ public abstract class OrderedUdpCommuncation implements UdpClientListener {
 				final ByteBuffer queuedReceivedData = ByteBuffer.allocate(readBuffer.remaining())
 						.order(ByteOrder.BIG_ENDIAN);
 				queuedReceivedData.put(readBuffer);
+				queuedReceivedData.flip();
 				this.seqNoToDataReceived.put(serverSeqNo, queuedReceivedData);
 			}
 			else if (serverSeqNo < this.nextReceiveSeqNo) {

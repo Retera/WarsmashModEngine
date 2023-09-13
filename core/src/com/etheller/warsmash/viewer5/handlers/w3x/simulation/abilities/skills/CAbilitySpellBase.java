@@ -2,7 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills;
 
 import java.util.EnumSet;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
@@ -38,22 +38,22 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	@Override
-	public final void populate(final MutableGameObject worldEditorAbility, final int level) {
-		this.manaCost = worldEditorAbility.getFieldAsInteger(AbilityFields.MANA_COST, level);
-		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE, level);
-		this.cooldown = worldEditorAbility.getFieldAsFloat(AbilityFields.COOLDOWN, level);
-		this.castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME, level);
-		int requiredLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL, 0);
+	public final void populate(final GameObject worldEditorAbility, final int level) {
+		this.manaCost = worldEditorAbility.getFieldAsInteger(AbilityFields.MANA_COST + level, 0);
+		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE + level, 0);
+		this.cooldown = worldEditorAbility.getFieldAsFloat(AbilityFields.COOLDOWN + level, 0);
+		this.castingTime = worldEditorAbility.getFieldAsFloat(AbilityFields.CASTING_TIME + level, 0);
+		final int requiredLevel = worldEditorAbility.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL, 0);
 
 		this.targetsAllowed = CTargetType
-				.parseTargetTypeSet(worldEditorAbility.getFieldAsString(AbilityFields.TARGETS_ALLOWED, level));
-		if (requiredLevel < 6 && !isPhysicalSpell() && !isUniversalSpell()) {
+				.parseTargetTypeSet(worldEditorAbility.getFieldAsList(AbilityFields.TARGETS_ALLOWED + level));
+		if ((requiredLevel < 6) && !isPhysicalSpell() && !isUniversalSpell()) {
 			this.targetsAllowed.add(CTargetType.NON_MAGIC_IMMUNE);
 		}
 		if (isPhysicalSpell() && !isUniversalSpell()) {
 			this.targetsAllowed.add(CTargetType.NON_ETHEREAL);
 		}
-		final String animNames = worldEditorAbility.getFieldAsString(AbilityFields.ANIM_NAMES, 0);
+		final String animNames = worldEditorAbility.getField(AbilityFields.ANIM_NAMES);
 
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
 		this.castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
@@ -66,21 +66,21 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		if (this.castingSecondaryTags.isEmpty()) {
 			this.castingSecondaryTags = SequenceUtils.SPELL;
 		}
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, 0);
-		this.heroDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.HERO_DURATION, 0);
+		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION + level, 0);
+		this.heroDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.HERO_DURATION + level, 0);
 
-		this.code = worldEditorAbility.getCode();
+		this.code = worldEditorAbility.getFieldAsWar3ID(AbilityFields.CODE, -1);
 
 		populateData(worldEditorAbility, level);
 	}
 
-	public float getDurationForTarget(CWidget target) {
-		CUnit unit = target.visit(AbilityTargetVisitor.UNIT);
+	public float getDurationForTarget(final CWidget target) {
+		final CUnit unit = target.visit(AbilityTargetVisitor.UNIT);
 		return getDurationForTarget(unit);
 	}
 
-	public float getDurationForTarget(CUnit targetUnit) {
-		if (targetUnit != null && targetUnit.isHero()) {
+	public float getDurationForTarget(final CUnit targetUnit) {
+		if ((targetUnit != null) && targetUnit.isHero()) {
 			return getHeroDuration();
 		}
 		return getDuration();
@@ -94,15 +94,16 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		return heroDuration;
 	}
 
-	public abstract void populateData(MutableGameObject worldEditorAbility, int level);
+	public abstract void populateData(GameObject worldEditorAbility, int level);
 
 	public abstract boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target);
 
-	public boolean doChannelTick(CSimulation simulation, CUnit caster, AbilityTarget target) {
+	public boolean doChannelTick(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		return false;
 	}
 
-	public void doChannelEnd(CSimulation game, CUnit unit, AbilityTarget target, boolean interrupted) {
+	public void doChannelEnd(final CSimulation game, final CUnit unit, final AbilityTarget target,
+			final boolean interrupted) {
 	}
 
 	@Override
@@ -129,9 +130,9 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 			receiver.useOk();
 			return;
 		}
-		float cooldownRemaining = getCooldownRemaining(game, unit);
+		final float cooldownRemaining = getCooldownRemaining(game, unit);
 		if (cooldownRemaining > 0) {
-			float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCode())
+			final float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCode())
 					* WarsmashConstants.SIMULATION_STEP_TIME;
 			receiver.cooldownNotYetReady(cooldownRemaining, cooldownLengthDisplay);
 		} else if (unit.getMana() < this.manaCost) {
@@ -141,8 +142,8 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		}
 	}
 
-	protected void innerCheckCanUseSpell(CSimulation game, CUnit unit, int orderId,
-			AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUseSpell(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
@@ -172,7 +173,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	public float getCooldownRemaining(final CSimulation game, final CUnit caster) {
-		return caster.getCooldownRemainingTicks(game, getCode()) * WarsmashConstants.SIMULATION_STEP_TIME;
+		return getCooldownRemaining(game, caster, getCode());
+	}
+
+	public static float getCooldownRemaining(final CSimulation game, final CUnit caster, final War3ID code) {
+		return caster.getCooldownRemainingTicks(game, code) * WarsmashConstants.SIMULATION_STEP_TIME;
 	}
 
 	public void setManaCost(final int manaCost) {

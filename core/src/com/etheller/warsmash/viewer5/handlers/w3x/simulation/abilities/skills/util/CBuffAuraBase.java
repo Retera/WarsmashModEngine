@@ -88,22 +88,23 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	@Override
 	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 							   AbilityTargetCheckReceiver<CWidget> receiver) {
-
+		receiver.notAnActiveAbility();
 	}
 
 	@Override
 	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
 							   AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-
+		receiver.notAnActiveAbility();
 	}
 
 	@Override
 	public void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
 									   AbilityTargetCheckReceiver<Void> receiver) {
-
+		receiver.notAnActiveAbility();
 	}
 	@Override
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+		receiver.notAnActiveAbility();
 	}
 
 	@Override

@@ -10,20 +10,39 @@ public final class GameCameraManager extends CameraManager {
 			Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
 			Float.POSITIVE_INFINITY);
 	private final CameraPreset[] presets;
+	private final CameraSetup[] presetCameras;
+	private final CameraSetup[] presetCamerasInsert;
+	private final CameraSetup[] presetCamerasDelete;
 	private final CameraRates cameraRates;
 	public final CameraPanControls cameraPanControls;
 	private Rectangle cameraBounds;
 	private int currentPreset = 0;
 	private float fov;
+	private float targetZOffset = 0.0f;
 	private RenderUnit targetControllerUnit;
 	private float targetControllerXOffset;
 	private float targetControllerYOffset;
 	private boolean targetControllerInheritOrientation;
+	private CustomCameraSetup customSetup;
 
 	public GameCameraManager(final CameraPreset[] presets, final CameraRates cameraRates) {
 		this.presets = presets;
 		this.cameraRates = cameraRates;
 		this.cameraPanControls = new CameraPanControls();
+
+		this.presetCameras = new CameraSetup[presets.length];
+		this.presetCamerasInsert = new CameraSetup[presets.length];
+		this.presetCamerasDelete = new CameraSetup[presets.length];
+		for (int i = 0; i < presets.length; i++) {
+			this.presetCameras[i] = getSetup(presets[i], false, false);
+			this.presetCamerasInsert[i] = getSetup(presets[i], true, false);
+			this.presetCamerasDelete[i] = getSetup(presets[i], false, true);
+		}
+	}
+
+	private CameraSetup getSetup(final CameraPreset preset, final boolean insert, final boolean delete) {
+		return new CameraSetup(preset.getAoa(), preset.getFov(), preset.getRotation(insert, delete), 0,
+				preset.getDistance(), preset.getFarZ(), preset.getNearZ(), preset.getHeight());
 	}
 
 	public void setCameraBounds(final Rectangle cameraBounds) {
@@ -32,12 +51,24 @@ public final class GameCameraManager extends CameraManager {
 
 	@Override
 	public void updateCamera() {
-		final CameraPreset cameraPreset = this.presets[this.currentPreset];
+		CameraSetup setup;
+		if (this.customSetup != null) {
+			setup = this.customSetup;
+		}
+		else if (this.cameraPanControls.insertDown && !this.cameraPanControls.deleteDown) {
+			setup = this.presetCamerasInsert[this.currentPreset];
+		}
+		else if (!this.cameraPanControls.insertDown && this.cameraPanControls.deleteDown) {
+			setup = this.presetCamerasDelete[this.currentPreset];
+		}
+		else {
+			setup = this.presetCameras[this.currentPreset];
+		}
 		final CameraRates cameraRate = this.cameraRates;
-		updateCamera(cameraPreset, cameraRate);
+		updateCamera(setup, cameraRate);
 	}
 
-	private void updateCamera(final CameraPreset cameraPreset, final CameraRates cameraRate) {
+	private void updateCamera(final CameraSetup cameraPreset, final CameraRates cameraRate) {
 		this.quatHeap2.idt();
 		this.quatHeap.idt();
 		final float newHorizontalAngle;
@@ -45,9 +76,7 @@ public final class GameCameraManager extends CameraManager {
 			newHorizontalAngle = this.targetControllerUnit.getFacing();
 		}
 		else {
-			newHorizontalAngle = (float) Math.toRadians(
-					cameraPreset.getRotation(this.cameraPanControls.insertDown, this.cameraPanControls.deleteDown)
-							- 90);
+			newHorizontalAngle = (float) Math.toRadians(cameraPreset.getRotation() - 90);
 		}
 		this.horizontalAngle = applyAtRate(this.horizontalAngle, newHorizontalAngle,
 				(float) Math.toRadians(cameraRate.rotation * 3));
@@ -71,7 +100,7 @@ public final class GameCameraManager extends CameraManager {
 		this.camera.moveToAndFace(this.position, this.target, this.worldUp);
 	}
 
-	private static float applyAtRate(final float oldValue, final float newValue, float rate) {
+	public static float applyAtRate(final float oldValue, final float newValue, float rate) {
 		rate *= Gdx.graphics.getDeltaTime();
 		final float deltaDistance = newValue - oldValue;
 		if (Math.abs(deltaDistance) < rate) {
@@ -146,7 +175,7 @@ public final class GameCameraManager extends CameraManager {
 	}
 
 	public void updateTargetZ(final float groundHeight) {
-		this.target.z = groundHeight + this.presets[this.currentPreset].getHeight();
+		this.target.z = groundHeight + this.presets[this.currentPreset].getHeight() + this.targetZOffset;
 	}
 
 	public void scrolled(final int amount) {
@@ -157,6 +186,7 @@ public final class GameCameraManager extends CameraManager {
 		if (this.currentPreset >= this.presets.length) {
 			this.currentPreset = this.presets.length - 1;
 		}
+		this.customSetup = null;
 	}
 
 	public boolean keyDown(final int keycode) {
@@ -178,10 +208,12 @@ public final class GameCameraManager extends CameraManager {
 		}
 		else if (keycode == Input.Keys.INSERT) {
 			this.cameraPanControls.insertDown = true;
+			this.customSetup = null;
 			return true;
 		}
 		else if (keycode == Input.Keys.FORWARD_DEL) {
 			this.cameraPanControls.deleteDown = true;
+			this.customSetup = null;
 			return true;
 		}
 		return false;
@@ -206,10 +238,12 @@ public final class GameCameraManager extends CameraManager {
 		}
 		else if (keycode == Input.Keys.INSERT) {
 			this.cameraPanControls.insertDown = false;
+			this.customSetup = null;
 			return true;
 		}
 		else if (keycode == Input.Keys.FORWARD_DEL) {
 			this.cameraPanControls.deleteDown = false;
+			this.customSetup = null;
 			return true;
 		}
 		return false;
@@ -230,5 +264,16 @@ public final class GameCameraManager extends CameraManager {
 
 	public RenderUnit getTargetControllerUnit() {
 		return this.targetControllerUnit;
+	}
+
+	public void setTargetZOffset(final float targetZOffset) {
+		this.targetZOffset = targetZOffset;
+	}
+
+	public void applyCameraSetupForceDuration(final CustomCameraSetup cameraSetup, final boolean doPan,
+			final float forceDuration) {
+		this.customSetup = cameraSetup;
+		this.target.x = cameraSetup.getDestPositionX();
+		this.target.y = cameraSetup.getDestPositionY();
 	}
 }

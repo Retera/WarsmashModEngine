@@ -169,8 +169,8 @@ public class RenderUnit implements RenderWidget {
 				.reset(game, gameUI, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId,
 						multiSelect, localPlayerIndex);
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
-			if (!this.simulationUnit.isPaused() || ability instanceof CBuff || 
-					ability instanceof AbilityGenericSingleIconPassiveAbility) {
+			if (!this.simulationUnit.isPaused() || (ability instanceof CBuff)
+					|| (ability instanceof AbilityGenericSingleIconPassiveAbility)) {
 				ability.visit(commandCardPopulatingVisitor);
 			}
 		}
@@ -179,7 +179,8 @@ public class RenderUnit implements RenderWidget {
 	@Override
 	public void updateAnimations(final War3MapViewer map) {
 		final boolean wasHidden = this.instance.hidden();
-		if (this.simulationUnit.isHidden()) {
+		if (this.simulationUnit.isHidden()
+				|| !this.simulationUnit.isVisible(map.simulation, map.getLocalPlayerIndex())) {
 			if (!wasHidden) {
 				if (this.selectionCircle != null) {
 					this.selectionCircle.hide();
@@ -600,8 +601,8 @@ public class RenderUnit implements RenderWidget {
 	}
 
 	@Override
-	public boolean isSelectable() {
-		return true; // later needs locust
+	public boolean isSelectable(final CSimulation simulation, final int byPlayer) {
+		return simulationUnit.isVisible(simulation, byPlayer); // later needs locust
 	}
 
 	@Override

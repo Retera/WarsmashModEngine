@@ -176,9 +176,6 @@ public class CUpgradeData {
 						break;
 					}
 				}
-				else {
-					System.err.println("a");
-				}
 			}
 
 			final boolean appliesToAllUnits = upgradeType.getFieldAsBoolean(APPLIES_TO_ALL_UNITS, 0);

@@ -61,7 +61,7 @@ public class CDestructableData {
 			final String name = unitType.getFieldAsString(NAME, 0);
 			final float life = unitType.getFieldAsFloat(HIT_POINT_MAXIMUM, 0);
 			final EnumSet<CTargetType> targetedAs = CTargetType
-					.parseTargetTypeSet(unitType.getFieldAsString(TARGETED_AS, 0));
+					.parseTargetTypeSet(unitType.getFieldAsList(TARGETED_AS));
 			final String armorType = unitType.getFieldAsString(ARMOR_TYPE, 0);
 			final int buildTime = unitType.getFieldAsInteger(BUILD_TIME, 0);
 

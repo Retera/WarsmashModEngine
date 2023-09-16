@@ -13,11 +13,6 @@ public class ABCallbackGetTargetedLocation extends ABLocationCallback {
 	public AbilityPointTarget callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		AbilityPointTarget target = (AbilityPointTarget) localStore.get(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+castId);
 		
-		if (target == null) {
-			System.err.println("COULDN'T FIND LOCATION");
-			System.err.println("Cast ID: " + castId);
-		}
-		
 		return target;
 	}
 

@@ -4,8 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.units.GameObject;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -159,9 +160,13 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 			if (this.isTargetedSpell()) {
 				if (this.isPointTarget() && target instanceof AbilityPointTarget) {
 					localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + this.castId, target);
-				} else if (!this.isPointTarget() && target instanceof CUnit) {
-					this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId,
-							target.visit(AbilityTargetVisitor.UNIT));
+				} else if (!this.isPointTarget()) {
+					final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+					this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, targetUnit);
+					final CDestructable targetDest = target.visit(AbilityTargetVisitor.DESTRUCTABLE);
+					this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, targetDest);
+					final CItem targetItem = target.visit(AbilityTargetVisitor.ITEM);
+					this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, targetItem);
 				}
 			}
 
@@ -174,6 +179,8 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 					this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
 				} else if (!this.isPointTarget()) {
 					this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
+					this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
+					this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
 				}
 			}
 		}
@@ -205,28 +212,29 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 
 	protected void innerCheckCanTargetSpell(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target instanceof CUnit) {
-			final CUnit targetUnit = (CUnit) target;
+		if (this.config.getExtraTargetConditions() != null) {
+			final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, targetUnit);
-
-			if (this.config.getExtraTargetConditions() != null) {
-				boolean result = true;
-				for (ABCondition condition : config.getExtraTargetConditions()) {
-					result = result && condition.evaluate(game, unit, localStore, castId);
-				}
-				if (result) {
-					receiver.targetOk(targetUnit);
-				} else {
-					String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
-					if (failReason != null) {
-						receiver.targetCheckFailed(failReason);
-					} else {
-						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
-					}
-				}
-			} else {
-				receiver.targetOk(targetUnit);
+			final CDestructable targetDest = target.visit(AbilityTargetVisitor.DESTRUCTABLE);
+			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, targetDest);
+			final CItem targetItem = target.visit(AbilityTargetVisitor.ITEM);
+			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, targetItem);
+			boolean result = true;
+			for (ABCondition condition : config.getExtraTargetConditions()) {
+				result = result && condition.evaluate(game, unit, localStore, castId);
 			}
+			if (result) {
+				receiver.targetOk(targetUnit);
+			} else {
+				String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+				if (failReason != null) {
+					receiver.targetCheckFailed(failReason);
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
+				}
+			}
+		} else {
+			receiver.targetOk(target);
 		}
 	}
 

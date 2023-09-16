@@ -1,0 +1,1104 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Arai", "castId": "raisedead", "autoCastOnId": "raisedeadon", "autoCastOffId": "raisedeadoff"},
+				{"id":"AIrd", "castId": "itemraisedead"}],
+		"type": "NORMAL_AUTOTARGET",
+		"extraCastConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "matchingCorpseExistsInRangeOfUnit",
+				"originUnit": {
+					"type": "getCastingUnit"
+				},
+				"range": {
+					"type": "getUnitAcquisitionRange",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"conditions": [{
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getMatchingUnit"
+					}
+				}]
+			},
+			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
+		}],
+		"extraTargetConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "isUnitValidTarget",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				}
+			},
+			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
+		}],
+		"specialFields": {
+			"autoAquireTarget": [{
+				"type": "setAutoTargetUnit",
+				"unit": {
+					"type": "getNearestCorpseInRangeOfUnit",
+					"originUnit": {
+						"type": "getCastingUnit"
+					},
+					"range": {
+						"type": "getUnitAcquisitionRange",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"conditions": [{
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getMatchingUnit"
+						}
+					}]
+				}
+			}]
+		},
+		"onEndCasting": [{
+				"type": "createTimedLifeBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"duration": {
+					"type": "getAbilityDuration"
+				},
+				"explode": {
+					"type": "rawBoolean",
+					"value": "false"
+				}
+			},{
+				"type": "iterateActions",
+				"times": {
+					"type": "getAbilityDataAsInteger",
+					"dataField": "A"
+				},
+				"iterationActions": [{
+						"type": "createUnit",
+						"id": {
+							"type": "getAbilityDataAsID",
+							"dataField": "C"
+						},
+						"loc": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"facing": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						}
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "EFFECT"
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+			},{
+				"type": "iterateActions",
+				"times": {
+					"type": "getAbilityDataAsInteger",
+					"dataField": "B"
+				},
+				"iterationActions": [{
+						"type": "createUnit",
+						"id": {
+							"type": "getAbilityDataAsID",
+							"dataField": "D"
+						},
+						"loc": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"facing": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						}
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "EFFECT"
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+			},{
+				"type": "removeUnit",
+				"unit": {
+					"type": "getAbilityTargetedUnit"
+				}
+			}]
+	},{
+		"ids": [{"id":"AUcb", "castId": "carrionscarabs", "autoCastOnId": "carrionscarabson", "autoCastOffId": "carrionscarabsoff"}],
+		"type": "NORMAL_AUTOTARGET",
+		"extraCastConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "matchingCorpseExistsInRangeOfUnit",
+				"originUnit": {
+					"type": "getCastingUnit"
+				},
+				"range": {
+					"type": "getUnitAcquisitionRange",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"conditions": [{
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getMatchingUnit"
+					}
+				}]
+			},
+			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
+		}],
+		"extraTargetConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "isUnitValidTarget",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				}
+			},
+			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
+		}],
+		"specialFields": {
+			"autoAquireTarget": [{
+				"type": "setAutoTargetUnit",
+				"unit": {
+					"type": "getNearestCorpseInRangeOfUnit",
+					"originUnit": {
+						"type": "getCastingUnit"
+					},
+					"range": {
+						"type": "getUnitAcquisitionRange",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"conditions": [{
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getMatchingUnit"
+						}
+					}]
+				}
+			}]
+		},
+		"onAddAbility": [{
+				"type": "createUnitQueue"
+			},{
+				"type": "createDeathReplacementEffect",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "bool",
+						"bool": {
+							"type": "getAbilityDataAsBoolean",
+							"dataField": "F"
+						}
+					},
+					"thenActions": [{
+						"type": "iterateUnitsInQueue",
+						"queue": {
+							"type": "getLastCreatedUnitQueue"
+						},
+						"iterationActions": [{
+							"type": "killUnit",
+							"unit": {
+								"type": "getEnumUnit"
+							}
+						}]
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addDeathReplacementEffect",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "GENERALONDEATHACTIONS"
+				},
+				"listener": {
+					"type": "getLastCreatedDeathReplacement"
+				}
+		}],
+		"onEndCasting": [{
+				"type": "iterateActions",
+				"times": {
+					"type": "getAbilityDataAsInteger",
+					"dataField": "A"
+				},
+				"iterationActions": [{
+						"type": "if",
+						"condition": {
+							"type": "floatNe0",
+							"value": {
+								"type": "getAbilityDuration"
+							}
+						},
+						"thenActions": [{
+							"type": "createTimedBuff",
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"duration": {
+								"type": "getAbilityDuration"
+							},
+							"showTimedLifeBar": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"showIcon": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"onAddActions": [{
+								"type": "addUnitToQueue",
+								"queue": {
+									"type": "getLastCreatedUnitQueue"
+								},
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}],
+							"onRemoveActions": [{
+									"type": "killUnit",
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+								},{
+									"type": "removeUnitFromQueue",
+									"queue": {
+										"type": "getLastCreatedUnitQueue"
+									},
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+							}]
+						}],
+						"elseActions": [{
+							"type": "createPassiveBuff",
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"showIcon": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"onAddActions": [{
+								"type": "addUnitToQueue",
+								"queue": {
+									"type": "getLastCreatedUnitQueue"
+								},
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}],
+							"onRemoveActions": [{
+								"type": "removeUnitFromQueue",
+								"queue": {
+									"type": "getLastCreatedUnitQueue"
+								},
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}]
+						}]
+					},{
+						"type": "createUnit",
+						"id": {
+							"type": "getAbilityDataAsID",
+							"dataField": "C"
+						},
+						"loc": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"facing": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						}
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "TARGET"
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "EFFECT"
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+			},{
+				"type": "iterateActions",
+				"times": {
+					"type": "getAbilityDataAsInteger",
+					"dataField": "B"
+				},
+				"iterationActions": [{
+						"type": "if",
+						"condition": {
+							"type": "floatNe0",
+							"value": {
+								"type": "getAbilityDuration"
+							}
+						},
+						"thenActions": [{
+							"type": "createTimedBuff",
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"duration": {
+								"type": "getAbilityDuration"
+							},
+							"showTimedLifeBar": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"showIcon": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"onAddActions": [{
+								"type": "addUnitToQueue",
+								"queue": {
+									"type": "getLastCreatedUnitQueue"
+								},
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}],
+							"onRemoveActions": [{
+									"type": "killUnit",
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+								},{
+									"type": "removeUnitFromQueue",
+									"queue": {
+										"type": "getLastCreatedUnitQueue"
+									},
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+							}]
+						}],
+						"elseActions": [{
+							"type": "createPassiveBuff",
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"showIcon": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"onAddActions": [{
+								"type": "addUnitToQueue",
+								"queue": {
+									"type": "getLastCreatedUnitQueue"
+								},
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}],
+							"onRemoveActions": [{
+								"type": "removeUnitFromQueue",
+								"queue": {
+									"type": "getLastCreatedUnitQueue"
+								},
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}]
+						}]
+					},{
+						"type": "createUnit",
+						"id": {
+							"type": "getAbilityDataAsID",
+							"dataField": "D"
+						},
+						"loc": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"facing": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						}
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "TARGET"
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "EFFECT"
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+			},{
+				"type": "if",
+				"condition": {
+					"type": "i!=0",
+					"value": {
+						"type": "getAbilityDataAsInteger",
+						"dataField": "E"
+					}
+				},
+				"thenActions": [{
+					"type": "while",
+					"condition": {
+						"type": "i>",
+						"value1": {
+							"type": "getUnitQueueSize",
+							"queue": {
+								"type": "getLastCreatedUnitQueue"
+							}
+						},
+						"value2": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "E"
+						}
+					},
+					"loopActions": [{
+						"type": "killUnit",
+						"unit": {
+							"type": "pollUnitQueue",
+							"queue": {
+								"type": "getLastCreatedUnitQueue"
+							}
+						}
+					}]
+				}],
+				"elseActions": []
+			},{
+				"type": "removeUnit",
+				"unit": {
+					"type": "getAbilityTargetedUnit"
+				}
+			}]
+	},{
+		"ids": [{"id":"Avng", "castId": "vengeance", "autoCastOnId": "vengeanceon", "autoCastOffId": "vengeanceoff"}],
+		"type": "NORMAL_AUTOTARGET",
+		"extraCastConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "matchingCorpseExistsInRangeOfUnit",
+				"originUnit": {
+					"type": "getCastingUnit"
+				},
+				"range": {
+					"type": "getUnitAcquisitionRange",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"conditions": [{
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getMatchingUnit"
+					}
+				}]
+			},
+			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
+		}],
+		"extraTargetConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "isUnitValidTarget",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				}
+			},
+			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
+		}],
+		"specialFields": {
+			"autoAquireTarget": [{
+				"type": "setAutoTargetUnit",
+				"unit": {
+					"type": "getNearestCorpseInRangeOfUnit",
+					"originUnit": {
+						"type": "getCastingUnit"
+					},
+					"range": {
+						"type": "getUnitAcquisitionRange",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"conditions": [{
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getMatchingUnit"
+						}
+					}]
+				}
+			}]
+		},
+		"onAddAbility": [{
+				"type": "createUnitQueue",
+				"name": "summons1"
+			},{
+				"type": "createUnitQueue",
+				"name": "summons2"
+			},{
+				"type": "createDeathReplacementEffect",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "bool",
+						"bool": {
+							"type": "getAbilityDataAsBoolean",
+							"dataField": "F"
+						}
+					},
+					"thenActions": [{
+							"type": "iterateUnitsInQueue",
+							"queue": {
+								"type": "getUnitQueueByName",
+								"name": "summons1"
+							},
+							"iterationActions": [{
+								"type": "killUnit",
+								"unit": {
+									"type": "getEnumUnit"
+								}
+							}]
+						},{
+							"type": "iterateUnitsInQueue",
+							"queue": {
+								"type": "getUnitQueueByName",
+								"name": "summons2"
+							},
+							"iterationActions": [{
+								"type": "killUnit",
+								"unit": {
+									"type": "getEnumUnit"
+								}
+							}]
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addDeathReplacementEffect",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "GENERALONDEATHACTIONS"
+				},
+				"listener": {
+					"type": "getLastCreatedDeathReplacement"
+				}
+		}],
+		"onEndCasting": [{
+				"type": "iterateActions",
+				"times": {
+					"type": "getAbilityDataAsInteger",
+					"dataField": "A"
+				},
+				"iterationActions": [{
+						"type": "if",
+						"condition": {
+							"type": "floatNe0",
+							"value": {
+								"type": "getAbilityDuration"
+							}
+						},
+						"thenActions": [{
+							"type": "createTimedBuff",
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"duration": {
+								"type": "getAbilityDuration"
+							},
+							"showTimedLifeBar": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"showIcon": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"onAddActions": [{
+									"type": "setExplodesOnDeath",
+									"unit": {
+										"type": "getBuffedUnit"
+									},
+									"explodes": {
+										"type": "rawBoolean",
+										"value": "true"
+									},
+									"buffId": {
+										"type": "getFirstBuffId"
+									}
+								},{
+									"type": "addUnitToQueue",
+									"queue": {
+										"type": "getUnitQueueByName",
+										"name": "summons1"
+									},
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+							}],
+							"onRemoveActions": [{
+								"type": "killUnit",
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							},{
+								"type": "removeUnitFromQueue",
+								"queue": {
+									"type": "getUnitQueueByName",
+									"name": "summons1"
+								},
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}]
+						}],
+						"elseActions": [{
+							"type": "createPassiveBuff",
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"showIcon": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"onAddActions": [{
+									"type": "setExplodesOnDeath",
+									"unit": {
+										"type": "getBuffedUnit"
+									},
+									"explodes": {
+										"type": "rawBoolean",
+										"value": "true"
+									},
+									"buffId": {
+										"type": "getFirstBuffId"
+									}
+								},{
+									"type": "addUnitToQueue",
+									"queue": {
+										"type": "getUnitQueueByName",
+										"name": "summons1"
+									},
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+							}],
+							"onRemoveActions": [{
+								"type": "removeUnitFromQueue",
+								"queue": {
+									"type": "getUnitQueueByName",
+									"name": "summons1"
+								},
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}]
+						}]
+					},{
+						"type": "createUnit",
+						"id": {
+							"type": "getAbilityDataAsID",
+							"dataField": "C"
+						},
+						"loc": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"facing": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						}
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "TARGET"
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "EFFECT"
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+			},{
+				"type": "iterateActions",
+				"times": {
+					"type": "getAbilityDataAsInteger",
+					"dataField": "B"
+				},
+				"iterationActions": [{
+						"type": "if",
+						"condition": {
+							"type": "floatNe0",
+							"value": {
+								"type": "getAbilityDuration"
+							}
+						},
+						"thenActions": [{
+							"type": "createTimedBuff",
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"duration": {
+								"type": "getAbilityDuration"
+							},
+							"showTimedLifeBar": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"showIcon": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"onAddActions": [{
+									"type": "setExplodesOnDeath",
+									"unit": {
+										"type": "getBuffedUnit"
+									},
+									"explodes": {
+										"type": "rawBoolean",
+										"value": "true"
+									},
+									"buffId": {
+										"type": "getFirstBuffId"
+									}
+								},{
+									"type": "addUnitToQueue",
+									"queue": {
+										"type": "getUnitQueueByName",
+										"name": "summons2"
+									},
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+							}],
+							"onRemoveActions": [{
+								"type": "removeUnitFromQueue",
+								"queue": {
+									"type": "getUnitQueueByName",
+									"name": "summons2"
+								},
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}]
+						}],
+						"elseActions": [{
+							"type": "createPassiveBuff",
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"showIcon": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"onAddActions": [{
+									"type": "setExplodesOnDeath",
+									"unit": {
+										"type": "getBuffedUnit"
+									},
+									"explodes": {
+										"type": "rawBoolean",
+										"value": "true"
+									},
+									"buffId": {
+										"type": "getFirstBuffId"
+									}
+								},{
+									"type": "addUnitToQueue",
+									"queue": {
+										"type": "getUnitQueueByName",
+										"name": "summons2"
+									},
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+							}],
+							"onRemoveActions": [{
+									"type": "killUnit",
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+								},{
+									"type": "removeUnitFromQueue",
+									"queue": {
+										"type": "getUnitQueueByName",
+										"name": "summons2"
+									},
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+							}]
+						}]
+					},{
+						"type": "createUnit",
+						"id": {
+							"type": "getAbilityDataAsID",
+							"dataField": "D"
+						},
+						"loc": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"facing": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						}
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "TARGET"
+					},{
+						"type": "createTemporarySpellEffectAtLocation",
+						"location": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getLastCreatedUnit"
+							}
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "EFFECT"
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+			},{
+				"type": "if",
+				"condition": {
+					"type": "i!=0",
+					"value": {
+						"type": "getAbilityDataAsInteger",
+						"dataField": "E"
+					}
+				},
+				"thenActions": [{
+						"type": "while",
+						"condition": {
+							"type": "and",
+							"condition1": {
+								"type": "i>",
+								"value1": {
+									"type": "i+",
+									"value1": {
+										"type": "getUnitQueueSize",
+										"queue": {
+											"type": "getUnitQueueByName",
+											"name": "summons1"
+										}
+									},
+									"value2": {
+										"type": "getUnitQueueSize",
+										"queue": {
+											"type": "getUnitQueueByName",
+											"name": "summons2"
+										}
+									}
+								},
+								"value2": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "E"
+								}
+							},
+							"condition2": {
+								"type": "i!=0",
+								"value": {
+									"type": "getUnitQueueSize",
+									"queue": {
+										"type": "getUnitQueueByName",
+										"name": "summons2"
+									}
+								}
+							}
+						},
+						"loopActions": [{
+							"type": "killUnit",
+							"unit": {
+								"type": "pollUnitQueue",
+								"queue": {
+									"type": "getUnitQueueByName",
+									"name": "summons2"
+								}
+							}
+						}]
+					},{
+						"type": "while",
+						"condition": {
+							"type": "i>",
+							"value1": {
+								"type": "getUnitQueueSize",
+								"queue": {
+									"type": "getUnitQueueByName",
+									"name": "summons1"
+								}
+							},
+							"value2": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "E"
+							}
+						},
+						"loopActions": [{
+							"type": "killUnit",
+							"unit": {
+								"type": "pollUnitQueue",
+								"queue": {
+									"type": "getUnitQueueByName",
+									"name": "summons1"
+								}
+							}
+						}]
+				}],
+				"elseActions": []
+			},{
+				"type": "removeUnit",
+				"unit": {
+					"type": "getAbilityTargetedUnit"
+				}
+		}]
+	}]
+}

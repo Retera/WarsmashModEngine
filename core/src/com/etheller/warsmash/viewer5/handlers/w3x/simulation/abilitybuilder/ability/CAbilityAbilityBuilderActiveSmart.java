@@ -1,9 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -153,6 +156,14 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	public int getBaseOrderId() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	public PrimaryTag getCastingPrimaryTag() {
+		return null;
+	}
+
+	public EnumSet<SecondaryTag> getCastingSecondaryTags() {
+		return null;
 	}
 
 	@Override

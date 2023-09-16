@@ -32,6 +32,8 @@ public class ABLocalStoreKeys {
 	
 	// Unit Names
 	public static final String ENUMUNIT = "_enumUnit#";
+	public static final String MATCHINGUNIT = "_matchingUnit#";
+	public static final String LASTCREATEDUNIT = "_lastCreatedUnit";
 	public static final String LASTADDEDUNIT = "_lastAddedUnit";
 	public static final String LASTREMOVEDDUNIT = "_lastRemovedUnit";
 	
@@ -41,7 +43,9 @@ public class ABLocalStoreKeys {
 	public static final String LASTADDEDABILITY = "_lastAddedAbility";
 	public static final String LASTADDEDBUFF = "_lastAddedBuff";
 	public static final String CURRENTLEVEL = "_currentLevel";
+	
 	public static final String LASTCREATEDUNITGROUP = "_lastCreatedUnitGroup";
+	public static final String LASTCREATEDUNITQUEUE = "_lastCreatedUnitQueue";
 
 	public static final String LASTCREATEDDESTBUFF = "_lastCreatedDestBuff";
 	
@@ -50,6 +54,7 @@ public class ABLocalStoreKeys {
 	public static final String ATTACKEDUNIT = "_attackedUnit#";
 	public static final String ABILITYTARGETEDUNIT = "_abilityTargetedUnit#";
 	public static final String ABILITYTARGETEDDESTRUCTABLE = "_abilityTargetedDestructable#";
+	public static final String ABILITYTARGETEDITEM = "_abilityTargetedItem#";
 	public static final String ABILITYTARGETEDLOCATION = "_abilityTargetedLocation#";
 	
 	//Generic Attacks

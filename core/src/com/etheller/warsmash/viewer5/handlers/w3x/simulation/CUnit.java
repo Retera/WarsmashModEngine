@@ -1552,7 +1552,7 @@ public class CUnit extends CWidget {
 							}
 						}
 					}
-					if (this.life < this.maximumLife) {
+					if (this.life < this.maximumLife || this.currentLifeRegenPerTick < 0) {
 						final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
 						boolean active = false;
 						switch (lifeRegenType) {
@@ -1588,7 +1588,7 @@ public class CUnit extends CWidget {
 							this.stateNotifier.lifeChanged();
 						}
 					}
-					if (this.mana < this.maximumMana) {
+					if (this.mana < this.maximumMana || this.currentManaRegenPerTick < 0) {
 						float manaPlusRegen = this.mana + this.currentManaRegenPerTick;
 						if (manaPlusRegen > this.maximumMana) {
 							manaPlusRegen = this.maximumMana;
@@ -1625,7 +1625,7 @@ public class CUnit extends CWidget {
 			} else if (!this.constructing) {
 				// Paused units only allow passives to function. Buffs don't tick (except a few)
 				// Base and bonus life/mana regen function, but regen from Str/Int doesn't
-				if (this.life < this.maximumLife) {
+				if (this.life < this.maximumLife || (this.currentLifeRegenPerTick - this.lifeRegenStrengthBonus) < 0) {
 					final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
 					boolean active = false;
 					switch (lifeRegenType) {
@@ -1655,7 +1655,8 @@ public class CUnit extends CWidget {
 						this.stateNotifier.lifeChanged();
 					}
 				}
-				if (this.mana < this.maximumMana) {
+				if (this.mana < this.maximumMana || (this.currentManaRegenPerTick
+							- this.manaRegenIntelligenceBonus) < 0) {
 					float manaPlusRegen = this.mana + this.currentManaRegenPerTick
 							- this.manaRegenIntelligenceBonus * WarsmashConstants.SIMULATION_STEP_TIME;
 					if (manaPlusRegen > this.maximumMana) {

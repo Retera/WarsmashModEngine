@@ -1,16 +1,24 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
@@ -41,6 +49,8 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 	private float duration = 0;
 	private float cooldown = 0;
 	private int manaCost = 0;
+	private PrimaryTag castingPrimaryTag;
+	private EnumSet<SecondaryTag> castingSecondaryTags;
 	
 	private int castId = 0;
 
@@ -69,6 +79,20 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 			} catch (Exception e) {
 
 			}
+		}
+
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		final String animNames = editorData.getField(AbilityFields.ANIM_NAMES);
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		this.castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, this.castingSecondaryTags, animNames);
+		if (primaryTags.isEmpty()) {
+			this.castingPrimaryTag = null;
+		} else {
+			this.castingPrimaryTag = primaryTags.iterator().next();
+		}
+		if (this.castingSecondaryTags.isEmpty()) {
+			this.castingSecondaryTags = SequenceUtils.SPELL;
 		}
 	}
 
@@ -100,6 +124,14 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 	@Override
 	public int getUIManaCost() {
 		return this.active ? 0 :this.manaCost;
+	}
+
+	public PrimaryTag getCastingPrimaryTag() {
+		return this.castingPrimaryTag;
+	}
+
+	public EnumSet<SecondaryTag> getCastingSecondaryTags() {
+		return this.castingSecondaryTags;
 	}
 
 	@Override

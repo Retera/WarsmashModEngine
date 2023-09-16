@@ -1,17 +1,16 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
@@ -19,15 +18,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 	private final AbilityBuilderConfiguration parser;
 	private Map<String, Object> localStore;
 	private AbilityBuilderAbility ability;
-	private AbilityTargetStillAliveAndTargetableVisitor stillAliveVisitor;
-	private ABAbilityTargetStillAliveAndTargetableVisitor preCastTargetableVisitor;
+	private ABAbilityTargetStillTargetableVisitor preCastTargetableVisitor;
 	
 	private int castStartTick = 0;
 	private boolean doneEffect = false;
@@ -41,8 +38,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 		this.parser = parser;
 		this.localStore = localStore;
 		this.ability = ability;
-		this.stillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
-		this.preCastTargetableVisitor = new ABAbilityTargetStillAliveAndTargetableVisitor();
+		this.preCastTargetableVisitor = new ABAbilityTargetStillTargetableVisitor();
 		
 	}
 
@@ -72,11 +68,12 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation game, boolean withinFacingWindow) {
-		this.unit.getUnitAnimationListener().playAnimation(false, null, SequenceUtils.SPELL, 1.0f, true);
+		this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+				this.ability.getCastingSecondaryTags(), 1.0f, true);
 		if (this.castStartTick == 0) {
 			this.castStartTick = game.getGameTurnTick();
 			
-			if (!this.target.visit(this.preCastTargetableVisitor.reset(game, this.unit, ability))) {
+			if (!this.target.visit(this.preCastTargetableVisitor.reset(game, this.unit, ability, false))) {
 				return this.unit.pollNextOrderBehavior(game);
 			}
 			
@@ -123,7 +120,11 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 			}
 		}
 		if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
+			System.out.println("Removing targets");
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
 			return this.unit.pollNextOrderBehavior(game);
 		}
 		return this;
@@ -164,6 +165,9 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 			}
 		}
 		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
 	}
 
 	@Override
@@ -180,7 +184,9 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 
 	@Override
 	public void endMove(CSimulation game, boolean interrupted) {
-		checkEndChannel(game, interrupted);
+		if (interrupted) {
+			checkEndChannel(game, interrupted);
+		}
 	}
 
 	@Override
@@ -190,9 +196,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 
 	@Override
 	protected boolean checkTargetStillValid(CSimulation simulation) {
-		List<CAbilityTypeAbilityBuilderLevelData> levelData = this.ability.getLevelData();
-		EnumSet<CTargetType> targetsAllowed = levelData.get((this.ability.getLevel()) - 1).getTargetsAllowed();
-		return this.target.visit(this.stillAliveVisitor.reset(simulation, this.unit, targetsAllowed));
+		return this.target.visit(this.preCastTargetableVisitor.reset(simulation, this.unit, this.ability, this.channeling));
 	}
 
 	@Override

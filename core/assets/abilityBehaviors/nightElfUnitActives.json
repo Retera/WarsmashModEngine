@@ -373,7 +373,7 @@
 				}
 		}]
 	},{
-		"ids": [{"id":"Arej", "castId": "rejuvination"},{"id":"AIrg", "castId": "rejuvination"}],
+		"ids": [{"id":"Arej", "castId": "rejuvination"},{"id":"AIrg", "castId": "itemregeneration"}],
 		"type": "NORMAL_FLEXTARGET_SIMPLE",
 		"specialFields": {
 			"targetedSpell": [{

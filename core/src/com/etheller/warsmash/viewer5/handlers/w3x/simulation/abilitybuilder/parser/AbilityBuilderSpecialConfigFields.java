@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.par
 
 import java.util.List;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 
 public class AbilityBuilderSpecialConfigFields {
@@ -10,6 +11,8 @@ public class AbilityBuilderSpecialConfigFields {
 	
 	private List<ABCondition> pointTargeted;
 	private List<ABCondition> targetedSpell;
+
+	private List<ABAction> autoAquireTarget;
 
 	public Integer getBufferManaRequired() {
 		return bufferManaRequired;
@@ -41,5 +44,13 @@ public class AbilityBuilderSpecialConfigFields {
 
 	public void setTargetedSpell(List<ABCondition> targetedSpell) {
 		this.targetedSpell = targetedSpell;
+	}
+
+	public List<ABAction> getAutoAquireTarget() {
+		return autoAquireTarget;
+	}
+
+	public void setAutoAquireTarget(List<ABAction> autoAquireTarget) {
+		this.autoAquireTarget = autoAquireTarget;
 	}
 }

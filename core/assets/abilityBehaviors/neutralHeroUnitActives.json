@@ -11,7 +11,7 @@
 							"value": "maxAbsorb"
 						},
 						"valueToStore": {
-							"type": "divideFloat",
+							"type": "f/",
 							"value1": {
 								"type": "getUnitCurrentMana",
 								"unit": {
@@ -26,9 +26,9 @@
 					},{
 						"type": "if",
 						"condition": {
-							"type": "floatGt",
+							"type": "f>",
 							"value1": {
-								"type": "*",
+								"type": "f*",
 								"value1": {
 									"type": "getTotalDamageDealt"
 								},
@@ -72,9 +72,9 @@
 									"type": "getListenerUnit"
 								},
 								"amount": {
-									"type": "*",
+									"type": "f*",
 									"value1": {
-										"type": "*",
+										"type": "f*",
 										"value1": {
 											"type": "getTotalDamageDealt"
 										},
@@ -91,7 +91,7 @@
 							},{
 								"type": "subtractTotalDamageDealt",
 								"amount": {
-									"type": "*",
+									"type": "f*",
 									"value1": {
 										"type": "getTotalDamageDealt"
 									},

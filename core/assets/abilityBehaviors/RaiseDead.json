@@ -273,7 +273,7 @@
 				"iterationActions": [{
 						"type": "if",
 						"condition": {
-							"type": "floatNe0",
+							"type": "f!=0",
 							"value": {
 								"type": "getAbilityDuration"
 							}
@@ -406,7 +406,7 @@
 				"iterationActions": [{
 						"type": "if",
 						"condition": {
-							"type": "floatNe0",
+							"type": "f!=0",
 							"value": {
 								"type": "getAbilityDuration"
 							}
@@ -695,7 +695,7 @@
 				"iterationActions": [{
 						"type": "if",
 						"condition": {
-							"type": "floatNe0",
+							"type": "f!=0",
 							"value": {
 								"type": "getAbilityDuration"
 							}
@@ -856,7 +856,7 @@
 				"iterationActions": [{
 						"type": "if",
 						"condition": {
-							"type": "floatNe0",
+							"type": "f!=0",
 							"value": {
 								"type": "getAbilityDuration"
 							}

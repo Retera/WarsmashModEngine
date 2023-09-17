@@ -240,7 +240,7 @@
 							}
 						},
 						"condition2": {
-							"type": "floatLt",
+							"type": "f<",
 							"value1": {
 								"type": "randomBoundedFloat",
 								"bound": {
@@ -257,7 +257,7 @@
 					"thenActions": [{
 							"type": "if",
 							"condition": {
-								"type": "floatNe0",
+								"type": "f!=0",
 								"value": {
 									"type": "getAbilityDataAsFloat",
 									"dataField": "B"
@@ -374,7 +374,7 @@
 			},{
 				"type": "createEvasionListener",
 				"conditions": [{
-					"type": "floatLt",
+					"type": "f<",
 					"value1": {
 						"type": "randomFloat"
 					},
@@ -439,7 +439,7 @@
 		"onAddAbility": [{
 				"type": "createEvasionListener",
 				"conditions": [{
-					"type": "floatLt",
+					"type": "f<",
 					"value1": {
 						"type": "randomFloat"
 					},

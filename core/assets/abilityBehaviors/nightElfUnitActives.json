@@ -395,7 +395,7 @@
 			"condition2": {
 				"type": "or",
 				"condition1": {
-					"type": "floatNe0",
+					"type": "f!=0",
 					"value": {
 						"type": "getAbilityArea"
 					}
@@ -409,7 +409,7 @@
 							"condition": {
 								"type": "or",
 								"condition1": {
-									"type": "floatEq0",
+									"type": "f=0",
 									"value": {
 										"type": "getAbilityDataAsFloat",
 										"dataField": "B"
@@ -449,7 +449,7 @@
 							"condition": {
 								"type": "or",
 								"condition1": {
-									"type": "floatEq0",
+									"type": "f=0",
 									"value": {
 										"type": "getAbilityDataAsFloat",
 										"dataField": "A"
@@ -469,7 +469,7 @@
 									"condition2": {
 										"type": "setCantUseReasonOnFailure",
 										"condition": {
-											"type": "integerIsOdd",
+											"type": "iOdd",
 											"value": {
 												"type": "getAbilityDataAsInteger",
 												"dataField": "C"
@@ -493,7 +493,7 @@
 					"condition": {
 						"type": "or",
 						"condition1": {
-							"type": "floatEq0",
+							"type": "f=0",
 							"value": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "B"
@@ -533,7 +533,7 @@
 					"condition": {
 						"type": "or",
 						"condition1": {
-							"type": "floatEq0",
+							"type": "f=0",
 							"value": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "A"
@@ -553,7 +553,7 @@
 							"condition2": {
 								"type": "setCantUseReasonOnFailure",
 								"condition": {
-									"type": "integerIsOdd",
+									"type": "iOdd",
 									"value": {
 										"type": "getAbilityDataAsInteger",
 										"dataField": "C"
@@ -589,7 +589,7 @@
 								"value": "hpPerSec"
 							},
 							"valueToStore": {
-								"type": "divideFloat",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityDataAsFloat",
 									"dataField": "A"
@@ -608,7 +608,7 @@
 								"value": "mpPerSec"
 							},
 							"valueToStore": {
-								"type": "divideFloat",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityDataAsFloat",
 									"dataField": "B"
@@ -742,7 +742,7 @@
 			"elseActions": [{
 				"type": "if",
 				"condition": {
-					"type": "floatGt",
+					"type": "f>",
 					"value1": {
 						"type": "getAbilityArea"
 					},
@@ -764,7 +764,7 @@
 										"condition": {
 											"type": "or",
 											"condition1": {
-												"type": "floatEq0",
+												"type": "f=0",
 												"value": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "B"
@@ -804,7 +804,7 @@
 										"condition": {
 											"type": "or",
 											"condition1": {
-												"type": "floatEq0",
+												"type": "f=0",
 												"value": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "A"
@@ -824,7 +824,7 @@
 												"condition2": {
 													"type": "setCantUseReasonOnFailure",
 													"condition": {
-														"type": "integerIsOdd",
+														"type": "iOdd",
 														"value": {
 															"type": "getAbilityDataAsInteger",
 															"dataField": "C"
@@ -855,7 +855,7 @@
 												"value": "hpPerSec"
 											},
 											"valueToStore": {
-												"type": "divideFloat",
+												"type": "f/",
 												"value1": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "A"
@@ -874,7 +874,7 @@
 												"value": "mpPerSec"
 											},
 											"valueToStore": {
-												"type": "divideFloat",
+												"type": "f/",
 												"value1": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "B"
@@ -1045,9 +1045,9 @@
 					},{
 						"type": "createTimer",
 						"timeout": {
-							"type": "+",
+							"type": "f+",
 							"value1": {
-								"type": "max",
+								"type": "fMax",
 								"value1": {
 									"type": "getAbilityDuration"
 								},
@@ -1082,7 +1082,7 @@
 									"value": "hpPerSec"
 								},
 								"valueToStore": {
-									"type": "divideFloat",
+									"type": "f/",
 									"value1": {
 										"type": "getAbilityDataAsFloat",
 										"dataField": "A"
@@ -1101,7 +1101,7 @@
 									"value": "mpPerSec"
 								},
 								"valueToStore": {
-									"type": "divideFloat",
+									"type": "f/",
 									"value1": {
 										"type": "getAbilityDataAsFloat",
 										"dataField": "B"

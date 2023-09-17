@@ -192,7 +192,7 @@
 				},{
 					"type": "if",
 					"condition": {
-						"type": "floatEq",
+						"type": "f=",
 						"value1": {
 							"type": "getAbilityDuration",
 							"target": {
@@ -222,7 +222,7 @@
 							"value": "slowDur"
 						},
 						"valueToStore": {
-							"type": "minFloat",
+							"type": "fMin",
 							"value1": {
 								"type": "getAbilityDuration",
 								"target": {
@@ -230,9 +230,9 @@
 								}
 							},
 							"value2": {
-								"type": "max",
+								"type": "fMax",
 								"value1": {
-									"type": "-",
+									"type": "f-",
 									"value1": {
 										"type": "getAbilityDuration",
 										"target": {
@@ -301,7 +301,7 @@
 										"value": "atkSpdAmt"
 									},
 									"valueToStore": {
-										"type": "divideFloat",
+										"type": "f/",
 										"value1": {
 											"type": "getStoredFloatByKey",
 											"key": {
@@ -337,7 +337,7 @@
 										"value": "moveAmt"
 									},
 									"valueToStore": {
-										"type": "divideFloat",
+										"type": "f/",
 										"value1": {
 											"type": "getStoredFloatByKey",
 											"key": {

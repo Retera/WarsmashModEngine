@@ -165,21 +165,21 @@ public abstract class AbilityBuilderGsonBuilder {
 	}
 
 	private static void registerGenericFloatCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
-		callbackTypeFactory.registerSubtype(ABCallbackAddFloat.class, "addFloat")
-				.registerSubtype(ABCallbackSubtractFloat.class, "subtractFloat")
-				.registerSubtype(ABCallbackMultiplyFloat.class, "multiplyFloat")
-				.registerSubtype(ABCallbackDivideFloat.class, "divideFloat")
-				.registerSubtype(ABCallbackMinFloat.class, "minFloat")
-				.registerSubtype(ABCallbackMaxFloat.class, "maxFloat")
-				.registerSubtype(ABCallbackCeilFloat.class, "ceilFloat")
-				.registerSubtype(ABCallbackFloorFloat.class, "floorFloat");
+		callbackTypeFactory.registerSubtype(ABCallbackAddFloat.class, "f+")
+				.registerSubtype(ABCallbackSubtractFloat.class, "f-")
+				.registerSubtype(ABCallbackMultiplyFloat.class, "f*")
+				.registerSubtype(ABCallbackDivideFloat.class, "f/")
+				.registerSubtype(ABCallbackMinFloat.class, "fMin")
+				.registerSubtype(ABCallbackMaxFloat.class, "fMax")
+				.registerSubtype(ABCallbackCeilFloat.class, "ceil")
+				.registerSubtype(ABCallbackFloorFloat.class, "floor");
 	}
 
 	private static void registerSpecialFloatCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
-		callbackTypeFactory.registerSubtype(ABCallbackAddFloat.class, "+")
-				.registerSubtype(ABCallbackSubtractFloat.class, "-").registerSubtype(ABCallbackMultiplyFloat.class, "*")
-				.registerSubtype(ABCallbackDivideFloat.class, "/")
-				.registerSubtype(ABCallbackMinFloat.class, "min").registerSubtype(ABCallbackMaxFloat.class, "max")
+		callbackTypeFactory.registerSubtype(ABCallbackAddFloat.class, "f+")
+				.registerSubtype(ABCallbackSubtractFloat.class, "f-").registerSubtype(ABCallbackMultiplyFloat.class, "f*")
+				.registerSubtype(ABCallbackDivideFloat.class, "f/")
+				.registerSubtype(ABCallbackMinFloat.class, "fMin").registerSubtype(ABCallbackMaxFloat.class, "fMax")
 				.registerSubtype(ABCallbackCeilFloat.class, "ceil")
 				.registerSubtype(ABCallbackFloorFloat.class, "floor");
 	}
@@ -211,6 +211,11 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetProjectileDestructableTargets.class, "getProjectileDestructableTargets")
 
 				.registerSubtype(ABCallbackAddInteger.class, "i+")
+				.registerSubtype(ABCallbackSubtractInteger.class, "i-")
+				.registerSubtype(ABCallbackMultiplyInteger.class, "i*")
+				.registerSubtype(ABCallbackDivideInteger.class, "i/")
+				.registerSubtype(ABCallbackMinInteger.class, "iMin")
+				.registerSubtype(ABCallbackMaxInteger.class, "iMax")
 
 				.registerSubtype(ABCallbackGetUnitGroupSize.class, "getUnitGroupSize")
 				.registerSubtype(ABCallbackGetUnitQueueSize.class, "getUnitQueueSize");
@@ -304,19 +309,25 @@ public abstract class AbilityBuilderGsonBuilder {
 	private static void registerConditions(RuntimeTypeAdapterFactory<ABCondition> conditionTypeFactory) {
 		conditionTypeFactory.registerSubtype(ABConditionAnd.class, "and").registerSubtype(ABConditionOr.class, "or")
 				.registerSubtype(ABConditionNot.class, "not").registerSubtype(ABConditionBool.class, "bool")
-				.registerSubtype(ABConditionFloatEqual.class, "floatEq")
-				.registerSubtype(ABConditionFloatEq0.class, "floatEq0")
-				.registerSubtype(ABConditionFloatGte.class, "floatGte")
-				.registerSubtype(ABConditionFloatGt.class, "floatGt")
-				.registerSubtype(ABConditionFloatLte.class, "floatLte")
-				.registerSubtype(ABConditionFloatLt.class, "floatLt")
-				.registerSubtype(ABConditionFloatNe.class, "floatNe")
-				.registerSubtype(ABConditionFloatNe0.class, "floatNe0")
+				.registerSubtype(ABConditionFloatEqual.class, "f=")
+				.registerSubtype(ABConditionFloatEq0.class, "f=0")
+				.registerSubtype(ABConditionFloatGte.class, "f>=")
+				.registerSubtype(ABConditionFloatGt.class, "f>")
+				.registerSubtype(ABConditionFloatLte.class, "f<=")
+				.registerSubtype(ABConditionFloatLt.class, "f<")
+				.registerSubtype(ABConditionFloatNe.class, "f!=")
+				.registerSubtype(ABConditionFloatNe0.class, "f!=0")
 				
-				.registerSubtype(ABConditionIntegerEqual.class, "integerEqual")
+				.registerSubtype(ABConditionIntegerEq.class, "i=")
+				.registerSubtype(ABConditionIntegerNe.class, "i!=")
 				.registerSubtype(ABConditionIntegerGt.class, "i>")
+				.registerSubtype(ABConditionIntegerGte.class, "i>=")
+				.registerSubtype(ABConditionIntegerLt.class, "i<")
+				.registerSubtype(ABConditionIntegerLte.class, "i<=")
 				.registerSubtype(ABConditionIntegerNe0.class, "i!=0")
-				.registerSubtype(ABConditionIntegerIsOdd.class, "integerIsOdd")
+				.registerSubtype(ABConditionIntegerEq0.class, "i=0")
+				.registerSubtype(ABConditionIntegerIsOdd.class, "iOdd")
+				.registerSubtype(ABConditionIntegerIsEven.class, "iEven")
 
 				.registerSubtype(ABConditionSetCantUseReasonOnFailure.class, "setCantUseReasonOnFailure")
 				

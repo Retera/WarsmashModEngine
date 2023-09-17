@@ -299,13 +299,13 @@
 						"value": "dpt"
 					},
 					"valueToStore": {
-						"type": "minFloat",
+						"type": "fMin",
 						"value1": {
 							"type": "getAbilityDataAsFloat",
 							"dataField": "A"
 						},
 						"value2": {
-							"type": "/",
+							"type": "f/",
 							"value1": {
 								"type": "getStoredFloatByKey",
 								"key": {
@@ -344,7 +344,7 @@
 						"value": "remainDmg"
 					},
 					"valueToStore": {
-						"type": "subtractFloat",
+						"type": "f-",
 						"value1": {
 							"type": "getStoredFloatByKey",
 							"key": {
@@ -353,7 +353,7 @@
 							}
 						},
 						"value2": {
-							"type": "min",
+							"type": "fMin",
 							"value1": {
 								"type": "getUnitCurrentHp",
 								"unit": {
@@ -372,7 +372,7 @@
 				},{
 					"type": "if",
 					"condition": {
-						"type": "floatGte",
+						"type": "f>",
 						"value1": {
 							"type": "getStoredFloatByKey",
 							"key": {
@@ -464,7 +464,7 @@
 					"value": "hgtStp"
 				},
 				"valueToStore": {
-					"type": "divideFloat",
+					"type": "f/",
 					"value1": {
 						"type": "pi"
 					},
@@ -490,7 +490,7 @@
 						}
 					},
 					"dist": {
-						"type": "/",
+						"type": "f/",
 						"value1": {
 							"type": "getAbilityArea"
 						},
@@ -521,9 +521,9 @@
 						}
 					},
 					"dist": {
-						"type": "+",
+						"type": "f+",
 						"value1": {
-							"type": "/",
+							"type": "f/",
 							"value1": {
 								"type": "getAbilityArea"
 							},
@@ -554,7 +554,7 @@
 					"type": "getAlias"
 				},
 				"radius": {
-					"type": "/",
+					"type": "f/",
 					"value1": {
 						"type": "getAbilityArea"
 					},
@@ -564,7 +564,7 @@
 					}
 				},
 				"speed": {
-					"type": "/",
+					"type": "f/",
 					"value1": {
 						"type": "getAbilityArea"
 					},
@@ -574,7 +574,7 @@
 					}
 				},
 				"projectileStepInterval": {
-					"type": "/",
+					"type": "f/",
 					"value1": {
 						"type": "getAbilityDataAsFloat",
 						"dataField": "B"
@@ -582,13 +582,13 @@
 					"value2": {
 						"type": "ceil",
 						"value": {
-							"type": "/",
+							"type": "f/",
 							"value1": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "A"
 							},
 							"value2": {
-								"type": "/",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityArea"
 								},
@@ -686,7 +686,7 @@
 								}]
 							},
 							"valueToStore": {
-								"type": "addFloat",
+								"type": "f+",
 								"value1": {
 									"type": "getStoredFloatByKey",
 									"key": {
@@ -716,7 +716,7 @@
 								"type": "getBuffedUnit"
 							},
 							"height": {
-								"type": "*",
+								"type": "f*",
 								"value1": {
 									"type": "rawFloat",
 									"value": 225

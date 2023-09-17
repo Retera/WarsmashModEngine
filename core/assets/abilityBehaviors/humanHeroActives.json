@@ -81,7 +81,7 @@
 									"valueToStore": {
 										"type": "randomBoundedFloat",
 										"bound": {
-											"type": "*",
+											"type": "f*",
 											"value1": {
 												"type": "pi"
 											},
@@ -98,7 +98,7 @@
 										"value": "randDist"
 									},
 									"valueToStore": {
-										"type": "multiplyFloat",
+										"type": "f*",
 										"value1": {
 											"type": "randomFloat"
 										},
@@ -109,7 +109,7 @@
 							},{
 								"type": "createTemporarySpellEffectAtPoint",
 								"x": {
-									"type": "+",
+									"type": "f+",
 									"value1": {
 										"type": "getLocationX",
 										"location": {
@@ -117,7 +117,7 @@
 										}
 									},
 									"value2": {
-										"type": "*",
+										"type": "f*",
 										"value1": {
 											"type": "cos",
 											"angle": {
@@ -138,7 +138,7 @@
 									}
 								},
 								"y": {
-									"type": "+",
+									"type": "f+",
 									"value1": {
 										"type": "getLocationY",
 										"location": {
@@ -146,7 +146,7 @@
 										}
 									},
 									"value2": {
-										"type": "*",
+										"type": "f*",
 										"value1": {
 											"type": "sin",
 											"angle": {
@@ -202,13 +202,13 @@
 							"value": "damageDealt"
 						},
 						"valueToStore": {
-							"type": "minFloat",
+							"type": "fMin",
 							"value1": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "A"
 							},
 							"value2": {
-								"type": "/",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityDataAsFloat",
 									"dataField": "F"
@@ -234,7 +234,7 @@
 							"value": "buildingDamageDealt"
 						},
 						"valueToStore": {
-							"type": "multiplyFloat",
+							"type": "f*",
 							"value1": {
 								"type": "getStoredFloatByKey",
 								"key": {
@@ -367,7 +367,7 @@
 					"value": "true"
 				},
 				"delay": {
-					"type": "+",
+					"type": "f+",
 					"value1": {
 						"type": "getAbilityDataAsFloat",
 						"dataField": "D"
@@ -383,13 +383,13 @@
 							"value": "damageDealt"
 						},
 						"valueToStore": {
-							"type": "minFloat",
+							"type": "fMin",
 							"value1": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "C"
 							},
 							"value2": {
-								"type": "/",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityDataAsFloat",
 									"dataField": "F"
@@ -415,7 +415,7 @@
 							"value": "buildingDamageDealt"
 						},
 						"valueToStore": {
-							"type": "multiplyFloat",
+							"type": "f*",
 							"value1": {
 								"type": "getStoredFloatByKey",
 								"key": {

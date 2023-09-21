@@ -26,10 +26,10 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	private float castRange;
 	private CBehaviorHumanRepair behaviorRepair;
 
-	public CAbilityHumanRepair(final int handleId, final War3ID alias, final EnumSet<CTargetType> targetsAllowed,
+	public CAbilityHumanRepair(final int handleId, final War3ID code, final War3ID alias, final EnumSet<CTargetType> targetsAllowed,
 			final float navalRangeBonus, final float repairCostRatio, final float repairTimeRatio,
 			final float castRange) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.targetsAllowed = targetsAllowed;
 		this.navalRangeBonus = navalRangeBonus;
 		this.repairCostRatio = repairCostRatio;

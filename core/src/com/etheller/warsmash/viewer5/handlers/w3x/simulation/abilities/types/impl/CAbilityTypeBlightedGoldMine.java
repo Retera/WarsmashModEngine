@@ -19,7 +19,7 @@ public class CAbilityTypeBlightedGoldMine extends CAbilityType<CAbilityTypeBligh
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeBlightedGoldMineLevelData levelData = getLevelData(0);
-		return new CAbilityBlightedGoldMine(handleId, getAlias(), levelData.getGoldPerInterval(),
+		return new CAbilityBlightedGoldMine(handleId, getCode(), getAlias(), levelData.getGoldPerInterval(),
 				levelData.getIntervalDuration(), levelData.getMaxNumberOfMiners(), levelData.getRadiusOfMiningRing());
 	}
 

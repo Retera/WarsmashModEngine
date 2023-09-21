@@ -20,8 +20,8 @@ public abstract class CAbilityAuraBase extends CAbilityPassiveSpellBase {
 	private SimulationRenderComponent fx;
 	private int nextAreaCheck = 0;
 
-	public CAbilityAuraBase(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityAuraBase(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

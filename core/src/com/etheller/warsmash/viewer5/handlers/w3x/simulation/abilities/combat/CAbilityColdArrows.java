@@ -22,8 +22,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbility
 public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	private boolean autoCastActive;
 
-	public CAbilityColdArrows(final War3ID rawcode, final int handleId) {
-		super(handleId, rawcode);
+	public CAbilityColdArrows(final War3ID rawcode, final War3ID code, final int handleId) {
+		super(handleId, code, rawcode);
 	}
 
 	@Override

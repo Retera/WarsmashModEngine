@@ -18,10 +18,10 @@ public class CAbilityAbilityBuilderTickingPassive extends AbilityGenericSingleIc
 	private AbilityBuilderConfiguration config;
 	private Map<String, Object> localStore;
 
-	public CAbilityAbilityBuilderTickingPassive(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderTickingPassive(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
 			Map<String, Object> localStore) {
-		super(alias, handleId);
+		super(code, alias, handleId);
 		this.levelData = levelData;
 		this.config = config;
 		this.localStore = localStore;

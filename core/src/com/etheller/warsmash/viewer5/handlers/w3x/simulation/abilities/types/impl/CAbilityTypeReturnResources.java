@@ -28,7 +28,7 @@ public class CAbilityTypeReturnResources extends CAbilityType<CAbilityTypeReturn
 		if (levelData.isAcceptsLumber()) {
 			acceptedResourceTypes.add(ResourceType.LUMBER);
 		}
-		return new CAbilityReturnResources(handleId, getAlias(), acceptedResourceTypes);
+		return new CAbilityReturnResources(handleId, getCode(), getAlias(), acceptedResourceTypes);
 	}
 
 	@Override

@@ -18,10 +18,10 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	private AbilityBuilderConfiguration config;
 	private Map<String, Object> localStore;
 
-	public CAbilityAbilityBuilderPassive(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderPassive(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
 			Map<String, Object> localStore) {
-		super(alias, handleId);
+		super(code, alias, handleId);
 		this.levelData = levelData;
 		this.config = config;
 		this.localStore = localStore;

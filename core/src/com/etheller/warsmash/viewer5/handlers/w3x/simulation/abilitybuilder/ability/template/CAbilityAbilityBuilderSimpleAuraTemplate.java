@@ -47,10 +47,10 @@ public class CAbilityAbilityBuilderSimpleAuraTemplate extends AbilityGenericSing
 	private final int ENTER_GROUP_TICKS = (int) (0.4 / WarsmashConstants.SIMULATION_STEP_TIME);
 	private final int RESET_GROUP_TICKS = LEAVE_GROUP_TICKS * 2;
 	
-	public CAbilityAbilityBuilderSimpleAuraTemplate(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderSimpleAuraTemplate(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, Map<String, Object> localStore,
 			Map<Integer,List<War3ID>> abilityIdsToAddPerLevel, List<War3ID> levellingAbilityIdsToAdd) {
-		super(alias, handleId);
+		super(code, alias, handleId);
 		this.levelData = levelData;
 		this.localStore = localStore;
 		this.abilityIdsToAddPerLevel = abilityIdsToAddPerLevel;

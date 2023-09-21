@@ -19,7 +19,7 @@ public class CAbilityTypeRoot extends CAbilityType<CAbilityTypeRootLevelData> {
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeRootLevelData levelData = getLevelData(0);
-		return new CAbilityRoot(handleId, getAlias(), levelData.getRootedWeaponsAttackBits(),
+		return new CAbilityRoot(handleId, getCode(), getAlias(), levelData.getRootedWeaponsAttackBits(),
 				levelData.getUprootedWeaponsAttackBits(), levelData.isRootedTurning(),
 				levelData.getUprootedDefenseType(), levelData.getDuration(), levelData.getOffDuration());
 	}

@@ -9,7 +9,7 @@ public class CBuffTimedLife extends CBuffTimed {
 	private final boolean explode;
 
 	public CBuffTimedLife(final int handleId, final War3ID alias, final float duration, boolean explode) {
-		super(handleId, alias, duration);
+		super(handleId, alias, alias, duration);
 		this.explode = explode;
 	}
 

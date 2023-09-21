@@ -20,7 +20,7 @@ public class CAbilityTypeItemStatBonus extends CAbilityType<CAbilityTypeItemStat
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeItemStatBonusLevelData levelData = getLevelData(0);
-		return new CAbilityItemStatBonus(handleId, getAlias(), levelData.getStrength(), levelData.getAgility(),
+		return new CAbilityItemStatBonus(handleId, getCode(), getAlias(), levelData.getStrength(), levelData.getAgility(),
 				levelData.getIntelligence());
 	}
 

@@ -19,7 +19,7 @@ public class CAbilityTypeCargoHold extends CAbilityType<CAbilityTypeCargoHoldLev
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeCargoHoldLevelData levelData = getLevelData(0);
-		return new CAbilityCargoHold(handleId, getAlias(), levelData.getCargoCapcity(), levelData.getDuration(),
+		return new CAbilityCargoHold(handleId, getCode(), getAlias(), levelData.getCargoCapcity(), levelData.getDuration(),
 				levelData.getCastRange(), levelData.getTargetsAllowed());
 	}
 

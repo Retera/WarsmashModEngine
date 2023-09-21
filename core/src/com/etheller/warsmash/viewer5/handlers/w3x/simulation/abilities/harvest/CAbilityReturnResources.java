@@ -20,9 +20,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 public class CAbilityReturnResources extends AbstractGenericAliasedAbility {
 	private EnumSet<ResourceType> acceptedResourceTypes;
 
-	public CAbilityReturnResources(final int handleId, final War3ID alias,
+	public CAbilityReturnResources(final int handleId, final War3ID code, final War3ID alias,
 			final EnumSet<ResourceType> acceptedResourceTypes) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.acceptedResourceTypes = acceptedResourceTypes;
 	}
 

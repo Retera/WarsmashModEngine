@@ -24,8 +24,8 @@ public class CAbilityEntangledMine extends CAbilityOverlayedMine implements CAbi
 	private int activeGoldIntervalIndex;
 	private int nextGoldTick;
 
-	public CAbilityEntangledMine(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityEntangledMine(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

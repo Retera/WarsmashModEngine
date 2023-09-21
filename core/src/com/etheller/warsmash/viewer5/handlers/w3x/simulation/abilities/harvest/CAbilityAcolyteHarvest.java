@@ -21,8 +21,8 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	private float duration;
 	private CBehaviorAcolyteHarvest behaviorAcolyteHarvest;
 
-	public CAbilityAcolyteHarvest(final int handleId, final War3ID alias, final float castRange, final float duration) {
-		super(handleId, alias);
+	public CAbilityAcolyteHarvest(final int handleId, final War3ID code, final War3ID alias, final float castRange, final float duration) {
+		super(handleId, code, alias);
 		this.castRange = castRange;
 		this.duration = duration;
 	}

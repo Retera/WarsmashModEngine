@@ -20,7 +20,7 @@ public class CAbilityTypeItemHeal extends CAbilityType<CAbilityTypeItemHealLevel
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeItemHealLevelData levelData = getLevelData(0);
-		return new CAbilityItemHeal(handleId, getAlias(), levelData.getLifeToRegain(), levelData.getCooldown());
+		return new CAbilityItemHeal(handleId, getCode(), getAlias(), levelData.getLifeToRegain(), levelData.getCooldown());
 	}
 
 	@Override

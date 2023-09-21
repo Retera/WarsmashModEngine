@@ -24,7 +24,7 @@ public class CAbilityTypeJass extends CAbilityType<CAbilityTypeLevelData> {
 
 	@Override
 	public CAbility createAbility(final int handleId) {
-		return new CAbilityJass(handleId, getAlias(), this.abilityTypeJassDefinition);
+		return new CAbilityJass(handleId, getCode(), getAlias(), this.abilityTypeJassDefinition);
 	}
 
 	@Override

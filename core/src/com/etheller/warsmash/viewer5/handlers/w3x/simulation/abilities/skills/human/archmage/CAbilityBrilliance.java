@@ -12,8 +12,8 @@ public class CAbilityBrilliance extends CAbilityAuraBase {
 	private float manaRegenerationIncrease;
 	private boolean percentBonus;
 
-	public CAbilityBrilliance(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityBrilliance(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

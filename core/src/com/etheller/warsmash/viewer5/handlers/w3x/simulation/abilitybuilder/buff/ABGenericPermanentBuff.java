@@ -7,12 +7,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 public abstract class ABGenericPermanentBuff extends ABBuff {
 
 	public ABGenericPermanentBuff(int handleId, War3ID alias, boolean showIcon) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 		this.setIconShowing(showIcon);
 	}
 	
 	public ABGenericPermanentBuff(int handleId, War3ID alias) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 	}
 
 	protected abstract void onBuffAdd(CSimulation game, CUnit unit);

@@ -7,7 +7,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABGenericPermanentBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABPermanentPassiveBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.StatBuffFromDataField;
@@ -29,10 +28,10 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 
 	private List<StatBuffFromDataField> statBuffDataFields;
 
-	public CAbilityAbilityBuilderStatPassiveTemplate(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderStatPassiveTemplate(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, Map<String, Object> localStore,
 			List<StatBuffFromDataField> statBuffDataFields) {
-		super(alias, handleId);
+		super(code, alias, handleId);
 		this.levelData = levelData;
 		this.localStore = localStore;
 		this.statBuffDataFields = statBuffDataFields;

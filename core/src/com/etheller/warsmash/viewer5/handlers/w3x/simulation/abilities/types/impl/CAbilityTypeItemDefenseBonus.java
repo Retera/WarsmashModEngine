@@ -20,7 +20,7 @@ public class CAbilityTypeItemDefenseBonus extends CAbilityType<CAbilityTypeItemD
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeItemDefenseBonusLevelData levelData = getLevelData(0);
-		return new CAbilityItemDefenseBonus(handleId, getAlias(), levelData.getDefenseBonus());
+		return new CAbilityItemDefenseBonus(handleId, getCode(), getAlias(), levelData.getDefenseBonus());
 	}
 
 	@Override

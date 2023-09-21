@@ -19,7 +19,7 @@ public class CAbilityTypeShopPurchaseItem extends CAbilityType<CAbilityTypeLevel
 
 	@Override
 	public CAbility createAbility(final int handleId) {
-		return new CAbilityShopPurhaseItem(handleId, getAlias());
+		return new CAbilityShopPurhaseItem(handleId, getCode(), getAlias());
 	}
 
 	@Override

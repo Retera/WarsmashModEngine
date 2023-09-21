@@ -12,7 +12,7 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	private int expireTick;
 	
 	public ABGenericTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 		this.showTimedLifeBar = showTimedLifeBar;
 		this.duration = duration;
 	}

@@ -15,8 +15,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbility {
 
-	public CAbilityStandDown(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityStandDown(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

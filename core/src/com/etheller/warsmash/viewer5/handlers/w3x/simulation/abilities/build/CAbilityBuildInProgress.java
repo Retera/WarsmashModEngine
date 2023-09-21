@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
@@ -17,7 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 public class CAbilityBuildInProgress extends AbstractCAbility {
 
 	public CAbilityBuildInProgress(final int handleId) {
-		super(handleId);
+		super(handleId, War3ID.fromString("ABnP"));
 	}
 
 	@Override

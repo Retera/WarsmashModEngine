@@ -19,7 +19,7 @@ public class CAbilityTypeCargoHoldEntangledMine extends CAbilityType<CAbilityTyp
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeCargoHoldLevelData levelData = getLevelData(0);
-		return new CAbilityCargoHoldEntangledMine(handleId, getAlias(), levelData.getCargoCapcity(),
+		return new CAbilityCargoHoldEntangledMine(handleId, getCode(), getAlias(), levelData.getCargoCapcity(),
 				levelData.getDuration(), levelData.getCastRange(), levelData.getTargetsAllowed());
 	}
 

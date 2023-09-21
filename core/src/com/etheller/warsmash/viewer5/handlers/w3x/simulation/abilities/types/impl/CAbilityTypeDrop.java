@@ -18,7 +18,7 @@ public class CAbilityTypeDrop extends CAbilityType<CAbilityTypeDropLevelData> {
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeDropLevelData levelData = getLevelData(0);
-		return new CAbilityDrop(handleId, getAlias(), levelData.getCastRange());
+		return new CAbilityDrop(handleId, getCode(), getAlias(), levelData.getCastRange());
 	}
 
 	@Override

@@ -18,8 +18,8 @@ public abstract class CBuffTimed extends AbstractCBuff {
 	private final float duration;
 	private int expireTick;
 
-	public CBuffTimed(final int handleId, final War3ID alias, final float duration) {
-		super(handleId, alias);
+	public CBuffTimed(final int handleId, final War3ID code, final War3ID alias, final float duration) {
+		super(handleId, code, alias);
 		this.duration = duration;
 	}
 

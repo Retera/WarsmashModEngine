@@ -19,7 +19,7 @@ public class CAbilityTypeHarvestLumber extends CAbilityType<CAbilityTypeHarvestL
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeHarvestLumberLevelData levelData = getLevelData(0);
-		return new CAbilityHarvest(handleId, getAlias(), levelData.getDamageToTree(), 0, levelData.getLumberCapacity(),
+		return new CAbilityHarvest(handleId, getCode(), getAlias(), levelData.getDamageToTree(), 0, levelData.getLumberCapacity(),
 				levelData.getCastRange(), levelData.getDuration());
 	}
 

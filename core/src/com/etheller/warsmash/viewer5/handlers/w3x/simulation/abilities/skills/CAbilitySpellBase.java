@@ -34,7 +34,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	private War3ID code;
 
 	public CAbilitySpellBase(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 	}
 
 	@Override
@@ -216,6 +216,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		this.castingSecondaryTags = castingSecondaryTags;
 	}
 
+	@Override
 	public War3ID getCode() {
 		return code;
 	}

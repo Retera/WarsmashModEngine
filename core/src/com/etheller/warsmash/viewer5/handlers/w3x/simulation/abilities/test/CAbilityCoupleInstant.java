@@ -20,7 +20,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiveAbility {
 
@@ -34,10 +33,10 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	private int goldCost;
 	private int lumberCost;
 
-	public CAbilityCoupleInstant(final int handleId, final War3ID alias, final War3ID resultingUnitType,
+	public CAbilityCoupleInstant(final int handleId, final War3ID code, final War3ID alias, final War3ID resultingUnitType,
 			final War3ID partnerUnitType, final boolean moveToPartner, final float castRange, final float area,
 			final EnumSet<CTargetType> targetsAllowed, final int goldCost, final int lumberCost) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.resultingUnitType = resultingUnitType;
 		this.partnerUnitType = partnerUnitType;
 		this.moveToPartner = moveToPartner;

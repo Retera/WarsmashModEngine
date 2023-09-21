@@ -6,7 +6,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
 public class ABTargetingBuff extends ABBuff {
 	public ABTargetingBuff(int handleId, War3ID alias) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 		this.setIconShowing(false);
 	}
 

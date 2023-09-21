@@ -12,8 +12,8 @@ public class CAbilityDevotion extends CAbilityAuraBase {
 	private float armorBonus;
 	private boolean percentBonus;
 
-	public CAbilityDevotion(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityDevotion(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

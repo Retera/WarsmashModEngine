@@ -16,7 +16,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class CBuffImmolationCaster extends AbstractCBuff {
@@ -26,7 +25,7 @@ public class CBuffImmolationCaster extends AbstractCBuff {
 	private final Rectangle recycleRect = new Rectangle();
 
 	public CBuffImmolationCaster(final int handleId, final War3ID alias, final CAbilityImmolation abilityImmolation) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 		this.abilityImmolation = abilityImmolation;
 	}
 

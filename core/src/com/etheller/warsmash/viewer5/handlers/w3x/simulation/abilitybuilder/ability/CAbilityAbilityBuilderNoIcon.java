@@ -23,9 +23,9 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility {
 	private AbilityBuilderConfiguration config;
 	private Map<String, Object> localStore;
 
-	public CAbilityAbilityBuilderNoIcon(int handleId, War3ID alias, List<CAbilityTypeAbilityBuilderLevelData> levelData,
+	public CAbilityAbilityBuilderNoIcon(int handleId, War3ID code, War3ID alias, List<CAbilityTypeAbilityBuilderLevelData> levelData,
 			AbilityBuilderConfiguration config, Map<String, Object> localStore) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.levelData = levelData;
 		this.config = config;
 		this.localStore = localStore;

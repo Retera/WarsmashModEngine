@@ -19,7 +19,7 @@ public class CAbilityTypeBlight extends CAbilityType<CAbilityTypeBlightLevelData
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeBlightLevelData levelData = getLevelData(0);
-		return new CAbilityBlight(handleId, getAlias(), levelData.isCreatesBlight(), levelData.getExpansionAmount(),
+		return new CAbilityBlight(handleId, getCode(), getAlias(), levelData.isCreatesBlight(), levelData.getExpansionAmount(),
 				levelData.getAreaOfEffect(), levelData.getGameSecondsPerBlightExpansion());
 	}
 

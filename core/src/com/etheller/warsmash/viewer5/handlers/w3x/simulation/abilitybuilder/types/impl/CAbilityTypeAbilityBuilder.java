@@ -38,17 +38,17 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 		
 		switch (parser.getType()) {
 		case BUFF:
-			return new CAbilityAbilityBuilderBuff(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderBuff(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case PASSIVE:
-			return new CAbilityAbilityBuilderPassive(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case TICKING_PASSIVE:
-			return new CAbilityAbilityBuilderTickingPassive(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderTickingPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case HIDDEN:
-			return new CAbilityAbilityBuilderNoIcon(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderNoIcon(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case TOGGLE:
-			return new CAbilityAbilityBuilderActiveToggle(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActiveToggle(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case TOGGLE_TICKING:
-			return new CAbilityAbilityBuilderActiveToggle(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActiveToggle(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_NOTARGET_SIMPLE:
 			ability = new CAbilityAbilityBuilderActiveNoTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
 			ability.populate(this.abilityEditorData, 1);
@@ -66,14 +66,14 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 			ability.populate(this.abilityEditorData, 1);
 			return ability;
 		case NORMAL_AUTOTARGET:
-			return new CAbilityAbilityBuilderActiveAutoTarget(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActiveAutoTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_NOTARGET:
-			return new CAbilityAbilityBuilderActiveNoTarget(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActiveNoTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_POINTTARGET:
-			return new CAbilityAbilityBuilderActivePointTarget(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActivePointTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_UNITTARGET:
 		default:
-			return new CAbilityAbilityBuilderActiveUnitTarget(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActiveUnitTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		}
 	}
 

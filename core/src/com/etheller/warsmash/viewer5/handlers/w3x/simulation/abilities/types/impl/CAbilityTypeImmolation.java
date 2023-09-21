@@ -19,7 +19,7 @@ public class CAbilityTypeImmolation extends CAbilityType<CAbilityTypeImmolationL
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeImmolationLevelData levelData = getLevelData(0);
-		return new CAbilityImmolation(handleId, getAlias(), levelData.getBufferManaRequired(),
+		return new CAbilityImmolation(handleId, getCode(), getAlias(), levelData.getBufferManaRequired(),
 				levelData.getDamagePerInterval(), levelData.getManaDrainedPerSecond(), levelData.getAreaOfEffect(),
 				levelData.getManaCost(), levelData.getDuration(), levelData.getTargetsAllowed(), levelData.getBuffId());
 	}

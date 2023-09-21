@@ -19,7 +19,7 @@ public class CAbilityTypePhoenixFire extends CAbilityType<CAbilityTypePhoenixFir
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypePhoenixFireLevelData levelData = getLevelData(0);
-		return new CAbilityPhoenixFire(handleId, getAlias(), levelData.getInitialDamage(),
+		return new CAbilityPhoenixFire(handleId, getCode(), getAlias(), levelData.getInitialDamage(),
 				levelData.getDamagePerSecond(), levelData.getAreaOfEffect(), levelData.getCooldown(),
 				levelData.getDuration(), levelData.getTargetsAllowed());
 	}

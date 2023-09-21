@@ -13,7 +13,7 @@ public class CBuffSlow extends CBuffTimed {
 	private int appliedMovementSpeedReduction;
 
 	public CBuffSlow(final int handleId, final War3ID alias, final float duration, final float attackSpeedReductionPercent, final float moveSpeedReductionPercent) {
-		super(handleId, alias, duration);
+		super(handleId, alias, alias, duration);
 		this.attackSpeedReductionPercent = attackSpeedReductionPercent;
 		this.moveSpeedReductionPercent = moveSpeedReductionPercent;
 	}

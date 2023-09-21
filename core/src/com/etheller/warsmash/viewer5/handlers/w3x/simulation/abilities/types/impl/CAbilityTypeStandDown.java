@@ -19,7 +19,7 @@ public class CAbilityTypeStandDown extends CAbilityType<CAbilityTypeLevelData> {
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeLevelData levelData = getLevelData(0);
-		return new CAbilityStandDown(handleId, getAlias());
+		return new CAbilityStandDown(handleId, getCode(), getAlias());
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
@@ -20,7 +19,7 @@ public class CAbilityNagaBuild extends AbstractCAbilityBuild {
 	private CBehaviorOrcBuild buildBehavior;
 
 	public CAbilityNagaBuild(final int handleId, final List<War3ID> structuresBuilt) {
-		super(handleId, structuresBuilt);
+		super(handleId, War3ID.fromString("AGbu"), structuresBuilt);
 	}
 
 	@Override

@@ -66,7 +66,7 @@ public class CAbilityPocketFactory extends CAbilityPointTargetSpellBase {
 						factoryUnit.add(game, new CBuffTimedLife(game.getHandleIdAllocator().createId(),
 								factoryUnitBuffId, getDuration(), false));
 						final CAbilityFactory factory = new CAbilityFactory(game.getHandleIdAllocator().createId(),
-								War3ID.fromString("ANfy"));
+								War3ID.fromString("ANfy"), War3ID.fromString("ANfy"));
 						factory.setLeashRange(leashRange);
 						factory.setSpawnUnitId(spawnUnitId);
 						factory.setSpawnInterval(spawnInterval);

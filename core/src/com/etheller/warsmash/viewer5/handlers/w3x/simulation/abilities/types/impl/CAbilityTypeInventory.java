@@ -19,7 +19,7 @@ public class CAbilityTypeInventory extends CAbilityType<CAbilityTypeInventoryLev
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeInventoryLevelData levelData = getLevelData(0);
-		return new CAbilityInventory(handleId, getAlias(), levelData.isCanDropItems(), levelData.isCanGetItems(),
+		return new CAbilityInventory(handleId, getCode(), getAlias(), levelData.isCanDropItems(), levelData.isCanGetItems(),
 				levelData.isCanUseItems(), levelData.isDropItemsOnDeath(), levelData.getItemCapacity());
 	}
 

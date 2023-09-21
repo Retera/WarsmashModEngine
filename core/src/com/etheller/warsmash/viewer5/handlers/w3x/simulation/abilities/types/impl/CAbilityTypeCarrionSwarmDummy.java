@@ -19,7 +19,7 @@ public class CAbilityTypeCarrionSwarmDummy extends CAbilityType<CAbilityTypeCarr
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeCarrionSwarmDummyLevelData levelData = getLevelData(0);
-		return new CAbilityCarrionSwarmDummy(handleId, getAlias(), levelData.getCastRange(),
+		return new CAbilityCarrionSwarmDummy(handleId, getCode(), getAlias(), levelData.getCastRange(),
 				levelData.getTargetsAllowed());
 	}
 

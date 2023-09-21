@@ -40,7 +40,7 @@ public class CAbilityHero extends AbstractCAbility {
 	private boolean reviving;
 
 	public CAbilityHero(final int handleId, final List<War3ID> skillsAvailable) {
-		super(handleId);
+		super(handleId, War3ID.fromString("AHer"));
 		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
 	}
 

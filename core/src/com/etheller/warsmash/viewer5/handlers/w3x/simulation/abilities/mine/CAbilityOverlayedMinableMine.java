@@ -20,9 +20,9 @@ public class CAbilityOverlayedMinableMine extends CAbilityOverlayedMine implemen
 	private final List<CBehaviorHarvest> activeMiners;
 	private boolean wasEmpty;
 
-	public CAbilityOverlayedMinableMine(final int handleId, final War3ID alias, final int maxGold,
+	public CAbilityOverlayedMinableMine(final int handleId, final War3ID code, final War3ID alias, final int maxGold,
 			final float miningDuration, final int miningCapacity) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.miningDuration = miningDuration;
 		this.miningCapacity = miningCapacity;
 		this.activeMiners = new ArrayList<>();

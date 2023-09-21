@@ -39,10 +39,10 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	private CBehaviorDropItem behaviorDropItem;
 	private CBehaviorGiveItemToHero behaviorGiveItem;
 
-	public CAbilityInventory(final int handleId, final War3ID alias, final boolean canDropItems,
+	public CAbilityInventory(final int handleId, final War3ID code, final War3ID alias, final boolean canDropItems,
 			final boolean canGetItems, final boolean canUseItems, final boolean dropItemsOnDeath,
 			final int itemCapacity) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.canDropItems = canDropItems;
 		this.canGetItems = canGetItems;
 		this.canUseItems = canUseItems;

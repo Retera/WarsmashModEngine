@@ -20,13 +20,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public final class CAbilityUpgrade extends AbstractCAbility {
 	private final Set<War3ID> upgradesTo;
 
 	public CAbilityUpgrade(final int handleId, final List<War3ID> upgradesTo) {
-		super(handleId);
+		super(handleId, War3ID.fromString("Aupg"));
 		this.upgradesTo = new LinkedHashSet<>(upgradesTo);
 	}
 

@@ -51,10 +51,10 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends AbstractGenericSingl
 
 	private int castId = 0;
 	
-	public CAbilityAbilityBuilderActiveAutoTarget(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderActiveAutoTarget(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
 			Map<String, Object> localStore) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.levelData = levelData;
 		this.config = config;
 		this.localStore = localStore;

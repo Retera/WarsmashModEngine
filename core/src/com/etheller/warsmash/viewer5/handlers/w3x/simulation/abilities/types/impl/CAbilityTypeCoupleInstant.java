@@ -19,7 +19,7 @@ public class CAbilityTypeCoupleInstant extends CAbilityType<CAbilityTypeCoupleIn
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeCoupleInstantLevelData levelData = getLevelData(0);
-		return new CAbilityCoupleInstant(handleId, getAlias(), levelData.getResultingUnitTypeId(),
+		return new CAbilityCoupleInstant(handleId, getCode(), getAlias(), levelData.getResultingUnitTypeId(),
 				levelData.getPartnerUnitTypeId(), levelData.isMoveToPartner(), levelData.getCastRange(),
 				levelData.getArea(), levelData.getTargetsAllowed(), levelData.getGoldCost(), levelData.getLumberCost());
 	}

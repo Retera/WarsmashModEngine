@@ -19,7 +19,7 @@ public class CAbilityTypeNeutralBuilding extends CAbilityType<CAbilityTypeNeutra
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeNeutralBuildingLevelData levelData = getLevelData(0);
-		return new CAbilityNeutralBuilding(handleId, getAlias(), levelData.getActivationRadius(),
+		return new CAbilityNeutralBuilding(handleId, getCode(), getAlias(), levelData.getActivationRadius(),
 				levelData.getInteractionType(), levelData.isShowSelectUnitButton(), levelData.isShowUnitIndicator(),
 				false);
 	}

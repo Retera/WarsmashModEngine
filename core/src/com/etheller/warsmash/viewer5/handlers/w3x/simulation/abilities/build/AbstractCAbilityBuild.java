@@ -20,14 +20,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildin
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public abstract class AbstractCAbilityBuild extends AbstractCAbility implements CAbilityMenu {
 	private static boolean REFUND_ON_ORDER_CANCEL = false;
 	private final Set<War3ID> structuresBuilt;
 
-	public AbstractCAbilityBuild(final int handleId, final List<War3ID> structuresBuilt) {
-		super(handleId);
+	public AbstractCAbilityBuild(final int handleId, final War3ID code, final List<War3ID> structuresBuilt) {
+		super(handleId, code);
 		this.structuresBuilt = new LinkedHashSet<>(structuresBuilt);
 	}
 

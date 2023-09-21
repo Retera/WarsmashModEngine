@@ -46,10 +46,10 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 	
 	private int castId = 0;
 
-	public CAbilityAbilityBuilderActiveNoTarget(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderActiveNoTarget(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
 			Map<String, Object> localStore) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.levelData = levelData;
 		this.config = config;
 		this.localStore = localStore;

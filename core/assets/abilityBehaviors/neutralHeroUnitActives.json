@@ -104,6 +104,14 @@
 				}]
 		}],
 		"onBeginCasting": [{
+				"type": "createSoundEffectOnUnit",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				}
+			},{
 				"type": "createPassiveBuff",
 				"buffId": {
 					"type": "getFirstBuffId"

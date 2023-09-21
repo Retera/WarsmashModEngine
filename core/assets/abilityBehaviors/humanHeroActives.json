@@ -3,6 +3,15 @@
 		"ids": [{"id":"AHfs", "castId": "flamestrike"}],
 		"type": "NORMAL_POINTTARGET",
 		"onBeginCasting": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "targetLoc"
+					},
+					"valueToStore": {
+						"type": "getTargetedLocation"
+					}
+			},{
 				"type": "createTemporarySpellEffectAtLocation",
 				"location": {
 					"type": "getTargetedLocation"
@@ -113,7 +122,11 @@
 									"value1": {
 										"type": "getLocationX",
 										"location": {
-											"type": "getTargetedLocation"
+											"type": "getStoredLocationByKey",
+											"key": {
+												"type": "rawString",
+												"value": "targetLoc"
+											}
 										}
 									},
 									"value2": {
@@ -142,7 +155,11 @@
 									"value1": {
 										"type": "getLocationY",
 										"location": {
-											"type": "getTargetedLocation"
+											"type": "getStoredLocationByKey",
+											"key": {
+												"type": "rawString",
+												"value": "targetLoc"
+											}
 										}
 									},
 									"value2": {
@@ -218,7 +235,11 @@
 									"value": {
 										"type": "countUnitsInRangeOfLocation",
 										"location": {
-											"type": "getTargetedLocation"
+											"type": "getStoredLocationByKey",
+											"key": {
+												"type": "rawString",
+												"value": "targetLoc"
+											}
 										},
 										"range": {
 											"type": "getAbilityArea"
@@ -250,7 +271,11 @@
 					},{
 						"type": "iterateUnitsInRangeOfLocation",
 						"location": {
-							"type": "getTargetedLocation"
+							"type": "getStoredLocationByKey",
+							"key": {
+								"type": "rawString",
+								"value": "targetLoc"
+							}
 						},
 						"range": {
 							"type": "getAbilityArea"
@@ -399,7 +424,11 @@
 									"value": {
 										"type": "countUnitsInRangeOfLocation",
 										"location": {
-											"type": "getTargetedLocation"
+											"type": "getStoredLocationByKey",
+											"key": {
+												"type": "rawString",
+												"value": "targetLoc"
+											}
 										},
 										"range": {
 											"type": "getAbilityArea"
@@ -431,7 +460,11 @@
 					},{
 						"type": "iterateUnitsInRangeOfLocation",
 						"location": {
-							"type": "getTargetedLocation"
+							"type": "getStoredLocationByKey",
+							"key": {
+								"type": "rawString",
+								"value": "targetLoc"
+							}
 						},
 						"range": {
 							"type": "getAbilityArea"

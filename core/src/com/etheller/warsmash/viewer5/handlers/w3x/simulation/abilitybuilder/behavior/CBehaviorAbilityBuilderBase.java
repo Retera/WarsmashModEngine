@@ -118,7 +118,6 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 			}
 		}
 		if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
-			System.out.println("Removing targets");
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);

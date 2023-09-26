@@ -42,16 +42,17 @@ public abstract class AbstractCAbilityTypeDefinition<TYPE_LEVEL_DATA extends CAb
 	}
 
 	public static final War3ID getLightningId(final GameObject abilityEditorData, final int level) {
-		return getBuffId(LIGHTNING, abilityEditorData, level, 0);
+		return getBuffId(LIGHTNING, abilityEditorData, -1, 0);
 	}
 
 	public static final War3ID getLightningId(final GameObject abilityEditorData, final int level, final int index) {
-		return getBuffId(LIGHTNING, abilityEditorData, level, index);
+		return getBuffId(LIGHTNING, abilityEditorData, -1, index);
 	}
 
 	private static final War3ID getBuffId(final String metaKey, final GameObject abilityEditorData, final int level,
 			final int buffIndex) {
-		final String buffIdString = abilityEditorData.getFieldAsString(metaKey + level, buffIndex);
+		final String buffIdString = abilityEditorData
+				.getFieldAsString(metaKey + (level == -1 ? "" : Integer.toString(level)), buffIndex);
 		War3ID buffId = War3ID.NONE;
 		try {
 			buffId = War3ID.fromString(buffIdString);

@@ -5,21 +5,16 @@ import java.util.Map;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABGenericPassiveBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABPermanentPassiveBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.StatBuffFromDataField;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityAbilityBuilderStatPassiveTemplate extends AbstractGenericSingleIconActiveAbility {
+public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSingleIconPassiveAbility {
 
 	private List<CAbilityTypeAbilityBuilderLevelData> levelData;
 	private Map<String, Object> localStore;
@@ -33,10 +28,10 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbstractGenericSi
 
 	private List<StatBuffFromDataField> statBuffDataFields;
 
-	public CAbilityAbilityBuilderStatPassiveTemplate(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderStatPassiveTemplate(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, Map<String, Object> localStore,
 			List<StatBuffFromDataField> statBuffDataFields) {
-		super(handleId, alias);
+		super(code, alias, handleId);
 		this.levelData = levelData;
 		this.localStore = localStore;
 		this.statBuffDataFields = statBuffDataFields;
@@ -154,7 +149,7 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbstractGenericSi
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		if (this.buffId != null) {
-			this.buff = new ABGenericPassiveBuff(game.getHandleIdAllocator().createId(), this.buffId);
+			this.buff = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(), this.buffId, localStore, null, null, 0);
 			unit.addNonStackingDisplayBuff(game, auraStackingKey, buff);
 		}
 		this.caster = unit;
@@ -186,71 +181,6 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbstractGenericSi
 	@Override
 	public void onDeath(CSimulation game, CUnit unit) {
 		removeBuffFromUnit(game, unit);
-	}
-
-	@Override
-	public int getBaseOrderId() {
-		return 0;
-	}
-
-	@Override
-	public boolean isToggleOn() {
-		return false;
-	}
-
-	// Unneeded Methods
-	@Override
-	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
-	}
-
-	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
-		return null;
-	}
-
-	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
-		return null;
-	}
-
-	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
-		return null;
-	}
-
-	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
-		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	protected void innerCheckCanSmartTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
-		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	protected void innerCheckCanSmartTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	protected void innerCheckCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
-		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
-		receiver.notAnActiveAbility();
 	}
 
 }

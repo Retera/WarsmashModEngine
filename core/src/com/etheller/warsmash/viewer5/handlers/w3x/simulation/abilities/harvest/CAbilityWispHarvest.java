@@ -28,9 +28,9 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 	private int periodicIntervalLengthTicks;
 	private CBehaviorWispHarvest behaviorWispHarvest;
 
-	public CAbilityWispHarvest(final int handleId, final War3ID alias, final int lumberPerInterval,
+	public CAbilityWispHarvest(final int handleId, final War3ID code, final War3ID alias, final int lumberPerInterval,
 			final float artAttachmentHeight, final float castRange, final float periodicIntervalLength) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.lumberPerInterval = lumberPerInterval;
 		this.artAttachmentHeight = artAttachmentHeight;
 		this.castRange = castRange;

@@ -49,10 +49,10 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 
 	private List<CUnitAttack> uprootedAttacks;
 
-	public CAbilityRoot(final int handleId, final War3ID alias, final int rootedWeaponsAttackBits,
+	public CAbilityRoot(final int handleId, final War3ID code, final War3ID alias, final int rootedWeaponsAttackBits,
 			final int uprootedWeaponsAttackBits, final boolean rootedTurning, final CDefenseType uprootedDefenseType,
 			final float duration, final float offDuration) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.rootedWeaponsAttackBits = rootedWeaponsAttackBits;
 		this.uprootedWeaponsAttackBits = uprootedWeaponsAttackBits;
 		this.rootedTurning = rootedTurning;

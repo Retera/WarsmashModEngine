@@ -12,8 +12,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public abstract class ABBuff extends AbstractCBuff {
 
-	public ABBuff(int handleId, War3ID alias) {
-		super(handleId, alias);
+	public ABBuff(int handleId, War3ID code, War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

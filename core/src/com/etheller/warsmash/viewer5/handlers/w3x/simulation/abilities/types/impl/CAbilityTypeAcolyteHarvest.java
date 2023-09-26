@@ -19,7 +19,7 @@ public class CAbilityTypeAcolyteHarvest extends CAbilityType<CAbilityTypeAcolyte
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeAcolyteHarvestLevelData levelData = getLevelData(0);
-		return new CAbilityAcolyteHarvest(handleId, getAlias(), levelData.getCastRange(), levelData.getDuration());
+		return new CAbilityAcolyteHarvest(handleId, getCode(), getAlias(), levelData.getCastRange(), levelData.getDuration());
 	}
 
 	@Override

@@ -15,7 +15,6 @@ public class ABConditionIntegerIsOdd implements ABCondition {
 	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		Integer v1 = value.callback(game, caster, localStore, castId);
 
-		System.err.println("Check int odd " + ((v1 % 2) == 1));
 		return (v1 % 2) == 1;
 	}
 

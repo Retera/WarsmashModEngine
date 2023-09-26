@@ -14,7 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 public class CAbilityNeutralBuild extends AbstractCAbilityBuild {
 
 	public CAbilityNeutralBuild(final int handleId, final List<War3ID> structuresBuilt) {
-		super(handleId, structuresBuilt);
+		super(handleId, War3ID.fromString("ANbu"), structuresBuilt);
 	}
 
 	@Override

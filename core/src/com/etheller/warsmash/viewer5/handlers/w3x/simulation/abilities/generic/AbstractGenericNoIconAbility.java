@@ -6,8 +6,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityV
 public abstract class AbstractGenericNoIconAbility extends AbstractGenericAliasedAbility
 		implements GenericNoIconAbility {
 
-	public AbstractGenericNoIconAbility(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public AbstractGenericNoIconAbility(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

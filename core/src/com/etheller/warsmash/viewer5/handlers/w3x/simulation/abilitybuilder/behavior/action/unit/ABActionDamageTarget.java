@@ -23,6 +23,8 @@ public class ABActionDamageTarget implements ABAction {
 	private ABAttackTypeCallback attackType;
 	private ABDamageTypeCallback damageType;
 	private ABFloatCallback damage;
+	
+	private ABBooleanCallback ignoreLTEZero;
 
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
@@ -30,6 +32,8 @@ public class ABActionDamageTarget implements ABAction {
 		boolean isItRanged = true;
 		CAttackType theAttackType = CAttackType.SPELLS;
 		CDamageType theDamageType = CDamageType.MAGIC;
+		
+		float theDamage = damage.callback(game, caster, localStore, castId);
 
 		if (isAttack != null) {
 			isItAttack = isAttack.callback(game, caster, localStore, castId);
@@ -43,10 +47,11 @@ public class ABActionDamageTarget implements ABAction {
 		if (damageType != null) {
 			theDamageType = damageType.callback(game, caster, localStore, castId);
 		}
-
-		target.callback(game, caster, localStore, castId).damage(game, source.callback(game, caster, localStore, castId), isItAttack,
-				isItRanged, theAttackType, theDamageType, CWeaponSoundTypeJass.WHOKNOWS.name(),
-				damage.callback(game, caster, localStore, castId));
+		if (ignoreLTEZero == null || !ignoreLTEZero.callback(game, caster, localStore, castId) || theDamage > 0) {
+			target.callback(game, caster, localStore, castId).damage(game, source.callback(game, caster, localStore, castId), isItAttack,
+					isItRanged, theAttackType, theDamageType, CWeaponSoundTypeJass.WHOKNOWS.name(),
+					damage.callback(game, caster, localStore, castId));
+		}
 	}
 
 }

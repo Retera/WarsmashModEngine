@@ -20,7 +20,7 @@ public class CAbilityTypeInvulnerable extends CAbilityType<CAbilityTypeLevelData
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeLevelData levelData = getLevelData(0);
-		return new CAbilityInvulnerable(handleId, getAlias());
+		return new CAbilityInvulnerable(handleId, getCode(), getAlias());
 	}
 
 	@Override

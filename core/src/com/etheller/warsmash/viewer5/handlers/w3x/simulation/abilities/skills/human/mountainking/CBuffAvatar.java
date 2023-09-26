@@ -4,10 +4,8 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffTimed;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffect;
 
 public class CBuffAvatar extends CBuffTimed {
 	private final int hitPointBonus;
@@ -16,7 +14,7 @@ public class CBuffAvatar extends CBuffTimed {
 
 	public CBuffAvatar(int handleId, War3ID alias, float duration, int hitPointBonus, int damageBonus,
 					   float defenseBonus) {
-		super(handleId, alias, duration);
+		super(handleId, alias, alias, duration);
 		this.hitPointBonus = hitPointBonus;
 		this.damageBonus = damageBonus;
 		this.defenseBonus = defenseBonus;

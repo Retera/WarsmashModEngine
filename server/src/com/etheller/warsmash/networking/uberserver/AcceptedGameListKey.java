@@ -38,4 +38,12 @@ public class AcceptedGameListKey {
 		final AcceptedGameListKey other = (AcceptedGameListKey) obj;
 		return Objects.equals(this.gameId, other.gameId) && (this.version == other.version);
 	}
+
+	@Override
+	public String toString() {
+		return "AcceptedGameListKey{" +
+				"gameId='" + gameId + '\'' +
+				", version=" + version +
+				'}';
+	}
 }

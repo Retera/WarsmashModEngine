@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
@@ -9,14 +10,26 @@ public abstract class AbstractCAbility implements CAbility {
 	private boolean disabled = false;
 	private boolean iconShowing = true;
 	private boolean permanent = false;
+	
+	private War3ID code;
 
-	public AbstractCAbility(final int handleId) {
+	public AbstractCAbility(final int handleId, final War3ID code) {
 		this.handleId = handleId;
+		this.code = code;
 	}
 
 	@Override
 	public final int getHandleId() {
 		return this.handleId;
+	}
+	
+	public War3ID getCode() { 
+		return this.code;
+	}
+	
+	@Override
+	public War3ID getAlias() {
+		return this.getCode();
 	}
 
 	@Override

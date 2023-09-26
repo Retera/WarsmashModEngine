@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.sappers;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -25,7 +25,7 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase {
 	private boolean exploding = false;
 	private boolean autoCastOn = false;
 
-	public CAbilityKaboom(int handleId, War3ID alias) {
+	public CAbilityKaboom(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -45,8 +45,8 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase {
 	}
 
 	@Override
-	protected void innerCheckCanSmartTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-											AbilityTargetCheckReceiver<CWidget> receiver) {
+	protected void innerCheckCanSmartTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (isAutoCastOn()) {
 			this.innerCheckCanTarget(game, unit, getBaseOrderId(), target, receiver);
 		}
@@ -56,34 +56,26 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		fullDamageAmount =
-				worldEditorAbility.getFieldAsFloat(AbilityFields.AoeDamageUponDeathSapper.FULL_DAMAGE_AMOUNT, level);
-		fullDamageRadius =
-				worldEditorAbility.getFieldAsFloat(AbilityFields.AoeDamageUponDeathSapper.FULL_DAMAGE_RADIUS, level);
-		partialDamageAmount =
-				worldEditorAbility.getFieldAsFloat(AbilityFields.AoeDamageUponDeathSapper.PARTIAL_DAMAGE_AMOUNT,
-						level);
-		partialDamageRadius =
-				worldEditorAbility.getFieldAsFloat(AbilityFields.AoeDamageUponDeathSapper.PARTIAL_DAMAGE_RADIUS,
-						level);
-		explodesOnDeath = worldEditorAbility.getFieldAsBoolean(AbilityFields.KaboomGoblinSapper.EXPLODES_ON_DEATH,
-				level);
-		buildingDamageFactor =
-				worldEditorAbility.getFieldAsFloat(AbilityFields.KaboomGoblinSapper.BUILDING_DAMAGE_FACTOR, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		fullDamageAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		fullDamageRadius = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		partialDamageAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_D + level, 0);
+		partialDamageRadius = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
+		explodesOnDeath = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_F + level, 0);
+		buildingDamageFactor = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_E + level, 0);
 
 		setCastRange(getCastRange() + 128);
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		exploding = true;
 		caster.kill(simulation);
 		return false;
 	}
 
 	@Override
-	public void onDeath(CSimulation game, CUnit cUnit) {
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
 		if (explodesOnDeath) {
 			exploding = true;
 		}
@@ -92,8 +84,8 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase {
 		}
 	}
 
-	private void explode(CSimulation simulation, CUnit caster) {
-		float radius = StrictMath.max(partialDamageRadius, fullDamageRadius);
+	private void explode(final CSimulation simulation, final CUnit caster) {
+		final float radius = StrictMath.max(partialDamageRadius, fullDamageRadius);
 		simulation.getWorldCollision().enumUnitsInRange(caster.getX(), caster.getY(), radius, (enumUnit) -> {
 			if (enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
 				float damageAmount;
@@ -114,7 +106,7 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase {
 	}
 
 	@Override
-	public void setAutoCastOn(boolean autoCastOn) {
+	public void setAutoCastOn(final boolean autoCastOn) {
 		this.autoCastOn = autoCastOn;
 	}
 

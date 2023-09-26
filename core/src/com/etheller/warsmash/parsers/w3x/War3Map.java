@@ -18,7 +18,7 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.FolderDataSource;
 import com.etheller.warsmash.datasources.MpqDataSource;
 import com.etheller.warsmash.parsers.w3x.doo.War3MapDoo;
-import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
+import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapRuntimeObjectData;
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
@@ -134,13 +134,14 @@ public class War3Map implements DataSource {
 		return unitsFile;
 	}
 
-	public Warcraft3MapObjectData readModifications() throws IOException {
-		final Warcraft3MapObjectData changes = Warcraft3MapObjectData.load(this.dataSource, true);
+	public Warcraft3MapRuntimeObjectData readModifications() throws IOException {
+		final Warcraft3MapRuntimeObjectData changes = Warcraft3MapRuntimeObjectData.load(this.dataSource, true);
 		return changes;
 	}
 
-	public Warcraft3MapObjectData readModifications(final WTS preloadedWTS) throws IOException {
-		final Warcraft3MapObjectData changes = Warcraft3MapObjectData.load(this.dataSource, true, preloadedWTS);
+	public Warcraft3MapRuntimeObjectData readModifications(final WTS preloadedWTS) throws IOException {
+		final Warcraft3MapRuntimeObjectData changes = Warcraft3MapRuntimeObjectData.load(this.dataSource, true,
+				preloadedWTS);
 		return changes;
 	}
 

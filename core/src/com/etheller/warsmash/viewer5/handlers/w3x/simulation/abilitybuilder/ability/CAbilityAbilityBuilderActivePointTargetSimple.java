@@ -3,7 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.abi
 import java.util.List;
 import java.util.Map;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -28,6 +28,7 @@ public class CAbilityAbilityBuilderActivePointTargetSimple extends CAbilityPoint
 	private int orderId;
 
 	private int castId = 0;
+	private boolean initialized = false;
 
 	public CAbilityAbilityBuilderActivePointTargetSimple(int handleId, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -51,18 +52,41 @@ public class CAbilityAbilityBuilderActivePointTargetSimple extends CAbilityPoint
 	}
 
 	@Override
-	public void populateData(MutableGameObject worldEditorAbility, int level) {
+	public void populateData(GameObject worldEditorAbility, int level) {
+		if (this.initialized ) {
+			if (config.getOnLevelChange() != null) {
+				CSimulation game = (CSimulation) this.localStore.get(ABLocalStoreKeys.GAME);
+				CUnit unit = (CUnit) this.localStore.get(ABLocalStoreKeys.THISUNIT);
+				for (ABAction action : config.getOnLevelChange()) {
+					action.runAction(game, unit, this.localStore, castId);
+				}
+			}
+		}
+		this.initialized = true;
+	}
 
+	@Override
+	public void onAdd(CSimulation game, CUnit unit) {
+		super.onAdd(game, unit);
+		localStore.put(ABLocalStoreKeys.GAME, game);
+		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
+		if (config.getOnAddAbility() != null) {
+			for (ABAction action : config.getOnAddAbility()) {
+				action.runAction(game, unit, localStore, castId);
+			}
+		}
 	}
 
 	@Override
 	public boolean doEffect(CSimulation simulation, CUnit unit, AbilityTarget target) {
 		this.castId++;
+		localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, target);
 		if (config.getOnBeginCasting() != null) {
 			for (ABAction action : config.getOnBeginCasting()) {
 				action.runAction(simulation, unit, localStore, castId);
 			}
 		}
+		localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId);
 		return false;
 	}
 

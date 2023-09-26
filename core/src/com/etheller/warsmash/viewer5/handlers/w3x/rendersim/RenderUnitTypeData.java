@@ -1,5 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
+import java.util.EnumSet;
+
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
+
 public class RenderUnitTypeData {
 	private final float maxPitch;
 	private final float maxRoll;
@@ -12,11 +16,13 @@ public class RenderUnitTypeData {
 	private final String buildingShadow;
 	private final String uberSplat;
 	private final float uberSplatScaleValue;
+	private final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments;
 
 	public RenderUnitTypeData(final float maxPitch, final float maxRoll, final float sampleRadius,
 			final boolean allowCustomTeamColor, final int teamColor, final float animationRunSpeed,
 			final float animationWalkSpeed, final float scalingValue, final String buildingShadow,
-			final String uberSplat, final float uberSplatScaleValue) {
+			final String uberSplat, final float uberSplatScaleValue,
+			final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments) {
 		this.maxPitch = maxPitch;
 		this.maxRoll = maxRoll;
 		this.sampleRadius = sampleRadius;
@@ -28,6 +34,7 @@ public class RenderUnitTypeData {
 		this.buildingShadow = buildingShadow;
 		this.uberSplat = uberSplat;
 		this.uberSplatScaleValue = uberSplatScaleValue;
+		this.requiredAnimationNamesForAttachments = requiredAnimationNamesForAttachments;
 	}
 
 	public float getMaxPitch() {
@@ -72,5 +79,9 @@ public class RenderUnitTypeData {
 
 	public float getUberSplatScaleValue() {
 		return this.uberSplatScaleValue;
+	}
+
+	public EnumSet<SecondaryTag> getRequiredAnimationNamesForAttachments() {
+		return requiredAnimationNamesForAttachments;
 	}
 }

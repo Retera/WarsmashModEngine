@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
@@ -25,7 +26,7 @@ public class CAbilityTypeDefinitionAbilityBuilder
 	}
 
 	@Override
-	public CAbilityType<?> createAbilityType(final War3ID alias, final MutableGameObject abilityEditorData) {
+	public CAbilityType<?> createAbilityType(final War3ID alias, final GameObject abilityEditorData) {
 		if (abilityEditorData != null) {
 			final int levels = abilityEditorData.getFieldAsInteger(LEVELS, 0);
 			final List<CAbilityTypeAbilityBuilderLevelData> levelData = new ArrayList<>();
@@ -39,17 +40,17 @@ public class CAbilityTypeDefinitionAbilityBuilder
 	}
 
 	@Override
-	protected CAbilityTypeAbilityBuilderLevelData createLevelData(final MutableGameObject abilityEditorData,
+	protected CAbilityTypeAbilityBuilderLevelData createLevelData(final GameObject abilityEditorData,
 			final int level) {
-		final String targetsAllowedAtLevelString = abilityEditorData.getFieldAsString(TARGETS_ALLOWED, level);
-		final float area = abilityEditorData.getFieldAsFloat(AREA, level);
-		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE, level);
-		final float castTime = abilityEditorData.getFieldAsFloat(CASTING_TIME, level);
-		final float cooldown = abilityEditorData.getFieldAsFloat(COOLDOWN, level);
-		final float durationHero = abilityEditorData.getFieldAsFloat(HERO_DURATION, level);
-		final float durationNormal = abilityEditorData.getFieldAsFloat(DURATION, level);
-		final String[] buffStrings = abilityEditorData.getFieldAsString(BUFF, level).split(",");
-		final String[] effectStrings = abilityEditorData.getFieldAsString(EFFECT, level).split(",");
+		final String targetsAllowedAtLevelString = abilityEditorData.readSLKTag(TARGETS_ALLOWED+level);
+		final float area = abilityEditorData.readSLKTagFloat(AREA+level);
+		final float castRange = abilityEditorData.readSLKTagFloat(CAST_RANGE+level);
+		final float castTime = abilityEditorData.readSLKTagFloat(CASTING_TIME+level);
+		final float cooldown = abilityEditorData.readSLKTagFloat(COOLDOWN+level);
+		final float durationHero = abilityEditorData.readSLKTagFloat(HERO_DURATION+level);
+		final float durationNormal = abilityEditorData.readSLKTagFloat(DURATION+level);
+		final String[] buffStrings = abilityEditorData.readSLKTag(BUFF+level).split(",");
+		final String[] effectStrings = abilityEditorData.readSLKTag(EFFECT+level).split(",");
 		final List<String> data = new ArrayList<>();
 		List<War3ID> buffs = new ArrayList<>();
 		List<War3ID> effects = new ArrayList<>();
@@ -67,17 +68,17 @@ public class CAbilityTypeDefinitionAbilityBuilder
 		for (String letter : letters) {
 			data.add(abilityEditorData.readSLKTag("Data" + letter + level));
 		}
-		final int manaCost = abilityEditorData.getFieldAsInteger(MANA_COST, level);
+		final int manaCost = abilityEditorData.readSLKTagInt(MANA_COST+level);
 		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
 		return new CAbilityTypeAbilityBuilderLevelData(targetsAllowedAtLevel, area, castRange, castTime, cooldown,
 				durationHero, durationNormal, buffs, effects, manaCost, data);
 	}
 
 	@Override
-	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final MutableGameObject abilityEditorData,
+	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final GameObject abilityEditorData,
 			final List<CAbilityTypeAbilityBuilderLevelData> levelData) {
 		if (abilityEditorData != null) {
-			return new CAbilityTypeAbilityBuilder(alias, abilityEditorData.getCode(), abilityEditorData, levelData, parser);
+			return new CAbilityTypeAbilityBuilder(alias, abilityEditorData.getFieldAsWar3ID(CODE, -1), abilityEditorData, levelData, parser);
 		} else {
 			return new CAbilityTypeAbilityBuilder(alias, alias, null, null, parser);
 		}

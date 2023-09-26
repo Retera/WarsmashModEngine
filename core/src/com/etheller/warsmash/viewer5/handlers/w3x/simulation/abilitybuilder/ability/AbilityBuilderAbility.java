@@ -1,9 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -27,6 +30,10 @@ public interface AbilityBuilderAbility extends SingleOrderAbility {
 	public War3ID getAlias();
 
 	public void startCooldown(CSimulation game, CUnit unit);
+	
+	public PrimaryTag getCastingPrimaryTag();
+	
+	public EnumSet<SecondaryTag> getCastingSecondaryTags();
 	
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
 			final AbilityTargetCheckReceiver<CWidget> receiver);

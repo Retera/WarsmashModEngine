@@ -20,7 +20,7 @@ public class CAbilityTypeItemManaRegain extends CAbilityType<CAbilityTypeItemMan
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeItemManaRegainLevelData levelData = getLevelData(0);
-		return new CAbilityItemManaRegain(handleId, getAlias(), levelData.getManaToRegain());
+		return new CAbilityItemManaRegain(handleId, getCode(), getAlias(), levelData.getManaToRegain(), levelData.getCooldown());
 	}
 
 	@Override

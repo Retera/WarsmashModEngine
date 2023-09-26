@@ -1,9 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -28,8 +31,8 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	
 	private int castId = 0;
 
-	public CAbilityAbilityBuilderActiveSmart(int handleId, War3ID alias, List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config, Map<String, Object> localStore) {
-		super(handleId, alias);
+	public CAbilityAbilityBuilderActiveSmart(int handleId, War3ID code, War3ID alias, List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config, Map<String, Object> localStore) {
+		super(handleId, code, alias);
 		this.levelData = levelData;
 		this.config = config;
 		this.localStore = localStore;
@@ -153,6 +156,14 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	public int getBaseOrderId() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	public PrimaryTag getCastingPrimaryTag() {
+		return null;
+	}
+
+	public EnumSet<SecondaryTag> getCastingSecondaryTags() {
+		return null;
 	}
 
 	@Override

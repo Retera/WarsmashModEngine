@@ -6,16 +6,18 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
-public final class ABAbilityTargetStillAliveAndTargetableVisitor implements AbilityTargetVisitor<Boolean> {
+public final class ABAbilityTargetStillTargetableVisitor implements AbilityTargetVisitor<Boolean> {
 	private CSimulation simulation;
 	private CUnit unit;
 	private AbilityBuilderAbility ability;
+	private boolean channeling;
 
-	public ABAbilityTargetStillAliveAndTargetableVisitor reset(final CSimulation simulation, final CUnit unit,
-			final AbilityBuilderAbility ability) {
+	public ABAbilityTargetStillTargetableVisitor reset(final CSimulation simulation, final CUnit unit,
+			final AbilityBuilderAbility ability, boolean channeling) {
 		this.simulation = simulation;
 		this.unit = unit;
 		this.ability = ability;
+		this.channeling = channeling;
 		return this;
 	}
 
@@ -26,6 +28,9 @@ public final class ABAbilityTargetStillAliveAndTargetableVisitor implements Abil
 
 	@Override
 	public Boolean accept(final CUnit target) {
+		if (channeling) {
+			return !target.isHidden();
+		}
 		BooleanAbilityTargetCheckReceiver<CWidget> receiver = new BooleanAbilityTargetCheckReceiver<>();
 		ability.checkCanTarget(simulation, unit, ability.getBaseOrderId(), target, receiver);
 		return !target.isHidden()
@@ -34,6 +39,9 @@ public final class ABAbilityTargetStillAliveAndTargetableVisitor implements Abil
 
 	@Override
 	public Boolean accept(final CDestructable target) {
+		if (channeling) {
+			return !target.isDead();
+		}
 		BooleanAbilityTargetCheckReceiver<CWidget> receiver = new BooleanAbilityTargetCheckReceiver<>();
 		ability.checkCanTarget(simulation, unit, ability.getBaseOrderId(), target, receiver);
 		return !target.isDead() && receiver.isTargetable();
@@ -41,6 +49,9 @@ public final class ABAbilityTargetStillAliveAndTargetableVisitor implements Abil
 
 	@Override
 	public Boolean accept(final CItem target) {
+		if (channeling) {
+			return !target.isDead() && !target.isHidden();
+		}
 		BooleanAbilityTargetCheckReceiver<CWidget> receiver = new BooleanAbilityTargetCheckReceiver<>();
 		ability.checkCanTarget(simulation, unit, ability.getBaseOrderId(), target, receiver);
 		return !target.isDead() && !target.isHidden()

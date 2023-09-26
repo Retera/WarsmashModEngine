@@ -1,40 +1,34 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl;
 
-import java.util.EnumSet;
 import java.util.List;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeNeutralBuilding;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeNeutralBuildingLevelData;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
 public class CAbilityTypeDefinitionNeutralBuilding
 		extends AbstractCAbilityTypeDefinition<CAbilityTypeNeutralBuildingLevelData> implements CAbilityTypeDefinition {
 
 	@Override
-	protected CAbilityTypeNeutralBuildingLevelData createLevelData(final MutableGameObject abilityEditorData,
+	protected CAbilityTypeNeutralBuildingLevelData createLevelData(final GameObject abilityEditorData,
 			final int level) {
-		final String targetsAllowedAtLevelString = abilityEditorData.getFieldAsString(TARGETS_ALLOWED, level);
-		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE, level);
-		final float activationRadius = abilityEditorData.getFieldAsFloat(NeutralBuilding.ACTIVATION_RADIUS, level);
-		final int interactionType = abilityEditorData.getFieldAsInteger(NeutralBuilding.INTERACTION_TYPE, level);
-		final boolean showSelectUnitButton = abilityEditorData
-				.getFieldAsBoolean(NeutralBuilding.SHOW_SELECT_UNIT_BUTTON, level);
-		final boolean showUnitIndicator = abilityEditorData.getFieldAsBoolean(NeutralBuilding.SHOW_UNIT_INDICATOR,
-				level);
+		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE + level, 0);
+		final float activationRadius = abilityEditorData.getFieldAsFloat(DATA_A + level, 0);
+		final int interactionType = abilityEditorData.getFieldAsInteger(DATA_B + level, 0);
+		final boolean showSelectUnitButton = abilityEditorData.getFieldAsBoolean(DATA_C + level, 0);
+		final boolean showUnitIndicator = abilityEditorData.getFieldAsBoolean(DATA_D + level, 0);
 
-		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
-		return new CAbilityTypeNeutralBuildingLevelData(targetsAllowedAtLevel, activationRadius, interactionType,
-				showSelectUnitButton, showUnitIndicator);
+		return new CAbilityTypeNeutralBuildingLevelData(getTargetsAllowed(abilityEditorData, level), activationRadius,
+				interactionType, showSelectUnitButton, showUnitIndicator);
 	}
 
 	@Override
-	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final MutableGameObject abilityEditorData,
+	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final GameObject abilityEditorData,
 			final List<CAbilityTypeNeutralBuildingLevelData> levelData) {
-		return new CAbilityTypeNeutralBuilding(alias, abilityEditorData.getCode(), levelData);
+		return new CAbilityTypeNeutralBuilding(alias, abilityEditorData.getFieldAsWar3ID(CODE, -1), levelData);
 	}
 
 }

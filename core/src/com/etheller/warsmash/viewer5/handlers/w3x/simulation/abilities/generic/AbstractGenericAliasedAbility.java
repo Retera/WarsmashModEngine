@@ -10,8 +10,8 @@ public abstract class AbstractGenericAliasedAbility extends AbstractCAbility imp
 	private final War3ID alias;
 	private int level = 1;
 
-	public AbstractGenericAliasedAbility(final int handleId, final War3ID alias) {
-		super(handleId);
+	public AbstractGenericAliasedAbility(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code);
 		this.alias = alias;
 	}
 

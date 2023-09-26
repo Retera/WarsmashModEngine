@@ -60,7 +60,7 @@
 				"onAddActions": [{
 						"type": "addStateModBuff",
 						"targetUnit": {
-							"type": "getCastingUnit"
+							"type": "getBuffedUnit"
 						},
 						"buff": {
 							"type": "getStoredStateModBuffByKey",
@@ -77,7 +77,7 @@
 				"onRemoveActions": [{
 						"type": "removeStateModBuff",
 						"targetUnit": {
-							"type": "getCastingUnit"
+							"type": "getBuffedUnit"
 						},
 						"buff": {
 							"type": "getStoredStateModBuffByKey",
@@ -113,7 +113,7 @@
 				"onAddActions": [{
 						"type": "addStateModBuff",
 						"targetUnit": {
-							"type": "getCastingUnit"
+							"type": "getBuffedUnit"
 						},
 						"buff": {
 							"type": "getStoredStateModBuffByKey",
@@ -131,7 +131,7 @@
 						"actions": [{
 								"type": "removeDamageTakenListener",
 								"targetUnit": {
-									"type": "getCastingUnit"
+									"type": "getListenerUnit"
 								},
 								"listener": {
 									"type": "getStoredDamageTakenListenerByKey",
@@ -144,7 +144,7 @@
 							},{
 								"type": "removeBuff",
 								"target": {
-									"type": "getCastingUnit"
+									"type": "getListenerUnit"
 								},
 								"buff": {
 									"type": "getStoredBuffByKey",
@@ -157,7 +157,7 @@
 					},{
 						"type": "addDamageTakenListener",
 						"targetUnit": {
-							"type": "getCastingUnit"
+							"type": "getBuffedUnit"
 						},
 						"listener": {
 							"type": "getLastCreatedDamageTakenListener"
@@ -175,7 +175,7 @@
 				"onRemoveActions": [{
 						"type": "removeStateModBuff",
 						"targetUnit": {
-							"type": "getCastingUnit"
+							"type": "getBuffedUnit"
 						},
 						"buff": {
 							"type": "getStoredStateModBuffByKey",
@@ -188,6 +188,8 @@
 								"value": "sleep"
 							}
 						}
+					},{
+						"type": "cleanUpCastInstance"
 				}]
 			},{
 				"type": "addBuff",
@@ -207,5 +209,658 @@
 					"type": "getLastCreatedBuff"
 				}
 		}]
+	},{
+		"ids": [{"id":"AUcs", "castId": "carrionswarm"},{"id":"AOsh", "castId": "shockwave"}],
+		"type": "NORMAL_POINTTARGET_SIMPLE",
+		"onBeginCasting": [{
+			"type": "createLocationTargetedCollisionProjectile",
+			"source": {
+				"type": "getCastingUnit"
+			},
+			"sourceLoc": {
+				"type": "createLocationFromOffset",
+				"origin": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"dist": {
+					"type": "rawFloat",
+					"value": 43
+				},
+				"angle": {
+					"type": "getAngleBetweenLocations",
+					"origin": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"target": {
+						"type": "getTargetedLocation"
+					}
+				}
+			},
+			"target": {
+				"type": "createLocationFromOffset",
+				"origin": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"dist": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "C"
+				},
+				"angle": {
+					"type": "getAngleBetweenLocations",
+					"origin": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"target": {
+						"type": "getTargetedLocation"
+					}
+				}
+			},
+			"id": {
+				"type": "getAlias"
+			},
+			"startingRadius": {
+				"type": "getAbilityArea"
+			},
+			"endingRadius": {
+				"type": "getAbilityDataAsFloat",
+				"dataField": "D"
+			},
+			"provideCounts": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"onLaunch": [{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "remainDmg"
+				},
+				"valueToStore": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "B"
+				}
+			}],
+			"onPreHits": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "dpt"
+					},
+					"valueToStore": {
+						"type": "fMin",
+						"value1": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						},
+						"value2": {
+							"type": "f/",
+							"value1": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "remainDmg"
+								}
+							},
+							"value2": {
+								"type": "intToFloat",
+								"value": {
+									"type": "getProjectileUnitTargets"
+								}
+							}
+						}
+					}
+			}],
+			"canHitTarget": [{
+				"type": "and",
+				"condition1": {
+					"type": "isValidTarget",
+					"target": {
+						"type": "getProjectileHitWidget"
+					}
+				},
+				"condition2": {
+					"type": "isUnitEnemy",
+					"unit": {
+						"type": "getProjectileHitUnit"
+					}
+				}
+			}],
+			"onHit": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "remainDmg"
+					},
+					"valueToStore": {
+						"type": "f-",
+						"value1": {
+							"type": "getStoredFloatByKey",
+							"key": {
+								"type": "rawString",
+								"value": "remainDmg"
+							}
+						},
+						"value2": {
+							"type": "fMin",
+							"value1": {
+								"type": "getUnitCurrentHp",
+								"unit": {
+									"type": "getProjectileHitUnit"
+								}
+							},
+							"value2": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "dpt"
+								}
+							}
+						}
+					}
+				},{
+					"type": "if",
+					"condition": {
+						"type": "f>",
+						"value1": {
+							"type": "getStoredFloatByKey",
+							"key": {
+								"type": "rawString",
+								"value": "dpt"
+							}
+						},
+						"value2": {
+							"type": "rawFloat",
+							"value": 1
+						}
+					},
+					"thenActions": [{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getProjectileHitUnit"
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "SPECIAL"
+						},{
+							"type": "damageTarget",
+							"source": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getProjectileHitUnit"
+							},
+							"damageType": {
+								"type": "getDamageTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "DISEASE"
+								}
+							},
+							"damage": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "dpt"
+								}
+							}
+					}],
+					"elseActions": []
+				}]
+		}]
+		
+	},{
+		"ids": [{"id":"AUim", "castId": "impale"}],
+		"type": "NORMAL_POINTTARGET_SIMPLE",
+		"onAddAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "STUN"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "stun"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createStateModBuff",
+				"buffType": "INVULNERABLE"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "invuln"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+		}],
+		"onBeginCasting": [{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "hgtStp"
+				},
+				"valueToStore": {
+					"type": "f/",
+					"value1": {
+						"type": "pi"
+					},
+					"value2": {
+						"type": "ticksForDuration",
+						"duration": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						}
+					}
+				}
+			},{
+				"type": "createLocationTargetedPseudoProjectile",
+				"source": {
+					"type": "getCastingUnit"
+				},
+				"sourceLoc": {
+					"type": "createLocationFromOffset",
+					"origin": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"dist": {
+						"type": "f/",
+						"value1": {
+							"type": "getAbilityArea"
+						},
+						"value2": {
+							"type": "rawFloat",
+							"value": 2
+						}
+					},
+					"angle": {
+						"type": "getAngleBetweenLocations",
+						"origin": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"target": {
+							"type": "getTargetedLocation"
+						}
+					}
+				},
+				"target": {
+					"type": "createLocationFromOffset",
+					"origin": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"dist": {
+						"type": "f+",
+						"value1": {
+							"type": "f/",
+							"value1": {
+								"type": "getAbilityArea"
+							},
+							"value2": {
+								"type": "rawFloat",
+								"value": 2
+							}
+						},
+						"value2": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						}
+					},
+					"angle": {
+						"type": "getAngleBetweenLocations",
+						"origin": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"target": {
+							"type": "getTargetedLocation"
+						}
+					}
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"radius": {
+					"type": "f/",
+					"value1": {
+						"type": "getAbilityArea"
+					},
+					"value2": {
+						"type": "rawFloat",
+						"value": 2
+					}
+				},
+				"speed": {
+					"type": "f/",
+					"value1": {
+						"type": "getAbilityArea"
+					},
+					"value2": {
+						"type": "rawFloat",
+						"value": 2
+					}
+				},
+				"projectileStepInterval": {
+					"type": "f/",
+					"value1": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					},
+					"value2": {
+						"type": "ceil",
+						"value": {
+							"type": "f/",
+							"value1": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							},
+							"value2": {
+								"type": "f/",
+								"value1": {
+									"type": "getAbilityArea"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 2
+								}
+							}
+						}
+					}
+				},
+				"projectileArtSkip": {
+					"type": "rawInteger",
+					"value": 2
+				},
+				"canHitTarget": [{
+					"type": "isValidTarget",
+					"target": {
+						"type": "getProjectileHitWidget"
+					}
+				}],
+				"onHit": [{
+						"type": "createTimedTickingBuff",
+						"buffId": {
+							"type": "getFirstBuffId"
+						},
+						"artType": "EFFECT",
+						"duration": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						},
+						"onAddActions": [{
+								"type": "addStateModBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getStoredStateModBuffByKey",
+									"instanceValue": {
+										"type": "rawBoolean",
+										"value": "false"
+									},
+									"key": {
+										"type": "rawString",
+										"value": "stun"
+									}
+								}
+							},{
+								"type": "addStateModBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getStoredStateModBuffByKey",
+									"instanceValue": {
+										"type": "rawBoolean",
+										"value": "false"
+									},
+									"key": {
+										"type": "rawString",
+										"value": "invuln"
+									}
+								}
+							},{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "catStrings",
+									"stringList": [{
+										"type": "rawString",
+										"value": "hgt"
+									},{
+										"type": "getUnitHandleAsString",
+										"unit": {
+											"type": "getBuffedUnit"
+										}
+									}]
+								},
+								"valueToStore": {
+									"type": "rawFloat",
+									"value": 0
+								}
+						}],
+						"onTickActions": [{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "catStrings",
+								"stringList": [{
+									"type": "rawString",
+									"value": "hgt"
+								},{
+									"type": "getUnitHandleAsString",
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+								}]
+							},
+							"valueToStore": {
+								"type": "f+",
+								"value1": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "catStrings",
+										"stringList": [{
+											"type": "rawString",
+											"value": "hgt"
+										},{
+											"type": "getUnitHandleAsString",
+											"unit": {
+												"type": "getBuffedUnit"
+											}
+										}]
+									}
+								},
+								"value2": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "rawString",
+										"value": "hgtStp"
+									}
+								}
+							}
+						},{
+							"type": "setUnitFlyHeight",
+							"unit": {
+								"type": "getBuffedUnit"
+							},
+							"height": {
+								"type": "f*",
+								"value1": {
+									"type": "rawFloat",
+									"value": 225
+								},
+								"value2": {
+									"type": "sin",
+									"angle": {
+										"type": "getStoredFloatByKey",
+										"key": {
+											"type": "catStrings",
+											"stringList": [{
+												"type": "rawString",
+												"value": "hgt"
+											},{
+												"type": "getUnitHandleAsString",
+												"unit": {
+													"type": "getBuffedUnit"
+												}
+											}]
+										}
+									}
+								}
+							}
+						}],
+						"onRemoveActions": [{
+								"type": "setUnitFlyHeight",
+								"unit": {
+									"type": "getBuffedUnit"
+								},
+								"height": {
+									"type": "rawFloat",
+									"value": 0
+								}
+							},{
+								"type": "removeStateModBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getStoredStateModBuffByKey",
+									"instanceValue": {
+										"type": "rawBoolean",
+										"value": "false"
+									},
+									"key": {
+										"type": "rawString",
+										"value": "invuln"
+									}
+								}
+							},{
+								"type": "damageTarget",
+								"source": {
+									"type": "getBuffCastingUnit"
+								},
+								"target": {
+									"type": "getBuffedUnit"
+								},
+								"damageType": {
+									"type": "getDamageTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "MAGIC"
+									}
+								},
+								"damage": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "C"
+								}
+							},{
+								"type": "if",
+								"condition": {
+									"type": "isUnitValidTarget",
+									"caster": {
+										"type": "getBuffCastingUnit"
+									},
+									"target": {
+										"type": "getBuffedUnit"
+									}
+								},
+								"thenActions": [{
+										"type": "createTimedBuff",
+										"buffId": {
+											"type": "getFirstBuffId"
+										},
+										"duration": {
+											"type": "getAbilityDuration",
+											"target": {
+												"type": "getBuffedUnit"
+											}
+										},
+										"onRemoveActions": [{
+											"type": "removeStateModBuff",
+											"targetUnit": {
+												"type": "getBuffedUnit"
+											},
+											"buff": {
+												"type": "getStoredStateModBuffByKey",
+												"instanceValue": {
+													"type": "rawBoolean",
+													"value": "false"
+												},
+												"key": {
+													"type": "rawString",
+													"value": "stun"
+												}
+											}
+										}]
+									},{
+										"type": "addBuff",
+										"target": {
+											"type": "getBuffedUnit"
+										},
+										"buff": {
+											"type": "getLastCreatedBuff"
+										}
+								}],
+								"elseActions": [{
+									"type": "removeStateModBuff",
+									"targetUnit": {
+										"type": "getBuffedUnit"
+									},
+									"buff": {
+										"type": "getStoredStateModBuffByKey",
+										"instanceValue": {
+											"type": "rawBoolean",
+											"value": "false"
+										},
+										"key": {
+											"type": "rawString",
+											"value": "stun"
+										}
+									}
+								}]
+						}]
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getProjectileHitUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+		}]
+		
 	}]
 }

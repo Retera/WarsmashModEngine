@@ -5,25 +5,21 @@ import java.util.List;
 import java.util.Random;
 
 import com.badlogic.gdx.math.Rectangle;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityPointTargetSpellBase;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	private float buildingReduction;
@@ -46,18 +42,17 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.buildingReduction = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.BUILDING_REDUCTION, level);
-		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.DAMAGE, level);
-		this.damagePerSecond = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.DAMAGE_PER_SECOND, level);
-		this.maximumDamagePerWave = worldEditorAbility.getFieldAsFloat(AbilityFields.Blizzard.MAXIMUM_DAMAGE_PER_WAVE,
-				level);
-		this.shardCount = worldEditorAbility.getFieldAsInteger(AbilityFields.Blizzard.NUMBER_OF_SHARDS, level);
-		this.waveCount = worldEditorAbility.getFieldAsInteger(AbilityFields.Blizzard.NUMBER_OF_WAVES, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.buildingReduction = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_D + level, 0);
+		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.damagePerSecond = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_E + level, 0);
+		this.maximumDamagePerWave = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_F + level, 0);
+		this.shardCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_C + level, 0);
+		this.waveCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
 
 		this.waveDelay = getCastingTime();
 		setCastingTime(0); // dont use the casting time field normally
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 		this.effectId = AbstractCAbilityTypeDefinition.getEffectId(worldEditorAbility, level);
 	}
 
@@ -70,40 +65,40 @@ public class CAbilityBlizzard extends CAbilityPointTargetSpellBase {
 	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		this.currentWave = 0;
 		this.waveForDamage = false;
-		this.nextWaveTick =
-				simulation.getGameTurnTick() + (int) StrictMath.ceil(this.waveDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+		this.nextWaveTick = simulation.getGameTurnTick()
+				+ (int) StrictMath.ceil(this.waveDelay / WarsmashConstants.SIMULATION_STEP_TIME);
 		return true;
 	}
 
 	@Override
-	public boolean doChannelTick(CSimulation simulation, CUnit caster, AbilityTarget target) {
+	public boolean doChannelTick(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		if (simulation.getGameTurnTick() >= this.nextWaveTick) {
 			final float waveDelay;
 			if (this.waveForDamage) {
 				this.currentWave++;
 				waveDelay = this.waveDelay;
 				this.waveForDamage = false;
-				List<CUnit> damageTargets = new ArrayList<>();
+				final List<CUnit> damageTargets = new ArrayList<>();
 				simulation.getWorldCollision()
 						.enumUnitsInRect(this.recycleRect.set(target.getX() - this.areaOfEffect,
-										target.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2),
+								target.getY() - this.areaOfEffect, this.areaOfEffect * 2, this.areaOfEffect * 2),
 								new CUnitEnumFunction() {
 									@Override
 									public boolean call(final CUnit possibleTarget) {
 										if (possibleTarget.canReach(target, CAbilityBlizzard.this.areaOfEffect)
 												&& possibleTarget.canBeTargetedBy(simulation, caster,
-												getTargetsAllowed())) {
+														getTargetsAllowed())) {
 											damageTargets.add(possibleTarget);
 										}
 										return false;
 									}
 								});
 				float damagePerTarget = this.damage;
-				if (damagePerTarget * damageTargets.size() > maximumDamagePerWave) {
+				if ((damagePerTarget * damageTargets.size()) > maximumDamagePerWave) {
 					damagePerTarget = maximumDamagePerWave / damageTargets.size();
 				}
-				float damagePerTargetBuilding = damagePerTarget * (buildingReduction);
-				for (CUnit damageTarget : damageTargets) {
+				final float damagePerTargetBuilding = damagePerTarget * (buildingReduction);
+				for (final CUnit damageTarget : damageTargets) {
 					float thisTargetDamage;
 					if (damageTarget.isBuilding()) {
 						thisTargetDamage = damagePerTargetBuilding;

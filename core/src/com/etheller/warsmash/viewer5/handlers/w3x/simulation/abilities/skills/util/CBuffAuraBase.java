@@ -22,8 +22,8 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	private CAbilityAuraBase auraSourceAbility;
 	private int nextCheckTick = 0;
 
-	public CBuffAuraBase(int handleId, War3ID alias) {
-		super(handleId, alias);
+	public CBuffAuraBase(int handleId, final War3ID code, War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	public void setAuraSourceUnit(CUnit auraSourceUnit) {
@@ -88,22 +88,23 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	@Override
 	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 							   AbilityTargetCheckReceiver<CWidget> receiver) {
-
+		receiver.notAnActiveAbility();
 	}
 
 	@Override
 	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
 							   AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-
+		receiver.notAnActiveAbility();
 	}
 
 	@Override
 	public void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
 									   AbilityTargetCheckReceiver<Void> receiver) {
-
+		receiver.notAnActiveAbility();
 	}
 	@Override
 	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+		receiver.notAnActiveAbility();
 	}
 
 	@Override

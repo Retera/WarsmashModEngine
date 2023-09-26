@@ -9,8 +9,8 @@ public abstract class CAbilityOverlayedMine extends AbstractGenericNoIconAbility
 	private CUnit parentGoldMineUnit;
 	private CAbilityGoldMinable parentGoldMineAbility;
 
-	public CAbilityOverlayedMine(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityOverlayedMine(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	public void setParentMine(final CUnit parentGoldMineUnit, final CAbilityGoldMinable parentGoldMineAbility) {

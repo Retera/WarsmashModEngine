@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -15,8 +15,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public class CAbilityDropInstant extends AbstractGenericSingleIconNoSmartActiveAbility implements CAbilitySpell {
 
-	public CAbilityDropInstant(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityDropInstant(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override
@@ -95,6 +95,6 @@ public class CAbilityDropInstant extends AbstractGenericSingleIconNoSmartActiveA
 	}
 
 	@Override
-	public void populate(final MutableGameObject worldEditorAbility, final int level) {
+	public void populate(final GameObject worldEditorAbility, final int level) {
 	}
 }

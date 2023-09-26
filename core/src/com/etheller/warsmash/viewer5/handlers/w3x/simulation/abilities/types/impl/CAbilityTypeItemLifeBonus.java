@@ -20,7 +20,7 @@ public class CAbilityTypeItemLifeBonus extends CAbilityType<CAbilityTypeItemLife
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeItemLifeBonusLevelData levelData = getLevelData(0);
-		return new CAbilityItemLifeBonus(handleId, getAlias(), levelData.getLifeBonus());
+		return new CAbilityItemLifeBonus(handleId, getCode(), getAlias(), levelData.getLifeBonus());
 	}
 
 	@Override

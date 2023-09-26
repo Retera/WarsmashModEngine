@@ -18,7 +18,7 @@ public class CAbilityTypeColdArrows extends CAbilityType<CAbilityTypeColdArrowsL
 
 	@Override
 	public CAbility createAbility(final int handleId) {
-		return new CAbilityColdArrows(getAlias(), handleId);
+		return new CAbilityColdArrows(getCode(), getAlias(), handleId);
 	}
 
 	@Override

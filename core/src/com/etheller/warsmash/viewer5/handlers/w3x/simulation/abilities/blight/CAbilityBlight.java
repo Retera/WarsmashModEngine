@@ -21,9 +21,9 @@ public class CAbilityBlight extends AbstractGenericNoIconAbility {
 	private float currentArea;
 	private int lastExpansionTick;
 
-	public CAbilityBlight(final int handleId, final War3ID alias, final boolean createsBlight,
+	public CAbilityBlight(final int handleId, final War3ID code, final War3ID alias, final boolean createsBlight,
 			final float expansionAmount, final float areaOfEffect, final float gameSecondsPerBlightExpansion) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.createsBlight = createsBlight;
 		this.expansionAmount = expansionAmount;
 		this.areaOfEffect = areaOfEffect;

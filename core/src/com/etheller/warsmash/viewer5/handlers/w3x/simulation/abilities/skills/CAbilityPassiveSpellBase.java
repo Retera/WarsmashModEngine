@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import java.util.EnumSet;
+
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -8,8 +10,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
-
-import java.util.EnumSet;
 
 public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconPassiveAbility implements CAbilitySpell {
 	private float castRange;
@@ -19,31 +19,31 @@ public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconP
 	private float heroDuration;
 	private War3ID code;
 
-	public CAbilityPassiveSpellBase(int handleId, War3ID alias) {
-		super(alias, handleId);
+	public CAbilityPassiveSpellBase(final int handleId, final War3ID code, final War3ID alias) {
+		super(code, alias, handleId);
 	}
 
 	@Override
-	public final void populate(final MutableObjectData.MutableGameObject worldEditorAbility, final int level) {
-		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+	public final void populate(final GameObject worldEditorAbility, final int level) {
+		this.castRange = worldEditorAbility.getFieldAsFloat(AbilityFields.CAST_RANGE + level, 0);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 		this.targetsAllowed = CTargetType
-				.parseTargetTypeSet(worldEditorAbility.getFieldAsString(AbilityFields.TARGETS_ALLOWED, level));
+				.parseTargetTypeSet(worldEditorAbility.getFieldAsString(AbilityFields.TARGETS_ALLOWED + level, 0));
 
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, 0);
-		this.heroDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.HERO_DURATION, 0);
-		this.code = worldEditorAbility.getCode();
+		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION + level, 0);
+		this.heroDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.HERO_DURATION + level, 0);
+		this.code = worldEditorAbility.getFieldAsWar3ID(AbilityFields.CODE, -1);
 
 		populateData(worldEditorAbility, level);
 	}
 
-	public float getDurationForTarget(CWidget target) {
-		CUnit unit = target.visit(AbilityTargetVisitor.UNIT);
+	public float getDurationForTarget(final CWidget target) {
+		final CUnit unit = target.visit(AbilityTargetVisitor.UNIT);
 		return getDurationForTarget(unit);
 	}
 
-	public float getDurationForTarget(CUnit targetUnit) {
-		if(targetUnit != null && targetUnit.isHero()) {
+	public float getDurationForTarget(final CUnit targetUnit) {
+		if ((targetUnit != null) && targetUnit.isHero()) {
 			return getHeroDuration();
 		}
 		return getDuration();
@@ -57,8 +57,7 @@ public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconP
 		return heroDuration;
 	}
 
-	public abstract void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level);
-
+	public abstract void populateData(GameObject worldEditorAbility, int level);
 
 	public float getCastRange() {
 		return this.castRange;
@@ -72,12 +71,11 @@ public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconP
 		return this.targetsAllowed;
 	}
 
-
 	public void setCastRange(final float castRange) {
 		this.castRange = castRange;
 	}
 
-	public void setAreaOfEffect(float areaOfEffect) {
+	public void setAreaOfEffect(final float areaOfEffect) {
 		this.areaOfEffect = areaOfEffect;
 	}
 
@@ -85,11 +83,11 @@ public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconP
 		this.targetsAllowed = targetsAllowed;
 	}
 
-	public void setDuration(float duration) {
+	public void setDuration(final float duration) {
 		this.duration = duration;
 	}
 
-	public void setHeroDuration(float heroDuration) {
+	public void setHeroDuration(final float heroDuration) {
 		this.heroDuration = heroDuration;
 	}
 

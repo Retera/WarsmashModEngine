@@ -11,6 +11,7 @@ public class ABTimedArtBuff extends ABGenericTimedBuff {
 	private NonStackingFx fx;
 	private SimulationRenderComponent sfx;
 	private SimulationRenderComponent lsfx;
+	private CEffectType artType = CEffectType.TARGET;
 	
 	public ABTimedArtBuff(int handleId, War3ID alias, float duration, boolean showIcon) {
 		this(handleId, alias, duration);
@@ -20,6 +21,10 @@ public class ABTimedArtBuff extends ABGenericTimedBuff {
 	public ABTimedArtBuff(int handleId, War3ID alias, float duration) {
 		super(handleId, alias, duration, false);
 	}
+	
+	public void setArtType(CEffectType artType) {
+		this.artType = artType;
+	}
 
 	@Override
 	protected void onBuffAdd(CSimulation game, CUnit unit) {
@@ -28,7 +33,7 @@ public class ABTimedArtBuff extends ABGenericTimedBuff {
 			this.fx = null;
 		}
 		if (this.getAlias() != null) {
-			this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), CEffectType.TARGET);
+			this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), artType);
 			this.sfx = game.unitSoundEffectEvent(unit, getAlias());
 			this.lsfx = game.unitLoopSoundEffectEvent(unit, getAlias());
 		}

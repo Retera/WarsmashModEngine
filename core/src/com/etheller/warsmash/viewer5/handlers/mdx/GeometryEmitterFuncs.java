@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.gl.ClientBuffer;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.IVec3;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter2.HeadOrTail;
 
 //The total storage that emitted objects can use.
@@ -320,13 +321,99 @@ public class GeometryEmitterFuncs {
 		shader.setUniformf("u_rows", emitterObject.rows);
 	}
 
-	public static void bindEventObjectEmitterBuffer(
-			final EventObjectEmitter<EventObjectEmitterObject, EventObjectSplUbr> emitter, final ClientBuffer buffer) {
-		final List<EventObjectSplUbr> objects = emitter.objects;
+	public static void bindEventObjectSplEmitterBuffer(
+			final EventObjectEmitter<EventObjectEmitterObject, EventObjectSpl> emitter, final ClientBuffer buffer) {
+		final List<EventObjectSpl> objects = emitter.objects;
+		final ByteBuffer byteView = buffer.byteView;
 		final FloatBuffer floatView = buffer.floatView;
 		int offset = 0;
 
-		for (final EventObjectSplUbr object : objects) {
+		for (final EventObjectSpl object : objects) {
+			final int floatOffset = offset * FLOATS_PER_OBJECT;
+			final int p0Offset = floatOffset + FLOAT_OFFSET_P0;
+			final float[] vertices = object.vertices;
+			final IVec3 normal = object.normal;
+
+			floatView.put(p0Offset + 0, vertices[0]);
+			floatView.put(p0Offset + 1, vertices[1]);
+			floatView.put(p0Offset + 2, vertices[2]);
+			floatView.put(p0Offset + 3, vertices[3]);
+			floatView.put(p0Offset + 4, vertices[4]);
+			floatView.put(p0Offset + 5, vertices[5]);
+			floatView.put(p0Offset + 6, vertices[6]);
+			floatView.put(p0Offset + 7, vertices[7]);
+			floatView.put(p0Offset + 8, vertices[8]);
+			floatView.put(p0Offset + 9, vertices[9]);
+			floatView.put(p0Offset + 10, vertices[10]);
+			floatView.put(p0Offset + 11, vertices[11]);
+
+			floatView.put(floatOffset + FLOAT_OFFSET_HEALTH, object.health);
+
+			final int byteOffset = offset * BYTES_PER_OBJECT;
+			final int leftRightTopOffset = byteOffset + BYTE_OFFSET_LEFT_RIGHT_TOP;
+			byteView.put(leftRightTopOffset + 0, (byte) (normal.x));
+			byteView.put(leftRightTopOffset + 1, (byte) (normal.y));
+			byteView.put(leftRightTopOffset + 2, (byte) (normal.z));
+
+			offset += 1;
+		}
+	}
+
+	public static void bindEventObjectSplEmitterShader(final EventObjectSplEmitter emitter,
+			final ShaderProgram shader) {
+		final MdxComplexInstance instance = emitter.instance;
+		final Scene scene = instance.scene;
+		final TextureMapper textureMapper = instance.textureMapper;
+		final EventObjectEmitterObject emitterObject = emitter.emitterObject;
+		final float[] intervalTimes = emitterObject.intervalTimes;
+		final float[][] intervals = emitterObject.intervals;
+		final float[][] colors = emitterObject.colors;
+		final MdxModel model = emitterObject.model;
+		final GL20 gl = model.viewer.gl;
+		final Texture texture = emitterObject.internalTexture;
+
+		gl.glBlendFunc(emitterObject.blendSrc, emitterObject.blendDst);
+
+		Texture finalTexture = textureMapper.get(texture);
+		if (finalTexture == null) {
+			finalTexture = texture;
+		}
+		model.viewer.webGL.bindTexture(finalTexture, 0);
+
+		shader.setUniformf("u_lifeSpan", emitterObject.lifeSpan);
+		shader.setUniformf("u_columns", emitterObject.columns);
+		shader.setUniformf("u_rows", emitterObject.rows);
+		shader.setUniformi("u_unshaded", emitterObject.emitterUsesMdlOrUnshaded != 0 ? 1 : 0);
+
+		final W3xSceneLightManager lightManager = (W3xSceneLightManager) scene.getLightManager();
+		final DataTexture unitLightsTexture = lightManager.getUnitLightsTexture();
+
+		unitLightsTexture.bind(14);
+		shader.setUniformi("u_lightTexture", 14);
+		shader.setUniformf("u_lightCount", lightManager.getUnitLightCount());
+		shader.setUniformf("u_lightTextureHeight", unitLightsTexture.getHeight());
+
+		// 3 because the uniform is shared with UBR, which has 3 values.
+		vectorTemp[0] = intervalTimes[0];
+		vectorTemp[1] = intervalTimes[1];
+		vectorTemp[2] = 0;
+		shader.setUniform3fv("u_intervalTimes", vectorTemp, 0, 3);
+
+		shader.setUniform3fv("u_intervals[0]", intervals[0], 0, 3);
+		shader.setUniform3fv("u_intervals[1]", intervals[1], 0, 3);
+
+		shader.setUniform4fv("u_colors[0]", colors[0], 0, 4);
+		shader.setUniform4fv("u_colors[1]", colors[1], 0, 4);
+		shader.setUniform4fv("u_colors[2]", colors[2], 0, 4);
+	}
+
+	public static void bindEventObjectUbrEmitterBuffer(
+			final EventObjectEmitter<EventObjectEmitterObject, EventObjectUbr> emitter, final ClientBuffer buffer) {
+		final List<EventObjectUbr> objects = emitter.objects;
+		final FloatBuffer floatView = buffer.floatView;
+		int offset = 0;
+
+		for (final EventObjectUbr object : objects) {
 			final int floatOffset = offset * FLOATS_PER_OBJECT;
 			final int p0Offset = floatOffset + FLOAT_OFFSET_P0;
 			final float[] vertices = object.vertices;
@@ -350,43 +437,6 @@ public class GeometryEmitterFuncs {
 		}
 	}
 
-	public static void bindEventObjectSplEmitterShader(final EventObjectSplEmitter emitter,
-			final ShaderProgram shader) {
-		final TextureMapper textureMapper = emitter.instance.textureMapper;
-		final EventObjectEmitterObject emitterObject = emitter.emitterObject;
-		final float[] intervalTimes = emitterObject.intervalTimes;
-		final float[][] intervals = emitterObject.intervals;
-		final float[][] colors = emitterObject.colors;
-		final MdxModel model = emitterObject.model;
-		final GL20 gl = model.viewer.gl;
-		final Texture texture = emitterObject.internalTexture;
-
-		gl.glBlendFunc(emitterObject.blendSrc, emitterObject.blendDst);
-
-		Texture finalTexture = textureMapper.get(texture);
-		if (finalTexture == null) {
-			finalTexture = texture;
-		}
-		model.viewer.webGL.bindTexture(finalTexture, 0);
-
-		shader.setUniformf("u_lifeSpan", emitterObject.lifeSpan);
-		shader.setUniformf("u_columns", emitterObject.columns);
-		shader.setUniformf("rows", emitterObject.rows);
-
-		// 3 because the uniform is shared with UBR, which has 3 values.
-		vectorTemp[0] = intervalTimes[0];
-		vectorTemp[1] = intervalTimes[1];
-		vectorTemp[2] = 0;
-		shader.setUniform3fv("u_intervalTimes", vectorTemp, 0, 3);
-
-		shader.setUniform3fv("u_intervals[0]", intervals[0], 0, 3);
-		shader.setUniform3fv("u_intervals[1]", intervals[1], 0, 3);
-
-		shader.setUniform3fv("u_colors[0]", colors[0], 0, 3);
-		shader.setUniform3fv("u_colors[1]", colors[1], 0, 3);
-		shader.setUniform3fv("u_colors[2]", colors[2], 0, 3);
-	}
-
 	public static void bindEventObjectUbrEmitterShader(final EventObjectUbrEmitter emitter,
 			final ShaderProgram shader) {
 		final TextureMapper textureMapper = emitter.instance.textureMapper;
@@ -407,13 +457,13 @@ public class GeometryEmitterFuncs {
 
 		shader.setUniformf("u_lifeSpan", emitterObject.lifeSpan);
 		shader.setUniformf("u_columns", emitterObject.columns);
-		shader.setUniformf("rows", emitterObject.rows);
+		shader.setUniformf("u_rows", emitterObject.rows);
 
 		shader.setUniform3fv("u_intervalTimes", intervalTimes, 0, 3);
 
-		shader.setUniform3fv("u_colors[0]", colors[0], 0, 3);
-		shader.setUniform3fv("u_colors[1]", colors[1], 0, 3);
-		shader.setUniform3fv("u_colors[2]", colors[2], 0, 3);
+		shader.setUniform4fv("u_colors[0]", colors[0], 0, 4);
+		shader.setUniform4fv("u_colors[1]", colors[1], 0, 4);
+		shader.setUniform4fv("u_colors[2]", colors[2], 0, 4);
 	}
 
 	public static void renderEmitter(final MdxEmitter<?, ?, ?> emitter, final ShaderProgram shader) {
@@ -453,17 +503,11 @@ public class GeometryEmitterFuncs {
 				bindRibbonEmitterShader((RibbonEmitter) emitter, shader);
 				break;
 			case EMITTER_SPLAT:
-				if (true) {
-					return;
-				}
-				bindEventObjectEmitterBuffer((EventObjectSplEmitter) emitter, buffer);
+				bindEventObjectSplEmitterBuffer((EventObjectSplEmitter) emitter, buffer);
 				bindEventObjectSplEmitterShader((EventObjectSplEmitter) emitter, shader);
 				break;
 			default:
-				if (true) {
-					return;
-				}
-				bindEventObjectEmitterBuffer((EventObjectUbrEmitter) emitter, buffer);
+				bindEventObjectUbrEmitterBuffer((EventObjectUbrEmitter) emitter, buffer);
 				bindEventObjectUbrEmitterShader((EventObjectUbrEmitter) emitter, shader);
 				break;
 			}

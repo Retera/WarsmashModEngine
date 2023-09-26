@@ -6,7 +6,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
@@ -25,22 +24,13 @@ import com.etheller.warsmash.networking.uberserver.users.User;
 import com.etheller.warsmash.networking.uberserver.users.UserManager;
 
 import net.warsmash.map.NetMapDownloader;
-import net.warsmash.uberserver.AccountCreationFailureReason;
-import net.warsmash.uberserver.ChannelServerMessageType;
-import net.warsmash.uberserver.GameCreationFailureReason;
-import net.warsmash.uberserver.GamingNetworkServerToClientListener;
-import net.warsmash.uberserver.HandshakeDeniedReason;
-import net.warsmash.uberserver.HostedGameVisibility;
-import net.warsmash.uberserver.JoinGameFailureReason;
-import net.warsmash.uberserver.LobbyGameSpeed;
-import net.warsmash.uberserver.LobbyPlayerType;
-import net.warsmash.uberserver.LoginFailureReason;
-import net.warsmash.uberserver.ServerErrorMessageType;
+import net.warsmash.uberserver.*;
 
 public class GamingNetworkServerBusinessLogicImpl {
 	private final Set<AcceptedGameListKey> acceptedGames;
 	private final UserManager userManager;
 	private final String welcomeMessage;
+	private final GamingNetworkServerTracker tracker;
 	private final Map<Integer, SessionImpl> userIdToCurrentSession = new HashMap<>();
 	private final Map<Long, SessionImpl> tokenToSession;
 	private final Map<String, ChatChannel> nameLowerCaseToChannel = new HashMap<>();
@@ -48,10 +38,11 @@ public class GamingNetworkServerBusinessLogicImpl {
 	private final Random random;
 
 	public GamingNetworkServerBusinessLogicImpl(final Set<AcceptedGameListKey> acceptedGames,
-			final UserManager userManager, final String welcomeMessage) {
+			final UserManager userManager, final String welcomeMessage, GamingNetworkServerTracker tracker) {
 		this.acceptedGames = acceptedGames;
 		this.userManager = userManager;
 		this.welcomeMessage = welcomeMessage;
+		this.tracker = tracker;
 		this.tokenToSession = new HashMap<>();
 		this.random = new Random();
 	}
@@ -66,32 +57,38 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 		if (sessionToKill != null) {
 			killSession(sessionToKill);
+			tracker.disconnectedSession(writer.getAddressString(), sessionToKill.getUser());
 		}
 	}
 
 	public void handshake(final String gameId, final int version,
-			final GamingNetworkServerToClientListener connectionContext) {
-		if (this.acceptedGames.contains(new AcceptedGameListKey(gameId, version))) {
+			final GamingNetworkClientConnectionContext connectionContext) {
+		AcceptedGameListKey acceptedGameListKey = new AcceptedGameListKey(gameId, version);
+		if (this.acceptedGames.contains(acceptedGameListKey)) {
 			connectionContext.handshakeAccepted();
+			tracker.handshakeAccepted(connectionContext.getAddressString(), acceptedGameListKey);
 		}
 		else {
 			connectionContext.handshakeDenied(HandshakeDeniedReason.BAD_GAME_VERSION);
+			tracker.handshakeDenied(connectionContext.getAddressString(), HandshakeDeniedReason.BAD_GAME_VERSION);
 		}
 	}
 
 	public void createAccount(final String username, final char[] passwordHash,
-			final GamingNetworkServerToClientListener connectionContext) {
+			final GamingNetworkClientConnectionContext connectionContext) {
 		final User user = this.userManager.createUser(username, passwordHash);
 		if (user == null) {
 			connectionContext.accountCreationFailed(AccountCreationFailureReason.USERNAME_ALREADY_EXISTS);
+			tracker.accountCreationFailed(connectionContext.getAddressString(), username);
 		}
 		else {
 			connectionContext.accountCreationOk();
+			tracker.accountCreatedOk(connectionContext.getAddressString(), username);
 		}
 	}
 
 	public void login(final String username, final char[] passwordHash,
-			final GamingNetworkServerToClientListener connectionContext) {
+			final GamingNetworkClientConnectionContext connectionContext) {
 		final User user = this.userManager.getUserByName(username);
 		if (user != null) {
 			if (PasswordAuthentication.authenticate(passwordHash, user.getPasswordHash())) {
@@ -104,13 +101,16 @@ public class GamingNetworkServerBusinessLogicImpl {
 				this.tokenToSession.put(session.getToken(), session);
 				this.userIdToCurrentSession.put(user.getId(), session);
 				connectionContext.loginOk(session.getToken(), GamingNetworkServerBusinessLogicImpl.this.welcomeMessage);
+				tracker.loginOk(connectionContext.getAddressString(), username);
 			}
 			else {
 				connectionContext.loginFailed(LoginFailureReason.INVALID_CREDENTIALS);
+				tracker.loginFailed(connectionContext.getAddressString(), LoginFailureReason.INVALID_CREDENTIALS);
 			}
 		}
 		else {
 			connectionContext.loginFailed(LoginFailureReason.UNKNOWN_USER);
+			tracker.loginFailed(connectionContext.getAddressString(), LoginFailureReason.UNKNOWN_USER);
 		}
 	}
 
@@ -120,7 +120,9 @@ public class GamingNetworkServerBusinessLogicImpl {
 		this.tokenToSession.remove(currentSession.getToken());
 		this.userIdToCurrentSession.remove(currentSession.getUser().getId());
 		try {
+			String addressString = currentSession.mostRecentConnectionContext.getAddressString();
 			currentSession.mostRecentConnectionContext.disconnected();
+			tracker.killedSession(addressString, currentSession.getUser());
 		}
 		catch (final Exception exc) {
 			System.err.println("Exception while killing session for user: " + exc);
@@ -129,7 +131,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 	}
 
 	public void joinChannel(final long sessionToken, final String channelName,
-			final GamingNetworkServerToClientListener connectionContext) {
+			final GamingNetworkClientConnectionContext connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			removeSessionFromCurrentChannel(session);
@@ -144,18 +146,21 @@ public class GamingNetworkServerBusinessLogicImpl {
 			session.currentChatChannel = channelKey;
 			session.lastActiveChatChannel = chatChannel.channelName;
 			connectionContext.joinedChannel(channelName);
+			tracker.joinedChannel(connectionContext.getAddressString(), session.getUser(), channelName);
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
 	public void joinGame(final long sessionToken, final String gameName,
-			final GamingNetworkServerToClientListener connectionContext) {
+			final GamingNetworkClientConnectionContext connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			if (session.currentGameName != null) {
 				connectionContext.joinGameFailed(JoinGameFailureReason.SESSION_ERROR);
+				tracker.joinGameFailed(connectionContext.getAddressString(), session.getUser(), gameName, JoinGameFailureReason.SESSION_ERROR);
 			}
 			else {
 				removeSessionFromCurrentChannel(session);
@@ -164,10 +169,12 @@ public class GamingNetworkServerBusinessLogicImpl {
 				final HostedGame game = this.nameLowerCaseToGame.get(gameKey);
 				if (game == null) {
 					connectionContext.joinGameFailed(JoinGameFailureReason.NO_SUCH_GAME);
+					tracker.joinGameFailed(connectionContext.getAddressString(), session.getUser(), gameName, JoinGameFailureReason.NO_SUCH_GAME);
 				}
 				else {
 					if (game.getUsedSlots() >= game.totalSlots) {
 						connectionContext.joinGameFailed(JoinGameFailureReason.GAME_FULL);
+						tracker.joinGameFailed(connectionContext.getAddressString(), session.getUser(), gameName, JoinGameFailureReason.GAME_FULL);
 					}
 					else {
 						game.addUser(session);
@@ -175,12 +182,14 @@ public class GamingNetworkServerBusinessLogicImpl {
 						connectionContext.joinedGame(gameName, game.mapName, game.mapChecksum);
 						game.sendServerMessage(session.getUser().getUsername(), ChannelServerMessageType.JOIN_GAME);
 						game.resendLobby(connectionContext);
+						tracker.joinedGame(connectionContext.getAddressString(), session.getUser(), gameName);
 					}
 				}
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -189,9 +198,11 @@ public class GamingNetworkServerBusinessLogicImpl {
 		if (session != null) {
 			removeSessionFromCurrentGame(session);
 			sendSessionToDefaultChannel(sessionToken, connectionContext, session);
+			tracker.leftGame(connectionContext.getAddressString(), session.getUser());
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -201,14 +212,17 @@ public class GamingNetworkServerBusinessLogicImpl {
 		if (session != null) {
 			if (session.currentGameName == null) {
 				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				tracker.updateMapFailedNoGame(connectionContext.getAddressString(), session.getUser());
 			}
 			else {
 				final HostedGame hostedGame = this.nameLowerCaseToGame.get(session.currentGameName);
 				hostedGame.writeMap(sessionToken, sequenceNumber, data);
+				tracker.writeMap(connectionContext.getAddressString(), session.getUser());
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -217,20 +231,24 @@ public class GamingNetworkServerBusinessLogicImpl {
 		if (session != null) {
 			if (session.currentGameName == null) {
 				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				tracker.mapDoneFailedNoGame(connectionContext.getAddressString(), session.getUser());
 			}
 			else {
 				final HostedGame hostedGame = this.nameLowerCaseToGame.get(session.currentGameName);
 				if (!hostedGame.mapDone(sessionToken, sequenceNumber)) {
 					closeGame(session.currentGameName, hostedGame);
 					connectionContext.serverErrorMessage(ServerErrorMessageType.UPLOAD_MAP_FAILED);
+					tracker.uploadMapFailed(connectionContext.getAddressString(), session.getUser());
 				}
 				else {
 					hostedGame.sendMapToAwaitingUsers();
+					tracker.uploadMapSucceeded(connectionContext.getAddressString(), session.getUser());
 				}
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -239,6 +257,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 		if (session != null) {
 			if (session.currentGameName == null) {
 				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				tracker.requestMapFailedNoGame(connectionContext.getAddressString(), session.getUser());
 			}
 			else {
 				final HostedGame hostedGame = this.nameLowerCaseToGame.get(session.currentGameName);
@@ -247,16 +266,19 @@ public class GamingNetworkServerBusinessLogicImpl {
 					System.err.println(session.getUser().getUsername() + " - sending map");
 					hostedGame.sendMap(connectionContext);
 					hostedGame.resendLobby(connectionContext);
+					tracker.sentMap(connectionContext.getAddressString(), session.getUser());
 				}
 				else {
 					System.err.println(
 							session.getUser().getUsername() + " - waiting for map because server wasn't ready");
 					hostedGame.addPlayerAwaitingMap(session);
+					tracker.subscribedForMap(connectionContext.getAddressString(), session.getUser());
 				}
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -264,7 +286,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 		sendSessionToDefaultChannel(session.getToken(), session.mostRecentConnectionContext, session);
 	}
 
-	private void sendSessionToDefaultChannel(long sessionToken, GamingNetworkServerToClientListener connectionContext,
+	private void sendSessionToDefaultChannel(long sessionToken, GamingNetworkClientConnectionContext connectionContext,
 			final SessionImpl session) {
 		if (session.lastActiveChatChannel != null) {
 			joinChannel(sessionToken, session.lastActiveChatChannel, connectionContext);
@@ -285,6 +307,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 			HostedGame game = this.nameLowerCaseToGame.get(gameKey);
 			if (game != null) {
 				connectionContext.gameCreationFailed(GameCreationFailureReason.GAME_NAME_ALREADY_USED);
+				tracker.gameCreationFailed(connectionContext.getAddressString(), session.getUser(), GameCreationFailureReason.GAME_NAME_ALREADY_USED);
 			}
 			else {
 				removeSessionFromCurrentChannel(session);
@@ -297,10 +320,12 @@ public class GamingNetworkServerBusinessLogicImpl {
 				connectionContext.joinedGame(gameName, game.mapName, game.mapChecksum);
 				game.sendServerMessage(session.getUser().getUsername(), ChannelServerMessageType.JOIN_GAME);
 				game.resendLobby(connectionContext);
+				tracker.createdGame(connectionContext.getAddressString(), session.getUser(), gameName, mapName, totalSlots, gameSpeed, visibility, mapChecksum);
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -314,21 +339,26 @@ public class GamingNetworkServerBusinessLogicImpl {
 				if (game != null) {
 					if (game.hostUser == session.getUser()) {
 						game.setPlayerSlotType(slot, lobbyPlayerType);
+						tracker.gameLobbySetPlayerSlotType(connectionContext.getAddressString(), session.getUser(), slot, lobbyPlayerType);
 					}
 					else {
 						connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+						tracker.gameLobbySetPlayerSlotTypeFailed(connectionContext.getAddressString(), session.getUser(), slot, lobbyPlayerType, LobbyActionFailureReason.NOT_HOST);
 					}
 				}
 				else {
 					connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+					tracker.gameLobbySetPlayerSlotTypeFailed(connectionContext.getAddressString(), session.getUser(), slot, lobbyPlayerType, LobbyActionFailureReason.NO_GAME);
 				}
 			}
 			else {
 				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				tracker.gameLobbySetPlayerSlotTypeFailed(connectionContext.getAddressString(), session.getUser(), slot, lobbyPlayerType, LobbyActionFailureReason.NO_SESSION_GAME);
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -342,21 +372,26 @@ public class GamingNetworkServerBusinessLogicImpl {
 				if (game != null) {
 					if (game.canSetRace(session, slot)) {
 						game.setPlayerRace(slot, raceItemIndex);
+						tracker.gameLobbySetPlayerRace(connectionContext.getAddressString(), session.getUser(), slot, raceItemIndex);
 					}
 					else {
 						connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+						tracker.gameLobbySetPlayerRaceFailed(connectionContext.getAddressString(), session.getUser(), slot, raceItemIndex, LobbyActionFailureReason.NOT_HOST_OR_SLOT);
 					}
 				}
 				else {
 					connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+					tracker.gameLobbySetPlayerRaceFailed(connectionContext.getAddressString(), session.getUser(), slot, raceItemIndex, LobbyActionFailureReason.NO_GAME);
 				}
 			}
 			else {
 				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				tracker.gameLobbySetPlayerRaceFailed(connectionContext.getAddressString(), session.getUser(), slot, raceItemIndex, LobbyActionFailureReason.NO_SESSION_GAME);
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -369,21 +404,26 @@ public class GamingNetworkServerBusinessLogicImpl {
 				if (game != null) {
 					if (game.getHostUser() == session.getUser()) {
 						game.onStartGame();
+						tracker.gameLobbyStartGame(connectionContext.getAddressString(), session.getUser(), channelKey);
 					}
 					else {
 						connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+						tracker.gameLobbyStartGameFailed(connectionContext.getAddressString(), session.getUser(), channelKey, LobbyActionFailureReason.NOT_HOST);
 					}
 				}
 				else {
 					connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+					tracker.gameLobbyStartGameFailed(connectionContext.getAddressString(), session.getUser(), channelKey, LobbyActionFailureReason.NO_GAME);
 				}
 			}
 			else {
 				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				tracker.gameLobbyStartGameFailed(connectionContext.getAddressString(), session.getUser(), null, LobbyActionFailureReason.NO_SESSION_GAME);
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -435,7 +475,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 	}
 
 	public void chatMessage(final long sessionToken, final String text,
-			final GamingNetworkServerToClientListener connectionContext) {
+			final GamingNetworkClientConnectionContext connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			if (session.currentChatChannel != null) {
@@ -443,6 +483,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 				final ChatChannel chatChannel = this.nameLowerCaseToChannel.get(channelKey);
 				if (chatChannel != null) {
 					chatChannel.sendMessage(session.getUser().getUsername(), text);
+					tracker.channelChatMessage(connectionContext.getAddressString(), session.getUser(), channelKey, text);
 				}
 			}
 			else if (session.currentGameName != null) {
@@ -450,19 +491,22 @@ public class GamingNetworkServerBusinessLogicImpl {
 				final HostedGame chatChannel = this.nameLowerCaseToGame.get(channelKey);
 				if (chatChannel != null) {
 					chatChannel.sendMessage(session.getUser().getUsername(), text);
+					tracker.gameLobbyChatMessage(connectionContext.getAddressString(), session.getUser(), channelKey, text);
 				}
 			}
 			else {
 				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				tracker.chatMessageFailed(connectionContext.getAddressString(), session.getUser(), text);
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
 	public void emoteMessage(final long sessionToken, final String text,
-			final GamingNetworkServerToClientListener connectionContext) {
+			final GamingNetworkClientConnectionContext connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			if (session.currentChatChannel != null) {
@@ -470,6 +514,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 				final ChatChannel chatChannel = this.nameLowerCaseToChannel.get(channelKey);
 				if (chatChannel != null) {
 					chatChannel.sendEmote(session.getUser().getUsername(), text);
+					tracker.channelEmoteMessage(connectionContext.getAddressString(), session.getUser(), channelKey, text);
 				}
 			}
 			else if (session.currentGameName != null) {
@@ -477,18 +522,21 @@ public class GamingNetworkServerBusinessLogicImpl {
 				final HostedGame chatChannel = this.nameLowerCaseToGame.get(channelKey);
 				if (chatChannel != null) {
 					chatChannel.sendEmote(session.getUser().getUsername(), text);
+					tracker.gameLobbyEmoteMessage(connectionContext.getAddressString(), session.getUser(), channelKey, text);
 				}
 			}
 			else {
 				connectionContext.serverErrorMessage(ServerErrorMessageType.ERROR_HANDLING_REQUEST);
+				tracker.emoteMessageFailed(connectionContext.getAddressString(), session.getUser(), text);
 			}
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
-	public void queryGamesList(final long sessionToken, final GamingNetworkServerToClientListener connectionContext) {
+	public void queryGamesList(final long sessionToken, final GamingNetworkClientConnectionContext connectionContext) {
 		final SessionImpl session = getSession(sessionToken, connectionContext);
 		if (session != null) {
 			// TODO this code paradigm is stupid and gives the client an incentive to modify
@@ -506,9 +554,11 @@ public class GamingNetworkServerBusinessLogicImpl {
 				}
 			}
 			connectionContext.endGamesList();
+			tracker.queriedGamesList(connectionContext.getAddressString(), session.getUser());
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
@@ -519,11 +569,12 @@ public class GamingNetworkServerBusinessLogicImpl {
 		}
 		else {
 			connectionContext.badSession();
+			tracker.badSession(connectionContext.getAddressString());
 		}
 	}
 
 	private SessionImpl getSession(final long token,
-			final GamingNetworkServerToClientListener mostRecentConnectionContext) {
+			final GamingNetworkClientConnectionContext mostRecentConnectionContext) {
 		final SessionImpl session = this.tokenToSession.get(token);
 		if (session != null) {
 			if (session.getLastActiveTime() < (System.currentTimeMillis() - (60 * 60 * 1000))) {
@@ -546,10 +597,10 @@ public class GamingNetworkServerBusinessLogicImpl {
 		private String lastActiveChatChannel;
 		private String currentChatChannel;
 		private String currentGameName;
-		private GamingNetworkServerToClientListener mostRecentConnectionContext;
+		private GamingNetworkClientConnectionContext mostRecentConnectionContext;
 
 		public SessionImpl(final User user, final long timestamp, final long secretKey,
-				final GamingNetworkServerToClientListener connectionContext) {
+				final GamingNetworkClientConnectionContext connectionContext) {
 			this.user = user;
 			this.timestamp = timestamp;
 			this.secretKey = secretKey;
@@ -557,7 +608,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 			this.mostRecentConnectionContext = connectionContext;
 		}
 
-		public void notifyUsed(final GamingNetworkServerToClientListener mostRecentConnectionContext) {
+		public void notifyUsed(final GamingNetworkClientConnectionContext mostRecentConnectionContext) {
 			this.lastActiveTime = System.currentTimeMillis();
 			this.mostRecentConnectionContext = mostRecentConnectionContext;
 		}
@@ -667,7 +718,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 			return this.mapFullyLoaded;
 		}
 
-		public void sendMap(GamingNetworkServerToClientListener connectionContext) {
+		public void sendMap(GamingNetworkClientConnectionContext connectionContext) {
 			int sequenceNumber = 0;
 			connectionContext.beginSendMap();
 			try (FileChannel readerChannel = FileChannel.open(this.mapFile.toPath(), StandardOpenOption.READ)) {
@@ -759,7 +810,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 			this.userSessionsAwaitingMap.add(session);
 		}
 
-		public void resendLobby(GamingNetworkServerToClientListener connectionContext) {
+		public void resendLobby(GamingNetworkClientConnectionContext connectionContext) {
 			for (int i = 0; i < this.userSessionSlotsGameData.length; i++) {
 				connectionContext.gameLobbySlotSetPlayerType(i, this.userSessionSlotsGameData[i].type);
 				if (this.userSessionSlots[i] != null) {

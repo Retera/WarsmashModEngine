@@ -20,7 +20,7 @@ public class CAbilityTypeRepair extends CAbilityType<CAbilityTypeHumanRepairLeve
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeHumanRepairLevelData levelData = getLevelData(0);
-		return new CAbilityRepair(handleId, getAlias(), levelData.getTargetsAllowed(), levelData.getNavalRangeBonus(),
+		return new CAbilityRepair(handleId, getCode(), getAlias(), levelData.getTargetsAllowed(), levelData.getNavalRangeBonus(),
 				levelData.getRepairCostRatio(), levelData.getRepairTimeRatio(), levelData.getCastRange());
 	}
 

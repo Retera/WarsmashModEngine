@@ -16,7 +16,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAbility {
 	private float bufferManaRequired;
@@ -32,10 +31,10 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	private CBuffImmolationCaster buffImmolationCaster;
 	private int nextChargeManaTick;
 
-	public CAbilityImmolation(final int handleId, final War3ID alias, final float bufferManaRequired,
+	public CAbilityImmolation(final int handleId, final War3ID code, final War3ID alias, final float bufferManaRequired,
 			final float damagePerInterval, final float manaDrainedPerSecond, final float areaOfEffect,
 			final int manaCost, final float duration, final EnumSet<CTargetType> targetsAllowed, final War3ID buffId) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.bufferManaRequired = bufferManaRequired;
 		this.damagePerInterval = damagePerInterval;
 		this.manaDrainedPerSecond = manaDrainedPerSecond;

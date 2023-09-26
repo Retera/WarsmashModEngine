@@ -197,7 +197,7 @@ public class TerrainShaders {
 				"uniform sampler2DArray sample10;\r\n" + //
 				"uniform sampler2DArray sample11;\r\n" + //
 				"uniform sampler2DArray sample12;\r\n" + //
-				"uniform sampler2DArray sample13;\r\n" + //
+//				"uniform sampler2DArray sample13;\r\n" + //
 //				"uniform sampler2DArray sample14;\r\n" + //
 //				"uniform sampler2DArray sample15;\r\n" + //
 				"uniform sampler2DArray sample16;\r\n" + //
@@ -249,8 +249,8 @@ public class TerrainShaders {
 				"			return textureGrad(sample11, uv, dx, dy);\r\n" + //
 				"		case 12u:\r\n" + //
 				"			return textureGrad(sample12, uv, dx, dy);\r\n" + //
-				"		case 13u:\r\n" + //
-				"			return textureGrad(sample13, uv, dx, dy);\r\n" + //
+//				"		case 13u:\r\n" + //
+//				"			return textureGrad(sample13, uv, dx, dy);\r\n" + //
 //				"		case 14u:\r\n" + //
 //				"			return textureGrad(sample14, uv, dx, dy);\r\n" + //
 //				"		case 15u:\r\n" + //

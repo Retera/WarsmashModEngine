@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
@@ -20,7 +19,7 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 	private CBehaviorHumanBuild buildBehavior;
 
 	public CAbilityHumanBuild(final int handleId, final List<War3ID> structuresBuilt) {
-		super(handleId, structuresBuilt);
+		super(handleId, War3ID.fromString("AHbu"), structuresBuilt);
 	}
 
 	@Override
@@ -47,17 +46,7 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 			final AbilityPointTarget point) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
-		final BufferedImage buildingPathingPixelMap = unitType.getBuildingPathingPixelMap();
-		if (buildingPathingPixelMap != null) {
-			point.x = (float) Math.floor(point.x / 64f) * 64f;
-			point.y = (float) Math.floor(point.y / 64f) * 64f;
-			if (((buildingPathingPixelMap.getWidth() / 2) % 2) == 1) {
-				point.x += 32f;
-			}
-			if (((buildingPathingPixelMap.getHeight() / 2) % 2) == 1) {
-				point.y += 32f;
-			}
-		}
+		roundTargetPoint(point, unitType);
 		final CPlayer player = game.getPlayer(caster.getPlayerIndex());
 		player.chargeFor(unitType);
 		if (unitType.getFoodUsed() != 0) {

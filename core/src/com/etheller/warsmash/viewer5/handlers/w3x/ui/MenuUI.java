@@ -347,8 +347,18 @@ public class MenuUI {
 					@Override
 					public void run() {
 						MenuUI.this.battleNetConnectDialog.setVisible(true);
-						MenuUI.this.rootFrame.setDecoratedText(MenuUI.this.battleNetConnectInfoText,
-								"NETERROR_DEFAULTERROR");
+						String msg;
+						switch (reason) {
+						case BAD_GAME_VERSION: {
+							msg = "ERROR_ID_VERSION_BAD";
+							break;
+						}
+						default: {
+							msg = "NETERROR_DEFAULTERROR";
+							break;
+						}
+						}
+						MenuUI.this.rootFrame.setDecoratedText(MenuUI.this.battleNetConnectInfoText, msg);
 					}
 				});
 			}
@@ -1100,10 +1110,10 @@ public class MenuUI {
 			@Override
 			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
 				if (newSelectedItem != null) {
-					if (newSelectedItem.compareTo(prevSelectedItem) == 0) {
+					if (newSelectedItem.compareTo(this.prevSelectedItem) == 0) {
 						return;
 					}
-					prevSelectedItem = newSelectedItem;
+					this.prevSelectedItem = newSelectedItem;
 
 					try {
 						final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
@@ -1287,10 +1297,27 @@ public class MenuUI {
 								MenuUI.this.campaignRootMenuUI.setVisible(false);
 								MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
 								MenuUI.this.campaignFade.setSequence("Birth");
+								try {
+									loadAndCacheMapConfigs(mission.getMapFilename());
+								}
+								catch (final IOException e) {
+									e.printStackTrace();
+								}
+								int localPlayerIndex = -1;
+								for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+									final CBasePlayer player = MenuUI.this.currentMapConfig.getPlayer(i);
+									if (player.getController() == CMapControl.USER) {
+										player.setSlotState(CPlayerSlotState.PLAYING);
+										player.setName(MenuUI.this.profileManager.getCurrentProfile());
+										if (localPlayerIndex == -1) {
+											localPlayerIndex = i;
+										}
+									}
+								}
 								MenuUI.this.beginGameInformation = new BeginGameInformation();
 								MenuUI.this.beginGameInformation.gameMapLookup = new CurrentNetGameMapLookupPath(
 										mission.getMapFilename());
-								MenuUI.this.beginGameInformation.localPlayerIndex = -1;
+								MenuUI.this.beginGameInformation.localPlayerIndex = localPlayerIndex;
 							}
 						});
 					}
@@ -1652,32 +1679,20 @@ public class MenuUI {
 		this.mainMenuFrame.setVisible(false);
 
 		try {
-			final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, mapFilename);
-			final War3MapW3i mapInfo = map.readMapInformation();
-			final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
-			MenuUI.this.rootFrame.setMapStrings(wtsFile);
-			final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
-			for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
-				final CBasePlayer player = war3MapConfig.getPlayer(i);
-				player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
-			}
-			Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame, war3MapConfig,
-					WarsmashConstants.JASS_FILE_LIST).config();
+			loadAndCacheMapConfigs(mapFilename);
+			MenuUI.this.beginGameInformation = new BeginGameInformation();
 			int localPlayerIndex = -1;
 			for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-				final CBasePlayer player = war3MapConfig.getPlayer(i);
+				final CBasePlayer player = this.currentMapConfig.getPlayer(i);
 				if (player.getController() == CMapControl.USER) {
 					player.setSlotState(CPlayerSlotState.PLAYING);
-//					player.setName(MenuUI.this.profileManager.getCurrentProfile());
-//					break;
+//						player.setName(MenuUI.this.profileManager.getCurrentProfile());
+//						break;
 					if (localPlayerIndex == -1) {
 						localPlayerIndex = i;
 					}
 				}
 			}
-			MenuUI.this.currentMapConfig = war3MapConfig;
-
-			MenuUI.this.beginGameInformation = new BeginGameInformation();
 			MenuUI.this.beginGameInformation.localPlayerIndex = localPlayerIndex;
 			this.beginGameInformation.loadingStarted = true;
 
@@ -1701,6 +1716,21 @@ public class MenuUI {
 		MenuUI.this.beginGameInformation.gameMapLookup = new CurrentNetGameMapLookupPath(mapFilename);
 		MenuUI.this.beginGameInformation.localPlayerIndex = -1;
 		MenuUI.this.menuState = MenuState.GOING_TO_MAP;
+	}
+
+	private void loadAndCacheMapConfigs(final String mapFilename) throws IOException {
+		final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, mapFilename);
+		final War3MapW3i mapInfo = map.readMapInformation();
+		final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
+		MenuUI.this.rootFrame.setMapStrings(wtsFile);
+		final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+		for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
+			final CBasePlayer player = war3MapConfig.getPlayer(i);
+			player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
+		}
+		Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame, war3MapConfig,
+				WarsmashConstants.JASS_FILE_LIST).config();
+		MenuUI.this.currentMapConfig = war3MapConfig;
 	}
 
 	private void setCurrentProfile(final String selectedProfileName) {

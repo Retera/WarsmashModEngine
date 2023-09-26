@@ -20,7 +20,7 @@ public class CAbilityTypeCargoHoldBurrow extends CAbilityType<CAbilityTypeCargoH
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeCargoHoldBurrowLevelData levelData = getLevelData(0);
-		return new CAbilityCargoHoldBurrow(handleId, getAlias(), levelData.getCargoCapcity(), levelData.getDuration(),
+		return new CAbilityCargoHoldBurrow(handleId, getCode(), getAlias(), levelData.getCargoCapcity(), levelData.getDuration(),
 				levelData.getCastRange(), levelData.getTargetsAllowed());
 	}
 

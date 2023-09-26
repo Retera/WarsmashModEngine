@@ -1,10 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -15,11 +17,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActiveAbility {
+	public static final War3ID CODE = War3ID.fromString("AIma");
 	private final int manaToRegain;
+	private final float cooldown;
 
-	public CAbilityItemManaRegain(final int handleId, final War3ID alias, final int manaToRegain) {
-		super(handleId, alias);
+	public CAbilityItemManaRegain(final int handleId, final War3ID code, final War3ID alias, final int manaToRegain,
+			final float cooldown) {
+		super(handleId, code, alias);
 		this.manaToRegain = manaToRegain;
+		this.cooldown = cooldown;
 	}
 
 	@Override
@@ -48,7 +54,13 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 	@Override
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		if (unit.getMana() >= unit.getMaximumMana()) {
+		final float cooldownRemaining = CAbilitySpellBase.getCooldownRemaining(game, unit, CODE);
+		if (cooldownRemaining > 0) {
+			final float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, CODE)
+					* WarsmashConstants.SIMULATION_STEP_TIME;
+			receiver.cooldownNotYetReady(cooldownRemaining, cooldownLengthDisplay);
+		}
+		else if (unit.getMana() >= unit.getMaximumMana()) {
 			receiver.activationCheckFailed(CommandStringErrorKeys.ALREADY_AT_FULL_MANA);
 		}
 		else {
@@ -92,6 +104,7 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 		if ((target == null) && (orderId == getBaseOrderId())) {
 			caster.restoreMana(game, this.manaToRegain);
 			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+			caster.beginCooldown(game, CODE, cooldown);
 			return false;
 		}
 		return super.checkBeforeQueue(game, caster, orderId, target);

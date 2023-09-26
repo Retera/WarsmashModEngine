@@ -20,7 +20,7 @@ import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
 import com.etheller.warsmash.units.DataTable;
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
@@ -33,10 +33,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityCollisionProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -107,9 +110,9 @@ public class CSimulation implements CPlayerAPI {
 	private final Set<CDestructable> ownedTreeSet = new HashSet<>();
 	private GlobalScope globalScope;
 
-	public CSimulation(final War3MapConfig config, final DataTable miscData, final MutableObjectData parsedUnitData,
-			final MutableObjectData parsedItemData, final MutableObjectData parsedDestructableData,
-			final MutableObjectData parsedAbilityData, final MutableObjectData parsedUpgradeData,
+	public CSimulation(final War3MapConfig config, final DataTable miscData, final ObjectData parsedUnitData,
+			final ObjectData parsedItemData, final ObjectData parsedDestructableData,
+			final ObjectData parsedAbilityData, final ObjectData parsedUpgradeData,
 			final DataTable standardUpgradeEffectMeta, final SimulationRenderController simulationRenderController,
 			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
 			final CommandErrorListener commandErrorListener) {
@@ -147,8 +150,7 @@ public class CSimulation implements CPlayerAPI {
 				final CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER
 						.get(seededRandom.nextInt(WarsmashConstants.RACE_MANAGER.getEntryCount()));
 				defaultRace = WarsmashConstants.RACE_MANAGER.getRace(raceEntry.getRaceId());
-			}
-			else {
+			} else {
 				for (int j = 0; j < WarsmashConstants.RACE_MANAGER.getEntryCount(); j++) {
 					final CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(j);
 					final CRace race = WarsmashConstants.RACE_MANAGER.getRace(entry.getRaceId());
@@ -355,6 +357,31 @@ public class CSimulation implements CPlayerAPI {
 		return projectile;
 	}
 
+	public CCollisionProjectile createCollisionProjectile(final CUnit source, final War3ID spellAlias,
+			final float launchX, final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final AbilityTarget target, final int maxHits, final int hitsPerTarget, final float startingRadius,
+			final float finalRadius, final float collisionInterval, final CAbilityCollisionProjectileListener projectileListener, boolean provideCounts) {
+		final CCollisionProjectile projectile = this.simulationRenderController.createCollisionProjectile(this, launchX,
+				launchY, launchFacing, speed, homing, source, spellAlias, target, maxHits, hitsPerTarget,
+				startingRadius, finalRadius, collisionInterval, projectileListener, provideCounts);
+		this.newProjectiles.add(projectile);
+		projectileListener.onLaunch(this, target);
+		return projectile;
+	}
+
+	public CPsuedoProjectile createPseudoProjectile(final CUnit source, final War3ID spellAlias,
+			final CEffectType effectType, final int effectArtIndex, final float launchX, final float launchY,
+			final float launchFacing, final float speed, final float projectileStepInterval, final int projectileArtSkip, final boolean homing,
+			final AbilityTarget target, final int maxHits, final int hitsPerTarget, final float startingRadius,
+			final float finalRadius, final CAbilityCollisionProjectileListener projectileListener, boolean provideCounts) {
+		final CPsuedoProjectile projectile = this.simulationRenderController.createPseudoProjectile(this, launchX,
+				launchY, launchFacing, speed, projectileStepInterval, projectileArtSkip, homing, source, spellAlias, effectType,
+				effectArtIndex, target, maxHits, hitsPerTarget, startingRadius, finalRadius, projectileListener, provideCounts);
+		this.newProjectiles.add(projectile);
+		projectileListener.onLaunch(this, target);
+		return projectile;
+	}
+
 	public void registerEffect(final CEffect effect) {
 		this.newProjectiles.add(effect);
 	}
@@ -367,6 +394,18 @@ public class CSimulation implements CPlayerAPI {
 	public SimulationRenderComponentLightning createLightning(final CUnit source, final War3ID lightningId,
 			final CUnit target, final Float duration) {
 		return this.simulationRenderController.createLightning(this, lightningId, source, target, duration);
+	}
+
+	public SimulationRenderComponentLightning createAbilityLightning(final CUnit source, final War3ID lightningId,
+			int lightningIndex, final CUnit target) {
+		return this.simulationRenderController.createAbilityLightning(this, lightningId, source, target,
+				lightningIndex);
+	}
+
+	public SimulationRenderComponentLightning createAbilityLightning(final CUnit source, final War3ID lightningId,
+			int lightningIndex, final CUnit target, final Float duration) {
+		return this.simulationRenderController.createAbilityLightning(this, lightningId, source, target, lightningIndex,
+				duration);
 	}
 
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
@@ -465,6 +504,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void removeUnit(final CUnit unit) {
+		unit.setHidden(true);
 		this.removedUnits.add(unit);
 	}
 
@@ -603,6 +643,10 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnTextTag(unit, type, amount);
 	}
 
+	public void spawnTextTag(final CUnit unit, final int playerIndex, final TextTagConfigType type, final String message) {
+		this.simulationRenderController.spawnTextTag(unit, type, message);
+	}
+
 	public void unitGainLevelEvent(final CUnit unit) {
 		this.players.get(unit.getPlayerIndex()).fireHeroLevelEvents(unit);
 		this.simulationRenderController.spawnGainLevelEffect(unit);
@@ -734,8 +778,8 @@ public class CSimulation implements CPlayerAPI {
 		return this.simulationRenderController.spawnSpellEffectOnPoint(x, y, facing, alias, effectType, index);
 	}
 
-	public void spawnTemporarySpellEffectOnPoint(final float x, final float y, final float facing,
-			final War3ID alias, final CEffectType effectType, final int index) {
+	public void spawnTemporarySpellEffectOnPoint(final float x, final float y, final float facing, final War3ID alias,
+			final CEffectType effectType, final int index) {
 		this.simulationRenderController.spawnTemporarySpellEffectOnPoint(x, y, facing, alias, effectType, index);
 	}
 

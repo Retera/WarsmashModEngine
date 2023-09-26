@@ -24,6 +24,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 
 public class CAbilityHero extends AbstractCAbility {
 	private final Set<War3ID> skillsAvailable;
@@ -39,7 +40,7 @@ public class CAbilityHero extends AbstractCAbility {
 	private boolean reviving;
 
 	public CAbilityHero(final int handleId, final List<War3ID> skillsAvailable) {
-		super(handleId);
+		super(handleId, War3ID.fromString("AHer"));
 		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
 	}
 
@@ -91,11 +92,16 @@ public class CAbilityHero extends AbstractCAbility {
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityTarget target) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
-		final CAbilityType<?> abilityType = game.getAbilityData().getAbilityType(orderIdAsRawtype);
+		learnSkill(game, caster, orderIdAsRawtype);
+		return false;
+	}
+
+	private void learnSkill(final CSimulation game, final CUnit caster, final War3ID skillId) {
+		final CAbilityType<?> abilityType = game.getAbilityData().getAbilityType(skillId);
 		if (abilityType != null) {
 			this.skillPoints--;
 			final CLevelingAbility existingAbility = caster
-					.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(orderIdAsRawtype));
+					.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(skillId));
 			if (existingAbility == null) {
 				final CAbility newAbility = abilityType.createAbility(game.getHandleIdAllocator().createId());
 				caster.add(game, newAbility);
@@ -108,7 +114,14 @@ public class CAbilityHero extends AbstractCAbility {
 			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
 					"NOTEXTERN: Ability is not yet programmed, unable to learn!");
 		}
-		return false;
+	}
+
+	public void selectHeroSkill(final CSimulation game, final CUnit caster, final War3ID skillId) {
+		final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+		checkCanUse(game, caster, skillId.getValue(), activationReceiver);
+		if (activationReceiver.isOk()) {
+			learnSkill(game, caster, skillId);
+		}
 	}
 
 	@Override
@@ -326,7 +339,7 @@ public class CAbilityHero extends AbstractCAbility {
 		final HeroStatValue primaryAttributeStat = getStat(unit.getUnitType().getPrimaryAttribute());
 		final int primaryAttributeBase = primaryAttributeStat.getCurrentBase();
 		final int primaryAttributeBonus = primaryAttributeStat.getBonus();
-		float agiAttackSpeedBonus = gameplayConstants.getAgiAttackSpeedBonus() * currentAgility;
+		final float agiAttackSpeedBonus = gameplayConstants.getAgiAttackSpeedBonus() * currentAgility;
 		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setPrimaryAttributePermanentDamageBonus(
 					(int) (primaryAttributeBase * gameplayConstants.getStrAttackBonus()));

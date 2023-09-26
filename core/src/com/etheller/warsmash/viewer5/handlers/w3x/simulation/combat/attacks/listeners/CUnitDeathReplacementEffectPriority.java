@@ -2,8 +2,9 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.lis
 
 public enum CUnitDeathReplacementEffectPriority {
 	PHOENIXREVIVE(0),
-	ABILITYREINCARNATION(1),
-	ITEMREINCARNATION(2);
+	GENERALONDEATHACTIONS(1),
+	ABILITYREINCARNATION(2),
+	ITEMREINCARNATION(3);
 
 	private int priority;
 	

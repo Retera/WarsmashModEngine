@@ -20,7 +20,7 @@ public class CAbilityTypeItemPermanentStatGain extends CAbilityType<CAbilityType
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeItemStatBonusLevelData levelData = getLevelData(0);
-		return new CAbilityItemPermanentStatGain(handleId, getAlias(), levelData.getStrength(), levelData.getAgility(),
+		return new CAbilityItemPermanentStatGain(handleId, getCode(), getAlias(), levelData.getStrength(), levelData.getAgility(),
 				levelData.getIntelligence());
 	}
 

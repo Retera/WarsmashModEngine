@@ -16,8 +16,8 @@ public class CAbilityChannelTest extends AbstractGenericSingleIconNoSmartActiveA
 	private CBehaviorChannelTest behaviorChannelTest;
 	private float artDuration;
 
-	public CAbilityChannelTest(final int handleId, final War3ID alias, final float artDuration) {
-		super(handleId, alias);
+	public CAbilityChannelTest(final int handleId, final War3ID code, final War3ID alias, final float artDuration) {
+		super(handleId, code, alias);
 		this.artDuration = artDuration;
 	}
 

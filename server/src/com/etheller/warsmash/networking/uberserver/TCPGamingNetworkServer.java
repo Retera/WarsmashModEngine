@@ -8,6 +8,7 @@ import net.warsmash.networking.udp.UdpServerListener;
 import net.warsmash.nio.channels.ChannelOpener;
 import net.warsmash.nio.channels.SocketChannelCallback;
 import net.warsmash.nio.channels.WritableOutput;
+import net.warsmash.nio.channels.WritableSocketOutput;
 import net.warsmash.nio.channels.tcp.TCPClientParser;
 import net.warsmash.nio.util.ExceptionListener;
 import net.warsmash.uberserver.GamingNetwork;
@@ -25,7 +26,7 @@ public class TCPGamingNetworkServer {
 	public void start() {
 		this.channelOpener.openTCPServerChannel(GamingNetwork.PORT, new SocketChannelCallback() {
 			@Override
-			public TCPClientParser onConnect(final WritableOutput writableOpenedChannel,
+			public TCPClientParser onConnect(final WritableSocketOutput writableOpenedChannel,
 					final SocketAddress remoteAddress) {
 				System.out.println("Received connection from " + remoteAddress);
 				return new TCPGamingNetworkServerClientParser(

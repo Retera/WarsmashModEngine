@@ -15,7 +15,7 @@ public class ABGenericAuraBuff extends ABBuff {
 	private CUnit caster;
 
 	public ABGenericAuraBuff(int handleId, War3ID alias, CUnit caster) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 		this.caster = caster;
 		this.fx = new HashMap<>();
 	}

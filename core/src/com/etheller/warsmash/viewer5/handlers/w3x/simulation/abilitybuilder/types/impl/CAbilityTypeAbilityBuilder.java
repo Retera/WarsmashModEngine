@@ -4,34 +4,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpell;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderNoIcon;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderPassive;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderTickingPassive;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderActiveFlexTargetSimple;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderActiveNoTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderActiveNoTargetSimple;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderActivePointTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderActivePointTargetSimple;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderActiveToggle;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderActiveUnitTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.CAbilityAbilityBuilderActiveUnitTargetSimple;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 
 public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbilityBuilderLevelData>  {
 
 	private AbilityBuilderConfiguration parser;
-	private MutableGameObject abilityEditorData;
+	private GameObject abilityEditorData;
 	
-	public CAbilityTypeAbilityBuilder(War3ID alias, War3ID code, MutableGameObject abilityEditorData, List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration parser) {
+	public CAbilityTypeAbilityBuilder(War3ID alias, War3ID code, GameObject abilityEditorData, List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration parser) {
 		super(alias, code, levelData);
 		this.parser = parser;
 		this.abilityEditorData = abilityEditorData;
@@ -40,6 +29,7 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 	@Override
 	public CAbility createAbility(int handleId) {
 		Map<String, Object> localStore = new HashMap<>();
+		localStore.put(ABLocalStoreKeys.ABILITYEDITORDATA, this.abilityEditorData);
 		localStore.put(ABLocalStoreKeys.LEVELDATA, getLevelData());
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, 1);
 		localStore.put(ABLocalStoreKeys.ALIAS, getAlias());
@@ -48,17 +38,17 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 		
 		switch (parser.getType()) {
 		case BUFF:
-			return new CAbilityAbilityBuilderBuff(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderBuff(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case PASSIVE:
-			return new CAbilityAbilityBuilderPassive(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case TICKING_PASSIVE:
-			return new CAbilityAbilityBuilderTickingPassive(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderTickingPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case HIDDEN:
-			return new CAbilityAbilityBuilderNoIcon(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderNoIcon(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case TOGGLE:
-			return new CAbilityAbilityBuilderActiveToggle(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActiveToggle(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case TOGGLE_TICKING:
-			return new CAbilityAbilityBuilderActiveToggle(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActiveToggle(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_NOTARGET_SIMPLE:
 			ability = new CAbilityAbilityBuilderActiveNoTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
 			ability.populate(this.abilityEditorData, 1);
@@ -75,13 +65,15 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 			ability = new CAbilityAbilityBuilderActiveFlexTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
 			ability.populate(this.abilityEditorData, 1);
 			return ability;
+		case NORMAL_AUTOTARGET:
+			return new CAbilityAbilityBuilderActiveAutoTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_NOTARGET:
-			return new CAbilityAbilityBuilderActiveNoTarget(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActiveNoTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_POINTTARGET:
-			return new CAbilityAbilityBuilderActivePointTarget(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActivePointTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_UNITTARGET:
 		default:
-			return new CAbilityAbilityBuilderActiveUnitTarget(handleId, getAlias(), getLevelData(), parser, localStore);
+			return new CAbilityAbilityBuilderActiveUnitTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		}
 	}
 

@@ -41,9 +41,9 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	private CWidget lastHarvestTarget;
 	private CBehaviorAttack behaviorTreeAttack;
 
-	public CAbilityHarvest(final int handleId, final War3ID alias, final int damageToTree, final int goldCapacity,
+	public CAbilityHarvest(final int handleId, final War3ID code, final War3ID alias, final int damageToTree, final int goldCapacity,
 			final int lumberCapacity, final float castRange, final float duration) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.damageToTree = damageToTree;
 		this.goldCapacity = goldCapacity;
 		this.lumberCapacity = lumberCapacity;

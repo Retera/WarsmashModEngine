@@ -19,7 +19,7 @@ public class CAbilityTypeGoldMineOverlayed extends CAbilityType<CAbilityTypeGold
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeGoldMineLevelData levelData = getLevelData(0);
-		return new CAbilityOverlayedMinableMine(handleId, getAlias(), levelData.getMaxGold(),
+		return new CAbilityOverlayedMinableMine(handleId, getCode(), getAlias(), levelData.getMaxGold(),
 				levelData.getMiningDuration(), levelData.getMiningCapacity());
 	}
 

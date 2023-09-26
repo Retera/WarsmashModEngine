@@ -12,8 +12,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public class CAbilityShopPurhaseItem extends AbstractGenericNoIconAbility {
 
-	public CAbilityShopPurhaseItem(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityShopPurhaseItem(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

@@ -1,8 +1,15 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.keeper;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructableEnumFunction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityPointTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffTimedLife;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -10,12 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 
@@ -25,7 +28,7 @@ public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 	private War3ID buffId;
 	private float areaOfEffect;
 
-	public CAbilityForceOfNature(int handleId, War3ID alias) {
+	public CAbilityForceOfNature(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 		anyMatchingDestFinder = new AnyMatchingDestFinder();
 	}
@@ -41,19 +44,16 @@ public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		numberOfSummonedUnits =
-				worldEditorAbility.getFieldAsInteger(AbilityFields.ForceOfNature.NUMBER_OF_SUMMONED_UNITS, level);
-		summonedUnitId =
-				War3ID.fromString(worldEditorAbility.getFieldAsString(AbilityFields.ForceOfNature.SUMMONED_UNIT_TYPE,
-						level));
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		numberOfSummonedUnits = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
+		summonedUnitId = War3ID.fromString(worldEditorAbility.getFieldAsString(AbilityFields.UNIT_ID + level, 0));
 		buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-									   AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		game.getWorldCollision().enumDestructablesInRange(target.getX(), target.getY(), areaOfEffect,
 				anyMatchingDestFinder.reset(game, unit));
 		if (!anyMatchingDestFinder.foundMatch) {
@@ -65,23 +65,23 @@ public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
-		List<CDestructable> trees = new ArrayList<>();
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
+		final List<CDestructable> trees = new ArrayList<>();
 		simulation.getWorldCollision().enumDestructablesInRange(target.getX(), target.getY(), areaOfEffect,
 				(enumDest) -> {
-			if (enumDest.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
-				trees.add(enumDest);
-			}
-			return trees.size() >= numberOfSummonedUnits;
-		});
-		for (CDestructable tree : trees) {
+					if (enumDest.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
+						trees.add(enumDest);
+					}
+					return trees.size() >= numberOfSummonedUnits;
+				});
+		for (final CDestructable tree : trees) {
 			tree.setLife(simulation, 0);
 
-			CUnit summonedUnit = simulation.createUnitSimple(summonedUnitId, caster.getPlayerIndex(), tree.getX(),
+			final CUnit summonedUnit = simulation.createUnitSimple(summonedUnitId, caster.getPlayerIndex(), tree.getX(),
 					tree.getY(), simulation.getGameplayConstants().getBuildingAngle());
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
-			summonedUnit.add(simulation, new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId,
-					getDuration(), false));
+			summonedUnit.add(simulation,
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, getDuration(), false));
 		}
 		return false;
 	}
@@ -91,7 +91,7 @@ public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 		private CUnit unit;
 		private boolean foundMatch = false;
 
-		public AnyMatchingDestFinder reset(CSimulation game, CUnit unit) {
+		public AnyMatchingDestFinder reset(final CSimulation game, final CUnit unit) {
 			this.game = game;
 			this.unit = unit;
 			this.foundMatch = false;
@@ -99,7 +99,7 @@ public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 		}
 
 		@Override
-		public boolean call(CDestructable enumDest) {
+		public boolean call(final CDestructable enumDest) {
 			if (enumDest.canBeTargetedBy(game, unit, getTargetsAllowed())) {
 				foundMatch = true;
 			}

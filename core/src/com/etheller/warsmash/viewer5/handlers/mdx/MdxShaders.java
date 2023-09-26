@@ -818,7 +818,7 @@ public class MdxShaders {
 				"        return min(start + mod(floor(spriteCount * repeat * factor), spriteCount), u_columns * u_rows - 1.0);\r\n"
 				+ //
 				"      }\r\n" + //
-				"      return 0.0;\r\n" + //
+				"      return start;\r\n" + //
 				"    }\r\n" + //
 				"    void particle2() {\r\n" + //
 				"      float factor = (u_lifeSpan - a_health) / u_lifeSpan;\r\n" + //
@@ -969,10 +969,17 @@ public class MdxShaders {
 				"        v_texcoord = vec2(right, top);\r\n" + //
 				"        position = a_p3;\r\n" + //
 				"      }\r\n" + //
+				"      vec3 lightingNormal = normalize(a_leftRightTop-127.5);\r\n" + //
 				"      v_texcoord[0] /= u_columns;\r\n" + //
 				"      v_texcoord[1] /= u_rows;\r\n" + //
 				"      v_color = mix(u_colors[index], u_colors[index + 1], factor) / 255.0;\r\n" + //
 				"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
+				"      if(!u_unshaded) {\r\n" + //
+				Shaders.lightSystem("lightingNormal", "position", "u_lightTexture", "u_lightTextureHeight",
+						"u_lightCount", false)
+				+ "\r\n" + //
+				"        v_color.xyz *= clamp(lightFactor, 0.0, 1.0);\r\n" + //
+				"      }\r\n" + //
 				"    }\r\n" + //
 				"    void ubersplat() {\r\n" + //
 				"      float factor = u_lifeSpan - a_health;\r\n" + //
@@ -1048,7 +1055,7 @@ public class MdxShaders {
 			"    }\r\n";
 
 	public static final String fsLightning = "\r\n" + //
-			//"    precision mediump float;\r\n" + //
+	// " precision mediump float;\r\n" + //
 			"    uniform sampler2D u_texture;\r\n" + //
 			"    varying vec2 v_uv;\r\n" + //
 			"    varying vec4 v_color;\r\n" + //

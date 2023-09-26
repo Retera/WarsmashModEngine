@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItemType;
@@ -15,72 +15,71 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.item.CItemTypeJass;
 
 public class CItemData {
-	private static final War3ID ABILITY_LIST = War3ID.fromString("iabi");
-	private static final War3ID COOLDOWN_GROUP = War3ID.fromString("icid");
-	private static final War3ID IGNORE_COOLDOWN = War3ID.fromString("iicd");
-	private static final War3ID NUMBER_OF_CHARGES = War3ID.fromString("iuse");
-	private static final War3ID ACTIVELY_USED = War3ID.fromString("iusa");
-	private static final War3ID PERISHABLE = War3ID.fromString("iper");
-	private static final War3ID USE_AUTOMATICALLY_WHEN_ACQUIRED = War3ID.fromString("ipow");
+	private static final String ABILITY_LIST = "abilList"; // replaced from 'iabi'
+	private static final String COOLDOWN_GROUP = "cooldownID"; // replaced from 'icid'
+	private static final String IGNORE_COOLDOWN = "ignoreCD"; // replaced from 'iicd'
+	private static final String NUMBER_OF_CHARGES = "uses"; // replaced from 'iuse'
+	private static final String ACTIVELY_USED = "usable"; // replaced from 'iusa'
+	private static final String PERISHABLE = "perishable"; // replaced from 'iper'
+	private static final String USE_AUTOMATICALLY_WHEN_ACQUIRED = "powerup"; // replaced from 'ipow'
 
-	private static final War3ID GOLD_COST = War3ID.fromString("igol");
-	private static final War3ID LUMBER_COST = War3ID.fromString("ilum");
-	private static final War3ID STOCK_MAX = War3ID.fromString("isto");
-	private static final War3ID STOCK_REPLENISH_INTERVAL = War3ID.fromString("istr");
-	private static final War3ID STOCK_START_DELAY = War3ID.fromString("isst");
+	private static final String GOLD_COST = "goldcost"; // replaced from 'igol'
+	private static final String LUMBER_COST = "lumbercost"; // replaced from 'ilum'
+	private static final String STOCK_MAX = "stockMax"; // replaced from 'isto'
+	private static final String STOCK_REPLENISH_INTERVAL = "stockRegen"; // replaced from 'istr'
+	private static final String STOCK_START_DELAY = "stockStart"; // replaced from 'isst'
 
-	private static final War3ID HIT_POINTS = War3ID.fromString("ihtp");
-	private static final War3ID ARMOR_TYPE = War3ID.fromString("iarm");
+	private static final String HIT_POINTS = "HP"; // replaced from 'ihtp'
+	private static final String ARMOR_TYPE = "armor"; // replaced from 'iarm'
 
-	private static final War3ID LEVEL = War3ID.fromString("ilev");
-	private static final War3ID LEVEL_UNCLASSIFIED = War3ID.fromString("ilvo");
-	private static final War3ID PRIORITY = War3ID.fromString("ipri");
+	private static final String LEVEL = "Level"; // replaced from 'ilev'
+	private static final String LEVEL_UNCLASSIFIED = "oldLevel"; // replaced from 'ilvo'
+	private static final String PRIORITY = "prio"; // replaced from 'ipri'
 
-	private static final War3ID SELLABLE = War3ID.fromString("isel");
-	private static final War3ID PAWNABLE = War3ID.fromString("ipaw");
+	private static final String SELLABLE = "sellable"; // replaced from 'isel'
+	private static final String PAWNABLE = "pawnable"; // replaced from 'ipaw'
 
-	private static final War3ID DROPPED_WHEN_CARRIER_DIES = War3ID.fromString("idrp");
-	private static final War3ID CAN_BE_DROPPED = War3ID.fromString("idro");
+	private static final String DROPPED_WHEN_CARRIER_DIES = "drop"; // replaced from 'idrp'
+	private static final String CAN_BE_DROPPED = "droppable"; // replaced from 'idro'
 
-	private static final War3ID VALID_TARGET_FOR_TRANSFORMATION = War3ID.fromString("imor");
-	private static final War3ID INCLUDE_AS_RANDOM_CHOICE = War3ID.fromString("iprn");
+	private static final String VALID_TARGET_FOR_TRANSFORMATION = "morph"; // replaced from 'imor'
+	private static final String INCLUDE_AS_RANDOM_CHOICE = "pickRandom"; // replaced from 'iprn'
 
 	private final Map<Integer, RandomItemSet> levelToRandomChoices = new HashMap<>();
-	private static final War3ID CLASSIFICATION = War3ID.fromString("icla");
+	private static final String CLASSIFICATION = "class"; // replaced from 'icla'
 
 	private final Map<War3ID, CItemType> itemIdToItemType = new HashMap<>();
-	private final MutableObjectData itemData;
+	private final ObjectData itemData;
 
-	public CItemData(final MutableObjectData itemData) {
+	public CItemData(final ObjectData itemData) {
 		this.itemData = itemData;
 		// TODO the below is a bit hacky, but needed to build the list of random choices
-		for (final War3ID key : this.itemData.keySet()) {
-			final MutableGameObject mutableGameObject = this.itemData.get(key);
-			getItemTypeInstance(key, mutableGameObject);
+		for (final String key : this.itemData.keySet()) {
+			final GameObject mutableGameObject = this.itemData.get(key);
+			getItemTypeInstance(War3ID.fromString(key), mutableGameObject);
 		}
 	}
 
 	public CItem create(final CSimulation simulation, final War3ID typeId, final float x, final float y,
 			final int handleId) {
-		final MutableGameObject itemType = this.itemData.get(typeId);
+		final GameObject itemType = this.itemData.get(typeId.asStringValue());
 		final CItemType itemTypeInstance = getItemTypeInstance(typeId, itemType);
 
 		return new CItem(handleId, x, y, itemTypeInstance.getMaxLife(), typeId, itemTypeInstance);
 	}
 
 	public CItemType getItemType(final War3ID typeId) {
-		final MutableGameObject itemType = this.itemData.get(typeId);
+		final GameObject itemType = this.itemData.get(typeId.asStringValue());
 		if (itemType == null) {
 			return null;
 		}
 		return getItemTypeInstance(typeId, itemType);
 	}
 
-	private CItemType getItemTypeInstance(final War3ID typeId, final MutableGameObject itemType) {
+	private CItemType getItemTypeInstance(final War3ID typeId, final GameObject itemType) {
 		CItemType itemTypeInstance = this.itemIdToItemType.get(typeId);
 		if (itemTypeInstance == null) {
-			final String abilityListString = itemType.getFieldAsString(ABILITY_LIST, 0);
-			final String[] abilityListStringItems = abilityListString.split(",");
+			final List<String> abilityListStringItems = itemType.getFieldAsList(ABILITY_LIST);
 			final List<War3ID> abilityList = new ArrayList<>();
 			for (final String abilityListStringItem : abilityListStringItems) {
 				if (abilityListStringItem.length() == 4) {

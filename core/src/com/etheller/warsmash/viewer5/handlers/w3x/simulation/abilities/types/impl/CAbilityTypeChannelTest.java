@@ -19,7 +19,7 @@ public class CAbilityTypeChannelTest extends CAbilityType<CAbilityTypeChannelTes
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeChannelTestLevelData levelData = getLevelData(0);
-		return new CAbilityChannelTest(handleId, getAlias(), levelData.getArtDuration());
+		return new CAbilityChannelTest(handleId, getCode(), getAlias(), levelData.getArtDuration());
 	}
 
 	@Override

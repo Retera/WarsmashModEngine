@@ -9,7 +9,7 @@ public class CBuffDevotion extends CBuffAuraBase {
 	private final float armorBonus;
 
 	public CBuffDevotion(int handleId, War3ID alias, float armorBonus) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 		this.armorBonus = armorBonus;
 	}
 

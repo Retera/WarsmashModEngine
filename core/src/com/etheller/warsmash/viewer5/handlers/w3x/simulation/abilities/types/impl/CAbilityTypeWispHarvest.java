@@ -19,7 +19,7 @@ public class CAbilityTypeWispHarvest extends CAbilityType<CAbilityTypeWispHarves
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeWispHarvestLevelData levelData = getLevelData(0);
-		return new CAbilityWispHarvest(handleId, getAlias(), levelData.getLumberPerInterval(),
+		return new CAbilityWispHarvest(handleId, getCode(), getAlias(), levelData.getLumberPerInterval(),
 				levelData.getArtAttachmentHeight(), levelData.getCastRange(), levelData.getDuration());
 	}
 

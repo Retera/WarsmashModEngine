@@ -1,15 +1,23 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorAbilityBuilderBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
@@ -30,20 +38,39 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 	private Map<String, Object> localStore;
 	private CBehaviorAbilityBuilderBase behavior;
 	private int orderId;
+	private PrimaryTag castingPrimaryTag;
+	private EnumSet<SecondaryTag> castingSecondaryTags;
 
 	private float cooldown = 0;
 	private int manaCost = 0;
 	
 	private int castId = 0;
 
-	public CAbilityAbilityBuilderActiveNoTarget(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderActiveNoTarget(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
 			Map<String, Object> localStore) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.levelData = levelData;
 		this.config = config;
 		this.localStore = localStore;
 		orderId = OrderIdUtils.getOrderId(config.getCastId());
+		CAbilityTypeAbilityBuilderLevelData levelDataLevel = this.levelData.get(this.getLevel() - 1);
+		this.manaCost = levelDataLevel.getManaCost();
+		this.cooldown = levelDataLevel.getCooldown();
+
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		final String animNames = editorData.getField(AbilityFields.ANIM_NAMES);
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		this.castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, this.castingSecondaryTags, animNames);
+		if (primaryTags.isEmpty()) {
+			this.castingPrimaryTag = null;
+		} else {
+			this.castingPrimaryTag = primaryTags.iterator().next();
+		}
+		if (this.castingSecondaryTags.isEmpty()) {
+			this.castingSecondaryTags = SequenceUtils.SPELL;
+		}
 	}
 
 	@Override
@@ -63,6 +90,14 @@ public class CAbilityAbilityBuilderActiveNoTarget extends AbstractGenericSingleI
 	@Override
 	public int getUIManaCost() {
 		return this.manaCost;
+	}
+
+	public PrimaryTag getCastingPrimaryTag() {
+		return this.castingPrimaryTag;
+	}
+
+	public EnumSet<SecondaryTag> getCastingSecondaryTags() {
+		return this.castingSecondaryTags;
 	}
 
 	@Override

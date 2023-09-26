@@ -31,6 +31,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityV
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityCargoHold;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
@@ -44,16 +45,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABGenericTimedBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackMove;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStun;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTickingPausedBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUpgradingVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -187,6 +180,7 @@ public class CUnit extends CWidget {
 	private transient CBehaviorPatrol patrolBehavior;
 	private transient CBehaviorStop stopBehavior;
 	private transient CBehaviorHoldPosition holdPositionBehavior;
+	private transient CBehaviorBoardTransport boardTransportBehavior;
 	private boolean constructing = false;
 	private boolean constructingPaused = false;
 	private boolean structure;
@@ -201,6 +195,7 @@ public class CUnit extends CWidget {
 	private boolean autoAttack = true;
 	private boolean moveDisabled = false;
 	private CBehavior defaultBehavior;
+	private CBehavior interruptedBehavior;
 	private COrder lastStartedOrder = null;
 	private CUnit workerInside;
 	private final War3ID[] buildQueue = new War3ID[WarsmashConstants.BUILD_QUEUE_SIZE];
@@ -459,7 +454,7 @@ public class CUnit extends CWidget {
 				if (!this.damageTakenModificationListeners.contains(CUnitDefaultEtherealDamageModListener.INSTANCE)) {
 					this.addDamageTakenModificationListener(CUnitDefaultEtherealDamageModListener.INSTANCE);
 				}
-				//Disable physical skills
+				// Disable physical skills
 //				for (CAbility ability : this.abilities) {
 //					if (ability.isPhysical()) {
 //						ability.setDisabled(true);
@@ -469,7 +464,7 @@ public class CUnit extends CWidget {
 				if (this.damageTakenModificationListeners.contains(CUnitDefaultEtherealDamageModListener.INSTANCE)) {
 					this.removeDamageTakenModificationListener(CUnitDefaultEtherealDamageModListener.INSTANCE);
 				}
-				//Enable physical skills
+				// Enable physical skills
 //				for (CAbility ability : this.abilities) {
 //					if (ability.isPhysical()) {
 //						ability.setDisabled(false);
@@ -527,19 +522,24 @@ public class CUnit extends CWidget {
 				}
 			}
 			if (isSleeping || isStun) {
-				if (this.currentBehavior != null) {
-					this.currentBehavior.end(game, true);
+				if (this.currentBehavior == null || this.currentBehavior.getHighlightOrderId() != OrderIds.stunned) {
+					if (this.currentBehavior != null) {
+						this.interruptedBehavior = this.currentBehavior;
+					}
+					this.currentBehavior = new CBehaviorStun(this);
+					this.currentBehavior.begin(game);
+					this.setAcceptingOrders(false);
+					this.stateNotifier.ordersChanged();
 				}
-				this.currentBehavior = new CBehaviorStun(this);
-				this.currentBehavior.begin(game);
-				this.setAcceptingOrders(false);
-				this.stateNotifier.ordersChanged();
 			} else {
-				this.setAcceptingOrders(true);
-				this.currentBehavior = this.pollNextOrderBehavior(game);
-				this.stateNotifier.ordersChanged();
+				if (this.currentBehavior != null && this.currentBehavior.getHighlightOrderId() == OrderIds.stunned) {
+					this.setAcceptingOrders(true);
+					this.currentBehavior = this.pollNextOrderBehavior(game);
+					this.interruptedBehavior = null;
+					this.stateNotifier.ordersChanged();
+				}
 			}
-			
+
 			if (isSleeping) {
 				if (!this.damageTakenListeners.contains(CUnitDefaultSleepListener.INSTANCE)) {
 					this.addDamageTakenListener(CUnitDefaultSleepListener.INSTANCE);
@@ -1552,7 +1552,7 @@ public class CUnit extends CWidget {
 							}
 						}
 					}
-					if (this.life < this.maximumLife) {
+					if (this.life < this.maximumLife || this.currentLifeRegenPerTick < 0) {
 						final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
 						boolean active = false;
 						switch (lifeRegenType) {
@@ -1588,7 +1588,7 @@ public class CUnit extends CWidget {
 							this.stateNotifier.lifeChanged();
 						}
 					}
-					if (this.mana < this.maximumMana) {
+					if (this.mana < this.maximumMana || this.currentManaRegenPerTick < 0) {
 						float manaPlusRegen = this.mana + this.currentManaRegenPerTick;
 						if (manaPlusRegen > this.maximumMana) {
 							manaPlusRegen = this.maximumMana;
@@ -1616,12 +1616,64 @@ public class CUnit extends CWidget {
 							autoAcquireAttackTargets(game, false);
 						}
 					}
+					for (int i = this.abilities.size() - 1; i >= 0; i--) {
+						// okay if it removes self from this during onTick() because of reverse
+						// iteration order
+						this.abilities.get(i).onTick(game, this);
+					}
 				}
-			}
-			for (int i = this.abilities.size() - 1; i >= 0; i--) {
-				// okay if it removes self from this during onTick() because of reverse
-				// iteration order
-				this.abilities.get(i).onTick(game, this);
+			} else if (!this.constructing) {
+				// Paused units only allow passives to function. Buffs don't tick (except a few)
+				// Base and bonus life/mana regen function, but regen from Str/Int doesn't
+				if (this.life < this.maximumLife || (this.currentLifeRegenPerTick - this.lifeRegenStrengthBonus) < 0) {
+					final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
+					boolean active = false;
+					switch (lifeRegenType) {
+					case ALWAYS:
+						active = true;
+						break;
+					case DAY:
+						active = game.isDay();
+						break;
+					case NIGHT:
+						active = game.isNight();
+						break;
+					case BLIGHT:
+						active = PathingFlags.isPathingFlag(game.getPathingGrid().getPathing(getX(), getY()),
+								PathingFlags.BLIGHTED);
+						break;
+					default:
+						active = false;
+					}
+					if (active) {
+						float lifePlusRegen = this.life + this.currentLifeRegenPerTick
+								- this.lifeRegenStrengthBonus * WarsmashConstants.SIMULATION_STEP_TIME;
+						if (lifePlusRegen > this.maximumLife) {
+							lifePlusRegen = this.maximumLife;
+						}
+						this.life = lifePlusRegen;
+						this.stateNotifier.lifeChanged();
+					}
+				}
+				if (this.mana < this.maximumMana || (this.currentManaRegenPerTick
+							- this.manaRegenIntelligenceBonus) < 0) {
+					float manaPlusRegen = this.mana + this.currentManaRegenPerTick
+							- this.manaRegenIntelligenceBonus * WarsmashConstants.SIMULATION_STEP_TIME;
+					if (manaPlusRegen > this.maximumMana) {
+						manaPlusRegen = this.maximumMana;
+					}
+					this.mana = manaPlusRegen;
+					this.stateNotifier.manaChanged();
+				}
+
+				for (int i = this.abilities.size() - 1; i >= 0; i--) {
+					// okay if it removes self from this during onTick() because of reverse
+					// iteration order
+					if (this.abilities.get(i) instanceof AbilityGenericSingleIconPassiveAbility || 
+							this.abilities.get(i) instanceof ABTimedTickingPausedBuff) {
+						this.abilities.get(i).onTick(game, this);
+					}
+				}
 			}
 		}
 		return false;
@@ -2046,6 +2098,9 @@ public class CUnit extends CWidget {
 			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
 			final String weaponSoundType, final float damage, final float bonusDamage) {
 		final boolean wasDead = isDead();
+		if (wasDead) {
+			return 0;
+		}
 		float trueDamage = 0;
 		if (!this.invulnerable) {
 
@@ -2599,7 +2654,8 @@ public class CUnit extends CWidget {
 		@Override
 		public boolean call(final CUnit unit) {
 			if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
-					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable() && !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
+					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()
+					&& !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
 				for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
 					if (this.source.canReach(unit, this.source.acquisitionRange)
 							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
@@ -2664,6 +2720,10 @@ public class CUnit extends CWidget {
 		this.holdPositionBehavior = holdPositionBehavior;
 	}
 
+	public void setBoardTransportBehavior(CBehaviorBoardTransport boardTransportBehavior) {
+		this.boardTransportBehavior = boardTransportBehavior;
+	}
+
 	public CBehaviorFollow getFollowBehavior() {
 		return this.followBehavior;
 	}
@@ -2676,7 +2736,14 @@ public class CUnit extends CWidget {
 		return this.holdPositionBehavior;
 	}
 
+	public CBehaviorBoardTransport getBoardTransportBehavior() {
+		return boardTransportBehavior;
+	}
+
 	public CBehavior pollNextOrderBehavior(final CSimulation game) {
+		if (this.interruptedBehavior != null) {
+			return this.interruptedBehavior;
+		}
 		if (this.defaultBehavior != this.stopBehavior) {
 			// kind of a stupid hack, meant to align in feel with some behaviors that were
 			// observed on War3
@@ -2733,10 +2800,14 @@ public class CUnit extends CWidget {
 
 	public void setHidden(final boolean hidden) {
 		this.hidden = hidden;
+		this.stateNotifier.hideStateChanged();
 	}
 
 	public void setPaused(final boolean paused) {
 		this.paused = paused;
+	}
+	public boolean isPaused() {
+		return this.paused;
 	}
 
 	public void setAcceptingOrders(final boolean acceptingOrders) {
@@ -2782,6 +2853,10 @@ public class CUnit extends CWidget {
 		for (int i = 0; i < this.buildQueue.length; i++) {
 			if (this.buildQueue[i] == null) {
 				setBuildQueueItem(game, i, rawcode, queueItemType);
+				if ((queueItemType == QueueItemType.UNIT) || (queueItemType == QueueItemType.RESEARCH)) {
+					final CPlayer player = game.getPlayer(this.playerIndex);
+					player.addTechtreeInProgress(rawcode);
+				}
 				return true;
 			}
 		}
@@ -2923,9 +2998,6 @@ public class CUnit extends CWidget {
 					}
 				}
 			}
-		}
-		if ((queueItemType == QueueItemType.UNIT) || (queueItemType == QueueItemType.RESEARCH)) {
-			player.addTechtreeInProgress(rawcode);
 		}
 	}
 
@@ -3722,7 +3794,7 @@ public class CUnit extends CWidget {
 	}
 
 	public void updateFogOfWar(final CSimulation game) {
-		if (!isDead() && !this.paused && !this.hidden) {
+		if (!isDead() && !this.hidden) {
 			final float sightRadius = game.isDay() ? this.unitType.getSightRadiusDay()
 					: this.unitType.getSightRadiusNight();
 			final CPlayerFogOfWar fogOfWar = game.getPlayer(this.playerIndex).getFogOfWar();

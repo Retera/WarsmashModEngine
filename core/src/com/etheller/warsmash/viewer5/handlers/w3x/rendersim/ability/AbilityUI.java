@@ -2,6 +2,8 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability;
 
 import java.util.List;
 
+import com.etheller.warsmash.util.War3ID;
+
 public class AbilityUI {
 	private final IconUI learnIconUI;
 	private final List<IconUI> onIconUIs;
@@ -12,13 +14,14 @@ public class AbilityUI {
 	private final List<EffectAttachmentUI> effectArt;
 	private final List<EffectAttachmentUI> areaEffectArt;
 	private final List<EffectAttachmentUIMissile> missileArt;
+	private final List<War3ID> lightningEffects;
 	private final String effectSound;
 	private final String effectSoundLooped;
 
 	public AbilityUI(IconUI learnIconUI, List<IconUI> onIconUIs, List<IconUI> offIconUIs,
 			List<EffectAttachmentUI> casterArt, List<EffectAttachmentUI> targetArt, List<EffectAttachmentUI> specialArt,
 			List<EffectAttachmentUI> effectArt, List<EffectAttachmentUI> areaEffectArt,
-			List<EffectAttachmentUIMissile> missileArt, String effectSound, String effectSoundLooped) {
+			List<EffectAttachmentUIMissile> missileArt, List<War3ID> lightningEffects, String effectSound, String effectSoundLooped) {
 		this.learnIconUI = learnIconUI;
 		this.onIconUIs = onIconUIs;
 		this.offIconUIs = offIconUIs;
@@ -28,6 +31,7 @@ public class AbilityUI {
 		this.effectArt = effectArt;
 		this.areaEffectArt = areaEffectArt;
 		this.missileArt = missileArt;
+		this.lightningEffects = lightningEffects;
 		this.effectSound = effectSound;
 		this.effectSoundLooped = effectSoundLooped;
 	}
@@ -108,5 +112,9 @@ public class AbilityUI {
 
 	public List<EffectAttachmentUIMissile> getMissileArt() {
 		return missileArt;
+	}
+
+	public List<War3ID> getLightningEffects() {
+		return lightningEffects;
 	}
 }

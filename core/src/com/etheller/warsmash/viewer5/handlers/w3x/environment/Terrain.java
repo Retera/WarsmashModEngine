@@ -243,7 +243,7 @@ public class Terrain {
 			}
 			final String dir = terrainTileInfo.getField("dir");
 			final String file = terrainTileInfo.getField("file");
-			this.groundTextures.add(new GroundTexture(dir + "\\" + file + texturesExt, dataSource, Gdx.gl30));
+			this.groundTextures.add(new GroundTexture(dir + "\\" + file + texturesExt, terrainTileInfo, dataSource, Gdx.gl30));
 			this.groundTextureToId.put(groundTile.asStringValue(), this.groundTextures.size() - 1);
 		}
 
@@ -251,7 +251,7 @@ public class Terrain {
 
 		this.blightTextureIndex = this.groundTextures.size();
 		this.groundTextures.add(new GroundTexture(
-				tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, dataSource, Gdx.gl30));
+				tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, null, dataSource, Gdx.gl30));
 
 		// Cliff Textures
 		for (final War3ID cliffTile : w3eFile.getCliffTiles()) {

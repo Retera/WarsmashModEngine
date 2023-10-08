@@ -87,6 +87,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior {
 					action.runAction(game, this.unit, localStore, castId);
 				}
 			}
+			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
 		}
 		final int ticksSinceCast = game.getGameTurnTick() - this.castStartTick;
 		final int castPointTicks = (int) (this.unit.getUnitType().getCastPoint()

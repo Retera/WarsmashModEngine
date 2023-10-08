@@ -242,6 +242,8 @@
 				}
 		}],
 		"onBeginCasting": [{
+				"type": "beginChanneling"
+			},{
 				"type": "createTargetingBuff",
 				"buffId": {
 					"type": "getSecondBuffId"
@@ -265,8 +267,6 @@
 				}
 		}],
 		"onEndCasting": [{
-				"type": "beginChanneling"
-			},{
 				"type": "createLightningEffect",
 				"origin": {
 					"type": "getCastingUnit"

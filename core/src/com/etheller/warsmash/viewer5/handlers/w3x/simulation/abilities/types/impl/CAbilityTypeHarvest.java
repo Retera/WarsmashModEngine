@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
@@ -24,7 +25,7 @@ public class CAbilityTypeHarvest extends CAbilityType<CAbilityTypeHarvestLevelDa
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 		final CAbilityTypeHarvestLevelData levelData = getLevelData(level - 1);
 		final CAbilityHarvest heroAbility = ((CAbilityHarvest) existingAbility);
 
@@ -34,6 +35,6 @@ public class CAbilityTypeHarvest extends CAbilityType<CAbilityTypeHarvestLevelDa
 		heroAbility.setCastRange(levelData.getCastRange());
 		heroAbility.setDuration(levelData.getDuration());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 	}
 }

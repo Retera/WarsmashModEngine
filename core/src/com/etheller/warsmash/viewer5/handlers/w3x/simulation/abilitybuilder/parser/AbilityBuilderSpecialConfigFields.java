@@ -2,31 +2,37 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.par
 
 import java.util.List;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.orderid.ABOrderIdCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeysEnum;
 
 public class AbilityBuilderSpecialConfigFields {
-	private Integer bufferManaRequired;
-	private Integer manaDrainedPerSecond;
+	private ABIntegerCallback bufferManaRequired;
+	private ABIntegerCallback manaDrainedPerSecond;
 	
 	private List<ABCondition> pointTargeted;
 	private List<ABCondition> targetedSpell;
 
 	private List<ABAction> autoAquireTarget;
 
-	public Integer getBufferManaRequired() {
+	public ABIntegerCallback getBufferManaRequired() {
 		return bufferManaRequired;
 	}
 
-	public void setBufferManaRequired(Integer bufferManaRequired) {
+	public void setBufferManaRequired(ABIntegerCallback bufferManaRequired) {
 		this.bufferManaRequired = bufferManaRequired;
 	}
 
-	public Integer getManaDrainedPerSecond() {
+	public ABIntegerCallback getManaDrainedPerSecond() {
 		return manaDrainedPerSecond;
 	}
 
-	public void setManaDrainedPerSecond(Integer manaDrainedPerSecond) {
+	public void setManaDrainedPerSecond(ABIntegerCallback manaDrainedPerSecond) {
 		this.manaDrainedPerSecond = manaDrainedPerSecond;
 	}
 
@@ -53,4 +59,5 @@ public class AbilityBuilderSpecialConfigFields {
 	public void setAutoAquireTarget(List<ABAction> autoAquireTarget) {
 		this.autoAquireTarget = autoAquireTarget;
 	}
+
 }

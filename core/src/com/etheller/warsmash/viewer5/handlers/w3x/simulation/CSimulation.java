@@ -186,7 +186,7 @@ public class CSimulation implements CPlayerAPI {
 
 		final CTimer fogUpdateTimer = new CTimer() {
 			@Override
-			public void onFire() {
+			public void onFire(final CSimulation simulation) {
 				updateFogOfWar();
 			}
 		};

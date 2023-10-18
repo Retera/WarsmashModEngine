@@ -22,7 +22,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 //TODO: Figure out if we need smart? Not implemented
-public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIconActiveAbility implements AbilityBuilderAbility {
+public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIconActiveAbility implements AbilityBuilderActiveAbility {
 
 	List<CAbilityTypeAbilityBuilderLevelData> levelData;
 	private AbilityBuilderConfiguration config;
@@ -39,14 +39,14 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	}
 	
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 	}
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
-		this.behavior = new CBehaviorAbilityBuilderBase(unit, config, localStore, this);
+		this.behavior = new CBehaviorAbilityBuilderBase(unit, localStore, this);
 		if (config.getOnAddAbility() != null) {
 			for (ABAction action : config.getOnAddAbility()) {
 				action.runAction(game, unit, localStore, castId);
@@ -65,11 +65,6 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 
 	@Override
 	public void onTick(CSimulation game, CUnit unit) {
-		if (config.getOnTickPreCast() != null) {
-			for (ABAction action : config.getOnTickPreCast()) {
-				action.runAction(game, unit, localStore, castId);
-			}
-		}
 	}
 
 	@Override
@@ -183,6 +178,66 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 
 	public void startCooldown(CSimulation game, CUnit unit) {
 		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public int getChargedManaCost() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void activate(CSimulation game, CUnit caster) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void deactivate(CSimulation game, CUnit caster) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getOffOrderId() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean isSeparateOnAndOff() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void runBeginCastingActions(CSimulation game, CUnit caster, int orderId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void runEndCastingActions(CSimulation game, CUnit caster, int orderId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void runChannelTickActions(CSimulation game, CUnit caster, int orderId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void runEndChannelActions(CSimulation game, CUnit caster, int orderId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void runCancelPreCastActions(CSimulation game, CUnit caster, int orderId) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

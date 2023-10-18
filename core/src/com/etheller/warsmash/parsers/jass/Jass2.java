@@ -682,6 +682,12 @@ public class Jass2 {
 						}
 						return new StringJassValue("");
 					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitName",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new StringJassValue(whichWidget == null ? "" : whichWidget.getUnitType().getName());
+					});
 			registerConversionAndStringNatives(jassProgramVisitor, war3MapViewer.getGameUI());
 			final War3MapConfig mapConfig = war3MapViewer.getMapConfig();
 			registerConfigNatives(jassProgramVisitor, mapConfig, startlocprioType, gametypeType, placementType,
@@ -4245,7 +4251,7 @@ public class Jass2 {
 		public void main() {
 			final CTimer triggerQueueTimer = new CTimer() {
 				@Override
-				public void onFire() {
+				public void onFire(final CSimulation simulation) {
 					CommonEnvironment.this.jassProgramVisitor.getGlobals().replayQueuedTriggers();
 				}
 			};

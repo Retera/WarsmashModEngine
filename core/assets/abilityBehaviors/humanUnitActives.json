@@ -1,7 +1,7 @@
 {
 	"abilityList": [{
 		"ids": [{"id":"Aslo", "castId": "slow", "autoCastOnId": "slowon", "autoCastOffId": "slowoff"}],
-		"type": "NORMAL_UNITTARGET_SIMPLE",
+		"type": "NORMAL_UNITTARGET",
 		"onAddAbility": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
@@ -69,7 +69,7 @@
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
 			}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getCastingUnit"

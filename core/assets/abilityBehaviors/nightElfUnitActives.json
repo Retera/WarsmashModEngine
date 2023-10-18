@@ -1,7 +1,7 @@
 {
 	"abilityList": [{
 		"ids": [{"id":"Aroa", "castId": "roar"},{"id":"ANbr", "castId": "battleroar"}],
-		"type": "NORMAL_NOTARGET_SIMPLE",
+		"type": "NORMAL_NOTARGET",
 		"onAddAbility": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
@@ -123,7 +123,7 @@
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getCastingUnit"
@@ -374,7 +374,7 @@
 		}]
 	},{
 		"ids": [{"id":"Arej", "castId": "rejuvination"},{"id":"AIrg", "castId": "itemregeneration"}],
-		"type": "NORMAL_FLEXTARGET_SIMPLE",
+		"type": "NORMAL_FLEXTARGET",
 		"specialFields": {
 			"targetedSpell": [{
 				"type": "not",
@@ -566,7 +566,7 @@
 				}
 			}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 			"type": "if",
 			"condition": {
 				"type": "isFlexAbilityTargeted"

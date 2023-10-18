@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -39,5 +40,7 @@ public interface CAbility extends CAbilityView {
 	void setIconShowing(boolean iconShowing);
 
 	void setPermanent(boolean permanent);
+
+	void setItemAbility(CItem item, int slot);
 
 }

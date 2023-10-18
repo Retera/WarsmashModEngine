@@ -14,6 +14,7 @@ public class AbilityBuilderParser {
 	private List<AbilityBuilderDupe> ids;
 
 	private AbilityBuilderType type;
+	private AbilityBuilderSpecialDisplayFields displayFields;
 	private AbilityBuilderSpecialConfigFields specialFields;
 
 	private List<ABCondition> extraTargetConditions;
@@ -21,10 +22,11 @@ public class AbilityBuilderParser {
 	
 	private List<ABAction> onAddAbility;
 	private List<ABAction> onRemoveAbility;
-	private List<ABAction> onTickPreCast;
 	private List<ABAction> onDeathPreCast;
 	private List<ABAction> onCancelPreCast;
 	private List<ABAction> onBeginCast;
+	private List<ABAction> onActivate;
+	private List<ABAction> onDeactivate;
 
 	private List<ABAction> onLevelChange;
 
@@ -50,6 +52,14 @@ public class AbilityBuilderParser {
 
 	public void setType(AbilityBuilderType type) {
 		this.type = type;
+	}
+
+	public AbilityBuilderSpecialDisplayFields getDisplayFields() {
+		return displayFields;
+	}
+
+	public void setDisplayFields(AbilityBuilderSpecialDisplayFields displayFields) {
+		this.displayFields = displayFields;
 	}
 
 	public AbilityBuilderSpecialConfigFields getSpecialFields() {
@@ -92,14 +102,6 @@ public class AbilityBuilderParser {
 		this.onRemoveAbility = onRemoveAbility;
 	}
 
-	public List<ABAction> getOnTickPreCast() {
-		return onTickPreCast;
-	}
-
-	public void setOnTickPreCast(List<ABAction> onTickPreCast) {
-		this.onTickPreCast = onTickPreCast;
-	}
-
 	public List<ABAction> getOnDeathPreCast() {
 		return onDeathPreCast;
 	}
@@ -122,6 +124,22 @@ public class AbilityBuilderParser {
 
 	public void setOnBeginCast(List<ABAction> onBeginCast) {
 		this.onBeginCast = onBeginCast;
+	}
+
+	public List<ABAction> getOnActivate() {
+		return onActivate;
+	}
+
+	public void setOnActivate(List<ABAction> onActivate) {
+		this.onActivate = onActivate;
+	}
+
+	public List<ABAction> getOnDeactivate() {
+		return onDeactivate;
+	}
+
+	public void setOnDeactivate(List<ABAction> onDeactivate) {
+		this.onDeactivate = onDeactivate;
 	}
 
 	public List<ABAction> getOnBeginCasting() {

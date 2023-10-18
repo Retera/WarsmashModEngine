@@ -15,6 +15,7 @@ public class AbilityBuilderConfiguration {
 	private String autoCastOffId;
 
 	private AbilityBuilderType type;
+	private AbilityBuilderSpecialDisplayFields displayFields;
 	private AbilityBuilderSpecialConfigFields specialFields;
 
 	private List<ABCondition> extraTargetConditions;
@@ -22,11 +23,12 @@ public class AbilityBuilderConfiguration {
 	
 	private List<ABAction> onAddAbility;
 	private List<ABAction> onRemoveAbility;
-	private List<ABAction> onTickPreCast;
 	private List<ABAction> onDeathPreCast;
 	private List<ABAction> onCancelPreCast;
-	private List<ABAction> onBeginCast;
-
+	private List<ABAction> onBeginCast;		//could become onOrderIssued? Not used currently
+	private List<ABAction> onActivate;
+	private List<ABAction> onDeactivate;
+	
 	private List<ABAction> onLevelChange;
 
 	private List<ABAction> onBeginCasting;
@@ -41,6 +43,7 @@ public class AbilityBuilderConfiguration {
 		this.autoCastOnId = dupe.getAutoCastOnId();
 		this.autoCastOffId = dupe.getAutoCastOffId();
 		this.type = parser.getType();
+		this.displayFields = parser.getDisplayFields();
 		this.specialFields = parser.getSpecialFields();
 		
 		this.extraTargetConditions = parser.getExtraTargetConditions();
@@ -48,10 +51,11 @@ public class AbilityBuilderConfiguration {
 		
 		this.onAddAbility = parser.getOnAddAbility();
 		this.onRemoveAbility = parser.getOnRemoveAbility();
-		this.onTickPreCast = parser.getOnTickPreCast();
 		this.onDeathPreCast = parser.getOnDeathPreCast();
 		this.onCancelPreCast = parser.getOnCancelPreCast();
 		this.onBeginCast = parser.getOnBeginCast();
+		this.onActivate = parser.getOnActivate();
+		this.onDeactivate = parser.getOnDeactivate();
 		
 		this.onLevelChange = parser.getOnLevelChange();
 
@@ -113,6 +117,14 @@ public class AbilityBuilderConfiguration {
 		this.type = type;
 	}
 
+	public AbilityBuilderSpecialDisplayFields getDisplayFields() {
+		return displayFields;
+	}
+
+	public void setDisplayFields(AbilityBuilderSpecialDisplayFields displayFields) {
+		this.displayFields = displayFields;
+	}
+
 	public AbilityBuilderSpecialConfigFields getSpecialFields() {
 		return specialFields;
 	}
@@ -153,14 +165,6 @@ public class AbilityBuilderConfiguration {
 		this.onRemoveAbility = onRemoveAbility;
 	}
 
-	public List<ABAction> getOnTickPreCast() {
-		return onTickPreCast;
-	}
-
-	public void setOnTickPreCast(List<ABAction> onTickPreCast) {
-		this.onTickPreCast = onTickPreCast;
-	}
-
 	public List<ABAction> getOnDeathPreCast() {
 		return onDeathPreCast;
 	}
@@ -183,6 +187,22 @@ public class AbilityBuilderConfiguration {
 
 	public void setOnBeginCast(List<ABAction> onBeginCast) {
 		this.onBeginCast = onBeginCast;
+	}
+
+	public List<ABAction> getOnActivate() {
+		return onActivate;
+	}
+
+	public void setOnActivate(List<ABAction> onActivate) {
+		this.onActivate = onActivate;
+	}
+
+	public List<ABAction> getOnDeactivate() {
+		return onDeactivate;
+	}
+
+	public void setOnDeactivate(List<ABAction> onDeactivate) {
+		this.onDeactivate = onDeactivate;
 	}
 
 	public List<ABAction> getOnLevelChange() {

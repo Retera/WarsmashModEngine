@@ -85,7 +85,7 @@ public abstract class CTimer {
 		return this.engineFireTick;
 	}
 
-	public abstract void onFire();
+	public abstract void onFire(final CSimulation simulation);
 
 	public void fire(final CSimulation simulation) {
 		// its implied that we will have "unregisterTimer" happen automatically
@@ -95,7 +95,7 @@ public abstract class CTimer {
 		// to change
 		// while firing (we might recycle this timer object)
 		final boolean repeats = this.repeats;
-		onFire();
+		onFire(simulation);
 		if (repeats) {
 			start(simulation);
 		}

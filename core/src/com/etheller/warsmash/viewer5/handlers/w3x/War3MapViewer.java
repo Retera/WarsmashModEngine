@@ -1622,7 +1622,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.terrain.setFogOfWarData(this.simulation.getPlayer(this.localPlayerIndex).getFogOfWar());
 		final CTimer fogUpdateTimer = new CTimer() {
 			@Override
-			public void onFire() {
+			public void onFire(final CSimulation simulation) {
 			}
 		};
 		fogUpdateTimer.setTimeoutTime(1.0f);
@@ -1630,7 +1630,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		fogUpdateTimer.start(this.simulation);
 		final CTimer fogGpuUpdateTimer = new CTimer() {
 			@Override
-			public void onFire() {
+			public void onFire(final CSimulation simulation) {
 				War3MapViewer.this.terrain.reloadFogOfWarDataToGPU();
 				for (final RenderDoodad doodad : War3MapViewer.this.decals) {
 					doodad.updateFog(War3MapViewer.this);

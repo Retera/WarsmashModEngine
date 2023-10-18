@@ -1,119 +1,67 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
-import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
-import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
-import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
-import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
-import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.timer.ManaDepletedCheckTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbilityActivationReceiver;
 
-public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIconNoSmartActiveAbility
-		implements AbilityBuilderAbility, AbilityBuilderToggleAbility {
+public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGenericActive {
 
-	private List<CAbilityTypeAbilityBuilderLevelData> levelData;
-	private AbilityBuilderConfiguration config;
-	private Map<String, Object> localStore;
+	protected int unorderId;
 
-	private int orderId;
-	private int unorderId;
+	protected boolean active;
 
-	private boolean active;
+	protected int bufferMana = 0;
+	protected int manaDrainedPerSecond = 0;
+	protected float duration = 0;
 
-	private int bufferMana = 0;
-	private int manaDrainedPerSecond = 0;
-	private int nextChargeManaTick;
-	private float duration = 0;
-	private float cooldown = 0;
-	private int manaCost = 0;
-	private PrimaryTag castingPrimaryTag;
-	private EnumSet<SecondaryTag> castingSecondaryTags;
-	
-	private int castId = 0;
+	private ManaDepletedCheckTimer timer;
+	private NonStackingStatBuff manaDrain;
 
 	public CAbilityAbilityBuilderActiveToggle(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
 			Map<String, Object> localStore) {
-		super(handleId, code, alias);
-		this.levelData = levelData;
-		this.config = config;
-		this.localStore = localStore;
-		orderId = OrderIdUtils.getOrderId(config.getCastId());
+		super(handleId, code, alias, levelData, config, localStore);
 		unorderId = OrderIdUtils.getOrderId(config.getUncastId());
 		active = false;
 
 		CAbilityTypeAbilityBuilderLevelData levelDataLevel = levelData.get(this.getLevel() - 1);
 		this.duration = levelDataLevel.getDurationNormal();
-		this.manaCost = levelDataLevel.getManaCost();
-		this.cooldown = levelDataLevel.getCooldown();
-		if (config.getSpecialFields() != null && config.getSpecialFields().getBufferManaRequired() != null) {
-			try {
-				String bufferManaStr = levelDataLevel.getData().get(config.getSpecialFields().getBufferManaRequired());
-				String perSecManaStr = levelDataLevel.getData()
-						.get(config.getSpecialFields().getManaDrainedPerSecond());
-				this.bufferMana = Integer.parseInt(bufferManaStr);
-				this.manaDrainedPerSecond = Integer.parseInt(perSecManaStr);
-			} catch (Exception e) {
-
-			}
-		}
-
-		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
-		final String animNames = editorData.getField(AbilityFields.ANIM_NAMES);
-		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
-		this.castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
-		Sequence.populateTags(primaryTags, this.castingSecondaryTags, animNames);
-		if (primaryTags.isEmpty()) {
-			this.castingPrimaryTag = null;
-		} else {
-			this.castingPrimaryTag = primaryTags.iterator().next();
-		}
-		if (this.castingSecondaryTags.isEmpty()) {
-			this.castingSecondaryTags = SequenceUtils.SPELL;
-		}
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
-		this.localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		CAbilityTypeAbilityBuilderLevelData levelDataLevel = this.levelData.get(this.getLevel() - 1);
 		this.duration = levelDataLevel.getDurationNormal();
-		this.manaCost = levelDataLevel.getManaCost();
-		this.cooldown = levelDataLevel.getCooldown();
-
-		try {
-			String bufferManaStr = levelDataLevel.getData().get(this.config.getSpecialFields().getBufferManaRequired());
-			String perSecManaStr = levelDataLevel.getData()
-					.get(this.config.getSpecialFields().getManaDrainedPerSecond());
-			this.bufferMana = Integer.parseInt(bufferManaStr);
-			this.manaDrainedPerSecond = Integer.parseInt(perSecManaStr);
-		} catch (Exception e) {
-
+		if (config.getSpecialFields() != null) {
+			if (config.getSpecialFields().getBufferManaRequired() != null) {
+				this.bufferMana = config.getSpecialFields().getBufferManaRequired().callback(game, unit, localStore, castId);
+			}
+			if (config.getSpecialFields().getManaDrainedPerSecond() != null) {
+				this.manaDrainedPerSecond = config.getSpecialFields().getManaDrainedPerSecond().callback(game, unit, localStore, castId);
+			}
 		}
+		manaDrain.setValue((-1 * this.manaDrainedPerSecond / this.duration));
 	}
 
 	@Override
@@ -123,15 +71,7 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 
 	@Override
 	public int getUIManaCost() {
-		return this.active ? 0 :this.manaCost;
-	}
-
-	public PrimaryTag getCastingPrimaryTag() {
-		return this.castingPrimaryTag;
-	}
-
-	public EnumSet<SecondaryTag> getCastingSecondaryTags() {
-		return this.castingSecondaryTags;
+		return this.active ? 0 :this.manaCost + this.bufferMana;
 	}
 
 	@Override
@@ -141,12 +81,18 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
+		timer = new ManaDepletedCheckTimer(unit, this);
 		localStore.put(ABLocalStoreKeys.TOGGLEDABILITY, this);
-		if (this.config.getOnAddAbility() != null) {
-			for (ABAction action : this.config.getOnAddAbility()) {
-				action.runAction(game, unit, this.localStore, castId);
+		if (config.getSpecialFields() != null) {
+			if (config.getSpecialFields().getBufferManaRequired() != null) {
+				this.bufferMana = config.getSpecialFields().getBufferManaRequired().callback(game, unit, localStore, castId);
+			}
+			if (config.getSpecialFields().getManaDrainedPerSecond() != null) {
+				this.manaDrainedPerSecond = config.getSpecialFields().getManaDrainedPerSecond().callback(game, unit, localStore, castId);
 			}
 		}
+		manaDrain = new NonStackingStatBuff(NonStackingStatBuffType.MPGEN, NonStackingStatBuff.ALLOW_STACKING_KEY, (-1 * this.manaDrainedPerSecond / this.duration));
+		super.onAdd(game, unit);
 	}
 
 	@Override
@@ -154,27 +100,7 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 		if (this.active) {
 			deactivate(game, unit);
 		}
-		if (this.config.getOnRemoveAbility() != null) {
-			for (ABAction action : this.config.getOnRemoveAbility()) {
-				action.runAction(game, unit, this.localStore, castId);
-			}
-		}
-	}
-
-	@Override
-	public void onTick(CSimulation game, CUnit unit) {
-		if (this.active) {
-			final int currentTick = game.getGameTurnTick();
-			if (currentTick >= this.nextChargeManaTick) {
-				final int delayTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
-				this.nextChargeManaTick = currentTick + delayTicks;
-				if (unit.getMana() >= this.manaDrainedPerSecond) {
-					unit.setMana(unit.getMana() - this.manaDrainedPerSecond);
-				} else {
-					deactivate(game, unit);
-				}
-			}
-		}
+		super.onRemove(game, unit);
 	}
 
 	@Override
@@ -182,11 +108,7 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 		if (this.active) {
 			deactivate(game, unit);
 		}
-		if (config.getOnDeathPreCast() != null) {
-			for (ABAction action : config.getOnDeathPreCast()) {
-				action.runAction(game, unit, localStore, castId);
-			}
-		}
+		super.onDeath(game, unit);
 	}
 
 	@Override
@@ -196,19 +118,23 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 			deactivate(game, caster);
 			return false;
 		} else if (!this.active && (orderId == this.orderId)) {
-			if (caster.chargeMana(this.getUIManaCost())) {
+			if (caster.chargeMana(this.manaCost)) {
 				activate(game, caster);
 			}
 			return false;
 		}
 		return super.checkBeforeQueue(game, caster, orderId, target);
 	}
-
+	
 	@Override
 	public void activate(final CSimulation game, final CUnit caster) {
 		this.castId++;
 		this.active = true;
 		this.startCooldown(game, caster);
+		if (this.manaDrainedPerSecond > 0) {
+			this.timer.start(game);
+			caster.addNonStackingStatBuff(manaDrain);
+		}
 		if (config.getOnBeginCasting() != null) {
 			for (ABAction action : config.getOnBeginCasting()) {
 				action.runAction(game, caster, localStore, castId);
@@ -219,15 +145,15 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 	@Override
 	public void deactivate(final CSimulation game, final CUnit caster) {
 		this.active = false;
+		if (this.manaDrainedPerSecond > 0) {
+			timer.pause(game);
+			caster.removeNonStackingStatBuff(manaDrain);
+		}
 		if (config.getOnEndCasting() != null) {
 			for (ABAction action : config.getOnEndCasting()) {
 				action.runAction(game, caster, localStore, castId);
 			}
 		}
-	}
-
-	@Override
-	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
 	}
 
 	@Override
@@ -246,26 +172,29 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+	protected boolean innerCheckCanTargetSpell(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
+		return false;
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+	protected boolean innerCheckCanTargetSpell(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
 			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
+		return false;
 	}
 
 	@Override
-	protected void innerCheckCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
+	protected boolean innerCheckCanTargetSpell(CSimulation game, CUnit unit, int orderId,
 			AbilityTargetCheckReceiver<Void> receiver) {
 		if (this.active && (orderId == this.unorderId)) {
-			receiver.targetOk(null);
+			return true;
 		} else if (!this.active && (orderId == this.orderId)) {
-			receiver.targetOk(null);
+			return true;
 		} else {
 			receiver.orderIdNotAccepted();
+			return false;
 		}
 	}
 
@@ -279,23 +208,8 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME, cooldownLengthDisplay);
 			} else if (unit.getMana() < (this.manaCost + this.bufferMana)) {
 				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
-			} else if (config.getExtraCastConditions() != null) {
-				boolean result = true;
-				for (ABCondition condition : config.getExtraCastConditions()) {
-					result = result && condition.evaluate(game, unit, localStore, castId);
-				}
-				if (result) {
-					receiver.useOk();
-				} else {
-					String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
-					if (failReason != null) {
-						receiver.activationCheckFailed(failReason);
-					} else {
-						receiver.unknownReasonUseNotOk();
-					}
-				}
 			} else {
-				receiver.useOk();
+				innerCheckExtraCastConditions(game, unit, cooldownRemaining, receiver);
 			}
 		} else {
 			if (cooldownRemaining > 0 && !(receiver instanceof MeleeUIAbilityActivationReceiver)) {
@@ -307,23 +221,10 @@ public class CAbilityAbilityBuilderActiveToggle extends AbstractGenericSingleIco
 		}
 	}
 
-	public void startCooldown(CSimulation game, CUnit unit) {
-		unit.beginCooldown(game, getAlias(), this.cooldown);
-	}
-
 	@Override
-	public List<CAbilityTypeAbilityBuilderLevelData> getLevelData() {
-		return levelData;
-	}
-
-	@Override
-	public AbilityBuilderConfiguration getConfig() {
-		return config;
-	}
-
-	@Override
-	public Map<String, Object> getLocalStore() {
-		return localStore;
+	protected boolean innerCheckCanUseSpell(CSimulation game, CUnit unit, int orderId,
+			AbilityActivationReceiver receiver) {
+		return true;
 	}
 
 }

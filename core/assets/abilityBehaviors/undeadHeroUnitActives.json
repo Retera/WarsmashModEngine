@@ -1,7 +1,7 @@
 {
 	"abilityList": [{
 		"ids": [{"id":"AUsl", "castId": "sleep"}],
-		"type": "NORMAL_UNITTARGET_SIMPLE",
+		"type": "NORMAL_UNITTARGET",
 		"onAddAbility": [{
 				"type": "createStateModBuff",
 				"buffType": "SLEEPING"
@@ -35,7 +35,7 @@
 					"type": "getLastCreatedStateModBuff"
 				}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getAbilityTargetedUnit"
@@ -211,8 +211,14 @@
 		}]
 	},{
 		"ids": [{"id":"AUcs", "castId": "carrionswarm"},{"id":"AOsh", "castId": "shockwave"}],
-		"type": "NORMAL_POINTTARGET_SIMPLE",
-		"onBeginCasting": [{
+		"type": "NORMAL_POINTTARGET",
+		"displayFields": {
+			"hideAreaCursor": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"onEndCasting": [{
 			"type": "createLocationTargetedCollisionProjectile",
 			"source": {
 				"type": "getCastingUnit"
@@ -423,7 +429,13 @@
 		
 	},{
 		"ids": [{"id":"AUim", "castId": "impale"}],
-		"type": "NORMAL_POINTTARGET_SIMPLE",
+		"type": "NORMAL_POINTTARGET",
+		"displayFields": {
+			"hideAreaCursor": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"onAddAbility": [{
 				"type": "createStateModBuff",
 				"buffType": "STUN"
@@ -457,7 +469,7 @@
 					"type": "getLastCreatedStateModBuff"
 				}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "storeValueLocally",
 				"key": {
 					"type": "rawString",

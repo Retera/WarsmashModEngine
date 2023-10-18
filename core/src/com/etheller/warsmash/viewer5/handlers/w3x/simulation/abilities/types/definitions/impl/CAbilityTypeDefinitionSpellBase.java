@@ -6,6 +6,7 @@ import java.util.List;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpell;
@@ -40,8 +41,8 @@ public class CAbilityTypeDefinitionSpellBase implements CAbilityTypeDefinition {
 			}
 
 			@Override
-			public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
-				existingAbility.setLevel(level);
+			public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
+				existingAbility.setLevel(game, unit, level);
 				((CAbilitySpell) existingAbility).populate(abilityEditorData, level);
 			}
 		};

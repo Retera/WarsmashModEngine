@@ -229,12 +229,16 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (((orderId == OrderIds.getitem) || (orderId == OrderIds.smart)) && !target.isDead()) {
 			if (target instanceof CItem) {
-				final CItem targetItem = (CItem) target;
-				if (!targetItem.isHidden()) {
-					receiver.targetOk(target);
-				}
-				else {
-					receiver.orderIdNotAccepted();
+				if (this.canGetItems) {
+					final CItem targetItem = (CItem) target;
+					if (!targetItem.isHidden()) {
+						receiver.targetOk(target);
+					}
+					else {
+						receiver.orderIdNotAccepted();
+					}
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_PICK_UP_THIS_ITEM);
 				}
 			}
 			else {
@@ -388,10 +392,12 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				}
 			}
 			else {
-				receiver.unknownReasonUseNotOk();
+				receiver.activationCheckFailed(CommandStringErrorKeys.UNABLE_TO_USE_THIS_ITEM);
 			}
 		}
-		else {
+		else if(orderId == OrderIds.dropitem && !this.canDropItems) {
+			receiver.activationCheckFailed(CommandStringErrorKeys.UNABLE_TO_DROP_THIS_ITEM);
+		} else {
 			receiver.useOk();
 		}
 	}
@@ -423,6 +429,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 							final CAbility abilityFromItem = abilityType
 									.createAbility(simulation.getHandleIdAllocator().createId());
 							abilityFromItem.setIconShowing(false);
+							abilityFromItem.setItemAbility(item, -1);
 							hero.add(simulation, abilityFromItem);
 							if (abilityFromItem instanceof SingleOrderAbility) {
 								final int baseOrderId = ((SingleOrderAbility) abilityFromItem).getBaseOrderId();
@@ -453,6 +460,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 									final CAbility abilityFromItem = abilityType
 											.createAbility(simulation.getHandleIdAllocator().createId());
 									abilityFromItem.setIconShowing(false);
+									abilityFromItem.setItemAbility(item, itemIndex);
 									hero.add(simulation, abilityFromItem);
 									this.itemsHeldAbilities[itemIndex].add(abilityFromItem);
 								}

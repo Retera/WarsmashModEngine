@@ -1,8 +1,8 @@
 {
 	"abilityList": [{
 		"ids": [{"id":"AEsh", "castId": "shadowstrike"}],
-		"type": "NORMAL_UNITTARGET_SIMPLE",
-		"onBeginCasting": [{
+		"type": "NORMAL_UNITTARGET",
+		"onEndCasting": [{
 			"type": "createUnitTargetedProjectile",
 			"source": {
 				"type": "getCastingUnit"

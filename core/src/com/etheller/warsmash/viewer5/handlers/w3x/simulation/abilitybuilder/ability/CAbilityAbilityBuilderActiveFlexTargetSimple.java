@@ -99,8 +99,8 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 	}
 

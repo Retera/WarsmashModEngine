@@ -31,7 +31,7 @@ public abstract class AbstractGenericAliasedAbility extends AbstractCAbility imp
 	}
 
 	@Override
-	public void setLevel(final int level) {
+	public void setLevel(CSimulation simulation, CUnit unit, final int level) {
 		this.level = level;
 	}
 }

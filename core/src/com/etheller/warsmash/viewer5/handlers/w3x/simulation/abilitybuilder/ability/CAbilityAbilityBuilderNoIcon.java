@@ -19,9 +19,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility {
 
-	List<CAbilityTypeAbilityBuilderLevelData> levelData;
-	private AbilityBuilderConfiguration config;
-	private Map<String, Object> localStore;
+	protected List<CAbilityTypeAbilityBuilderLevelData> levelData;
+	protected AbilityBuilderConfiguration config;
+	protected Map<String, Object> localStore;
 
 	public CAbilityAbilityBuilderNoIcon(int handleId, War3ID code, War3ID alias, List<CAbilityTypeAbilityBuilderLevelData> levelData,
 			AbilityBuilderConfiguration config, Map<String, Object> localStore) {
@@ -32,8 +32,8 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility {
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 	}
 
@@ -57,11 +57,6 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void onTick(CSimulation game, CUnit unit) {
-		if (config.getOnTickPreCast() != null) {
-			for (ABAction action : config.getOnTickPreCast()) {
-				action.runAction(game, unit, localStore, 0);
-			}
-		}
 	}
 
 	@Override

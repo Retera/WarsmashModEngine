@@ -107,7 +107,7 @@ public class CAbilityHero extends AbstractCAbility {
 				caster.add(game, newAbility);
 			}
 			else {
-				abilityType.setLevel(game, existingAbility, existingAbility.getLevel() + 1);
+				abilityType.setLevel(game, caster, existingAbility, existingAbility.getLevel() + 1);
 			}
 		}
 		else {

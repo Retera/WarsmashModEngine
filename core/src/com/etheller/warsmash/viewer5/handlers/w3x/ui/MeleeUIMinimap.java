@@ -43,14 +43,17 @@ public class MeleeUIMinimap {
 				final Texture minimapIcon;
 				if (simUnit.getGoldMineData() != null) {
 					minimapIcon = this.specialIcons[0];
-					dimensions = 14;
+					dimensions = 21;
 				} else if (simUnit.getNeutralBuildingData() != null) {
 					minimapIcon = this.specialIcons[1];
-					dimensions = 14;
+					dimensions = 21;
 				} else if (simUnit.isHero()) {
 					minimapIcon = this.specialIcons[2];
-					dimensions = 14;
+					dimensions = 28;
 				} else {
+					if (simUnit.isBuilding()) {
+						dimensions = 10;
+					}
 					minimapIcon = this.teamColors[unit.getSimulationUnit().getPlayerIndex()];
 				}
 				batch.draw(minimapIcon,

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.units.GameObject;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -22,6 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
+@Deprecated
 public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTargetSpellBase {
 
 	List<CAbilityTypeAbilityBuilderLevelData> levelData;
@@ -52,8 +52,8 @@ public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTarget
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 	}
 

@@ -5,7 +5,6 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.etheller.warsmash.units.GameObject;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
@@ -51,6 +50,12 @@ public class CAbilityTypeDefinitionAbilityTemplateBuilder
 		final float durationNormal = abilityEditorData.readSLKTagFloat(DURATION+level);
 		final String[] buffStrings = abilityEditorData.readSLKTag(BUFF+level).split(",");
 		final String[] effectStrings = abilityEditorData.readSLKTag(EFFECT+level).split(",");
+		final String unitIdStr = abilityEditorData.readSLKTag(UNIT_ID+level);
+		War3ID unitId = War3ID.NONE;
+		if (unitIdStr != null && !unitIdStr.isEmpty()) {
+			unitId = War3ID.fromString(unitIdStr);
+		}
+		
 		final List<String> data = new ArrayList<>();
 		List<War3ID> buffs = new ArrayList<>();
 		List<War3ID> effects = new ArrayList<>();
@@ -71,7 +76,7 @@ public class CAbilityTypeDefinitionAbilityTemplateBuilder
 		final int manaCost = abilityEditorData.readSLKTagInt(MANA_COST+level);
 		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
 		return new CAbilityTypeAbilityBuilderLevelData(targetsAllowedAtLevel, area, castRange, castTime, cooldown,
-				durationHero, durationNormal, buffs, effects, manaCost, data);
+				durationHero, durationNormal, buffs, effects, manaCost, data, unitId);
 	}
 
 	@Override

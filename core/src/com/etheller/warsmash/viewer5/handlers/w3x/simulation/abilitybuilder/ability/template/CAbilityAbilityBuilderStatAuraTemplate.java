@@ -153,8 +153,8 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 		targetsAllowed = levelData.get(getLevel() - 1).getTargetsAllowed();
 		range = levelData.get(getLevel() - 1).getArea();
@@ -220,8 +220,8 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 					}
 				}
 			}
-			for (CUnit unit : auraGroup) {
-				unit.computeDerivedFields(statBuff.getBuff().getBuffType());
+			for (CUnit unitA : auraGroup) {
+				unitA.computeDerivedFields(statBuff.getBuff().getBuffType());
 			}
 		}
 		if (this.rangeOverride != null) {

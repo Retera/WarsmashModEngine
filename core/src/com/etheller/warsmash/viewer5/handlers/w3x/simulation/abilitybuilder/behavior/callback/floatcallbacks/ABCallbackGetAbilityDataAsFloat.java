@@ -20,7 +20,7 @@ public class ABCallbackGetAbilityDataAsFloat extends ABFloatCallback {
 		int level = (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);
 		
 		String data = levelData.get(level-1).getData().get(dataField.getIndex());
-		if ("-".equals(data)) {
+		if (data.contains("-") || data.isEmpty()) {
 			return 0f;
 		}
 		

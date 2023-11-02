@@ -25,7 +25,7 @@ public class ABTimer extends CTimer {
 	}
 
 	
-	private void onFire(CSimulation simulation) {
+	public void onFire(CSimulation simulation) {
 		localStore.put(ABLocalStoreKeys.FIRINGTIMER, this);
 		if (actions != null) {
 			for (ABAction action : actions) {
@@ -34,15 +34,4 @@ public class ABTimer extends CTimer {
 		}
 	}
 	
-	@Override
-	public void fire(final CSimulation simulation) {
-		onFire(simulation);
-		super.fire(simulation);
-	}
-	
-	@Override
-	public void onFire() {
-		//Intentionally Empty
-	}
-
 }

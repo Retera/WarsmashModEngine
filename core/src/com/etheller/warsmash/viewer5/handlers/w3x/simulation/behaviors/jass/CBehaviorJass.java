@@ -49,4 +49,9 @@ public class CBehaviorJass implements CBehavior {
 		return this.highlightOrderId;
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

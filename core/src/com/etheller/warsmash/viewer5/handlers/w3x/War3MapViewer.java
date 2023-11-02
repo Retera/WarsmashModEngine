@@ -1361,6 +1361,24 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
+					public void changeUnitVertexColor(final CUnit unit, final Color color) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
+						renderPeer.setVertexColoring(color);
+					}
+
+					@Override
+					public void changeUnitVertexColor(final CUnit unit, final float r, final float g, final float b) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
+						renderPeer.setVertexColoring(r,g,b);
+					}
+
+					@Override
+					public void changeUnitVertexColor(final CUnit unit, final float r, final float g, final float b, final float a) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
+						renderPeer.setVertexColoring(r,g,b,a);
+					}
+
+					@Override
 					public void spawnTextTag(final CUnit unit, final TextTagConfigType configType,
 							final int displayAmount) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
@@ -1622,7 +1640,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.terrain.setFogOfWarData(this.simulation.getPlayer(this.localPlayerIndex).getFogOfWar());
 		final CTimer fogUpdateTimer = new CTimer() {
 			@Override
-			public void onFire() {
+			public void onFire(final CSimulation simulation) {
 			}
 		};
 		fogUpdateTimer.setTimeoutTime(1.0f);
@@ -1630,7 +1648,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		fogUpdateTimer.start(this.simulation);
 		final CTimer fogGpuUpdateTimer = new CTimer() {
 			@Override
-			public void onFire() {
+			public void onFire(final CSimulation simulation) {
 				War3MapViewer.this.terrain.reloadFogOfWarDataToGPU();
 				for (final RenderDoodad doodad : War3MapViewer.this.decals) {
 					doodad.updateFog(War3MapViewer.this);

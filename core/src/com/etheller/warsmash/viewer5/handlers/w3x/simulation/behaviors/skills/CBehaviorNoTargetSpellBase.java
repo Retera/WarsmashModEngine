@@ -82,4 +82,9 @@ public class CBehaviorNoTargetSpellBase implements CBehavior {
 	public CAbilitySpellBase getAbility() {
 		return this.ability;
 	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

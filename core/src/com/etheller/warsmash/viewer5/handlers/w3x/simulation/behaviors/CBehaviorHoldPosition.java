@@ -41,4 +41,9 @@ public class CBehaviorHoldPosition implements CBehavior {
 
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

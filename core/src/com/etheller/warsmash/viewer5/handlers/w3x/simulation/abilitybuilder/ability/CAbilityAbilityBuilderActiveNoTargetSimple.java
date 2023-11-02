@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.type
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 
+@Deprecated
 public class CAbilityAbilityBuilderActiveNoTargetSimple extends CAbilityNoTargetSpellBase {
 
 	List<CAbilityTypeAbilityBuilderLevelData> levelData;
@@ -47,8 +48,8 @@ public class CAbilityAbilityBuilderActiveNoTargetSimple extends CAbilityNoTarget
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 	}
 	

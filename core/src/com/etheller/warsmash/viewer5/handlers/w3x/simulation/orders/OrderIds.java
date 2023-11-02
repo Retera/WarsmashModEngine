@@ -548,7 +548,7 @@ public class OrderIds {
 	public static final int _enduranceaura = 852118; //endurance aura (AOae) -- 
 	public static final int _criticalstrike = 852120; //critical strike (AOcr) -- 
 	public static final int _reincarnation = 852124; //reincarnation (AOre) -- 
-	public static final int _couplearchercouplehippogryph = 852141; //couple (archer), couple (hippogryph) (Acoa, Acoh) -- 
+	public static final int coupleinternal = 852141; //couple (archer), couple (hippogryph) (Acoa, Acoh) -- 
 	public static final int _impalingbolt = 852152; //impaling bolt (vorpal blades) (Aimp) -- 
 	public static final int _itemmagicimmunity = 852153; //item magic immunity (Amim) -- 
 	public static final int _moonglaive = 852154; //moon glaive (Amgl) -- 

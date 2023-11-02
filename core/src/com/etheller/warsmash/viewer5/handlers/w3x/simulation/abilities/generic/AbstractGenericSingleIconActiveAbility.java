@@ -112,8 +112,18 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 	}
 
 	@Override
+	public int getUIFoodCost() {
+		return 0;
+	}
+
+	@Override
 	public int getUIManaCost() {
 		return 0;
+	}
+
+	@Override
+	public int getUsesRemaining() {
+		return -1;
 	}
 
 	@Override

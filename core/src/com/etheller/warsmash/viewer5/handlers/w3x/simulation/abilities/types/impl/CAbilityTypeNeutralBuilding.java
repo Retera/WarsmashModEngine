@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
@@ -25,7 +26,7 @@ public class CAbilityTypeNeutralBuilding extends CAbilityType<CAbilityTypeNeutra
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 		final CAbilityTypeNeutralBuildingLevelData levelData = getLevelData(level - 1);
 		final CAbilityNeutralBuilding heroAbility = ((CAbilityNeutralBuilding) existingAbility);
 
@@ -34,7 +35,7 @@ public class CAbilityTypeNeutralBuilding extends CAbilityType<CAbilityTypeNeutra
 		heroAbility.setShowSelectUnitButton(levelData.isShowSelectUnitButton());
 		heroAbility.setShowUnitIndicator(levelData.isShowUnitIndicator());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 	}
 
 }

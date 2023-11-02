@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
@@ -60,6 +61,11 @@ public abstract class AbstractCAbility implements CAbility {
 	@Override
 	public void setPermanent(final boolean permanent) {
 		this.permanent = permanent;
+	}
+	
+	@Override 
+	public void setItemAbility(CItem item, int slot) {
+		//do nothing
 	}
 
 	@Override

@@ -12,7 +12,9 @@ public enum StatBuffType {
 	MAXMPGEN,
 	MVSPD,
 	HPSTEAL,
-	THORNS;
+	THORNS,
+	MAXHP,
+	MAXMP;
 	
 	
 	public NonStackingStatBuffType toNonStackingStatBuffType(boolean percentage) {
@@ -46,6 +48,18 @@ public enum StatBuffType {
 				return NonStackingStatBuffType.MPGENPCT;
 			} else {
 				return NonStackingStatBuffType.MPGEN;
+			}
+		case MAXHP:
+			if (percentage) {
+				return NonStackingStatBuffType.MAXHPPCT;
+			} else {
+				return NonStackingStatBuffType.MAXHP;
+			}
+		case MAXMP:
+			if (percentage) {
+				return NonStackingStatBuffType.MAXMPPCT;
+			} else {
+				return NonStackingStatBuffType.MAXMP;
 			}
 		case MVSPD:
 			if (percentage) {

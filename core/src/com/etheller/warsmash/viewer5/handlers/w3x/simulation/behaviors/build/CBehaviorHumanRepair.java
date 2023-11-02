@@ -105,4 +105,9 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 	public int getHighlightOrderId() {
 		return OrderIds.repair;
 	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

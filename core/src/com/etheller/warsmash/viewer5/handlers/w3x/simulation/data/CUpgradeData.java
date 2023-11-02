@@ -177,7 +177,9 @@ public class CUpgradeData {
 					}
 				}
 				else {
-					System.err.println("a");
+					if (!"_".equals(effectIdString)) {
+						System.err.println("Not 4 len: " + effectIdString);
+					}
 				}
 			}
 

@@ -27,6 +27,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
+@Deprecated
 public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellBase {
 	private CBehavior behavior;
 
@@ -99,8 +100,8 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 	}
 

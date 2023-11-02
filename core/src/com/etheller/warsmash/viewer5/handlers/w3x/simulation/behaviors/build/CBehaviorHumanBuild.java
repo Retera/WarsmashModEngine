@@ -178,4 +178,9 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 		}
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

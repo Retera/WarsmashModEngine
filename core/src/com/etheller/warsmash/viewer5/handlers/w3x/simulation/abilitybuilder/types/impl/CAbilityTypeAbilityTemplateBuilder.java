@@ -7,6 +7,7 @@ import java.util.Map;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
@@ -50,8 +51,8 @@ public class CAbilityTypeAbilityTemplateBuilder extends CAbilityType<CAbilityTyp
 	}
 
 	@Override
-	public void setLevel(CSimulation game, CLevelingAbility existingAbility, int level) {
-		existingAbility.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, CLevelingAbility existingAbility, int level) {
+		existingAbility.setLevel(game, unit, level);
 	}
 
 }

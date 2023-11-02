@@ -94,8 +94,8 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 		for (StatBuffFromDataField statBuff : this.statBuffDataFields) {
 			NonStackingStatBuffType type = statBuff.convertToNonStackingType(levelData.get(getLevel() - 1));
@@ -142,7 +142,7 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 			caster.computeDerivedFields(statBuff.getBuff().getBuffType());
 		}
 		if (this.buff != null) {
-			this.buff.setLevel(level);
+			this.buff.setLevel(game, unit, level);
 		}
 	}
 

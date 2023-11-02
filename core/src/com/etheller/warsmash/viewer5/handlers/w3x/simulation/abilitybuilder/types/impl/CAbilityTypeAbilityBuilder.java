@@ -7,6 +7,7 @@ import java.util.Map;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpell;
@@ -41,13 +42,9 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 			return new CAbilityAbilityBuilderBuff(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case PASSIVE:
 			return new CAbilityAbilityBuilderPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
-		case TICKING_PASSIVE:
-			return new CAbilityAbilityBuilderTickingPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case HIDDEN:
 			return new CAbilityAbilityBuilderNoIcon(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case TOGGLE:
-			return new CAbilityAbilityBuilderActiveToggle(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
-		case TOGGLE_TICKING:
 			return new CAbilityAbilityBuilderActiveToggle(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_NOTARGET_SIMPLE:
 			ability = new CAbilityAbilityBuilderActiveNoTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
@@ -65,6 +62,10 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 			ability = new CAbilityAbilityBuilderActiveFlexTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
 			ability.populate(this.abilityEditorData, 1);
 			return ability;
+		case NORMAL_FLEXTARGET:
+			return new CAbilityAbilityBuilderActiveFlexTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
+		case NORMAL_PAIRING:
+			return new CAbilityAbilityBuilderActivePairing(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_AUTOTARGET:
 			return new CAbilityAbilityBuilderActiveAutoTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_NOTARGET:
@@ -77,14 +78,14 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 		}
 	}
 
-	public void setLevel(CSimulation game, CAbilitySpell existingAbility, int level) {
-		existingAbility.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, CAbilitySpell existingAbility, int level) {
+		existingAbility.setLevel(game, unit, level);
 		existingAbility.populate(abilityEditorData, level);
 	}
 
 	@Override
-	public void setLevel(CSimulation game, CLevelingAbility existingAbility, int level) {
-		existingAbility.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, CLevelingAbility existingAbility, int level) {
+		existingAbility.setLevel(game, unit, level);
 	}
 
 }

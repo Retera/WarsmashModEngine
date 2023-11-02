@@ -152,5 +152,10 @@ public class CAbilityMove extends AbstractCAbility {
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
+	
+	@Override
+	public boolean isPermanent() {
+		return true;
+	}
 
 }

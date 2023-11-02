@@ -80,4 +80,9 @@ public class CBehaviorCarrionSwarmDummy extends CAbstractRangedBehavior {
 
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanRepair;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
@@ -25,7 +26,7 @@ public class CAbilityTypeHumanRepair extends CAbilityType<CAbilityTypeHumanRepai
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 
 		final CAbilityTypeHumanRepairLevelData levelData = getLevelData(level - 1);
 		final CAbilityHumanRepair heroAbility = ((CAbilityHumanRepair) existingAbility);
@@ -36,7 +37,7 @@ public class CAbilityTypeHumanRepair extends CAbilityType<CAbilityTypeHumanRepai
 		heroAbility.setRepairTimeRatio(levelData.getRepairTimeRatio());
 		heroAbility.setCastRange(levelData.getCastRange());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 
 	}
 

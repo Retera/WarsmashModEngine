@@ -20,6 +20,7 @@ public class ABActionCreateTimedBuff implements ABAction {
 	private ABBooleanCallback showTimedLifeBar;
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
+	private List<ABAction> onExpireActions;
 	private ABBooleanCallback showIcon;
 	private CEffectType artType;
 
@@ -34,7 +35,7 @@ public class ABActionCreateTimedBuff implements ABAction {
 			ABTimedBuff ability = new ABTimedBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
-					onRemoveActions, showIcon.callback(game, caster, localStore, castId), castId);
+					onRemoveActions, onExpireActions, showIcon.callback(game, caster, localStore, castId), castId);
 			if (artType != null) {
 				ability.setArtType(artType);
 			}
@@ -43,7 +44,7 @@ public class ABActionCreateTimedBuff implements ABAction {
 			ABTimedBuff ability = new ABTimedBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
-					onRemoveActions, castId);
+					onRemoveActions, onExpireActions, castId);
 			if (artType != null) {
 				ability.setArtType(artType);
 			}

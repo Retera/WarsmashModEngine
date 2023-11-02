@@ -56,11 +56,12 @@ public class MeleeUIMinimap {
 					}
 					minimapIcon = this.teamColors[unit.getSimulationUnit().getPlayerIndex()];
 				}
+				int offset = dimensions / 2;
 				batch.draw(minimapIcon,
 						this.minimapFilledArea.x + (((unit.location[0] - this.playableMapArea.getX())
-								/ (this.playableMapArea.getWidth())) * this.minimapFilledArea.width),
+								/ (this.playableMapArea.getWidth())) * this.minimapFilledArea.width) - offset,
 						this.minimapFilledArea.y + (((unit.location[1] - this.playableMapArea.getY())
-								/ (this.playableMapArea.getHeight())) * this.minimapFilledArea.height),
+								/ (this.playableMapArea.getHeight())) * this.minimapFilledArea.height) - offset,
 						dimensions, dimensions);
 			}
 		}

@@ -7,31 +7,27 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
-	private final AbilityBuilderConfiguration parser;
 	private Map<String, Object> localStore;
-	private AbilityBuilderAbility ability;
+	private AbilityBuilderActiveAbility ability;
 	
 	private int castStartTick = 0;
 	private boolean doneEffect = false;
 	private boolean channeling = false;
 	
-	private int castId = 0;
 	private CUnit unit;
+	private int orderId;
 	
 	private boolean instant = false;
 
-	public CBehaviorAbilityBuilderNoTarget(final CUnit unit, final AbilityBuilderConfiguration parser,
-			final Map<String, Object> localStore, AbilityBuilderAbility ability) {
+	public CBehaviorAbilityBuilderNoTarget(final CUnit unit,
+			final Map<String, Object> localStore, AbilityBuilderActiveAbility ability) {
 		this.unit = unit;
-		this.parser = parser;
 		this.localStore = localStore;
 		this.ability = ability;
 	}
@@ -65,6 +61,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
+		this.orderId = this.ability.getBaseOrderId();
 		return this;
 	}
 
@@ -73,6 +70,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
+		this.orderId = orderId;
 		return this;
 	}
 
@@ -86,23 +84,29 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		if (this.castStartTick == 0) {
 			this.castStartTick = game.getGameTurnTick();
 			
-			if (!this.unit.chargeMana(this.ability.getUIManaCost())) {
+			if (!this.unit.chargeMana(this.ability.getChargedManaCost())) {
 				game.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(),
 						CommandStringErrorKeys.NOT_ENOUGH_MANA);
 				return this.unit.pollNextOrderBehavior(game);
 			}
 			this.ability.startCooldown(game, this.unit);
 			
-			if (parser.getOnBeginCasting() != null) {
-				for (ABAction action : parser.getOnBeginCasting()) {
-					action.runAction(game, this.unit, localStore, castId);
-				}
+			this.ability.runBeginCastingActions(game, unit, orderId);
+			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+			if (newBehavior != null) {
+				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+				return newBehavior;
 			}
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
 		}
 		
 		if (instant) {
 			tryDoEffect(game, wasChanneling);
+			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+			if (newBehavior != null) {
+				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+				return newBehavior;
+			}
 			if (!this.channeling) {
 				return this.unit.pollNextOrderBehavior(game);
 			}
@@ -114,6 +118,11 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 					/ WarsmashConstants.SIMULATION_STEP_TIME);
 			if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
 				tryDoEffect(game, wasChanneling);
+				CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+				if (newBehavior != null) {
+					localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+					return newBehavior;
+				}
 			}
 			if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
 				return this.unit.pollNextOrderBehavior(game);
@@ -133,11 +142,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 				game.unitSoundEffectEvent(this.unit, this.ability.getAlias());
 			}
 			
-			if (parser.getOnEndCasting() != null) {
-				for (ABAction action : parser.getOnEndCasting()) {
-					action.runAction(game, this.unit, localStore, castId);
-				}
-			}
+			this.ability.runEndCastingActions(game, unit, orderId);
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
 			
 		}
@@ -152,11 +157,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	}
 
 	public boolean doChannelTick(CSimulation game, CUnit caster) {
-		if (parser.getOnChannelTick() != null) {
-			for (ABAction action : parser.getOnChannelTick()) {
-				action.runAction(game, this.unit, localStore, castId);
-			}
-		}
+		this.ability.runChannelTickActions(game, caster, orderId);
 		return (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
 	}
 
@@ -176,11 +177,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	private void endChannel(CSimulation game, boolean interrupted) {
 		this.localStore.put(ABLocalStoreKeys.INTERRUPTED, interrupted);
 		game.unitStopSoundEffectEvent(this.unit, this.ability.getAlias());
-		if (parser.getOnEndChannel() != null) {
-			for (ABAction action : parser.getOnEndChannel()) {
-				action.runAction(game, this.unit, localStore, castId);
-			}
-		}
+		this.ability.runEndChannelActions(game, unit, orderId);
 	}
 
 	@Override
@@ -189,7 +186,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	}
 
 	public void setCastId(int castId) {
-		this.castId = castId;
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

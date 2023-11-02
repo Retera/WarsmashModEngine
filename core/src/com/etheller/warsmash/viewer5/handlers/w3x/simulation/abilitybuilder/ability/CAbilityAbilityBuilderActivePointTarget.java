@@ -45,8 +45,9 @@ public class CAbilityAbilityBuilderActivePointTarget extends CAbilityAbilityBuil
 	@Override
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
 		this.castId++;
-		this.behavior.setCastId(castId);
 		localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
+		this.runOnOrderIssuedActions(game, caster, orderId);
+		this.behavior.setCastId(castId);
 		return this.behavior.reset(point);
 	}
 

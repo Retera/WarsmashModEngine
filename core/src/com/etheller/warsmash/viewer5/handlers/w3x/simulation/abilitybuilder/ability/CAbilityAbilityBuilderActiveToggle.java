@@ -24,6 +24,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbilityActivationReceiver;
 
+@Deprecated
 public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGenericActive {
 
 	protected int unorderId;
@@ -115,10 +116,12 @@ public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGe
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityTarget target) {
 		if (this.active && (orderId == this.unorderId)) {
+			this.runOnOrderIssuedActions(game, caster, orderId);
 			deactivate(game, caster);
 			return false;
 		} else if (!this.active && (orderId == this.orderId)) {
 			if (caster.chargeMana(this.manaCost)) {
+				this.runOnOrderIssuedActions(game, caster, orderId);
 				activate(game, caster);
 			}
 			return false;

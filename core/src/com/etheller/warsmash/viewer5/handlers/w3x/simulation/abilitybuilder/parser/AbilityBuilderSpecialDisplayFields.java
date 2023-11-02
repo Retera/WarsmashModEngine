@@ -17,6 +17,7 @@ public class AbilityBuilderSpecialDisplayFields {
 	private ABBooleanCallback castlessNoTarget;
 	
 	private ABBooleanCallback toggleable;
+	private ABBooleanCallback castToggleOff;
 	private ABBooleanCallback separateOnAndOff;
 	private ABIDCallback alternateUnitId;
 	
@@ -67,6 +68,12 @@ public class AbilityBuilderSpecialDisplayFields {
 	}
 	public void setToggleable(ABBooleanCallback toggleable) {
 		this.toggleable = toggleable;
+	}
+	public ABBooleanCallback getCastToggleOff() {
+		return castToggleOff;
+	}
+	public void setCastToggleOff(ABBooleanCallback castToggleOff) {
+		this.castToggleOff = castToggleOff;
 	}
 	public ABBooleanCallback getSeparateOnAndOff() {
 		return separateOnAndOff;

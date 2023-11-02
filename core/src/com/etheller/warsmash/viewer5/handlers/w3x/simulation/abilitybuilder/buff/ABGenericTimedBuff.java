@@ -38,6 +38,8 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	
 	protected abstract void onBuffRemove(CSimulation game, CUnit unit);
 
+	protected abstract void onBuffExpire(CSimulation game, CUnit unit);
+
 	@Override
 	public float getDurationMax() {
 		return this.duration;
@@ -53,6 +55,7 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	public void onTick(final CSimulation game, final CUnit caster) {
 		this.currentTick++;
 		if (this.currentTick > this.expireTick) {
+			this.onBuffExpire(game, caster);
 			caster.remove(game, this);
 		}
 	}

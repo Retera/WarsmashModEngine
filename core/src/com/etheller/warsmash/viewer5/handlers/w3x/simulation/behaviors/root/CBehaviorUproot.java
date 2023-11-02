@@ -60,4 +60,8 @@ public class CBehaviorUproot implements CBehavior {
 		return OrderIds.unroot;
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

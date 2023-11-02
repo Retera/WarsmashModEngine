@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -24,9 +25,16 @@ public interface AbilityBuilderActiveAbility extends GenericSingleIconActiveAbil
 	
 	public int getChargedManaCost();
 
+	public float getArea();
+
+	public float getCastRange();
+	public void setCastRange(float castRange);
+
 	public int getOffOrderId();
 
 	public void startCooldown(CSimulation game, CUnit unit);
+
+	public void resetCooldown(CSimulation game, CUnit unit);
 	
 	public PrimaryTag getCastingPrimaryTag();
 	
@@ -45,6 +53,8 @@ public interface AbilityBuilderActiveAbility extends GenericSingleIconActiveAbil
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver);
 
+	public void runOnOrderIssuedActions(CSimulation game, CUnit caster, int orderId);
+
 	public void runBeginCastingActions(CSimulation game, CUnit caster, int orderId);
 
 	public void runEndCastingActions(CSimulation game, CUnit caster, int orderId);
@@ -56,5 +66,9 @@ public interface AbilityBuilderActiveAbility extends GenericSingleIconActiveAbil
 	public void runCancelPreCastActions(CSimulation game, CUnit caster, int orderId);
 
 	public boolean isSeparateOnAndOff();
+
+	War3ID getOnTooltipOverride();
+
+	War3ID getOffTooltipOverride();
 
 }

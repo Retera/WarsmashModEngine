@@ -1234,5 +1234,233 @@
 				}]
 			}]
 		}]
+	},{
+		"ids": [{"id":"Acoa", "castId": "mounthippogryph"}],
+		"type": "NORMAL_PAIRING",
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Acoh"
+			},
+			"pairUnitId": {
+				"type": "getAbilityDataAsID",
+				"dataField": "A"
+			},
+			"pairUnitTypeError": "MUST_TARGET_A_HIPPOGRYPH",
+			"cantTargetError": "UNABLE_TO_MERGE_WITH_THAT_UNIT",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "false"
+			},
+			"pairingOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupleinternal"
+				}
+			},
+			"orderPairedUnit": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"orderPairedUnitOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupleinternal"
+				}
+			}
+		},
+		"onEndCasting": [{
+				"type": "mergeUnits",
+				"unit1": {
+					"type": "getCastingUnit"
+				},
+				"unit2": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"newUnitId": {
+					"type": "getAbilityUnitId"
+				},
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getAbilityTargetedUnit"
+					}
+				},
+				"facing": {
+					"type": "getUnitFacing",
+					"unit": {
+						"type": "getAbilityTargetedUnit"
+					}
+				}
+		}],
+		"onCancelPreCast": [{
+				"type": "issueStopOrder",
+				"unit": {
+					"type": "getAbilityPairedUnit"
+				}
+			},{
+				"type": "cleanUpCastInstance"
+		}]
+	},{
+		"ids": [{"id":"Acoh", "castId": "loadarcher"}],
+		"type": "NORMAL_PAIRING",
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Acoa"
+			},
+			"pairUnitId": {
+				"type": "getAbilityDataAsID",
+				"dataField": "A"
+			},
+			"pairUnitTypeError": "MUST_TARGET_AN_ARCHER",
+			"cantTargetError": "UNABLE_TO_MERGE_WITH_THAT_UNIT",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "false"
+			},
+			"pairingOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupleinternal"
+				}
+			},
+			"orderPairedUnit": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"orderPairedUnitOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupleinternal"
+				}
+			}
+		},
+		"onCancelPreCast": [{
+				"type": "issueStopOrder",
+				"unit": {
+					"type": "getAbilityPairedUnit"
+				}
+			},{
+				"type": "cleanUpCastInstance"
+		}]
+	},{
+		"ids": [{"id":"Acoi", "castId": "coupleinstant"}],
+		"type": "NORMAL_PAIRING",
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Acoi"
+			},
+			"pairUnitId": {
+				"type": "getAbilityDataAsID",
+				"dataField": "A"
+			},
+			"cantTargetError": "UNABLE_TO_MERGE_WITH_THAT_UNIT",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"pairSearchRadius": {
+				"type": "getAbilityArea"
+			},
+			"pairingOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupletarget"
+				}
+			},
+			"orderPairedUnit": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"orderPairedUnitOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupletarget"
+				}
+			}
+		},
+		"onBeginCasting": [{
+			"type": "beginChanneling"
+		}],
+		"onEndCasting": [{
+			"type": "if",
+			"condition": {
+				"type": "bool",
+				"bool": {
+					"type": "getAbilityDataAsBoolean",
+					"dataField": "B"
+				}
+			},
+			"thenActions": [{
+					"type": "mergeUnits",
+					"unit1": {
+						"type": "getCastingUnit"
+					},
+					"unit2": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"newUnitId": {
+						"type": "getAbilityUnitId"
+					},
+					"location": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"facing": {
+						"type": "getUnitFacing",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					}
+				},{
+					"type": "startCooldown",
+					"alias": {
+						"type": "getWar3IDFromString",
+						"id": "Adec"
+					},
+					"unit": {
+						"type": "getLastCreatedUnit"
+					}
+				},{
+					"type": "cleanUpCastInstance"
+			}],
+			"elseActions": []
+		}],
+		"onEndChannel": [{
+			"type": "if",
+			"condition": {
+				"type": "notNull",
+				"value": {
+					"type": "getAbilityPairedUnit"
+				}
+			},
+			"thenActions": [{
+				"type": "issueStopOrder",
+				"unit": {
+					"type": "getAbilityPairedUnit"
+				}
+			}],
+			"elseActions": []
+		},{
+				"type": "cleanUpCastInstance"
+		}],
+		"onCancelPreCast": [{
+				"type": "issueStopOrder",
+				"unit": {
+					"type": "getAbilityPairedUnit"
+				}
+			},{
+				"type": "cleanUpCastInstance"
+		}]
 	}]
 }

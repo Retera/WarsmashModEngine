@@ -18,10 +18,11 @@ public class CAbilityTypeAbilityBuilderLevelData extends CAbilityTypeLevelData {
 	private final List<War3ID> effects;
 	private final int manaCost;
 	private final List<String> data;
+	private final War3ID unitId;
 
 	public CAbilityTypeAbilityBuilderLevelData(EnumSet<CTargetType> targetsAllowed, float area, float castRange,
 			float castTime, float cooldown, float durationHero, float durationNormal, List<War3ID> buffs,
-			List<War3ID> effects, int manaCost, List<String> data) {
+			List<War3ID> effects, int manaCost, List<String> data, War3ID unitId) {
 		super(targetsAllowed);
 		this.area = area;
 		this.castRange = castRange;
@@ -33,6 +34,7 @@ public class CAbilityTypeAbilityBuilderLevelData extends CAbilityTypeLevelData {
 		this.effects = effects;
 		this.manaCost = manaCost;
 		this.data = data;
+		this.unitId = unitId;
 	}
 
 	public float getArea() {
@@ -73,6 +75,10 @@ public class CAbilityTypeAbilityBuilderLevelData extends CAbilityTypeLevelData {
 
 	public List<String> getData() {
 		return data;
+	}
+
+	public War3ID getUnitId() {
+		return unitId;
 	}
 
 }

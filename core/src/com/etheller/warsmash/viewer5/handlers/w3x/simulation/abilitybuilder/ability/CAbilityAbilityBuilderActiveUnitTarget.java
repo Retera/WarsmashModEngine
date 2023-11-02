@@ -41,6 +41,7 @@ public class CAbilityAbilityBuilderActiveUnitTarget extends CAbilityAbilityBuild
 		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, target.visit(AbilityTargetVisitor.UNIT));
 		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
 		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, target.visit(AbilityTargetVisitor.DESTRUCTABLE));
+		this.runOnOrderIssuedActions(game, caster, orderId);
 		return this.behavior.reset(target);
 	}
 

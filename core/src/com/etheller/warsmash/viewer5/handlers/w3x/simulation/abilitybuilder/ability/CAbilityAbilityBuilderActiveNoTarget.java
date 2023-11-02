@@ -89,6 +89,7 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 		if (castless) {
 			return null;
 		} else {
+			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
 			return this.behavior.reset();
 		}

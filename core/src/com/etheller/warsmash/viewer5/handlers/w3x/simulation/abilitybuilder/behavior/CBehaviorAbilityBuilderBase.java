@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior;
 
-import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -11,7 +10,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
@@ -114,18 +112,27 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 			this.ability.startCooldown(game, this.unit);
 			
 			this.ability.runBeginCastingActions(game, unit, orderId);
+			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+			if (newBehavior != null) {
+				cleanupInputs();
+				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+				return newBehavior;
+			}
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
 		}
 		
 
 		if (instant) {
 			tryDoEffect(game, wasChanneling);
+			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+			if (newBehavior != null) {
+				cleanupInputs();
+				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+				return newBehavior;
+			}
 			
 			if (!this.channeling) {
-				this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
-				this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
-				this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
-				this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
+				cleanupInputs();
 				return this.unit.pollNextOrderBehavior(game);
 			}
 		} else {
@@ -136,16 +143,26 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 					/ WarsmashConstants.SIMULATION_STEP_TIME);
 			if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
 				tryDoEffect(game, wasChanneling);
+				CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+				if (newBehavior != null) {
+					cleanupInputs();
+					localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+					return newBehavior;
+				}
 			}
 			if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
-				this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
-				this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
-				this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
-				this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
+				cleanupInputs();
 				return this.unit.pollNextOrderBehavior(game);
 			}
 		}
 		return this;
+	}
+	
+	private void cleanupInputs() {
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
 	}
 	
 	private void tryDoEffect(CSimulation game, boolean wasChanneling) {
@@ -195,10 +212,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		this.localStore.put(ABLocalStoreKeys.INTERRUPTED, interrupted);
 		game.unitStopSoundEffectEvent(this.unit, this.ability.getAlias());
 		this.ability.runEndChannelActions(game, unit, orderId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
+		cleanupInputs();
 	}
 
 	@Override
@@ -208,9 +222,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 
 	@Override
 	public boolean isWithinRange(CSimulation simulation) {
-		List<CAbilityTypeAbilityBuilderLevelData> levelData = this.ability.getLevelData();
-		final float castRange = levelData.get((this.ability.getLevel()) - 1).getCastRange();
-		return this.unit.canReach(this.target, castRange);
+		return this.unit.canReach(this.target, this.ability.getCastRange());
 	}
 
 	@Override
@@ -239,6 +251,11 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	
 	public void setCastId(int castId) {
 		this.castId = castId;
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
 	}
 
 }

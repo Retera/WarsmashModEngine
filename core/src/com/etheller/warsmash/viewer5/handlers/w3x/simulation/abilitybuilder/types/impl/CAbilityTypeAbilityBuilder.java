@@ -42,13 +42,9 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 			return new CAbilityAbilityBuilderBuff(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case PASSIVE:
 			return new CAbilityAbilityBuilderPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
-		case TICKING_PASSIVE:
-			return new CAbilityAbilityBuilderTickingPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case HIDDEN:
 			return new CAbilityAbilityBuilderNoIcon(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case TOGGLE:
-			return new CAbilityAbilityBuilderActiveToggle(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
-		case TOGGLE_TICKING:
 			return new CAbilityAbilityBuilderActiveToggle(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_NOTARGET_SIMPLE:
 			ability = new CAbilityAbilityBuilderActiveNoTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
@@ -68,6 +64,8 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 			return ability;
 		case NORMAL_FLEXTARGET:
 			return new CAbilityAbilityBuilderActiveFlexTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
+		case NORMAL_PAIRING:
+			return new CAbilityAbilityBuilderActivePairing(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_AUTOTARGET:
 			return new CAbilityAbilityBuilderActiveAutoTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_NOTARGET:

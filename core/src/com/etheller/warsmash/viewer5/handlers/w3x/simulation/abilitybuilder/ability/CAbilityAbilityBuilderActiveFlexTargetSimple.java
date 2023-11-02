@@ -27,6 +27,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
+@Deprecated
 public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellBase {
 	private CBehavior behavior;
 

@@ -118,6 +118,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, target.visit(AbilityTargetVisitor.UNIT));
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, target.visit(AbilityTargetVisitor.DESTRUCTABLE));
+			this.runOnOrderIssuedActions(game, caster, orderId);
 			return this.behavior.reset(target);
 		} else {
 			return null;
@@ -128,6 +129,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
 		if (this.isTargetedSpell() && this.isPointTarget()) {
 			localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
+			this.runOnOrderIssuedActions(game, caster, orderId);
 			return this.behavior.reset(point);
 		} else {
 			return null;
@@ -140,6 +142,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 			if (castless) {
 				return null;
 			} else {
+				this.runOnOrderIssuedActions(game, caster, orderId);
 				return this.behavior.reset();
 			}
 		} else {

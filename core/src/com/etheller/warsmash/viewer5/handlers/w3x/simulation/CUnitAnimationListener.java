@@ -23,6 +23,12 @@ public interface CUnitAnimationListener {
 
 	void removeSecondaryTag(SecondaryTag secondaryTag);
 
+	void addSecondaryTagForFutureAnimations(SecondaryTag secondaryTag);
+
+	void removeSecondaryTagForFutureAnimations(SecondaryTag secondaryTag);
+
+	EnumSet<SecondaryTag> getSecondaryTags();
+	
 	void lockTurrentFacing(AbilityTarget target);
 
 	void clearTurrentFacing();

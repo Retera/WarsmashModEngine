@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.type
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 
+@Deprecated
 public class CAbilityAbilityBuilderActiveNoTargetSimple extends CAbilityNoTargetSpellBase {
 
 	List<CAbilityTypeAbilityBuilderLevelData> levelData;

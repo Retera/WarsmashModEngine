@@ -3006,6 +3006,19 @@ public class Jass2 {
 						whichUnit.add(CommonEnvironment.this.simulation, ability);
 						return BooleanJassValue.TRUE;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitRemoveAbility",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int abilityId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final War3ID rawcode = new War3ID(abilityId);
+						
+						CAbility abil = whichUnit.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
+						if (abil != null) {
+							whichUnit.remove(simulation, abil);
+							return BooleanJassValue.TRUE;
+						}
+						return BooleanJassValue.FALSE;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitItemInSlot",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

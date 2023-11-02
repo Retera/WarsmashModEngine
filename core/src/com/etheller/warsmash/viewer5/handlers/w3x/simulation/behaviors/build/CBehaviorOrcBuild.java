@@ -167,4 +167,8 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 		}
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

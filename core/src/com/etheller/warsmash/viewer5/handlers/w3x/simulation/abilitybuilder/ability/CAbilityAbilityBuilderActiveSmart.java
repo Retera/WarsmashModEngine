@@ -22,6 +22,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 //TODO: Figure out if we need smart? Not implemented
+@Deprecated
 public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIconActiveAbility implements AbilityBuilderActiveAbility {
 
 	List<CAbilityTypeAbilityBuilderLevelData> levelData;
@@ -236,6 +237,48 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 
 	@Override
 	public void runCancelPreCastActions(CSimulation game, CUnit caster, int orderId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public float getArea() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public float getCastRange() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public War3ID getOnTooltipOverride() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public War3ID getOffTooltipOverride() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void resetCooldown(CSimulation game, CUnit unit) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setCastRange(float castRange) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void runOnOrderIssuedActions(CSimulation game, CUnit caster, int orderId) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
@@ -870,6 +871,18 @@ public class CSimulation implements CPlayerAPI {
 
 	public void changeUnitColor(final CUnit unit, final int playerIndex) {
 		this.simulationRenderController.changeUnitColor(unit, playerIndex);
+	}
+
+	public void changeUnitVertexColor(final CUnit unit, final Color color) {
+		this.simulationRenderController.changeUnitVertexColor(unit, color);
+	}
+
+	public void changeUnitVertexColor(final CUnit unit, final float r, final float g, final float b) {
+		this.simulationRenderController.changeUnitVertexColor(unit, r, g, b);
+	}
+
+	public void changeUnitVertexColor(final CUnit unit, final float r, final float g, final float b, final float a) {
+		this.simulationRenderController.changeUnitVertexColor(unit, r, g, b, a);
 	}
 
 	public void setGlobalScope(final GlobalScope globalScope) {

@@ -177,4 +177,9 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 			refund(player, unitTypeToCreate);
 		}
 	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

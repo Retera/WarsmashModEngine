@@ -13,14 +13,14 @@ public class ABTimedTickingBuff extends ABTimedBuff {
 	private List<ABAction> onTickActions;
 
 	public ABTimedTickingBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onTickActions, boolean showIcon, final int castId) {
-		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onTickActions, castId);
+			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions, boolean showIcon, final int castId) {
+		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions, onTickActions, castId);
 		this.setIconShowing(showIcon);
 	}
 	
 	public ABTimedTickingBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onTickActions, final int castId) {
-		super(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, castId);
+			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions, final int castId) {
+		super(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions, castId);
 		this.onTickActions = onTickActions;
 	}
 

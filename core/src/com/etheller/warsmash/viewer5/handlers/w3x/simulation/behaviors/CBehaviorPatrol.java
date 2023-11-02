@@ -63,4 +63,9 @@ public class CBehaviorPatrol implements CRangedBehavior {
 
 	}
 
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

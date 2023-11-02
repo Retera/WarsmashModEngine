@@ -63,7 +63,11 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-
+		for (int i = 0; i < this.itemsHeld.length; i++) {
+			if (this.itemsHeld[i] != null) {
+				dropItem(game, unit, i, unit.getX(), unit.getY(), false);
+			}
+		}
 	}
 
 	@Override

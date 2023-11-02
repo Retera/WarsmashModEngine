@@ -363,6 +363,99 @@ public class CUnitData {
 		}
 	}
 
+	public void addMissingDefaultAbilitiesToUnit(final CSimulation simulation, final HandleIdAllocator handleIdAllocator,
+			final CUnitType unitTypeInstance, final boolean resetMana, final int manaInitial, final int speed,
+			final CUnit unit) {
+		CAbilityMove preMove = unit.getFirstAbilityOfType(CAbilityMove.class);
+		if (speed > 0 && preMove == null) {
+			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
+		}
+		if (speed <= 0 && preMove != null) {
+			unit.remove(simulation, preMove);
+		}
+		final List<CUnitAttack> unitSpecificAttacks = new ArrayList<>();
+		for (final CUnitAttack attack : unitTypeInstance.getAttacks()) {
+			unitSpecificAttacks.add(attack.copy());
+		}
+		unit.setUnitSpecificAttacks(unitSpecificAttacks);
+		unit.setUnitSpecificCurrentAttacks(
+				getEnabledAttacks(unitSpecificAttacks, unitTypeInstance.getAttacksEnabled()));
+		if (!unit.getCurrentAttacks().isEmpty()) {
+			unit.add(simulation, new CAbilityAttack(handleIdAllocator.createId()));
+		}
+		final List<War3ID> structuresBuilt = unitTypeInstance.getStructuresBuilt();
+		if (!structuresBuilt.isEmpty()) {
+			switch (unitTypeInstance.getRace()) {
+			case ORC:
+				unit.add(simulation, new CAbilityOrcBuild(handleIdAllocator.createId(), structuresBuilt));
+				break;
+			case HUMAN:
+				unit.add(simulation, new CAbilityHumanBuild(handleIdAllocator.createId(), structuresBuilt));
+				break;
+			case UNDEAD:
+				unit.add(simulation, new CAbilityUndeadBuild(handleIdAllocator.createId(), structuresBuilt));
+				break;
+			case NIGHTELF:
+				unit.add(simulation, new CAbilityNightElfBuild(handleIdAllocator.createId(), structuresBuilt));
+				break;
+			case NAGA:
+				unit.add(simulation, new CAbilityNagaBuild(handleIdAllocator.createId(), structuresBuilt));
+				break;
+			case CREEPS:
+			case CRITTERS:
+			case DEMON:
+			case OTHER:
+				unit.add(simulation, new CAbilityOrcBuild(handleIdAllocator.createId(), structuresBuilt));
+				break;
+			}
+		}
+		final List<War3ID> unitsTrained = unitTypeInstance.getUnitsTrained();
+		final List<War3ID> researchesAvailable = unitTypeInstance.getResearchesAvailable();
+		final List<War3ID> upgradesTo = unitTypeInstance.getUpgradesTo();
+		final List<War3ID> itemsSold = unitTypeInstance.getItemsSold();
+		final List<War3ID> itemsMade = unitTypeInstance.getItemsMade();
+		if (!unitsTrained.isEmpty() || !researchesAvailable.isEmpty()) {
+			unit.add(simulation, new CAbilityQueue(handleIdAllocator.createId(), unitsTrained, researchesAvailable));
+		}
+		if (!upgradesTo.isEmpty()) {
+			unit.add(simulation, new CAbilityUpgrade(handleIdAllocator.createId(), upgradesTo));
+		}
+		if (!itemsSold.isEmpty()) {
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold));
+		}
+		if (!itemsMade.isEmpty()) {
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade));
+		}
+		if (unitTypeInstance.isRevivesHeroes()) {
+			unit.add(simulation, new CAbilityReviveHero(handleIdAllocator.createId()));
+		}
+		if (!unitsTrained.isEmpty() || unitTypeInstance.isRevivesHeroes()) {
+			unit.add(simulation, new CAbilityRally(handleIdAllocator.createId()));
+		}
+		if (unitTypeInstance.isHero()) {
+			final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
+			if (unit.getFirstAbilityOfType(CAbilityHero.class) != null) {
+				CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
+				abil.setSkillsAvailable(heroAbilityList);
+				abil.recalculateAllStats(simulation, unit);
+			} else {
+				unit.add(simulation, new CAbilityHero(handleIdAllocator.createId(), heroAbilityList));
+				// reset initial mana after the value is adjusted for hero data
+				unit.setMana(manaInitial);
+			}
+		}
+		for (final War3ID ability : unitTypeInstance.getAbilityList()) {
+			final CLevelingAbility existingAbility = unit
+					.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(ability));
+			if ((existingAbility == null)) {
+				final CAbility createAbility = this.abilityData.createAbility(ability, handleIdAllocator.createId());
+				if (createAbility != null) {
+					unit.add(simulation, createAbility);
+				}
+			}
+		}
+	}
+
 	private CUnitType getUnitTypeInstance(final War3ID typeId, final BufferedImage buildingPathingPixelMap,
 			final GameObject unitType) {
 		CUnitType unitTypeInstance = this.unitIdToUnitType.get(typeId);

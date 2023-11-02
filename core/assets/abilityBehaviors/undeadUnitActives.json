@@ -181,5 +181,107 @@
 			},{
 				"type": "cleanUpCastInstance"
 		}]
+	},{
+		"ids": [{"id":"Asac", "castId": "sacrifice"}],
+		"type": "NORMAL_PAIRING",
+		"overrideFields": {
+			"rangeOverride": {
+				"type": "fMaxValue"
+			}
+		},
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Alam"
+			},
+			"pairUnitTypeError": "MUST_TARGET_AN_ACOLYTE",
+			"cantTargetError": "MUST_TARGET_AN_ACOLYTE",
+			"cantPairError": "SACRIFICIAL_PIT_IS_ALREADY_SACRIFICING_AN_ACOLYTE",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "false"
+			},
+			"orderPairedUnit": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"orderPairedUnitOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "requestsacrifice"
+				}
+			}
+		},
+		"displayFields": {
+			"goldCost": {
+				"type": "getUnitTypeGoldCost",
+				"id": {
+					"type": "getWar3IDFromString",
+					"id": "ushd"
+				}
+			},
+			"lumberCost": {
+				"type": "getUnitTypeLumberCost",
+				"id": {
+					"type": "getWar3IDFromString",
+					"id": "ushd"
+				}
+			},
+			"foodCost": {
+				"type": "getUnitTypeFoodCost",
+				"id": {
+					"type": "getWar3IDFromString",
+					"id": "ushd"
+				}
+			}
+		},
+		"onAddAbility": [{
+			"type": "addRallyAbility",
+			"unit": {
+				"type": "getCastingUnit"
+			}
+		}]
+	},{
+		"ids": [{"id":"Alam", "castId": "requestsacrifice"}],
+		"type": "NORMAL_PAIRING",
+		"extraTargetConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "not",
+				"condition": {
+					"type": "isUnitTraining",
+					"unit": {
+						"type": "getAbilityTargetedUnit"
+					}
+				}
+			},
+			"reason": "SACRIFICIAL_PIT_IS_ALREADY_SACRIFICING_AN_ACOLYTE"
+		}],
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Asac"
+			},
+			"pairUnitTypeError": "MUST_TARGET_A_SACRIFICIAL_PIT",
+			"cantTargetError": "MUST_TARGET_A_SACRIFICIAL_PIT",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "false"
+			}
+		},
+		"onEndCasting": [{
+			"type": "startSacrificingUnit",
+			"unit": {
+				"type": "getAbilityTargetedUnit"
+			},
+			"sacrifice": {
+				"type": "getCastingUnit"
+			},
+			"id": {
+				"type": "getWar3IDFromString",
+				"id": "ushd"
+			}
+		}]
 	}]
 }

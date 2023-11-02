@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.par
 
 public enum AbilityBuilderType {
 	NORMAL_AUTOTARGET,
+	NORMAL_PAIRING,
 	NORMAL_FLEXTARGET_SIMPLE,
 	NORMAL_UNITTARGET_SIMPLE,
 	NORMAL_POINTTARGET_SIMPLE,
@@ -11,10 +12,8 @@ public enum AbilityBuilderType {
 	NORMAL_POINTTARGET,
 	NORMAL_NOTARGET,
 	TOGGLE,
-	TOGGLE_TICKING,
 	SMART,
 	BUFF,
-	TICKING_PASSIVE,
 	PASSIVE,
 	TEMPLATE,
 	HIDDEN;

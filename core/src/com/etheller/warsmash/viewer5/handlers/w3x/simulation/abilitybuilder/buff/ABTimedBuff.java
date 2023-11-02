@@ -16,6 +16,7 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 	protected Map<String, Object> localStore;
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
+	private List<ABAction> onExpireActions;
 	
 	private CEffectType artType = CEffectType.TARGET;
 	private NonStackingFx fx;
@@ -25,17 +26,18 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 	protected int castId = 0;
 
 	public ABTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, boolean showIcon, final int castId) {
-		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, castId);
+			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, boolean showIcon, final int castId) {
+		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions, castId);
 		this.setIconShowing(showIcon);
 	}
 
 	public ABTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, final int castId) {
+			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, final int castId) {
 		super(handleId, alias, duration, showTimedLifeBar);
 		this.localStore = localStore;
 		this.onAddActions = onAddActions;
 		this.onRemoveActions = onRemoveActions;
+		this.onExpireActions = onExpireActions;
 		this.castId = castId;
 	}
 	
@@ -73,6 +75,15 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 		}
 		if (onRemoveActions != null) {
 			for (ABAction action : onRemoveActions) {
+				action.runAction(game, unit, localStore, castId);
+			}
+		}
+	}
+
+	@Override
+	protected void onBuffExpire(CSimulation game, CUnit unit) {
+		if (onExpireActions != null) {
+			for (ABAction action : onExpireActions) {
 				action.runAction(game, unit, localStore, castId);
 			}
 		}

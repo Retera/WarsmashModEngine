@@ -143,4 +143,9 @@ public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 		DENIED,
 		ACCEPTED
 	};
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

@@ -35,4 +35,9 @@ public class CBehaviorStun implements CBehavior {
 
 	}
 
+	@Override
+	public boolean interruptable() {
+		return false;
+	}
+
 }

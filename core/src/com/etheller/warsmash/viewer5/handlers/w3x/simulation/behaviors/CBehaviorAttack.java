@@ -143,4 +143,9 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

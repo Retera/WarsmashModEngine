@@ -49,6 +49,7 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 		castId++;
 		CWidget target = autoTarget(game, caster);
 		if (target != null) {
+			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
 			return this.behavior.reset(target);
 		} else {

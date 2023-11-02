@@ -27,7 +27,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 
 public class CAbilityHero extends AbstractCAbility {
-	private final Set<War3ID> skillsAvailable;
+	private Set<War3ID> skillsAvailable;
 	private int xp;
 	private int heroLevel;
 	private int skillPoints = 1;
@@ -371,6 +371,53 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.setLifeRegenStrengthBonus(currentStrength * gameplayConstants.getStrRegenBonus());
 		unit.setManaRegenIntelligenceBonus(currentIntelligence * gameplayConstants.getIntRegenBonus());
 	}
+	
+	public void recalculateAllStats(final CSimulation game, final CUnit unit) {
+		final CGameplayConstants gameplayConstants = game.getGameplayConstants();
+		this.strength.calculate(this.heroLevel);
+		this.agility.calculate(this.heroLevel);
+		this.intelligence.calculate(this.heroLevel);
+		final int currentStrength = this.strength.getCurrent();
+		final int currentIntelligence = this.intelligence.getCurrent();
+		final int currentAgility = this.agility.getCurrent();
+		final int currentAgilityBase = this.agility.getCurrentBase();
+		final int currentAgilityBonus = this.agility.getBonus();
+
+		final HeroStatValue primaryAttributeStat = getStat(unit.getUnitType().getPrimaryAttribute());
+		final int primaryAttributeBase = primaryAttributeStat.getCurrentBase();
+		final int primaryAttributeBonus = primaryAttributeStat.getBonus();
+		final float agiAttackSpeedBonus = gameplayConstants.getAgiAttackSpeedBonus() * currentAgility;
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
+			attack.setPrimaryAttributePermanentDamageBonus(
+					(int) (primaryAttributeBase * gameplayConstants.getStrAttackBonus()));
+			attack.setPrimaryAttributeTemporaryDamageBonus(
+					(int) (primaryAttributeBonus * gameplayConstants.getStrAttackBonus()));
+			attack.setAgilityAttackSpeedBonus(agiAttackSpeedBonus);
+		}
+
+		final float hitPointIncrease = gameplayConstants.getStrHitPointBonus() * currentStrength;
+		final int oldMaximumLife = unit.getMaximumLife();
+		final float oldLife = unit.getLife();
+		final int newMaximumLife = Math.round(oldMaximumLife + hitPointIncrease);
+		final float newLife = (oldLife * (newMaximumLife)) / oldMaximumLife;
+		unit.setMaximumLife(newMaximumLife);
+		unit.setLife(game, newLife);
+
+		final float manaPointIncrease = gameplayConstants.getIntManaBonus() * currentIntelligence;
+		final int oldMaximumMana = unit.getMaximumMana();
+		final float oldMana = unit.getMana();
+		final int newMaximumMana = Math.round(oldMaximumMana + manaPointIncrease);
+		final float newMana = (oldMana * (newMaximumMana)) / oldMaximumMana;
+		unit.setMaximumMana(newMaximumMana);
+		unit.setMana(newMana);
+
+		final int agilityDefenseBonus = Math.round(
+				gameplayConstants.getAgiDefenseBase() + (gameplayConstants.getAgiDefenseBonus() * currentAgilityBase));
+		unit.setAgilityDefensePermanentBonus(agilityDefenseBonus);
+		unit.setAgilityDefenseTemporaryBonus(gameplayConstants.getAgiDefenseBonus() * currentAgilityBonus);
+		unit.setLifeRegenStrengthBonus(currentStrength * gameplayConstants.getStrRegenBonus());
+		unit.setManaRegenIntelligenceBonus(currentIntelligence * gameplayConstants.getIntRegenBonus());
+	}
 
 	public static final class HeroStatValue {
 		private final float perLevelFactor;
@@ -431,7 +478,16 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.skillsAvailable;
 	}
 
+	public void setSkillsAvailable(List<War3ID> skillsAvailable) {
+		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
+	}
+
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+	
+	@Override
+	public boolean isPermanent() {
+		return true;
 	}
 }

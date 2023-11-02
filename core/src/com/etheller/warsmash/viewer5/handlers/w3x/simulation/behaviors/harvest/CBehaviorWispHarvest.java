@@ -153,4 +153,9 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 		}
 		return nearestMine;
 	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

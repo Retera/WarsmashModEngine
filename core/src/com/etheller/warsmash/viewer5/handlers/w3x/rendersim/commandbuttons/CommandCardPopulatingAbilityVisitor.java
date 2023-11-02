@@ -7,6 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataU
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.BuffUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.UnitIconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -88,27 +89,94 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			final AbilityUI ui = this.abilityDataUI.getUI(ability.getAlias());
 			final boolean autoCastOn = ability.isAutoCastOn();
 			if (ability.isSeparateOnAndOff()) {
-				addCommandButton(ability, ui.getOnIconUI(ability.getLevel() - 1), ability.getHandleId(),
-						ability.getBaseOrderId(),
-						autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
-						false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
-						ability.getUIManaCost(), ability.getUsesRemaining());
-				addCommandButton(ability, ui.getOffIconUI(ability.getLevel() - 1), ability.getHandleId(),
-						ability.getOffOrderId(),
-						autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
-						false, 0, 0, 0, 0, -1);
+				War3ID onTt = ability.getOnTooltipOverride();
+				if (onTt == null || onTt == ability.getAlias()) {
+					addCommandButton(ability, ui.getOnIconUI(ability.getLevel() - 1), ability.getHandleId(),
+							ability.getBaseOrderId(),
+							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
+							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
+							ability.getUIManaCost(), ability.getUsesRemaining());
+				} else {
+					addCommandButton(ability, ui.getOnIconUI(ability.getLevel() - 1),
+							resolveUnknownIcon(onTt, false, ability.getLevel() - 1), ability.getHandleId(),
+							ability.getBaseOrderId(),
+							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
+							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
+							ability.getUIManaCost(), ability.getUsesRemaining());
+				}
+
+				War3ID offTt = ability.getOffTooltipOverride();
+				if (offTt == null || offTt == ability.getAlias()) {
+					addCommandButton(ability, ui.getOffIconUI(ability.getLevel() - 1), ability.getHandleId(),
+							ability.getOffOrderId(),
+							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
+							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
+							ability.getUIManaCost(), -1);
+				} else {
+					addCommandButton(ability, ui.getOffIconUI(ability.getLevel() - 1),
+							resolveUnknownIcon(offTt, true, ability.getLevel() - 1), ability.getHandleId(),
+							ability.getOffOrderId(),
+							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
+							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
+							ability.getUIManaCost(), -1);
+				}
 			} else {
 				final boolean active = ability.isToggleOn();
-				addCommandButton(ability,
-						active ? ui.getOffIconUI(ability.getLevel() - 1) : ui.getOnIconUI(ability.getLevel() - 1),
-						ability.getHandleId(), active ? ability.getOffOrderId() : ability.getBaseOrderId(),
-						autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
-						false, active ? 0 : ability.getUIGoldCost(), active ? 0 : ability.getUILumberCost(),
-						active ? 0 : ability.getUIFoodCost(), active ? 0 : ability.getUIManaCost(),
-						active ? -1 : ability.getUsesRemaining());
+				War3ID tt = null;
+				if (active) {
+					tt = ability.getOnTooltipOverride();
+				} else {
+					tt = ability.getOffTooltipOverride();
+				}
+				if (tt == null || tt == ability.getAlias()) {
+					addCommandButton(ability,
+							active ? ui.getOffIconUI(ability.getLevel() - 1) : ui.getOnIconUI(ability.getLevel() - 1),
+							ability.getHandleId(), active ? ability.getOffOrderId() : ability.getBaseOrderId(),
+							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
+							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
+							ability.getUIManaCost(), active ? -1 : ability.getUsesRemaining());
+				} else {
+					addCommandButton(ability,
+							active ? ui.getOffIconUI(ability.getLevel() - 1) : ui.getOnIconUI(ability.getLevel() - 1),
+							resolveUnknownIcon(tt, active, ability.getLevel() - 1), ability.getHandleId(),
+							active ? ability.getOffOrderId() : ability.getBaseOrderId(),
+							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
+							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
+							ability.getUIManaCost(), active ? -1 : ability.getUsesRemaining());
+				}
 			}
 		}
 		return null;
+	}
+
+	private IconUI resolveUnknownIcon(War3ID id, boolean active, int index) {
+		AbilityUI aui = this.abilityDataUI.getUI(id);
+		IconUI icon = null;
+		if (aui == null) {
+			icon = this.abilityDataUI.getUnitUI(id);
+			if (icon == null) {
+				icon = this.abilityDataUI.getUpgradeUI(id, index);
+			}
+			if (icon == null) {
+				ItemUI item = this.abilityDataUI.getItemUI(id);
+				if (item != null) {
+					icon = item.getIconUI();
+				}
+			}
+			if (icon == null) {
+				BuffUI buff = this.abilityDataUI.getBuffUI(id);
+				if (buff != null) {
+					icon = buff.getOnIconUI();
+				}
+			}
+		} else {
+			if (active) {
+				icon = aui.getOffIconUI(index);
+			} else {
+				icon = aui.getOnIconUI(index);
+			}
+		}
+		return icon;
 	}
 
 	@Override
@@ -333,7 +401,9 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			if (this.multiSelect) {
 				return;
 			}
-			addCommandButton(ability, buildUI, ability.getHandleId(), ability.getBaseOrderId(), 0, false, true);
+			if (ability.isIconShowing()) {
+				addCommandButton(ability, buildUI, ability.getHandleId(), ability.getBaseOrderId(), 0, false, true);
+			}
 		}
 	}
 
@@ -365,6 +435,16 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		addCommandButton(ability, iconUI, iconUI.getToolTip(), iconUI.getButtonPositionX(), iconUI.getButtonPositionY(),
 				handleId, orderId, autoCastOrderId, autoCastActive, menuButton, goldCost, lumberCost, foodCost,
 				manaCost, numberOverlay);
+	}
+
+	private void addCommandButton(final CAbility ability, final IconUI iconUI, final IconUI tooltipOverride,
+			final int handleId, final int orderId, final int autoCastOrderId, final boolean autoCastActive,
+			final boolean menuButton, final int goldCost, final int lumberCost, final int foodCost, final int manaCost,
+			final int numberOverlay) {
+		addCommandButton(ability, iconUI.getIcon(), iconUI.getIconDisabled(), tooltipOverride.getToolTip(),
+				tooltipOverride.getUberTip(), iconUI.getButtonPositionX(), iconUI.getButtonPositionY(), handleId,
+				orderId, autoCastOrderId, autoCastActive, menuButton, goldCost, lumberCost, foodCost, manaCost,
+				numberOverlay, iconUI.getHotkey());
 	}
 
 	private void addCommandButton(final CAbility ability, final IconUI iconUI, final String toolTip,

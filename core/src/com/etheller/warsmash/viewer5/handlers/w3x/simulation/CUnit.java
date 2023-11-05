@@ -1339,16 +1339,13 @@ public class CUnit extends CWidget {
 				}
 			}
 		} else {
-			final Iterator<CAbility> abilityIterator = this.disabledAbilities.iterator();
-			while (abilityIterator.hasNext()) {
-				final CAbility ability = abilityIterator.next();
+			for (CAbility ability : new ArrayList<>(this.disabledAbilities)) {
 				if (ability.isRequirementsMet(simulation, this)) {
 					ability.setDisabled(false, CAbilityDisableType.REQUIREMENTS);
 				}
 				if (!ability.isDisabled()) {
-//					System.err.println("Enabling ability: " + ability.getAlias().asStringValue());
 					ability.onAdd(simulation, this);
-					abilityIterator.remove();
+					this.disabledAbilities.remove(ability);
 				}
 			}
 		}

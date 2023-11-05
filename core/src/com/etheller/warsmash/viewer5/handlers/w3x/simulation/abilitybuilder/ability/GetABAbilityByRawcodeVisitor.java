@@ -25,7 +25,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 
-public class GetABAbilityByRawcodeVisitor implements CAbilityVisitor<AbilityBuilderActiveAbility> {
+public class GetABAbilityByRawcodeVisitor implements CAbilityVisitor<AbilityBuilderAbility> {
 	private static final GetABAbilityByRawcodeVisitor INSTANCE = new GetABAbilityByRawcodeVisitor();
 
 	public static GetABAbilityByRawcodeVisitor getInstance() {
@@ -40,138 +40,141 @@ public class GetABAbilityByRawcodeVisitor implements CAbilityVisitor<AbilityBuil
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final AbilityBuilderActiveAbility ability) {
-		return ability;
-	}
-
-	@Override
-	public AbilityBuilderActiveAbility accept(final GenericSingleIconActiveAbility ability) {
-		return null;
-	}
-
-	@Override
-	public AbilityBuilderActiveAbility accept(GenericSingleIconPassiveAbility ability) {
-		if (ability instanceof AbilityBuilderActiveAbility && this.rawcode.equals(ability.getAlias())) {
-			return (AbilityBuilderActiveAbility) ability;
+	public AbilityBuilderAbility accept(final AbilityBuilderActiveAbility ability) {
+		if (this.rawcode.equals(ability.getAlias())) {
+			return (AbilityBuilderAbility) ability;
 		}
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final GenericNoIconAbility ability) {
-		if (ability instanceof AbilityBuilderActiveAbility && this.rawcode.equals(ability.getAlias())) {
-			return (AbilityBuilderActiveAbility) ability;
+	public AbilityBuilderAbility accept(final GenericSingleIconActiveAbility ability) {
+		return null;
+	}
+
+	@Override
+	public AbilityBuilderAbility accept(GenericSingleIconPassiveAbility ability) {
+		if (ability instanceof AbilityBuilderAbility && this.rawcode.equals(ability.getAlias())) {
+			return (AbilityBuilderAbility) ability;
 		}
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityAttack ability) {
+	public AbilityBuilderAbility accept(final GenericNoIconAbility ability) {
+		if (ability instanceof AbilityBuilderAbility && this.rawcode.equals(ability.getAlias())) {
+			return (AbilityBuilderAbility) ability;
+		}
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityMove ability) {
+	public AbilityBuilderAbility accept(final CAbilityAttack ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityOrcBuild ability) {
+	public AbilityBuilderAbility accept(final CAbilityMove ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityHumanBuild ability) {
+	public AbilityBuilderAbility accept(final CAbilityOrcBuild ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityUndeadBuild ability) {
+	public AbilityBuilderAbility accept(final CAbilityHumanBuild ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityNightElfBuild ability) {
+	public AbilityBuilderAbility accept(final CAbilityUndeadBuild ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityGenericDoNothing ability) {
+	public AbilityBuilderAbility accept(final CAbilityNightElfBuild ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityColdArrows ability) {
+	public AbilityBuilderAbility accept(final CAbilityGenericDoNothing ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityNagaBuild ability) {
+	public AbilityBuilderAbility accept(final CAbilityColdArrows ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityNeutralBuild ability) {
+	public AbilityBuilderAbility accept(final CAbilityNagaBuild ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityBuildInProgress ability) {
+	public AbilityBuilderAbility accept(final CAbilityNeutralBuild ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityQueue ability) {
+	public AbilityBuilderAbility accept(final CAbilityBuildInProgress ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilitySellItems ability) {
+	public AbilityBuilderAbility accept(final CAbilityQueue ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityUpgrade ability) {
+	public AbilityBuilderAbility accept(final CAbilitySellItems ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityReviveHero ability) {
+	public AbilityBuilderAbility accept(final CAbilityUpgrade ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityRoot ability) {
+	public AbilityBuilderAbility accept(final CAbilityReviveHero ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityRally ability) {
+	public AbilityBuilderAbility accept(final CAbilityRoot ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CBuff ability) {
+	public AbilityBuilderAbility accept(final CAbilityRally ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityReturnResources ability) {
+	public AbilityBuilderAbility accept(final CBuff ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityHero ability) {
+	public AbilityBuilderAbility accept(final CAbilityReturnResources ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityJass ability) {
+	public AbilityBuilderAbility accept(final CAbilityHero ability) {
 		return null;
 	}
 
 	@Override
-	public AbilityBuilderActiveAbility accept(final CAbilityNeutralBuilding ability) {
+	public AbilityBuilderAbility accept(final CAbilityJass ability) {
+		return null;
+	}
+
+	@Override
+	public AbilityBuilderAbility accept(final CAbilityNeutralBuilding ability) {
 		return null;
 	}
 }

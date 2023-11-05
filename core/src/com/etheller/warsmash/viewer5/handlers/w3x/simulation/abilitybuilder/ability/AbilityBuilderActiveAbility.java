@@ -16,7 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public interface AbilityBuilderActiveAbility extends GenericSingleIconActiveAbility {
+public interface AbilityBuilderActiveAbility extends AbilityBuilderAbility, GenericSingleIconActiveAbility {
 	public List<CAbilityTypeAbilityBuilderLevelData> getLevelData();
 
 	public AbilityBuilderConfiguration getConfig();

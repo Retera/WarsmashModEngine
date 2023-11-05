@@ -27,6 +27,7 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 	private ABBooleanCallback instantTransformAtDurationEnd; // should the transform back be instant?
 
 	private ABBooleanCallback permanent; // remove ability after transform
+	private ABBooleanCallback requiresPayment;
 	private ABFloatCallback duration; // the time before the unit is forced to change back (doesn't charge for it)
 	private ABFloatCallback transformTime; // the time the unit is locked for the transformation (for slow) or spends
 											// animating (for instant)
@@ -70,6 +71,7 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 
 		boolean instant = false;
 		boolean perm = false;
+		boolean charge = false;
 		float dur = 0;
 		float transTime = 0;
 		float landTime = 0;
@@ -83,6 +85,9 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 		}
 		if (permanent != null) {
 			perm = permanent.callback(game, caster, localStore, castId);
+		}
+		if (this.requiresPayment != null) {
+			charge = this.requiresPayment.callback(game, caster, localStore, castId);
 		}
 		if (duration != null) {
 			dur = duration.callback(game, caster, localStore, castId);
@@ -118,17 +123,36 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 				action.runAction(game, u1, localStore, castId);
 			}
 		}
-		if (dur > 0) {
+		
+		if (dur > 0 && !perm) {
+			OnTransformationActions actions;
+			if (charge) {
+				int goldCost = 0;
+				int lumberCost = 0;
+				Integer foodCost = null;
+				if (game.getGameplayConstants().isRelativeUpgradeCosts()) {
+					
+					goldCost = baseType.getGoldCost() - u1.getUnitType().getGoldCost();
+					lumberCost = baseType.getLumberCost() - u1.getUnitType().getLumberCost();
+				} else {
+					goldCost = baseType.getGoldCost();
+					lumberCost = baseType.getLumberCost();
+				}
+				actions = new OnTransformationActions(goldCost, lumberCost, foodCost, null, onUntransformActions);
+			} else {
+				actions = new OnTransformationActions(onUntransformActions);
+			}
+			
 			if (instant) {
 				TransformationHandler.createInstantTransformBackBuff(game, localStore, u1, baseType,
-						new OnTransformationActions(onUntransformActions), abil, theBuffId, true, transTime, dur, perm);
+						actions, abil, theBuffId, true, transTime, dur, perm);
 			} else {
 				boolean takingOff = u1.getMovementType() != MovementType.FLY
 						&& baseType.getMovementType() == MovementType.FLY;
 				boolean landing = u1.getMovementType() == MovementType.FLY
 						&& baseType.getMovementType() != MovementType.FLY;
 				TransformationHandler.createSlowTransformBackBuff(game, localStore, u1, baseType,
-						new OnTransformationActions(onUntransformActions), abil, theBuffId, true, transTime, dur, perm,
+						actions, abil, theBuffId, true, transTime, dur, perm,
 						takingOff, landing, imTakeOff, imLand, atlAdDelay, landTime, altAdTime);
 			}
 		}

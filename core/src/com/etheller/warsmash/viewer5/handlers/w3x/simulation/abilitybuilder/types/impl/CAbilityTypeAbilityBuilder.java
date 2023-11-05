@@ -38,8 +38,6 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 		CAbilitySpell ability;
 		
 		switch (parser.getType()) {
-		case BUFF:
-			return new CAbilityAbilityBuilderBuff(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case PASSIVE:
 			return new CAbilityAbilityBuilderPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case HIDDEN:

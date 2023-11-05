@@ -278,6 +278,20 @@
 						}
 					}
 				},
+				"requiresPayment": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 16
+						}
+					}
+				},
 				"altitudeAdjustmentDelay": {
 					"type": "getAbilityCastTime"
 				},
@@ -713,6 +727,20 @@
 						"value2": {
 							"type": "rawInteger",
 							"value": 8
+						}
+					}
+				},
+				"requiresPayment": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 16
 						}
 					}
 				},
@@ -1182,6 +1210,20 @@
 							"value2": {
 								"type": "rawInteger",
 								"value": 8
+							}
+						}
+					},
+					"requiresPayment": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 16
 							}
 						}
 					},
@@ -1683,6 +1725,20 @@
 							}
 						}
 					},
+					"requiresPayment": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 16
+							}
+						}
+					},
 					"altitudeAdjustmentDelay": {
 						"type": "getAbilityCastTime"
 					},
@@ -2170,6 +2226,20 @@
 							}
 						}
 					},
+					"requiresPayment": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 16
+							}
+						}
+					},
 					"altitudeAdjustmentDelay": {
 						"type": "getAbilityCastTime"
 					},
@@ -2652,6 +2722,20 @@
 						"value2": {
 							"type": "rawInteger",
 							"value": 8
+						}
+					}
+				},
+				"requiresPayment": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 16
 						}
 					}
 				},
@@ -3220,6 +3304,22 @@
 						"type": "getLastCreatedNonStackingStatBuff"
 					}
 				}]
+		}]
+	},{
+		"ids": [{"id":"Acha"}],
+		"type": "HIDDEN",
+		"onAddAbility": [{
+				"type": "transformUnitInstant",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"alternateUnitId": {
+					"type": "getAbilityUnitId"
+				},
+				"permanent": {
+					"type": "rawBoolean",
+					"value": "true"
+				}
 		}]
 	}]
 }

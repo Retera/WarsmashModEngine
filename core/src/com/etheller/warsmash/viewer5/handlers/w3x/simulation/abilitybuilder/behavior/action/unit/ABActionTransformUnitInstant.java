@@ -7,7 +7,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -47,10 +47,14 @@ public class ABActionTransformUnitInstant implements ABAction {
 		CPlayer pl = game.getPlayer(u1.getPlayerIndex());
 		boolean charge = false;
 		boolean addAlternateTagAfter = false;
+		boolean perm = false;
+		if (permanent != null) {
+			perm = permanent.callback(game, caster, localStore, castId);
+		}
 		if (this.requiresPayment != null) {
 			charge = this.requiresPayment.callback(game, caster, localStore, castId);
 		}
-		AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+		AbilityBuilderAbility abil = (AbilityBuilderAbility) localStore.get(ABLocalStoreKeys.ABILITY);
 
 		CUnitType baseType = null;
 		if (baseUnitId == null) {
@@ -72,7 +76,7 @@ public class ABActionTransformUnitInstant implements ABAction {
 		if (u1.getTypeId().equals(altId)) {
 			// Transforming back
 			targetType = baseType;
-			if (targetType.equals(u1.getUnitType())) {
+			if (perm || targetType.equals(u1.getUnitType())) {
 				// No need to do anything
 				return;
 			}
@@ -110,8 +114,9 @@ public class ABActionTransformUnitInstant implements ABAction {
 		}
 		OnTransformationActions actions = new OnTransformationActions(goldCost, lumberCost, foodCost,
 				onTransformActions, onUntransformActions);
+		OnTransformationActions unActions = new OnTransformationActions(-goldCost, -lumberCost, null,
+				null, onUntransformActions);
 
-		boolean perm = false;
 		float dur = 0;
 		float transTime = 0;
 		War3ID theBuffId = null;
@@ -138,7 +143,7 @@ public class ABActionTransformUnitInstant implements ABAction {
 					addAlternateTagAfter, perm, true);
 			if (dur > 0) {
 				TransformationHandler.createInstantTransformBackBuff(game, localStore, u1, baseType,
-						new OnTransformationActions(onUntransformActions), abil, theBuffId, addAlternateTagAfter,
+						unActions, abil, theBuffId, addAlternateTagAfter,
 						transTime, dur, perm);
 			}
 		}

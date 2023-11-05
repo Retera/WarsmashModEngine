@@ -109,7 +109,6 @@ public class CAbilityData {
 	private final ObjectData abilityData;
 	private Map<War3ID, CAbilityType<?>> aliasToAbilityType = new HashMap<>();
 	private final Map<War3ID, CAbilityTypeDefinition> codeToAbilityTypeDefinition = new HashMap<>();
-	private final Map<War3ID, CAbilityTypeDefinition> codeToBuffTypeDefinition = new HashMap<>();
 
 	public CAbilityData(final ObjectData abilityData) {
 		this.abilityData = abilityData;
@@ -301,13 +300,7 @@ public class CAbilityData {
 					try {
 						behaviors = gson.fromJson(new FileReader(abilityBehaviorFile), AbilityBuilderFile.class);
 						for (AbilityBuilderParser behavior : behaviors.getAbilityList()) {
-							if (behavior.getType().equals(AbilityBuilderType.BUFF)) {
-								for (AbilityBuilderDupe dupe : behavior.getIds()) {
-									AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
-									this.codeToBuffTypeDefinition.put(War3ID.fromString(config.getId()),
-											config.createDefinition());
-								}
-							} else if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
+							if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
 								for (AbilityBuilderDupe dupe : behavior.getIds()) {
 									this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
 											new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
@@ -357,17 +350,6 @@ public class CAbilityData {
 				this.aliasToAbilityType.put(alias, abilityType);
 			}
 		}
-		return abilityType;
-	}
-
-	public CAbilityType<?> getBuffType(final War3ID code) {
-		CAbilityType<?> abilityType = null;
-		final CAbilityTypeDefinition buffTypeDefinition = this.codeToBuffTypeDefinition.get(code);
-		if (buffTypeDefinition != null) {
-			abilityType = buffTypeDefinition.createAbilityType(code, null);
-			this.aliasToAbilityType.put(code, abilityType);
-		}
-
 		return abilityType;
 	}
 

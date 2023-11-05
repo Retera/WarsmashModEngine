@@ -205,17 +205,6 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 					this.active = true;
 				}
 			}
-
-			if (this.config.getOverrideFields() != null) {
-				if (this.config.getOverrideFields().getOnTooltipOverride() != null) {
-					this.onTooltipOverride = this.config.getOverrideFields().getOnTooltipOverride().callback(game, unit,
-							localStore, castId);
-				}
-				if (this.config.getOverrideFields().getOffTooltipOverride() != null) {
-					this.offTooltipOverride = this.config.getOverrideFields().getOffTooltipOverride().callback(game,
-							unit, localStore, castId);
-				}
-			}
 		}
 	}
 
@@ -240,6 +229,15 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			if (this.config.getOverrideFields().getManaCostOverride() != null) {
 				this.manaCost = this.config.getOverrideFields().getManaCostOverride().callback(game, unit, localStore,
 						castId);
+			}
+
+			if (this.config.getOverrideFields().getOnTooltipOverride() != null) {
+				this.onTooltipOverride = this.config.getOverrideFields().getOnTooltipOverride().callback(game, unit,
+						localStore, castId);
+			}
+			if (this.config.getOverrideFields().getOffTooltipOverride() != null) {
+				this.offTooltipOverride = this.config.getOverrideFields().getOffTooltipOverride().callback(game,
+						unit, localStore, castId);
 			}
 		}
 

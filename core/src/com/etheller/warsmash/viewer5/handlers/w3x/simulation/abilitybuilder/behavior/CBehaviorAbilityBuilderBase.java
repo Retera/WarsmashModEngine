@@ -93,10 +93,6 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	@Override
 	public CBehavior update(final CSimulation game, boolean withinFacingWindow) {
 		boolean wasChanneling = this.channeling;
-		if (!instant) {
-			this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
-					this.ability.getCastingSecondaryTags(), 1.0f, true);
-		}
 		if (this.castStartTick == 0) {
 			this.castStartTick = game.getGameTurnTick();
 			
@@ -117,6 +113,10 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 				cleanupInputs();
 				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
 				return newBehavior;
+			}
+			if (!instant) {
+				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+						this.ability.getCastingSecondaryTags(), 1.0f, true);
 			}
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
 		}

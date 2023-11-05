@@ -97,11 +97,11 @@ public class CBehaviorFinishTransformation implements CBehavior {
 
 			if (instantTransformAtDurationEnd) {
 				TransformationHandler.createInstantTransformBackBuff(game, localStore, unit, baseTypeForDuration,
-						new OnTransformationActions(actions.getOnUntransformActions()), ability, buffId,
+						actions.createUntransformActions(), ability, buffId,
 						addAlternateTagAfter, transformationTime, duration, permanent);
 			} else {
 				TransformationHandler.createSlowTransformBackBuff(game, localStore, unit, baseTypeForDuration,
-						new OnTransformationActions(actions.getOnUntransformActions()), ability, buffId,
+						actions.createUntransformActions(), ability, buffId,
 						addAlternateTagAfter, transformationTime, duration, permanent, takingOff, landing,
 						immediateTakeoff, immediateLanding, altitudeAdjustmentDelay, landingDelay,
 						altitudeAdjustmentDuration);

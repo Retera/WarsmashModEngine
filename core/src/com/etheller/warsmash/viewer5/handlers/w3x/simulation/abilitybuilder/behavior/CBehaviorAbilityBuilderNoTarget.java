@@ -77,10 +77,6 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	@Override
 	public CBehavior update(final CSimulation game) {
 		boolean wasChanneling = this.channeling;
-		if (!instant) {
-			this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
-					this.ability.getCastingSecondaryTags(), 1.0f, true);
-		}
 		if (this.castStartTick == 0) {
 			this.castStartTick = game.getGameTurnTick();
 			
@@ -96,6 +92,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 			if (newBehavior != null) {
 				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
 				return newBehavior;
+			}
+			if (!instant) {
+				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+						this.ability.getCastingSecondaryTags(), 1.0f, true);
 			}
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
 		}

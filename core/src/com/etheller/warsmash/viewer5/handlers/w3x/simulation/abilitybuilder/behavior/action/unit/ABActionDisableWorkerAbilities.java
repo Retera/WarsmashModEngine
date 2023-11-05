@@ -5,6 +5,7 @@ import java.util.Map;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanRepair;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNagaBuild;
@@ -38,8 +39,9 @@ public class ABActionDisableWorkerAbilities implements ABAction {
 		for (Class type : workerAbils) {
 			CAbility abil = targetUnit.getFirstAbilityOfType(type);
 			if (abil != null) {
-				abil.setDisabled(true);
+				abil.setDisabled(true, CAbilityDisableType.TRANSFORMATION);
 				abil.setIconShowing(false);
+				targetUnit.checkDisabledAbilities(game, true);
 			}
 		}
 	}

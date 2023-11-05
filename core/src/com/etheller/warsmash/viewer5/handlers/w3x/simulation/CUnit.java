@@ -28,6 +28,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
@@ -149,6 +150,7 @@ public class CUnit extends CWidget {
 	private int playerIndex;
 
 	private final List<CAbility> abilities = new ArrayList<>();
+	private final List<CAbility> disabledAbilities = new ArrayList<>();
 
 	private CBehavior currentBehavior;
 	private final Queue<COrder> orderQueue = new LinkedList<>();
@@ -456,8 +458,9 @@ public class CUnit extends CWidget {
 			}
 			CAbility attack = this.getFirstAbilityOfType(CAbilityAttack.class);
 			if (attack != null) {
-				attack.setDisabled(isDisableAttack);
+				attack.setDisabled(isDisableAttack, CAbilityDisableType.ATTACKDISABLED);
 			}
+			this.checkDisabledAbilities(game, isDisableAttack);
 
 			if (isEthereal) {
 				if (!this.damageTakenModificationListeners.contains(CUnitDefaultEtherealDamageModListener.INSTANCE)) {
@@ -574,8 +577,10 @@ public class CUnit extends CWidget {
 				this.setFlyHeight(0);
 				this.moveDisabled = true;
 			} else {
-				this.setFlyHeight(this.unitType.getDefaultFlyingHeight());
-				this.moveDisabled = false;
+				if (this.moveDisabled) {
+					this.setFlyHeight(this.unitType.getDefaultFlyingHeight());
+					this.moveDisabled = false;
+				}
 			}
 			break;
 		case INVULNERABLE:
@@ -1269,10 +1274,22 @@ public class CUnit extends CWidget {
 	}
 
 	public void add(final CSimulation simulation, final CAbility ability) {
-		this.abilities.add(ability);
-		simulation.onAbilityAddedToUnit(this, ability);
-		ability.onAdd(simulation, this);
-		this.stateNotifier.abilitiesChanged();
+		if (!ability.isRequirementsMet(simulation, this)) {
+			ability.setDisabled(true, CAbilityDisableType.REQUIREMENTS);
+		}
+		if (ability.isDisabled()) {	
+			this.disabledAbilities.add(ability);
+			this.abilities.add(ability);
+			simulation.onAbilityAddedToUnit(this, ability);
+			ability.onAddDisabled(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		} else {
+			this.abilities.add(ability);
+			simulation.onAbilityAddedToUnit(this, ability);
+			ability.onAddDisabled(simulation, this);
+			ability.onAdd(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		}
 	}
 
 	public void add(final CSimulation simulation, final CBuff ability) {
@@ -1287,10 +1304,19 @@ public class CUnit extends CWidget {
 	}
 
 	public void remove(final CSimulation simulation, final CAbility ability) {
-		this.abilities.remove(ability);
-		simulation.onAbilityRemovedFromUnit(this, ability);
-		ability.onRemove(simulation, this);
-		// this.stateNotifier.abilitiesChanged();
+		if (this.disabledAbilities.contains(ability)) {
+			this.abilities.remove(ability);
+			this.disabledAbilities.remove(ability);
+			simulation.onAbilityRemovedFromUnit(this, ability);
+			ability.onRemoveDisabled(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		} else {
+			this.abilities.remove(ability);
+			simulation.onAbilityRemovedFromUnit(this, ability);
+			ability.onRemove(simulation, this);
+			ability.onRemoveDisabled(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		}
 	}
 
 	public void remove(final CSimulation simulation, final CBuff ability) {
@@ -1298,6 +1324,34 @@ public class CUnit extends CWidget {
 		simulation.onAbilityRemovedFromUnit(this, ability);
 		ability.onRemove(simulation, this);
 		this.stateNotifier.abilitiesChanged();
+	}
+	
+	public void checkDisabledAbilities(final CSimulation simulation, final boolean disable) {
+		if (disable) {
+			for (CAbility ability : this.abilities) {
+				if (!ability.isRequirementsMet(simulation, this)) {
+					ability.setDisabled(true, CAbilityDisableType.REQUIREMENTS);
+				}
+				if (ability.isDisabled() && !this.disabledAbilities.contains(ability)) {
+//					System.err.println("Disabling ability: " + ability.getAlias().asStringValue());
+					this.disabledAbilities.add(ability);
+					ability.onRemove(simulation, this);
+				}
+			}
+		} else {
+			final Iterator<CAbility> abilityIterator = this.disabledAbilities.iterator();
+			while (abilityIterator.hasNext()) {
+				final CAbility ability = abilityIterator.next();
+				if (ability.isRequirementsMet(simulation, this)) {
+					ability.setDisabled(false, CAbilityDisableType.REQUIREMENTS);
+				}
+				if (!ability.isDisabled()) {
+//					System.err.println("Enabling ability: " + ability.getAlias().asStringValue());
+					ability.onAdd(simulation, this);
+					abilityIterator.remove();
+				}
+			}
+		}
 	}
 
 	public War3ID getTypeId() {
@@ -1329,7 +1383,10 @@ public class CUnit extends CWidget {
 
 	public void setTypeId(final CSimulation game, final War3ID typeId, boolean updateArt) {
 		game.getWorldCollision().removeUnit(this);
+		CPlayer player = game.getPlayer(this.playerIndex);
+		player.removeTechtreeUnlocked(game, this.typeId);
 		this.typeId = typeId;
+		player.addTechtreeUnlocked(game, this.typeId);
 		final float lifeRatio = this.maximumLife == 0 ? 1 : this.life / this.maximumLife;
 		final float manaRatio = this.maximumMana == 0 ? Float.NaN : this.mana / this.maximumMana;
 		final CUnitType previousUnitType = getUnitType();
@@ -1536,10 +1593,11 @@ public class CUnit extends CWidget {
 							if (ability instanceof CAbilityBuildInProgress) {
 								abilityIterator.remove();
 							} else {
-								ability.setDisabled(false);
+								ability.setDisabled(false, CAbilityDisableType.CONSTRUCTION);
 								ability.setIconShowing(true);
 							}
 						}
+						this.checkDisabledAbilities(game, false);
 						final CPlayer player = game.getPlayer(this.playerIndex);
 						if (upgrading) {
 							if (this.unitType.getFoodMade() != 0) {
@@ -1552,7 +1610,7 @@ public class CUnit extends CWidget {
 							player.setFoodCap(player.getFoodCap() + this.unitType.getFoodMade());
 						}
 						player.removeTechtreeInProgress(this.unitType.getTypeId());
-						player.addTechtreeUnlocked(this.unitType.getTypeId());
+						player.addTechtreeUnlocked(game, this.unitType.getTypeId());
 						if (!upgrading) {
 							game.unitConstructFinishEvent(this);
 							fireConstructFinishEvents(game);
@@ -1612,7 +1670,7 @@ public class CUnit extends CWidget {
 								final CPlayer player = game.getPlayer(this.playerIndex);
 								player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
 								player.removeTechtreeInProgress(queuedRawcode);
-								player.addTechtreeUnlocked(queuedRawcode);
+								player.addTechtreeUnlocked(game, queuedRawcode);
 								fireTrainFinishEvents(game, trainedUnit);
 								// nudge the trained unit out around us
 								trainedUnit.nudgeAround(game, this);
@@ -1642,7 +1700,7 @@ public class CUnit extends CWidget {
 								final CPlayer player = game.getPlayer(this.playerIndex);
 								player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
 								player.removeTechtreeInProgress(queuedRawcode);
-								player.addTechtreeUnlocked(queuedRawcode);
+								player.addTechtreeUnlocked(game, queuedRawcode);
 								fireTrainFinishEvents(game, trainedUnit);
 								// nudge the trained unit out around us
 								trainedUnit.nudgeAround(game, this);
@@ -2419,7 +2477,7 @@ public class CUnit extends CWidget {
 			if (this.constructing) {
 				player.removeTechtreeInProgress(this.unitType.getTypeId());
 			} else {
-				player.removeTechtreeUnlocked(this.unitType.getTypeId());
+				player.removeTechtreeUnlocked(simulation, this.unitType.getTypeId());
 			}
 		}
 		// else its a hero and techtree "remains unlocked" which is currently meaning
@@ -3575,7 +3633,7 @@ public class CUnit extends CWidget {
 			if (this.constructing) {
 				player.removeTechtreeInProgress(this.unitType.getTypeId());
 			} else {
-				player.removeTechtreeUnlocked(this.unitType.getTypeId());
+				player.removeTechtreeUnlocked(simulation, this.unitType.getTypeId());
 			}
 			setHidden(true);
 			// setting hidden to let things that refer to this before it gets garbage
@@ -3626,10 +3684,11 @@ public class CUnit extends CWidget {
 			if (ability instanceof CAbilityBuildInProgress) {
 				abilityIterator.remove();
 			} else {
-				ability.setDisabled(false);
+				ability.setDisabled(false, CAbilityDisableType.CONSTRUCTION);
 				ability.setIconShowing(true);
 			}
 		}
+		this.checkDisabledAbilities(game, false);
 
 		game.unitCancelUpgradingEvent(this, this.upgradeIdType);
 		this.upgradeIdType = null;
@@ -3659,6 +3718,7 @@ public class CUnit extends CWidget {
 		for (final CAbility ability : getAbilities()) {
 			ability.visit(AbilityDisableWhileUpgradingVisitor.INSTANCE);
 		}
+		this.checkDisabledAbilities(game, true);
 		player.addTechtreeInProgress(rawcode);
 
 		game.unitUpgradingEvent(this, rawcode);

@@ -2330,7 +2330,7 @@ public class Jass2 {
 						final double facing = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 						final War3ID blightedMineRawcode = War3ID.fromString("ugol");
 						final War3ID goldMineRawcode = War3ID.fromString("ngol");
-						player.addTechtreeUnlocked(blightedMineRawcode);
+						player.addTechtreeUnlocked(simulation, blightedMineRawcode);
 						final CUnit blightedMine = CommonEnvironment.this.simulation.createUnitSimple(
 								blightedMineRawcode, player.getId(), (float) x, (float) y, (float) facing);
 						final CUnit goldMine = CommonEnvironment.this.simulation.createUnitSimple(goldMineRawcode,

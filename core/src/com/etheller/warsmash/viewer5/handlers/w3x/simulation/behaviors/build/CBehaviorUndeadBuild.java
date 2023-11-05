@@ -113,6 +113,7 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 				for (final CAbility ability : constructedStructure.getAbilities()) {
 					ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
 				}
+				unit.checkDisabledAbilities(simulation, true);
 				final float deltaX = this.unit.getX() - this.target.getX();
 				final float deltaY = this.unit.getY() - this.target.getY();
 				final float delta = (float) Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));

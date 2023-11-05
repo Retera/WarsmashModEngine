@@ -20,6 +20,10 @@ public interface CAbilityView extends CHandle {
 
 	void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId, AbilityTargetCheckReceiver<Void> receiver);
 
+	void checkRequirementsMet(CSimulation game, CUnit unit, AbilityActivationReceiver receiver);
+	
+	boolean isRequirementsMet(CSimulation game, CUnit unit);
+
 	@Override
 	int getHandleId();
 	

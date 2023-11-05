@@ -62,8 +62,14 @@ public class TransformationHandler {
 	}
 
 	public static void playMorphAnimation(CUnit unit, boolean addAlternateTagAfter) {
-		unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.MORPH,
-				addAlternateTagAfter ? SequenceUtils.EMPTY : EnumSet.of(SecondaryTag.ALTERNATE), 1.0f, true);
+		if (addAlternateTagAfter) {
+			unit.getUnitAnimationListener().removeSecondaryTagForFutureAnimations(SecondaryTag.ALTERNATE);
+			unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.MORPH,
+					SequenceUtils.EMPTY, 1.0f, true);
+		} else {
+			unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.MORPH,
+					EnumSet.of(SecondaryTag.ALTERNATE), 1.0f, true);
+		}
 		unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND,
 				addAlternateTagAfter ? EnumSet.of(SecondaryTag.ALTERNATE) : SequenceUtils.EMPTY, true);
 		if (addAlternateTagAfter) {

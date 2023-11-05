@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
@@ -63,7 +64,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	protected int manaCost = 0;
 	protected float area = 0;
 	protected float range = 0;
-	
+
 	protected boolean hideAreaCursor = false;
 
 	protected int bufferMana = 0;
@@ -123,8 +124,6 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
-		localStore.put(ABLocalStoreKeys.GAME, game);
-		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
 		setSpellFields(game, unit);
 		determineToggleableFields(game, unit);
 		if (config.getOnAddAbility() != null) {
@@ -134,33 +133,61 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		}
 	}
 
+	@Override
+	public void onAddDisabled(CSimulation game, CUnit unit) {
+		localStore.put(ABLocalStoreKeys.GAME, game);
+		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
+		setSpellFields(game, unit);
+		determineToggleableFields(game, unit);
+		if (config.getOnAddDisabledAbility() != null) {
+			for (ABAction action : config.getOnAddDisabledAbility()) {
+				action.runAction(game, unit, localStore, castId);
+			}
+		}
+	}
+
+	@Override
+	public void onRemoveDisabled(CSimulation game, CUnit unit) {
+		if (config.getOnRemoveDisabledAbility() != null) {
+			for (ABAction action : config.getOnRemoveDisabledAbility()) {
+				action.runAction(game, unit, localStore, castId);
+			}
+		}
+	}
+
 	private void determineToggleableFields(CSimulation game, CUnit unit) {
 		if (config.getDisplayFields() != null && config.getDisplayFields().getSeparateOnAndOff() != null) {
-			this.separateOnAndOff = config.getDisplayFields().getSeparateOnAndOff().callback(game, unit, localStore, castId);
+			this.separateOnAndOff = config.getDisplayFields().getSeparateOnAndOff().callback(game, unit, localStore,
+					castId);
 		}
 		if (config.getDisplayFields() != null && config.getDisplayFields().getToggleable() != null) {
 			this.toggleable = config.getDisplayFields().getToggleable().callback(game, unit, localStore, castId);
 		}
 		if (config.getDisplayFields() != null && config.getDisplayFields().getCastToggleOff() != null) {
-			this.allowCastlessDeactivate = !config.getDisplayFields().getCastToggleOff().callback(game, unit, localStore, castId);
+			this.allowCastlessDeactivate = !config.getDisplayFields().getCastToggleOff().callback(game, unit,
+					localStore, castId);
 		}
 		if (toggleable && config.getDisplayFields() != null && config.getDisplayFields().getAlternateUnitId() != null) {
-			if (unit.getTypeId().equals(config.getDisplayFields().getAlternateUnitId().callback(game, unit, localStore, castId))) {
+			if (unit.getTypeId()
+					.equals(config.getDisplayFields().getAlternateUnitId().callback(game, unit, localStore, castId))) {
 				this.active = true;
 			}
 		}
 		if (config.getSpecialFields() != null && config.getSpecialFields().getBufferManaRequired() != null) {
-			this.bufferMana = config.getSpecialFields().getBufferManaRequired().callback(game, unit, localStore, castId);
+			this.bufferMana = config.getSpecialFields().getBufferManaRequired().callback(game, unit, localStore,
+					castId);
 		}
-		if (this.toggleable) { 
+		if (this.toggleable) {
 			localStore.put(ABLocalStoreKeys.TOGGLEDABILITY, this);
 			int manaPerSec = 0;
 			if (config.getSpecialFields() != null && config.getSpecialFields().getManaDrainedPerSecond() != null) {
-				manaPerSec = config.getSpecialFields().getManaDrainedPerSecond().callback(game, unit, localStore, castId);
+				manaPerSec = config.getSpecialFields().getManaDrainedPerSecond().callback(game, unit, localStore,
+						castId);
 			}
 			if (manaPerSec != 0) {
 				if (manaDrain == null) {
-					manaDrain = new NonStackingStatBuff(NonStackingStatBuffType.MPGEN, NonStackingStatBuff.ALLOW_STACKING_KEY, (-1 * manaPerSec));
+					manaDrain = new NonStackingStatBuff(NonStackingStatBuffType.MPGEN,
+							NonStackingStatBuff.ALLOW_STACKING_KEY, (-1 * manaPerSec));
 				} else {
 					manaDrain.setValue((-1 * manaPerSec));
 				}
@@ -171,19 +198,22 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				this.manaDrain = null;
 				this.timer = null;
 			}
-			
+
 			if (config.getDisplayFields() != null && config.getDisplayFields().getAlternateUnitId() != null) {
-				if (unit.getTypeId().equals(config.getDisplayFields().getAlternateUnitId().callback(game, unit, localStore, manaPerSec))) {
+				if (unit.getTypeId().equals(
+						config.getDisplayFields().getAlternateUnitId().callback(game, unit, localStore, manaPerSec))) {
 					this.active = true;
 				}
 			}
 
 			if (this.config.getOverrideFields() != null) {
 				if (this.config.getOverrideFields().getOnTooltipOverride() != null) {
-					this.onTooltipOverride = this.config.getOverrideFields().getOnTooltipOverride().callback(game, unit, localStore, castId);
+					this.onTooltipOverride = this.config.getOverrideFields().getOnTooltipOverride().callback(game, unit,
+							localStore, castId);
 				}
 				if (this.config.getOverrideFields().getOffTooltipOverride() != null) {
-					this.offTooltipOverride = this.config.getOverrideFields().getOffTooltipOverride().callback(game, unit, localStore, castId);
+					this.offTooltipOverride = this.config.getOverrideFields().getOffTooltipOverride().callback(game,
+							unit, localStore, castId);
 				}
 			}
 		}
@@ -200,20 +230,22 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				this.area = this.config.getOverrideFields().getAreaOverride().callback(game, unit, localStore, castId);
 			}
 			if (this.config.getOverrideFields().getRangeOverride() != null) {
-				this.range = this.config.getOverrideFields().getRangeOverride().callback(game, unit, localStore, castId);
+				this.range = this.config.getOverrideFields().getRangeOverride().callback(game, unit, localStore,
+						castId);
 			}
 			if (this.config.getOverrideFields().getCooldownOverride() != null) {
-				this.cooldown = this.config.getOverrideFields().getCooldownOverride().callback(game, unit, localStore, castId);
+				this.cooldown = this.config.getOverrideFields().getCooldownOverride().callback(game, unit, localStore,
+						castId);
 			}
 			if (this.config.getOverrideFields().getManaCostOverride() != null) {
-				this.manaCost = this.config.getOverrideFields().getManaCostOverride().callback(game, unit, localStore, castId);
+				this.manaCost = this.config.getOverrideFields().getManaCostOverride().callback(game, unit, localStore,
+						castId);
 			}
 		}
 
-		if (this.config.getDisplayFields() != null
-				&& this.config.getDisplayFields().getHideAreaCursor() != null) {
-			this.hideAreaCursor = this.config.getDisplayFields()
-					.getHideAreaCursor().callback(game, unit, localStore, this.getLevel());
+		if (this.config.getDisplayFields() != null && this.config.getDisplayFields().getHideAreaCursor() != null) {
+			this.hideAreaCursor = this.config.getDisplayFields().getHideAreaCursor().callback(game, unit, localStore,
+					this.getLevel());
 		}
 	}
 
@@ -232,7 +264,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			unit.beginCooldown(game, cdID, 0);
 		}
 	}
-	
+
 	private War3ID getCooldownId() {
 		if (this.item != null) {
 			if (item.getItemType().isIgnoreCooldown()) {
@@ -282,12 +314,12 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public Map<String, Object> getLocalStore() {
 		return this.localStore;
 	}
-	
+
 	@Override
 	public War3ID getOnTooltipOverride() {
 		return onTooltipOverride;
 	}
-	
+
 	@Override
 	public War3ID getOffTooltipOverride() {
 		return offTooltipOverride;
@@ -297,7 +329,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public int getUIManaCost() {
 		return (this.toggleable && this.active && this.allowCastlessDeactivate) ? 0 : this.manaCost + this.bufferMana;
 	}
-	
+
 	@Override
 	public int getChargedManaCost() {
 		return this.manaCost;
@@ -352,8 +384,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 	protected ABBehavior createNoTargetBehavior(CUnit unit) {
 		ABBehavior beh = new CBehaviorAbilityBuilderNoTarget(unit, localStore, this);
-		if (this.item != null || (this.config.getDisplayFields() != null && this.config.getDisplayFields().getInstantCast() != null
-				&& this.config.getDisplayFields().getInstantCast().callback(null, unit, localStore, castId))) {
+		if (this.item != null
+				|| (this.config.getDisplayFields() != null && this.config.getDisplayFields().getInstantCast() != null
+						&& this.config.getDisplayFields().getInstantCast().callback(null, unit, localStore, castId))) {
 			beh.setInstant(true);
 		}
 		return beh;
@@ -361,8 +394,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 	protected ABBehavior createRangedBehavior(CUnit unit) {
 		ABBehavior beh = new CBehaviorAbilityBuilderBase(unit, localStore, this);
-		if (this.item != null || (this.config.getDisplayFields() != null && this.config.getDisplayFields().getInstantCast() != null
-				&& this.config.getDisplayFields().getInstantCast().callback(null, unit, localStore, castId))) {
+		if (this.item != null
+				|| (this.config.getDisplayFields() != null && this.config.getDisplayFields().getInstantCast() != null
+						&& this.config.getDisplayFields().getInstantCast().callback(null, unit, localStore, castId))) {
 			beh.setInstant(true);
 		}
 		return beh;
@@ -376,19 +410,21 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			return;
 		}
 		final int cooldownRemaining = unit.getCooldownRemainingTicks(game, getCooldownId());
-		
+
 		if (this.toggleable && this.active && this.allowCastlessDeactivate) {
 			if (cooldownRemaining > 0 && !(receiver instanceof MeleeUIAbilityActivationReceiver)) {
 				float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCooldownId())
 						* WarsmashConstants.SIMULATION_STEP_TIME;
-				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME, cooldownLengthDisplay);
+				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME,
+						cooldownLengthDisplay);
 			}
 			receiver.useOk();
 		} else {
 			if (cooldownRemaining > 0) {
 				float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCooldownId())
 						* WarsmashConstants.SIMULATION_STEP_TIME;
-				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME, cooldownLengthDisplay);
+				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME,
+						cooldownLengthDisplay);
 			} else if (unit.getMana() < (this.manaCost + this.bufferMana)) {
 				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 			} else {
@@ -450,25 +486,21 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
-		}
-		else if (orderId == OrderIds.smart) {
+		} else if (orderId == OrderIds.smart) {
 			innerCheckCanSmartTarget(game, unit, orderId, target, receiver);
-		}
-		else {
+		} else {
 			receiver.orderIdNotAccepted();
 		}
 	}
-	
+
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
 			receiver.targetOk(null);
-		}
-		else if (innerCheckCastOrderId(game, unit, orderId)) {
+		} else if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTargetNoTarget(game, unit, orderId, receiver);
-		}
-		else {
+		} else {
 			receiver.orderIdNotAccepted();
 		}
 	}
@@ -539,7 +571,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	protected boolean innerCheckCastOrderId(final CSimulation game, final CUnit unit, final int orderId) {
-		return (!this.active && orderId == getBaseOrderId()) || ((this.active || this.separateOnAndOff) && orderId == getOffOrderId());
+		return (!this.active && orderId == getBaseOrderId())
+				|| ((this.active || this.separateOnAndOff) && orderId == getOffOrderId());
 	}
 
 	protected boolean innerCheckTargetTargetable(CSimulation game, CUnit unit, CWidget target) {
@@ -547,8 +580,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	protected boolean innerCheckTargetInRange(CUnit unit, AbilityTarget target) {
-		return !unit.isMovementDisabled()
-				|| unit.canReach(target, this.getCastRange());
+		return !unit.isMovementDisabled() || unit.canReach(target, this.getCastRange());
 	}
 
 	protected String innerCheckExtraTargetConditions(CSimulation game, CUnit unit, int orderId) {
@@ -643,7 +675,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
-	
+
 	@Override
 	public void runOnOrderIssuedActions(final CSimulation game, final CUnit caster, int orderId) {
 		if (config.getOnOrderIssued() != null) {
@@ -652,7 +684,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
-	
+
 	@Override
 	public void runBeginCastingActions(final CSimulation game, final CUnit caster, int orderId) {
 		if (config.getOnBeginCasting() != null) {
@@ -661,7 +693,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
-	
+
 	@Override
 	public void runEndCastingActions(final CSimulation game, final CUnit caster, int orderId) {
 		if (config.getOnEndCasting() != null) {
@@ -669,7 +701,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				action.runAction(game, caster, localStore, castId);
 			}
 		}
-		if (this.toggleable) { 
+		if (this.toggleable) {
 			if (orderId == this.getBaseOrderId()) {
 				this.activate(game, caster);
 			}
@@ -678,7 +710,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
-	
+
 	@Override
 	public void runChannelTickActions(final CSimulation game, final CUnit caster, int orderId) {
 		if (config.getOnChannelTick() != null) {
@@ -687,7 +719,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
-	
+
 	@Override
 	public void runEndChannelActions(final CSimulation game, final CUnit caster, int orderId) {
 		if (config.getOnEndChannel() != null) {
@@ -696,7 +728,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
-	
+
 	@Override
 	public void runCancelPreCastActions(final CSimulation game, final CUnit caster, int orderId) {
 		if (config.getOnCancelPreCast() != null) {
@@ -705,7 +737,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
-	
+
 	@Override
 	public void activate(final CSimulation game, final CUnit caster) {
 		Boolean failed = (Boolean) this.localStore.get(ABLocalStoreKeys.FAILEDTOCAST + castId);
@@ -766,9 +798,44 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
 
 	}
-	
+
 	@Override
 	public <T> T visit(final CAbilityVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public void checkRequirementsMet(CSimulation game, CUnit unit, AbilityActivationReceiver receiver) {
+		List<CUnitTypeRequirement> reqs = this.levelData.get(this.getLevel() - 1).getRequirements();
+		CPlayer player = game.getPlayer(unit.getPlayerIndex());
+		if (reqs != null) {
+			for (final CUnitTypeRequirement requirement : reqs) {
+//				System.err.println("Checking reqs for " + this.getAlias() + ": looking for "
+//						+ requirement.getRequirement() + " at amount " + requirement.getRequiredLevel() + " and found "
+//						+ player.getTechtreeUnlocked(requirement.getRequirement()));
+				if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
+					receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+				}
+			}
+		}
+	}
+
+	@Override
+	public boolean isRequirementsMet(CSimulation game, CUnit unit) {
+		List<CUnitTypeRequirement> reqs = this.levelData.get(this.getLevel() - 1).getRequirements();
+		CPlayer player = game.getPlayer(unit.getPlayerIndex());
+		boolean requirementsMet = player.isTechtreeAllowedByMax(this.getAlias());
+		if (reqs != null) {
+			for (final CUnitTypeRequirement requirement : reqs) {
+//				System.err.println("Checking reqs for " + this.getAlias() + ": looking for "
+//						+ requirement.getRequirement() + " at amount " + requirement.getRequiredLevel() + " and found "
+//						+ player.getTechtreeUnlocked(requirement.getRequirement()));
+				if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
+					requirementsMet = false;
+				}
+			}
+		}
+//		System.err.println("Returning "+requirementsMet+" for " + this.getAlias());
+		return requirementsMet;
 	}
 }

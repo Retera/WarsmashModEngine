@@ -8,7 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 
 public abstract class AbstractCAbility implements CAbility {
 	private final int handleId;
-	private boolean disabled = false;
+	private byte disabled = 0;
 	private boolean iconShowing = true;
 	private boolean permanent = false;
 	
@@ -35,12 +35,16 @@ public abstract class AbstractCAbility implements CAbility {
 
 	@Override
 	public final boolean isDisabled() {
-		return this.disabled;
+		return this.disabled != 0;
 	}
 
 	@Override
-	public final void setDisabled(final boolean disabled) {
-		this.disabled = disabled;
+	public final void setDisabled(final boolean disabled, CAbilityDisableType type) {
+		if (disabled) {
+			this.disabled |= type.getMask();
+		} else {
+			this.disabled &= ~type.getMask();
+		}
 	}
 
 	@Override
@@ -71,8 +75,9 @@ public abstract class AbstractCAbility implements CAbility {
 	@Override
 	public final void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		if (this.disabled) {
+		if (this.isDisabled()) {
 			receiver.disabled();
+			this.checkRequirementsMet(game, unit, receiver);
 		}
 		else {
 			innerCheckCanUse(game, unit, orderId, receiver);
@@ -84,5 +89,25 @@ public abstract class AbstractCAbility implements CAbility {
 
 	@Override
 	public void onSetUnitType(final CSimulation game, final CUnit cUnit) {
+	}
+
+	@Override
+	public void checkRequirementsMet(CSimulation game, CUnit unit, AbilityActivationReceiver receiver) {
+		
+	}
+	
+	@Override
+	public boolean isRequirementsMet(CSimulation game, CUnit unit) {
+		return true;
+	}
+	
+	@Override
+	public void onAddDisabled(CSimulation game, CUnit unit) {
+		//do nothing
+	}
+	
+	@Override
+	public void onRemoveDisabled(CSimulation game, CUnit unit) {
+		//do nothing
 	}
 }

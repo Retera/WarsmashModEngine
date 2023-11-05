@@ -459,7 +459,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	private void addCommandButton(final CAbility ability, final Texture icon, final Texture iconDisabled,
 			final String toolTip, String uberTip, final int buttonPosX, final int buttonPosY, final int handleId,
 			final int orderId, final int autoCastOrderId, final boolean autoCastActive, final boolean menuButton,
-			int goldCost, int lumberCost, int foodCost, final int manaCost, final int numberOverlay,
+			int goldCost, int lumberCost, int foodCost, int manaCost, final int numberOverlay,
 			final char hotkey) {
 		boolean requiresPatron = false;
 		if (this.unit.getPlayerIndex() != this.localPlayerIndex) {
@@ -496,6 +496,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				goldCost = 0;
 				lumberCost = 0;
 				foodCost = 0;
+				manaCost = 0;
 			}
 			if (this.previewCallback.isShowingRequirements()) {
 				uberTip = this.previewCallback.getRequirementsText() + "|r" + uberTip;

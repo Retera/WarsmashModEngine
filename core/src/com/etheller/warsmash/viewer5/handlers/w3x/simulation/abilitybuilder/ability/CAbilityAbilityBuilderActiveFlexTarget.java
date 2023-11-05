@@ -92,8 +92,13 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 	}
 
 	@Override
-	public void onAdd(CSimulation game, CUnit unit) {
+	public void onAddDisabled(CSimulation game, CUnit unit) {
 		localStore.put(ABLocalStoreKeys.FLEXABILITY, this);
+		super.onAddDisabled(game, unit);
+	}
+
+	@Override
+	public void onAdd(CSimulation game, CUnit unit) {
 		this.behavior = new CBehaviorAbilityBuilderBase(unit, localStore, this);
 		this.setTargeted(game, unit);
 		this.setPointTarget(game, unit);

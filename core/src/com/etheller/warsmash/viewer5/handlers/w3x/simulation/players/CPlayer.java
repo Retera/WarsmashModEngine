@@ -175,7 +175,7 @@ public class CPlayer extends CBasePlayer {
 		return getTechtreeUnlocked(rawcode) + getTechtreeInProgress(rawcode);
 	}
 
-	public void addTechtreeUnlocked(final War3ID rawcode) {
+	public void addTechtreeUnlocked(CSimulation simulation, final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, 1);
@@ -183,13 +183,16 @@ public class CPlayer extends CBasePlayer {
 		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked + 1);
 		}
+		fireRequirementUpdateForAbilities(simulation, false);
 	}
 
-	public void setTechtreeUnlocked(final War3ID rawcode, final int setToLevel) {
+	public void setTechtreeUnlocked(CSimulation simulation, final War3ID rawcode, final int setToLevel) {
+		int prev = this.getTechtreeUnlocked(rawcode);
 		this.rawcodeToTechtreeUnlocked.put(rawcode, setToLevel);
+		fireRequirementUpdateForAbilities(simulation, prev > setToLevel);
 	}
 
-	public void removeTechtreeUnlocked(final War3ID rawcode) {
+	public void removeTechtreeUnlocked(CSimulation simulation, final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, -1);
@@ -197,6 +200,7 @@ public class CPlayer extends CBasePlayer {
 		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked - 1);
 		}
+		fireRequirementUpdateForAbilities(simulation, true);
 	}
 
 	public void addTechtreeInProgress(final War3ID rawcode) {
@@ -626,6 +630,7 @@ public class CPlayer extends CBasePlayer {
 			final int setToLevel = previousUnlockCount + levels;
 			setTechToLevel(simulation, techIdRawcodeId, setToLevel);
 		}
+		fireRequirementUpdateForAbilities(simulation, false);
 	}
 
 	public void setTechResearched(final CSimulation simulation, final War3ID techIdRawcodeId, final int setToLevel) {
@@ -633,12 +638,12 @@ public class CPlayer extends CBasePlayer {
 		if ((setToLevel > previousUnlockCount) || (setToLevel < previousUnlockCount)) {
 			setTechToLevel(simulation, techIdRawcodeId, setToLevel);
 		}
-
+		fireRequirementUpdateForAbilities(simulation, false);
 	}
 
 	private void setTechToLevel(final CSimulation simulation, final War3ID techIdRawcodeId, final int setToLevel) {
 		final int previousLevel = getTechtreeUnlocked(techIdRawcodeId);
-		setTechtreeUnlocked(techIdRawcodeId, setToLevel);
+		setTechtreeUnlocked(simulation, techIdRawcodeId, setToLevel);
 		// terminate in progress upgrades of this kind for player
 		final CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
 		if (upgradeType != null) {
@@ -674,6 +679,14 @@ public class CPlayer extends CBasePlayer {
 	public void updateFogModifiers(final CSimulation game) {
 		for (final CFogModifier fogModifier : this.fogModifiers) {
 			fogModifier.update(game.getPathingGrid(), this.fogOfWar);
+		}
+	}
+	
+	public void fireRequirementUpdateForAbilities(final CSimulation simulation, final boolean disable) {
+		for(CUnit unit : simulation.getUnits()) {
+			if (unit.getPlayerIndex() == this.getId()) {
+				unit.checkDisabledAbilities(simulation, disable);
+			}
 		}
 	}
 }

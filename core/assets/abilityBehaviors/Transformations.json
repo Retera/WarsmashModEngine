@@ -219,7 +219,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 			"type": "if",
 			"condition": {
 				"type": "isToggleAbilityActive"
@@ -301,7 +301,7 @@
 			}],
 				"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -657,7 +657,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 			"type": "if",
 			"condition": {
 				"type": "isToggleAbilityActive"
@@ -745,7 +745,7 @@
 			}],
 				"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -1110,7 +1110,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
 					"type": "getNonStackingStatBuffTypeFromString",
@@ -1226,7 +1226,7 @@
 				}],
 					"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -1621,7 +1621,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 				"type": "createStateModBuff",
 				"buffType": "ETHEREAL"
 			},{
@@ -1732,7 +1732,7 @@
 					}
 				}]
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -2108,7 +2108,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 				"type": "createStateModBuff",
 				"buffType": "ETHEREAL"
 			},{
@@ -2211,7 +2211,7 @@
 				}],
 					"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -2596,7 +2596,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 			"type": "if",
 			"condition": {
 				"type": "isToggleAbilityActive"
@@ -2678,7 +2678,7 @@
 			}],
 				"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -3038,7 +3038,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
 					"type": "getNonStackingStatBuffTypeFromString",
@@ -3055,7 +3055,7 @@
 					"dataField": "E"
 				}
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"

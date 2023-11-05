@@ -56,7 +56,7 @@ public final class CommandCardActivationReceiverPreviewCallback implements Abili
         final CUnitType unitType = unitData.getUnitType(type);
         String requirementString;
         if (unitType != null) {
-            requirementString = unitType.getName();
+            requirementString = level + " " + unitType.getName() + (level > 1 ? "s" : "");
         } else {
             final CUpgradeType upgradeType = upgradeData
                     .getType(type);

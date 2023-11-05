@@ -10,10 +10,16 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 
 public interface CAbility extends CAbilityView {
 	/* should fire when ability added to unit */
+	void onAddDisabled(CSimulation game, CUnit unit);
+	
+	/* should fire when ability added to unit only if the ability is not disabled at the time */
 	void onAdd(CSimulation game, CUnit unit);
 
-	/* should fire when ability removed from unit */
+	/* should fire when ability removed from unit only if the ability is not disabled at the time */
 	void onRemove(CSimulation game, CUnit unit);
+
+	/* should fire when ability removed from unit */
+	void onRemoveDisabled(CSimulation game, CUnit unit);
 
 	void onTick(CSimulation game, CUnit unit);
 
@@ -35,7 +41,7 @@ public interface CAbility extends CAbilityView {
 
 	CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId);
 
-	void setDisabled(boolean disabled);
+	void setDisabled(boolean disabled, CAbilityDisableType type);
 
 	void setIconShowing(boolean iconShowing);
 

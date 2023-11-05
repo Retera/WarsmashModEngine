@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityTypeLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
@@ -19,10 +20,11 @@ public class CAbilityTypeAbilityBuilderLevelData extends CAbilityTypeLevelData {
 	private final int manaCost;
 	private final List<String> data;
 	private final War3ID unitId;
+	private List<CUnitTypeRequirement> requirements;
 
 	public CAbilityTypeAbilityBuilderLevelData(EnumSet<CTargetType> targetsAllowed, float area, float castRange,
 			float castTime, float cooldown, float durationHero, float durationNormal, List<War3ID> buffs,
-			List<War3ID> effects, int manaCost, List<String> data, War3ID unitId) {
+			List<War3ID> effects, int manaCost, List<String> data, War3ID unitId, List<CUnitTypeRequirement> requirements) {
 		super(targetsAllowed);
 		this.area = area;
 		this.castRange = castRange;
@@ -35,6 +37,7 @@ public class CAbilityTypeAbilityBuilderLevelData extends CAbilityTypeLevelData {
 		this.manaCost = manaCost;
 		this.data = data;
 		this.unitId = unitId;
+		this.requirements = requirements;
 	}
 
 	public float getArea() {
@@ -79,6 +82,20 @@ public class CAbilityTypeAbilityBuilderLevelData extends CAbilityTypeLevelData {
 
 	public War3ID getUnitId() {
 		return unitId;
+	}
+
+	/**
+	 * @return the requirements
+	 */
+	public List<CUnitTypeRequirement> getRequirements() {
+		return requirements;
+	}
+
+	/**
+	 * @param requirements the requirements to set
+	 */
+	public void setRequirements(List<CUnitTypeRequirement> requirements) {
+		this.requirements = requirements;
 	}
 
 }

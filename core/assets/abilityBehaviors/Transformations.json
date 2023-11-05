@@ -219,7 +219,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 			"type": "if",
 			"condition": {
 				"type": "isToggleAbilityActive"
@@ -278,6 +278,20 @@
 						}
 					}
 				},
+				"requiresPayment": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 16
+						}
+					}
+				},
 				"altitudeAdjustmentDelay": {
 					"type": "getAbilityCastTime"
 				},
@@ -301,7 +315,7 @@
 			}],
 				"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -657,7 +671,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 			"type": "if",
 			"condition": {
 				"type": "isToggleAbilityActive"
@@ -716,6 +730,20 @@
 						}
 					}
 				},
+				"requiresPayment": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 16
+						}
+					}
+				},
 				"altitudeAdjustmentDelay": {
 					"type": "getAbilityCastTime"
 				},
@@ -745,7 +773,7 @@
 			}],
 				"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -1110,7 +1138,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
 					"type": "getNonStackingStatBuffTypeFromString",
@@ -1185,6 +1213,20 @@
 							}
 						}
 					},
+					"requiresPayment": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 16
+							}
+						}
+					},
 					"altitudeAdjustmentDelay": {
 						"type": "getAbilityCastTime"
 					},
@@ -1226,7 +1268,7 @@
 				}],
 					"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -1621,7 +1663,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 				"type": "createStateModBuff",
 				"buffType": "ETHEREAL"
 			},{
@@ -1683,6 +1725,20 @@
 							}
 						}
 					},
+					"requiresPayment": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 16
+							}
+						}
+					},
 					"altitudeAdjustmentDelay": {
 						"type": "getAbilityCastTime"
 					},
@@ -1732,7 +1788,7 @@
 					}
 				}]
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -2108,7 +2164,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 				"type": "createStateModBuff",
 				"buffType": "ETHEREAL"
 			},{
@@ -2170,6 +2226,20 @@
 							}
 						}
 					},
+					"requiresPayment": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 16
+							}
+						}
+					},
 					"altitudeAdjustmentDelay": {
 						"type": "getAbilityCastTime"
 					},
@@ -2211,7 +2281,7 @@
 				}],
 					"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -2596,7 +2666,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 			"type": "if",
 			"condition": {
 				"type": "isToggleAbilityActive"
@@ -2655,6 +2725,20 @@
 						}
 					}
 				},
+				"requiresPayment": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 16
+						}
+					}
+				},
 				"altitudeAdjustmentDelay": {
 					"type": "getAbilityCastTime"
 				},
@@ -2678,7 +2762,7 @@
 			}],
 				"elseActions": []
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -3038,7 +3122,7 @@
 				}
 			}
 		},
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
 					"type": "getNonStackingStatBuffTypeFromString",
@@ -3055,7 +3139,7 @@
 					"dataField": "E"
 				}
 		}],
-		"onRemoveAbility": [{
+		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
 			"unit": {
 				"type": "getCastingUnit"
@@ -3220,6 +3304,22 @@
 						"type": "getLastCreatedNonStackingStatBuff"
 					}
 				}]
+		}]
+	},{
+		"ids": [{"id":"Acha"}],
+		"type": "HIDDEN",
+		"onAddAbility": [{
+				"type": "transformUnitInstant",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"alternateUnitId": {
+					"type": "getAbilityUnitId"
+				},
+				"permanent": {
+					"type": "rawBoolean",
+					"value": "true"
+				}
 		}]
 	}]
 }

@@ -115,7 +115,7 @@ public class SequenceUtils {
 		return matchRank;
 	}
 
-	public static IndexedSequence selectSequence(final AnimationTokens.PrimaryTag type,
+	public static IndexedSequence selectSequence(AnimationTokens.PrimaryTag type,
 			final EnumSet<AnimationTokens.SecondaryTag> tags, final List<Sequence> sequences,
 			final boolean allowRarityVariations) {
 		List<IndexedSequence> filtered = filterSequences(type, tags, sequences);
@@ -141,6 +141,9 @@ public class SequenceUtils {
 				}
 			}
 			if (fallbackTags == null) {
+				if (type == null) {
+					type = PrimaryTag.STAND;
+				}
 				for (int i = 0, l = sequences.size(); i < l; i++) {
 					final Sequence sequence = sequences.get(i);
 					if (sequence.getPrimaryTags().contains(type) || (type == null)) {

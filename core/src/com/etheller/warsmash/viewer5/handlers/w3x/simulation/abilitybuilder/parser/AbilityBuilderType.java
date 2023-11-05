@@ -13,7 +13,6 @@ public enum AbilityBuilderType {
 	NORMAL_NOTARGET,
 	TOGGLE,
 	SMART,
-	BUFF,
 	PASSIVE,
 	TEMPLATE,
 	HIDDEN;

@@ -95,7 +95,9 @@ public class ABLocalStoreKeys {
 	public static final String ABILITYPAIREDUNIT = "_abilityPairedUnit#";
 	public static final String LASTPARTNERABILITY = "_lastPartnerAbility";
 	
-	
+	// Transforming
+	public static final String ACTIVE_ALTITUDE_ADJUSTMENT = "_activeAltAdj";
+	public static final String WAITING_ANIMATION = "_morphTimer";
 	
 	
 

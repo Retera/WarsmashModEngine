@@ -569,7 +569,7 @@
 				}
 			}
 		}],
-		"onAddAbility": [{
+		"onAddDisabledAbility": [{
 			"type": "if",
 			"condition": {
 				"type": "isToggleAbilityActive"

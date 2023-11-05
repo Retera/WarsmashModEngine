@@ -303,7 +303,7 @@ public class CSimulation implements CPlayerAPI {
 		if (newUnitType.getFoodMade() != 0) {
 			player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
 		}
-		player.addTechtreeUnlocked(typeId);
+		player.addTechtreeUnlocked(this, typeId);
 		// nudge unit
 		newUnit.setPointAndCheckUnstuck(x, y, this);
 		if (!newUnit.isBuilding()) {
@@ -677,7 +677,7 @@ public class CSimulation implements CPlayerAPI {
 			final CPlayer player = this.players.get(unit.getPlayerIndex());
 			player.setUnitFoodUsed(unit, unit.getUnitType().getFoodUsed());
 			player.setUnitFoodMade(unit, unit.getUnitType().getFoodMade());
-			player.addTechtreeUnlocked(unit.getTypeId());
+			player.addTechtreeUnlocked(this, unit.getTypeId());
 		}
 	}
 

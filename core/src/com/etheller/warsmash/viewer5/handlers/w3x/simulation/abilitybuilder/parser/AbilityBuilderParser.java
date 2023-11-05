@@ -20,9 +20,11 @@ public class AbilityBuilderParser {
 
 	private List<ABCondition> extraTargetConditions;
 	private List<ABCondition> extraCastConditions;
-	
+
 	private List<ABAction> onAddAbility;
+	private List<ABAction> onAddDisabledAbility;
 	private List<ABAction> onRemoveAbility;
+	private List<ABAction> onRemoveDisabledAbility;
 	private List<ABAction> onDeathPreCast;
 	private List<ABAction> onCancelPreCast;
 	private List<ABAction> onOrderIssued;
@@ -103,12 +105,40 @@ public class AbilityBuilderParser {
 		this.onAddAbility = onAddAbility;
 	}
 
+	/**
+	 * @return the onAddDisabledAbility
+	 */
+	public List<ABAction> getOnAddDisabledAbility() {
+		return onAddDisabledAbility;
+	}
+
+	/**
+	 * @param onAddDisabledAbility the onAddDisabledAbility to set
+	 */
+	public void setOnAddDisabledAbility(List<ABAction> onAddDisabledAbility) {
+		this.onAddDisabledAbility = onAddDisabledAbility;
+	}
+
 	public List<ABAction> getOnRemoveAbility() {
 		return onRemoveAbility;
 	}
 
 	public void setOnRemoveAbility(List<ABAction> onRemoveAbility) {
 		this.onRemoveAbility = onRemoveAbility;
+	}
+
+	/**
+	 * @return the onRemoveDisabledAbility
+	 */
+	public List<ABAction> getOnRemoveDisabledAbility() {
+		return onRemoveDisabledAbility;
+	}
+
+	/**
+	 * @param onRemoveDisabledAbility the onRemoveDisabledAbility to set
+	 */
+	public void setOnRemoveDisabledAbility(List<ABAction> onRemoveDisabledAbility) {
+		this.onRemoveDisabledAbility = onRemoveDisabledAbility;
 	}
 
 	public List<ABAction> getOnDeathPreCast() {

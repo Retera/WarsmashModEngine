@@ -5,7 +5,7 @@ import java.util.Map;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.GetABAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -29,7 +29,7 @@ public class ABActionStartCooldown implements ABAction {
 			if (cooldown != null) {
 				theUnit.beginCooldown(game, aliasId, cooldown.callback(game, caster, localStore, castId));
 			} else {
-				AbilityBuilderActiveAbility abil = theUnit.getAbility(GetABAbilityByRawcodeVisitor.getInstance().reset(aliasId));
+				AbilityBuilderAbility abil = theUnit.getAbility(GetABAbilityByRawcodeVisitor.getInstance().reset(aliasId));
 				if (abil != null) {
 					abil.startCooldown(game, theUnit);
 				}
@@ -39,7 +39,7 @@ public class ABActionStartCooldown implements ABAction {
 				War3ID aliasId = (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
 				theUnit.beginCooldown(game, aliasId, cooldown.callback(game, caster, localStore, castId));
 			} else {
-				AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+				AbilityBuilderAbility abil = (AbilityBuilderAbility) localStore.get(ABLocalStoreKeys.ABILITY);
 				abil.startCooldown(game, theUnit);
 			}
 		}

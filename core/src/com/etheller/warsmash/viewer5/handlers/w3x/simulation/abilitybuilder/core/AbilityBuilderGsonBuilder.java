@@ -439,7 +439,6 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionStoreValueLocally.class, "storeValueLocally")
 				.registerSubtype(ABActionRemoveSpellEffect.class, "removeSpellEffect")
 				.registerSubtype(ABActionCreateAbilityFromId.class, "createAbilityFromId")
-				.registerSubtype(ABActionCreateBuffFromId.class, "createBuffFromId")
 				.registerSubtype(ABActionAddDefenseBonus.class, "addDefenseBonus")
 				.registerSubtype(ABActionRemoveDefenseBonus.class, "removeDefenseBonus")
 				.registerSubtype(ABActionAddRallyAbility.class, "addRallyAbility")

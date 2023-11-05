@@ -103,6 +103,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 				for (final CAbility ability : constructedStructure.getAbilities()) {
 					ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
 				}
+				unit.checkDisabledAbilities(simulation, true);
 				this.unit.setHidden(true);
 				this.unit.setPaused(true);
 				this.unit.setInvulnerable(true);

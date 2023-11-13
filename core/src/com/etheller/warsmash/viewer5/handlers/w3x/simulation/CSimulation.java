@@ -53,13 +53,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUpgradeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CFogModifier;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
@@ -118,6 +119,7 @@ public class CSimulation implements CPlayerAPI {
 			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
 			final CommandErrorListener commandErrorListener) {
 		this.gameplayConstants = new CGameplayConstants(miscData);
+		CFogModifier.setConstants(gameplayConstants);
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
 		this.abilityData = new CAbilityData(parsedAbilityData);
@@ -891,6 +893,10 @@ public class CSimulation implements CPlayerAPI {
 
 	public GlobalScope getGlobalScope() {
 		return this.globalScope;
+	}
+	
+	public float getTerrainHeight(float x, float y) {
+		return this.simulationRenderController.getTerrainHeight(x, y);
 	}
 
 }

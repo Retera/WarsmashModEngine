@@ -231,7 +231,7 @@
 									"dataField": "F"
 								},
 								"value2": {
-									"type": "intToFloat",
+									"type": "i2f",
 									"value": {
 										"type": "countUnitsInRangeOfLocation",
 										"location": {
@@ -420,7 +420,7 @@
 									"dataField": "F"
 								},
 								"value2": {
-									"type": "intToFloat",
+									"type": "i2f",
 									"value": {
 										"type": "countUnitsInRangeOfLocation",
 										"location": {

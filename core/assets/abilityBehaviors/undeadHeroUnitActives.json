@@ -320,7 +320,7 @@
 								}
 							},
 							"value2": {
-								"type": "intToFloat",
+								"type": "i2f",
 								"value": {
 									"type": "getProjectileUnitTargets"
 								}

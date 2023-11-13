@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABAutocastTypeCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
@@ -10,6 +11,8 @@ public class AbilityBuilderOverrideFields {
 	private ABFloatCallback rangeOverride;
 	private ABFloatCallback cooldownOverride;
 	private ABIntegerCallback manaCostOverride;
+	
+	private ABAutocastTypeCallback autocastTypeOverride;
 	
 	private ABIDCallback onTooltipOverride;
 	private ABIDCallback offTooltipOverride;
@@ -37,6 +40,12 @@ public class AbilityBuilderOverrideFields {
 	}
 	public void setManaCostOverride(ABIntegerCallback manaCostOverride) {
 		this.manaCostOverride = manaCostOverride;
+	}
+	public ABAutocastTypeCallback getAutocastTypeOverride() {
+		return autocastTypeOverride;
+	}
+	public void setAutocastTypeOverride(ABAutocastTypeCallback autocastTypeOverride) {
+		this.autocastTypeOverride = autocastTypeOverride;
 	}
 	public ABIDCallback getOnTooltipOverride() {
 		return onTooltipOverride;

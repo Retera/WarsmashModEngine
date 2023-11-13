@@ -338,15 +338,21 @@
 						}
 					},
 					"thenActions": [{
-						"type": "setStacking",
-						"allowStacking": {
-							"type": "rawBoolean",
-							"value": "true"
-						},
-						"allowSamePriorityStacking": {
-							"type": "rawBoolean",
-							"value": "false"
-						}
+							"type": "preDamageListenerSetMiss",
+							"miss": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
+						},{
+							"type": "setStacking",
+							"allowStacking": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"allowSamePriorityStacking": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
 					}],
 					"elseActions": []
 				}]

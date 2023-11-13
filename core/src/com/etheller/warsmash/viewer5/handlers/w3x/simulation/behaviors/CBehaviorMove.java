@@ -485,4 +485,9 @@ public class CBehaviorMove implements CBehavior {
 	public boolean interruptable() {
 		return true;
 	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
 }

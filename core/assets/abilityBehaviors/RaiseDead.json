@@ -1,6 +1,6 @@
 {
 	"abilityList": [{
-		"ids": [{"id":"Arai", "castId": "raisedead", "autoCastOnId": "raisedeadon", "autoCastOffId": "raisedeadoff"},
+		"ids": [{"id":"Arai", "castId": "raisedead", "autoCastOnId": "raisedeadon", "autoCastOffId": "raisedeadoff", "autoCastType": "NOTARGET"},
 				{"id":"AIrd", "castId": "itemraisedead"}],
 		"type": "NORMAL_AUTOTARGET",
 		"extraCastConditions": [{
@@ -167,7 +167,7 @@
 				}
 			}]
 	},{
-		"ids": [{"id":"AUcb", "castId": "carrionscarabs", "autoCastOnId": "carrionscarabson", "autoCastOffId": "carrionscarabsoff"}],
+		"ids": [{"id":"AUcb", "castId": "carrionscarabs", "autoCastOnId": "carrionscarabson", "autoCastOffId": "carrionscarabsoff", "autoCastType": "NOTARGET"}],
 		"type": "NORMAL_AUTOTARGET",
 		"extraCastConditions": [{
 			"type": "setCantUseReasonOnFailure",
@@ -572,7 +572,7 @@
 				}
 			}]
 	},{
-		"ids": [{"id":"Avng", "castId": "vengeance", "autoCastOnId": "vengeanceon", "autoCastOffId": "vengeanceoff"}],
+		"ids": [{"id":"Avng", "castId": "vengeance", "autoCastOnId": "vengeanceon", "autoCastOffId": "vengeanceoff", "autoCastType": "NOTARGET"}],
 		"type": "NORMAL_AUTOTARGET",
 		"extraCastConditions": [{
 			"type": "setCantUseReasonOnFailure",

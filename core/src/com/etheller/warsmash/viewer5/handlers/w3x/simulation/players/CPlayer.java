@@ -27,6 +27,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CFogModifier;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
 public class CPlayer extends CBasePlayer {
@@ -672,13 +674,19 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
-	public void addFogModifer(final CFogModifier fogModifier) {
+	public void addFogModifer(final CSimulation game, final CFogModifier fogModifier) {
 		this.fogModifiers.add(fogModifier);
+		fogModifier.onAdd(game, this);
+	}
+
+	public void removeFogModifer(final CSimulation game, final CFogModifier fogModifier) {
+		this.fogModifiers.remove(fogModifier);
+		fogModifier.onRemove(game, this);
 	}
 
 	public void updateFogModifiers(final CSimulation game) {
-		for (final CFogModifier fogModifier : this.fogModifiers) {
-			fogModifier.update(game.getPathingGrid(), this.fogOfWar);
+		for (int i = this.fogModifiers.size() - 1; i >= 0; i--) {
+			this.fogModifiers.get(i).update(game, this, game.getPathingGrid(), this.fogOfWar);
 		}
 	}
 	

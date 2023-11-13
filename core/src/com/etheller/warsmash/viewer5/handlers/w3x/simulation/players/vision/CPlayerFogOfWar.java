@@ -1,17 +1,19 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision;
 
 import java.nio.ByteBuffer;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 
 public class CPlayerFogOfWar {
+	public static final int PATHING_RATIO = 4;
+	public static final int GRID_STEP = PATHING_RATIO * 32;
 	private final int width;
 	private final int height;
 	private final ByteBuffer fogOfWarBuffer;
 
 	public CPlayerFogOfWar(final PathingGrid pathingGrid) {
-		width = (pathingGrid.getWidth() / 8) + 1;
-		height = (pathingGrid.getHeight() / 8) + 1;
+		width = (pathingGrid.getWidth() / PATHING_RATIO) + 1;
+		height = (pathingGrid.getHeight() / PATHING_RATIO) + 1;
 		final int fogOfWarBufferLen = width * height;
 		this.fogOfWarBuffer = ByteBuffer.allocateDirect(fogOfWarBufferLen);
 		fogOfWarBuffer.clear();

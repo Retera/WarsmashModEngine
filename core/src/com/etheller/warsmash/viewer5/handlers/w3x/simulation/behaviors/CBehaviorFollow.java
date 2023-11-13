@@ -28,7 +28,7 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
-		if (this.justAutoAttacked = this.unit.autoAcquireAttackTargets(simulation, false)) {
+		if (this.justAutoAttacked = this.unit.autoAcquireTargets(simulation, false)) {
 			return true;
 		}
 		return this.unit.canReach(this.target, this.unit.getAcquisitionRange());

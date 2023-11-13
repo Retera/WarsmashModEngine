@@ -17,8 +17,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbilityActivationReceiver;
 
 public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassiveAbility implements AbilityBuilderAbility {
 
@@ -80,6 +78,11 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	@Override
 	public float getArea() {
 		return area;
+	}
+
+	@Override
+	public float getCooldown() {
+		return cooldown;
 	}
 
 	@Override

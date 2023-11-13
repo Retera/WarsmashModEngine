@@ -427,6 +427,21 @@ public abstract class CUnitAttack {
 				}
 			}
 		}
+		if (result.isMiss()) {
+			if (weaponType == CWeaponType.ARTILLERY) {
+				result.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
+			} else if (weaponType == CWeaponType.MSPLASH) {
+				result.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
+				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss");
+			} else {
+				System.err.println("MISS!");
+				result.setBaseDamage(0);
+				result.setBonusDamage(0);
+				result.setDamageMultiplier(0);
+				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss"); //TODO Technically cheating here
+			}
+		}
+		
 		if (!result.isMiss() && result.getDamageMultiplier() != 1 && result.getDamageMultiplier() != 0) {
 			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, Math.round(result.computeFinalDamage()));
 		} else if (result.getBonusDamage() != 0) {

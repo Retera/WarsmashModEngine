@@ -13,6 +13,7 @@ import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 
 public class PathingGrid {
 	public static final BufferedImage BLANK_PATHING = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
@@ -359,13 +360,13 @@ public class PathingGrid {
 	}
 
 	public int getFogOfWarIndexX(final float x) {
-		final float userCellSpaceX = ((x + 128f) - this.centerOffset[0]) / 256.0f;
+		final float userCellSpaceX = ((x + (16f * CPlayerFogOfWar.PATHING_RATIO)) - this.centerOffset[0]) / (32f * CPlayerFogOfWar.PATHING_RATIO);
 		final int cellX = (int) userCellSpaceX;
 		return cellX;
 	}
 
 	public int getFogOfWarIndexY(final float y) {
-		final float userCellSpaceY = ((y + 128f) - this.centerOffset[1]) / 256.0f;
+		final float userCellSpaceY = ((y + (16f * CPlayerFogOfWar.PATHING_RATIO)) - this.centerOffset[1]) / (32f * CPlayerFogOfWar.PATHING_RATIO);
 		final int cellY = (int) userCellSpaceY;
 		return cellY;
 	}

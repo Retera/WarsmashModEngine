@@ -9,6 +9,7 @@ import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
 
 public class CBehaviorJass implements CBehavior {
 	private final int highlightOrderId;
@@ -52,6 +53,11 @@ public class CBehaviorJass implements CBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
 	}
 
 }

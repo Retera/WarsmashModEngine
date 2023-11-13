@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -51,6 +52,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	protected int autoCastOnId = 0;
 	protected int autoCastOffId = 0;
 	protected boolean autocasting = false;
+	protected AutocastType autocastType = AutocastType.NONE;
 	protected boolean toggleable = false;
 	protected boolean separateOnAndOff = false;
 	protected boolean active = false;
@@ -92,6 +94,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		}
 		if (config.getAutoCastOffId() != null) {
 			autoCastOffId = OrderIdUtils.getOrderId(config.getAutoCastOffId());
+		}
+		if (config.getAutoCastType() != null) {
+			autocastType = config.getAutoCastType();
 		}
 
 		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
@@ -230,6 +235,10 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				this.manaCost = this.config.getOverrideFields().getManaCostOverride().callback(game, unit, localStore,
 						castId);
 			}
+			if (this.config.getOverrideFields().getAutocastTypeOverride() != null) {
+				this.autocastType = this.config.getOverrideFields().getAutocastTypeOverride().callback(game, unit, localStore,
+						castId);
+			}
 
 			if (this.config.getOverrideFields().getOnTooltipOverride() != null) {
 				this.onTooltipOverride = this.config.getOverrideFields().getOnTooltipOverride().callback(game, unit,
@@ -338,6 +347,10 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		return (this.area == 0 || this.hideAreaCursor) ? Float.NaN : this.area;
 	}
 
+	public float getCooldown() {
+		return cooldown;
+	}
+
 	public float getArea() {
 		return area;
 	}
@@ -376,8 +389,19 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void setAutoCastOn(final boolean autoCastOn) {
+	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
 		this.autocasting = autoCastOn;
+		caster.setAutocastAbility(autoCastOn ? this : null);
+	}
+
+	@Override
+	public void setAutoCastOff() {
+		this.autocasting = false;
+	}
+
+	@Override
+	public AutocastType getAutocastType() {
+		return autocastType;
 	}
 
 	protected ABBehavior createNoTargetBehavior(CUnit unit) {
@@ -480,6 +504,44 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
+			final AbilityTargetCheckReceiver<CWidget> receiver) {
+		if (orderId == getBaseOrderId()) {
+			if (innerCheckCanTargetSpell(game, unit, orderId, target, receiver)) {
+				if (innerCheckTargetTargetable(game, unit, target)) {
+					if (innerCheckTargetInRange(unit, target)) {
+						this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + -1,
+								target.visit(AbilityTargetVisitor.UNIT));
+						this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + -1,
+								target.visit(AbilityTargetVisitor.ITEM));
+						this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + -1,
+								target.visit(AbilityTargetVisitor.DESTRUCTABLE));
+						String extraFailReason = innerCheckExtraAutoTargetConditions(game, unit, orderId);
+						this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + -1);
+						this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + -1);
+						this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + -1);
+						if (extraFailReason != null) {
+							if (!extraFailReason.equals("unknown")) {
+								receiver.targetCheckFailed(extraFailReason);
+							} else {
+								receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
+							}
+						} else {
+							receiver.targetOk(target);
+						}
+					} else {
+						receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
+					}
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
+				}
+			}
+		} else {
+			receiver.orderIdNotAccepted();
+		}
+	}
+
+	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (innerCheckCastOrderId(game, unit, orderId)) {
@@ -492,12 +554,60 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		if (orderId == getBaseOrderId()) {
+			if (innerCheckCanTargetSpell(game, unit, orderId, target, receiver)) {
+				if (innerCheckTargetInRange(unit, target)) {
+					localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + -1, target);
+					String extraFailReason = innerCheckExtraAutoTargetConditions(game, unit, orderId);
+					localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + -1);
+					if (extraFailReason != null) {
+						if (!extraFailReason.equals("unknown")) {
+							receiver.targetCheckFailed(extraFailReason);
+						} else {
+							receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THERE);
+						}
+					} else {
+						receiver.targetOk(target);
+					}
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
+				}
+			}
+		} else {
+			receiver.orderIdNotAccepted();
+		}
+	}
+
+	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
 			receiver.targetOk(null);
 		} else if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTargetNoTarget(game, unit, orderId, receiver);
+		} else {
+			receiver.orderIdNotAccepted();
+		}
+	}
+
+	@Override
+	public void checkCanAutoTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityTargetCheckReceiver<Void> receiver) {
+		if (orderId == getBaseOrderId()) {
+			if (innerCheckCanTargetSpell(game, unit, orderId, receiver)) {
+				String extraFailReason = innerCheckExtraAutoTargetConditions(game, unit, orderId);
+				if (extraFailReason != null) {
+					if (!extraFailReason.equals("unknown")) {
+						receiver.targetCheckFailed(extraFailReason);
+					} else {
+						receiver.orderIdNotAccepted();
+					}
+				} else {
+					receiver.targetOk(null);
+				}
+			}
 		} else {
 			receiver.orderIdNotAccepted();
 		}
@@ -586,6 +696,34 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			boolean result = true;
 			for (ABCondition condition : config.getExtraTargetConditions()) {
 				result = result && condition.evaluate(game, unit, localStore, -1);
+			}
+			if (result) {
+				return null;
+			} else {
+				String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+				if (failReason != null) {
+					return failReason;
+				} else {
+					return "unknown";
+				}
+			}
+		} else {
+			return null;
+		}
+	}
+
+	protected String innerCheckExtraAutoTargetConditions(CSimulation game, CUnit unit, int orderId) {
+		if (config.getExtraTargetConditions() != null || config.getExtraAutoTargetConditions() != null) {
+			boolean result = true;
+			if (config.getExtraTargetConditions() != null) {
+				for (ABCondition condition : config.getExtraTargetConditions()) {
+					result = result && condition.evaluate(game, unit, localStore, -1);
+				}
+			}
+			if (config.getExtraAutoTargetConditions() != null) {
+				for (ABCondition condition : config.getExtraAutoTargetConditions()) {
+					result = result && condition.evaluate(game, unit, localStore, -1);
+				}
 			}
 			if (result) {
 				return null;

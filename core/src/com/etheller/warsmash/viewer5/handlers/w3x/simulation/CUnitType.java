@@ -34,6 +34,7 @@ public class CUnitType {
 	private final int manaMaximum;
 	private final int speed;
 	private final int defense;
+	private final War3ID defaultAutocastAbility;
 	private final List<War3ID> abilityList;
 	private final boolean building;
 	private final PathingGrid.MovementType movementType;
@@ -108,7 +109,7 @@ public class CUnitType {
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
-			final int manaMaximum, final int speed, final int defense, final List<War3ID> abilityList,
+			final int manaMaximum, final int speed, final int defense, final War3ID defaultAutocastAbility, final List<War3ID> abilityList,
 			final boolean isBldg, final MovementType movementType, final float defaultFlyingHeight,
 			final float collisionSize, final EnumSet<CUnitClassification> classifications,
 			final List<CUnitAttack> attacks, final int attacksEnabled, final String armorType, final boolean raise,
@@ -142,6 +143,7 @@ public class CUnitType {
 		this.manaMaximum = manaMaximum;
 		this.speed = speed;
 		this.defense = defense;
+		this.defaultAutocastAbility = defaultAutocastAbility;
 		this.abilityList = abilityList;
 		this.building = isBldg;
 		this.movementType = movementType;
@@ -254,6 +256,13 @@ public class CUnitType {
 
 	public int getDefense() {
 		return this.defense;
+	}
+
+	/**
+	 * @return the defaultAutocastAbility
+	 */
+	public War3ID getDefaultAutocastAbility() {
+		return defaultAutocastAbility;
 	}
 
 	public List<War3ID> getAbilityList() {

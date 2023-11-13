@@ -6,6 +6,8 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -17,13 +19,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
-public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
+public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility implements CAutocastAbility {
 	private EnumSet<CTargetType> targetsAllowed;
 	private float navalRangeBonus;
 	private float repairCostRatio;
 	private float repairTimeRatio;
 	private float castRange;
 	private CBehaviorRepair behaviorRepair;
+	private boolean autocasting = false;
 
 	public CAbilityRepair(final int handleId, final War3ID code, final War3ID alias, final EnumSet<CTargetType> targetsAllowed,
 			final float navalRangeBonus, final float repairCostRatio, final float repairTimeRatio,
@@ -178,6 +181,55 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
 
 	public void setCastRange(final float castRange) {
 		this.castRange = castRange;
+	}
+
+	@Override
+	public AutocastType getAutocastType() {
+		return AutocastType.NEARESTVALID;
+	}
+
+	@Override
+	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+		this.autocasting = autoCastOn;
+		caster.setAutocastAbility(autoCastOn ? this : null);
+	}
+
+	@Override
+	public boolean isAutoCastOn() {
+		return autocasting ;
+	}
+
+	@Override
+	public void setAutoCastOff() {
+		this.autocasting = false;
+	}
+
+	@Override
+	public int getAutoCastOnOrderId() {
+		return OrderIds.repairon;
+	}
+
+	@Override
+	public int getAutoCastOffOrderId() {
+		return OrderIds.repairoff;
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+			AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.checkCanTarget(game, unit, orderId, target, receiver);
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
+			AbilityTargetCheckReceiver<Void> receiver) {
+		receiver.orderIdNotAccepted();
 	}
 
 }

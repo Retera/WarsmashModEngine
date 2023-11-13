@@ -19,6 +19,7 @@ public class AbilityBuilderParser {
 	private AbilityBuilderOverrideFields overrideFields;
 
 	private List<ABCondition> extraTargetConditions;
+	private List<ABCondition> extraAutoTargetConditions;
 	private List<ABCondition> extraCastConditions;
 
 	private List<ABAction> onAddAbility;
@@ -87,6 +88,20 @@ public class AbilityBuilderParser {
 
 	public void setExtraTargetConditions(List<ABCondition> extraTargetConditions) {
 		this.extraTargetConditions = extraTargetConditions;
+	}
+
+	/**
+	 * @return the extraAutoTargetConditions
+	 */
+	public List<ABCondition> getExtraAutoTargetConditions() {
+		return extraAutoTargetConditions;
+	}
+
+	/**
+	 * @param extraAutoTargetConditions the extraAutoTargetConditions to set
+	 */
+	public void setExtraAutoTargetConditions(List<ABCondition> extraAutoTargetConditions) {
+		this.extraAutoTargetConditions = extraAutoTargetConditions;
 	}
 
 	public List<ABCondition> getExtraCastConditions() {

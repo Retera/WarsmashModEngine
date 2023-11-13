@@ -27,6 +27,10 @@ public class CGameplayConstants {
 	private final float structureDecayTime;
 	private final float buildingAngle;
 	private final float rootAngle;
+	
+	private final float fogFlashTime;
+	private final float dyingRevealRadius;
+	private final float foggedAttackRevealRadius;
 
 	private final float defenseArmor;
 
@@ -137,6 +141,10 @@ public class CGameplayConstants {
 
 		this.buildingAngle = miscData.getFieldFloatValue("BuildingAngle");
 		this.rootAngle = miscData.getFieldFloatValue("RootAngle");
+
+		this.fogFlashTime = miscData.getFieldFloatValue("FogFlashTime");
+		this.dyingRevealRadius = miscData.getFieldFloatValue("DyingRevealRadius");
+		this.foggedAttackRevealRadius = miscData.getFieldFloatValue("FoggedAttackRevealRadius");
 
 		final CDefenseType[] defenseTypeOrder = { CDefenseType.SMALL, CDefenseType.MEDIUM, CDefenseType.LARGE,
 				CDefenseType.FORT, CDefenseType.NORMAL, CDefenseType.HERO, CDefenseType.DIVINE, CDefenseType.NONE, };
@@ -352,6 +360,18 @@ public class CGameplayConstants {
 
 	public float getRootAngle() {
 		return this.rootAngle;
+	}
+
+	public float getFogFlashTime() {
+		return fogFlashTime;
+	}
+
+	public float getDyingRevealRadius() {
+		return dyingRevealRadius;
+	}
+
+	public float getFoggedAttackRevealRadius() {
+		return foggedAttackRevealRadius;
 	}
 
 	public float getDefenseArmor() {

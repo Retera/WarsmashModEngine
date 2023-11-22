@@ -218,6 +218,32 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 	}
 
 	@Override
+	public void issueGuiPlayerEvent(final int playerIndex, final int eventId) {
+		final CPlayerUnitOrderExecutor executor = getExecutor(playerIndex);
+		Gdx.app.postRunnable(new Runnable() {
+			@Override
+			public void run() {
+				final int currentServerTurnInProgress = WarsmashClient.this.latestCompletedTurn + 1;
+				if (currentServerTurnInProgress > WarsmashClient.this.latestLocallyRequestedTurn) {
+					WarsmashClient.this.queuedMessages.add(new QueuedMessage(currentServerTurnInProgress) {
+						@Override
+						public void run() {
+							executor.issueGuiPlayerEvent(eventId);
+						}
+					});
+				}
+				else if (currentServerTurnInProgress == WarsmashClient.this.latestLocallyRequestedTurn) {
+					executor.issueGuiPlayerEvent(eventId);
+				}
+				else {
+					System.err.println("Turn tick system mismatch: " + currentServerTurnInProgress + " < "
+							+ WarsmashClient.this.latestLocallyRequestedTurn);
+				}
+			}
+		});
+	}
+
+	@Override
 	public void finishedTurn(final int gameTurnTick) {
 		if (WarsmashConstants.VERBOSE_LOGGING) {
 			System.out.println("finishedTurn " + gameTurnTick);

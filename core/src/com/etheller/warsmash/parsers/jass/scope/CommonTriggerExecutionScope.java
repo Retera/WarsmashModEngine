@@ -624,7 +624,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	}
 
 	public static CommonTriggerExecutionScope unitConstructFinishScope(final JassGameEventsWar3 triggerEventId,
-			final Trigger trigger, final CUnit constructedStructure, CUnit constructingUnit) {
+			final Trigger trigger, final CUnit constructedStructure, final CUnit constructingUnit) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.triggerWidget = constructedStructure;
 		scope.triggeringUnit = constructedStructure;
@@ -634,7 +634,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	}
 
 	public static CommonTriggerExecutionScope unitTrainFinishScope(final JassGameEventsWar3 triggerEventId,
-			final Trigger trigger, final CUnit trainingUnit, CUnit trainedUnit) {
+			final Trigger trigger, final CUnit trainingUnit, final CUnit trainedUnit) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.triggerWidget = trainingUnit;
 		scope.triggeringUnit = trainingUnit;
@@ -645,7 +645,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	}
 
 	public static CommonTriggerExecutionScope unitResearchFinishScope(final JassGameEventsWar3 triggerEventId,
-			final Trigger trigger, final CUnit researchingUnit, War3ID researched) {
+			final Trigger trigger, final CUnit researchingUnit, final War3ID researched) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.triggerWidget = researchingUnit;
 		scope.triggeringUnit = researchingUnit;
@@ -677,6 +677,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		scope.triggeringUnit = spellAbilityUnit;
 		scope.spellTargetPoint = targetPoint;
 		scope.spellAbilityId = spellAbilityId;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope guiPlayerEventTriggerScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CPlayerJass player) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggeringPlayer = player;
 		scope.triggerEventId = triggerEventId;
 		return scope;
 	}
@@ -796,5 +804,9 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 
 	public static interface WidgetEventScopeBuilder {
 		CommonTriggerExecutionScope create(JassGameEventsWar3 triggerEventId, Trigger trigger, CWidget unit);
+	}
+
+	public static interface PlayerEventScopeBuilder {
+		CommonTriggerExecutionScope create(JassGameEventsWar3 triggerEventId, Trigger trigger, CPlayerJass player);
 	}
 }

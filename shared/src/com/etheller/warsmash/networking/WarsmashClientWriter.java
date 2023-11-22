@@ -11,7 +11,7 @@ public class WarsmashClientWriter {
 	private final ByteBuffer sendBuffer = ByteBuffer.allocate(1024).order(ByteOrder.BIG_ENDIAN);
 	private final long sessionToken;
 
-	public WarsmashClientWriter(final OrderedUdpClient client, long sessionToken) {
+	public WarsmashClientWriter(final OrderedUdpClient client, final long sessionToken) {
 		this.client = client;
 		this.sessionToken = sessionToken;
 	}
@@ -91,6 +91,14 @@ public class WarsmashClientWriter {
 		this.sendBuffer.putLong(this.sessionToken);
 		this.sendBuffer.putInt(unitHandleId);
 		this.sendBuffer.putInt(cancelIndex);
+	}
+
+	public void issueGuiPlayerEvent(final int eventId) {
+		this.sendBuffer.clear();
+		this.sendBuffer.putInt(4 + 8 + 4);
+		this.sendBuffer.putInt(ClientToServerProtocol.ISSUE_GUI_PLAYER_EVENT);
+		this.sendBuffer.putLong(this.sessionToken);
+		this.sendBuffer.putInt(eventId);
 	}
 
 	public void finishedTurn(final int gameTurnTick) {

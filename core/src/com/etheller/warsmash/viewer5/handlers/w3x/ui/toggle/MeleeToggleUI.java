@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui.toggle;
 
 import java.util.List;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -122,7 +123,8 @@ public class MeleeToggleUI implements WarsmashUI {
 
 	@Override
 	public boolean keyDown(final int keycode) {
-		if (keycode == Input.Keys.ESCAPE) {
+		if ((keycode == Input.Keys.Z)
+				&& (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.ALT_RIGHT))) {
 			setCurrentUI((this.allUIs.indexOf(this.currentUI) + 1) % this.allUIs.size());
 			return true;
 		}

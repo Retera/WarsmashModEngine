@@ -176,6 +176,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnit
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildingIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
@@ -3512,7 +3513,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				advanceSelectedSubGroup();
 				this.war3MapViewer.getUiSounds().getSound("SubGroupSelectionChange").play(this.uiScene.audioContext, 0,
 						0, 0);
+				return true;
 			}
+		}
+		if (keycode == Input.Keys.ESCAPE) {
+			this.unitOrderListener.issueGuiPlayerEvent(JassGameEventsWar3.EVENT_PLAYER_END_CINEMATIC.getEventId());
+			return true;
 		}
 		final String keyString = Input.Keys.toString(keycode);
 		final char c = keyString.length() == 1 ? keyString.charAt(0) : ' ';

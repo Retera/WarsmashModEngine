@@ -60,6 +60,13 @@ public class CPlayerUnitOrderListenerDelaying implements CPlayerUnitOrderListene
 		});
 	}
 
+	@Override
+	public void issueGuiPlayerEvent(final int eventId) {
+		this.actions.add(() -> {
+			this.delegate.issueGuiPlayerEvent(eventId);
+		});
+	}
+
 	public void publishDelayedActions() {
 		for (final Runnable action : this.actions) {
 			action.run();

@@ -22,6 +22,8 @@ public interface ClientToServerListener {
 
 	void unitCancelTrainingItem(SocketAddress sourceAddress, long sessionToken, int unitHandleId, int cancelIndex);
 
+	void issueGuiPlayerEvent(SocketAddress sourceAddress, long sessionToken, int eventId);
+
 	void finishedTurn(SocketAddress sourceAddress, long sessionToken, int gameTurnTick);
 
 	void framesSkipped(long sessionToken, int nFramesSkipped);

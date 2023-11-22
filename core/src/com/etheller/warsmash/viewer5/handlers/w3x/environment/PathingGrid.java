@@ -1,8 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +18,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 
+import net.warsmash.pathfinding.l1.planner.DiagEqL1PathPlanner;
+import net.warsmash.pathfinding.l1.planner.SizedGridView;
+
 public class PathingGrid {
+	public static final int MAX_COLLISION_SIZE = 4; // TODO gameplay constants
 	public static final BufferedImage BLANK_PATHING = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 	private static final Map<String, MovementType> movetpToMovementType = new HashMap<>();
 	static {
@@ -31,12 +39,23 @@ public class PathingGrid {
 	private final float[] centerOffset;
 	private final List<RemovablePathingMapInstance> dynamicPathingInstances;
 
+	private final byte[][] clearanceMap;
+	private final byte[][] airClearanceMap;
+	private final EnumMap<MovementType, DiagEqL1PathPlanner[]> movementTypeToPlanner;
+
 	public PathingGrid(final War3MapWpm terrainPathing, final float[] centerOffset) {
 		this.centerOffset = centerOffset;
 		this.pathingGrid = terrainPathing.getPathing();
 		this.pathingGridSizes = terrainPathing.getSize();
 		this.dynamicPathingOverlay = new short[this.pathingGrid.length];
 		this.dynamicPathingInstances = new ArrayList<>();
+
+		this.clearanceMap = new byte[this.pathingGridSizes[0]][this.pathingGridSizes[1]];
+		this.airClearanceMap = new byte[this.pathingGridSizes[0]][this.pathingGridSizes[1]];
+		this.movementTypeToPlanner = new EnumMap<>(MovementType.class);
+		for (final MovementType type : MovementType.values()) {
+			movementTypeToPlanner.put(type, new DiagEqL1PathPlanner[MAX_COLLISION_SIZE]);
+		}
 	}
 
 	// this blit function is basically copied from HiveWE, maybe remember to mention
@@ -180,6 +199,7 @@ public class PathingGrid {
 		final RemovablePathingMapInstance removablePathingMapInstance = new RemovablePathingMapInstance(positionX,
 				positionY, rotationInput, pathingTextureTga);
 		removablePathingMapInstance.blit();
+		onPathingChanged();
 		this.dynamicPathingInstances.add(removablePathingMapInstance);
 		return removablePathingMapInstance;
 	}
@@ -370,6 +390,81 @@ public class PathingGrid {
 		return cellY;
 	}
 
+	private void computeClearanceMap(final byte[][] clearanceMap, final MovementType movementType,
+			final int maxCollisionSize) {
+		for (int cellX = 0; cellX < this.pathingGridSizes[0]; cellX++) {
+			for (int cellY = 0; cellY < this.pathingGridSizes[1]; cellY++) {
+				byte cellValue = 0;
+				if (isCellPathable(cellX, cellY, movementType)) {
+					cellValue++;
+					for (int availableCollisionSizeLessOne = 1; availableCollisionSizeLessOne < maxCollisionSize; availableCollisionSizeLessOne++) {
+						boolean pathable = true;
+						for (int checkIndex = 0; (checkIndex < availableCollisionSizeLessOne)
+								&& pathable; checkIndex++) {
+							pathable = isCellPathable(cellX + availableCollisionSizeLessOne, cellY + checkIndex,
+									movementType)
+									&& isCellPathable(cellX + checkIndex, cellY + availableCollisionSizeLessOne,
+											movementType);
+						}
+						if (pathable) {
+							pathable = isCellPathable(cellX + availableCollisionSizeLessOne,
+									cellY + availableCollisionSizeLessOne, movementType);
+							if (pathable) {
+								cellValue++;
+							}
+						}
+						else {
+							break;
+						}
+					}
+				}
+				clearanceMap[cellX][cellY] = cellValue;
+			}
+		}
+	}
+
+	public void dumpClearanceMap() {
+		try (PrintWriter writer = new PrintWriter(new File("clearanceMap.txt"))) {
+			for (int cellX = 0; cellX < this.pathingGridSizes[0]; cellX++) {
+				for (int cellY = 0; cellY < this.pathingGridSizes[1]; cellY++) {
+					writer.print(this.clearanceMap[cellX][cellY]);
+					writer.print(",");
+				}
+				writer.println();
+			}
+		}
+		catch (final FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void onPathingChanged() {
+		{
+			final MovementType movementType = MovementType.AMPHIBIOUS;
+			computeClearanceMap(clearanceMap, movementType, MAX_COLLISION_SIZE);
+			for (int i = 0; i < MAX_COLLISION_SIZE; i++) {
+				movementTypeToPlanner.get(movementType)[i] = DiagEqL1PathPlanner
+						.create(new SizedGridView(clearanceMap, i + 1));
+			}
+		}
+		{
+			final MovementType movementType = MovementType.FLY;
+			computeClearanceMap(airClearanceMap, movementType, MAX_COLLISION_SIZE);
+			for (int i = 0; i < MAX_COLLISION_SIZE; i++) {
+				movementTypeToPlanner.get(movementType)[i] = DiagEqL1PathPlanner
+						.create(new SizedGridView(clearanceMap, i + 1));
+			}
+		}
+	}
+
+	public DiagEqL1PathPlanner getPlanner(MovementType movementType, final int collisionSizeCells) {
+		if (movementType != MovementType.FLY) {
+			// all move types can be approximated by amphibious other than flying
+			movementType = MovementType.AMPHIBIOUS;
+		}
+		return movementTypeToPlanner.get(movementType)[collisionSizeCells - 1];
+	}
+
 	public static final class PathingFlags {
 		public static short UNWALKABLE = 0x2;
 		public static short UNFLYABLE = 0x4;
@@ -503,11 +598,13 @@ public class PathingGrid {
 			for (final RemovablePathingMapInstance instance : PathingGrid.this.dynamicPathingInstances) {
 				instance.blit();
 			}
+			onPathingChanged();
 		}
 
 		public void add() {
 			PathingGrid.this.dynamicPathingInstances.add(this);
 			blit();
+			onPathingChanged();
 		}
 	}
 }

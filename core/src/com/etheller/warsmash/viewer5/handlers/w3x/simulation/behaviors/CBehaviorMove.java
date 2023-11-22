@@ -425,50 +425,6 @@ public class CBehaviorMove implements CBehavior {
 		if (this.firstPathfindJob) {
 			this.firstPathfindJob = false;
 			System.out.println("init path " + this.path);
-			// check for smoothing
-			if (!this.path.isEmpty()) {
-				float lastX = startFloatingX;
-				float lastY = startFloatingY;
-				float smoothingGroupStartX = startFloatingX;
-				float smoothingGroupStartY = startFloatingY;
-				final Point2D.Float firstPathElement = this.path.get(0);
-				double totalPathDistance = firstPathElement.distance(lastX, lastY);
-				lastX = firstPathElement.x;
-				lastY = firstPathElement.y;
-				int smoothingStartIndex = -1;
-				for (int i = 0; i < (this.path.size() - 1); i++) {
-					final Point2D.Float nextPossiblePathElement = this.path.get(i + 1);
-					totalPathDistance += nextPossiblePathElement.distance(lastX, lastY);
-					if ((totalPathDistance < (1.15
-							* nextPossiblePathElement.distance(smoothingGroupStartX, smoothingGroupStartY)))
-							&& pathingGrid.isPathable((smoothingGroupStartX + nextPossiblePathElement.x) / 2,
-									(smoothingGroupStartY + nextPossiblePathElement.y) / 2, movementType)) {
-						if (smoothingStartIndex == -1) {
-							smoothingStartIndex = i;
-						}
-					}
-					else {
-						if (smoothingStartIndex != -1) {
-							for (int j = i - 1; j >= smoothingStartIndex; j--) {
-								this.path.remove(j);
-							}
-							i = smoothingStartIndex;
-						}
-						smoothingStartIndex = -1;
-						final Point2D.Float smoothGroupNext = this.path.get(i);
-						smoothingGroupStartX = smoothGroupNext.x;
-						smoothingGroupStartY = smoothGroupNext.y;
-						totalPathDistance = nextPossiblePathElement.distance(smoothGroupNext);
-					}
-					lastX = nextPossiblePathElement.x;
-					lastY = nextPossiblePathElement.y;
-				}
-				if (smoothingStartIndex != -1) {
-					for (int j = smoothingStartIndex; j < (this.path.size() - 1); j++) {
-						final Point2D.Float removed = this.path.remove(j);
-					}
-				}
-			}
 		}
 		else if (this.path.isEmpty() || (this.searchCycles > 6)) {
 			if (this.searchCycles > 9) {

@@ -1,11 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing;
 
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.PriorityQueue;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -15,6 +17,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
+
+import net.warsmash.pathfinding.l1.planner.DiagEqL1PathPlanner;
+import net.warsmash.pathfinding.l1.util.Point;
 
 public class CPathfindingProcessor {
 	private static final Rectangle tempRect = new Rectangle();
@@ -218,6 +223,32 @@ public class CPathfindingProcessor {
 			this.totalJobLoops++;
 			final PathfindingJob job = this.moveQueue.peek();
 			if (!job.jobStarted) {
+				if (true) {
+					final int cellsSize = Math.min(PathingGrid.MAX_COLLISION_SIZE,
+							(int) Math.floor(job.collisionSize / 16f)) + 1;
+					final DiagEqL1PathPlanner planner = this.pathingGrid.getPlanner(job.movementType, cellsSize);
+					final List<Point> result = new ArrayList<>();
+					final float startX = job.startX;
+					final float startY = job.startY;
+					final float collisionScaleOffset = ((cellsSize - 1) / 2.0f) * 32.f;
+					final int startCellX = this.pathingGrid.getCellX(startX - collisionScaleOffset);
+					final int startCellY = this.pathingGrid.getCellY(startY - collisionScaleOffset);
+					final float endX = job.goal.x;
+					final float endY = job.goal.y;
+					final int endCellX = this.pathingGrid.getCellX(endX - collisionScaleOffset);
+					final int endCellY = this.pathingGrid.getCellY(endY - collisionScaleOffset);
+					planner.search(endCellX, endCellY, startCellX, startCellY, result);
+					final List<Point2D.Float> correctedResult = new ArrayList<>(result.size());
+					for (int i = 1; i < result.size(); i++) {
+						final Point point = result.get(result.size() - i - 1);
+						correctedResult.add(
+								new Point2D.Float(this.pathingGrid.getWorldX((int) (point.x)) + collisionScaleOffset,
+										this.pathingGrid.getWorldY((int) (point.y)) + collisionScaleOffset));
+					}
+					job.queueItem.pathFound(correctedResult, simulation);
+					this.moveQueue.poll();
+					continue JobsLoop;
+				}
 				this.pathfindJobId++;
 				this.totalIterations = 0;
 				this.totalJobLoops = 0;

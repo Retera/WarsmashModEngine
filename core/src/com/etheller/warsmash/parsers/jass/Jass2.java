@@ -1046,8 +1046,8 @@ public class Jass2 {
 								if (damageType == null) {
 									damageType = CDamageType.UNKNOWN;
 								}
-								target.damage(CommonEnvironment.this.simulation, whichUnit, attack, ranged, attackType, damageType,
-										weaponType.name(), (float) amount);
+								target.damage(CommonEnvironment.this.simulation, whichUnit, attack, ranged, attackType,
+										damageType, weaponType.name(), (float) amount);
 							}
 						}
 						return BooleanJassValue.TRUE;
@@ -2500,6 +2500,13 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						// TODO fog of war!!
 						return BooleanJassValue.FALSE;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTerrainCliffLevel",
+					(arguments, globalScope, triggerScope) -> {
+						final float x = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float y = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final int layerHeight = war3MapViewer.terrain.getCorner(x, y).getLayerHeight();
+						return new IntegerJassValue(layerHeight);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateSoundFromLabel",
 					(arguments, globalScope, triggerScope) -> {

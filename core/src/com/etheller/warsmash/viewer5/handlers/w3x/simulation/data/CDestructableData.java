@@ -27,6 +27,8 @@ public class CDestructableData {
 	private static final String GOLD_REPAIR = "goldRep"; // replaced from 'breg'
 	private static final String LUMBER_REPAIR = "lumberRep"; // replaced from 'brel'
 
+	private static final String OCCLUSION_HEIGHT = "occH";
+
 	private final ObjectData unitData;
 	private final Map<War3ID, CDestructableType> unitIdToUnitType = new HashMap<>();
 	private final SimulationRenderController simulationRenderController;
@@ -64,8 +66,9 @@ public class CDestructableData {
 					.parseTargetTypeSet(unitType.getFieldAsList(TARGETED_AS));
 			final String armorType = unitType.getFieldAsString(ARMOR_TYPE, 0);
 			final int buildTime = unitType.getFieldAsInteger(BUILD_TIME, 0);
+			final float occlusionHeight = unitType.getFieldAsFloat(OCCLUSION_HEIGHT, 0);
 
-			unitTypeInstance = new CDestructableType(name, life, targetedAs, armorType, buildTime,
+			unitTypeInstance = new CDestructableType(name, life, targetedAs, armorType, buildTime, occlusionHeight,
 					buildingPathingPixelMap, buildingPathingDeathPixelMap);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}

@@ -85,6 +85,7 @@ public class W3xShaders {
 		public static final String frag = "\r\n" + //
 				"    uniform sampler2D u_texture;\r\n" + //
 				"    uniform sampler2D u_shadowMap;\r\n" + //
+				"    uniform sampler2D u_fogOfWarMap;\r\n" + //
 				"    uniform vec4 u_color;\r\n" + //
 				"    uniform bool u_show_lighting;\r\n" + //
 				"    varying vec2 v_uv;\r\n" + //
@@ -99,6 +100,8 @@ public class W3xShaders {
 				"      }\r\n" + //
 				"      vec4 color = texture2D(u_texture, clamp(v_uv, 0.0, 1.0)).rgba * u_color;\r\n" + //
 				"      float shadow = texture2D(u_shadowMap, v_suv).r;\r\n" + //
+				"      float fogOfWarData = texture2D(u_fogOfWarMap, v_suv).r;\r\n" + //
+				"      shadow = clamp(shadow + fogOfWarData, 0.0, 1.0);\r\n" + //
 				// " color.xyz *= clamp(dot(v_normal, lightDirection) + 0.45, 0.0, 1.0);\r\n" +
 				// //
 				"      if (a_positionHeight <= 4.0) {;\r\n" + //

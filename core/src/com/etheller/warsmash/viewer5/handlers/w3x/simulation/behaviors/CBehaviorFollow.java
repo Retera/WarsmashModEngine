@@ -76,4 +76,9 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

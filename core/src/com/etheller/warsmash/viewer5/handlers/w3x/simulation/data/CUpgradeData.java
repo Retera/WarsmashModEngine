@@ -176,6 +176,11 @@ public class CUpgradeData {
 						break;
 					}
 				}
+				else {
+					if (!"_".equals(effectIdString)) {
+						System.err.println("Not 4 len: " + effectIdString);
+					}
+				}
 			}
 
 			final boolean appliesToAllUnits = upgradeType.getFieldAsBoolean(APPLIES_TO_ALL_UNITS, 0);

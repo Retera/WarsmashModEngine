@@ -43,11 +43,11 @@ public class CAbilityAbilityBuilderAuraTemplate extends AbilityGenericSingleIcon
 	private final int ENTER_GROUP_TICKS = (int) (0.4 / WarsmashConstants.SIMULATION_STEP_TIME);
 	private final int RESET_GROUP_TICKS = LEAVE_GROUP_TICKS * 2;
 	
-	public CAbilityAbilityBuilderAuraTemplate(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderAuraTemplate(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, Map<String, Object> localStore,
 			List<ABAction> addToAuraActions, List<ABAction> updateAuraLevelActions,
 			List<ABAction> removeFromAuraActions) {
-		super(alias, handleId);
+		super(code, alias, handleId);
 		this.levelData = levelData;
 		this.localStore = localStore;
 		this.addToAuraActions = addToAuraActions;
@@ -56,8 +56,8 @@ public class CAbilityAbilityBuilderAuraTemplate extends AbilityGenericSingleIcon
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 		targetsAllowed = levelData.get(getLevel()).getTargetsAllowed();
 		range = levelData.get(getLevel()).getCastRange();

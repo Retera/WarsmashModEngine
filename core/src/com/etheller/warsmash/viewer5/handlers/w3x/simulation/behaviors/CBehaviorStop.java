@@ -40,4 +40,9 @@ public class CBehaviorStop implements CBehavior {
 
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

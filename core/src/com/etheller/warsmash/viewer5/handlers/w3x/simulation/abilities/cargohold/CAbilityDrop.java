@@ -17,8 +17,8 @@ public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility 
 	private float castRange;
 	private CBehaviorDrop behaviorDrop;
 
-	public CAbilityDrop(final int handleId, final War3ID alias, final float castRange) {
-		super(handleId, alias);
+	public CAbilityDrop(final int handleId, final War3ID code, final War3ID alias, final float castRange) {
+		super(handleId, code, alias);
 		this.castRange = castRange;
 	}
 

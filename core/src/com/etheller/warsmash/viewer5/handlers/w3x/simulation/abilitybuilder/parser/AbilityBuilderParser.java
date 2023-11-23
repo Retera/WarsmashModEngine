@@ -14,17 +14,22 @@ public class AbilityBuilderParser {
 	private List<AbilityBuilderDupe> ids;
 
 	private AbilityBuilderType type;
+	private AbilityBuilderSpecialDisplayFields displayFields;
 	private AbilityBuilderSpecialConfigFields specialFields;
+	private AbilityBuilderOverrideFields overrideFields;
 
 	private List<ABCondition> extraTargetConditions;
 	private List<ABCondition> extraCastConditions;
-	
+
 	private List<ABAction> onAddAbility;
+	private List<ABAction> onAddDisabledAbility;
 	private List<ABAction> onRemoveAbility;
-	private List<ABAction> onTickPreCast;
+	private List<ABAction> onRemoveDisabledAbility;
 	private List<ABAction> onDeathPreCast;
 	private List<ABAction> onCancelPreCast;
-	private List<ABAction> onBeginCast;
+	private List<ABAction> onOrderIssued;
+	private List<ABAction> onActivate;
+	private List<ABAction> onDeactivate;
 
 	private List<ABAction> onLevelChange;
 
@@ -52,12 +57,28 @@ public class AbilityBuilderParser {
 		this.type = type;
 	}
 
+	public AbilityBuilderSpecialDisplayFields getDisplayFields() {
+		return displayFields;
+	}
+
+	public void setDisplayFields(AbilityBuilderSpecialDisplayFields displayFields) {
+		this.displayFields = displayFields;
+	}
+
 	public AbilityBuilderSpecialConfigFields getSpecialFields() {
 		return specialFields;
 	}
 
 	public void setSpecialFields(AbilityBuilderSpecialConfigFields specialFields) {
 		this.specialFields = specialFields;
+	}
+
+	public AbilityBuilderOverrideFields getOverrideFields() {
+		return overrideFields;
+	}
+
+	public void setOverrideFields(AbilityBuilderOverrideFields overrideFields) {
+		this.overrideFields = overrideFields;
 	}
 
 	public List<ABCondition> getExtraTargetConditions() {
@@ -84,6 +105,20 @@ public class AbilityBuilderParser {
 		this.onAddAbility = onAddAbility;
 	}
 
+	/**
+	 * @return the onAddDisabledAbility
+	 */
+	public List<ABAction> getOnAddDisabledAbility() {
+		return onAddDisabledAbility;
+	}
+
+	/**
+	 * @param onAddDisabledAbility the onAddDisabledAbility to set
+	 */
+	public void setOnAddDisabledAbility(List<ABAction> onAddDisabledAbility) {
+		this.onAddDisabledAbility = onAddDisabledAbility;
+	}
+
 	public List<ABAction> getOnRemoveAbility() {
 		return onRemoveAbility;
 	}
@@ -92,12 +127,18 @@ public class AbilityBuilderParser {
 		this.onRemoveAbility = onRemoveAbility;
 	}
 
-	public List<ABAction> getOnTickPreCast() {
-		return onTickPreCast;
+	/**
+	 * @return the onRemoveDisabledAbility
+	 */
+	public List<ABAction> getOnRemoveDisabledAbility() {
+		return onRemoveDisabledAbility;
 	}
 
-	public void setOnTickPreCast(List<ABAction> onTickPreCast) {
-		this.onTickPreCast = onTickPreCast;
+	/**
+	 * @param onRemoveDisabledAbility the onRemoveDisabledAbility to set
+	 */
+	public void setOnRemoveDisabledAbility(List<ABAction> onRemoveDisabledAbility) {
+		this.onRemoveDisabledAbility = onRemoveDisabledAbility;
 	}
 
 	public List<ABAction> getOnDeathPreCast() {
@@ -116,12 +157,28 @@ public class AbilityBuilderParser {
 		this.onCancelPreCast = onCancelPreCast;
 	}
 
-	public List<ABAction> getOnBeginCast() {
-		return onBeginCast;
+	public List<ABAction> getOnOrderIssued() {
+		return onOrderIssued;
 	}
 
-	public void setOnBeginCast(List<ABAction> onBeginCast) {
-		this.onBeginCast = onBeginCast;
+	public void setOnOrderIssued(List<ABAction> onOrderIssued) {
+		this.onOrderIssued = onOrderIssued;
+	}
+
+	public List<ABAction> getOnActivate() {
+		return onActivate;
+	}
+
+	public void setOnActivate(List<ABAction> onActivate) {
+		this.onActivate = onActivate;
+	}
+
+	public List<ABAction> getOnDeactivate() {
+		return onDeactivate;
+	}
+
+	public void setOnDeactivate(List<ABAction> onDeactivate) {
+		this.onDeactivate = onDeactivate;
 	}
 
 	public List<ABAction> getOnBeginCasting() {

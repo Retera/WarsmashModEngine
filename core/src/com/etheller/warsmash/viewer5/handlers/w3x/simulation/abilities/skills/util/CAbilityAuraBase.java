@@ -20,8 +20,8 @@ public abstract class CAbilityAuraBase extends CAbilityPassiveSpellBase {
 	private SimulationRenderComponent fx;
 	private int nextAreaCheck = 0;
 
-	public CAbilityAuraBase(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityAuraBase(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public abstract class CAbilityAuraBase extends CAbilityPassiveSpellBase {
 						final CBuffAuraBase buff = createBuff(game.getHandleIdAllocator().createId(), source, enumUnit);
 						buff.setAuraSourceUnit(source);
 						buff.setAuraSourceAbility(this);
-						buff.setLevel(level);
+						buff.setLevel(game, source, level);
 						enumUnit.add(game, buff);
 					}
 				}

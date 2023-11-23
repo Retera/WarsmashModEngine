@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 import java.util.EnumSet;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.units.GameObject;
@@ -30,6 +31,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 
 public class RenderUnit implements RenderWidget {
+	public static final Color ETHEREAL = new Color(0.75f, 1, 0.5f, 0.5f);
+	public static final Color DEFAULT = new Color(1, 1, 1, 1);
 	public static final Quaternion tempQuat = new Quaternion();
 	private static final String RED = "red"; // replaced from 'uclr'
 	private static final String GREEN = "green"; // replaced from 'uclg'
@@ -653,5 +656,19 @@ public class RenderUnit implements RenderWidget {
 
 	public RenderUnitTypeData getTypeData() {
 		return typeData;
+	}
+	
+	public void setVertexColoring(Color color) {
+		this.instance.setVertexColor(color);
+	}
+	
+	public void setVertexColoring(float r, float g, float b) {
+		float[] color = new float[] {r,g,b};
+		this.instance.setVertexColor(color);
+	}
+	
+	public void setVertexColoring(float r, float g, float b, float a) {
+		float[] color = new float[] {r,g,b,a};
+		this.instance.setVertexColor(color);
 	}
 }

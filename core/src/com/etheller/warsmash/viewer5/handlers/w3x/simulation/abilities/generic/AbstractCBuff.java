@@ -5,8 +5,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityV
 
 public abstract class AbstractCBuff extends AbstractGenericAliasedAbility implements CBuff {
 
-	public AbstractCBuff(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public AbstractCBuff(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

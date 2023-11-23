@@ -52,4 +52,8 @@ public class ABTimedArtBuff extends ABGenericTimedBuff {
 		}
 	}
 
+	@Override
+	protected void onBuffExpire(CSimulation game, CUnit unit) {
+	}
+
 }

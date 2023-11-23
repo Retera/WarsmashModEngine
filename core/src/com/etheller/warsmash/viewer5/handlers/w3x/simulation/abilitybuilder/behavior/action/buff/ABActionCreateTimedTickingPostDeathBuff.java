@@ -20,6 +20,7 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABAction {
 	private ABBooleanCallback showTimedLifeBar;
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
+	private List<ABAction> onExpireActions;
 	private List<ABAction> onTickActions;
 	private ABBooleanCallback showIcon;
 	private CEffectType artType;
@@ -35,7 +36,7 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABAction {
 			ABTimedTickingPostDeathBuff ability = new ABTimedTickingPostDeathBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
-					onRemoveActions, onTickActions, showIcon.callback(game, caster, localStore, castId), castId);
+					onRemoveActions, onExpireActions, onTickActions, showIcon.callback(game, caster, localStore, castId), castId);
 			if (artType != null) {
 				ability.setArtType(artType);
 			}
@@ -44,7 +45,7 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABAction {
 			ABTimedTickingPostDeathBuff ability = new ABTimedTickingPostDeathBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
-					onRemoveActions, onTickActions, castId);
+					onRemoveActions, onExpireActions, onTickActions, castId);
 			if (artType != null) {
 				ability.setArtType(artType);
 			}

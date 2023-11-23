@@ -21,9 +21,9 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 	private final int manaToRegain;
 	private final float cooldown;
 
-	public CAbilityItemManaRegain(final int handleId, final War3ID alias, final int manaToRegain,
+	public CAbilityItemManaRegain(final int handleId, final War3ID code, final War3ID alias, final int manaToRegain,
 			final float cooldown) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.manaToRegain = manaToRegain;
 		this.cooldown = cooldown;
 	}

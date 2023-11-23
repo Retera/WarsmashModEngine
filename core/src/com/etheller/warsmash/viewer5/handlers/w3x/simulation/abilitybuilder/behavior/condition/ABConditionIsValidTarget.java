@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.widget.ABWidgetCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
@@ -34,6 +35,11 @@ public class ABConditionIsValidTarget implements ABCondition {
 		if (caster != null) {
 			theCaster = caster.callback(game, casterUnit, localStore, castId);
 		}
+		
+//		CWidget theTarget = target.callback(game, theCaster, localStore, castId);
+//		for (CTargetType tar : targetsAllowed) {
+//			System.err.println("Matches " + tar + "? " + theTarget.canBeTargetedBy(game, theCaster, EnumSet.of(tar)));
+//		}
 
 		return target.callback(game, casterUnit, localStore, castId).canBeTargetedBy(game, theCaster, targetsAllowed);
 	}

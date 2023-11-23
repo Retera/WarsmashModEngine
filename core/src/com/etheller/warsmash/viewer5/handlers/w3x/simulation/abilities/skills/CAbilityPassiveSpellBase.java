@@ -20,8 +20,8 @@ public abstract class CAbilityPassiveSpellBase extends AbilityGenericSingleIconP
 	private float heroDuration;
 	private War3ID code;
 
-	public CAbilityPassiveSpellBase(final int handleId, final War3ID alias) {
-		super(alias, handleId);
+	public CAbilityPassiveSpellBase(final int handleId, final War3ID code, final War3ID alias) {
+		super(code, alias, handleId);
 	}
 
 	@Override

@@ -22,9 +22,9 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	private EnumSet<CTargetType> targetsAllowed;
 	private CBehaviorCarrionSwarmDummy behaviorCarrionSwarmDummy;
 
-	public CAbilityCarrionSwarmDummy(final int handleId, final War3ID alias, final float castRange,
+	public CAbilityCarrionSwarmDummy(final int handleId, final War3ID code, final War3ID alias, final float castRange,
 			final EnumSet<CTargetType> targetsAllowed) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.castRange = castRange;
 		this.targetsAllowed = targetsAllowed;
 	}

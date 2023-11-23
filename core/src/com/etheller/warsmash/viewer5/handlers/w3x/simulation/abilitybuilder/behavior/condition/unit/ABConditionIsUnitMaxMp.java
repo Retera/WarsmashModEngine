@@ -14,7 +14,6 @@ public class ABConditionIsUnitMaxMp implements ABCondition {
 	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		CUnit theUnit = unit.callback(game, caster, localStore, castId);
 		if (theUnit != null) {
-			System.err.println("Check Max MP " + (theUnit.getMana() >= theUnit.getMaximumMana()));
 			return theUnit.getMana() >= theUnit.getMaximumMana();
 		}
 		return false;

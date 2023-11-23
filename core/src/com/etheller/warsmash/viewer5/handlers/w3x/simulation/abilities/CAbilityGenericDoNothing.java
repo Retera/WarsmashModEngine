@@ -16,8 +16,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
  */
 public class CAbilityGenericDoNothing extends AbstractGenericAliasedAbility {
 
-	public CAbilityGenericDoNothing(final War3ID rawcode, final int handleId) {
-		super(handleId, rawcode);
+	public CAbilityGenericDoNothing(final War3ID code, final War3ID alias, final int handleId) {
+		super(handleId, code, alias);
 	}
 
 	@Override

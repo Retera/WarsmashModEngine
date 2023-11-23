@@ -33,6 +33,9 @@ public class ABConditionIsUnitValidTarget implements ABCondition {
 		if (caster != null) {
 			theCaster = caster.callback(game, casterUnit, localStore, castId);
 		}
+//		for (CTargetType tar : targetsAllowed) {
+//			System.err.println("Matches " + tar + "? " + theUnit.canBeTargetedBy(game, theCaster, EnumSet.of(tar)));
+//		}
 
 		return theUnit.canBeTargetedBy(game, theCaster, targetsAllowed);
 	}

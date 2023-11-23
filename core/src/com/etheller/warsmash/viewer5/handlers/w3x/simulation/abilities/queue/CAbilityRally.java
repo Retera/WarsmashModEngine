@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -16,7 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 public class CAbilityRally extends AbstractCAbility implements CLevelingAbility {
 
 	public CAbilityRally(final int handleId) {
-		super(handleId);
+		super(handleId, War3ID.fromString("ARal"));
 	}
 
 	@Override
@@ -116,7 +117,7 @@ public class CAbilityRally extends AbstractCAbility implements CLevelingAbility 
 	}
 
 	@Override
-	public void setLevel(final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final int level) {
 	}
 
 	@Override

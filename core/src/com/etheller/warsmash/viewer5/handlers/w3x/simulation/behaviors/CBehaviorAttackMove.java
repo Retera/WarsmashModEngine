@@ -66,4 +66,9 @@ public class CBehaviorAttackMove implements CRangedBehavior {
 	public void endMove(final CSimulation game, final boolean interrupted) {
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

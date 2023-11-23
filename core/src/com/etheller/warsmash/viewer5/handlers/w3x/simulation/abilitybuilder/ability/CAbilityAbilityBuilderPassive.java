@@ -4,36 +4,133 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbilityActivationReceiver;
 
-public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassiveAbility {
+public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassiveAbility implements AbilityBuilderAbility {
 
-	List<CAbilityTypeAbilityBuilderLevelData> levelData;
-	private AbilityBuilderConfiguration config;
-	private Map<String, Object> localStore;
+	protected List<CAbilityTypeAbilityBuilderLevelData> levelData;
+	protected AbilityBuilderConfiguration config;
+	protected Map<String, Object> localStore;
 
-	public CAbilityAbilityBuilderPassive(int handleId, War3ID alias,
+	protected CItem item = null;
+	
+	protected float cooldown = 0;
+	protected float area = 0;
+
+	private War3ID onTooltipOverride = null;
+
+	public CAbilityAbilityBuilderPassive(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
 			Map<String, Object> localStore) {
-		super(alias, handleId);
+		super(code, alias, handleId);
 		this.levelData = levelData;
 		this.config = config;
 		this.localStore = localStore;
+		localStore.put(ABLocalStoreKeys.ABILITY, this);
+	}
+
+	protected void setSpellFields(CSimulation game, CUnit unit) {
+		CAbilityTypeAbilityBuilderLevelData levelDataLevel = this.levelData.get(this.getLevel() - 1);
+		this.cooldown = levelDataLevel.getCooldown();
+		this.area = levelDataLevel.getArea();
+		if (this.config.getOverrideFields() != null) {
+			if (this.config.getOverrideFields().getAreaOverride() != null) {
+				this.area = this.config.getOverrideFields().getAreaOverride().callback(game, unit, localStore, 0);
+			}
+			if (this.config.getOverrideFields().getCooldownOverride() != null) {
+				this.cooldown = this.config.getOverrideFields().getCooldownOverride().callback(game, unit, localStore,
+						0);
+			}
+			if (this.config.getOverrideFields().getOnTooltipOverride() != null) {
+				this.onTooltipOverride = this.config.getOverrideFields().getOnTooltipOverride().callback(game, unit,
+						localStore, 0);
+			}
+		}
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public List<CAbilityTypeAbilityBuilderLevelData> getLevelData() {
+		return this.levelData;
+	}
+
+	@Override
+	public AbilityBuilderConfiguration getConfig() {
+		return this.config;
+	}
+
+	@Override
+	public Map<String, Object> getLocalStore() {
+		return this.localStore;
+	}
+
+	@Override
+	public float getArea() {
+		return area;
+	}
+
+	@Override
+	public void startCooldown(CSimulation game, CUnit unit) {
+		War3ID cdID = getCooldownId();
+		if (cdID != War3ID.NONE) {
+			unit.beginCooldown(game, cdID, this.cooldown);
+		}
+	}
+
+	@Override
+	public void resetCooldown(CSimulation game, CUnit unit) {
+		War3ID cdID = getCooldownId();
+		if (cdID != War3ID.NONE) {
+			unit.beginCooldown(game, cdID, 0);
+		}
+	}
+
+	private War3ID getCooldownId() {
+		if (this.item != null) {
+			if (item.getItemType().isIgnoreCooldown()) {
+				return War3ID.NONE;
+			} else {
+				if (item.getItemType().getCooldownGroup() != null) {
+					return item.getItemType().getCooldownGroup();
+				}
+			}
+		}
+		return getCode();
+	}
+
+	@Override
+	public void setItemAbility(final CItem item, int slot) {
+		this.item = item;
+		this.localStore.put(ABLocalStoreKeys.ITEM, item);
+		this.localStore.put(ABLocalStoreKeys.ITEMSLOT, slot);
+	}
+
+	@Override
+	public War3ID getOnTooltipOverride() {
+		return onTooltipOverride;
+	}
+	
+	
+
+	@Override
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
+		setSpellFields(game, unit);
 		if (config.getOnLevelChange() != null) {
-			CSimulation game = (CSimulation) localStore.get(ABLocalStoreKeys.GAME);
-			CUnit unit = (CUnit) localStore.get(ABLocalStoreKeys.THISUNIT);
 			for (ABAction action : config.getOnLevelChange()) {
 				action.runAction(game, unit, localStore, 0);
 			}
@@ -52,9 +149,30 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	}
 
 	@Override
+	public void onAddDisabled(CSimulation game, CUnit unit) {
+		localStore.put(ABLocalStoreKeys.GAME, game);
+		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
+		setSpellFields(game, unit);
+		if (config.getOnAddDisabledAbility() != null) {
+			for (ABAction action : config.getOnAddDisabledAbility()) {
+				action.runAction(game, unit, localStore, 0);
+			}
+		}
+	}
+
+	@Override
 	public void onRemove(CSimulation game, CUnit unit) {
 		if (config.getOnRemoveAbility() != null) {
 			for (ABAction action : config.getOnRemoveAbility()) {
+				action.runAction(game, unit, localStore, 0);
+			}
+		}
+	}
+
+	@Override
+	public void onRemoveDisabled(CSimulation game, CUnit unit) {
+		if (config.getOnRemoveDisabledAbility() != null) {
+			for (ABAction action : config.getOnRemoveDisabledAbility()) {
 				action.runAction(game, unit, localStore, 0);
 			}
 		}
@@ -71,6 +189,54 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 				action.runAction(game, unit, localStore, 0);
 			}
 		}
+	}
+
+	@Override
+	public <T> T visit(final CAbilityVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
+	@Override
+	public void checkRequirementsMet(CSimulation game, CUnit unit, AbilityActivationReceiver receiver) {
+		List<CUnitTypeRequirement> reqs = this.levelData.get(this.getLevel() - 1).getRequirements();
+		CPlayer player = game.getPlayer(unit.getPlayerIndex());
+		if (reqs != null) {
+			for (final CUnitTypeRequirement requirement : reqs) {
+				if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
+					receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+				}
+			}
+		}
+	}
+
+	@Override
+	public boolean isRequirementsMet(CSimulation game, CUnit unit) {
+		List<CUnitTypeRequirement> reqs = this.levelData.get(this.getLevel() - 1).getRequirements();
+		CPlayer player = game.getPlayer(unit.getPlayerIndex());
+		boolean requirementsMet = player.isTechtreeAllowedByMax(this.getAlias());
+		if (reqs != null) {
+			for (final CUnitTypeRequirement requirement : reqs) {
+				if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
+					requirementsMet = false;
+				}
+			}
+		}
+		return requirementsMet;
+	}
+
+	@Override
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityActivationReceiver receiver) {
+		final int cooldownRemaining = unit.getCooldownRemainingTicks(game, getCooldownId());
+
+		if (cooldownRemaining > 0) {
+			float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCooldownId())
+					* WarsmashConstants.SIMULATION_STEP_TIME;
+			receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME,
+					cooldownLengthDisplay);
+		}
+		
+		super.innerCheckCanUse(game, unit, orderId, receiver);
 	}
 
 }

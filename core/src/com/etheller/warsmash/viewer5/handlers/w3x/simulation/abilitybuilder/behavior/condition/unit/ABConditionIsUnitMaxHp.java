@@ -14,7 +14,6 @@ public class ABConditionIsUnitMaxHp implements ABCondition {
 	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		CUnit theUnit = unit.callback(game, caster, localStore, castId);
 		if (theUnit != null) {
-			System.err.println("Check Max HP " + (theUnit.getLife() >= theUnit.getMaximumLife()));
 			return theUnit.getLife() >= theUnit.getMaximumLife();
 		}
 		return false;

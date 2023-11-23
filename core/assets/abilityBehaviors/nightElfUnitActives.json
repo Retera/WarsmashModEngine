@@ -1,7 +1,7 @@
 {
 	"abilityList": [{
 		"ids": [{"id":"Aroa", "castId": "roar"},{"id":"ANbr", "castId": "battleroar"}],
-		"type": "NORMAL_NOTARGET_SIMPLE",
+		"type": "NORMAL_NOTARGET",
 		"onAddAbility": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
@@ -123,7 +123,7 @@
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getCastingUnit"
@@ -373,8 +373,8 @@
 				}
 		}]
 	},{
-		"ids": [{"id":"Arej", "castId": "rejuvination"},{"id":"AIrg", "castId": "rejuvination"}],
-		"type": "NORMAL_FLEXTARGET_SIMPLE",
+		"ids": [{"id":"Arej", "castId": "rejuvination"},{"id":"AIrg", "castId": "itemregeneration"}],
+		"type": "NORMAL_FLEXTARGET",
 		"specialFields": {
 			"targetedSpell": [{
 				"type": "not",
@@ -395,7 +395,7 @@
 			"condition2": {
 				"type": "or",
 				"condition1": {
-					"type": "floatNe0",
+					"type": "f!=0",
 					"value": {
 						"type": "getAbilityArea"
 					}
@@ -409,7 +409,7 @@
 							"condition": {
 								"type": "or",
 								"condition1": {
-									"type": "floatEq0",
+									"type": "f=0",
 									"value": {
 										"type": "getAbilityDataAsFloat",
 										"dataField": "B"
@@ -449,7 +449,7 @@
 							"condition": {
 								"type": "or",
 								"condition1": {
-									"type": "floatEq0",
+									"type": "f=0",
 									"value": {
 										"type": "getAbilityDataAsFloat",
 										"dataField": "A"
@@ -469,7 +469,7 @@
 									"condition2": {
 										"type": "setCantUseReasonOnFailure",
 										"condition": {
-											"type": "integerIsOdd",
+											"type": "iOdd",
 											"value": {
 												"type": "getAbilityDataAsInteger",
 												"dataField": "C"
@@ -493,7 +493,7 @@
 					"condition": {
 						"type": "or",
 						"condition1": {
-							"type": "floatEq0",
+							"type": "f=0",
 							"value": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "B"
@@ -533,7 +533,7 @@
 					"condition": {
 						"type": "or",
 						"condition1": {
-							"type": "floatEq0",
+							"type": "f=0",
 							"value": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "A"
@@ -553,7 +553,7 @@
 							"condition2": {
 								"type": "setCantUseReasonOnFailure",
 								"condition": {
-									"type": "integerIsOdd",
+									"type": "iOdd",
 									"value": {
 										"type": "getAbilityDataAsInteger",
 										"dataField": "C"
@@ -566,7 +566,7 @@
 				}
 			}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 			"type": "if",
 			"condition": {
 				"type": "isFlexAbilityTargeted"
@@ -589,7 +589,7 @@
 								"value": "hpPerSec"
 							},
 							"valueToStore": {
-								"type": "divideFloat",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityDataAsFloat",
 									"dataField": "A"
@@ -608,7 +608,7 @@
 								"value": "mpPerSec"
 							},
 							"valueToStore": {
-								"type": "divideFloat",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityDataAsFloat",
 									"dataField": "B"
@@ -742,7 +742,7 @@
 			"elseActions": [{
 				"type": "if",
 				"condition": {
-					"type": "floatGt",
+					"type": "f>",
 					"value1": {
 						"type": "getAbilityArea"
 					},
@@ -764,7 +764,7 @@
 										"condition": {
 											"type": "or",
 											"condition1": {
-												"type": "floatEq0",
+												"type": "f=0",
 												"value": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "B"
@@ -804,7 +804,7 @@
 										"condition": {
 											"type": "or",
 											"condition1": {
-												"type": "floatEq0",
+												"type": "f=0",
 												"value": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "A"
@@ -824,7 +824,7 @@
 												"condition2": {
 													"type": "setCantUseReasonOnFailure",
 													"condition": {
-														"type": "integerIsOdd",
+														"type": "iOdd",
 														"value": {
 															"type": "getAbilityDataAsInteger",
 															"dataField": "C"
@@ -855,7 +855,7 @@
 												"value": "hpPerSec"
 											},
 											"valueToStore": {
-												"type": "divideFloat",
+												"type": "f/",
 												"value1": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "A"
@@ -874,7 +874,7 @@
 												"value": "mpPerSec"
 											},
 											"valueToStore": {
-												"type": "divideFloat",
+												"type": "f/",
 												"value1": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "B"
@@ -1045,9 +1045,9 @@
 					},{
 						"type": "createTimer",
 						"timeout": {
-							"type": "+",
+							"type": "f+",
 							"value1": {
-								"type": "max",
+								"type": "fMax",
 								"value1": {
 									"type": "getAbilityDuration"
 								},
@@ -1082,7 +1082,7 @@
 									"value": "hpPerSec"
 								},
 								"valueToStore": {
-									"type": "divideFloat",
+									"type": "f/",
 									"value1": {
 										"type": "getAbilityDataAsFloat",
 										"dataField": "A"
@@ -1101,7 +1101,7 @@
 									"value": "mpPerSec"
 								},
 								"valueToStore": {
-									"type": "divideFloat",
+									"type": "f/",
 									"value1": {
 										"type": "getAbilityDataAsFloat",
 										"dataField": "B"
@@ -1233,6 +1233,234 @@
 						"elseActions": []
 				}]
 			}]
+		}]
+	},{
+		"ids": [{"id":"Acoa", "castId": "mounthippogryph"}],
+		"type": "NORMAL_PAIRING",
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Acoh"
+			},
+			"pairUnitId": {
+				"type": "getAbilityDataAsID",
+				"dataField": "A"
+			},
+			"pairUnitTypeError": "MUST_TARGET_A_HIPPOGRYPH",
+			"cantTargetError": "UNABLE_TO_MERGE_WITH_THAT_UNIT",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "false"
+			},
+			"pairingOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupleinternal"
+				}
+			},
+			"orderPairedUnit": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"orderPairedUnitOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupleinternal"
+				}
+			}
+		},
+		"onEndCasting": [{
+				"type": "mergeUnits",
+				"unit1": {
+					"type": "getCastingUnit"
+				},
+				"unit2": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"newUnitId": {
+					"type": "getAbilityUnitId"
+				},
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getAbilityTargetedUnit"
+					}
+				},
+				"facing": {
+					"type": "getUnitFacing",
+					"unit": {
+						"type": "getAbilityTargetedUnit"
+					}
+				}
+		}],
+		"onCancelPreCast": [{
+				"type": "issueStopOrder",
+				"unit": {
+					"type": "getAbilityPairedUnit"
+				}
+			},{
+				"type": "cleanUpCastInstance"
+		}]
+	},{
+		"ids": [{"id":"Acoh", "castId": "loadarcher"}],
+		"type": "NORMAL_PAIRING",
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Acoa"
+			},
+			"pairUnitId": {
+				"type": "getAbilityDataAsID",
+				"dataField": "A"
+			},
+			"pairUnitTypeError": "MUST_TARGET_AN_ARCHER",
+			"cantTargetError": "UNABLE_TO_MERGE_WITH_THAT_UNIT",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "false"
+			},
+			"pairingOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupleinternal"
+				}
+			},
+			"orderPairedUnit": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"orderPairedUnitOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupleinternal"
+				}
+			}
+		},
+		"onCancelPreCast": [{
+				"type": "issueStopOrder",
+				"unit": {
+					"type": "getAbilityPairedUnit"
+				}
+			},{
+				"type": "cleanUpCastInstance"
+		}]
+	},{
+		"ids": [{"id":"Acoi", "castId": "coupleinstant"}],
+		"type": "NORMAL_PAIRING",
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Acoi"
+			},
+			"pairUnitId": {
+				"type": "getAbilityDataAsID",
+				"dataField": "A"
+			},
+			"cantTargetError": "UNABLE_TO_MERGE_WITH_THAT_UNIT",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"pairSearchRadius": {
+				"type": "getAbilityArea"
+			},
+			"pairingOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupletarget"
+				}
+			},
+			"orderPairedUnit": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"orderPairedUnitOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "coupletarget"
+				}
+			}
+		},
+		"onBeginCasting": [{
+			"type": "beginChanneling"
+		}],
+		"onEndCasting": [{
+			"type": "if",
+			"condition": {
+				"type": "bool",
+				"bool": {
+					"type": "getAbilityDataAsBoolean",
+					"dataField": "B"
+				}
+			},
+			"thenActions": [{
+					"type": "mergeUnits",
+					"unit1": {
+						"type": "getCastingUnit"
+					},
+					"unit2": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"newUnitId": {
+						"type": "getAbilityUnitId"
+					},
+					"location": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"facing": {
+						"type": "getUnitFacing",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					}
+				},{
+					"type": "startCooldown",
+					"alias": {
+						"type": "getWar3IDFromString",
+						"id": "Adec"
+					},
+					"unit": {
+						"type": "getLastCreatedUnit"
+					}
+				},{
+					"type": "cleanUpCastInstance"
+			}],
+			"elseActions": []
+		}],
+		"onEndChannel": [{
+			"type": "if",
+			"condition": {
+				"type": "notNull",
+				"value": {
+					"type": "getAbilityPairedUnit"
+				}
+			},
+			"thenActions": [{
+				"type": "issueStopOrder",
+				"unit": {
+					"type": "getAbilityPairedUnit"
+				}
+			}],
+			"elseActions": []
+		},{
+				"type": "cleanUpCastInstance"
+		}],
+		"onCancelPreCast": [{
+				"type": "issueStopOrder",
+				"unit": {
+					"type": "getAbilityPairedUnit"
+				}
+			},{
+				"type": "cleanUpCastInstance"
 		}]
 	}]
 }

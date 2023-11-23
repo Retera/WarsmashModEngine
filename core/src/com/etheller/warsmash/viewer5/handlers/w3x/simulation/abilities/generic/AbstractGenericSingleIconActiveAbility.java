@@ -12,8 +12,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGenericAliasedAbility
 		implements GenericSingleIconActiveAbility {
-	public AbstractGenericSingleIconActiveAbility(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public AbstractGenericSingleIconActiveAbility(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override
@@ -112,8 +112,18 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 	}
 
 	@Override
+	public int getUIFoodCost() {
+		return 0;
+	}
+
+	@Override
 	public int getUIManaCost() {
 		return 0;
+	}
+
+	@Override
+	public int getUsesRemaining() {
+		return -1;
 	}
 
 	@Override

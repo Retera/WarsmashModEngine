@@ -80,4 +80,9 @@ public class CBehaviorLoad extends CAbstractRangedBehavior {
 	public int getHighlightOrderId() {
 		return OrderIds.load;
 	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

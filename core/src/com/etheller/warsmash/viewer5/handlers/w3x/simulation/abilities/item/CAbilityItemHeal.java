@@ -21,8 +21,8 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 	private final int lifeToRegain;
 	private final float cooldown;
 
-	public CAbilityItemHeal(final int handleId, final War3ID alias, final int lifeToRegain, final float cooldown) {
-		super(handleId, alias);
+	public CAbilityItemHeal(final int handleId, final War3ID code, final War3ID alias, final int lifeToRegain, final float cooldown) {
+		super(handleId, code, alias);
 		this.lifeToRegain = lifeToRegain;
 		this.cooldown = cooldown;
 	}

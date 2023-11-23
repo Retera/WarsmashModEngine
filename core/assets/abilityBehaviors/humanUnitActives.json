@@ -1,7 +1,7 @@
 {
 	"abilityList": [{
 		"ids": [{"id":"Aslo", "castId": "slow", "autoCastOnId": "slowon", "autoCastOffId": "slowoff"}],
-		"type": "NORMAL_UNITTARGET_SIMPLE",
+		"type": "NORMAL_UNITTARGET",
 		"onAddAbility": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
@@ -68,8 +68,8 @@
 				"valueToStore": {
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
-			}],
-		"onBeginCasting": [{
+		}],
+		"onEndCasting": [{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getCastingUnit"
@@ -242,6 +242,8 @@
 				}
 		}],
 		"onBeginCasting": [{
+				"type": "beginChanneling"
+			},{
 				"type": "createTargetingBuff",
 				"buffId": {
 					"type": "getSecondBuffId"
@@ -265,8 +267,6 @@
 				}
 		}],
 		"onEndCasting": [{
-				"type": "beginChanneling"
-			},{
 				"type": "createLightningEffect",
 				"origin": {
 					"type": "getCastingUnit"
@@ -462,6 +462,187 @@
 				}
 			},{
 				"type": "cleanUpCastInstance"
+		}]
+	},{
+		"ids": [{"id":"Amic", "castId": "militiaconvert", "uncastId": "militiaunconvert"}],
+		"type": "NORMAL_PAIRING",
+		"displayFields": {
+			"separateOnAndOff": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Amil"
+			},
+			"cantPairError": "NO_PEASANTS_COULD_BE_FOUND",
+			"cantPairOffError": "NO_MILITIA_COULD_BE_FOUND",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"maxPartners": {
+				"type": "rawInteger",
+				"value": 0
+			},
+			"pairSearchRadius": {
+				"type": "getAbilityArea"
+			},
+			"orderPairedUnit": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"orderPairedUnitOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "militia"
+				}
+			},
+			"orderPairedUnitOffOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "militiaoff"
+				}
+			}
+		},
+		"onEndCasting": [{
+				"type": "createSoundEffectOnUnit",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				}
+			}]
+	},{
+		"ids": [{"id":"Amil", "castId": "militia", "uncastId": "militiaoff"}],
+		"type": "NORMAL_PAIRING",
+		"displayFields": {
+			"toggleable": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"alternateUnitId": {
+				"type": "getAbilityDataAsID",
+				"dataField": "B"
+			}
+		},
+		"specialFields": {
+			"pairAbilityId": {
+				"type": "getWar3IDFromString",
+				"id": "Amic"
+			},
+			"cantPairError": "NO_TOWN_HALLS_COULD_BE_FOUND_THAT_CAN_CONVERT_PEASANTS_INTO_MILITIA",
+			"cantPairOffError": "NO_TOWN_HALLS_COULD_BE_FOUND_THAT_CAN_CONVERT_MILITIA_INTO_PEASANTS",
+			"autoTargetPartner": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"pairSearchRadius": {
+				"type": "getAbilityArea"
+			},
+			"pairingOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "militia"
+				}
+			},
+			"pairingOffOrderId": {
+				"type": "idString",
+				"idString": {
+					"type": "rawString",
+					"value": "militiaoff"
+				}
+			}
+		},
+		"onOrderIssued": [{
+			"type": "setAbilityCastRange",
+			"range": {
+				"type": "getAbilityCastRange",
+				"ability": {
+					"type": "getPartnerAbility"
+				}
+			}
+		}],
+		"onAddDisabledAbility": [{
+			"type": "if",
+			"condition": {
+				"type": "isToggleAbilityActive"
+			},
+			"thenActions": [{
+					"type": "transformedUnitAbilityAdd",
+					"unit": {
+						"type": "getCastingUnit"
+					},
+					"baseUnitId": {
+						"type": "getAbilityDataAsID",
+						"dataField": "A"
+					},
+					"alternateUnitId": {
+						"type": "getAbilityDataAsID",
+						"dataField": "B"
+					},
+					"duration": {
+						"type": "getAbilityDuration"
+					},
+					"buffId": {
+						"type": "getWar3IDFromString",
+						"id": "Bmil"
+					},
+					"instantTransformAtDurationEnd": {
+						"type": "rawBoolean",
+						"value": "true"
+					},
+					"onUntransformActions": [{
+						"type": "enableWorkerAbilities"
+					}]
+				},{
+					"type": "disableWorkerAbilities"
+			}],
+				"elseActions": []
+		}],
+		"onEndCasting": [{
+				"type": "transformUnitInstant",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"baseUnitId": {
+					"type": "getAbilityDataAsID",
+					"dataField": "A"
+				},
+				"alternateUnitId": {
+					"type": "getAbilityDataAsID",
+					"dataField": "B"
+				},
+				"duration": {
+					"type": "getAbilityDuration"
+				},
+				"buffId": {
+					"type": "getWar3IDFromString",
+					"id": "Bmil"
+				},
+				"onTransformActions": [{
+						"type": "instantReturnResources"
+					},{
+						"type": "disableWorkerAbilities"
+				}],
+				"onUntransformActions": [{
+					"type": "enableWorkerAbilities"
+				}]
+			},{
+				"type": "if",
+				"condition": {
+					"type": "isTransformingToAlternate"
+				},
+				"thenActions": [],
+				"elseActions": [{
+					"type": "sendUnitBackToWork"
+				}]
 		}]
 	}]
 }

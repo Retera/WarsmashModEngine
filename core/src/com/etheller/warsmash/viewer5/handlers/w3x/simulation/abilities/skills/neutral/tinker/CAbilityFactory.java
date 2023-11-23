@@ -21,8 +21,8 @@ public class CAbilityFactory extends CAbilityPassiveSpellBase {
 
 	private int lastSpawnTick;
 
-	public CAbilityFactory(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityFactory(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

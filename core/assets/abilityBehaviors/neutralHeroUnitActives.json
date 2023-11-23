@@ -1,7 +1,17 @@
 {
 	"abilityList": [{
 		"ids": [{"id":"ANms", "castId": "manashieldon", "uncastId": "manashieldoff"}],
-		"type": "TOGGLE",
+		"type": "NORMAL_NOTARGET",
+		"displayFields": {
+			"toggleable": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"castlessNoTarget": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"onAddAbility": [{
 				"type": "createFinalDamageTakenModificationListener",
 				"actions": [{
@@ -11,7 +21,7 @@
 							"value": "maxAbsorb"
 						},
 						"valueToStore": {
-							"type": "divideFloat",
+							"type": "f/",
 							"value1": {
 								"type": "getUnitCurrentMana",
 								"unit": {
@@ -26,9 +36,9 @@
 					},{
 						"type": "if",
 						"condition": {
-							"type": "floatGt",
+							"type": "f>",
 							"value1": {
-								"type": "*",
+								"type": "f*",
 								"value1": {
 									"type": "getTotalDamageDealt"
 								},
@@ -72,9 +82,9 @@
 									"type": "getListenerUnit"
 								},
 								"amount": {
-									"type": "*",
+									"type": "f*",
 									"value1": {
-										"type": "*",
+										"type": "f*",
 										"value1": {
 											"type": "getTotalDamageDealt"
 										},
@@ -91,7 +101,7 @@
 							},{
 								"type": "subtractTotalDamageDealt",
 								"amount": {
-									"type": "*",
+									"type": "f*",
 									"value1": {
 										"type": "getTotalDamageDealt"
 									},
@@ -103,7 +113,15 @@
 						}]
 				}]
 		}],
-		"onBeginCasting": [{
+		"onActivate": [{
+				"type": "createSoundEffectOnUnit",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				}
+			},{
 				"type": "createPassiveBuff",
 				"buffId": {
 					"type": "getFirstBuffId"
@@ -125,7 +143,7 @@
 					"type": "getLastCreatedFinalDamageTakenModificationListener"
 				}
 		}],
-		"onEndCasting": [{
+		"onDeactivate": [{
 				"type": "removeBuff",
 				"target": {
 					"type": "getCastingUnit"

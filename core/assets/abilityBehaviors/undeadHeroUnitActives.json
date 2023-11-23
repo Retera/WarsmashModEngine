@@ -1,7 +1,7 @@
 {
 	"abilityList": [{
 		"ids": [{"id":"AUsl", "castId": "sleep"}],
-		"type": "NORMAL_UNITTARGET_SIMPLE",
+		"type": "NORMAL_UNITTARGET",
 		"onAddAbility": [{
 				"type": "createStateModBuff",
 				"buffType": "SLEEPING"
@@ -35,7 +35,7 @@
 					"type": "getLastCreatedStateModBuff"
 				}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getAbilityTargetedUnit"
@@ -211,8 +211,14 @@
 		}]
 	},{
 		"ids": [{"id":"AUcs", "castId": "carrionswarm"},{"id":"AOsh", "castId": "shockwave"}],
-		"type": "NORMAL_POINTTARGET_SIMPLE",
-		"onBeginCasting": [{
+		"type": "NORMAL_POINTTARGET",
+		"displayFields": {
+			"hideAreaCursor": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"onEndCasting": [{
 			"type": "createLocationTargetedCollisionProjectile",
 			"source": {
 				"type": "getCastingUnit"
@@ -299,13 +305,13 @@
 						"value": "dpt"
 					},
 					"valueToStore": {
-						"type": "minFloat",
+						"type": "fMin",
 						"value1": {
 							"type": "getAbilityDataAsFloat",
 							"dataField": "A"
 						},
 						"value2": {
-							"type": "/",
+							"type": "f/",
 							"value1": {
 								"type": "getStoredFloatByKey",
 								"key": {
@@ -344,7 +350,7 @@
 						"value": "remainDmg"
 					},
 					"valueToStore": {
-						"type": "subtractFloat",
+						"type": "f-",
 						"value1": {
 							"type": "getStoredFloatByKey",
 							"key": {
@@ -353,7 +359,7 @@
 							}
 						},
 						"value2": {
-							"type": "min",
+							"type": "fMin",
 							"value1": {
 								"type": "getUnitCurrentHp",
 								"unit": {
@@ -372,7 +378,7 @@
 				},{
 					"type": "if",
 					"condition": {
-						"type": "floatGte",
+						"type": "f>",
 						"value1": {
 							"type": "getStoredFloatByKey",
 							"key": {
@@ -423,7 +429,13 @@
 		
 	},{
 		"ids": [{"id":"AUim", "castId": "impale"}],
-		"type": "NORMAL_POINTTARGET_SIMPLE",
+		"type": "NORMAL_POINTTARGET",
+		"displayFields": {
+			"hideAreaCursor": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"onAddAbility": [{
 				"type": "createStateModBuff",
 				"buffType": "STUN"
@@ -457,14 +469,14 @@
 					"type": "getLastCreatedStateModBuff"
 				}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "storeValueLocally",
 				"key": {
 					"type": "rawString",
 					"value": "hgtStp"
 				},
 				"valueToStore": {
-					"type": "divideFloat",
+					"type": "f/",
 					"value1": {
 						"type": "pi"
 					},
@@ -490,7 +502,7 @@
 						}
 					},
 					"dist": {
-						"type": "/",
+						"type": "f/",
 						"value1": {
 							"type": "getAbilityArea"
 						},
@@ -521,9 +533,9 @@
 						}
 					},
 					"dist": {
-						"type": "+",
+						"type": "f+",
 						"value1": {
-							"type": "/",
+							"type": "f/",
 							"value1": {
 								"type": "getAbilityArea"
 							},
@@ -554,7 +566,7 @@
 					"type": "getAlias"
 				},
 				"radius": {
-					"type": "/",
+					"type": "f/",
 					"value1": {
 						"type": "getAbilityArea"
 					},
@@ -564,7 +576,7 @@
 					}
 				},
 				"speed": {
-					"type": "/",
+					"type": "f/",
 					"value1": {
 						"type": "getAbilityArea"
 					},
@@ -574,7 +586,7 @@
 					}
 				},
 				"projectileStepInterval": {
-					"type": "/",
+					"type": "f/",
 					"value1": {
 						"type": "getAbilityDataAsFloat",
 						"dataField": "B"
@@ -582,13 +594,13 @@
 					"value2": {
 						"type": "ceil",
 						"value": {
-							"type": "/",
+							"type": "f/",
 							"value1": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "A"
 							},
 							"value2": {
-								"type": "/",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityArea"
 								},
@@ -686,7 +698,7 @@
 								}]
 							},
 							"valueToStore": {
-								"type": "addFloat",
+								"type": "f+",
 								"value1": {
 									"type": "getStoredFloatByKey",
 									"key": {
@@ -716,7 +728,7 @@
 								"type": "getBuffedUnit"
 							},
 							"height": {
-								"type": "*",
+								"type": "f*",
 								"value1": {
 									"type": "rawFloat",
 									"value": 225

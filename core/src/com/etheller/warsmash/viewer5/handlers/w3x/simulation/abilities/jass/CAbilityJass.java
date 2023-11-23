@@ -18,8 +18,8 @@ public class CAbilityJass extends AbstractGenericAliasedAbility {
 	private final CAbilityTypeJassDefinition typeDefinition;
 	private CommonTriggerExecutionScope jassAbilityBasicScope;
 
-	public CAbilityJass(final int handleId, final War3ID alias, final CAbilityTypeJassDefinition type) {
-		super(handleId, alias);
+	public CAbilityJass(final int handleId, final War3ID code, final War3ID alias, final CAbilityTypeJassDefinition type) {
+		super(handleId, code, alias);
 		this.typeDefinition = type;
 	}
 

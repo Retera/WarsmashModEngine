@@ -103,7 +103,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 					this.simulation.unitGainResourceEvent(this.unit, player.getId(),
 							this.abilityHarvest.getCarriedResourceType(),
 							this.abilityHarvest.getCarriedResourceAmount());
-					this.abilityHarvest.setCarriedResources(null, 0);
+					this.abilityHarvest.setCarriedResources(this.abilityHarvest.getCarriedResourceType(), 0);
 					if (nextTarget != null) {
 						return this.abilityHarvest.getBehaviorHarvest().reset(nextTarget);
 					}
@@ -232,6 +232,11 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 	@Override
 	public void endMove(final CSimulation game, final boolean interrupted) {
 
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
 	}
 
 }

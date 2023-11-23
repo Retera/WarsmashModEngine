@@ -20,6 +20,11 @@ public enum NonStackingStatBuffType {
 	THORNS,
 	THORNSPCT,
 	
+	MAXHP,
+	MAXHPPCT,
+	MAXMP,
+	MAXMPPCT,
+	
 	ALLATK, // These are for parsing
 	ALLATKPCT;
 }

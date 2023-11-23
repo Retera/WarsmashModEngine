@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
@@ -20,7 +19,7 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 	private CBehaviorHumanBuild buildBehavior;
 
 	public CAbilityHumanBuild(final int handleId, final List<War3ID> structuresBuilt) {
-		super(handleId, structuresBuilt);
+		super(handleId, War3ID.fromString("AHbu"), structuresBuilt);
 	}
 
 	@Override

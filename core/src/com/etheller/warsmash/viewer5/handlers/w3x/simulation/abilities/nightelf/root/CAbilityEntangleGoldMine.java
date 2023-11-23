@@ -138,6 +138,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 					for (final CAbility ability : this.entangledMine.getAbilities()) {
 						ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
 					}
+					unit.checkDisabledAbilities(simulation, true);
 				}
 				this.entangledMine.setFoodUsed(this.entangledMine.getUnitType().getFoodUsed());
 				simulation.getPlayer(unit.getPlayerIndex()).addTechtreeInProgress(this.resultingTypeId);

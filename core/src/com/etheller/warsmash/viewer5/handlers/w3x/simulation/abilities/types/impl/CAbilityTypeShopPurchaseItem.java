@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityShopPurhaseItem;
@@ -19,16 +20,16 @@ public class CAbilityTypeShopPurchaseItem extends CAbilityType<CAbilityTypeLevel
 
 	@Override
 	public CAbility createAbility(final int handleId) {
-		return new CAbilityShopPurhaseItem(handleId, getAlias());
+		return new CAbilityShopPurhaseItem(handleId, getCode(), getAlias());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 		final CLevelingAbility heroAbility = (existingAbility);
 
 		// TODO ignores fields
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 
 	}
 }

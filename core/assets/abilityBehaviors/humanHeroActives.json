@@ -3,6 +3,15 @@
 		"ids": [{"id":"AHfs", "castId": "flamestrike"}],
 		"type": "NORMAL_POINTTARGET",
 		"onBeginCasting": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "targetLoc"
+					},
+					"valueToStore": {
+						"type": "getTargetedLocation"
+					}
+			},{
 				"type": "createTemporarySpellEffectAtLocation",
 				"location": {
 					"type": "getTargetedLocation"
@@ -81,7 +90,7 @@
 									"valueToStore": {
 										"type": "randomBoundedFloat",
 										"bound": {
-											"type": "*",
+											"type": "f*",
 											"value1": {
 												"type": "pi"
 											},
@@ -98,7 +107,7 @@
 										"value": "randDist"
 									},
 									"valueToStore": {
-										"type": "multiplyFloat",
+										"type": "f*",
 										"value1": {
 											"type": "randomFloat"
 										},
@@ -109,15 +118,19 @@
 							},{
 								"type": "createTemporarySpellEffectAtPoint",
 								"x": {
-									"type": "+",
+									"type": "f+",
 									"value1": {
 										"type": "getLocationX",
 										"location": {
-											"type": "getTargetedLocation"
+											"type": "getStoredLocationByKey",
+											"key": {
+												"type": "rawString",
+												"value": "targetLoc"
+											}
 										}
 									},
 									"value2": {
-										"type": "*",
+										"type": "f*",
 										"value1": {
 											"type": "cos",
 											"angle": {
@@ -138,15 +151,19 @@
 									}
 								},
 								"y": {
-									"type": "+",
+									"type": "f+",
 									"value1": {
 										"type": "getLocationY",
 										"location": {
-											"type": "getTargetedLocation"
+											"type": "getStoredLocationByKey",
+											"key": {
+												"type": "rawString",
+												"value": "targetLoc"
+											}
 										}
 									},
 									"value2": {
-										"type": "*",
+										"type": "f*",
 										"value1": {
 											"type": "sin",
 											"angle": {
@@ -202,13 +219,13 @@
 							"value": "damageDealt"
 						},
 						"valueToStore": {
-							"type": "minFloat",
+							"type": "fMin",
 							"value1": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "A"
 							},
 							"value2": {
-								"type": "/",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityDataAsFloat",
 									"dataField": "F"
@@ -218,7 +235,11 @@
 									"value": {
 										"type": "countUnitsInRangeOfLocation",
 										"location": {
-											"type": "getTargetedLocation"
+											"type": "getStoredLocationByKey",
+											"key": {
+												"type": "rawString",
+												"value": "targetLoc"
+											}
 										},
 										"range": {
 											"type": "getAbilityArea"
@@ -234,7 +255,7 @@
 							"value": "buildingDamageDealt"
 						},
 						"valueToStore": {
-							"type": "multiplyFloat",
+							"type": "f*",
 							"value1": {
 								"type": "getStoredFloatByKey",
 								"key": {
@@ -250,7 +271,11 @@
 					},{
 						"type": "iterateUnitsInRangeOfLocation",
 						"location": {
-							"type": "getTargetedLocation"
+							"type": "getStoredLocationByKey",
+							"key": {
+								"type": "rawString",
+								"value": "targetLoc"
+							}
 						},
 						"range": {
 							"type": "getAbilityArea"
@@ -367,7 +392,7 @@
 					"value": "true"
 				},
 				"delay": {
-					"type": "+",
+					"type": "f+",
 					"value1": {
 						"type": "getAbilityDataAsFloat",
 						"dataField": "D"
@@ -383,13 +408,13 @@
 							"value": "damageDealt"
 						},
 						"valueToStore": {
-							"type": "minFloat",
+							"type": "fMin",
 							"value1": {
 								"type": "getAbilityDataAsFloat",
 								"dataField": "C"
 							},
 							"value2": {
-								"type": "/",
+								"type": "f/",
 								"value1": {
 									"type": "getAbilityDataAsFloat",
 									"dataField": "F"
@@ -399,7 +424,11 @@
 									"value": {
 										"type": "countUnitsInRangeOfLocation",
 										"location": {
-											"type": "getTargetedLocation"
+											"type": "getStoredLocationByKey",
+											"key": {
+												"type": "rawString",
+												"value": "targetLoc"
+											}
 										},
 										"range": {
 											"type": "getAbilityArea"
@@ -415,7 +444,7 @@
 							"value": "buildingDamageDealt"
 						},
 						"valueToStore": {
-							"type": "multiplyFloat",
+							"type": "f*",
 							"value1": {
 								"type": "getStoredFloatByKey",
 								"key": {
@@ -431,7 +460,11 @@
 					},{
 						"type": "iterateUnitsInRangeOfLocation",
 						"location": {
-							"type": "getTargetedLocation"
+							"type": "getStoredLocationByKey",
+							"key": {
+								"type": "rawString",
+								"value": "targetLoc"
+							}
 						},
 						"range": {
 							"type": "getAbilityArea"

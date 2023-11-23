@@ -11,9 +11,16 @@ public class ABLocalStoreKeys {
 	public static final String CODE = "_code";
 	public static final String GAME = "_game";
 	public static final String THISUNIT = "_thisUnit";
+	public static final String ABILITY = "_ability";
+	public static final String ITEM = "_item";
+	public static final String ITEMSLOT = "_itemSlot";
 	public static final String ITERATORCOUNT = "_i";
 	public static final String BUFFCASTINGUNIT = "_buffCastingUnit";
+	
+	public static final String NEWBEHAVIOR = "_newBehavior";
 
+	public static final String FAILEDTOCAST = "_failedToCast#";
+	public static final String TRANSFORMINGTOALT = "_transformingToAlt#";
 	public static final String CHANNELING = "_channeling#";
 	public static final String INTERRUPTED = "_interrupted#";
 	public static final String PERIODICNEXTTICK = "_periodicNextTick#";
@@ -22,6 +29,7 @@ public class ABLocalStoreKeys {
 
 	public static final String TOGGLEDABILITY = "_toggledAbility";
 	public static final String FLEXABILITY = "_flexAbility";
+	public static final String PAIRABILITY = "_pairAbility";
 	
 	// Aura Template
 	public static final String AURAGROUP = "_auraGroup";
@@ -32,6 +40,8 @@ public class ABLocalStoreKeys {
 	
 	// Unit Names
 	public static final String ENUMUNIT = "_enumUnit#";
+	public static final String MATCHINGUNIT = "_matchingUnit#";
+	public static final String LASTCREATEDUNIT = "_lastCreatedUnit";
 	public static final String LASTADDEDUNIT = "_lastAddedUnit";
 	public static final String LASTREMOVEDDUNIT = "_lastRemovedUnit";
 	
@@ -41,7 +51,9 @@ public class ABLocalStoreKeys {
 	public static final String LASTADDEDABILITY = "_lastAddedAbility";
 	public static final String LASTADDEDBUFF = "_lastAddedBuff";
 	public static final String CURRENTLEVEL = "_currentLevel";
+	
 	public static final String LASTCREATEDUNITGROUP = "_lastCreatedUnitGroup";
+	public static final String LASTCREATEDUNITQUEUE = "_lastCreatedUnitQueue";
 
 	public static final String LASTCREATEDDESTBUFF = "_lastCreatedDestBuff";
 	
@@ -50,6 +62,7 @@ public class ABLocalStoreKeys {
 	public static final String ATTACKEDUNIT = "_attackedUnit#";
 	public static final String ABILITYTARGETEDUNIT = "_abilityTargetedUnit#";
 	public static final String ABILITYTARGETEDDESTRUCTABLE = "_abilityTargetedDestructable#";
+	public static final String ABILITYTARGETEDITEM = "_abilityTargetedItem#";
 	public static final String ABILITYTARGETEDLOCATION = "_abilityTargetedLocation#";
 	
 	//Generic Attacks
@@ -76,6 +89,15 @@ public class ABLocalStoreKeys {
 	public static final String PROJECTILECURRENTLOC = "_projCurrentLoc#";
 	public static final String PROJECTILEHITUNIT = "_projHitUnit#";
 	public static final String PROJECTILEHITDEST = "_projHitDest#";
+	
+	
+	// Pairing
+	public static final String ABILITYPAIREDUNIT = "_abilityPairedUnit#";
+	public static final String LASTPARTNERABILITY = "_lastPartnerAbility";
+	
+	// Transforming
+	public static final String ACTIVE_ALTITUDE_ADJUSTMENT = "_activeAltAdj";
+	public static final String WAITING_ANIMATION = "_morphTimer";
 	
 	
 

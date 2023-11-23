@@ -334,6 +334,10 @@ public class GeometryEmitterFuncs {
 			final float[] vertices = object.vertices;
 			final IVec3 normal = object.normal;
 
+			if (floatView.limit() < p0Offset + 11) {
+				System.err.println("FloatView has a limit of " + floatView.limit() + " which is not large enough. Aborting");
+				continue;
+			}
 			floatView.put(p0Offset + 0, vertices[0]);
 			floatView.put(p0Offset + 1, vertices[1]);
 			floatView.put(p0Offset + 2, vertices[2]);

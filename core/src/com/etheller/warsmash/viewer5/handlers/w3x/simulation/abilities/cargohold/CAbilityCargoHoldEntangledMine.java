@@ -9,9 +9,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
 public class CAbilityCargoHoldEntangledMine extends CAbilityCargoHold {
 
-	public CAbilityCargoHoldEntangledMine(final int handleId, final War3ID alias, final int cargoCapacity,
+	public CAbilityCargoHoldEntangledMine(final int handleId, final War3ID code, final War3ID alias, final int cargoCapacity,
 			final float duration, final float castRange, final EnumSet<CTargetType> targetsAllowed) {
-		super(handleId, alias, cargoCapacity, duration, castRange, targetsAllowed);
+		super(handleId, code, alias, cargoCapacity, duration, castRange, targetsAllowed);
 	}
 
 	@Override

@@ -13,17 +13,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.cargohold.CBehaviorLoad;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TeamType;
 
 public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility {
     private float castRange;
     private Set<War3ID> allowedUnitTypes;
     private CBehaviorLoad behaviorLoad;
 
-    public CAbilityLoad(final int handleId, final War3ID alias, final float castRange,
+    public CAbilityLoad(final int handleId, final War3ID code, final War3ID alias, final float castRange,
                         final Set<War3ID> allowedUnitTypes) {
-        super(handleId, alias);
+        super(handleId, code, alias);
         this.castRange = castRange;
         this.allowedUnitTypes = allowedUnitTypes;
     }

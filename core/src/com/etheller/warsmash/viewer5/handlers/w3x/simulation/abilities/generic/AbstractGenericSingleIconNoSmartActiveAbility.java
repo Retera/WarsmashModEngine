@@ -9,8 +9,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 
 public abstract class AbstractGenericSingleIconNoSmartActiveAbility extends AbstractGenericSingleIconActiveAbility {
 
-	public AbstractGenericSingleIconNoSmartActiveAbility(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public AbstractGenericSingleIconNoSmartActiveAbility(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override

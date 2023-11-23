@@ -18,4 +18,8 @@ public class ABTimedTargetingBuff extends ABGenericTimedBuff {
 	protected void onBuffRemove(CSimulation game, CUnit unit) {
 	}
 
+	@Override
+	protected void onBuffExpire(CSimulation game, CUnit unit) {
+	}
+
 }

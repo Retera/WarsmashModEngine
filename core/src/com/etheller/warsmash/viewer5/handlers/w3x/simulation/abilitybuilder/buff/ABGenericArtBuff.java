@@ -12,7 +12,7 @@ public class ABGenericArtBuff extends ABBuff {
 	private SimulationRenderComponent lsfx;
 
 	public ABGenericArtBuff(int handleId, War3ID alias) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 		this.setIconShowing(false);
 	}
 

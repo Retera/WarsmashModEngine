@@ -9,7 +9,7 @@ public class CBuffBrilliance extends CBuffAuraBase {
 	private final float manaRegenBonus;
 
 	public CBuffBrilliance(int handleId, War3ID alias, float manaRegenBonus) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 		this.manaRegenBonus = manaRegenBonus;
 	}
 

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemManaRegain;
@@ -20,18 +21,18 @@ public class CAbilityTypeItemManaRegain extends CAbilityType<CAbilityTypeItemMan
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeItemManaRegainLevelData levelData = getLevelData(0);
-		return new CAbilityItemManaRegain(handleId, getAlias(), levelData.getManaToRegain(), levelData.getCooldown());
+		return new CAbilityItemManaRegain(handleId, getCode(), getAlias(), levelData.getManaToRegain(), levelData.getCooldown());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, CUnit unit, final CLevelingAbility existingAbility, final int level) {
 
 		final CAbilityTypeLevelData levelData = getLevelData(level - 1);
 		final CLevelingAbility heroAbility = (existingAbility);
 
 		// TODO ignores fields
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 
 	}
 }

@@ -7,6 +7,7 @@ import java.util.Map;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
@@ -38,20 +39,20 @@ public class CAbilityTypeAbilityTemplateBuilder extends CAbilityType<CAbilityTyp
 		
 		switch (parser.getTemplateType()) {
 		case PASSIVE_STATS:
-			return new CAbilityAbilityBuilderStatPassiveTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getStatBuffsFromDataFields());
+			return new CAbilityAbilityBuilderStatPassiveTemplate(handleId, getCode(), getAlias(), getLevelData(), localStore, parser.getStatBuffsFromDataFields());
 		case AURA_STATS:
-			return new CAbilityAbilityBuilderStatAuraTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getStatBuffsFromDataFields(), parser.getMeleeRangeTargetOverride());
+			return new CAbilityAbilityBuilderStatAuraTemplate(handleId, getCode(), getAlias(), getLevelData(), localStore, parser.getStatBuffsFromDataFields(), parser.getMeleeRangeTargetOverride());
 		case AURA_SIMPLE:
-			return new CAbilityAbilityBuilderSimpleAuraTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getAbilityIdsToAddPerLevel(), parser.getLevellingAbilityIdsToAdd());
+			return new CAbilityAbilityBuilderSimpleAuraTemplate(handleId, getCode(), getAlias(), getLevelData(), localStore, parser.getAbilityIdsToAddPerLevel(), parser.getLevellingAbilityIdsToAdd());
 		case AURA:
 		default:
-			return new CAbilityAbilityBuilderAuraTemplate(handleId, getAlias(), getLevelData(), localStore, parser.getAddToAuraActions(), parser.getUpdateAuraLevelActions(), parser.getRemoveFromAuraActions());
+			return new CAbilityAbilityBuilderAuraTemplate(handleId, getCode(), getAlias(), getLevelData(), localStore, parser.getAddToAuraActions(), parser.getUpdateAuraLevelActions(), parser.getRemoveFromAuraActions());
 		}
 	}
 
 	@Override
-	public void setLevel(CSimulation game, CLevelingAbility existingAbility, int level) {
-		existingAbility.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, CLevelingAbility existingAbility, int level) {
+		existingAbility.setLevel(game, unit, level);
 	}
 
 }

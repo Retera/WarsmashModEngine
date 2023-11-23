@@ -77,4 +77,9 @@ public class CBehaviorDrop extends CAbstractRangedBehavior {
 	public int getHighlightOrderId() {
 		return OrderIds.unloadall;
 	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

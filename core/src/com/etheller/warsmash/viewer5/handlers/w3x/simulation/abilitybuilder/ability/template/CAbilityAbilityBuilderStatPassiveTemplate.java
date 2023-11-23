@@ -7,7 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABGenericPassiveBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABPermanentPassiveBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.StatBuffFromDataField;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
@@ -28,10 +28,10 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 
 	private List<StatBuffFromDataField> statBuffDataFields;
 
-	public CAbilityAbilityBuilderStatPassiveTemplate(int handleId, War3ID alias,
+	public CAbilityAbilityBuilderStatPassiveTemplate(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, Map<String, Object> localStore,
 			List<StatBuffFromDataField> statBuffDataFields) {
-		super(alias, handleId);
+		super(code, alias, handleId);
 		this.levelData = levelData;
 		this.localStore = localStore;
 		this.statBuffDataFields = statBuffDataFields;
@@ -94,8 +94,8 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 	}
 
 	@Override
-	public void setLevel(int level) {
-		super.setLevel(level);
+	public void setLevel(CSimulation game, CUnit unit, int level) {
+		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
 		for (StatBuffFromDataField statBuff : this.statBuffDataFields) {
 			NonStackingStatBuffType type = statBuff.convertToNonStackingType(levelData.get(getLevel() - 1));
@@ -142,14 +142,14 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 			caster.computeDerivedFields(statBuff.getBuff().getBuffType());
 		}
 		if (this.buff != null) {
-			this.buff.setLevel(level);
+			this.buff.setLevel(game, unit, level);
 		}
 	}
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		if (this.buffId != null) {
-			this.buff = new ABGenericPassiveBuff(game.getHandleIdAllocator().createId(), this.buffId);
+			this.buff = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(), this.buffId, localStore, null, null, 0);
 			unit.addNonStackingDisplayBuff(game, auraStackingKey, buff);
 		}
 		this.caster = unit;

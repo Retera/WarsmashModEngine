@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
 import java.awt.image.BufferedImage;
 
+import com.badlogic.gdx.graphics.Color;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
@@ -135,5 +136,11 @@ public interface SimulationRenderController {
 	void unitUpdatedType(CUnit unit, War3ID typeId);
 
 	void changeUnitColor(CUnit unit, int playerIndex);
+
+	void changeUnitVertexColor(CUnit unit, Color color);
+
+	void changeUnitVertexColor(CUnit unit, float r, float g, float b);
+
+	void changeUnitVertexColor(CUnit unit, float r, float g, float b, float a);
 
 }

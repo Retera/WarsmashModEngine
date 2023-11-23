@@ -145,4 +145,9 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 	public CAbilitySpellBase getAbility() {
 		return this.ability;
 	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

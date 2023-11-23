@@ -22,8 +22,8 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	private CAbilityAuraBase auraSourceAbility;
 	private int nextCheckTick = 0;
 
-	public CBuffAuraBase(int handleId, War3ID alias) {
-		super(handleId, alias);
+	public CBuffAuraBase(int handleId, final War3ID code, War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	public void setAuraSourceUnit(CUnit auraSourceUnit) {

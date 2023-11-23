@@ -22,14 +22,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public final class CAbilityQueue extends AbstractCAbility {
 	private final Set<War3ID> unitsTrained;
 	private final Set<War3ID> researchesAvailable;
 
 	public CAbilityQueue(final int handleId, final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable) {
-		super(handleId);
+		super(handleId, War3ID.fromString("Aque"));
 		this.unitsTrained = new LinkedHashSet<>(unitsTrained);
 		this.researchesAvailable = new LinkedHashSet<>(researchesAvailable);
 	}

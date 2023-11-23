@@ -132,6 +132,25 @@ public interface RenderWidget {
 		}
 
 		@Override
+		public void addSecondaryTagForFutureAnimations(SecondaryTag tag) {
+			if (!this.secondaryAnimationTags.contains(tag)) {
+				this.secondaryAnimationTags.add(tag);
+			}
+		}
+
+		@Override
+		public void removeSecondaryTagForFutureAnimations(SecondaryTag tag) {
+			if (this.secondaryAnimationTags.contains(tag)) {
+				this.secondaryAnimationTags.remove(tag);
+			}
+		}
+
+		@Override
+		public EnumSet<SecondaryTag> getSecondaryTags() {
+			return secondaryAnimationTags;
+		}
+
+		@Override
 		public void playAnimation(final boolean force, final PrimaryTag animationName,
 				final EnumSet<SecondaryTag> secondaryAnimationTags, final float speedRatio,
 				final boolean allowRarityVariations) {

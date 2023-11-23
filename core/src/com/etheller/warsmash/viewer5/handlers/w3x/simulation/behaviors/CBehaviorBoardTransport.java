@@ -91,4 +91,9 @@ public class CBehaviorBoardTransport extends CAbstractRangedBehavior {
 
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

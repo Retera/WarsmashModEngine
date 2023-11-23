@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.demonhunter.CAbilityImmolation;
@@ -19,13 +20,13 @@ public class CAbilityTypeImmolation extends CAbilityType<CAbilityTypeImmolationL
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeImmolationLevelData levelData = getLevelData(0);
-		return new CAbilityImmolation(handleId, getAlias(), levelData.getBufferManaRequired(),
+		return new CAbilityImmolation(handleId, getCode(), getAlias(), levelData.getBufferManaRequired(),
 				levelData.getDamagePerInterval(), levelData.getManaDrainedPerSecond(), levelData.getAreaOfEffect(),
 				levelData.getManaCost(), levelData.getDuration(), levelData.getTargetsAllowed(), levelData.getBuffId());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 
 		final CAbilityTypeImmolationLevelData levelData = getLevelData(level - 1);
 		final CAbilityImmolation heroAbility = ((CAbilityImmolation) existingAbility);
@@ -39,7 +40,7 @@ public class CAbilityTypeImmolation extends CAbilityType<CAbilityTypeImmolationL
 		heroAbility.setTargetsAllowed(levelData.getTargetsAllowed());
 		heroAbility.setBuffId(levelData.getBuffId());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 
 	}
 

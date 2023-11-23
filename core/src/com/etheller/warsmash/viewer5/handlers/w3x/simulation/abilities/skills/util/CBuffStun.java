@@ -10,7 +10,7 @@ public class CBuffStun extends CBuffTimed {
 	private StateModBuff stunBuff;
 
 	public CBuffStun(final int handleId, final War3ID alias, final float duration) {
-		super(handleId, alias, duration);
+		super(handleId, alias, alias, duration);
 		stunBuff = new StateModBuff(StateModBuffType.STUN, 1);
 	}
 

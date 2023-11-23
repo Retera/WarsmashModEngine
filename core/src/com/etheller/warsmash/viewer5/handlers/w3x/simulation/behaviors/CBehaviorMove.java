@@ -480,4 +480,9 @@ public class CBehaviorMove implements CBehavior {
 			}
 		}
 	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
 }

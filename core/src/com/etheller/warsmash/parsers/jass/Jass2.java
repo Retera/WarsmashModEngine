@@ -682,6 +682,12 @@ public class Jass2 {
 						}
 						return new StringJassValue("");
 					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitName",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new StringJassValue(whichWidget == null ? "" : whichWidget.getUnitType().getName());
+					});
 			registerConversionAndStringNatives(jassProgramVisitor, war3MapViewer.getGameUI());
 			final War3MapConfig mapConfig = war3MapViewer.getMapConfig();
 			registerConfigNatives(jassProgramVisitor, mapConfig, startlocprioType, gametypeType, placementType,
@@ -2324,7 +2330,7 @@ public class Jass2 {
 						final double facing = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 						final War3ID blightedMineRawcode = War3ID.fromString("ugol");
 						final War3ID goldMineRawcode = War3ID.fromString("ngol");
-						player.addTechtreeUnlocked(blightedMineRawcode);
+						player.addTechtreeUnlocked(simulation, blightedMineRawcode);
 						final CUnit blightedMine = CommonEnvironment.this.simulation.createUnitSimple(
 								blightedMineRawcode, player.getId(), (float) x, (float) y, (float) facing);
 						final CUnit goldMine = CommonEnvironment.this.simulation.createUnitSimple(goldMineRawcode,
@@ -3006,6 +3012,19 @@ public class Jass2 {
 								.createAbility(CommonEnvironment.this.simulation.getHandleIdAllocator().createId());
 						whichUnit.add(CommonEnvironment.this.simulation, ability);
 						return BooleanJassValue.TRUE;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitRemoveAbility",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int abilityId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final War3ID rawcode = new War3ID(abilityId);
+						
+						CAbility abil = whichUnit.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
+						if (abil != null) {
+							whichUnit.remove(simulation, abil);
+							return BooleanJassValue.TRUE;
+						}
+						return BooleanJassValue.FALSE;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitItemInSlot",
 					(arguments, globalScope, triggerScope) -> {
@@ -4252,7 +4271,7 @@ public class Jass2 {
 		public void main() {
 			final CTimer triggerQueueTimer = new CTimer() {
 				@Override
-				public void onFire() {
+				public void onFire(final CSimulation simulation) {
 					CommonEnvironment.this.jassProgramVisitor.getGlobals().replayQueuedTriggers();
 				}
 			};

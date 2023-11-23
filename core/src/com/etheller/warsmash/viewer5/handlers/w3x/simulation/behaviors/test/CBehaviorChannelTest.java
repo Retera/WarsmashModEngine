@@ -49,4 +49,9 @@ public class CBehaviorChannelTest implements CBehavior {
 		return OrderIds.channel;
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

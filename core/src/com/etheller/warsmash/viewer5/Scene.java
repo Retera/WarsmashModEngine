@@ -151,6 +151,9 @@ public abstract class Scene {
 	public boolean removeInstance(final ModelInstance instance) {
 		if (instance.scene == this) {
 			instance.removeLights(this);
+			for (int i = 0, l = instance.childrenInstances.size(); i < l; i++) {
+				instance.childrenInstances.get(i).detach();
+			}
 			innerRemove(instance);
 
 			instance.scene = null;

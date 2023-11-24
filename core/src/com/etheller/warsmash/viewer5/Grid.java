@@ -73,6 +73,9 @@ public class Grid {
 	}
 
 	public void moved(final ModelInstance instance, final float upcomingX, final float upcomingY) {
+		if (instance.parent != null) {
+			return;
+		}
 		final Bounds bounds = instance.model.bounds;
 		final float x = (upcomingX + bounds.x) - this.x;
 		final float y = (upcomingY + bounds.y) - this.y;

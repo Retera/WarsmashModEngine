@@ -528,7 +528,7 @@ public class CUnitData {
 			// made but I'll support it
 			final float minimumAttackRange = unitType.getFieldAsInteger(MINIMUM_ATTACK_RANGE, 0);
 			final EnumSet<CTargetType> targetedAs = CTargetType
-					.parseTargetTypeSet(unitType.getFieldAsString(TARGETED_AS, 0));
+					.parseTargetTypeSet(unitType.getFieldAsList(TARGETED_AS));
 			final List<String> classificationStringList = unitType.getFieldAsList(CLASSIFICATION);
 			final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
 			if (!classificationStringList.isEmpty()) {
@@ -550,7 +550,7 @@ public class CUnitData {
 				final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_HALF_DMG, 0);
 				final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_QUARTER_DMG, 0);
 				final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
-						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK1_AREA_OF_EFFECT_TARGETS, 0));
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK1_AREA_OF_EFFECT_TARGETS));
 				final CAttackType attackType = CAttackType
 						.parseAttackType(unitType.getFieldAsString(ATTACK1_ATTACK_TYPE, 0));
 				final float cooldownTime = unitType.getFieldAsFloat(ATTACK1_COOLDOWN, 0);
@@ -597,7 +597,7 @@ public class CUnitData {
 				final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_HALF_DMG, 0);
 				final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_QUARTER_DMG, 0);
 				final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
-						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK2_AREA_OF_EFFECT_TARGETS, 0));
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK2_AREA_OF_EFFECT_TARGETS));
 				final CAttackType attackType = CAttackType
 						.parseAttackType(unitType.getFieldAsString(ATTACK2_ATTACK_TYPE, 0));
 				final float cooldownTime = unitType.getFieldAsFloat(ATTACK2_COOLDOWN, 0);

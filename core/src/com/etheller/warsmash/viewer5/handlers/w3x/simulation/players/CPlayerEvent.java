@@ -42,4 +42,9 @@ public class CPlayerEvent implements RemovableTriggerEvent {
 		this.globalScope.queueTrigger(this.filter, CommonTriggerExecutionScope.filterScope(scope, hero), this.trigger,
 				scope, scope);
 	}
+
+	public void fire(final CPlayer player, final TriggerExecutionScope scope) {
+		this.globalScope.queueTrigger(this.filter, CommonTriggerExecutionScope.filterScope(scope, player), this.trigger,
+				scope, scope);
+	}
 }

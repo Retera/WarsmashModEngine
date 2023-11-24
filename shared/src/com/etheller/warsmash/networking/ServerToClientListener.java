@@ -19,6 +19,8 @@ public interface ServerToClientListener {
 
 	void unitCancelTrainingItem(int playerIndex, int unitHandleId, int cancelIndex);
 
+	void issueGuiPlayerEvent(int playerIndex, int eventId);
+
 	void startGame();
 
 	void finishedTurn(int gameTurnTick);

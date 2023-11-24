@@ -51,4 +51,9 @@ public class WarsmashClientSendingOrderListener implements CPlayerUnitOrderListe
 		this.writer.send();
 	}
 
+	@Override
+	public void issueGuiPlayerEvent(final int eventId) {
+		this.writer.issueGuiPlayerEvent(eventId);
+		this.writer.send();
+	}
 }

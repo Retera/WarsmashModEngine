@@ -29,36 +29,37 @@ public class EventObjectSpl
 		final Matrix4 worldMatrix = node.worldMatrix;
 		final Vector3 pivot = node.pivot;
 		final Quaternion worldRotation = node.worldRotation;
+		final Vector3 worldScale = node.worldScale;
 		final War3MapViewer viewer = (War3MapViewer) instance.model.viewer;
 
 		this.health = emitterObject.lifeSpan;
 
-		vertexHeap.x = pivot.x + scale;
-		vertexHeap.y = pivot.y + scale;
+		vertexHeap.x = pivot.x + (scale / worldScale.x);
+		vertexHeap.y = pivot.y + (scale / worldScale.y);
 		vertexHeap.z = pivot.z;
 		vertexHeap.prj(worldMatrix);
 		vertices[0] = vertexHeap.x;
 		vertices[1] = vertexHeap.y;
 		vertices[2] = vertexHeap.z;
 
-		vertexHeap.x = pivot.x - scale;
-		vertexHeap.y = pivot.y + scale;
+		vertexHeap.x = pivot.x - (scale / worldScale.x);
+		vertexHeap.y = pivot.y + (scale / worldScale.y);
 		vertexHeap.z = pivot.z;
 		vertexHeap.prj(worldMatrix);
 		vertices[3] = vertexHeap.x;
 		vertices[4] = vertexHeap.y;
 		vertices[5] = vertexHeap.z;
 
-		vertexHeap.x = pivot.x - scale;
-		vertexHeap.y = pivot.y - scale;
+		vertexHeap.x = pivot.x - (scale / worldScale.x);
+		vertexHeap.y = pivot.y - (scale / worldScale.y);
 		vertexHeap.z = pivot.z;
 		vertexHeap.prj(worldMatrix);
 		vertices[6] = vertexHeap.x;
 		vertices[7] = vertexHeap.y;
 		vertices[8] = vertexHeap.z;
 
-		vertexHeap.x = pivot.x + scale;
-		vertexHeap.y = pivot.y - scale;
+		vertexHeap.x = pivot.x + (scale / worldScale.x);
+		vertexHeap.y = pivot.y - (scale / worldScale.y);
 		vertexHeap.z = pivot.z;
 		vertexHeap.prj(worldMatrix);
 		vertices[9] = vertexHeap.x;

@@ -320,6 +320,16 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
+	public void firePlayerEvents(final CommonTriggerExecutionScope.PlayerEventScopeBuilder eventScopeBuilder,
+			final JassGameEventsWar3 eventType) {
+		final List<CPlayerEvent> eventList = getEventList(eventType);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(this, eventScopeBuilder.create(eventType, event.getTrigger(), this));
+			}
+		}
+	}
+
 	public List<CUnit> getHeroes() {
 		return this.heroes;
 	}

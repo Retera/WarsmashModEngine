@@ -895,8 +895,16 @@ public class CSimulation implements CPlayerAPI {
 		return this.globalScope;
 	}
 	
-	public float getTerrainHeight(float x, float y) {
+	public int getTerrainHeight(float x, float y) {
 		return this.simulationRenderController.getTerrainHeight(x, y);
+	}
+	
+	public boolean isTerrainRomp(float x, float y) {
+		return this.simulationRenderController.isTerrainRomp(x, y);
+	}
+	
+	public boolean isTerrainWater(float x, float y) {
+		return this.simulationRenderController.isTerrainWater(x, y);
 	}
 
 }

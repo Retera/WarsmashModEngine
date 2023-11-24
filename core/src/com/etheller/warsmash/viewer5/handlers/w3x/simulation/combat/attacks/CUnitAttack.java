@@ -434,7 +434,6 @@ public abstract class CUnitAttack {
 				result.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
 				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss");
 			} else {
-				System.err.println("MISS!");
 				result.setBaseDamage(0);
 				result.setBonusDamage(0);
 				result.setDamageMultiplier(0);

@@ -1520,8 +1520,21 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
-					public float getTerrainHeight(float x, float y) {
-						return War3MapViewer.this.terrain.getGroundHeight(x, y);
+					public int getTerrainHeight(float x, float y) {
+						RenderCorner corner = War3MapViewer.this.terrain.getCorner(x, y);
+						return corner == null ? 999 : corner.getLayerHeight();
+					}
+
+					@Override
+					public boolean isTerrainRomp(float x, float y) {
+						RenderCorner corner = War3MapViewer.this.terrain.getCorner(x, y);
+						return corner == null ? false : corner.romp;
+					}
+
+					@Override
+					public boolean isTerrainWater(float x, float y) {
+						RenderCorner corner = War3MapViewer.this.terrain.getCorner(x, y);
+						return corner == null ? false : corner.getWater() != 0;
 					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, this.commandErrorListener);
 

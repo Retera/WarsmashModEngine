@@ -7,7 +7,10 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 
 public class MeleeUIMinimap {
@@ -39,10 +42,9 @@ public class MeleeUIMinimap {
 				minimapFilledHeight);
 	}
 
-	public void render(final SpriteBatch batch, final Iterable<RenderUnit> units, final PathingGrid pathingGrid, final CPlayerFogOfWar fogOfWar) {
+	public void render(final CSimulation game, final SpriteBatch batch, final Iterable<RenderUnit> units, final PathingGrid pathingGrid, final CPlayerFogOfWar fogOfWar, final CPlayer player) {
 		batch.draw(this.minimapTexture, this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
 		Color og = batch.getColor();
-
 		
 		final int minX = pathingGrid.getFogOfWarIndexX(playableMapArea.getX());
 		final int minY = pathingGrid.getFogOfWarIndexY(playableMapArea.getY());
@@ -78,7 +80,7 @@ public class MeleeUIMinimap {
 		for (final RenderUnit unit : units) {
 			CUnit simUnit = unit.getSimulationUnit();
 			int dimensions = 4;
-			if (!simUnit.isHidden() && !simUnit.isDead()) {
+			if (!simUnit.isHidden() && !simUnit.isDead() && simUnit.isVisible(game, player.getId())) {
 				batch.setColor(1,1,1,1);
 				final Texture minimapIcon;
 				if (simUnit.getGoldMineData() != null) {
@@ -88,7 +90,12 @@ public class MeleeUIMinimap {
 					minimapIcon = this.specialIcons[1];
 					dimensions = 21;
 				} else if (simUnit.isHero()) {
-					batch.setColor(1f, 1f, 1f, heroAlpha);
+					if (player.hasAlliance(simUnit.getPlayerIndex(), CAllianceType.PASSIVE)) {
+						batch.setColor(1f, 1f, 1f, heroAlpha);
+					} else {
+//						Color pc = new Color(game.getPlayer(simUnit.getPlayerIndex()).getColor());
+						batch.setColor(1f, 0.2f, 0.2f, heroAlpha);
+					}
 					minimapIcon = this.specialIcons[2];
 					dimensions = 28;
 				} else {

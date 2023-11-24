@@ -332,8 +332,7 @@ public class CUnit extends CWidget {
 				buffKeyMap.put(buff.getStackingKey(), theList);
 			}
 			theList.add(buff);
-		}
-		else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
+		} else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
 			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
 					.get(NonStackingStatBuffType.MELEEATKPCT);
 			if (buffKeyMap == null) {
@@ -358,8 +357,7 @@ public class CUnit extends CWidget {
 				buffKeyMap.put(buff.getStackingKey(), theList);
 			}
 			theList.add(buff);
-		}
-		else {
+		} else {
 			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
 			if (buffKeyMap == null) {
 				buffKeyMap = new HashMap<>();
@@ -381,8 +379,7 @@ public class CUnit extends CWidget {
 					.get(NonStackingStatBuffType.MELEEATK);
 			try {
 				buffKeyMap.get(buff.getStackingKey()).remove(buff);
-			}
-			catch (final Exception e) {
+			} catch (final Exception e) {
 				System.err.println(e.getLocalizedMessage());
 				System.err.println(e.getStackTrace().toString());
 				System.err.println("From: " + this.getTypeId().asStringValue());
@@ -391,20 +388,17 @@ public class CUnit extends CWidget {
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK);
 			try {
 				buffKeyMap.get(buff.getStackingKey()).remove(buff);
-			}
-			catch (final Exception e) {
+			} catch (final Exception e) {
 				System.err.println(e.getLocalizedMessage());
 				System.err.println(e.getStackTrace().toString());
 				System.err.println("From: " + this.getTypeId().asStringValue());
 			}
-		}
-		else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
+		} else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
 			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
 					.get(NonStackingStatBuffType.MELEEATKPCT);
 			try {
 				buffKeyMap.get(buff.getStackingKey()).remove(buff);
-			}
-			catch (final Exception e) {
+			} catch (final Exception e) {
 				System.err.println(e.getLocalizedMessage());
 				System.err.println(e.getStackTrace().toString());
 				System.err.println("From: " + this.getTypeId().asStringValue());
@@ -413,19 +407,16 @@ public class CUnit extends CWidget {
 			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT);
 			try {
 				buffKeyMap.get(buff.getStackingKey()).remove(buff);
-			}
-			catch (final Exception e) {
+			} catch (final Exception e) {
 				System.err.println(e.getLocalizedMessage());
 				System.err.println(e.getStackTrace().toString());
 				System.err.println("From: " + this.getTypeId().asStringValue());
 			}
-		}
-		else {
+		} else {
 			final Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
 			try {
 				buffKeyMap.get(buff.getStackingKey()).remove(buff);
-			}
-			catch (final Exception e) {
+			} catch (final Exception e) {
 				System.err.println(e.getLocalizedMessage());
 				System.err.println(e.getStackTrace().toString());
 				System.err.println("From: " + this.getTypeId().asStringValue());
@@ -541,8 +532,7 @@ public class CUnit extends CWidget {
 //						ability.setDisabled(true);
 //					}
 //				}
-			}
-			else {
+			} else {
 				if (this.damageTakenModificationListeners.contains(CUnitDefaultEtherealDamageModListener.INSTANCE)) {
 					this.removeDamageTakenModificationListener(CUnitDefaultEtherealDamageModListener.INSTANCE);
 					game.changeUnitVertexColor(this, RenderUnit.DEFAULT);
@@ -641,8 +631,7 @@ public class CUnit extends CWidget {
 				if (!this.damageTakenListeners.contains(CUnitDefaultSleepListener.INSTANCE)) {
 					this.addDamageTakenListener(CUnitDefaultSleepListener.INSTANCE);
 				}
-			}
-			else {
+			} else {
 				if (this.damageTakenListeners.contains(CUnitDefaultSleepListener.INSTANCE)) {
 					this.removeDamageTakenListener(CUnitDefaultSleepListener.INSTANCE);
 				}
@@ -699,12 +688,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -720,12 +707,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -750,12 +735,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -771,12 +754,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -792,12 +773,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -820,12 +799,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -841,12 +818,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -863,12 +838,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -890,12 +863,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -911,12 +882,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -976,12 +945,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -1004,12 +971,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -1021,8 +986,7 @@ public class CUnit extends CWidget {
 			}
 			if (this.lifestealListener != null) {
 				this.lifestealListener.setAmount(totalNSVampBuff);
-			}
-			else {
+			} else {
 				this.lifestealListener = new CUnitDefaultLifestealListener(totalNSVampBuff);
 				this.addPostDamageListener(this.lifestealListener);
 			}
@@ -1035,12 +999,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -1052,8 +1014,7 @@ public class CUnit extends CWidget {
 			}
 			if (this.flatThornsListener != null) {
 				this.flatThornsListener.setAmount(totalNSThornsBuff);
-			}
-			else {
+			} else {
 				this.flatThornsListener = new CUnitDefaultThornsListener(false, totalNSThornsBuff);
 				this.addDamageTakenListener(this.flatThornsListener);
 			}
@@ -1066,12 +1027,10 @@ public class CUnit extends CWidget {
 				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
 					if (buffForKey == null) {
 						buffForKey = buff.getValue();
-					}
-					else {
+					} else {
 						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 							buffForKey += buff.getValue();
-						}
-						else {
+						} else {
 							buffForKey = Math.max(buffForKey, buff.getValue());
 						}
 					}
@@ -1083,8 +1042,7 @@ public class CUnit extends CWidget {
 			}
 			if (this.percentThornsListener != null) {
 				this.percentThornsListener.setAmount(totalNSThornsPctBuff);
-			}
-			else {
+			} else {
 				this.percentThornsListener = new CUnitDefaultThornsListener(true, totalNSThornsPctBuff);
 				this.addDamageTakenListener(this.percentThornsListener);
 			}
@@ -1205,8 +1163,7 @@ public class CUnit extends CWidget {
 		if (existingArts.isEmpty()) {
 			final SimulationRenderComponent fx = game.createPersistentSpellEffectOnUnit(this, id, target);
 			newFx.setArt(fx);
-		}
-		else {
+		} else {
 			newFx.setArt(existingArts.iterator().next().getArt());
 		}
 		existingArts.add(newFx);
@@ -1231,14 +1188,12 @@ public class CUnit extends CWidget {
 		}
 		if (existingBuffs.isEmpty()) {
 			this.add(game, buff);
-		}
-		else {
+		} else {
 			final CBuff currentBuff = this.getFirstAbilityOfType(buff.getClass());
 			if (currentBuff == null) {
 				existingBuffs.clear();
 				this.add(game, buff);
-			}
-			else {
+			} else {
 				if (buff.getLevel() >= currentBuff.getLevel()) {
 					this.remove(game, currentBuff);
 					this.add(game, buff);
@@ -1414,8 +1369,7 @@ public class CUnit extends CWidget {
 	public void add(final CSimulation simulation, final CBuff ability) {
 		if (this.abilities.contains(ability) && (ability instanceof ABGenericTimedBuff)) {
 			((ABGenericTimedBuff) ability).updateExpiration(simulation, this);
-		}
-		else {
+		} else {
 			this.abilities.add(ability);
 			simulation.onAbilityAddedToUnit(this, ability);
 			ability.onAdd(simulation, this);
@@ -1538,8 +1492,7 @@ public class CUnit extends CWidget {
 				ability.onRemove(game, this);
 				game.onAbilityRemovedFromUnit(this, ability);
 				removedAbilities.add(ability);
-			}
-			else {
+			} else {
 				persistedAbilities.add(ability);
 			}
 		}
@@ -1643,14 +1596,12 @@ public class CUnit extends CWidget {
 								// we just delete the unit
 								return true;
 							}
-						}
-						else {
+						} else {
 							game.heroDeathEvent(this);
 						}
 						this.deathTurnTick = gameTurnTick;
 					}
-				}
-				else if (!this.boneCorpse) {
+				} else if (!this.boneCorpse) {
 					if (game.getGameTurnTick() > (this.deathTurnTick + (int) (game.getGameplayConstants().getDecayTime()
 							/ WarsmashConstants.SIMULATION_STEP_TIME))) {
 						this.boneCorpse = true;
@@ -1660,8 +1611,7 @@ public class CUnit extends CWidget {
 							game.getWorldCollision().addUnit(this);
 						}
 					}
-				}
-				else if (game.getGameTurnTick() > (this.deathTurnTick
+				} else if (game.getGameTurnTick() > (this.deathTurnTick
 						+ (int) (getEndingDecayTime(game) / WarsmashConstants.SIMULATION_STEP_TIME))) {
 					if (this.unitType.isHero()) {
 						if (!getHeroData().isAwaitingRevive()) {
@@ -1674,8 +1624,7 @@ public class CUnit extends CWidget {
 					return true;
 				}
 			}
-		}
-		else {
+		} else {
 			if (!this.paused) {
 				if ((this.rallyPoint != this) && (this.rallyPoint instanceof CUnit)
 						&& ((CUnit) this.rallyPoint).isDead()) {
@@ -1694,8 +1643,7 @@ public class CUnit extends CWidget {
 									* (this.maximumLife * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
 							setLife(game, Math.min(this.life + healthGain, this.maximumLife));
 						}
-					}
-					else {
+					} else {
 						buildTime = game.getUnitData().getUnitType(this.upgradeIdType).getBuildTime();
 					}
 					if (this.constructionProgress >= buildTime) {
@@ -1707,8 +1655,7 @@ public class CUnit extends CWidget {
 								game.removeUnit(this.workerInside);
 								this.workerInside = null;
 							}
-						}
-						else {
+						} else {
 							popoutWorker(game);
 						}
 						final Iterator<CAbility> abilityIterator = this.abilities.iterator();
@@ -1738,8 +1685,7 @@ public class CUnit extends CWidget {
 						if (!upgrading) {
 							game.unitConstructFinishEvent(this);
 							fireConstructFinishEvents(game);
-						}
-						else {
+						} else {
 							game.unitUpgradeFinishEvent(this);
 						}
 						if (upgrading || true) {
@@ -1749,15 +1695,13 @@ public class CUnit extends CWidget {
 						}
 						this.stateNotifier.ordersChanged();
 					}
-				}
-				else {
+				} else {
 					final War3ID queuedRawcode = this.buildQueue[0];
 					if (queuedRawcode != null) {
 						// queue step forward
 						if (this.queuedUnitFoodPaid) {
 							this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
-						}
-						else {
+						} else {
 							if (this.buildQueueTypes[0] == QueueItemType.UNIT) {
 								final CPlayer player = game.getPlayer(this.playerIndex);
 								final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
@@ -1767,8 +1711,7 @@ public class CUnit extends CWidget {
 										player.setFoodUsed(newFoodUsed);
 										this.queuedUnitFoodPaid = true;
 									}
-								}
-								else {
+								} else {
 									this.queuedUnitFoodPaid = true;
 								}
 							} else if (this.buildQueueTypes[0] == QueueItemType.SACRIFICE) {
@@ -1781,8 +1724,7 @@ public class CUnit extends CWidget {
 									player.setFoodUsed(newFoodUsed);
 									this.queuedUnitFoodPaid = true;
 								}
-							}
-							else {
+							} else {
 								this.queuedUnitFoodPaid = true;
 								System.err.println(
 										"Unpaid food for non unit queue item ???? Attempting to correct this by setting paid=true");
@@ -1845,8 +1787,7 @@ public class CUnit extends CWidget {
 								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
 								this.stateNotifier.queueChanged();
 							}
-						}
-						else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
+						} else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
 							final CUnit revivingHero = game.getUnit(queuedRawcode.getValue());
 							final CUnitType trainedUnitType = revivingHero.getUnitType();
 							final CGameplayConstants gameplayConstants = game.getGameplayConstants();
@@ -1891,8 +1832,7 @@ public class CUnit extends CWidget {
 								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
 								this.stateNotifier.queueChanged();
 							}
-						}
-						else if (this.buildQueueTypes[0] == QueueItemType.RESEARCH) {
+						} else if (this.buildQueueTypes[0] == QueueItemType.RESEARCH) {
 							final CUpgradeType trainedUnitType = game.getUpgradeData().getType(queuedRawcode);
 							// TODO the "getBuildTime" math below probably would be better served to have
 							// been cached, for performance, since we are in the update method. But maybe it
@@ -1941,8 +1881,7 @@ public class CUnit extends CWidget {
 							}
 							this.life = lifePlusRegen;
 							this.stateNotifier.lifeChanged();
-						}
-						else {
+						} else {
 							float lifePlusRegen = (this.life + this.currentLifeRegenPerTick)
 									- this.baseLifeRegenPerTick;
 							if (lifePlusRegen > this.maximumLife) {
@@ -1991,8 +1930,7 @@ public class CUnit extends CWidget {
 								&& (this.currentBehavior.getHighlightOrderId() != lastBehaviorHighlightOrderId)) {
 							this.stateNotifier.ordersChanged();
 						}
-					}
-					else {
+					} else {
 						// check to auto acquire targets
 						autoAcquireTargets(game, this.moveDisabled);
 					}
@@ -2005,8 +1943,7 @@ public class CUnit extends CWidget {
 						this.abilities.get(i).onTick(game, this);
 					}
 				}
-			}
-			else if (!this.constructing) {
+			} else if (!this.constructing) {
 				// Paused units only allow passives to function. Buffs don't tick (except a few)
 				// Base and bonus life/mana regen function, but regen from Str/Int doesn't
 				if (this.life < this.maximumLife || (this.currentLifeRegenPerTick - this.lifeRegenStrengthBonus) < 0) {
@@ -2124,8 +2061,7 @@ public class CUnit extends CWidget {
 		if (!getCurrentAttacks().isEmpty() && !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 			if (this.collisionRectangle != null) {
 				tempRect.set(this.collisionRectangle);
-			}
-			else {
+			} else {
 				tempRect.set(getX(), getY(), 0, 0);
 			}
 			final float halfSize = this.acquisitionRange;
@@ -2206,8 +2142,7 @@ public class CUnit extends CWidget {
 				this.orderQueue.add(order);
 			}
 			this.stateNotifier.waypointsChanged();
-		}
-		else {
+		} else {
 			setDefaultBehavior(this.stopBehavior);
 			if (this.currentBehavior != null) {
 				this.currentBehavior.end(game, true);
@@ -2302,8 +2237,7 @@ public class CUnit extends CWidget {
 		CBehavior nextBehavior;
 		if (order != null) {
 			nextBehavior = order.begin(game, this);
-		}
-		else {
+		} else {
 			nextBehavior = this.defaultBehavior;
 		}
 		return nextBehavior;
@@ -2406,12 +2340,10 @@ public class CUnit extends CWidget {
 			tempRect.setSize(this.unitType.getBuildingPathingPixelMap().getWidth() * 32,
 					this.unitType.getBuildingPathingPixelMap().getHeight() * 32);
 			collisionSize = tempRect.getWidth() / 2;
-		}
-		else if (this.collisionRectangle != null) {
+		} else if (this.collisionRectangle != null) {
 			tempRect.set(this.collisionRectangle);
 			collisionSize = this.unitType.getCollisionSize();
-		}
-		else {
+		} else {
 			tempRect.setSize(16, 16);
 			collisionSize = this.unitType.getCollisionSize();
 		}
@@ -2491,8 +2423,7 @@ public class CUnit extends CWidget {
 		if (target instanceof CUnit) {
 			final CUnitType targetUnitType = ((CUnit) target).getUnitType();
 			targetCollisionSize = targetUnitType.getCollisionSize();
-		}
-		else {
+		} else {
 			targetCollisionSize = 0; // TODO destructable collision size here
 		}
 		if (dx < 0) {
@@ -2570,8 +2501,7 @@ public class CUnit extends CWidget {
 			final float defense = this.currentDefense;
 			if (damageType != CDamageType.NORMAL) {
 				damageRatioFromDefense = 1.0f;
-			}
-			else if (defense >= 0) {
+			} else if (defense >= 0) {
 				damageRatioFromDefense = 1f - ((defense * simulation.getGameplayConstants().getDefenseArmor())
 						/ (1 + (simulation.getGameplayConstants().getDefenseArmor() * defense)));
 			} else {
@@ -2680,8 +2610,7 @@ public class CUnit extends CWidget {
 
 		if (this.constructing) {
 			simulation.createDeathExplodeEffect(this, explodesOnDeathBuffId);
-		}
-		else {
+		} else {
 			this.deathTurnTick = simulation.getGameTurnTick();
 		}
 
@@ -2738,8 +2667,7 @@ public class CUnit extends CWidget {
 					int availableAwardXp;
 					if (killedUnitIsAHero) {
 						availableAwardXp = gameplayConstants.getGrantHeroXP(killedUnitHeroData.getHeroLevel());
-					}
-					else {
+					} else {
 						availableAwardXp = gameplayConstants.getGrantNormalXP(this.unitType.getLevel());
 					}
 					final List<CUnit> xpReceivingHeroes = new ArrayList<>();
@@ -2816,8 +2744,7 @@ public class CUnit extends CWidget {
 					return true;
 				}
 			}
-		}
-		else if (target instanceof CDestructable) {
+		} else if (target instanceof CDestructable) {
 			final CDestructable targetDest = (CDestructable) target;
 			final CDestructableType targetDestType = targetDest.getDestType();
 			final BufferedImage pathingPixelMap = targetDest.isDead() ? targetDestType.getPathingDeathPixelMap()
@@ -2974,102 +2901,79 @@ public class CUnit extends CWidget {
 													if (this.isRaisable() && this.isDecays() && isBoneCorpse()) {
 														if (targetsAllowed.contains(CTargetType.DEAD)) {
 															return true;
-														}
-														else {
+														} else {
 															receiver.targetCheckFailed(
 																	CommandStringErrorKeys.TARGET_MUST_BE_LIVING);
 														}
-													}
-													else {
+													} else {
 														receiver.targetCheckFailed(
 																CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 													}
-												}
-												else {
+												} else {
 													if (!targetsAllowed.contains(CTargetType.DEAD)
 															|| targetsAllowed.contains(CTargetType.ALIVE)) {
 														return true;
-													}
-													else {
+													} else {
 														receiver.targetCheckFailed(
 																CommandStringErrorKeys.MUST_TARGET_A_CORPSE);
 													}
 												}
-											}
-											else {
+											} else {
 												receiver.targetCheckFailed(
 														CommandStringErrorKeys.UNABLE_TO_TARGET_HEROES);
 											}
-										}
-										else {
+										} else {
 											receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_HERO);
 										}
-									}
-									else {
+									} else {
 										if (invulnerable) {
 											receiver.targetCheckFailed(
 													CommandStringErrorKeys.THAT_TARGET_IS_INVULNERABLE);
-										}
-										else {
+										} else {
 											receiver.targetCheckFailed(
 													CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 										}
 									}
-								}
-								else {
+								} else {
 									receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ANCIENTS);
 								}
-							}
-							else {
+							} else {
 								receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ANCIENT);
 							}
-						}
-						else {
+						} else {
 							receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_ORGANIC_UNITS);
 						}
-					}
-					else {
+					} else {
 						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ORGANIC_UNITS);
 					}
-				}
-				else {
+				} else {
 					receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_FRIENDLY_UNIT);
 				}
-			}
-			else {
+			} else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ENEMY_UNIT);
 			}
-		}
-		else {
+		} else {
 			if (this.unitType.getTargetedAs().contains(CTargetType.GROUND)
 					&& !targetsAllowed.contains(CTargetType.GROUND)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_GROUND_UNITS);
-			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE)
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE)
 					&& !targetsAllowed.contains(CTargetType.STRUCTURE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BUILDINGS);
-			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.AIR)
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.AIR)
 					&& !targetsAllowed.contains(CTargetType.AIR)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_AIR_UNITS);
-			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.WARD)
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.WARD)
 					&& !targetsAllowed.contains(CTargetType.WARD)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WARDS);
-			}
-			else if (targetsAllowed.contains(CTargetType.GROUND)) {
+			} else if (targetsAllowed.contains(CTargetType.GROUND)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_GROUND_UNIT);
-			}
-			else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
+			} else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_BUILDING);
-			}
-			else if (targetsAllowed.contains(CTargetType.AIR)) {
+			} else if (targetsAllowed.contains(CTargetType.AIR)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_AIR_UNIT);
-			}
-			else if (targetsAllowed.contains(CTargetType.WARD)) {
+			} else if (targetsAllowed.contains(CTargetType.WARD)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_WARD);
-			}
-			else {
+			} else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 			}
 		}
@@ -3334,7 +3238,8 @@ public class CUnit extends CWidget {
 								&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
 							if (!(unit.isUnitType(CUnitTypeJass.ETHEREAL) && attack.getAttackType() != CAttackType.MAGIC
 									&& attack.getAttackType() != CAttackType.SPELLS)
-									&& !(this.game.getGameplayConstants().isMagicImmuneResistsDamage() && unit.isUnitType(CUnitTypeJass.MAGIC_IMMUNE)
+									&& !(this.game.getGameplayConstants().isMagicImmuneResistsDamage()
+											&& unit.isUnitType(CUnitTypeJass.MAGIC_IMMUNE)
 											&& attack.getAttackType() == CAttackType.MAGIC)) {
 								if (this.source.currentBehavior != null) {
 									this.source.currentBehavior.end(this.game, false);
@@ -3663,23 +3568,20 @@ public class CUnit extends CWidget {
 						final int newFoodUsed = player.getFoodUsed() + unitType.getFoodUsed();
 						if (newFoodUsed <= player.getFoodCap()) {
 							player.setFoodUsed(newFoodUsed);
-						}
-						else {
+						} else {
 							this.queuedUnitFoodPaid = false;
 							game.getCommandErrorListener().showInterfaceError(this.playerIndex,
 									CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 							player.removeTechtreeInProgress(rawcode);
 						}
 					}
-				}
-				else if (queueItemType == QueueItemType.HERO_REVIVE) {
+				} else if (queueItemType == QueueItemType.HERO_REVIVE) {
 					final CUnitType unitType = game.getUnit(this.buildQueue[index].getValue()).getUnitType();
 					if (unitType.getFoodUsed() != 0) {
 						final int newFoodUsed = player.getFoodUsed() + unitType.getFoodUsed();
 						if (newFoodUsed <= player.getFoodCap()) {
 							player.setFoodUsed(newFoodUsed);
-						}
-						else {
+						} else {
 							this.queuedUnitFoodPaid = false;
 							game.getCommandErrorListener().showInterfaceError(this.playerIndex,
 									CommandStringErrorKeys.NOT_ENOUGH_FOOD);
@@ -3697,8 +3599,7 @@ public class CUnit extends CWidget {
 			final boolean isHeroType = unitType.isHero();
 			if (isHeroType && (player.getHeroTokens() > 0)) {
 				player.setHeroTokens(player.getHeroTokens() - 1);
-			}
-			else {
+			} else {
 				player.chargeFor(unitType);
 			}
 		}
@@ -4058,8 +3959,7 @@ public class CUnit extends CWidget {
 			// in melee games.
 			// (See "Remove creeps and critters from used start locations" implementation)
 			setLife(simulation, 0);
-		}
-		else {
+		} else {
 			if (this.constructing) {
 				player.removeTechtreeInProgress(this.unitType.getTypeId());
 			} else {
@@ -4102,8 +4002,7 @@ public class CUnit extends CWidget {
 		if (game.getGameplayConstants().isRelativeUpgradeCosts()) {
 			goldCost = newUpgradeUnitType.getGoldCost() - this.unitType.getGoldCost();
 			lumberCost = newUpgradeUnitType.getLumberCost() - this.unitType.getLumberCost();
-		}
-		else {
+		} else {
 			goldCost = newUpgradeUnitType.getGoldCost();
 			lumberCost = newUpgradeUnitType.getLumberCost();
 		}
@@ -4140,8 +4039,7 @@ public class CUnit extends CWidget {
 		if (game.getGameplayConstants().isRelativeUpgradeCosts()) {
 			goldCost = newUpgradeUnitType.getGoldCost() - this.unitType.getGoldCost();
 			lumberCost = newUpgradeUnitType.getLumberCost() - this.unitType.getLumberCost();
-		}
-		else {
+		} else {
 			goldCost = newUpgradeUnitType.getGoldCost();
 			lumberCost = newUpgradeUnitType.getLumberCost();
 		}
@@ -4326,8 +4224,7 @@ public class CUnit extends CWidget {
 		final CLevelingAbility ability = getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(abilityId));
 		if (ability == null) {
 			return 0;
-		}
-		else {
+		} else {
 			return ability.getLevel();
 		}
 	}
@@ -4446,8 +4343,7 @@ public class CUnit extends CWidget {
 							abilityHarvest.getBehaviorReturnResources().reset(game);
 							this.order(game, OrderIds.returnresources,
 									abilityHarvest.getBehaviorReturnResources().findNearestDropoffPoint(game));
-						}
-						else {
+						} else {
 							this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestMine(this, game));
 						}
 						return ResourceType.GOLD;
@@ -4456,8 +4352,7 @@ public class CUnit extends CWidget {
 							abilityHarvest.getBehaviorReturnResources().reset(game);
 							this.order(game, OrderIds.returnresources,
 									abilityHarvest.getBehaviorReturnResources().findNearestDropoffPoint(game));
-						}
-						else {
+						} else {
 							this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestTree(this,
 									abilityHarvest, game, abilityHarvest.getLastHarvestTarget()));
 						}
@@ -4480,8 +4375,7 @@ public class CUnit extends CWidget {
 							&& (abilityHarvest.getGoldCapacity() > 0)) {
 						this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestMine(this, game));
 						return ResourceType.GOLD;
-					}
-					else if (abilityHarvest.getLumberCapacity() > 0) {
+					} else if (abilityHarvest.getLumberCapacity() > 0) {
 						this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestTree(this,
 								abilityHarvest, game, abilityHarvest.getLastHarvestTarget()));
 						return ResourceType.LUMBER;
@@ -4526,28 +4420,48 @@ public class CUnit extends CWidget {
 				final CPlayerFogOfWar fogOfWar = game.getPlayer(this.playerIndex).getFogOfWar();
 				final float myX = getX();
 				final float myY = getY();
-				final float myZ = this.getUnitType().getMovementType() == MovementType.FLY ? Float.MAX_VALUE
+				final int myZ = this.getUnitType().getMovementType() == MovementType.FLY ? Integer.MAX_VALUE
 						: game.getTerrainHeight(myX, myY);
-				fogOfWar.setState(game.getPathingGrid().getFogOfWarIndexX(myX),
-						game.getPathingGrid().getFogOfWarIndexY(myY), (byte) 0);
+				final PathingGrid pathingGrid = game.getPathingGrid();
+				fogOfWar.setState(pathingGrid.getFogOfWarIndexX(myX), pathingGrid.getFogOfWarIndexY(myY), (byte) 0);
 
-				int myXi = game.getPathingGrid().getFogOfWarIndexX(myX);
-				int myYi = game.getPathingGrid().getFogOfWarIndexX(myY);
-				int maxXi = game.getPathingGrid().getFogOfWarIndexX(myX + sightRadius);
-				int maxYi = game.getPathingGrid().getFogOfWarIndexX(myY + sightRadius);
+				int myXi = pathingGrid.getFogOfWarIndexX(myX);
+				int myYi = pathingGrid.getFogOfWarIndexX(myY);
+				int maxXi = pathingGrid.getFogOfWarIndexX(myX + sightRadius);
+				int maxYi = pathingGrid.getFogOfWarIndexX(myY + sightRadius);
 				for (int a = 1; a <= Math.max(maxYi - myYi, maxXi - myXi); a++) {
 					int distance = a * a;
 
-					if (distance <= radSq && myZ >= game.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP)) {
+					if (distance <= radSq && !pathingGrid.isBlockVision(myX, myY - (a - 1) * CPlayerFogOfWar.GRID_STEP)
+							&& fogOfWar.getState(myXi, myYi - a + 1) == 0
+							&& (game.isTerrainWater(myX, myY - a * CPlayerFogOfWar.GRID_STEP)
+									|| myZ > game.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP)
+									|| (!game.isTerrainRomp(myX, myY - a * CPlayerFogOfWar.GRID_STEP) && myZ == game
+											.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP)))) {
 						fogOfWar.setState(myXi, myYi - a, (byte) 0);
 					}
-					if (distance <= radSq && myZ >= game.getTerrainHeight(myX, myY + a * CPlayerFogOfWar.GRID_STEP)) {
+					if (distance <= radSq && !pathingGrid.isBlockVision(myX, myY + (a - 1) * CPlayerFogOfWar.GRID_STEP)
+							&& fogOfWar.getState(myXi, myYi + a - 1) == 0
+							&& (game.isTerrainWater(myX, myY + a * CPlayerFogOfWar.GRID_STEP)
+									|| myZ > game.getTerrainHeight(myX, myY + a * CPlayerFogOfWar.GRID_STEP)
+									|| (!game.isTerrainRomp(myX, myY + a * CPlayerFogOfWar.GRID_STEP) && myZ == game
+											.getTerrainHeight(myX, myY + a * CPlayerFogOfWar.GRID_STEP)))) {
 						fogOfWar.setState(myXi, myYi + a, (byte) 0);
 					}
-					if (distance <= radSq && myZ >= game.getTerrainHeight(myX - a * CPlayerFogOfWar.GRID_STEP, myY)) {
+					if (distance <= radSq && !pathingGrid.isBlockVision(myX - (a - 1) * CPlayerFogOfWar.GRID_STEP, myY)
+							&& fogOfWar.getState(myXi - a + 1, myYi) == 0
+							&& (game.isTerrainWater(myX - a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| myZ > game.getTerrainHeight(myX - a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| (!game.isTerrainRomp(myX - a * CPlayerFogOfWar.GRID_STEP, myY) && myZ == game
+											.getTerrainHeight(myX - a * CPlayerFogOfWar.GRID_STEP, myY)))) {
 						fogOfWar.setState(myXi - a, myYi, (byte) 0);
 					}
-					if (distance <= radSq && myZ >= game.getTerrainHeight(myX + a * CPlayerFogOfWar.GRID_STEP, myY)) {
+					if (distance <= radSq && !pathingGrid.isBlockVision(myX + (a - 1) * CPlayerFogOfWar.GRID_STEP, myY)
+							&& fogOfWar.getState(myXi + a - 1, myYi) == 0
+							&& (game.isTerrainWater(myX + a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| myZ > game.getTerrainHeight(myX + a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| (!game.isTerrainRomp(myX + a * CPlayerFogOfWar.GRID_STEP, myY) && myZ == game
+											.getTerrainHeight(myX + a * CPlayerFogOfWar.GRID_STEP, myY)))) {
 						fogOfWar.setState(myXi + a, myYi, (byte) 0);
 					}
 				}
@@ -4559,28 +4473,56 @@ public class CUnit extends CWidget {
 							int xf = x * CPlayerFogOfWar.GRID_STEP;
 							int yf = y * CPlayerFogOfWar.GRID_STEP;
 
-							if (myZ >= game.getTerrainHeight(myX - xf, myY - yf)
+							if ((game.isTerrainWater(myX - xf, myY - yf)
+									|| myZ > game.getTerrainHeight(myX - xf, myY - yf)
+									|| (!game.isTerrainRomp(myX - xf, myY - yf)
+											&& myZ == game.getTerrainHeight(myX - xf, myY - yf)))
+									&& !pathingGrid.isBlockVision(myX - xf, myY - yf)
 									&& fogOfWar.getState(myXi - x + 1, myYi - y + 1) == 0
-									&& (x == y || (x > y && fogOfWar.getState(myXi - x + 1, myYi - y) == 0)
-											|| (x < y && fogOfWar.getState(myXi - x, myYi - y + 1) == 0))) {
+									&& (x == y
+											|| (x > y && fogOfWar.getState(myXi - x + 1, myYi - y) == 0
+													&& !pathingGrid.isBlockVision(myXi - x + 1, myYi - y))
+											|| (x < y && fogOfWar.getState(myXi - x, myYi - y + 1) == 0
+													&& !pathingGrid.isBlockVision(myXi - x, myYi - y + 1)))) {
 								fogOfWar.setState(myXi - x, myYi - y, (byte) 0);
 							}
-							if (myZ >= game.getTerrainHeight(myX - xf, myY + yf)
+							if ((game.isTerrainWater(myX - xf, myY + yf)
+									|| myZ > game.getTerrainHeight(myX - xf, myY + yf)
+									|| (!game.isTerrainRomp(myX - xf, myY + yf)
+											&& myZ == game.getTerrainHeight(myX - xf, myY + yf)))
+									&& !pathingGrid.isBlockVision(myX - xf, myY + yf)
 									&& fogOfWar.getState(myXi - x + 1, myYi + y - 1) == 0
-									&& (x == y || (x > y && fogOfWar.getState(myXi - x + 1, myYi + y) == 0)
-											|| (x < y && fogOfWar.getState(myXi - x, myYi + y - 1) == 0))) {
+									&& (x == y
+											|| (x > y && fogOfWar.getState(myXi - x + 1, myYi + y) == 0
+													&& !pathingGrid.isBlockVision(myXi - x + 1, myYi + y))
+											|| (x < y && fogOfWar.getState(myXi - x, myYi + y - 1) == 0
+													&& !pathingGrid.isBlockVision(myXi - x, myYi + y - 1)))) {
 								fogOfWar.setState(myXi - x, myYi + y, (byte) 0);
 							}
-							if (myZ >= game.getTerrainHeight(myX + xf, myY - yf)
+							if ((game.isTerrainWater(myX + xf, myY - yf)
+									|| myZ > game.getTerrainHeight(myX + xf, myY - yf)
+									|| (!game.isTerrainRomp(myX + xf, myY - yf)
+											&& myZ == game.getTerrainHeight(myX + xf, myY - yf)))
+									&& !pathingGrid.isBlockVision(myX + xf, myY - yf)
 									&& fogOfWar.getState(myXi + x - 1, myYi - y + 1) == 0
-									&& (x == y || (x > y && fogOfWar.getState(myXi + x - 1, myYi - y) == 0)
-											|| (x < y && fogOfWar.getState(myXi + x, myYi - y + 1) == 0))) {
+									&& (x == y
+											|| (x > y && fogOfWar.getState(myXi + x - 1, myYi - y) == 0
+													&& !pathingGrid.isBlockVision(myXi + x - 1, myYi - y))
+											|| (x < y && fogOfWar.getState(myXi + x, myYi - y + 1) == 0
+													&& !pathingGrid.isBlockVision(myXi + x, myYi - y + 1)))) {
 								fogOfWar.setState(myXi + x, myYi - y, (byte) 0);
 							}
-							if (myZ >= game.getTerrainHeight(myX + xf, myY + yf)
+							if ((game.isTerrainWater(myX + xf, myY + yf)
+									|| myZ > game.getTerrainHeight(myX + xf, myY + yf)
+									|| (!game.isTerrainRomp(myX + xf, myY + yf)
+											&& myZ == game.getTerrainHeight(myX + xf, myY + yf)))
+									&& !pathingGrid.isBlockVision(myX + xf, myY + yf)
 									&& fogOfWar.getState(myXi + x - 1, myYi + y - 1) == 0
-									&& (x == y || (x > y && fogOfWar.getState(myXi + x - 1, myYi + y) == 0)
-											|| (x < y && fogOfWar.getState(myXi + x, myYi + y - 1) == 0))) {
+									&& (x == y
+											|| (x > y && fogOfWar.getState(myXi + x - 1, myYi + y) == 0
+													&& !pathingGrid.isBlockVision(myXi + x - 1, myYi + y))
+											|| (x < y && fogOfWar.getState(myXi + x, myYi + y - 1) == 0
+													&& !pathingGrid.isBlockVision(myXi + x, myYi + y - 1)))) {
 								fogOfWar.setState(myXi + x, myYi + y, (byte) 0);
 							}
 						}
@@ -4758,6 +4700,10 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean isVisible(final CSimulation simulation, final int toPlayerIndex) {
+		if (toPlayerIndex == this.playerIndex
+				&& (simulation.isDay() ? this.unitType.getSightRadiusDay() : this.unitType.getSightRadiusNight()) > 0) {
+			return true;
+		}
 		final CPlayer toPlayer = simulation.getPlayer(toPlayerIndex);
 		final byte fogState = toPlayer.getFogOfWar().getState(simulation.getPathingGrid(), this.getX(), this.getY());
 		if (fogState == 0) {

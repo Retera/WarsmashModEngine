@@ -1903,7 +1903,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		}
 
-		this.meleeUIMinimap.render(batch, this.war3MapViewer.units, this.war3MapViewer.simulation.getPathingGrid(), this.war3MapViewer.getFogOfWar());
+		this.meleeUIMinimap.render(this.war3MapViewer.simulation, batch, this.war3MapViewer.units, this.war3MapViewer.simulation.getPathingGrid(), this.war3MapViewer.getFogOfWar(), this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex()));
 		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
 		for (final TextTag textTag : this.war3MapViewer.textTags) {

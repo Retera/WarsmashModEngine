@@ -44,7 +44,7 @@ public class PathingGrid {
 	// that in credits as well:
 	// https://github.com/stijnherfst/HiveWE/blob/master/Base/PathingMap.cpp
 	private void blitPathingOverlayTexture(final float positionX, final float positionY, final int rotationInput,
-			final BufferedImage pathingTextureTga) {
+			final BufferedImage pathingTextureTga, boolean blocksVision) {
 		final int rotation = (rotationInput + 450) % 360;
 		final int divW = ((rotation % 180) != 0) ? pathingTextureTga.getHeight() : pathingTextureTga.getWidth();
 		final int divH = ((rotation % 180) != 0) ? pathingTextureTga.getWidth() : pathingTextureTga.getHeight();
@@ -85,7 +85,7 @@ public class PathingGrid {
 					data |= PathingFlags.UNFLYABLE;
 				}
 				if (((rgb & 0xFF0000) >>> 16) > 127) {
-					data |= PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
+					data |= PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE | (blocksVision ? PathingFlags.BLOCKVISION : 0);
 				}
 				this.dynamicPathingOverlay[(yy * this.pathingGridSizes[0]) + xx] |= data;
 			}
@@ -371,10 +371,23 @@ public class PathingGrid {
 		return cellY;
 	}
 
+	public boolean isCellBlockVision(final int cellX, final int cellY) {
+		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
+		if (index < 0 || index >= this.pathingGrid.length) {
+			return false;
+		}
+		return PathingFlags.isPathingFlag(this.dynamicPathingOverlay[index], PathingFlags.BLOCKVISION);
+	}
+
+	public boolean isBlockVision(final float x, final float y) {
+		return isCellBlockVision(getCellX(x), getCellY(y));
+	}
+
 	public static final class PathingFlags {
 		public static short UNWALKABLE = 0x2;
 		public static short UNFLYABLE = 0x4;
 		public static short UNBUILDABLE = 0x8;
+		public static short BLOCKVISION = 0x10;
 		public static short BLIGHTED = 0x20;
 		public static short UNSWIMABLE = 0x40; // PROBABLY, didn't confirm this flag value is accurate
 		public static short BOUDNARY = 0xF0;
@@ -398,6 +411,8 @@ public class PathingGrid {
 				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNFLYABLE);
 			case UNWALKABLE:
 				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNWALKABLE);
+			case BLOCKVISION:
+				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.BLOCKVISION);
 			default:
 				return false;
 			}
@@ -485,6 +500,7 @@ public class PathingGrid {
 		private final float positionY;
 		private final int rotationInput;
 		private final BufferedImage pathingTextureTga;
+		private boolean blocksVision = false;
 
 		public RemovablePathingMapInstance(final float positionX, final float positionY, final int rotationInput,
 				final BufferedImage pathingTextureTga) {
@@ -495,7 +511,7 @@ public class PathingGrid {
 		}
 
 		private void blit() {
-			blitPathingOverlayTexture(this.positionX, this.positionY, this.rotationInput, this.pathingTextureTga);
+			blitPathingOverlayTexture(this.positionX, this.positionY, this.rotationInput, this.pathingTextureTga, this.blocksVision);
 		}
 
 		public void remove() {
@@ -508,6 +524,11 @@ public class PathingGrid {
 
 		public void add() {
 			PathingGrid.this.dynamicPathingInstances.add(this);
+			blit();
+		}
+
+		public void setBlocksVision() {
+			this.blocksVision = true;
 			blit();
 		}
 	}

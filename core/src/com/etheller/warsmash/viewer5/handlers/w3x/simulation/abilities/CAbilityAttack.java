@@ -67,8 +67,14 @@ public class CAbilityAttack extends AbstractCAbility {
 			for (final CUnitAttack attack : unit.getCurrentAttacks()) {
 				if (target.canBeTargetedBy(game, unit, attack.getTargetsAllowed())) {
 					CUnit tarU = target.visit(AbilityTargetVisitor.UNIT);
-					if (tarU != null && tarU.isUnitType(CUnitTypeJass.ETHEREAL) && attack.getAttackType() != CAttackType.MAGIC && attack.getAttackType() != CAttackType.SPELLS) {
-						receiver.targetCheckFailed(CommandStringErrorKeys.ETHEREAL_UNITS_CAN_ONLY_BE_HIT_BY_SPELLS_AND_MAGIC_DAMAGE);
+					if (tarU != null) {
+						if (tarU.isUnitType(CUnitTypeJass.ETHEREAL) && attack.getAttackType() != CAttackType.MAGIC && attack.getAttackType() != CAttackType.SPELLS) {
+							receiver.targetCheckFailed(CommandStringErrorKeys.ETHEREAL_UNITS_CAN_ONLY_BE_HIT_BY_SPELLS_AND_MAGIC_DAMAGE);
+						} else if (tarU.isUnitType(CUnitTypeJass.MAGIC_IMMUNE) && attack.getAttackType() == CAttackType.MAGIC && game.getGameplayConstants().isMagicImmuneResistsDamage()) {
+							receiver.targetCheckFailed(CommandStringErrorKeys.THAT_UNIT_IS_IMMUNE_TO_MAGIC);
+						} else {
+							canTarget = true;
+						}
 					} else {
 						canTarget = true;
 					}
@@ -210,6 +216,21 @@ public class CAbilityAttack extends AbstractCAbility {
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.ATTACK;
 	}
 
 }

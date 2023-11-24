@@ -23,6 +23,7 @@ public class AbilityBuilderConfiguration {
 
 	private List<ABCondition> extraTargetConditions;
 	private List<ABCondition> extraAutoTargetConditions;
+	private List<ABCondition> extraAutoNoTargetConditions;
 	private List<ABCondition> extraCastConditions;
 	
 	private List<ABAction> onAddAbility;
@@ -58,6 +59,7 @@ public class AbilityBuilderConfiguration {
 		this.extraTargetConditions = parser.getExtraTargetConditions();
 		this.extraAutoTargetConditions = parser.getExtraAutoTargetConditions();
 		this.extraCastConditions = parser.getExtraCastConditions();
+		this.extraAutoNoTargetConditions = parser.getExtraAutoNoTargetConditions();
 		
 		this.onAddAbility = parser.getOnAddAbility();
 		this.onAddDisabledAbility = parser.getOnAddDisabledAbility();
@@ -187,6 +189,14 @@ public class AbilityBuilderConfiguration {
 	 */
 	public void setExtraAutoTargetConditions(List<ABCondition> extraAutoTargetConditions) {
 		this.extraAutoTargetConditions = extraAutoTargetConditions;
+	}
+
+	public List<ABCondition> getExtraAutoNoTargetConditions() {
+		return extraAutoNoTargetConditions;
+	}
+
+	public void setExtraAutoNoTargetConditions(List<ABCondition> extraAutoNoTargetConditions) {
+		this.extraAutoNoTargetConditions = extraAutoNoTargetConditions;
 	}
 
 	public List<ABCondition> getExtraCastConditions() {

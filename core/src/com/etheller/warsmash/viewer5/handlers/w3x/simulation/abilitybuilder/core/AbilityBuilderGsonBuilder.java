@@ -519,6 +519,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionBeginChanneling.class, "beginChanneling")
 				.registerSubtype(ABActionFinishChanneling.class, "finishChanneling")
 				.registerSubtype(ABActionSetAbilityCastRange.class, "setAbilityCastRange")
+				.registerSubtype(ABActionAddTargetAllowed.class, "addTargetAllowed")
+				.registerSubtype(ABActionRemoveTargetAllowed.class, "removeTargetAllowed")
 				
 
 				.registerSubtype(ABActionCreateTimer.class, "createTimer")

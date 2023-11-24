@@ -563,5 +563,77 @@
 					"type": "getLastCreatedDeathReplacement"
 				}
 		}]
+	},{
+		"ids": [{"id":"Aetl"}],
+		"type": "PASSIVE",
+		"onAddAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "ETHEREAL"
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeStateModBuff",
+			"targetUnit": {
+				"type": "getCastingUnit"
+			},
+			"buff": {
+				"type": "getLastCreatedStateModBuff"
+			}
+		}]
+	},{
+		"ids": [{"id":"Amim"}],
+		"type": "PASSIVE",
+		"onAddAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "MAGIC_IMMUNE"
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeStateModBuff",
+			"targetUnit": {
+				"type": "getCastingUnit"
+			},
+			"buff": {
+				"type": "getLastCreatedStateModBuff"
+			}
+		}]
+	},{
+		"ids": [{"id":"Arsk"}],
+		"type": "PASSIVE",
+		"onAddAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "RESISTANT"
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeStateModBuff",
+			"targetUnit": {
+				"type": "getCastingUnit"
+			},
+			"buff": {
+				"type": "getLastCreatedStateModBuff"
+			}
+		}]
 	}]
 }

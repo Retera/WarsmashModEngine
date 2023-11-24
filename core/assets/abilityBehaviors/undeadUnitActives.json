@@ -2,6 +2,12 @@
 	"abilityList": [{
 		"ids": [{"id":"Acan", "castId": "cannibalize"}],
 		"type": "NORMAL_AUTOTARGET",
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"extraCastConditions": [{
 			"type": "setCantUseReasonOnFailure",
 			"condition": {
@@ -258,6 +264,12 @@
 			},
 			"reason": "SACRIFICIAL_PIT_IS_ALREADY_SACRIFICING_AN_ACOLYTE"
 		}],
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"specialFields": {
 			"pairAbilityId": {
 				"type": "getWar3IDFromString",
@@ -305,7 +317,7 @@
 				}
 			}
 		},
-		"extraAutoTargetConditions": [{
+		"extraAutoNoTargetConditions": [{
 			"type": "matchingUnitExistsInRangeOfUnit",
 			"originUnit": {
 				"type": "getCastingUnit"
@@ -505,7 +517,7 @@
 				}
 			}
 		},
-		"extraAutoTargetConditions": [{
+		"extraAutoNoTargetConditions": [{
 			"type": "matchingUnitExistsInRangeOfUnit",
 			"originUnit": {
 				"type": "getCastingUnit"

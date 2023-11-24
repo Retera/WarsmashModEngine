@@ -1237,6 +1237,12 @@
 	},{
 		"ids": [{"id":"Acoa", "castId": "mounthippogryph"}],
 		"type": "NORMAL_PAIRING",
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"specialFields": {
 			"pairAbilityId": {
 				"type": "getWar3IDFromString",
@@ -1306,6 +1312,12 @@
 	},{
 		"ids": [{"id":"Acoh", "castId": "loadarcher"}],
 		"type": "NORMAL_PAIRING",
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"specialFields": {
 			"pairAbilityId": {
 				"type": "getWar3IDFromString",
@@ -1351,6 +1363,12 @@
 	},{
 		"ids": [{"id":"Acoi", "castId": "coupleinstant"}],
 		"type": "NORMAL_PAIRING",
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"specialFields": {
 			"pairAbilityId": {
 				"type": "getWar3IDFromString",

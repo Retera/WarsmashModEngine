@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -321,6 +322,24 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	public void setAutoCastOff() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean isPhysical() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

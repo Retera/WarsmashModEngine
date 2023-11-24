@@ -29,6 +29,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
@@ -60,23 +61,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenModificationListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenModificationListenerDamageModResult;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackEvasionListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackFinalDamageTakenModificationListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPostDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerPriority;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementEffect;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementResult;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementStacking;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDeathReplacementEffectPriority;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultAccuracyCheckListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultEtherealDamageModListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultLifestealListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultSleepListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultThornsListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
@@ -450,8 +435,16 @@ public class CUnit extends CWidget {
 	public void computeUnitState(CSimulation game, StateModBuffType type) {
 		switch (type) {
 		case DISABLE_ATTACK:
+		case DISABLE_MELEE_ATTACK:
+		case DISABLE_RANGED_ATTACK:
+		case DISABLE_SPECIAL_ATTACK:
+		case DISABLE_SPELLS:
 		case ETHEREAL:
 			boolean isDisableAttack = false;
+			boolean isDisableMeleeAttack = false;
+			boolean isDisableRangedAttack = false;
+			boolean isDisableSpecialAttack = false;
+			boolean isDisableSpells = false;
 			boolean isEthereal = false;
 			for (StateModBuff buff : stateModBuffs) {
 				if (buff.getBuffType() == StateModBuffType.DISABLE_ATTACK) {
@@ -459,17 +452,62 @@ public class CUnit extends CWidget {
 						isDisableAttack = true;
 					}
 				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_MELEE_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableMeleeAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_RANGED_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableRangedAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_SPECIAL_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableSpecialAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_SPELLS) {
+					if (buff.getValue() != 0) {
+						isDisableSpells = true;
+					}
+				}
 				if (buff.getBuffType() == StateModBuffType.ETHEREAL) {
 					if (buff.getValue() != 0) {
 						isEthereal = true;
-						isDisableAttack = true;
 					}
 				}
 			}
-			CAbility attack = this.getFirstAbilityOfType(CAbilityAttack.class);
-			if (attack != null) {
-				attack.setDisabled(isDisableAttack, CAbilityDisableType.ATTACKDISABLED);
+//			CAbility attack = this.getFirstAbilityOfType(CAbilityAttack.class);
+//			if (attack != null) {
+//				attack.setDisabled(isDisableAttack, CAbilityDisableType.ATTACKDISABLED);
+//			}
+			for (CAbility ability : this.abilities) {
+				if (((isDisableAttack || isEthereal) && ability.getAbilityCategory() == CAbilityCategory.ATTACK)
+						|| (isDisableSpells && ability.getAbilityCategory() == CAbilityCategory.SPELL
+								&& !ability.isPhysical())
+						|| (isEthereal && ability.isPhysical()
+								&& (ability.getAbilityCategory() == CAbilityCategory.SPELL
+										|| ability.getAbilityCategory() == CAbilityCategory.CORE))) {
+					ability.setDisabled(true, CAbilityDisableType.ATTACKDISABLED);
+				} else {
+					ability.setDisabled(false, CAbilityDisableType.ATTACKDISABLED);
+				}
 			}
+			List<CUnitAttack> newAttackList = new ArrayList<CUnitAttack>();
+			for (int i = 0; i < this.unitSpecificAttacks.size(); i++) {
+				CUnitAttack attack = this.unitSpecificAttacks.get(i);
+				if ((this.getUnitType().getAttacksEnabled() & (i + 1)) != 0 && !isDisableAttack
+						&& (!isDisableMeleeAttack || !attack.getWeaponType().equals(CWeaponType.NORMAL))
+						&& (!isDisableRangedAttack || attack.getWeaponType().equals(CWeaponType.NORMAL))
+						&& (!isDisableSpecialAttack || !((attack.getTargetsAllowed().size() == 1)
+								&& attack.getTargetsAllowed().equals(EnumSet.of(CTargetType.TREE))))) {
+					newAttackList.add(attack);
+				}
+
+			}
+			this.setUnitSpecificCurrentAttacks(newAttackList);
+			this.notifyAttacksChanged();
 			this.checkDisabledAbilities(game, isDisableAttack);
 
 			if (isEthereal) {
@@ -517,6 +555,17 @@ public class CUnit extends CWidget {
 				}
 			}
 			this.setMagicImmune(isMagicImmune);
+			if (isMagicImmune) {
+				if (!this.finalDamageTakenModificationListeners
+						.contains(CUnitDefaultMagicImmuneDamageModListener.INSTANCE)) {
+					this.addFinalDamageTakenModificationListener(CUnitDefaultMagicImmuneDamageModListener.INSTANCE);
+				}
+			} else {
+				if (this.finalDamageTakenModificationListeners
+						.contains(CUnitDefaultMagicImmuneDamageModListener.INSTANCE)) {
+					this.removeFinalDamageTakenModificationListener(CUnitDefaultMagicImmuneDamageModListener.INSTANCE);
+				}
+			}
 			break;
 		case RESISTANT:
 			boolean isResistant = false;
@@ -2442,7 +2491,8 @@ public class CUnit extends CWidget {
 				damageRatioFromDefense = 1f - ((defense * simulation.getGameplayConstants().getDefenseArmor())
 						/ (1 + (simulation.getGameplayConstants().getDefenseArmor() * defense)));
 			} else {
-				damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -defense);
+				damageRatioFromDefense = 2f
+						- (float) StrictMath.pow(1f - simulation.getGameplayConstants().getDefenseArmor(), -defense);
 			}
 			trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * (result.computeFinalDamage());
 
@@ -3117,8 +3167,8 @@ public class CUnit extends CWidget {
 					targetCheckReceiver.reset();
 					ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
 							targetCheckReceiver);
-					if (targetCheckReceiver.isTargetable() && !this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(
-							unit.getPlayerIndex(), CAllianceType.PASSIVE)) {
+					if (targetCheckReceiver.isTargetable() && !this.game.getPlayer(this.source.getPlayerIndex())
+							.hasAlliance(unit.getPlayerIndex(), CAllianceType.PASSIVE)) {
 						if (currentUnitTarget == null) {
 							currentUnitTarget = unit;
 							comparisonValue = this.source.distance(unit);
@@ -3160,26 +3210,32 @@ public class CUnit extends CWidget {
 
 		@Override
 		public boolean call(final CUnit unit) {
-			if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
-					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()
-					&& !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
-				for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
-					if (this.source.canReach(unit, this.source.acquisitionRange)
-							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
-							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
-						if (this.source.currentBehavior != null) {
-							this.source.currentBehavior.end(this.game, false);
+			if (this.source.getAttackBehavior() != null
+					&& !this.source.getFirstAbilityOfType(CAbilityAttack.class).isDisabled()) {
+				// TODO this "attack behavior null" check was added for some weird Root edge
+				// case with NE, maybe
+				// refactor it later
+				if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
+						CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()
+						&& !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
+					for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
+						if (this.source.canReach(unit, this.source.acquisitionRange)
+								&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
+								&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
+							if (!(unit.isUnitType(CUnitTypeJass.ETHEREAL) && attack.getAttackType() != CAttackType.MAGIC
+									&& attack.getAttackType() != CAttackType.SPELLS)
+									&& !(this.game.getGameplayConstants().isMagicImmuneResistsDamage() && unit.isUnitType(CUnitTypeJass.MAGIC_IMMUNE)
+											&& attack.getAttackType() == CAttackType.MAGIC)) {
+								if (this.source.currentBehavior != null) {
+									this.source.currentBehavior.end(this.game, false);
+								}
+								this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack,
+										attack, unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING);
+								this.source.currentBehavior.begin(this.game);
+								this.foundAnyTarget = true;
+								return true;
+							}
 						}
-						if (this.source.getAttackBehavior() != null) {
-							// TODO this "attack behavior null" check was added for some weird Root edge
-							// case with NE, maybe
-							// refactor it later
-							this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack, attack,
-									unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING);
-							this.source.currentBehavior.begin(this.game);
-						}
-						this.foundAnyTarget = true;
-						return true;
 					}
 				}
 			}
@@ -4360,6 +4416,7 @@ public class CUnit extends CWidget {
 				int maxYi = game.getPathingGrid().getFogOfWarIndexX(myY + sightRadius);
 				for (int a = 1; a <= Math.max(maxYi - myYi, maxXi - myXi); a++) {
 					int distance = a * a;
+
 					if (distance <= radSq && myZ >= game.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP)) {
 						fogOfWar.setState(myXi, myYi - a, (byte) 0);
 					}

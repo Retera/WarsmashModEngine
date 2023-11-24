@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
@@ -32,6 +33,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.timer.ManaDepletedCheckTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIdUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -76,6 +78,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	protected int castId = 0;
 	private War3ID onTooltipOverride = null;
 	private War3ID offTooltipOverride = null;
+	private EnumSet<CTargetType> targetsAllowed;
+	private boolean physical = false;
+	private boolean universal = false;
 
 	public CAbilityAbilityBuilderGenericActive(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -85,6 +90,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		this.config = config;
 		this.localStore = localStore;
 		localStore.put(ABLocalStoreKeys.ABILITY, this);
+		
 		orderId = OrderIdUtils.getOrderId(config.getCastId());
 		if (config.getUncastId() != null) {
 			unorderId = OrderIdUtils.getOrderId(config.getUncastId());
@@ -248,6 +254,24 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				this.offTooltipOverride = this.config.getOverrideFields().getOffTooltipOverride().callback(game,
 						unit, localStore, castId);
 			}
+			if (this.config.getOverrideFields().getPhysicalSpell() != null) {
+				this.physical = this.config.getOverrideFields().getPhysicalSpell().callback(game,
+						unit, localStore, castId);
+			}
+			if (this.config.getOverrideFields().getUniversalSpell() != null) {
+				this.universal = this.config.getOverrideFields().getUniversalSpell().callback(game,
+						unit, localStore, castId);
+			}
+		}
+
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		final int requiredLevel = editorData.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL, 0);
+		this.targetsAllowed = levelDataLevel.getTargetsAllowed();
+		if ((requiredLevel < 6 || game.getGameplayConstants().isMagicImmuneResistsUltimates()) && !isPhysical() && !isUniversal()) {
+			this.targetsAllowed.add(CTargetType.NON_MAGIC_IMMUNE);
+		}
+		if (isPhysical() && !isUniversal()) {
+			this.targetsAllowed.add(CTargetType.NON_ETHEREAL);
 		}
 
 		if (this.config.getDisplayFields() != null && this.config.getDisplayFields().getHideAreaCursor() != null) {
@@ -508,7 +532,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == getBaseOrderId()) {
 			if (innerCheckCanTargetSpell(game, unit, orderId, target, receiver)) {
-				if (innerCheckTargetTargetable(game, unit, target)) {
+				if (innerCheckTargetTargetable(game, unit, target, receiver)) {
 					if (innerCheckTargetInRange(unit, target)) {
 						this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + -1,
 								target.visit(AbilityTargetVisitor.UNIT));
@@ -532,8 +556,6 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 					} else {
 						receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 					}
-				} else {
-					receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 				}
 			}
 		} else {
@@ -597,7 +619,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		if (orderId == getBaseOrderId()) {
 			if (innerCheckCanTargetSpell(game, unit, orderId, receiver)) {
-				String extraFailReason = innerCheckExtraAutoTargetConditions(game, unit, orderId);
+				String extraFailReason = innerCheckExtraAutoNoTargetConditions(game, unit, orderId, receiver);
 				if (extraFailReason != null) {
 					if (!extraFailReason.equals("unknown")) {
 						receiver.targetCheckFailed(extraFailReason);
@@ -640,7 +662,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (innerCheckCanTargetSpell(game, unit, orderId, target, receiver)) {
-			if (innerCheckTargetTargetable(game, unit, target)) {
+			if (innerCheckTargetTargetable(game, unit, target, receiver)) {
 				if (innerCheckTargetInRange(unit, target)) {
 					this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + -1,
 							target.visit(AbilityTargetVisitor.UNIT));
@@ -664,8 +686,6 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				} else {
 					receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 				}
-			} else {
-				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 			}
 		}
 	}
@@ -683,8 +703,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				|| ((this.active || this.separateOnAndOff) && orderId == getOffOrderId());
 	}
 
-	protected boolean innerCheckTargetTargetable(CSimulation game, CUnit unit, CWidget target) {
-		return target.canBeTargetedBy(game, unit, this.levelData.get(this.getLevel() - 1).getTargetsAllowed());
+	protected boolean innerCheckTargetTargetable(CSimulation game, CUnit unit, CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		return target.canBeTargetedBy(game, unit, targetsAllowed, receiver);
 	}
 
 	protected boolean innerCheckTargetInRange(CUnit unit, AbilityTarget target) {
@@ -722,6 +742,30 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 			if (config.getExtraAutoTargetConditions() != null) {
 				for (ABCondition condition : config.getExtraAutoTargetConditions()) {
+					result = result && condition.evaluate(game, unit, localStore, -1);
+				}
+			}
+			if (result) {
+				return null;
+			} else {
+				String failReason = (String) localStore.get(ABLocalStoreKeys.CANTUSEREASON);
+				if (failReason != null) {
+					return failReason;
+				} else {
+					return "unknown";
+				}
+			}
+		} else {
+			return null;
+		}
+	}
+
+	protected String innerCheckExtraAutoNoTargetConditions(CSimulation game, CUnit unit, int orderId,
+			AbilityTargetCheckReceiver<Void> receiver) {
+		if (config.getExtraAutoNoTargetConditions() != null) {
+			boolean result = true;
+			if (config.getExtraAutoNoTargetConditions() != null) {
+				for (ABCondition condition : config.getExtraAutoNoTargetConditions()) {
 					result = result && condition.evaluate(game, unit, localStore, -1);
 				}
 			}
@@ -973,5 +1017,20 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		}
 //		System.err.println("Returning "+requirementsMet+" for " + this.getAlias());
 		return requirementsMet;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return physical;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return universal;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.SPELL;
 	}
 }

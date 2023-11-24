@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABAutocastTypeCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -16,6 +17,9 @@ public class AbilityBuilderOverrideFields {
 	
 	private ABIDCallback onTooltipOverride;
 	private ABIDCallback offTooltipOverride;
+	
+	private ABBooleanCallback physicalSpell;
+	private ABBooleanCallback universalSpell;
 	
 	public ABFloatCallback getAreaOverride() {
 		return areaOverride;
@@ -58,6 +62,18 @@ public class AbilityBuilderOverrideFields {
 	}
 	public void setOffTooltipOverride(ABIDCallback offTooltipOverride) {
 		this.offTooltipOverride = offTooltipOverride;
+	}
+	public ABBooleanCallback getPhysicalSpell() {
+		return physicalSpell;
+	}
+	public void setPhysicalSpell(ABBooleanCallback physicalSpell) {
+		this.physicalSpell = physicalSpell;
+	}
+	public ABBooleanCallback getUniversalSpell() {
+		return universalSpell;
+	}
+	public void setUniversalSpell(ABBooleanCallback universalSpell) {
+		this.universalSpell = universalSpell;
 	}
 	
 	

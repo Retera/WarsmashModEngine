@@ -37,6 +37,11 @@ public class CGameplayConstants {
 	private final float etherealDamageBonusSpells;
 	private final float etherealDamageBonusMagic;
 	private final boolean etherealDamageBonusAlly;
+	
+	private final boolean magicImmuneResistsDamage;
+	private final boolean magicImmuneResistsLeech;
+	private final boolean magicImmuneResistsThorns;
+	private final boolean magicImmuneResistsUltimates;
 
 	private final int heroMaxReviveCostGold;
 	private final int heroMaxReviveCostLumber;
@@ -202,6 +207,11 @@ public class CGameplayConstants {
 		this.etherealDamageBonusMagic = magBonus;
 		this.etherealDamageBonusSpells = spellBonus;
 		this.etherealDamageBonusAlly = miscData.getFieldValue("EtherealDamageBonusAlly") != 0;
+
+		this.magicImmuneResistsDamage = miscData.getFieldValue("MagicImmunesResistDamage") != 0;
+		this.magicImmuneResistsLeech = miscData.getFieldValue("MagicImmunesResistLeech") != 0;
+		this.magicImmuneResistsThorns = miscData.getFieldValue("MagicImmunesResistThorns") != 0;
+		this.magicImmuneResistsUltimates = miscData.getFieldValue("MagicImmunesResistUltimates") != 0;
 
 		this.globalExperience = miscData.getFieldValue("GlobalExperience") != 0;
 		this.maxLevelHeroesDrainExp = miscData.getFieldValue("MaxLevelHeroesDrainExp") != 0;
@@ -388,6 +398,22 @@ public class CGameplayConstants {
 
 	public boolean isEtherealDamageBonusAlly() {
 		return etherealDamageBonusAlly;
+	}
+
+	public boolean isMagicImmuneResistsDamage() {
+		return magicImmuneResistsDamage;
+	}
+
+	public boolean isMagicImmuneResistsLeech() {
+		return magicImmuneResistsLeech;
+	}
+
+	public boolean isMagicImmuneResistsThorns() {
+		return magicImmuneResistsThorns;
+	}
+
+	public boolean isMagicImmuneResistsUltimates() {
+		return magicImmuneResistsUltimates;
 	}
 
 	public boolean isGlobalExperience() {

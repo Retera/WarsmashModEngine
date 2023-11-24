@@ -91,4 +91,19 @@ public class CAbilityGenericDoNothing extends AbstractGenericAliasedAbility {
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
 
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
+	}
+
 }

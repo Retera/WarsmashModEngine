@@ -158,4 +158,19 @@ public class CAbilityMove extends AbstractCAbility {
 		return true;
 	}
 
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.MOVEMENT;
+	}
+
 }

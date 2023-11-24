@@ -4,6 +4,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -94,5 +95,20 @@ public class CAbilityChannelTest extends AbstractGenericSingleIconNoSmartActiveA
 
 	public float getArtDuration() {
 		return this.artDuration;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.SPELL;
 	}
 }

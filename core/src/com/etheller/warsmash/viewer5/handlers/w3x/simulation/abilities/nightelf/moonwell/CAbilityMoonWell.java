@@ -8,6 +8,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -21,7 +23,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentModel;
 
-public class CAbilityMoonWell extends CAbilitySpellBase {
+public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbility {
 	private boolean autoCastActive = false;
 
 	private SimulationRenderComponentModel waterRenderComponent;
@@ -211,13 +213,19 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	}
 
 	@Override
+	public AutocastType getAutocastType() {
+		return AutocastType.NEARESTVALID;
+	}
+
+	@Override
 	public boolean isAutoCastOn() {
 		return this.autoCastActive;
 	}
 
 	@Override
-	public void setAutoCastOn(final boolean autoCastOn) {
+	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
 		this.autoCastActive = autoCastOn;
+		caster.setAutocastAbility(autoCastOn ? this : null);
 	}
 
 	@Override
@@ -233,6 +241,29 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	@Override
 	public int getAutoCastOffOrderId() {
 		return OrderIds.replenishoff;
+	}
+
+	@Override
+	public void setAutoCastOff() {
+		this.autoCastActive = false;
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+			AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.checkCanTarget(game, unit, orderId, target, receiver);
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
+			AbilityTargetCheckReceiver<Void> receiver) {
+		receiver.orderIdNotAccepted();
 	}
 
 }

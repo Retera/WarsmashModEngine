@@ -94,11 +94,20 @@ public class WarsmashServerWriter implements ServerToClientListener {
 	@Override
 	public void unitCancelTrainingItem(final int playerIndex, final int unitHandleId, final int cancelIndex) {
 		this.sendBuffer.clear();
-		this.sendBuffer.putInt(4 + 4 + 4 + 4 + 4 + 1);
+		this.sendBuffer.putInt(4 + 4 + 4 + 4);
 		this.sendBuffer.putInt(ServerToClientProtocol.UNIT_CANCEL_TRAINING);
 		this.sendBuffer.putInt(playerIndex);
 		this.sendBuffer.putInt(unitHandleId);
 		this.sendBuffer.putInt(cancelIndex);
+	}
+
+	@Override
+	public void issueGuiPlayerEvent(final int playerIndex, final int eventId) {
+		this.sendBuffer.clear();
+		this.sendBuffer.putInt(4 + 4 + 4);
+		this.sendBuffer.putInt(ServerToClientProtocol.ISSUE_GUI_PLAYER_EVENT);
+		this.sendBuffer.putInt(playerIndex);
+		this.sendBuffer.putInt(eventId);
 	}
 
 	@Override

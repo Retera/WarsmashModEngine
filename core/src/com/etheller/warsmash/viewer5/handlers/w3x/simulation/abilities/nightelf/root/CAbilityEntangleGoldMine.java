@@ -48,7 +48,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void onRemove(final CSimulation game, final CUnit unit) {
+	public void onRemoveDisabled(final CSimulation game, final CUnit unit) {
 		if (this.entangledMine != null) {
 			unentangle(game);
 		}

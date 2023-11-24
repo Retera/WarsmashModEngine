@@ -183,7 +183,7 @@ public class CAbilityAbilityBuilderActiveUnitTargetSimple extends CAbilityTarget
 	}
 
 	@Override
-	public void setAutoCastOn(final boolean autoCastOn) {
+	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
 		this.autocasting = autoCastOn;
 	}
 

@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -122,6 +123,21 @@ public class CAbilityRally extends AbstractCAbility implements CLevelingAbility 
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return true;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 
 }

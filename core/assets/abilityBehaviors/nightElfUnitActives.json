@@ -1237,6 +1237,12 @@
 	},{
 		"ids": [{"id":"Acoa", "castId": "mounthippogryph"}],
 		"type": "NORMAL_PAIRING",
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"specialFields": {
 			"pairAbilityId": {
 				"type": "getWar3IDFromString",
@@ -1306,6 +1312,12 @@
 	},{
 		"ids": [{"id":"Acoh", "castId": "loadarcher"}],
 		"type": "NORMAL_PAIRING",
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"specialFields": {
 			"pairAbilityId": {
 				"type": "getWar3IDFromString",
@@ -1351,6 +1363,12 @@
 	},{
 		"ids": [{"id":"Acoi", "castId": "coupleinstant"}],
 		"type": "NORMAL_PAIRING",
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"specialFields": {
 			"pairAbilityId": {
 				"type": "getWar3IDFromString",
@@ -1461,6 +1479,195 @@
 				}
 			},{
 				"type": "cleanUpCastInstance"
+		}]
+	},{
+		"ids": [{"id":"Afae", "castId": "faeriefire", "autoCastOnId": "faeriefireon", "autoCastOffId": "faeriefireoff"}],
+		"type": "NORMAL_UNITTARGET",
+		"overrideFields": {
+			"autocastTypeOverride": {
+				"type": "conditionalAutocastType",
+				"condition": {
+					"type": "bool",
+					"bool": {
+						"type": "getAbilityDataAsBoolean",
+						"dataField": "B"
+					}
+				},
+				"value1": {
+					"type": "getAutocastTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "NEARESTVALID"
+					}
+				},
+				"value2": {
+					"type": "getAutocastTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "ATTACKINGALLY"
+					}
+				}
+			}
+		},
+		"extraAutoTargetConditions": [{
+			"type": "not",
+			"condition": {
+				"type": "doesUnitHaveBuff",
+				"unit": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"id": {
+					"type": "getFirstBuffId"
+				}
+			}
+		}],
+		"onAddAbility": [{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "DEF"
+					}
+				},
+				"stackingKey": {
+					"type": "rawString",
+					"value": "faerieFire"
+				},
+				"value": {
+					"type": "negativeFloat",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "defbuff"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				}
+		}],
+		"onEndCasting": [{
+				"type": "createTimedBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					}
+				},
+				"onAddActions": [{
+						"type": "addNonStackingStatBuff",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"buff": {
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"key": {
+								"type": "rawString",
+								"value": "defbuff"
+							}
+						}
+					},{
+						"type": "createUnitVisionModifier",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"player": {
+							"type": "getOwnerOfUnit",
+							"unit": {
+								"type": "getBuffCastingUnit"
+							}
+						},
+						"alwaysNightVision": {
+							"type": "rawBoolean",
+							"value": "true"
+						}
+					},{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "vision"
+						},
+						"valueToStore": {
+							"type": "getLastCreatedVisionModifier"
+						}
+				}],
+				"onRemoveActions": [{
+						"type": "removeNonStackingStatBuff",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"buff": {
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"key": {
+								"type": "rawString",
+								"value": "defbuff"
+							}
+						}
+					},{
+						"type": "removeVisionModifier",
+						"modifier": {
+							"type": "getStoredVisionModifierByKey",
+							"key": {
+								"type": "rawString",
+								"value": "vision"
+							}
+						},
+						"player": {
+							"type": "getOwnerOfUnit",
+							"unit": {
+								"type": "getBuffCastingUnit"
+							}
+						}
+				}]
+			},{
+				"type": "addBuff",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+		}],
+		"onLevelChange": [{
+			"type": "updateNonStackingStatBuff",
+			"buff": {
+				"type": "getStoredNonStackingStatBuffByKey",
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"key": {
+					"type": "rawString",
+					"value": "defbuff"
+				}
+			},
+			"value": {
+				"type": "negativeFloat",
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "A"
+				}
+			}
 		}]
 	}]
 }

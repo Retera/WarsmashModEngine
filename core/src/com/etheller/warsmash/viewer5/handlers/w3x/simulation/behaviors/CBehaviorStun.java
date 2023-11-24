@@ -40,4 +40,9 @@ public class CBehaviorStun implements CBehavior {
 		return false;
 	}
 
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
 }

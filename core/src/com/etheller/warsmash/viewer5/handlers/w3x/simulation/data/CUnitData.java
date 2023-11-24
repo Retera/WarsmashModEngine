@@ -30,6 +30,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNagaBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityNightElfBuild;
@@ -157,6 +158,7 @@ public class CUnitData {
 	private static final String DEATH_TIME = "death"; // replaced from 'udtm'
 	private static final String TARGETED_AS = "targType"; // replaced from 'utar'
 
+	private static final String ABILITIES_DEFAULT_AUTO = "auto"; // replaced from 'uabi'
 	private static final String ABILITIES_NORMAL = "abilList"; // replaced from 'uabi'
 	private static final String ABILITIES_HERO = "heroAbilList"; // replaced from 'uhab'
 
@@ -359,13 +361,20 @@ public class CUnitData {
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);
 				}
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && createAbility instanceof CAutocastAbility) {
+					((CAutocastAbility)createAbility).setAutoCastOn(unit, true);
+				}
+			} else {
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && existingAbility instanceof CAutocastAbility) {
+					((CAutocastAbility)existingAbility).setAutoCastOn(unit, true);
+				}
 			}
 		}
 	}
 
-	public void addMissingDefaultAbilitiesToUnit(final CSimulation simulation, final HandleIdAllocator handleIdAllocator,
-			final CUnitType unitTypeInstance, final boolean resetMana, final int manaInitial, final int speed,
-			final CUnit unit) {
+	public void addMissingDefaultAbilitiesToUnit(final CSimulation simulation,
+			final HandleIdAllocator handleIdAllocator, final CUnitType unitTypeInstance, final boolean resetMana,
+			final int manaInitial, final int speed, final CUnit unit) {
 		CAbilityMove preMove = unit.getFirstAbilityOfType(CAbilityMove.class);
 		if (speed > 0 && preMove == null) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
@@ -452,6 +461,13 @@ public class CUnitData {
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);
 				}
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && createAbility instanceof CAutocastAbility) {
+					((CAutocastAbility)createAbility).setAutoCastOn(unit, true);
+				}
+			} else {
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && existingAbility instanceof CAutocastAbility) {
+					((CAutocastAbility)existingAbility).setAutoCastOn(unit, true);
+				}
 			}
 		}
 	}
@@ -470,6 +486,7 @@ public class CUnitData {
 			final float manaRegen = unitType.getFieldAsFloat(MANA_REGEN, 0);
 			final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
 			final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
+			final String defaultAutocastAbility = unitType.getFieldAsString(ABILITIES_DEFAULT_AUTO, 0);
 			final List<String> abilityListString = unitType.getFieldAsList(ABILITIES_NORMAL);
 			final List<String> heroAbilityListString = unitType.getFieldAsList(ABILITIES_HERO);
 			final int unitLevel = unitType.getFieldAsInteger(UNIT_LEVEL, 0);
@@ -511,7 +528,7 @@ public class CUnitData {
 			// made but I'll support it
 			final float minimumAttackRange = unitType.getFieldAsInteger(MINIMUM_ATTACK_RANGE, 0);
 			final EnumSet<CTargetType> targetedAs = CTargetType
-					.parseTargetTypeSet(unitType.getFieldAsString(TARGETED_AS, 0));
+					.parseTargetTypeSet(unitType.getFieldAsList(TARGETED_AS));
 			final List<String> classificationStringList = unitType.getFieldAsList(CLASSIFICATION);
 			final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
 			if (!classificationStringList.isEmpty()) {
@@ -533,7 +550,7 @@ public class CUnitData {
 				final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_HALF_DMG, 0);
 				final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_QUARTER_DMG, 0);
 				final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
-						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK1_AREA_OF_EFFECT_TARGETS, 0));
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK1_AREA_OF_EFFECT_TARGETS));
 				final CAttackType attackType = CAttackType
 						.parseAttackType(unitType.getFieldAsString(ATTACK1_ATTACK_TYPE, 0));
 				final float cooldownTime = unitType.getFieldAsFloat(ATTACK1_COOLDOWN, 0);
@@ -569,8 +586,7 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			}
-			catch (final Exception exc) {
+			} catch (final Exception exc) {
 				System.err.println("Attack 1 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			try {
@@ -581,7 +597,7 @@ public class CUnitData {
 				final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_HALF_DMG, 0);
 				final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_QUARTER_DMG, 0);
 				final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
-						.parseTargetTypeSet(unitType.getFieldAsString(ATTACK2_AREA_OF_EFFECT_TARGETS, 0));
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK2_AREA_OF_EFFECT_TARGETS));
 				final CAttackType attackType = CAttackType
 						.parseAttackType(unitType.getFieldAsString(ATTACK2_ATTACK_TYPE, 0));
 				final float cooldownTime = unitType.getFieldAsFloat(ATTACK2_COOLDOWN, 0);
@@ -633,8 +649,7 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			}
-			catch (final Exception exc) {
+			} catch (final Exception exc) {
 				System.err.println("Attack 2 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			final List<CUnitAttack> enabledAttacks = getEnabledAttacks(attacks, attacksEnabled);
@@ -694,6 +709,12 @@ public class CUnitData {
 			final List<War3ID> itemsSold = parseIDList(unitType.getFieldAsList(ITEMS_SOLD));
 			final List<War3ID> itemsMade = parseIDList(unitType.getFieldAsList(ITEMS_MADE));
 
+			final War3ID defaultAutocastAbilityId;
+			if (defaultAutocastAbility != null && !defaultAutocastAbility.isEmpty() && !defaultAutocastAbility.equals("_")) {
+				defaultAutocastAbilityId = War3ID.fromString(defaultAutocastAbility);
+			} else {
+				defaultAutocastAbilityId = null;
+			}
 			final List<War3ID> heroAbilityList = parseIDList(heroAbilityListString);
 			final List<War3ID> abilityList = parseIDList(abilityListString);
 
@@ -723,17 +744,18 @@ public class CUnitData {
 			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
 
 			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, manaRegen, lifeRegenType,
-					manaInitial, manaMaximum, speed, defense, abilityList, isBldg, movementType, moveHeight,
-					collisionSize, classifications, attacks, attacksEnabled, armorType, raise, decay, defenseType,
-					impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange, minimumAttackRange,
-					structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed, upgradeClassToType, upgradesTo,
-					itemsSold, itemsMade, unitRace, goldCost, lumberCost, foodUsed, foodMade, buildTime,
-					preventedPathingTypes, requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers,
-					unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute,
-					heroAbilityList, heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue,
-					castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay,
-					sightRadiusNight, extendedLineOfSight, goldBountyAwardedBase, goldBountyAwardedDice,
-					goldBountyAwardedSides, lumberBountyAwardedBase, lumberBountyAwardedDice, lumberBountyAwardedSides);
+					manaInitial, manaMaximum, speed, defense, defaultAutocastAbilityId, abilityList, isBldg,
+					movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled, armorType, raise,
+					decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
+					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed,
+					upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost, foodUsed,
+					foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow, turnRate,
+					requirements, requirementTiers, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence,
+					intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount, canFlee, priority,
+					revivesHeroes, pointValue, castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe,
+					defenseUpgradeBonus, sightRadiusDay, sightRadiusNight, extendedLineOfSight, goldBountyAwardedBase,
+					goldBountyAwardedDice, goldBountyAwardedSides, lumberBountyAwardedBase, lumberBountyAwardedDice,
+					lumberBountyAwardedSides);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}
@@ -785,31 +807,25 @@ public class CUnitData {
 				if (i < requirementsLevelsString.size()) {
 					if (requirementsLevelsString.get(i).isEmpty()) {
 						level = 1;
-					}
-					else {
+					} else {
 						try {
 							level = Integer.parseInt(requirementsLevelsString.get(i));
-						}
-						catch (final NumberFormatException exc) {
+						} catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				}
-				else if (requirementsLevelsString.size() > 0) {
+				} else if (requirementsLevelsString.size() > 0) {
 					final String requirementLevel = requirementsLevelsString.get(requirementsLevelsString.size() - 1);
 					if (requirementLevel.isEmpty()) {
 						level = 1;
-					}
-					else {
+					} else {
 						try {
 							level = Integer.parseInt(requirementLevel);
-						}
-						catch (final NumberFormatException exc) {
+						} catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				}
-				else {
+				} else {
 					level = 1;
 				}
 				requirements.add(new CUnitTypeRequirement(War3ID.fromString(item), level));
@@ -829,8 +845,7 @@ public class CUnitData {
 			final float newSumBonusAtLevel = sumBonusAtLevel + statPerLevel;
 			if (i == 0) {
 				table[i] = (int) newSumBonusAtLevel;
-			}
-			else {
+			} else {
 				table[i] = (int) newSumBonusAtLevel - table[i - 1];
 			}
 			sumBonusAtLevel = newSumBonusAtLevel;

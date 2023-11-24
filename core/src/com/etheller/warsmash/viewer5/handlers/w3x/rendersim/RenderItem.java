@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 
 public class RenderItem implements RenderWidget {
@@ -186,7 +187,7 @@ public class RenderItem implements RenderWidget {
 	}
 
 	@Override
-	public boolean isSelectable() {
+	public boolean isSelectable(final CSimulation simulation, final int byPlayer) {
 		return true;
 	}
 

@@ -153,6 +153,10 @@ public class AbilityDisableWhileUpgradingVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(GenericSingleIconPassiveAbility ability) {
+		if (!ability.isUniversal()) {
+			ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
+			ability.setIconShowing(false);
+		}
 		return null;
 	}
 

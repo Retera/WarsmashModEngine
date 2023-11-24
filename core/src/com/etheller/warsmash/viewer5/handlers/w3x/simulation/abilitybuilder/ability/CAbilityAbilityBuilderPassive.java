@@ -17,8 +17,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.MeleeUIAbilityActivationReceiver;
 
 public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassiveAbility implements AbilityBuilderAbility {
 
@@ -44,9 +42,11 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	}
 
 	protected void setSpellFields(CSimulation game, CUnit unit) {
-		CAbilityTypeAbilityBuilderLevelData levelDataLevel = this.levelData.get(this.getLevel() - 1);
-		this.cooldown = levelDataLevel.getCooldown();
-		this.area = levelDataLevel.getArea();
+		if (this.levelData.size() > 0) {
+			CAbilityTypeAbilityBuilderLevelData levelDataLevel = this.levelData.get(this.getLevel() - 1);
+			this.cooldown = levelDataLevel.getCooldown();
+			this.area = levelDataLevel.getArea();
+		}
 		if (this.config.getOverrideFields() != null) {
 			if (this.config.getOverrideFields().getAreaOverride() != null) {
 				this.area = this.config.getOverrideFields().getAreaOverride().callback(game, unit, localStore, 0);
@@ -80,6 +80,11 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	@Override
 	public float getArea() {
 		return area;
+	}
+
+	@Override
+	public float getCooldown() {
+		return cooldown;
 	}
 
 	@Override
@@ -198,12 +203,14 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 
 	@Override
 	public void checkRequirementsMet(CSimulation game, CUnit unit, AbilityActivationReceiver receiver) {
-		List<CUnitTypeRequirement> reqs = this.levelData.get(this.getLevel() - 1).getRequirements();
-		CPlayer player = game.getPlayer(unit.getPlayerIndex());
-		if (reqs != null) {
-			for (final CUnitTypeRequirement requirement : reqs) {
-				if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
-					receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+		if (this.levelData.size() > 0) {
+			List<CUnitTypeRequirement> reqs = this.levelData.get(this.getLevel() - 1).getRequirements();
+			CPlayer player = game.getPlayer(unit.getPlayerIndex());
+			if (reqs != null) {
+				for (final CUnitTypeRequirement requirement : reqs) {
+					if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
+						receiver.missingRequirement(requirement.getRequirement(), requirement.getRequiredLevel());
+					}
 				}
 			}
 		}
@@ -211,17 +218,20 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 
 	@Override
 	public boolean isRequirementsMet(CSimulation game, CUnit unit) {
-		List<CUnitTypeRequirement> reqs = this.levelData.get(this.getLevel() - 1).getRequirements();
-		CPlayer player = game.getPlayer(unit.getPlayerIndex());
-		boolean requirementsMet = player.isTechtreeAllowedByMax(this.getAlias());
-		if (reqs != null) {
-			for (final CUnitTypeRequirement requirement : reqs) {
-				if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
-					requirementsMet = false;
+		if (this.levelData.size() > 0) {
+			List<CUnitTypeRequirement> reqs = this.levelData.get(this.getLevel() - 1).getRequirements();
+			CPlayer player = game.getPlayer(unit.getPlayerIndex());
+			boolean requirementsMet = player.isTechtreeAllowedByMax(this.getAlias());
+			if (reqs != null) {
+				for (final CUnitTypeRequirement requirement : reqs) {
+					if (player.getTechtreeUnlocked(requirement.getRequirement()) < requirement.getRequiredLevel()) {
+						requirementsMet = false;
+					}
 				}
 			}
+			return requirementsMet;
 		}
-		return requirementsMet;
+		return true;
 	}
 
 	@Override

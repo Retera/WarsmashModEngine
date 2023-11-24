@@ -36,6 +36,12 @@ public interface CAbilityView extends CHandle {
 	boolean isIconShowing();
 
 	boolean isPermanent();
+	
+	boolean isPhysical();
+	
+	boolean isUniversal();
+	
+	CAbilityCategory getAbilityCategory();
 
 	<T> T visit(CAbilityVisitor<T> visitor);
 }

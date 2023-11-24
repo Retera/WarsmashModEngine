@@ -623,6 +623,10 @@
 			}
 		},
 		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
 			"onTooltipOverride": {
 				"type": "nullIfFalse",
 				"condition": {
@@ -1090,6 +1094,10 @@
 			}
 		},
 		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
 			"onTooltipOverride": {
 				"type": "nullIfFalse",
 				"condition": {
@@ -2618,6 +2626,10 @@
 			}
 		},
 		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
 			"onTooltipOverride": {
 				"type": "nullIfFalse",
 				"condition": {

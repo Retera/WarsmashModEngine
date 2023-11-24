@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
@@ -191,5 +192,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
 	}
 }

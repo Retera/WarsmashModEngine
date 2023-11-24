@@ -90,6 +90,9 @@ public class ABLocalStoreKeys {
 	public static final String PROJECTILEHITUNIT = "_projHitUnit#";
 	public static final String PROJECTILEHITDEST = "_projHitDest#";
 	
+	//vision
+	public static final String LASTCREATEDVISIONMODIFIER = "_lastCreatedVisionMod";
+	
 	
 	// Pairing
 	public static final String ABILITYPAIREDUNIT = "_abilityPairedUnit#";

@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -241,5 +242,20 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 
 	public void setLumberCost(final int lumberCost) {
 		this.lumberCost = lumberCost;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.SPELL;
 	}
 }

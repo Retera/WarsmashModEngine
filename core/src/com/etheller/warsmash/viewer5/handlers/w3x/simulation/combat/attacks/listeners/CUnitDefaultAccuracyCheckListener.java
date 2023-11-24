@@ -1,12 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners;
 
+import java.util.Random;
+
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 
 public class CUnitDefaultAccuracyCheckListener implements CUnitAttackPreDamageListener{
 	
@@ -19,34 +20,18 @@ public class CUnitDefaultAccuracyCheckListener implements CUnitAttackPreDamageLi
 			CUnitAttackPreDamageListenerDamageModResult damageResult) {
 		boolean miss = false;
 		if (target instanceof CUnit) {
-			// TODO
-			//if (attacker.getTerrainHeight() < target.getTerrainHeight()) {
-			//	Random random = simulation.getSeededRandom();
-			//	if (random.nextFloat(1f) > simulation.getGameplayConstants().getChanceToMiss()) {
-			//		miss = true;
-			//	}
-			//}
+			if (simulation.getTerrainHeight(attacker.getX(), attacker.getY()) < simulation.getTerrainHeight(target.getX(), target.getY())) {
+				Random random = simulation.getSeededRandom();
+				if (random.nextFloat(1f) < simulation.getGameplayConstants().getChanceToMiss()) {
+					miss = true;
+				}
+			}
 			miss = miss || ((CUnit) target).checkForMiss(simulation, attacker, true, miss, null, null, damageResult.getBaseDamage(), damageResult.getBonusDamage());
 			
 		}
 		if (miss) {
-			if (weaponType == CWeaponType.ARTILLERY) {
-				damageResult.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
-				damageResult.setMiss(true);
-			} else if (weaponType == CWeaponType.MSPLASH) {
-				damageResult.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
-				damageResult.setMiss(true);
-				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss");
-			} else {
-				System.err.println("MISS!");
-				damageResult.setBaseDamage(0);
-				damageResult.setBonusDamage(0);
-				damageResult.setDamageMultiplier(0);
-				damageResult.setMiss(true);
-				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss"); //TODO Technically cheating here
-				
-			}
-			return new CUnitAttackEffectListenerStacking(false, false);
+			damageResult.setMiss(true);
+			return new CUnitAttackEffectListenerStacking(false, true);
 		}
 		return new CUnitAttackEffectListenerStacking();
 	}

@@ -77,6 +77,11 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 	}
 
 	@Override
+	public float getCooldown() {
+		return cooldown;
+	}
+
+	@Override
 	public void startCooldown(CSimulation game, CUnit unit) {
 		War3ID cdID = getCooldownId();
 		if (cdID != War3ID.NONE) {

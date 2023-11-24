@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+
 public class AbilityBuilderDupe {
 	private String id;
 
@@ -7,6 +9,7 @@ public class AbilityBuilderDupe {
 	private String uncastId;
 	private String autoCastOnId;
 	private String autoCastOffId;
+	private AutocastType autoCastType;
 
 	public String getId() {
 		return id;
@@ -46,5 +49,19 @@ public class AbilityBuilderDupe {
 
 	public void setAutoCastOffId(String autoCastOffId) {
 		this.autoCastOffId = autoCastOffId;
+	}
+
+	/**
+	 * @return the autoCastType
+	 */
+	public AutocastType getAutoCastType() {
+		return autoCastType;
+	}
+
+	/**
+	 * @param autoCastType the autoCastType to set
+	 */
+	public void setAutoCastType(AutocastType autoCastType) {
+		this.autoCastType = autoCastType;
 	}
 }

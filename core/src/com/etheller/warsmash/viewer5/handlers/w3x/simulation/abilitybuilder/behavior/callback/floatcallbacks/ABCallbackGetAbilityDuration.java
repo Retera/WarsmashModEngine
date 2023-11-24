@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 
 public class ABCallbackGetAbilityDuration extends ABFloatCallback {
 
@@ -18,7 +19,8 @@ public class ABCallbackGetAbilityDuration extends ABFloatCallback {
 	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		List<CAbilityTypeAbilityBuilderLevelData>  levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore.get(ABLocalStoreKeys.LEVELDATA);
 		if (target != null) {
-			if (target.callback(game, caster, localStore, castId).isHero()) {
+			CUnit tar = target.callback(game, caster, localStore, castId);
+			if (tar.isHero() || tar.isUnitType(CUnitTypeJass.RESISTANT)) {
 				return levelData.get(((int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL))-1).getDurationHero();
 			}
 		}

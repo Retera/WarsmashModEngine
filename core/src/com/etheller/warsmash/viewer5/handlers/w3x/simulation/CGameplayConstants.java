@@ -27,12 +27,21 @@ public class CGameplayConstants {
 	private final float structureDecayTime;
 	private final float buildingAngle;
 	private final float rootAngle;
+	
+	private final float fogFlashTime;
+	private final float dyingRevealRadius;
+	private final float foggedAttackRevealRadius;
 
 	private final float defenseArmor;
 
 	private final float etherealDamageBonusSpells;
 	private final float etherealDamageBonusMagic;
 	private final boolean etherealDamageBonusAlly;
+	
+	private final boolean magicImmuneResistsDamage;
+	private final boolean magicImmuneResistsLeech;
+	private final boolean magicImmuneResistsThorns;
+	private final boolean magicImmuneResistsUltimates;
 
 	private final int heroMaxReviveCostGold;
 	private final int heroMaxReviveCostLumber;
@@ -138,6 +147,10 @@ public class CGameplayConstants {
 		this.buildingAngle = miscData.getFieldFloatValue("BuildingAngle");
 		this.rootAngle = miscData.getFieldFloatValue("RootAngle");
 
+		this.fogFlashTime = miscData.getFieldFloatValue("FogFlashTime");
+		this.dyingRevealRadius = miscData.getFieldFloatValue("DyingRevealRadius");
+		this.foggedAttackRevealRadius = miscData.getFieldFloatValue("FoggedAttackRevealRadius");
+
 		final CDefenseType[] defenseTypeOrder = { CDefenseType.SMALL, CDefenseType.MEDIUM, CDefenseType.LARGE,
 				CDefenseType.FORT, CDefenseType.NORMAL, CDefenseType.HERO, CDefenseType.DIVINE, CDefenseType.NONE, };
 		this.damageBonusTable = new float[CAttackType.values().length][defenseTypeOrder.length];
@@ -194,6 +207,11 @@ public class CGameplayConstants {
 		this.etherealDamageBonusMagic = magBonus;
 		this.etherealDamageBonusSpells = spellBonus;
 		this.etherealDamageBonusAlly = miscData.getFieldValue("EtherealDamageBonusAlly") != 0;
+
+		this.magicImmuneResistsDamage = miscData.getFieldValue("MagicImmunesResistDamage") != 0;
+		this.magicImmuneResistsLeech = miscData.getFieldValue("MagicImmunesResistLeech") != 0;
+		this.magicImmuneResistsThorns = miscData.getFieldValue("MagicImmunesResistThorns") != 0;
+		this.magicImmuneResistsUltimates = miscData.getFieldValue("MagicImmunesResistUltimates") != 0;
 
 		this.globalExperience = miscData.getFieldValue("GlobalExperience") != 0;
 		this.maxLevelHeroesDrainExp = miscData.getFieldValue("MaxLevelHeroesDrainExp") != 0;
@@ -354,6 +372,18 @@ public class CGameplayConstants {
 		return this.rootAngle;
 	}
 
+	public float getFogFlashTime() {
+		return fogFlashTime;
+	}
+
+	public float getDyingRevealRadius() {
+		return dyingRevealRadius;
+	}
+
+	public float getFoggedAttackRevealRadius() {
+		return foggedAttackRevealRadius;
+	}
+
 	public float getDefenseArmor() {
 		return this.defenseArmor;
 	}
@@ -368,6 +398,22 @@ public class CGameplayConstants {
 
 	public boolean isEtherealDamageBonusAlly() {
 		return etherealDamageBonusAlly;
+	}
+
+	public boolean isMagicImmuneResistsDamage() {
+		return magicImmuneResistsDamage;
+	}
+
+	public boolean isMagicImmuneResistsLeech() {
+		return magicImmuneResistsLeech;
+	}
+
+	public boolean isMagicImmuneResistsThorns() {
+		return magicImmuneResistsThorns;
+	}
+
+	public boolean isMagicImmuneResistsUltimates() {
+		return magicImmuneResistsUltimates;
 	}
 
 	public boolean isGlobalExperience() {

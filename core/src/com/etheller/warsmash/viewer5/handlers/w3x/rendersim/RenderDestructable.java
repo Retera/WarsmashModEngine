@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 
 public class RenderDestructable extends RenderDoodad implements RenderWidget {
@@ -178,7 +179,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	}
 
 	@Override
-	public boolean isSelectable() {
+	public boolean isSelectable(final CSimulation simulation, final int byPlayer) {
 		return this.selectable;
 	}
 

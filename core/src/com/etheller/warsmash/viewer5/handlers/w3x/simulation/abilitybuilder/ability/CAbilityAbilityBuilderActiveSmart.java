@@ -10,6 +10,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorAbilityBuilderBase;
@@ -281,6 +283,63 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	public void runOnOrderIssuedActions(CSimulation game, CUnit caster, int orderId) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public AutocastType getAutocastType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+			AbilityTargetCheckReceiver<CWidget> receiver) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
+			AbilityTargetCheckReceiver<Void> receiver) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public float getCooldown() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setAutoCastOff() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isPhysical() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

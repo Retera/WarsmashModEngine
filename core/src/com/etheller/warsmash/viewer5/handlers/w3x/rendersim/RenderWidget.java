@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -46,7 +47,7 @@ public interface RenderWidget {
 
 	SplatMover getSelectionCircle();
 
-	boolean isSelectable();
+	boolean isSelectable(CSimulation simulation, int byPlayer);
 
 	boolean isShowSelectionCircleAboveWater();
 

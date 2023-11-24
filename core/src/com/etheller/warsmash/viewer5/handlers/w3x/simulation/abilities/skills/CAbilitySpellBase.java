@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -47,10 +48,10 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 
 		this.targetsAllowed = CTargetType
 				.parseTargetTypeSet(worldEditorAbility.getFieldAsList(AbilityFields.TARGETS_ALLOWED + level));
-		if ((requiredLevel < 6) && !isPhysicalSpell() && !isUniversalSpell()) {
+		if ((requiredLevel < 6) && !isPhysical() && !isUniversal()) {
 			this.targetsAllowed.add(CTargetType.NON_MAGIC_IMMUNE);
 		}
-		if (isPhysicalSpell() && !isUniversalSpell()) {
+		if (isPhysical() && !isUniversal()) {
 			this.targetsAllowed.add(CTargetType.NON_ETHEREAL);
 		}
 		final String animNames = worldEditorAbility.getField(AbilityFields.ANIM_NAMES);
@@ -221,11 +222,18 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		return code;
 	}
 
-	public boolean isUniversalSpell() {
+	@Override
+	public boolean isUniversal() {
 		return false;
 	}
 
-	public boolean isPhysicalSpell() {
+	@Override
+	public boolean isPhysical() {
 		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.SPELL;
 	}
 }

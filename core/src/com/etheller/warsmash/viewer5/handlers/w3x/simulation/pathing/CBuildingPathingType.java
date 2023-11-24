@@ -8,7 +8,8 @@ public enum CBuildingPathingType {
 	UNFLYABLE,
 	UNWALKABLE,
 	UNAMPH,
-	UNFLOAT;
+	UNFLOAT,
+	BLOCKVISION;
 
 	public static CBuildingPathingType parsePathingType(final String typeString) {
 		if ("_".equals(typeString) || "".equals(typeString)) {

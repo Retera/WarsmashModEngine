@@ -21,6 +21,7 @@ import java.util.ArrayList;
 public class WorldScene extends Scene {
 
 	public Grid grid;
+	private final InstanceProcessor instanceProcessor = new InstanceProcessor();
 
 	public WorldScene(final ModelViewer viewer, final SceneLightManager lightManager) {
 		super(viewer, lightManager);
@@ -56,44 +57,64 @@ public class WorldScene extends Scene {
 		this.visibleInstances = 0;
 
 		// Update and collect all of the visible instances.
+		instanceProcessor.reset(dt, frame);
 		for (final GridCell cell : this.grid.cells) {
 			if (cell.isVisible(this.camera) || true) {
 				this.visibleCells += 1;
 
 				for (final ModelInstance instance : new ArrayList<>(cell.instances)) {
-//					final ModelInstance instance = cell.instances.get(i);
-					if (instance.rendered && (instance.cullFrame < frame) && instance.isVisible(this.camera)) {
-						instance.cullFrame = frame;
+					instanceProcessor.call(instance);
+				}
+			}
+		}
+	}
 
-						if (instance.updateFrame < frame) {
-							instance.update(dt, this);
-							if (!instance.rendered) {
-								// it became hidden while it updated
-								continue;
-							}
-						}
+	private final class InstanceProcessor implements ModelInstanceCallback {
+		private float dt;
+		private int frame;
 
-						if (instance.isBatched()) {
-							if (this.currentBatchedInstance < this.batchedInstances.size()) {
-								this.batchedInstances.set(this.currentBatchedInstance++, instance);
-							}
-							else {
-								this.batchedInstances.add(instance);
-								this.currentBatchedInstance++;
-							}
-						}
-						else {
-							if (this.currentInstance < this.instances.size()) {
-								this.instances.set(this.currentInstance++, instance);
-							}
-							else {
-								this.instances.add(instance);
-								this.currentInstance++;
-							}
-						}
+		public InstanceProcessor reset(final float dt, final int frame) {
+			this.dt = dt;
+			this.frame = frame;
+			return this;
+		}
 
-						this.visibleInstances += 1;
+		@Override
+		public void call(final ModelInstance instance) {
+//			final ModelInstance instance = cell.instances.get(i);
+			if (instance.rendered && (instance.cullFrame < frame) && instance.isVisible(camera)) {
+				instance.cullFrame = frame;
+
+				if (instance.updateFrame < frame) {
+					instance.update(dt, WorldScene.this);
+					if (!instance.rendered) {
+						// it became hidden while it updated
+						return;
 					}
+				}
+
+				if (instance.isBatched()) {
+					if (currentBatchedInstance < batchedInstances.size()) {
+						batchedInstances.set(currentBatchedInstance++, instance);
+					}
+					else {
+						batchedInstances.add(instance);
+						currentBatchedInstance++;
+					}
+				}
+				else {
+					if (currentInstance < instances.size()) {
+						instances.set(currentInstance++, instance);
+					}
+					else {
+						instances.add(instance);
+						currentInstance++;
+					}
+				}
+
+				visibleInstances += 1;
+				for (int i = 0, l = instance.childrenInstances.size(); i < l; i++) {
+					call(instance.childrenInstances.get(i));
 				}
 			}
 		}

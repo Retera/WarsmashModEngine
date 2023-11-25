@@ -1494,7 +1494,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void update(final float deltaTime) {
-		this.portrait.update();
+		this.portrait.update(deltaTime);
 
 		final int baseMouseX = Gdx.input.getX();
 		int mouseX = baseMouseX;
@@ -2435,6 +2435,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		private final EnumSet<AnimationTokens.SecondaryTag> recycleSet = EnumSet
 				.noneOf(AnimationTokens.SecondaryTag.class);
 		private RenderUnit unit;
+		// If animationTargetDuration is 0, it will play the whole animation.
+		private long portraitTargetDuration = 0;
+		private long portraitCurrentDuration = 0;
 
 		public Portrait(final War3MapViewer war3MapViewer, final Scene portraitScene) {
 			this.portraitScene = portraitScene;
@@ -2443,13 +2446,25 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
 		}
 
-		public void update() {
+		public void update(final float dt) {
 			this.portraitCameraManager.updateCamera();
-			if ((this.modelInstance != null)
-					&& (this.modelInstance.sequenceEnded || (this.modelInstance.sequence == -1))) {
-				this.recycleSet.clear();
-				this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
-				SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+			if (this.modelInstance != null) {
+				if (this.portraitTargetDuration != 0) {
+					if (this.portraitCurrentDuration < this.portraitTargetDuration) {
+						this.portraitCurrentDuration += (dt * 1000);
+						modelInstance.sequenceLoopMode = SequenceLoopMode.ALWAYS_LOOP;
+					} else {
+						this.modelInstance.sequenceEnded = true;
+						modelInstance.sequenceLoopMode = SequenceLoopMode.NEVER_LOOP;
+						this.portraitTargetDuration = 0;
+					}
+				}
+
+				if (this.modelInstance.sequenceEnded || (this.modelInstance.sequence == -1)) {
+					this.recycleSet.clear();
+					this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
+					SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+				}
 			}
 		}
 
@@ -2461,11 +2476,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
 				this.recycleSet.add(SecondaryTag.TALK);
 				if(us != null) {
-					this.modelInstance.animationTargetDuration = (long)(1000 * Extensions.audio.getDuration(us.getLastPlayedSound()));
+					this.portraitTargetDuration = (long)(1000 * Extensions.audio.getDuration(us.getLastPlayedSound()));
 				} else {
-					this.modelInstance.animationTargetDuration = 0;
+					this.portraitTargetDuration = 0;
 				}
-				this.modelInstance.animationCurrentDuration = 0;
+				this.portraitCurrentDuration = 0;
 				SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
 			}
 		}

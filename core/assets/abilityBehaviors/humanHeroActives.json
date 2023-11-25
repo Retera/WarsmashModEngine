@@ -269,7 +269,7 @@
 							}
 						}
 					},{
-						"type": "iterateUnitsInRangeOfLocation",
+						"type": "iterateUnitsInRangeOfLocationMatchingCondition",
 						"location": {
 							"type": "getStoredLocationByKey",
 							"key": {
@@ -279,6 +279,12 @@
 						},
 						"range": {
 							"type": "getAbilityArea"
+						},
+						"condition": {
+							"type": "isUnitValidTarget",
+							"target": {
+								"type": "getMatchingUnit"
+							}
 						},
 						"iterationActions": [{
 								"type": "createTimedArtBuff",
@@ -458,7 +464,7 @@
 							}
 						}
 					},{
-						"type": "iterateUnitsInRangeOfLocation",
+						"type": "iterateUnitsInRangeOfLocationMatchingCondition",
 						"location": {
 							"type": "getStoredLocationByKey",
 							"key": {
@@ -468,6 +474,12 @@
 						},
 						"range": {
 							"type": "getAbilityArea"
+						},
+						"condition": {
+							"type": "isUnitValidTarget",
+							"target": {
+								"type": "getMatchingUnit"
+							}
 						},
 						"iterationActions": [{
 								"type": "createTimedArtBuff",

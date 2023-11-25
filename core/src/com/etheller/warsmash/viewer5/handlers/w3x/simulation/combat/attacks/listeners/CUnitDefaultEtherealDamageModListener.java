@@ -22,7 +22,7 @@ public class CUnitDefaultEtherealDamageModListener implements CUnitAttackDamageT
 				previousDamage.addDamageMultiplier(game.getGameplayConstants().getEtherealDamageBonusSpells());
 			}
 		}
-		if (damageType == CDamageType.NORMAL || (attackType != CAttackType.MAGIC && attackType != CAttackType.SPELLS)) {
+		if (damageType == CDamageType.NORMAL && attackType != CAttackType.MAGIC) {
 			previousDamage.setBaseDamage(0);
 			previousDamage.setBonusDamage(0);
 			previousDamage.setDamageMultiplier(0);

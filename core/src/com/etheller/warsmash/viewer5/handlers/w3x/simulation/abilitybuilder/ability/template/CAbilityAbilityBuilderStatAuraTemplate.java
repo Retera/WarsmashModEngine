@@ -315,4 +315,9 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 		emptyAura(game, unit);
 	}
 
+	@Override
+	public boolean isUniversal() {
+		return true;
+	}
+
 }

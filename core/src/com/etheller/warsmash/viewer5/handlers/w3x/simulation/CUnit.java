@@ -28,9 +28,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityCargoHold;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
@@ -48,6 +51,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABGenericTimedBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTickingPausedBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.BehaviorTargetUnitVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
@@ -59,6 +63,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStun;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUpgradingVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -82,6 +87,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.list
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultAccuracyCheckListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultEtherealDamageModListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultLifestealListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultMagicImmuneDamageModListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultSleepListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitDefaultThornsListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
@@ -91,8 +97,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTarget
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CUnitAttackVisionFogModifier;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CUnitDeathVisionFogModifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
@@ -187,6 +195,8 @@ public class CUnit extends CWidget {
 	private transient List<StateListenerUpdate> stateListenersUpdates = new ArrayList<>();
 	private float acquisitionRange;
 	private transient static AutoAttackTargetFinderEnum autoAttackTargetFinderEnum = new AutoAttackTargetFinderEnum();
+	private transient static AutocastTargetFinderEnum autocastTargetFinderEnum = new AutocastTargetFinderEnum();
+	private transient CAutocastAbility autocastAbility = null;
 
 	private transient CBehaviorMove moveBehavior;
 	private transient CBehaviorAttack attackBehavior;
@@ -210,6 +220,7 @@ public class CUnit extends CWidget {
 	private boolean autoAttack = true;
 	private boolean moveDisabled = false;
 	private CBehavior defaultBehavior;
+	private CBehavior interruptedDefaultBehavior;
 	private CBehavior interruptedBehavior;
 	private COrder lastStartedOrder = null;
 	private CUnit workerInside;
@@ -226,6 +237,7 @@ public class CUnit extends CWidget {
 	private List<CUnitAttack> unitSpecificAttacks;
 	private List<CUnitAttack> unitSpecificCurrentAttacks;
 	private boolean disableAttacks;
+	private final CUnitAttackVisionFogModifier attackFogMod;
 
 	private final Map<CUnitAttackPreDamageListenerPriority, List<CUnitAttackPreDamageListener>> preDamageListeners = new HashMap<>();
 	private final List<CUnitAttackPostDamageListener> postDamageListeners = new ArrayList<>();
@@ -273,6 +285,7 @@ public class CUnit extends CWidget {
 		initializeListenerLists();
 		this.addPreDamageListener(CUnitAttackPreDamageListenerPriority.ACCURACY,
 				new CUnitDefaultAccuracyCheckListener());
+		this.attackFogMod = new CUnitAttackVisionFogModifier(this, playerIndex);
 		computeAllDerivedFields();
 	}
 
@@ -459,8 +472,16 @@ public class CUnit extends CWidget {
 	public void computeUnitState(final CSimulation game, final StateModBuffType type) {
 		switch (type) {
 		case DISABLE_ATTACK:
+		case DISABLE_MELEE_ATTACK:
+		case DISABLE_RANGED_ATTACK:
+		case DISABLE_SPECIAL_ATTACK:
+		case DISABLE_SPELLS:
 		case ETHEREAL:
 			boolean isDisableAttack = false;
+			boolean isDisableMeleeAttack = false;
+			boolean isDisableRangedAttack = false;
+			boolean isDisableSpecialAttack = false;
+			boolean isDisableSpells = false;
 			boolean isEthereal = false;
 			for (final StateModBuff buff : stateModBuffs) {
 				if (buff.getBuffType() == StateModBuffType.DISABLE_ATTACK) {
@@ -468,17 +489,62 @@ public class CUnit extends CWidget {
 						isDisableAttack = true;
 					}
 				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_MELEE_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableMeleeAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_RANGED_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableRangedAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_SPECIAL_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableSpecialAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_SPELLS) {
+					if (buff.getValue() != 0) {
+						isDisableSpells = true;
+					}
+				}
 				if (buff.getBuffType() == StateModBuffType.ETHEREAL) {
 					if (buff.getValue() != 0) {
 						isEthereal = true;
-						isDisableAttack = true;
 					}
 				}
 			}
-			final CAbility attack = this.getFirstAbilityOfType(CAbilityAttack.class);
-			if (attack != null) {
-				attack.setDisabled(isDisableAttack, CAbilityDisableType.ATTACKDISABLED);
+//			CAbility attack = this.getFirstAbilityOfType(CAbilityAttack.class);
+//			if (attack != null) {
+//				attack.setDisabled(isDisableAttack, CAbilityDisableType.ATTACKDISABLED);
+//			}
+			for (final CAbility ability : this.abilities) {
+				if ((isDisableAttack || isEthereal) && ability.getAbilityCategory() == CAbilityCategory.ATTACK
+						|| isDisableSpells && ability.getAbilityCategory() == CAbilityCategory.SPELL
+								&& !ability.isPhysical()
+						|| isEthereal && ability.isPhysical() && (ability.getAbilityCategory() == CAbilityCategory.SPELL
+								|| ability.getAbilityCategory() == CAbilityCategory.CORE)) {
+					ability.setDisabled(true, CAbilityDisableType.ATTACKDISABLED);
+				}
+				else {
+					ability.setDisabled(false, CAbilityDisableType.ATTACKDISABLED);
+				}
 			}
+			final List<CUnitAttack> newAttackList = new ArrayList<CUnitAttack>();
+			for (int i = 0; i < this.unitSpecificAttacks.size(); i++) {
+				final CUnitAttack attack = this.unitSpecificAttacks.get(i);
+				if ((this.getUnitType().getAttacksEnabled() & i + 1) != 0 && !isDisableAttack
+						&& (!isDisableMeleeAttack || !attack.getWeaponType().equals(CWeaponType.NORMAL))
+						&& (!isDisableRangedAttack || attack.getWeaponType().equals(CWeaponType.NORMAL))
+						&& (!isDisableSpecialAttack || !(attack.getTargetsAllowed().size() == 1
+								&& attack.getTargetsAllowed().equals(EnumSet.of(CTargetType.TREE))))) {
+					newAttackList.add(attack);
+				}
+
+			}
+			this.setUnitSpecificCurrentAttacks(newAttackList);
+			this.notifyAttacksChanged();
 			this.checkDisabledAbilities(game, isDisableAttack);
 
 			if (isEthereal) {
@@ -527,6 +593,18 @@ public class CUnit extends CWidget {
 				}
 			}
 			this.setMagicImmune(isMagicImmune);
+			if (isMagicImmune) {
+				if (!this.finalDamageTakenModificationListeners
+						.contains(CUnitDefaultMagicImmuneDamageModListener.INSTANCE)) {
+					this.addFinalDamageTakenModificationListener(CUnitDefaultMagicImmuneDamageModListener.INSTANCE);
+				}
+			}
+			else {
+				if (this.finalDamageTakenModificationListeners
+						.contains(CUnitDefaultMagicImmuneDamageModListener.INSTANCE)) {
+					this.removeFinalDamageTakenModificationListener(CUnitDefaultMagicImmuneDamageModListener.INSTANCE);
+				}
+			}
 			break;
 		case RESISTANT:
 			boolean isResistant = false;
@@ -559,6 +637,7 @@ public class CUnit extends CWidget {
 				if (this.currentBehavior == null || this.currentBehavior.getHighlightOrderId() != OrderIds.stunned) {
 					if (this.currentBehavior != null) {
 						this.interruptedBehavior = this.currentBehavior;
+						this.interruptedDefaultBehavior = this.defaultBehavior;
 					}
 					this.currentBehavior = new CBehaviorStun(this);
 					this.currentBehavior.begin(game);
@@ -569,9 +648,10 @@ public class CUnit extends CWidget {
 			else {
 				if (this.currentBehavior != null && this.currentBehavior.getHighlightOrderId() == OrderIds.stunned) {
 //					this.setAcceptingOrders(true);
-					setDefaultBehavior(this.stopBehavior);
+					setDefaultBehavior(this.interruptedDefaultBehavior);
 					this.currentBehavior = this.pollNextOrderBehavior(game);
 					this.interruptedBehavior = null;
+					this.interruptedDefaultBehavior = null;
 					this.stateNotifier.ordersChanged();
 				}
 			}
@@ -1915,6 +1995,24 @@ public class CUnit extends CWidget {
 						this.stateNotifier.manaChanged();
 					}
 					if (this.currentBehavior != null) {
+						final CUnit target = this.currentBehavior.visit(BehaviorTargetUnitVisitor.INSTANCE);
+						if (target != null && !game.getPlayer(playerIndex).hasAlliance(target.getPlayerIndex(),
+								CAllianceType.SHARED_VISION)) {
+							if (attackFogMod.getPlayerIndex() != target.getPlayerIndex()) {
+								game.getPlayer(this.attackFogMod.getPlayerIndex()).removeFogModifer(game,
+										this.attackFogMod);
+								this.attackFogMod.setPlayerIndex(target.getPlayerIndex());
+								game.getPlayer(target.getPlayerIndex()).addFogModifer(game, this.attackFogMod);
+							}
+						}
+						else {
+							if (this.attackFogMod.getPlayerIndex() != this.playerIndex) {
+								game.getPlayer(this.attackFogMod.getPlayerIndex()).removeFogModifer(game,
+										this.attackFogMod);
+								this.attackFogMod.setPlayerIndex(playerIndex);
+							}
+						}
+
 						final CBehavior lastBehavior = this.currentBehavior;
 						final int lastBehaviorHighlightOrderId = lastBehavior.getHighlightOrderId();
 						this.currentBehavior = this.currentBehavior.update(game);
@@ -1931,9 +2029,7 @@ public class CUnit extends CWidget {
 					}
 					else {
 						// check to auto acquire targets
-						if (autoAttack) {
-							autoAcquireAttackTargets(game, false);
-						}
+						autoAcquireTargets(game, this.moveDisabled);
 					}
 //					for (CAbility ability : new ArrayList<>(this.abilities)) {
 //						ability.onTick(game, this);
@@ -2017,6 +2113,50 @@ public class CUnit extends CWidget {
 		}
 	}
 
+	public boolean autoAcquireTargets(final CSimulation game, final boolean disableMove) {
+		final boolean autocast = autoAcquireAutocastTargets(game, disableMove);
+		if (!autocast) {
+			if (autoAttack) {
+				return autoAcquireAttackTargets(game, disableMove);
+			}
+		}
+		return autocast;
+	}
+
+	public boolean autoAcquireAutocastTargets(final CSimulation game, final boolean disableMove) {
+		if (autocastAbility != null && !autocastAbility.isDisabled()) {
+			if (autocastAbility.getAutocastType() == AutocastType.NOTARGET) {
+				final BooleanAbilityTargetCheckReceiver<Void> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+						.<Void>getInstance().reset();
+				autocastAbility.checkCanAutoTargetNoTarget(game, this, autocastAbility.getBaseOrderId(),
+						booleanTargetReceiver);
+				if (booleanTargetReceiver.isTargetable()) {
+					return this.order(game, autocastAbility.getBaseOrderId(), null);
+				}
+			}
+			else if (autocastAbility.getAutocastType() != AutocastType.NONE) {
+				if (this.collisionRectangle != null) {
+					tempRect.set(this.collisionRectangle);
+				}
+				else {
+					tempRect.set(getX(), getY(), 0, 0);
+				}
+				final float halfSize = this.acquisitionRange;
+				tempRect.x -= halfSize;
+				tempRect.y -= halfSize;
+				tempRect.width += halfSize * 2;
+				tempRect.height += halfSize * 2;
+				game.getWorldCollision().enumUnitsInRect(tempRect,
+						autocastTargetFinderEnum.reset(game, this, autocastAbility, disableMove));
+				if (autocastTargetFinderEnum.currentUnitTarget != null) {
+					this.order(game, autocastAbility.getBaseOrderId(), autocastTargetFinderEnum.currentUnitTarget);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public boolean autoAcquireAttackTargets(final CSimulation game, final boolean disableMove) {
 		if (!getCurrentAttacks().isEmpty() && !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 			if (this.collisionRectangle != null) {
@@ -2094,7 +2234,17 @@ public class CUnit extends CWidget {
 		}
 		else if (queue && this.currentBehavior != this.stopBehavior
 				&& this.currentBehavior != this.holdPositionBehavior) {
-			this.orderQueue.add(order);
+			if (order.getOrderId() == OrderIds.patrol) {
+				if (this.defaultBehavior == this.patrolBehavior) {
+					this.patrolBehavior.addPatrolPoint(order.getTarget(game));
+				}
+				else {
+					this.orderQueue.add(order);
+				}
+			}
+			else {
+				this.orderQueue.add(order);
+			}
 			this.stateNotifier.waypointsChanged();
 		}
 		else {
@@ -2137,50 +2287,51 @@ public class CUnit extends CWidget {
 						return true;
 					}
 				}
-				final boolean targetable = target.visit(new AbilityTargetVisitor<Boolean>() {
-					@Override
-					public Boolean accept(final AbilityPointTarget target) {
-						final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
-								.<AbilityPointTarget>getInstance().reset();
-						ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
-						final boolean pointTargetable = booleanTargetReceiver.isTargetable();
-						if (pointTargetable) {
-							order(simulation, new COrderTargetPoint(ability.getHandleId(), orderId, target, false),
-									false);
+				else {
+					final boolean targetable = target.visit(new AbilityTargetVisitor<Boolean>() {
+						@Override
+						public Boolean accept(final AbilityPointTarget target) {
+							final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+									.<AbilityPointTarget>getInstance().reset();
+							ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
+							final boolean pointTargetable = booleanTargetReceiver.isTargetable();
+							if (pointTargetable) {
+								order(simulation, new COrderTargetPoint(ability.getHandleId(), orderId, target, false),
+										false);
+							}
+							return pointTargetable;
 						}
-						return pointTargetable;
-					}
 
-					public Boolean acceptWidget(final CWidget target) {
-						final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
-								.<CWidget>getInstance().reset();
-						ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
-						final boolean widgetTargetable = booleanTargetReceiver.isTargetable();
-						if (widgetTargetable) {
-							order(simulation,
-									new COrderTargetWidget(ability.getHandleId(), orderId, target.getHandleId(), false),
-									false);
+						public Boolean acceptWidget(final CWidget target) {
+							final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+									.<CWidget>getInstance().reset();
+							ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
+							final boolean widgetTargetable = booleanTargetReceiver.isTargetable();
+							if (widgetTargetable) {
+								order(simulation, new COrderTargetWidget(ability.getHandleId(), orderId,
+										target.getHandleId(), false), false);
+							}
+							return widgetTargetable;
 						}
-						return widgetTargetable;
-					}
 
-					@Override
-					public Boolean accept(final CUnit target) {
-						return acceptWidget(target);
-					}
+						@Override
+						public Boolean accept(final CUnit target) {
+							return acceptWidget(target);
+						}
 
-					@Override
-					public Boolean accept(final CDestructable target) {
-						return acceptWidget(target);
-					}
+						@Override
+						public Boolean accept(final CDestructable target) {
+							return acceptWidget(target);
+						}
 
-					@Override
-					public Boolean accept(final CItem target) {
-						return acceptWidget(target);
+						@Override
+						public Boolean accept(final CItem target) {
+							return acceptWidget(target);
+						}
+					});
+					if (targetable) {
+						return true;
 					}
-				});
-				if (targetable) {
-					return true;
 				}
 			}
 		}
@@ -2466,7 +2617,8 @@ public class CUnit extends CWidget {
 						/ (1 + simulation.getGameplayConstants().getDefenseArmor() * defense);
 			}
 			else {
-				damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -defense);
+				damageRatioFromDefense = 2f
+						- (float) StrictMath.pow(1f - simulation.getGameplayConstants().getDefenseArmor(), -defense);
 			}
 			trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * result.computeFinalDamage();
 
@@ -2554,6 +2706,15 @@ public class CUnit extends CWidget {
 			// okay if it removes self from this during onDeath() because of reverse
 			// iteration order
 			this.abilities.get(i).onDeath(simulation, this);
+		}
+		simulation.getPlayer(playerIndex).addFogModifer(simulation, new CUnitDeathVisionFogModifier(this));
+		if (source != null) {
+			simulation.getPlayer(source.getPlayerIndex()).addFogModifer(simulation,
+					new CUnitDeathVisionFogModifier(this));
+		}
+		if (this.attackFogMod.getPlayerIndex() != this.playerIndex) {
+			simulation.getPlayer(this.attackFogMod.getPlayerIndex()).removeFogModifer(simulation, this.attackFogMod);
+			this.attackFogMod.setPlayerIndex(playerIndex);
 		}
 
 		if (result.isReincarnating()) {
@@ -3012,6 +3173,187 @@ public class CUnit extends CWidget {
 		this.unitAnimationListener.playAnimation(true, PrimaryTag.STAND, SequenceUtils.EMPTY, 0.0f, true);
 	}
 
+	private static final class AutocastTargetFinderEnum implements CUnitEnumFunction {
+		private final static BooleanAbilityTargetCheckReceiver<CWidget> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
+				.<CWidget>getInstance();
+		private CSimulation game;
+		private CUnit source;
+		private CAutocastAbility ability;
+		private boolean disableMove;
+		private AutocastType type;
+
+		private CUnit currentUnitTarget;
+		private double comparisonValue;
+
+		private AutocastTargetFinderEnum reset(final CSimulation game, final CUnit source,
+				final CAutocastAbility ability, final boolean disableMove) {
+			this.game = game;
+			this.source = source;
+			this.ability = ability;
+			this.disableMove = disableMove;
+			this.type = ability.getAutocastType();
+
+			currentUnitTarget = null;
+			comparisonValue = Double.NaN;
+			return this;
+		}
+
+		@Override
+		public boolean call(final CUnit unit) {
+			if (type != AutocastType.NONE) {
+				switch (type) {
+				case ATTACKINGALLY:
+				case ATTACKINGENEMY:
+					if (unit.getCurrentBehavior() != null && unit.getCurrentBehavior() instanceof CRangedBehavior) {
+						final CRangedBehavior rbeh = (CRangedBehavior) unit.getCurrentBehavior();
+						if (rbeh.getHighlightOrderId() == OrderIds.attack) {
+							final AbilityTarget target = rbeh.getTarget();
+							final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+							if (targetUnit != null) {
+								if (type == AutocastType.ATTACKINGALLY
+										&& this.game.getPlayer(this.source.getPlayerIndex())
+												.hasAlliance(targetUnit.getPlayerIndex(), CAllianceType.PASSIVE)
+										|| type == AutocastType.ATTACKINGENEMY
+												&& !this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(
+														targetUnit.getPlayerIndex(), CAllianceType.PASSIVE)) {
+									targetCheckReceiver.reset();
+									ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(),
+											unit, targetCheckReceiver);
+									if (targetCheckReceiver.isTargetable()) {
+										if (currentUnitTarget == null) {
+											currentUnitTarget = unit;
+											comparisonValue = this.source.distance(unit);
+										}
+										else {
+											final double dist = this.source.distance(unit);
+											if (dist < this.comparisonValue) {
+												currentUnitTarget = unit;
+												comparisonValue = dist;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					break;
+				case ATTACKTARGETING:
+					if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
+							CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()
+							&& !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
+						for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
+							if (this.source.canReach(unit, this.source.acquisitionRange)
+									&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
+									&& this.source.distance(unit) >= this.source.getUnitType()
+											.getMinimumAttackRange()) {
+								targetCheckReceiver.reset();
+								ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+										targetCheckReceiver);
+								if (targetCheckReceiver.isTargetable()) {
+									if (currentUnitTarget == null) {
+										currentUnitTarget = unit;
+										comparisonValue = this.source.distance(unit);
+									}
+									else {
+										final double dist = this.source.distance(unit);
+										if (dist < this.comparisonValue) {
+											currentUnitTarget = unit;
+											comparisonValue = dist;
+										}
+									}
+								}
+							}
+						}
+					}
+
+					break;
+				case HIGESTHP:
+					targetCheckReceiver.reset();
+					ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+							targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable()) {
+						if (currentUnitTarget == null) {
+							currentUnitTarget = unit;
+							comparisonValue = unit.getLife() / unit.getMaximumLife();
+						}
+						else {
+							final double ratio = unit.getLife() / unit.getMaximumLife();
+							if (ratio > this.comparisonValue) {
+								currentUnitTarget = unit;
+								comparisonValue = ratio;
+							}
+						}
+					}
+					break;
+				case LOWESTHP:
+					targetCheckReceiver.reset();
+					ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+							targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable()) {
+						if (unit.getLife() < unit.getMaximumLife()) {
+							if (currentUnitTarget == null) {
+								currentUnitTarget = unit;
+								comparisonValue = unit.getLife() / unit.getMaximumLife();
+							}
+							else {
+								final double ratio = unit.getLife() / unit.getMaximumLife();
+								if (ratio < this.comparisonValue) {
+									currentUnitTarget = unit;
+									comparisonValue = ratio;
+								}
+							}
+						}
+					}
+					break;
+				case NEARESTVALID:
+					targetCheckReceiver.reset();
+					ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+							targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable()) {
+						if (currentUnitTarget == null) {
+							currentUnitTarget = unit;
+							comparisonValue = this.source.distance(unit);
+						}
+						else {
+							final double dist = this.source.distance(unit);
+							if (dist < this.comparisonValue) {
+								currentUnitTarget = unit;
+								comparisonValue = dist;
+							}
+						}
+					}
+					break;
+				case NEARESTENEMY:
+					targetCheckReceiver.reset();
+					ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+							targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable() && !this.game.getPlayer(this.source.getPlayerIndex())
+							.hasAlliance(unit.getPlayerIndex(), CAllianceType.PASSIVE)) {
+						if (currentUnitTarget == null) {
+							currentUnitTarget = unit;
+							comparisonValue = this.source.distance(unit);
+						}
+						else {
+							final double dist = this.source.distance(unit);
+							if (dist < this.comparisonValue) {
+								currentUnitTarget = unit;
+								comparisonValue = dist;
+							}
+						}
+					}
+					break;
+				case NONE:
+				case NOTARGET:
+				default:
+					break;
+
+				}
+			}
+
+			return false;
+		}
+	}
+
 	private static final class AutoAttackTargetFinderEnum implements CUnitEnumFunction {
 		private CSimulation game;
 		private CUnit source;
@@ -3029,26 +3371,33 @@ public class CUnit extends CWidget {
 
 		@Override
 		public boolean call(final CUnit unit) {
-			if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
-					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()
-					&& !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
-				for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
-					if (this.source.canReach(unit, this.source.acquisitionRange)
-							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
-							&& this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange()) {
-						if (this.source.currentBehavior != null) {
-							this.source.currentBehavior.end(this.game, false);
+			if (this.source.getAttackBehavior() != null
+					&& !this.source.getFirstAbilityOfType(CAbilityAttack.class).isDisabled()) {
+				// TODO this "attack behavior null" check was added for some weird Root edge
+				// case with NE, maybe
+				// refactor it later
+				if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
+						CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()
+						&& !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
+					for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
+						if (this.source.canReach(unit, this.source.acquisitionRange)
+								&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
+								&& this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange()) {
+							if (!(unit.isUnitType(CUnitTypeJass.ETHEREAL) && attack.getAttackType() != CAttackType.MAGIC
+									&& attack.getAttackType() != CAttackType.SPELLS)
+									&& !(this.game.getGameplayConstants().isMagicImmuneResistsDamage()
+											&& unit.isUnitType(CUnitTypeJass.MAGIC_IMMUNE)
+											&& attack.getAttackType() == CAttackType.MAGIC)) {
+								if (this.source.currentBehavior != null) {
+									this.source.currentBehavior.end(this.game, false);
+								}
+								this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack,
+										attack, unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING);
+								this.source.currentBehavior.begin(this.game);
+								this.foundAnyTarget = true;
+								return true;
+							}
 						}
-						if (this.source.getAttackBehavior() != null) {
-							// TODO this "attack behavior null" check was added for some weird Root edge
-							// case with NE, maybe
-							// refactor it later
-							this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack, attack,
-									unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING);
-							this.source.currentBehavior.begin(this.game);
-						}
-						this.foundAnyTarget = true;
-						return true;
 					}
 				}
 			}
@@ -4230,21 +4579,118 @@ public class CUnit extends CWidget {
 		if (!isDead() && !this.hidden) {
 			final float sightRadius = game.isDay() ? this.unitType.getSightRadiusDay()
 					: this.unitType.getSightRadiusNight();
-			final CPlayerFogOfWar fogOfWar = game.getPlayer(this.playerIndex).getFogOfWar();
-			final float myX = getX();
-			final int myIndexX = game.getPathingGrid().getFogOfWarIndexX(myX);
-			final float myY = getY();
-			final int myIndexY = game.getPathingGrid().getFogOfWarIndexY(myY);
-			fogOfWar.setState(myIndexX, myIndexY, (byte) 0);
-			final float twoPi = (float) StrictMath.PI * 2;
-			final float angleIncrement = (float) StrictMath.PI / 6;
-			for (float angle = 0; angle < twoPi; angle += angleIncrement) {
-				for (float dist = 128; dist <= sightRadius; dist += 128) {
-					final float x = myX + (float) (StrictMath.cos(angle) * dist);
-					final float y = myY + (float) (StrictMath.sin(angle) * dist);
-					final int iterationIndexX = game.getPathingGrid().getFogOfWarIndexX(x);
-					final int iterationIndexY = game.getPathingGrid().getFogOfWarIndexY(y);
-					fogOfWar.setState(iterationIndexX, iterationIndexY, (byte) 0);
+			if (sightRadius > 0) {
+				final float radSq = sightRadius * sightRadius / (CPlayerFogOfWar.GRID_STEP * CPlayerFogOfWar.GRID_STEP);
+				final CPlayerFogOfWar fogOfWar = game.getPlayer(this.playerIndex).getFogOfWar();
+				final float myX = getX();
+				final float myY = getY();
+				final int myZ = this.getUnitType().getMovementType() == MovementType.FLY ? Integer.MAX_VALUE
+						: game.getTerrainHeight(myX, myY);
+				final PathingGrid pathingGrid = game.getPathingGrid();
+				fogOfWar.setState(pathingGrid.getFogOfWarIndexX(myX), pathingGrid.getFogOfWarIndexY(myY), (byte) 0);
+
+				final int myXi = pathingGrid.getFogOfWarIndexX(myX);
+				final int myYi = pathingGrid.getFogOfWarIndexX(myY);
+				final int maxXi = pathingGrid.getFogOfWarIndexX(myX + sightRadius);
+				final int maxYi = pathingGrid.getFogOfWarIndexX(myY + sightRadius);
+				for (int a = 1; a <= Math.max(maxYi - myYi, maxXi - myXi); a++) {
+					final int distance = a * a;
+
+					if (distance <= radSq && !pathingGrid.isBlockVision(myX, myY - (a - 1) * CPlayerFogOfWar.GRID_STEP)
+							&& fogOfWar.getState(myXi, myYi - a + 1) == 0
+							&& (game.isTerrainWater(myX, myY - a * CPlayerFogOfWar.GRID_STEP)
+									|| myZ > game.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP)
+									|| !game.isTerrainRomp(myX, myY - a * CPlayerFogOfWar.GRID_STEP) && myZ == game
+											.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP))) {
+						fogOfWar.setState(myXi, myYi - a, (byte) 0);
+					}
+					if (distance <= radSq && !pathingGrid.isBlockVision(myX, myY + (a - 1) * CPlayerFogOfWar.GRID_STEP)
+							&& fogOfWar.getState(myXi, myYi + a - 1) == 0
+							&& (game.isTerrainWater(myX, myY + a * CPlayerFogOfWar.GRID_STEP)
+									|| myZ > game.getTerrainHeight(myX, myY + a * CPlayerFogOfWar.GRID_STEP)
+									|| !game.isTerrainRomp(myX, myY + a * CPlayerFogOfWar.GRID_STEP) && myZ == game
+											.getTerrainHeight(myX, myY + a * CPlayerFogOfWar.GRID_STEP))) {
+						fogOfWar.setState(myXi, myYi + a, (byte) 0);
+					}
+					if (distance <= radSq && !pathingGrid.isBlockVision(myX - (a - 1) * CPlayerFogOfWar.GRID_STEP, myY)
+							&& fogOfWar.getState(myXi - a + 1, myYi) == 0
+							&& (game.isTerrainWater(myX - a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| myZ > game.getTerrainHeight(myX - a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| !game.isTerrainRomp(myX - a * CPlayerFogOfWar.GRID_STEP, myY) && myZ == game
+											.getTerrainHeight(myX - a * CPlayerFogOfWar.GRID_STEP, myY))) {
+						fogOfWar.setState(myXi - a, myYi, (byte) 0);
+					}
+					if (distance <= radSq && !pathingGrid.isBlockVision(myX + (a - 1) * CPlayerFogOfWar.GRID_STEP, myY)
+							&& fogOfWar.getState(myXi + a - 1, myYi) == 0
+							&& (game.isTerrainWater(myX + a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| myZ > game.getTerrainHeight(myX + a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| !game.isTerrainRomp(myX + a * CPlayerFogOfWar.GRID_STEP, myY) && myZ == game
+											.getTerrainHeight(myX + a * CPlayerFogOfWar.GRID_STEP, myY))) {
+						fogOfWar.setState(myXi + a, myYi, (byte) 0);
+					}
+				}
+
+				for (int y = 1; y <= maxYi - myYi; y++) {
+					for (int x = 1; x <= maxXi - myXi; x++) {
+						final float distance = x * x + y * y;
+						if (distance <= radSq) {
+							final int xf = x * CPlayerFogOfWar.GRID_STEP;
+							final int yf = y * CPlayerFogOfWar.GRID_STEP;
+
+							if ((game.isTerrainWater(myX - xf, myY - yf)
+									|| myZ > game.getTerrainHeight(myX - xf, myY - yf)
+									|| !game.isTerrainRomp(myX - xf, myY - yf)
+											&& myZ == game.getTerrainHeight(myX - xf, myY - yf))
+									&& !pathingGrid.isBlockVision(myX - xf, myY - yf)
+									&& fogOfWar.getState(myXi - x + 1, myYi - y + 1) == 0
+									&& (x == y
+											|| x > y && fogOfWar.getState(myXi - x + 1, myYi - y) == 0
+													&& !pathingGrid.isBlockVision(myXi - x + 1, myYi - y)
+											|| x < y && fogOfWar.getState(myXi - x, myYi - y + 1) == 0
+													&& !pathingGrid.isBlockVision(myXi - x, myYi - y + 1))) {
+								fogOfWar.setState(myXi - x, myYi - y, (byte) 0);
+							}
+							if ((game.isTerrainWater(myX - xf, myY + yf)
+									|| myZ > game.getTerrainHeight(myX - xf, myY + yf)
+									|| !game.isTerrainRomp(myX - xf, myY + yf)
+											&& myZ == game.getTerrainHeight(myX - xf, myY + yf))
+									&& !pathingGrid.isBlockVision(myX - xf, myY + yf)
+									&& fogOfWar.getState(myXi - x + 1, myYi + y - 1) == 0
+									&& (x == y
+											|| x > y && fogOfWar.getState(myXi - x + 1, myYi + y) == 0
+													&& !pathingGrid.isBlockVision(myXi - x + 1, myYi + y)
+											|| x < y && fogOfWar.getState(myXi - x, myYi + y - 1) == 0
+													&& !pathingGrid.isBlockVision(myXi - x, myYi + y - 1))) {
+								fogOfWar.setState(myXi - x, myYi + y, (byte) 0);
+							}
+							if ((game.isTerrainWater(myX + xf, myY - yf)
+									|| myZ > game.getTerrainHeight(myX + xf, myY - yf)
+									|| !game.isTerrainRomp(myX + xf, myY - yf)
+											&& myZ == game.getTerrainHeight(myX + xf, myY - yf))
+									&& !pathingGrid.isBlockVision(myX + xf, myY - yf)
+									&& fogOfWar.getState(myXi + x - 1, myYi - y + 1) == 0
+									&& (x == y
+											|| x > y && fogOfWar.getState(myXi + x - 1, myYi - y) == 0
+													&& !pathingGrid.isBlockVision(myXi + x - 1, myYi - y)
+											|| x < y && fogOfWar.getState(myXi + x, myYi - y + 1) == 0
+													&& !pathingGrid.isBlockVision(myXi + x, myYi - y + 1))) {
+								fogOfWar.setState(myXi + x, myYi - y, (byte) 0);
+							}
+							if ((game.isTerrainWater(myX + xf, myY + yf)
+									|| myZ > game.getTerrainHeight(myX + xf, myY + yf)
+									|| !game.isTerrainRomp(myX + xf, myY + yf)
+											&& myZ == game.getTerrainHeight(myX + xf, myY + yf))
+									&& !pathingGrid.isBlockVision(myX + xf, myY + yf)
+									&& fogOfWar.getState(myXi + x - 1, myYi + y - 1) == 0
+									&& (x == y
+											|| x > y && fogOfWar.getState(myXi + x - 1, myYi + y) == 0
+													&& !pathingGrid.isBlockVision(myXi + x - 1, myYi + y)
+											|| x < y && fogOfWar.getState(myXi + x, myYi + y - 1) == 0
+													&& !pathingGrid.isBlockVision(myXi + x, myYi + y - 1))) {
+								fogOfWar.setState(myXi + x, myYi + y, (byte) 0);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -4410,7 +4856,18 @@ public class CUnit extends CWidget {
 		this.falseDeath = falseDeath;
 	}
 
+	public void setAutocastAbility(final CAutocastAbility autocastAbility) {
+		if (this.autocastAbility != null) {
+			this.autocastAbility.setAutoCastOff();
+		}
+		this.autocastAbility = autocastAbility;
+	}
+
 	public boolean isVisible(final CSimulation simulation, final int toPlayerIndex) {
+		if (toPlayerIndex == this.playerIndex
+				&& (simulation.isDay() ? this.unitType.getSightRadiusDay() : this.unitType.getSightRadiusNight()) > 0) {
+			return true;
+		}
 		final CPlayer toPlayer = simulation.getPlayer(toPlayerIndex);
 		final byte fogState = toPlayer.getFogOfWar().getState(simulation.getPathingGrid(), this.getX(), this.getY());
 		if (fogState == 0) {
@@ -4418,5 +4875,4 @@ public class CUnit extends CWidget {
 		}
 		return false;
 	}
-
 }

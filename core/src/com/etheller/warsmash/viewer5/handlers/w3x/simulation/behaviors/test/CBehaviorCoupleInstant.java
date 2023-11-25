@@ -4,6 +4,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.test.CAbilityCoupleInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
@@ -91,6 +92,11 @@ public class CBehaviorCoupleInstant extends CAbstractRangedBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public AbilityTarget getTarget() {
+		return this.target;
 	}
 
 }

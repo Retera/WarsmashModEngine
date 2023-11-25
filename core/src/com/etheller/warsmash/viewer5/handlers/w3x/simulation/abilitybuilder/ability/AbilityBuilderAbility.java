@@ -19,6 +19,8 @@ public interface AbilityBuilderAbility extends CLevelingAbility, Aliased {
 	public Map<String, Object> getLocalStore();
 	
 	public float getArea();
+	
+	public float getCooldown();
 
 	public void startCooldown(CSimulation game, CUnit unit);
 

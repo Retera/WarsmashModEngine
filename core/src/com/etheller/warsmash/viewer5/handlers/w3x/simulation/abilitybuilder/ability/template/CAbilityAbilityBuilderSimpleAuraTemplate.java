@@ -199,4 +199,9 @@ public class CAbilityAbilityBuilderSimpleAuraTemplate extends AbilityGenericSing
 		emptyAura(game, unit);
 	}
 
+	@Override
+	public boolean isUniversal() {
+		return true;
+	}
+
 }

@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 
 public abstract class CAbstractRangedBehavior implements CRangedBehavior {
@@ -110,6 +111,16 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 
 	public void setDisableMove(final boolean disableMove) {
 		this.disableMove = disableMove;
+	}
+
+	@Override
+	public AbilityTarget getTarget() {
+		return this.target;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
 	}
 
 }

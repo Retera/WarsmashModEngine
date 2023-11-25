@@ -23,11 +23,11 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 		final int autoCastOffOrderId = getAutoCastOffOrderId();
 		if (orderId != 0) {
 			if (orderId == autoCastOnOrderId) {
-				setAutoCastOn(true);
+				setAutoCastOn(caster, true);
 				return false;
 			}
 			else if (orderId == autoCastOffOrderId) {
-				setAutoCastOn(false);
+				setAutoCastOn(caster, false);
 				return false;
 			}
 			else {
@@ -146,7 +146,7 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 		return 0;
 	}
 
-	public void setAutoCastOn(final boolean autoCastOn) {
+	public void setAutoCastOn(final CUnit unit, final boolean autoCastOn) {
 	}
 
 	@Override

@@ -153,4 +153,9 @@ public class CAbilityAbilityBuilderAuraTemplate extends AbilityGenericSingleIcon
 		emptyAura(game, unit);
 	}
 
+	@Override
+	public boolean isUniversal() {
+		return true;
+	}
+
 }

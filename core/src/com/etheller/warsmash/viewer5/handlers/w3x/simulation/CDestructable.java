@@ -37,6 +37,9 @@ public class CDestructable extends CWidget {
 		this.destType = destTypeInstance;
 		this.pathingInstance = pathingInstance;
 		this.pathingInstanceDeath = pathingInstanceDeath;
+		if (this.destType.getOcclusionHeight() > 0) {
+			this.pathingInstance.setBlocksVision();
+		}
 	}
 
 	@Override

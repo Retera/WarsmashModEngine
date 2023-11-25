@@ -5,7 +5,10 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityUnitOrPointTargetSpellBase;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -14,7 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase {
+public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implements CAutocastAbility {
 
 	private float fullDamageRadius;
 	private float fullDamageAmount;
@@ -106,12 +109,42 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase {
 	}
 
 	@Override
-	public void setAutoCastOn(final boolean autoCastOn) {
+	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
 		this.autoCastOn = autoCastOn;
+		caster.setAutocastAbility(autoCastOn ? this : null);
 	}
 
 	@Override
 	public boolean isAutoCastOn() {
 		return autoCastOn;
+	}
+
+	@Override
+	public void setAutoCastOff() {
+		this.autoCastOn = false;
+	}
+
+	@Override
+	public AutocastType getAutocastType() {
+		return AutocastType.NEARESTENEMY;
+	}
+
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+			AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.checkCanTarget(game, unit, orderId, target, receiver);
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
+			AbilityTargetCheckReceiver<Void> receiver) {
+		receiver.orderIdNotAccepted();
 	}
 }

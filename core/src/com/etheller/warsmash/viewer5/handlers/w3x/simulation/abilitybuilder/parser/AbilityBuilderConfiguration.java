@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.par
 
 import java.util.List;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.definitions.impl.CAbilityTypeDefinitionAbilityBuilder;
@@ -13,6 +14,7 @@ public class AbilityBuilderConfiguration {
 	private String uncastId;
 	private String autoCastOnId;
 	private String autoCastOffId;
+	private AutocastType autoCastType;
 
 	private AbilityBuilderType type;
 	private AbilityBuilderSpecialDisplayFields displayFields;
@@ -20,6 +22,8 @@ public class AbilityBuilderConfiguration {
 	private AbilityBuilderOverrideFields overrideFields;
 
 	private List<ABCondition> extraTargetConditions;
+	private List<ABCondition> extraAutoTargetConditions;
+	private List<ABCondition> extraAutoNoTargetConditions;
 	private List<ABCondition> extraCastConditions;
 	
 	private List<ABAction> onAddAbility;
@@ -46,13 +50,16 @@ public class AbilityBuilderConfiguration {
 		this.uncastId = dupe.getUncastId();
 		this.autoCastOnId = dupe.getAutoCastOnId();
 		this.autoCastOffId = dupe.getAutoCastOffId();
+		this.autoCastType = dupe.getAutoCastType();
 		this.type = parser.getType();
 		this.displayFields = parser.getDisplayFields();
 		this.specialFields = parser.getSpecialFields();
 		this.overrideFields = parser.getOverrideFields();
 		
 		this.extraTargetConditions = parser.getExtraTargetConditions();
+		this.extraAutoTargetConditions = parser.getExtraAutoTargetConditions();
 		this.extraCastConditions = parser.getExtraCastConditions();
+		this.extraAutoNoTargetConditions = parser.getExtraAutoNoTargetConditions();
 		
 		this.onAddAbility = parser.getOnAddAbility();
 		this.onAddDisabledAbility = parser.getOnAddDisabledAbility();
@@ -116,6 +123,20 @@ public class AbilityBuilderConfiguration {
 		this.autoCastOffId = autoCastOffId;
 	}
 
+	/**
+	 * @return the autoCastType
+	 */
+	public AutocastType getAutoCastType() {
+		return autoCastType;
+	}
+
+	/**
+	 * @param autoCastType the autoCastType to set
+	 */
+	public void setAutoCastType(AutocastType autoCastType) {
+		this.autoCastType = autoCastType;
+	}
+
 	public AbilityBuilderType getType() {
 		return type;
 	}
@@ -154,6 +175,28 @@ public class AbilityBuilderConfiguration {
 
 	public void setExtraTargetConditions(List<ABCondition> extraTargetConditions) {
 		this.extraTargetConditions = extraTargetConditions;
+	}
+
+	/**
+	 * @return the extraAutoTargetConditions
+	 */
+	public List<ABCondition> getExtraAutoTargetConditions() {
+		return extraAutoTargetConditions;
+	}
+
+	/**
+	 * @param extraAutoTargetConditions the extraAutoTargetConditions to set
+	 */
+	public void setExtraAutoTargetConditions(List<ABCondition> extraAutoTargetConditions) {
+		this.extraAutoTargetConditions = extraAutoTargetConditions;
+	}
+
+	public List<ABCondition> getExtraAutoNoTargetConditions() {
+		return extraAutoNoTargetConditions;
+	}
+
+	public void setExtraAutoNoTargetConditions(List<ABCondition> extraAutoNoTargetConditions) {
+		this.extraAutoNoTargetConditions = extraAutoNoTargetConditions;
 	}
 
 	public List<ABCondition> getExtraCastConditions() {

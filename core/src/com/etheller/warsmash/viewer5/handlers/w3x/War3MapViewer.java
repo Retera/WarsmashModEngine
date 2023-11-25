@@ -88,6 +88,7 @@ import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.GroundTexture;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
@@ -133,7 +134,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
@@ -1517,6 +1518,24 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					@Override
 					public void setBlight(final float x, final float y, final float radius, final boolean blighted) {
 						War3MapViewer.this.setBlight(x, y, radius, blighted);
+					}
+
+					@Override
+					public int getTerrainHeight(float x, float y) {
+						RenderCorner corner = War3MapViewer.this.terrain.getCorner(x, y);
+						return corner == null ? 999 : corner.getLayerHeight();
+					}
+
+					@Override
+					public boolean isTerrainRomp(float x, float y) {
+						RenderCorner corner = War3MapViewer.this.terrain.getCorner(x, y);
+						return corner == null ? false : corner.romp;
+					}
+
+					@Override
+					public boolean isTerrainWater(float x, float y) {
+						RenderCorner corner = War3MapViewer.this.terrain.getCorner(x, y);
+						return corner == null ? false : corner.getWater() != 0;
 					}
 				}, this.terrain.pathingGrid, this.terrain.getEntireMap(), this.seededRandom, this.commandErrorListener);
 
@@ -3390,6 +3409,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				final float dy = y - whichLocationY;
 				final float distSquared = (dx * dx) + (dy * dy);
 				if (distSquared <= rSquared) {
+					final RenderCorner corner = this.terrain.getCorner(x, y);
+					GroundTexture currentTex = this.terrain.groundTextures.get(corner.getGroundTexture());
+					if (corner != null && currentTex.isBuildable()) {
+						corner.setBlight(blighted);
+					} else {
+						continue;
+					}
+
 					for (float pathX = -64; pathX < 64; pathX += 32f) {
 						for (float pathY = -64; pathY < 64; pathY += 32f) {
 							final float blightX = x + pathX + 16;
@@ -3398,10 +3425,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								this.simulation.getPathingGrid().setBlighted(blightX, blightY, blighted);
 							}
 						}
-					}
-					final RenderCorner corner = this.terrain.getCorner(x, y);
-					if (corner != null) {
-						changedData |= corner.setBlight(blighted);
 					}
 				}
 			}

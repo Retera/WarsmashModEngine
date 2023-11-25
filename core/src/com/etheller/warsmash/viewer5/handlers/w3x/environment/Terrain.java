@@ -49,11 +49,11 @@ import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 
 public class Terrain {
 	public static final float CELL_SIZE = 128f;
@@ -243,7 +243,7 @@ public class Terrain {
 			}
 			final String dir = terrainTileInfo.getField("dir");
 			final String file = terrainTileInfo.getField("file");
-			this.groundTextures.add(new GroundTexture(dir + "\\" + file + texturesExt, dataSource, Gdx.gl30));
+			this.groundTextures.add(new GroundTexture(dir + "\\" + file + texturesExt, terrainTileInfo, dataSource, Gdx.gl30));
 			this.groundTextureToId.put(groundTile.asStringValue(), this.groundTextures.size() - 1);
 		}
 
@@ -251,7 +251,7 @@ public class Terrain {
 
 		this.blightTextureIndex = this.groundTextures.size();
 		this.groundTextures.add(new GroundTexture(
-				tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, dataSource, Gdx.gl30));
+				tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, null, dataSource, Gdx.gl30));
 
 		// Cliff Textures
 		for (final War3ID cliffTile : w3eFile.getCliffTiles()) {

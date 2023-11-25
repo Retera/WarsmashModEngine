@@ -1770,16 +1770,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					final boolean ally = simulationUnit.isUnitAlly(this.localPlayer);
 					final CPlayer unitPlayer = game.getPlayer(simulationUnitPlayerIndex);
 					final String name = unitPlayer.getName();
-					if (ally) {
-						if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_CONTROL)) {
-							returnValue = "|CFF00FF00" + name;
+					if (name != null) {
+						if (ally) {
+							if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_CONTROL)) {
+								returnValue = "|CFF00FF00" + name;
+							}
+							else {
+								returnValue = "|CFFFFFF00" + name;
+							}
 						}
 						else {
-							returnValue = "|CFFFFFF00" + name;
+							returnValue = "|CFFFF0000" + name;
 						}
-					}
-					else {
-						returnValue = "|CFFFF0000" + name;
 					}
 				}
 				final CAbilityGoldMinable goldMineData = simulationUnit.getGoldMineData();
@@ -1900,7 +1902,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		}
 
-		this.meleeUIMinimap.render(batch, this.war3MapViewer.units);
+		this.meleeUIMinimap.render(this.war3MapViewer.simulation, batch, this.war3MapViewer.units,
+				this.war3MapViewer.simulation.getPathingGrid(), this.war3MapViewer.getFogOfWar(),
+				this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex()));
 		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
 		for (final TextTag textTag : this.war3MapViewer.textTags) {

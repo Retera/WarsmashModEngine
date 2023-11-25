@@ -600,9 +600,9 @@ public class MdxComplexInstance extends ModelInstance {
 					this.animationCurrentDuration += frameTime;
 					this.sequenceLoopMode = SequenceLoopMode.ALWAYS_LOOP;
 				} else {
+					this.sequenceLoopMode = SequenceLoopMode.NEVER_LOOP;
 					SequenceUtils.randomPortraitSequence(this);
 					this.animationTargetDuration = 0;
-					return;
 				}
 			}
 

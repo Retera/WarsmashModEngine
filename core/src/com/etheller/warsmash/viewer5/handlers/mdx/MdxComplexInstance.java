@@ -74,7 +74,7 @@ public class MdxComplexInstance extends ModelInstance {
 	public Texture[] replaceableTextures_diffuse = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
 	public Texture[] replaceableTextures_normal = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
 	public Texture[] replaceableTextures_orm = new Texture[WarsmashConstants.REPLACEABLE_TEXTURE_LIMIT];
-	// If animationDuration is 0, it will play the whole animation.
+	// If animationTargetDuration is 0, it will play the whole animation.
 	public long animationTargetDuration = 0;
 	public long animationCurrentDuration = 0;
 	private float animationSpeed = 1.0f;
@@ -595,7 +595,6 @@ public class MdxComplexInstance extends ModelInstance {
 						this.vertexColor[3] - (integerFrameTime / (float) (interval[1] - interval[0])));
 			}
 
-			final long animEnd = interval[1] - 1;
 			if(this.animationTargetDuration != 0) {
 				if(this.animationCurrentDuration < this.animationTargetDuration) {
 					this.animationCurrentDuration += frameTime;
@@ -607,6 +606,7 @@ public class MdxComplexInstance extends ModelInstance {
 				}
 			}
 
+			final long animEnd = interval[1] - 1;
 			if (this.floatingFrame >= animEnd) {
 				boolean sequenceRestarted = false;
 				if ((this.sequenceLoopMode == SequenceLoopMode.ALWAYS_LOOP)

@@ -2952,7 +2952,9 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("DestroyEffect",
 					(arguments, globalScope, triggerScope) -> {
 						final RenderSpellEffect fx = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						fx.setKillWhenDone(true);
+						if (fx != null) {
+							fx.setKillWhenDone(true);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetItemInvulnerable",
@@ -2960,6 +2962,21 @@ public class Jass2 {
 						final CItem whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final boolean flag = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
 						whichWidget.setInvulernable(flag);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetItemVisible",
+					(arguments, globalScope, triggerScope) -> {
+						final CItem whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final boolean flag = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						whichWidget.setHidden(!flag);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetItemPosition",
+					(arguments, globalScope, triggerScope) -> {
+						final CItem whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+						whichWidget.setPointAndCheckUnstuck(x, y, this.simulation);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetDestructableInvulnerable",
@@ -3739,8 +3756,13 @@ public class Jass2 {
 
 			jassProgramVisitor.getJassNativeManager().createNative("GetExpiredTimer",
 					(arguments, globalScope, triggerScope) -> {
-						return new HandleJassValue(timerType,
-								((CommonTriggerExecutionScope) triggerScope).getExpiringTimer());
+						if (triggerScope instanceof CommonTriggerExecutionScope) {
+							return new HandleJassValue(timerType,
+									((CommonTriggerExecutionScope) triggerScope).getExpiringTimer());
+						}
+						else {
+							return new HandleJassValue(timerType, null);
+						}
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerStructureCount",
 					(arguments, globalScope, triggerScope) -> {
@@ -5331,7 +5353,12 @@ public class Jass2 {
 		jassProgramVisitor.getJassNativeManager().createNative("ConvertAttackType",
 				(arguments, globalScope, triggerScope) -> {
 					final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-					return new HandleJassValue(attacktypeType, CAttackTypeJass.VALUES[i]);
+					if (i < CAttackTypeJass.VALUES.length) {
+						return new HandleJassValue(attacktypeType, CAttackTypeJass.VALUES[i]);
+					}
+					else {
+						return new HandleJassValue(attacktypeType, null);
+					}
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("ConvertDamageType",
 				(arguments, globalScope, triggerScope) -> {

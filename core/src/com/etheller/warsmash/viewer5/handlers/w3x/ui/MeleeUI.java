@@ -3762,6 +3762,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					}
 				}
 				else {
+					if (this.rootFrame.mouseOverUI(screenCoordsVector.x, screenCoordsVector.y) != null) {
+						return false;
+					}
+					
 					this.war3MapViewer.getClickLocation(this.lastMouseClickLocation, screenX, (int) worldScreenY, true,
 							true);
 					this.lastMouseDragStart.set(this.lastMouseClickLocation);

@@ -34,7 +34,9 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 		this.childFrames.remove(childFrame);
 	}
 
-	// TODO: Separate in-game specific function from the UI class. 
+	/* TODO: Separate in-game specific function from the UI class. 
+		- Issue with unit highlight fluctuating remove due to hpBar and hover tips.
+	*/
 	public UIFrame mouseOverUI(float screenX, float screenY) {
 		UIFrame out = null;
 		if(isVisible()) {

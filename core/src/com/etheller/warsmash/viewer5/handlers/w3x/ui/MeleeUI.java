@@ -4290,7 +4290,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.tooltipFrame.setVisible(false);
 			}
 		}
-		if (mousedUIFrame == null) {
+		boolean hover = ((AbstractUIFrame)consoleUI).mouseOverUI(screenCoordsVector.x, screenCoordsVector.y);
+		if (!hover) {
 			final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 					this.anyClickableUnitFilter);
 			if (newMouseOverUnit != this.mouseOverUnit) {
@@ -4301,6 +4302,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				this.mouseOverUnit = newMouseOverUnit;
 			}
+		} else {
+			this.war3MapViewer.clearUnitMouseOverHighlight();
+			this.mouseOverUnit = null;
 		}
 		return false;
 	}

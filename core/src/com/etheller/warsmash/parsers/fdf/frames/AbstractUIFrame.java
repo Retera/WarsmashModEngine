@@ -34,19 +34,31 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 		this.childFrames.remove(childFrame);
 	}
 
-	public boolean mouseOverUI(float screenX, float screenY) {
-		boolean res = false;
+	// TODO: Separate in-game specific function from the UI class. 
+	public UIFrame mouseOverUI(float screenX, float screenY) {
+		UIFrame out = null;
 		if(isVisible()) {
 			ListIterator<UIFrame> reverseIterator = this.childFrames.listIterator(this.childFrames.size());
 			while (reverseIterator.hasPrevious()) {
-				final AbstractRenderableFrame child = (AbstractRenderableFrame) reverseIterator.previous();
-				res = child.renderBounds.contains(screenX, screenY) && child.isVisible();
+				final UIFrame child = reverseIterator.previous();
+				boolean res = false;
+				// TODO: better implementation due to Backdrop being child class of AbstractUIFrame 
+				if(child instanceof AbstractUIFrame &&
+					!(child instanceof BackdropFrame)) {
+					out = ((AbstractUIFrame)child).mouseOverUI(screenX, screenY);
+					res = out != null;
+				} else {
+					final AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
+					res = renderFrame.renderBounds.contains(screenX, screenY) && renderFrame.isVisible();
+				}
+
 				if(res) {
-					return res;
+					out = child;
+					return child;
 				}
 			}
 		}
-		return res;
+		return out;
 	}
 
 	public AbstractUIFrame(final String name, final UIFrame parent) {

@@ -4213,8 +4213,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.tooltipFrame.setVisible(false);
 			}
 		}
-		boolean hover = ((AbstractUIFrame)consoleUI).mouseOverUI(screenCoordsVector.x, screenCoordsVector.y);
-		if (!hover) {
+		UIFrame hover = this.rootFrame.mouseOverUI(screenCoordsVector.x, screenCoordsVector.y);
+		if (hover == null) {
 			final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 					this.anyClickableUnitFilter);
 			if (newMouseOverUnit != this.mouseOverUnit) {

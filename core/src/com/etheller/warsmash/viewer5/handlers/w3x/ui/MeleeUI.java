@@ -1288,7 +1288,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (WarsmashConstants.CATCH_CURSOR) {
 			Gdx.input.setCursorCatched(true);
 		}
-		this.includeFrames = new String[]{"EscMenuBackDrop", "ScriptDialog", "SmashHoverTip", "SmashHpBar"};
+		this.includeFrames = new String[]{"EscMenuBackdrop", "ScriptDialog", "SmashHoverTip", "SmashHpBar"};
 		this.ignoreFrames = new String[]{"SmashHoverTip", "SmashHpBar"};
 
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);

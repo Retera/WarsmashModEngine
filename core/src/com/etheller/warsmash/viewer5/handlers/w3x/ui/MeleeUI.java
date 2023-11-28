@@ -11,6 +11,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.Set;
@@ -45,6 +46,7 @@ import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
+import com.etheller.warsmash.parsers.fdf.frames.AbstractRenderableFrame;
 import com.etheller.warsmash.parsers.fdf.frames.AbstractUIFrame;
 import com.etheller.warsmash.parsers.fdf.frames.FilterModeTextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
@@ -383,6 +385,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private int hpBarFrameIndex = 0;
 	private boolean allowDrag;
 	private int currentlyDraggingPointer = -1;
+	private String[] includeFrames;
+	private String[] ignoreFrames;
 	private final ShapeRenderer shapeRenderer = new ShapeRenderer();
 	private final List<MultiSelectUnitStateListener> multiSelectUnitStateListeners = new ArrayList<>();
 	private long lastUnitClickTime = 0;
@@ -1284,6 +1288,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (WarsmashConstants.CATCH_CURSOR) {
 			Gdx.input.setCursorCatched(true);
 		}
+		this.includeFrames = new String[]{"EscMenuBackDrop", "ScriptDialog", "SmashHoverTip", "SmashHpBar"};
+		this.ignoreFrames = new String[]{"SmashHoverTip", "SmashHpBar"};
 
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
 
@@ -1862,6 +1868,54 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 		this.hpBarFrameIndex++;
 		return simpleStatusBarFrame;
+	}
+
+	private UIFrame getHoveredFrame(AbstractUIFrame startFrame, float screenX, float screenY, String[] includeParent, String[] ignoreFrame) {
+		UIFrame outFrame = null;
+		if (startFrame.isVisible()) {
+			final ListIterator<UIFrame> curIterator = startFrame.getChildIterator();
+			while (curIterator.hasPrevious()) {
+				final UIFrame child = curIterator.previous();
+				boolean found = false;
+
+				if (child instanceof AbstractUIFrame) {
+					if (checkFrameInArray(child, includeParent)) {
+						AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
+						found = renderFrame.getRenderBounds().contains(screenX, screenY) && renderFrame.isVisible();	
+					} else {
+						outFrame = this.getHoveredFrame((AbstractUIFrame)child, screenX, screenY, includeParent, ignoreFrame);
+						found = outFrame != null;
+					}
+				} else {
+					AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
+					found = renderFrame.getRenderBounds().contains(screenX, screenY) &&
+							renderFrame.isVisible() &&
+							!checkFrameInArray(renderFrame, ignoreFrame);
+				}
+
+				if (found && !checkFrameInArray(child, ignoreFrame)) {
+					return child;
+				}
+			}
+		}
+		return outFrame;
+	}
+
+	private boolean checkFrameInArray(UIFrame frame, String[] targetFrames) {
+		if (targetFrames == null || frame == null) {
+			return false;
+		} else {
+			if (frame.getName() == null) {
+				return false;
+			}
+
+			for (int ind = 0; ind < targetFrames.length; ind++) {
+				if (frame.getName().startsWith(targetFrames[ind])) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	private void setCursorState(final MenuCursorState state, final Color color) {
@@ -3762,7 +3816,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					}
 				}
 				else {
-					if (this.rootFrame.mouseOverUI(screenCoordsVector.x, screenCoordsVector.y) != null) {
+					if (this.getHoveredFrame((AbstractUIFrame)rootFrame, screenCoordsVector.x, screenCoordsVector.y, includeFrames, ignoreFrames) != null) {
 						return false;
 					}
 					
@@ -4217,7 +4271,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.tooltipFrame.setVisible(false);
 			}
 		}
-		UIFrame hover = this.rootFrame.mouseOverUI(screenCoordsVector.x, screenCoordsVector.y);
+		UIFrame hover = this.getHoveredFrame( (AbstractUIFrame) this.rootFrame, screenCoordsVector.x, screenCoordsVector.y, includeFrames, ignoreFrames);
 		if (hover == null) {
 			final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 					this.anyClickableUnitFilter);

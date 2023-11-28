@@ -34,33 +34,8 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 		this.childFrames.remove(childFrame);
 	}
 
-	/* TODO: Separate in-game specific function from the UI class. 
-		- Issue with unit highlight fluctuating remove due to hpBar and hover tips.
-	*/
-	public UIFrame mouseOverUI(float screenX, float screenY) {
-		UIFrame out = null;
-		if(isVisible()) {
-			ListIterator<UIFrame> reverseIterator = this.childFrames.listIterator(this.childFrames.size());
-			while (reverseIterator.hasPrevious()) {
-				final UIFrame child = reverseIterator.previous();
-				boolean res = false;
-				// TODO: better implementation due to Backdrop being child class of AbstractUIFrame 
-				if(child instanceof AbstractUIFrame &&
-					!(child instanceof BackdropFrame)) {
-					out = ((AbstractUIFrame)child).mouseOverUI(screenX, screenY);
-					res = out != null;
-				} else {
-					final AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
-					res = renderFrame.renderBounds.contains(screenX, screenY) && renderFrame.isVisible();
-				}
-
-				if(res) {
-					out = child;
-					return child;
-				}
-			}
-		}
-		return out;
+	public ListIterator<UIFrame> getChildIterator() {
+		return this.childFrames.listIterator(this.childFrames.size());
 	}
 
 	public AbstractUIFrame(final String name, final UIFrame parent) {

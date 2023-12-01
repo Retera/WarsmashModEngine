@@ -1498,7 +1498,8 @@ public class CUnit extends CWidget {
 		final List<CAbility> persistedAbilities = new ArrayList<>();
 		final List<CAbility> removedAbilities = new ArrayList<>();
 		for (final CAbility ability : this.abilities) {
-			if (!ability.isPermanent() && !sharedAbilities.contains(ability.getAlias()) && !(ability.getAbilityCategory() == CAbilityCategory.BUFF)) {
+			if (!ability.isPermanent() && !sharedAbilities.contains(ability.getAlias())
+					&& !(ability.getAbilityCategory() == CAbilityCategory.BUFF)) {
 				ability.onRemove(game, this);
 				game.onAbilityRemovedFromUnit(this, ability);
 				removedAbilities.add(ability);
@@ -4436,13 +4437,14 @@ public class CUnit extends CWidget {
 				fogOfWar.setState(pathingGrid.getFogOfWarIndexX(myX), pathingGrid.getFogOfWarIndexY(myY), (byte) 0);
 
 				int myXi = pathingGrid.getFogOfWarIndexX(myX);
-				int myYi = pathingGrid.getFogOfWarIndexX(myY);
+				int myYi = pathingGrid.getFogOfWarIndexY(myY);
 				int maxXi = pathingGrid.getFogOfWarIndexX(myX + sightRadius);
-				int maxYi = pathingGrid.getFogOfWarIndexX(myY + sightRadius);
+				int maxYi = pathingGrid.getFogOfWarIndexY(myY + sightRadius);
 				for (int a = 1; a <= Math.max(maxYi - myYi, maxXi - myXi); a++) {
 					int distance = a * a;
 
-					if (distance <= radSq && (flying || !pathingGrid.isBlockVision(myX, myY - (a - 1) * CPlayerFogOfWar.GRID_STEP))
+					if (distance <= radSq
+							&& (flying || !pathingGrid.isBlockVision(myX, myY - (a - 1) * CPlayerFogOfWar.GRID_STEP))
 							&& fogOfWar.getState(myXi, myYi - a + 1) == 0
 							&& (flying || game.isTerrainWater(myX, myY - a * CPlayerFogOfWar.GRID_STEP)
 									|| myZ > game.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP)
@@ -4450,7 +4452,8 @@ public class CUnit extends CWidget {
 											.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP)))) {
 						fogOfWar.setState(myXi, myYi - a, (byte) 0);
 					}
-					if (distance <= radSq && (flying || !pathingGrid.isBlockVision(myX, myY + (a - 1) * CPlayerFogOfWar.GRID_STEP))
+					if (distance <= radSq
+							&& (flying || !pathingGrid.isBlockVision(myX, myY + (a - 1) * CPlayerFogOfWar.GRID_STEP))
 							&& fogOfWar.getState(myXi, myYi + a - 1) == 0
 							&& (flying || game.isTerrainWater(myX, myY + a * CPlayerFogOfWar.GRID_STEP)
 									|| myZ > game.getTerrainHeight(myX, myY + a * CPlayerFogOfWar.GRID_STEP)
@@ -4458,7 +4461,8 @@ public class CUnit extends CWidget {
 											.getTerrainHeight(myX, myY + a * CPlayerFogOfWar.GRID_STEP)))) {
 						fogOfWar.setState(myXi, myYi + a, (byte) 0);
 					}
-					if (distance <= radSq && (flying || !pathingGrid.isBlockVision(myX - (a - 1) * CPlayerFogOfWar.GRID_STEP, myY))
+					if (distance <= radSq
+							&& (flying || !pathingGrid.isBlockVision(myX - (a - 1) * CPlayerFogOfWar.GRID_STEP, myY))
 							&& fogOfWar.getState(myXi - a + 1, myYi) == 0
 							&& (flying || game.isTerrainWater(myX - a * CPlayerFogOfWar.GRID_STEP, myY)
 									|| myZ > game.getTerrainHeight(myX - a * CPlayerFogOfWar.GRID_STEP, myY)
@@ -4466,7 +4470,8 @@ public class CUnit extends CWidget {
 											.getTerrainHeight(myX - a * CPlayerFogOfWar.GRID_STEP, myY)))) {
 						fogOfWar.setState(myXi - a, myYi, (byte) 0);
 					}
-					if (distance <= radSq && (flying || !pathingGrid.isBlockVision(myX + (a - 1) * CPlayerFogOfWar.GRID_STEP, myY))
+					if (distance <= radSq
+							&& (flying || !pathingGrid.isBlockVision(myX + (a - 1) * CPlayerFogOfWar.GRID_STEP, myY))
 							&& fogOfWar.getState(myXi + a - 1, myYi) == 0
 							&& (flying || game.isTerrainWater(myX + a * CPlayerFogOfWar.GRID_STEP, myY)
 									|| myZ > game.getTerrainHeight(myX + a * CPlayerFogOfWar.GRID_STEP, myY)
@@ -4487,52 +4492,64 @@ public class CUnit extends CWidget {
 									|| myZ > game.getTerrainHeight(myX - xf, myY - yf)
 									|| (!game.isTerrainRomp(myX - xf, myY - yf)
 											&& myZ == game.getTerrainHeight(myX - xf, myY - yf)))
-									&& (flying || !pathingGrid.isBlockVision(myX - xf, myY - yf))
+									&& (flying || !pathingGrid.isBlockVision(myX - xf + CPlayerFogOfWar.GRID_STEP,
+											myY - yf + CPlayerFogOfWar.GRID_STEP))
 									&& fogOfWar.getState(myXi - x + 1, myYi - y + 1) == 0
 									&& (x == y
 											|| (x > y && fogOfWar.getState(myXi - x + 1, myYi - y) == 0
-													&& !pathingGrid.isBlockVision(myXi - x + 1, myYi - y))
+													&& (flying || !pathingGrid.isBlockVision(
+															myX - xf + CPlayerFogOfWar.GRID_STEP, myY - yf)))
 											|| (x < y && fogOfWar.getState(myXi - x, myYi - y + 1) == 0
-													&& !pathingGrid.isBlockVision(myXi - x, myYi - y + 1)))) {
+													&& (flying || !pathingGrid.isBlockVision(myX - xf,
+															myY - yf + CPlayerFogOfWar.GRID_STEP))))) {
 								fogOfWar.setState(myXi - x, myYi - y, (byte) 0);
 							}
 							if ((flying || game.isTerrainWater(myX - xf, myY + yf)
 									|| myZ > game.getTerrainHeight(myX - xf, myY + yf)
 									|| (!game.isTerrainRomp(myX - xf, myY + yf)
 											&& myZ == game.getTerrainHeight(myX - xf, myY + yf)))
-									&& (flying || !pathingGrid.isBlockVision(myX - xf, myY + yf))
+									&& (flying || !pathingGrid.isBlockVision(myX - xf + CPlayerFogOfWar.GRID_STEP,
+											myY + yf - CPlayerFogOfWar.GRID_STEP))
 									&& fogOfWar.getState(myXi - x + 1, myYi + y - 1) == 0
 									&& (x == y
 											|| (x > y && fogOfWar.getState(myXi - x + 1, myYi + y) == 0
-													&& !pathingGrid.isBlockVision(myXi - x + 1, myYi + y))
+													&& (flying || !pathingGrid.isBlockVision(
+															myX - xf + CPlayerFogOfWar.GRID_STEP, myY + yf)))
 											|| (x < y && fogOfWar.getState(myXi - x, myYi + y - 1) == 0
-													&& !pathingGrid.isBlockVision(myXi - x, myYi + y - 1)))) {
+													&& (flying || !pathingGrid.isBlockVision(myX - xf,
+															myY + yf - CPlayerFogOfWar.GRID_STEP))))) {
 								fogOfWar.setState(myXi - x, myYi + y, (byte) 0);
 							}
 							if ((flying || game.isTerrainWater(myX + xf, myY - yf)
 									|| myZ > game.getTerrainHeight(myX + xf, myY - yf)
 									|| (!game.isTerrainRomp(myX + xf, myY - yf)
 											&& myZ == game.getTerrainHeight(myX + xf, myY - yf)))
-									&& (flying || !pathingGrid.isBlockVision(myX + xf, myY - yf))
+									&& (flying || !pathingGrid.isBlockVision(myX + xf - CPlayerFogOfWar.GRID_STEP,
+											myY - yf + CPlayerFogOfWar.GRID_STEP))
 									&& fogOfWar.getState(myXi + x - 1, myYi - y + 1) == 0
 									&& (x == y
 											|| (x > y && fogOfWar.getState(myXi + x - 1, myYi - y) == 0
-													&& !pathingGrid.isBlockVision(myXi + x - 1, myYi - y))
+													&& (flying || !pathingGrid.isBlockVision(
+															myX + xf - CPlayerFogOfWar.GRID_STEP, myY - yf)))
 											|| (x < y && fogOfWar.getState(myXi + x, myYi - y + 1) == 0
-													&& !pathingGrid.isBlockVision(myXi + x, myYi - y + 1)))) {
+													&& (flying || !pathingGrid.isBlockVision(myX + xf,
+															myY - yf + CPlayerFogOfWar.GRID_STEP))))) {
 								fogOfWar.setState(myXi + x, myYi - y, (byte) 0);
 							}
 							if ((flying || game.isTerrainWater(myX + xf, myY + yf)
 									|| myZ > game.getTerrainHeight(myX + xf, myY + yf)
 									|| (!game.isTerrainRomp(myX + xf, myY + yf)
 											&& myZ == game.getTerrainHeight(myX + xf, myY + yf)))
-									&& (flying || !pathingGrid.isBlockVision(myX + xf, myY + yf))
+									&& (flying || !pathingGrid.isBlockVision(myX + xf - CPlayerFogOfWar.GRID_STEP,
+											myY + yf - CPlayerFogOfWar.GRID_STEP))
 									&& fogOfWar.getState(myXi + x - 1, myYi + y - 1) == 0
 									&& (x == y
 											|| (x > y && fogOfWar.getState(myXi + x - 1, myYi + y) == 0
-													&& !pathingGrid.isBlockVision(myXi + x - 1, myYi + y))
+													&& (flying || !pathingGrid.isBlockVision(
+															myX + xf - CPlayerFogOfWar.GRID_STEP, myY + yf)))
 											|| (x < y && fogOfWar.getState(myXi + x, myYi + y - 1) == 0
-													&& !pathingGrid.isBlockVision(myXi + x, myYi + y - 1)))) {
+													&& (flying || !pathingGrid.isBlockVision(myX + xf,
+															myY + yf - CPlayerFogOfWar.GRID_STEP))))) {
 								fogOfWar.setState(myXi + x, myYi + y, (byte) 0);
 							}
 						}

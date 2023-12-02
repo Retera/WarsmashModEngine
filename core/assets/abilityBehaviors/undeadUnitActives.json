@@ -326,11 +326,20 @@
 				"type": "getAbilityArea"
 			},
 			"conditions": [{
-				"type": "not",
-				"condition": {
-					"type": "isUnitMaxHp",
-					"unit": {
+				"type": "and",
+				"condition1": {
+					"type": "isUnitValidTarget",
+					"target": {
 						"type": "getMatchingUnit"
+					}
+				},
+				"condition2": {
+					"type": "not",
+					"condition": {
+						"type": "isUnitMaxHp",
+						"unit": {
+							"type": "getMatchingUnit"
+						}
 					}
 				}
 			}]
@@ -372,11 +381,20 @@
 					"type": "getAbilityArea"
 				},
 				"condition": {
-					"type": "not",
-					"condition": {
-						"type": "isUnitMaxHp",
-						"unit": {
+					"type": "and",
+					"condition1": {
+						"type": "isUnitValidTarget",
+						"target": {
 							"type": "getMatchingUnit"
+						}
+					},
+					"condition2": {
+						"type": "not",
+						"condition": {
+							"type": "isUnitMaxHp",
+							"unit": {
+								"type": "getMatchingUnit"
+							}
 						}
 					}
 				},
@@ -526,11 +544,20 @@
 				"type": "getAbilityArea"
 			},
 			"conditions": [{
-				"type": "not",
-				"condition": {
-					"type": "isUnitMaxMp",
-					"unit": {
+				"type": "and",
+				"condition1": {
+					"type": "isUnitValidTarget",
+					"target": {
 						"type": "getMatchingUnit"
+					}
+				},
+				"condition2": {
+					"type": "not",
+					"condition": {
+						"type": "isUnitMaxMp",
+						"unit": {
+							"type": "getMatchingUnit"
+						}
 					}
 				}
 			}]
@@ -572,11 +599,20 @@
 					"type": "getAbilityArea"
 				},
 				"condition": {
-					"type": "not",
-					"condition": {
-						"type": "isUnitMaxMp",
-						"unit": {
+					"type": "and",
+					"condition1": {
+						"type": "isUnitValidTarget",
+						"target": {
 							"type": "getMatchingUnit"
+						}
+					},
+					"condition2": {
+						"type": "not",
+						"condition": {
+							"type": "isUnitMaxMp",
+							"unit": {
+								"type": "getMatchingUnit"
+							}
 						}
 					}
 				},

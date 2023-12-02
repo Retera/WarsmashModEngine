@@ -133,7 +133,13 @@
 				},
 				"effectType": "CASTER"
 			},{
-				"type": "iterateUnitsInRangeOfUnit",
+				"type": "iterateUnitsInRangeOfUnitMatchingCondition",
+				"condition": {
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getMatchingUnit"
+					}
+				},
 				"iterationActions": [{
 						"type": "createTimedBuff",
 						"buffId": {
@@ -752,7 +758,13 @@
 					}
 				},
 				"thenActions": [{
-						"type": "iterateUnitsInRangeOfUnit",
+						"type": "iterateUnitsInRangeOfUnitMatchingCondition",
+						"condition": {
+							"type": "isUnitValidTarget",
+							"target": {
+								"type": "getMatchingUnit"
+							}
+						},
 						"iterationActions": [{
 							"type": "if",
 							"condition": {

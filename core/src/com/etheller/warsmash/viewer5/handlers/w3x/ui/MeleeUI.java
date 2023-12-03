@@ -546,6 +546,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		foodChanged();
 		this.resourceBarUpkeepText = (StringFrame) this.rootFrame.getFrameByName("ResourceBarUpkeepText", 0);
 		upkeepChanged();
+		this.resourceBarSupplyText.setWidth(this.resourceBarUpkeepText.getAssignedWidth());
+		this.resourceBarLumberText.setWidth(this.resourceBarUpkeepText.getAssignedWidth());
+		this.resourceBarGoldText.setWidth(this.resourceBarUpkeepText.getAssignedWidth());
 
 		final UIFrame upperButtonBar = this.rootFrame.createSimpleFrame("UpperButtonBarFrame", this.consoleUI, 0);
 		upperButtonBar.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.consoleUI, FramePoint.TOPLEFT, 0, 0));
@@ -1870,7 +1873,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return simpleStatusBarFrame;
 	}
 
-	// TODO: resourceBarGoldText and resourceBarLumberText cannot be identified due to resourceBarSupplyText overlapping the rest. 
 	private UIFrame getHoveredFrame(AbstractUIFrame startFrame, float screenX, float screenY, String[] includeParent, String[] ignoreFrame) {
 		UIFrame outFrame = null;
 		if (startFrame.isVisible()) {

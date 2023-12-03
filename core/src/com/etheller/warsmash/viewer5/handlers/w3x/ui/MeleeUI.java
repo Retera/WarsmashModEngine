@@ -1870,6 +1870,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return simpleStatusBarFrame;
 	}
 
+	// TODO: resourceBarGoldText and resourceBarLumberText cannot be identified due to resourceBarSupplyText overlapping the rest. 
 	private UIFrame getHoveredFrame(AbstractUIFrame startFrame, float screenX, float screenY, String[] includeParent, String[] ignoreFrame) {
 		UIFrame outFrame = null;
 		if (startFrame.isVisible()) {
@@ -1881,7 +1882,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				if (child instanceof AbstractUIFrame) {
 					if (checkFrameInArray(child, includeParent)) {
 						AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
-						found = renderFrame.getRenderBounds().contains(screenX, screenY) && renderFrame.isVisible();	
+						found = renderFrame.getRenderBounds().contains(screenX, screenY) &&
+								renderFrame.isVisible();
+						if(found) {
+							outFrame = renderFrame;
+						}	
 					} else {
 						outFrame = this.getHoveredFrame((AbstractUIFrame)child, screenX, screenY, includeParent, ignoreFrame);
 						found = outFrame != null;
@@ -1889,12 +1894,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				} else {
 					AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
 					found = renderFrame.getRenderBounds().contains(screenX, screenY) &&
-							renderFrame.isVisible() &&
-							!checkFrameInArray(renderFrame, ignoreFrame);
+							renderFrame.isVisible();
+					if(found) {
+						outFrame = renderFrame;
+					}
 				}
 
-				if (found && !checkFrameInArray(child, ignoreFrame)) {
-					return child;
+				if (outFrame != null && !checkFrameInArray(outFrame, ignoreFrame)) {
+					return outFrame;
 				}
 			}
 		}

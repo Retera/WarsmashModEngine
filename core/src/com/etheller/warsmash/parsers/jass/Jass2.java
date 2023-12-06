@@ -2410,48 +2410,48 @@ public class Jass2 {
 						}
 						return null;
 					});
-      jassProgramVisitor.getJassNativeManager().createNative("SetHeroStr",
-          (arguments, globalScope, triggerScope) -> {
-            final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-            final int str = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-            final boolean permanent = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
-            final CAbilityHero heroData = whichUnit.getHeroData();
-            if (heroData != null) {
-              if (permanent) {
-                heroData.setStrengthBase(CommonEnvironment.this.simulation, whichUnit, str);
-              } // Todo add else case to handle non-permanent
-            }
-            return null;
-          }
-      )
-      jassProgramVisitor.getJassNativeManager().createNative("SetHeroAgi",
-          (arguments, globalScope, triggerScope) -> {
-            final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-            final int agi = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-            final boolean permanent = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
-            final CAbilityHero heroData = whichUnit.getHeroData();
-            if (heroData != null) {
-              if (permanent) {
-                heroData.setAgilityBase(CommonEnvironment.this.simulation, whichUnit, agi);
-              } // Todo add else case to handle non-permanent
-            }
-            return null;
-          }
-      )
-      jassProgramVisitor.getJassNativeManager().createNative("SetHeroInt",
-          (arguments, globalScope, triggerScope) -> {
-            final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-            final int intelligence = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-            final boolean permanent = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
-            final CAbilityHero heroData = whichUnit.getHeroData();
-            if (heroData != null) {
-              if (permanent) {
-                heroData.setIntelligenceBase(CommonEnvironment.this.simulation, whichUnit, intelligence);
-              } // Todo add else case to handle non-permanent
-            }
-            return null;
-          }
-      )
+			jassProgramVisitor.getJassNativeManager().createNative("SetHeroStr",
+				(arguments, globalScope, triggerScope) -> {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int str = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final boolean permanent = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+					final CAbilityHero heroData = whichUnit.getHeroData();
+					if (heroData != null) {
+					if (permanent) {
+						heroData.setStrengthBase(CommonEnvironment.this.simulation, whichUnit, str);
+					} // Todo add else case to handle non-permanent
+					}
+					return null;
+				}
+			)
+			jassProgramVisitor.getJassNativeManager().createNative("SetHeroAgi",
+				(arguments, globalScope, triggerScope) -> {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int agi = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final boolean permanent = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+					final CAbilityHero heroData = whichUnit.getHeroData();
+					if (heroData != null) {
+					if (permanent) {
+						heroData.setAgilityBase(CommonEnvironment.this.simulation, whichUnit, agi);
+					} // Todo add else case to handle non-permanent
+					}
+					return null;
+				}
+			)
+			jassProgramVisitor.getJassNativeManager().createNative("SetHeroInt",
+				(arguments, globalScope, triggerScope) -> {
+					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+					final int intelligence = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					final boolean permanent = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+					final CAbilityHero heroData = whichUnit.getHeroData();
+					if (heroData != null) {
+					if (permanent) {
+						heroData.setIntelligenceBase(CommonEnvironment.this.simulation, whichUnit, intelligence);
+					} // Todo add else case to handle non-permanent
+					}
+					return null;
+				}
+			)
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnitType",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

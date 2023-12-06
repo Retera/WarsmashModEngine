@@ -486,11 +486,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			teamColors[i] = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource,
 					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
 		}
-		final Texture[] specialIcons = new Texture[3];
+		final Texture[] specialIcons = new Texture[5];
 		specialIcons[0] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq, "UI\\MiniMap\\minimap-gold.blp");
 		specialIcons[1] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
 				"UI\\MiniMap\\minimap-neutralbuilding.blp");
 		specialIcons[2] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq, "UI\\MiniMap\\minimap-hero.blp");
+		specialIcons[3] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
+				"UI\\MiniMap\\minimap-gold-entangled.blp");
+		specialIcons[4] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
+				"UI\\MiniMap\\minimap-gold-haunted.blp");
 		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();
 		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors, specialIcons);
 	}
@@ -4290,7 +4294,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.tooltipFrame.setVisible(false);
 			}
 		}
-		boolean hover = ((AbstractUIFrame)consoleUI).mouseOverUI(screenCoordsVector.x, screenCoordsVector.y);
+		final boolean hover = ((AbstractUIFrame) this.consoleUI).mouseOverUI(screenCoordsVector.x,
+				screenCoordsVector.y);
 		if (!hover) {
 			final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 					this.anyClickableUnitFilter);
@@ -4302,7 +4307,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				this.mouseOverUnit = newMouseOverUnit;
 			}
-		} else {
+		}
+		else {
 			this.war3MapViewer.clearUnitMouseOverHighlight();
 			this.mouseOverUnit = null;
 		}

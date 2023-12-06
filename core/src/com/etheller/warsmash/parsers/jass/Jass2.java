@@ -2330,7 +2330,7 @@ public class Jass2 {
 						final double facing = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 						final War3ID blightedMineRawcode = War3ID.fromString("ugol");
 						final War3ID goldMineRawcode = War3ID.fromString("ngol");
-						player.addTechtreeUnlocked(simulation, blightedMineRawcode);
+						player.addTechtreeUnlocked(this.simulation, blightedMineRawcode);
 						final CUnit blightedMine = CommonEnvironment.this.simulation.createUnitSimple(
 								blightedMineRawcode, player.getId(), (float) x, (float) y, (float) facing);
 						final CUnit goldMine = CommonEnvironment.this.simulation.createUnitSimple(goldMineRawcode,
@@ -2737,6 +2737,16 @@ public class Jass2 {
 						final CWidget whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						return new RealJassValue(whichWidget.getY());
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetDestructableX",
+					(arguments, globalScope, triggerScope) -> {
+						final CWidget whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						return new RealJassValue(whichWidget.getX());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetDestructableY",
+					(arguments, globalScope, triggerScope) -> {
+						final CWidget whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						return new RealJassValue(whichWidget.getY());
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitX",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
@@ -3035,10 +3045,11 @@ public class Jass2 {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final int abilityId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final War3ID rawcode = new War3ID(abilityId);
-						
-						CAbility abil = whichUnit.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
+
+						final CAbility abil = whichUnit
+								.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
 						if (abil != null) {
-							whichUnit.remove(simulation, abil);
+							whichUnit.remove(this.simulation, abil);
 							return BooleanJassValue.TRUE;
 						}
 						return BooleanJassValue.FALSE;

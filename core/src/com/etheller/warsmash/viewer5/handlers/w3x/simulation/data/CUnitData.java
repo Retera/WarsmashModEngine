@@ -218,6 +218,8 @@ public class CUnitData {
 	private static final String LUMBER_BOUNTY_AWARDED_DICE = "lumberbountydice"; // replaced from 'ulbd'
 	private static final String LUMBER_BOUNTY_AWARDED_SIDES = "lumberbountysides"; // replaced from 'ulbs'
 
+	private static final String NEUTRAL_BUILDING_SHOW_ICON = "nbmmIcon";
+
 	private final CGameplayConstants gameplayConstants;
 	private final ObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
@@ -361,12 +363,15 @@ public class CUnitData {
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);
 				}
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && createAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)createAbility).setAutoCastOn(unit, true);
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (createAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) createAbility).setAutoCastOn(unit, true);
 				}
-			} else {
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && existingAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)existingAbility).setAutoCastOn(unit, true);
+			}
+			else {
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (existingAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) existingAbility).setAutoCastOn(unit, true);
 				}
 			}
 		}
@@ -375,11 +380,11 @@ public class CUnitData {
 	public void addMissingDefaultAbilitiesToUnit(final CSimulation simulation,
 			final HandleIdAllocator handleIdAllocator, final CUnitType unitTypeInstance, final boolean resetMana,
 			final int manaInitial, final int speed, final CUnit unit) {
-		CAbilityMove preMove = unit.getFirstAbilityOfType(CAbilityMove.class);
-		if (speed > 0 && preMove == null) {
+		final CAbilityMove preMove = unit.getFirstAbilityOfType(CAbilityMove.class);
+		if ((speed > 0) && (preMove == null)) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
-		if (speed <= 0 && preMove != null) {
+		if ((speed <= 0) && (preMove != null)) {
 			unit.remove(simulation, preMove);
 		}
 		final List<CUnitAttack> unitSpecificAttacks = new ArrayList<>();
@@ -444,10 +449,11 @@ public class CUnitData {
 		if (unitTypeInstance.isHero()) {
 			final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
 			if (unit.getFirstAbilityOfType(CAbilityHero.class) != null) {
-				CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
+				final CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
 				abil.setSkillsAvailable(heroAbilityList);
 				abil.recalculateAllStats(simulation, unit);
-			} else {
+			}
+			else {
 				unit.add(simulation, new CAbilityHero(handleIdAllocator.createId(), heroAbilityList));
 				// reset initial mana after the value is adjusted for hero data
 				unit.setMana(manaInitial);
@@ -461,12 +467,15 @@ public class CUnitData {
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);
 				}
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && createAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)createAbility).setAutoCastOn(unit, true);
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (createAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) createAbility).setAutoCastOn(unit, true);
 				}
-			} else {
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && existingAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)existingAbility).setAutoCastOn(unit, true);
+			}
+			else {
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (existingAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) existingAbility).setAutoCastOn(unit, true);
 				}
 			}
 		}
@@ -586,7 +595,8 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			} catch (final Exception exc) {
+			}
+			catch (final Exception exc) {
 				System.err.println("Attack 1 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			try {
@@ -649,7 +659,8 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			} catch (final Exception exc) {
+			}
+			catch (final Exception exc) {
 				System.err.println("Attack 2 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			final List<CUnitAttack> enabledAttacks = getEnabledAttacks(attacks, attacksEnabled);
@@ -710,9 +721,11 @@ public class CUnitData {
 			final List<War3ID> itemsMade = parseIDList(unitType.getFieldAsList(ITEMS_MADE));
 
 			final War3ID defaultAutocastAbilityId;
-			if (defaultAutocastAbility != null && !defaultAutocastAbility.isEmpty() && !defaultAutocastAbility.equals("_")) {
+			if ((defaultAutocastAbility != null) && !defaultAutocastAbility.isEmpty()
+					&& !defaultAutocastAbility.equals("_")) {
 				defaultAutocastAbilityId = War3ID.fromString(defaultAutocastAbility);
-			} else {
+			}
+			else {
 				defaultAutocastAbilityId = null;
 			}
 			final List<War3ID> heroAbilityList = parseIDList(heroAbilityListString);
@@ -743,6 +756,8 @@ public class CUnitData {
 
 			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
 
+			final boolean neutralBuildingShowMinimapIcon = unitType.getFieldAsBoolean(NEUTRAL_BUILDING_SHOW_ICON, 0);
+
 			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, manaRegen, lifeRegenType,
 					manaInitial, manaMaximum, speed, defense, defaultAutocastAbilityId, abilityList, isBldg,
 					movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled, armorType, raise,
@@ -755,7 +770,7 @@ public class CUnitData {
 					revivesHeroes, pointValue, castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe,
 					defenseUpgradeBonus, sightRadiusDay, sightRadiusNight, extendedLineOfSight, goldBountyAwardedBase,
 					goldBountyAwardedDice, goldBountyAwardedSides, lumberBountyAwardedBase, lumberBountyAwardedDice,
-					lumberBountyAwardedSides);
+					lumberBountyAwardedSides, neutralBuildingShowMinimapIcon);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}
@@ -807,25 +822,31 @@ public class CUnitData {
 				if (i < requirementsLevelsString.size()) {
 					if (requirementsLevelsString.get(i).isEmpty()) {
 						level = 1;
-					} else {
+					}
+					else {
 						try {
 							level = Integer.parseInt(requirementsLevelsString.get(i));
-						} catch (final NumberFormatException exc) {
+						}
+						catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				} else if (requirementsLevelsString.size() > 0) {
+				}
+				else if (requirementsLevelsString.size() > 0) {
 					final String requirementLevel = requirementsLevelsString.get(requirementsLevelsString.size() - 1);
 					if (requirementLevel.isEmpty()) {
 						level = 1;
-					} else {
+					}
+					else {
 						try {
 							level = Integer.parseInt(requirementLevel);
-						} catch (final NumberFormatException exc) {
+						}
+						catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				} else {
+				}
+				else {
 					level = 1;
 				}
 				requirements.add(new CUnitTypeRequirement(War3ID.fromString(item), level));
@@ -845,7 +866,8 @@ public class CUnitData {
 			final float newSumBonusAtLevel = sumBonusAtLevel + statPerLevel;
 			if (i == 0) {
 				table[i] = (int) newSumBonusAtLevel;
-			} else {
+			}
+			else {
 				table[i] = (int) newSumBonusAtLevel - table[i - 1];
 			}
 			sumBonusAtLevel = newSumBonusAtLevel;

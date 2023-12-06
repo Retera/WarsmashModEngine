@@ -106,17 +106,19 @@ public class CUnitType {
 	private final int lumberBountyAwardedBase;
 	private final int lumberBountyAwardedDice;
 	private final int lumberBountyAwardedSides;
+	private final boolean neutralBuildingShowMinimapIcon;
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
-			final int manaMaximum, final int speed, final int defense, final War3ID defaultAutocastAbility, final List<War3ID> abilityList,
-			final boolean isBldg, final MovementType movementType, final float defaultFlyingHeight,
-			final float collisionSize, final EnumSet<CUnitClassification> classifications,
-			final List<CUnitAttack> attacks, final int attacksEnabled, final String armorType, final boolean raise,
-			final boolean decay, final CDefenseType defenseType, final float impactZ,
-			final BufferedImage buildingPathingPixelMap, final float deathTime, final EnumSet<CTargetType> targetedAs,
-			final float defaultAcquisitionRange, final float minimumAttackRange, final List<War3ID> structuresBuilt,
-			final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable, final List<War3ID> upgradesUsed,
+			final int manaMaximum, final int speed, final int defense, final War3ID defaultAutocastAbility,
+			final List<War3ID> abilityList, final boolean isBldg, final MovementType movementType,
+			final float defaultFlyingHeight, final float collisionSize,
+			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks,
+			final int attacksEnabled, final String armorType, final boolean raise, final boolean decay,
+			final CDefenseType defenseType, final float impactZ, final BufferedImage buildingPathingPixelMap,
+			final float deathTime, final EnumSet<CTargetType> targetedAs, final float defaultAcquisitionRange,
+			final float minimumAttackRange, final List<War3ID> structuresBuilt, final List<War3ID> unitsTrained,
+			final List<War3ID> researchesAvailable, final List<War3ID> upgradesUsed,
 			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType, final List<War3ID> upgradesTo,
 			final List<War3ID> itemsSold, final List<War3ID> itemsMade, final CUnitRace unitRace, final int goldCost,
 			final int lumberCost, final int foodUsed, final int foodMade, final int buildTime,
@@ -131,7 +133,8 @@ public class CUnitType {
 			final boolean canBeBuiltOnThem, final boolean canBuildOnMe, final int defenseUpgradeBonus,
 			final int sightRadiusDay, final int sightRadiusNight, final boolean extendedLineOfSight,
 			final int goldBountyAwardedBase, final int goldBountyAwardedDice, final int goldBountyAwardedSides,
-			final int lumberBountyAwardedBase, final int lumberBountyAwardedDice, final int lumberBountyAwardedSides) {
+			final int lumberBountyAwardedBase, final int lumberBountyAwardedDice, final int lumberBountyAwardedSides,
+			boolean neutralBuildingShowMinimapIcon) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
@@ -212,6 +215,7 @@ public class CUnitType {
 		this.lumberBountyAwardedBase = lumberBountyAwardedBase;
 		this.lumberBountyAwardedDice = lumberBountyAwardedDice;
 		this.lumberBountyAwardedSides = lumberBountyAwardedSides;
+		this.neutralBuildingShowMinimapIcon = neutralBuildingShowMinimapIcon;
 	}
 
 	public String getName() {
@@ -262,7 +266,7 @@ public class CUnitType {
 	 * @return the defaultAutocastAbility
 	 */
 	public War3ID getDefaultAutocastAbility() {
-		return defaultAutocastAbility;
+		return this.defaultAutocastAbility;
 	}
 
 	public List<War3ID> getAbilityList() {
@@ -294,7 +298,7 @@ public class CUnitType {
 	}
 
 	public int getAttacksEnabled() {
-		return attacksEnabled;
+		return this.attacksEnabled;
 	}
 
 	public boolean isRaise() {
@@ -362,11 +366,11 @@ public class CUnitType {
 	}
 
 	public List<War3ID> getItemsSold() {
-		return itemsSold;
+		return this.itemsSold;
 	}
 
 	public List<War3ID> getItemsMade() {
-		return itemsMade;
+		return this.itemsMade;
 	}
 
 	public CUnitRace getRace() {
@@ -505,46 +509,50 @@ public class CUnitType {
 	}
 
 	public int getDefenseUpgradeBonus() {
-		return defenseUpgradeBonus;
+		return this.defenseUpgradeBonus;
 	}
 
 	public int getSightRadiusDay() {
-		return sightRadiusDay;
+		return this.sightRadiusDay;
 	}
 
 	public int getSightRadiusNight() {
-		return sightRadiusNight;
+		return this.sightRadiusNight;
 	}
 
 	public boolean isExtendedLineOfSight() {
-		return extendedLineOfSight;
+		return this.extendedLineOfSight;
 	}
 
 	public int getGoldBountyAwardedBase() {
-		return goldBountyAwardedBase;
+		return this.goldBountyAwardedBase;
 	}
 
 	public int getGoldBountyAwardedDice() {
-		return goldBountyAwardedDice;
+		return this.goldBountyAwardedDice;
 	}
 
 	public int getGoldBountyAwardedSides() {
-		return goldBountyAwardedSides;
+		return this.goldBountyAwardedSides;
 	}
 
 	public int getLumberBountyAwardedBase() {
-		return lumberBountyAwardedBase;
+		return this.lumberBountyAwardedBase;
 	}
 
 	public int getLumberBountyAwardedDice() {
-		return lumberBountyAwardedDice;
+		return this.lumberBountyAwardedDice;
 	}
 
 	public int getLumberBountyAwardedSides() {
-		return lumberBountyAwardedSides;
+		return this.lumberBountyAwardedSides;
 	}
 
 	public int getCargoCapacity() {
 		return 1;
+	}
+
+	public boolean isNeutralBuildingShowMinimapIcon() {
+		return this.neutralBuildingShowMinimapIcon;
 	}
 }

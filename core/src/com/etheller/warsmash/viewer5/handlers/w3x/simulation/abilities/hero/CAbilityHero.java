@@ -278,6 +278,21 @@ public class CAbilityHero extends AbstractCAbility {
 		}
 	}
 
+  public void setStrengthBase(final CSimulation game, final CUnit unit, final int strengthBase) {
+    this.strength.setBase(strengthBase);
+    calculateDerivatedFields(game, unit);
+  }
+
+  public void setAgilityBase(final CSimulation game, final CUnit unit, final int agilityBase) {
+    this.agility.setBase(agilityBase);
+    calculateDerivatedFields(game, unit);
+  }
+
+  public void setIntelligenceBase(final CSimulation game, final CUnit unit, final int intelligenceBase) {
+    this.intelligence.setBase(intelligenceBase);
+    calculateDerivatedFields(game, unit);
+  }
+
 	public void addStrengthBonus(final CSimulation game, final CUnit unit, final int strengthBonus) {
 		this.strength.setBonus(this.strength.getBonus() + strengthBonus);
 		calculateDerivatedFields(game, unit);

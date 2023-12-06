@@ -2424,7 +2424,7 @@ public class Jass2 {
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetHeroAgi",
-				(arguments, globalScope, triggerScope) -> {
+					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final int agi = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final boolean permanent = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());

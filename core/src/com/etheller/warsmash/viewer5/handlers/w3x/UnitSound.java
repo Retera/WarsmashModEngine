@@ -163,6 +163,10 @@ public final class UnitSound {
 		return this.sounds.size();
 	}
 
+	public Sound getLastPlayedSound() {
+		return this.lastPlayedSound;
+	}
+
 	public void stop() {
 		for (final Sound sound : this.sounds) {
 			sound.stop();

@@ -51,4 +51,20 @@ public class BuffUI {
 		return this.effectSoundLooped;
 	}
 
+	public List<EffectAttachmentUI> getTargetArt() {
+		return targetArt;
+	}
+
+	public List<EffectAttachmentUI> getSpecialArt() {
+		return specialArt;
+	}
+
+	public List<EffectAttachmentUI> getEffectArt() {
+		return effectArt;
+	}
+
+	public List<EffectAttachmentUI> getMissileArt() {
+		return missileArt;
+	}
+
 }

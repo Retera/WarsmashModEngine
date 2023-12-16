@@ -10,6 +10,7 @@ import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 
 public class CTimerJass extends CTimer implements CHandle {
 	private JassFunction handlerFunc;
@@ -27,7 +28,7 @@ public class CTimerJass extends CTimer implements CHandle {
 	}
 
 	@Override
-	public void onFire() {
+	public void onFire(final CSimulation simulation) {
 		final CommonTriggerExecutionScope handlerScope = CommonTriggerExecutionScope.expiringTimer(null, this);
 		// Snapshotting these values at the top... This is leaky and later I should make
 		// a better solution, but I was having a problem with bj_stockUpdateTimer where

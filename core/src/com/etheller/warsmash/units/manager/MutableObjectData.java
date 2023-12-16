@@ -83,10 +83,10 @@ public final class MutableObjectData {
 				if (name.startsWith("\"") && name.endsWith("\"")) {
 					name = name.substring(1, name.length() - 1);
 				}
-				gameObject.setField("Name", name);
+				gameObject.setField("Profile", "Name", name);
 			}
 			if (suffix.startsWith("WESTRING")) {
-				gameObject.setField("EditorSuffix", this.worldEditStrings.getString(suffix));
+				gameObject.setField("Profile", "EditorSuffix", this.worldEditStrings.getString(suffix));
 			}
 		}
 	}

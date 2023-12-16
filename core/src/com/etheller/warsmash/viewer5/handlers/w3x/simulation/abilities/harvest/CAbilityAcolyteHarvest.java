@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -21,8 +22,8 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	private float duration;
 	private CBehaviorAcolyteHarvest behaviorAcolyteHarvest;
 
-	public CAbilityAcolyteHarvest(final int handleId, final War3ID alias, final float castRange, final float duration) {
-		super(handleId, alias);
+	public CAbilityAcolyteHarvest(final int handleId, final War3ID code, final War3ID alias, final float castRange, final float duration) {
+		super(handleId, code, alias);
 		this.castRange = castRange;
 		this.duration = duration;
 	}
@@ -142,5 +143,20 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 
 	public float getDuration() {
 		return this.duration;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

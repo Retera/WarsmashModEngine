@@ -4,10 +4,12 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -22,12 +24,20 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener.CUnitStateNotifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityCargoHold;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
@@ -39,7 +49,21 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABGenericTimedBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTickingPausedBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.BehaviorTargetUnitVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackMove;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorBoardTransport;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStop;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorStun;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.AbilityDisableWhileUpgradingVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.CBehaviorReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -48,6 +72,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CRegenType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
@@ -55,21 +80,30 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTarget
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CUnitAttackVisionFogModifier;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CUnitDeathVisionFogModifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CUnitState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class CUnit extends CWidget {
 	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
@@ -77,6 +111,7 @@ public class CUnit extends CWidget {
 	private War3ID typeId;
 	private float facing; // degrees
 	private float mana;
+	private int baseMaximumLife;
 	private int maximumLife;
 	private float lifeRegen;
 	private float lifeRegenStrengthBonus;
@@ -84,6 +119,7 @@ public class CUnit extends CWidget {
 	private float manaRegen;
 	private float manaRegenIntelligenceBonus;
 	private float manaRegenBonus;
+	private int baseMaximumMana;
 	private int maximumMana;
 	private int speed;
 	private int agilityDefensePermanentBonus;
@@ -92,8 +128,20 @@ public class CUnit extends CWidget {
 	private float temporaryDefenseBonus;
 	private float totalTemporaryDefenseBonus;
 
+	private int speedBonus;
+
+	private CUnitDefaultThornsListener flatThornsListener = null;
+	private CUnitDefaultThornsListener percentThornsListener = null;
+	private CUnitDefaultLifestealListener lifestealListener = null;
+
+	private final List<StateModBuff> stateModBuffs = new ArrayList<>();
+	private final Map<NonStackingStatBuffType, Map<String, List<NonStackingStatBuff>>> nonStackingBuffs = new HashMap<>();
+	private final Map<String, List<NonStackingFx>> nonStackingFx = new HashMap<>();
+	private final Map<String, List<CBuff>> nonStackingDisplayBuffs = new HashMap<>();
+
 	private int currentDefenseDisplay;
 	private float currentDefense;
+	private float baseLifeRegenPerTick;
 	private float currentLifeRegenPerTick;
 	private float currentManaRegenPerTick;
 	private CDefenseType defenseType;
@@ -103,6 +151,7 @@ public class CUnit extends CWidget {
 	private int playerIndex;
 
 	private final List<CAbility> abilities = new ArrayList<>();
+	private final List<CAbility> disabledAbilities = new ArrayList<>();
 
 	private CBehavior currentBehavior;
 	private final Queue<COrder> orderQueue = new LinkedList<>();
@@ -118,6 +167,7 @@ public class CUnit extends CWidget {
 	private boolean decays;
 	private boolean corpse;
 	private boolean boneCorpse;
+	private boolean falseDeath;
 
 	private transient CUnitAnimationListener unitAnimationListener;
 
@@ -128,6 +178,8 @@ public class CUnit extends CWidget {
 	private transient List<StateListenerUpdate> stateListenersUpdates = new ArrayList<>();
 	private float acquisitionRange;
 	private transient static AutoAttackTargetFinderEnum autoAttackTargetFinderEnum = new AutoAttackTargetFinderEnum();
+	private transient static AutocastTargetFinderEnum autocastTargetFinderEnum = new AutocastTargetFinderEnum();
+	private transient CAutocastAbility autocastAbility = null;
 
 	private transient CBehaviorMove moveBehavior;
 	private transient CBehaviorAttack attackBehavior;
@@ -147,7 +199,12 @@ public class CUnit extends CWidget {
 	private boolean acceptingOrders = true;
 	private boolean invulnerable = false;
 	private boolean magicImmune = false;
+	private boolean resistant = false;
+	private boolean autoAttack = true;
+	private boolean moveDisabled = false;
 	private CBehavior defaultBehavior;
+	private CBehavior interruptedDefaultBehavior;
+	private CBehavior interruptedBehavior;
 	private COrder lastStartedOrder = null;
 	private CUnit workerInside;
 	private final War3ID[] buildQueue = new War3ID[WarsmashConstants.BUILD_QUEUE_SIZE];
@@ -163,6 +220,15 @@ public class CUnit extends CWidget {
 	private List<CUnitAttack> unitSpecificAttacks;
 	private List<CUnitAttack> unitSpecificCurrentAttacks;
 	private boolean disableAttacks;
+	private CUnitAttackVisionFogModifier attackFogMod;
+
+	private final Map<CUnitAttackPreDamageListenerPriority, List<CUnitAttackPreDamageListener>> preDamageListeners = new HashMap<>();
+	private final List<CUnitAttackPostDamageListener> postDamageListeners = new ArrayList<>();
+	private final List<CUnitAttackDamageTakenModificationListener> damageTakenModificationListeners = new ArrayList<>();
+	private final List<CUnitAttackFinalDamageTakenModificationListener> finalDamageTakenModificationListeners = new ArrayList<>();
+	private final List<CUnitAttackDamageTakenListener> damageTakenListeners = new ArrayList<>();
+	private final Map<CUnitDeathReplacementEffectPriority, List<CUnitDeathReplacementEffect>> deathReplacementEffects = new HashMap<>();
+	private final List<CUnitAttackEvasionListener> evasionListeners = new ArrayList<>();
 
 	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
 	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
@@ -181,9 +247,11 @@ public class CUnit extends CWidget {
 		this.typeId = typeId;
 		this.facing = facing;
 		this.mana = mana;
+		this.baseMaximumLife = maximumLife;
 		this.maximumLife = maximumLife;
 		this.lifeRegen = lifeRegen;
 		this.manaRegen = unitType.getManaRegen();
+		this.baseMaximumMana = maximumMana;
 		this.maximumMana = maximumMana;
 		this.speed = speed;
 		this.flyHeight = unitType.getDefaultFlyingHeight();
@@ -196,7 +264,12 @@ public class CUnit extends CWidget {
 		this.defaultBehavior = this.stopBehavior;
 		this.raisable = unitType.isRaise();
 		this.decays = unitType.isDecay();
-		computeDerivedFields();
+		initializeNonStackingBuffs();
+		initializeListenerLists();
+		this.addPreDamageListener(CUnitAttackPreDamageListenerPriority.ACCURACY,
+				new CUnitDefaultAccuracyCheckListener());
+		this.attackFogMod = new CUnitAttackVisionFogModifier(this, playerIndex);
+		computeAllDerivedFields();
 	}
 
 	public void performDefaultBehavior(final CSimulation game) {
@@ -230,38 +303,1005 @@ public class CUnit extends CWidget {
 
 	public void setLifeRegenStrengthBonus(final float lifeRegenStrengthBonus) {
 		this.lifeRegenStrengthBonus = lifeRegenStrengthBonus;
-		computeDerivedFields();
+		computeDerivedFields(NonStackingStatBuffType.HPGEN);
 	}
 
-	private void computeDerivedFields() {
-		this.currentDefenseDisplay = this.unitType.getDefense() + this.agilityDefensePermanentBonus
-				+ this.permanentDefenseBonus;
-		this.totalTemporaryDefenseBonus = this.temporaryDefenseBonus + this.agilityDefenseTemporaryBonus;
-		this.currentDefense = this.currentDefenseDisplay + this.totalTemporaryDefenseBonus;
-		this.currentLifeRegenPerTick = (this.lifeRegen + this.lifeRegenBonus + this.lifeRegenStrengthBonus)
-				* WarsmashConstants.SIMULATION_STEP_TIME;
-		this.currentManaRegenPerTick = (this.manaRegen + this.manaRegenBonus + this.manaRegenIntelligenceBonus)
-				* WarsmashConstants.SIMULATION_STEP_TIME;
+	public void addNonStackingStatBuff(final NonStackingStatBuff buff) {
+		if (buff.getBuffType() == NonStackingStatBuffType.ALLATK) {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
+					.get(NonStackingStatBuffType.MELEEATK);
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATK, buffKeyMap);
+			}
+			List<NonStackingStatBuff> theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
+
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK);
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATK, buffKeyMap);
+			}
+			theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
+		} else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
+					.get(NonStackingStatBuffType.MELEEATKPCT);
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATKPCT, buffKeyMap);
+			}
+			List<NonStackingStatBuff> theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
+
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT);
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATKPCT, buffKeyMap);
+			}
+			theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
+		} else {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
+			if (buffKeyMap == null) {
+				buffKeyMap = new HashMap<>();
+				this.nonStackingBuffs.put(buff.getBuffType(), buffKeyMap);
+			}
+			List<NonStackingStatBuff> theList = buffKeyMap.get(buff.getStackingKey());
+			if (theList == null) {
+				theList = new ArrayList<>();
+				buffKeyMap.put(buff.getStackingKey(), theList);
+			}
+			theList.add(buff);
+		}
+		computeDerivedFields(buff.getBuffType());
+	}
+
+	public void removeNonStackingStatBuff(final NonStackingStatBuff buff) {
+		if (buff.getBuffType() == NonStackingStatBuffType.ALLATK) {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
+					.get(NonStackingStatBuffType.MELEEATK);
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (final Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
+
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK);
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (final Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
+		} else if (buff.getBuffType() == NonStackingStatBuffType.ALLATKPCT) {
+			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
+					.get(NonStackingStatBuffType.MELEEATKPCT);
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (final Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
+
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT);
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (final Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
+		} else {
+			final Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs.get(buff.getBuffType());
+			try {
+				buffKeyMap.get(buff.getStackingKey()).remove(buff);
+			} catch (final Exception e) {
+				System.err.println(e.getLocalizedMessage());
+				System.err.println(e.getStackTrace().toString());
+				System.err.println("From: " + this.getTypeId().asStringValue());
+			}
+		}
+		computeDerivedFields(buff.getBuffType());
+	}
+
+	public void addStateModBuff(StateModBuff listener) {
+		if (!stateModBuffs.contains(listener)) {
+			stateModBuffs.add(0, listener);
+		}
+	}
+
+	public void removeStateModBuff(final StateModBuff listener) {
+		stateModBuffs.remove(listener);
+	}
+
+	public void removeAllStateModBuffs(final StateModBuffType type) {
+		for (int i = stateModBuffs.size() - 1; i >= 0; i--) {
+			if (stateModBuffs.get(i).getBuffType() == type) {
+				stateModBuffs.remove(i);
+			}
+		}
+	}
+
+	public void computeUnitState(final CSimulation game, final StateModBuffType type) {
+		switch (type) {
+		case DISABLE_ATTACK:
+		case DISABLE_MELEE_ATTACK:
+		case DISABLE_RANGED_ATTACK:
+		case DISABLE_SPECIAL_ATTACK:
+		case DISABLE_SPELLS:
+		case ETHEREAL:
+			boolean isDisableAttack = false;
+			boolean isDisableMeleeAttack = false;
+			boolean isDisableRangedAttack = false;
+			boolean isDisableSpecialAttack = false;
+			boolean isDisableSpells = false;
+			boolean isEthereal = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.DISABLE_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_MELEE_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableMeleeAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_RANGED_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableRangedAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_SPECIAL_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableSpecialAttack = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.DISABLE_SPELLS) {
+					if (buff.getValue() != 0) {
+						isDisableSpells = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.ETHEREAL) {
+					if (buff.getValue() != 0) {
+						isEthereal = true;
+					}
+				}
+			}
+//			CAbility attack = this.getFirstAbilityOfType(CAbilityAttack.class);
+//			if (attack != null) {
+//				attack.setDisabled(isDisableAttack, CAbilityDisableType.ATTACKDISABLED);
+//			}
+			for (CAbility ability : this.abilities) {
+				if (((isDisableAttack || isEthereal) && ability.getAbilityCategory() == CAbilityCategory.ATTACK)
+						|| (isDisableSpells && ability.getAbilityCategory() == CAbilityCategory.SPELL
+								&& !ability.isPhysical())
+						|| (isEthereal && ability.isPhysical()
+								&& (ability.getAbilityCategory() == CAbilityCategory.SPELL
+										|| ability.getAbilityCategory() == CAbilityCategory.CORE))) {
+					ability.setDisabled(true, CAbilityDisableType.ATTACKDISABLED);
+				} else {
+					ability.setDisabled(false, CAbilityDisableType.ATTACKDISABLED);
+				}
+			}
+			List<CUnitAttack> newAttackList = new ArrayList<CUnitAttack>();
+			for (int i = 0; i < this.unitSpecificAttacks.size(); i++) {
+				CUnitAttack attack = this.unitSpecificAttacks.get(i);
+				if ((this.getUnitType().getAttacksEnabled() & (i + 1)) != 0 && !isDisableAttack
+						&& (!isDisableMeleeAttack || !attack.getWeaponType().equals(CWeaponType.NORMAL))
+						&& (!isDisableRangedAttack || attack.getWeaponType().equals(CWeaponType.NORMAL))
+						&& (!isDisableSpecialAttack || !((attack.getTargetsAllowed().size() == 1)
+								&& attack.getTargetsAllowed().equals(EnumSet.of(CTargetType.TREE))))) {
+					newAttackList.add(attack);
+				}
+
+			}
+			this.setUnitSpecificCurrentAttacks(newAttackList);
+			this.notifyAttacksChanged();
+			this.checkDisabledAbilities(game, isDisableAttack);
+
+			if (isEthereal) {
+				if (!this.damageTakenModificationListeners.contains(CUnitDefaultEtherealDamageModListener.INSTANCE)) {
+					this.addDamageTakenModificationListener(CUnitDefaultEtherealDamageModListener.INSTANCE);
+				}
+				game.changeUnitVertexColor(this, RenderUnit.ETHEREAL);
+				// Disable physical skills
+//				for (CAbility ability : this.abilities) {
+//					if (ability.isPhysical()) {
+//						ability.setDisabled(true);
+//					}
+//				}
+			} else {
+				if (this.damageTakenModificationListeners.contains(CUnitDefaultEtherealDamageModListener.INSTANCE)) {
+					this.removeDamageTakenModificationListener(CUnitDefaultEtherealDamageModListener.INSTANCE);
+					game.changeUnitVertexColor(this, RenderUnit.DEFAULT);
+				}
+				// Enable physical skills
+//				for (CAbility ability : this.abilities) {
+//					if (ability.isPhysical()) {
+//						ability.setDisabled(false);
+//					}
+//				}
+			}
+			break;
+		case DISABLE_AUTO_ATTACK:
+			boolean isDisableAutoAttack = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.DISABLE_AUTO_ATTACK) {
+					if (buff.getValue() != 0) {
+						isDisableAutoAttack = true;
+					}
+				}
+			}
+			this.autoAttack = !isDisableAutoAttack;
+			break;
+		case MAGIC_IMMUNE:
+			boolean isMagicImmune = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.MAGIC_IMMUNE) {
+					if (buff.getValue() != 0) {
+						isMagicImmune = true;
+					}
+				}
+			}
+			this.setMagicImmune(isMagicImmune);
+			if (isMagicImmune) {
+				if (!this.finalDamageTakenModificationListeners
+						.contains(CUnitDefaultMagicImmuneDamageModListener.INSTANCE)) {
+					this.addFinalDamageTakenModificationListener(CUnitDefaultMagicImmuneDamageModListener.INSTANCE);
+				}
+			} else {
+				if (this.finalDamageTakenModificationListeners
+						.contains(CUnitDefaultMagicImmuneDamageModListener.INSTANCE)) {
+					this.removeFinalDamageTakenModificationListener(CUnitDefaultMagicImmuneDamageModListener.INSTANCE);
+				}
+			}
+			break;
+		case RESISTANT:
+			boolean isResistant = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.RESISTANT) {
+					if (buff.getValue() != 0) {
+						isResistant = true;
+					}
+				}
+			}
+			this.resistant = isResistant;
+			break;
+		case SLEEPING:
+		case STUN:
+			boolean isSleeping = false;
+			boolean isStun = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.SLEEPING) {
+					if (buff.getValue() != 0) {
+						isSleeping = true;
+					}
+				}
+				if (buff.getBuffType() == StateModBuffType.STUN) {
+					if (buff.getValue() != 0) {
+						isStun = true;
+					}
+				}
+			}
+			if (isSleeping || isStun) {
+				if ((this.currentBehavior == null)
+						|| (this.currentBehavior.getHighlightOrderId() != OrderIds.stunned)) {
+					if (this.currentBehavior != null) {
+						this.interruptedBehavior = this.currentBehavior;
+						this.interruptedDefaultBehavior = this.defaultBehavior;
+					}
+					this.currentBehavior = new CBehaviorStun(this);
+					this.currentBehavior.begin(game);
+					setDefaultBehavior(this.currentBehavior);
+					this.stateNotifier.ordersChanged();
+				}
+			} else {
+				if (this.currentBehavior != null && this.currentBehavior.getHighlightOrderId() == OrderIds.stunned) {
+					setDefaultBehavior(this.interruptedDefaultBehavior);
+					this.currentBehavior = this.pollNextOrderBehavior(game);
+					this.interruptedBehavior = null;
+					this.interruptedDefaultBehavior = null;
+					this.stateNotifier.ordersChanged();
+				}
+			}
+
+			if (isSleeping) {
+				if (!this.damageTakenListeners.contains(CUnitDefaultSleepListener.INSTANCE)) {
+					this.addDamageTakenListener(CUnitDefaultSleepListener.INSTANCE);
+				}
+			} else {
+				if (this.damageTakenListeners.contains(CUnitDefaultSleepListener.INSTANCE)) {
+					this.removeDamageTakenListener(CUnitDefaultSleepListener.INSTANCE);
+				}
+			}
+			break;
+		case SNARED:
+			boolean isSnared = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.SNARED) {
+					if (buff.getValue() != 0) {
+						isSnared = true;
+					}
+				}
+			}
+			if (isSnared) {
+				this.setFlyHeight(0);
+				this.moveDisabled = true;
+			} else {
+				if (this.moveDisabled) {
+					this.setFlyHeight(this.unitType.getDefaultFlyingHeight());
+					this.moveDisabled = false;
+				}
+			}
+			break;
+		case INVULNERABLE:
+			boolean isInvuln = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.INVULNERABLE) {
+					if (buff.getValue() != 0) {
+						isInvuln = true;
+					}
+				}
+			}
+			this.setInvulnerable(isInvuln);
+			this.stateNotifier.abilitiesChanged();
+			break;
+		default:
+			break;
+		}
+	}
+
+	public void computeDerivedFields(final NonStackingStatBuffType type) {
+		Map<String, List<NonStackingStatBuff>> buffKeyMap;
+		switch (type) {
+		case DEF:
+		case DEFPCT:
+			this.currentDefenseDisplay = this.unitType.getDefense() + this.agilityDefensePermanentBonus
+					+ this.permanentDefenseBonus;
+
+			float totalNSDefBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.DEF);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSDefBuff += buffForKey;
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.DEFPCT);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSDefBuff += buffForKey * this.currentDefenseDisplay;
+			}
+
+			this.totalTemporaryDefenseBonus = this.temporaryDefenseBonus + this.agilityDefenseTemporaryBonus
+					+ totalNSDefBuff;
+			this.currentDefense = this.currentDefenseDisplay + this.totalTemporaryDefenseBonus;
+			break;
+		case HPGEN:
+		case HPGENPCT:
+		case MAXHPGENPCT:
+			float totalNSHPGenBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.HPGEN);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSHPGenBuff += buffForKey;
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.HPGENPCT);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSHPGenBuff += buffForKey * (this.lifeRegen + this.lifeRegenBonus + this.lifeRegenStrengthBonus);
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MAXHPGENPCT);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSHPGenBuff += buffForKey * (this.maximumLife);
+			}
+			this.currentLifeRegenPerTick = (this.lifeRegen + this.lifeRegenBonus + this.lifeRegenStrengthBonus
+					+ totalNSHPGenBuff) * WarsmashConstants.SIMULATION_STEP_TIME;
+			break;
+		case MPGEN:
+		case MPGENPCT:
+		case MAXMPGENPCT:
+			float totalNSMPGenBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MPGEN);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMPGenBuff += buffForKey;
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MPGENPCT);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMPGenBuff += buffForKey
+						* (this.manaRegen + this.manaRegenBonus + this.manaRegenIntelligenceBonus);
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MAXMPGENPCT);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMPGenBuff += buffForKey * this.maximumMana;
+			}
+			this.currentManaRegenPerTick = (this.manaRegen + this.manaRegenBonus + this.manaRegenIntelligenceBonus
+					+ totalNSMPGenBuff) * WarsmashConstants.SIMULATION_STEP_TIME;
+			break;
+		case MVSPDPCT:
+		case MVSPD:
+			float totalNSMvSpdBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MVSPD);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMvSpdBuff += buffForKey;
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MVSPDPCT);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMvSpdBuff += buffForKey * this.speed;
+			}
+			this.speedBonus = Math.round(totalNSMvSpdBuff);
+			break;
+		case MELEEATK:
+		case MELEEATKPCT:
+			for (final CUnitAttack attack : getUnitSpecificAttacks()) {
+				if ((attack.getWeaponType() != null) && (attack.getWeaponType() == CWeaponType.NORMAL)) {
+					attack.setNonStackingFlatBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATK));
+					attack.setNonStackingPctBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATKPCT));
+					attack.computeDerivedFields();
+				}
+			}
+			this.notifyAttacksChanged();
+			break;
+		case RNGDATK:
+		case RNGDATKPCT:
+			for (final CUnitAttack attack : getUnitSpecificAttacks()) {
+				if ((attack.getWeaponType() != null) && (attack.getWeaponType() != CWeaponType.NORMAL)) {
+					attack.setNonStackingFlatBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK));
+					attack.setNonStackingPctBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT));
+					attack.computeDerivedFields();
+				}
+			}
+			this.notifyAttacksChanged();
+			break;
+		case ALLATK:
+		case ALLATKPCT:
+			for (final CUnitAttack attack : getUnitSpecificAttacks()) {
+				if ((attack.getWeaponType() != null) && (attack.getWeaponType() == CWeaponType.NORMAL)) {
+					attack.setNonStackingFlatBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATK));
+					attack.setNonStackingPctBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.MELEEATKPCT));
+					attack.computeDerivedFields();
+				}
+			}
+			for (final CUnitAttack attack : getUnitSpecificAttacks()) {
+				if ((attack.getWeaponType() != null) && (attack.getWeaponType() != CWeaponType.NORMAL)) {
+					attack.setNonStackingFlatBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATK));
+					attack.setNonStackingPctBuffs(this.nonStackingBuffs.get(NonStackingStatBuffType.RNGDATKPCT));
+					attack.computeDerivedFields();
+				}
+			}
+			this.notifyAttacksChanged();
+			break;
+		case ATKSPD:
+			float totalNSAtkSpdBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.ATKSPD);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSAtkSpdBuff += buffForKey;
+			}
+			for (final CUnitAttack attack : getUnitSpecificAttacks()) {
+				attack.setAttackSpeedModifier(totalNSAtkSpdBuff);
+			}
+			this.notifyAttacksChanged();
+			break;
+		case HPSTEAL:
+			float totalNSVampBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.HPSTEAL);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSVampBuff += buffForKey;
+			}
+			if (this.lifestealListener != null) {
+				this.lifestealListener.setAmount(totalNSVampBuff);
+			} else {
+				this.lifestealListener = new CUnitDefaultLifestealListener(totalNSVampBuff);
+				this.addPostDamageListener(this.lifestealListener);
+			}
+			break;
+		case THORNS:
+			float totalNSThornsBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.THORNS);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSThornsBuff += buffForKey;
+			}
+			if (this.flatThornsListener != null) {
+				this.flatThornsListener.setAmount(totalNSThornsBuff);
+			} else {
+				this.flatThornsListener = new CUnitDefaultThornsListener(false, totalNSThornsBuff);
+				this.addDamageTakenListener(this.flatThornsListener);
+			}
+			break;
+		case THORNSPCT:
+			float totalNSThornsPctBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.THORNSPCT);
+			for (final String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSThornsPctBuff += buffForKey;
+			}
+			if (this.percentThornsListener != null) {
+				this.percentThornsListener.setAmount(totalNSThornsPctBuff);
+			} else {
+				this.percentThornsListener = new CUnitDefaultThornsListener(true, totalNSThornsPctBuff);
+				this.addDamageTakenListener(this.percentThornsListener);
+			}
+			break;
+		case MAXHPPCT:
+		case MAXHP:
+			float totalNSMaxHPBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MAXHP);
+			for (String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMaxHPBuff += buffForKey;
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MAXHPPCT);
+			for (String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMaxHPBuff += buffForKey * this.baseMaximumLife;
+			}
+			int newMaxLife = this.baseMaximumLife + Math.round(totalNSMaxHPBuff);
+			if (newMaxLife > this.maximumLife) {
+				this.life += newMaxLife - this.maximumLife;
+				this.maximumLife = newMaxLife;
+			} else {
+				this.maximumLife = newMaxLife;
+				this.life = Math.min(this.life, this.maximumLife);
+			}
+			break;
+		case MAXMPPCT:
+		case MAXMP:
+			float totalNSMaxMPBuff = 0;
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MAXMP);
+			for (String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMaxMPBuff += buffForKey;
+			}
+			buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.MAXMPPCT);
+			for (String key : buffKeyMap.keySet()) {
+				Float buffForKey = null;
+				for (NonStackingStatBuff buff : buffKeyMap.get(key)) {
+					if (buffForKey == null) {
+						buffForKey = buff.getValue();
+					} else {
+						if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+							buffForKey += buff.getValue();
+						} else {
+							buffForKey = Math.max(buffForKey, buff.getValue());
+						}
+					}
+				}
+				if (buffForKey == null) {
+					continue;
+				}
+				totalNSMaxMPBuff += buffForKey * this.baseMaximumMana;
+			}
+			int newMaxMana = this.baseMaximumMana + Math.round(totalNSMaxMPBuff);
+			if (newMaxMana > this.maximumMana) {
+				this.mana += newMaxMana - this.maximumMana;
+				this.maximumMana = newMaxMana;
+			} else {
+				this.maximumMana = newMaxMana;
+				this.mana = Math.min(this.mana, this.maximumMana);
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	public NonStackingFx addNonStackingFx(final CSimulation game, final String stackingKey, final War3ID id,
+			final CEffectType target) {
+		List<NonStackingFx> existingArts = nonStackingFx.get(stackingKey);
+		final NonStackingFx newFx = new NonStackingFx(stackingKey, id);
+		if (existingArts == null) {
+			existingArts = new ArrayList<>();
+			nonStackingFx.put(stackingKey, existingArts);
+		}
+		if (existingArts.isEmpty()) {
+			final SimulationRenderComponent fx = game.createPersistentSpellEffectOnUnit(this, id, target);
+			newFx.setArt(fx);
+		} else {
+			newFx.setArt(existingArts.iterator().next().getArt());
+		}
+		existingArts.add(newFx);
+		return newFx;
+	}
+
+	public void removeNonStackingFx(final CSimulation game, final NonStackingFx fx) {
+		final List<NonStackingFx> existingArts = nonStackingFx.get(fx.getStackingKey());
+		if (existingArts != null) {
+			existingArts.remove(fx);
+			if (existingArts.isEmpty()) {
+				fx.getArt().remove();
+			}
+		}
+	}
+
+	public void addNonStackingDisplayBuff(final CSimulation game, final String stackingKey, final CBuff buff) {
+		List<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
+		if (existingBuffs == null) {
+			existingBuffs = new ArrayList<>();
+			nonStackingDisplayBuffs.put(stackingKey, existingBuffs);
+		}
+		if (existingBuffs.isEmpty()) {
+			this.add(game, buff);
+		} else {
+			final CBuff currentBuff = this.getFirstAbilityOfType(buff.getClass());
+			if (currentBuff == null) {
+				existingBuffs.clear();
+				this.add(game, buff);
+			} else {
+				if (buff.getLevel() >= currentBuff.getLevel()) {
+					this.remove(game, currentBuff);
+					this.add(game, buff);
+				}
+
+			}
+		}
+		existingBuffs.add(buff);
+	}
+
+	public void removeNonStackingDisplayBuff(final CSimulation game, final String stackingKey, final CBuff buff) {
+		final List<CBuff> existingBuffs = nonStackingDisplayBuffs.get(stackingKey);
+		if (existingBuffs != null) {
+			existingBuffs.remove(buff);
+			CBuff currentBuff = this.getFirstAbilityOfType(buff.getClass());
+			if (currentBuff == buff) {
+				this.remove(game, currentBuff);
+				if (!existingBuffs.isEmpty()) {
+					currentBuff = null;
+					for (final CBuff iterBuff : existingBuffs) {
+						if ((currentBuff == null) || (currentBuff.getLevel() < iterBuff.getLevel())) {
+							currentBuff = iterBuff;
+						}
+					}
+					this.add(game, currentBuff);
+				}
+			}
+		}
+	}
+
+	private void initializeNonStackingBuffs() {
+		this.nonStackingBuffs.put(NonStackingStatBuffType.ATKSPD, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.DEF, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.DEFPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.HPGEN, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.HPGENPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXHPGENPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.HPSTEAL, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATK, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MELEEATKPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MPGEN, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MPGENPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXMPGENPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MVSPDPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MVSPD, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATK, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.RNGDATKPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.THORNS, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.THORNSPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXHP, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXHPPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXMP, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXMPPCT, new HashMap<>(1));
+	}
+
+	private void initializeListenerLists() {
+		for (final CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
+			preDamageListeners.put(priority, new ArrayList<>());
+		}
+		for (final CUnitDeathReplacementEffectPriority priority : CUnitDeathReplacementEffectPriority.values()) {
+			deathReplacementEffects.put(priority, new ArrayList<>());
+		}
+	}
+
+	private void computeAllDerivedFields() {
+		this.baseLifeRegenPerTick = this.lifeRegen * WarsmashConstants.SIMULATION_STEP_TIME;
+		computeDerivedFields(NonStackingStatBuffType.DEF);
+		computeDerivedFields(NonStackingStatBuffType.HPGEN);
+		computeDerivedFields(NonStackingStatBuffType.MPGEN);
+		if (this.getUnitSpecificAttacks() != null) {
+			computeDerivedFields(NonStackingStatBuffType.ALLATK);
+			computeDerivedFields(NonStackingStatBuffType.ATKSPD);
+		}
+		computeDerivedFields(NonStackingStatBuffType.HPSTEAL);
+		computeDerivedFields(NonStackingStatBuffType.MVSPD);
+		computeDerivedFields(NonStackingStatBuffType.THORNS);
+		computeDerivedFields(NonStackingStatBuffType.THORNSPCT);
+		computeDerivedFields(NonStackingStatBuffType.MAXHP);
+		computeDerivedFields(NonStackingStatBuffType.MAXMP);
+	}
+
+	private void computeAllUnitStates(CSimulation game) {
+		this.computeUnitState(game, StateModBuffType.INVULNERABLE);
+		this.computeUnitState(game, StateModBuffType.ETHEREAL);
+		this.computeUnitState(game, StateModBuffType.DISABLE_AUTO_ATTACK);
+		this.computeUnitState(game, StateModBuffType.MAGIC_IMMUNE);
+		this.computeUnitState(game, StateModBuffType.RESISTANT);
+		this.computeUnitState(game, StateModBuffType.SNARED);
 	}
 
 	public void setManaRegenIntelligenceBonus(final float manaRegenIntelligenceBonus) {
 		this.manaRegenIntelligenceBonus = manaRegenIntelligenceBonus;
-		computeDerivedFields();
+		computeDerivedFields(NonStackingStatBuffType.MPGEN);
 	}
 
 	public void setLifeRegenBonus(final float lifeRegenBonus) {
 		this.lifeRegenBonus = lifeRegenBonus;
-		computeDerivedFields();
+		computeDerivedFields(NonStackingStatBuffType.HPGEN);
 	}
 
 	public void setManaRegenBonus(final float manaRegenBonus) {
 		this.manaRegenBonus = manaRegenBonus;
-		computeDerivedFields();
+		computeDerivedFields(NonStackingStatBuffType.MPGEN);
 	}
 
 	public void setManaRegen(final float manaRegen) {
 		this.manaRegen = manaRegen;
-		computeDerivedFields();
+		computeDerivedFields(NonStackingStatBuffType.MPGEN);
 	}
 
 	public float getManaRegenBonus() {
@@ -274,17 +1314,17 @@ public class CUnit extends CWidget {
 
 	public void setAgilityDefensePermanentBonus(final int agilityDefensePermanentBonus) {
 		this.agilityDefensePermanentBonus = agilityDefensePermanentBonus;
-		computeDerivedFields();
+		computeDerivedFields(NonStackingStatBuffType.DEF);
 	}
 
 	public void setAgilityDefenseTemporaryBonus(final float agilityDefenseTemporaryBonus) {
 		this.agilityDefenseTemporaryBonus = agilityDefenseTemporaryBonus;
-		computeDerivedFields();
+		computeDerivedFields(NonStackingStatBuffType.DEF);
 	}
 
 	public void setPermanentDefenseBonus(final int permanentDefenseBonus) {
 		this.permanentDefenseBonus = permanentDefenseBonus;
-		computeDerivedFields();
+		computeDerivedFields(NonStackingStatBuffType.DEF);
 	}
 
 	public int getPermanentDefenseBonus() {
@@ -293,7 +1333,7 @@ public class CUnit extends CWidget {
 
 	public void setTemporaryDefenseBonus(final float temporaryDefenseBonus) {
 		this.temporaryDefenseBonus = temporaryDefenseBonus;
-		computeDerivedFields();
+		computeDerivedFields(NonStackingStatBuffType.DEF);
 	}
 
 	public float getTemporaryDefenseBonus() {
@@ -318,16 +1358,81 @@ public class CUnit extends CWidget {
 	}
 
 	public void add(final CSimulation simulation, final CAbility ability) {
-		this.abilities.add(ability);
-		simulation.onAbilityAddedToUnit(this, ability);
-		ability.onAdd(simulation, this);
-		this.stateNotifier.abilitiesChanged();
+		if (!ability.isRequirementsMet(simulation, this)) {
+			ability.setDisabled(true, CAbilityDisableType.REQUIREMENTS);
+		}
+		if (ability.isDisabled()) {
+			this.disabledAbilities.add(ability);
+			this.abilities.add(ability);
+			simulation.onAbilityAddedToUnit(this, ability);
+			ability.onAddDisabled(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		} else {
+			this.abilities.add(ability);
+			simulation.onAbilityAddedToUnit(this, ability);
+			ability.onAddDisabled(simulation, this);
+			ability.onAdd(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		}
+	}
+
+	public void add(final CSimulation simulation, final CBuff ability) {
+		if (this.abilities.contains(ability) && (ability instanceof ABGenericTimedBuff)) {
+			((ABGenericTimedBuff) ability).updateExpiration(simulation, this);
+		} else {
+			this.abilities.add(ability);
+			simulation.onAbilityAddedToUnit(this, ability);
+			ability.onAdd(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		}
 	}
 
 	public void remove(final CSimulation simulation, final CAbility ability) {
+		if (this.disabledAbilities.contains(ability)) {
+			this.abilities.remove(ability);
+			this.disabledAbilities.remove(ability);
+			simulation.onAbilityRemovedFromUnit(this, ability);
+			ability.onRemoveDisabled(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		} else {
+			this.abilities.remove(ability);
+			simulation.onAbilityRemovedFromUnit(this, ability);
+			ability.onRemove(simulation, this);
+			ability.onRemoveDisabled(simulation, this);
+			this.stateNotifier.abilitiesChanged();
+		}
+	}
+
+	public void remove(final CSimulation simulation, final CBuff ability) {
 		this.abilities.remove(ability);
 		simulation.onAbilityRemovedFromUnit(this, ability);
 		ability.onRemove(simulation, this);
+		this.stateNotifier.abilitiesChanged();
+	}
+
+	public void checkDisabledAbilities(final CSimulation simulation, final boolean disable) {
+		if (disable) {
+			for (CAbility ability : this.abilities) {
+				if (!ability.isRequirementsMet(simulation, this)) {
+					ability.setDisabled(true, CAbilityDisableType.REQUIREMENTS);
+				}
+				if (ability.isDisabled() && !this.disabledAbilities.contains(ability)) {
+//					System.err.println("Disabling ability: " + ability.getAlias().asStringValue());
+					this.disabledAbilities.add(ability);
+					ability.onRemove(simulation, this);
+				}
+			}
+		} else {
+			for (CAbility ability : new ArrayList<>(this.disabledAbilities)) {
+				if (ability.isRequirementsMet(simulation, this)) {
+					ability.setDisabled(false, CAbilityDisableType.REQUIREMENTS);
+				}
+				if (!ability.isDisabled()) {
+					ability.onAdd(simulation, this);
+					this.disabledAbilities.remove(ability);
+				}
+			}
+		}
 	}
 
 	public War3ID getTypeId() {
@@ -354,24 +1459,29 @@ public class CUnit extends CWidget {
 	}
 
 	public void setTypeId(final CSimulation game, final War3ID typeId) {
+		setTypeId(game, typeId, true);
+	}
+
+	public void setTypeId(final CSimulation game, final War3ID typeId, boolean updateArt) {
 		game.getWorldCollision().removeUnit(this);
+		CPlayer player = game.getPlayer(this.playerIndex);
+		player.removeTechtreeUnlocked(game, this.typeId);
 		this.typeId = typeId;
+		player.addTechtreeUnlocked(game, this.typeId);
 		final float lifeRatio = this.maximumLife == 0 ? 1 : this.life / this.maximumLife;
 		final float manaRatio = this.maximumMana == 0 ? Float.NaN : this.mana / this.maximumMana;
 		final CUnitType previousUnitType = getUnitType();
 		this.unitType = game.getUnitData().getUnitType(typeId);
-		if (Float.isNaN(manaRatio)) {
-			this.mana = this.unitType.getManaInitial();
-		}
-		else {
+		if (!Float.isNaN(manaRatio)) {
 			this.maximumMana = this.unitType.getManaMaximum();
-			this.mana = manaRatio * this.maximumMana;
 		}
 		this.maximumLife = this.unitType.getMaxLife();
 		this.life = lifeRatio * this.maximumLife;
 		this.lifeRegen = this.unitType.getLifeRegen();
 		this.manaRegen = this.unitType.getManaRegen();
-		this.flyHeight = this.unitType.getDefaultFlyingHeight();
+		if (updateArt) {
+			this.flyHeight = this.unitType.getDefaultFlyingHeight();
+		}
 		this.speed = this.unitType.getSpeed();
 		this.classifications.clear();
 		this.classifications.addAll(this.unitType.getClassifications());
@@ -380,15 +1490,20 @@ public class CUnit extends CWidget {
 		this.structure = this.unitType.isBuilding();
 		this.raisable = this.unitType.isRaise();
 		this.decays = this.unitType.isDecay();
+		final List<War3ID> sharedAbilities = new ArrayList<War3ID>(previousUnitType.getAbilityList());
+		sharedAbilities.addAll(previousUnitType.getHeroAbilityList());
+		final List<War3ID> newIds = new ArrayList<War3ID>(this.unitType.getAbilityList());
+		newIds.addAll(this.unitType.getHeroAbilityList());
+		sharedAbilities.retainAll(newIds); // TODO Seems wasteful, but need to avoid messing up heros on transform
 		final List<CAbility> persistedAbilities = new ArrayList<>();
 		final List<CAbility> removedAbilities = new ArrayList<>();
 		for (final CAbility ability : this.abilities) {
-			if (!ability.isPermanent()) {
+			if (!ability.isPermanent() && !sharedAbilities.contains(ability.getAlias())
+					&& !(ability.getAbilityCategory() == CAbilityCategory.BUFF)) {
 				ability.onRemove(game, this);
 				game.onAbilityRemovedFromUnit(this, ability);
 				removedAbilities.add(ability);
-			}
-			else {
+			} else {
 				persistedAbilities.add(ability);
 			}
 		}
@@ -396,13 +1511,20 @@ public class CUnit extends CWidget {
 			this.abilities.remove(removed); // TODO remove inefficient O(N) search
 		}
 		game.unitUpdatedType(this, typeId);
-		game.getUnitData().addDefaultAbilitiesToUnit(game, game.getHandleIdAllocator(), this.unitType, false, -1,
+		game.getUnitData().addMissingDefaultAbilitiesToUnit(game, game.getHandleIdAllocator(), this.unitType, false, -1,
 				this.speed, this);
-		computeDerivedFields();
+		if (Float.isNaN(manaRatio)) {
+			this.mana = this.unitType.getManaInitial();
+		} else {
+			this.mana = manaRatio * this.maximumMana;
+		}
 		game.getWorldCollision().addUnit(this);
 		for (final CAbility ability : persistedAbilities) {
 			ability.onSetUnitType(game, this);
+			game.onAbilityAddedToUnit(this, ability);
 		}
+		computeAllDerivedFields();
+		this.computeAllUnitStates(game);
 	}
 
 	public void setFacing(final float facing) {
@@ -417,7 +1539,9 @@ public class CUnit extends CWidget {
 	}
 
 	public void setMaximumLife(final int maximumLife) {
-		this.maximumLife = maximumLife;
+		this.baseMaximumLife = maximumLife;
+		computeDerivedFields(NonStackingStatBuffType.MAXHPPCT);
+		computeDerivedFields(NonStackingStatBuffType.MAXHPGENPCT);
 	}
 
 	public void addMaxLifeRelative(final CSimulation game, final int hitPointBonus) {
@@ -430,15 +1554,18 @@ public class CUnit extends CWidget {
 	}
 
 	public void setMaximumMana(final int maximumMana) {
-		this.maximumMana = maximumMana;
+		this.baseMaximumMana = maximumMana;
+		computeDerivedFields(NonStackingStatBuffType.MAXMPPCT);
+		computeDerivedFields(NonStackingStatBuffType.MAXMPGENPCT);
 	}
 
 	public void setSpeed(final int speed) {
 		this.speed = speed;
+		computeDerivedFields(NonStackingStatBuffType.MVSPD);
 	}
 
 	public int getSpeed() {
-		return this.speed;
+		return this.speed + this.speedBonus;
 	}
 
 	/**
@@ -458,59 +1585,57 @@ public class CUnit extends CWidget {
 		}
 		this.stateListenersUpdates.clear();
 		if (isDead()) {
-			final int gameTurnTick = game.getGameTurnTick();
-			if (!this.corpse) {
-				if (this.collisionRectangle != null) {
-					// Moved this here because doing it on "kill" was able to happen in some cases
-					// while also iterating over the units that are in the collision system, and
-					// then it hit the "writing while iterating" problem.
-					game.getWorldCollision().removeUnit(this);
-				}
-				if (gameTurnTick > (this.deathTurnTick
-						+ (int) (this.unitType.getDeathTime() / WarsmashConstants.SIMULATION_STEP_TIME))) {
-					this.corpse = true;
-					if (!this.isRaisable()) {
-						this.boneCorpse = true;
-						// start final phase immediately for "cant raise" case
+			if (!falseDeath) {
+				final int gameTurnTick = game.getGameTurnTick();
+				if (!this.corpse) {
+					if (this.collisionRectangle != null) {
+						// Moved this here because doing it on "kill" was able to happen in some cases
+						// while also iterating over the units that are in the collision system, and
+						// then it hit the "writing while iterating" problem.
+						game.getWorldCollision().removeUnit(this);
 					}
-					if (!this.unitType.isHero()) {
-						if (!this.isDecays()) {
-							// if we dont raise AND dont decay, then now that death anim is over
-							// we just delete the unit
-							return true;
+					if (gameTurnTick > (this.deathTurnTick
+							+ (int) (this.unitType.getDeathTime() / WarsmashConstants.SIMULATION_STEP_TIME))) {
+						this.corpse = true;
+						if (!this.isRaisable()) {
+							this.boneCorpse = true;
+							// start final phase immediately for "cant raise" case
+						}
+						if (!this.unitType.isHero()) {
+							if (!this.isDecays()) {
+								// if we dont raise AND dont decay, then now that death anim is over
+								// we just delete the unit
+								return true;
+							}
+						} else {
+							game.heroDeathEvent(this);
+						}
+						this.deathTurnTick = gameTurnTick;
+					}
+				} else if (!this.boneCorpse) {
+					if (game.getGameTurnTick() > (this.deathTurnTick + (int) (game.getGameplayConstants().getDecayTime()
+							/ WarsmashConstants.SIMULATION_STEP_TIME))) {
+						this.boneCorpse = true;
+						this.deathTurnTick = gameTurnTick;
+
+						if (this.isRaisable()) {
+							game.getWorldCollision().addUnit(this);
 						}
 					}
-					else {
-						game.heroDeathEvent(this);
+				} else if (game.getGameTurnTick() > (this.deathTurnTick
+						+ (int) (getEndingDecayTime(game) / WarsmashConstants.SIMULATION_STEP_TIME))) {
+					if (this.unitType.isHero()) {
+						if (!getHeroData().isAwaitingRevive()) {
+							setHidden(true);
+							getHeroData().setAwaitingRevive(true);
+							game.heroDissipateEvent(this);
+						}
+						return false;
 					}
-					this.deathTurnTick = gameTurnTick;
+					return true;
 				}
 			}
-			else if (!this.boneCorpse) {
-				if (game.getGameTurnTick() > (this.deathTurnTick + (int) (game.getGameplayConstants().getDecayTime()
-						/ WarsmashConstants.SIMULATION_STEP_TIME))) {
-					this.boneCorpse = true;
-					this.deathTurnTick = gameTurnTick;
-
-					if (this.isRaisable()) {
-						game.getWorldCollision().addUnit(this);
-					}
-				}
-			}
-			else if (game.getGameTurnTick() > (this.deathTurnTick
-					+ (int) (getEndingDecayTime(game) / WarsmashConstants.SIMULATION_STEP_TIME))) {
-				if (this.unitType.isHero()) {
-					if (!getHeroData().isAwaitingRevive()) {
-						setHidden(true);
-						getHeroData().setAwaitingRevive(true);
-						game.heroDissipateEvent(this);
-					}
-					return false;
-				}
-				return true;
-			}
-		}
-		else {
+		} else {
 			if (!this.paused) {
 				if ((this.rallyPoint != this) && (this.rallyPoint instanceof CUnit)
 						&& ((CUnit) this.rallyPoint).isDead()) {
@@ -529,8 +1654,7 @@ public class CUnit extends CWidget {
 									* (this.maximumLife * (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE));
 							setLife(game, Math.min(this.life + healthGain, this.maximumLife));
 						}
-					}
-					else {
+					} else {
 						buildTime = game.getUnitData().getUnitType(this.upgradeIdType).getBuildTime();
 					}
 					if (this.constructionProgress >= buildTime) {
@@ -542,8 +1666,7 @@ public class CUnit extends CWidget {
 								game.removeUnit(this.workerInside);
 								this.workerInside = null;
 							}
-						}
-						else {
+						} else {
 							popoutWorker(game);
 						}
 						final Iterator<CAbility> abilityIterator = this.abilities.iterator();
@@ -551,12 +1674,12 @@ public class CUnit extends CWidget {
 							final CAbility ability = abilityIterator.next();
 							if (ability instanceof CAbilityBuildInProgress) {
 								abilityIterator.remove();
-							}
-							else {
-								ability.setDisabled(false);
+							} else {
+								ability.setDisabled(false, CAbilityDisableType.CONSTRUCTION);
 								ability.setIconShowing(true);
 							}
 						}
+						this.checkDisabledAbilities(game, false);
 						final CPlayer player = game.getPlayer(this.playerIndex);
 						if (upgrading) {
 							if (this.unitType.getFoodMade() != 0) {
@@ -569,12 +1692,11 @@ public class CUnit extends CWidget {
 							player.setFoodCap(player.getFoodCap() + this.unitType.getFoodMade());
 						}
 						player.removeTechtreeInProgress(this.unitType.getTypeId());
-						player.addTechtreeUnlocked(this.unitType.getTypeId());
+						player.addTechtreeUnlocked(game, this.unitType.getTypeId());
 						if (!upgrading) {
 							game.unitConstructFinishEvent(this);
 							fireConstructFinishEvents(game);
-						}
-						else {
+						} else {
 							game.unitUpgradeFinishEvent(this);
 						}
 						if (upgrading || true) {
@@ -584,15 +1706,13 @@ public class CUnit extends CWidget {
 						}
 						this.stateNotifier.ordersChanged();
 					}
-				}
-				else {
+				} else {
 					final War3ID queuedRawcode = this.buildQueue[0];
 					if (queuedRawcode != null) {
 						// queue step forward
 						if (this.queuedUnitFoodPaid) {
 							this.constructionProgress += WarsmashConstants.SIMULATION_STEP_TIME;
-						}
-						else {
+						} else {
 							if (this.buildQueueTypes[0] == QueueItemType.UNIT) {
 								final CPlayer player = game.getPlayer(this.playerIndex);
 								final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
@@ -602,12 +1722,12 @@ public class CUnit extends CWidget {
 										player.setFoodUsed(newFoodUsed);
 										this.queuedUnitFoodPaid = true;
 									}
-								}
-								else {
+								} else {
 									this.queuedUnitFoodPaid = true;
 								}
-							}
-							else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
+							} else if (this.buildQueueTypes[0] == QueueItemType.SACRIFICE) {
+								this.queuedUnitFoodPaid = true;
+							} else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
 								final CPlayer player = game.getPlayer(this.playerIndex);
 								final CUnitType trainedUnitType = game.getUnit(queuedRawcode.getValue()).getUnitType();
 								final int newFoodUsed = player.getFoodUsed() + trainedUnitType.getFoodUsed();
@@ -615,8 +1735,7 @@ public class CUnit extends CWidget {
 									player.setFoodUsed(newFoodUsed);
 									this.queuedUnitFoodPaid = true;
 								}
-							}
-							else {
+							} else {
 								this.queuedUnitFoodPaid = true;
 								System.err.println(
 										"Unpaid food for non unit queue item ???? Attempting to correct this by setting paid=true");
@@ -633,7 +1752,7 @@ public class CUnit extends CWidget {
 								final CPlayer player = game.getPlayer(this.playerIndex);
 								player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
 								player.removeTechtreeInProgress(queuedRawcode);
-								player.addTechtreeUnlocked(queuedRawcode);
+								player.addTechtreeUnlocked(game, queuedRawcode);
 								fireTrainFinishEvents(game, trainedUnit);
 								// nudge the trained unit out around us
 								trainedUnit.nudgeAround(game, this);
@@ -649,8 +1768,37 @@ public class CUnit extends CWidget {
 								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
 								this.stateNotifier.queueChanged();
 							}
-						}
-						else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
+						} else if (this.buildQueueTypes[0] == QueueItemType.SACRIFICE) {
+							final CUnitType trainedUnitType = game.getUnitData().getUnitType(queuedRawcode);
+							if (this.constructionProgress >= trainedUnitType.getBuildTime()) {
+								this.constructionProgress = 0;
+								final CUnit trainedUnit = game.createUnit(queuedRawcode, this.playerIndex, getX(),
+										getY(), game.getGameplayConstants().getBuildingAngle());
+
+								game.removeUnit(this.getWorkerInside());
+
+								// dont add food cost to player 2x
+								trainedUnit.setFoodUsed(trainedUnitType.getFoodUsed());
+								final CPlayer player = game.getPlayer(this.playerIndex);
+								player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
+								player.removeTechtreeInProgress(queuedRawcode);
+								player.addTechtreeUnlocked(game, queuedRawcode);
+								fireTrainFinishEvents(game, trainedUnit);
+								// nudge the trained unit out around us
+								trainedUnit.nudgeAround(game, this);
+								game.unitTrainedEvent(this, trainedUnit);
+								if (this.rallyPoint != null) {
+									final int rallyOrderId = OrderIds.smart;
+									this.rallyPoint.visit(UseAbilityOnTargetByIdVisitor.INSTANCE.reset(game,
+											trainedUnit, rallyOrderId));
+								}
+								for (int i = 0; i < (this.buildQueue.length - 1); i++) {
+									setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
+								}
+								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
+								this.stateNotifier.queueChanged();
+							}
+						} else if (this.buildQueueTypes[0] == QueueItemType.HERO_REVIVE) {
 							final CUnit revivingHero = game.getUnit(queuedRawcode.getValue());
 							final CUnitType trainedUnitType = revivingHero.getUnitType();
 							final CGameplayConstants gameplayConstants = game.getGameplayConstants();
@@ -695,8 +1843,7 @@ public class CUnit extends CWidget {
 								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
 								this.stateNotifier.queueChanged();
 							}
-						}
-						else if (this.buildQueueTypes[0] == QueueItemType.RESEARCH) {
+						} else if (this.buildQueueTypes[0] == QueueItemType.RESEARCH) {
 							final CUpgradeType trainedUnitType = game.getUpgradeData().getType(queuedRawcode);
 							// TODO the "getBuildTime" math below probably would be better served to have
 							// been cached, for performance, since we are in the update method. But maybe it
@@ -718,7 +1865,7 @@ public class CUnit extends CWidget {
 							}
 						}
 					}
-					if (this.life < this.maximumLife) {
+					if (this.life < this.maximumLife || this.currentLifeRegenPerTick < 0) {
 						final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
 						boolean active = false;
 						switch (lifeRegenType) {
@@ -745,17 +1892,42 @@ public class CUnit extends CWidget {
 							}
 							this.life = lifePlusRegen;
 							this.stateNotifier.lifeChanged();
+						} else {
+							float lifePlusRegen = (this.life + this.currentLifeRegenPerTick)
+									- this.baseLifeRegenPerTick;
+							if (lifePlusRegen > this.maximumLife) {
+								lifePlusRegen = this.maximumLife;
+							}
+							this.life = lifePlusRegen;
+							this.stateNotifier.lifeChanged();
 						}
 					}
-					if (this.mana < this.maximumMana) {
+					if (this.mana < this.maximumMana || this.currentManaRegenPerTick < 0) {
 						float manaPlusRegen = this.mana + this.currentManaRegenPerTick;
 						if (manaPlusRegen > this.maximumMana) {
 							manaPlusRegen = this.maximumMana;
 						}
-						this.mana = manaPlusRegen;
+						this.mana = Math.max(manaPlusRegen, 0);
 						this.stateNotifier.manaChanged();
 					}
 					if (this.currentBehavior != null) {
+						CUnit target = this.currentBehavior.visit(BehaviorTargetUnitVisitor.INSTANCE);
+						if (target != null && !game.getPlayer(playerIndex).hasAlliance(target.getPlayerIndex(),
+								CAllianceType.SHARED_VISION)) {
+							if (attackFogMod.getPlayerIndex() != target.getPlayerIndex()) {
+								game.getPlayer(this.attackFogMod.getPlayerIndex()).removeFogModifer(game,
+										this.attackFogMod);
+								this.attackFogMod.setPlayerIndex(target.getPlayerIndex());
+								game.getPlayer(target.getPlayerIndex()).addFogModifer(game, this.attackFogMod);
+							}
+						} else {
+							if (this.attackFogMod.getPlayerIndex() != this.playerIndex) {
+								game.getPlayer(this.attackFogMod.getPlayerIndex()).removeFogModifer(game,
+										this.attackFogMod);
+								this.attackFogMod.setPlayerIndex(playerIndex);
+							}
+						}
+
 						final CBehavior lastBehavior = this.currentBehavior;
 						final int lastBehaviorHighlightOrderId = lastBehavior.getHighlightOrderId();
 						this.currentBehavior = this.currentBehavior.update(game);
@@ -769,17 +1941,71 @@ public class CUnit extends CWidget {
 								&& (this.currentBehavior.getHighlightOrderId() != lastBehaviorHighlightOrderId)) {
 							this.stateNotifier.ordersChanged();
 						}
-					}
-					else {
+					} else {
 						// check to auto acquire targets
-						autoAcquireAttackTargets(game, false);
+						autoAcquireTargets(game, this.moveDisabled);
+					}
+//					for (CAbility ability : new ArrayList<>(this.abilities)) {
+//						ability.onTick(game, this);
+//					}
+					for (int i = this.abilities.size() - 1; i >= 0; i--) {
+						// okay if it removes self from this during onTick() because of reverse
+						// iteration order
+						this.abilities.get(i).onTick(game, this);
 					}
 				}
-			}
-			for (int i = this.abilities.size() - 1; i >= 0; i--) {
-				// okay if it removes self from this during onTick() because of reverse
-				// iteration order
-				this.abilities.get(i).onTick(game, this);
+			} else if (!this.constructing) {
+				// Paused units only allow passives to function. Buffs don't tick (except a few)
+				// Base and bonus life/mana regen function, but regen from Str/Int doesn't
+				if (this.life < this.maximumLife || (this.currentLifeRegenPerTick - this.lifeRegenStrengthBonus) < 0) {
+					final CRegenType lifeRegenType = getUnitType().getLifeRegenType();
+					boolean active = false;
+					switch (lifeRegenType) {
+					case ALWAYS:
+						active = true;
+						break;
+					case DAY:
+						active = game.isDay();
+						break;
+					case NIGHT:
+						active = game.isNight();
+						break;
+					case BLIGHT:
+						active = PathingFlags.isPathingFlag(game.getPathingGrid().getPathing(getX(), getY()),
+								PathingFlags.BLIGHTED);
+						break;
+					default:
+						active = false;
+					}
+					if (active) {
+						float lifePlusRegen = (this.life + this.currentLifeRegenPerTick)
+								- (this.lifeRegenStrengthBonus * WarsmashConstants.SIMULATION_STEP_TIME);
+						if (lifePlusRegen > this.maximumLife) {
+							lifePlusRegen = this.maximumLife;
+						}
+						this.life = lifePlusRegen;
+						this.stateNotifier.lifeChanged();
+					}
+				}
+				if (this.mana < this.maximumMana
+						|| (this.currentManaRegenPerTick - this.manaRegenIntelligenceBonus) < 0) {
+					float manaPlusRegen = this.mana + this.currentManaRegenPerTick
+							- this.manaRegenIntelligenceBonus * WarsmashConstants.SIMULATION_STEP_TIME;
+					if (manaPlusRegen > this.maximumMana) {
+						manaPlusRegen = this.maximumMana;
+					}
+					this.mana = Math.max(manaPlusRegen, 0);
+					this.stateNotifier.manaChanged();
+				}
+
+				for (int i = this.abilities.size() - 1; i >= 0; i--) {
+					// okay if it removes self from this during onTick() because of reverse
+					// iteration order
+					if (this.abilities.get(i) instanceof AbilityGenericSingleIconPassiveAbility
+							|| this.abilities.get(i) instanceof ABTimedTickingPausedBuff) {
+						this.abilities.get(i).onTick(game, this);
+					}
+				}
 			}
 		}
 		return false;
@@ -800,12 +2026,53 @@ public class CUnit extends CWidget {
 		}
 	}
 
+	public boolean autoAcquireTargets(final CSimulation game, final boolean disableMove) {
+		boolean autocast = autoAcquireAutocastTargets(game, disableMove);
+		if (!autocast) {
+			if (autoAttack) {
+				return autoAcquireAttackTargets(game, disableMove);
+			}
+		}
+		return autocast;
+	}
+
+	public boolean autoAcquireAutocastTargets(final CSimulation game, final boolean disableMove) {
+		if (autocastAbility != null && !autocastAbility.isDisabled()) {
+			if (autocastAbility.getAutocastType() == AutocastType.NOTARGET) {
+				final BooleanAbilityTargetCheckReceiver<Void> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+						.<Void>getInstance().reset();
+				autocastAbility.checkCanAutoTargetNoTarget(game, this, autocastAbility.getBaseOrderId(),
+						booleanTargetReceiver);
+				if (booleanTargetReceiver.isTargetable()) {
+					return this.order(game, autocastAbility.getBaseOrderId(), null);
+				}
+			} else if (autocastAbility.getAutocastType() != AutocastType.NONE) {
+				if (this.collisionRectangle != null) {
+					tempRect.set(this.collisionRectangle);
+				} else {
+					tempRect.set(getX(), getY(), 0, 0);
+				}
+				final float halfSize = this.acquisitionRange;
+				tempRect.x -= halfSize;
+				tempRect.y -= halfSize;
+				tempRect.width += halfSize * 2;
+				tempRect.height += halfSize * 2;
+				game.getWorldCollision().enumUnitsInRect(tempRect,
+						autocastTargetFinderEnum.reset(game, this, autocastAbility, disableMove));
+				if (autocastTargetFinderEnum.currentUnitTarget != null) {
+					this.order(game, autocastAbility.getBaseOrderId(), autocastTargetFinderEnum.currentUnitTarget);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public boolean autoAcquireAttackTargets(final CSimulation game, final boolean disableMove) {
 		if (!getCurrentAttacks().isEmpty() && !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 			if (this.collisionRectangle != null) {
 				tempRect.set(this.collisionRectangle);
-			}
-			else {
+			} else {
 				tempRect.set(getX(), getY(), 0, 0);
 			}
 			final float halfSize = this.acquisitionRange;
@@ -837,6 +2104,7 @@ public class CUnit extends CWidget {
 
 		if (order != null) {
 			final CAbility ability = game.getAbility(order.getAbilityHandleId());
+
 			if (ability != null) {
 				if (!getAbilities().contains(ability)) {
 					// not allowed to use ability of other unit...
@@ -860,12 +2128,32 @@ public class CUnit extends CWidget {
 			// attack order or something later
 			return;
 		}
-		if ((queue || !this.acceptingOrders) && (this.currentBehavior != this.stopBehavior)
-				&& (this.currentBehavior != this.holdPositionBehavior)) {
+		if (!queue
+				&& (!this.acceptingOrders || (this.currentBehavior != null && !this.currentBehavior.interruptable()))) {
+			for (final COrder queuedOrder : this.orderQueue) {
+				if (queuedOrder != null) {
+					final int abilityHandleId = queuedOrder.getAbilityHandleId();
+					final CAbility ability = game.getAbility(abilityHandleId);
+					ability.onCancelFromQueue(game, this, queuedOrder.getOrderId());
+				}
+			}
+			this.orderQueue.clear();
 			this.orderQueue.add(order);
+			this.stateNotifier.ordersChanged();
 			this.stateNotifier.waypointsChanged();
-		}
-		else {
+		} else if (queue && (this.currentBehavior != this.stopBehavior)
+				&& (this.currentBehavior != this.holdPositionBehavior)) {
+			if (order.getOrderId() == OrderIds.patrol) {
+				if (this.defaultBehavior == this.patrolBehavior) {
+					this.patrolBehavior.addPatrolPoint(order.getTarget(game));
+				} else {
+					this.orderQueue.add(order);
+				}
+			} else {
+				this.orderQueue.add(order);
+			}
+			this.stateNotifier.waypointsChanged();
+		} else {
 			setDefaultBehavior(this.stopBehavior);
 			if (this.currentBehavior != null) {
 				this.currentBehavior.end(game, true);
@@ -904,51 +2192,51 @@ public class CUnit extends CWidget {
 						order(simulation, new COrderNoTarget(ability.getHandleId(), orderId, false), false);
 						return true;
 					}
-				}
-				final boolean targetable = target.visit(new AbilityTargetVisitor<Boolean>() {
-					@Override
-					public Boolean accept(final AbilityPointTarget target) {
-						final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
-								.<AbilityPointTarget>getInstance().reset();
-						ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
-						final boolean pointTargetable = booleanTargetReceiver.isTargetable();
-						if (pointTargetable) {
-							order(simulation, new COrderTargetPoint(ability.getHandleId(), orderId, target, false),
-									false);
+				} else {
+					final boolean targetable = target.visit(new AbilityTargetVisitor<Boolean>() {
+						@Override
+						public Boolean accept(final AbilityPointTarget target) {
+							final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+									.<AbilityPointTarget>getInstance().reset();
+							ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
+							final boolean pointTargetable = booleanTargetReceiver.isTargetable();
+							if (pointTargetable) {
+								order(simulation, new COrderTargetPoint(ability.getHandleId(), orderId, target, false),
+										false);
+							}
+							return pointTargetable;
 						}
-						return pointTargetable;
-					}
 
-					public Boolean acceptWidget(final CWidget target) {
-						final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
-								.<CWidget>getInstance().reset();
-						ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
-						final boolean widgetTargetable = booleanTargetReceiver.isTargetable();
-						if (widgetTargetable) {
-							order(simulation,
-									new COrderTargetWidget(ability.getHandleId(), orderId, target.getHandleId(), false),
-									false);
+						public Boolean acceptWidget(final CWidget target) {
+							final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+									.<CWidget>getInstance().reset();
+							ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
+							final boolean widgetTargetable = booleanTargetReceiver.isTargetable();
+							if (widgetTargetable) {
+								order(simulation, new COrderTargetWidget(ability.getHandleId(), orderId,
+										target.getHandleId(), false), false);
+							}
+							return widgetTargetable;
 						}
-						return widgetTargetable;
-					}
 
-					@Override
-					public Boolean accept(final CUnit target) {
-						return acceptWidget(target);
-					}
+						@Override
+						public Boolean accept(final CUnit target) {
+							return acceptWidget(target);
+						}
 
-					@Override
-					public Boolean accept(final CDestructable target) {
-						return acceptWidget(target);
-					}
+						@Override
+						public Boolean accept(final CDestructable target) {
+							return acceptWidget(target);
+						}
 
-					@Override
-					public Boolean accept(final CItem target) {
-						return acceptWidget(target);
+						@Override
+						public Boolean accept(final CItem target) {
+							return acceptWidget(target);
+						}
+					});
+					if (targetable) {
+						return true;
 					}
-				});
-				if (targetable) {
-					return true;
 				}
 			}
 		}
@@ -960,8 +2248,7 @@ public class CUnit extends CWidget {
 		CBehavior nextBehavior;
 		if (order != null) {
 			nextBehavior = order.begin(game, this);
-		}
-		else {
+		} else {
 			nextBehavior = this.defaultBehavior;
 		}
 		return nextBehavior;
@@ -1064,12 +2351,10 @@ public class CUnit extends CWidget {
 			tempRect.setSize(this.unitType.getBuildingPathingPixelMap().getWidth() * 32,
 					this.unitType.getBuildingPathingPixelMap().getHeight() * 32);
 			collisionSize = tempRect.getWidth() / 2;
-		}
-		else if (this.collisionRectangle != null) {
+		} else if (this.collisionRectangle != null) {
 			tempRect.set(this.collisionRectangle);
 			collisionSize = this.unitType.getCollisionSize();
-		}
-		else {
+		} else {
 			tempRect.setSize(16, 16);
 			collisionSize = this.unitType.getCollisionSize();
 		}
@@ -1149,8 +2434,7 @@ public class CUnit extends CWidget {
 		if (target instanceof CUnit) {
 			final CUnitType targetUnitType = ((CUnit) target).getUnitType();
 			targetCollisionSize = targetUnitType.getCollisionSize();
-		}
-		else {
+		} else {
 			targetCollisionSize = 0; // TODO destructable collision size here
 		}
 		if (dx < 0) {
@@ -1186,29 +2470,66 @@ public class CUnit extends CWidget {
 		return groundDistance;
 	}
 
+	public boolean checkForMiss(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType, final float damage,
+			final float bonusDamage) {
+		boolean miss = false;
+		if (isAttack) {
+			for (final CUnitAttackEvasionListener listener : evasionListeners) {
+				miss = miss || listener.onAttack(simulation, source, this, isAttack, isRanged, damageType);
+			}
+		}
+		return miss;
+	}
+
 	@Override
-	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			final CDamageType damageType, final String weaponType, final float damage) {
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage) {
+		return this.damage(simulation, source, isAttack, isRanged, attackType, damageType, weaponSoundType, damage, 0);
+	}
+
+	@Override
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage, final float bonusDamage) {
 		final boolean wasDead = isDead();
+		if (wasDead) {
+			return 0;
+		}
+		float trueDamage = 0;
 		if (!this.invulnerable) {
+
+			final CUnitAttackDamageTakenModificationListenerDamageModResult result = new CUnitAttackDamageTakenModificationListenerDamageModResult(
+					damage, bonusDamage);
+			for (final CUnitAttackDamageTakenModificationListener listener : damageTakenModificationListeners) {
+				listener.onDamage(simulation, source, this, isAttack, isRanged, attackType, damageType, result);
+			}
+
 			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
 					getDefenseType());
 			final float damageRatioFromDefense;
 			final float defense = this.currentDefense;
 			if (damageType != CDamageType.NORMAL) {
 				damageRatioFromDefense = 1.0f;
-			}
-			else if (defense >= 0) {
+			} else if (defense >= 0) {
 				damageRatioFromDefense = 1f - ((defense * simulation.getGameplayConstants().getDefenseArmor())
 						/ (1 + (simulation.getGameplayConstants().getDefenseArmor() * defense)));
+			} else {
+				damageRatioFromDefense = 2f
+						- (float) StrictMath.pow(1f - simulation.getGameplayConstants().getDefenseArmor(), -defense);
 			}
-			else {
-				damageRatioFromDefense = 2f - (float) StrictMath.pow(0.94, -defense);
+			trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * (result.computeFinalDamage());
+
+			for (final CUnitAttackFinalDamageTakenModificationListener listener : new ArrayList<>(
+					finalDamageTakenModificationListeners)) {
+				trueDamage = listener.onDamage(simulation, source, this, isAttack, isRanged, attackType, damageType,
+						trueDamage);
 			}
-			final float trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * damage;
+
 			final boolean wasAboveMax = this.life > this.maximumLife;
 			this.life -= trueDamage;
-			if ((damage < 0) && !wasAboveMax && (this.life > this.maximumLife)) {
+			if (((result.computeFinalDamage()) < 0) && !wasAboveMax && (this.life > this.maximumLife)) {
 				// NOTE wasAboveMax is for that weird life drain power to drain above max... to
 				// be honest that's a crazy mechanic anyway so I didn't test whether it works
 				// yet
@@ -1216,14 +2537,18 @@ public class CUnit extends CWidget {
 			}
 			this.stateNotifier.lifeChanged();
 		}
-		simulation.unitDamageEvent(this, weaponType, this.unitType.getArmorType());
+		for (final CUnitAttackDamageTakenListener listener : new ArrayList<>(damageTakenListeners)) {
+			listener.onDamage(simulation, source, this, isAttack, isRanged, damageType, damage, bonusDamage,
+					trueDamage);
+		}
+		simulation.unitDamageEvent(this, weaponSoundType, this.unitType.getArmorType());
 		if (!this.invulnerable && isDead()) {
 			if (!wasDead) {
 				kill(simulation, source);
 			}
-		}
-		else {
-			if ((this.currentBehavior == null) || (this.currentBehavior == this.defaultBehavior)) {
+		} else {
+			if ((this.currentBehavior == null)
+					|| (this.currentBehavior == this.defaultBehavior && this.currentBehavior.interruptable())) {
 				boolean foundMatchingReturnFireAttack = false;
 				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(), CAllianceType.PASSIVE)
 						&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
@@ -1248,6 +2573,7 @@ public class CUnit extends CWidget {
 				}
 			}
 		}
+		return trueDamage;
 	}
 
 	private void kill(final CSimulation simulation, final CUnit source) {
@@ -1255,15 +2581,50 @@ public class CUnit extends CWidget {
 			this.currentBehavior.end(simulation, true);
 		}
 		this.currentBehavior = null;
+
+		final CUnitDeathReplacementResult result = new CUnitDeathReplacementResult();
+		CUnitDeathReplacementStacking allowContinue = new CUnitDeathReplacementStacking();
+		for (final CUnitDeathReplacementEffectPriority priority : CUnitDeathReplacementEffectPriority.values()) {
+			if (allowContinue.isAllowStacking()) {
+				for (final CUnitDeathReplacementEffect effect : deathReplacementEffects.get(priority)) {
+					if (allowContinue.isAllowSamePriorityStacking()) {
+						allowContinue = effect.onDeath(simulation, this, source, result);
+					}
+				}
+			}
+		}
+		if (result.isReviving()) {
+			return;
+		}
+
 		this.orderQueue.clear();
-		if (this.constructing) {
-			simulation.createDeathExplodeEffect(this, explodesOnDeathBuffId);
-		}
-		else {
-			this.deathTurnTick = simulation.getGameTurnTick();
-		}
 		killPathingInstance();
 		popoutWorker(simulation);
+		for (int i = this.abilities.size() - 1; i >= 0; i--) {
+			// okay if it removes self from this during onDeath() because of reverse
+			// iteration order
+			this.abilities.get(i).onDeath(simulation, this);
+		}
+		simulation.getPlayer(playerIndex).addFogModifer(simulation, new CUnitDeathVisionFogModifier(this));
+		if (source != null) {
+			simulation.getPlayer(source.getPlayerIndex()).addFogModifer(simulation,
+					new CUnitDeathVisionFogModifier(this));
+		}
+		if (this.attackFogMod.getPlayerIndex() != this.playerIndex) {
+			simulation.getPlayer(this.attackFogMod.getPlayerIndex()).removeFogModifer(simulation, this.attackFogMod);
+			this.attackFogMod.setPlayerIndex(playerIndex);
+		}
+
+		if (result.isReincarnating()) {
+			return;
+		}
+
+		if (this.constructing) {
+			simulation.createDeathExplodeEffect(this, explodesOnDeathBuffId);
+		} else {
+			this.deathTurnTick = simulation.getGameTurnTick();
+		}
+
 		final CPlayer player = simulation.getPlayer(this.playerIndex);
 		if (this.foodMade != 0) {
 			player.setUnitFoodMade(this, 0);
@@ -1274,9 +2635,8 @@ public class CUnit extends CWidget {
 		if (getHeroData() == null) {
 			if (this.constructing) {
 				player.removeTechtreeInProgress(this.unitType.getTypeId());
-			}
-			else {
-				player.removeTechtreeUnlocked(this.unitType.getTypeId());
+			} else {
+				player.removeTechtreeUnlocked(simulation, this.unitType.getTypeId());
 			}
 		}
 		// else its a hero and techtree "remains unlocked" which is currently meaning
@@ -1318,8 +2678,7 @@ public class CUnit extends CWidget {
 					int availableAwardXp;
 					if (killedUnitIsAHero) {
 						availableAwardXp = gameplayConstants.getGrantHeroXP(killedUnitHeroData.getHeroLevel());
-					}
-					else {
+					} else {
 						availableAwardXp = gameplayConstants.getGrantNormalXP(this.unitType.getLevel());
 					}
 					final List<CUnit> xpReceivingHeroes = new ArrayList<>();
@@ -1353,11 +2712,6 @@ public class CUnit extends CWidget {
 					}
 				}
 			}
-		}
-		for (int i = this.abilities.size() - 1; i >= 0; i--) {
-			// okay if it removes self from this during onDeath() because of reverse
-			// iteration order
-			this.abilities.get(i).onDeath(simulation, this);
 		}
 		fireDeathEvents(simulation);
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DEATH);
@@ -1401,8 +2755,7 @@ public class CUnit extends CWidget {
 					return true;
 				}
 			}
-		}
-		else if (target instanceof CDestructable) {
+		} else if (target instanceof CDestructable) {
 			final CDestructable targetDest = (CDestructable) target;
 			final CDestructableType targetDestType = targetDest.getDestType();
 			final BufferedImage pathingPixelMap = targetDest.isDead() ? targetDestType.getPathingDeathPixelMap()
@@ -1559,102 +2912,79 @@ public class CUnit extends CWidget {
 													if (this.isRaisable() && this.isDecays() && isBoneCorpse()) {
 														if (targetsAllowed.contains(CTargetType.DEAD)) {
 															return true;
-														}
-														else {
+														} else {
 															receiver.targetCheckFailed(
 																	CommandStringErrorKeys.TARGET_MUST_BE_LIVING);
 														}
-													}
-													else {
+													} else {
 														receiver.targetCheckFailed(
 																CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 													}
-												}
-												else {
+												} else {
 													if (!targetsAllowed.contains(CTargetType.DEAD)
 															|| targetsAllowed.contains(CTargetType.ALIVE)) {
 														return true;
-													}
-													else {
+													} else {
 														receiver.targetCheckFailed(
 																CommandStringErrorKeys.MUST_TARGET_A_CORPSE);
 													}
 												}
-											}
-											else {
+											} else {
 												receiver.targetCheckFailed(
 														CommandStringErrorKeys.UNABLE_TO_TARGET_HEROES);
 											}
-										}
-										else {
+										} else {
 											receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_HERO);
 										}
-									}
-									else {
+									} else {
 										if (invulnerable) {
 											receiver.targetCheckFailed(
 													CommandStringErrorKeys.THAT_TARGET_IS_INVULNERABLE);
-										}
-										else {
+										} else {
 											receiver.targetCheckFailed(
 													CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 										}
 									}
-								}
-								else {
+								} else {
 									receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ANCIENTS);
 								}
-							}
-							else {
+							} else {
 								receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ANCIENT);
 							}
-						}
-						else {
+						} else {
 							receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_ORGANIC_UNITS);
 						}
-					}
-					else {
+					} else {
 						receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_ORGANIC_UNITS);
 					}
-				}
-				else {
+				} else {
 					receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_FRIENDLY_UNIT);
 				}
-			}
-			else {
+			} else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_ENEMY_UNIT);
 			}
-		}
-		else {
+		} else {
 			if (this.unitType.getTargetedAs().contains(CTargetType.GROUND)
 					&& !targetsAllowed.contains(CTargetType.GROUND)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_GROUND_UNITS);
-			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE)
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE)
 					&& !targetsAllowed.contains(CTargetType.STRUCTURE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BUILDINGS);
-			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.AIR)
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.AIR)
 					&& !targetsAllowed.contains(CTargetType.AIR)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_AIR_UNITS);
-			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.WARD)
+			} else if (this.unitType.getTargetedAs().contains(CTargetType.WARD)
 					&& !targetsAllowed.contains(CTargetType.WARD)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WARDS);
-			}
-			else if (targetsAllowed.contains(CTargetType.GROUND)) {
+			} else if (targetsAllowed.contains(CTargetType.GROUND)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_GROUND_UNIT);
-			}
-			else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
+			} else if (targetsAllowed.contains(CTargetType.STRUCTURE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_BUILDING);
-			}
-			else if (targetsAllowed.contains(CTargetType.AIR)) {
+			} else if (targetsAllowed.contains(CTargetType.AIR)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_AN_AIR_UNIT);
-			}
-			else if (targetsAllowed.contains(CTargetType.WARD)) {
+			} else if (targetsAllowed.contains(CTargetType.WARD)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_WARD);
-			}
-			else {
+			} else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 			}
 		}
@@ -1662,7 +2992,7 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean isMovementDisabled() {
-		return this.moveBehavior == null;
+		return (this.moveBehavior == null) || this.moveDisabled;
 		// TODO this used to directly return the state of whether our unit was a
 		// building. Will it be a problem that I changed it?
 		// I was trying to fix attack move on stationary units which was crashing
@@ -1688,6 +3018,10 @@ public class CUnit extends CWidget {
 		this.acquisitionRange = acquisitionRange;
 	}
 
+	public void setCurrentHp(final CSimulation game, final float hpValue) {
+		setLife(game, Math.min(hpValue, getMaximumLife()));
+	}
+
 	public void heal(final CSimulation game, final float lifeToRegain) {
 		setLife(game, Math.min(getLife() + lifeToRegain, getMaximumLife()));
 	}
@@ -1709,6 +3043,181 @@ public class CUnit extends CWidget {
 		this.unitAnimationListener.playAnimation(true, PrimaryTag.STAND, SequenceUtils.EMPTY, 0.0f, true);
 	}
 
+	private static final class AutocastTargetFinderEnum implements CUnitEnumFunction {
+		private final static BooleanAbilityTargetCheckReceiver<CWidget> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
+				.<CWidget>getInstance();
+		private CSimulation game;
+		private CUnit source;
+		private CAutocastAbility ability;
+		private boolean disableMove;
+		private AutocastType type;
+
+		private CUnit currentUnitTarget;
+		private double comparisonValue;
+
+		private AutocastTargetFinderEnum reset(final CSimulation game, final CUnit source,
+				final CAutocastAbility ability, final boolean disableMove) {
+			this.game = game;
+			this.source = source;
+			this.ability = ability;
+			this.disableMove = disableMove;
+			this.type = ability.getAutocastType();
+
+			currentUnitTarget = null;
+			comparisonValue = Double.NaN;
+			return this;
+		}
+
+		@Override
+		public boolean call(final CUnit unit) {
+			if (type != AutocastType.NONE) {
+				switch (type) {
+				case ATTACKINGALLY:
+				case ATTACKINGENEMY:
+					if (unit.getCurrentBehavior() != null && unit.getCurrentBehavior() instanceof CRangedBehavior) {
+						CRangedBehavior rbeh = (CRangedBehavior) unit.getCurrentBehavior();
+						if (rbeh.getHighlightOrderId() == OrderIds.attack) {
+							AbilityTarget target = rbeh.getTarget();
+							CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+							if (targetUnit != null) {
+								if ((type == AutocastType.ATTACKINGALLY
+										&& this.game.getPlayer(this.source.getPlayerIndex())
+												.hasAlliance(targetUnit.getPlayerIndex(), CAllianceType.PASSIVE))
+										|| (type == AutocastType.ATTACKINGENEMY
+												&& !this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(
+														targetUnit.getPlayerIndex(), CAllianceType.PASSIVE))) {
+									targetCheckReceiver.reset();
+									ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(),
+											unit, targetCheckReceiver);
+									if (targetCheckReceiver.isTargetable()) {
+										if (currentUnitTarget == null) {
+											currentUnitTarget = unit;
+											comparisonValue = this.source.distance(unit);
+										} else {
+											double dist = this.source.distance(unit);
+											if (dist < this.comparisonValue) {
+												currentUnitTarget = unit;
+												comparisonValue = dist;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					break;
+				case ATTACKTARGETING:
+					if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
+							CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()
+							&& !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
+						for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
+							if (this.source.canReach(unit, this.source.acquisitionRange)
+									&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
+									&& (this.source.distance(unit) >= this.source.getUnitType()
+											.getMinimumAttackRange())) {
+								targetCheckReceiver.reset();
+								ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+										targetCheckReceiver);
+								if (targetCheckReceiver.isTargetable()) {
+									if (currentUnitTarget == null) {
+										currentUnitTarget = unit;
+										comparisonValue = this.source.distance(unit);
+									} else {
+										double dist = this.source.distance(unit);
+										if (dist < this.comparisonValue) {
+											currentUnitTarget = unit;
+											comparisonValue = dist;
+										}
+									}
+								}
+							}
+						}
+					}
+
+					break;
+				case HIGESTHP:
+					targetCheckReceiver.reset();
+					ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+							targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable()) {
+						if (currentUnitTarget == null) {
+							currentUnitTarget = unit;
+							comparisonValue = unit.getLife() / unit.getMaximumLife();
+						} else {
+							double ratio = unit.getLife() / unit.getMaximumLife();
+							if (ratio > this.comparisonValue) {
+								currentUnitTarget = unit;
+								comparisonValue = ratio;
+							}
+						}
+					}
+					break;
+				case LOWESTHP:
+					targetCheckReceiver.reset();
+					ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+							targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable()) {
+						if (unit.getLife() < unit.getMaximumLife()) {
+							if (currentUnitTarget == null) {
+								currentUnitTarget = unit;
+								comparisonValue = unit.getLife() / unit.getMaximumLife();
+							} else {
+								double ratio = unit.getLife() / unit.getMaximumLife();
+								if (ratio < this.comparisonValue) {
+									currentUnitTarget = unit;
+									comparisonValue = ratio;
+								}
+							}
+						}
+					}
+					break;
+				case NEARESTVALID:
+					targetCheckReceiver.reset();
+					ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+							targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable()) {
+						if (currentUnitTarget == null) {
+							currentUnitTarget = unit;
+							comparisonValue = this.source.distance(unit);
+						} else {
+							double dist = this.source.distance(unit);
+							if (dist < this.comparisonValue) {
+								currentUnitTarget = unit;
+								comparisonValue = dist;
+							}
+						}
+					}
+					break;
+				case NEARESTENEMY:
+					targetCheckReceiver.reset();
+					ability.checkCanAutoTarget(this.game, this.source, this.ability.getBaseOrderId(), unit,
+							targetCheckReceiver);
+					if (targetCheckReceiver.isTargetable() && !this.game.getPlayer(this.source.getPlayerIndex())
+							.hasAlliance(unit.getPlayerIndex(), CAllianceType.PASSIVE)) {
+						if (currentUnitTarget == null) {
+							currentUnitTarget = unit;
+							comparisonValue = this.source.distance(unit);
+						} else {
+							double dist = this.source.distance(unit);
+							if (dist < this.comparisonValue) {
+								currentUnitTarget = unit;
+								comparisonValue = dist;
+							}
+						}
+					}
+					break;
+				case NONE:
+				case NOTARGET:
+				default:
+					break;
+
+				}
+			}
+
+			return false;
+		}
+	}
+
 	private static final class AutoAttackTargetFinderEnum implements CUnitEnumFunction {
 		private CSimulation game;
 		private CUnit source;
@@ -1726,25 +3235,33 @@ public class CUnit extends CWidget {
 
 		@Override
 		public boolean call(final CUnit unit) {
-			if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
-					CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()) {
-				for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
-					if (this.source.canReach(unit, this.source.acquisitionRange)
-							&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
-							&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
-						if (this.source.currentBehavior != null) {
-							this.source.currentBehavior.end(this.game, false);
+			if (this.source.getAttackBehavior() != null
+					&& !this.source.getFirstAbilityOfType(CAbilityAttack.class).isDisabled()) {
+				// TODO this "attack behavior null" check was added for some weird Root edge
+				// case with NE, maybe
+				// refactor it later
+				if (!this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(unit.getPlayerIndex(),
+						CAllianceType.PASSIVE) && !unit.isDead() && !unit.isInvulnerable()
+						&& !unit.isUnitType(CUnitTypeJass.SLEEPING)) {
+					for (final CUnitAttack attack : this.source.getCurrentAttacks()) {
+						if (this.source.canReach(unit, this.source.acquisitionRange)
+								&& unit.canBeTargetedBy(this.game, this.source, attack.getTargetsAllowed())
+								&& (this.source.distance(unit) >= this.source.getUnitType().getMinimumAttackRange())) {
+							if (!(unit.isUnitType(CUnitTypeJass.ETHEREAL) && attack.getAttackType() != CAttackType.MAGIC
+									&& attack.getAttackType() != CAttackType.SPELLS)
+									&& !(this.game.getGameplayConstants().isMagicImmuneResistsDamage()
+											&& unit.isUnitType(CUnitTypeJass.MAGIC_IMMUNE)
+											&& attack.getAttackType() == CAttackType.MAGIC)) {
+								if (this.source.currentBehavior != null) {
+									this.source.currentBehavior.end(this.game, false);
+								}
+								this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack,
+										attack, unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING);
+								this.source.currentBehavior.begin(this.game);
+								this.foundAnyTarget = true;
+								return true;
+							}
 						}
-						if (this.source.getAttackBehavior() != null) {
-							// TODO this "attack behavior null" check was added for some weird Root edge
-							// case with NE, maybe
-							// refactor it later
-							this.source.currentBehavior = this.source.getAttackBehavior().reset(OrderIds.attack, attack,
-									unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING);
-							this.source.currentBehavior.begin(this.game);
-						}
-						this.foundAnyTarget = true;
-						return true;
 					}
 				}
 			}
@@ -1792,7 +3309,7 @@ public class CUnit extends CWidget {
 		this.holdPositionBehavior = holdPositionBehavior;
 	}
 
-	public void setBoardTransportBehavior(CBehaviorBoardTransport boardTransportBehavior) {
+	public void setBoardTransportBehavior(final CBehaviorBoardTransport boardTransportBehavior) {
 		this.boardTransportBehavior = boardTransportBehavior;
 	}
 
@@ -1817,6 +3334,9 @@ public class CUnit extends CWidget {
 			// kind of a stupid hack, meant to align in feel with some behaviors that were
 			// observed on War3
 			return this.defaultBehavior;
+		}
+		if (this.interruptedBehavior != null) {
+			return this.interruptedBehavior;
 		}
 		final COrder order = this.orderQueue.poll();
 		final CBehavior nextOrderBehavior = beginOrder(game, order);
@@ -1876,6 +3396,10 @@ public class CUnit extends CWidget {
 		this.paused = paused;
 	}
 
+	public boolean isPaused() {
+		return this.paused;
+	}
+
 	public void setAcceptingOrders(final boolean acceptingOrders) {
 		this.acceptingOrders = acceptingOrders;
 	}
@@ -1919,7 +3443,8 @@ public class CUnit extends CWidget {
 		for (int i = 0; i < this.buildQueue.length; i++) {
 			if (this.buildQueue[i] == null) {
 				setBuildQueueItem(game, i, rawcode, queueItemType);
-				if ((queueItemType == QueueItemType.UNIT) || (queueItemType == QueueItemType.RESEARCH)) {
+				if ((queueItemType == QueueItemType.UNIT) || (queueItemType == QueueItemType.RESEARCH)
+						|| (queueItemType == QueueItemType.SACRIFICE)) {
 					final CPlayer player = game.getPlayer(this.playerIndex);
 					player.addTechtreeInProgress(rawcode);
 				}
@@ -1951,6 +3476,7 @@ public class CUnit extends CWidget {
 			final CUpgradeType trainedUnitType = simulation.getUpgradeData().getType(rawcode);
 			return trainedUnitType.getBuildTime(simulation.getPlayer(this.playerIndex).getTechtreeUnlocked(rawcode));
 		}
+		case SACRIFICE:
 		case UNIT: {
 			final CUnitType trainedUnitType = simulation.getUnitData().getUnitType(this.buildQueue[0]);
 			return trainedUnitType.getBuildTime();
@@ -1974,6 +3500,7 @@ public class CUnit extends CWidget {
 				if (cancelIndex == 0) {
 					this.constructionProgress = 0.0f;
 					switch (cancelledType) {
+					case SACRIFICE:
 					case RESEARCH: {
 						break;
 					}
@@ -2004,6 +3531,15 @@ public class CUnit extends CWidget {
 					final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
 					player.refundFor(unitType);
 					player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
+					break;
+				}
+				case SACRIFICE: {
+					final CPlayer player = game.getPlayer(this.playerIndex);
+					final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
+					player.refundFor(unitType);
+					player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
+
+					this.getWorkerInside().setHidden(false);
 					break;
 				}
 				case HERO_REVIVE: {
@@ -2043,23 +3579,20 @@ public class CUnit extends CWidget {
 						final int newFoodUsed = player.getFoodUsed() + unitType.getFoodUsed();
 						if (newFoodUsed <= player.getFoodCap()) {
 							player.setFoodUsed(newFoodUsed);
-						}
-						else {
+						} else {
 							this.queuedUnitFoodPaid = false;
 							game.getCommandErrorListener().showInterfaceError(this.playerIndex,
 									CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 							player.removeTechtreeInProgress(rawcode);
 						}
 					}
-				}
-				else if (queueItemType == QueueItemType.HERO_REVIVE) {
+				} else if (queueItemType == QueueItemType.HERO_REVIVE) {
 					final CUnitType unitType = game.getUnit(this.buildQueue[index].getValue()).getUnitType();
 					if (unitType.getFoodUsed() != 0) {
 						final int newFoodUsed = player.getFoodUsed() + unitType.getFoodUsed();
 						if (newFoodUsed <= player.getFoodCap()) {
 							player.setFoodUsed(newFoodUsed);
-						}
-						else {
+						} else {
 							this.queuedUnitFoodPaid = false;
 							game.getCommandErrorListener().showInterfaceError(this.playerIndex,
 									CommandStringErrorKeys.NOT_ENOUGH_FOOD);
@@ -2077,8 +3610,23 @@ public class CUnit extends CWidget {
 			final boolean isHeroType = unitType.isHero();
 			if (isHeroType && (player.getHeroTokens() > 0)) {
 				player.setHeroTokens(player.getHeroTokens() - 1);
+			} else {
+				player.chargeFor(unitType);
 			}
-			else {
+		}
+	}
+
+	public void queueSacrificingUnit(final CSimulation game, final War3ID rawcode, final CUnit sacrifice) {
+		if (queue(game, rawcode, QueueItemType.SACRIFICE)) {
+			sacrifice.setHidden(true);
+			this.setWorkerInside(sacrifice);
+
+			final CPlayer player = game.getPlayer(this.playerIndex);
+			final CUnitType unitType = game.getUnitData().getUnitType(rawcode);
+			final boolean isHeroType = unitType.isHero();
+			if (isHeroType && (player.getHeroTokens() > 0)) {
+				player.setHeroTokens(player.getHeroTokens() - 1);
+			} else {
 				player.chargeFor(unitType);
 			}
 		}
@@ -2105,7 +3653,7 @@ public class CUnit extends CWidget {
 	}
 
 	public static enum QueueItemType {
-		UNIT, RESEARCH, HERO_REVIVE;
+		UNIT, RESEARCH, HERO_REVIVE, SACRIFICE;
 	}
 
 	public void setRallyPoint(final AbilityTarget target) {
@@ -2335,6 +3883,7 @@ public class CUnit extends CWidget {
 
 	public void setUnitSpecificCurrentAttacks(final List<CUnitAttack> unitSpecificCurrentAttacks) {
 		this.unitSpecificCurrentAttacks = unitSpecificCurrentAttacks;
+		computeDerivedFields(NonStackingStatBuffType.ATKSPD);
 	}
 
 	public List<CUnitAttack> getUnitSpecificAttacks() {
@@ -2421,13 +3970,11 @@ public class CUnit extends CWidget {
 			// in melee games.
 			// (See "Remove creeps and critters from used start locations" implementation)
 			setLife(simulation, 0);
-		}
-		else {
+		} else {
 			if (this.constructing) {
 				player.removeTechtreeInProgress(this.unitType.getTypeId());
-			}
-			else {
-				player.removeTechtreeUnlocked(this.unitType.getTypeId());
+			} else {
+				player.removeTechtreeUnlocked(simulation, this.unitType.getTypeId());
 			}
 			setHidden(true);
 			// setting hidden to let things that refer to this before it gets garbage
@@ -2466,8 +4013,7 @@ public class CUnit extends CWidget {
 		if (game.getGameplayConstants().isRelativeUpgradeCosts()) {
 			goldCost = newUpgradeUnitType.getGoldCost() - this.unitType.getGoldCost();
 			lumberCost = newUpgradeUnitType.getLumberCost() - this.unitType.getLumberCost();
-		}
-		else {
+		} else {
 			goldCost = newUpgradeUnitType.getGoldCost();
 			lumberCost = newUpgradeUnitType.getLumberCost();
 		}
@@ -2478,12 +4024,12 @@ public class CUnit extends CWidget {
 			final CAbility ability = abilityIterator.next();
 			if (ability instanceof CAbilityBuildInProgress) {
 				abilityIterator.remove();
-			}
-			else {
-				ability.setDisabled(false);
+			} else {
+				ability.setDisabled(false, CAbilityDisableType.CONSTRUCTION);
 				ability.setIconShowing(true);
 			}
 		}
+		this.checkDisabledAbilities(game, false);
 
 		game.unitCancelUpgradingEvent(this, this.upgradeIdType);
 		this.upgradeIdType = null;
@@ -2504,8 +4050,7 @@ public class CUnit extends CWidget {
 		if (game.getGameplayConstants().isRelativeUpgradeCosts()) {
 			goldCost = newUpgradeUnitType.getGoldCost() - this.unitType.getGoldCost();
 			lumberCost = newUpgradeUnitType.getLumberCost() - this.unitType.getLumberCost();
-		}
-		else {
+		} else {
 			goldCost = newUpgradeUnitType.getGoldCost();
 			lumberCost = newUpgradeUnitType.getLumberCost();
 		}
@@ -2514,6 +4059,7 @@ public class CUnit extends CWidget {
 		for (final CAbility ability : getAbilities()) {
 			ability.visit(AbilityDisableWhileUpgradingVisitor.INSTANCE);
 		}
+		this.checkDisabledAbilities(game, true);
 		player.addTechtreeInProgress(rawcode);
 
 		game.unitUpgradingEvent(this, rawcode);
@@ -2608,9 +4154,15 @@ public class CUnit extends CWidget {
 			throw new UnsupportedOperationException(
 					"cannot ask engine if unit is plagued: plague is not yet implemented");
 		case SNARED:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is snared: snare is not yet implemented");
-
+			boolean isSnared = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.SNARED) {
+					if (buff.getValue() != 0) {
+						isSnared = true;
+					}
+				}
+			}
+			return isSnared;
 		case UNDEAD:
 			return getUnitType().getClassifications().contains(CUnitClassification.UNDEAD);
 		case MECHANICAL:
@@ -2633,14 +4185,27 @@ public class CUnit extends CWidget {
 			throw new UnsupportedOperationException(
 					"cannot ask engine if unit is POLYMORPHED: POLYMORPHED is not yet implemented");
 		case SLEEPING:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is SLEEPING: SLEEPING is not yet implemented");
+			boolean isSleeping = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.SLEEPING) {
+					if (buff.getValue() != 0) {
+						isSleeping = true;
+					}
+				}
+			}
+			return isSleeping;
 		case RESISTANT:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is RESISTANT: RESISTANT is not yet implemented");
+			return this.resistant;
 		case ETHEREAL:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is ETHEREAL: ETHEREAL is not yet implemented");
+			boolean isEthereal = false;
+			for (final StateModBuff buff : stateModBuffs) {
+				if (buff.getBuffType() == StateModBuffType.ETHEREAL) {
+					if (buff.getValue() != 0) {
+						isEthereal = true;
+					}
+				}
+			}
+			return isEthereal;
 		case MAGIC_IMMUNE:
 			return isMagicImmune();
 		}
@@ -2670,8 +4235,7 @@ public class CUnit extends CWidget {
 		final CLevelingAbility ability = getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(abilityId));
 		if (ability == null) {
 			return 0;
-		}
-		else {
+		} else {
 			return ability.getLevel();
 		}
 	}
@@ -2782,16 +4346,15 @@ public class CUnit extends CWidget {
 			if (ability instanceof CAbilityHarvest) {
 				final CAbilityHarvest abilityHarvest = (CAbilityHarvest) ability;
 				final int carriedResourceAmount = abilityHarvest.getCarriedResourceAmount();
+				final ResourceType carriedResourceType = abilityHarvest.getCarriedResourceType();
 				if (carriedResourceAmount != 0) {
-					final ResourceType carriedResourceType = abilityHarvest.getCarriedResourceType();
 					switch (carriedResourceType) {
 					case GOLD:
 						if (carriedResourceAmount >= abilityHarvest.getGoldCapacity()) {
 							abilityHarvest.getBehaviorReturnResources().reset(game);
 							this.order(game, OrderIds.returnresources,
 									abilityHarvest.getBehaviorReturnResources().findNearestDropoffPoint(game));
-						}
-						else {
+						} else {
 							this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestMine(this, game));
 						}
 						return ResourceType.GOLD;
@@ -2800,8 +4363,7 @@ public class CUnit extends CWidget {
 							abilityHarvest.getBehaviorReturnResources().reset(game);
 							this.order(game, OrderIds.returnresources,
 									abilityHarvest.getBehaviorReturnResources().findNearestDropoffPoint(game));
-						}
-						else {
+						} else {
 							this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestTree(this,
 									abilityHarvest, game, abilityHarvest.getLastHarvestTarget()));
 						}
@@ -2810,14 +4372,21 @@ public class CUnit extends CWidget {
 						throw new IllegalStateException(
 								"Worker was carrying a resource of unsupported type: " + carriedResourceType);
 					}
-				}
-				else {
+				} else if (carriedResourceType != null) {
+					if (carriedResourceType == ResourceType.GOLD) {
+						this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestMine(this, game));
+						return ResourceType.GOLD;
+					} else if (carriedResourceType == ResourceType.LUMBER) {
+						this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestTree(this,
+								abilityHarvest, game, abilityHarvest.getLastHarvestTarget()));
+						return ResourceType.LUMBER;
+					}
+				} else if (defaultResourceType != null) {
 					if (((defaultResourceType == ResourceType.GOLD) || (abilityHarvest.getLumberCapacity() == 0))
 							&& (abilityHarvest.getGoldCapacity() > 0)) {
 						this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestMine(this, game));
 						return ResourceType.GOLD;
-					}
-					else if (abilityHarvest.getLumberCapacity() > 0) {
+					} else if (abilityHarvest.getLumberCapacity() > 0) {
 						this.order(game, OrderIds.harvest, CBehaviorReturnResources.findNearestTree(this,
 								abilityHarvest, game, abilityHarvest.getLastHarvestTarget()));
 						return ResourceType.LUMBER;
@@ -2854,24 +4423,137 @@ public class CUnit extends CWidget {
 	}
 
 	public void updateFogOfWar(final CSimulation game) {
-		if (!isDead() && !this.paused && !this.hidden) {
+		if (!isDead() && !this.hidden) {
 			final float sightRadius = game.isDay() ? this.unitType.getSightRadiusDay()
 					: this.unitType.getSightRadiusNight();
-			final CPlayerFogOfWar fogOfWar = game.getPlayer(this.playerIndex).getFogOfWar();
-			final float myX = getX();
-			final int myIndexX = game.getPathingGrid().getFogOfWarIndexX(myX);
-			final float myY = getY();
-			final int myIndexY = game.getPathingGrid().getFogOfWarIndexY(myY);
-			fogOfWar.setState(myIndexX, myIndexY, (byte) 0);
-			final float twoPi = (float) StrictMath.PI * 2;
-			final float angleIncrement = (float) StrictMath.PI / 6;
-			for (float angle = 0; angle < twoPi; angle += angleIncrement) {
-				for (float dist = 128; dist <= sightRadius; dist += 128) {
-					final float x = myX + (float) (StrictMath.cos(angle) * dist);
-					final float y = myY + (float) (StrictMath.sin(angle) * dist);
-					final int iterationIndexX = game.getPathingGrid().getFogOfWarIndexX(x);
-					final int iterationIndexY = game.getPathingGrid().getFogOfWarIndexY(y);
-					fogOfWar.setState(iterationIndexX, iterationIndexY, (byte) 0);
+			if (sightRadius > 0) {
+				final float radSq = sightRadius * sightRadius / (CPlayerFogOfWar.GRID_STEP * CPlayerFogOfWar.GRID_STEP);
+				final CPlayerFogOfWar fogOfWar = game.getPlayer(this.playerIndex).getFogOfWar();
+				final boolean flying = this.getUnitType().getMovementType() == MovementType.FLY;
+				final float myX = getX();
+				final float myY = getY();
+				final int myZ = flying ? Integer.MAX_VALUE : game.getTerrainHeight(myX, myY);
+				final PathingGrid pathingGrid = game.getPathingGrid();
+				fogOfWar.setState(pathingGrid.getFogOfWarIndexX(myX), pathingGrid.getFogOfWarIndexY(myY), (byte) 0);
+
+				int myXi = pathingGrid.getFogOfWarIndexX(myX);
+				int myYi = pathingGrid.getFogOfWarIndexY(myY);
+				int maxXi = pathingGrid.getFogOfWarIndexX(myX + sightRadius);
+				int maxYi = pathingGrid.getFogOfWarIndexY(myY + sightRadius);
+				for (int a = 1; a <= Math.max(maxYi - myYi, maxXi - myXi); a++) {
+					int distance = a * a;
+
+					if (distance <= radSq
+							&& (flying || !pathingGrid.isBlockVision(myX, myY - (a - 1) * CPlayerFogOfWar.GRID_STEP))
+							&& fogOfWar.getState(myXi, myYi - a + 1) == 0
+							&& (flying || game.isTerrainWater(myX, myY - a * CPlayerFogOfWar.GRID_STEP)
+									|| myZ > game.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP)
+									|| (!game.isTerrainRomp(myX, myY - a * CPlayerFogOfWar.GRID_STEP) && myZ == game
+											.getTerrainHeight(myX, myY - a * CPlayerFogOfWar.GRID_STEP)))) {
+						fogOfWar.setState(myXi, myYi - a, (byte) 0);
+					}
+					if (distance <= radSq
+							&& (flying || !pathingGrid.isBlockVision(myX, myY + (a - 1) * CPlayerFogOfWar.GRID_STEP))
+							&& fogOfWar.getState(myXi, myYi + a - 1) == 0
+							&& (flying || game.isTerrainWater(myX, myY + a * CPlayerFogOfWar.GRID_STEP)
+									|| myZ > game.getTerrainHeight(myX, myY + a * CPlayerFogOfWar.GRID_STEP)
+									|| (!game.isTerrainRomp(myX, myY + a * CPlayerFogOfWar.GRID_STEP) && myZ == game
+											.getTerrainHeight(myX, myY + a * CPlayerFogOfWar.GRID_STEP)))) {
+						fogOfWar.setState(myXi, myYi + a, (byte) 0);
+					}
+					if (distance <= radSq
+							&& (flying || !pathingGrid.isBlockVision(myX - (a - 1) * CPlayerFogOfWar.GRID_STEP, myY))
+							&& fogOfWar.getState(myXi - a + 1, myYi) == 0
+							&& (flying || game.isTerrainWater(myX - a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| myZ > game.getTerrainHeight(myX - a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| (!game.isTerrainRomp(myX - a * CPlayerFogOfWar.GRID_STEP, myY) && myZ == game
+											.getTerrainHeight(myX - a * CPlayerFogOfWar.GRID_STEP, myY)))) {
+						fogOfWar.setState(myXi - a, myYi, (byte) 0);
+					}
+					if (distance <= radSq
+							&& (flying || !pathingGrid.isBlockVision(myX + (a - 1) * CPlayerFogOfWar.GRID_STEP, myY))
+							&& fogOfWar.getState(myXi + a - 1, myYi) == 0
+							&& (flying || game.isTerrainWater(myX + a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| myZ > game.getTerrainHeight(myX + a * CPlayerFogOfWar.GRID_STEP, myY)
+									|| (!game.isTerrainRomp(myX + a * CPlayerFogOfWar.GRID_STEP, myY) && myZ == game
+											.getTerrainHeight(myX + a * CPlayerFogOfWar.GRID_STEP, myY)))) {
+						fogOfWar.setState(myXi + a, myYi, (byte) 0);
+					}
+				}
+
+				for (int y = 1; y <= maxYi - myYi; y++) {
+					for (int x = 1; x <= maxXi - myXi; x++) {
+						float distance = x * x + y * y;
+						if (distance <= radSq) {
+							int xf = x * CPlayerFogOfWar.GRID_STEP;
+							int yf = y * CPlayerFogOfWar.GRID_STEP;
+
+							if ((flying || game.isTerrainWater(myX - xf, myY - yf)
+									|| myZ > game.getTerrainHeight(myX - xf, myY - yf)
+									|| (!game.isTerrainRomp(myX - xf, myY - yf)
+											&& myZ == game.getTerrainHeight(myX - xf, myY - yf)))
+									&& (flying || !pathingGrid.isBlockVision(myX - xf + CPlayerFogOfWar.GRID_STEP,
+											myY - yf + CPlayerFogOfWar.GRID_STEP))
+									&& fogOfWar.getState(myXi - x + 1, myYi - y + 1) == 0
+									&& (x == y
+											|| (x > y && fogOfWar.getState(myXi - x + 1, myYi - y) == 0
+													&& (flying || !pathingGrid.isBlockVision(
+															myX - xf + CPlayerFogOfWar.GRID_STEP, myY - yf)))
+											|| (x < y && fogOfWar.getState(myXi - x, myYi - y + 1) == 0
+													&& (flying || !pathingGrid.isBlockVision(myX - xf,
+															myY - yf + CPlayerFogOfWar.GRID_STEP))))) {
+								fogOfWar.setState(myXi - x, myYi - y, (byte) 0);
+							}
+							if ((flying || game.isTerrainWater(myX - xf, myY + yf)
+									|| myZ > game.getTerrainHeight(myX - xf, myY + yf)
+									|| (!game.isTerrainRomp(myX - xf, myY + yf)
+											&& myZ == game.getTerrainHeight(myX - xf, myY + yf)))
+									&& (flying || !pathingGrid.isBlockVision(myX - xf + CPlayerFogOfWar.GRID_STEP,
+											myY + yf - CPlayerFogOfWar.GRID_STEP))
+									&& fogOfWar.getState(myXi - x + 1, myYi + y - 1) == 0
+									&& (x == y
+											|| (x > y && fogOfWar.getState(myXi - x + 1, myYi + y) == 0
+													&& (flying || !pathingGrid.isBlockVision(
+															myX - xf + CPlayerFogOfWar.GRID_STEP, myY + yf)))
+											|| (x < y && fogOfWar.getState(myXi - x, myYi + y - 1) == 0
+													&& (flying || !pathingGrid.isBlockVision(myX - xf,
+															myY + yf - CPlayerFogOfWar.GRID_STEP))))) {
+								fogOfWar.setState(myXi - x, myYi + y, (byte) 0);
+							}
+							if ((flying || game.isTerrainWater(myX + xf, myY - yf)
+									|| myZ > game.getTerrainHeight(myX + xf, myY - yf)
+									|| (!game.isTerrainRomp(myX + xf, myY - yf)
+											&& myZ == game.getTerrainHeight(myX + xf, myY - yf)))
+									&& (flying || !pathingGrid.isBlockVision(myX + xf - CPlayerFogOfWar.GRID_STEP,
+											myY - yf + CPlayerFogOfWar.GRID_STEP))
+									&& fogOfWar.getState(myXi + x - 1, myYi - y + 1) == 0
+									&& (x == y
+											|| (x > y && fogOfWar.getState(myXi + x - 1, myYi - y) == 0
+													&& (flying || !pathingGrid.isBlockVision(
+															myX + xf - CPlayerFogOfWar.GRID_STEP, myY - yf)))
+											|| (x < y && fogOfWar.getState(myXi + x, myYi - y + 1) == 0
+													&& (flying || !pathingGrid.isBlockVision(myX + xf,
+															myY - yf + CPlayerFogOfWar.GRID_STEP))))) {
+								fogOfWar.setState(myXi + x, myYi - y, (byte) 0);
+							}
+							if ((flying || game.isTerrainWater(myX + xf, myY + yf)
+									|| myZ > game.getTerrainHeight(myX + xf, myY + yf)
+									|| (!game.isTerrainRomp(myX + xf, myY + yf)
+											&& myZ == game.getTerrainHeight(myX + xf, myY + yf)))
+									&& (flying || !pathingGrid.isBlockVision(myX + xf - CPlayerFogOfWar.GRID_STEP,
+											myY + yf - CPlayerFogOfWar.GRID_STEP))
+									&& fogOfWar.getState(myXi + x - 1, myYi + y - 1) == 0
+									&& (x == y
+											|| (x > y && fogOfWar.getState(myXi + x - 1, myYi + y) == 0
+													&& (flying || !pathingGrid.isBlockVision(
+															myX + xf - CPlayerFogOfWar.GRID_STEP, myY + yf)))
+											|| (x < y && fogOfWar.getState(myXi + x, myYi + y - 1) == 0
+													&& (flying || !pathingGrid.isBlockVision(myX + xf,
+															myY + yf - CPlayerFogOfWar.GRID_STEP))))) {
+								fogOfWar.setState(myXi + x, myYi + y, (byte) 0);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -2887,6 +4569,96 @@ public class CUnit extends CWidget {
 
 	public boolean isExplodesOnDeath() {
 		return this.explodesOnDeath;
+	}
+
+	public List<CUnitAttackPreDamageListener> getPreDamageListenersForPriority(
+			final CUnitAttackPreDamageListenerPriority priority) {
+		return preDamageListeners.get(priority);
+	}
+
+	public void addPreDamageListener(final CUnitAttackPreDamageListenerPriority priority,
+			final CUnitAttackPreDamageListener listener) {
+		List<CUnitAttackPreDamageListener> list = preDamageListeners.get(priority);
+		if (list == null) {
+			list = new ArrayList<>();
+		}
+		list.add(0, listener);
+	}
+
+	public void removePreDamageListener(final CUnitAttackPreDamageListenerPriority priority,
+			final CUnitAttackPreDamageListener listener) {
+		final List<CUnitAttackPreDamageListener> list = preDamageListeners.get(priority);
+		if (list != null) {
+			list.remove(listener);
+		}
+	}
+
+	public List<CUnitAttackPostDamageListener> getPostDamageListeners() {
+		return this.postDamageListeners;
+	}
+
+	public void addPostDamageListener(final CUnitAttackPostDamageListener listener) {
+		postDamageListeners.add(0, listener);
+	}
+
+	public void removePostDamageListener(final CUnitAttackPostDamageListener listener) {
+		postDamageListeners.remove(listener);
+	}
+
+	public void addDamageTakenModificationListener(final CUnitAttackDamageTakenModificationListener listener) {
+		damageTakenModificationListeners.add(0, listener);
+	}
+
+	public void removeDamageTakenModificationListener(final CUnitAttackDamageTakenModificationListener listener) {
+		damageTakenModificationListeners.remove(listener);
+	}
+
+	public void addFinalDamageTakenModificationListener(
+			final CUnitAttackFinalDamageTakenModificationListener listener) {
+		finalDamageTakenModificationListeners.add(0, listener);
+	}
+
+	public void removeFinalDamageTakenModificationListener(
+			final CUnitAttackFinalDamageTakenModificationListener listener) {
+		finalDamageTakenModificationListeners.remove(listener);
+	}
+
+	public void addDamageTakenListener(final CUnitAttackDamageTakenListener listener) {
+		damageTakenListeners.add(0, listener);
+	}
+
+	public void removeDamageTakenListener(final CUnitAttackDamageTakenListener listener) {
+		damageTakenListeners.remove(listener);
+	}
+
+	public List<CUnitDeathReplacementEffect> getDeathReplacementEffectsForPriority(
+			final CUnitDeathReplacementEffectPriority priority) {
+		return deathReplacementEffects.get(priority);
+	}
+
+	public void addDeathReplacementEffect(final CUnitDeathReplacementEffectPriority priority,
+			final CUnitDeathReplacementEffect listener) {
+		List<CUnitDeathReplacementEffect> list = deathReplacementEffects.get(priority);
+		if (list == null) {
+			list = new ArrayList<>();
+		}
+		list.add(0, listener);
+	}
+
+	public void removeDeathReplacementEffect(final CUnitDeathReplacementEffectPriority priority,
+			final CUnitDeathReplacementEffect listener) {
+		final List<CUnitDeathReplacementEffect> list = deathReplacementEffects.get(priority);
+		if (list != null) {
+			list.remove(listener);
+		}
+	}
+
+	public void addEvasionListener(final CUnitAttackEvasionListener listener) {
+		evasionListeners.add(0, listener);
+	}
+
+	public void removeEvasionListener(final CUnitAttackEvasionListener listener) {
+		evasionListeners.remove(listener);
 	}
 
 	public void beginCooldown(final CSimulation game, final War3ID abilityId, final float cooldownDuration) {
@@ -2937,5 +4709,33 @@ public class CUnit extends CWidget {
 
 	public boolean isMagicImmune() {
 		return magicImmune;
+	}
+
+	public boolean isFalseDeath() {
+		return falseDeath;
+	}
+
+	public void setFalseDeath(final boolean falseDeath) {
+		this.falseDeath = falseDeath;
+	}
+
+	public void setAutocastAbility(CAutocastAbility autocastAbility) {
+		if (this.autocastAbility != null) {
+			this.autocastAbility.setAutoCastOff();
+		}
+		this.autocastAbility = autocastAbility;
+	}
+
+	public boolean isVisible(final CSimulation simulation, final int toPlayerIndex) {
+		if (toPlayerIndex == this.playerIndex
+				&& (simulation.isDay() ? this.unitType.getSightRadiusDay() : this.unitType.getSightRadiusNight()) > 0) {
+			return true;
+		}
+		final CPlayer toPlayer = simulation.getPlayer(toPlayerIndex);
+		final byte fogState = toPlayer.getFogOfWar().getState(simulation.getPathingGrid(), this.getX(), this.getY());
+		if (fogState == 0) {
+			return true;
+		}
+		return false;
 	}
 }

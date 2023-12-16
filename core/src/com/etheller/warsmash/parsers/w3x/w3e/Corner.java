@@ -107,8 +107,13 @@ public class Corner {
 		return this.blight;
 	}
 
-	public void setBlight(final boolean flag) {
-		this.blight = flag ? 0b00100000 : 0;
+	public boolean setBlight(final boolean flag) {
+		final int newBlightValue = flag ? 0b00100000 : 0;
+		if (this.blight != newBlightValue) {
+			this.blight = newBlightValue;
+			return true;
+		}
+		return false;
 	}
 
 	public int getWater() {

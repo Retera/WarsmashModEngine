@@ -65,7 +65,7 @@ import com.etheller.warsmash.parsers.jass.triggers.TriggerAction;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerCondition;
 import com.etheller.warsmash.parsers.jass.triggers.UnitGroup;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Scene;
@@ -666,7 +666,7 @@ public class Jass2 {
 						}
 						// TODO for now this looks in the ability editor data, not the fast symbol table
 						// layer on top, because the layer on top forgot to have a name value...
-						final MutableGameObject abilityEditorData = war3MapViewer.getAllObjectData().getAbilities()
+						final GameObject abilityEditorData = war3MapViewer.getAllObjectData().getAbilities()
 								.get(war3id);
 						if (abilityEditorData != null) {
 							return new StringJassValue(abilityEditorData.getName());
@@ -681,6 +681,12 @@ public class Jass2 {
 							return new StringJassValue(destructableTypeTmp.getName());
 						}
 						return new StringJassValue("");
+					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitName",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new StringJassValue(whichWidget == null ? "" : whichWidget.getUnitType().getName());
 					});
 			registerConversionAndStringNatives(jassProgramVisitor, war3MapViewer.getGameUI());
 			final War3MapConfig mapConfig = war3MapViewer.getMapConfig();
@@ -1033,7 +1039,7 @@ public class Jass2 {
 						final boolean attack = arguments.get(3).visit(BooleanJassValueVisitor.getInstance());
 						final boolean ranged = arguments.get(4).visit(BooleanJassValueVisitor.getInstance());
 						CAttackType attackType = nullable(arguments, 5, ObjectJassValueVisitor.getInstance());
-						final CDamageType damageType = nullable(arguments, 6, ObjectJassValueVisitor.getInstance());
+						CDamageType damageType = nullable(arguments, 6, ObjectJassValueVisitor.getInstance());
 						CWeaponSoundTypeJass weaponType = nullable(arguments, 7, ObjectJassValueVisitor.getInstance());
 						if (whichUnit != null) {
 							if (target != null) {
@@ -1043,8 +1049,11 @@ public class Jass2 {
 								if (weaponType == null) {
 									weaponType = CWeaponSoundTypeJass.WHOKNOWS;
 								}
-								target.damage(CommonEnvironment.this.simulation, whichUnit, attackType, damageType,
-										weaponType.name(), (float) amount);
+								if (damageType == null) {
+									damageType = CDamageType.UNKNOWN;
+								}
+								target.damage(CommonEnvironment.this.simulation, whichUnit, attack, ranged, attackType,
+										damageType, weaponType.name(), (float) amount);
 							}
 						}
 						return BooleanJassValue.TRUE;
@@ -2321,7 +2330,7 @@ public class Jass2 {
 						final double facing = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 						final War3ID blightedMineRawcode = War3ID.fromString("ugol");
 						final War3ID goldMineRawcode = War3ID.fromString("ngol");
-						player.addTechtreeUnlocked(blightedMineRawcode);
+						player.addTechtreeUnlocked(simulation, blightedMineRawcode);
 						final CUnit blightedMine = CommonEnvironment.this.simulation.createUnitSimple(
 								blightedMineRawcode, player.getId(), (float) x, (float) y, (float) facing);
 						final CUnit goldMine = CommonEnvironment.this.simulation.createUnitSimple(goldMineRawcode,
@@ -2536,6 +2545,13 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						// TODO fog of war!!
 						return BooleanJassValue.FALSE;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTerrainCliffLevel",
+					(arguments, globalScope, triggerScope) -> {
+						final float x = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float y = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final int layerHeight = war3MapViewer.terrain.getCorner(x, y).getLayerHeight();
+						return new IntegerJassValue(layerHeight);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateSoundFromLabel",
 					(arguments, globalScope, triggerScope) -> {
@@ -3035,6 +3051,19 @@ public class Jass2 {
 								.createAbility(CommonEnvironment.this.simulation.getHandleIdAllocator().createId());
 						whichUnit.add(CommonEnvironment.this.simulation, ability);
 						return BooleanJassValue.TRUE;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitRemoveAbility",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int abilityId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final War3ID rawcode = new War3ID(abilityId);
+						
+						CAbility abil = whichUnit.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
+						if (abil != null) {
+							whichUnit.remove(simulation, abil);
+							return BooleanJassValue.TRUE;
+						}
+						return BooleanJassValue.FALSE;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitItemInSlot",
 					(arguments, globalScope, triggerScope) -> {
@@ -4281,7 +4310,7 @@ public class Jass2 {
 		public void main() {
 			final CTimer triggerQueueTimer = new CTimer() {
 				@Override
-				public void onFire() {
+				public void onFire(final CSimulation simulation) {
 					CommonEnvironment.this.jassProgramVisitor.getGlobals().replayQueuedTriggers();
 				}
 			};

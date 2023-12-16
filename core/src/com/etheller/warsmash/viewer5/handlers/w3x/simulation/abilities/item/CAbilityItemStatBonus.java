@@ -16,9 +16,9 @@ public class CAbilityItemStatBonus extends AbstractGenericNoIconAbility {
 	private final int agility;
 	private final int intelligence;
 
-	public CAbilityItemStatBonus(final int handleId, final War3ID alias, final int strength, final int agility,
+	public CAbilityItemStatBonus(final int handleId, final War3ID code, final War3ID alias, final int strength, final int agility,
 			final int intelligence) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.strength = strength;
 		this.agility = agility;
 		this.intelligence = intelligence;

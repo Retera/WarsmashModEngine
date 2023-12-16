@@ -20,6 +20,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 
 public class GetAbilityByRawcodeVisitor implements CAbilityVisitor<CLevelingAbility> {
 	private static final GetAbilityByRawcodeVisitor INSTANCE = new GetAbilityByRawcodeVisitor();
@@ -114,6 +115,14 @@ public class GetAbilityByRawcodeVisitor implements CAbilityVisitor<CLevelingAbil
 
 	@Override
 	public CLevelingAbility accept(final CAbilityReviveHero ability) {
+		return null;
+	}
+
+	@Override
+	public CLevelingAbility accept(final AbilityBuilderActiveAbility ability) {
+		if (this.rawcode.equals(ability.getAlias())) {
+			return ability;
+		}
 		return null;
 	}
 

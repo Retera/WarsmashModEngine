@@ -1,10 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
+import java.io.File;
+import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -92,14 +94,23 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionStandDown;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionWispHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.AbilityBuilderGsonBuilder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderDupe;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderFile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.definitions.impl.CAbilityTypeDefinitionAbilityTemplateBuilder;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 
 public class CAbilityData {
 
-	private final MutableObjectData abilityData;
+	private final ObjectData abilityData;
 	private Map<War3ID, CAbilityType<?>> aliasToAbilityType = new HashMap<>();
 	private final Map<War3ID, CAbilityTypeDefinition> codeToAbilityTypeDefinition = new HashMap<>();
 
-	public CAbilityData(final MutableObjectData abilityData) {
+	public CAbilityData(final ObjectData abilityData) {
 		this.abilityData = abilityData;
 		this.aliasToAbilityType = new HashMap<>();
 		registerCodes();
@@ -113,7 +124,7 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHds"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityDivineShield(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHad"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityDevotion(handleId, alias)));
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityDevotion(handleId, alias, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHre"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityResurrect(handleId, alias)));
 		// Archmage
@@ -122,7 +133,7 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHbz"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityBlizzard(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHab"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityBrilliance(handleId, alias)));
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityBrilliance(handleId, alias, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHmt"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMassTeleport(handleId, alias)));
 		// Mountain King:
@@ -189,7 +200,7 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aent"), new CAbilityTypeDefinitionSpellBase(
 				(handleId, alias) -> new CAbilityEntangleGoldMine(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aegm"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityEntangledMine(handleId, alias)));
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityEntangledMine(handleId, alias, alias)));
 
 		// Ancients:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aeat"),
@@ -208,7 +219,7 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANcs"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityClusterRockets(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANfy"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityFactory(handleId, alias)));
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityFactory(handleId, alias, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANsy"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityPocketFactory(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Asds"),
@@ -242,7 +253,7 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Apit"), new CAbilityTypeDefinitionShopPurchaseItem());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aneu"), new CAbilityTypeDefinitionNeutralBuilding());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aall"), new CAbilityTypeDefinitionShopSharing());
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Acoi"), new CAbilityTypeDefinitionCoupleInstant());
+		//this.codeToAbilityTypeDefinition.put(War3ID.fromString("Acoi"), new CAbilityTypeDefinitionCoupleInstant());
 		this.codeToAbilityTypeDefinition.put(CAbilityItemHeal.CODE, new CAbilityTypeDefinitionItemHeal());
 		this.codeToAbilityTypeDefinition.put(CAbilityItemManaRegain.CODE, new CAbilityTypeDefinitionItemManaRegain());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIat"), new CAbilityTypeDefinitionItemAttackBonus());
@@ -271,8 +282,54 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aloa"), new CAbilityTypeDefinitionLoad());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Adro"), new CAbilityTypeDefinitionDrop());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Adri"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityDropInstant(handleId, alias)));
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityDropInstant(handleId, alias, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aroo"), new CAbilityTypeDefinitionRoot());
+
+		System.err.println("========================================================================");
+		System.err.println("Starting to load ability builder");
+		System.err.println("========================================================================");
+
+		Gson gson = AbilityBuilderGsonBuilder.create();
+
+		AbilityBuilderFile behaviors = null;
+		try {
+			File abilityBehaviorsDir = new File("abilityBehaviors");
+			File[] abilityBehaviorFiles = abilityBehaviorsDir.listFiles();
+			if (abilityBehaviorFiles != null) {
+				for (File abilityBehaviorFile : abilityBehaviorFiles) {
+					try {
+						behaviors = gson.fromJson(new FileReader(abilityBehaviorFile), AbilityBuilderFile.class);
+						for (AbilityBuilderParser behavior : behaviors.getAbilityList()) {
+							if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
+								for (AbilityBuilderDupe dupe : behavior.getIds()) {
+									this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
+											new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
+								}
+							} else {
+								for (AbilityBuilderDupe dupe : behavior.getIds()) {
+									AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
+									this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
+											config.createDefinition());
+								}
+							}
+						}
+					} catch (JsonParseException e) {
+						System.err.println("Failed to load Ability Builder config file: " + abilityBehaviorFile.getName());
+						e.printStackTrace();
+					} catch (IllegalArgumentException e) {
+						System.err.println("Failed to load Ability Builder config file: " + abilityBehaviorFile.getName());
+						e.printStackTrace();
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		System.err.println("========================================================================");
+		System.err.println("registered abilities");
+		System.err.println("========================================================================");
+
 	}
 
 	public void registerJassType(final War3ID war3id, final CAbilityTypeJassDefinition whichAbilityType) {
@@ -282,14 +339,14 @@ public class CAbilityData {
 	public CAbilityType<?> getAbilityType(final War3ID alias) {
 		CAbilityType<?> abilityType = this.aliasToAbilityType.get(alias);
 		if (abilityType == null) {
-			final MutableGameObject mutableGameObject = this.abilityData.get(alias);
-			if (mutableGameObject == null) {
+			final GameObject gameObject = this.abilityData.get(alias);
+			if (gameObject == null) {
 				return null;
 			}
-			final War3ID code = War3ID.fromString(mutableGameObject.readSLKTag("code"));
+			final War3ID code = War3ID.fromString(gameObject.readSLKTag("code"));
 			final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
 			if (abilityTypeDefinition != null) {
-				abilityType = abilityTypeDefinition.createAbilityType(alias, mutableGameObject);
+				abilityType = abilityTypeDefinition.createAbilityType(alias, gameObject);
 				this.aliasToAbilityType.put(alias, abilityType);
 			}
 		}
@@ -301,7 +358,7 @@ public class CAbilityData {
 		// fast symbol table resolution.
 		// (i.e. like all other fields of CAbilityType). For now I didn't bother because
 		// I wanted to just have this working.
-		final MutableGameObject mutableGameObject = this.abilityData.get(alias);
+		final GameObject mutableGameObject = this.abilityData.get(alias);
 		int levelSkip = mutableGameObject.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL_SKIP, 0);
 		if (levelSkip == 0) {
 			levelSkip = game.getGameplayConstants().getHeroAbilityLevelSkip();
@@ -315,6 +372,6 @@ public class CAbilityData {
 		if (abilityType != null) {
 			return abilityType.createAbility(handleId);
 		}
-		return new CAbilityGenericDoNothing(abilityId, handleId);
+		return new CAbilityGenericDoNothing(abilityId, abilityId, handleId);
 	}
 }

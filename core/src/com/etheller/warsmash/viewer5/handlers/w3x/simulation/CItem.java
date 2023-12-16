@@ -41,18 +41,25 @@ public class CItem extends CWidget {
 	}
 
 	@Override
-	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-		   	CDamageType damageType, final String weaponType, final float damage) {
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage) {
 		if (this.invulnerable) {
-			return;
+			return 0;
 		}
 		final boolean wasDead = isDead();
 		this.life -= damage;
-		simulation.itemDamageEvent(this, weaponType, this.itemType.getArmorType());
+		simulation.itemDamageEvent(this, weaponSoundType, this.itemType.getArmorType());
 		if (isDead() && !wasDead) {
 			fireDeathEvents(simulation);
 			forceDropIfHeld(simulation);
 		}
+		return damage;
+	}
+
+	@Override
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage, final float bonusDamage) {
+		return this.damage(simulation, source, isAttack, isRanged, attackType, damageType, weaponSoundType, damage + bonusDamage);
 	}
 
 	public void forceDropIfHeld(final CSimulation simulation) {

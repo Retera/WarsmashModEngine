@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityRoot;
@@ -19,13 +20,13 @@ public class CAbilityTypeRoot extends CAbilityType<CAbilityTypeRootLevelData> {
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeRootLevelData levelData = getLevelData(0);
-		return new CAbilityRoot(handleId, getAlias(), levelData.getRootedWeaponsAttackBits(),
+		return new CAbilityRoot(handleId, getCode(), getAlias(), levelData.getRootedWeaponsAttackBits(),
 				levelData.getUprootedWeaponsAttackBits(), levelData.isRootedTurning(),
 				levelData.getUprootedDefenseType(), levelData.getDuration(), levelData.getOffDuration());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 
 		final CAbilityTypeRootLevelData levelData = getLevelData(level - 1);
 		final CAbilityRoot heroAbility = (CAbilityRoot) (existingAbility);
@@ -37,7 +38,7 @@ public class CAbilityTypeRoot extends CAbilityType<CAbilityTypeRootLevelData> {
 		heroAbility.setDuration(levelData.getDuration());
 		heroAbility.setOffDuration(levelData.getOffDuration());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 
 	}
 }

@@ -6,7 +6,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractCBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
@@ -23,8 +22,8 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	private CAbilityAuraBase auraSourceAbility;
 	private int nextCheckTick = 0;
 
-	public CBuffAuraBase(int handleId, War3ID alias) {
-		super(handleId, alias);
+	public CBuffAuraBase(int handleId, final War3ID code, War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	public void setAuraSourceUnit(CUnit auraSourceUnit) {
@@ -42,7 +41,7 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
 		onBuffAdd(game, unit);
-		this.fx = game.createSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
+		this.fx = game.createPersistentSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
 	}
 
 	@Override
@@ -109,7 +108,7 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	}
 
 	@Override
-	public float getDurationRemaining(CSimulation game) {
+	public float getDurationRemaining(CSimulation game, final CUnit unit) {
 		return 0;
 	}
 

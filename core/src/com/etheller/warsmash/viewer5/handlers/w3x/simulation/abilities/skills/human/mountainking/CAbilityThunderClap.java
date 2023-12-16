@@ -1,12 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.mountainking;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityNoTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffSlow;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffStun;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
@@ -24,7 +23,7 @@ public class CAbilityThunderClap extends CAbilityNoTargetSpellBase {
 	private float attackSpeedReductionPercent;
 	private float movementSpeedReductionPercent;
 
-	public CAbilityThunderClap(int handleId, War3ID alias) {
+	public CAbilityThunderClap(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -34,29 +33,29 @@ public class CAbilityThunderClap extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.ThunderClap.AOE_DAMAGE, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.damage = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.attackSpeedReductionPercent =
-				worldEditorAbility.getFieldAsFloat(AbilityFields.ThunderClap.ATTACK_SPEED_REDUCTION_PERCENT, level);
-		this.movementSpeedReductionPercent =
-				worldEditorAbility.getFieldAsFloat(AbilityFields.ThunderClap.MOVEMENT_SPEED_REDUCTION_PERCENT, level);
+		this.attackSpeedReductionPercent = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_D + level, 0);
+		this.movementSpeedReductionPercent = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		simulation.getWorldCollision().enumUnitsInRange(caster.getX(), caster.getY(), areaOfEffect, (enumUnit) -> {
-			if (!enumUnit.isUnitAlly(simulation.getPlayer(caster.getPlayerIndex())) && enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
-				enumUnit.add(simulation, new CBuffSlow(simulation.getHandleIdAllocator().createId(),
-						CAbilityThunderClap.this.buffId, getDurationForTarget(enumUnit), attackSpeedReductionPercent,
-						movementSpeedReductionPercent));
-				enumUnit.damage(simulation, caster, CAttackType.SPELLS, CDamageType.UNIVERSAL,
+			if (!enumUnit.isUnitAlly(simulation.getPlayer(caster.getPlayerIndex()))
+					&& enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
+				enumUnit.add(simulation,
+						new CBuffSlow(simulation.getHandleIdAllocator().createId(), CAbilityThunderClap.this.buffId,
+								getDurationForTarget(enumUnit), attackSpeedReductionPercent,
+								movementSpeedReductionPercent));
+				enumUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.UNIVERSAL,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), CAbilityThunderClap.this.damage);
 			}
 			return false;
 		});
-		simulation.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+		simulation.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 		return false;
 	}
 }

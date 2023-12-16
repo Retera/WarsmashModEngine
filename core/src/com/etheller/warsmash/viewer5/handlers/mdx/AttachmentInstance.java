@@ -7,21 +7,12 @@ public class AttachmentInstance implements UpdatableObject {
 
 	private final MdxComplexInstance instance;
 	private final Attachment attachment;
-	public final MdxComplexInstance internalInstance;
+	public MdxComplexInstance internalInstance;
+	private boolean initialized;
 
 	public AttachmentInstance(final MdxComplexInstance instance, final Attachment attachment) {
-		final MdxModel internalModel = attachment.internalModel;
-		final MdxComplexInstance internalInstance = (MdxComplexInstance) internalModel.addInstance();
-
-		internalInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
-		internalInstance.dontInheritScaling = false;
-		internalInstance.hide();
-		internalInstance.setParent(instance.nodes[attachment.objectId]);
-		internalInstance.setAnimationSpeed(instance.getAnimationSpeed());
-
 		this.instance = instance;
 		this.attachment = attachment;
-		this.internalInstance = internalInstance;
 	}
 
 	@Override
@@ -56,10 +47,16 @@ public class AttachmentInstance implements UpdatableObject {
 		}
 	}
 
-	public void onRemove() {
-		final MdxComplexInstance internalInstance = this.internalInstance;
-		if (internalInstance != null) {
-			internalInstance.detach();
-		}
+	public void initialize() {
+		final MdxModel internalModel = attachment.internalModel;
+		final MdxComplexInstance internalInstance = (MdxComplexInstance) internalModel.addInstance();
+
+		internalInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+		internalInstance.dontInheritScaling = false;
+		internalInstance.hide();
+		internalInstance.setParent(instance.nodes[attachment.objectId]);
+		internalInstance.setAnimationSpeed(instance.getAnimationSpeed());
+		this.internalInstance = internalInstance;
+		this.initialized = true;
 	}
 }

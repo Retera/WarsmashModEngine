@@ -5,6 +5,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -21,9 +22,9 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 	private final int manaToRegain;
 	private final float cooldown;
 
-	public CAbilityItemManaRegain(final int handleId, final War3ID alias, final int manaToRegain,
+	public CAbilityItemManaRegain(final int handleId, final War3ID code, final War3ID alias, final int manaToRegain,
 			final float cooldown) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.manaToRegain = manaToRegain;
 		this.cooldown = cooldown;
 	}
@@ -103,7 +104,7 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 			final AbilityTarget target) {
 		if ((target == null) && (orderId == getBaseOrderId())) {
 			caster.restoreMana(game, this.manaToRegain);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			caster.beginCooldown(game, CODE, cooldown);
 			return false;
 		}
@@ -124,5 +125,20 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 	@Override
 	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
 		return null;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.ITEM;
 	}
 }

@@ -7,7 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ut
 
 public class CBuffDivineShield extends CBuffTimed {
 	public CBuffDivineShield(int handleId, War3ID alias, float duration) {
-		super(handleId, alias, duration);
+		super(handleId, alias, alias, duration);
 	}
 
 	@Override

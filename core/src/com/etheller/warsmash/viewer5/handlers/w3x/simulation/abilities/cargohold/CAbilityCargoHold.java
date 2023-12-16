@@ -26,9 +26,9 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	private final float castRange;
 	private EnumSet<CTargetType> targetsAllowed;
 
-	public CAbilityCargoHold(final int handleId, final War3ID alias, final int cargoCapacity, final float duration,
+	public CAbilityCargoHold(final int handleId, final War3ID code, final War3ID alias, final int cargoCapacity, final float duration,
 			final float castRange, final EnumSet<CTargetType> targetsAllowed) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.cargoCapacity = cargoCapacity;
 		this.cargoUnits = new ArrayList<>();
 		this.duration = duration;

@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -28,9 +29,9 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 	private int periodicIntervalLengthTicks;
 	private CBehaviorWispHarvest behaviorWispHarvest;
 
-	public CAbilityWispHarvest(final int handleId, final War3ID alias, final int lumberPerInterval,
+	public CAbilityWispHarvest(final int handleId, final War3ID code, final War3ID alias, final int lumberPerInterval,
 			final float artAttachmentHeight, final float castRange, final float periodicIntervalLength) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.lumberPerInterval = lumberPerInterval;
 		this.artAttachmentHeight = artAttachmentHeight;
 		this.castRange = castRange;
@@ -164,6 +165,21 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 	public void setPeriodicIntervalLength(final float periodicIntervalLength) {
 		this.periodicIntervalLength = periodicIntervalLength;
 		this.periodicIntervalLengthTicks = (int) (periodicIntervalLength / WarsmashConstants.SIMULATION_STEP_TIME);
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 
 }

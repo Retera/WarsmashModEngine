@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 
+import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
@@ -11,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarg
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
 public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 	private final CSimulation game;
@@ -121,6 +123,15 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 		}
 		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
 			unit.cancelBuildQueueItem(this.game, cancelIndex);
+		}
+	}
+
+	@Override
+	public void issueGuiPlayerEvent(final int eventId) {
+		final CPlayer player = this.game.getPlayer(playerIndex);
+		final JassGameEventsWar3 eventType = JassGameEventsWar3.getByEventId(eventId);
+		if (eventType != null) {
+			player.firePlayerEvents(CommonTriggerExecutionScope::guiPlayerEventTriggerScope, eventType);
 		}
 	}
 

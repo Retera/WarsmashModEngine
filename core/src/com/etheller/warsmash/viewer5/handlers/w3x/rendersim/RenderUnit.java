@@ -3,11 +3,11 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 import java.util.EnumSet;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.parsers.fdf.GameUI;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
-import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
@@ -27,22 +27,26 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 
 public class RenderUnit implements RenderWidget {
+	public static final Color ETHEREAL = new Color(0.75f, 1, 0.5f, 0.5f);
+	public static final Color DEFAULT = new Color(1, 1, 1, 1);
 	public static final Quaternion tempQuat = new Quaternion();
-	private static final War3ID RED = War3ID.fromString("uclr");
-	private static final War3ID GREEN = War3ID.fromString("uclg");
-	private static final War3ID BLUE = War3ID.fromString("uclb");
-	private static final War3ID MOVE_HEIGHT = War3ID.fromString("umvh");
-	private static final War3ID ORIENTATION_INTERPOLATION = War3ID.fromString("uori");
-	public static final War3ID ANIM_PROPS = War3ID.fromString("uani");
-	public static final War3ID ATTACHMENT_ANIM_PROPS = War3ID.fromString("uaap");
-	private static final War3ID BLEND_TIME = War3ID.fromString("uble");
-	private static final War3ID BUILD_SOUND_LABEL = War3ID.fromString("ubsl");
-	private static final War3ID UNIT_SELECT_HEIGHT = War3ID.fromString("uslz");
+	private static final String RED = "red"; // replaced from 'uclr'
+	private static final String GREEN = "green"; // replaced from 'uclg'
+	private static final String BLUE = "blue"; // replaced from 'uclb'
+	private static final String MOVE_HEIGHT = "moveHeight"; // replaced from 'umvh'
+	private static final String ORIENTATION_INTERPOLATION = "orientInterp"; // replaced from 'uori'
+	public static final String ANIM_PROPS = "animProps"; // replaced from 'uani'
+	public static final String ATTACHMENT_ANIM_PROPS = "Attachmentanimprops"; // replaced from 'uaap'
+	private static final String BLEND_TIME = "blend"; // replaced from 'uble'
+	private static final String BUILD_SOUND_LABEL = "BuildingSoundLabel"; // replaced from 'ubsl'
+	private static final String UNIT_SELECT_HEIGHT = "selZ"; // replaced from 'uslz'
 	private static final float[] heapZ = new float[3];
 	public MdxComplexInstance instance;
-	public MutableGameObject row;
+	public GameObject row;
 	public final float[] location = new float[3];
 	public float selectionScale;
 	public UnitSoundset soundset;
@@ -74,11 +78,11 @@ public class RenderUnit implements RenderWidget {
 	private float selectionHeight;
 	private RenderUnit preferredSelectionReplacement;
 
-	public RenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
-			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
-			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
-			final MdxModel specialArtModel, final BuildingShadow buildingShadow, final float selectionCircleScaleFactor,
-			final float animationWalkSpeed, final float animationRunSpeed, final float scalingValue) {
+	public RenderUnit(final War3MapViewer map, final MdxModel model, final GameObject row, final float x, final float y,
+			final float z, final int playerIndex, final UnitSoundset soundset, final MdxModel portraitModel,
+			final CUnit simulationUnit, final RenderUnitTypeData typeData, final MdxModel specialArtModel,
+			final BuildingShadow buildingShadow, final float selectionCircleScaleFactor, final float animationWalkSpeed,
+			final float animationRunSpeed, final float scalingValue) {
 		this.simulationUnit = simulationUnit;
 		resetRenderUnit(map, model, row, x, y, z, playerIndex, soundset, portraitModel, simulationUnit, typeData,
 				specialArtModel, buildingShadow, selectionCircleScaleFactor, animationWalkSpeed, animationRunSpeed,
@@ -86,8 +90,8 @@ public class RenderUnit implements RenderWidget {
 
 	}
 
-	public void resetRenderUnit(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
-			final float x, final float y, final float z, final int playerIndex, final UnitSoundset soundset,
+	public void resetRenderUnit(final War3MapViewer map, final MdxModel model, final GameObject row, final float x,
+			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
 			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
 			final MdxModel specialArtModel, final BuildingShadow buildingShadow, final float selectionCircleScaleFactor,
 			final float animationWalkSpeed, final float animationRunSpeed, final float scalingValue) {
@@ -132,9 +136,9 @@ public class RenderUnit implements RenderWidget {
 			this.location[2] += heapZ[2];
 
 			instance.move(heapZ);
-			War3ID red;
-			War3ID green;
-			War3ID blue;
+			String red;
+			String green;
+			String blue;
 			red = RED;
 			green = GREEN;
 			blue = BLUE;
@@ -168,14 +172,18 @@ public class RenderUnit implements RenderWidget {
 				.reset(game, gameUI, this.simulationUnit, commandButtonListener, abilityDataUI, subMenuOrderId,
 						multiSelect, localPlayerIndex);
 		for (final CAbility ability : this.simulationUnit.getAbilities()) {
-			ability.visit(commandCardPopulatingVisitor);
+			if (!this.simulationUnit.isPaused() || (ability instanceof CBuff)
+					|| (ability instanceof AbilityGenericSingleIconPassiveAbility)) {
+				ability.visit(commandCardPopulatingVisitor);
+			}
 		}
 	}
 
 	@Override
 	public void updateAnimations(final War3MapViewer map) {
 		final boolean wasHidden = this.instance.hidden();
-		if (this.simulationUnit.isHidden()) {
+		if (this.simulationUnit.isHidden()
+				|| !this.simulationUnit.isVisible(map.simulation, map.getLocalPlayerIndex())) {
 			if (!wasHidden) {
 				if (this.selectionCircle != null) {
 					this.selectionCircle.hide();
@@ -596,8 +604,8 @@ public class RenderUnit implements RenderWidget {
 	}
 
 	@Override
-	public boolean isSelectable() {
-		return true; // later needs locust
+	public boolean isSelectable(final CSimulation simulation, final int byPlayer) {
+		return simulationUnit.isVisible(simulation, byPlayer); // later needs locust
 	}
 
 	@Override
@@ -648,5 +656,19 @@ public class RenderUnit implements RenderWidget {
 
 	public RenderUnitTypeData getTypeData() {
 		return typeData;
+	}
+	
+	public void setVertexColoring(Color color) {
+		this.instance.setVertexColor(color);
+	}
+	
+	public void setVertexColoring(float r, float g, float b) {
+		float[] color = new float[] {r,g,b};
+		this.instance.setVertexColor(color);
+	}
+	
+	public void setVertexColoring(float r, float g, float b, float a) {
+		float[] color = new float[] {r,g,b,a};
+		this.instance.setVertexColor(color);
 	}
 }

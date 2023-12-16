@@ -4,6 +4,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -15,8 +16,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbility {
 
-	public CAbilityStandDown(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+	public CAbilityStandDown(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override
@@ -106,6 +107,21 @@ public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbi
 	protected void innerCheckCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.targetOk(null);
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 
 }

@@ -9,7 +9,7 @@ import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.value.JassValue;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
@@ -48,7 +48,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void onRemove(final CSimulation game, final CUnit unit) {
+	public void onRemoveDisabled(final CSimulation game, final CUnit unit) {
 		if (this.entangledMine != null) {
 			unentangle(game);
 		}
@@ -60,9 +60,8 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String resultingType = worldEditorAbility
-				.getFieldAsString(AbilityFields.EntangleGoldMine.RESULTING_UNIT_TYPE, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		final String resultingType = worldEditorAbility.getFieldAsString(AbilityFields.UNIT_ID + level, 0);
 		this.resultingTypeId = resultingType.length() == 4 ? War3ID.fromString(resultingType) : War3ID.NONE;
 
 		setCastingPrimaryTag(PrimaryTag.STAND);
@@ -76,7 +75,8 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int orderId, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, int orderId, final CWidget target,
+			final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == OrderIds.entangleinstant) {
 			orderId = getBaseOrderId();
 		}
@@ -112,7 +112,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		instant = (orderId == OrderIds.entangleinstant);
 		return super.begin(game, caster, orderId, target);
 	}
@@ -138,6 +138,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 					for (final CAbility ability : this.entangledMine.getAbilities()) {
 						ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
 					}
+					unit.checkDisabledAbilities(simulation, true);
 				}
 				this.entangledMine.setFoodUsed(this.entangledMine.getUnitType().getFoodUsed());
 				simulation.getPlayer(unit.getPlayerIndex()).addTechtreeInProgress(this.resultingTypeId);
@@ -146,7 +147,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 				// to a common subroutine later) ==
 
 				this.entangledMine.getOverlayedGoldMineData().setParentMine(unitTarget, goldMineData);
-				this.unitRootsRenderComponent = simulation.createSpellEffectOnUnit(unit, getAlias(), CEffectType.CASTER,
+				this.unitRootsRenderComponent = simulation.createPersistentSpellEffectOnUnit(unit, getAlias(), CEffectType.CASTER,
 						0);
 
 				setIconShowing(false);

@@ -13,8 +13,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 public class CAbilityItemDefenseBonus extends AbstractGenericNoIconAbility {
 	private final int defenseBonus;
 
-	public CAbilityItemDefenseBonus(final int handleId, final War3ID alias, final int defenseBonus) {
-		super(handleId, alias);
+	public CAbilityItemDefenseBonus(final int handleId, final War3ID code, final War3ID alias, final int defenseBonus) {
+		super(handleId, code, alias);
 		this.defenseBonus = defenseBonus;
 	}
 

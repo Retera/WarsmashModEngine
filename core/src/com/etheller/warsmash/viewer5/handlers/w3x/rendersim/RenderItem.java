@@ -1,9 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
 import com.badlogic.gdx.math.Quaternion;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
-import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
@@ -11,16 +10,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 
 public class RenderItem implements RenderWidget {
-	private static final War3ID ITEM_MODEL_SCALE = War3ID.fromString("isca");
-	private static final War3ID ITEM_RED = War3ID.fromString("iclr");
-	private static final War3ID ITEM_GREEN = War3ID.fromString("iclg");
-	private static final War3ID ITEM_BLUE = War3ID.fromString("iclb");
+	private static final String ITEM_MODEL_SCALE = "scale"; // replaced from 'isca'
+	private static final String ITEM_RED = "colorR"; // replaced from 'iclr'
+	private static final String ITEM_GREEN = "colorG"; // replaced from 'iclg'
+	private static final String ITEM_BLUE = "colorB"; // replaced from 'iclb'
 	private final CItem simulationItem;
 	public final MdxComplexInstance instance;
-	public final MutableGameObject row;
+	public final GameObject row;
 	public final float[] location = new float[3];
 	public float radius;
 	public UnitSoundset soundset;
@@ -31,8 +31,8 @@ public class RenderItem implements RenderWidget {
 	private boolean hidden;
 	private boolean dead;
 
-	public RenderItem(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
-			final float y, final float z, final float angle, final UnitSoundset soundset, final MdxModel portraitModel,
+	public RenderItem(final War3MapViewer map, final MdxModel model, final GameObject row, final float x, final float y,
+			final float z, final float angle, final UnitSoundset soundset, final MdxModel portraitModel,
 			final CItem simulationItem) {
 		this.portraitModel = portraitModel;
 		this.simulationItem = simulationItem;
@@ -47,10 +47,10 @@ public class RenderItem implements RenderWidget {
 		instance.setScene(map.worldScene);
 
 		if (row != null) {
-			War3ID red;
-			War3ID green;
-			War3ID blue;
-			War3ID scale;
+			String red;
+			String green;
+			String blue;
+			String scale;
 			scale = ITEM_MODEL_SCALE;
 			red = ITEM_RED;
 			green = ITEM_GREEN;
@@ -187,7 +187,7 @@ public class RenderItem implements RenderWidget {
 	}
 
 	@Override
-	public boolean isSelectable() {
+	public boolean isSelectable(final CSimulation simulation, final int byPlayer) {
 		return true;
 	}
 

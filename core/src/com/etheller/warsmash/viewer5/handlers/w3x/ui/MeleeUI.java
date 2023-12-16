@@ -60,7 +60,7 @@ import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.FastNumberFormat;
 import com.etheller.warsmash.util.ImageUtils;
@@ -160,6 +160,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CUpgradeClass;
@@ -177,6 +178,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnit
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildingIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
@@ -268,6 +270,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private StringFrame simpleBuildingDescriptionValue;
 	private StringFrame simpleBuildingBuildingActionLabel;
 	private SimpleStatusBarFrame simpleBuildingBuildTimeIndicator;
+	private TextureFrame simpleBuildQueueBackdrop;
 	private final QueueIcon[] queueIconFrames = new QueueIcon[WarsmashConstants.BUILD_QUEUE_SIZE];
 	private QueueIcon selectWorkerInsideFrame;
 	private final UIFrame[] selectedUnitHighlightBackdrop = new UIFrame[WarsmashConstants.MAX_SELECTION_SIZE];
@@ -483,8 +486,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			teamColors[i] = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource,
 					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
 		}
+		final Texture[] specialIcons = new Texture[3];
+		specialIcons[0] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
+				"UI\\MiniMap\\minimap-gold.blp");
+		specialIcons[1] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
+				"UI\\MiniMap\\minimap-neutralbuilding.blp");
+		specialIcons[2] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
+				"UI\\MiniMap\\minimap-hero.blp");
 		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();
-		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors);
+		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors, specialIcons);
 	}
 
 	/**
@@ -779,10 +789,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.simpleBuildingBuildTimeIndicator.setWidth(buildTimeIndicatorWidth);
 		this.simpleBuildingBuildTimeIndicator.setHeight(buildTimeIndicatorHeight);
 		this.simpleInfoPanelBuildingDetail.setVisible(false);
-		final TextureFrame simpleBuildQueueBackdrop = (TextureFrame) this.rootFrame
+		this.simpleBuildQueueBackdrop = (TextureFrame) this.rootFrame
 				.getFrameByName("SimpleBuildQueueBackdrop", 0);
 		simpleBuildQueueBackdrop.setWidth(infoPanelUnitDetailWidth);
 		simpleBuildQueueBackdrop.setHeight(infoPanelUnitDetailWidth * 0.5f);
+		simpleBuildQueueBackdrop.setVisible(false);
 
 		this.queueIconFrames[0] = new QueueIcon("SmashBuildQueueIcon0", this.smashSimpleInfoPanel, this, 0);
 		final TextureFrame queueIconFrameBackdrop0 = new TextureFrame("SmashBuildQueueIcon0Backdrop",
@@ -792,8 +803,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.queueIconFrames[0].set(queueIconFrameBackdrop0);
 		this.queueIconFrames[0]
 				.addSetPoint(new SetPoint(FramePoint.CENTER, this.smashSimpleInfoPanel, FramePoint.BOTTOMLEFT,
-						(infoPanelUnitDetailWidth * (15 + 19f)) / 256, (infoPanelUnitDetailWidth * (66 + 19f)) / 256));
-		this.frontQueueIconWidth = (infoPanelUnitDetailWidth * 38) / 256;
+						infoPanelUnitDetailWidth * (15 + 19f) / 256, infoPanelUnitDetailWidth * (66 + 19f) / 256));
+		this.frontQueueIconWidth = infoPanelUnitDetailWidth * 38 / 256;
 		this.queueIconFrames[0].setWidth(this.frontQueueIconWidth);
 		this.queueIconFrames[0].setHeight(this.frontQueueIconWidth);
 		queueIconFrameBackdrop0.setWidth(this.frontQueueIconWidth);
@@ -808,9 +819,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			queueIconFrameBackdrop
 					.addSetPoint(new SetPoint(FramePoint.CENTER, this.queueIconFrames[i], FramePoint.CENTER, 0, 0));
 			this.queueIconFrames[i].addSetPoint(new SetPoint(FramePoint.CENTER, this.smashSimpleInfoPanel,
-					FramePoint.BOTTOMLEFT, (infoPanelUnitDetailWidth * (13 + 14.5f + (40 * (i - 1)))) / 256,
-					(infoPanelUnitDetailWidth * (24 + 14.5f)) / 256));
-			final float queueIconWidth = (infoPanelUnitDetailWidth * 29) / 256;
+					FramePoint.BOTTOMLEFT, infoPanelUnitDetailWidth * (13 + 14.5f + 40 * (i - 1)) / 256,
+					infoPanelUnitDetailWidth * (24 + 14.5f) / 256));
+			final float queueIconWidth = infoPanelUnitDetailWidth * 29 / 256;
 			this.queueIconFrames[i].setWidth(queueIconWidth);
 			this.queueIconFrames[i].setHeight(queueIconWidth);
 			queueIconFrameBackdrop.setWidth(queueIconWidth);
@@ -846,10 +857,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.rootFrame.add(selectedSubgroupHighlightBackdrop);
 				selectedSubgroupHighlightBackdrop
 						.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
-								((-this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * .10f)
-										+ (this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
-								(((this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * -.75f))
-										- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+								-this.frontQueueIconWidth * .37f / 2 + this.frontQueueIconWidth * .10f
+										+ this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize),
+								this.frontQueueIconWidth * .37f / 2 + this.frontQueueIconWidth * -.75f
+										- this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize)));
 			}
 			{
 				final TextureFrame cargoBackdrop = new TextureFrame("SmashCargoBackdrop", this.smashSimpleInfoPanel,
@@ -863,10 +874,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.rootFrame.add(cargoBackdrop);
 				cargoBackdrop
 						.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
-								((-this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * .0f)
-										+ (this.frontQueueIconWidth * 1.20f * (i % halfSelectionMaxSize)),
-								(((this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * -.75f))
-										- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+								-this.frontQueueIconWidth * .37f / 2 + this.frontQueueIconWidth * .0f
+										+ this.frontQueueIconWidth * 1.20f * (i % halfSelectionMaxSize),
+								this.frontQueueIconWidth * .37f / 2 + this.frontQueueIconWidth * -.75f
+										- this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize)));
 			}
 		}
 		this.cargoClickListener = new MultiSelectionIconListener() {
@@ -887,7 +898,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					final CAbilityCargoHold cargoData = simulationUnit.getCargoData();
 					if (cargoData != null) {
 						final CUnit unitInside = cargoData.getUnit(index);
-						if ((index >= 0) && (index < cargoData.getCargoCount())) {
+						if (index >= 0 && index < cargoData.getCargoCount()) {
 							final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
 							final CSimulation simulation = MeleeUI.this.war3MapViewer.simulation;
 							cargoData.checkCanUse(simulation, simulationUnit, OrderIds.unload, activationReceiver);
@@ -962,12 +973,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.selectedUnitFrames[i].set(multiSelectUnitIconFrameBackdrop, hpBarFrame, manaBarFrame);
 			multiSelectUnitIconFrameBackdrop
 					.addSetPoint(new SetPoint(FramePoint.CENTER, this.selectedUnitFrames[i], FramePoint.CENTER, 0, 0));
-			this.selectedUnitFrames[i]
-					.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
-							(this.frontQueueIconWidth * .10f)
-									+ (this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize)),
-							(this.frontQueueIconWidth * -.75f)
-									- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			this.selectedUnitFrames[i].addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel,
+					FramePoint.TOPLEFT,
+					this.frontQueueIconWidth * .10f + this.frontQueueIconWidth * 1.10f * (i % halfSelectionMaxSize),
+					this.frontQueueIconWidth * -.75f - this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize)));
 			this.selectedUnitFrames[i].setWidth(this.frontQueueIconWidth);
 			this.selectedUnitFrames[i].setHeight(this.frontQueueIconWidth);
 			multiSelectUnitIconFrameBackdrop.setWidth(this.frontQueueIconWidth);
@@ -1005,12 +1014,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.cargoUnitFrames[i].set(cargoUnitIconFrameBackdrop, hpBarFrame, manaBarFrame);
 			cargoUnitIconFrameBackdrop
 					.addSetPoint(new SetPoint(FramePoint.CENTER, this.cargoUnitFrames[i], FramePoint.CENTER, 0, 0));
-			this.cargoUnitFrames[i]
-					.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
-							(this.frontQueueIconWidth * .0f)
-									+ (this.frontQueueIconWidth * 1.20f * (i % halfSelectionMaxSize)),
-							(this.frontQueueIconWidth * -.75f)
-									- (this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize))));
+			this.cargoUnitFrames[i].addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel,
+					FramePoint.TOPLEFT,
+					this.frontQueueIconWidth * .0f + this.frontQueueIconWidth * 1.20f * (i % halfSelectionMaxSize),
+					this.frontQueueIconWidth * -.75f - this.frontQueueIconWidth * 1.5f * (i / halfSelectionMaxSize)));
 			this.cargoUnitFrames[i].setWidth(this.frontQueueIconWidth);
 			this.cargoUnitFrames[i].setHeight(this.frontQueueIconWidth);
 			cargoUnitIconFrameBackdrop.setWidth(this.frontQueueIconWidth);
@@ -1100,8 +1107,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final SpriteFrame cooldownFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
 						"SmashInventoryButton_" + commandButtonIndex + "_Cooldown", this.rootFrame, "", 0);
 				commandCardIcon.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.inventoryBarFrame, FramePoint.TOPLEFT,
-						GameUI.convertX(this.uiViewport, 0.0037f + (0.04f * i)),
-						GameUI.convertY(this.uiViewport, -0.0021f - (0.03815f * j))));
+						GameUI.convertX(this.uiViewport, 0.0037f + 0.04f * i),
+						GameUI.convertY(this.uiViewport, -0.0021f - 0.03815f * j)));
 				commandCardIcon.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
 				commandCardIcon.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
 				iconFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
@@ -1194,8 +1201,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						"SmashCommandButton_" + commandButtonIndex + "_Autocast", this.rootFrame, "", 0);
 				commandCardIcon.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
 						GameUI.convertX(this.uiViewport,
-								0.6175f + (WarsmashConstants.USE_NINE_ITEM_INVENTORY ? 0.0405f : 0.0f) + (0.0434f * i)),
-						GameUI.convertY(this.uiViewport, 0.095f - (0.044f * j))));
+								0.6175f + (WarsmashConstants.USE_NINE_ITEM_INVENTORY ? 0.0405f : 0.0f) + 0.0434f * i),
+						GameUI.convertY(this.uiViewport, 0.095f - 0.044f * j)));
 				commandCardIcon.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
 				commandCardIcon.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
 				iconFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
@@ -1269,7 +1276,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.tooltipResourceTextFrames[i] = (StringFrame) this.rootFrame
 					.getFrameByName("SmashToolTipIconResourceLabel", i);
 			this.tooltipResourceFrames[i].addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.tooltipText,
-					FramePoint.BOTTOMLEFT, GameUI.convertX(this.uiViewport, 0.004f + (0.032f * i)),
+					FramePoint.BOTTOMLEFT, GameUI.convertX(this.uiViewport, 0.004f + 0.032f * i),
 					GameUI.convertY(this.uiViewport, -0.001f)));
 			// have we really no better API than the below???
 			((AbstractUIFrame) this.tooltipFrame).add(this.tooltipResourceFrames[i]);
@@ -1289,7 +1296,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
 
 		this.meleeUIAbilityActivationReceiver = new MeleeUIAbilityActivationReceiver(
-				this.war3MapViewer.getLocalPlayerIndex(), (this::getUiSoundForError));
+				this.war3MapViewer.getLocalPlayerIndex(), this::getUiSoundForError);
 
 		final MdxModel rallyModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("RallyIndicatorDst"));
 		this.rallyPointInstance = (MdxComplexInstance) rallyModel.addInstance();
@@ -1350,7 +1357,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.unitOrderListener.issueImmediateOrder(this.selectedUnit.getSimulationUnit().getHandleId(),
 							abilityHandleId, orderId, shiftDown);
 					if (abilityToUse instanceof CAbilityHero) {
-						if ((((CAbilityHero) abilityToUse).getSkillPoints() <= 1) && (orderId != OrderIds.skillmenu)) {
+						if (((CAbilityHero) abilityToUse).getSkillPoints() <= 1 && orderId != OrderIds.skillmenu) {
 							// using up the last skill point, so close the menu
 							// TODO this is kind of a stupid hack and should probably be improved later
 							openMenu(0);
@@ -1504,10 +1511,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final int maxX = minX + this.uiViewport.getScreenWidth();
 		final int minY = this.uiViewport.getScreenY();
 		final int maxY = minY + this.uiViewport.getScreenHeight();
-		final boolean left = (mouseX <= (minX + 3)) && WarsmashConstants.CATCH_CURSOR;
-		final boolean right = (mouseX >= (maxX - 3)) && WarsmashConstants.CATCH_CURSOR;
-		final boolean up = (mouseY <= (minY + 3)) && WarsmashConstants.CATCH_CURSOR;
-		final boolean down = (mouseY >= (maxY - 3)) && WarsmashConstants.CATCH_CURSOR;
+		final boolean left = mouseX <= minX + 3 && WarsmashConstants.CATCH_CURSOR;
+		final boolean right = mouseX >= maxX - 3 && WarsmashConstants.CATCH_CURSOR;
+		final boolean up = mouseY <= minY + 3 && WarsmashConstants.CATCH_CURSOR;
+		final boolean down = mouseY >= maxY - 3 && WarsmashConstants.CATCH_CURSOR;
 		this.cameraManager.applyVelocity(deltaTime, up, down, left, right);
 
 		mouseX = Math.max(minX, Math.min(maxX, mouseX));
@@ -1519,7 +1526,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 		this.hpBarFrameIndex = 0;
 		if (!this.allowDrag) {
-			if ((this.mouseOverUnit != null) && isUnitSelectable(this.mouseOverUnit)) {
+			if (this.mouseOverUnit != null && isUnitSelectable(this.mouseOverUnit)) {
 				final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
 				positionHealthBar(simpleStatusBarFrame, this.mouseOverUnit, 1.0f);
 				final String hoverTipTextValue = getWorldFrameHoverTipText(this.war3MapViewer.simulation,
@@ -1537,7 +1544,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							0, GameUI.convertY(this.uiViewport, 0.003f)));
 				}
 				if (this.mouseOverUnit.getSimulationWidget().isInvulnerable()
-						|| (this.mouseOverUnit instanceof RenderItem)) {
+						|| this.mouseOverUnit instanceof RenderItem) {
 					// this is a bit silly, for now I'm using it to position the "Gold" text on gold
 					// mines even though they are invulnerable
 					simpleStatusBarFrame.setVisible(false);
@@ -1558,7 +1565,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				@Override
 				public boolean call(final CUnit unit) {
 					final RenderUnit renderUnit = MeleeUI.this.war3MapViewer.getRenderPeer(unit);
-					if (!unit.isDead() && renderUnit.isSelectable()
+					if (!unit.isDead()
+							&& renderUnit.isSelectable(war3MapViewer.simulation, war3MapViewer.getLocalPlayerIndex())
 							&& MeleeUI.this.dragSelectPreviewUnitsUpcoming.add(renderUnit)) {
 						final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
 						if (!unit.isInvulnerable()) {
@@ -1580,7 +1588,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.dragSelectPreviewUnits = this.dragSelectPreviewUnitsUpcoming;
 			this.dragSelectPreviewUnitsUpcoming = temp;
 		}
-		if ((this.selectedUnits != null) && false) {
+		if (this.selectedUnits != null && false) {
 			for (final RenderUnit unit : this.selectedUnits) {
 				final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
 				positionHealthBar(simpleStatusBarFrame, unit, 1.0f);
@@ -1589,7 +1597,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		for (int i = this.hpBarFrameIndex; i < this.hpBarFrames.size(); i++) {
 			this.hpBarFrames.get(i).setVisible(false);
 		}
-		if (this.simpleProgressIndicator.isVisible() && (this.simpleProgressIndicatorDurationRemaining > 0)) {
+		if (this.simpleProgressIndicator.isVisible() && this.simpleProgressIndicatorDurationRemaining > 0) {
 			// NOTE: this is some approximation, not an accurate bar visual
 			this.simpleProgressIndicatorDurationRemaining -= deltaTime;
 			this.simpleProgressIndicator
@@ -1685,7 +1693,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.war3MapViewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y));
 		this.cameraManager.updateTargetZ(groundHeight);
 		this.cameraManager.updateCamera();
-		if (this.allowDrag && (this.draggingMouseButton == Input.Buttons.MIDDLE)) {
+		if (this.allowDrag && this.draggingMouseButton == Input.Buttons.MIDDLE) {
 			// in case camera updates while dragging mouse, update where we think mouse is
 			// in 3d
 			this.lastMouseDragCameraTargetStart.set(this.cameraManager.target);
@@ -1709,7 +1717,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.gameMessagesFrame.setAlpha(fadeAlpha);
 		}
 		if (this.currentMusics != null) {
-			if ((this.currentMusics[this.currentMusicIndex] != null)
+			if (this.currentMusics[this.currentMusicIndex] != null
 					&& !this.currentMusics[this.currentMusicIndex].isPlaying()) {
 				if (this.currentMusicRandomizeIndex) {
 					this.currentMusicIndex = (int) (Math.random() * this.currentMusics.length);
@@ -1743,7 +1751,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private boolean isUnitSelectable(final RenderWidget mouseOverUnit) {
-		return mouseOverUnit.isSelectable() && !mouseOverUnit.getSimulationWidget().isDead();
+		return mouseOverUnit.isSelectable(war3MapViewer.simulation, war3MapViewer.getLocalPlayerIndex())
+				&& !mouseOverUnit.getSimulationWidget().isDead();
 	}
 
 	private String getWorldFrameHoverTipText(final CSimulation game, final RenderWidget whichUnit) {
@@ -1757,30 +1766,30 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			else {
 				final int simulationUnitPlayerIndex = simulationUnit.getPlayerIndex();
-				final boolean neutralHostile = simulationUnitPlayerIndex == (WarsmashConstants.MAX_PLAYERS - 4);
-				final boolean neutralPassive = simulationUnitPlayerIndex == (WarsmashConstants.MAX_PLAYERS - 1);
+				final boolean neutralHostile = simulationUnitPlayerIndex == WarsmashConstants.MAX_PLAYERS - 4;
+				final boolean neutralPassive = simulationUnitPlayerIndex == WarsmashConstants.MAX_PLAYERS - 1;
 				String returnValue = "";
-				if ((simulationUnitPlayerIndex != this.localPlayer.getId())
-						&& (simulationUnitPlayerIndex < (WarsmashConstants.MAX_PLAYERS - 4))) {
+				if (simulationUnitPlayerIndex != this.localPlayer.getId()
+						&& simulationUnitPlayerIndex < WarsmashConstants.MAX_PLAYERS - 4) {
 					final boolean ally = simulationUnit.isUnitAlly(this.localPlayer);
 					final CPlayer unitPlayer = game.getPlayer(simulationUnitPlayerIndex);
 					final String name = unitPlayer.getName();
-					if (ally) {
-						if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_CONTROL)) {
-							returnValue = "|CFF00FF00" + name;
+					if (name != null) {
+						if (ally) {
+							if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_CONTROL)) {
+								returnValue = "|CFF00FF00" + name;
+							} else {
+								returnValue = "|CFFFFFF00" + name;
+							}
+						} else {
+							returnValue = "|CFFFF0000" + name;
 						}
-						else {
-							returnValue = "|CFFFFFF00" + name;
-						}
-					}
-					else {
-						returnValue = "|CFFFF0000" + name;
 					}
 				}
 				final CAbilityGoldMinable goldMineData = simulationUnit.getGoldMineData();
 				final CAbilityOverlayedMine blightedGoldMineData = simulationUnit.getOverlayedGoldMineData();
-				final boolean neutral = (neutralPassive && simulationUnit.isBuilding()) || neutralHostile
-						|| (goldMineData != null) || (blightedGoldMineData != null);
+				final boolean neutral = neutralPassive && simulationUnit.isBuilding() || neutralHostile
+						|| goldMineData != null || blightedGoldMineData != null;
 				if (neutral) {
 					if (!returnValue.isEmpty()) {
 						returnValue += "|n";
@@ -1797,7 +1806,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						}
 					}
 					final int creepLevel = simulationUnit.getUnitType().getLevel();
-					if (neutralHostile && (creepLevel > 0)) {
+					if (neutralHostile && creepLevel > 0) {
 						final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
 						returnValue += "|n" + level + " " + creepLevel;
 					}
@@ -1839,10 +1848,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		simpleStatusBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
 		simpleStatusBarFrame.getBorderFrame().setColor(0f, 0f, 0f, alpha);
 		final float lifeRatioRemaining = unit.getSimulationWidget().getLife() / unit.getSimulationWidget().getMaxLife();
-		simpleStatusBarFrame.getBarFrame().setColor(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
+		simpleStatusBarFrame.getBarFrame().setColor(Math.min(1.0f, 2.0f - lifeRatioRemaining * 2),
 				Math.min(1.0f, lifeRatioRemaining * 2), 0, alpha);
 		final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
-		simpleStatusBarFrame.setWidth((unit.getSelectionScale() * 1.5f * Gdx.graphics.getWidth()) / 2560);
+		simpleStatusBarFrame.setWidth(unit.getSelectionScale() * 1.5f * Gdx.graphics.getWidth() / 2560);
 		simpleStatusBarFrame.setHeight(16);
 		simpleStatusBarFrame.addSetPoint(
 				new SetPoint(FramePoint.CENTER, this.rootFrame, FramePoint.BOTTOMLEFT, unprojected.x, unprojected.y));
@@ -1895,24 +1904,27 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		}
 
-		this.meleeUIMinimap.render(batch, this.war3MapViewer.units);
+		this.meleeUIMinimap.render(this.war3MapViewer.simulation, batch, this.war3MapViewer.units, this.war3MapViewer.simulation.getPathingGrid(), this.war3MapViewer.getFogOfWar(), this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex()));
 		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
 		for (final TextTag textTag : this.war3MapViewer.textTags) {
 			this.war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, textTag.getPosition());
 			if (this.war3MapViewer.worldScene.camera.rect.contains(screenCoordsVector.x,
-					(Gdx.graphics.getHeight() - screenCoordsVector.y) + textTag.getScreenCoordsZHeight())) {
+					Gdx.graphics.getHeight() - screenCoordsVector.y + textTag.getScreenCoordsZHeight())) {
 				final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
 				final float remainingLife = textTag.getRemainingLife();
 				final float fadeStart = textTag.getFadeStart();
 				final float lifetimeDuration = textTag.getLifetimeDuration();
 				final float fadingSeconds = lifetimeDuration - fadeStart;
-				final float alpha = remainingLife > fadingSeconds ? 1.0f : (remainingLife / fadingSeconds);
+				final float alpha = remainingLife > fadingSeconds ? 1.0f : remainingLife / fadingSeconds;
+				glyphLayout.setText(this.textTagFont, textTag.getText());
+				this.textTagFont.setColor(0, 0, 0, textTag.getColor().a * alpha);
+				this.textTagFont.draw(batch, textTag.getText(), unprojected.x - glyphLayout.width / 2 + 3,
+						unprojected.y - glyphLayout.height / 2 - 1 + textTag.getScreenCoordsZHeight());
 				this.textTagFont.setColor(textTag.getColor().r, textTag.getColor().g, textTag.getColor().b,
 						textTag.getColor().a * alpha);
-				glyphLayout.setText(this.textTagFont, textTag.getText());
-				this.textTagFont.draw(batch, textTag.getText(), unprojected.x - (glyphLayout.width / 2),
-						(unprojected.y - (glyphLayout.height / 2)) + textTag.getScreenCoordsZHeight());
+				this.textTagFont.draw(batch, textTag.getText(), unprojected.x - glyphLayout.width / 2,
+						unprojected.y - glyphLayout.height / 2 + textTag.getScreenCoordsZHeight());
 			}
 		}
 		if (this.draggingMouseButton == Input.Buttons.LEFT) {
@@ -1945,7 +1957,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		@Override
 		public boolean call(final CWidget unit) {
 			final RenderWidget renderPeer = MeleeUI.this.war3MapViewer.getRenderPeer(unit);
-			return !unit.isDead() && renderPeer.isSelectable();
+			return !unit.isDead()
+					&& renderPeer.isSelectable(war3MapViewer.simulation, war3MapViewer.getLocalPlayerIndex());
 		}
 	}
 
@@ -2084,6 +2097,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		@Override
+		public Void accept(final AbilityBuilderActiveAbility ability) {
+			final float uiAreaOfEffect = ability.getUIAreaOfEffect();
+			if (Float.isNaN(uiAreaOfEffect)) {
+				handleTargetCursor(ability);
+			} else {
+				handlePlacementCursor(ability, uiAreaOfEffect);
+			}
+			return null;
+		}
+
+		@Override
 		public Void accept(final GenericSingleIconActiveAbility ability) {
 			final float uiAreaOfEffect = ability.getUIAreaOfEffect();
 			if (Float.isNaN(uiAreaOfEffect)) {
@@ -2175,7 +2199,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			boolean justLoaded = false;
 			final War3MapViewer viewer = MeleeUI.this.war3MapViewer;
 			if (MeleeUI.this.cursorModelInstance == null) {
-				final MutableObjectData unitData = viewer.getAllObjectData().getUnits();
+				final ObjectData unitData = viewer.getAllObjectData().getUnits();
 				final War3ID buildingTypeId = new War3ID(previewBuildUnitId);
 				MeleeUI.this.cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
 				final String unitModelPath = viewer.getUnitModelPath(unitData.get(buildingTypeId));
@@ -2216,10 +2240,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (MeleeUI.this.cursorModelPathing != null) {
 				clickLocationTemp.x = (float) Math.floor(clickLocationTemp.x / 64f) * 64f;
 				clickLocationTemp.y = (float) Math.floor(clickLocationTemp.y / 64f) * 64f;
-				if (((MeleeUI.this.cursorModelPathing.getWidth() / 2) % 2) == 1) {
+				if (MeleeUI.this.cursorModelPathing.getWidth() / 2 % 2 == 1) {
 					clickLocationTemp.x += 32f;
 				}
-				if (((MeleeUI.this.cursorModelPathing.getHeight() / 2) % 2) == 1) {
+				if (MeleeUI.this.cursorModelPathing.getHeight() / 2 % 2 == 1) {
 					clickLocationTemp.y += 32f;
 				}
 				clickLocationTemp.z = viewer.terrain.getGroundHeight(clickLocationTemp.x, clickLocationTemp.y);
@@ -2234,9 +2258,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				boolean blockAll = false;
 				final int cellX = pathingGrid.getCellX(clickLocationTemp.x);
 				final int cellY = pathingGrid.getCellY(clickLocationTemp.y);
-				if ((cellX < halfCursorWidthCells) || (cellX > (pathingGrid.getWidth() - halfCursorWidthCells))
-						|| (cellY < halfCursorHeightCells)
-						|| (cellY > (pathingGrid.getHeight() - halfCursorHeightCells))) {
+				if (cellX < halfCursorWidthCells || cellX > pathingGrid.getWidth() - halfCursorWidthCells
+						|| cellY < halfCursorHeightCells || cellY > pathingGrid.getHeight() - halfCursorHeightCells) {
 					blockAll = true;
 				}
 				final boolean canBeBuiltOnThem = MeleeUI.this.cursorBuildingUnitType.isCanBeBuiltOnThem();
@@ -2258,9 +2281,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					for (int i = 0; i < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
 						for (int j = 0; j < MeleeUI.this.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
 							boolean blocked = false;
-							final short pathing = pathingGrid.getPathing(
-									(clickLocationTemp.x + (i * 32)) - halfRenderWidth,
-									(clickLocationTemp.y + (j * 32)) - halfRenderHeight);
+							final short pathing = pathingGrid.getPathing(clickLocationTemp.x + i * 32 - halfRenderWidth,
+									clickLocationTemp.y + j * 32 - halfRenderHeight);
 							for (final CBuildingPathingType preventedType : MeleeUI.this.cursorBuildingUnitType
 									.getPreventedPathingTypes()) {
 								if (PathingFlags.isPathingFlag(pathing, preventedType)) {
@@ -2562,7 +2584,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	public void selectUnit(RenderUnit unit) {
 		this.subMenuOrderIdStack.clear();
-		if ((unit != null) && unit.getSimulationUnit().isDead()) {
+		if (unit != null && unit.getSimulationUnit().isDead()) {
 			unit = null;
 		}
 		if (this.selectedUnit != null) {
@@ -2624,7 +2646,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	private void repositionRallyPoint(final CUnit simulationUnit) {
 		final AbilityTarget rallyPoint = simulationUnit.getRallyPoint();
-		if ((rallyPoint != null) && (simulationUnit.getFirstAbilityOfType(CAbilityRally.class) != null)) {
+		if (rallyPoint != null && simulationUnit.getFirstAbilityOfType(CAbilityRally.class) != null) {
 			this.rallyPointInstance
 					.setTeamColor(this.war3MapViewer.simulation.getPlayer(simulationUnit.getPlayerIndex()).getColor());
 			this.rallyPointInstance.show();
@@ -2656,7 +2678,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final Queue<COrder> orderQueue = simulationUnit.getOrderQueue();
 			iterator = orderQueue.iterator();
 			final COrder order = simulationUnit.getCurrentOrder();
-			if ((order != null) && order.isQueued()) {
+			if (order != null && order.isQueued()) {
 				final MdxComplexInstance waypointModelInstance = getOrCreateWaypointIndicator(orderIndex);
 				final AbilityTarget target = order.getTarget(this.war3MapViewer.simulation);
 				if (target != null) {
@@ -2675,7 +2697,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		else {
 			iterator = Collections.emptyIterator();
 		}
-		for (; (orderIndex < this.waypointModelInstances.size()) || iterator.hasNext(); orderIndex++) {
+		for (; orderIndex < this.waypointModelInstances.size() || iterator.hasNext(); orderIndex++) {
 			final MdxComplexInstance waypointModelInstance = getOrCreateWaypointIndicator(orderIndex);
 			if (iterator.hasNext()) {
 				final COrder order = iterator.next();
@@ -2725,7 +2747,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final float lifeRatioRemaining = simulationUnit.getLife() / simulationUnit.getMaxLife();
 		this.rootFrame.setText(this.unitLifeText, FastNumberFormat.formatWholeNumber(simulationUnit.getLife()) + " / "
 				+ FastNumberFormat.formatWholeNumber(simulationUnit.getMaxLife()));
-		this.unitLifeText.setColor(new Color(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
+		this.unitLifeText.setColor(new Color(Math.min(1.0f, 2.0f - lifeRatioRemaining * 2),
 				Math.min(1.0f, lifeRatioRemaining * 2), 0, 1.0f));
 		final int maximumMana = simulationUnit.getMaximumMana();
 		if (maximumMana > 0) {
@@ -2749,11 +2771,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.cargoBackdrop[i].setVisible(false);
 		}
 		this.simpleProgressIndicator.setVisible(false);
-		if ((simulationUnit.getBuildQueue()[0] != null)
-				&& (simulationUnit.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()) && !multiSelect) {
+		if (simulationUnit.getBuildQueue()[0] != null
+				&& simulationUnit.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex() && !multiSelect) {
 			for (int i = 0; i < this.queueIconFrames.length; i++) {
 				final QueueItemType queueItemType = simulationUnit.getBuildQueueTypes()[i];
-				if (queueItemType == null) {
+				if (queueItemType == null || (i>0 && QueueItemType.SACRIFICE.equals(simulationUnit.getBuildQueueTypes()[0]))) {
 					this.queueIconFrames[i].setVisible(false);
 				}
 				else {
@@ -2791,6 +2813,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 			}
 			this.simpleInfoPanelBuildingDetail.setVisible(!multiSelect);
+			this.simpleBuildQueueBackdrop.setVisible(true);
 			this.simpleInfoPanelUnitDetail.setVisible(false);
 			this.rootFrame.setText(this.simpleBuildingNameValue, simulationUnit.getUnitType().getName());
 			this.rootFrame.setText(this.simpleBuildingDescriptionValue, "");
@@ -2801,8 +2824,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.UNIT) {
 				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
 						this.rootFrame.getTemplates().getDecoratedString("TRAINING"));
-			}
-			else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.HERO_REVIVE) {
+			} else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.SACRIFICE) {
+				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
+						this.rootFrame.getTemplates().getDecoratedString("TRAINING"));
+				this.simpleBuildQueueBackdrop.setVisible(false);
+			} else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.HERO_REVIVE) {
 				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
 						this.rootFrame.getTemplates().getDecoratedString("REVIVING"));
 			}
@@ -2877,7 +2903,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final boolean constructing = simulationUnit.isConstructingOrUpgrading();
 			this.smashBuffStatusBar.setVisible(!multiSelect && !simulationUnit.isBuilding() && !constructing);
 			final CAbilityCargoHold cargoData = simulationUnit.getCargoData();
-			if ((cargoData != null) && !cargoData.isEmpty() && !multiSelect && !constructing) {
+			if (cargoData != null && !cargoData.isEmpty() && !multiSelect && !constructing) {
 				final String unitTypeName = simulationUnit.getUnitType().getName();
 				this.attack1Icon.setVisible(false);
 				this.attack2Icon.setVisible(false);
@@ -2885,6 +2911,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.heroInfoPanel.setVisible(false);
 				this.simpleBuildTimeIndicator.setVisible(false);
 				this.simpleBuildingBuildTimeIndicator.setVisible(false);
+				this.selectWorkerInsideFrame.setVisible(false);
 
 				this.simpleClassValue.setVisible(!simulationUnit.isBuilding());
 				this.rootFrame.setText(this.simpleNameValue, unitTypeName);
@@ -3070,7 +3097,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.queueIconFrames[0].setTexture(constructingUnitUI.getIcon());
 					this.queueIconFrames[0].setToolTip(constructingUnitUI.getToolTip());
 					this.queueIconFrames[0].setUberTip(constructingUnitUI.getUberTip());
-					if ((simulationUnit.getWorkerInside() != null) && !simulationUnit.isConstructionConsumesWorker()) {
+					if (simulationUnit.getWorkerInside() != null && !simulationUnit.isConstructionConsumesWorker()) {
 						this.selectWorkerInsideFrame.setVisible(true);
 						this.selectWorkerInsideFrame.setTexture(this.war3MapViewer.getAbilityDataUI()
 								.getUnitUI(simulationUnit.getWorkerInside().getTypeId()).getIcon());
@@ -3213,27 +3240,27 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final boolean autoCastActive, final boolean menuButton, final String tip, final String uberTip,
 			final char hotkey, final int goldCost, final int lumberCost, final int foodCost, final int manaCost,
 			final float cooldownRemaining, final float cooldownMax, final int numberOverlay) {
-		if ((buttonPositionX == -11) || (buttonPositionY == -11)) {
+		if (buttonPositionX == -11 || buttonPositionY == -11) {
 			// NOTE some guys said they liked to do this as a hack to hide icons or whatever
 			return;
 		}
 		int x = Math.max(0, Math.min(COMMAND_CARD_WIDTH - 1, buttonPositionX));
 		int y = Math.max(0, Math.min(COMMAND_CARD_HEIGHT - 1, buttonPositionY));
-		while ((x >= 0) && (y >= 0) && this.commandCard[y][x].isVisible()) {
+		while (x >= 0 && y >= 0 && this.commandCard[y][x].isVisible()) {
 			x--;
-			if (x < 0) {
+			if (x < 0 && y != 0) {
 				x = COMMAND_CARD_WIDTH - 1;
 				y--;
 			}
 		}
-		if ((y < 0) || (x < 0)) {
+		if (y < 0 || x < 0) {
 			if (y < 0) {
 				y = 0;
 			}
 			if (x < 0) {
 				x = 0;
 			}
-			while ((x < COMMAND_CARD_WIDTH) && (y < COMMAND_CARD_HEIGHT) && this.commandCard[y][x].isVisible()) {
+			while (x < COMMAND_CARD_WIDTH && y < COMMAND_CARD_HEIGHT && this.commandCard[y][x].isVisible()) {
 				x++;
 				if (x >= COMMAND_CARD_WIDTH) {
 					x = 0;
@@ -3241,7 +3268,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 			}
 		}
-		if ((x < COMMAND_CARD_WIDTH) && (x >= 0) && (y < COMMAND_CARD_HEIGHT) && (y >= 0)) {
+		if (x < COMMAND_CARD_WIDTH && x >= 0 && y < COMMAND_CARD_HEIGHT && y >= 0) {
 			this.commandCard[y][x].setCommandButtonData(icon, abilityHandleId, orderId, autoCastId, active,
 					autoCastActive, menuButton, tip, uberTip, hotkey, goldCost, lumberCost, foodCost, manaCost,
 					this.selectedUnit.getSimulationUnit().getMana() < manaCost, cooldownRemaining, cooldownMax,
@@ -3251,7 +3278,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void buff(final Texture icon, final int level, final String tip, final String uberTip) {
-		if ((this.selectedUnit == null) || !this.selectedUnit.getSimulationUnit().isBuilding()) {
+		if (this.selectedUnit == null || !this.selectedUnit.getSimulationUnit().isBuilding()) {
 			if (this.currentBuffBarIconIndex < this.buffBarIcons.length) {
 				this.buffBarIcons[this.currentBuffBarIconIndex++].set(icon, tip, uberTip);
 			}
@@ -3309,7 +3336,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			for (int index = 0; index < attackTypes.length; index++) {
 				final CodeKeyType attackType = attackTypes[index];
 				String skinLookupKey = "InfoPanelIcon" + prefix + attackType.getCodeKey() + suffix;
-				if (!gameUI.hasSkinField(skinLookupKey) && (attackType == CAttackType.SPELLS)) {
+				if (!gameUI.hasSkinField(skinLookupKey) && attackType == CAttackType.SPELLS) {
 					skinLookupKey = "InfoPanelIcon" + prefix + CAttackType.MAGIC.getCodeKey() + suffix;
 				}
 				final Texture suffixTexture = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
@@ -3318,7 +3345,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				else {
 					skinLookupKey = "InfoPanelIcon" + prefix + attackType.getCodeKey();
-					if (!gameUI.hasSkinField(skinLookupKey) && (attackType == CAttackType.SPELLS)) {
+					if (!gameUI.hasSkinField(skinLookupKey) && attackType == CAttackType.SPELLS) {
 						skinLookupKey = "InfoPanelIcon" + prefix + CAttackType.MAGIC.getCodeKey();
 					}
 					this.damageBackdropTextures[index] = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
@@ -3329,7 +3356,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		public Texture getTexture(final CodeKeyType attackType) {
 			if (attackType != null) {
 				final int ordinal = attackType.ordinal();
-				if ((ordinal >= 0) && (ordinal < this.damageBackdropTextures.length)) {
+				if (ordinal >= 0 && ordinal < this.damageBackdropTextures.length) {
 					return this.damageBackdropTextures[ordinal];
 				}
 			}
@@ -3351,7 +3378,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.rootFrame.setText(this.unitLifeText,
 					FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getLife()) + " / "
 							+ FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMaxLife()));
-			this.unitLifeText.setColor(new Color(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
+			this.unitLifeText.setColor(new Color(Math.min(1.0f, 2.0f - lifeRatioRemaining * 2),
 					Math.min(1.0f, lifeRatioRemaining * 2), 0, 1.0f));
 		}
 	}
@@ -3361,7 +3388,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (this.selectedUnit == null) {
 			return;
 		}
-		if (this.selectedUnit.getSimulationUnit().isHidden()) {
+		if (this.selectedUnit.getSimulationUnit().isHidden() || !this.selectedUnit.getSimulationUnit()
+				.isVisible(war3MapViewer.simulation, war3MapViewer.getLocalPlayerIndex())) {
 			removeSubGroupHighlightSelectedUnitFromSelection();
 		}
 	}
@@ -3388,9 +3416,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void manaChanged() {
-		this.rootFrame.setText(this.unitManaText,
-				FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMana()) + " / "
-						+ FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMaximumMana()));
+		final int maximumMana = this.selectedUnit.getSimulationUnit().getMaximumMana();
+		if (maximumMana > 0) {
+			this.rootFrame.setText(this.unitManaText,
+					FastNumberFormat.formatWholeNumber(this.selectedUnit.getSimulationUnit().getMana()) + " / "
+							+ maximumMana);
+		}
+		else {
+			this.rootFrame.setText(this.unitManaText, "");
+		}
 	}
 
 	@Override
@@ -3473,7 +3507,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		clearCommandCard();
 		final AbilityDataUI abilityDataUI = this.war3MapViewer.getAbilityDataUI();
 		final int menuOrderId = getSubMenuOrderId();
-		if ((this.activeCommand != null) && (this.draggingItem == null)) {
+		if (this.activeCommand != null && this.draggingItem == null) {
 			final IconUI cancelUI = abilityDataUI.getCancelUI();
 			commandButton(cancelUI.getButtonPositionX(), cancelUI.getButtonPositionY(), cancelUI.getIcon(), 0,
 					menuOrderId, 0, false, false, true, cancelUI.getToolTip(), cancelUI.getUberTip(),
@@ -3521,7 +3555,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				advanceSelectedSubGroup();
 				this.war3MapViewer.getUiSounds().getSound("SubGroupSelectionChange").play(this.uiScene.audioContext, 0,
 						0, 0);
+				return true;
 			}
+		}
+		if (keycode == Input.Keys.ESCAPE) {
+			this.unitOrderListener.issueGuiPlayerEvent(JassGameEventsWar3.EVENT_PLAYER_END_CINEMATIC.getEventId());
+			return true;
 		}
 		final String keyString = Input.Keys.toString(keycode);
 		final char c = keyString.length() == 1 ? keyString.charAt(0) : ' ';
@@ -3643,8 +3682,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									clickLocationTemp2, pointTargetReceiver);
 							final Vector2 target = pointTargetReceiver.getTarget();
 							if (target != null) {
-								if ((this.activeCommand instanceof CAbilityAttack)
-										&& (this.activeCommandOrderId == OrderIds.attack)) {
+								if (this.activeCommand instanceof CAbilityAttack
+										&& this.activeCommandOrderId == OrderIds.attack) {
 									this.war3MapViewer.showConfirmation(clickLocationTemp, 1, 0, 0);
 								}
 								else {
@@ -3703,14 +3742,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 							}
 							else {
-								if ((this.activeCommandUnitTargetFilter.lastFailureMessage != null)
+								if (this.activeCommandUnitTargetFilter.lastFailureMessage != null
 										&& !this.activeCommandUnitTargetFilter.lastFailureMessage.isEmpty()) {
 									showInterfaceError(this.activeCommandUnit.getSimulationUnit().getPlayerIndex(),
 											this.activeCommandUnitTargetFilter.lastFailureMessage);
 								}
 								else {
 									final String externStringKey = pointTargetReceiver.getExternStringKey();
-									if ((externStringKey != null) && !externStringKey.isEmpty()) {
+									if (externStringKey != null && !externStringKey.isEmpty()) {
 										showInterfaceError(this.activeCommandUnit.getSimulationUnit().getPlayerIndex(),
 												externStringKey);
 									}
@@ -3727,8 +3766,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			else {
 				if (button == Input.Buttons.RIGHT) {
-					if ((getSelectedUnit() != null) && (getSelectedUnit().getSimulationUnit()
-							.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())) {
+					if (getSelectedUnit() != null && getSelectedUnit().getSimulationUnit()
+							.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()) {
 						RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 								this.anyClickableUnitFilter);
 						if (rayPickUnit == null) {
@@ -3894,7 +3933,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	private void rightClickMove(final int screenX, final float worldScreenY) {
 		this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY,
-				(getSelectedUnit() != null) && getSelectedUnit().getSimulationUnit().isMovementOnWaterAllowed(), true);
+				getSelectedUnit() != null && getSelectedUnit().getSimulationUnit().isMovementOnWaterAllowed(), true);
 		this.war3MapViewer.showConfirmation(clickLocationTemp, 0, 1, 0);
 		clickLocationTemp2.set(clickLocationTemp.x, clickLocationTemp.y);
 
@@ -3969,9 +4008,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.selectedUnits = selectedUnits;
 		if (!selectedUnits.isEmpty()) {
 			final RenderUnit unit = selectedUnits.get(0);
-			boolean selectionChanged = (unit != this.selectedUnit)
-					|| (prevSelectedUnits.size() != selectedUnits.size());
-			for (int i = 0; (i < prevSelectedUnits.size()) && (i < selectedUnits.size()); i++) {
+			boolean selectionChanged = unit != this.selectedUnit || prevSelectedUnits.size() != selectedUnits.size();
+			for (int i = 0; i < prevSelectedUnits.size() && i < selectedUnits.size(); i++) {
 				if (prevSelectedUnits.get(i) != selectedUnits.get(i)) {
 					selectionChanged = true;
 				}
@@ -3995,7 +4033,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
 					}
 					else {
-						if ((this.selectedSoundCount >= 3) && (pissedSoundCount > 0)) {
+						if (this.selectedSoundCount >= 3 && pissedSoundCount > 0) {
 							soundIndex = this.selectedSoundCount - 3;
 							ackSoundToPlay = unit.soundset.pissed;
 						}
@@ -4003,10 +4041,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							soundIndex = (int) (Math.random() * ackSoundToPlay.getSoundCount());
 						}
 					}
-					if ((ackSoundToPlay != null) && ackSoundToPlay
+					if (ackSoundToPlay != null && ackSoundToPlay
 							.playUnitResponse(this.war3MapViewer.worldScene.audioContext, unit, soundIndex)) {
 						this.selectedSoundCount++;
-						if ((this.selectedSoundCount - 3) >= pissedSoundCount) {
+						if (this.selectedSoundCount - 3 >= pissedSoundCount) {
 							this.selectedSoundCount = 0;
 						}
 						USAudio = ackSoundToPlay;
@@ -4074,7 +4112,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						final List<RenderWidget> selectedWidgets = new ArrayList<>();
 						boolean foundGoal = false;
 						for (final RenderUnit unit : this.dragSelectPreviewUnits) {
-							if ((unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())
+							if (unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()
 									&& !unit.getSimulationUnit().isBuilding()) {
 								foundGoal = true;
 								selectedWidgets.add(unit);
@@ -4101,18 +4139,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				else {
 					if (this.allowDrag) {
-						if ((button == Input.Buttons.LEFT) && (this.mouseOverUnit != null)
+						if (button == Input.Buttons.LEFT && this.mouseOverUnit != null
 								&& isUnitSelectable(this.mouseOverUnit)) {
 							final long currentMillis = TimeUtils.millis();
 							final List<RenderWidget> unitList = new ArrayList<>();
 							final boolean shiftDown = isShiftDown();
-							final boolean controlDown = isControlDown()
-									|| (((currentMillis - this.lastUnitClickTime) < 500)
-											&& (this.mouseOverUnit == this.lastClickUnit));
+							final boolean controlDown = isControlDown() || currentMillis - this.lastUnitClickTime < 500
+									&& this.mouseOverUnit == this.lastClickUnit;
 							if (shiftDown) {
 								unitList.addAll(this.selectedUnits);
 							}
-							if ((this.mouseOverUnit instanceof RenderUnit) && controlDown) {
+							if (this.mouseOverUnit instanceof RenderUnit && controlDown) {
 								processSelectNearbyUnits(unitList, shiftDown, (RenderUnit) this.mouseOverUnit);
 							}
 							else {
@@ -4259,7 +4296,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final int manaCost = mousedUIFrame.getToolTipManaCost();
 		final String toolTip = mousedUIFrame.getToolTip();
 		final String uberTip = mousedUIFrame.getUberTip();
-		if ((toolTip == null) || (uberTip == null)) {
+		if (toolTip == null || uberTip == null) {
 			this.tooltipFrame.setVisible(false);
 		}
 		else {
@@ -4410,7 +4447,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				else {
 					final String externStringKey = receiver.getExternStringKey();
-					if ((externStringKey != null) && !externStringKey.isEmpty()) {
+					if (externStringKey != null && !externStringKey.isEmpty()) {
 						showInterfaceError(simulationUnit.getPlayerIndex(), externStringKey);
 					}
 				}
@@ -4459,7 +4496,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (this.disposed) {
 				return;
 			}
-			if (this.sourceUnit.getSimulationUnit().isHidden()) {
+			if (this.sourceUnit.getSimulationUnit().isHidden() || !this.sourceUnit.getSimulationUnit()
+					.isVisible(war3MapViewer.simulation, war3MapViewer.getLocalPlayerIndex())) {
 				removeSourceUnitFromSelection();
 			}
 		}
@@ -4687,7 +4725,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	@Override
 	public void removedUnit(final CUnit whichUnit) {
 		final RenderUnit renderUnit = this.war3MapViewer.getRenderPeer(whichUnit);
-		if ((this.selectedUnits != null) && this.selectedUnits.contains(renderUnit)) {
+		if (this.selectedUnits != null && this.selectedUnits.contains(renderUnit)) {
 			final List<RenderUnit> newSelectedUnits = new ArrayList<>(this.selectedUnits);
 			newSelectedUnits.remove(renderUnit);
 			selectUnits(newSelectedUnits);
@@ -4723,7 +4761,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void mouseDown(final GameUI gameUI, final Viewport uiViewport) {
-			if ((getCameraManager().getTargetControllerUnit() == null) && (MeleeUI.this.selectedUnit != null)) {
+			if (getCameraManager().getTargetControllerUnit() == null && MeleeUI.this.selectedUnit != null) {
 				getCameraManager().setTargetController(MeleeUI.this.selectedUnit, 0, 0, false);
 			}
 			this.mouseDown = true;

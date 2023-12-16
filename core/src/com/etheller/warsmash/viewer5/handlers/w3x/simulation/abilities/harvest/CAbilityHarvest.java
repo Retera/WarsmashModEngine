@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -41,9 +42,9 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	private CWidget lastHarvestTarget;
 	private CBehaviorAttack behaviorTreeAttack;
 
-	public CAbilityHarvest(final int handleId, final War3ID alias, final int damageToTree, final int goldCapacity,
+	public CAbilityHarvest(final int handleId, final War3ID code, final War3ID alias, final int damageToTree, final int goldCapacity,
 			final int lumberCapacity, final float castRange, final float duration) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.damageToTree = damageToTree;
 		this.goldCapacity = goldCapacity;
 		this.lumberCapacity = lumberCapacity;
@@ -258,5 +259,20 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 
 	public void setDuration(final float duration) {
 		this.duration = duration;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

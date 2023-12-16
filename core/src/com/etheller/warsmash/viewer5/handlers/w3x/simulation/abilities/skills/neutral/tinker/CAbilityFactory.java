@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.tinker;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -21,36 +21,36 @@ public class CAbilityFactory extends CAbilityPassiveSpellBase {
 
 	private int lastSpawnTick;
 
-	public CAbilityFactory(int handleId, War3ID alias) {
-		super(handleId, alias);
+	public CAbilityFactory(final int handleId, final War3ID code, final War3ID alias) {
+		super(handleId, code, alias);
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		this.spawnUnitId = War3ID.fromString(worldEditorAbility.getFieldAsString(AbilityFields.Factory.SPAWN_UNIT_ID,
-				level));
-		this.leashRange = worldEditorAbility.getFieldAsFloat(AbilityFields.Factory.LEASH_RANGE, level);
-		this.spawnInterval = worldEditorAbility.getFieldAsFloat(AbilityFields.Factory.SPAWN_INTERVAL, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.spawnUnitId = War3ID.fromString(worldEditorAbility.getFieldAsString(AbilityFields.UNIT_ID + level, 0));
+		this.leashRange = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.spawnInterval = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 	}
 
 	@Override
-	public void onTick(CSimulation game, CUnit factory) {
-		int gameTurnTick = game.getGameTurnTick();
-		if (gameTurnTick >= lastSpawnTick + (int) (StrictMath.ceil(this.spawnInterval / WarsmashConstants.SIMULATION_STEP_TIME))) {
+	public void onTick(final CSimulation game, final CUnit factory) {
+		final int gameTurnTick = game.getGameTurnTick();
+		if (gameTurnTick >= (lastSpawnTick
+				+ (int) (StrictMath.ceil(this.spawnInterval / WarsmashConstants.SIMULATION_STEP_TIME)))) {
 
-			float facing = factory.getFacing();
-			float facingRad = (float) StrictMath.toRadians(facing);
-			float x = factory.getX() + ((float) StrictMath.cos(facingRad) * getAreaOfEffect());
-			float y = factory.getY() + ((float) StrictMath.sin(facingRad) * getAreaOfEffect());
+			final float facing = factory.getFacing();
+			final float facingRad = (float) StrictMath.toRadians(facing);
+			final float x = factory.getX() + ((float) StrictMath.cos(facingRad) * getAreaOfEffect());
+			final float y = factory.getY() + ((float) StrictMath.sin(facingRad) * getAreaOfEffect());
 
-			CUnit spawnedUnit = game.createUnitSimple(this.spawnUnitId, factory.getPlayerIndex(), x, y, facing);
+			final CUnit spawnedUnit = game.createUnitSimple(this.spawnUnitId, factory.getPlayerIndex(), x, y, facing);
 			game.unitSoundEffectEvent(factory, getAlias());
 			spawnedUnit.addClassification(CUnitClassification.SUMMONED);
-			spawnedUnit.add(game, new CBuffTimedLife(game.getHandleIdAllocator().createId(), this.buffId,
-					getDuration(), false));
-			AbilityTarget rallyPoint = factory.getRallyPoint();
-			if(rallyPoint != null) {
+			spawnedUnit.add(game,
+					new CBuffTimedLife(game.getHandleIdAllocator().createId(), this.buffId, getDuration(), false));
+			final AbilityTarget rallyPoint = factory.getRallyPoint();
+			if (rallyPoint != null) {
 				spawnedUnit.order(game, OrderIds.smart, rallyPoint);
 			}
 			lastSpawnTick = gameTurnTick;
@@ -61,7 +61,7 @@ public class CAbilityFactory extends CAbilityPassiveSpellBase {
 		return spawnUnitId;
 	}
 
-	public void setSpawnUnitId(War3ID spawnUnitId) {
+	public void setSpawnUnitId(final War3ID spawnUnitId) {
 		this.spawnUnitId = spawnUnitId;
 	}
 
@@ -69,7 +69,7 @@ public class CAbilityFactory extends CAbilityPassiveSpellBase {
 		return leashRange;
 	}
 
-	public void setLeashRange(float leashRange) {
+	public void setLeashRange(final float leashRange) {
 		this.leashRange = leashRange;
 	}
 
@@ -77,7 +77,7 @@ public class CAbilityFactory extends CAbilityPassiveSpellBase {
 		return spawnInterval;
 	}
 
-	public void setSpawnInterval(float spawnInterval) {
+	public void setSpawnInterval(final float spawnInterval) {
 		this.spawnInterval = spawnInterval;
 	}
 
@@ -85,7 +85,7 @@ public class CAbilityFactory extends CAbilityPassiveSpellBase {
 		return buffId;
 	}
 
-	public void setBuffId(War3ID buffId) {
+	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;
 	}
 }

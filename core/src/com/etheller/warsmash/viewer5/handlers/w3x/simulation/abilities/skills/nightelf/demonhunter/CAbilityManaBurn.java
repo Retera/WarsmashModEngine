@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.demonhunter;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -11,7 +11,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -29,7 +28,7 @@ public class CAbilityManaBurn extends CAbilityTargetSpellBase {
 	private float boltDelay;
 	private float boltLifetime;
 
-	public CAbilityManaBurn(int handleId, War3ID alias) {
+	public CAbilityManaBurn(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -39,17 +38,17 @@ public class CAbilityManaBurn extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
+	public void populateData(final GameObject worldEditorAbility, final int level) {
 		this.lightningId = AbstractCAbilityTypeDefinition.getLightningId(worldEditorAbility, level);
-		this.maxManaDrained = worldEditorAbility.getFieldAsFloat(AbilityFields.ManaBurn.MAX_MANA_DRAINED, level);
-		this.boltDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.ManaBurn.BOLT_DELAY, level);
-		this.boltLifetime = worldEditorAbility.getFieldAsFloat(AbilityFields.ManaBurn.BOLT_LIFETIME, level);
+		this.maxManaDrained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		this.boltDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.boltLifetime = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-									   AbilityTargetCheckReceiver<CWidget> receiver) {
-		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
 			if (targetUnit.getMana() > 0) {
 				super.innerCheckCanTarget(game, unit, orderId, target, receiver);
@@ -64,15 +63,16 @@ public class CAbilityManaBurn extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
-		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
+		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
-			SimulationRenderComponentLightning lightning = simulation.createLightning(caster, lightningId, targetUnit);
-			simulation.createSpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
-			int boltDelayEndTick =
-					simulation.getGameTurnTick() + (int) StrictMath.ceil(boltDelay / WarsmashConstants.SIMULATION_STEP_TIME);
-			int boltLifetimeEndTick =
-					simulation.getGameTurnTick() + (int) StrictMath.ceil(boltLifetime / WarsmashConstants.SIMULATION_STEP_TIME);
+			final SimulationRenderComponentLightning lightning = simulation.createLightning(caster, lightningId,
+					targetUnit);
+			simulation.createTemporarySpellEffectOnUnit(targetUnit, getAlias(), CEffectType.TARGET);
+			final int boltDelayEndTick = simulation.getGameTurnTick()
+					+ (int) StrictMath.ceil(boltDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+			final int boltLifetimeEndTick = simulation.getGameTurnTick()
+					+ (int) StrictMath.ceil(boltLifetime / WarsmashConstants.SIMULATION_STEP_TIME);
 			simulation.registerEffect(new CEffectManaBurnBolt(boltLifetimeEndTick, boltDelayEndTick,
 					this.maxManaDrained, caster, targetUnit, lightning));
 		}
@@ -88,8 +88,9 @@ public class CAbilityManaBurn extends CAbilityTargetSpellBase {
 		private final SimulationRenderComponentLightning boltFx;
 		private int boltDelayEndTick;
 
-		public CEffectManaBurnBolt(int boltLifetimeEndTick, int boltDelayEndTick, float maxManaDrained, CUnit caster,
-								   CUnit targetUnit, SimulationRenderComponentLightning boltFx) {
+		public CEffectManaBurnBolt(final int boltLifetimeEndTick, final int boltDelayEndTick,
+				final float maxManaDrained, final CUnit caster, final CUnit targetUnit,
+				final SimulationRenderComponentLightning boltFx) {
 			this.boltLifetimeEndTick = boltLifetimeEndTick;
 			this.boltDelayEndTick = boltDelayEndTick;
 			this.maxManaDrained = maxManaDrained;
@@ -99,18 +100,18 @@ public class CAbilityManaBurn extends CAbilityTargetSpellBase {
 		}
 
 		@Override
-		public boolean update(CSimulation game) {
-			int gameTurnTick = game.getGameTurnTick();
+		public boolean update(final CSimulation game) {
+			final int gameTurnTick = game.getGameTurnTick();
 			if (gameTurnTick >= boltDelayEndTick) {
-				float targetMana = targetUnit.getMana();
-				float manaDamage = StrictMath.min(targetMana, this.maxManaDrained);
+				final float targetMana = targetUnit.getMana();
+				final float manaDamage = StrictMath.min(targetMana, this.maxManaDrained);
 				targetUnit.setMana(targetMana - manaDamage);
-				targetUnit.damage(game, caster, CAttackType.SPELLS, CDamageType.FIRE,
+				targetUnit.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.FIRE,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), manaDamage);
 				game.spawnTextTag(targetUnit, caster.getPlayerIndex(), TextTagConfigType.MANA_BURN, (int) manaDamage);
 				this.boltDelayEndTick = Integer.MAX_VALUE;
 			}
-			boolean done = gameTurnTick >= boltLifetimeEndTick;
+			final boolean done = gameTurnTick >= boltLifetimeEndTick;
 			if (done) {
 				boltFx.remove();
 			}

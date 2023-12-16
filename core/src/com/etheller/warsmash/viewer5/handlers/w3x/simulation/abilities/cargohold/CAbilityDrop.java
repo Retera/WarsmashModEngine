@@ -4,6 +4,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -17,8 +18,8 @@ public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility 
 	private float castRange;
 	private CBehaviorDrop behaviorDrop;
 
-	public CAbilityDrop(final int handleId, final War3ID alias, final float castRange) {
-		super(handleId, alias);
+	public CAbilityDrop(final int handleId, final War3ID code, final War3ID alias, final float castRange) {
+		super(handleId, code, alias);
 		this.castRange = castRange;
 	}
 
@@ -105,5 +106,20 @@ public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility 
 
 	public void setCastRange(final float castRange) {
 		this.castRange = castRange;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

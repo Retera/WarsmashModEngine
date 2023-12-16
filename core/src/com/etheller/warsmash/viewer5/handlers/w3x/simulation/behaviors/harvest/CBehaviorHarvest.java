@@ -216,7 +216,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 	}
 
 	private void dropResources() {
-		if (this.abilityHarvest.getCarriedResourceType() != null) {
+		if (this.abilityHarvest.getCarriedResourceType() != null && this.abilityHarvest.getCarriedResourceAmount() > 0) {
 			switch (this.abilityHarvest.getCarriedResourceType()) {
 			case FOOD:
 				throw new IllegalStateException("Unit used Harvest skill to carry FOOD resource!");
@@ -234,6 +234,11 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 	@Override
 	public void endMove(final CSimulation game, final boolean interrupted) {
 
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
 	}
 
 }

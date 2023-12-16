@@ -33,7 +33,7 @@ public class Sequence {
 		primaryTags.clear();
 		secondaryTags.clear();
 		TokenLoop:
-		for (final String token : name.split("\\s+")) {
+		for (final String token : name.split("\\s+|,")) {
 			final String upperCaseToken = token.toUpperCase();
 			for (final PrimaryTag primaryTag : PrimaryTag.values()) {
 				if (upperCaseToken.equals(primaryTag.name())) {

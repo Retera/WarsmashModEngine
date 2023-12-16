@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityAcolyteHarvest;
@@ -19,17 +20,17 @@ public class CAbilityTypeAcolyteHarvest extends CAbilityType<CAbilityTypeAcolyte
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeAcolyteHarvestLevelData levelData = getLevelData(0);
-		return new CAbilityAcolyteHarvest(handleId, getAlias(), levelData.getCastRange(), levelData.getDuration());
+		return new CAbilityAcolyteHarvest(handleId, getCode(), getAlias(), levelData.getCastRange(), levelData.getDuration());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 		final CAbilityTypeAcolyteHarvestLevelData levelData = getLevelData(level - 1);
 		final CAbilityAcolyteHarvest heroAbility = ((CAbilityAcolyteHarvest) existingAbility);
 
 		heroAbility.setCastRange(levelData.getCastRange());
 		heroAbility.setDuration(levelData.getDuration());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 	}
 }

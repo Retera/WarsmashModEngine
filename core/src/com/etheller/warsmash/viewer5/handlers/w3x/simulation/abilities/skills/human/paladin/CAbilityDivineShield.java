@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -15,7 +15,7 @@ public class CAbilityDivineShield extends CAbilityNoTargetSpellBase {
 	private boolean canDeactivate;
 	private War3ID buffId;
 
-	public CAbilityDivineShield(int handleId, War3ID alias) {
+	public CAbilityDivineShield(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -25,15 +25,15 @@ public class CAbilityDivineShield extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(MutableObjectData.MutableGameObject worldEditorAbility, int level) {
-		this.canDeactivate = worldEditorAbility.getFieldAsBoolean(AbilityFields.DivineShield.CAN_DEACTIVATE, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.canDeactivate = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_A + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 	}
 
 	@Override
-	public boolean doEffect(CSimulation simulation, CUnit caster, AbilityTarget target) {
-		caster.add(simulation, new CBuffDivineShield(simulation.getHandleIdAllocator().createId(), this.buffId,
-				getDuration()));
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
+		caster.add(simulation,
+				new CBuffDivineShield(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration()));
 		return false;
 	}
 }

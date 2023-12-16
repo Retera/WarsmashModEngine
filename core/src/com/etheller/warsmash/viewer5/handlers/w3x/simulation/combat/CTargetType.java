@@ -1,42 +1,14 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat;
 
 import java.util.EnumSet;
+import java.util.List;
 
 public enum CTargetType {
-	AIR,
-	ALIVE,
-	ALLIES,
-	DEAD,
-	DEBRIS,
-	ENEMIES,
-	GROUND,
-	HERO,
-	INVULNERABLE,
-	ITEM,
-	MECHANICAL,
-	NEUTRAL,
-	NONE,
-	NONHERO,
-	NONSAPPER,
-	NOTSELF,
-	ORGANIC,
-	PLAYERUNITS,
-	SAPPER,
-	SELF,
-	STRUCTURE,
-	TERRAIN,
-	TREE,
-	VULNERABLE,
-	WALL,
-	WARD,
-	ANCIENT,
-	NONANCIENT,
-	FRIEND,
-	BRIDGE,
-	DECORATION,
+	AIR, ALIVE, ALLIES, DEAD, DEBRIS, ENEMIES, GROUND, HERO, INVULNERABLE, ITEM, MECHANICAL, NEUTRAL, NONE, NONHERO,
+	NONSAPPER, NOTSELF, ORGANIC, PLAYERUNITS, SAPPER, SELF, STRUCTURE, TERRAIN, TREE, VULNERABLE, WALL, WARD, ANCIENT,
+	NONANCIENT, FRIEND, BRIDGE, DECORATION,
 	// BELOW: internal values:
-	NON_MAGIC_IMMUNE,
-	NON_ETHEREAL
+	NON_MAGIC_IMMUNE, NON_ETHEREAL
 
 	;
 
@@ -134,6 +106,17 @@ public enum CTargetType {
 	public static EnumSet<CTargetType> parseTargetTypeSet(final String targetTypeString) {
 		final EnumSet<CTargetType> types = EnumSet.noneOf(CTargetType.class);
 		for (final String type : targetTypeString.split(",")) {
+			final CTargetType parsedType = parseTargetType(type);
+			if (parsedType != null) {
+				types.add(parsedType);
+			}
+		}
+		return types;
+	}
+
+	public static EnumSet<CTargetType> parseTargetTypeSet(final List<String> targetTypeStrings) {
+		final EnumSet<CTargetType> types = EnumSet.noneOf(CTargetType.class);
+		for (final String type : targetTypeStrings) {
 			final CTargetType parsedType = parseTargetType(type);
 			if (parsedType != null) {
 				types.add(parsedType);

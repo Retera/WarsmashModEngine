@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic;
 
-import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.Aliased;
 
 public interface GenericSingleIconActiveAbility extends CLevelingAbility, SingleOrderAbility, Aliased {
@@ -16,8 +15,12 @@ public interface GenericSingleIconActiveAbility extends CLevelingAbility, Single
 	int getUIGoldCost();
 
 	int getUILumberCost();
+	
+	int getUIFoodCost();
 
 	int getUIManaCost();
+
+	int getUsesRemaining();
 
 	float getUIAreaOfEffect();
 

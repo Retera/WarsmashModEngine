@@ -32,9 +32,9 @@ public class CAbilityBlightedGoldMine extends CAbilityOverlayedMine {
 
 	private final List<SimulationRenderComponent> spellEffects = new ArrayList<>();
 
-	public CAbilityBlightedGoldMine(final int handleId, final War3ID alias, final int goldPerInterval,
+	public CAbilityBlightedGoldMine(final int handleId, final War3ID code, final War3ID alias, final int goldPerInterval,
 			final float intervalDuration, final int maxNumberOfMiners, final float radiusOfMiningRing) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.goldPerInterval = goldPerInterval;
 		this.intervalDuration = intervalDuration;
 		this.maxNumberOfMiners = maxNumberOfMiners;

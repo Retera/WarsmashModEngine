@@ -7,6 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericAliasedAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -64,10 +65,10 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	private final SimulationRenderComponent[] selectedPlayerUnitFx = new SimulationRenderComponent[WarsmashConstants.MAX_PLAYERS];
 	private final Rectangle recycleRect = new Rectangle();
 
-	public CAbilityNeutralBuilding(final int handleId, final War3ID alias, final float activationRadius,
+	public CAbilityNeutralBuilding(final int handleId, final War3ID code, final War3ID alias, final float activationRadius,
 			final int interactionType, final boolean showSelectUnitButton, final boolean showUnitIndicator,
 			final boolean onlySelectAllies) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.activationRadius = activationRadius;
 		this.interactionType = interactionType;
 		this.showSelectUnitButton = showSelectUnitButton;
@@ -249,8 +250,23 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	private void selectUnit(final CSimulation game, final CUnit enumUnit, final int playerIndex) {
 		selectedPlayerUnit[playerIndex] = enumUnit;
 		if (showUnitIndicator) {
-			selectedPlayerUnitFx[playerIndex] = game.createSpellEffectOnUnit(enumUnit, getAlias(), CEffectType.TARGET,
+			selectedPlayerUnitFx[playerIndex] = game.createPersistentSpellEffectOnUnit(enumUnit, getAlias(), CEffectType.TARGET,
 					0);
 		}
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

@@ -12,17 +12,19 @@ public class CDestructableType {
 	private final EnumSet<CTargetType> targetedAs;
 	private final String armorType;
 	private final int buildTime;
+	private final float occlusionHeight;
 	private final BufferedImage pathingPixelMap;
 	private final BufferedImage pathingDeathPixelMap;
 
 	public CDestructableType(final String name, final float maxLife, final EnumSet<CTargetType> targetedAs,
-							 final String armorType, final int buildTime, final BufferedImage pathingPixelMap,
-							 final BufferedImage pathingDeathPixelMap) {
+			final String armorType, final int buildTime, final float occlusionHeight,
+			final BufferedImage pathingPixelMap, final BufferedImage pathingDeathPixelMap) {
 		this.name = name;
 		this.maxLife = maxLife;
 		this.targetedAs = targetedAs;
 		this.armorType = armorType;
 		this.buildTime = buildTime;
+		this.occlusionHeight = occlusionHeight;
 		this.pathingPixelMap = pathingPixelMap;
 		this.pathingDeathPixelMap = pathingDeathPixelMap;
 	}
@@ -45,6 +47,10 @@ public class CDestructableType {
 
 	public int getBuildTime() {
 		return this.buildTime;
+	}
+
+	public float getOcclusionHeight() {
+		return occlusionHeight;
 	}
 
 	public BufferedImage getPathingPixelMap() {

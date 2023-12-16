@@ -100,6 +100,7 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 				for (final CAbility ability : constructedStructure.getAbilities()) {
 					ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
 				}
+				unit.checkDisabledAbilities(simulation, true);
 				final float deltaX = this.unit.getX() - this.target.getX();
 				final float deltaY = this.unit.getY() - this.target.getY();
 				final float delta = (float) Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
@@ -176,6 +177,11 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 			final CUnitType unitTypeToCreate = game.getUnitData().getUnitType(this.orderId);
 			refund(player, unitTypeToCreate);
 		}
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
 	}
 
 }

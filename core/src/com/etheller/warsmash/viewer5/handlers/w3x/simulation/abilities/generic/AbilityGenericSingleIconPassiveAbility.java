@@ -4,6 +4,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -16,8 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
  */
 public class AbilityGenericSingleIconPassiveAbility extends AbstractGenericAliasedAbility implements GenericSingleIconPassiveAbility {
 
-	public AbilityGenericSingleIconPassiveAbility(final War3ID rawcode, final int handleId) {
-		super(handleId, rawcode);
+	public AbilityGenericSingleIconPassiveAbility(final War3ID code, final War3ID alias, final int handleId) {
+		super(handleId, code, alias);
 	}
 
 	@Override
@@ -89,6 +90,21 @@ public class AbilityGenericSingleIconPassiveAbility extends AbstractGenericAlias
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.PASSIVE;
 	}
 
 }

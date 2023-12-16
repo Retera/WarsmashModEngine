@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorAttackMove implements CRangedBehavior {
@@ -64,6 +65,21 @@ public class CBehaviorAttackMove implements CRangedBehavior {
 
 	@Override
 	public void endMove(final CSimulation game, final boolean interrupted) {
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
+	@Override
+	public AbilityTarget getTarget() {
+		return this.target;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
 	}
 
 }

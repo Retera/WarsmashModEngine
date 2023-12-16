@@ -5,8 +5,8 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.etheller.warsmash.units.manager.MutableObjectData;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
@@ -17,22 +17,23 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderController;
 
 public class CDestructableData {
-	private static final War3ID NAME = War3ID.fromString("bnam");
-	private static final War3ID HIT_POINT_MAXIMUM = War3ID.fromString("bhps");
-	private static final War3ID TARGETED_AS = War3ID.fromString("btar");
-	private static final War3ID ARMOR_TYPE = War3ID.fromString("barm");
+	private static final String NAME = "Name"; // replaced from 'bnam'
+	private static final String HIT_POINT_MAXIMUM = "HP"; // replaced from 'bhps'
+	private static final String TARGETED_AS = "targType"; // replaced from 'btar'
+	private static final String ARMOR_TYPE = "armor"; // replaced from 'barm'
 
-	private static final War3ID BUILD_TIME = War3ID.fromString("bbut");
-	private static final War3ID REPAIR_TIME = War3ID.fromString("bret");
-	private static final War3ID GOLD_REPAIR = War3ID.fromString("breg");
-	private static final War3ID LUMBER_REPAIR = War3ID.fromString("brel");
+	private static final String BUILD_TIME = "buildTime"; // replaced from 'bbut'
+	private static final String REPAIR_TIME = "repairTime"; // replaced from 'bret'
+	private static final String GOLD_REPAIR = "goldRep"; // replaced from 'breg'
+	private static final String LUMBER_REPAIR = "lumberRep"; // replaced from 'brel'
 
-	private final MutableObjectData unitData;
+	private static final String OCCLUSION_HEIGHT = "occH";
+
+	private final ObjectData unitData;
 	private final Map<War3ID, CDestructableType> unitIdToUnitType = new HashMap<>();
 	private final SimulationRenderController simulationRenderController;
 
-	public CDestructableData(final MutableObjectData unitData,
-			final SimulationRenderController simulationRenderController) {
+	public CDestructableData(final ObjectData unitData, final SimulationRenderController simulationRenderController) {
 		this.unitData = unitData;
 		this.simulationRenderController = simulationRenderController;
 	}
@@ -40,7 +41,7 @@ public class CDestructableData {
 	public CDestructable create(final CSimulation simulation, final War3ID typeId, final float x, final float y,
 			final HandleIdAllocator handleIdAllocator, final RemovablePathingMapInstance pathingInstance,
 			final RemovablePathingMapInstance pathingInstanceDeath) {
-		final MutableGameObject unitType = this.unitData.get(typeId);
+		final GameObject unitType = this.unitData.get(typeId);
 		final int handleId = handleIdAllocator.createId();
 
 		final CDestructableType unitTypeInstance = getUnitTypeInstance(typeId, unitType);
@@ -52,7 +53,7 @@ public class CDestructableData {
 		return destructable;
 	}
 
-	private CDestructableType getUnitTypeInstance(final War3ID typeId, final MutableGameObject unitType) {
+	private CDestructableType getUnitTypeInstance(final War3ID typeId, final GameObject unitType) {
 		CDestructableType unitTypeInstance = this.unitIdToUnitType.get(typeId);
 		if (unitTypeInstance == null) {
 			final BufferedImage buildingPathingPixelMap = this.simulationRenderController
@@ -62,11 +63,12 @@ public class CDestructableData {
 			final String name = unitType.getFieldAsString(NAME, 0);
 			final float life = unitType.getFieldAsFloat(HIT_POINT_MAXIMUM, 0);
 			final EnumSet<CTargetType> targetedAs = CTargetType
-					.parseTargetTypeSet(unitType.getFieldAsString(TARGETED_AS, 0));
+					.parseTargetTypeSet(unitType.getFieldAsList(TARGETED_AS));
 			final String armorType = unitType.getFieldAsString(ARMOR_TYPE, 0);
 			final int buildTime = unitType.getFieldAsInteger(BUILD_TIME, 0);
+			final float occlusionHeight = unitType.getFieldAsFloat(OCCLUSION_HEIGHT, 0);
 
-			unitTypeInstance = new CDestructableType(name, life, targetedAs, armorType, buildTime,
+			unitTypeInstance = new CDestructableType(name, life, targetedAs, armorType, buildTime, occlusionHeight,
 					buildingPathingPixelMap, buildingPathingDeathPixelMap);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 		}
@@ -78,7 +80,7 @@ public class CDestructableData {
 		if (unitTypeInstance != null) {
 			return unitTypeInstance;
 		}
-		final MutableGameObject unitType = this.unitData.get(rawcode);
+		final GameObject unitType = this.unitData.get(rawcode.asStringValue());
 		if (unitType == null) {
 			return null;
 		}

@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorUproot implements CBehavior {
@@ -60,4 +61,13 @@ public class CBehaviorUproot implements CBehavior {
 		return OrderIds.unroot;
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
 }

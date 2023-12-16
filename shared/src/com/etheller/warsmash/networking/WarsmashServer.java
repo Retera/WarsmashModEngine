@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +16,7 @@ import net.warsmash.uberserver.GamingNetwork;
 
 public class WarsmashServer implements ClientToServerListener {
 	private static final boolean VERBOSE_LOGGING = false;
-	private static final int MAGIC_DELAY_OFFSET = 0; //4
+	private static final int MAGIC_DELAY_OFFSET = 4; // 4
 	private final OrderedUdpServer udpServer;
 	private final Set<SocketAddress> socketAddressesKnown = new HashSet<>();
 	private final Map<Long, Integer> sessionTokenToPermittedSlot;
@@ -192,6 +191,22 @@ public class WarsmashServer implements ClientToServerListener {
 			@Override
 			public void run() {
 				WarsmashServer.this.writer.unitCancelTrainingItem(playerIndex, unitHandleId, cancelIndex);
+				WarsmashServer.this.writer.send();
+			}
+		});
+	}
+
+	@Override
+	public void issueGuiPlayerEvent(final SocketAddress sourceAddress, final long sessionToken, final int eventId) {
+		System.out.println("issueGuiPlayerEvent from " + sourceAddress);
+		final int playerIndex = getPlayerIndex(sourceAddress, sessionToken);
+		if (playerIndex == -1) {
+			return;
+		}
+		this.turnActions.add(new Runnable() {
+			@Override
+			public void run() {
+				WarsmashServer.this.writer.issueGuiPlayerEvent(playerIndex, eventId);
 				WarsmashServer.this.writer.send();
 			}
 		});

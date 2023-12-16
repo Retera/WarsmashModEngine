@@ -1,12 +1,15 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget.UnitAnimationListenerImpl;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CDestructableBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -25,6 +28,8 @@ public class CDestructable extends CWidget {
 	private boolean blighted;
 	private Rectangle registeredEnumRectangle;
 
+	private List<CDestructableBuff> buffs;
+
 	public CDestructable(final int handleId, final float x, final float y, final float life,
 			final CDestructableType destTypeInstance, final RemovablePathingMapInstance pathingInstance,
 			final RemovablePathingMapInstance pathingInstanceDeath) {
@@ -32,6 +37,9 @@ public class CDestructable extends CWidget {
 		this.destType = destTypeInstance;
 		this.pathingInstance = pathingInstance;
 		this.pathingInstanceDeath = pathingInstanceDeath;
+		if (this.destType.getOcclusionHeight() > 0) {
+			this.pathingInstance.setBlocksVision();
+		}
 	}
 
 	@Override
@@ -62,17 +70,27 @@ public class CDestructable extends CWidget {
 	}
 
 	@Override
-	public void damage(final CSimulation simulation, final CUnit source, final CAttackType attackType,
-			CDamageType damageType, final String weaponType, final float damage) {
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage) {
 		if (isInvulnerable()) {
-			return;
+			return 0;
 		}
 		final boolean wasDead = isDead();
 		this.life -= damage;
-		simulation.destructableDamageEvent(this, weaponType, this.destType.getArmorType());
+		simulation.destructableDamageEvent(this, weaponSoundType, this.destType.getArmorType());
 		if (!wasDead && isDead()) {
 			kill(simulation);
 		}
+		return damage;
+	}
+
+	@Override
+	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage, final float bonusDamage) {
+		return this.damage(simulation, source, isAttack, isRanged, attackType, damageType, weaponSoundType,
+				damage + bonusDamage);
 	}
 
 	private void kill(final CSimulation simulation) {
@@ -81,6 +99,13 @@ public class CDestructable extends CWidget {
 		}
 		if (this.pathingInstanceDeath != null) {
 			this.pathingInstanceDeath.add();
+		}
+		if (this.buffs != null) {
+			for (int i = this.buffs.size() - 1; i >= 0; i--) {
+				// okay if it removes self from this during onDeath() because of reverse
+				// iteration order
+				this.buffs.get(i).onDeath(simulation, this);
+			}
 		}
 		fireDeathEvents(simulation);
 	}
@@ -96,7 +121,7 @@ public class CDestructable extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-								   final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
+			final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (targetsAllowed.containsAll(this.destType.getTargetedAs())) {
 			if (isDead()) {
 				if (targetsAllowed.contains(CTargetType.DEAD)) {
@@ -110,13 +135,17 @@ public class CDestructable extends CWidget {
 				receiver.targetCheckFailed(CommandStringErrorKeys.SOMETHING_IS_BLOCKING_THAT_TREE_STUMP);
 			}
 		} else {
-			if (this.destType.getTargetedAs().contains(CTargetType.TREE) && !targetsAllowed.contains(CTargetType.TREE)) {
+			if (this.destType.getTargetedAs().contains(CTargetType.TREE)
+					&& !targetsAllowed.contains(CTargetType.TREE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_TREES);
-			} else if (this.destType.getTargetedAs().contains(CTargetType.DEBRIS) && !targetsAllowed.contains(CTargetType.DEBRIS)) {
+			} else if (this.destType.getTargetedAs().contains(CTargetType.DEBRIS)
+					&& !targetsAllowed.contains(CTargetType.DEBRIS)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_DEBRIS);
-			} else if (this.destType.getTargetedAs().contains(CTargetType.WALL) && !targetsAllowed.contains(CTargetType.WALL)) {
+			} else if (this.destType.getTargetedAs().contains(CTargetType.WALL)
+					&& !targetsAllowed.contains(CTargetType.WALL)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WALLS);
-			} else if (this.destType.getTargetedAs().contains(CTargetType.BRIDGE) && !targetsAllowed.contains(CTargetType.BRIDGE)) {
+			} else if (this.destType.getTargetedAs().contains(CTargetType.BRIDGE)
+					&& !targetsAllowed.contains(CTargetType.BRIDGE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BRIDGES);
 			} else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
@@ -174,5 +203,18 @@ public class CDestructable extends CWidget {
 	@Override
 	public double distance(final float x, final float y) {
 		return StrictMath.sqrt(distanceSquaredNoCollision(x, y));
+	}
+
+	public void add(final CSimulation simulation, final CDestructableBuff buff) {
+		if (this.buffs == null) {
+			this.buffs = new ArrayList<>();
+		}
+		this.buffs.add(buff);
+		buff.onAdd(simulation, this);
+	}
+
+	public void remove(final CSimulation simulation, final CDestructableBuff buff) {
+		this.buffs.remove(buff);
+		buff.onRemove(simulation, this);
 	}
 }

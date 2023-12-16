@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
@@ -8,6 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -20,7 +20,7 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 	private CBehaviorHumanBuild buildBehavior;
 
 	public CAbilityHumanBuild(final int handleId, final List<War3ID> structuresBuilt) {
-		super(handleId, structuresBuilt);
+		super(handleId, War3ID.fromString("AHbu"), structuresBuilt);
 	}
 
 	@Override
@@ -64,6 +64,21 @@ public class CAbilityHumanBuild extends AbstractCAbilityBuild {
 	@Override
 	public <T> T visit(final CAbilityVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 
 }

@@ -97,4 +97,9 @@ public class CBehaviorRoot extends CAbstractRangedBehavior {
 	protected void resetBeforeMoving(final CSimulation simulation) {
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

@@ -57,13 +57,20 @@ public class Doodad {
 		this.editorId = stream.readInt();
 	}
 
-	public void save(final LittleEndianDataOutputStream stream, final int version) throws IOException {
+	public void save(final LittleEndianDataOutputStream stream, final int version, final War3MapW3i mapInformation)
+			throws IOException {
 		ParseUtils.writeWar3ID(stream, this.id);
 		;
 		stream.writeInt(this.variation);
 		ParseUtils.writeFloatArray(stream, this.location);
 		stream.writeFloat(this.angle);
 		ParseUtils.writeFloatArray(stream, this.scale);
+		if (((mapInformation.getGameVersionMajor() * 100) + mapInformation.getGameVersionMinor()) >= 132) {
+			War3ID skinToWrite = this.skinId;
+			if (skinToWrite == null) {
+				skinToWrite = this.id;
+			}
+		}
 		ParseUtils.writeUInt8(stream, this.flags);
 		ParseUtils.writeUInt8(stream, this.life);
 

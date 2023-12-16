@@ -71,6 +71,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Bounds;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.ViewerTextureRenderable;
+import com.etheller.warsmash.viewer5.gl.Extensions;
 import com.etheller.warsmash.viewer5.handlers.mdx.Attachment;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -1493,7 +1494,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void update(final float deltaTime) {
-		this.portrait.update();
+		this.portrait.update(deltaTime);
 
 		final int baseMouseX = Gdx.input.getX();
 		int mouseX = baseMouseX;
@@ -1936,8 +1937,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
-	public void portraitTalk() {
-		this.portrait.talk();
+	public void portraitTalk(UnitSound us) {
+		this.portrait.talk(us);
 	}
 
 	private final class AnyClickableUnitFilter implements CWidgetFilterFunction {
@@ -2434,6 +2435,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		private final EnumSet<AnimationTokens.SecondaryTag> recycleSet = EnumSet
 				.noneOf(AnimationTokens.SecondaryTag.class);
 		private RenderUnit unit;
+		// If animationTargetDuration is 0, it will play the whole animation.
+		private long portraitTargetDuration = 0;
+		private long portraitCurrentDuration = 0;
 
 		public Portrait(final War3MapViewer war3MapViewer, final Scene portraitScene) {
 			this.portraitScene = portraitScene;
@@ -2442,23 +2446,41 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
 		}
 
-		public void update() {
+		public void update(final float dt) {
 			this.portraitCameraManager.updateCamera();
-			if ((this.modelInstance != null)
-					&& (this.modelInstance.sequenceEnded || (this.modelInstance.sequence == -1))) {
-				this.recycleSet.clear();
-				this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
-				SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+			if (this.modelInstance != null) {
+				if (this.portraitTargetDuration != 0) {
+					if (this.portraitCurrentDuration < this.portraitTargetDuration) {
+						this.portraitCurrentDuration += (dt * 1000);
+						modelInstance.sequenceLoopMode = SequenceLoopMode.ALWAYS_LOOP;
+					} else {
+						this.modelInstance.sequenceEnded = true;
+						modelInstance.sequenceLoopMode = SequenceLoopMode.NEVER_LOOP;
+						this.portraitTargetDuration = 0;
+					}
+				}
+
+				if (this.modelInstance.sequenceEnded || (this.modelInstance.sequence == -1)) {
+					this.recycleSet.clear();
+					this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
+					SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+				}
 			}
 		}
 
-		public void talk() {
+		public void talk(UnitSound us) {
 			// TODO we somehow called talk from null by clicking a unit right at the same
 			// time it died, so I do a null check here until I study that case further.
 			if (this.modelInstance != null) {
 				this.recycleSet.clear();
 				this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
 				this.recycleSet.add(SecondaryTag.TALK);
+				if(us != null) {
+					this.portraitTargetDuration = (long)(1000 * Extensions.audio.getDuration(us.getLastPlayedSound()));
+				} else {
+					this.portraitTargetDuration = 0;
+				}
+				this.portraitCurrentDuration = 0;
 				SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
 			}
 		}
@@ -3604,7 +3626,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									shiftDown);
 							if (getSelectedUnit().soundset.yes
 									.playUnitResponse(this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
-								portraitTalk();
+								portraitTalk(getSelectedUnit().soundset.yes);
 							}
 							this.activeCommandUnit = null;
 							this.activeCommand = null;
@@ -3660,7 +3682,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 								}
 								if (getSelectedUnit().soundset.yes.playUnitResponse(
 										this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
-									portraitTalk();
+									portraitTalk(getSelectedUnit().soundset.yes);
 								}
 								this.selectedSoundCount = 0;
 								if (this.activeCommand instanceof AbstractCAbilityBuild) {
@@ -3744,7 +3766,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 										: getSelectedUnit().soundset.yes;
 								if (yesSound.playUnitResponse(this.war3MapViewer.worldScene.audioContext,
 										getSelectedUnit())) {
-									portraitTalk();
+									portraitTalk(yesSound);
 								}
 								if (rallied) {
 									this.war3MapViewer.getUiSounds().getSound("RallyPointPlace")
@@ -3855,7 +3877,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final UnitSound yesSound = this.activeCommand instanceof CAbilityAttack ? getSelectedUnit().soundset.yesAttack
 				: getSelectedUnit().soundset.yes;
 		if (yesSound.playUnitResponse(this.war3MapViewer.worldScene.audioContext, getSelectedUnit())) {
-			portraitTalk();
+			portraitTalk(yesSound);
 		}
 		this.selectedSoundCount = 0;
 		if (this.activeCommand instanceof CAbilityRally) {
@@ -3903,7 +3925,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (ordered) {
 			if (getSelectedUnit().soundset.yes.playUnitResponse(this.war3MapViewer.worldScene.audioContext,
 					getSelectedUnit())) {
-				portraitTalk();
+				portraitTalk(getSelectedUnit().soundset.yes);
 			}
 			if (rallied) {
 				this.war3MapViewer.getUiSounds().getSound("RallyPointPlace").play(this.uiScene.audioContext, 0, 0, 0);
@@ -3958,6 +3980,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (selectionChanged) {
 				this.selectedSoundCount = 0;
 			}
+			UnitSound USAudio = null;
 			if ((unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())
 					|| (unit.getSimulationUnit().getUnitType().getRace() == CUnitRace.CRITTERS)
 					|| ((unit.getSimulationUnit().getUnitType().getRace() == CUnitRace.OTHER)
@@ -3986,6 +4009,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						if ((this.selectedSoundCount - 3) >= pissedSoundCount) {
 							this.selectedSoundCount = 0;
 						}
+						USAudio = ackSoundToPlay;
 						playedNewSound = true;
 					}
 				}
@@ -4013,7 +4037,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 			}
 			if (playedNewSound) {
-				portraitTalk();
+				portraitTalk(USAudio);
 			}
 		}
 		else {

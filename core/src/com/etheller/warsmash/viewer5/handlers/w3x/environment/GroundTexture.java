@@ -6,17 +6,28 @@ import java.nio.Buffer;
 
 import com.badlogic.gdx.graphics.GL30;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.ImageUtils.AnyExtensionImage;
 
 public class GroundTexture {
 	public int id;
 	private int tileSize;
+	private boolean buildable;
 	public boolean extended;
 
-	public GroundTexture(final String path, final DataSource dataSource, final GL30 gl) throws IOException {
+	public GroundTexture(final String path, final Element terrainTileInfo, final DataSource dataSource, final GL30 gl) throws IOException {
+		if(terrainTileInfo != null) {
+			this.buildable = Integer.parseInt(terrainTileInfo.getField("buildable")) == 1;
+		} else {
+			this.buildable = true;
+		}
 		final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource, path, "ground texture");
 		loadImage(path, gl, imageInfo.getImageData(), imageInfo.isNeedsSRGBFix());
+	}
+
+	public boolean isBuildable() {
+		return buildable;
 	}
 
 	private void loadImage(final String path, final GL30 gl, final BufferedImage image, final boolean sRGBFix) {

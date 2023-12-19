@@ -73,6 +73,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.listeners.CUnitEffectReactionListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
@@ -2485,14 +2486,24 @@ public class CUnit extends CWidget {
 		return miss;
 	}
 
-	public boolean checkForReaction(final CSimulation simulation, final CUnit source, final CProjectile projectile, final boolean isAttack) {
-		boolean miss = false;
-		if (isAttack) {
-			for (final CUnitEffectReactionListener listener : reactionListeners) {
-				miss = miss || listener.onHit(simulation, source, this, projectile);
+	public boolean checkForReaction(final CSimulation simulation, final CUnit source, final CProjectile projectile) {
+		boolean allow = true;
+		for (final CUnitEffectReactionListener listener : reactionListeners) {
+			if (allow) {
+				allow = allow && listener.onHit(simulation, source, this, projectile);
 			}
 		}
-		return miss;
+		return allow;
+	}
+
+	public boolean checkForReaction(final CSimulation simulation, final CUnit source, final CAttackProjectile projectile) {
+		boolean allow = true;
+		for (final CUnitEffectReactionListener listener : reactionListeners) {
+			if (allow) {
+				allow = allow && listener.onHit(simulation, source, this, projectile);
+			}
+		}
+		return allow;
 	}
 
 	@Override

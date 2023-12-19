@@ -130,6 +130,10 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 		return playerEvent;
 	}
 
+	public void addEvent(final CWidgetEvent playerEvent) {
+		getOrCreateEventList(playerEvent.getEventType()).add(playerEvent);
+	}
+
 	public void removeEvent(final CWidgetEvent playerEvent) {
 		final List<CWidgetEvent> eventList = getEventList(playerEvent.getEventType());
 		if (eventList != null) {

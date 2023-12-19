@@ -400,8 +400,20 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return this.spellTargetUnit;
 	}
 
+	public CItem getSpellTargetItem() {
+		return this.spellTargetItem;
+	}
+
+	public CDestructable getSpellTargetDestructable() {
+		return this.spellTargetDestructable;
+	}
+
 	public AbilityPointTarget getSpellTargetPoint() {
 		return this.spellTargetPoint;
+	}
+
+	public CAbility getSpellAbility() {
+		return this.spellAbility;
 	}
 
 	public War3ID getSpellAbilityId() {
@@ -655,7 +667,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope unitSpellEffectTargetScope(final JassGameEventsWar3 triggerEventId,
+	public static CommonTriggerExecutionScope unitSpellTargetUnitScope(final JassGameEventsWar3 triggerEventId,
 			final Trigger trigger, final CAbility spellAbility, final CUnit spellAbilityUnit, final CUnit targetUnit,
 			final War3ID spellAbilityId) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
@@ -668,7 +680,33 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope unitSpellEffectPointScope(final JassGameEventsWar3 triggerEventId,
+	public static CommonTriggerExecutionScope unitSpellTargetItemScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CAbility spellAbility, final CUnit spellAbilityUnit, final CItem targetItem,
+			final War3ID spellAbilityId) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.spellAbility = spellAbility;
+		scope.spellAbilityUnit = spellAbilityUnit;
+		scope.triggeringUnit = spellAbilityUnit;
+		scope.spellTargetItem = targetItem;
+		scope.spellAbilityId = spellAbilityId;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitSpellTargetDestructableScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CAbility spellAbility, final CUnit spellAbilityUnit,
+			final CDestructable targetDest, final War3ID spellAbilityId) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.spellAbility = spellAbility;
+		scope.spellAbilityUnit = spellAbilityUnit;
+		scope.triggeringUnit = spellAbilityUnit;
+		scope.spellTargetDestructable = targetDest;
+		scope.spellAbilityId = spellAbilityId;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitSpellPointScope(final JassGameEventsWar3 triggerEventId,
 			final Trigger trigger, final CAbility spellAbility, final CUnit spellAbilityUnit,
 			final AbilityPointTarget targetPoint, final War3ID spellAbilityId) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
@@ -676,6 +714,18 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		scope.spellAbilityUnit = spellAbilityUnit;
 		scope.triggeringUnit = spellAbilityUnit;
 		scope.spellTargetPoint = targetPoint;
+		scope.spellAbilityId = spellAbilityId;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitSpellNoTargetScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CAbility spellAbility, final CUnit spellAbilityUnit,
+			final War3ID spellAbilityId) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.spellAbility = spellAbility;
+		scope.spellAbilityUnit = spellAbilityUnit;
+		scope.triggeringUnit = spellAbilityUnit;
 		scope.spellAbilityId = spellAbilityId;
 		scope.triggerEventId = triggerEventId;
 		return scope;

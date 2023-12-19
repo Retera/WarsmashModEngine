@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
 public class ABProjectileListener implements CAbilityProjectileListener {
 	
@@ -32,7 +33,7 @@ public class ABProjectileListener implements CAbilityProjectileListener {
 	}
 
 	@Override
-	public void onLaunch(CSimulation game, AbilityTarget target) {
+	public void onLaunch(CSimulation game, CProjectile projectile, AbilityTarget target) {
 		if (onLaunch != null) {
 			for (ABAction action : onLaunch) {
 				action.runAction(game, caster, localStore, castId);
@@ -41,7 +42,7 @@ public class ABProjectileListener implements CAbilityProjectileListener {
 	}
 
 	@Override
-	public void onHit(CSimulation game, AbilityTarget target) {
+	public void onHit(CSimulation game, CProjectile projectile, AbilityTarget target) {
 		if (onHit != null) {
 			CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 			CDestructable targetDest = target.visit(AbilityTargetVisitor.DESTRUCTABLE);

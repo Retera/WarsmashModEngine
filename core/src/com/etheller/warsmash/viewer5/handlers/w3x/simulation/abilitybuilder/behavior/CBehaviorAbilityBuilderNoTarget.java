@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.abil
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
@@ -79,6 +80,12 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	public CBehavior update(final CSimulation game) {
 		boolean wasChanneling = this.channeling;
 		if (this.castStartTick == 0) {
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this.ability, null);
+			if (this.unit.getCurrentBehavior() != this) {
+				return this.unit.getCurrentBehavior();
+			} else if (this.unit.isPaused()) {
+				return this;
+			}
 			this.castStartTick = game.getGameTurnTick();
 			
 			if (!this.unit.chargeMana(this.ability.getChargedManaCost())) {
@@ -102,7 +109,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		}
 		
 		if (instant) {
-			tryDoEffect(game, wasChanneling);
+			CBehavior beh = tryDoEffect(game, wasChanneling);
+			if (beh != null) {
+				return beh;
+			}
 			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 			if (newBehavior != null) {
 				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
@@ -118,7 +128,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 			final int backswingTicks = (int) (this.unit.getUnitType().getCastBackswingPoint()
 					/ WarsmashConstants.SIMULATION_STEP_TIME);
 			if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
-				tryDoEffect(game, wasChanneling);
+				CBehavior beh = tryDoEffect(game, wasChanneling);
+				if (beh != null) {
+					return beh;
+				}
 				CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 				if (newBehavior != null) {
 					localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
@@ -132,16 +145,28 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		return this;
 	}
 	
-	private void tryDoEffect(CSimulation game, boolean wasChanneling) {
+	private CBehavior tryDoEffect(CSimulation game, boolean wasChanneling) {
 		boolean wasEffectDone = this.doneEffect;
 		if (!wasEffectDone) {
-			this.doneEffect = true;
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, this.ability, null);
+			if (this.unit.getCurrentBehavior() != this) {
+				return this.unit.getCurrentBehavior();
+			} else if (this.unit.isPaused()) {
+				return this;
+			}
 			if (this.channeling) {
+				this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this.ability, null);
+				if (this.unit.getCurrentBehavior() != this) {
+					return this.unit.getCurrentBehavior();
+				} else if (this.unit.isPaused()) {
+					return this;
+				}
 				game.unitLoopSoundEffectEvent(this.unit, this.ability.getAlias());
 			}
 			else {
 				game.unitSoundEffectEvent(this.unit, this.ability.getAlias());
 			}
+			this.doneEffect = true;
 			
 			this.ability.runEndCastingActions(game, unit, orderId);
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
@@ -151,6 +176,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		if (wasEffectDone && wasChanneling && !this.channeling) {
 			endChannel(game, false);
 		}
+		return null;
 	}
 
 	@Override
@@ -165,6 +191,8 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	@Override
 	public void end(final CSimulation game, boolean interrupted) {
 		checkEndChannel(game, interrupted);
+		this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_ENDCAST, this.ability, null);
+		this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this.ability, null);
 	}
 
 	private void checkEndChannel(final CSimulation game, final boolean interrupted) {

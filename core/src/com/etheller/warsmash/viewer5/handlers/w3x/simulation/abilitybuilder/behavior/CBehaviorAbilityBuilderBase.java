@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.abil
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior implements ABBehavior {
@@ -94,6 +95,13 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	public CBehavior update(final CSimulation game, boolean withinFacingWindow) {
 		boolean wasChanneling = this.channeling;
 		if (this.castStartTick == 0) {
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this.ability, this.target);
+			if (this.unit.getCurrentBehavior() != this) {
+				return this.unit.getCurrentBehavior();
+			} else if (this.unit.isPaused()) {
+				return this;
+			}
+			
 			this.castStartTick = game.getGameTurnTick();
 			
 			if (!this.target.visit(this.preCastTargetableVisitor.reset(game, this.unit, ability, false, orderId))) {
@@ -108,6 +116,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 			this.ability.startCooldown(game, this.unit);
 			
 			this.ability.runBeginCastingActions(game, unit, orderId);
+
 			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 			if (newBehavior != null) {
 				cleanupInputs();
@@ -123,7 +132,10 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		
 
 		if (instant) {
-			tryDoEffect(game, wasChanneling);
+			CBehavior beh = tryDoEffect(game, wasChanneling);
+			if (beh != null) {
+				return beh;
+			}
 			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 			if (newBehavior != null) {
 				cleanupInputs();
@@ -142,7 +154,10 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 			final int backswingTicks = (int) (this.unit.getUnitType().getCastBackswingPoint()
 					/ WarsmashConstants.SIMULATION_STEP_TIME);
 			if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
-				tryDoEffect(game, wasChanneling);
+				CBehavior beh = tryDoEffect(game, wasChanneling);
+				if (beh != null) {
+					return beh;
+				}
 				CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 				if (newBehavior != null) {
 					cleanupInputs();
@@ -165,16 +180,28 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
 	}
 	
-	private void tryDoEffect(CSimulation game, boolean wasChanneling) {
+	private CBehavior tryDoEffect(CSimulation game, boolean wasChanneling) {
 		boolean wasEffectDone = this.doneEffect;
 		if (!wasEffectDone) {
-			this.doneEffect = true;
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, this.ability, this.target);
+			if (this.unit.getCurrentBehavior() != this) {
+				return this.unit.getCurrentBehavior();
+			} else if (this.unit.isPaused()) {
+				return this;
+			}
 			if (this.channeling) {
+				this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this.ability, this.target);
+				if (this.unit.getCurrentBehavior() != this) {
+					return this.unit.getCurrentBehavior();
+				} else if (this.unit.isPaused()) {
+					return this;
+				}
 				game.unitLoopSoundEffectEvent(this.unit, this.ability.getAlias());
 			}
 			else {
 				game.unitSoundEffectEvent(this.unit, this.ability.getAlias());
 			}
+			this.doneEffect = true;
 			
 			this.ability.runEndCastingActions(game, unit, orderId);
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
@@ -184,6 +211,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		if (wasEffectDone && wasChanneling && !this.channeling) {
 			endChannel(game, false);
 		}
+		return null;
 	}
 
 	@Override
@@ -198,6 +226,8 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	@Override
 	public void end(final CSimulation game, boolean interrupted) {
 		checkEndChannel(game, interrupted);
+		this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_ENDCAST, this.ability, this.target);
+		this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this.ability, this.target);
 	}
 
 	private void checkEndChannel(final CSimulation game, final boolean interrupted) {

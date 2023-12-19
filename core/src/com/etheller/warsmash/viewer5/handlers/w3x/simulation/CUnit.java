@@ -73,6 +73,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.listeners.CUnitEffectReactionListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
@@ -229,6 +231,7 @@ public class CUnit extends CWidget {
 	private final List<CUnitAttackDamageTakenListener> damageTakenListeners = new ArrayList<>();
 	private final Map<CUnitDeathReplacementEffectPriority, List<CUnitDeathReplacementEffect>> deathReplacementEffects = new HashMap<>();
 	private final List<CUnitAttackEvasionListener> evasionListeners = new ArrayList<>();
+	private final List<CUnitEffectReactionListener> reactionListeners = new ArrayList<>();
 
 	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
 	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
@@ -2482,6 +2485,16 @@ public class CUnit extends CWidget {
 		return miss;
 	}
 
+	public boolean checkForReaction(final CSimulation simulation, final CUnit source, final CProjectile projectile, final boolean isAttack) {
+		boolean miss = false;
+		if (isAttack) {
+			for (final CUnitEffectReactionListener listener : reactionListeners) {
+				miss = miss || listener.onHit(simulation, source, this, projectile);
+			}
+		}
+		return miss;
+	}
+
 	@Override
 	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
 			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
@@ -4248,6 +4261,126 @@ public class CUnit extends CWidget {
 		return false;
 	}
 
+	public void fireSpellEvents(final CSimulation game, JassGameEventsWar3 eventId, CAbility ability,
+			final AbilityTarget target) {
+		if (target == null) {
+			this.fireSpellEventsNoTarget(game, eventId, ability);
+		} else {
+			target.visit(new AbilityTargetVisitor<Object>() {
+
+				@Override
+				public Object accept(AbilityPointTarget target) {
+					fireSpellEventsPointTarget(game, eventId, ability, target);
+					return null;
+				}
+
+				@Override
+				public Object accept(CUnit target) {
+					fireSpellEventsUnitTarget(game, eventId, ability, target);
+					return null;
+				}
+
+				@Override
+				public Object accept(CDestructable target) {
+					fireSpellEventsDestructableTarget(game, eventId, ability, target);
+					return null;
+				}
+
+				@Override
+				public Object accept(CItem target) {
+					fireSpellEventsItemTarget(game, eventId, ability, target);
+					return null;
+				}
+
+			});
+		}
+	}
+
+	public void fireSpellEventsNoTarget(final CSimulation game, JassGameEventsWar3 eventId, CAbility ability) {
+		final List<CWidgetEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, CommonTriggerExecutionScope.unitSpellNoTargetScope(eventId, event.getTrigger(),
+						ability, this, ability.getAlias()));
+			}
+		}
+		game.getPlayer(this.playerIndex).fireSpellEventsNoTarget(unitSpellEventToPlayerEvent(eventId), ability, this);
+		game.fireSpellEventsNoTarget(eventId, ability, this);
+	}
+
+	public void fireSpellEventsPointTarget(final CSimulation game, JassGameEventsWar3 eventId, CAbility ability,
+			final AbilityPointTarget target) {
+		final List<CWidgetEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, CommonTriggerExecutionScope.unitSpellPointScope(eventId, event.getTrigger(), ability,
+						this, target, ability.getAlias()));
+			}
+		}
+		game.getPlayer(this.playerIndex).fireSpellEventsPointTarget(unitSpellEventToPlayerEvent(eventId), ability, this,
+				target);
+		game.fireSpellEventsPointTarget(eventId, ability, this, target);
+	}
+
+	public void fireSpellEventsUnitTarget(final CSimulation game, JassGameEventsWar3 eventId, CAbility ability,
+			final CUnit target) {
+		final List<CWidgetEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, CommonTriggerExecutionScope.unitSpellTargetUnitScope(eventId, event.getTrigger(),
+						ability, this, target, ability.getAlias()));
+			}
+		}
+		game.getPlayer(this.playerIndex).fireSpellEventsUnitTarget(unitSpellEventToPlayerEvent(eventId), ability, this,
+				target);
+		game.fireSpellEventsUnitTarget(eventId, ability, this, target);
+	}
+
+	public void fireSpellEventsItemTarget(final CSimulation game, JassGameEventsWar3 eventId, CAbility ability,
+			final CItem target) {
+		final List<CWidgetEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, CommonTriggerExecutionScope.unitSpellTargetItemScope(eventId, event.getTrigger(),
+						ability, this, target, ability.getAlias()));
+			}
+		}
+		game.getPlayer(this.playerIndex).fireSpellEventsItemTarget(unitSpellEventToPlayerEvent(eventId), ability, this,
+				target);
+		game.fireSpellEventsItemTarget(eventId, ability, this, target);
+	}
+
+	public void fireSpellEventsDestructableTarget(final CSimulation game, JassGameEventsWar3 eventId, CAbility ability,
+			final CDestructable target) {
+		final List<CWidgetEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CWidgetEvent event : eventList) {
+				event.fire(this, CommonTriggerExecutionScope.unitSpellTargetDestructableScope(eventId,
+						event.getTrigger(), ability, this, target, ability.getAlias()));
+			}
+		}
+		game.getPlayer(this.playerIndex).fireSpellEventsDestructableTarget(unitSpellEventToPlayerEvent(eventId),
+				ability, this, target);
+		game.fireSpellEventsDestructableTarget(eventId, ability, this, target);
+	}
+
+	private JassGameEventsWar3 unitSpellEventToPlayerEvent(JassGameEventsWar3 eventId) {
+		switch (eventId) {
+		case EVENT_UNIT_SPELL_CAST:
+			return JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_CAST;
+		case EVENT_UNIT_SPELL_CHANNEL:
+			return JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_CHANNEL;
+		case EVENT_UNIT_SPELL_EFFECT:
+			return JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_EFFECT;
+		case EVENT_UNIT_SPELL_FINISH:
+			return JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_FINISH;
+		case EVENT_UNIT_SPELL_ENDCAST:
+			return JassGameEventsWar3.EVENT_PLAYER_UNIT_SPELL_ENDCAST;
+		default:
+			return null;
+		}
+	}
+
 	public void firePickUpItemEvents(final CSimulation game, final CItem item) {
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_PICKUP_ITEM);
 		if (eventList != null) {
@@ -4659,6 +4792,14 @@ public class CUnit extends CWidget {
 
 	public void removeEvasionListener(final CUnitAttackEvasionListener listener) {
 		evasionListeners.remove(listener);
+	}
+
+	public void addReactionListener(final CUnitEffectReactionListener listener) {
+		reactionListeners.add(0, listener);
+	}
+
+	public void removeReactionListener(final CUnitEffectReactionListener listener) {
+		reactionListeners.remove(listener);
 	}
 
 	public void beginCooldown(final CSimulation game, final War3ID abilityId, final float cooldownDuration) {

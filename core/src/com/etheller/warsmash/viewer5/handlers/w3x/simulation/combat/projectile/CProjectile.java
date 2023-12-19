@@ -57,8 +57,8 @@ public abstract class CProjectile implements CEffect {
 		this.y = this.y + dy;
 
 		if (done && !this.done) {
-			this.onHitTarget(game);
 			this.done = true;
+			this.onHitTarget(game);
 		}
 		return this.done;
 	}

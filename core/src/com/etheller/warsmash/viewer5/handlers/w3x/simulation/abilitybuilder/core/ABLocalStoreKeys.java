@@ -57,13 +57,22 @@ public class ABLocalStoreKeys {
 
 	public static final String LASTCREATEDDESTBUFF = "_lastCreatedDestBuff";
 	
-	//Generic Targetting
+	//Generic Targeting
 	public static final String ATTACKINGUNIT = "_attackingUnit#";
 	public static final String ATTACKEDUNIT = "_attackedUnit#";
 	public static final String ABILITYTARGETEDUNIT = "_abilityTargetedUnit#";
 	public static final String ABILITYTARGETEDDESTRUCTABLE = "_abilityTargetedDestructable#";
 	public static final String ABILITYTARGETEDITEM = "_abilityTargetedItem#";
 	public static final String ABILITYTARGETEDLOCATION = "_abilityTargetedLocation#";
+
+	//Event Targeting
+	public static final String EVENTABILITY = "_eventAbility#";
+	public static final String EVENTABILITYID = "_eventAbilityId#";
+	public static final String EVENTCASTINGUNIT = "_eventCastingUnit#";
+	public static final String EVENTTARGETEDUNIT = "_eventTargetedUnit#";
+	public static final String EVENTTARGETEDDESTRUCTABLE = "_eventTargetedDestructable#";
+	public static final String EVENTTARGETEDITEM = "_eventTargetedItem#";
+	public static final String EVENTTARGETEDLOCATION = "_eventTargetedLocation#";
 	
 	//Generic Attacks
 	public static final String BASEDAMAGEDEALT = "_baseDamageDealt#";

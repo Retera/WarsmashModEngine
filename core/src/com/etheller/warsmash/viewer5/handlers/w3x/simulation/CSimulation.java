@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -18,8 +19,10 @@ import com.badlogic.gdx.math.Rectangle;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
+import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
@@ -29,7 +32,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
@@ -53,6 +58,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUpgradeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
@@ -65,6 +71,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManag
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
@@ -107,6 +114,8 @@ public class CSimulation implements CPlayerAPI {
 	private transient CommandErrorListener commandErrorListener;
 	private final CRegionManager regionManager;
 	private final List<TimeOfDayVariableEvent> timeOfDayVariableEvents = new ArrayList<>();
+	private final EnumMap<JassGameEventsWar3, List<CGlobalEvent>> eventTypeToEvents = new EnumMap<>(
+			JassGameEventsWar3.class);
 	private boolean timeOfDaySuspended;
 	private boolean daytime;
 	private final Set<CDestructable> ownedTreeSet = new HashSet<>();
@@ -356,7 +365,7 @@ public class CSimulation implements CPlayerAPI {
 		final CAbilityProjectile projectile = this.simulationRenderController.createProjectile(this, launchX, launchY,
 				launchFacing, speed, homing, source, spellAlias, target, projectileListener);
 		this.newProjectiles.add(projectile);
-		projectileListener.onLaunch(this, target);
+		projectileListener.onLaunch(this, projectile, target);
 		return projectile;
 	}
 
@@ -368,7 +377,7 @@ public class CSimulation implements CPlayerAPI {
 				launchY, launchFacing, speed, homing, source, spellAlias, target, maxHits, hitsPerTarget,
 				startingRadius, finalRadius, collisionInterval, projectileListener, provideCounts);
 		this.newProjectiles.add(projectile);
-		projectileListener.onLaunch(this, target);
+		projectileListener.onLaunch(this, projectile, target);
 		return projectile;
 	}
 
@@ -381,7 +390,7 @@ public class CSimulation implements CPlayerAPI {
 				launchY, launchFacing, speed, projectileStepInterval, projectileArtSkip, homing, source, spellAlias, effectType,
 				effectArtIndex, target, maxHits, hitsPerTarget, startingRadius, finalRadius, projectileListener, provideCounts);
 		this.newProjectiles.add(projectile);
-		projectileListener.onLaunch(this, target);
+		projectileListener.onLaunch(this, projectile, target);
 		return projectile;
 	}
 
@@ -754,6 +763,92 @@ public class CSimulation implements CPlayerAPI {
 			public void remove() {
 			}
 		};
+	}
+
+	private List<CGlobalEvent> getOrCreateEventList(final JassGameEventsWar3 eventType) {
+		List<CGlobalEvent> eventList = this.eventTypeToEvents.get(eventType);
+		if (eventList == null) {
+			eventList = new ArrayList<>();
+			this.eventTypeToEvents.put(eventType, eventList);
+		}
+		return eventList;
+	}
+
+	protected List<CGlobalEvent> getEventList(final JassGameEventsWar3 eventType) {
+		return this.eventTypeToEvents.get(eventType);
+	}
+
+	public RemovableTriggerEvent registerGlobalUnitEvent(final Trigger whichTrigger,
+			final JassGameEventsWar3 eventType, final TriggerBooleanExpression filter) {
+		final CGlobalEvent newEvent = new CGlobalWidgetEvent(this, this.globalScope, whichTrigger, eventType, filter);
+		getOrCreateEventList(eventType).add(newEvent);
+		return newEvent;
+	}
+
+	public void addGlobalEvent(CGlobalEvent newEvent) {
+		getOrCreateEventList(newEvent.getEventType()).add(newEvent);
+	}
+
+	public void removeGlobalEvent(final CGlobalEvent globalEvent) {
+		final List<CGlobalEvent> eventList = getEventList(globalEvent.getEventType());
+		if (eventList != null) {
+			eventList.remove(globalEvent);
+		}
+	}
+
+	public void fireSpellEventsNoTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+			final CUnit spellAbilityUnit) {
+		final List<CGlobalEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CGlobalEvent event : eventList) {
+				event.fire(spellAbilityUnit, CommonTriggerExecutionScope.unitSpellNoTargetScope(eventId,
+						event.getTrigger(), spellAbility, spellAbilityUnit, spellAbility.getAlias()));
+			}
+		}
+	}
+
+	public void fireSpellEventsPointTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+			final CUnit spellAbilityUnit, final AbilityPointTarget abilityPointTarget) {
+		final List<CGlobalEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CGlobalEvent event : eventList) {
+				event.fire(spellAbilityUnit, CommonTriggerExecutionScope.unitSpellPointScope(eventId,
+						event.getTrigger(), spellAbility, spellAbilityUnit, abilityPointTarget, spellAbility.getAlias()));
+			}
+		}
+	}
+
+	public void fireSpellEventsUnitTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+			final CUnit spellAbilityUnit, final CUnit unitTarget) {
+		final List<CGlobalEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CGlobalEvent event : eventList) {
+				event.fire(spellAbilityUnit, CommonTriggerExecutionScope.unitSpellTargetUnitScope(eventId,
+						event.getTrigger(), spellAbility, spellAbilityUnit, unitTarget, spellAbility.getAlias()));
+			}
+		}
+	}
+
+	public void fireSpellEventsItemTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+			final CUnit spellAbilityUnit, final CItem itemTarget) {
+		final List<CGlobalEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CGlobalEvent event : eventList) {
+				event.fire(spellAbilityUnit, CommonTriggerExecutionScope.unitSpellTargetItemScope(eventId,
+						event.getTrigger(), spellAbility, spellAbilityUnit, itemTarget, spellAbility.getAlias()));
+			}
+		}
+	}
+
+	public void fireSpellEventsDestructableTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+			final CUnit spellAbilityUnit, final CDestructable destTarget) {
+		final List<CGlobalEvent> eventList = getEventList(eventId);
+		if (eventList != null) {
+			for (final CGlobalEvent event : eventList) {
+				event.fire(spellAbilityUnit, CommonTriggerExecutionScope.unitSpellTargetDestructableScope(eventId,
+						event.getTrigger(), spellAbility, spellAbilityUnit, destTarget, spellAbility.getAlias()));
+			}
+		}
 	}
 
 	public void heroDeathEvent(final CUnit cUnit) {

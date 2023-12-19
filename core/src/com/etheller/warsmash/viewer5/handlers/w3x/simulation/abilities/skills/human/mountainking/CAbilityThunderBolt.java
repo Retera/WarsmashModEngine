@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
@@ -49,12 +50,12 @@ public class CAbilityThunderBolt extends CAbilityTargetSpellBase {
 					(float) caster.angleTo(targetUnit), projectileSpeed, projectileHomingEnabled, targetUnit,
 					new CAbilityProjectileListener() {
 						@Override
-						public void onLaunch(final CSimulation game, final AbilityTarget target) {
+						public void onLaunch(final CSimulation game, CProjectile projectile, final AbilityTarget target) {
 
 						}
 
 						@Override
-						public void onHit(final CSimulation game, final AbilityTarget target) {
+						public void onHit(final CSimulation game, CProjectile projectile, final AbilityTarget target) {
 							final CUnit unitTarget = target.visit(AbilityTargetUnitVisitor.INSTANCE);
 							if (unitTarget != null) {
 								unitTarget.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.LIGHTNING,

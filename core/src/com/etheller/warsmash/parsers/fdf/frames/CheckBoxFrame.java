@@ -2,6 +2,7 @@ package com.etheller.warsmash.parsers.fdf.frames;
 
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -93,6 +94,14 @@ public class CheckBoxFrame extends GlueButtonFrame {
 			@Override
 			public LuaValue call() {
 				return LuaValue.valueOf(isChecked());
+			}
+		});
+		table.set("SetChecked", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				final String flag = arg.checkjstring();
+				setChecked("true".equals(flag));
+				return null;
 			}
 		});
 	}

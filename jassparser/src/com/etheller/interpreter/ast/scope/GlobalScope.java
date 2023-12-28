@@ -11,10 +11,15 @@ import java.util.Map;
 import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.debug.DebuggingJassFunction;
 import com.etheller.interpreter.ast.debug.JassStackElement;
+import com.etheller.interpreter.ast.execution.JassStackFrame;
+import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.execution.instruction.BeginFunctionInstruction;
 import com.etheller.interpreter.ast.execution.instruction.InstructionAppendingJassStatementVisitor;
 import com.etheller.interpreter.ast.execution.instruction.JassInstruction;
+import com.etheller.interpreter.ast.execution.instruction.PushLiteralInstruction;
+import com.etheller.interpreter.ast.execution.instruction.ReturnInstruction;
 import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.function.JassParameter;
 import com.etheller.interpreter.ast.function.NativeJassFunction;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
@@ -26,6 +31,7 @@ import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
+import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
@@ -33,6 +39,7 @@ import com.etheller.interpreter.ast.value.PrimitiveJassType;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.HandleJassTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.HandleTypeSuperTypeLoadingVisitor;
+import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
 public final class GlobalScope {
 	private final List<GlobalScopeAssignable> indexedGlobals = new ArrayList<GlobalScopeAssignable>();
@@ -47,6 +54,8 @@ public final class GlobalScope {
 	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
 	private final ArrayDeque<QueuedCallback> triggerQueue = new ArrayDeque<>();
 	private final ArrayDeque<QueuedCallback> runningTriggerQueue = new ArrayDeque<>();
+	private final List<JassThread> threads = new ArrayList<>();
+	private JassThread currentThread;
 
 	public final HandleJassType handleType;
 
@@ -207,10 +216,12 @@ public final class GlobalScope {
 		final List<JassStatement> statements = function.getStatements();
 		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
 		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
-				this.instructions, this, function.getParameters().size());
+				this.instructions, this, function.getParameters());
 		for (final JassStatement statement : statements) {
 			statement.accept(visitor);
 		}
+		this.instructions.add(new PushLiteralInstruction(JassType.NOTHING.getNullValue()));
+		this.instructions.add(new ReturnInstruction());
 	}
 
 	public JassFunction getFunctionByName(final String name) {
@@ -275,6 +286,82 @@ public final class GlobalScope {
 		else {
 			throw new RuntimeException("type " + type + " cannot extend unknown type " + supertype);
 		}
+	}
+
+	public JassThread createThread(final CodeJassValue codeValue) {
+		final JassStackFrame jassStackFrame = new JassStackFrame();
+		jassStackFrame.returnAddressInstructionPtr = -1;
+		final JassThread jassThread = new JassThread(jassStackFrame, this, TriggerExecutionScope.EMPTY,
+				codeValue.getUserFunctionInstructionPtr());
+		this.threads.add(jassThread);
+		return jassThread;
+	}
+
+	public JassThread createThread(final String functionName, final List<JassValue> arguments,
+			final TriggerExecutionScope triggerExecutionScope) {
+		JassFunction functionByName = getFunctionByName(functionName);
+		if (functionByName instanceof DebuggingJassFunction) {
+			functionByName = ((DebuggingJassFunction) functionByName).getDelegate();
+		}
+		if (functionByName instanceof UserJassFunction) {
+			final UserJassFunction userJassFunction = (UserJassFunction) functionByName;
+			final Integer userFunctionInstructionPtr = getUserFunctionInstructionPtr(functionName);
+			final int instructionPtr = userFunctionInstructionPtr == null ? -1 : userFunctionInstructionPtr;
+			final List<JassParameter> parameters = userJassFunction.getParameters();
+			if (arguments.size() != parameters.size()) {
+				throw new RuntimeException("Invalid number of arguments passed to function");
+			}
+			final JassStackFrame jassStackFrame = new JassStackFrame();
+			jassStackFrame.returnAddressInstructionPtr = -1;
+			for (int i = 0; i < parameters.size(); i++) {
+				final JassParameter parameter = parameters.get(i);
+				final JassValue argument = arguments.get(i);
+				if (!parameter.matchesType(argument)) {
+					if ((parameter == null) || (argument == null)) {
+						System.err.println(
+								"We called some Jass function with incorrect argument types, and the types were null!!!");
+					}
+					System.err.println(
+							parameter.getType() + " != " + argument.visit(JassTypeGettingValueVisitor.getInstance()));
+					throw new RuntimeException(
+							"Invalid type " + argument.visit(JassTypeGettingValueVisitor.getInstance()).getName()
+									+ " for specified argument " + parameter.getType().getName());
+				}
+				jassStackFrame.push(argument);
+			}
+			final JassThread jassThread = new JassThread(jassStackFrame, this, triggerExecutionScope, instructionPtr);
+			this.threads.add(jassThread);
+			return jassThread;
+		}
+		else {
+			throw new IllegalStateException("Can only create thread from user function");
+		}
+	}
+
+	/**
+	 * @return true if all threads have terminated
+	 */
+	public boolean runThreads() {
+		for (int threadIndex = this.threads.size() - 1; threadIndex >= 0; threadIndex--) {
+			final JassThread thread = this.threads.get(threadIndex);
+			this.currentThread = thread;
+			while (!thread.isSleeping()) {
+				final int nextInstructionPtr = thread.instructionPtr++;
+				if (nextInstructionPtr == -1) {
+					this.threads.remove(threadIndex);
+					break;
+				}
+				else {
+					this.instructions.get(nextInstructionPtr).run(thread);
+				}
+			}
+		}
+		this.currentThread = null;
+		return this.threads.isEmpty();
+	}
+
+	public JassThread getCurrentThread() {
+		return this.currentThread;
 	}
 
 	public RemovableTriggerEvent registerVariableEvent(final Trigger trigger, final String varName,

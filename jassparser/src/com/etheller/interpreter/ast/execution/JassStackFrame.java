@@ -3,13 +3,15 @@ package com.etheller.interpreter.ast.execution;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.etheller.interpreter.ast.execution.instruction.BeginFunctionInstruction;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class JassStackFrame {
-	public String functionNameMetaData;
+	public BeginFunctionInstruction functionNameMetaData;
 	public int returnAddressInstructionPtr;
 	public JassStackFrame stackBase;
 	public List<JassValue> contents = new ArrayList<>();
+	public int debugLineNo;
 
 	public JassValue getLast(final int offset) {
 		return this.contents.get(this.contents.size() - 1 - offset);

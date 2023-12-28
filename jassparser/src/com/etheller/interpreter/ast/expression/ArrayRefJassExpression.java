@@ -38,6 +38,11 @@ public class ArrayRefJassExpression implements JassExpression {
 		}
 	}
 
+	@Override
+	public <T> T accept(final JassExpressionVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
 	public String getIdentifier() {
 		return this.identifier;
 	}

@@ -28,14 +28,6 @@ public class NativeJassFunction extends AbstractJassFunction {
 		return this.implementation.call(arguments, globalScope, triggerScope);
 	}
 
-	@Override
-	public JassValue continueExecuting(final JassStack stack) {
-		if (!checkNativeExists()) {
-			return this.returnType.getNullValue();
-		}
-		return this.implementation.continueExecuting(stack);
-	}
-
 	private boolean checkNativeExists() {
 		if (this.implementation == null) {
 			System.err.println(

@@ -5,6 +5,7 @@ import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class ReturnInstruction implements JassInstruction {
+	public static final ReturnInstruction INSTANCE = new ReturnInstruction();
 
 	@Override
 	public void run(final JassThread thread) {

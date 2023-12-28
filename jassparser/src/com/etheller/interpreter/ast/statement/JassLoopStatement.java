@@ -32,6 +32,11 @@ public class JassLoopStatement implements JassStatement {
 		}
 	}
 
+	@Override
+	public <T> T accept(final JassStatementVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
 	public List<JassStatement> getStatements() {
 		return this.statements;
 	}

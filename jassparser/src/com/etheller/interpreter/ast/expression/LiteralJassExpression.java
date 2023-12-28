@@ -18,6 +18,11 @@ public class LiteralJassExpression implements JassExpression {
 		return this.value;
 	}
 
+	@Override
+	public <T> T accept(final JassExpressionVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
 	public JassValue getValue() {
 		return this.value;
 	}

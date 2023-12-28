@@ -18,4 +18,13 @@ public class NotJassExpression implements JassExpression {
 			final TriggerExecutionScope triggerScope) {
 		return this.expression.evaluate(globalScope, localScope, triggerScope).visit(NotJassValueVisitor.getInstance());
 	}
+
+	@Override
+	public <T> T accept(final JassExpressionVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
+	public JassExpression getExpression() {
+		return this.expression;
+	}
 }

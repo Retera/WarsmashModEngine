@@ -4,13 +4,19 @@ import com.etheller.interpreter.ast.function.JassFunction;
 
 public class CodeJassValue implements JassValue {
 	private final JassFunction value;
+	private final Integer userFunctionInstructionPtr;
 
-	public CodeJassValue(final JassFunction value) {
+	public CodeJassValue(final JassFunction value, final Integer userFunctionInstructionPtr) {
 		this.value = value;
+		this.userFunctionInstructionPtr = userFunctionInstructionPtr;
 	}
 
 	public JassFunction getValue() {
-		return value;
+		return this.value;
+	}
+
+	public Integer getUserFunctionInstructionPtr() {
+		return this.userFunctionInstructionPtr;
 	}
 
 	@Override

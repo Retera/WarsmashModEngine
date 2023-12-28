@@ -15,4 +15,9 @@ public class JassReturnNothingStatement implements JassStatement {
 		return RETURN_NOTHING_NOTICE;
 	}
 
+	@Override
+	public <T> T accept(final JassStatementVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
 }

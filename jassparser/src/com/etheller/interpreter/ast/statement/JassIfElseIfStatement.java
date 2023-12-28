@@ -39,6 +39,11 @@ public class JassIfElseIfStatement implements JassStatement {
 		return null;
 	}
 
+	@Override
+	public <T> T accept(final JassStatementVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
 	public JassExpression getCondition() {
 		return this.condition;
 	}

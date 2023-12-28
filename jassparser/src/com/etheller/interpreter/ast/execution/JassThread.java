@@ -8,4 +8,21 @@ public class JassThread {
 	public GlobalScope globalScope;
 	public TriggerExecutionScope triggerScope;
 	public int instructionPtr;
+	public boolean sleeping = false;
+
+	public JassThread(final JassStackFrame stackFrame, final GlobalScope globalScope,
+			final TriggerExecutionScope triggerScope, final int instructionPtr) {
+		this.stackFrame = stackFrame;
+		this.globalScope = globalScope;
+		this.triggerScope = triggerScope;
+		this.instructionPtr = instructionPtr;
+	}
+
+	public void setSleeping(final boolean sleeping) {
+		this.sleeping = sleeping;
+	}
+
+	public boolean isSleeping() {
+		return this.sleeping;
+	}
 }

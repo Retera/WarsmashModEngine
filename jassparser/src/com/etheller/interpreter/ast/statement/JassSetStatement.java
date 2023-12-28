@@ -29,6 +29,11 @@ public class JassSetStatement implements JassStatement {
 		return null;
 	}
 
+	@Override
+	public <T> T accept(final JassStatementVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
 	public String getIdentifier() {
 		return this.identifier;
 	}

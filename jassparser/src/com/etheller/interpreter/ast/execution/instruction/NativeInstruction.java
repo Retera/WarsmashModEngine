@@ -23,7 +23,8 @@ public class NativeInstruction implements JassInstruction {
 			arguments.addFirst(thread.stackFrame.pop());
 		}
 		final JassValue nativeReturnValue = nativeFromId.call(arguments, thread.globalScope, thread.triggerScope);
-		// implicit return instruction
+		thread.stackFrame.push(nativeReturnValue);
+		ReturnInstruction.INSTANCE.run(thread);
 
 	}
 }

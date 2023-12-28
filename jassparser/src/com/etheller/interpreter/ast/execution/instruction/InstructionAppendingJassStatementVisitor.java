@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.interpreter.ast.debug.DebuggingJassStatement;
 import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.expression.ArithmeticJassExpression;
 import com.etheller.interpreter.ast.expression.ArrayRefJassExpression;
@@ -17,6 +18,7 @@ import com.etheller.interpreter.ast.expression.NegateJassExpression;
 import com.etheller.interpreter.ast.expression.NotJassExpression;
 import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
 import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.function.JassParameter;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.statement.JassArrayedAssignmentStatement;
 import com.etheller.interpreter.ast.statement.JassCallStatement;
@@ -47,10 +49,13 @@ public class InstructionAppendingJassStatementVisitor
 	private final ArrayDeque<Integer> loopStartInstructionPtrs = new ArrayDeque<>();
 
 	public InstructionAppendingJassStatementVisitor(final List<JassInstruction> instructions,
-			final GlobalScope globalScope, final int startingLocalId) {
+			final GlobalScope globalScope, final List<JassParameter> parameters) {
 		this.instructions = instructions;
 		this.globalScope = globalScope;
-		this.nextLocalId = startingLocalId;
+		this.nextLocalId = 0;
+		for (final JassParameter parameter : parameters) {
+			this.nameToLocalId.put(parameter.getIdentifier(), this.nextLocalId++);
+		}
 	}
 
 	public int getLocalId(final String name) {
@@ -70,9 +75,11 @@ public class InstructionAppendingJassStatementVisitor
 		if (localId != -1) {
 			this.instructions.add(new LocalArrayAssignmentInstruction(localId));
 		}
-		final int globalId = this.globalScope.getGlobalId(identifier);
-		if (globalId != -1) {
-			this.instructions.add(new GlobalArrayAssignmentInstruction(globalId));
+		else {
+			final int globalId = this.globalScope.getGlobalId(identifier);
+			if (globalId != -1) {
+				this.instructions.add(new GlobalArrayAssignmentInstruction(globalId));
+			}
 		}
 		return null;
 	}
@@ -200,10 +207,19 @@ public class InstructionAppendingJassStatementVisitor
 		if (localId != -1) {
 			this.instructions.add(new LocalAssignmentInstruction(localId));
 		}
-		final int globalId = this.globalScope.getGlobalId(identifier);
-		if (globalId != -1) {
-			this.instructions.add(new GlobalAssignmentInstruction(globalId));
+		else {
+			final int globalId = this.globalScope.getGlobalId(identifier);
+			if (globalId != -1) {
+				this.instructions.add(new GlobalAssignmentInstruction(globalId));
+			}
 		}
+		return null;
+	}
+
+	@Override
+	public Void visit(final DebuggingJassStatement statement) {
+		this.instructions.add(new SetDebugLineNoInstruction(statement.getLineNo()));
+		statement.getDelegate().accept(this);
 		return null;
 	}
 
@@ -218,11 +234,15 @@ public class InstructionAppendingJassStatementVisitor
 		if (localId != -1) {
 			this.instructions.add(new LocalReferenceInstruction(localId));
 		}
-		final int globalId = this.globalScope.getGlobalId(identifier);
-		if (globalId != -1) {
-			this.instructions.add(new GlobalReferenceInstruction(globalId));
+		else {
+			final int globalId = this.globalScope.getGlobalId(identifier);
+			if (globalId != -1) {
+				this.instructions.add(new GlobalReferenceInstruction(globalId));
+			}
+			else {
+				throw new IllegalArgumentException("No such identifier: " + identifier);
+			}
 		}
-		throw new IllegalArgumentException("No such identifier: " + identifier);
 	}
 
 	@Override
@@ -250,11 +270,11 @@ public class InstructionAppendingJassStatementVisitor
 	}
 
 	public void insertFunctionCallInstructions(final String functionName, final List<JassExpression> arguments) {
-		this.instructions.add(new NewStackFrameInstruction());
 		for (int i = 0; i < arguments.size(); i++) {
 			insertExpressionInstructions(arguments.get(i));
 		}
-		this.instructions.add(new SetReturnAddrInstruction(this.instructions.size()));
+		final int newStackFrameInstructionPtr = this.instructions.size();
+		this.instructions.add(null);
 		final Integer userFunctionInstructionPtr = this.globalScope.getUserFunctionInstructionPtr(functionName);
 		if (userFunctionInstructionPtr != null) {
 			this.instructions.add(new BranchInstruction(userFunctionInstructionPtr.intValue()));
@@ -269,16 +289,20 @@ public class InstructionAppendingJassStatementVisitor
 						new RuntimeException());
 			}
 		}
+		this.instructions.set(newStackFrameInstructionPtr,
+				new NewStackFrameInstruction(this.instructions.size(), arguments.size()));
 	}
 
 	@Override
 	public Void visit(final FunctionReferenceJassExpression expression) {
 		final String identifier = expression.getIdentifier();
 		final JassFunction functionByName = this.globalScope.getFunctionByName(identifier);
-		if (functionByName == null) {
+		final Integer userFunctionInstructionPtr = this.globalScope.getUserFunctionInstructionPtr(identifier);
+		if ((functionByName == null) || (userFunctionInstructionPtr == null)) {
 			throw new RuntimeException("Unable to find function: " + identifier);
 		}
-		this.instructions.add(new PushLiteralInstruction(new CodeJassValue(functionByName)));
+		this.instructions
+				.add(new PushLiteralInstruction(new CodeJassValue(functionByName, userFunctionInstructionPtr)));
 		return null;
 	}
 
@@ -290,12 +314,14 @@ public class InstructionAppendingJassStatementVisitor
 
 	@Override
 	public Void visit(final NegateJassExpression expression) {
+		insertExpressionInstructions(expression.getExpression());
 		this.instructions.add(new NegateInstruction());
 		return null;
 	}
 
 	@Override
 	public Void visit(final NotJassExpression expression) {
+		insertExpressionInstructions(expression.getExpression());
 		this.instructions.add(new NotInstruction());
 		return null;
 	}

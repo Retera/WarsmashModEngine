@@ -23,6 +23,11 @@ public class ReferenceJassExpression implements JassExpression {
 		return local.getValue();
 	}
 
+	@Override
+	public <T> T accept(final JassExpressionVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
 	public String getIdentifier() {
 		return this.identifier;
 	}

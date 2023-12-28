@@ -43,6 +43,11 @@ public class ArithmeticJassExpression implements JassExpression {
 		}
 	}
 
+	@Override
+	public <T> T accept(final JassExpressionVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
 	public JassExpression getLeftExpression() {
 		return this.leftExpression;
 	}

@@ -23,4 +23,9 @@ public class JassReturnStatement implements JassStatement {
 		return returnVal;
 	}
 
+	@Override
+	public <T> T accept(final JassStatementVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
 }

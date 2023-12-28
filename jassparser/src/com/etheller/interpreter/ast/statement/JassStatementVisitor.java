@@ -1,5 +1,7 @@
 package com.etheller.interpreter.ast.statement;
 
+import com.etheller.interpreter.ast.debug.DebuggingJassStatement;
+
 public interface JassStatementVisitor<TYPE> {
 	TYPE visit(JassArrayedAssignmentStatement statement);
 
@@ -26,4 +28,6 @@ public interface JassStatementVisitor<TYPE> {
 	TYPE visit(JassReturnStatement statement);
 
 	TYPE visit(JassSetStatement statement);
+
+	TYPE visit(DebuggingJassStatement statement);
 }

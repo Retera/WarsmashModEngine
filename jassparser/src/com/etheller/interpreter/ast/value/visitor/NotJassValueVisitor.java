@@ -3,6 +3,7 @@ package com.etheller.interpreter.ast.value.visitor;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.DummyJassValue;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
@@ -51,6 +52,11 @@ public class NotJassValueVisitor implements JassValueVisitor<JassValue> {
 	public JassValue accept(final HandleJassValue value) {
 		throw new IllegalStateException(
 				"Unable to apply not keyword to a variable of type " + value.getType().getName());
+	}
+
+	@Override
+	public JassValue accept(final DummyJassValue value) {
+		return value;
 	}
 
 }

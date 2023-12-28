@@ -38,4 +38,12 @@ public class ArrayRefJassExpression implements JassExpression {
 		}
 	}
 
+	public String getIdentifier() {
+		return this.identifier;
+	}
+
+	public JassExpression getIndexExpression() {
+		return this.indexExpression;
+	}
+
 }

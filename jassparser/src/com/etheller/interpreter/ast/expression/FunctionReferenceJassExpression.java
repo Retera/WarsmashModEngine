@@ -24,4 +24,7 @@ public class FunctionReferenceJassExpression implements JassExpression {
 		return new CodeJassValue(functionByName);
 	}
 
+	public String getIdentifier() {
+		return this.identifier;
+	}
 }

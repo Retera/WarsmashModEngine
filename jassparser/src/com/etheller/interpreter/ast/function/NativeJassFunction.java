@@ -22,13 +22,28 @@ public class NativeJassFunction extends AbstractJassFunction {
 	@Override
 	protected JassValue innerCall(final List<JassValue> arguments, final GlobalScope globalScope,
 			final TriggerExecutionScope triggerScope, final LocalScope localScope) {
+		if (!checkNativeExists()) {
+			return this.returnType.getNullValue();
+		}
+		return this.implementation.call(arguments, globalScope, triggerScope);
+	}
+
+	@Override
+	public JassValue continueExecuting(final JassStack stack) {
+		if (!checkNativeExists()) {
+			return this.returnType.getNullValue();
+		}
+		return this.implementation.continueExecuting(stack);
+	}
+
+	private boolean checkNativeExists() {
 		if (this.implementation == null) {
 			System.err.println(
 					"Call to native function that was declared but had no native implementation: " + this.name);
-			return this.returnType.getNullValue();
+			return false;
 //			throw new UnsupportedOperationException(
 //					"Call to native function that was declared but had no native implementation: " + this.name);
 		}
-		return this.implementation.call(arguments, globalScope, triggerScope);
+		return true;
 	}
 }

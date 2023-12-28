@@ -29,4 +29,11 @@ public class JassSetStatement implements JassStatement {
 		return null;
 	}
 
+	public String getIdentifier() {
+		return this.identifier;
+	}
+
+	public JassExpression getExpression() {
+		return this.expression;
+	}
 }

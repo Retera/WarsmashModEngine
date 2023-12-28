@@ -11,12 +11,18 @@ import java.util.Map;
 import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.debug.DebuggingJassFunction;
 import com.etheller.interpreter.ast.debug.JassStackElement;
+import com.etheller.interpreter.ast.execution.instruction.BeginFunctionInstruction;
+import com.etheller.interpreter.ast.execution.instruction.InstructionAppendingJassStatementVisitor;
+import com.etheller.interpreter.ast.execution.instruction.JassInstruction;
 import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.function.NativeJassFunction;
+import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
+import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
@@ -29,8 +35,14 @@ import com.etheller.interpreter.ast.value.visitor.HandleJassTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.HandleTypeSuperTypeLoadingVisitor;
 
 public final class GlobalScope {
-	private final Map<String, GlobalScopeAssignable> globals = new HashMap<>();
+	private final List<GlobalScopeAssignable> indexedGlobals = new ArrayList<GlobalScopeAssignable>();
+	private final List<JassInstruction> instructions = new ArrayList<JassInstruction>();
+	private final Map<String, Integer> globals = new HashMap<>();
+	private final Map<String, GlobalScopeAssignable> fastGlobals = new HashMap<>();
 	private final Map<String, JassFunction> functions = new HashMap<>();
+	private final Map<String, Integer> functionNameToInstructionPtr = new HashMap<>();
+	private final Map<String, Integer> functionNameToNativeId = new HashMap<>();
+	private final List<JassFunction> indexedNativeFunctions = new ArrayList<>();
 	private final Map<String, JassType> types = new HashMap<>();
 	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
 	private final ArrayDeque<QueuedCallback> triggerQueue = new ArrayDeque<>();
@@ -96,14 +108,21 @@ public final class GlobalScope {
 		this.types.put(type.getName(), type);
 	}
 
+	private void putGlobal(final String name, final GlobalScopeAssignable globalScopeAssignable) {
+		final int index = this.indexedGlobals.size();
+		this.indexedGlobals.add(globalScopeAssignable);
+		this.globals.put(name, index);
+		this.fastGlobals.put(name, globalScopeAssignable);
+	}
+
 	public void createGlobalArray(final String name, final JassType type) {
 		final GlobalScopeAssignable assignable = new GlobalScopeAssignable(type, this);
 		assignable.setValue(new ArrayJassValue((ArrayJassType) type)); // TODO less bad code
-		this.globals.put(name, assignable);
+		putGlobal(name, assignable);
 	}
 
 	public void createGlobal(final String name, final JassType type) {
-		this.globals.put(name, new GlobalScopeAssignable(type, this));
+		putGlobal(name, new GlobalScopeAssignable(type, this));
 	}
 
 	public void createGlobal(final String name, final JassType type, final JassValue value) {
@@ -114,11 +133,11 @@ public final class GlobalScope {
 		catch (final Exception exc) {
 			throw new RuntimeException("Global initialization failed for name: " + name, exc);
 		}
-		this.globals.put(name, assignable);
+		putGlobal(name, assignable);
 	}
 
 	public void setGlobal(final String name, final JassValue value) {
-		final GlobalScopeAssignable assignable = this.globals.get(name);
+		final GlobalScopeAssignable assignable = this.fastGlobals.get(name);
 		if (assignable == null) {
 			throw new RuntimeException("Undefined global: " + name);
 		}
@@ -129,29 +148,85 @@ public final class GlobalScope {
 	}
 
 	public JassValue getGlobal(final String name) {
-		final Assignable global = this.globals.get(name);
+		final Assignable global = this.fastGlobals.get(name);
 		if (global == null) {
 			throw new RuntimeException("Undefined global: " + name);
 		}
 		return global.getValue();
 	}
 
+	public JassValue getGlobalById(final int globalId) {
+		return getAssignableGlobalById(globalId).getValue();
+	}
+
+	public GlobalScopeAssignable getAssignableGlobalById(final int globalId) {
+		return this.indexedGlobals.get(globalId);
+	}
+
+	/**
+	 * @param name
+	 * @return the global id, or else -1 if no such global exists
+	 */
+	public int getGlobalId(final String name) {
+		final Integer globalId = this.globals.get(name);
+		if (globalId == null) {
+			return -1;
+		}
+		return globalId;
+	}
+
 	public GlobalScopeAssignable getAssignableGlobal(final String name) {
-		return this.globals.get(name);
+		return this.fastGlobals.get(name);
+	}
+
+	private JassFunction internalDefineFunction(final int lineNo, final String sourceFile, final String name,
+			final JassFunction function) {
+		JassFunction result;
+		if (JassSettings.DEBUG) {
+			result = new DebuggingJassFunction(lineNo, sourceFile, name, function);
+		}
+		else {
+			result = function;
+		}
+		this.functions.put(name, result);
+		return result;
 	}
 
 	public void defineFunction(final int lineNo, final String sourceFile, final String name,
-			final JassFunction function) {
-		if (JassSettings.DEBUG) {
-			this.functions.put(name, new DebuggingJassFunction(lineNo, sourceFile, name, function));
-		}
-		else {
-			this.functions.put(name, function);
+			final NativeJassFunction function) {
+		final JassFunction definedFunction = internalDefineFunction(lineNo, sourceFile, name, function);
+		final int nativeId = this.indexedNativeFunctions.size();
+		this.functionNameToNativeId.put(name, nativeId);
+		this.indexedNativeFunctions.add(definedFunction);
+	}
+
+	public void defineFunction(final int lineNo, final String sourceFile, final String name,
+			final UserJassFunction function) {
+		internalDefineFunction(lineNo, sourceFile, name, function);
+		this.functionNameToInstructionPtr.put(name, this.instructions.size());
+		final List<JassStatement> statements = function.getStatements();
+		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
+		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
+				this.instructions, this, function.getParameters().size());
+		for (final JassStatement statement : statements) {
+			statement.accept(visitor);
 		}
 	}
 
 	public JassFunction getFunctionByName(final String name) {
 		return this.functions.get(name);
+	}
+
+	public Integer getUserFunctionInstructionPtr(final String name) {
+		return this.functionNameToInstructionPtr.get(name);
+	}
+
+	public Integer getNativeId(final String name) {
+		return this.functionNameToNativeId.get(name);
+	}
+
+	public JassFunction getNativeById(final int id) {
+		return this.indexedNativeFunctions.get(id);
 	}
 
 	public JassType parseType(final String text) {

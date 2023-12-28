@@ -43,4 +43,12 @@ public class JassCallStatement implements JassStatement {
 		return null;
 	}
 
+	public String getFunctionName() {
+		return this.functionName;
+	}
+
+	public List<JassExpression> getArguments() {
+		return this.arguments;
+	}
+
 }

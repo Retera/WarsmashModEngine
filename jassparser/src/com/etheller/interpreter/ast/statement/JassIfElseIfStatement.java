@@ -39,4 +39,15 @@ public class JassIfElseIfStatement implements JassStatement {
 		return null;
 	}
 
+	public JassExpression getCondition() {
+		return this.condition;
+	}
+
+	public List<JassStatement> getThenStatements() {
+		return this.thenStatements;
+	}
+
+	public JassStatement getElseifTail() {
+		return this.elseifTail;
+	}
 }

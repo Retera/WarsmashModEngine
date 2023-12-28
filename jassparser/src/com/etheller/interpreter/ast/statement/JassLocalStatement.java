@@ -36,4 +36,12 @@ public class JassLocalStatement implements JassStatement {
 		return null;
 	}
 
+	public String getIdentifier() {
+		return this.identifier;
+	}
+
+	public JassType getType() {
+		return this.type;
+	}
+
 }

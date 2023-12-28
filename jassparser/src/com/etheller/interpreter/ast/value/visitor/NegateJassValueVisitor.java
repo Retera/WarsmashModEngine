@@ -3,6 +3,7 @@ package com.etheller.interpreter.ast.value.visitor;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.DummyJassValue;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
@@ -50,6 +51,11 @@ public class NegateJassValueVisitor implements JassValueVisitor<JassValue> {
 	@Override
 	public JassValue accept(final HandleJassValue value) {
 		throw new IllegalStateException("Unable to apply numeric unary negative sign to handle");
+	}
+
+	@Override
+	public JassValue accept(final DummyJassValue value) {
+		return value;
 	}
 
 }

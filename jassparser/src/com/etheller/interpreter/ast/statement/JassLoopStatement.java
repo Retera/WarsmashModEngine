@@ -32,4 +32,8 @@ public class JassLoopStatement implements JassStatement {
 		}
 	}
 
+	public List<JassStatement> getStatements() {
+		return this.statements;
+	}
+
 }

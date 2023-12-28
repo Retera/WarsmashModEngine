@@ -39,4 +39,12 @@ public class FunctionCallJassExpression implements JassExpression {
 		}
 	}
 
+	public String getFunctionName() {
+		return this.functionName;
+	}
+
+	public List<JassExpression> getArguments() {
+		return this.arguments;
+	}
+
 }

@@ -26,4 +26,16 @@ public class JassLocalDefinitionStatement implements JassStatement {
 		return null;
 	}
 
+	public String getIdentifier() {
+		return this.identifier;
+	}
+
+	public JassExpression getExpression() {
+		return this.expression;
+	}
+
+	public JassType getType() {
+		return this.type;
+	}
+
 }

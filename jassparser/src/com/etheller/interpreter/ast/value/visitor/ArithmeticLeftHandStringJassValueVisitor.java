@@ -4,6 +4,7 @@ import com.etheller.interpreter.ast.expression.ArithmeticSign;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.DummyJassValue;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
@@ -56,6 +57,11 @@ public class ArithmeticLeftHandStringJassValueVisitor implements JassValueVisito
 	@Override
 	public JassValue accept(final HandleJassValue value) {
 		throw new UnsupportedOperationException("Cannot perform string operation on handle");
+	}
+
+	@Override
+	public JassValue accept(final DummyJassValue value) {
+		return value;
 	}
 
 }

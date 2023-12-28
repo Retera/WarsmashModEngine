@@ -18,4 +18,8 @@ public class LiteralJassExpression implements JassExpression {
 		return this.value;
 	}
 
+	public JassValue getValue() {
+		return this.value;
+	}
+
 }

@@ -23,4 +23,7 @@ public class ReferenceJassExpression implements JassExpression {
 		return local.getValue();
 	}
 
+	public String getIdentifier() {
+		return this.identifier;
+	}
 }

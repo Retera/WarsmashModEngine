@@ -2330,7 +2330,7 @@ public class Jass2 {
 						final double facing = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 						final War3ID blightedMineRawcode = War3ID.fromString("ugol");
 						final War3ID goldMineRawcode = War3ID.fromString("ngol");
-						player.addTechtreeUnlocked(simulation, blightedMineRawcode);
+						player.addTechtreeUnlocked(this.simulation, blightedMineRawcode);
 						final CUnit blightedMine = CommonEnvironment.this.simulation.createUnitSimple(
 								blightedMineRawcode, player.getId(), (float) x, (float) y, (float) facing);
 						final CUnit goldMine = CommonEnvironment.this.simulation.createUnitSimple(goldMineRawcode,
@@ -2453,7 +2453,8 @@ public class Jass2 {
 						final CAbilityHero heroData = whichUnit.getHeroData();
 						if (heroData != null) {
 							if (permanent) {
-								heroData.setIntelligenceBase(CommonEnvironment.this.simulation, whichUnit, intelligence);
+								heroData.setIntelligenceBase(CommonEnvironment.this.simulation, whichUnit,
+										intelligence);
 							} // Todo add else case to handle non-permanent
 						}
 						return null;
@@ -2742,29 +2743,6 @@ public class Jass2 {
 						// EVENT_WIDGET_DEATH
 						// assigns to the return value of this and fires itself upon changing owner!!??
 						return playerType.getNullValue();
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("GetRandomReal",
-					(arguments, globalScope, triggerScope) -> {
-						final float lowBound = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
-						final float highBound = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
-						return new RealJassValue((CommonEnvironment.this.simulation.getSeededRandom().nextFloat()
-								* (highBound - lowBound)) + lowBound);
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("GetRandomInt",
-					(arguments, globalScope, triggerScope) -> {
-						int lowBound = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-						int highBound = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						if (lowBound > highBound) {
-							if (highBound >= 0) {
-								lowBound = highBound;
-							}
-							else {
-								highBound = lowBound;
-							}
-						}
-						return new IntegerJassValue(
-								CommonEnvironment.this.simulation.getSeededRandom().nextInt((highBound - lowBound) + 1)
-										+ lowBound);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetWidgetX",
 					(arguments, globalScope, triggerScope) -> {
@@ -3057,10 +3035,11 @@ public class Jass2 {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final int abilityId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final War3ID rawcode = new War3ID(abilityId);
-						
-						CAbility abil = whichUnit.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
+
+						final CAbility abil = whichUnit
+								.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
 						if (abil != null) {
-							whichUnit.remove(simulation, abil);
+							whichUnit.remove(this.simulation, abil);
 							return BooleanJassValue.TRUE;
 						}
 						return BooleanJassValue.FALSE;
@@ -4294,6 +4273,7 @@ public class Jass2 {
 						orderCommandCard.setMouseTargetRadius((float) radius);
 						return null;
 					});
+			registerRandomNatives(jassProgramVisitor, this.simulation);
 		}
 
 		public void config() {
@@ -4644,6 +4624,32 @@ public class Jass2 {
 				});
 	}
 
+	public static void registerRandomNatives(final JassProgramVisitor jassProgramVisitor,
+			final CSimulation simulation) {
+		jassProgramVisitor.getJassNativeManager().createNative("GetRandomReal",
+				(arguments, globalScope, triggerScope) -> {
+					final float lowBound = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
+					final float highBound = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+					return new RealJassValue(
+							(simulation.getSeededRandom().nextFloat() * (highBound - lowBound)) + lowBound);
+				});
+		jassProgramVisitor.getJassNativeManager().createNative("GetRandomInt",
+				(arguments, globalScope, triggerScope) -> {
+					int lowBound = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					int highBound = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+					if (lowBound > highBound) {
+						if (highBound >= 0) {
+							lowBound = highBound;
+						}
+						else {
+							highBound = lowBound;
+						}
+					}
+					return new IntegerJassValue(
+							simulation.getSeededRandom().nextInt((highBound - lowBound) + 1) + lowBound);
+				});
+	}
+
 	private static <T> T nullable(final List<JassValue> arguments, final int index,
 			final ObjectJassValueVisitor<T> visitor) {
 		final JassValue arg = arguments.get(index);
@@ -4773,8 +4779,8 @@ public class Jass2 {
 		}
 	}
 
-	private static void registerConfigNatives(final JassProgramVisitor jassProgramVisitor,
-			final War3MapConfig mapConfig, final HandleJassType startlocprioType, final HandleJassType gametypeType,
+	public static void registerConfigNatives(final JassProgramVisitor jassProgramVisitor, final War3MapConfig mapConfig,
+			final HandleJassType startlocprioType, final HandleJassType gametypeType,
 			final HandleJassType placementType, final HandleJassType gamespeedType,
 			final HandleJassType gamedifficultyType, final HandleJassType mapdensityType,
 			final HandleJassType locationType, final HandleJassType playerType, final HandleJassType playercolorType,

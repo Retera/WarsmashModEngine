@@ -26,4 +26,8 @@ public class JassExitWhenStatement implements JassStatement {
 		return null;
 	}
 
+	public JassExpression getExpression() {
+		return this.expression;
+	}
+
 }

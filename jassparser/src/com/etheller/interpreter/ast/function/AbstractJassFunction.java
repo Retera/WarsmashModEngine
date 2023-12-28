@@ -2,6 +2,7 @@ package com.etheller.interpreter.ast.function;
 
 import java.util.List;
 
+import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
@@ -37,7 +38,7 @@ public abstract class AbstractJassFunction implements JassFunction {
 			if (!parameter.matchesType(argument)) {
 				if ((parameter == null) || (argument == null)) {
 					System.err.println(
-							"Returning null because we called some Jass function with incorrect argument types, and the types were null!!!");
+							"We called some Jass function with incorrect argument types, and the types were null!!!");
 					System.err.println("This is a temporary hack for tests and showcase programming solutions");
 					return null;
 				}
@@ -54,4 +55,69 @@ public abstract class AbstractJassFunction implements JassFunction {
 
 	protected abstract JassValue innerCall(final List<JassValue> arguments, final GlobalScope globalScope,
 			TriggerExecutionScope triggerScope, final LocalScope localScope);
+
+	@Override
+	public void run(final JassThread jassThread, final List<JassValue> arguments) {
+		if (arguments.size() != this.parameters.size()) {
+			throw new RuntimeException("Invalid number of arguments passed to function");
+		}
+		for (int i = 0; i < this.parameters.size(); i++) {
+			final JassParameter parameter = this.parameters.get(i);
+			final JassValue argument = arguments.get(i);
+			if (!parameter.matchesType(argument)) {
+				if ((parameter == null) || (argument == null)) {
+					System.err.println(
+							"We called some Jass function with incorrect argument types, and the types were null!!!");
+				}
+				System.err.println(
+						parameter.getType() + " != " + argument.visit(JassTypeGettingValueVisitor.getInstance()));
+				throw new RuntimeException(
+						"Invalid type " + argument.visit(JassTypeGettingValueVisitor.getInstance()).getName()
+								+ " for specified argument " + parameter.getType().getName());
+			}
+			localScope.createLocal(parameter.getIdentifier(), parameter.getType(), argument);
+		}
+	}
+
+	@Override
+	public final JassStack createStack(final JassStack stack, final List<JassValue> arguments) {
+		final LocalScope localScope = createLocalScope(arguments, false);
+		if (localScope == null) {
+			throw new RuntimeException("Invalid type for specified argument");
+		}
+		final JassStack newStack = new JassStack(stack.globalScope, localScope, stack.triggerScope);
+		return newStack;
+	}
+
+	private LocalScope createLocalScope(final List<JassValue> arguments, final boolean allowNullReturns) {
+		if (arguments.size() != this.parameters.size()) {
+			throw new RuntimeException("Invalid number of arguments passed to function");
+		}
+		final LocalScope localScope = new LocalScope();
+		for (int i = 0; i < this.parameters.size(); i++) {
+			final JassParameter parameter = this.parameters.get(i);
+			final JassValue argument = arguments.get(i);
+			if (!parameter.matchesType(argument)) {
+				if ((parameter == null) || (argument == null)) {
+					System.err.println(
+							"We called some Jass function with incorrect argument types, and the types were null!!!");
+				}
+				System.err.println(
+						parameter.getType() + " != " + argument.visit(JassTypeGettingValueVisitor.getInstance()));
+				throw new RuntimeException(
+						"Invalid type " + argument.visit(JassTypeGettingValueVisitor.getInstance()).getName()
+								+ " for specified argument " + parameter.getType().getName());
+			}
+			localScope.createLocal(parameter.getIdentifier(), parameter.getType(), argument);
+		}
+		return localScope;
+	}
+
+	public List<JassParameter> getParameters() {
+		return this.parameters;
+	}
+
+	public JassType getReturnType() {
+		return this.returnType;
+	}
 }

@@ -3,6 +3,7 @@ package com.etheller.interpreter.ast.statement;
 import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.expression.JassExpression;
+import com.etheller.interpreter.ast.function.JassStack;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
@@ -52,4 +53,43 @@ public class JassArrayedAssignmentStatement implements JassStatement {
 		return null;
 	}
 
+	@Override
+	public JassValue continueExecuting(final JassStack jassStack) {
+		Assignable variable = jassStack.localScope.getAssignableLocal(this.identifier);
+		final JassValue index = this.indexExpression.continueEvaluating(jassStack);
+		if (variable == null) {
+			variable = jassStack.globalScope.getAssignableGlobal(this.identifier);
+		}
+		if (variable.getValue() == null) {
+			throw new JassException(jassStack.globalScope, "Unable to assign uninitialized array", null);
+		}
+		final ArrayJassValue arrayValue = variable.getValue().visit(ArrayJassValueVisitor.getInstance());
+		if (arrayValue != null) {
+			final Integer indexInt = index.visit(IntegerJassValueVisitor.getInstance());
+			if ((indexInt != null) && (indexInt >= 0)) {
+				arrayValue.set(jassStack.globalScope, indexInt, this.expression.continueEvaluating(jassStack));
+			}
+			else {
+				throw new JassException(jassStack.globalScope,
+						"Attempted to assign " + this.identifier + "[" + indexInt + "], which was an illegal index",
+						null);
+			}
+		}
+		else {
+			throw new JassException(jassStack.globalScope, "Not an array", null);
+		}
+		return null;
+	}
+
+	public String getIdentifier() {
+		return this.identifier;
+	}
+
+	public JassExpression getIndexExpression() {
+		return this.indexExpression;
+	}
+
+	public JassExpression getExpression() {
+		return this.expression;
+	}
 }

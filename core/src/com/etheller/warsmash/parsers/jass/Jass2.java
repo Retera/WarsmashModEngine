@@ -2335,9 +2335,6 @@ public class Jass2 {
 								ObjectJassValueVisitor.getInstance());
 						final float facing = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final War3ID rawcodeId = new War3ID(rawcode);
-						if ("nmrl".equals(rawcodeId.toString())) {
-							System.err.println("mrgrgllglgllgll");
-						}
 						final float x = whichLocation == null ? 0 : (float) whichLocation.x;
 						final float y = whichLocation == null ? 0 : (float) whichLocation.y;
 						final CUnit newUnit = CommonEnvironment.this.simulation.createUnitSimple(rawcodeId,

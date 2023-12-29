@@ -10,11 +10,23 @@ public class JassStackFrame {
 	public BeginFunctionInstruction functionNameMetaData;
 	public int returnAddressInstructionPtr;
 	public JassStackFrame stackBase;
-	public List<JassValue> contents = new ArrayList<>();
+	public List<JassValue> contents;
 	public int debugLineNo;
 
+	public JassStackFrame(final int argumentCount) {
+		this.contents = new ArrayList<>(argumentCount);
+	}
+
+	public JassStackFrame() {
+		this.contents = new ArrayList<>();
+	}
+
 	public JassValue getLast(final int offset) {
-		return this.contents.get(this.contents.size() - 1 - offset);
+		final int index = this.contents.size() - 1 - offset;
+		if ((index >= this.contents.size()) || (index < 0)) {
+			System.err.println("bad");
+		}
+		return this.contents.get(index);
 	}
 
 	public void push(final JassValue value) {
@@ -23,6 +35,9 @@ public class JassStackFrame {
 
 	public JassValue pop() {
 		final int lastIndex = this.contents.size() - 1;
+		if (lastIndex == -1) {
+			System.err.println("bad");
+		}
 		final JassValue jassValue = this.contents.get(lastIndex);
 		this.contents.remove(lastIndex);
 		return jassValue;

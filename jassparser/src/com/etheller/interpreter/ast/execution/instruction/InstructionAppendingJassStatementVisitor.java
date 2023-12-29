@@ -1,6 +1,7 @@
 package com.etheller.interpreter.ast.execution.instruction;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,11 +43,13 @@ import com.etheller.interpreter.ast.value.visitor.ArrayTypeVisitor;
 
 public class InstructionAppendingJassStatementVisitor
 		implements JassStatementVisitor<Void>, JassExpressionVisitor<Void> {
+	private static final PushLiteralInstruction PUSH_NOTHING = new PushLiteralInstruction(
+			JassReturnNothingStatement.RETURN_NOTHING_NOTICE);
 	private final List<JassInstruction> instructions;
 	private final GlobalScope globalScope;
 	private final Map<String, Integer> nameToLocalId = new HashMap<>();
 	private int nextLocalId;
-	private final ArrayDeque<Integer> loopStartInstructionPtrs = new ArrayDeque<>();
+	private final ArrayDeque<LoopImpl> loopStartInstructionPtrs = new ArrayDeque<>();
 
 	public InstructionAppendingJassStatementVisitor(final List<JassInstruction> instructions,
 			final GlobalScope globalScope, final List<JassParameter> parameters) {
@@ -89,19 +92,22 @@ public class InstructionAppendingJassStatementVisitor
 		final String functionName = statement.getFunctionName();
 		final List<JassExpression> arguments = statement.getArguments();
 		insertFunctionCallInstructions(functionName, arguments);
+		this.instructions.add(PopInstruction.INSTANCE);
 		return null;
 	}
 
 	@Override
 	public Void visit(final JassDoNothingStatement statement) {
-		this.instructions.add(new DoNothingInstruction());
+		this.instructions.add(DoNothingInstruction.INSTANCE);
 		return null;
 	}
 
 	@Override
 	public Void visit(final JassExitWhenStatement statement) {
 		insertExpressionInstructions(statement.getExpression());
-		this.instructions.add(new ConditionalBranchInstruction(this.loopStartInstructionPtrs.peek()));
+		final int conditionBranchInstructionPtr = this.instructions.size();
+		this.loopStartInstructionPtrs.peek().exitWhenInstPtrs.add(conditionBranchInstructionPtr);
+		this.instructions.add(null);
 		return null;
 	}
 
@@ -178,24 +184,32 @@ public class InstructionAppendingJassStatementVisitor
 
 	@Override
 	public Void visit(final JassLoopStatement statement) {
-		this.loopStartInstructionPtrs.push(this.instructions.size());
+		final int loopStart = this.instructions.size();
+		this.loopStartInstructionPtrs.push(new LoopImpl());
 		for (final JassStatement loopBodySubStatement : statement.getStatements()) {
 			loopBodySubStatement.accept(this);
 		}
-		this.loopStartInstructionPtrs.pop();
+		this.instructions.add(new BranchInstruction(loopStart));
+		final int loopEndInstructionPtr = this.instructions.size();
+		final ConditionalBranchInstruction conditionalLoopEndJump = new ConditionalBranchInstruction(
+				loopEndInstructionPtr);
+		for (final int conditionalBranchInstructionPtr : this.loopStartInstructionPtrs.pop().exitWhenInstPtrs) {
+			this.instructions.set(conditionalBranchInstructionPtr, conditionalLoopEndJump);
+		}
 		return null;
 	}
 
 	@Override
 	public Void visit(final JassReturnNothingStatement statement) {
-		this.instructions.add(new PushLiteralInstruction(JassReturnNothingStatement.RETURN_NOTHING_NOTICE));
-		this.instructions.add(new ReturnInstruction());
+		this.instructions.add(PUSH_NOTHING);
+		this.instructions.add(ReturnInstruction.INSTANCE);
 		return null;
 	}
 
 	@Override
 	public Void visit(final JassReturnStatement statement) {
-		this.instructions.add(new ReturnInstruction());
+		insertExpressionInstructions(statement.getExpression());
+		this.instructions.add(ReturnInstruction.INSTANCE);
 		return null;
 	}
 
@@ -331,5 +345,9 @@ public class InstructionAppendingJassStatementVisitor
 		final String identifier = expression.getIdentifier();
 		insertReferenceExpressionInstructions(identifier);
 		return null;
+	}
+
+	private static final class LoopImpl {
+		private final List<Integer> exitWhenInstPtrs = new ArrayList<>();
 	}
 }

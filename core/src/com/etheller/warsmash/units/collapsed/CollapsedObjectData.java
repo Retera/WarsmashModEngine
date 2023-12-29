@@ -179,10 +179,10 @@ public class CollapsedObjectData {
 				if (name.startsWith("\"") && name.endsWith("\"")) {
 					name = name.substring(1, name.length() - 1);
 				}
-				gameObject.setField("Profile", "Name", name);
+				gameObject.setField("Name", name);
 			}
 			if (suffix.startsWith("WESTRING")) {
-				gameObject.setField("Profile", "EditorSuffix", worldEditStrings.getString(suffix));
+				gameObject.setField("EditorSuffix", worldEditStrings.getString(suffix));
 			}
 		}
 	}

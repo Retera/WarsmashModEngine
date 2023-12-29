@@ -39,6 +39,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilitySellItems;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -361,25 +362,34 @@ public class CUnitData {
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);
 				}
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && createAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)createAbility).setAutoCastOn(unit, true);
-				}
-			} else {
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && existingAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)existingAbility).setAutoCastOn(unit, true);
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (createAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) createAbility).setAutoCastOn(unit, true);
 				}
 			}
+			else {
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (existingAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) existingAbility).setAutoCastOn(unit, true);
+				}
+			}
+		}
+
+		if (unitTypeInstance.isHero() && simulation.isMapReignOfChaos()
+				&& (unit.getFirstAbilityOfType(CAbilityInventory.class) == null)) {
+			unit.add(simulation,
+					simulation.getAbilityData().createAbility(War3ID.fromString("AInv"), handleIdAllocator.createId()));
 		}
 	}
 
 	public void addMissingDefaultAbilitiesToUnit(final CSimulation simulation,
 			final HandleIdAllocator handleIdAllocator, final CUnitType unitTypeInstance, final boolean resetMana,
 			final int manaInitial, final int speed, final CUnit unit) {
-		CAbilityMove preMove = unit.getFirstAbilityOfType(CAbilityMove.class);
-		if (speed > 0 && preMove == null) {
+		final CAbilityMove preMove = unit.getFirstAbilityOfType(CAbilityMove.class);
+		if ((speed > 0) && (preMove == null)) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
-		if (speed <= 0 && preMove != null) {
+		if ((speed <= 0) && (preMove != null)) {
 			unit.remove(simulation, preMove);
 		}
 		final List<CUnitAttack> unitSpecificAttacks = new ArrayList<>();
@@ -444,10 +454,11 @@ public class CUnitData {
 		if (unitTypeInstance.isHero()) {
 			final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
 			if (unit.getFirstAbilityOfType(CAbilityHero.class) != null) {
-				CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
+				final CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
 				abil.setSkillsAvailable(heroAbilityList);
 				abil.recalculateAllStats(simulation, unit);
-			} else {
+			}
+			else {
 				unit.add(simulation, new CAbilityHero(handleIdAllocator.createId(), heroAbilityList));
 				// reset initial mana after the value is adjusted for hero data
 				unit.setMana(manaInitial);
@@ -461,12 +472,15 @@ public class CUnitData {
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);
 				}
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && createAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)createAbility).setAutoCastOn(unit, true);
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (createAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) createAbility).setAutoCastOn(unit, true);
 				}
-			} else {
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && existingAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)existingAbility).setAutoCastOn(unit, true);
+			}
+			else {
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (existingAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) existingAbility).setAutoCastOn(unit, true);
 				}
 			}
 		}
@@ -586,7 +600,8 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			} catch (final Exception exc) {
+			}
+			catch (final Exception exc) {
 				System.err.println("Attack 1 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			try {
@@ -625,7 +640,7 @@ public class CUnitData {
 				final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK2_RANGE_MOTION_BUFFER, 0);
 				boolean showUI = unitType.getFieldAsBoolean(ATTACK2_SHOW_UI, 0);
 				final EnumSet<CTargetType> targetsAllowed = CTargetType
-						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK1_TARGETS_ALLOWED));
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK2_TARGETS_ALLOWED));
 				final String weaponSound = unitType.getFieldAsString(ATTACK2_WEAPON_SOUND, 0);
 				final String weapon_type_temp = unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0);
 				CWeaponType weaponType = CWeaponType.NONE;
@@ -649,7 +664,8 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			} catch (final Exception exc) {
+			}
+			catch (final Exception exc) {
 				System.err.println("Attack 2 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			final List<CUnitAttack> enabledAttacks = getEnabledAttacks(attacks, attacksEnabled);
@@ -710,9 +726,11 @@ public class CUnitData {
 			final List<War3ID> itemsMade = parseIDList(unitType.getFieldAsList(ITEMS_MADE));
 
 			final War3ID defaultAutocastAbilityId;
-			if (defaultAutocastAbility != null && !defaultAutocastAbility.isEmpty() && !defaultAutocastAbility.equals("_")) {
+			if ((defaultAutocastAbility != null) && !defaultAutocastAbility.isEmpty()
+					&& !defaultAutocastAbility.equals("_")) {
 				defaultAutocastAbilityId = War3ID.fromString(defaultAutocastAbility);
-			} else {
+			}
+			else {
 				defaultAutocastAbilityId = null;
 			}
 			final List<War3ID> heroAbilityList = parseIDList(heroAbilityListString);
@@ -807,25 +825,31 @@ public class CUnitData {
 				if (i < requirementsLevelsString.size()) {
 					if (requirementsLevelsString.get(i).isEmpty()) {
 						level = 1;
-					} else {
+					}
+					else {
 						try {
 							level = Integer.parseInt(requirementsLevelsString.get(i));
-						} catch (final NumberFormatException exc) {
+						}
+						catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				} else if (requirementsLevelsString.size() > 0) {
+				}
+				else if (requirementsLevelsString.size() > 0) {
 					final String requirementLevel = requirementsLevelsString.get(requirementsLevelsString.size() - 1);
 					if (requirementLevel.isEmpty()) {
 						level = 1;
-					} else {
+					}
+					else {
 						try {
 							level = Integer.parseInt(requirementLevel);
-						} catch (final NumberFormatException exc) {
+						}
+						catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				} else {
+				}
+				else {
 					level = 1;
 				}
 				requirements.add(new CUnitTypeRequirement(War3ID.fromString(item), level));
@@ -845,7 +869,8 @@ public class CUnitData {
 			final float newSumBonusAtLevel = sumBonusAtLevel + statPerLevel;
 			if (i == 0) {
 				table[i] = (int) newSumBonusAtLevel;
-			} else {
+			}
+			else {
 				table[i] = (int) newSumBonusAtLevel - table[i - 1];
 			}
 			sumBonusAtLevel = newSumBonusAtLevel;

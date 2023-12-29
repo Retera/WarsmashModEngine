@@ -28,4 +28,8 @@ public class JassReturnStatement implements JassStatement {
 		return visitor.visit(this);
 	}
 
+	public JassExpression getExpression() {
+		return this.expression;
+	}
+
 }

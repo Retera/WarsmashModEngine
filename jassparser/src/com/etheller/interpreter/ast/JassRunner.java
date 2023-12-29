@@ -105,6 +105,7 @@ public class JassRunner {
 		}
 		final JassThread myJassThread = jassProgramVisitor.getGlobals().createThread("main", Collections.emptyList(),
 				TriggerExecutionScope.EMPTY);
+		jassProgramVisitor.getGlobals().queueThread(myJassThread);
 		boolean done = false;
 		do {
 			final long currentTimeMillis = System.currentTimeMillis();

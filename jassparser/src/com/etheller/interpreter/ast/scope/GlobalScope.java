@@ -10,6 +10,7 @@ import java.util.Map;
 
 import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.debug.DebuggingJassFunction;
+import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.debug.JassStackElement;
 import com.etheller.interpreter.ast.execution.JassStackFrame;
 import com.etheller.interpreter.ast.execution.JassThread;
@@ -55,7 +56,9 @@ public final class GlobalScope {
 	private final ArrayDeque<QueuedCallback> triggerQueue = new ArrayDeque<>();
 	private final ArrayDeque<QueuedCallback> runningTriggerQueue = new ArrayDeque<>();
 	private final List<JassThread> threads = new ArrayList<>();
+	private final List<JassThread> newThreads = new ArrayList<>();
 	private JassThread currentThread;
+	private boolean yieldedCurrentThread = false;
 
 	public final HandleJassType handleType;
 
@@ -80,6 +83,20 @@ public final class GlobalScope {
 		final List<JassStackElement> copiedStack = new ArrayList<>();
 		for (final JassStackElement stackElement : this.jassStack) {
 			copiedStack.add(new JassStackElement(stackElement));
+		}
+		JassThread unwindThread = this.currentThread;
+		while (unwindThread != null) {
+			JassStackFrame frame = unwindThread.stackFrame;
+			while (frame != null) {
+				if (frame.functionNameMetaData != null) {
+					copiedStack.add(new JassStackElement(frame.functionNameMetaData, frame.debugLineNo));
+				}
+				else {
+					copiedStack.add(new JassStackElement("<unknown source>", "<unknown function>", -1));
+				}
+				frame = frame.stackBase;
+			}
+			unwindThread = unwindThread.parent;
 		}
 		return copiedStack;
 	}
@@ -289,11 +306,18 @@ public final class GlobalScope {
 	}
 
 	public JassThread createThread(final CodeJassValue codeValue) {
+		return createThread(codeValue, TriggerExecutionScope.EMPTY);
+	}
+
+	public void queueThread(final JassThread thread) {
+		this.newThreads.add(thread);
+	}
+
+	public JassThread createThread(final CodeJassValue codeValue, final TriggerExecutionScope triggerScope) {
 		final JassStackFrame jassStackFrame = new JassStackFrame();
 		jassStackFrame.returnAddressInstructionPtr = -1;
-		final JassThread jassThread = new JassThread(jassStackFrame, this, TriggerExecutionScope.EMPTY,
+		final JassThread jassThread = new JassThread(jassStackFrame, this, triggerScope,
 				codeValue.getUserFunctionInstructionPtr());
-		this.threads.add(jassThread);
 		return jassThread;
 	}
 
@@ -311,7 +335,7 @@ public final class GlobalScope {
 			if (arguments.size() != parameters.size()) {
 				throw new RuntimeException("Invalid number of arguments passed to function");
 			}
-			final JassStackFrame jassStackFrame = new JassStackFrame();
+			final JassStackFrame jassStackFrame = new JassStackFrame(arguments.size());
 			jassStackFrame.returnAddressInstructionPtr = -1;
 			for (int i = 0; i < parameters.size(); i++) {
 				final JassParameter parameter = parameters.get(i);
@@ -330,7 +354,6 @@ public final class GlobalScope {
 				jassStackFrame.push(argument);
 			}
 			final JassThread jassThread = new JassThread(jassStackFrame, this, triggerExecutionScope, instructionPtr);
-			this.threads.add(jassThread);
 			return jassThread;
 		}
 		else {
@@ -342,26 +365,73 @@ public final class GlobalScope {
 	 * @return true if all threads have terminated
 	 */
 	public boolean runThreads() {
-		for (int threadIndex = this.threads.size() - 1; threadIndex >= 0; threadIndex--) {
-			final JassThread thread = this.threads.get(threadIndex);
-			this.currentThread = thread;
+		boolean anyThreadsAdded = false;
+		do {
+			runOneThreadLooop();
+			anyThreadsAdded = !this.newThreads.isEmpty();
+			this.threads.addAll(this.newThreads);
+			this.newThreads.clear();
+		}
+		while (anyThreadsAdded);
+		return this.threads.isEmpty();
+	}
+
+	public void runThreadUntilCompletion(final JassThread thread) {
+		final JassThread parentThread = this.currentThread;
+		thread.parent = parentThread;
+		this.currentThread = thread;
+		try {
 			while (!thread.isSleeping()) {
-				final int nextInstructionPtr = thread.instructionPtr++;
-				if (nextInstructionPtr == -1) {
-					this.threads.remove(threadIndex);
+				if (thread.instructionPtr == -1) {
 					break;
 				}
 				else {
-					this.instructions.get(nextInstructionPtr).run(thread);
+					this.instructions.get(thread.instructionPtr++).run(thread);
 				}
 			}
 		}
+		catch (final Exception exc) {
+			throw new JassException(this, "runThreads() encountered exception", exc);
+		}
+		this.currentThread = parentThread;
+	}
+
+	private void runOneThreadLooop() {
+		for (int threadIndex = this.threads.size() - 1; threadIndex >= 0; threadIndex--) {
+			final JassThread thread = this.threads.get(threadIndex);
+			this.currentThread = thread;
+			try {
+				while (!thread.isSleeping()) {
+					if (thread.instructionPtr == -1) {
+						this.threads.remove(threadIndex);
+						this.yieldedCurrentThread = false;
+						break;
+					}
+					else {
+						this.instructions.get(thread.instructionPtr++).run(thread);
+					}
+				}
+			}
+			catch (final Exception exc) {
+				throw new JassException(this, "runThreads() encountered exception", exc);
+			}
+			if (this.yieldedCurrentThread) {
+				this.currentThread.setSleeping(false);
+				this.newThreads.add(this.threads.remove(threadIndex));
+			}
+		}
 		this.currentThread = null;
-		return this.threads.isEmpty();
 	}
 
 	public JassThread getCurrentThread() {
 		return this.currentThread;
+	}
+
+	public void yieldCurrentThread() {
+		if (this.currentThread != null) {
+			this.currentThread.setSleeping(true);
+			this.yieldedCurrentThread = true;
+		}
 	}
 
 	public RemovableTriggerEvent registerVariableEvent(final Trigger trigger, final String varName,

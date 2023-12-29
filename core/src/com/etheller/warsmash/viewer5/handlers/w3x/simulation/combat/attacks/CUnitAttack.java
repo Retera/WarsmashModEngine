@@ -38,7 +38,7 @@ public abstract class CUnitAttack {
 	private float animationBackswingPoint;
 	private float animationDamagePoint;
 	private CAttackType attackType;
-	private float cooldownTimeBase;
+	private final float cooldownTimeBase;
 	private float cooldownTime;
 	private int damageBase;
 	private int damageDice;
@@ -57,9 +57,9 @@ public abstract class CUnitAttack {
 	private int primaryAttributeTemporaryDamageBonus;
 	private int permanentDamageBonus;
 	private int temporaryDamageBonus;
-	
+
 	private float attackSpeedModifier;
-	
+
 	private Map<String, List<NonStackingStatBuff>> nonStackingFlatBuffs = new HashMap<>();
 	private Map<String, List<NonStackingStatBuff>> nonStackingPctBuffs = new HashMap<>();
 
@@ -125,29 +125,32 @@ public abstract class CUnitAttack {
 		this.totalDamageDice = this.damageDice;
 		this.minDamageDisplay = this.totalBaseDamage + this.totalDamageDice;
 		this.maxDamageDisplay = this.totalBaseDamage + (this.totalDamageDice * this.damageSidesPerDie);
-		
+
 		int totalNSAtkBuff = 0;
-		for (String key : this.nonStackingFlatBuffs.keySet()) {
+		for (final String key : this.nonStackingFlatBuffs.keySet()) {
 			float buffForKey = 0;
-			for (NonStackingStatBuff buff : this.nonStackingFlatBuffs.get(key)) {
+			for (final NonStackingStatBuff buff : this.nonStackingFlatBuffs.get(key)) {
 				if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 					buffForKey += buff.getValue();
-				} else {
+				}
+				else {
 					buffForKey = Math.max(buffForKey, buff.getValue());
 				}
 			}
 			totalNSAtkBuff += buffForKey;
 		}
 		int totalNSAtkPctBuff = 0;
-		for (String key : this.nonStackingPctBuffs.keySet()) {
+		for (final String key : this.nonStackingPctBuffs.keySet()) {
 			Float buffForKey = null;
-			for (NonStackingStatBuff buff : this.nonStackingPctBuffs.get(key)) {
+			for (final NonStackingStatBuff buff : this.nonStackingPctBuffs.get(key)) {
 				if (buffForKey == null) {
 					buffForKey = buff.getValue();
-				} else {
+				}
+				else {
 					if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 						buffForKey += buff.getValue();
-					} else {
+					}
+					else {
 						buffForKey = Math.max(buffForKey, buff.getValue());
 					}
 				}
@@ -155,14 +158,15 @@ public abstract class CUnitAttack {
 			if (buffForKey == null) {
 				continue;
 			}
-			int otherAtkBonus = (int)(this.totalBaseDamage * buffForKey) + (int)Math.ceil(this.totalDamageDice * (1+this.damageSidesPerDie) / 2 * buffForKey);    
-		    if (otherAtkBonus == 0) {
-		    	otherAtkBonus = (int)(buffForKey/Math.abs(buffForKey));
-		    }
-		    if (otherAtkBonus <= 0) {
-		    	otherAtkBonus = Math.max(otherAtkBonus, -1 * this.minDamageDisplay);
-		    }
-		    totalNSAtkPctBuff += otherAtkBonus;
+			int otherAtkBonus = (int) (this.totalBaseDamage * buffForKey)
+					+ (int) Math.ceil(((this.totalDamageDice * (1 + this.damageSidesPerDie)) / 2) * buffForKey);
+			if (otherAtkBonus == 0) {
+				otherAtkBonus = (int) (buffForKey / Math.abs(buffForKey));
+			}
+			if (otherAtkBonus <= 0) {
+				otherAtkBonus = Math.max(otherAtkBonus, -1 * this.minDamageDisplay);
+			}
+			totalNSAtkPctBuff += otherAtkBonus;
 		}
 
 		if (this.minDamageDisplay < 0) {
@@ -174,9 +178,10 @@ public abstract class CUnitAttack {
 
 		this.totalTemporaryDamageBonus = this.primaryAttributeTemporaryDamageBonus + this.temporaryDamageBonus
 				+ totalNSAtkBuff + totalNSAtkPctBuff;
-		float totalAttackSpeedBonus = this.agiAttackSpeedBonus + this.attackSpeedBonus + this.attackSpeedModifier;
+		final float totalAttackSpeedBonus = this.agiAttackSpeedBonus + this.attackSpeedBonus + this.attackSpeedModifier;
 		float totalAttackSpeedPercent = 1.0f + totalAttackSpeedBonus;
-		// TODO there might be a gameplay constants value for this instead of 0.0001, didn't look
+		// TODO there might be a gameplay constants value for this instead of 0.0001,
+		// didn't look
 		if (totalAttackSpeedPercent <= 0.0001f) {
 			totalAttackSpeedPercent = 0.0001f;
 		}
@@ -333,39 +338,39 @@ public abstract class CUnitAttack {
 		return this.attackSpeedModifier;
 	}
 
-	public void setAttackSpeedModifier(float attackSpeedModifier) {
+	public void setAttackSpeedModifier(final float attackSpeedModifier) {
 		this.attackSpeedModifier = Math.min(attackSpeedModifier, 4);
 		computeDerivedFields();
 	}
 
 	public Map<String, List<NonStackingStatBuff>> getNonStackingFlatBuffs() {
-		return nonStackingFlatBuffs;
+		return this.nonStackingFlatBuffs;
 	}
 
-	public void setNonStackingFlatBuffs(Map<String, List<NonStackingStatBuff>> nonStackingFlatBuffs) {
+	public void setNonStackingFlatBuffs(final Map<String, List<NonStackingStatBuff>> nonStackingFlatBuffs) {
 		this.nonStackingFlatBuffs = nonStackingFlatBuffs;
 	}
 
 	public Map<String, List<NonStackingStatBuff>> getNonStackingPctBuffs() {
-		return nonStackingPctBuffs;
+		return this.nonStackingPctBuffs;
 	}
 
-	public void setNonStackingPctBuffs(Map<String, List<NonStackingStatBuff>> nonStackingPctBuffs) {
+	public void setNonStackingPctBuffs(final Map<String, List<NonStackingStatBuff>> nonStackingPctBuffs) {
 		this.nonStackingPctBuffs = nonStackingPctBuffs;
 	}
-	
-	public void setAgilityAttackSpeedBonus(float agiAttackSpeedBonus) {
+
+	public void setAgilityAttackSpeedBonus(final float agiAttackSpeedBonus) {
 		this.agiAttackSpeedBonus = agiAttackSpeedBonus;
 		computeDerivedFields();
 	}
 
-	public void setAttackSpeedBonus(float attackSpeedBonus) {
+	public void setAttackSpeedBonus(final float attackSpeedBonus) {
 		this.attackSpeedBonus = attackSpeedBonus;
 		computeDerivedFields();
 	}
 
 	public float getAttackSpeedBonus() {
-		return attackSpeedBonus;
+		return this.attackSpeedBonus;
 	}
 
 	public int getPrimaryAttributePermanentDamageBonus() {
@@ -385,11 +390,11 @@ public abstract class CUnitAttack {
 	}
 
 	public int getTotalDamageDice() {
-		return totalDamageDice;
+		return this.totalDamageDice;
 	}
 
 	public int getTotalBaseDamage() {
-		return totalBaseDamage;
+		return this.totalBaseDamage;
 	}
 
 	public int getTotalTemporaryDamageBonus() {
@@ -397,61 +402,73 @@ public abstract class CUnitAttack {
 	}
 
 	public float getTotalAttackSpeedPercent() {
-		return totalAttackSpeedPercent;
+		return this.totalAttackSpeedPercent;
 	}
 
 	public abstract void launch(CSimulation simulation, CUnit unit, AbilityTarget target, float damage,
-								CUnitAttackListener attackListener);
+			CUnitAttackListener attackListener);
 
-	public int roll(Random seededRandom) {
+	public int roll(final Random seededRandom) {
 		int damage = getTotalBaseDamage();
-		int dice = getTotalDamageDice();
-		int sidesPerDie = getDamageSidesPerDie();
+		final int dice = getTotalDamageDice();
+		final int sidesPerDie = getDamageSidesPerDie();
 		for (int i = 0; i < dice; i++) {
-			damage += seededRandom.nextInt(sidesPerDie) + 1;
+			final int singleRoll = sidesPerDie == 0 ? 0 : seededRandom.nextInt(sidesPerDie);
+			damage += singleRoll + 1;
 		}
 		return damage + getTotalTemporaryDamageBonus();
 	}
 
-	public CUnitAttackPreDamageListenerDamageModResult runPreDamageListeners(final CSimulation simulation, CUnit attacker, AbilityTarget target,
-			float damage) {
-		CUnitAttackPreDamageListenerDamageModResult result = new CUnitAttackPreDamageListenerDamageModResult(damage);
+	public CUnitAttackPreDamageListenerDamageModResult runPreDamageListeners(final CSimulation simulation,
+			final CUnit attacker, final AbilityTarget target, final float damage) {
+		final CUnitAttackPreDamageListenerDamageModResult result = new CUnitAttackPreDamageListenerDamageModResult(
+				damage);
 		CUnitAttackEffectListenerStacking allowContinue = new CUnitAttackEffectListenerStacking();
 
-		for (CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
+		for (final CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
 			if (allowContinue.isAllowStacking()) {
-				for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(priority)) {
+				for (final CUnitAttackPreDamageListener listener : attacker
+						.getPreDamageListenersForPriority(priority)) {
 					if (allowContinue.isAllowSamePriorityStacking()) {
-						allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+						allowContinue = listener.onAttack(simulation, attacker, target, this.weaponType,
+								this.attackType, this.weaponType.getDamageType(), result);
 					}
 				}
 			}
 		}
 		if (result.isMiss()) {
-			if (weaponType == CWeaponType.ARTILLERY) {
+			if (this.weaponType == CWeaponType.ARTILLERY) {
 				result.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
-			} else if (weaponType == CWeaponType.MSPLASH) {
+			}
+			else if (this.weaponType == CWeaponType.MSPLASH) {
 				result.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
 				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss");
-			} else {
+			}
+			else {
 				result.setBaseDamage(0);
 				result.setBonusDamage(0);
 				result.setDamageMultiplier(0);
-				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss"); //TODO Technically cheating here
+				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss"); // TODO
+																															// Technically
+																															// cheating
+																															// here
 			}
 		}
-		
-		if (!result.isMiss() && result.getDamageMultiplier() != 1 && result.getDamageMultiplier() != 0) {
-			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, Math.round(result.computeFinalDamage()));
-		} else if (result.getBonusDamage() != 0) {
-			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.BASH, Math.round(result.getBonusDamage()));
+
+		if (!result.isMiss() && (result.getDamageMultiplier() != 1) && (result.getDamageMultiplier() != 0)) {
+			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE,
+					Math.round(result.computeFinalDamage()));
+		}
+		else if (result.getBonusDamage() != 0) {
+			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.BASH,
+					Math.round(result.getBonusDamage()));
 		}
 		return result;
 	}
 
-	public void runPostDamageListeners(final CSimulation simulation, CUnit attacker, AbilityTarget target,
-			float actualDamage) {
-		for (CUnitAttackPostDamageListener listener : attacker.getPostDamageListeners()) {
+	public void runPostDamageListeners(final CSimulation simulation, final CUnit attacker, final AbilityTarget target,
+			final float actualDamage) {
+		for (final CUnitAttackPostDamageListener listener : attacker.getPostDamageListeners()) {
 			listener.onHit(simulation, attacker, target, actualDamage);
 
 		}

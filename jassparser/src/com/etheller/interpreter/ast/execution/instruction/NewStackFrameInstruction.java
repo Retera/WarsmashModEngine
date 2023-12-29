@@ -15,11 +15,14 @@ public class NewStackFrameInstruction implements JassInstruction {
 	@Override
 	public void run(final JassThread thread) {
 		final JassStackFrame baseStackFrame = thread.stackFrame;
-		final JassStackFrame jassStackFrame = new JassStackFrame();
+		final JassStackFrame jassStackFrame = new JassStackFrame(this.argumentCount);
 		jassStackFrame.stackBase = baseStackFrame;
 		jassStackFrame.returnAddressInstructionPtr = this.returnAddressInstructionPtr;
 		for (int i = 0; i < this.argumentCount; i++) {
-			jassStackFrame.push(baseStackFrame.pop());
+			jassStackFrame.push(baseStackFrame.getLast((this.argumentCount - i) - 1));
+		}
+		for (int i = 0; i < this.argumentCount; i++) {
+			baseStackFrame.pop();
 		}
 		thread.stackFrame = jassStackFrame;
 	}

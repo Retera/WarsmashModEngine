@@ -9,6 +9,7 @@ public class JassThread {
 	public TriggerExecutionScope triggerScope;
 	public int instructionPtr;
 	public boolean sleeping = false;
+	public JassThread parent;
 
 	public JassThread(final JassStackFrame stackFrame, final GlobalScope globalScope,
 			final TriggerExecutionScope triggerScope, final int instructionPtr) {

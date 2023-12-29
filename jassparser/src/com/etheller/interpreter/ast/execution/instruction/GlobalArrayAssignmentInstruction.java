@@ -16,8 +16,8 @@ public class GlobalArrayAssignmentInstruction implements JassInstruction {
 
 	@Override
 	public void run(final JassThread thread) {
-		final JassValue index = thread.stackFrame.pop();
 		final JassValue value = thread.stackFrame.pop();
+		final JassValue index = thread.stackFrame.pop();
 		final JassValue globalValue = thread.globalScope.getGlobalById(this.globalId);
 
 		if (globalValue == null) {

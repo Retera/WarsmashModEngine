@@ -22,6 +22,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.interpreter.JassLexer;
 import com.etheller.interpreter.JassParser;
 import com.etheller.interpreter.ast.debug.JassException;
+import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
@@ -32,6 +33,7 @@ import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
+import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
@@ -40,6 +42,7 @@ import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.RealJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
 import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
+import com.etheller.interpreter.ast.value.visitor.CodeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.IntegerJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.JassFunctionJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
@@ -137,6 +140,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.CUnitState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerNativeEvent;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerSleepAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CAttackTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CBlendMode;
@@ -176,7 +180,7 @@ public class Jass2 {
 
 		final JassProgramVisitor jassProgramVisitor = new JassProgramVisitor();
 		final CommonEnvironment environment = new CommonEnvironment(jassProgramVisitor, dataSource, uiViewport, uiScene,
-				war3MapViewer, meleeUI);
+				war3MapViewer, meleeUI, files);
 		for (String jassFilePath : files) {
 			if (!dataSource.has(jassFilePath)) {
 				jassFilePath = jassFilePath
@@ -482,7 +486,7 @@ public class Jass2 {
 
 		private CommonEnvironment(final JassProgramVisitor jassProgramVisitor, final DataSource dataSource,
 				final Viewport uiViewport, final Scene uiScene, final War3MapViewer war3MapViewer,
-				final WarsmashUI meleeUI) {
+				final WarsmashUI meleeUI, final String[] originalFiles) {
 			this.jassProgramVisitor = jassProgramVisitor;
 			this.gameUI = war3MapViewer.getGameUI();
 			final Rectangle tempRect = new Rectangle();
@@ -715,8 +719,7 @@ public class Jass2 {
 								ObjectJassValueVisitor.<CTimerJass>getInstance());
 						final Double timeout = arguments.get(1).visit(RealJassValueVisitor.getInstance());
 						final boolean periodic = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
-						final JassFunction handlerFunc = nullable(arguments, 3,
-								JassFunctionJassValueVisitor.getInstance());
+						final CodeJassValue handlerFunc = nullable(arguments, 3, CodeJassValueVisitor.getInstance());
 						if ((timer != null) && !timer.isRunning()) {
 							timer.setTimeoutTime(timeout.floatValue());
 							timer.setRepeats(periodic);
@@ -780,10 +783,12 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GroupAddUnit",
 					(arguments, globalScope, triggerScope) -> {
-						final List<CUnit> group = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+						final List<CUnit> group = nullable(arguments, 0,
+								ObjectJassValueVisitor.<List<CUnit>>getInstance());
 						final CUnit whichUnit = arguments.get(1).visit(ObjectJassValueVisitor.<CUnit>getInstance());
-						group.add(whichUnit);
+						if (group != null) {
+							group.add(whichUnit);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GroupRemoveUnit",
@@ -1246,10 +1251,10 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final CPlayerJass whyichPlayer = arguments.get(1)
+						final CPlayerJass whichPlayer = arguments.get(1)
 								.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
-						final TriggerBooleanExpression filter = arguments.get(2)
-								.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+						final TriggerBooleanExpression filter = nullable(arguments, 2,
+								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 						throw new UnsupportedOperationException("GroupEnumUnitsSelected not supported yet.");
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GroupImmediateOrder",
@@ -1362,17 +1367,19 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("ForGroup",
 					(arguments, globalScope, triggerScope) -> {
-						final List<CUnit> group = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						final JassFunction callback = arguments.get(1)
-								.visit(JassFunctionJassValueVisitor.getInstance());
-						try {
-							for (final CUnit unit : group) {
-								callback.call(Collections.emptyList(), globalScope,
-										CommonTriggerExecutionScope.enumScope(triggerScope, unit));
+						final List<CUnit> group = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (group != null) {
+							final JassFunction callback = arguments.get(1)
+									.visit(JassFunctionJassValueVisitor.getInstance());
+							try {
+								for (final CUnit unit : group) {
+									callback.call(Collections.emptyList(), globalScope,
+											CommonTriggerExecutionScope.enumScope(triggerScope, unit));
+								}
 							}
-						}
-						catch (final Exception e) {
-							throw new JassException(globalScope, "Exception during ForGroup", e);
+							catch (final Exception e) {
+								throw new JassException(globalScope, "Exception during ForGroup", e);
+							}
 						}
 						return null;
 					});
@@ -2288,6 +2295,19 @@ public class Jass2 {
 								player.getId(), (float) x, (float) y, (float) facing);
 						return new HandleJassValue(unitType, newUnit);
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("CreateCorpse",
+					(arguments, globalScope, triggerScope) -> {
+						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int rawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final double x = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+						final double y = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+						final double facing = arguments.get(4).visit(RealJassValueVisitor.getInstance());
+						final War3ID rawcodeId = new War3ID(rawcode);
+						final CUnit newUnit = CommonEnvironment.this.simulation.createUnitSimple(rawcodeId,
+								player.getId(), (float) x, (float) y, (float) facing);
+						newUnit.kill(this.simulation);
+						return new HandleJassValue(unitType, newUnit);
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("BlzCreateUnitWithSkin",
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -2315,6 +2335,9 @@ public class Jass2 {
 								ObjectJassValueVisitor.getInstance());
 						final float facing = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final War3ID rawcodeId = new War3ID(rawcode);
+						if ("nmrl".equals(rawcodeId.toString())) {
+							System.err.println("mrgrgllglgllgll");
+						}
 						final float x = whichLocation == null ? 0 : (float) whichLocation.x;
 						final float y = whichLocation == null ? 0 : (float) whichLocation.y;
 						final CUnit newUnit = CommonEnvironment.this.simulation.createUnitSimple(rawcodeId,
@@ -2635,10 +2658,18 @@ public class Jass2 {
 						whichTrigger.execute(globalScope, new CommonTriggerExecutionScope(whichTrigger, triggerScope));
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerExecuteWait",
+					(arguments, globalScope, triggerScope) -> {
+						final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						whichTrigger.setWaitOnSleeps(true);
+						whichTrigger.execute(globalScope, new CommonTriggerExecutionScope(whichTrigger, triggerScope));
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("Preloader",
 					(arguments, globalScope, triggerScope) -> {
 						final String filename = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-						doPreloadScript(dataSource, war3MapViewer, filename);
+						doPreloadScript(dataSource, uiViewport, uiScene, war3MapViewer, filename, meleeUI,
+								originalFiles, jassProgramVisitor);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateTimerDialog",
@@ -2688,7 +2719,7 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("EnableWeatherEffect",
 					(arguments, globalScope, triggerScope) -> {
-						final Rectangle where = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final Rectangle where = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final boolean enable = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
 						// TODO NYI
 						return null;
@@ -2846,9 +2877,18 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerSleepAction",
 					(arguments, globalScope, triggerScope) -> {
-						final double time = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-						if (time != 0) {
-							throw new JassException(globalScope, "Needs to sleep " + time, null);
+						final Double seconds = arguments.get(0).visit(RealJassValueVisitor.getInstance());
+						final JassThread currentThread = globalScope.getCurrentThread();
+						if (currentThread != null) {
+							currentThread.setSleeping(true);
+							final CTimerSleepAction timer = new CTimerSleepAction(currentThread);
+							timer.setRepeats(false);
+							timer.setTimeoutTime(seconds.floatValue());
+							timer.start(this.simulation);
+						}
+						else {
+							throw new JassException(globalScope,
+									"Needs to sleep " + seconds + " but no thread was found", null);
 						}
 						return null;
 					});
@@ -3151,6 +3191,34 @@ public class Jass2 {
 							cameraSetup.setDestPositionY(y);
 						}
 						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupGetDestPositionLoc",
+					(arguments, globalScope, triggerScope) -> {
+						final CustomCameraSetup cameraSetup = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						if (cameraSetup != null) {
+							return new HandleJassValue(locationType,
+									new Point2D.Double(cameraSetup.getDestPositionX(), cameraSetup.getDestPositionY()));
+						}
+						return locationType.getNullValue();
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupGetDestPositionX",
+					(arguments, globalScope, triggerScope) -> {
+						final CustomCameraSetup cameraSetup = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						if (cameraSetup != null) {
+							return new RealJassValue(cameraSetup.getDestPositionX());
+						}
+						return RealJassValue.ZERO;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupGetDestPositionY",
+					(arguments, globalScope, triggerScope) -> {
+						final CustomCameraSetup cameraSetup = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						if (cameraSetup != null) {
+							return new RealJassValue(cameraSetup.getDestPositionY());
+						}
+						return RealJassValue.ZERO;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupApplyForceDuration",
 					(arguments, globalScope, triggerScope) -> {
@@ -3675,10 +3743,10 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInGroup",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.<CUnit>getInstance());
-						final List<CUnit> group = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						return BooleanJassValue.of(group.contains(whichUnit));
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.<CUnit>getInstance());
+						final List<CUnit> group = nullable(arguments, 1,
+								ObjectJassValueVisitor.<List<CUnit>>getInstance());
+						return BooleanJassValue.of((whichUnit != null) && (group != null) && group.contains(whichUnit));
 					});
 
 			// Patch 1.23+ crap
@@ -4276,17 +4344,6 @@ public class Jass2 {
 			registerRandomNatives(jassProgramVisitor, this.simulation);
 		}
 
-		public void config() {
-			try {
-				this.jassProgramVisitor.getGlobals().getFunctionByName("config").call(Collections.emptyList(),
-						this.jassProgramVisitor.getGlobals(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
-			}
-			catch (final Exception exc) {
-				throw new JassException(this.jassProgramVisitor.getGlobals(),
-						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc);
-			}
-		}
-
 		public void main() {
 			final CTimer triggerQueueTimer = new CTimer() {
 				@Override
@@ -4299,8 +4356,9 @@ public class Jass2 {
 			triggerQueueTimer.start(this.simulation);
 			this.simulation.setGlobalScope(this.jassProgramVisitor.getGlobals());
 			try {
-				this.jassProgramVisitor.getGlobals().getFunctionByName("main").call(Collections.emptyList(),
-						this.jassProgramVisitor.getGlobals(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
+				final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("main",
+						Collections.emptyList(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
+				this.jassProgramVisitor.getGlobals().queueThread(mainThread);
 			}
 			catch (final Exception exc) {
 				throw new JassException(this.jassProgramVisitor.getGlobals(),
@@ -4439,8 +4497,9 @@ public class Jass2 {
 
 		public void config() {
 			try {
-				this.jassProgramVisitor.getGlobals().getFunctionByName("config").call(Collections.emptyList(),
-						this.jassProgramVisitor.getGlobals(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
+				final JassThread configThread = this.jassProgramVisitor.getGlobals().createThread("config",
+						Collections.emptyList(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
+				this.jassProgramVisitor.getGlobals().runThreadUntilCompletion(configThread);
 			}
 			catch (final Exception exc) {
 				throw new JassException(this.jassProgramVisitor.getGlobals(),
@@ -4574,16 +4633,16 @@ public class Jass2 {
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("DestroyFilter",
 				(arguments, globalScope, triggerScope) -> {
-					final BoolExprFilter filter = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<BoolExprFilter>getInstance());
+					final BoolExprFilter filter = nullable(arguments, 0,
+							ObjectJassValueVisitor.<BoolExprFilter>getInstance());
 					System.err.println(
 							"DestroyFilter called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("DestroyBoolExpr",
 				(arguments, globalScope, triggerScope) -> {
-					final TriggerBooleanExpression boolexpr = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+					final TriggerBooleanExpression boolexpr = nullable(arguments, 0,
+							ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 					System.err.println(
 							"DestroyBoolExpr called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
 					return null;
@@ -4617,7 +4676,7 @@ public class Jass2 {
 		jassProgramVisitor.getJassNativeManager().createNative("TriggerAddAction",
 				(arguments, globalScope, triggerScope) -> {
 					final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					final JassFunction actionFunc = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+					final CodeJassValue actionFunc = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
 					final int actionIndex = whichTrigger.addAction(actionFunc);
 					return new HandleJassValue(triggeractionType,
 							new TriggerAction(whichTrigger, actionFunc, actionIndex));
@@ -4659,6 +4718,15 @@ public class Jass2 {
 		return arg.visit(visitor);
 	}
 
+	private static CodeJassValue nullable(final List<JassValue> arguments, final int index,
+			final CodeJassValueVisitor visitor) {
+		final JassValue arg = arguments.get(index);
+		if (arg == null) {
+			return null;
+		}
+		return arg.visit(visitor);
+	}
+
 	private static JassFunction nullable(final List<JassValue> arguments, final int index,
 			final JassFunctionJassValueVisitor visitor) {
 		final JassValue arg = arguments.get(index);
@@ -4668,9 +4736,9 @@ public class Jass2 {
 		return arg.visit(visitor);
 	}
 
-	private static void doPreloadScript(final DataSource dataSource, final War3MapViewer war3MapViewer,
-			final String filename) {
-		final JassProgramVisitor jassProgramVisitor = new JassProgramVisitor();
+	private static void doPreloadScript(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene,
+			final War3MapViewer war3MapViewer, final String filename, final WarsmashUI meleeUI,
+			final String[] originalFiles, final JassProgramVisitor jassProgramVisitor) {
 		jassProgramVisitor.getJassNativeManager().createNative("Preload", new JassFunction() {
 			@Override
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -4717,6 +4785,9 @@ public class Jass2 {
 		catch (final Exception e) {
 			e.printStackTrace();
 		}
+		final JassThread preloadThread = jassProgramVisitor.getGlobals().createThread("PreloadFiles",
+				Collections.emptyList(), TriggerExecutionScope.EMPTY);
+		jassProgramVisitor.getGlobals().queueThread(preloadThread);
 	}
 
 	private static final class SaveHashtableValueFunc implements JassFunction {

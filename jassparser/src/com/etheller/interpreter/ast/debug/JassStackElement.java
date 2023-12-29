@@ -1,5 +1,7 @@
 package com.etheller.interpreter.ast.debug;
 
+import com.etheller.interpreter.ast.execution.instruction.BeginFunctionInstruction;
+
 public class JassStackElement {
 	private final String sourceFile;
 	private final String functionName;
@@ -13,6 +15,10 @@ public class JassStackElement {
 
 	public JassStackElement(final JassStackElement other) {
 		this(other.sourceFile, other.functionName, other.lineNumber);
+	}
+
+	public JassStackElement(final BeginFunctionInstruction functionNameMetaData, final int lineNo) {
+		this(functionNameMetaData.getSourceFile(), functionNameMetaData.getName(), lineNo);
 	}
 
 	public String getSourceFile() {

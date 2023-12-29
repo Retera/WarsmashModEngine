@@ -16,6 +16,9 @@ public class BeginFunctionInstruction implements JassInstruction {
 	@Override
 	public void run(final JassThread thread) {
 		// This is a tomb stone instruction giving us function info for later maybe
+		if (thread.stackFrame == null) {
+			throw new IllegalStateException();
+		}
 		thread.stackFrame.functionNameMetaData = this;
 
 //		final JassStackFrame jassStackFrame = new JassStackFrame();

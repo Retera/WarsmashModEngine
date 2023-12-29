@@ -73,7 +73,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(profile, "Profile", false);
 		units.add(unitAbilities, "UnitAbilities", true);
@@ -102,7 +102,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(profile, "Profile", false);
 		units.add(itemData, "ItemData", true);
@@ -124,7 +124,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(destructableData, "DestructableData", true);
 
@@ -146,7 +146,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(destructableData, "DoodadData", true);
 
@@ -220,7 +220,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData abilities = new WarcraftData();
+		final WarcraftData abilities = new WarcraftData(this.worldEditStrings);
 
 		abilities.add(profile, "Profile", true);
 		abilities.add(abilityData, "AbilityData", true);
@@ -256,7 +256,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData abilities = new WarcraftData();
+		final WarcraftData abilities = new WarcraftData(this.worldEditStrings);
 
 		abilities.add(profile, "Profile", false);
 		abilities.add(abilityData, "AbilityData", true);
@@ -288,7 +288,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(profile, "Profile", false);
 		units.add(upgradeData, "UpgradeData", true);
@@ -391,9 +391,6 @@ public class StandardObjectData {
 					}
 				}
 			}
-		}
-
-		public WarcraftData() {
 		}
 
 		public List<DataTable> getTables() {
@@ -526,6 +523,7 @@ public class StandardObjectData {
 			return 0;
 		}
 
+		@Override
 		public void setField(final String field, final String value) {
 			for (final DataTable table : this.dataSource.getTables()) {
 				final Element element = table.get(this.id);
@@ -534,7 +532,8 @@ public class StandardObjectData {
 					return;
 				}
 			}
-			throw new IllegalArgumentException("no field");
+			final Element element = this.dataSource.tables.get(0).get(this.id);
+			element.setField(field, value);
 		}
 
 		@Override

@@ -649,6 +649,7 @@ public class CUnit extends CWidget {
 			else {
 				if ((this.currentBehavior != null)
 						&& (this.currentBehavior.getHighlightOrderId() == OrderIds.stunned)) {
+//					this.setAcceptingOrders(true);
 					setDefaultBehavior(this.interruptedDefaultBehavior);
 					this.currentBehavior = pollNextOrderBehavior(game);
 					this.interruptedBehavior = null;
@@ -826,7 +827,7 @@ public class CUnit extends CWidget {
 				if (buffForKey == null) {
 					continue;
 				}
-				totalNSHPGenBuff += buffForKey * (this.maximumLife);
+				totalNSHPGenBuff += buffForKey * this.maximumLife;
 			}
 			this.currentLifeRegenPerTick = (this.lifeRegen + this.lifeRegenBonus + this.lifeRegenStrengthBonus
 					+ totalNSHPGenBuff) * WarsmashConstants.SIMULATION_STEP_TIME;
@@ -1552,9 +1553,7 @@ public class CUnit extends CWidget {
 		final float manaRatio = this.maximumMana == 0 ? Float.NaN : this.mana / this.maximumMana;
 		final CUnitType previousUnitType = getUnitType();
 		this.unitType = game.getUnitData().getUnitType(typeId);
-		if (!Float.isNaN(manaRatio)) {
-			this.maximumMana = this.unitType.getManaMaximum();
-		}
+		this.maximumMana = this.unitType.getManaMaximum();
 		this.maximumLife = this.unitType.getMaxLife();
 		this.life = lifeRatio * this.maximumLife;
 		this.lifeRegen = this.unitType.getLifeRegen();
@@ -1630,7 +1629,7 @@ public class CUnit extends CWidget {
 		final int oldMaximumLife = getMaximumLife();
 		final float oldLife = getLife();
 		final int newMaximumLife = oldMaximumLife + hitPointBonus;
-		final float newLife = (oldLife * (newMaximumLife)) / oldMaximumLife;
+		final float newLife = (oldLife * newMaximumLife) / oldMaximumLife;
 		setMaximumLife(newMaximumLife);
 		setLife(game, newLife);
 	}
@@ -2637,7 +2636,7 @@ public class CUnit extends CWidget {
 				damageRatioFromDefense = 2f
 						- (float) StrictMath.pow(1f - simulation.getGameplayConstants().getDefenseArmor(), -defense);
 			}
-			trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * (result.computeFinalDamage());
+			trueDamage = damageRatioFromArmorClass * damageRatioFromDefense * result.computeFinalDamage();
 
 			for (final CUnitAttackFinalDamageTakenModificationListener listener : new ArrayList<>(
 					this.finalDamageTakenModificationListeners)) {
@@ -2647,7 +2646,7 @@ public class CUnit extends CWidget {
 
 			final boolean wasAboveMax = this.life > this.maximumLife;
 			this.life -= trueDamage;
-			if (((result.computeFinalDamage()) < 0) && !wasAboveMax && (this.life > this.maximumLife)) {
+			if ((result.computeFinalDamage() < 0) && !wasAboveMax && (this.life > this.maximumLife)) {
 				// NOTE wasAboveMax is for that weird life drain power to drain above max... to
 				// be honest that's a crazy mechanic anyway so I didn't test whether it works
 				// yet

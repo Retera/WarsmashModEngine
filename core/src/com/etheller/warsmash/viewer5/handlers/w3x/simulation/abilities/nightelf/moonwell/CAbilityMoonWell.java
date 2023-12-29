@@ -54,13 +54,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-		this.waterRenderComponent.remove();
+		removeWaterRenderComponent();
 		enableManaRegen(unit);
 	}
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
-		this.waterRenderComponent.remove();
+		removeWaterRenderComponent();
 	}
 
 	private void disableManaRegen(final CUnit unit) {
@@ -88,7 +88,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 		}
 		else {
 			if (isDisabled()) {
-				this.waterRenderComponent.remove();
+				removeWaterRenderComponent();
 			}
 			else {
 				this.waterRenderComponent.setHeight(this.waterHeight * (unit.getMana() / unit.getMaximumMana()));
@@ -104,12 +104,19 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 		}
 		if (this.autoCastActive) {
 			final int gameTurnTick = game.getGameTurnTick();
-			if ((gameTurnTick >= this.lastAutoCastCheckTick) && (unit.getMana() > this.autocastRequirement)) {
+			if (gameTurnTick >= this.lastAutoCastCheckTick && unit.getMana() > this.autocastRequirement) {
 				checkAutoCast(game, unit);
 				this.lastAutoCastCheckTick = gameTurnTick + (int) (2.0f / WarsmashConstants.SIMULATION_STEP_TIME);
 			}
 		}
 		super.onTick(game, unit);
+	}
+
+	private void removeWaterRenderComponent() {
+		if (this.waterRenderComponent != null) {
+			this.waterRenderComponent.remove();
+			this.waterRenderComponent = null;
+		}
 	}
 
 	private void checkAutoCast(final CSimulation game, final CUnit unit) {
@@ -139,13 +146,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 			final float lifeWanted = life > maximumLife ? 0 : maximumLife - life;
 			final float manaWanted = mana > maximumMana ? 0 : maximumMana - mana;
 			float availableCasterMana = caster.getMana();
-			if ((lifeWanted > 0) && (availableCasterMana > 0)) {
+			if (lifeWanted > 0 && availableCasterMana > 0) {
 				final float availableLifeOffered = availableCasterMana / this.hitPointsGained;
 				final float lifeGained = Math.min(availableLifeOffered, lifeWanted);
 				unitTarget.heal(game, lifeGained);
 				availableCasterMana -= lifeGained * this.hitPointsGained;
 			}
-			if ((manaWanted > 0) && (availableCasterMana > 0)) {
+			if (manaWanted > 0 && availableCasterMana > 0) {
 				final float availableManaOffered = availableCasterMana / this.manaGained;
 				final float manaGained = Math.min(availableManaOffered, manaWanted);
 				unitTarget.setMana(mana + manaGained);

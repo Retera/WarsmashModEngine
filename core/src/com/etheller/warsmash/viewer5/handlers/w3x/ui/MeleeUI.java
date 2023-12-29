@@ -487,12 +487,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
 		}
 		final Texture[] specialIcons = new Texture[3];
-		specialIcons[0] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
-				"UI\\MiniMap\\minimap-gold.blp");
+		specialIcons[0] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq, "UI\\MiniMap\\minimap-gold.blp");
 		specialIcons[1] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
 				"UI\\MiniMap\\minimap-neutralbuilding.blp");
-		specialIcons[2] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
-				"UI\\MiniMap\\minimap-hero.blp");
+		specialIcons[2] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq, "UI\\MiniMap\\minimap-hero.blp");
 		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();
 		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors, specialIcons);
 	}
@@ -789,8 +787,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.simpleBuildingBuildTimeIndicator.setWidth(buildTimeIndicatorWidth);
 		this.simpleBuildingBuildTimeIndicator.setHeight(buildTimeIndicatorHeight);
 		this.simpleInfoPanelBuildingDetail.setVisible(false);
-		this.simpleBuildQueueBackdrop = (TextureFrame) this.rootFrame
-				.getFrameByName("SimpleBuildQueueBackdrop", 0);
+		this.simpleBuildQueueBackdrop = (TextureFrame) this.rootFrame.getFrameByName("SimpleBuildQueueBackdrop", 0);
 		simpleBuildQueueBackdrop.setWidth(infoPanelUnitDetailWidth);
 		simpleBuildQueueBackdrop.setHeight(infoPanelUnitDetailWidth * 0.5f);
 		simpleBuildQueueBackdrop.setVisible(false);
@@ -1778,10 +1775,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						if (ally) {
 							if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_CONTROL)) {
 								returnValue = "|CFF00FF00" + name;
-							} else {
+							}
+							else {
 								returnValue = "|CFFFFFF00" + name;
 							}
-						} else {
+						}
+						else {
 							returnValue = "|CFFFF0000" + name;
 						}
 					}
@@ -1904,7 +1903,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		}
 
-		this.meleeUIMinimap.render(this.war3MapViewer.simulation, batch, this.war3MapViewer.units, this.war3MapViewer.simulation.getPathingGrid(), this.war3MapViewer.getFogOfWar(), this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex()));
+		this.meleeUIMinimap.render(this.war3MapViewer.simulation, batch, this.war3MapViewer.units,
+				this.war3MapViewer.simulation.getPathingGrid(), this.war3MapViewer.getFogOfWar(),
+				this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex()));
 		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
 		for (final TextTag textTag : this.war3MapViewer.textTags) {
@@ -2101,7 +2102,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final float uiAreaOfEffect = ability.getUIAreaOfEffect();
 			if (Float.isNaN(uiAreaOfEffect)) {
 				handleTargetCursor(ability);
-			} else {
+			}
+			else {
 				handlePlacementCursor(ability, uiAreaOfEffect);
 			}
 			return null;
@@ -2775,7 +2777,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				&& simulationUnit.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex() && !multiSelect) {
 			for (int i = 0; i < this.queueIconFrames.length; i++) {
 				final QueueItemType queueItemType = simulationUnit.getBuildQueueTypes()[i];
-				if (queueItemType == null || (i>0 && QueueItemType.SACRIFICE.equals(simulationUnit.getBuildQueueTypes()[0]))) {
+				if (queueItemType == null
+						|| i > 0 && QueueItemType.SACRIFICE.equals(simulationUnit.getBuildQueueTypes()[0])) {
 					this.queueIconFrames[i].setVisible(false);
 				}
 				else {
@@ -2824,11 +2827,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.UNIT) {
 				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
 						this.rootFrame.getTemplates().getDecoratedString("TRAINING"));
-			} else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.SACRIFICE) {
+			}
+			else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.SACRIFICE) {
 				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
 						this.rootFrame.getTemplates().getDecoratedString("TRAINING"));
 				this.simpleBuildQueueBackdrop.setVisible(false);
-			} else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.HERO_REVIVE) {
+			}
+			else if (simulationUnit.getBuildQueueTypes()[0] == QueueItemType.HERO_REVIVE) {
 				this.rootFrame.setText(this.simpleBuildingBuildingActionLabel,
 						this.rootFrame.getTemplates().getDecoratedString("REVIVING"));
 			}

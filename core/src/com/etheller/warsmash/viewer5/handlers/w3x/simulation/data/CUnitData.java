@@ -219,6 +219,8 @@ public class CUnitData {
 	private static final String LUMBER_BOUNTY_AWARDED_DICE = "lumberbountydice"; // replaced from 'ulbd'
 	private static final String LUMBER_BOUNTY_AWARDED_SIDES = "lumberbountysides"; // replaced from 'ulbs'
 
+	private static final String NEUTRAL_BUILDING_SHOW_ICON = "nbmmIcon";
+
 	private final CGameplayConstants gameplayConstants;
 	private final ObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
@@ -761,6 +763,8 @@ public class CUnitData {
 
 			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
 
+			final boolean neutralBuildingShowMinimapIcon = unitType.getFieldAsBoolean(NEUTRAL_BUILDING_SHOW_ICON, 0);
+
 			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, manaRegen, lifeRegenType,
 					manaInitial, manaMaximum, speed, defense, defaultAutocastAbilityId, abilityList, isBldg,
 					movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled, armorType, raise,
@@ -773,7 +777,7 @@ public class CUnitData {
 					revivesHeroes, pointValue, castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe,
 					defenseUpgradeBonus, sightRadiusDay, sightRadiusNight, extendedLineOfSight, goldBountyAwardedBase,
 					goldBountyAwardedDice, goldBountyAwardedSides, lumberBountyAwardedBase, lumberBountyAwardedDice,
-					lumberBountyAwardedSides);
+					lumberBountyAwardedSides, neutralBuildingShowMinimapIcon);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

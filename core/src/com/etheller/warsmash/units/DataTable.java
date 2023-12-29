@@ -340,6 +340,27 @@ public class DataTable implements ObjectData {
 	}
 
 	@Override
+	public void inheritFrom(String childKey, String parentKey) {
+		final Element childEntry = get(childKey);
+		final Element parentEntry = get(parentKey);
+		if (parentEntry != null) {
+			if (childEntry != null) {
+				for (final String key : parentEntry.keySet()) {
+					if (!childEntry.hasField(key)) {
+						final List<String> fieldList = parentEntry.getFieldAsList(key);
+						for (int i = 0; i < fieldList.size(); i++) {
+							childEntry.setField(key, fieldList.get(i), i);
+						}
+					}
+				}
+			}
+			else {
+				cloneUnit(parentKey, childKey);
+			}
+		}
+	}
+
+	@Override
 	public void setValue(final String slk, final String id, final String field, final String value) {
 		get(id).setField(field, value);
 	}

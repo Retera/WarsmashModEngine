@@ -210,6 +210,7 @@ public class RenderUnit implements RenderWidget {
 				if (this.shadow != null) {
 					this.shadow.show(map.terrain.centerOffset);
 				}
+				repositioned(map);
 			}
 		}
 		final float prevX = this.location[0];
@@ -605,7 +606,7 @@ public class RenderUnit implements RenderWidget {
 
 	@Override
 	public boolean isSelectable(final CSimulation simulation, final int byPlayer) {
-		return simulationUnit.isVisible(simulation, byPlayer); // later needs locust
+		return this.simulationUnit.isVisible(simulation, byPlayer); // later needs locust
 	}
 
 	@Override
@@ -655,20 +656,20 @@ public class RenderUnit implements RenderWidget {
 	}
 
 	public RenderUnitTypeData getTypeData() {
-		return typeData;
+		return this.typeData;
 	}
-	
+
 	public void setVertexColoring(Color color) {
 		this.instance.setVertexColor(color);
 	}
-	
+
 	public void setVertexColoring(float r, float g, float b) {
-		float[] color = new float[] {r,g,b};
+		final float[] color = new float[] { r, g, b };
 		this.instance.setVertexColor(color);
 	}
-	
+
 	public void setVertexColoring(float r, float g, float b, float a) {
-		float[] color = new float[] {r,g,b,a};
+		final float[] color = new float[] { r, g, b, a };
 		this.instance.setVertexColor(color);
 	}
 }

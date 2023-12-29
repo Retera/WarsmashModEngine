@@ -431,6 +431,13 @@ public class StandardObjectData {
 			}
 			this.units.put(new StringKey(cloneId), new WarcraftObject(cloneId, this));
 		}
+
+		@Override
+		public void inheritFrom(String childKey, String parentKey) {
+			for (final DataTable table : this.tables) {
+				table.inheritFrom(childKey, parentKey);
+			}
+		}
 	}
 
 	public static class WarcraftObject implements GameObject {

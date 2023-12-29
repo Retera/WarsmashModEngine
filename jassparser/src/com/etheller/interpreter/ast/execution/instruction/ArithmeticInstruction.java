@@ -29,7 +29,9 @@ public class ArithmeticInstruction implements JassInstruction {
 							.visit(ArithmeticLeftHandNullJassValueVisitor.INSTANCE.reset(this.arithmeticSign));
 				}
 			}
-			result = leftValue.visit(ArithmeticJassValueVisitor.INSTANCE.reset(rightValue, this.arithmeticSign));
+			else {
+				result = leftValue.visit(ArithmeticJassValueVisitor.INSTANCE.reset(rightValue, this.arithmeticSign));
+			}
 		}
 		catch (final ArithmeticException exception) {
 			exception.printStackTrace();

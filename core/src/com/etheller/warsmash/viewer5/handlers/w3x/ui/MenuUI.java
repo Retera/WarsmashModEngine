@@ -1829,7 +1829,8 @@ public class MenuUI {
 									.getByAddress(this.beginGameInformation.hostInetAddress);
 							System.err.println("Connecting to address: " + byAddress);
 							warsmashClient = new WarsmashClient(byAddress, this.beginGameInformation.hostUdpPort,
-									this.loadingMap.viewer, this.beginGameInformation.sessionToken);
+									this.loadingMap.viewer, this.beginGameInformation.sessionToken,
+									this.beginGameInformation.serverSlotToMapSlot);
 						}
 						catch (final UnknownHostException e) {
 							throw new RuntimeException(e);

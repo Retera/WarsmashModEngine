@@ -3301,8 +3301,10 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("KillUnit",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						whichUnit.kill(CommonEnvironment.this.simulation);
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichUnit != null) {
+							whichUnit.kill(CommonEnvironment.this.simulation);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveUnit",

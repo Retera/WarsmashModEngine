@@ -1593,6 +1593,20 @@ public class CUnit extends CWidget {
 		game.unitUpdatedType(this, typeId);
 		game.getUnitData().addMissingDefaultAbilitiesToUnit(game, game.getHandleIdAllocator(), this.unitType, false, -1,
 				this.speed, this);
+		{
+			// Remove and add the persisted abilities, so that some stuff like move and
+			// attack are "first" in the end resulting list. This is "dumb" and a better
+			// design later might be worth considering; it fixes a bug where otherwise
+			// `Chaos` used on a worker into another near identical worker was changing the
+			// ability order used by "smart" such that the unit would prefer Attack over
+			// Harvest
+			for (final CAbility persisted : persistedAbilities) {
+				this.abilities.remove(persisted);
+			}
+			for (final CAbility persisted : persistedAbilities) {
+				this.abilities.add(persisted);
+			}
+		}
 		if (Float.isNaN(manaRatio)) {
 			this.mana = this.unitType.getManaInitial();
 		}
@@ -2435,19 +2449,15 @@ public class CUnit extends CWidget {
 
 	public void setX(final float newX, final CWorldCollision collision, final CRegionManager regionManager) {
 		final float prevX = getX();
-		if (!isBuilding()) {
-			setX(newX);
-			collision.translate(this, newX - prevX, 0);
-		}
+		setX(newX);
+		collision.translate(this, newX - prevX, 0);
 		checkRegionEvents(regionManager);
 	}
 
 	public void setY(final float newY, final CWorldCollision collision, final CRegionManager regionManager) {
 		final float prevY = getY();
-		if (!isBuilding()) {
-			setY(newY);
-			collision.translate(this, 0, newY - prevY);
-		}
+		setY(newY);
+		collision.translate(this, 0, newY - prevY);
 		checkRegionEvents(regionManager);
 	}
 
@@ -2496,9 +2506,7 @@ public class CUnit extends CWidget {
 		final float prevY = getY();
 		setX(newX);
 		setY(newY);
-		if (!isBuilding()) {
-			collision.translate(this, newX - prevX, newY - prevY);
-		}
+		collision.translate(this, newX - prevX, newY - prevY);
 		checkRegionEvents(regionManager);
 	}
 
@@ -4131,12 +4139,14 @@ public class CUnit extends CWidget {
 			setLife(simulation, 0);
 		}
 		else {
-			if (this.constructing) {
-				player.removeTechtreeInProgress(this.unitType.getTypeId());
-			}
-			else {
-				player.removeTechtreeUnlocked(simulation, this.unitType.getTypeId());
-			}
+			if (!isDead()) {
+				if (this.constructing) {
+					player.removeTechtreeInProgress(this.unitType.getTypeId());
+				}
+				else {
+					player.removeTechtreeUnlocked(simulation, this.unitType.getTypeId());
+				}
+			} // else techtree was removed upon death
 			setHidden(true);
 			// setting hidden to let things that refer to this before it gets garbage
 			// collected see it as basically worthless

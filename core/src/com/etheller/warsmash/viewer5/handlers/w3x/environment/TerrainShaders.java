@@ -392,7 +392,7 @@ public class TerrainShaders {
 				"   vec2 d2 = min(position - mapBounds.xy, mapBounds.zw - position);\r\n" + //
 				"   float d1 = clamp(min(d2.x, d2.y) / 64.0 + 1.0, 0.0, 1.0) * 0.8 + 0.2;;\r\n" + //
 				"   float fogOfWarData = texture2D(fogOfWarMap, v_suv).r;\r\n" + //
-				"	outColor = texture(water_textures, vec3(UV, current_texture)) * vec4(Color.rgb * d1 * shadeColor, Color.a) * (1.0 - fogOfWarData);\r\n"
+				"	outColor = texture(water_textures, vec3(UV, current_texture)) * vec4(Color.rgb * d1 * shadeColor * (1.0 - fogOfWarData), Color.a);\r\n"
 				+ //
 				"}";
 	}

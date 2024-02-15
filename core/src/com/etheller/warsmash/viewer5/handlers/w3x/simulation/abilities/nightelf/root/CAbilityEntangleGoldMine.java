@@ -113,7 +113,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		instant = (orderId == OrderIds.entangleinstant);
+		instant = orderId == OrderIds.entangleinstant;
 		return super.begin(game, caster, orderId, target);
 	}
 
@@ -122,7 +122,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
 			final CAbilityGoldMinable goldMineData = unitTarget.getGoldMineData();
-			if ((goldMineData != null) && goldMineData.isBaseMine()) {
+			if (goldMineData != null && goldMineData.isBaseMine()) {
 				unitTarget.setHidden(true);
 				unitTarget.setPaused(true);
 				// == stuff copied from build behavior ==
@@ -147,8 +147,8 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 				// to a common subroutine later) ==
 
 				this.entangledMine.getOverlayedGoldMineData().setParentMine(unitTarget, goldMineData);
-				this.unitRootsRenderComponent = simulation.createPersistentSpellEffectOnUnit(unit, getAlias(), CEffectType.CASTER,
-						0);
+				this.unitRootsRenderComponent = simulation.createPersistentSpellEffectOnUnit(unit, getAlias(),
+						CEffectType.CASTER, 0);
 
 				setIconShowing(false);
 				setPermanent(true);

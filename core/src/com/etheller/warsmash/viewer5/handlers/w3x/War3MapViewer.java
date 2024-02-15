@@ -3418,7 +3418,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					final RenderCorner corner = this.terrain.getCorner(x, y);
 					final GroundTexture currentTex = this.terrain.groundTextures.get(corner.getGroundTexture());
 					if ((corner != null) && currentTex.isBuildable()) {
-						corner.setBlight(blighted);
+						changedData |= corner.setBlight(blighted);
 					}
 					else {
 						continue;

@@ -34,6 +34,21 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 		this.childFrames.remove(childFrame);
 	}
 
+	public boolean mouseOverUI(float screenX, float screenY) {
+		boolean res = false;
+		if(isVisible()) {
+			ListIterator<UIFrame> reverseIterator = this.childFrames.listIterator(this.childFrames.size());
+			while (reverseIterator.hasPrevious()) {
+				final AbstractRenderableFrame child = (AbstractRenderableFrame) reverseIterator.previous();
+				res = child.renderBounds.contains(screenX, screenY) && child.isVisible();
+				if(res) {
+					return res;
+				}
+			}
+		}
+		return res;
+	}
+
 	public AbstractUIFrame(final String name, final UIFrame parent) {
 		super(name, parent);
 	}

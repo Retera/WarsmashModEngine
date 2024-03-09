@@ -3408,7 +3408,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final float blightRectangleMaxX = blightRectangle.x + blightRectangle.width;
 		final float blightRectangleMaxY = blightRectangle.y + blightRectangle.height;
 		final float rSquared = radius * radius;
-		final boolean changedData = false;
+		boolean changedData = false;
 		for (float x = blightRectangle.x; x < blightRectangleMaxX; x += 128.0f) {
 			for (float y = blightRectangle.y; y < blightRectangleMaxY; y += 128.0f) {
 				final float dx = x - whichLocationX;

@@ -3231,7 +3231,7 @@ public class CUnit extends CWidget {
 												.hasAlliance(targetUnit.getPlayerIndex(), CAllianceType.PASSIVE))
 										|| ((this.type == AutocastType.ATTACKINGENEMY)
 												&& !this.game.getPlayer(this.source.getPlayerIndex()).hasAlliance(
-														targetUnit.getPlayerIndex(), CAllianceType.PASSIVE)) {
+														targetUnit.getPlayerIndex(), CAllianceType.PASSIVE))) {
 									targetCheckReceiver.reset();
 									this.ability.checkCanAutoTarget(this.game, this.source,
 											this.ability.getBaseOrderId(), unit, targetCheckReceiver);

@@ -1461,7 +1461,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public SimulationRenderComponent spawnAbilitySoundEffect(final CUnit caster, final War3ID alias) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
 						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
-						if (abilityUi.getEffectSound() == null) {
+						if ((abilityUi == null) || (abilityUi.getEffectSound() == null)) {
 							return SimulationRenderComponent.DO_NOTHING;
 						}
 						final long soundId = War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound()).play(
@@ -3303,47 +3303,60 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			}
 			final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(targetWidget);
 			if (renderUnit == null) {
-				throw new NullPointerException(
+				final NullPointerException nullPointerException = new NullPointerException(
 						"renderUnit is null! targetWidget is \"" + ((CUnit) targetWidget).getUnitType().getName()
 								+ "\", attachPointName=\"" + attachPointNames + "\"");
+				if (WarsmashConstants.ENABLE_DEBUG) {
+					throw nullPointerException;
+				}
+				else {
+					nullPointerException.printStackTrace();
+				}
 			}
 			final MdxModel spawnedEffectModel = loadModelMdx(modelName);
 			if (spawnedEffectModel != null) {
 				final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel.addInstance();
-				modelInstance.setTeamColor(renderUnit.playerIndex);
 				float yaw = 0;
-				{
-					final MdxModel model = (MdxModel) renderUnit.instance.model;
-					int index = -1;
-					for (int i = 0; i < model.attachments.size(); i++) {
-						final Attachment attachment = model.attachments.get(i);
-						boolean match = true;
-						for (final String attachmentPointNameToken : attachPointNames) {
-							if (!attachment.getName().contains(attachmentPointNameToken)) {
-								match = false;
+				if (renderUnit != null) {
+					modelInstance.setTeamColor(renderUnit.playerIndex);
+					{
+						final MdxModel model = (MdxModel) renderUnit.instance.model;
+						int index = -1;
+						for (int i = 0; i < model.attachments.size(); i++) {
+							final Attachment attachment = model.attachments.get(i);
+							boolean match = true;
+							for (final String attachmentPointNameToken : attachPointNames) {
+								if (!attachment.getName().contains(attachmentPointNameToken)) {
+									match = false;
+								}
+							}
+							if (match) {
+								index = i;
+								break;
 							}
 						}
-						if (match) {
-							index = i;
-							break;
+						if (index != -1) {
+							modelInstance.detach();
+							final MdxNode attachment = renderUnit.instance.getAttachment(index);
+							modelInstance.setParent(attachment);
+							modelInstance.setLocation(0, 0, 0);
+						}
+						else {
+							// TODO This is not consistent with War3, is it? Should look nice though.
+							modelInstance.setLocation(renderUnit.location);
+							yaw = (float) Math.toRadians(renderUnit.getSimulationUnit().getFacing());
 						}
 					}
-					if (index != -1) {
-						modelInstance.detach();
-						final MdxNode attachment = renderUnit.instance.getAttachment(index);
-						modelInstance.setParent(attachment);
-						modelInstance.setLocation(0, 0, 0);
-					}
-					else {
-						// TODO This is not consistent with War3, is it? Should look nice though.
-						modelInstance.setLocation(renderUnit.location);
-						yaw = (float) Math.toRadians(renderUnit.getSimulationUnit().getFacing());
-					}
+				}
+				else {
+					modelInstance.setLocation(0, 0, 0);
 				}
 				modelInstance.setScene(War3MapViewer.this.worldScene);
+				final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments = renderUnit == null
+						? SequenceUtils.EMPTY
+						: renderUnit.getTypeData().getRequiredAnimationNamesForAttachments();
 				final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance, War3MapViewer.this,
-						yaw, RenderSpellEffect.DEFAULT_ANIMATION_QUEUE,
-						renderUnit.getTypeData().getRequiredAnimationNamesForAttachments());
+						yaw, RenderSpellEffect.DEFAULT_ANIMATION_QUEUE, requiredAnimationNamesForAttachments);
 				War3MapViewer.this.projectiles.add(renderAttackInstant);
 				return renderAttackInstant;
 			}

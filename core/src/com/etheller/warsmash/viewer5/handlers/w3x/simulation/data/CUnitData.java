@@ -486,6 +486,12 @@ public class CUnitData {
 				}
 			}
 		}
+
+		if (unitTypeInstance.isHero() && simulation.isMapReignOfChaos()
+				&& (unit.getFirstAbilityOfType(CAbilityInventory.class) == null)) {
+			unit.add(simulation,
+					simulation.getAbilityData().createAbility(War3ID.fromString("AInv"), handleIdAllocator.createId()));
+		}
 	}
 
 	private CUnitType getUnitTypeInstance(final War3ID typeId, final BufferedImage buildingPathingPixelMap,

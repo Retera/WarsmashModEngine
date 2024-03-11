@@ -68,6 +68,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePrefer
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CFogModifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.FalseTimeOfDay;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
@@ -117,6 +118,7 @@ public class CSimulation implements CPlayerAPI {
 	private final EnumMap<JassGameEventsWar3, List<CGlobalEvent>> eventTypeToEvents = new EnumMap<>(
 			JassGameEventsWar3.class);
 	private boolean timeOfDaySuspended;
+	private FalseTimeOfDay falseTimeOfDay = null;
 	private boolean daytime;
 	private final Set<CDestructable> ownedTreeSet = new HashSet<>();
 	private GlobalScope globalScope;
@@ -483,9 +485,15 @@ public class CSimulation implements CPlayerAPI {
 		}
 		this.gameTurnTick++;
 		final float timeOfDayBefore = getGameTimeOfDay();
-		if (!this.timeOfDaySuspended) {
-			this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
-					% this.gameplayConstants.getGameDayLength();
+		if (this.falseTimeOfDay != null) {
+			if (!this.falseTimeOfDay.tick()) {
+				this.falseTimeOfDay = null;
+			}
+		} else {
+			if (!this.timeOfDaySuspended) {
+				this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
+						% this.gameplayConstants.getGameDayLength();
+			}
 		}
 		final float timeOfDayAfter = getGameTimeOfDay();
 		this.daytime = (timeOfDayAfter >= this.gameplayConstants.getDawnTimeGameHours())
@@ -537,13 +545,28 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public float getGameTimeOfDay() {
+		if (this.falseTimeOfDay != null && this.falseTimeOfDay.isInitialized()) {
+			return this.falseTimeOfDay.getTimeOfDay();
+		}
 		return (this.currentGameDayTimeElapsed / this.gameplayConstants.getGameDayLength())
 				* this.gameplayConstants.getGameDayHours();
 	}
 
 	public void setGameTimeOfDay(final float value) {
-		final float elapsed = value / this.gameplayConstants.getGameDayHours();
-		this.currentGameDayTimeElapsed = elapsed * this.gameplayConstants.getGameDayLength();
+		if (this.falseTimeOfDay != null && this.falseTimeOfDay.isInitialized()) {
+			this.falseTimeOfDay.setTimeOfDay(value);
+		} else {
+			final float elapsed = value / this.gameplayConstants.getGameDayHours();
+			this.currentGameDayTimeElapsed = elapsed * this.gameplayConstants.getGameDayLength();
+		}
+	}
+	
+	public void addFalseTimeOfDay(int hour, int minute, float duration) {
+		this.falseTimeOfDay = new FalseTimeOfDay(hour, minute, (int) (duration / WarsmashConstants.SIMULATION_STEP_TIME));
+	}
+	
+	public boolean isFalseTimeOfDay() {
+		return (this.falseTimeOfDay!=null && this.falseTimeOfDay.isInitialized());
 	}
 
 	public int getGameTurnTick() {

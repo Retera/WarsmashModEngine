@@ -1,0 +1,20 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"AIct", "castId": "itemchangetimeofday"}],
+		"type": "NORMAL_NOTARGET",
+		"onEndCasting": [{
+			"type": "setFalseTimeOfDay",
+			"hour": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "A"
+			},
+			"minute": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "B"
+			},
+			"duration": {
+				"type": "getAbilityDuration"
+			}
+		}]
+	}]
+}

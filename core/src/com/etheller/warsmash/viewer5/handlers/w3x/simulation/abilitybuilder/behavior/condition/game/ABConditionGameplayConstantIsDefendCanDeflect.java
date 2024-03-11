@@ -9,7 +9,6 @@ public class ABConditionGameplayConstantIsDefendCanDeflect implements ABConditio
 
 	@Override
 	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		System.err.println("Can Deflect: " + game.getGameplayConstants().isDefendDeflection());
 		return game.getGameplayConstants().isDefendDeflection();
 	}
 

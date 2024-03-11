@@ -534,23 +534,11 @@ public class CUnit extends CWidget {
 					this.addDamageTakenModificationListener(CUnitDefaultEtherealDamageModListener.INSTANCE);
 				}
 				game.changeUnitVertexColor(this, RenderUnit.ETHEREAL);
-				// Disable physical skills
-//				for (CAbility ability : this.abilities) {
-//					if (ability.isPhysical()) {
-//						ability.setDisabled(true);
-//					}
-//				}
 			} else {
 				if (this.damageTakenModificationListeners.contains(CUnitDefaultEtherealDamageModListener.INSTANCE)) {
 					this.removeDamageTakenModificationListener(CUnitDefaultEtherealDamageModListener.INSTANCE);
 					game.changeUnitVertexColor(this, RenderUnit.DEFAULT);
 				}
-				// Enable physical skills
-//				for (CAbility ability : this.abilities) {
-//					if (ability.isPhysical()) {
-//						ability.setDisabled(false);
-//					}
-//				}
 			}
 			break;
 		case DISABLE_AUTO_ATTACK:

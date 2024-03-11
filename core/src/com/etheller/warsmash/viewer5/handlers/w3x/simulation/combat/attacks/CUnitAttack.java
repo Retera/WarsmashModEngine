@@ -37,6 +37,7 @@ public abstract class CUnitAttack {
 	private float animationBackswingPointBase;
 	private float animationBackswingPoint;
 	private float animationDamagePoint;
+	private float animationDamagePointBase;
 	private CAttackType attackType;
 	private float cooldownTimeBase;
 	private float cooldownTime;
@@ -77,7 +78,7 @@ public abstract class CUnitAttack {
 			final boolean showUI, final EnumSet<CTargetType> targetsAllowed, final String weaponSound,
 			final CWeaponType weaponType) {
 		this.animationBackswingPointBase = animationBackswingPoint;
-		this.animationDamagePoint = animationDamagePoint;
+		this.animationDamagePointBase = animationDamagePoint;
 		this.attackType = attackType;
 		this.cooldownTimeBase = cooldownTime;
 		this.damageBase = damageBase;
@@ -95,7 +96,7 @@ public abstract class CUnitAttack {
 
 	public CUnitAttack(final CUnitAttack other) {
 		this.animationBackswingPointBase = other.animationBackswingPointBase;
-		this.animationDamagePoint = other.animationDamagePoint;
+		this.animationDamagePointBase = other.animationDamagePointBase;
 		this.attackType = other.attackType;
 		this.cooldownTimeBase = other.cooldownTimeBase;
 		this.damageBase = other.damageBase;
@@ -175,7 +176,7 @@ public abstract class CUnitAttack {
 		this.totalTemporaryDamageBonus = this.primaryAttributeTemporaryDamageBonus + this.temporaryDamageBonus
 				+ totalNSAtkBuff + totalNSAtkPctBuff;
 		float totalAttackSpeedBonus = this.agiAttackSpeedBonus + this.attackSpeedBonus + this.attackSpeedModifier;
-		float totalAttackSpeedPercent = 1.0f + totalAttackSpeedBonus;
+		float totalAttackSpeedPercent = 1.0f + Math.max(Math.min(totalAttackSpeedBonus, 4), -0.9f);
 		// TODO there might be a gameplay constants value for this instead of 0.0001, didn't look
 		if (totalAttackSpeedPercent <= 0.0001f) {
 			totalAttackSpeedPercent = 0.0001f;
@@ -183,6 +184,7 @@ public abstract class CUnitAttack {
 		this.cooldownTime = this.cooldownTimeBase / totalAttackSpeedPercent;
 		this.totalAttackSpeedPercent = totalAttackSpeedPercent;
 		this.animationBackswingPoint = this.animationBackswingPointBase / totalAttackSpeedPercent;
+		this.animationDamagePoint = this.animationDamagePointBase / totalAttackSpeedPercent;
 	}
 
 	public float getAnimationBackswingPoint() {
@@ -246,7 +248,7 @@ public abstract class CUnitAttack {
 	}
 
 	public void setAnimationDamagePoint(final float animationDamagePoint) {
-		this.animationDamagePoint = animationDamagePoint;
+		this.animationDamagePointBase = animationDamagePoint;
 	}
 
 	public void setAttackType(final CAttackType attackType) {
@@ -334,7 +336,7 @@ public abstract class CUnitAttack {
 	}
 
 	public void setAttackSpeedModifier(float attackSpeedModifier) {
-		this.attackSpeedModifier = Math.min(attackSpeedModifier, 4);
+		this.attackSpeedModifier = attackSpeedModifier;
 		computeDerivedFields();
 	}
 

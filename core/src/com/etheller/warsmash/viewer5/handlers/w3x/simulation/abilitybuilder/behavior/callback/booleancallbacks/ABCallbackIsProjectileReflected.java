@@ -14,7 +14,6 @@ public class ABCallbackIsProjectileReflected extends ABBooleanCallback {
 	@Override
 	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		CProjectile proj = projectile.callback(game, caster, localStore, castId);
-		System.err.println("Already Relfected? " + proj.isReflected());
 		return proj.isReflected();
 	}
 

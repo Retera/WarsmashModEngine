@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision;
 import java.nio.ByteBuffer;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class CPlayerFogOfWar {
 	public static final int PATHING_RATIO = 4;
@@ -35,13 +36,13 @@ public class CPlayerFogOfWar {
 		return fogOfWarBuffer;
 	}
 
-	public byte getState(final PathingGrid pathingGrid, final float x, final float y) {
+	private byte getState(final PathingGrid pathingGrid, final float x, final float y) {
 		final int indexX = pathingGrid.getFogOfWarIndexX(x);
 		final int indexY = pathingGrid.getFogOfWarIndexY(y);
 		return getState(indexX, indexY);
 	}
 
-	public byte getState(final int indexX, final int indexY) {
+	private byte getState(final int indexX, final int indexY) {
 		final int index = (indexY * getWidth()) + indexX;
 		if ((index >= 0) && (index < fogOfWarBuffer.capacity())) {
 			return fogOfWarBuffer.get(index);
@@ -49,17 +50,41 @@ public class CPlayerFogOfWar {
 		return 0;
 	}
 
-	public void setState(final PathingGrid pathingGrid, final float x, final float y, final byte fogOfWarState) {
+	public CFogState getFogState(final PathingGrid pathingGrid, final float x, final float y) {
+		return CFogState.getByMask(getState(pathingGrid, x, y));
+	}
+
+	public CFogState getFogState(final int indexX, final int indexY) {
+		return CFogState.getByMask(getState(indexX,indexY));
+	}
+
+	public boolean isVisible(final PathingGrid pathingGrid, final float x, final float y) {
+		return getState(pathingGrid, x, y)==0;
+	}
+	
+	public boolean isVisible(final int indexX, final int indexY) {
+		return getState(indexX, indexY)==0;
+	}
+
+	private void setState(final PathingGrid pathingGrid, final float x, final float y, final byte fogOfWarState) {
 		final int indexX = pathingGrid.getFogOfWarIndexX(x);
 		final int indexY = pathingGrid.getFogOfWarIndexY(y);
 		setState(indexX, indexY, fogOfWarState);
 	}
 
-	public void setState(final int indexX, final int indexY, final byte fogOfWarState) {
+	private void setState(final int indexX, final int indexY, final byte fogOfWarState) {
 		final int writeIndex = (indexY * getWidth()) + indexX;
 		if ((writeIndex >= 0) && (writeIndex < fogOfWarBuffer.capacity())) {
 			fogOfWarBuffer.put(writeIndex, fogOfWarState);
 		}
+	}
+
+	public void setVisible(final PathingGrid pathingGrid, final float x, final float y, final CFogState fogOfWarState) {
+		setState(pathingGrid, x, y, fogOfWarState.getMask());
+	}
+
+	public void setVisible(final int indexX, final int indexY, final CFogState fogOfWarState) {
+		setState(indexX, indexY, fogOfWarState.getMask());
 	}
 
 	public void convertVisibleToFogged() {

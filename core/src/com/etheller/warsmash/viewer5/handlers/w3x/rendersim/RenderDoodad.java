@@ -128,22 +128,12 @@ public class RenderDoodad {
 		final PathingGrid pathingGrid = war3MapViewer.simulation.getPathingGrid();
 		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
 		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
-		final byte state = fogOfWar.getState(fogOfWarIndexX, fogOfWarIndexY);
-		CFogState newFogState = CFogState.MASKED;
-		if (state < 0) {
-			newFogState = CFogState.MASKED;
-		}
-		else if (state == 0) {
-			newFogState = CFogState.VISIBLE;
-		}
-		else {
-			newFogState = CFogState.FOGGED;
-		}
+		CFogState newFogState = fogOfWar.getFogState(fogOfWarIndexX, fogOfWarIndexY);
 		if (newFogState != this.fogState) {
 			this.fogState = newFogState;
 		}
-		if (state != this.lastFogStateColor) {
-			this.lastFogStateColor = War3MapViewer.fadeLineOfSightColor(this.lastFogStateColor, state);
+		if (newFogState.getMask() != this.lastFogStateColor) {
+			this.lastFogStateColor = War3MapViewer.fadeLineOfSightColor(this.lastFogStateColor, newFogState.getMask());
 			for (int i = 0; i < this.vertexColorBase.length; i++) {
 				VERTEX_COLOR_HEAP[i] = (this.vertexColorBase[i] * (255 - (this.lastFogStateColor & 0xFF))) / 255f;
 			}

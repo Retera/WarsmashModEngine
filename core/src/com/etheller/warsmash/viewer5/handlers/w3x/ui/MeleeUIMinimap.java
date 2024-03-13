@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class MeleeUIMinimap {
 	private static final float HERO_STEP = 0.01f;
@@ -55,14 +56,14 @@ public class MeleeUIMinimap {
 		
 		for (int y = 0; y < (maxY - minY); y++) {
 			for (int x =  0; x < (maxX - minX); x++) {
-				byte state = fogOfWar.getState(x+minX, y+minY);
-				if (state > 0) {
+				CFogState state = fogOfWar.getFogState(x+minX, y+minY);
+				if (CFogState.FOGGED.equals(state)) {
 					batch.setColor(0f,0f,0f,0.5f);
 					batch.draw(this.teamColors[0],
 							this.minimapFilledArea.x + x * mapXMod,
 							this.minimapFilledArea.y + y * mapYMod,
 							mapXMod, mapYMod);
-				} else if (state < 0) {
+				} else if (CFogState.MASKED.equals(state)) {
 					batch.setColor(0f,0f,0f,1f);
 					batch.draw(this.teamColors[0],
 							this.minimapFilledArea.x + x * mapXMod,

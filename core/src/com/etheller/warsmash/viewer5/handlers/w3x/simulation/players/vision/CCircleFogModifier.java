@@ -6,25 +6,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class CCircleFogModifier extends CFogModifier {
-	private final byte state;
+	private final CFogState state;
 	private boolean enabled = true;
 	private float myX;
 	private float myY;
 	private float radius;
 
 	public CCircleFogModifier(final CFogState fogState, final float radius, final float x, final float y) {
-		switch (fogState) {
-		case FOGGED:
-			state = 127;
-			break;
-		case MASKED:
-			state = -128;
-			break;
-		case VISIBLE:
-		default:
-			state = 0;
-			break;
-		}
+		this.state = fogState;
 		this.radius = radius;
 		this.myX = x;
 		this.myY = y;
@@ -41,20 +30,20 @@ public class CCircleFogModifier extends CFogModifier {
 			return;
 		}
 		final float radSq = this.radius * this.radius;
-		fogOfWar.setState(pathingGrid.getFogOfWarIndexX(this.myX), pathingGrid.getFogOfWarIndexY(this.myY), state);
+		fogOfWar.setVisible(pathingGrid.getFogOfWarIndexX(this.myX), pathingGrid.getFogOfWarIndexY(this.myY), state);
 
 		for (int y = 0; y <= (int) Math.floor(this.radius); y += 128) {
 			for (int x = 0; x <= (int) Math.floor(this.radius); x += 128) {
 				float distance = x * x + y * y;
 				if (distance <= radSq) {
-					fogOfWar.setState(pathingGrid.getFogOfWarIndexX(myX - x),
-							pathingGrid.getFogOfWarIndexY(myY - y), (byte) 0);
-					fogOfWar.setState(pathingGrid.getFogOfWarIndexX(myX - x),
-							pathingGrid.getFogOfWarIndexY(myY + y), (byte) 0);
-					fogOfWar.setState(pathingGrid.getFogOfWarIndexX(myX + x),
-							pathingGrid.getFogOfWarIndexY(myY - y), (byte) 0);
-					fogOfWar.setState(pathingGrid.getFogOfWarIndexX(myX + x),
-							pathingGrid.getFogOfWarIndexY(myY + y), (byte) 0);
+					fogOfWar.setVisible(pathingGrid.getFogOfWarIndexX(myX - x),
+							pathingGrid.getFogOfWarIndexY(myY - y), state);
+					fogOfWar.setVisible(pathingGrid.getFogOfWarIndexX(myX - x),
+							pathingGrid.getFogOfWarIndexY(myY + y), state);
+					fogOfWar.setVisible(pathingGrid.getFogOfWarIndexX(myX + x),
+							pathingGrid.getFogOfWarIndexY(myY - y), state);
+					fogOfWar.setVisible(pathingGrid.getFogOfWarIndexX(myX + x),
+							pathingGrid.getFogOfWarIndexY(myY + y), state);
 				}
 			}
 		}

@@ -7,23 +7,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class CRectFogModifier extends CFogModifier {
-	private final byte state;
+	private final CFogState state;
 	private final Rectangle area;
 	private boolean enabled = true;
 
 	public CRectFogModifier(final CFogState fogState, final Rectangle area) {
-		switch (fogState) {
-		case FOGGED:
-			state = 127;
-			break;
-		case MASKED:
-			state = -128;
-			break;
-		case VISIBLE:
-		default:
-			state = 0;
-			break;
-		}
+		this.state = fogState;
 		this.area = area;
 	}
 
@@ -43,7 +32,7 @@ public class CRectFogModifier extends CFogModifier {
 		final int yMax = pathingGrid.getFogOfWarIndexY((float) Math.ceil(this.area.y + this.area.height));
 		for (int i = xMin; i <= xMax; i += 1) {
 			for (int j = yMin; j <= yMax; j += 1) {
-				fogOfWar.setState(i, j, state);
+				fogOfWar.setVisible(i, j, state);
 			}
 		}
 	}

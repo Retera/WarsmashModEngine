@@ -7,11 +7,14 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class RenderItem implements RenderWidget {
 	private static final String ITEM_MODEL_SCALE = "scale"; // replaced from 'isca'
@@ -79,10 +82,15 @@ public class RenderItem implements RenderWidget {
 
 	@Override
 	public void updateAnimations(final War3MapViewer map) {
+		final CPlayerFogOfWar fogOfWar = map.getFogOfWar();
+		final PathingGrid pathingGrid = map.simulation.getPathingGrid();
+		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.location[0]);
+		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.location[1]);
+		boolean fogHidden = !fogOfWar.isVisible(fogOfWarIndexX, fogOfWarIndexY);
 		final boolean hidden = this.simulationItem.isHidden();
-		if (hidden != this.hidden) {
-			this.hidden = hidden;
-			if (hidden) {
+		if ((hidden || fogHidden) != this.hidden) {
+			this.hidden = hidden||fogHidden;
+			if (this.hidden) {
 				this.instance.hide();
 				if (this.shadow != null) {
 					this.shadow.hide();

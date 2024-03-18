@@ -58,7 +58,7 @@ public class JassRunner {
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
 				final CodeJassValue threadFunction = arguments.get(0).visit(CodeJassValueVisitor.getInstance());
-				globalScope.createThread(threadFunction);
+				globalScope.queueThread(globalScope.createThread(threadFunction));
 				return null;
 			}
 		});

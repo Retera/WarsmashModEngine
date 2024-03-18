@@ -290,8 +290,10 @@ public class CSimulation implements CPlayerAPI {
 		final CUnit createdUnit = this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
 		if (createdUnit != null) {
 			setupCreatedUnit(createdUnit);
+			if (createdUnit.getCollisionRectangle() == null) {
+				this.worldCollision.addUnit(createdUnit);
+			} // else the unit was probably injected into collision before default behaviors
 			createdUnit.performDefaultBehavior(this);
-			this.worldCollision.addUnit(createdUnit);
 			if (createdUnit.isHero()) {
 				heroCreateEvent(createdUnit);
 			}

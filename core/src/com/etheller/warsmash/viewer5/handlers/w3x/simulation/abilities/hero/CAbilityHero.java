@@ -272,7 +272,8 @@ public class CAbilityHero extends AbstractCAbility {
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
 		final int neededTotalXp = gameplayConstants.getNeedHeroXPSum(level - 1);
 		if (this.xp < neededTotalXp) {
-			addXp(simulation, unit, neededTotalXp - this.xp);
+			addXp(simulation, unit, (int) Math
+					.ceil((neededTotalXp - this.xp) / simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP()));
 		}
 		else {
 			// remove xp TODO
@@ -387,7 +388,7 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.setLifeRegenStrengthBonus(currentStrength * gameplayConstants.getStrRegenBonus());
 		unit.setManaRegenIntelligenceBonus(currentIntelligence * gameplayConstants.getIntRegenBonus());
 	}
-	
+
 	public void recalculateAllStats(final CSimulation game, final CUnit unit) {
 		final CGameplayConstants gameplayConstants = game.getGameplayConstants();
 		this.strength.calculate(this.heroLevel);
@@ -494,14 +495,14 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.skillsAvailable;
 	}
 
-	public void setSkillsAvailable(List<War3ID> skillsAvailable) {
+	public void setSkillsAvailable(final List<War3ID> skillsAvailable) {
 		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
 	}
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
-	
+
 	@Override
 	public boolean isPermanent() {
 		return true;

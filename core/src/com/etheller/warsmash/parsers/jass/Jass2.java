@@ -2404,6 +2404,28 @@ public class Jass2 {
 						return new RealJassValue(
 								whichUnit.getUnitState(CommonEnvironment.this.simulation, whichUnitState));
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("AddHeroXP",
+					(arguments, globalScope, triggerScope) -> {
+						// Todo add showEyeCandy boolean and update addXp fn and upstream fns to make hero level up fx suppressable
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int xp = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final CAbilityHero heroData = whichUnit.getHeroData();
+						if (heroData != null) {
+							heroData.addXp(CommonEnvironment.this.simulation, whichUnit, xp);
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetHeroXP",
+					(arguments, globalScope, triggerScope) -> {
+						// Todo add showEyeCandy boolean and update addXp fn and upstream fns to make hero level up fx suppressable
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int xp = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final CAbilityHero heroData = whichUnit.getHeroData();
+						if (heroData != null) {
+							heroData.setXp(CommonEnvironment.this.simulation, whichUnit, xp);
+						}
+						return null;
+					});      
 			jassProgramVisitor.getJassNativeManager().createNative("SetHeroLevel",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

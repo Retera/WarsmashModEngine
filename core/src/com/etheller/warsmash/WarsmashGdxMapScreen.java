@@ -224,10 +224,9 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 	public static DataSource parseDataSources(final DataTable warsmashIni) {
 		final Element dataSourcesConfig = warsmashIni.get("DataSources");
-		final int dataSourcesCount = dataSourcesConfig.getFieldValue("Count");
 		final List<DataSourceDescriptor> dataSourcesList = new ArrayList<>();
 		final List<String> allCascPrefixes = new ArrayList<>();
-		for (int i = 0; i < dataSourcesCount; i++) {
+		for (int i = 0; i < dataSourcesConfig.size(); i++) {
 			final String type = dataSourcesConfig.getField("Type" + (i < 10 ? "0" : "") + i);
 			final String path = dataSourcesConfig.getField("Path" + (i < 10 ? "0" : "") + i);
 			switch (type) {
@@ -246,6 +245,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 				dataSourcesList.add(new CascDataSourceDescriptor(path, parsedPrefixes));
 				break;
 			}
+			case "":
+				continue;
 			default:
 				throw new RuntimeException("Unknown data source type: " + type);
 			}

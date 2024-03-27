@@ -48,6 +48,9 @@ public class WaveBuilder {
 		final float wavesDepth = 25f / 128f;
 		final char tileset = this.w3eFile.getTileset();
 		final Element waterRow = this.waterTable.get(tileset + "Sha");
+		if (waterRow == null) {
+			return;
+		}
 
 		final long wavesCliff = (this.w3iFile.getFlags() & War3MapW3iFlags.SHOW_WATER_WAVES_ON_CLIFF_SHORES);
 		final long wavesRolling = (this.w3iFile.getFlags() & War3MapW3iFlags.SHOW_WATER_WAVES_ON_ROLLING_SHORES);

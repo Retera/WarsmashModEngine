@@ -93,6 +93,12 @@ public class WarsmashServerParser implements OrderedUdpServerListener {
 					this.listener.unitCancelTrainingItem(sourceAddress, sessionToken, unitHandleId, cancelIndex);
 					break;
 				}
+				case ClientToServerProtocol.ISSUE_GUI_PLAYER_EVENT: {
+					final long sessionToken = buffer.getLong();
+					final int eventId = buffer.getInt();
+					this.listener.issueGuiPlayerEvent(sourceAddress, sessionToken, eventId);
+					break;
+				}
 				case ClientToServerProtocol.FINISHED_TURN: {
 					final long sessionToken = buffer.getLong();
 					final int gameTurnTick = buffer.getInt();

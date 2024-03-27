@@ -20,9 +20,9 @@ public class CAbilityItemPermanentStatGain extends AbstractGenericNoIconAbility 
 	private final int agility;
 	private final int intelligence;
 
-	public CAbilityItemPermanentStatGain(final int handleId, final War3ID alias, final int strength, final int agility,
+	public CAbilityItemPermanentStatGain(final int handleId, final War3ID code, final War3ID alias, final int strength, final int agility,
 			final int intelligence) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.strength = strength;
 		this.agility = agility;
 		this.intelligence = intelligence;
@@ -39,7 +39,7 @@ public class CAbilityItemPermanentStatGain extends AbstractGenericNoIconAbility 
 			heroData.addStrengthBase(game, caster, this.strength);
 			heroData.addAgilityBase(game, caster, this.agility);
 			heroData.addIntelligenceBase(game, caster, this.intelligence);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.TARGET);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.TARGET);
 			return false;
 		}
 		else {

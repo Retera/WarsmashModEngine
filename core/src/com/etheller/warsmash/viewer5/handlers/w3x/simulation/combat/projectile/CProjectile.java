@@ -8,15 +8,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 
-public abstract class CProjectile {
-	private float x;
-	private float y;
+public abstract class CProjectile implements CEffect {
+	protected float x;
+	protected float y;
 	private final float initialTargetX;
 	private final float initialTargetY;
 	private final float speed;
 	private final AbilityTarget target;
 	private boolean homingEnabled;
-	private boolean done;
+	protected boolean done;
 	private final CUnit source;
 
 	public CProjectile(final float x, final float y, final float speed, final AbilityTarget target, boolean homingEnabled,
@@ -31,6 +31,7 @@ public abstract class CProjectile {
 		this.initialTargetY = target.getY();
 	}
 
+	@Override
 	public boolean update(final CSimulation game) {
 		final float tx = getTargetX();
 		final float ty = getTargetY();

@@ -1,8 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
-import java.util.Locale;
-
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter;
 
@@ -26,9 +25,8 @@ public class ParticleEmitterObject extends GenericObject implements EmitterObjec
 	public ParticleEmitterObject(final MdxModel model, final MdlxParticleEmitter emitter, final int index) {
 		super(model, emitter, index);
 
-		this.internalModel = (MdxModel) model.viewer.load(
-				emitter.getPath().replace("\\", "/").toLowerCase(Locale.US).replace(".mdl", ".mdx"), model.pathSolver,
-				model.solverParams);
+		this.internalModel = War3MapViewer.loadModelMdx(model.viewer.dataSource, model.viewer, emitter.getPath(),
+				model.pathSolver, model.solverParams);
 		this.speed = emitter.getSpeed();
 		this.latitude = emitter.getLatitude();
 		this.longitude = emitter.getLongitude();

@@ -14,4 +14,6 @@ public interface CPlayerUnitOrderListener {
 	void issueImmediateOrder(int unitHandleId, int abilityHandleId, int orderId, boolean queue);
 
 	void unitCancelTrainingItem(int unitHandleId, int cancelIndex);
+
+	void issueGuiPlayerEvent(int eventId);
 }

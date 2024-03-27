@@ -83,10 +83,10 @@ public final class MutableObjectData {
 				if (name.startsWith("\"") && name.endsWith("\"")) {
 					name = name.substring(1, name.length() - 1);
 				}
-				gameObject.setField("Name", name);
+				gameObject.setField("Profile", "Name", name);
 			}
 			if (suffix.startsWith("WESTRING")) {
-				gameObject.setField("EditorSuffix", this.worldEditStrings.getString(suffix));
+				gameObject.setField("Profile", "EditorSuffix", this.worldEditStrings.getString(suffix));
 			}
 		}
 	}
@@ -249,6 +249,10 @@ public final class MutableObjectData {
 			final Set<War3ID> customUnitKeys = this.editorData.getCustom().keySet();
 			final Set<War3ID> customKeys = new HashSet<>(customUnitKeys);
 			for (final String standardUnitKey : this.sourceSLKData.keySet()) {
+				if (standardUnitKey.length() > 4) {
+					System.err.println("Omitting object data key because it is too long: " + standardUnitKey);
+					continue;
+				}
 				customKeys.add(War3ID.fromString(standardUnitKey));
 			}
 			this.cachedKeySet = customKeys;
@@ -600,11 +604,7 @@ public final class MutableObjectData {
 				return matchingChange.getStrval();
 			}
 			// no luck with custom data, look at the standard data
-			int slkLevel = level;
-			if ((MutableObjectData.this.worldEditorDataType == WorldEditorDataType.UPGRADES) && false) {
-				slkLevel -= 1;
-			}
-			return getFieldStringFromSLKs(field, slkLevel);
+			return getFieldStringFromSLKs(field, level);
 		}
 
 		private Change getMatchingChange(final War3ID field, final int level) {
@@ -628,14 +628,15 @@ public final class MutableObjectData {
 			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
 				return getFieldAsString(MutableObjectData.this.metaNameToMetaId.get(key), 0);
 			}
-			if ((worldEditorDataType == WorldEditorDataType.ABILITIES) && key.startsWith("Data")) {
-				for (final String metaKeyString : sourceSLKMetaData.keySet()) {
-					final GameObject metaField = sourceSLKMetaData.get(metaKeyString);
+			if ((MutableObjectData.this.worldEditorDataType == WorldEditorDataType.ABILITIES)
+					&& key.startsWith("Data")) {
+				for (final String metaKeyString : MutableObjectData.this.sourceSLKMetaData.keySet()) {
+					final GameObject metaField = MutableObjectData.this.sourceSLKMetaData.get(metaKeyString);
 					if ("data".equals(metaField.getField("field").toLowerCase())) {
 						final String useSpecific = metaField.getField("useSpecific");
 						final String[] specificUses = useSpecific.split(",");
 						for (final String use : specificUses) {
-							if (this.getAlias().asStringValue().equalsIgnoreCase(use)) {
+							if (getAlias().asStringValue().equalsIgnoreCase(use)) {
 								final int index = metaField.getFieldValue("index");
 								if ((key.length() >= 5) && (key.charAt(4) == (('A' + index) - 1))) {
 									final int level = Integer.parseInt(key.substring(5));
@@ -653,14 +654,15 @@ public final class MutableObjectData {
 			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
 				return getFieldAsBoolean(MutableObjectData.this.metaNameToMetaId.get(key), 0);
 			}
-			if ((worldEditorDataType == WorldEditorDataType.ABILITIES) && key.startsWith("Data")) {
-				for (final String metaKeyString : sourceSLKMetaData.keySet()) {
-					final GameObject metaField = sourceSLKMetaData.get(metaKeyString);
+			if ((MutableObjectData.this.worldEditorDataType == WorldEditorDataType.ABILITIES)
+					&& key.startsWith("Data")) {
+				for (final String metaKeyString : MutableObjectData.this.sourceSLKMetaData.keySet()) {
+					final GameObject metaField = MutableObjectData.this.sourceSLKMetaData.get(metaKeyString);
 					if ("data".equals(metaField.getField("field").toLowerCase())) {
 						final String useSpecific = metaField.getField("useSpecific");
 						final String[] specificUses = useSpecific.split(",");
 						for (final String use : specificUses) {
-							if (this.getAlias().asStringValue().equalsIgnoreCase(use)) {
+							if (getAlias().asStringValue().equalsIgnoreCase(use)) {
 								final int index = metaField.getFieldValue("index");
 								if ((key.length() >= 5) && (key.charAt(4) == (('A' + index) - 1))) {
 									final int level = Integer.parseInt(key.substring(5));
@@ -678,14 +680,15 @@ public final class MutableObjectData {
 			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
 				return getFieldAsInteger(MutableObjectData.this.metaNameToMetaId.get(key), 0);
 			}
-			if ((worldEditorDataType == WorldEditorDataType.ABILITIES) && key.startsWith("Data")) {
-				for (final String metaKeyString : sourceSLKMetaData.keySet()) {
-					final GameObject metaField = sourceSLKMetaData.get(metaKeyString);
+			if ((MutableObjectData.this.worldEditorDataType == WorldEditorDataType.ABILITIES)
+					&& key.startsWith("Data")) {
+				for (final String metaKeyString : MutableObjectData.this.sourceSLKMetaData.keySet()) {
+					final GameObject metaField = MutableObjectData.this.sourceSLKMetaData.get(metaKeyString);
 					if ("data".equals(metaField.getField("field").toLowerCase())) {
 						final String useSpecific = metaField.getField("useSpecific");
 						final String[] specificUses = useSpecific.split(",");
 						for (final String use : specificUses) {
-							if (this.getAlias().asStringValue().equalsIgnoreCase(use)) {
+							if (getAlias().asStringValue().equalsIgnoreCase(use)) {
 								final int index = metaField.getFieldValue("index");
 								if ((key.length() >= 5) && (key.charAt(4) == (('A' + index) - 1))) {
 									final int level = Integer.parseInt(key.substring(5));
@@ -703,14 +706,15 @@ public final class MutableObjectData {
 			if (MutableObjectData.this.metaNameToMetaId.containsKey(key)) {
 				return getFieldAsFloat(MutableObjectData.this.metaNameToMetaId.get(key), 0);
 			}
-			if ((worldEditorDataType == WorldEditorDataType.ABILITIES) && key.startsWith("Data")) {
-				for (final String metaKeyString : sourceSLKMetaData.keySet()) {
-					final GameObject metaField = sourceSLKMetaData.get(metaKeyString);
+			if ((MutableObjectData.this.worldEditorDataType == WorldEditorDataType.ABILITIES)
+					&& key.startsWith("Data")) {
+				for (final String metaKeyString : MutableObjectData.this.sourceSLKMetaData.keySet()) {
+					final GameObject metaField = MutableObjectData.this.sourceSLKMetaData.get(metaKeyString);
 					if ("data".equals(metaField.getField("field").toLowerCase())) {
 						final String useSpecific = metaField.getField("useSpecific");
 						final String[] specificUses = useSpecific.split(",");
 						for (final String use : specificUses) {
-							if (this.getAlias().asStringValue().equalsIgnoreCase(use)) {
+							if (getAlias().asStringValue().equalsIgnoreCase(use)) {
 								final int index = metaField.getFieldValue("index");
 								if ((key.length() >= 5) && (key.charAt(4) == (('A' + index) - 1))) {
 									final int level = Integer.parseInt(key.substring(5));
@@ -851,17 +855,10 @@ public final class MutableObjectData {
 				throw new IllegalStateException("corrupted unit, no parent unit id");
 			}
 			int index = metaData.getFieldValue("index");
-			final String upgradeHack = metaData.getField("appendIndex");
-			if ("0".equals(upgradeHack)) {
-				// Engage magic upgrade hack to replace index with level
-				if (!field.toString().equals("gbpx") && !field.toString().equals("gbpy")) {
-					index = level;
-				}
-			}
-			else if ((index != -1) && (level > 0)) {
-				index = level - 1;
-			}
 			if (index != -1) {
+				if (level > 0) {
+					index = level - 1;
+				}
 				final String fieldStringValue = this.parentWC3Object
 						.getField(getEditorMetaDataDisplayKey(level, metaData), index);
 				return fieldStringValue;

@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	private int cargoCapacity;
@@ -25,9 +26,9 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 	private final float castRange;
 	private EnumSet<CTargetType> targetsAllowed;
 
-	public CAbilityCargoHold(final int handleId, final War3ID alias, final int cargoCapacity, final float duration,
+	public CAbilityCargoHold(final int handleId, final War3ID code, final War3ID alias, final int cargoCapacity, final float duration,
 			final float castRange, final EnumSet<CTargetType> targetsAllowed) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.cargoCapacity = cargoCapacity;
 		this.cargoUnits = new ArrayList<>();
 		this.duration = duration;
@@ -94,7 +95,7 @@ public class CAbilityCargoHold extends AbstractGenericNoIconAbility {
 				receiver.targetOk(target);
 			}
 			else {
-				receiver.mustTargetType(TargetType.UNIT);
+				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_DROP_THIS_ITEM);
 			}
 		}
 		else {

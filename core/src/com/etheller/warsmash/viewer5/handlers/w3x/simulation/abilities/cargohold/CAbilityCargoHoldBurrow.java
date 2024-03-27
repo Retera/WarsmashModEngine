@@ -12,9 +12,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 public class CAbilityCargoHoldBurrow extends CAbilityCargoHold {
 	private float[] originalBaseAttackRates;
 
-	public CAbilityCargoHoldBurrow(final int handleId, final War3ID alias, final int cargoCapacity,
+	public CAbilityCargoHoldBurrow(final int handleId, final War3ID code, final War3ID alias, final int cargoCapacity,
 			final float duration, final float castRange, final EnumSet<CTargetType> targetsAllowed) {
-		super(handleId, alias, cargoCapacity, duration, castRange, targetsAllowed);
+		super(handleId, code, alias, cargoCapacity, duration, castRange, targetsAllowed);
 	}
 
 	@Override

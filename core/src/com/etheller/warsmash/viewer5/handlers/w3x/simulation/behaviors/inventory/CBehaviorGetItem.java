@@ -67,4 +67,9 @@ public class CBehaviorGetItem extends CAbstractRangedBehavior {
 
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -39,12 +40,16 @@ public abstract class CAbilityType<TYPE_LEVEL_DATA extends CAbilityTypeLevelData
 		return levelData.size();
 	}
 
+	protected final List<TYPE_LEVEL_DATA> getLevelData() {
+		return this.levelData;
+	}
+
 	protected final TYPE_LEVEL_DATA getLevelData(final int level) {
 		return this.levelData.get(level);
 	}
 
 	public abstract CAbility createAbility(int handleId);
 
-	public abstract void setLevel(CSimulation game, CLevelingAbility existingAbility, int level);
+	public abstract void setLevel(CSimulation game, CUnit unit, CLevelingAbility existingAbility, int level);
 
 }

@@ -1,0 +1,156 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"AHad"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "DEF",
+				"dataField": "A",
+				"percentageBooleanField": "B"
+			}]
+		}
+	},{
+		"ids": [{"id":"AHab"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "MPGEN",
+				"dataField": "A",
+				"percentageBooleanField": "B"
+			}]
+		}
+	},{
+		"ids": [{"id":"AOae"},{"id":"Aasl"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"statBuffsFromDataFields": [{
+					"type": "ATKSPD",
+					"dataField": "B"
+				},{
+					"type": "MVSPD",
+					"dataField": "A",
+					"percentageOverride": true
+			}]
+		}
+	},{
+		"ids": [{"id":"AUau"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "MVSPD",
+				"dataField": "A",
+				"percentageOverride": true
+			},{
+				"type": "HPGEN",
+				"dataField": "B",
+				"percentageBooleanField": "C"
+			}]
+		}
+	},{
+		"ids": [{"id":"AUav"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"meleeRangeTargetOverride": {
+				"targetMelee": true,
+				"targetRange": false
+			},
+			"statBuffsFromDataFields": [{
+				"type": "HPSTEAL",
+				"dataField": "A"
+			}]
+		}
+	},{
+		"ids": [{"id":"AEah"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "THORNS",
+				"dataField": "A",
+				"percentageBooleanField": "B"
+			}]
+		}
+	},{
+		"ids": [{"id":"AEar"},{"id":"AOac"},{"id":"Aakb"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "ATK",
+				"dataField": "A",
+				"flatBooleanField": "D",
+				"targetMeleeField": "B",
+				"targetRangeField": "C"
+			}]
+		}
+	},{
+		"ids": [{"id":"Aoar"},{"id":"Aabr"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "MAXHPGEN",
+				"dataField": "A",
+				"percentageBooleanField": "B"
+			}]
+		}
+	},{
+		"ids": [{"id":"Aarm"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "AURA_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "MAXMPGEN",
+				"dataField": "A",
+				"percentageBooleanField": "B"
+			}]
+		}
+	},{
+		"ids": [{"id":"AIva"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "PASSIVE_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "HPSTEAL",
+				"dataField": "A"
+			}]
+		}
+	},{
+		"ids": [{"id":"AIas"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "PASSIVE_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "ATKSPD",
+				"dataField": "A"
+			}]
+		}
+	},{
+		"ids": [{"id":"AIrm"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "PASSIVE_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "MPGEN",
+				"dataField": "A",
+				"percentageOverride": true
+			}]
+		}
+	},{
+		"ids": [{"id":"AIms"}],
+		"type": "TEMPLATE",
+		"templateFields": {
+			"templateType": "PASSIVE_STATS",
+			"statBuffsFromDataFields": [{
+				"type": "MVSPD",
+				"dataField": "A",
+				"percentageOverride": false
+			}]
+		}
+	}]
+}

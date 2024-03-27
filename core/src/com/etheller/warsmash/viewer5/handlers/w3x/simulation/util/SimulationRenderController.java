@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
 import java.awt.image.BufferedImage;
 
+import com.badlogic.gdx.graphics.Color;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
@@ -12,9 +13,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityCollisionProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public interface SimulationRenderController {
@@ -25,6 +29,28 @@ public interface SimulationRenderController {
 	CAbilityProjectile createProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
 			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
 			CAbilityProjectileListener projectileListener);
+
+	CCollisionProjectile createCollisionProjectile(CSimulation cSimulation, float launchX, float launchY,
+			float launchFacing, float projectileSpeed, boolean homing, CUnit source, War3ID spellAlias,
+			AbilityTarget target, int maxHits, int hitsPerTarget, float startingRadius, float finalRadius,
+			float collisionInterval, CAbilityCollisionProjectileListener projectileListener, boolean provideCounts);
+
+	CPsuedoProjectile createPseudoProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
+			float projectileSpeed, float projectileStepInterval, int projectileArtSkip, boolean homing, CUnit source, War3ID spellAlias,
+			CEffectType effectType, int effectArtIndex, AbilityTarget target, int maxHits, int hitsPerTarget,
+			float startingRadius, float finalRadius, CAbilityCollisionProjectileListener projectileListener, boolean provideCounts);
+
+	SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source,
+													   CUnit target);
+
+	SimulationRenderComponentLightning createLightning(CSimulation simulation, War3ID lightningId, CUnit source,
+													   CUnit target, Float duration);
+
+	SimulationRenderComponentLightning createAbilityLightning(CSimulation simulation, War3ID lightningId, CUnit source,
+			CUnit target, int index);
+	
+	SimulationRenderComponentLightning createAbilityLightning(CSimulation simulation, War3ID lightningId, CUnit source,
+			CUnit target, int index, Float duration);
 
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);
@@ -56,7 +82,7 @@ public interface SimulationRenderController {
 
 	void spawnUnitUpgradeFinishSound(CUnit constructedStructure);
 
-	void spawnDeathExplodeEffect(CUnit cUnit);
+	void spawnDeathExplodeEffect(CUnit cUnit, War3ID explodesOnDeathBuffId);
 
 	void spawnGainLevelEffect(CUnit cUnit);
 
@@ -64,24 +90,31 @@ public interface SimulationRenderController {
 
 	void unitRepositioned(CUnit cUnit);
 
-	void spawnGainResourceTextTag(CUnit gainingUnit, ResourceType resourceType, int amount);
+	void spawnTextTag(CUnit unit, TextTagConfigType configType, int displayAmount);
+
+	void spawnTextTag(CUnit unit, TextTagConfigType configType, String message);
 
 	void spawnEffectOnUnit(CUnit unit, String effectPath);
 
-	void spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
+	void spawnTemporarySpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
 
-	SimulationRenderComponent spawnSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
+	SimulationRenderComponentModel spawnPersistentSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType);
 
-	SimulationRenderComponent spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
+	SimulationRenderComponentModel spawnPersistentSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType, int index);
+
+	SimulationRenderComponentModel spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
 			CEffectType effectType, int index);
 
+	void spawnTemporarySpellEffectOnPoint(float x, float y, float facing, War3ID alias,
+			CEffectType effectType, int index);
+	
 	void spawnUIUnitGetItemSound(CUnit cUnit, CItem item);
 
 	void spawnUIUnitDropItemSound(CUnit cUnit, CItem item);
 
-	void spawnAbilitySoundEffect(CUnit caster, War3ID alias);
+	SimulationRenderComponent spawnAbilitySoundEffect(CUnit caster, War3ID alias);
 
-	void loopAbilitySoundEffect(CUnit caster, War3ID alias);
+	SimulationRenderComponent loopAbilitySoundEffect(CUnit caster, War3ID alias);
 
 	void stopAbilitySoundEffect(CUnit caster, War3ID alias);
 
@@ -91,7 +124,7 @@ public interface SimulationRenderController {
 
 	void heroDeathEvent(CUnit cUnit);
 
-	SimulationRenderComponent createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias,
+	SimulationRenderComponentModel createSpellEffectOverDestructable(CUnit source, CDestructable target, War3ID alias,
 			float artAttachmentHeight);
 
 	void unitUpgradingEvent(CUnit unit, War3ID upgradeIdType);
@@ -103,4 +136,17 @@ public interface SimulationRenderController {
 	void unitUpdatedType(CUnit unit, War3ID typeId);
 
 	void changeUnitColor(CUnit unit, int playerIndex);
+
+	void changeUnitVertexColor(CUnit unit, Color color);
+
+	void changeUnitVertexColor(CUnit unit, float r, float g, float b);
+
+	void changeUnitVertexColor(CUnit unit, float r, float g, float b, float a);
+	
+	int getTerrainHeight(float x, float y);
+	
+	boolean isTerrainRomp(float x, float y);
+	
+	boolean isTerrainWater(float x, float y);
+
 }

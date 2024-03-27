@@ -27,6 +27,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CFogModifier;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
 public class CPlayer extends CBasePlayer {
@@ -175,7 +177,7 @@ public class CPlayer extends CBasePlayer {
 		return getTechtreeUnlocked(rawcode) + getTechtreeInProgress(rawcode);
 	}
 
-	public void addTechtreeUnlocked(final War3ID rawcode) {
+	public void addTechtreeUnlocked(CSimulation simulation, final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, 1);
@@ -183,13 +185,16 @@ public class CPlayer extends CBasePlayer {
 		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked + 1);
 		}
+		fireRequirementUpdateForAbilities(simulation, false);
 	}
 
-	public void setTechtreeUnlocked(final War3ID rawcode, final int setToLevel) {
+	public void setTechtreeUnlocked(CSimulation simulation, final War3ID rawcode, final int setToLevel) {
+		int prev = this.getTechtreeUnlocked(rawcode);
 		this.rawcodeToTechtreeUnlocked.put(rawcode, setToLevel);
+		fireRequirementUpdateForAbilities(simulation, prev > setToLevel);
 	}
 
-	public void removeTechtreeUnlocked(final War3ID rawcode) {
+	public void removeTechtreeUnlocked(CSimulation simulation, final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, -1);
@@ -197,6 +202,7 @@ public class CPlayer extends CBasePlayer {
 		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked - 1);
 		}
+		fireRequirementUpdateForAbilities(simulation, true);
 	}
 
 	public void addTechtreeInProgress(final War3ID rawcode) {
@@ -310,6 +316,16 @@ public class CPlayer extends CBasePlayer {
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
 				event.fire(hero, eventScopeBuilder.create(eventType, event.getTrigger(), hero));
+			}
+		}
+	}
+
+	public void firePlayerEvents(final CommonTriggerExecutionScope.PlayerEventScopeBuilder eventScopeBuilder,
+			final JassGameEventsWar3 eventType) {
+		final List<CPlayerEvent> eventList = getEventList(eventType);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(this, eventScopeBuilder.create(eventType, event.getTrigger(), this));
 			}
 		}
 	}
@@ -626,6 +642,7 @@ public class CPlayer extends CBasePlayer {
 			final int setToLevel = previousUnlockCount + levels;
 			setTechToLevel(simulation, techIdRawcodeId, setToLevel);
 		}
+		fireRequirementUpdateForAbilities(simulation, false);
 	}
 
 	public void setTechResearched(final CSimulation simulation, final War3ID techIdRawcodeId, final int setToLevel) {
@@ -633,12 +650,12 @@ public class CPlayer extends CBasePlayer {
 		if ((setToLevel > previousUnlockCount) || (setToLevel < previousUnlockCount)) {
 			setTechToLevel(simulation, techIdRawcodeId, setToLevel);
 		}
-
+		fireRequirementUpdateForAbilities(simulation, false);
 	}
 
 	private void setTechToLevel(final CSimulation simulation, final War3ID techIdRawcodeId, final int setToLevel) {
 		final int previousLevel = getTechtreeUnlocked(techIdRawcodeId);
-		setTechtreeUnlocked(techIdRawcodeId, setToLevel);
+		setTechtreeUnlocked(simulation, techIdRawcodeId, setToLevel);
 		// terminate in progress upgrades of this kind for player
 		final CUpgradeType upgradeType = simulation.getUpgradeData().getType(techIdRawcodeId);
 		if (upgradeType != null) {
@@ -667,13 +684,27 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
-	public void addFogModifer(final CFogModifier fogModifier) {
+	public void addFogModifer(final CSimulation game, final CFogModifier fogModifier) {
 		this.fogModifiers.add(fogModifier);
+		fogModifier.onAdd(game, this);
+	}
+
+	public void removeFogModifer(final CSimulation game, final CFogModifier fogModifier) {
+		this.fogModifiers.remove(fogModifier);
+		fogModifier.onRemove(game, this);
 	}
 
 	public void updateFogModifiers(final CSimulation game) {
-		for (final CFogModifier fogModifier : this.fogModifiers) {
-			fogModifier.update(game.getPathingGrid(), this.fogOfWar);
+		for (int i = this.fogModifiers.size() - 1; i >= 0; i--) {
+			this.fogModifiers.get(i).update(game, this, game.getPathingGrid(), this.fogOfWar);
+		}
+	}
+	
+	public void fireRequirementUpdateForAbilities(final CSimulation simulation, final boolean disable) {
+		for(CUnit unit : simulation.getUnits()) {
+			if (unit.getPlayerIndex() == this.getId()) {
+				unit.checkDisabledAbilities(simulation, disable);
+			}
 		}
 	}
 }

@@ -4,8 +4,7 @@ import java.util.EnumSet;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
-import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -16,12 +15,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 
 public class RenderDestructable extends RenderDoodad implements RenderWidget {
-	private static final War3ID TEX_FILE = War3ID.fromString("btxf");
-	private static final War3ID TEX_ID = War3ID.fromString("btxi");
-	private static final War3ID SEL_CIRCLE_SIZE = War3ID.fromString("bgsc");
+	private static final String TEX_FILE = "texFile"; // replaced from 'btxf'
+	private static final String TEX_ID = "texID"; // replaced from 'btxi'
+	private static final String SEL_CIRCLE_SIZE = "selcircsize"; // replaced from 'bgsc'
 
 	private float life;
 	public Rectangle walkableBounds;
@@ -36,7 +36,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	private final int replaceableTextureId;
 	private String replaceableTextureFile;
 
-	public RenderDestructable(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
+	public RenderDestructable(final War3MapViewer map, final MdxModel model, final GameObject row,
 			final float[] location3D, final float[] scale3D, final float facingRadians, final float selectionScale,
 			final float maxPitch, final float maxRoll, final float life, final BuildingShadow destructableShadow,
 			final CDestructable simulationDestructable, final int doodadVariation) {
@@ -179,7 +179,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	}
 
 	@Override
-	public boolean isSelectable() {
+	public boolean isSelectable(final CSimulation simulation, final int byPlayer) {
 		return this.selectable;
 	}
 
@@ -205,8 +205,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 		final EnumSet<PrimaryTag> primaryTags = EnumSet.noneOf(PrimaryTag.class);
 		PrimaryTag bestPrimaryTag = null;
 		final EnumSet<SecondaryTag> secondaryTags = EnumSet.noneOf(SecondaryTag.class);
-		TokenLoop:
-		for (final String token : sequence.split("\\s+")) {
+		TokenLoop: for (final String token : sequence.split("\\s+")) {
 			final String upperCaseToken = token.toUpperCase();
 			for (final PrimaryTag primaryTag : PrimaryTag.values()) {
 				if (upperCaseToken.equals(primaryTag.name())) {
@@ -239,15 +238,15 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 		return false;
 	}
 
-	private static final War3ID DOODAD_COLOR_RED = War3ID.fromString("bvcr");
-	private static final War3ID DOODAD_COLOR_GREEN = War3ID.fromString("bvcg");
-	private static final War3ID DOODAD_COLOR_BLUE = War3ID.fromString("bvcb");
+	private static final String DOODAD_COLOR_RED = "colorR"; // replaced from 'bvcr'
+	private static final String DOODAD_COLOR_GREEN = "colorG"; // replaced from 'bvcg'
+	private static final String DOODAD_COLOR_BLUE = "colorB"; // replaced from 'bvcb'
 
 	@Override
-	public void applyColor(final MutableGameObject row, final int doodadVariation, final ModelInstance instance) {
-		final int vertR = row.getFieldAsInteger(DOODAD_COLOR_RED, doodadVariation);
-		final int vertG = row.getFieldAsInteger(DOODAD_COLOR_GREEN, doodadVariation);
-		final int vertB = row.getFieldAsInteger(DOODAD_COLOR_BLUE, doodadVariation);
+	public void applyColor(final GameObject row, final int doodadVariation, final ModelInstance instance) {
+		final int vertR = row.getFieldValue(DOODAD_COLOR_RED);
+		final int vertG = row.getFieldValue(DOODAD_COLOR_GREEN);
+		final int vertB = row.getFieldValue(DOODAD_COLOR_BLUE);
 		((MdxComplexInstance) instance).setVertexColor(new float[] { vertR / 255f, vertG / 255f, vertB / 255f });
 	}
 }

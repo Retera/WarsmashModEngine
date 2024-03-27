@@ -2,7 +2,6 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.ja
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 
 import com.etheller.interpreter.ast.function.JassFunction;
@@ -13,7 +12,7 @@ import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
@@ -30,11 +29,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<CAbilityTypeLevelData>
 		implements CAbilityTypeDefinition {
@@ -67,14 +65,12 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	}
 
 	@Override
-	protected CAbilityTypeLevelData createLevelData(final MutableGameObject abilityEditorData, final int level) {
-		final String targetsAllowedAtLevelString = abilityEditorData.getFieldAsString(TARGETS_ALLOWED, level);
-		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
-		return new CAbilityTypeLevelData(targetsAllowedAtLevel);
+	protected CAbilityTypeLevelData createLevelData(final GameObject abilityEditorData, final int level) {
+		return new CAbilityTypeLevelData(getTargetsAllowed(abilityEditorData, level));
 	}
 
 	@Override
-	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final MutableGameObject abilityEditorData,
+	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final GameObject abilityEditorData,
 			final List<CAbilityTypeLevelData> levelData) {
 		return new CAbilityTypeJass(alias, this.code, levelData, this.jassGlobalScope, this);
 	}
@@ -405,18 +401,18 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 			receiver.noChargesRemaining();
 		}
 		else if (unit.getMana() < orderCommandCardIcon.manaCost) {
-			receiver.notEnoughResources(ResourceType.MANA);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		}
 		else {
 			final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 			if (player.getGold() < orderCommandCardIcon.goldCost) {
-				receiver.notEnoughResources(ResourceType.GOLD);
+				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 			}
 			else if (player.getLumber() < orderCommandCardIcon.lumberCost) {
-				receiver.notEnoughResources(ResourceType.LUMBER);
+				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 			}
 			else if ((player.getFoodUsed() + orderCommandCardIcon.foodCostDisplayOnly) < player.getFoodCap()) {
-				receiver.notEnoughResources(ResourceType.FOOD);
+				receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 			}
 			else {
 				if (this.checkUseJass != null) {

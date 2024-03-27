@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -24,6 +25,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
 public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
@@ -40,9 +42,9 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	private CWidget lastHarvestTarget;
 	private CBehaviorAttack behaviorTreeAttack;
 
-	public CAbilityHarvest(final int handleId, final War3ID alias, final int damageToTree, final int goldCapacity,
+	public CAbilityHarvest(final int handleId, final War3ID code, final War3ID alias, final int damageToTree, final int goldCapacity,
 			final int lumberCapacity, final float castRange, final float duration) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.damageToTree = damageToTree;
 		this.goldCapacity = goldCapacity;
 		this.lumberCapacity = lumberCapacity;
@@ -122,13 +124,13 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (target instanceof CUnit) {
+			if(this.goldCapacity <= 0){
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_TREE);
+				return;
+			}
 			final CUnit targetUnit = (CUnit) target;
 			for (final CAbility ability : targetUnit.getAbilities()) {
 				if (ability instanceof CAbilityGoldMinable) {
-					if(this.goldCapacity <= 0){
-						receiver.mustTargetResources();
-						return;
-					}
 					receiver.targetOk(target);
 					return;
 				}
@@ -140,22 +142,20 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 					}
 				}
 			}
-			receiver.mustTargetResources();
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_RESOURCES);
 		}
 		else if (target instanceof CDestructable) {
-			if (target.canBeTargetedBy(game, unit, this.treeAttack.getTargetsAllowed())) {
-				if(this.lumberCapacity <= 0){
-					receiver.mustTargetResources();
-					return;
-				}
+			if(this.lumberCapacity <= 0){
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_GOLD_MINE);
+				return;
+			}
+			if (target.canBeTargetedBy(game, unit, this.treeAttack.getTargetsAllowed(), receiver)) {
 				receiver.targetOk(target);
 			}
-			else {
-				receiver.mustTargetResources();
-			}
+			// else receiver called by "canBeTargetedBy"
 		}
 		else {
-			receiver.mustTargetResources();
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_RESOURCES);
 		}
 	}
 
@@ -259,5 +259,20 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 
 	public void setDuration(final float duration) {
 		this.duration = duration;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

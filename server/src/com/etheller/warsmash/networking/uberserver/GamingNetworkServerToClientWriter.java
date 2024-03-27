@@ -1,25 +1,31 @@
 package com.etheller.warsmash.networking.uberserver;
 
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import net.warsmash.networking.util.AbstractWriter;
 import net.warsmash.nio.channels.WritableOutput;
-import net.warsmash.uberserver.AccountCreationFailureReason;
-import net.warsmash.uberserver.ChannelServerMessageType;
-import net.warsmash.uberserver.GameCreationFailureReason;
-import net.warsmash.uberserver.GamingNetwork;
-import net.warsmash.uberserver.GamingNetworkServerToClientListener;
-import net.warsmash.uberserver.HandshakeDeniedReason;
-import net.warsmash.uberserver.JoinGameFailureReason;
-import net.warsmash.uberserver.LobbyPlayerType;
-import net.warsmash.uberserver.LoginFailureReason;
-import net.warsmash.uberserver.ServerErrorMessageType;
+import net.warsmash.nio.channels.WritableSocketOutput;
+import net.warsmash.uberserver.*;
 
-public class GamingNetworkServerToClientWriter extends AbstractWriter implements GamingNetworkServerToClientListener {
+public class GamingNetworkServerToClientWriter extends AbstractWriter implements GamingNetworkClientConnectionContext {
+	private final String addressString;
 
-	public GamingNetworkServerToClientWriter(final WritableOutput writableOutput) {
+	public GamingNetworkServerToClientWriter(final WritableSocketOutput writableOutput) {
 		super(writableOutput);
+		SocketAddress remoteAddress;
+		try {
+			remoteAddress = writableOutput.getRemoteAddress();
+		} catch (Exception exc) {
+			exc.printStackTrace();
+			remoteAddress = null;
+		}
+		if (remoteAddress != null) {
+			this.addressString = remoteAddress.toString();
+		} else {
+			this.addressString = "<getRemoteAddress() failed>";
+		}
 	}
 
 	@Override
@@ -273,5 +279,10 @@ public class GamingNetworkServerToClientWriter extends AbstractWriter implements
 		this.writeBuffer.putShort(hostUdpPort);
 		this.writeBuffer.putInt(yourServerPlayerSlot);
 		send();
+	}
+
+	@Override
+	public String getAddressString() {
+		return addressString;
 	}
 }

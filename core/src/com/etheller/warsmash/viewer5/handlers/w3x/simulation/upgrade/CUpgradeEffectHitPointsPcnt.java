@@ -14,19 +14,13 @@ public class CUpgradeEffectHitPointsPcnt implements CUpgradeEffect {
 
 	@Override
 	public void apply(CSimulation simulation, CUnit unit, int level) {
-		float life = unit.getLife();
-		int maximumLife = unit.getMaximumLife();
-		unit.setMaximumLife(maximumLife
-				+ StrictMath.round(unit.getUnitType().getMaxLife() * Util.levelValue(base, mod, level - 1)));
-		unit.setLife(simulation, (life / maximumLife) * unit.getMaximumLife());
+		unit.addMaxLifeRelative(simulation, StrictMath.round(unit.getUnitType().getMaxLife() * Util.levelValue(base,
+				mod, level - 1)));
 	}
 
 	@Override
 	public void unapply(CSimulation simulation, CUnit unit, int level) {
-		float life = unit.getLife();
-		int maximumLife = unit.getMaximumLife();
-		unit.setMaximumLife(maximumLife
-				- StrictMath.round(unit.getUnitType().getMaxLife() * Util.levelValue(base, mod, level - 1)));
-		unit.setLife(simulation, (life / maximumLife) * unit.getMaximumLife());
+		unit.addMaxLifeRelative(simulation, -StrictMath.round(unit.getUnitType().getMaxLife() * Util.levelValue(base,
+				mod, level - 1)));
 	}
 }

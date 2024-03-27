@@ -151,6 +151,9 @@ public abstract class Scene {
 	public boolean removeInstance(final ModelInstance instance) {
 		if (instance.scene == this) {
 			instance.removeLights(this);
+			for (int i = 0, l = instance.childrenInstances.size(); i < l; i++) {
+				instance.childrenInstances.get(i).detach();
+			}
 			innerRemove(instance);
 
 			instance.scene = null;
@@ -265,7 +268,7 @@ public abstract class Scene {
 
 		// Render all of the batches.
 		for (final RenderBatch batch : this.batches.values()) {
-			batch.render();
+			batch.renderOpaque();
 		}
 
 		// Render all of the opaque things of non-batched instances.
@@ -300,6 +303,11 @@ public abstract class Scene {
 		final Rectangle viewport = this.camera.rect;
 
 		this.viewer.gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
+
+		// Render all of the batches.
+		for (final RenderBatch batch : this.batches.values()) {
+			batch.renderTranslucent();
+		}
 
 		for (final ModelInstance instance : this.instances) {
 			instance.renderTranslucent();

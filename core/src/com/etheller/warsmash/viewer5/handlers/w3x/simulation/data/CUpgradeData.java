@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.units.DataTable;
-import com.etheller.warsmash.units.manager.MutableObjectData;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CGameplayConstants;
@@ -32,64 +32,64 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEff
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffectTechMaxAllowed;
 
 public class CUpgradeData {
-	private static final War3ID APPLIES_TO_ALL_UNITS = War3ID.fromString("glob");
-	private static final War3ID CLASS = War3ID.fromString("gcls");
-	private static final War3ID GOLD_BASE = War3ID.fromString("gglb");
-	private static final War3ID GOLD_INCREMENT = War3ID.fromString("gglm");
-	private static final War3ID LEVELS = War3ID.fromString("glvl");
-	private static final War3ID LUMBER_BASE = War3ID.fromString("glmb");
-	private static final War3ID LUMBER_INCREMENT = War3ID.fromString("glmm");
-	private static final War3ID RACE = War3ID.fromString("grac");
-	private static final War3ID TIME_BASE = War3ID.fromString("gtib");
-	private static final War3ID TIME_INCREMENT = War3ID.fromString("gtim");
-	private static final War3ID TRANSFER_WITH_UNIT_OWNERSHIP = War3ID.fromString("ginh");
-	private static final War3ID REQUIREMENTS = War3ID.fromString("greq");
-	private static final War3ID REQUIREMENTS_LEVELS = War3ID.fromString("grqc");
-	private static final War3ID NAME = War3ID.fromString("gnam");
+	private static final String APPLIES_TO_ALL_UNITS = "global"; // replaced from 'glob'
+	private static final String CLASS = "class"; // replaced from 'gcls'
+	private static final String GOLD_BASE = "goldbase"; // replaced from 'gglb'
+	private static final String GOLD_INCREMENT = "goldmod"; // replaced from 'gglm'
+	private static final String LEVELS = "maxlevel"; // replaced from 'glvl'
+	private static final String LUMBER_BASE = "lumberbase"; // replaced from 'glmb'
+	private static final String LUMBER_INCREMENT = "lumbermod"; // replaced from 'glmm'
+	private static final String RACE = "race"; // replaced from 'grac'
+	private static final String TIME_BASE = "timebase"; // replaced from 'gtib'
+	private static final String TIME_INCREMENT = "timemod"; // replaced from 'gtim'
+	private static final String TRANSFER_WITH_UNIT_OWNERSHIP = "inherit"; // replaced from 'ginh'
+	private static final String REQUIREMENTS = "Requires"; // replaced from 'greq'
+	private static final String REQUIREMENTS_LEVELS = "Requiresamount"; // replaced from 'grqc'
+	private static final String NAME = "Name"; // replaced from 'gnam'
 
-	private static final War3ID[] EFFECT = { War3ID.fromString("gef1"), War3ID.fromString("gef2"),
-			War3ID.fromString("gef3"), War3ID.fromString("gef4"), };
-	private static final War3ID[] EFFECT_BASE = { War3ID.fromString("gba1"), War3ID.fromString("gba2"),
-			War3ID.fromString("gba3"), War3ID.fromString("gba4"), };
-	private static final War3ID[] EFFECT_MOD = { War3ID.fromString("gmo1"), War3ID.fromString("gmo2"),
-			War3ID.fromString("gmo3"), War3ID.fromString("gmo4"), };
-	private static final War3ID[] EFFECT_CODE = { War3ID.fromString("gco1"), War3ID.fromString("gco2"),
-			War3ID.fromString("gco3"), War3ID.fromString("gco4"), };
+	private static final String[] EFFECT = { "effect1", "effect2", // replaced from 'gef1'
+			"effect3", "effect4", }; // replaced from 'gef3'
+	private static final String[] EFFECT_BASE = { "base1", "base2", // replaced from 'gba1'
+			"base3", "base4", }; // replaced from 'gba3'
+	private static final String[] EFFECT_MOD = { "mod1", "mod2", // replaced from 'gmo1'
+			"mod3", "mod4", }; // replaced from 'gmo3'
+	private static final String[] EFFECT_CODE = { "code1", "code2", // replaced from 'gco1'
+			"code3", "code4", }; // replaced from 'gco3'
 
 	private final CGameplayConstants gameplayConstants;
-	private final MutableObjectData upgradeData;
+	private final ObjectData upgradeData;
 	private final DataTable standardUpgradeEffectMeta;
 	private final Map<War3ID, CUpgradeType> idToType = new HashMap<>();
 
-	public CUpgradeData(final CGameplayConstants gameplayConstants, final MutableObjectData upgradeData,
-			DataTable standardUpgradeEffectMeta) {
+	public CUpgradeData(final CGameplayConstants gameplayConstants, final ObjectData upgradeData,
+			final DataTable standardUpgradeEffectMeta) {
 		this.gameplayConstants = gameplayConstants;
 		this.upgradeData = upgradeData;
 		this.standardUpgradeEffectMeta = standardUpgradeEffectMeta;
 	}
 
 	public CUpgradeType getType(final War3ID typeId) {
-		final MutableGameObject upgradeType = this.upgradeData.get(typeId);
+		final GameObject upgradeType = this.upgradeData.get(typeId);
 		if (upgradeType == null) {
 			return null;
 		}
 		return getUpgradeTypeInstance(typeId, upgradeType);
 	}
 
-	private CUpgradeType getUpgradeTypeInstance(final War3ID typeId, final MutableGameObject upgradeType) {
+	private CUpgradeType getUpgradeTypeInstance(final War3ID typeId, final GameObject upgradeType) {
 		CUpgradeType upgradeTypeInstance = this.idToType.get(typeId);
 		if (upgradeTypeInstance == null) {
-			List<CUpgradeEffect> upgradeEffects = new ArrayList<>();
+			final List<CUpgradeEffect> upgradeEffects = new ArrayList<>();
 			for (int i = 0; i < EFFECT.length; i++) {
-				War3ID effectMetaKey = EFFECT[i];
-				War3ID effectBaseMetaKey = EFFECT_BASE[i];
-				War3ID effectModMetaKey = EFFECT_MOD[i];
-				War3ID effectCodeMetaKey = EFFECT_CODE[i];
+				final String effectMetaKey = EFFECT[i];
+				final String effectBaseMetaKey = EFFECT_BASE[i];
+				final String effectModMetaKey = EFFECT_MOD[i];
+				final String effectCodeMetaKey = EFFECT_CODE[i];
 
 				/* This effectId defines what type of benefit the upgrade will provide */
-				String effectIdString = upgradeType.getFieldAsString(effectMetaKey, 0);
+				final String effectIdString = upgradeType.getFieldAsString(effectMetaKey, 0);
 				if (effectIdString.length() == 4) {
-					War3ID effectId = War3ID.fromString(effectIdString);
+					final War3ID effectId = War3ID.fromString(effectIdString);
 					// NOTE: maybe a string switch is not performant, if it's a problem maybe change
 					// it later but the syntax is pretty nice and the calculation is cached and only
 					// runs once per upgrade
@@ -100,10 +100,13 @@ public class CUpgradeData {
 										upgradeType.getFieldAsInteger(effectModMetaKey, 0)));
 						break;
 					case "rlev":
-						upgradeEffects
-								.add(new CUpgradeEffectSpellLevel(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
-										upgradeType.getFieldAsInteger(effectModMetaKey, 0),
-										War3ID.fromString(upgradeType.getFieldAsString(effectCodeMetaKey, 0))));
+						final String spellIdField = upgradeType.getFieldAsString(effectCodeMetaKey, 0);
+						if (spellIdField.length() == 4) {
+							upgradeEffects.add(
+									new CUpgradeEffectSpellLevel(upgradeType.getFieldAsInteger(effectBaseMetaKey, 0),
+											upgradeType.getFieldAsInteger(effectModMetaKey, 0),
+											War3ID.fromString(spellIdField)));
+						}
 						break;
 					case "rhpx":
 						upgradeEffects
@@ -173,35 +176,44 @@ public class CUpgradeData {
 						break;
 					}
 				}
+				else {
+					if (!"_".equals(effectIdString)) {
+						System.err.println("Not 4 len: " + effectIdString);
+					}
+				}
 			}
 
-			boolean appliesToAllUnits = upgradeType.getFieldAsBoolean(APPLIES_TO_ALL_UNITS, 0);
+			final boolean appliesToAllUnits = upgradeType.getFieldAsBoolean(APPLIES_TO_ALL_UNITS, 0);
 
 			final String classString = upgradeType.getFieldAsString(CLASS, 0);
 			final CUpgradeClass upgradeClass = CUpgradeClass.parseUpgradeClass(classString);
 
-			int goldBase = upgradeType.getFieldAsInteger(GOLD_BASE, 0);
-			int goldIncrement = upgradeType.getFieldAsInteger(GOLD_INCREMENT, 0);
+			final int goldBase = upgradeType.getFieldAsInteger(GOLD_BASE, 0);
+			final int goldIncrement = upgradeType.getFieldAsInteger(GOLD_INCREMENT, 0);
 
-			int levelCount = upgradeType.getFieldAsInteger(LEVELS, 0);
+			final int levelCount = upgradeType.getFieldAsInteger(LEVELS, 0);
 
-			int lumberBase = upgradeType.getFieldAsInteger(LUMBER_BASE, 0);
-			int lumberIncrement = upgradeType.getFieldAsInteger(LUMBER_INCREMENT, 0);
+			final int lumberBase = upgradeType.getFieldAsInteger(LUMBER_BASE, 0);
+			final int lumberIncrement = upgradeType.getFieldAsInteger(LUMBER_INCREMENT, 0);
 
 			final String raceString = upgradeType.getFieldAsString(RACE, 0);
 			final CUnitRace unitRace = CUnitRace.parseRace(raceString);
 
-			int timeBase = (int) Math
+			final int timeBase = (int) Math
 					.ceil(upgradeType.getFieldAsInteger(TIME_BASE, 0) * WarsmashConstants.GAME_SPEED_TIME_FACTOR);
-			int timeIncrement = (int) Math
+			final int timeIncrement = (int) Math
 					.ceil(upgradeType.getFieldAsInteger(TIME_INCREMENT, 0) * WarsmashConstants.GAME_SPEED_TIME_FACTOR);
 
-			boolean transferWithUnitOwnership = upgradeType.getFieldAsBoolean(TRANSFER_WITH_UNIT_OWNERSHIP, 0);
+			final boolean transferWithUnitOwnership = upgradeType.getFieldAsBoolean(TRANSFER_WITH_UNIT_OWNERSHIP, 0);
 
 			final List<CUpgradeType.UpgradeLevel> upgradeLevels = new ArrayList<>();
-			for (int i = 1; i <= levelCount; i++) {
-				final String requirementsTierString = upgradeType.getFieldAsString(REQUIREMENTS, i);
-				final String requirementsLevelsString = upgradeType.getFieldAsString(REQUIREMENTS_LEVELS, i);
+			for (int i = 0; i < levelCount; i++) {
+				String suffix = "";
+				if (i > 0) {
+					suffix = Integer.toString(i);
+				}
+				final List<String> requirementsTierString = upgradeType.getFieldAsList(REQUIREMENTS + suffix);
+				final List<String> requirementsLevelsString = upgradeType.getFieldAsList(REQUIREMENTS_LEVELS + suffix);
 				final List<CUnitTypeRequirement> tierRequirements = CUnitData.parseRequirements(requirementsTierString,
 						requirementsLevelsString);
 				final String levelName = upgradeType.getFieldAsString(NAME, i);

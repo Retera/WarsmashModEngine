@@ -22,7 +22,7 @@ public enum CUnitClassification {
 	WARD("ward"),
 	ANCIENT("ancient"),
 	STANDON("standon"),
-	NEURAL("neutral"),
+	NEUTRAL("neutral"),
 	TAUREN("tauren", "TaurenClass");
 	private static final Map<String, CUnitClassification> UNIT_EDITOR_KEY_TO_CLASSIFICATION = new HashMap<>();
 	static {

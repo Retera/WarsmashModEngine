@@ -6,6 +6,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -14,7 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 public class CAbilityNeutralBuild extends AbstractCAbilityBuild {
 
 	public CAbilityNeutralBuild(final int handleId, final List<War3ID> structuresBuilt) {
-		super(handleId, structuresBuilt);
+		super(handleId, War3ID.fromString("ANbu"), structuresBuilt);
 	}
 
 	@Override
@@ -56,5 +57,20 @@ public class CAbilityNeutralBuild extends AbstractCAbilityBuild {
 	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

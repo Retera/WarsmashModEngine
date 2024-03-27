@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityLoad;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
@@ -18,18 +19,18 @@ public class CAbilityTypeLoad extends CAbilityType<CAbilityTypeLoadLevelData> {
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeLoadLevelData levelData = getLevelData(0);
-		return new CAbilityLoad(handleId, getAlias(), levelData.getCastRange(), levelData.getAllowedUnitTypes());
+		return new CAbilityLoad(handleId, getCode(), getAlias(), levelData.getCastRange(), levelData.getAllowedUnitTypes());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 		final CAbilityTypeLoadLevelData levelData = getLevelData(level - 1);
 		final CAbilityLoad heroAbility = ((CAbilityLoad) existingAbility);
 
 		heroAbility.setCastRange(levelData.getCastRange());
 		heroAbility.setAllowedUnitTypes(levelData.getAllowedUnitTypes());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 	}
 
 }

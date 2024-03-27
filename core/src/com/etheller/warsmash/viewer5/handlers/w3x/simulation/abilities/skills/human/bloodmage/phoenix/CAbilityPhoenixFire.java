@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 
@@ -27,10 +28,10 @@ public class CAbilityPhoenixFire extends AbstractGenericNoIconAbility {
 
 	private int lastAttackTurnTick;
 
-	public CAbilityPhoenixFire(final int handleId, final War3ID alias, final float initialDamage,
+	public CAbilityPhoenixFire(final int handleId, final War3ID code, final War3ID alias, final float initialDamage,
 			final float damagePerSecond, final float areaOfEffect, final float cooldown, final float duration,
 			final EnumSet<CTargetType> targetsAllowed) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.initialDamage = initialDamage;
 		this.damagePerSecond = damagePerSecond;
 		this.areaOfEffect = areaOfEffect;

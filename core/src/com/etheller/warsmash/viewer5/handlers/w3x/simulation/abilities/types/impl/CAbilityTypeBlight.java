@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.blight.CAbilityBlight;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
@@ -19,12 +20,12 @@ public class CAbilityTypeBlight extends CAbilityType<CAbilityTypeBlightLevelData
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeBlightLevelData levelData = getLevelData(0);
-		return new CAbilityBlight(handleId, getAlias(), levelData.isCreatesBlight(), levelData.getExpansionAmount(),
+		return new CAbilityBlight(handleId, getCode(), getAlias(), levelData.isCreatesBlight(), levelData.getExpansionAmount(),
 				levelData.getAreaOfEffect(), levelData.getGameSecondsPerBlightExpansion());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 		final CAbilityTypeBlightLevelData levelData = getLevelData(level - 1);
 		final CAbilityBlight heroAbility = ((CAbilityBlight) existingAbility);
 
@@ -33,6 +34,6 @@ public class CAbilityTypeBlight extends CAbilityType<CAbilityTypeBlightLevelData
 		heroAbility.setExpansionAmount(levelData.getExpansionAmount());
 		heroAbility.setGameSecondsPerBlightExpansion(levelData.getGameSecondsPerBlightExpansion());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 	}
 }

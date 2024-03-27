@@ -5,5 +5,5 @@ import java.net.SocketAddress;
 import net.warsmash.nio.channels.tcp.TCPClientParser;
 
 public interface SocketChannelCallback {
-	TCPClientParser onConnect(WritableOutput writableOpenedChannel, SocketAddress remoteAddress);
+	TCPClientParser onConnect(WritableSocketOutput writableOpenedChannel, SocketAddress remoteAddress);
 }

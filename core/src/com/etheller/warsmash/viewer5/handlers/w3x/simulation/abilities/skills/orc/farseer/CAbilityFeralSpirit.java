@@ -3,7 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.o
 import java.util.ArrayList;
 import java.util.List;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -20,7 +20,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnitId;
 	private int summonUnitCount;
 	private War3ID buffId;
-	private float duration;
 	private float areaOfEffect;
 
 	// TODO maybe "lastSummonHandleIds" instead, for ease of use with saving game,
@@ -33,15 +32,12 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.FERAL_SPIRIT_SUMMON_UNIT_TYPE_1,
-				level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.UNIT_ID + level, 0);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.FERAL_SPIRIT_SUMMON_UNIT_COUNT_1,
-				level);
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_B + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
@@ -66,9 +62,8 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
-			summonedUnit.setExplodesOnDeath(true);
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.SPECIAL);
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration(), true));
+			simulation.createTemporarySpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.SPECIAL);
 			this.lastSummonUnits.add(summonedUnit);
 		}
 		return false;
@@ -86,10 +81,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 		return this.buffId;
 	}
 
-	public float getDuration() {
-		return this.duration;
-	}
-
 	public float getAreaOfEffect() {
 		return this.areaOfEffect;
 	}
@@ -104,10 +95,6 @@ public class CAbilityFeralSpirit extends CAbilityNoTargetSpellBase {
 
 	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;
-	}
-
-	public void setDuration(final float duration) {
-		this.duration = duration;
 	}
 
 	public void setAreaOfEffect(final float areaOfEffect) {

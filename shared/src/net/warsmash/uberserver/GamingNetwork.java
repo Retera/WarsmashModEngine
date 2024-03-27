@@ -13,5 +13,5 @@ public class GamingNetwork {
 	public static final String GAME_ID_BASE = "WAR3";
 	public static final String GAME_ID_XPAC = "W3XP";
 
-	public static final int GAME_VERSION_DATA = 102201;
+	public static final int GAME_VERSION_DATA = 102202;
 }

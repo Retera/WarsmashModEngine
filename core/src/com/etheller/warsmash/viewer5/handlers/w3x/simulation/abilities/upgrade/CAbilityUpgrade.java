@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -19,13 +20,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public final class CAbilityUpgrade extends AbstractCAbility {
 	private final Set<War3ID> upgradesTo;
 
 	public CAbilityUpgrade(final int handleId, final List<War3ID> upgradesTo) {
-		super(handleId);
+		super(handleId, War3ID.fromString("Aupg"));
 		this.upgradesTo = new LinkedHashSet<>(upgradesTo);
 	}
 
@@ -72,15 +73,15 @@ public final class CAbilityUpgrade extends AbstractCAbility {
 								receiver.useOk();
 							}
 							else {
-								receiver.notEnoughResources(ResourceType.FOOD);
+								receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 							}
 						}
 						else {
-							receiver.notEnoughResources(ResourceType.LUMBER);
+							receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 						}
 					}
 					else {
-						receiver.notEnoughResources(ResourceType.GOLD);
+						receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 					}
 				}
 				else {
@@ -194,5 +195,20 @@ public final class CAbilityUpgrade extends AbstractCAbility {
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return true;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

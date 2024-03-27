@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
@@ -24,9 +25,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 
 public class CAbilityHero extends AbstractCAbility {
-	private final Set<War3ID> skillsAvailable;
+	private Set<War3ID> skillsAvailable;
 	private int xp;
 	private int heroLevel;
 	private int skillPoints = 1;
@@ -39,7 +41,7 @@ public class CAbilityHero extends AbstractCAbility {
 	private boolean reviving;
 
 	public CAbilityHero(final int handleId, final List<War3ID> skillsAvailable) {
-		super(handleId);
+		super(handleId, War3ID.fromString("AHer"));
 		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
 	}
 
@@ -91,24 +93,36 @@ public class CAbilityHero extends AbstractCAbility {
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityTarget target) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
-		final CAbilityType<?> abilityType = game.getAbilityData().getAbilityType(orderIdAsRawtype);
+		learnSkill(game, caster, orderIdAsRawtype);
+		return false;
+	}
+
+	private void learnSkill(final CSimulation game, final CUnit caster, final War3ID skillId) {
+		final CAbilityType<?> abilityType = game.getAbilityData().getAbilityType(skillId);
 		if (abilityType != null) {
 			this.skillPoints--;
 			final CLevelingAbility existingAbility = caster
-					.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(orderIdAsRawtype));
+					.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(skillId));
 			if (existingAbility == null) {
 				final CAbility newAbility = abilityType.createAbility(game.getHandleIdAllocator().createId());
 				caster.add(game, newAbility);
 			}
 			else {
-				abilityType.setLevel(game, existingAbility, existingAbility.getLevel() + 1);
+				abilityType.setLevel(game, caster, existingAbility, existingAbility.getLevel() + 1);
 			}
 		}
 		else {
-			game.getCommandErrorListener().showCommandError(caster.getPlayerIndex(),
+			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
 					"NOTEXTERN: Ability is not yet programmed, unable to learn!");
 		}
-		return false;
+	}
+
+	public void selectHeroSkill(final CSimulation game, final CUnit caster, final War3ID skillId) {
+		final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+		checkCanUse(game, caster, skillId.getValue(), activationReceiver);
+		if (activationReceiver.isOk()) {
+			learnSkill(game, caster, skillId);
+		}
 	}
 
 	@Override
@@ -265,6 +279,21 @@ public class CAbilityHero extends AbstractCAbility {
 		}
 	}
 
+	public void setStrengthBase(final CSimulation game, final CUnit unit, final int strengthBase) {
+		this.strength.setBase(strengthBase);
+		calculateDerivatedFields(game, unit);
+	}
+
+	public void setAgilityBase(final CSimulation game, final CUnit unit, final int agilityBase) {
+		this.agility.setBase(agilityBase);
+		calculateDerivatedFields(game, unit);
+	}
+
+	public void setIntelligenceBase(final CSimulation game, final CUnit unit, final int intelligenceBase) {
+		this.intelligence.setBase(intelligenceBase);
+		calculateDerivatedFields(game, unit);
+	}
+
 	public void addStrengthBonus(final CSimulation game, final CUnit unit, final int strengthBonus) {
 		this.strength.setBonus(this.strength.getBonus() + strengthBonus);
 		calculateDerivatedFields(game, unit);
@@ -319,17 +348,20 @@ public class CAbilityHero extends AbstractCAbility {
 		final int deltaStrength = currentStrength - prevStrength;
 		final int currentIntelligence = this.intelligence.getCurrent();
 		final int deltaIntelligence = currentIntelligence - prevIntelligence;
-		final int currentAgilityBase = this.agility.getBase();
+		final int currentAgility = this.agility.getCurrent();
+		final int currentAgilityBase = this.agility.getCurrentBase();
 		final int currentAgilityBonus = this.agility.getBonus();
 
 		final HeroStatValue primaryAttributeStat = getStat(unit.getUnitType().getPrimaryAttribute());
-		final int primaryAttributeBase = primaryAttributeStat.getBase();
+		final int primaryAttributeBase = primaryAttributeStat.getCurrentBase();
 		final int primaryAttributeBonus = primaryAttributeStat.getBonus();
+		final float agiAttackSpeedBonus = gameplayConstants.getAgiAttackSpeedBonus() * currentAgility;
 		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setPrimaryAttributePermanentDamageBonus(
 					(int) (primaryAttributeBase * gameplayConstants.getStrAttackBonus()));
 			attack.setPrimaryAttributeTemporaryDamageBonus(
 					(int) (primaryAttributeBonus * gameplayConstants.getStrAttackBonus()));
+			attack.setAgilityAttackSpeedBonus(agiAttackSpeedBonus);
 		}
 
 		final float hitPointIncrease = gameplayConstants.getStrHitPointBonus() * deltaStrength;
@@ -341,6 +373,53 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.setLife(game, newLife);
 
 		final float manaPointIncrease = gameplayConstants.getIntManaBonus() * deltaIntelligence;
+		final int oldMaximumMana = unit.getMaximumMana();
+		final float oldMana = unit.getMana();
+		final int newMaximumMana = Math.round(oldMaximumMana + manaPointIncrease);
+		final float newMana = (oldMana * (newMaximumMana)) / oldMaximumMana;
+		unit.setMaximumMana(newMaximumMana);
+		unit.setMana(newMana);
+
+		final int agilityDefenseBonus = Math.round(
+				gameplayConstants.getAgiDefenseBase() + (gameplayConstants.getAgiDefenseBonus() * currentAgilityBase));
+		unit.setAgilityDefensePermanentBonus(agilityDefenseBonus);
+		unit.setAgilityDefenseTemporaryBonus(gameplayConstants.getAgiDefenseBonus() * currentAgilityBonus);
+		unit.setLifeRegenStrengthBonus(currentStrength * gameplayConstants.getStrRegenBonus());
+		unit.setManaRegenIntelligenceBonus(currentIntelligence * gameplayConstants.getIntRegenBonus());
+	}
+	
+	public void recalculateAllStats(final CSimulation game, final CUnit unit) {
+		final CGameplayConstants gameplayConstants = game.getGameplayConstants();
+		this.strength.calculate(this.heroLevel);
+		this.agility.calculate(this.heroLevel);
+		this.intelligence.calculate(this.heroLevel);
+		final int currentStrength = this.strength.getCurrent();
+		final int currentIntelligence = this.intelligence.getCurrent();
+		final int currentAgility = this.agility.getCurrent();
+		final int currentAgilityBase = this.agility.getCurrentBase();
+		final int currentAgilityBonus = this.agility.getBonus();
+
+		final HeroStatValue primaryAttributeStat = getStat(unit.getUnitType().getPrimaryAttribute());
+		final int primaryAttributeBase = primaryAttributeStat.getCurrentBase();
+		final int primaryAttributeBonus = primaryAttributeStat.getBonus();
+		final float agiAttackSpeedBonus = gameplayConstants.getAgiAttackSpeedBonus() * currentAgility;
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
+			attack.setPrimaryAttributePermanentDamageBonus(
+					(int) (primaryAttributeBase * gameplayConstants.getStrAttackBonus()));
+			attack.setPrimaryAttributeTemporaryDamageBonus(
+					(int) (primaryAttributeBonus * gameplayConstants.getStrAttackBonus()));
+			attack.setAgilityAttackSpeedBonus(agiAttackSpeedBonus);
+		}
+
+		final float hitPointIncrease = gameplayConstants.getStrHitPointBonus() * currentStrength;
+		final int oldMaximumLife = unit.getMaximumLife();
+		final float oldLife = unit.getLife();
+		final int newMaximumLife = Math.round(oldMaximumLife + hitPointIncrease);
+		final float newLife = (oldLife * (newMaximumLife)) / oldMaximumLife;
+		unit.setMaximumLife(newMaximumLife);
+		unit.setLife(game, newLife);
+
+		final float manaPointIncrease = gameplayConstants.getIntManaBonus() * currentIntelligence;
 		final int oldMaximumMana = unit.getMaximumMana();
 		final float oldMana = unit.getMana();
 		final int newMaximumMana = Math.round(oldMaximumMana + manaPointIncrease);
@@ -385,6 +464,10 @@ public class CAbilityHero extends AbstractCAbility {
 			return this.base;
 		}
 
+		public int getCurrentBase() {
+			return this.currentBase;
+		}
+
 		public int getBonus() {
 			return this.bonus;
 		}
@@ -411,7 +494,31 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.skillsAvailable;
 	}
 
+	public void setSkillsAvailable(List<War3ID> skillsAvailable) {
+		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
+	}
+
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+	
+	@Override
+	public boolean isPermanent() {
+		return true;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

@@ -59,7 +59,7 @@ public class MdxRenderBatch extends RenderBatch {
 	}
 
 	@Override
-	public void render() {
+	public void renderOpaque() {
 		if (DynamicShadowManager.IS_SHADOW_MAPPING) {
 			return;
 		}
@@ -132,4 +132,7 @@ public class MdxRenderBatch extends RenderBatch {
 		}
 	}
 
+	@Override
+	public void renderTranslucent() {
+	}
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.test.CAbilityCoupleInstant;
@@ -19,13 +20,13 @@ public class CAbilityTypeCoupleInstant extends CAbilityType<CAbilityTypeCoupleIn
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeCoupleInstantLevelData levelData = getLevelData(0);
-		return new CAbilityCoupleInstant(handleId, getAlias(), levelData.getResultingUnitTypeId(),
+		return new CAbilityCoupleInstant(handleId, getCode(), getAlias(), levelData.getResultingUnitTypeId(),
 				levelData.getPartnerUnitTypeId(), levelData.isMoveToPartner(), levelData.getCastRange(),
 				levelData.getArea(), levelData.getTargetsAllowed(), levelData.getGoldCost(), levelData.getLumberCost());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 		final CAbilityTypeCoupleInstantLevelData levelData = getLevelData(level - 1);
 		final CAbilityCoupleInstant heroAbility = ((CAbilityCoupleInstant) existingAbility);
 
@@ -38,7 +39,7 @@ public class CAbilityTypeCoupleInstant extends CAbilityType<CAbilityTypeCoupleIn
 		heroAbility.setGoldCost(levelData.getGoldCost());
 		heroAbility.setLumberCost(levelData.getLumberCost());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 	}
 
 }

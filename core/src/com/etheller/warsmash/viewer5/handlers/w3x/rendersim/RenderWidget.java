@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxNode;
@@ -16,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitAnimationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -47,7 +47,7 @@ public interface RenderWidget {
 
 	SplatMover getSelectionCircle();
 
-	boolean isSelectable();
+	boolean isSelectable(CSimulation simulation, int byPlayer);
 
 	boolean isShowSelectionCircleAboveWater();
 
@@ -77,8 +77,8 @@ public interface RenderWidget {
 			this.instance = instance;
 			this.animationWalkSpeed = animationWalkSpeed;
 			this.animationRunSpeed = animationRunSpeed;
-			turretBone = this.instance.inefficientlyGetNodeByNameSearch("bone_turret");
-			headBone = this.instance.inefficientlyGetNodeByNameSearch("bone_head");
+			this.turretBone = this.instance.inefficientlyGetNodeByNameSearch("bone_turret");
+			this.headBone = this.instance.inefficientlyGetNodeByNameSearch("bone_head");
 		}
 
 		@Override
@@ -129,6 +129,25 @@ public interface RenderWidget {
 				playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio,
 						this.currentlyAllowingRarityVariations);
 			}
+		}
+
+		@Override
+		public void addSecondaryTagForFutureAnimations(SecondaryTag tag) {
+			if (!this.secondaryAnimationTags.contains(tag)) {
+				this.secondaryAnimationTags.add(tag);
+			}
+		}
+
+		@Override
+		public void removeSecondaryTagForFutureAnimations(SecondaryTag tag) {
+			if (this.secondaryAnimationTags.contains(tag)) {
+				this.secondaryAnimationTags.remove(tag);
+			}
+		}
+
+		@Override
+		public EnumSet<SecondaryTag> getSecondaryTags() {
+			return secondaryAnimationTags;
 		}
 
 		@Override
@@ -213,8 +232,8 @@ public interface RenderWidget {
 					}
 				}
 			}
-			applyLock(turretBone, turretFacingLock);
-			applyLock(headBone, headFacingLock);
+			applyLock(this.turretBone, this.turretFacingLock);
+			applyLock(this.headBone, this.headFacingLock);
 		}
 
 		private static void applyLock(final MdxNode turretBone, final AbilityTarget turretFacingLock) {
@@ -228,11 +247,9 @@ public interface RenderWidget {
 					final float ang = (float) Math.atan2(turretFacingLock.getY() - turretBone.worldLocation.y,
 							turretFacingLock.getX() - turretBone.worldLocation.x);
 					if (turretBone.overrideWorldRotation == null) {
-						turretBone.setOverrideWorldRotation(new Quaternion(Vector3.Z, ang));
+						turretBone.setOverrideWorldRotation(new Quaternion());
 					}
-					else {
-						turretBone.overrideWorldRotation.setFromAxisRad(0, 0, 1, ang);
-					}
+					turretBone.overrideWorldRotation.setFromAxisRad(0, 0, 1, ang);
 				}
 			}
 		}

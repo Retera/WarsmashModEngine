@@ -3,6 +3,7 @@ package com.etheller.warsmash.networking.uberserver;
 import java.nio.ByteBuffer;
 
 import net.warsmash.nio.channels.WritableOutput;
+import net.warsmash.nio.channels.WritableSocketOutput;
 import net.warsmash.uberserver.GamingNetworkClientToServerListener;
 import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.LobbyGameSpeed;
@@ -16,7 +17,7 @@ public class DefaultGamingNetworkServerClientBuilder implements GamingNetworkSer
 	}
 
 	@Override
-	public GamingNetworkClientToServerListener createClient(final WritableOutput output) {
+	public GamingNetworkClientToServerListener createClient(final WritableSocketOutput output) {
 		final GamingNetworkServerToClientWriter writer = new GamingNetworkServerToClientWriter(output);
 		return new GamingNetworkClientToServerListener() {
 			@Override

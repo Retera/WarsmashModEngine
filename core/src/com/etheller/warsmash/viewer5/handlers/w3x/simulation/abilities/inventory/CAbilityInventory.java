@@ -26,6 +26,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	private final boolean canDropItems;
@@ -38,10 +39,10 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	private CBehaviorDropItem behaviorDropItem;
 	private CBehaviorGiveItemToHero behaviorGiveItem;
 
-	public CAbilityInventory(final int handleId, final War3ID alias, final boolean canDropItems,
+	public CAbilityInventory(final int handleId, final War3ID code, final War3ID alias, final boolean canDropItems,
 			final boolean canGetItems, final boolean canUseItems, final boolean dropItemsOnDeath,
 			final int itemCapacity) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.canDropItems = canDropItems;
 		this.canGetItems = canGetItems;
 		this.canUseItems = canUseItems;
@@ -62,7 +63,11 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-
+		for (int i = 0; i < this.itemsHeld.length; i++) {
+			if (this.itemsHeld[i] != null) {
+				dropItem(game, unit, i, unit.getX(), unit.getY(), false);
+			}
+		}
 	}
 
 	@Override
@@ -228,12 +233,16 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (((orderId == OrderIds.getitem) || (orderId == OrderIds.smart)) && !target.isDead()) {
 			if (target instanceof CItem) {
-				final CItem targetItem = (CItem) target;
-				if (!targetItem.isHidden()) {
-					receiver.targetOk(target);
-				}
-				else {
-					receiver.orderIdNotAccepted();
+				if (this.canGetItems) {
+					final CItem targetItem = (CItem) target;
+					if (!targetItem.isHidden()) {
+						receiver.targetOk(target);
+					}
+					else {
+						receiver.orderIdNotAccepted();
+					}
+				} else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_PICK_UP_THIS_ITEM);
 				}
 			}
 			else {
@@ -387,10 +396,12 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				}
 			}
 			else {
-				receiver.unknownReasonUseNotOk();
+				receiver.activationCheckFailed(CommandStringErrorKeys.UNABLE_TO_USE_THIS_ITEM);
 			}
 		}
-		else {
+		else if(orderId == OrderIds.dropitem && !this.canDropItems) {
+			receiver.activationCheckFailed(CommandStringErrorKeys.UNABLE_TO_DROP_THIS_ITEM);
+		} else {
 			receiver.useOk();
 		}
 	}
@@ -422,6 +433,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 							final CAbility abilityFromItem = abilityType
 									.createAbility(simulation.getHandleIdAllocator().createId());
 							abilityFromItem.setIconShowing(false);
+							abilityFromItem.setItemAbility(item, -1);
 							hero.add(simulation, abilityFromItem);
 							if (abilityFromItem instanceof SingleOrderAbility) {
 								final int baseOrderId = ((SingleOrderAbility) abilityFromItem).getBaseOrderId();
@@ -452,6 +464,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 									final CAbility abilityFromItem = abilityType
 											.createAbility(simulation.getHandleIdAllocator().createId());
 									abilityFromItem.setIconShowing(false);
+									abilityFromItem.setItemAbility(item, itemIndex);
 									hero.add(simulation, abilityFromItem);
 									this.itemsHeldAbilities[itemIndex].add(abilityFromItem);
 								}
@@ -462,7 +475,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					}
 				}
 				if (playUserUISounds) {
-					simulation.getCommandErrorListener().showInventoryFullError(hero.getPlayerIndex());
+					simulation.getCommandErrorListener().showInterfaceError(hero.getPlayerIndex(), CommandStringErrorKeys.INVENTORY_IS_FULL);
 				}
 			}
 		}

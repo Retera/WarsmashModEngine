@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
@@ -19,12 +20,12 @@ public class CAbilityTypeBlightedGoldMine extends CAbilityType<CAbilityTypeBligh
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeBlightedGoldMineLevelData levelData = getLevelData(0);
-		return new CAbilityBlightedGoldMine(handleId, getAlias(), levelData.getGoldPerInterval(),
+		return new CAbilityBlightedGoldMine(handleId, getCode(), getAlias(), levelData.getGoldPerInterval(),
 				levelData.getIntervalDuration(), levelData.getMaxNumberOfMiners(), levelData.getRadiusOfMiningRing());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 		final CAbilityTypeBlightedGoldMineLevelData levelData = getLevelData(level - 1);
 		final CAbilityBlightedGoldMine heroAbility = ((CAbilityBlightedGoldMine) existingAbility);
 
@@ -33,6 +34,6 @@ public class CAbilityTypeBlightedGoldMine extends CAbilityType<CAbilityTypeBligh
 		heroAbility.setRadiusOfMiningRing(levelData.getRadiusOfMiningRing());
 		heroAbility.setMaxNumberOfMiners(levelData.getMaxNumberOfMiners());
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 	}
 }

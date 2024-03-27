@@ -104,4 +104,9 @@ public class CBehaviorGiveItemToHero extends CAbstractRangedBehavior {
 
 	}
 
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
 }

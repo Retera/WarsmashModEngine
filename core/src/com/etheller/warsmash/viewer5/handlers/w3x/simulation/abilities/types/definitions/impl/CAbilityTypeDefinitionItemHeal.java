@@ -1,34 +1,29 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import java.util.List;
+
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeChannelTest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeItemHeal;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeItemHealLevelData;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
-
-import java.util.EnumSet;
-import java.util.List;
 
 public class CAbilityTypeDefinitionItemHeal extends AbstractCAbilityTypeDefinition<CAbilityTypeItemHealLevelData>
 		implements CAbilityTypeDefinition {
-	protected static final War3ID HIT_POINTS_GAINED = War3ID.fromString("Ihpg");
 
 	@Override
-	protected CAbilityTypeItemHealLevelData createLevelData(final MutableGameObject abilityEditorData,
-			final int level) {
-		final String targetsAllowedAtLevelString = abilityEditorData.getFieldAsString(TARGETS_ALLOWED, level);
-		final int hitPointsGained = abilityEditorData.getFieldAsInteger(HIT_POINTS_GAINED, level);
-		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
-		return new CAbilityTypeItemHealLevelData(targetsAllowedAtLevel, hitPointsGained);
+	protected CAbilityTypeItemHealLevelData createLevelData(final GameObject abilityEditorData, final int level) {
+		final int hitPointsGained = abilityEditorData.getFieldAsInteger(DATA_A + level, 0);
+		final float cooldown = abilityEditorData.getFieldAsFloat(COOLDOWN + level, 0);
+		return new CAbilityTypeItemHealLevelData(getTargetsAllowed(abilityEditorData, level), hitPointsGained,
+				cooldown);
 	}
 
 	@Override
-	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final MutableGameObject abilityEditorData,
+	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final GameObject abilityEditorData,
 			final List<CAbilityTypeItemHealLevelData> levelData) {
-		return new CAbilityTypeItemHeal(alias, abilityEditorData.getCode(), levelData);
+		return new CAbilityTypeItemHeal(alias, abilityEditorData.getFieldAsWar3ID(CODE, -1), levelData);
 	}
 
 }

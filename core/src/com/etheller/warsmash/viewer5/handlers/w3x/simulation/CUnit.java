@@ -2453,6 +2453,10 @@ public class CUnit extends CWidget {
 
 	@Override
 	public double distance(final float x, final float y) {
+		return distance(x, y);
+	}
+
+	public double distance(final double x, final double y) {
 		double dx = Math.abs(x - getX());
 		double dy = Math.abs(y - getY());
 		final float thisCollisionSize = this.unitType.getCollisionSize();

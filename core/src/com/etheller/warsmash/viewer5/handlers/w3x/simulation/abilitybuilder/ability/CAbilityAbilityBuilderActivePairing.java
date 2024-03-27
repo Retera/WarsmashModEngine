@@ -282,7 +282,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset(target);
+			return this.behavior.reset(game, target);
 		} else if (checkTargetInternalOrderId(game, caster, orderId)) {
 //			System.err.println(caster.getUnitType().getName() + " Got internal order");
 			final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
@@ -292,7 +292,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset(target, orderId);
+			return this.behavior.reset(game, target, orderId);
 		} else {
 			return null;
 		}

@@ -28,6 +28,7 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	
 	protected float cooldown = 0;
 	protected float area = 0;
+	protected float range = 0;
 
 	private War3ID onTooltipOverride = null;
 
@@ -46,10 +47,15 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 			CAbilityTypeAbilityBuilderLevelData levelDataLevel = this.levelData.get(this.getLevel() - 1);
 			this.cooldown = levelDataLevel.getCooldown();
 			this.area = levelDataLevel.getArea();
+			this.range = levelDataLevel.getCastRange();
 		}
 		if (this.config.getOverrideFields() != null) {
 			if (this.config.getOverrideFields().getAreaOverride() != null) {
 				this.area = this.config.getOverrideFields().getAreaOverride().callback(game, unit, localStore, 0);
+			}
+			if (this.config.getOverrideFields().getRangeOverride() != null) {
+				this.range = this.config.getOverrideFields().getRangeOverride().callback(game, unit, localStore,
+						0);
 			}
 			if (this.config.getOverrideFields().getCooldownOverride() != null) {
 				this.cooldown = this.config.getOverrideFields().getCooldownOverride().callback(game, unit, localStore,
@@ -80,6 +86,11 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	@Override
 	public float getArea() {
 		return area;
+	}
+
+	@Override
+	public float getCastRange() {
+		return range;
 	}
 
 	@Override

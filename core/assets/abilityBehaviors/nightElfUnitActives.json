@@ -1629,6 +1629,42 @@
 							"valueToStore": {
 								"type": "getLastCreatedVisionModifier"
 							}
+						},{
+							"type": "createStateModBuff",
+							"buffType": "DETECTED",
+							"value": {
+								"type": "createDetectedData",
+								"detectionLevel": {
+									"type": "rawInteger",
+									"value": 127
+								},
+								"player": {
+									"type": "playerToStateModValue",
+									"player": {
+										"type": "getOwnerOfUnit",
+										"unit": {
+											"type": "getBuffCastingUnit"
+										}
+									}
+								}
+							}
+						},{
+							"type": "addStateModBuff",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"buff": {
+								"type": "getLastCreatedStateModBuff"
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "detected"
+							},
+							"valueToStore": {
+								"type": "getLastCreatedStateModBuff"
+							}
 					}],
 					"onRemoveActions": [{
 							"type": "removeNonStackingStatBuff",
@@ -1659,6 +1695,18 @@
 								"type": "getOwnerOfUnit",
 								"unit": {
 									"type": "getBuffCastingUnit"
+								}
+							}
+						},{
+							"type": "removeStateModBuff",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"buff": {
+								"type": "getStoredStateModBuffByKey",
+								"key": {
+									"type": "rawString",
+									"value": "detected"
 								}
 							}
 					}]
@@ -1692,6 +1740,184 @@
 					"dataField": "A"
 				}
 			}
+		}]
+	},{
+		"ids": [{"id":"Ashm", "castId": "ambush"}],
+		"type": "NORMAL_NOTARGET",
+		"displayFields": {
+			"instantCast": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"specialFields": {
+			"behaviorCategory": "IDLE"
+		},
+		"onAddDisabledAbility": [{
+				"type": "if",
+				"condition": {
+					"type": "isTimeOfDayInRange",
+					"startTime": {
+						"type": "rawFloat",
+						"value": 6
+					},
+					"endTime": {
+						"type": "rawFloat",
+						"value": 18
+					}
+				},
+				"thenActions": [{
+					"type": "setAbilityEnabledForPlayer",
+					"player": {
+						"type": "getOwnerOfUnit",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"abilityId": {
+						"type": "getAlias"
+					},
+					"enabled": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}],
+				"elseActions": []
+			},{
+				"type": "createTimeOfDayEvent",
+				"startTime": {
+					"type": "rawFloat",
+					"value": 6
+				},
+				"endTime": {
+					"type": "rawFloat",
+					"value": 18
+				},
+				"equalityId": {
+					"type": "catStrings",
+					"stringList": [{
+							"type": "i2s",
+							"value": {
+								"type": "getPlayerId",
+								"player": {
+									"type": "getOwnerOfUnit",
+									"unit": {
+										"type": "getCastingUnit"
+									}
+								}
+							}
+						},{
+							"type": "getAliasAsString"
+						},{
+							"type": "rawString",
+							"value": "day"
+					}]
+				},
+				"actions": [{
+					"type": "setAbilityEnabledForPlayer",
+					"player": {
+						"type": "getOwnerOfUnit",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"abilityId": {
+						"type": "getAlias"
+					},
+					"enabled": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}]
+			},{
+				"type": "registerUniqueTimeOfDayEvent",
+				"event": {
+					"type": "getLastCreatedTimeOfDayEvent"
+				}
+			},{
+				"type": "createTimeOfDayEvent",
+				"startTime": {
+					"type": "rawFloat",
+					"value": 18
+				},
+				"endTime": {
+					"type": "rawFloat",
+					"value": 6
+				},
+				"equalityId": {
+					"type": "catStrings",
+					"stringList": [{
+							"type": "i2s",
+							"value": {
+								"type": "getPlayerId",
+								"player": {
+									"type": "getOwnerOfUnit",
+									"unit": {
+										"type": "getCastingUnit"
+									}
+								}
+							}
+						},{
+							"type": "getAliasAsString"
+						},{
+							"type": "rawString",
+							"value": "night"
+					}]
+				},
+				"actions": [{
+					"type": "setAbilityEnabledForPlayer",
+					"player": {
+						"type": "getOwnerOfUnit",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"abilityId": {
+						"type": "getAlias"
+					},
+					"enabled": {
+						"type": "rawBoolean",
+						"value": "true"
+					}
+				}]
+			},{
+				"type": "registerUniqueTimeOfDayEvent",
+				"event": {
+					"type": "getLastCreatedTimeOfDayEvent"
+				}
+		}],
+		"onBeginCasting": [{
+				"type": "if",
+				"condition": {
+					"type": "isTimeOfDayInRange",
+					"startTime": {
+						"type": "rawFloat",
+						"value": 6
+					},
+					"endTime": {
+						"type": "rawFloat",
+						"value": 18
+					}
+				},
+				"thenActions": [{
+					"type": "setAbilityEnabledForPlayer",
+					"player": {
+						"type": "getOwnerOfUnit",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"abilityId": {
+						"type": "getAlias"
+					},
+					"enabled": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}],
+				"elseActions": []
+			},{
+			"type": "beginChanneling"
 		}]
 	}]
 }

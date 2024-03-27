@@ -28,7 +28,7 @@ public class CUnitAttackVisionFogModifier extends CFogModifier {
 	public void update(final CSimulation game, final CPlayer player, final PathingGrid pathingGrid,
 			final CPlayerFogOfWar fogOfWar) {
 		if (!this.unit.isDead() && !this.unit.isHidden() && ATTACKING_UNIT_VISION_RADIUS > 0) {
-			final boolean flying = this.unit.getUnitType().getMovementType() == MovementType.FLY;
+			final boolean flying = this.unit.getMovementType() == MovementType.FLY;
 			final float myX = this.unit.getX();
 			final float myY = this.unit.getY();
 			final int myZ = flying ? Integer.MAX_VALUE : game.getTerrainHeight(myX, myY);

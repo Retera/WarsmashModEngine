@@ -2536,6 +2536,14 @@ public class Jass2 {
 						final int techIdRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						return new IntegerJassValue(player.getTechtreeMaxAllowed(new War3ID(techIdRawcode)));
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetPlayerAbilityAvailable",
+					(arguments, globalScope, triggerScope) -> {
+						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int abilityIdRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final boolean enabled = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+						player.setAbilityEnabled(simulation, new War3ID(abilityIdRawcode), enabled);
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsFogEnabled",
 					(arguments, globalScope, triggerScope) -> {
 						// TODO fog of war!!

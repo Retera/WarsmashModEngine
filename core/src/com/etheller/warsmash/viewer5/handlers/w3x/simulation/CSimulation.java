@@ -34,7 +34,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Remova
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
@@ -58,7 +57,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUpgradeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
@@ -72,7 +70,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.FalseTimeOfDa
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
@@ -114,10 +111,11 @@ public class CSimulation implements CPlayerAPI {
 	private final List<CTimer> removedTimers = new ArrayList<>();
 	private transient CommandErrorListener commandErrorListener;
 	private final CRegionManager regionManager;
-	private final List<TimeOfDayVariableEvent> timeOfDayVariableEvents = new ArrayList<>();
+	private final List<TimeOfDayEvent> timeOfDayVariableEvents = new ArrayList<>();
 	private final EnumMap<JassGameEventsWar3, List<CGlobalEvent>> eventTypeToEvents = new EnumMap<>(
 			JassGameEventsWar3.class);
 	private boolean timeOfDaySuspended;
+	private Float nextGameTime = null;
 	private FalseTimeOfDay falseTimeOfDay = null;
 	private boolean daytime;
 	private final Set<CDestructable> ownedTreeSet = new HashSet<>();
@@ -286,6 +284,7 @@ public class CSimulation implements CPlayerAPI {
 		final CItem item = this.itemData.create(this, alias, unitX, unitY, this.handleIdAllocator.createId());
 		this.handleIdToItem.put(item.getHandleId(), item);
 		this.items.add(item);
+		this.worldCollision.addItem(item);
 		return item;
 	}
 
@@ -486,11 +485,18 @@ public class CSimulation implements CPlayerAPI {
 		this.gameTurnTick++;
 		final float timeOfDayBefore = getGameTimeOfDay();
 		if (this.falseTimeOfDay != null) {
+			if (this.nextGameTime != null) {
+				this.falseTimeOfDay.setTimeOfDay(this.nextGameTime);
+				this.nextGameTime = null;
+			}
 			if (!this.falseTimeOfDay.tick()) {
 				this.falseTimeOfDay = null;
 			}
 		} else {
-			if (!this.timeOfDaySuspended) {
+			if (this.nextGameTime != null) {
+				this.currentGameDayTimeElapsed = (this.nextGameTime / this.gameplayConstants.getGameDayHours()) * this.gameplayConstants.getGameDayLength();
+				this.nextGameTime = null;
+			} else if (!this.timeOfDaySuspended) {
 				this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
 						% this.gameplayConstants.getGameDayLength();
 			}
@@ -515,11 +521,7 @@ public class CSimulation implements CPlayerAPI {
 		while (!this.activeTimers.isEmpty() && (this.activeTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
 			this.activeTimers.pop().fire(this);
 		}
-		for (final TimeOfDayVariableEvent timeOfDayEvent : this.timeOfDayVariableEvents) {
-			if (!timeOfDayEvent.isMatching(timeOfDayBefore) && timeOfDayEvent.isMatching(timeOfDayAfter)) {
-				timeOfDayEvent.fire();
-			}
-		}
+		checkTimeOfDayEvents(timeOfDayBefore, timeOfDayAfter);
 
 	}
 
@@ -553,16 +555,21 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public void setGameTimeOfDay(final float value) {
-		if (this.falseTimeOfDay != null && this.falseTimeOfDay.isInitialized()) {
-			this.falseTimeOfDay.setTimeOfDay(value);
-		} else {
-			final float elapsed = value / this.gameplayConstants.getGameDayHours();
-			this.currentGameDayTimeElapsed = elapsed * this.gameplayConstants.getGameDayLength();
+		this.nextGameTime = value;
+	}
+	
+	private void checkTimeOfDayEvents(final float timeOfDayBefore, final float timeOfDayAfter) {
+		for (final TimeOfDayEvent timeOfDayEvent : this.timeOfDayVariableEvents) {
+			if (!timeOfDayEvent.isMatching(timeOfDayBefore) && timeOfDayEvent.isMatching(timeOfDayAfter)) {
+				timeOfDayEvent.fire();
+			}
 		}
 	}
 	
 	public void addFalseTimeOfDay(int hour, int minute, float duration) {
+		float timeOfDayBefore = this.getGameTimeOfDay();
 		this.falseTimeOfDay = new FalseTimeOfDay(hour, minute, (int) (duration / WarsmashConstants.SIMULATION_STEP_TIME));
+		checkTimeOfDayEvents(timeOfDayBefore, this.getGameTimeOfDay());
 	}
 	
 	public boolean isFalseTimeOfDay() {
@@ -765,6 +772,18 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.unitPreferredSelectionReplacement(unit, newUnit);
 	}
 
+	public void registerTimeOfDayEvent(final TimeOfDayEvent timeOfDayEvent) {
+		this.timeOfDayVariableEvents.add(timeOfDayEvent);
+	}
+
+	public boolean isTimeOfDayEventRegistered(final TimeOfDayEvent timeOfDayEvent) {
+		return this.timeOfDayVariableEvents.contains(timeOfDayEvent);
+	}
+
+	public void unregisterTimeOfDayEvent(final TimeOfDayEvent timeOfDayEvent) {
+		this.timeOfDayVariableEvents.remove(timeOfDayEvent);
+	}
+
 	public RemovableTriggerEvent registerTimeOfDayEvent(final GlobalScope globalScope, final Trigger trigger,
 			final CLimitOp opcode, final double doubleValue) {
 		final TimeOfDayVariableEvent timeOfDayVariableEvent = new TimeOfDayVariableEvent(trigger, opcode, doubleValue,
@@ -915,8 +934,14 @@ public class CSimulation implements CPlayerAPI {
 	public boolean isTreeOwned(final CDestructable tree) {
 		return this.ownedTreeSet.contains(tree);
 	}
+	
+	public static interface TimeOfDayEvent {
+		public void fire();
 
-	private static final class TimeOfDayVariableEvent extends VariableEvent {
+		public boolean isMatching(double timeOfDayBefore);
+	}
+
+	private static final class TimeOfDayVariableEvent extends VariableEvent implements TimeOfDayEvent {
 		private final GlobalScope globalScope;
 
 		public TimeOfDayVariableEvent(final Trigger trigger, final CLimitOp limitOp, final double doubleValue,
@@ -1003,6 +1028,10 @@ public class CSimulation implements CPlayerAPI {
 
 	public void changeUnitVertexColor(final CUnit unit, final float r, final float g, final float b, final float a) {
 		this.simulationRenderController.changeUnitVertexColor(unit, r, g, b, a);
+	}
+
+	public float[] getUnitVertexColor(final CUnit unit) {
+		return this.simulationRenderController.getUnitVertexColor(unit);
 	}
 
 	public void setGlobalScope(final GlobalScope globalScope) {

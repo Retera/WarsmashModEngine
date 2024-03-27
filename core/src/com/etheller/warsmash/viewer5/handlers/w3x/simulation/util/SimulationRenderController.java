@@ -142,6 +142,8 @@ public interface SimulationRenderController {
 	void changeUnitVertexColor(CUnit unit, float r, float g, float b);
 
 	void changeUnitVertexColor(CUnit unit, float r, float g, float b, float a);
+
+	float[] getUnitVertexColor(CUnit unit);
 	
 	int getTerrainHeight(float x, float y);
 	

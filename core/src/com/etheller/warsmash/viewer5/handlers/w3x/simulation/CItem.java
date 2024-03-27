@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 
 import java.util.EnumSet;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
@@ -14,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CItem extends CWidget {
+	private final static int COLLISION_SIZE = 16;
 	private final War3ID typeId;
 	private final CItemType itemType;
 	private boolean hidden;
@@ -21,6 +23,7 @@ public class CItem extends CWidget {
 	private int charges;
 	private CAbilityInventory containedInventory;
 	private CUnit containedUnit;
+	private Rectangle registeredEnumRectangle;
 
 	public CItem(final int handleId, final float x, final float y, final float life, final War3ID typeId,
 			final CItemType itemTypeInstance) {
@@ -52,6 +55,7 @@ public class CItem extends CWidget {
 		if (isDead() && !wasDead) {
 			fireDeathEvents(simulation);
 			forceDropIfHeld(simulation);
+			simulation.getWorldCollision().removeItem(this);
 		}
 		return damage;
 	}
@@ -80,11 +84,15 @@ public class CItem extends CWidget {
 	}
 
 	public void setX(final float x, final CWorldCollision collision) {
+		float oldX = this.getX();
 		super.setX(x);
+		collision.translate(this, x - oldX, 0);
 	}
 
 	public void setY(final float y, final CWorldCollision collision) {
+		float oldY = this.getY();
 		super.setY(y);
+		collision.translate(this, 0, y - oldY);
 	}
 
 	@Override
@@ -119,20 +127,17 @@ public class CItem extends CWidget {
 	}
 
 	public void setPointAndCheckUnstuck(final float newX, final float newY, final CSimulation game) {
-		final CWorldCollision collision = game.getWorldCollision();
 		final PathingGrid pathingGrid = game.getPathingGrid();
 		;
 		float outputX = newX, outputY = newY;
 		int checkX = 0;
 		int checkY = 0;
-		float collisionSize;
 		tempRect.setSize(16, 16);
-		collisionSize = 16;
 		for (int i = 0; i < 300; i++) {
 			final float centerX = newX + (checkX * 64);
 			final float centerY = newY + (checkY * 64);
 			tempRect.setCenter(centerX, centerY);
-			if (pathingGrid.isPathable(centerX, centerY, MovementType.FOOT, collisionSize)) {
+			if (pathingGrid.isPathable(centerX, centerY, MovementType.FOOT, COLLISION_SIZE)) {
 				outputX = centerX;
 				outputY = centerY;
 				break;
@@ -141,8 +146,11 @@ public class CItem extends CWidget {
 			checkX -= (int) Math.cos(angle);
 			checkY -= (int) Math.sin(angle);
 		}
+		float oldX = this.getX();
+		float oldY = this.getY();
 		setX(outputX);
 		setY(outputY);
+		game.getWorldCollision().translate(this, outputX - oldX, outputY - oldY);
 	}
 
 	@Override
@@ -178,6 +186,14 @@ public class CItem extends CWidget {
 	@Override
 	public double distance(final float x, final float y) {
 		return StrictMath.sqrt(distanceSquaredNoCollision(x, y));
+	}
+
+	public Rectangle getOrCreateRegisteredEnumRectangle() {
+		if (this.registeredEnumRectangle == null) {
+			this.registeredEnumRectangle = new Rectangle(getX() - COLLISION_SIZE, getY() - COLLISION_SIZE, COLLISION_SIZE * 2,
+					COLLISION_SIZE * 2);
+		}
+		return this.registeredEnumRectangle;
 	}
 
 }

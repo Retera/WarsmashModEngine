@@ -77,6 +77,7 @@ public class RenderUnit implements RenderWidget {
 	public SplatMover uberSplat;
 	private float selectionHeight;
 	private RenderUnit preferredSelectionReplacement;
+	private float[] currentColor = {1,1,1,1};
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final GameObject row, final float x, final float y,
 			final float z, final int playerIndex, final UnitSoundset soundset, final MdxModel portraitModel,
@@ -660,15 +661,22 @@ public class RenderUnit implements RenderWidget {
 	
 	public void setVertexColoring(Color color) {
 		this.instance.setVertexColor(color);
+		this.currentColor = new float[]{color.r, color.g, color.b, color.a};
 	}
 	
 	public void setVertexColoring(float r, float g, float b) {
 		float[] color = new float[] {r,g,b};
 		this.instance.setVertexColor(color);
+		this.currentColor = new float[]{r, g, b, 1};
 	}
 	
 	public void setVertexColoring(float r, float g, float b, float a) {
 		float[] color = new float[] {r,g,b,a};
 		this.instance.setVertexColor(color);
+		this.currentColor = color;
+	}
+	
+	public float[] getVertexColoring() {
+		return currentColor;
 	}
 }

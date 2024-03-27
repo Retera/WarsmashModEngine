@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.orderid.ABOrderIdCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeysEnum;
 
 public class AbilityBuilderSpecialConfigFields {
@@ -34,6 +35,8 @@ public class AbilityBuilderSpecialConfigFields {
 	private ABBooleanCallback orderPairedUnit;
 	private ABOrderIdCallback orderPairedUnitOrderId;
 	private ABOrderIdCallback orderPairedUnitOffOrderId;
+	
+	private CBehaviorCategory behaviorCategory;
 
 	public ABIntegerCallback getBufferManaRequired() {
 		return bufferManaRequired;
@@ -185,5 +188,13 @@ public class AbilityBuilderSpecialConfigFields {
 
 	public void setOrderPairedUnitOffOrderId(ABOrderIdCallback orderPairedUnitOffOrderId) {
 		this.orderPairedUnitOffOrderId = orderPairedUnitOffOrderId;
+	}
+
+	public CBehaviorCategory getBehaviorCategory() {
+		return behaviorCategory;
+	}
+
+	public void setBehaviorCategory(CBehaviorCategory behaviorCategory) {
+		this.behaviorCategory = behaviorCategory;
 	}
 }

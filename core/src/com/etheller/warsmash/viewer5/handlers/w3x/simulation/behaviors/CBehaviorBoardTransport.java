@@ -96,4 +96,9 @@ public class CBehaviorBoardTransport extends CAbstractRangedBehavior {
 		return true;
 	}
 
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
+	}
+
 }

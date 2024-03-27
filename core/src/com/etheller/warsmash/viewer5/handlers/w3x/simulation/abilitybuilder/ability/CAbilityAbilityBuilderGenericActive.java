@@ -449,6 +449,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 						&& this.config.getDisplayFields().getInstantCast().callback(null, unit, localStore, castId))) {
 			beh.setInstant(true);
 		}
+		if (this.config.getSpecialFields() != null && this.config.getSpecialFields().getBehaviorCategory() != null) {
+			beh.setBehaviorCategory(this.config.getSpecialFields().getBehaviorCategory());
+		}
 		return beh;
 	}
 
@@ -458,6 +461,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				|| (this.config.getDisplayFields() != null && this.config.getDisplayFields().getInstantCast() != null
 						&& this.config.getDisplayFields().getInstantCast().callback(null, unit, localStore, castId))) {
 			beh.setInstant(true);
+		}
+		if (this.config.getSpecialFields() != null && this.config.getSpecialFields().getBehaviorCategory() != null) {
+			beh.setBehaviorCategory(this.config.getSpecialFields().getBehaviorCategory());
 		}
 		return beh;
 	}

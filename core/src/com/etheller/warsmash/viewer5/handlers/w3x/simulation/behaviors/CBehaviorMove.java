@@ -239,7 +239,7 @@ public class CBehaviorMove implements CBehavior {
 						// collisionSize
 						// / 16)
 						// * 16
-						&& !worldCollision.intersectsAnythingOtherThan(tempRect, this.unit, movementType))) {
+						&& !worldCollision.intersectsAnythingOtherThan(tempRect, this.unit, movementType, false))) {
 					this.unit.setPoint(nextX, nextY, worldCollision, simulation.getRegionManager());
 					if (done) {
 						// if we're making headway along the path then it's OK to start thinking fast
@@ -384,11 +384,16 @@ public class CBehaviorMove implements CBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
-
+		if (this.disableCollision) {
+			this.unit.setNoCollisionMovementType(true);
+		}
 	}
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
+		if (this.disableCollision) {
+			this.unit.setNoCollisionMovementType(false);
+		}
 		if (ALWAYS_INTERRUPT_MOVE) {
 			game.removeFromPathfindingQueue(this);
 			this.pathfindingActive = false;
@@ -489,5 +494,10 @@ public class CBehaviorMove implements CBehavior {
 	@Override
 	public <T> T visit(final CBehaviorVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
 	}
 }

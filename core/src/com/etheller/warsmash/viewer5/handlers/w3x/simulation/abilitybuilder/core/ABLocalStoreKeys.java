@@ -86,6 +86,10 @@ public class ABLocalStoreKeys {
 	public static final String LASTCREATEDTIMER = "_lastCreatedTimer";
 	public static final String LASTSTARTEDTIMER = "_lastCreatedTimer";
 	public static final String FIRINGTIMER = "_firingTimer";
+	
+	//Events
+	public static final String LASTCREATEDTODEVENT = "_lastCreatedToDEvent";
+	
 
 	// Dest Names
 	public static final String BUFFEDDEST = "_buffedDest#";
@@ -161,6 +165,10 @@ public class ABLocalStoreKeys {
 	public static final String REACTIONABILITYCASTER = "_reactionAbilityCaster#";
 	public static final String REACTIONABILITYTARGET = "_reactionAbilityTarget#";
 	
+	// Behavior Change Names
+	public static final String LASTCREATEDBCL = "_lastCreatedBCL";
+	public static final String PRECHANGEBEHAVIOR = "_preChangeBehavior#";
+	public static final String POSTCHANGEBEHAVIOR = "_postChangeBehaviorj#";
 	
 	public static String combineKey(String key, int castId) {
 		return key + castId;

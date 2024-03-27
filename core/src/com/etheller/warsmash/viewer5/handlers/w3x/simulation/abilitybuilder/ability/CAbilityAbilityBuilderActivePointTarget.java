@@ -48,7 +48,7 @@ public class CAbilityAbilityBuilderActivePointTarget extends CAbilityAbilityBuil
 		localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
 		this.runOnOrderIssuedActions(game, caster, orderId);
 		this.behavior.setCastId(castId);
-		return this.behavior.reset(point);
+		return this.behavior.reset(game, point);
 	}
 
 	@Override

@@ -29,7 +29,7 @@ public class CUnitVisionFogModifier extends CFogModifier {
 			final float sightRadius = game.isDay() && !alwaysNightVision ? this.unit.getUnitType().getSightRadiusDay()
 					: this.unit.getUnitType().getSightRadiusNight();
 			if (sightRadius > 0) {
-				final boolean flying = this.unit.getUnitType().getMovementType() == MovementType.FLY;
+				final boolean flying = this.unit.getMovementType() == MovementType.FLY;
 				final float radSq = sightRadius * sightRadius / (CPlayerFogOfWar.GRID_STEP * CPlayerFogOfWar.GRID_STEP);
 				final float myX = this.unit.getX();
 				final float myY = this.unit.getY();

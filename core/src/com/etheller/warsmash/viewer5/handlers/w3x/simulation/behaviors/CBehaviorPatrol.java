@@ -129,4 +129,9 @@ public class CBehaviorPatrol implements CRangedBehavior {
 	public <T> T visit(final CBehaviorVisitor<T> visitor) {
 		return visitor.accept(this);
 	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
+	}
 }

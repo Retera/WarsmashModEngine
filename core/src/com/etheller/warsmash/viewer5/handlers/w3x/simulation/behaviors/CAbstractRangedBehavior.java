@@ -14,9 +14,9 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 
 	protected AbilityTarget target;
 	private boolean wasWithinPropWindow = false;
-	private boolean wasInRange = false;
-	private boolean disableMove = false;
-	private CBehaviorMove moveBehavior;
+	protected boolean wasInRange = false;
+	protected boolean disableMove = false;
+	protected CBehaviorMove moveBehavior;
 
 	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target) {
 		return innerReset(target, false);

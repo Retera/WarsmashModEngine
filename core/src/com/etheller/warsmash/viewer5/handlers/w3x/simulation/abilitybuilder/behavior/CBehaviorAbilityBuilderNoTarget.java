@@ -6,10 +6,12 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
@@ -26,6 +28,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	private int orderId;
 	
 	private boolean instant = false;
+	private CBehaviorCategory behaviorCategory = null;
 
 	public CBehaviorAbilityBuilderNoTarget(final CUnit unit,
 			final Map<String, Object> localStore, AbilityBuilderActiveAbility ability) {
@@ -37,24 +40,28 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	public void setInstant(boolean instant) {
 		this.instant = instant;
 	}
+	
+	public void setBehaviorCategory(CBehaviorCategory behaviorCategory) {
+		this.behaviorCategory  = behaviorCategory;
+	}
 
 	@Override
-	public ABBehavior reset(final CWidget target) {
+	public ABBehavior reset(final CSimulation game, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public ABBehavior reset(CWidget target, int orderId) {
+	public ABBehavior reset(final CSimulation game, CWidget target, int orderId) {
 		return null;
 	}
 
 	@Override
-	public ABBehavior reset(final AbilityPointTarget target) {
+	public ABBehavior reset(final CSimulation game, final AbilityPointTarget target) {
 		return null;
 	}
 
 	@Override
-	public ABBehavior reset(AbilityPointTarget target, int orderId) {
+	public ABBehavior reset(final CSimulation game, AbilityPointTarget target, int orderId) {
 		return null;
 	}
 
@@ -220,6 +227,19 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		if (this.behaviorCategory != null) {
+			return this.behaviorCategory ;
+		}
+		return CBehaviorCategory.SPELL;
+	}
+
+	@Override
+	public CAbility getAbility() {
+		return ability;
 	}
 
 	@Override

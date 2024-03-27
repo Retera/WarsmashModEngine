@@ -51,7 +51,7 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 		if (target != null) {
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset(target);
+			return this.behavior.reset(game, target);
 		} else {
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);

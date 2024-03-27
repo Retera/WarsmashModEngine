@@ -18,6 +18,8 @@ public interface CBehavior {
 	int getHighlightOrderId();
 	
 	boolean interruptable();
+	
+	CBehaviorCategory getBehaviorCategory();
 
 	public <T> T visit(CBehaviorVisitor<T> visitor);
 }

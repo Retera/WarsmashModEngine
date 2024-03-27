@@ -82,4 +82,9 @@ public class CBehaviorAttackMove implements CRangedBehavior {
 		return visitor.accept(this);
 	}
 
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
+	}
+
 }

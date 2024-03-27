@@ -51,4 +51,9 @@ public class CBehaviorHoldPosition implements CBehavior {
 		return visitor.accept(this);
 	}
 
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.IDLE;
+	}
+
 }

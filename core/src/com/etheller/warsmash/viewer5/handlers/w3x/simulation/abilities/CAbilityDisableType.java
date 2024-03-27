@@ -5,7 +5,8 @@ public enum CAbilityDisableType {
 	CONSTRUCTION((byte) 2),
 	TRANSFORMATION((byte) 4),
 	TRIGGER((byte) 8),
-	ATTACKDISABLED((byte) 16);
+	ATTACKDISABLED((byte) 16),
+	PLAYER((byte) 32);
 
 	private byte mask;
 	

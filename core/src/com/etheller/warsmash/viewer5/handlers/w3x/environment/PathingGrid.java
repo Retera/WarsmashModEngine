@@ -144,22 +144,22 @@ public class PathingGrid {
 		final Rectangle pathingMapRectangle = new Rectangle((positionX - (width / 2)) + offsetX,
 				(positionY - (height / 2)) + offsetY, width, height);
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
-				MovementType.AMPHIBIOUS)) {
+				MovementType.AMPHIBIOUS, true)) {
 			System.out.println("intersects amph unit");
 			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
-				MovementType.FLOAT)) {
+				MovementType.FLOAT, true)) {
 			System.out.println("intersects float unit");
 			anyPathingTypesInRegion |= PathingFlags.UNSWIMABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
-				MovementType.FLY)) {
+				MovementType.FLY, true)) {
 			System.out.println("intersects fly unit");
 			anyPathingTypesInRegion |= PathingFlags.UNFLYABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
-				MovementType.FOOT)) {
+				MovementType.FOOT, true)) {
 			System.out.println("intersects foot unit");
 			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE;
 		}
@@ -369,6 +369,19 @@ public class PathingGrid {
 		final float userCellSpaceY = ((y + (16f * CPlayerFogOfWar.PATHING_RATIO)) - this.centerOffset[1]) / (32f * CPlayerFogOfWar.PATHING_RATIO);
 		final int cellY = (int) userCellSpaceY;
 		return cellY;
+	}
+	
+	public static int getFogOfWarDistance(final float d) {
+		return getFogOfWarDistance(d,false);
+	}
+	
+	public static int getFogOfWarDistance(final float d, boolean roundUp) {
+		final float userCellSpace = ((d + (16f * CPlayerFogOfWar.PATHING_RATIO))) / (32f * CPlayerFogOfWar.PATHING_RATIO);
+		if (roundUp) {
+			return (int) (Math.ceil(userCellSpace)+0.1);
+		} else {
+			return (int)userCellSpace;
+		}
 	}
 
 	public boolean isCellBlockVision(final int cellX, final int cellY) {

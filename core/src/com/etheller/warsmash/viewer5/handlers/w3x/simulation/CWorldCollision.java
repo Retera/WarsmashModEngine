@@ -18,10 +18,12 @@ public class CWorldCollision {
 	private final Quadtree<CUnit> buildingUnitCollision;
 	private final Quadtree<CUnit> anyUnitEnumerableCollision;
 	private final Quadtree<CDestructable> destructablesForEnum;
+	private final Quadtree<CWidget> itemsForEnum;
 	private final float maxCollisionRadius;
 	private final AnyUnitExceptTwoIntersector anyUnitExceptTwoIntersector;
 	private final EachUnitOnlyOnceIntersector eachUnitOnlyOnceIntersector;
 	private final DestructableEnumIntersector destructableEnumIntersector;
+	private final ItemEnumIntersector itemEnumIntersector;
 
 	public CWorldCollision(final Rectangle entireMapBounds, final float maxCollisionRadius) {
 		this.deadUnitCollision = new Quadtree<>(entireMapBounds);
@@ -31,10 +33,12 @@ public class CWorldCollision {
 		this.buildingUnitCollision = new Quadtree<>(entireMapBounds);
 		this.anyUnitEnumerableCollision = new Quadtree<>(entireMapBounds);
 		this.destructablesForEnum = new Quadtree<>(entireMapBounds);
+		this.itemsForEnum = new Quadtree<>(entireMapBounds);
 		this.maxCollisionRadius = maxCollisionRadius;
 		this.anyUnitExceptTwoIntersector = new AnyUnitExceptTwoIntersector();
 		this.eachUnitOnlyOnceIntersector = new EachUnitOnlyOnceIntersector();
 		this.destructableEnumIntersector = new DestructableEnumIntersector();
+		this.itemEnumIntersector = new ItemEnumIntersector();
 	}
 
 	public void addUnit(final CUnit unit) {
@@ -54,8 +58,7 @@ public class CWorldCollision {
 				// buildings are here so that we can include them when enumerating all units in
 				// a rect, but they don't really move dynamically, this is kind of pointless
 				this.buildingUnitCollision.add(unit, bounds);
-			}
-			else {
+			} else {
 				final MovementType movementType = unit.getMovementType();
 				if (movementType != null) {
 					switch (movementType) {
@@ -94,6 +97,16 @@ public class CWorldCollision {
 		this.destructablesForEnum.remove(dest, bounds);
 	}
 
+	public void addItem(final CItem item) {
+		Rectangle bounds = item.getOrCreateRegisteredEnumRectangle();
+		this.itemsForEnum.add(item, bounds);
+	}
+
+	public void removeItem(final CItem item) {
+		final Rectangle bounds = item.getOrCreateRegisteredEnumRectangle();
+		this.itemsForEnum.remove(item, bounds);
+	}
+
 	public void removeUnit(final CUnit unit) {
 		final Rectangle bounds = unit.getCollisionRectangle();
 		if (bounds != null) {
@@ -103,8 +116,7 @@ public class CWorldCollision {
 			} else {
 				if (unit.isBuilding()) {
 					this.buildingUnitCollision.remove(unit, bounds);
-				}
-				else {
+				} else {
 					final MovementType movementType = unit.getMovementType();
 					if (movementType != null) {
 						switch (movementType) {
@@ -143,7 +155,7 @@ public class CWorldCollision {
 		// and so a recycled allocation did not work
 		final Set<CUnit> intersectedUnits = new HashSet<>();
 		this.anyUnitEnumerableCollision.intersect(rect, (unit) -> {
-			if(unit.isHidden() || !intersectedUnits.add(unit)) {
+			if (unit.isHidden() || !intersectedUnits.add(unit)) {
 				return false;
 			}
 			return callback.call(unit);
@@ -154,7 +166,7 @@ public class CWorldCollision {
 		// NOTE: allocation here seems quite wasteful, see note on enumUnitsInRect
 		final Set<CUnit> intersectedUnits = new HashSet<>();
 		this.deadUnitCollision.intersect(rect, (unit) -> {
-			if(unit.isHidden() || !intersectedUnits.add(unit)) {
+			if (unit.isHidden() || !intersectedUnits.add(unit)) {
 				return false;
 			}
 			return callback.call(unit);
@@ -201,39 +213,41 @@ public class CWorldCollision {
 	}
 
 	public boolean intersectsAnythingOtherThan(final Rectangle newPossibleRectangle, final CUnit sourceUnitToIgnore,
-			final MovementType movementType) {
-		return this.intersectsAnythingOtherThan(newPossibleRectangle, sourceUnitToIgnore, null, movementType);
+			final MovementType movementType, final boolean forConstruction) {
+		return this.intersectsAnythingOtherThan(newPossibleRectangle, sourceUnitToIgnore, null, movementType,
+				forConstruction);
 	}
 
 	public boolean intersectsAnythingOtherThan(final Rectangle newPossibleRectangle, final CUnit sourceUnitToIgnore,
-			final CUnit sourceSecondUnitToIgnore, final MovementType movementType) {
+			final CUnit sourceSecondUnitToIgnore, final MovementType movementType, final boolean forConstruction) {
 		if (movementType != null) {
 			switch (movementType) {
 			case AMPHIBIOUS:
-				if (this.seaUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore))) {
+				if (this.seaUnitCollision.intersect(newPossibleRectangle, this.anyUnitExceptTwoIntersector
+						.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore, forConstruction))) {
 					return true;
 				}
-				if (this.groundUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore))) {
+				if (this.groundUnitCollision.intersect(newPossibleRectangle, this.anyUnitExceptTwoIntersector
+						.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore, forConstruction))) {
 					return true;
 				}
 				return false;
 			case FLOAT:
-				return this.seaUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
+				return this.seaUnitCollision.intersect(newPossibleRectangle, this.anyUnitExceptTwoIntersector
+						.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore, forConstruction));
 			case FLY:
-				return this.airUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
-			case DISABLED:
+				return this.airUnitCollision.intersect(newPossibleRectangle, this.anyUnitExceptTwoIntersector
+						.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore, forConstruction));
 			case FOOT_NO_COLLISION:
+				return this.itemsForEnum.intersect(newPossibleRectangle, this.itemEnumIntersector);
+			case DISABLED:
 				return false;
 			default:
 			case FOOT:
 			case HORSE:
 			case HOVER:
-				return this.groundUnitCollision.intersect(newPossibleRectangle,
-						this.anyUnitExceptTwoIntersector.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore));
+				return this.groundUnitCollision.intersect(newPossibleRectangle, this.anyUnitExceptTwoIntersector
+						.reset(sourceUnitToIgnore, sourceSecondUnitToIgnore, forConstruction));
 			}
 		}
 		return false;
@@ -281,19 +295,31 @@ public class CWorldCollision {
 		}
 	}
 
+	public void translate(final CItem item, final float xShift, final float yShift) {
+		final Rectangle bounds = item.getOrCreateRegisteredEnumRectangle();
+		if (!item.isDead()) {
+			this.itemsForEnum.translate(item, bounds, xShift, yShift);
+		}
+	}
+
 	private static final class AnyUnitExceptTwoIntersector implements QuadtreeIntersector<CUnit> {
 		private CUnit firstUnit;
 		private CUnit secondUnit;
+		private boolean forConstruction;
 
-		public AnyUnitExceptTwoIntersector reset(final CUnit firstUnit, final CUnit secondUnit) {
+		public AnyUnitExceptTwoIntersector reset(final CUnit firstUnit, final CUnit secondUnit,
+				final boolean forConstruction) {
 			this.firstUnit = firstUnit;
 			this.secondUnit = secondUnit;
+			this.forConstruction = forConstruction;
 			return this;
 		}
 
 		@Override
 		public boolean onIntersect(final CUnit intersectingObject) {
-			if (intersectingObject.isHidden()) {
+			if (intersectingObject.isHidden() || MovementType.FOOT_NO_COLLISION.equals(intersectingObject.getMovementType())
+					|| (forConstruction && intersectingObject.isNoBuildingCollision())
+					|| (!forConstruction && intersectingObject.isNoUnitCollision())) {
 				return false;
 			}
 			return (intersectingObject != this.firstUnit) && (intersectingObject != this.secondUnit);
@@ -345,6 +371,17 @@ public class CWorldCollision {
 //				return false;
 //			}
 			return this.consumerDelegate.call(intersectingObject);
+		}
+	}
+
+	private static final class ItemEnumIntersector implements QuadtreeIntersector<CWidget> {
+
+		@Override
+		public boolean onIntersect(final CWidget intersectingObject) {
+			if (intersectingObject instanceof CItem && ((CItem) intersectingObject).isHidden()) {
+				return false;
+			}
+			return true;
 		}
 	}
 }

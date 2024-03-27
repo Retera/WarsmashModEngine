@@ -1394,6 +1394,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					}
 
 					@Override
+					public float[] getUnitVertexColor(final CUnit unit) {
+						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
+						return renderPeer.getVertexColoring();
+					}
+
+					@Override
 					public void spawnTextTag(final CUnit unit, final TextTagConfigType configType,
 							final int displayAmount) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);

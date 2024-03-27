@@ -81,4 +81,9 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 		return true;
 	}
 
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
+	}
+
 }

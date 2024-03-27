@@ -3,8 +3,10 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
@@ -62,6 +64,8 @@ public class CPlayer extends CBasePlayer {
 	private int goldGathered;
 	private int lumberGathered;
 	private boolean noCreepSleep;
+
+	private Set<War3ID> disabledAbilities = new HashSet<>();
 
 	// if you use triggers for this then the transient tag here becomes really
 	// questionable -- it already was -- but I meant for those to inform us
@@ -753,6 +757,19 @@ public class CPlayer extends CBasePlayer {
 		for (int i = this.fogModifiers.size() - 1; i >= 0; i--) {
 			this.fogModifiers.get(i).update(game, this, game.getPathingGrid(), this.fogOfWar);
 		}
+	}
+	
+	public void setAbilityEnabled(final CSimulation simulation, War3ID ability, boolean enabled) {
+		if (enabled) {
+			this.disabledAbilities.remove(ability);
+		} else {
+			this.disabledAbilities.add(ability);
+		}
+		fireRequirementUpdateForAbilities(simulation, !enabled);
+	}
+	
+	public boolean isAbilityDisabled(War3ID abilityId) {
+		return this.disabledAbilities.contains(abilityId);
 	}
 
 	public void fireRequirementUpdateForAbilities(final CSimulation simulation, final boolean disable) {

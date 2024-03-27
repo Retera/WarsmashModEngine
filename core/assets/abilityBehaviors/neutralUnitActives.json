@@ -1,0 +1,18 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Ahid", "castId": "ambush"}],
+		"type": "NORMAL_NOTARGET",
+		"displayFields": {
+			"instantCast": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"specialFields": {
+			"behaviorCategory": "IDLE"
+		},
+		"onBeginCasting": [{
+			"type": "beginChanneling"
+		}]
+	}]
+}

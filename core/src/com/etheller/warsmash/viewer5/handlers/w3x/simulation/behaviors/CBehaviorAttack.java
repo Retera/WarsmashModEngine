@@ -148,4 +148,9 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 		return true;
 	}
 
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.ATTACK;
+	}
+
 }

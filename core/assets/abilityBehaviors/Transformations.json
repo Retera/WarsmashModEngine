@@ -676,106 +676,121 @@
 			}
 		},
 		"onAddDisabledAbility": [{
-			"type": "if",
-			"condition": {
-				"type": "isToggleAbilityActive"
-			},
-			"thenActions": [{
-				"type": "transformedUnitAbilityAdd",
-				"unit": {
-					"type": "getCastingUnit"
+				"type": "createStateModBuff",
+				"buffType": "INVISIBLE"
+			},{
+				"type": "if",
+				"condition": {
+					"type": "isToggleAbilityActive"
 				},
-				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				},
-				"alternateUnitId": {
-					"type": "getAbilityUnitId"
-				},
-				"immediateLanding": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 2
+				"thenActions": [{
+					"type": "transformedUnitAbilityAdd",
+					"unit": {
+						"type": "getCastingUnit"
+					},
+					"baseUnitId": {
+						"type": "getAbilityDataAsID",
+						"dataField": "A"
+					},
+					"alternateUnitId": {
+						"type": "getAbilityUnitId"
+					},
+					"immediateLanding": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 2
+							}
 						}
-					}
-				},
-				"immediateTakeOff": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 4
+					},
+					"immediateTakeOff": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 4
+							}
 						}
-					}
-				},
-				"permanent": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 8
+					},
+					"permanent": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 8
+							}
 						}
-					}
-				},
-				"requiresPayment": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
+					},
+					"requiresPayment": {
+						"type": "i2b",
+						"value": {
+							"type": "i&",
+							"value1": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 16
+							}
 						}
-					}
-				},
-				"altitudeAdjustmentDelay": {
-					"type": "getAbilityCastTime"
-				},
-				"altitudeAdjustmentTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "C"
-				},
-				"landingDelayTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				},
-				"transformTime": {
-					"type": "getAbilityDuration"
-				},
-				"duration": {
-					"type": "getAbilityHeroDuration"
-				},
-				"buffId": {
-					"type": "getFirstBuffId"
-				},
-				"onTransformActions": [{
-					"type": "setBurrowPlaceholder"
+					},
+					"altitudeAdjustmentDelay": {
+						"type": "getAbilityCastTime"
+					},
+					"altitudeAdjustmentTime": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "C"
+					},
+					"landingDelayTime": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "D"
+					},
+					"transformTime": {
+						"type": "getAbilityDuration"
+					},
+					"duration": {
+						"type": "getAbilityHeroDuration"
+					},
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"onTransformActions": [{
+							"type": "addStateModBuff",
+							"targetUnit": {
+								"type": "getCastingUnit"
+							},
+							"buff": {
+								"type": "getLastCreatedStateModBuff"
+							}
+					}],
+					"onUntransformActions": [{
+						"type": "removeStateModBuff",
+						"targetUnit": {
+							"type": "getCastingUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedStateModBuff"
+						}
+					}]
 				}],
-				"onUntransformActions": [{
-					"type": "setBurrowPlaceholder"
-				}]
-			}],
-				"elseActions": []
+					"elseActions": []
 		}],
 		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
@@ -804,7 +819,13 @@
 				}
 			},
 			"onUntransformActions": [{
-				"type": "setBurrowPlaceholder"
+				"type": "removeStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
 			}]
 		}],
 		"onBeginCasting": [{
@@ -905,10 +926,22 @@
 					"type": "getFirstBuffId"
 				},
 				"onTransformActions": [{
-					"type": "setBurrowPlaceholder"
+						"type": "addStateModBuff",
+						"targetUnit": {
+							"type": "getCastingUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedStateModBuff"
+						}
 				}],
 				"onUntransformActions": [{
-					"type": "setBurrowPlaceholder"
+					"type": "removeStateModBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedStateModBuff"
+					}
 				}]
 			},{
 				"type": "if",

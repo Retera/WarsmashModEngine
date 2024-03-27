@@ -124,7 +124,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, target.visit(AbilityTargetVisitor.DESTRUCTABLE));
 			this.runOnOrderIssuedActions(game, caster, orderId);
-			return this.behavior.reset(target);
+			return this.behavior.reset(game, target);
 		} else {
 			return null;
 		}
@@ -135,7 +135,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 		if (this.isTargetedSpell() && this.isPointTarget()) {
 			localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
 			this.runOnOrderIssuedActions(game, caster, orderId);
-			return this.behavior.reset(point);
+			return this.behavior.reset(game, point);
 		} else {
 			return null;
 		}

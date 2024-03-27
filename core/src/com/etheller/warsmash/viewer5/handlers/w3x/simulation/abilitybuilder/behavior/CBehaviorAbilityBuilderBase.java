@@ -6,12 +6,14 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
@@ -29,6 +31,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	private int orderId;
 	
 	private boolean instant = false;
+	private CBehaviorCategory behaviorCategory = null;
 
 	public CBehaviorAbilityBuilderBase(final CUnit unit,
 			final Map<String, Object> localStore, AbilityBuilderActiveAbility ability) {
@@ -42,44 +45,80 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	public void setInstant(boolean instant) {
 		this.instant = instant;
 	}
+	
+	public void setBehaviorCategory(CBehaviorCategory behaviorCategory) {
+		this.behaviorCategory = behaviorCategory;
+	}
 
-	public ABBehavior reset(final CWidget target) {
+	public CBehavior reset(final CSimulation game, final CWidget target) {
 		innerReset(target, false);
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = this.ability.getBaseOrderId();
 		this.preventReInterrupt = false;
+		if (!isWithinRange(game)) {
+			if ((this.moveBehavior == null) || this.disableMove) {
+				return this.unit.pollNextOrderBehavior(game);
+			}
+			this.wasInRange = false;
+			resetBeforeMoving(game);
+			return this.unit.getMoveBehavior();
+		}
 		return this;
 	}
 
-	public ABBehavior reset(final CWidget target, int orderId) {
+	public CBehavior reset(final CSimulation game, final CWidget target, int orderId) {
 		innerReset(target, false);
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = orderId;
 		this.preventReInterrupt = false;
+		if (!isWithinRange(game)) {
+			if ((this.moveBehavior == null) || this.disableMove) {
+				return this.unit.pollNextOrderBehavior(game);
+			}
+			this.wasInRange = false;
+			resetBeforeMoving(game);
+			return this.unit.getMoveBehavior();
+		}
 		return this;
 	}
 
-	public ABBehavior reset(final AbilityPointTarget target) {
+	public CBehavior reset(final CSimulation game, final AbilityPointTarget target) {
 		innerReset(target, false);
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = this.ability.getBaseOrderId();
 		this.preventReInterrupt = false;
+		if (!isWithinRange(game)) {
+			if ((this.moveBehavior == null) || this.disableMove) {
+				return this.unit.pollNextOrderBehavior(game);
+			}
+			this.wasInRange = false;
+			resetBeforeMoving(game);
+			return this.unit.getMoveBehavior();
+		}
 		return this;
 	}
 
-	public ABBehavior reset(final AbilityPointTarget target, int orderId) {
+	public CBehavior reset(final CSimulation game, final AbilityPointTarget target, int orderId) {
 		innerReset(target, false);
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = orderId;
 		this.preventReInterrupt = false;
+		if (!isWithinRange(game)) {
+			if ((this.moveBehavior == null) || this.disableMove) {
+				return this.unit.pollNextOrderBehavior(game);
+			}
+			this.wasInRange = false;
+			resetBeforeMoving(game);
+			return this.unit.getMoveBehavior();
+		}
 		return this;
 	}
 
@@ -288,6 +327,19 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		if (this.behaviorCategory != null) {
+			return this.behaviorCategory ;
+		}
+		return CBehaviorCategory.SPELL;
+	}
+
+	@Override
+	public CAbility getAbility() {
+		return ability;
 	}
 
 }

@@ -2576,7 +2576,7 @@ public class CUnit extends CWidget {
 
 	@Override
 	public double distance(final float x, final float y) {
-		return distance(x, y);
+		return distance((double)x, (double)y);
 	}
 
 	public double distance(final double x, final double y) {

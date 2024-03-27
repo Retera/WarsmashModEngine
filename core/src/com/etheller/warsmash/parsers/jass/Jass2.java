@@ -2512,10 +2512,13 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerTechCount",
 					(arguments, globalScope, triggerScope) -> {
-						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CPlayer player = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final int techIdRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final boolean specificOnly = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
-						return new IntegerJassValue(player.getTechtreeUnlocked(new War3ID(techIdRawcode)));
+						if (player != null) {
+							return new IntegerJassValue(player.getTechtreeUnlocked(new War3ID(techIdRawcode)));
+						}
+						return IntegerJassValue.ZERO;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetPlayerTechResearched",
 					(arguments, globalScope, triggerScope) -> {

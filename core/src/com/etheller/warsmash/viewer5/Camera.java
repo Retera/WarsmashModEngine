@@ -59,6 +59,7 @@ public class Camera {
 	public final Vector3 directionY;
 	public final Vector3 directionZ;
 	public final Vector3[] vectors;
+	public final Vector3[] billboardedVectorsBase;
 	public final Vector3[] billboardedVectors;
 
 	public final Vector4[] planes;
@@ -103,6 +104,9 @@ public class Camera {
 		// are the unit axes
 		this.vectors = new Vector3[] { new Vector3(-1, -1, 0), new Vector3(-1, 1, 0), new Vector3(1, 1, 0),
 				new Vector3(1, -1, 0), new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1) };
+		this.billboardedVectorsBase = new Vector3[] { new Vector3(-1, 1, 0), new Vector3(1, 1, 0),
+				new Vector3(1, -1, 0), new Vector3(-1, -1, 0), new Vector3(1, 0, 0), new Vector3(0, 1, 0),
+				new Vector3(0, 0, 1) };
 
 		// First four vectors are the corners of a 2x2 rectangle billboarded to the
 		// camera, the last three vectors are the unit axes billboarded
@@ -245,6 +249,7 @@ public class Camera {
 			final Matrix4 viewProjectionMatrix = this.viewProjectionMatrix;
 			final Vector3[] vectors = this.vectors;
 			final Vector3[] billboardedVectors = this.billboardedVectors;
+			final Vector3[] billboardedVectorsBase = this.billboardedVectorsBase;
 
 			if (this.isPerspective) {
 				RenderMathUtils.perspective(projectionMatrix, this.fov, this.aspect, this.nearClipPlane,
@@ -283,7 +288,7 @@ public class Camera {
 			this.inverseViewProjectionMatrix.inv();
 
 			for (int i = 0; i < 7; i++) {
-				billboardedVectors[i].set(vectors[i]);
+				billboardedVectors[i].set(billboardedVectorsBase[i]);
 				inverseRotation.transform(billboardedVectors[i]);
 			}
 			this.dirty = false;

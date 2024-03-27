@@ -5,17 +5,14 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
 import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.viewer5.FogSettings;
 
 public class CampaignMenuData {
 	private final String header;
 	private final String name;
 	private final boolean defaultOpen;
 	private final String background;
-	private final int backgroundFogStyle;
-	private final Color backgroundFogColor;
-	private final float backgroundFogDensity;
-	private final float backgroundFogStart;
-	private final float backgroundFogEnd;
+	private final FogSettings backgroundFogSettings;
 	private final int cursor;
 	private final String ambientSound;
 	private final CampaignMission introCinematic;
@@ -28,14 +25,16 @@ public class CampaignMenuData {
 		this.name = element.getField("Name");
 		this.defaultOpen = element.getFieldValue("DefaultOpen") == 1;
 		this.background = element.getField("Background");
-		this.backgroundFogStyle = element.getFieldValue("BackgroundFogStyle");
-		this.backgroundFogColor = new Color(element.getFieldFloatValue("BackgroundFogColor", 1) / 255f,
+		this.backgroundFogSettings = new FogSettings();
+		final int backgroundFogStyle = element.getFieldValue("BackgroundFogStyle") + 1;
+		backgroundFogSettings.setStyleByIndex(backgroundFogStyle);
+		this.backgroundFogSettings.color = new Color(element.getFieldFloatValue("BackgroundFogColor", 1) / 255f,
 				element.getFieldFloatValue("BackgroundFogColor", 2) / 255f,
 				element.getFieldFloatValue("BackgroundFogColor", 3) / 255f,
 				element.getFieldFloatValue("BackgroundFogColor", 0) / 255f);
-		this.backgroundFogDensity = element.getFieldFloatValue("BackgroundFogDensity");
-		this.backgroundFogStart = element.getFieldFloatValue("BackgroundFogStart");
-		this.backgroundFogEnd = element.getFieldFloatValue("BackgroundFogEnd");
+		this.backgroundFogSettings.density = element.getFieldFloatValue("BackgroundFogDensity");
+		this.backgroundFogSettings.start = element.getFieldFloatValue("BackgroundFogStart");
+		this.backgroundFogSettings.end = element.getFieldFloatValue("BackgroundFogEnd");
 		this.cursor = element.getFieldValue("Cursor");
 		this.ambientSound = element.getField("AmbientSound");
 		this.introCinematic = readMission(element, "IntroCinematic");
@@ -65,24 +64,8 @@ public class CampaignMenuData {
 		return this.background;
 	}
 
-	public int getBackgroundFogStyle() {
-		return this.backgroundFogStyle;
-	}
-
-	public Color getBackgroundFogColor() {
-		return this.backgroundFogColor;
-	}
-
-	public float getBackgroundFogDensity() {
-		return this.backgroundFogDensity;
-	}
-
-	public float getBackgroundFogStart() {
-		return this.backgroundFogStart;
-	}
-
-	public float getBackgroundFogEnd() {
-		return this.backgroundFogEnd;
+	public FogSettings getBackgroundFogSettings() {
+		return backgroundFogSettings;
 	}
 
 	public int getCursor() {

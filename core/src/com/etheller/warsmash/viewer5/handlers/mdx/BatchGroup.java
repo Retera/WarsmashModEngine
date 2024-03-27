@@ -224,7 +224,11 @@ public class BatchGroup extends GenericGroup {
 					shader.setUniform4fv("u_geosetColor", geosetColor, 0, geosetColor.length);
 
 					shader.setUniformf("u_layerAlpha", layerAlpha);
-					shader.setUniformf("u_unshaded", layer.unshaded);
+					shader.setUniformi("u_unshaded", layer.unshaded != 0 ? 1 : 0);
+					shader.setUniformi("u_unfogged", layer.unfogged != 0 ? 1 : 0);
+					shader.setUniformf("u_fogColor", scene.fogSettings.color);
+					shader.setUniformf("u_fogParams", scene.fogSettings.style.ordinal(), scene.fogSettings.start,
+							scene.fogSettings.end, scene.fogSettings.density);
 
 					shader.setUniform2fv("u_uvTrans", uvAnim, 0, 2);
 					shader.setUniform2fv("u_uvRot", uvAnim, 2, 2);

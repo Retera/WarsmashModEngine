@@ -708,6 +708,9 @@ public class MdxShaders {
 			"    uniform sampler2D u_texture;\r\n" + //
 			"    uniform vec4 u_vertexColor;\r\n" + //
 			"    uniform float u_filterMode;\r\n" + //
+			"    uniform bool u_unfogged;\r\n" + //
+			"    uniform vec4 u_fogColor;\r\n" + //
+			"    uniform vec4 u_fogParams;\r\n" + //
 			"    varying vec2 v_uv;\r\n" + //
 			"    varying vec4 v_color;\r\n" + //
 			"    varying vec4 v_uvTransRot;\r\n" + //
@@ -729,6 +732,15 @@ public class MdxShaders {
 			"      // \"Close to 0 alpha\"\r\n" + //
 			"      if (u_filterMode >= 5.0 && color.a < 0.02) {\r\n" + //
 			"        discard;\r\n" + //
+			"      }\r\n" + //
+			"      if(!u_unfogged && u_fogParams.x > 0.5) {\r\n" + //
+			"        float fogAmount = clamp(((1.0 / gl_FragCoord.w) - u_fogParams.y) / (u_fogParams.z - u_fogParams.y), 0.0, 1.0);\r\n"
+			+ //
+			"        if (u_filterMode < 3.0 || u_filterMode > 4.0) {\r\n" + //
+			"          color.rgb = color.rgb * (1.0 - fogAmount) + u_fogColor.rgb * fogAmount;\r\n" + //
+			"        } else {\r\n" + //
+			"          color.rgb = color.rgb * (vec3(1.0 - fogAmount) + u_fogColor.rgb * fogAmount);\r\n" + //
+			"        }\r\n" + //
 			"      }\r\n" + //
 			"      gl_FragColor = color;\r\n" + //
 			"    }";
@@ -1029,12 +1041,24 @@ public class MdxShaders {
 			"    uniform float u_filterMode;\r\n" + //
 			"    varying vec2 v_texcoord;\r\n" + //
 			"    varying vec4 v_color;\r\n" + //
+			"    uniform bool u_unfogged;\r\n" + //
+			"    uniform vec4 u_fogColor;\r\n" + //
+			"    uniform vec4 u_fogParams;\r\n" + //
 			"    void main() {\r\n" + //
 			"      vec4 texel = texture2D(u_texture, v_texcoord);\r\n" + //
 			"      vec4 color = texel * v_color;\r\n" + //
 			"      // 1bit Alpha, used by ribbon emitters.\r\n" + //
 			"      if (u_emitter == EMITTER_RIBBON && u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
 			"        discard;\r\n" + //
+			"      }\r\n" + //
+			"      if(!u_unfogged && u_fogParams.x > 0.5) {\r\n" + //
+			"        float fogAmount = clamp(((1.0 / gl_FragCoord.w) - u_fogParams.y) / (u_fogParams.z - u_fogParams.y), 0.0, 1.0);\r\n"
+			+ //
+			"        if (u_filterMode != 1.0 && u_filterMode != 4.0) {\r\n" + //
+			"          color.rgb = color.rgb * (1.0 - fogAmount) + u_fogColor.rgb * fogAmount;\r\n" + //
+			"        } else {\r\n" + //
+			"          color.rgb = color.rgb * (vec3(1.0 - fogAmount) + u_fogColor.rgb * fogAmount);\r\n" + //
+			"        }\r\n" + //
 			"      }\r\n" + //
 			"      gl_FragColor = color;\r\n" + //
 			"    }";

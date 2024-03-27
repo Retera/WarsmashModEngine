@@ -33,6 +33,7 @@ import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
+import com.etheller.warsmash.viewer5.FogSettings;
 import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -301,7 +302,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 	}
 
 	@Override
-	public void setModel(final String path) {
+	public void setModel(final String path, final FogSettings fogSettings) {
 		if (this.mainInstance != null) {
 			this.mainInstance.detach();
 		}
@@ -320,6 +321,19 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 			// hacky replica of a model viewer tool with a bunch of irrelevant loop type
 			// settings instead of what it should be
 			this.hasPlayedStandHack = false;
+		}
+		if (fogSettings != null) {
+			this.scene.fogSettings.style = fogSettings.style;
+			this.scene.fogSettings.color = fogSettings.color;
+			this.scene.fogSettings.density = fogSettings.density;
+			this.scene.fogSettings.start = fogSettings.start;
+			this.scene.fogSettings.end = fogSettings.end;
+//			if (this.modelCamera != null) {
+//				this.scene.fogSettings.start = (fogSettings.start - this.modelCamera.nearClippingPlane)
+//						/ (this.modelCamera.farClippingPlane - this.modelCamera.nearClippingPlane);
+//				this.scene.fogSettings.end = (fogSettings.end - this.modelCamera.nearClippingPlane)
+//						/ (this.modelCamera.farClippingPlane - this.modelCamera.nearClippingPlane);
+//			}
 		}
 
 	}

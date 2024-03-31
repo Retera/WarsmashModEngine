@@ -168,7 +168,7 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
 		if (!this.rooted && (orderId == OrderIds.root)) {
-			return this.behaviorRoot.reset(point);
+			return this.behaviorRoot.reset(game, point);
 		}
 		return caster.pollNextOrderBehavior(game);
 	}

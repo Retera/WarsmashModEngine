@@ -26,9 +26,8 @@ public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 		this.abilityAcolyteHarvest = abilityWispHarvest;
 	}
 
-	public CBehaviorAcolyteHarvest reset(final CWidget target) {
-		innerReset(target, false);
-		return this;
+	public CBehavior reset(CSimulation game, final CWidget target) {
+		return innerReset(game, target, false);
 	}
 
 	@Override

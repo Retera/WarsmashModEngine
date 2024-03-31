@@ -48,7 +48,7 @@ public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility {
 
     @Override
     public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-        return this.behaviorLoad.reset(target);
+        return this.behaviorLoad.reset(game, target);
     }
 
     @Override

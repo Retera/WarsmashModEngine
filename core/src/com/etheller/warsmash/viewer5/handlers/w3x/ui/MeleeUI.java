@@ -2929,8 +2929,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						final UnitIconUI unitUI = this.war3MapViewer.getAbilityDataUI()
 								.getUnitUI(cargoContainedUnit.getTypeId());
 						this.cargoUnitFrames[i].setTexture(unitUI.getIcon());
-						this.cargoUnitFrames[i].setToolTip(unitUI.getToolTip());
-						this.cargoUnitFrames[i].setUberTip(unitUI.getUberTip());
+						if (cargoContainedUnit.isHero()) {
+							this.cargoUnitFrames[i].setToolTip(cargoContainedUnit.getHeroData().getProperName());
+							this.cargoUnitFrames[i].setUberTip("Level " + cargoContainedUnit.getHeroData().getHeroLevel());
+						} else {
+							this.cargoUnitFrames[i].setToolTip(cargoContainedUnit.getUnitType().getName());
+							this.cargoUnitFrames[i].setUberTip(unitUI.getUberTip());
+						}
 						this.cargoUnitFrames[i].setLifeRatioRemaining(
 								cargoContainedUnit.getLife() / cargoContainedUnit.getMaximumLife());
 						this.cargoUnitFrames[i].showFocused(this.rootFrame, this.uiViewport);

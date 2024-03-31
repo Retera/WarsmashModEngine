@@ -161,7 +161,7 @@ public class CAbilityAttack extends AbstractCAbility {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getCurrentAttacks()) {
 			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
-				behavior = caster.getAttackBehavior().reset(OrderIds.attack, attack, target, false,
+				behavior = caster.getAttackBehavior().reset(game, OrderIds.attack, attack, target, false,
 						CBehaviorAttackListener.DO_NOTHING);
 				break;
 			}
@@ -186,7 +186,7 @@ public class CAbilityAttack extends AbstractCAbility {
 			CBehavior behavior = null;
 			for (final CUnitAttack attack : caster.getCurrentAttacks()) {
 				if (attack.getWeaponType().isAttackGroundSupported()) {
-					behavior = caster.getAttackBehavior().reset(OrderIds.attackground, attack, point, false,
+					behavior = caster.getAttackBehavior().reset(game, OrderIds.attackground, attack, point, false,
 							CBehaviorAttackListener.DO_NOTHING);
 					break;
 				}

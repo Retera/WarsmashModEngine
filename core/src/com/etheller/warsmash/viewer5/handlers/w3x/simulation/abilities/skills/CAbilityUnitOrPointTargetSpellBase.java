@@ -25,13 +25,13 @@ public abstract class CAbilityUnitOrPointTargetSpellBase extends CAbilitySpellBa
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behavior.reset(target);
+		return this.behavior.reset(game, target);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
-		return this.behavior.reset(point);
+		return this.behavior.reset(game, point);
 	}
 
 	@Override

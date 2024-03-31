@@ -298,7 +298,7 @@ public class CUnit extends CWidget {
 	}
 	
 	private void beginBehavior(final CSimulation game, final CBehavior behavior) {
-		if (!(this.currentBehavior == behavior)) {
+		if (this.currentBehavior != behavior) {
 			final int lastBehaviorHighlightOrderId = this.currentBehavior != null ? this.currentBehavior.getHighlightOrderId() : -1;
 			if (this.currentBehavior != null) {
 				this.currentBehavior.end(game, false);
@@ -318,6 +318,14 @@ public class CUnit extends CWidget {
 				}
 			}
 		}
+	}
+	
+	public CBehavior finishMoveBehavior(final CSimulation game, final CBehavior behavior) {
+		for (CUnitBehaviorChangeListener listener : new ArrayList<>(this.behaviorChangeListeners)) {
+			listener.onChange(game, this, this.currentBehavior, behavior);
+		}
+		
+		return behavior.update(game);
 	}
 
 	public void performDefaultBehavior(final CSimulation game) {
@@ -2719,7 +2727,7 @@ public class CUnit extends CWidget {
 						&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
 					for (final CUnitAttack attack : getCurrentAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
-							this.beginBehavior(simulation, getAttackBehavior().reset(OrderIds.attack, attack, source, false,
+							this.beginBehavior(simulation, getAttackBehavior().reset(simulation, OrderIds.attack, attack, source, false,
 									CBehaviorAttackListener.DO_NOTHING));
 							foundMatchingReturnFireAttack = true;
 							break;
@@ -3429,7 +3437,7 @@ public class CUnit extends CWidget {
 									&& !(this.game.getGameplayConstants().isMagicImmuneResistsDamage()
 											&& unit.isUnitType(CUnitTypeJass.MAGIC_IMMUNE)
 											&& attack.getAttackType() == CAttackType.MAGIC)) {
-								this.source.beginBehavior(game, this.source.getAttackBehavior().reset(OrderIds.attack,
+								this.source.beginBehavior(game, this.source.getAttackBehavior().reset(game, OrderIds.attack,
 										attack, unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING));
 								this.foundAnyTarget = true;
 								return true;

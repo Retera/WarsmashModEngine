@@ -287,7 +287,7 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
 		if (this.isTargetedSpell() && !this.isPointTarget()) {
 			if (this.behavior instanceof CBehaviorTargetSpellBase) {
-				return ((CBehaviorTargetSpellBase) this.behavior).reset(target);
+				return ((CBehaviorTargetSpellBase) this.behavior).reset(game, target);
 			} else {
 				return null;
 			}
@@ -300,7 +300,7 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
 		if (this.isTargetedSpell() && this.isPointTarget()) {
 			if (this.behavior instanceof CBehaviorTargetSpellBase) {
-				return ((CBehaviorTargetSpellBase) this.behavior).reset(point);
+				return ((CBehaviorTargetSpellBase) this.behavior).reset(game, point);
 			} else {
 				return null;
 			}

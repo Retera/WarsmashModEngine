@@ -20,9 +20,8 @@ public class CBehaviorDrop extends CAbstractRangedBehavior {
 		this.ability = ability;
 	}
 
-	public CBehaviorDrop reset(final AbilityPointTarget target) {
-		innerReset(target, false);
-		return this;
+	public CBehavior reset(CSimulation game, final AbilityPointTarget target) {
+		return innerReset(game, target, false);
 	}
 
 	@Override
@@ -43,6 +42,7 @@ public class CBehaviorDrop extends CAbstractRangedBehavior {
 		final float durationTicks = (int) Math.ceil(cargoData.getDuration() / WarsmashConstants.SIMULATION_STEP_TIME);
 		if (deltaTicks >= durationTicks) {
 			cargoData.dropUnitByIndex(simulation, unit, 0);
+			this.unit.notifyOrdersChanged();
 			this.lastDropTick = gameTurnTick;
 		}
 		return this;

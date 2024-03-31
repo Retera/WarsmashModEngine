@@ -35,8 +35,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 			// TODO it is unconventional not to return self here
 			return this.unit.pollNextOrderBehavior(simulation);
 		}
-		innerReset(nearestDropoffPoint, true);
-		return this;
+		return innerReset(simulation, nearestDropoffPoint, true);
 	}
 
 	@Override
@@ -106,7 +105,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 							this.abilityHarvest.getCarriedResourceAmount());
 					this.abilityHarvest.setCarriedResources(this.abilityHarvest.getCarriedResourceType(), 0);
 					if (nextTarget != null) {
-						return this.abilityHarvest.getBehaviorHarvest().reset(nextTarget);
+						return this.abilityHarvest.getBehaviorHarvest().reset(simulation, nextTarget);
 					}
 					return this.unit.pollNextOrderBehavior(this.simulation);
 				}

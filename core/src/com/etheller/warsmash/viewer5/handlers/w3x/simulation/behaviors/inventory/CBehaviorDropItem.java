@@ -20,10 +20,9 @@ public class CBehaviorDropItem extends CAbstractRangedBehavior {
 		this.inventory = inventory;
 	}
 
-	public CBehaviorDropItem reset(final CItem targetItem, final AbilityPointTarget targetPoint) {
-		innerReset(targetPoint);
+	public CBehavior reset(CSimulation game, final CItem targetItem, final AbilityPointTarget targetPoint) {
 		this.targetItem = targetItem;
-		return this;
+		return innerReset(game, targetPoint);
 	}
 
 	@Override

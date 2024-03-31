@@ -83,7 +83,7 @@ public class CBehaviorPatrol implements CRangedBehavior {
 		if (tarUnit != null) {
 			if (simulation.getPlayer(unit.getPlayerIndex()).hasAlliance(tarUnit.getPlayerIndex(), CAllianceType.PASSIVE)) {
 				unit.getOrderQueue().clear();
-				return unit.getFollowBehavior().reset(this.getHighlightOrderId(), tarUnit);
+				return unit.getFollowBehavior().reset(simulation, this.getHighlightOrderId(), tarUnit);
 			} else {
 				AbilityPointTarget newTar = new AbilityPointTarget(tarUnit.getX(), tarUnit.getY());
 				this.targets.set(iter, newTar);

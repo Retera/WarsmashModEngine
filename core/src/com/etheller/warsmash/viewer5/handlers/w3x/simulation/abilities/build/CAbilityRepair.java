@@ -120,7 +120,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorRepair.reset(target);
+		return this.behaviorRepair.reset(game, target);
 	}
 
 	@Override

@@ -87,7 +87,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorHarvest.reset(target);
+		return this.behaviorHarvest.reset(game, target);
 	}
 
 	@Override

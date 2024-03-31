@@ -37,15 +37,14 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		this.abilityHarvest = abilityHarvest;
 	}
 
-	public CBehaviorHarvest reset(final CWidget target) {
-		innerReset(target, target instanceof CUnit);
+	public CBehavior reset(CSimulation game, final CWidget target) {
 		this.abilityHarvest.setLastHarvestTarget(target);
 		if (this.popoutFromMineTurnTick != 0) {
 			// TODO this check is probably only for debug and should be removed after
 			// extensive testing
 			throw new IllegalStateException("A unit took action while within a gold mine.");
 		}
-		return this;
+		return innerReset(game, target, target instanceof CUnit);
 	}
 
 	@Override
@@ -125,7 +124,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 	public CBehavior accept(final CDestructable target) {
 		if ((this.abilityHarvest.getCarriedResourceType() != ResourceType.LUMBER)
 				|| (this.abilityHarvest.getCarriedResourceAmount() < this.abilityHarvest.getLumberCapacity())) {
-			return this.abilityHarvest.getBehaviorTreeAttack().reset(getHighlightOrderId(),
+			return this.abilityHarvest.getBehaviorTreeAttack().reset(simulation, getHighlightOrderId(),
 					this.abilityHarvest.getTreeAttack(), target, false, this);
 		}
 		else {
@@ -188,7 +187,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 			final CDestructable nearestTree = CBehaviorReturnResources.findNearestTree(this.unit, this.abilityHarvest,
 					simulation, this.unit);
 			if (nearestTree != null) {
-				return reset(nearestTree);
+				return reset(simulation, nearestTree);
 			}
 		}
 		return this.unit.pollNextOrderBehavior(simulation);

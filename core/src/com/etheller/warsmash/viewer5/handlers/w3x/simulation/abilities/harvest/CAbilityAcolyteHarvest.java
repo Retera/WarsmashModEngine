@@ -43,7 +43,7 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorAcolyteHarvest.reset(target);
+		return this.behaviorAcolyteHarvest.reset(game, target);
 	}
 
 	@Override

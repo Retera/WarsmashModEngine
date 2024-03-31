@@ -82,7 +82,7 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
 		// only from engine, not ever allowed by the checks
 		if (target instanceof CUnit) {
-			return this.behaviorCoupleInstant.reset((CUnit) target);
+			return this.behaviorCoupleInstant.reset(game, (CUnit) target);
 		}
 		return caster.pollNextOrderBehavior(game);
 	}
@@ -106,7 +106,7 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 		}
 		coupleTarget.order(game, new COrderTargetWidget(possiblePairFinder.pairMatchAbility.getHandleId(),
 				possiblePairFinder.pairMatchAbility.getBaseOrderId(), caster.getHandleId(), false), false);
-		return this.behaviorCoupleInstant.reset(coupleTarget);
+		return this.behaviorCoupleInstant.reset(game, coupleTarget);
 	}
 
 	@Override

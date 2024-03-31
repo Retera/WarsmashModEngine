@@ -105,12 +105,12 @@ public class CAbilityMove extends AbstractCAbility {
 			if (smart) {
 				CAbilityLoad transportLoad = CAbilityLoad.getTransportLoad(game, caster, targetUnit, true, true);
 				if (transportLoad != null) {
-					behavior = caster.getBoardTransportBehavior().reset(OrderIds.move, targetUnit);
+					behavior = caster.getBoardTransportBehavior().reset(game, OrderIds.move, targetUnit);
 				}
 			}
 			if (behavior == null) {
 				behavior = caster.getFollowBehavior()
-						.reset(smart ? OrderIds.move : orderId, targetUnit);
+						.reset(game, smart ? OrderIds.move : orderId, targetUnit);
 				caster.setDefaultBehavior(behavior);
 			}
 			return behavior;

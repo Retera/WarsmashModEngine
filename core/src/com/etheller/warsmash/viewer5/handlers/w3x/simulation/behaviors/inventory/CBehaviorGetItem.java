@@ -19,9 +19,8 @@ public class CBehaviorGetItem extends CAbstractRangedBehavior {
 		this.inventory = inventory;
 	}
 
-	public CBehaviorGetItem reset(final CItem targetItem) {
-		innerReset(targetItem);
-		return this;
+	public CBehavior reset(CSimulation game, final CItem targetItem) {
+		return innerReset(game, targetItem);
 	}
 
 	@Override

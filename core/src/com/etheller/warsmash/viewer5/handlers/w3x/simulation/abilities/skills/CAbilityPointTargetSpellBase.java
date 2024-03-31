@@ -30,7 +30,7 @@ public abstract class CAbilityPointTargetSpellBase extends CAbilitySpellBase {
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
-		return this.behavior.reset(point);
+		return this.behavior.reset(game, point);
 	}
 
 	@Override

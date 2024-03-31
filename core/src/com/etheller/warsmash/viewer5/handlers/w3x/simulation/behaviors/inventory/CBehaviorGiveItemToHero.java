@@ -23,11 +23,10 @@ public class CBehaviorGiveItemToHero extends CAbstractRangedBehavior {
 		this.inventory = inventory;
 	}
 
-	public CBehaviorGiveItemToHero reset(final CItem targetItem, final CUnit targetHero) {
-		innerReset(targetHero);
+	public CBehavior reset(CSimulation game, final CItem targetItem, final CUnit targetHero) {
 		this.targetItem = targetItem;
 		this.targetHero = targetHero;
-		return this;
+		return innerReset(game, targetHero);
 	}
 
 	@Override

@@ -38,12 +38,12 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 		this.buildOnBuildingIntersector = new BuildOnBuildingIntersector();
 	}
 
-	public CBehavior reset(final AbilityPointTarget target, final int orderId, final int highlightOrderId) {
+	public CBehavior reset(CSimulation game, final AbilityPointTarget target, final int orderId, final int highlightOrderId) {
 		this.highlightOrderId = highlightOrderId;
 		this.orderId = new War3ID(orderId);
 		this.unitCreated = false;
 		this.doneTick = 0;
-		return innerReset(target);
+		return innerReset(game, target);
 	}
 
 	@Override

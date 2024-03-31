@@ -50,7 +50,7 @@ public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
-		return this.behaviorDrop.reset(point);
+		return this.behaviorDrop.reset(game, point);
 	}
 
 	@Override

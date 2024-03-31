@@ -23,10 +23,10 @@ public class CBehaviorRoot extends CAbstractRangedBehavior {
 		this.abilityRoot = abilityRoot;
 	}
 
-	public CAbstractRangedBehavior reset(final AbilityPointTarget pointTarget) {
+	public CBehavior reset(CSimulation game, final AbilityPointTarget pointTarget) {
 		this.rootStartTick = -1;
 		this.rootFinishTick = -1;
-		return this.innerReset(pointTarget);
+		return this.innerReset(game, pointTarget);
 	}
 
 	@Override

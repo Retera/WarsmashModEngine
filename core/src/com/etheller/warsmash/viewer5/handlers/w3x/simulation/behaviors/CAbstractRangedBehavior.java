@@ -2,7 +2,6 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 
 public abstract class CAbstractRangedBehavior implements CRangedBehavior {
@@ -14,15 +13,15 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 
 	protected AbilityTarget target;
 	private boolean wasWithinPropWindow = false;
-	protected boolean wasInRange = false;
-	protected boolean disableMove = false;
-	protected CBehaviorMove moveBehavior;
+	private boolean wasInRange = false;
+	private boolean disableMove = false;
+	private CBehaviorMove moveBehavior;
 
-	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target) {
-		return innerReset(target, false);
+	protected final CBehavior innerReset(CSimulation game, final AbilityTarget target) {
+		return innerReset(game, target, false);
 	}
 
-	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target, final boolean disableCollision) {
+	protected final CBehavior innerReset(CSimulation game, final AbilityTarget target, final boolean disableCollision) {
 		this.target = target;
 		this.wasWithinPropWindow = false;
 		this.wasInRange = false;
@@ -34,6 +33,14 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 			moveBehavior = null;
 		}
 		this.moveBehavior = moveBehavior;
+		if (!isWithinRange(game)) {
+			if ((this.moveBehavior == null) || this.disableMove) {
+				return this.unit.pollNextOrderBehavior(game);
+			}
+			this.wasInRange = false;
+			resetBeforeMoving(game);
+			return this.unit.getMoveBehavior();
+		}
 		return this;
 	}
 

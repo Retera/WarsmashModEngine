@@ -16,9 +16,9 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 		super(unit);
 	}
 
-	public CBehavior reset(final int higlightOrderId, final CWidget target) {
+	public CBehavior reset(CSimulation game, final int higlightOrderId, final CWidget target) {
 		this.higlightOrderId = higlightOrderId;
-		return innerReset(target);
+		return innerReset(game, target);
 	}
 
 	@Override

@@ -21,9 +21,8 @@ public class CBehaviorCarrionSwarmDummy extends CAbstractRangedBehavior {
 		this.abilityCarrionSwarmDummy = abilityCarrionSwarmDummy;
 	}
 
-	public CBehaviorCarrionSwarmDummy reset(final AbilityTarget target) {
-		innerReset(target);
-		return this;
+	public CBehavior reset(CSimulation game, final AbilityTarget target) {
+		return innerReset(game, target);
 	}
 
 	@Override

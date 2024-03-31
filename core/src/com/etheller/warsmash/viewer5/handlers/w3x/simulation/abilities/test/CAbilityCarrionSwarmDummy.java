@@ -62,13 +62,13 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorCarrionSwarmDummy.reset(target);
+		return this.behaviorCarrionSwarmDummy.reset(game, target);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
-		return this.behaviorCarrionSwarmDummy.reset(point);
+		return this.behaviorCarrionSwarmDummy.reset(game, point);
 	}
 
 	@Override

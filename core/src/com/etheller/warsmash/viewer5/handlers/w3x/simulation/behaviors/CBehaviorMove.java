@@ -101,7 +101,7 @@ public class CBehaviorMove implements CBehavior {
 	@Override
 	public CBehavior update(final CSimulation simulation) {
 		if ((this.rangedBehavior != null) && this.rangedBehavior.isWithinRange(simulation)) {
-			return this.rangedBehavior.update(simulation);
+			return this.unit.finishMoveBehavior(simulation, this.rangedBehavior);
 		}
 		if (this.firstUpdate) {
 			// when units start moving, if they're on top of other units, maybe push them to

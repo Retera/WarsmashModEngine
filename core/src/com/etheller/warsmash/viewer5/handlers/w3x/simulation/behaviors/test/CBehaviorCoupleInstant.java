@@ -23,9 +23,8 @@ public class CBehaviorCoupleInstant extends CAbstractRangedBehavior {
 		this.stillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 
-	public CBehaviorCoupleInstant reset(final CUnit coupleTarget) {
-		innerReset(coupleTarget);
-		return this;
+	public CBehavior reset(CSimulation game, final CUnit coupleTarget) {
+		return innerReset(game, coupleTarget);
 	}
 
 	@Override

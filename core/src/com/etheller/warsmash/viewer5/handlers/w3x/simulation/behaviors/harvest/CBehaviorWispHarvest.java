@@ -27,9 +27,8 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 		this.abilityWispHarvest = abilityWispHarvest;
 	}
 
-	public CBehaviorWispHarvest reset(final CWidget target) {
-		innerReset(target, false);
-		return this;
+	public CBehavior reset(CSimulation game, final CWidget target) {
+		return innerReset(game, target, false);
 	}
 
 	@Override
@@ -86,7 +85,7 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 			final CDestructable nearestTree = findNearestTree(this.unit, this.abilityWispHarvest, simulation,
 					this.unit);
 			if (nearestTree != null) {
-				return reset(nearestTree);
+				return reset(simulation, nearestTree);
 			}
 		}
 		return this.unit.pollNextOrderBehavior(simulation);

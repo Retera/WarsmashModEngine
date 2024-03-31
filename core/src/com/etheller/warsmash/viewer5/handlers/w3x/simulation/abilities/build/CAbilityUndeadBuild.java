@@ -52,7 +52,7 @@ public class CAbilityUndeadBuild extends AbstractCAbilityBuild {
 		if (unitType.getFoodUsed() != 0) {
 			player.setFoodUsed(player.getFoodUsed() + unitType.getFoodUsed());
 		}
-		return this.buildBehavior.reset(point, orderId, getBaseOrderId());
+		return this.buildBehavior.reset(game, point, orderId, getBaseOrderId());
 	}
 
 	@Override

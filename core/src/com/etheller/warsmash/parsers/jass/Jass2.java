@@ -3884,7 +3884,7 @@ public class Jass2 {
 							return null;
 						}
 						return new HandleJassValue(abilitybehaviorType,
-								unit.getFollowBehavior().reset(highlightOrderId, whichFollowTarget));
+								unit.getFollowBehavior().reset(simulation, highlightOrderId, whichFollowTarget));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitMovePointBehavior",
 					(arguments, globalScope, triggerScope) -> {
@@ -3941,7 +3941,7 @@ public class Jass2 {
 							return null;
 						}
 						return new HandleJassValue(abilitybehaviorType,
-								unit.getAttackBehavior().reset(highlightOrderId,
+								unit.getAttackBehavior().reset(simulation, highlightOrderId,
 										unit.getCurrentAttacks().get(whichUnitAttackIndex), target, false,
 										CBehaviorAttackListener.DO_NOTHING));
 					});
@@ -3956,7 +3956,7 @@ public class Jass2 {
 							return null;
 						}
 						return new HandleJassValue(abilitybehaviorType,
-								unit.getAttackBehavior().reset(highlightOrderId,
+								unit.getAttackBehavior().reset(simulation, highlightOrderId,
 										unit.getCurrentAttacks().get(whichUnitAttackIndex),
 										new AbilityPointTarget((float) targetX, (float) targetY), false,
 										CBehaviorAttackListener.DO_NOTHING));
@@ -3971,7 +3971,7 @@ public class Jass2 {
 							return null;
 						}
 						return new HandleJassValue(abilitybehaviorType,
-								unit.getAttackBehavior().reset(highlightOrderId,
+								unit.getAttackBehavior().reset(simulation, highlightOrderId,
 										unit.getCurrentAttacks().get(whichUnitAttackIndex),
 										new AbilityPointTarget((float) target.x, (float) target.y), false,
 										CBehaviorAttackListener.DO_NOTHING));

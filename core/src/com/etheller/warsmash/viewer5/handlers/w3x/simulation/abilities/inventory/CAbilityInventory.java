@@ -175,19 +175,19 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 		}
 		final CItem targetItem = target.visit(AbilityTargetVisitor.ITEM);
 		if (targetItem != null) {
-			return this.behaviorGetItem.reset((CItem) target);
+			return this.behaviorGetItem.reset(game, (CItem) target);
 		}
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	public CBehavior beginDropItem(final CSimulation game, final CUnit caster, final int orderId,
 			final CItem itemToDrop, final AbilityPointTarget target) {
-		return this.behaviorDropItem.reset(itemToDrop, target);
+		return this.behaviorDropItem.reset(game, itemToDrop, target);
 	}
 
 	public CBehavior beginDropItem(final CSimulation game, final CUnit caster, final int orderId,
 			final CItem itemToDrop, final CUnit targetHero) {
-		return this.behaviorGiveItem.reset(itemToDrop, targetHero);
+		return this.behaviorGiveItem.reset(game, itemToDrop, targetHero);
 	}
 
 	@Override

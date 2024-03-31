@@ -51,75 +51,39 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	}
 
 	public CBehavior reset(final CSimulation game, final CWidget target) {
-		innerReset(target, false);
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = this.ability.getBaseOrderId();
 		this.preventReInterrupt = false;
-		if (!isWithinRange(game)) {
-			if ((this.moveBehavior == null) || this.disableMove) {
-				return this.unit.pollNextOrderBehavior(game);
-			}
-			this.wasInRange = false;
-			resetBeforeMoving(game);
-			return this.unit.getMoveBehavior();
-		}
-		return this;
+		return innerReset(game, target, false);
 	}
 
 	public CBehavior reset(final CSimulation game, final CWidget target, int orderId) {
-		innerReset(target, false);
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = orderId;
 		this.preventReInterrupt = false;
-		if (!isWithinRange(game)) {
-			if ((this.moveBehavior == null) || this.disableMove) {
-				return this.unit.pollNextOrderBehavior(game);
-			}
-			this.wasInRange = false;
-			resetBeforeMoving(game);
-			return this.unit.getMoveBehavior();
-		}
-		return this;
+		return innerReset(game, target, false);
 	}
 
 	public CBehavior reset(final CSimulation game, final AbilityPointTarget target) {
-		innerReset(target, false);
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = this.ability.getBaseOrderId();
 		this.preventReInterrupt = false;
-		if (!isWithinRange(game)) {
-			if ((this.moveBehavior == null) || this.disableMove) {
-				return this.unit.pollNextOrderBehavior(game);
-			}
-			this.wasInRange = false;
-			resetBeforeMoving(game);
-			return this.unit.getMoveBehavior();
-		}
-		return this;
+		return innerReset(game, target, false);
 	}
 
 	public CBehavior reset(final CSimulation game, final AbilityPointTarget target, int orderId) {
-		innerReset(target, false);
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = orderId;
 		this.preventReInterrupt = false;
-		if (!isWithinRange(game)) {
-			if ((this.moveBehavior == null) || this.disableMove) {
-				return this.unit.pollNextOrderBehavior(game);
-			}
-			this.wasInRange = false;
-			resetBeforeMoving(game);
-			return this.unit.getMoveBehavior();
-		}
-		return this;
+		return innerReset(game, target, false);
 	}
 
 	public ABBehavior reset() {

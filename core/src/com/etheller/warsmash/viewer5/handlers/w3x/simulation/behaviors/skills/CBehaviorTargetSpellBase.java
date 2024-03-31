@@ -25,20 +25,18 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 		this.stillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 
-	public CBehaviorTargetSpellBase reset(final CWidget target) {
-		innerReset(target, false);
+	public CBehavior reset(CSimulation game, final CWidget target) {
 		this.castStartTick = 0;
 		this.doneEffect = false;
 		this.channeling = false;
-		return this;
+		return innerReset(game, target, false);
 	}
 
-	public CBehaviorTargetSpellBase reset(final AbilityPointTarget target) {
-		innerReset(target, false);
+	public CBehavior reset(CSimulation game, final AbilityPointTarget target) {
 		this.castStartTick = 0;
 		this.doneEffect = false;
 		this.channeling = false;
-		return this;
+		return innerReset(game, target, false);
 	}
 
 	@Override

@@ -54,7 +54,7 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorWispHarvest.reset(target);
+		return this.behaviorWispHarvest.reset(game, target);
 	}
 
 	@Override

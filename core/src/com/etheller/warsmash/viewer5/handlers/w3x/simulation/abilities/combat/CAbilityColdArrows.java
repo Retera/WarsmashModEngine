@@ -105,7 +105,7 @@ public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getCurrentAttacks()) {
 			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
-				behavior = caster.getAttackBehavior().reset(OrderIds.coldarrowstarg, attack, target, false,
+				behavior = caster.getAttackBehavior().reset(game, OrderIds.coldarrowstarg, attack, target, false,
 						CBehaviorAttackListener.DO_NOTHING);
 				break;
 			}

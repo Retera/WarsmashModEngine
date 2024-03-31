@@ -22,9 +22,8 @@ public class CBehaviorLoad extends CAbstractRangedBehavior {
 		this.stillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 
-	public CBehaviorLoad reset(final CWidget target) {
-		innerReset(target, false);
-		return this;
+	public CBehavior reset(CSimulation game, final CWidget target) {
+		return innerReset(game, target, false);
 	}
 
 	@Override

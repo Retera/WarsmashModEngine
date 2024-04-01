@@ -15,7 +15,6 @@ public class ABActionRegisterUniqueTimeOfDayEvent implements ABAction {
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
 		ABTimeOfDayEvent ev = event.callback(game, caster, localStore, castId);
 		if (!game.isTimeOfDayEventRegistered(ev)) {
-			System.err.println("REGISTERED TIME OF DAY EVENT: " + ev);
 			game.registerTimeOfDayEvent(ev);
 		}
 		

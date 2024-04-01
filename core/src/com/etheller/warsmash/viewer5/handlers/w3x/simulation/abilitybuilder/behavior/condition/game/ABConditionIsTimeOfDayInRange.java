@@ -21,7 +21,6 @@ public class ABConditionIsTimeOfDayInRange implements ABCondition {
 		if (endTime != null) {
 			et = endTime.callback(game, caster, localStore, castId);
 		}
-		System.err.println("Checking time of day: " + game.getGameTimeOfDay());
 		return st <= et ? game.getGameTimeOfDay() >= st && game.getGameTimeOfDay() < et
 				: game.getGameTimeOfDay() >= st || game.getGameTimeOfDay() < et;
 	}

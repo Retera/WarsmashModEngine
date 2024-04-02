@@ -425,8 +425,12 @@ public abstract class CUnitAttack {
 
 		for (CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
 			if (allowContinue.isAllowStacking()) {
-				if (priority == CUnitAttackPreDamageListenerPriority.ATTACKREPLACEMENT && this.attackReplacement != null && this.attackReplacement.getPreDamageListener() != null) {
-					allowContinue = this.attackReplacement.getPreDamageListener().onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+				if (priority == CUnitAttackPreDamageListenerPriority.ATTACKREPLACEMENT && this.attackReplacement != null && this.attackReplacement.getPreDamageListeners() != null) {
+					for (CUnitAttackPreDamageListener listener : this.attackReplacement.getPreDamageListeners()) {
+						if (allowContinue.isAllowSamePriorityStacking()) {
+							allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+						}
+					}
 				} else {
 					for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(priority)) {
 						if (allowContinue.isAllowSamePriorityStacking()) {

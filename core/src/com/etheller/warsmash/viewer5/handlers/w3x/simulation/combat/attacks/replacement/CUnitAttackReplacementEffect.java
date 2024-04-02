@@ -1,11 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement;
 
+import java.util.List;
+
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
 
 public class CUnitAttackReplacementEffect {
 
-	public CUnitAttackPreDamageListener getPreDamageListener() {
+	public List<CUnitAttackPreDamageListener> getPreDamageListeners() {
 		return null;
 	}
 

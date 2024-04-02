@@ -155,6 +155,10 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				action.runAction(game, unit, localStore, castId);
 			}
 		}
+		
+		if (this.autocastType == AutocastType.ATTACKREPLACEMENT) {
+			//game.createProjectile(unit, offTooltipOverride, bufferMana, autoCastOnId, autoCastOffId, area, active, unit, null)
+		}
 	}
 
 	@Override
@@ -429,6 +433,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	@Override
 	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
 		this.autocasting = autoCastOn;
+		if (this.autocastType == AutocastType.ATTACKREPLACEMENT) {
+			//caster.addAttackReplacement(null, CUnitAttackReplacementPriority.AUTOCAST);
+		}
 		caster.setAutocastAbility(autoCastOn ? this : null);
 	}
 

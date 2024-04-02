@@ -42,18 +42,30 @@ public class CUnitAttackMissile extends CUnitAttack {
 	}
 
 	public float getProjectileArc() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.getProjectileArc();
+		}
 		return this.projectileArc;
 	}
 
 	public String getProjectileArt() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.getProjectileArt();
+		}
 		return this.projectileArt;
 	}
 
 	public boolean isProjectileHomingEnabled() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.isProjectileHomingEnabled();
+		}
 		return this.projectileHomingEnabled;
 	}
 
 	public int getProjectileSpeed() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.getProjectileSpeed();
+		}
 		return this.projectileSpeed;
 	}
 

@@ -5,14 +5,7 @@ public enum CUnitAttackPreDamageListenerPriority {
 	ACCURACY(1),
 	STACKING(2),
 	CRITBASH(3),
-	MASKPLUS(4),
-	ORBSLOT1(5),
-	ORBSLOT2(6),
-	ORBSLOT3(7),
-	ORBSLOT4(8),
-	ORBSLOT5(9),
-	ORBSLOT6(10),
-	FEEDBACK(11);
+	ATTACKREPLACEMENT(4);
 
 	private int priority;
 	

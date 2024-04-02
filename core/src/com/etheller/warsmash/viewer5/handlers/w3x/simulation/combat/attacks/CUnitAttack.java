@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.list
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerPriority;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackReplacementEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 
@@ -63,6 +64,8 @@ public abstract class CUnitAttack {
 	
 	private Map<String, List<NonStackingStatBuff>> nonStackingFlatBuffs = new HashMap<>();
 	private Map<String, List<NonStackingStatBuff>> nonStackingPctBuffs = new HashMap<>();
+	
+	protected CUnitAttackReplacementEffect attackReplacement = null;
 
 	// calculate
 	private int totalBaseDamage;
@@ -422,9 +425,13 @@ public abstract class CUnitAttack {
 
 		for (CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
 			if (allowContinue.isAllowStacking()) {
-				for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(priority)) {
-					if (allowContinue.isAllowSamePriorityStacking()) {
-						allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+				if (priority == CUnitAttackPreDamageListenerPriority.ATTACKREPLACEMENT && this.attackReplacement != null && this.attackReplacement.getPreDamageListener() != null) {
+					allowContinue = this.attackReplacement.getPreDamageListener().onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+				} else {
+					for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(priority)) {
+						if (allowContinue.isAllowSamePriorityStacking()) {
+							allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+						}
 					}
 				}
 			}

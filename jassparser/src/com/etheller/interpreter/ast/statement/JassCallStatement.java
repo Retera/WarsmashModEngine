@@ -43,4 +43,17 @@ public class JassCallStatement implements JassStatement {
 		return null;
 	}
 
+	@Override
+	public <T> T accept(final JassStatementVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
+	public String getFunctionName() {
+		return this.functionName;
+	}
+
+	public List<JassExpression> getArguments() {
+		return this.arguments;
+	}
+
 }

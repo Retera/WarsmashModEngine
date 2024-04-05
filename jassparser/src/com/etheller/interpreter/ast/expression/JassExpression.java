@@ -7,4 +7,6 @@ import com.etheller.interpreter.ast.value.JassValue;
 
 public interface JassExpression {
 	JassValue evaluate(GlobalScope globalScope, LocalScope localScope, TriggerExecutionScope triggerScope);
+
+	<T> T accept(JassExpressionVisitor<T> visitor);
 }

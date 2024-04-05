@@ -5,10 +5,13 @@ import java.util.Collections;
 import java.util.List;
 
 import com.etheller.interpreter.ast.debug.JassException;
+import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.util.CHandle;
+import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.JassValue;
 
 public class Trigger implements CHandle {
 	private static int STUPID_STATIC_TRIGGER_COUNT_DELETE_THIS_LATER = 452354453;
@@ -25,6 +28,12 @@ public class Trigger implements CHandle {
 	public int addAction(final JassFunction function) {
 		final int index = this.actions.size();
 		this.actions.add(function);
+		return index;
+	}
+
+	public int addAction(final CodeJassValue function) {
+		final int index = this.actions.size();
+		this.actions.add(new JassThreadActionFunc(function));
 		return index;
 	}
 
@@ -72,13 +81,7 @@ public class Trigger implements CHandle {
 				action.call(Collections.emptyList(), globalScope, triggerScope);
 			}
 			catch (final Exception e) {
-				if ((e.getMessage() != null) && e.getMessage().startsWith("Needs to sleep")) {
-					// TODO not good design
-					e.printStackTrace();
-				}
-				else {
-					throw new JassException(globalScope, "Exception during Trigger action execute", e);
-				}
+				throw new JassException(globalScope, "Exception during Trigger action execute", e);
 			}
 		}
 	}
@@ -117,4 +120,23 @@ public class Trigger implements CHandle {
 		return this.handleId;
 	}
 
+	private final class JassThreadActionFunc implements JassFunction {
+		private final CodeJassValue codeJassValue;
+
+		public JassThreadActionFunc(final CodeJassValue codeJassValue) {
+			this.codeJassValue = codeJassValue;
+		}
+
+		@Override
+		public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+				final TriggerExecutionScope triggerScope) {
+			final JassThread triggerThread = globalScope.createThread(this.codeJassValue, triggerScope);
+			globalScope.runThreadUntilCompletion(triggerThread);
+			if (isWaitOnSleeps() && (triggerThread.instructionPtr != -1)) {
+				globalScope.queueThread(triggerThread);
+			}
+			return null;
+		}
+
+	}
 }

@@ -254,17 +254,30 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.reviving;
 	}
 
-	public void addXp(final CSimulation simulation, final CUnit unit, final int xp) {
-		this.xp += xp * simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP();
+	private void levelUpHero(final CSimulation simulation, final CUnit unit) {
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
 		while ((this.heroLevel < gameplayConstants.getMaxHeroLevel())
-				&& (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {
+			&& (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {
 			this.heroLevel++;
 			this.skillPoints++;
 			calculateDerivatedFields(simulation, unit);
 			simulation.unitGainLevelEvent(unit);
 		}
+	}
+
+	public void addXp(final CSimulation simulation, final CUnit unit, final int xp) {
+		this.xp += xp * simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP();
+		levelUpHero(simulation, unit);
 		unit.internalPublishHeroStatsChanged();
+	}
+
+	// In the original engine setXp is only called if the passed xp value > the hero's current xp.
+	// setXp cannot be used to decrease the hero's xp or level.
+	public void setXp(final CSimulation simulation, final CUnit unit, final int xp) {
+		final int newXpVal = xp * Math.round(simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP());
+		if (newXpVal > this.xp) {
+			addXp(simulation, unit, newXpVal - this.xp);
+		}
 	}
 
 	public void setHeroLevel(final CSimulation simulation, final CUnit unit, final int level,
@@ -272,7 +285,8 @@ public class CAbilityHero extends AbstractCAbility {
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
 		final int neededTotalXp = gameplayConstants.getNeedHeroXPSum(level - 1);
 		if (this.xp < neededTotalXp) {
-			addXp(simulation, unit, neededTotalXp - this.xp);
+			addXp(simulation, unit, (int) Math
+					.ceil((neededTotalXp - this.xp) / simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP()));
 		}
 		else {
 			// remove xp TODO
@@ -387,7 +401,7 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.setLifeRegenStrengthBonus(currentStrength * gameplayConstants.getStrRegenBonus());
 		unit.setManaRegenIntelligenceBonus(currentIntelligence * gameplayConstants.getIntRegenBonus());
 	}
-	
+
 	public void recalculateAllStats(final CSimulation game, final CUnit unit) {
 		final CGameplayConstants gameplayConstants = game.getGameplayConstants();
 		this.strength.calculate(this.heroLevel);
@@ -494,14 +508,14 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.skillsAvailable;
 	}
 
-	public void setSkillsAvailable(List<War3ID> skillsAvailable) {
+	public void setSkillsAvailable(final List<War3ID> skillsAvailable) {
 		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
 	}
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
-	
+
 	@Override
 	public boolean isPermanent() {
 		return true;

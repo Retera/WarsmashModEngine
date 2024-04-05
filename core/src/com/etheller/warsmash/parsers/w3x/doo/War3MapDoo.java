@@ -23,7 +23,7 @@ public class War3MapDoo {
 
 	public War3MapDoo(final LittleEndianDataInputStream stream, final War3MapW3i mapInformation) throws IOException {
 		if (stream != null) {
-			this.load(stream, mapInformation);
+			load(stream, mapInformation);
 		}
 	}
 
@@ -57,7 +57,7 @@ public class War3MapDoo {
 		return true;
 	}
 
-	public void save(final LittleEndianDataOutputStream stream) throws IOException {
+	public void save(final LittleEndianDataOutputStream stream, final War3MapW3i mapInformation) throws IOException {
 
 		ParseUtils.writeWar3ID(stream, MAGIC_NUMBER);
 		stream.writeInt(this.version);
@@ -65,7 +65,7 @@ public class War3MapDoo {
 		ParseUtils.writeUInt32(stream, this.doodads.size());
 
 		for (final Doodad doodad : this.doodads) {
-			doodad.save(stream, this.version);
+			doodad.save(stream, this.version, mapInformation);
 		}
 
 		ParseUtils.writeUInt8Array(stream, this.u2);

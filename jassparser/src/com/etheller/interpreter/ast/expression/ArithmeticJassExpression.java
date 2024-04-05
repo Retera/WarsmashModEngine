@@ -42,4 +42,21 @@ public class ArithmeticJassExpression implements JassExpression {
 			return IntegerJassValue.ZERO;
 		}
 	}
+
+	@Override
+	public <T> T accept(final JassExpressionVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
+	public JassExpression getLeftExpression() {
+		return this.leftExpression;
+	}
+
+	public JassExpression getRightExpression() {
+		return this.rightExpression;
+	}
+
+	public ArithmeticSign getArithmeticSign() {
+		return this.arithmeticSign;
+	}
 }

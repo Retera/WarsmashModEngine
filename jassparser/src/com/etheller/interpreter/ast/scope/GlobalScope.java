@@ -10,16 +10,29 @@ import java.util.Map;
 
 import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.debug.DebuggingJassFunction;
+import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.debug.JassStackElement;
+import com.etheller.interpreter.ast.execution.JassStackFrame;
+import com.etheller.interpreter.ast.execution.JassThread;
+import com.etheller.interpreter.ast.execution.instruction.BeginFunctionInstruction;
+import com.etheller.interpreter.ast.execution.instruction.InstructionAppendingJassStatementVisitor;
+import com.etheller.interpreter.ast.execution.instruction.JassInstruction;
+import com.etheller.interpreter.ast.execution.instruction.PushLiteralInstruction;
+import com.etheller.interpreter.ast.execution.instruction.ReturnInstruction;
 import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.function.JassParameter;
+import com.etheller.interpreter.ast.function.NativeJassFunction;
+import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
+import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
+import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
@@ -27,14 +40,25 @@ import com.etheller.interpreter.ast.value.PrimitiveJassType;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.HandleJassTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.HandleTypeSuperTypeLoadingVisitor;
+import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
 public final class GlobalScope {
-	private final Map<String, GlobalScopeAssignable> globals = new HashMap<>();
+	private final List<GlobalScopeAssignable> indexedGlobals = new ArrayList<GlobalScopeAssignable>();
+	private final List<JassInstruction> instructions = new ArrayList<JassInstruction>();
+	private final Map<String, Integer> globals = new HashMap<>();
+	private final Map<String, GlobalScopeAssignable> fastGlobals = new HashMap<>();
 	private final Map<String, JassFunction> functions = new HashMap<>();
+	private final Map<String, Integer> functionNameToInstructionPtr = new HashMap<>();
+	private final Map<String, Integer> functionNameToNativeId = new HashMap<>();
+	private final List<JassFunction> indexedNativeFunctions = new ArrayList<>();
 	private final Map<String, JassType> types = new HashMap<>();
 	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
 	private final ArrayDeque<QueuedCallback> triggerQueue = new ArrayDeque<>();
 	private final ArrayDeque<QueuedCallback> runningTriggerQueue = new ArrayDeque<>();
+	private final List<JassThread> threads = new ArrayList<>();
+	private final List<JassThread> newThreads = new ArrayList<>();
+	private JassThread currentThread;
+	private boolean yieldedCurrentThread = false;
 
 	public final HandleJassType handleType;
 
@@ -59,6 +83,20 @@ public final class GlobalScope {
 		final List<JassStackElement> copiedStack = new ArrayList<>();
 		for (final JassStackElement stackElement : this.jassStack) {
 			copiedStack.add(new JassStackElement(stackElement));
+		}
+		JassThread unwindThread = this.currentThread;
+		while (unwindThread != null) {
+			JassStackFrame frame = unwindThread.stackFrame;
+			while (frame != null) {
+				if (frame.functionNameMetaData != null) {
+					copiedStack.add(new JassStackElement(frame.functionNameMetaData, frame.debugLineNo));
+				}
+				else {
+					copiedStack.add(new JassStackElement("<unknown source>", "<unknown function>", -1));
+				}
+				frame = frame.stackBase;
+			}
+			unwindThread = unwindThread.parent;
 		}
 		return copiedStack;
 	}
@@ -96,14 +134,21 @@ public final class GlobalScope {
 		this.types.put(type.getName(), type);
 	}
 
+	private void putGlobal(final String name, final GlobalScopeAssignable globalScopeAssignable) {
+		final int index = this.indexedGlobals.size();
+		this.indexedGlobals.add(globalScopeAssignable);
+		this.globals.put(name, index);
+		this.fastGlobals.put(name, globalScopeAssignable);
+	}
+
 	public void createGlobalArray(final String name, final JassType type) {
 		final GlobalScopeAssignable assignable = new GlobalScopeAssignable(type, this);
 		assignable.setValue(new ArrayJassValue((ArrayJassType) type)); // TODO less bad code
-		this.globals.put(name, assignable);
+		putGlobal(name, assignable);
 	}
 
 	public void createGlobal(final String name, final JassType type) {
-		this.globals.put(name, new GlobalScopeAssignable(type, this));
+		putGlobal(name, new GlobalScopeAssignable(type, this));
 	}
 
 	public void createGlobal(final String name, final JassType type, final JassValue value) {
@@ -114,11 +159,11 @@ public final class GlobalScope {
 		catch (final Exception exc) {
 			throw new RuntimeException("Global initialization failed for name: " + name, exc);
 		}
-		this.globals.put(name, assignable);
+		putGlobal(name, assignable);
 	}
 
 	public void setGlobal(final String name, final JassValue value) {
-		final GlobalScopeAssignable assignable = this.globals.get(name);
+		final GlobalScopeAssignable assignable = this.fastGlobals.get(name);
 		if (assignable == null) {
 			throw new RuntimeException("Undefined global: " + name);
 		}
@@ -129,29 +174,87 @@ public final class GlobalScope {
 	}
 
 	public JassValue getGlobal(final String name) {
-		final Assignable global = this.globals.get(name);
+		final Assignable global = this.fastGlobals.get(name);
 		if (global == null) {
 			throw new RuntimeException("Undefined global: " + name);
 		}
 		return global.getValue();
 	}
 
+	public JassValue getGlobalById(final int globalId) {
+		return getAssignableGlobalById(globalId).getValue();
+	}
+
+	public GlobalScopeAssignable getAssignableGlobalById(final int globalId) {
+		return this.indexedGlobals.get(globalId);
+	}
+
+	/**
+	 * @param name
+	 * @return the global id, or else -1 if no such global exists
+	 */
+	public int getGlobalId(final String name) {
+		final Integer globalId = this.globals.get(name);
+		if (globalId == null) {
+			return -1;
+		}
+		return globalId;
+	}
+
 	public GlobalScopeAssignable getAssignableGlobal(final String name) {
-		return this.globals.get(name);
+		return this.fastGlobals.get(name);
+	}
+
+	private JassFunction internalDefineFunction(final int lineNo, final String sourceFile, final String name,
+			final JassFunction function) {
+		JassFunction result;
+		if (JassSettings.DEBUG) {
+			result = new DebuggingJassFunction(lineNo, sourceFile, name, function);
+		}
+		else {
+			result = function;
+		}
+		this.functions.put(name, result);
+		return result;
 	}
 
 	public void defineFunction(final int lineNo, final String sourceFile, final String name,
-			final JassFunction function) {
-		if (JassSettings.DEBUG) {
-			this.functions.put(name, new DebuggingJassFunction(lineNo, sourceFile, name, function));
+			final NativeJassFunction function) {
+		final JassFunction definedFunction = internalDefineFunction(lineNo, sourceFile, name, function);
+		final int nativeId = this.indexedNativeFunctions.size();
+		this.functionNameToNativeId.put(name, nativeId);
+		this.indexedNativeFunctions.add(definedFunction);
+	}
+
+	public void defineFunction(final int lineNo, final String sourceFile, final String name,
+			final UserJassFunction function) {
+		internalDefineFunction(lineNo, sourceFile, name, function);
+		this.functionNameToInstructionPtr.put(name, this.instructions.size());
+		final List<JassStatement> statements = function.getStatements();
+		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
+		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
+				this.instructions, this, function.getParameters());
+		for (final JassStatement statement : statements) {
+			statement.accept(visitor);
 		}
-		else {
-			this.functions.put(name, function);
-		}
+		this.instructions.add(new PushLiteralInstruction(JassType.NOTHING.getNullValue()));
+		this.instructions.add(new ReturnInstruction());
 	}
 
 	public JassFunction getFunctionByName(final String name) {
 		return this.functions.get(name);
+	}
+
+	public Integer getUserFunctionInstructionPtr(final String name) {
+		return this.functionNameToInstructionPtr.get(name);
+	}
+
+	public Integer getNativeId(final String name) {
+		return this.functionNameToNativeId.get(name);
+	}
+
+	public JassFunction getNativeById(final int id) {
+		return this.indexedNativeFunctions.get(id);
 	}
 
 	public JassType parseType(final String text) {
@@ -199,6 +302,135 @@ public final class GlobalScope {
 		}
 		else {
 			throw new RuntimeException("type " + type + " cannot extend unknown type " + supertype);
+		}
+	}
+
+	public JassThread createThread(final CodeJassValue codeValue) {
+		return createThread(codeValue, TriggerExecutionScope.EMPTY);
+	}
+
+	public void queueThread(final JassThread thread) {
+		this.newThreads.add(thread);
+	}
+
+	public JassThread createThread(final CodeJassValue codeValue, final TriggerExecutionScope triggerScope) {
+		final JassStackFrame jassStackFrame = new JassStackFrame();
+		jassStackFrame.returnAddressInstructionPtr = -1;
+		final JassThread jassThread = new JassThread(jassStackFrame, this, triggerScope,
+				codeValue.getUserFunctionInstructionPtr());
+		return jassThread;
+	}
+
+	public JassThread createThread(final String functionName, final List<JassValue> arguments,
+			final TriggerExecutionScope triggerExecutionScope) {
+		JassFunction functionByName = getFunctionByName(functionName);
+		if (functionByName instanceof DebuggingJassFunction) {
+			functionByName = ((DebuggingJassFunction) functionByName).getDelegate();
+		}
+		if (functionByName instanceof UserJassFunction) {
+			final UserJassFunction userJassFunction = (UserJassFunction) functionByName;
+			final Integer userFunctionInstructionPtr = getUserFunctionInstructionPtr(functionName);
+			final int instructionPtr = userFunctionInstructionPtr == null ? -1 : userFunctionInstructionPtr;
+			final List<JassParameter> parameters = userJassFunction.getParameters();
+			if (arguments.size() != parameters.size()) {
+				throw new RuntimeException("Invalid number of arguments passed to function");
+			}
+			final JassStackFrame jassStackFrame = new JassStackFrame(arguments.size());
+			jassStackFrame.returnAddressInstructionPtr = -1;
+			for (int i = 0; i < parameters.size(); i++) {
+				final JassParameter parameter = parameters.get(i);
+				final JassValue argument = arguments.get(i);
+				if (!parameter.matchesType(argument)) {
+					if ((parameter == null) || (argument == null)) {
+						System.err.println(
+								"We called some Jass function with incorrect argument types, and the types were null!!!");
+					}
+					System.err.println(
+							parameter.getType() + " != " + argument.visit(JassTypeGettingValueVisitor.getInstance()));
+					throw new RuntimeException(
+							"Invalid type " + argument.visit(JassTypeGettingValueVisitor.getInstance()).getName()
+									+ " for specified argument " + parameter.getType().getName());
+				}
+				jassStackFrame.push(argument);
+			}
+			final JassThread jassThread = new JassThread(jassStackFrame, this, triggerExecutionScope, instructionPtr);
+			return jassThread;
+		}
+		else {
+			throw new IllegalStateException("Can only create thread from user function");
+		}
+	}
+
+	/**
+	 * @return true if all threads have terminated
+	 */
+	public boolean runThreads() {
+		boolean anyThreadsAdded = false;
+		do {
+			runOneThreadLooop();
+			anyThreadsAdded = !this.newThreads.isEmpty();
+			this.threads.addAll(this.newThreads);
+			this.newThreads.clear();
+		}
+		while (anyThreadsAdded);
+		return this.threads.isEmpty();
+	}
+
+	public void runThreadUntilCompletion(final JassThread thread) {
+		final JassThread parentThread = this.currentThread;
+		thread.parent = parentThread;
+		this.currentThread = thread;
+		try {
+			while (!thread.isSleeping()) {
+				if (thread.instructionPtr == -1) {
+					break;
+				}
+				else {
+					this.instructions.get(thread.instructionPtr++).run(thread);
+				}
+			}
+		}
+		catch (final Exception exc) {
+			throw new JassException(this, "runThreads() encountered exception", exc);
+		}
+		this.currentThread = parentThread;
+	}
+
+	private void runOneThreadLooop() {
+		for (int threadIndex = this.threads.size() - 1; threadIndex >= 0; threadIndex--) {
+			final JassThread thread = this.threads.get(threadIndex);
+			this.currentThread = thread;
+			try {
+				while (!thread.isSleeping()) {
+					if (thread.instructionPtr == -1) {
+						this.threads.remove(threadIndex);
+						this.yieldedCurrentThread = false;
+						break;
+					}
+					else {
+						this.instructions.get(thread.instructionPtr++).run(thread);
+					}
+				}
+			}
+			catch (final Exception exc) {
+				throw new JassException(this, "runThreads() encountered exception", exc);
+			}
+			if (this.yieldedCurrentThread) {
+				this.currentThread.setSleeping(false);
+				this.newThreads.add(this.threads.remove(threadIndex));
+			}
+		}
+		this.currentThread = null;
+	}
+
+	public JassThread getCurrentThread() {
+		return this.currentThread;
+	}
+
+	public void yieldCurrentThread() {
+		if (this.currentThread != null) {
+			this.currentThread.setSleeping(true);
+			this.yieldedCurrentThread = true;
 		}
 	}
 

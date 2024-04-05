@@ -39,4 +39,17 @@ public class FunctionCallJassExpression implements JassExpression {
 		}
 	}
 
+	@Override
+	public <T> T accept(final JassExpressionVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
+	public String getFunctionName() {
+		return this.functionName;
+	}
+
+	public List<JassExpression> getArguments() {
+		return this.arguments;
+	}
+
 }

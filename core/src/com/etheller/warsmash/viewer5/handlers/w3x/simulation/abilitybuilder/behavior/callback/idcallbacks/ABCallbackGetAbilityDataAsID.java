@@ -21,7 +21,7 @@ public class ABCallbackGetAbilityDataAsID extends ABIDCallback {
 		int level = (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);
 		
 		String data = levelData.get(level-1).getData().get(dataField.getIndex());
-		if (data == null || "-".equals(data) || data.isBlank()) {
+		if (data == null || "-".equals(data) || data.isBlank() || "_".equals(data)) {
 			return War3ID.NONE;
 		}
 		return War3ID.fromString(data);

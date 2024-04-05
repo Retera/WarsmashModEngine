@@ -4,6 +4,7 @@ import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.statement.JassStatement;
+import com.etheller.interpreter.ast.statement.JassStatementVisitor;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class DebuggingJassStatement implements JassStatement {
@@ -20,6 +21,19 @@ public class DebuggingJassStatement implements JassStatement {
 			final TriggerExecutionScope triggerScope) {
 		globalScope.setLineNumber(this.lineNo);
 		return this.delegate.execute(globalScope, localScope, triggerScope);
+	}
+
+	@Override
+	public <T> T accept(final JassStatementVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
+	public int getLineNo() {
+		return this.lineNo;
+	}
+
+	public JassStatement getDelegate() {
+		return this.delegate;
 	}
 
 }

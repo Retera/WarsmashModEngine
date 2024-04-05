@@ -40,7 +40,8 @@ public final class CAbilitySellItems extends AbstractCAbility {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
 		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
 		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
-			final CItemType itemType = game.getItemData().getItemType(this.itemsSold.get(itemIndex));
+			final War3ID itemTypeId = this.itemsSold.get(itemIndex);
+			final CItemType itemType = game.getItemData().getItemType(itemTypeId);
 			if (itemType != null) {
 				final CPlayer player = game.getPlayer(playerIndex);
 				if ((player.getGold() >= itemType.getGoldCost())) {

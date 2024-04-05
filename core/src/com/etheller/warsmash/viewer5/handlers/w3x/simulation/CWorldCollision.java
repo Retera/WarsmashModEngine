@@ -52,7 +52,8 @@ public class CWorldCollision {
 		}
 		if (unit.isBoneCorpse()) {
 			this.deadUnitCollision.add(unit, bounds);
-		} else {
+		}
+		else {
 			this.anyUnitEnumerableCollision.add(unit, bounds);
 			if (unit.isBuilding()) {
 				// buildings are here so that we can include them when enumerating all units in
@@ -113,7 +114,8 @@ public class CWorldCollision {
 			this.anyUnitEnumerableCollision.remove(unit, bounds);
 			if (unit.isBoneCorpse()) {
 				this.deadUnitCollision.remove(unit, bounds);
-			} else {
+			}
+			else {
 				if (unit.isBuilding()) {
 					this.buildingUnitCollision.remove(unit, bounds);
 				} else {
@@ -173,7 +175,7 @@ public class CWorldCollision {
 		});
 	}
 
-	public void enumCorpsesInRange(float x, float y, float radius, final CUnitEnumFunction callback) {
+	public void enumCorpsesInRange(final float x, final float y, final float radius, final CUnitEnumFunction callback) {
 		enumCorpsesInRect(new Rectangle(x - radius, y - radius, radius * 2, radius * 2), (enumUnit) -> {
 			if (enumUnit.canReach(x, y, radius)) {
 				return callback.call(enumUnit);
@@ -182,7 +184,7 @@ public class CWorldCollision {
 		});
 	}
 
-	public void enumUnitsInRange(float x, float y, float radius, final CUnitEnumFunction callback) {
+	public void enumUnitsInRange(final float x, final float y, final float radius, final CUnitEnumFunction callback) {
 		enumUnitsInRect(new Rectangle(x - radius, y - radius, radius * 2, radius * 2), (enumUnit) -> {
 			if (enumUnit.canReach(x, y, radius)) {
 				return callback.call(enumUnit);
@@ -203,7 +205,8 @@ public class CWorldCollision {
 		this.destructablesForEnum.intersect(rect, this.destructableEnumIntersector.reset(callback));
 	}
 
-	public void enumDestructablesInRange(float x, float y, float radius, CDestructableEnumFunction callback) {
+	public void enumDestructablesInRange(final float x, final float y, final float radius,
+			final CDestructableEnumFunction callback) {
 		enumDestructablesInRect(new Rectangle(x - radius, y - radius, radius * 2, radius * 2), (enumUnit) -> {
 			if (enumUnit.distance(x, y) <= radius) {
 				return callback.call(enumUnit);
@@ -254,45 +257,56 @@ public class CWorldCollision {
 	}
 
 	public void translate(final CUnit unit, final float xShift, final float yShift) {
-		if (unit.isBuilding()) {
-			throw new IllegalArgumentException("Cannot add building to the CWorldCollision");
-		}
 		final MovementType movementType = unit.getMovementType();
 		final Rectangle bounds = unit.getCollisionRectangle();
-		if (unit.isBoneCorpse()) {
-			this.deadUnitCollision.translate(unit, bounds, xShift, yShift);
-		} else {
-			final float oldX = bounds.x;
-			final float oldY = bounds.y;
-			this.anyUnitEnumerableCollision.translate(unit, bounds, xShift, yShift);
-			bounds.x = oldX;
-			bounds.y = oldY;
-			if (movementType != null) {
-				switch (movementType) {
-				case AMPHIBIOUS:
-					this.seaUnitCollision.translate(unit, bounds, xShift, yShift);
+		if (bounds != null) {
+			if (unit.isBoneCorpse()) {
+				this.deadUnitCollision.translate(unit, bounds, xShift, yShift);
+			}
+			else {
+				final float oldX = bounds.x;
+				final float oldY = bounds.y;
+				this.anyUnitEnumerableCollision.translate(unit, bounds, xShift, yShift);
+				if (unit.isBuilding()) {
 					bounds.x = oldX;
 					bounds.y = oldY;
-					this.groundUnitCollision.translate(unit, bounds, xShift, yShift);
-					break;
-				case FLOAT:
-					this.seaUnitCollision.translate(unit, bounds, xShift, yShift);
-					break;
-				case FLY:
-					this.airUnitCollision.translate(unit, bounds, xShift, yShift);
-					break;
-				case DISABLED:
-					break;
-				default:
-				case FOOT:
-				case FOOT_NO_COLLISION:
-				case HORSE:
-				case HOVER:
-					this.groundUnitCollision.translate(unit, bounds, xShift, yShift);
-					break;
+					this.buildingUnitCollision.translate(unit, bounds, xShift, yShift);
+				}
+				else if (movementType != null) {
+					switch (movementType) {
+					case AMPHIBIOUS:
+						bounds.x = oldX;
+						bounds.y = oldY;
+						this.seaUnitCollision.translate(unit, bounds, xShift, yShift);
+						bounds.x = oldX;
+						bounds.y = oldY;
+						this.groundUnitCollision.translate(unit, bounds, xShift, yShift);
+						break;
+					case FLOAT:
+						bounds.x = oldX;
+						bounds.y = oldY;
+						this.seaUnitCollision.translate(unit, bounds, xShift, yShift);
+						break;
+					case FLY:
+						bounds.x = oldX;
+						bounds.y = oldY;
+						this.airUnitCollision.translate(unit, bounds, xShift, yShift);
+						break;
+					case DISABLED:
+						break;
+					default:
+					case FOOT:
+					case FOOT_NO_COLLISION:
+					case HORSE:
+					case HOVER:
+						bounds.x = oldX;
+						bounds.y = oldY;
+						this.groundUnitCollision.translate(unit, bounds, xShift, yShift);
+						break;
+					}
 				}
 			}
-		}
+		} // else probably moving a dead unit that isn't corpse yet
 	}
 
 	public void translate(final CItem item, final float xShift, final float yShift) {

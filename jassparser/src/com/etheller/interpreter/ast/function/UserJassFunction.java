@@ -15,7 +15,7 @@ import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 /**
  * Not a native
  *
- * @author Eric
+ * @author Retera
  *
  */
 public final class UserJassFunction extends AbstractJassFunction {
@@ -33,25 +33,33 @@ public final class UserJassFunction extends AbstractJassFunction {
 		for (final JassStatement statement : this.statements) {
 			final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
 			if (returnValue != null) {
-				if (!this.returnType.isAssignableFrom(returnValue.visit(JassTypeGettingValueVisitor.getInstance()))) {
-					if ((this.returnType == JassType.NOTHING)
-							&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
-						return null;
-					}
-					else if ((this.returnType.isNullable())
-							&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
-						return this.returnType.getNullValue();
-					}
-					else {
-						throw new JassException(globalScope, "Invalid return type", null);
-					}
-				}
-				return returnValue;
+				return returnByValue(globalScope, returnValue);
 			}
 		}
 		if (JassType.NOTHING != this.returnType) {
 			throw new JassException(globalScope, "Invalid return type", null);
 		}
 		return null;
+	}
+
+	private JassValue returnByValue(final GlobalScope globalScope, final JassValue returnValue) {
+		if (!this.returnType.isAssignableFrom(returnValue.visit(JassTypeGettingValueVisitor.getInstance()))) {
+			if ((this.returnType == JassType.NOTHING)
+					&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
+				return null;
+			}
+			else if ((this.returnType.isNullable())
+					&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
+				return this.returnType.getNullValue();
+			}
+			else {
+				throw new JassException(globalScope, "Invalid return type", null);
+			}
+		}
+		return returnValue;
+	}
+
+	public List<JassStatement> getStatements() {
+		return this.statements;
 	}
 }

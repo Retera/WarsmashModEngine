@@ -4,6 +4,7 @@ import com.etheller.interpreter.ast.expression.ArithmeticSign;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.DummyJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
@@ -60,6 +61,11 @@ public class ArithmeticJassValueVisitor implements JassValueVisitor<JassValue> {
 	@Override
 	public JassValue accept(final ArrayJassValue value) {
 		throw new UnsupportedOperationException("Cannot perform arithmetic on array");
+	}
+
+	@Override
+	public JassValue accept(final DummyJassValue value) {
+		return value;
 	}
 
 	@Override

@@ -18,10 +18,19 @@ public class FunctionReferenceJassExpression implements JassExpression {
 	public JassValue evaluate(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
 		final JassFunction functionByName = globalScope.getFunctionByName(this.identifier);
-		if (functionByName == null) {
+		final Integer userFunctionInstructionPtr = globalScope.getUserFunctionInstructionPtr(this.identifier);
+		if ((functionByName == null) || (userFunctionInstructionPtr == null)) {
 			throw new RuntimeException("Unable to find function: " + this.identifier);
 		}
-		return new CodeJassValue(functionByName);
+		return new CodeJassValue(functionByName, userFunctionInstructionPtr);
 	}
 
+	@Override
+	public <T> T accept(final JassExpressionVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
+	public String getIdentifier() {
+		return this.identifier;
+	}
 }

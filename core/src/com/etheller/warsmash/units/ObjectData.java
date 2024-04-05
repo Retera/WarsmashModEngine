@@ -13,6 +13,8 @@ public interface ObjectData {
 
 	void cloneUnit(final String parentId, final String cloneId);
 
+	void inheritFrom(String childKey, String parentKey);
+
 	void setValue(String slk, String id, String field, String value);
 
 	Set<String> keySet();

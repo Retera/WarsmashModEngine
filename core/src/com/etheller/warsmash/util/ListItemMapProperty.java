@@ -26,7 +26,8 @@ public class ListItemMapProperty extends AbstractListItemProperty {
             final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
             gameUI.setMapStrings(wtsFile);
 
-            mapName = gameUI.getTrigStr(mapInfo.getName());
+            String mapNameString = gameUI.getTrigStr(mapInfo.getName());
+			mapName = mapNameString == null ? mapInfo.getName() : mapNameString;
             playerCount = mapInfo.getPlayers().size();
             mapType = (mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP)) ? MapType.MELEE_MAP : MapType.CUSTOM_MAP;
         } catch (IOException e) {

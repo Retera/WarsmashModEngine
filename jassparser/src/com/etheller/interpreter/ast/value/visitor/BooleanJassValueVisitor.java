@@ -3,6 +3,7 @@ package com.etheller.interpreter.ast.value.visitor;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.DummyJassValue;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
@@ -48,6 +49,11 @@ public class BooleanJassValueVisitor implements JassValueVisitor<Boolean> {
 
 	@Override
 	public Boolean accept(final HandleJassValue value) {
+		throw new IllegalStateException("Unable to convert " + value + " to boolean");
+	}
+
+	@Override
+	public Boolean accept(final DummyJassValue value) {
 		throw new IllegalStateException("Unable to convert " + value + " to boolean");
 	}
 

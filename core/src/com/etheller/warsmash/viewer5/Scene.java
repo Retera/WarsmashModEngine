@@ -62,6 +62,8 @@ public abstract class Scene {
 	public boolean alpha = false;
 	public Color backgroundColor = Color.BLACK;
 	private final SceneLightManager lightManager;
+	public FogSettings fogSettings = new FogSettings();
+	public boolean show = true;
 
 	public Scene(final ModelViewer viewer, final SceneLightManager lightManager) {
 		final CanvasProvider canvas = viewer.canvas;
@@ -253,6 +255,9 @@ public abstract class Scene {
 	}
 
 	public void renderOpaque() {
+		if (!show) {
+			return;
+		}
 		final Rectangle viewport = this.camera.rect;
 		this.viewer.gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
 
@@ -278,6 +283,9 @@ public abstract class Scene {
 	}
 
 	public void renderOpaque(final DynamicShadowManager dynamicShadowManager, final WebGL webGL) {
+		if (!show) {
+			return;
+		}
 		final Matrix4 depthMatrix = dynamicShadowManager.prepareShadowMatrix();
 		dynamicShadowManager.beginShadowMap(webGL);
 		Gdx.gl30.glDepthMask(true);
@@ -300,6 +308,9 @@ public abstract class Scene {
 	 * camera's viewport.
 	 */
 	public void renderTranslucent() {
+		if (!show) {
+			return;
+		}
 		final Rectangle viewport = this.camera.rect;
 
 		this.viewer.gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);

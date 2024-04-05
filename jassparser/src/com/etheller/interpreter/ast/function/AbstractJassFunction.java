@@ -37,7 +37,7 @@ public abstract class AbstractJassFunction implements JassFunction {
 			if (!parameter.matchesType(argument)) {
 				if ((parameter == null) || (argument == null)) {
 					System.err.println(
-							"Returning null because we called some Jass function with incorrect argument types, and the types were null!!!");
+							"We called some Jass function with incorrect argument types, and the types were null!!!");
 					System.err.println("This is a temporary hack for tests and showcase programming solutions");
 					return null;
 				}
@@ -54,4 +54,12 @@ public abstract class AbstractJassFunction implements JassFunction {
 
 	protected abstract JassValue innerCall(final List<JassValue> arguments, final GlobalScope globalScope,
 			TriggerExecutionScope triggerScope, final LocalScope localScope);
+
+	public List<JassParameter> getParameters() {
+		return this.parameters;
+	}
+
+	public JassType getReturnType() {
+		return this.returnType;
+	}
 }

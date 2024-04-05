@@ -18,6 +18,10 @@ public abstract class HashedGameObject implements GameObject {
 		this.parentTable = table;
 	}
 
+	public int size(){
+		return this.fields.size();
+	}
+
 	@Override
 	public void setField(final String slk, final String field, final String value) {
 		setField(field, value);

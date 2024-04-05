@@ -61,6 +61,7 @@ import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WorldEditStrings;
+import com.etheller.warsmash.viewer5.FogSettings;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
@@ -234,6 +235,9 @@ public class MenuUI {
 	private GlueTextButtonFrame battleNetConnectCancelButton;
 	private DialogWar3 dialog;
 	private Task gameListQueryTask;
+	private boolean hideUI;
+	private final DataTable miscData;
+	private FogSettings menuFogSettings;
 
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
 			final WarsmashGdxMultiScreenGame screenManager, final SingleModelScreen menuScreen,
@@ -263,6 +267,27 @@ public class MenuUI {
 			catch (final IOException e) {
 				e.printStackTrace();
 			}
+		}
+		this.miscData = new DataTable(worldEditStrings);
+		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\MiscData.txt")) {
+			this.miscData.readTXT(miscDataTxtStream, true);
+		}
+		catch (final IOException e) {
+			e.printStackTrace();
+		}
+		final Element zFogElement = this.miscData.get("MenuZFog");
+		if (zFogElement != null) {
+			final int styleValue = zFogElement.getFieldAsInteger("Style", WarsmashConstants.GAME_VERSION) + 1;
+			menuFogSettings = new FogSettings();
+			menuFogSettings.setStyleByIndex(styleValue);
+			menuFogSettings.start = zFogElement.getFieldAsFloat("Start", WarsmashConstants.GAME_VERSION);
+			menuFogSettings.end = zFogElement.getFieldAsFloat("End", WarsmashConstants.GAME_VERSION);
+			menuFogSettings.density = zFogElement.getFieldAsFloat("Density", WarsmashConstants.GAME_VERSION);
+			final float a = zFogElement.getFieldAsFloat("Color", WarsmashConstants.GAME_VERSION * 4) / 255f;
+			final float r = zFogElement.getFieldAsFloat("Color", 1 + (WarsmashConstants.GAME_VERSION * 4)) / 255f;
+			final float g = zFogElement.getFieldAsFloat("Color", 2 + (WarsmashConstants.GAME_VERSION * 4)) / 255f;
+			final float b = zFogElement.getFieldAsFloat("Color", 3 + (WarsmashConstants.GAME_VERSION * 4)) / 255f;
+			menuFogSettings.color = new Color(r, g, b, a);
 		}
 
 		gamingNetworkConnection.addListener(new GamingNetworkServerToClientListener() {
@@ -756,6 +781,7 @@ public class MenuUI {
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, WarsmashConstants.GAME_VERSION),
 				this.uiViewport, this.uiScene, this.viewer, 0, WTS.DO_NOTHING);
 
+		this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), menuFogSettings);
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
 			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
@@ -1649,7 +1675,7 @@ public class MenuUI {
 				campaignScreenModel = loadingScreens.getField(key, 3);
 			}
 
-			this.menuScreen.setModel(null);
+			this.menuScreen.setModel(null, null);
 			this.rootFrame.setSpriteFrameModel(this.loadingBackground, campaignScreenModel);
 			this.loadingBackground.setSequence(animationSequenceIndex);
 			this.rootFrame.setSpriteFrameModel(this.loadingBar, this.rootFrame.getSkinField("LoadingProgressBar"));
@@ -1771,13 +1797,16 @@ public class MenuUI {
 	}
 
 	public void render(final SpriteBatch batch, final GlyphLayout glyphLayout) {
-		final BitmapFont font = this.rootFrame.getFont();
-		final BitmapFont font20 = this.rootFrame.getFont20();
-		font.setColor(Color.YELLOW);
-		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
-		glyphLayout.setText(font, fpsString);
-		font.draw(batch, fpsString, (getMinWorldWidth() - glyphLayout.width) / 2, 1100 * this.heightRatioCorrection);
-		this.rootFrame.render(batch, font20, glyphLayout);
+		if (!hideUI) {
+			final BitmapFont font = this.rootFrame.getFont();
+			final BitmapFont font20 = this.rootFrame.getFont20();
+			font.setColor(Color.YELLOW);
+			final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
+			glyphLayout.setText(font, fpsString);
+			font.draw(batch, fpsString, (getMinWorldWidth() - glyphLayout.width) / 2,
+					1100 * this.heightRatioCorrection);
+			this.rootFrame.render(batch, font20, glyphLayout);
+		}
 	}
 
 	private float getMinWorldWidth() {
@@ -1829,7 +1858,8 @@ public class MenuUI {
 									.getByAddress(this.beginGameInformation.hostInetAddress);
 							System.err.println("Connecting to address: " + byAddress);
 							warsmashClient = new WarsmashClient(byAddress, this.beginGameInformation.hostUdpPort,
-									this.loadingMap.viewer, this.beginGameInformation.sessionToken);
+									this.loadingMap.viewer, this.beginGameInformation.sessionToken,
+									this.beginGameInformation.serverSlotToMapSlot);
 						}
 						catch (final UnknownHostException e) {
 							throw new RuntimeException(e);
@@ -2064,7 +2094,7 @@ public class MenuUI {
 				this.glueScreenLoop.stop();
 				this.glueScreenLoop = this.mainMenuGlueScreenLoop;
 				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
-				this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"));
+				this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), menuFogSettings);
 				this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 				this.menuState = MenuState.GOING_TO_SINGLE_PLAYER;
 				break;
@@ -2099,7 +2129,8 @@ public class MenuUI {
 				final String currentCampaignBackgroundModel = getCurrentBackgroundModel();
 				final String currentCampaignAmbientSound = this.rootFrame
 						.trySkinField(this.currentCampaign.getAmbientSound());
-				this.menuScreen.setModel(currentCampaignBackgroundModel);
+				this.menuScreen.setModel(currentCampaignBackgroundModel,
+						this.currentCampaign.getBackgroundFogSettings());
 				this.glueScreenLoop.stop();
 				this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
 				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
@@ -2122,7 +2153,8 @@ public class MenuUI {
 				final String currentCampaignBackgroundModel = getCurrentBackgroundModel();
 				final String currentCampaignAmbientSound = this.rootFrame
 						.trySkinField(this.currentCampaign.getAmbientSound());
-				this.menuScreen.setModel(currentCampaignBackgroundModel);
+				this.menuScreen.setModel(currentCampaignBackgroundModel,
+						this.currentCampaign.getBackgroundFogSettings());
 				this.glueScreenLoop.stop();
 				this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
 				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
@@ -2399,6 +2431,10 @@ public class MenuUI {
 		if (this.focusUIFrame != null) {
 			this.focusUIFrame.keyTyped(character);
 		}
+		if ((character == 'z') && Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT)) {
+			this.hideUI = !this.hideUI;
+			this.uiScene.show = !this.uiScene.show;
+		}
 		return false;
 	}
 
@@ -2417,7 +2453,7 @@ public class MenuUI {
 			this.glueScreenLoop.stop();
 			this.glueScreenLoop = this.mainMenuGlueScreenLoop;
 			this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
-			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"));
+			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), menuFogSettings);
 			this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 			break;
 		case CAMPAIGN:
@@ -2425,7 +2461,7 @@ public class MenuUI {
 			final String currentCampaignBackgroundModel = getCurrentBackgroundModel();
 			final String currentCampaignAmbientSound = this.rootFrame
 					.trySkinField(this.currentCampaign.getAmbientSound());
-			this.menuScreen.setModel(currentCampaignBackgroundModel);
+			this.menuScreen.setModel(currentCampaignBackgroundModel, this.currentCampaign.getBackgroundFogSettings());
 			this.glueScreenLoop.stop();
 			this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
 			this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
@@ -2434,7 +2470,7 @@ public class MenuUI {
 			this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
 			break;
 		case BATTLE_NET_CUSTOM_GAME_LOBBY: {
-			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"));
+			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), menuFogSettings);
 			MenuUI.this.menuScreen.alternateModelToBattlenet();
 			this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 			requestEnterDefaultChat();

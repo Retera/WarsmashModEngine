@@ -211,12 +211,17 @@ public class GeometryEmitterFuncs {
 
 		shader.setUniformf("u_emitter", EMITTER_PARTICLE2);
 
+		shader.setUniformf("u_filterMode", emitterObject.filterModeForShader);
 		shader.setUniformf("u_lifeSpan", emitterObject.lifeSpan);
 		shader.setUniformf("u_timeMiddle", emitterObject.timeMiddle);
 		shader.setUniformf("u_columns", emitterObject.columns);
 		shader.setUniformf("u_rows", emitterObject.rows);
 		shader.setUniformf("u_teamColored", emitterObject.teamColored);
 		shader.setUniformi("u_unshaded", emitterObject.emitterUsesMdlOrUnshaded != 0 ? 1 : 0);
+		shader.setUniformi("u_unfogged", emitterObject.unfogged != 0 ? 1 : 0);
+		shader.setUniformf("u_fogColor", scene.fogSettings.color);
+		shader.setUniformf("u_fogParams", scene.fogSettings.style.ordinal(), scene.fogSettings.start,
+				scene.fogSettings.end, scene.fogSettings.density);
 
 		final W3xSceneLightManager lightManager = (W3xSceneLightManager) scene.getLightManager();
 		final DataTexture unitLightsTexture = lightManager.getUnitLightsTexture();
@@ -334,8 +339,9 @@ public class GeometryEmitterFuncs {
 			final float[] vertices = object.vertices;
 			final IVec3 normal = object.normal;
 
-			if (floatView.limit() < p0Offset + 11) {
-				System.err.println("FloatView has a limit of " + floatView.limit() + " which is not large enough. Aborting");
+			if (floatView.limit() < (p0Offset + 11)) {
+				System.err.println(
+						"FloatView has a limit of " + floatView.limit() + " which is not large enough. Aborting");
 				continue;
 			}
 			floatView.put(p0Offset + 0, vertices[0]);

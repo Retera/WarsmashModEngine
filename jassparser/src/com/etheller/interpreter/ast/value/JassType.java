@@ -20,4 +20,5 @@ public interface JassType {
 	public static final PrimitiveJassType BOOLEAN = new PrimitiveJassType("boolean", BooleanJassValue.FALSE);
 	public static final PrimitiveJassType NOTHING = new PrimitiveJassType("nothing",
 			JassReturnNothingStatement.RETURN_NOTHING_NOTICE);
+	public static final PrimitiveJassType DUMMY = new PrimitiveJassType("dummy", DummyJassValue.PAUSE_FOR_SLEEP);
 }

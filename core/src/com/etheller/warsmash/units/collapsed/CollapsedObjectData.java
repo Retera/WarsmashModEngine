@@ -17,12 +17,25 @@ public class CollapsedObjectData {
 	public static void apply(final WorldEditStrings worldEditStrings, final WorldEditorDataType worldEditorDataType,
 			final ObjectData sourceSLKData, final ObjectData sourceSLKMetaData,
 			final War3ObjectDataChangeset editorData) {
-		for (final Map.Entry<War3ID, ObjectDataChangeEntry> entry : editorData.getOriginal()) {
+		if (worldEditorDataType == WorldEditorDataType.ABILITIES) {
+			for (final String originalKey : sourceSLKData.keySet()) {
+				final GameObject originalObject = sourceSLKData.get(originalKey);
+				final String code = originalObject.getFieldAsString("code", 0);
+				if (code != null) {
+					final GameObject codeObject = sourceSLKData.get(code);
+					if (codeObject != null) {
+						sourceSLKData.inheritFrom(originalKey, code);
+					}
+				}
+			}
+		}
+		for (final Map.Entry<War3ID, ObjectDataChangeEntry> entry : editorData.getCustom()) {
 			final War3ID unitId = entry.getKey();
 			final ObjectDataChangeEntry unitChanges = entry.getValue();
 			final War3ID oldId = unitChanges.getOldId();
 			final War3ID newId = unitChanges.getNewId();
-			final String unitIdString = oldId.toString();
+			final String unitIdString = newId.toString();
+			sourceSLKData.cloneUnit(oldId.asStringValue(), newId.asStringValue());
 			final GameObject gameObject = sourceSLKData.get(unitIdString);
 			if (gameObject != null) {
 				for (final Map.Entry<War3ID, List<Change>> changeEntry : unitChanges.getChanges()) {
@@ -37,13 +50,12 @@ public class CollapsedObjectData {
 				}
 			}
 		}
-		for (final Map.Entry<War3ID, ObjectDataChangeEntry> entry : editorData.getCustom()) {
+		for (final Map.Entry<War3ID, ObjectDataChangeEntry> entry : editorData.getOriginal()) {
 			final War3ID unitId = entry.getKey();
 			final ObjectDataChangeEntry unitChanges = entry.getValue();
 			final War3ID oldId = unitChanges.getOldId();
 			final War3ID newId = unitChanges.getNewId();
-			final String unitIdString = newId.toString();
-			sourceSLKData.cloneUnit(oldId.asStringValue(), newId.asStringValue());
+			final String unitIdString = oldId.toString();
 			final GameObject gameObject = sourceSLKData.get(unitIdString);
 			if (gameObject != null) {
 				for (final Map.Entry<War3ID, List<Change>> changeEntry : unitChanges.getChanges()) {
@@ -179,10 +191,10 @@ public class CollapsedObjectData {
 				if (name.startsWith("\"") && name.endsWith("\"")) {
 					name = name.substring(1, name.length() - 1);
 				}
-				gameObject.setField("Profile", "Name", name);
+				gameObject.setField("Name", name);
 			}
 			if (suffix.startsWith("WESTRING")) {
-				gameObject.setField("Profile", "EditorSuffix", worldEditStrings.getString(suffix));
+				gameObject.setField("EditorSuffix", worldEditStrings.getString(suffix));
 			}
 		}
 	}

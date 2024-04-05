@@ -3,6 +3,7 @@ package com.etheller.interpreter.ast.value.visitor;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.DummyJassValue;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassType;
@@ -50,6 +51,11 @@ public class JassTypeGettingValueVisitor implements JassValueVisitor<JassType> {
 	@Override
 	public JassType accept(final HandleJassValue value) {
 		return value.getType();
+	}
+
+	@Override
+	public JassType accept(final DummyJassValue value) {
+		return JassType.DUMMY;
 	}
 
 }

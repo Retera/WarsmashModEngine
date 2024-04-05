@@ -99,6 +99,7 @@ public class CSimulation implements CPlayerAPI {
 	private final PathingGrid pathingGrid;
 	private final CWorldCollision worldCollision;
 	private final CPathfindingProcessor[] pathfindingProcessors;
+	private final int mapVersion;
 	private final CGameplayConstants gameplayConstants;
 	private final Random seededRandom;
 	private float currentGameDayTimeElapsed;
@@ -121,14 +122,15 @@ public class CSimulation implements CPlayerAPI {
 	private final Set<CDestructable> ownedTreeSet = new HashSet<>();
 	private GlobalScope globalScope;
 
-	public CSimulation(final War3MapConfig config, final DataTable miscData, final ObjectData parsedUnitData,
-			final ObjectData parsedItemData, final ObjectData parsedDestructableData,
+	public CSimulation(final War3MapConfig config, final int mapVersion, final DataTable miscData,
+			final ObjectData parsedUnitData, final ObjectData parsedItemData, final ObjectData parsedDestructableData,
 			final ObjectData parsedAbilityData, final ObjectData parsedUpgradeData,
 			final DataTable standardUpgradeEffectMeta, final SimulationRenderController simulationRenderController,
 			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
 			final CommandErrorListener commandErrorListener) {
+		this.mapVersion = mapVersion;
 		this.gameplayConstants = new CGameplayConstants(miscData);
-		CFogModifier.setConstants(gameplayConstants);
+		CFogModifier.setConstants(this.gameplayConstants);
 		this.simulationRenderController = simulationRenderController;
 		this.pathingGrid = pathingGrid;
 		this.abilityData = new CAbilityData(parsedAbilityData);
@@ -162,7 +164,8 @@ public class CSimulation implements CPlayerAPI {
 				final CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER
 						.get(seededRandom.nextInt(WarsmashConstants.RACE_MANAGER.getEntryCount()));
 				defaultRace = WarsmashConstants.RACE_MANAGER.getRace(raceEntry.getRaceId());
-			} else {
+			}
+			else {
 				for (int j = 0; j < WarsmashConstants.RACE_MANAGER.getEntryCount(); j++) {
 					final CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(j);
 					final CRace race = WarsmashConstants.RACE_MANAGER.getRace(entry.getRaceId());
@@ -298,11 +301,15 @@ public class CSimulation implements CPlayerAPI {
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		final CUnit createdUnit = this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
-		setupCreatedUnit(createdUnit);
-		createdUnit.performDefaultBehavior(this);
-		this.worldCollision.addUnit(createdUnit);
-		if (createdUnit.isHero()) {
-			heroCreateEvent(createdUnit);
+		if (createdUnit != null) {
+			setupCreatedUnit(createdUnit);
+			if (createdUnit.getCollisionRectangle() == null) {
+				this.worldCollision.addUnit(createdUnit);
+			} // else the unit was probably injected into collision before default behaviors
+			createdUnit.performDefaultBehavior(this);
+			if (createdUnit.isHero()) {
+				heroCreateEvent(createdUnit);
+			}
 		}
 		return createdUnit;
 	}
@@ -310,20 +317,23 @@ public class CSimulation implements CPlayerAPI {
 	public CUnit createUnitSimple(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		final CUnit newUnit = createUnit(typeId, playerIndex, x, y, facing);
-		final CPlayer player = getPlayer(playerIndex);
-		final CUnitType newUnitType = newUnit.getUnitType();
-		final int foodUsed = newUnitType.getFoodUsed();
-		newUnit.setFoodUsed(foodUsed);
-		player.setFoodUsed(player.getFoodUsed() + foodUsed);
-		if (newUnitType.getFoodMade() != 0) {
-			player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
-		}
-		player.addTechtreeUnlocked(this, typeId);
-		// nudge unit
-		newUnit.setPointAndCheckUnstuck(x, y, this);
-		if (!newUnit.isBuilding()) {
-			newUnit.getUnitAnimationListener().playAnimation(false, PrimaryTag.BIRTH, SequenceUtils.EMPTY, 1.0f, true);
-			newUnit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.EMPTY, true);
+		if (newUnit != null) {
+			final CPlayer player = getPlayer(playerIndex);
+			final CUnitType newUnitType = newUnit.getUnitType();
+			final int foodUsed = newUnitType.getFoodUsed();
+			newUnit.setFoodUsed(foodUsed);
+			player.setFoodUsed(player.getFoodUsed() + foodUsed);
+			if (newUnitType.getFoodMade() != 0) {
+				player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
+			}
+			player.addTechtreeUnlocked(this, typeId);
+			// nudge unit
+			newUnit.setPointAndCheckUnstuck(x, y, this);
+			if (!newUnit.isBuilding()) {
+				newUnit.getUnitAnimationListener().playAnimation(false, PrimaryTag.BIRTH, SequenceUtils.EMPTY, 1.0f,
+						true);
+				newUnit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.EMPTY, true);
+			}
 		}
 		return newUnit;
 	}
@@ -376,7 +386,8 @@ public class CSimulation implements CPlayerAPI {
 	public CCollisionProjectile createCollisionProjectile(final CUnit source, final War3ID spellAlias,
 			final float launchX, final float launchY, final float launchFacing, final float speed, final boolean homing,
 			final AbilityTarget target, final int maxHits, final int hitsPerTarget, final float startingRadius,
-			final float finalRadius, final float collisionInterval, final CAbilityCollisionProjectileListener projectileListener, boolean provideCounts) {
+			final float finalRadius, final float collisionInterval,
+			final CAbilityCollisionProjectileListener projectileListener, final boolean provideCounts) {
 		final CCollisionProjectile projectile = this.simulationRenderController.createCollisionProjectile(this, launchX,
 				launchY, launchFacing, speed, homing, source, spellAlias, target, maxHits, hitsPerTarget,
 				startingRadius, finalRadius, collisionInterval, projectileListener, provideCounts);
@@ -387,12 +398,14 @@ public class CSimulation implements CPlayerAPI {
 
 	public CPsuedoProjectile createPseudoProjectile(final CUnit source, final War3ID spellAlias,
 			final CEffectType effectType, final int effectArtIndex, final float launchX, final float launchY,
-			final float launchFacing, final float speed, final float projectileStepInterval, final int projectileArtSkip, final boolean homing,
-			final AbilityTarget target, final int maxHits, final int hitsPerTarget, final float startingRadius,
-			final float finalRadius, final CAbilityCollisionProjectileListener projectileListener, boolean provideCounts) {
+			final float launchFacing, final float speed, final float projectileStepInterval,
+			final int projectileArtSkip, final boolean homing, final AbilityTarget target, final int maxHits,
+			final int hitsPerTarget, final float startingRadius, final float finalRadius,
+			final CAbilityCollisionProjectileListener projectileListener, final boolean provideCounts) {
 		final CPsuedoProjectile projectile = this.simulationRenderController.createPseudoProjectile(this, launchX,
-				launchY, launchFacing, speed, projectileStepInterval, projectileArtSkip, homing, source, spellAlias, effectType,
-				effectArtIndex, target, maxHits, hitsPerTarget, startingRadius, finalRadius, projectileListener, provideCounts);
+				launchY, launchFacing, speed, projectileStepInterval, projectileArtSkip, homing, source, spellAlias,
+				effectType, effectArtIndex, target, maxHits, hitsPerTarget, startingRadius, finalRadius,
+				projectileListener, provideCounts);
 		this.newProjectiles.add(projectile);
 		projectileListener.onLaunch(this, projectile, target);
 		return projectile;
@@ -413,13 +426,13 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public SimulationRenderComponentLightning createAbilityLightning(final CUnit source, final War3ID lightningId,
-			int lightningIndex, final CUnit target) {
+			final int lightningIndex, final CUnit target) {
 		return this.simulationRenderController.createAbilityLightning(this, lightningId, source, target,
 				lightningIndex);
 	}
 
 	public SimulationRenderComponentLightning createAbilityLightning(final CUnit source, final War3ID lightningId,
-			int lightningIndex, final CUnit target, final Float duration) {
+			final int lightningIndex, final CUnit target, final Float duration) {
 		return this.simulationRenderController.createAbilityLightning(this, lightningId, source, target, lightningIndex,
 				duration);
 	}
@@ -526,6 +539,7 @@ public class CSimulation implements CPlayerAPI {
 		}
 		checkTimeOfDayEvents(timeOfDayBefore, timeOfDayAfter);
 
+		this.globalScope.runThreads();
 	}
 
 	public void removeUnit(final CUnit unit) {
@@ -688,7 +702,8 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.spawnTextTag(unit, type, amount);
 	}
 
-	public void spawnTextTag(final CUnit unit, final int playerIndex, final TextTagConfigType type, final String message) {
+	public void spawnTextTag(final CUnit unit, final int playerIndex, final TextTagConfigType type,
+			final String message) {
 		this.simulationRenderController.spawnTextTag(unit, type, message);
 	}
 
@@ -1009,8 +1024,9 @@ public class CSimulation implements CPlayerAPI {
 		final CUnitType unitTypeInstance = unit.getUnitType();
 		final int manaInitial = unitTypeInstance.getManaInitial();
 		final int speed = unitTypeInstance.getSpeed();
-		unitData.addDefaultAbilitiesToUnit(this, handleIdAllocator, unitTypeInstance, true, manaInitial, speed, unit);
-		unitData.applyPlayerUpgradesToUnit(this, unit.getPlayerIndex(), unitTypeInstance, unit);
+		this.unitData.addDefaultAbilitiesToUnit(this, this.handleIdAllocator, unitTypeInstance, true, manaInitial,
+				speed, unit);
+		this.unitData.applyPlayerUpgradesToUnit(this, unit.getPlayerIndex(), unitTypeInstance, unit);
 		final BufferedImage buildingPathingPixelMap = unitTypeInstance.getBuildingPathingPixelMap();
 		if (buildingPathingPixelMap != null) {
 			unit.regeneratePathingInstance(this, buildingPathingPixelMap);
@@ -1044,17 +1060,25 @@ public class CSimulation implements CPlayerAPI {
 	public GlobalScope getGlobalScope() {
 		return this.globalScope;
 	}
-	
-	public int getTerrainHeight(float x, float y) {
+
+	public int getTerrainHeight(final float x, final float y) {
 		return this.simulationRenderController.getTerrainHeight(x, y);
 	}
-	
-	public boolean isTerrainRomp(float x, float y) {
+
+	public boolean isTerrainRomp(final float x, final float y) {
 		return this.simulationRenderController.isTerrainRomp(x, y);
 	}
-	
-	public boolean isTerrainWater(float x, float y) {
+
+	public boolean isTerrainWater(final float x, final float y) {
 		return this.simulationRenderController.isTerrainWater(x, y);
+	}
+
+	public int getMapVersion() {
+		return this.mapVersion;
+	}
+
+	public boolean isMapReignOfChaos() {
+		return this.mapVersion <= 24;
 	}
 
 }

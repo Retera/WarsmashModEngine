@@ -19,4 +19,13 @@ public class NegateJassExpression implements JassExpression {
 		return this.expression.evaluate(globalScope, localScope, triggerScope)
 				.visit(NegateJassValueVisitor.getInstance());
 	}
+
+	@Override
+	public <T> T accept(final JassExpressionVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
+	public JassExpression getExpression() {
+		return this.expression;
+	}
 }

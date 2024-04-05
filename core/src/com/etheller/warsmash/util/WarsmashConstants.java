@@ -33,6 +33,7 @@ public class WarsmashConstants {
 	public static final String DEFAULT_STRING = "Default string";
 
 	public static boolean CATCH_CURSOR = false;
+	public static boolean FULL_SCREEN_MENU_BACKDROP = false;
 	public static final boolean VERBOSE_LOGGING = true;
 	public static final boolean ENABLE_DEBUG = false;
 	public static final char SPECIAL_ESCAPE_KEYCODE = 0x7E;
@@ -61,6 +62,9 @@ public class WarsmashConstants {
 		MAX_PLAYERS = emulatorConstants.getFieldValue("MaxPlayers");
 		GAME_VERSION = emulatorConstants.getFieldValue("GameVersion");
 		CATCH_CURSOR = emulatorConstants.getFieldValue("CatchCursor") == 1;
+		if (emulatorConstants.getField("FullScreenMenuBackdrop") != null) {
+			FULL_SCREEN_MENU_BACKDROP = emulatorConstants.getFieldValue("FullScreenMenuBackdrop") == 1;
+		}
 		FIX_FLAT_FILES_TILESET_LOADING = emulatorConstants.getFieldValue("FixFlatFilesTilesetLoading") == 1;
 		ENABLE_MUSIC = emulatorConstants.getFieldValue("EnableMusic") == 1;
 		LOAD_UNITS_FROM_WORLDEDIT_DATA = emulatorConstants.getFieldValue("LoadUnitsFromWorldEditData") == 1;

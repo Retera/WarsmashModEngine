@@ -51,7 +51,9 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 			unit.removeNonStackingFx(game, this.fx);
 		}
 		if (this.getAlias() != null) {
-			this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), artType);
+			if (artType != null) {
+				this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), artType);
+			}
 			this.sfx = game.unitSoundEffectEvent(unit, getAlias());
 			this.lsfx = game.unitLoopSoundEffectEvent(unit, getAlias());
 		}

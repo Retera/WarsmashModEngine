@@ -43,6 +43,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.listeners.CUnitAbilityEffectReactionListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityGoldMinable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityOverlayedMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityRoot;
@@ -75,7 +76,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.listeners.CUnitEffectReactionListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.listeners.CUnitAbilityProjReactionListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.listeners.CUnitAttackProjReactionListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
@@ -232,7 +234,9 @@ public class CUnit extends CWidget {
 	private final List<CUnitAttackDamageTakenListener> damageTakenListeners = new ArrayList<>();
 	private final Map<CUnitDeathReplacementEffectPriority, List<CUnitDeathReplacementEffect>> deathReplacementEffects = new HashMap<>();
 	private final List<CUnitAttackEvasionListener> evasionListeners = new ArrayList<>();
-	private final List<CUnitEffectReactionListener> reactionListeners = new ArrayList<>();
+	private final List<CUnitAttackProjReactionListener> attackProjReactionListeners = new ArrayList<>();
+	private final List<CUnitAbilityProjReactionListener> abilityProjReactionListeners = new ArrayList<>();
+	private final List<CUnitAbilityEffectReactionListener> abilityEffectReactionListeners = new ArrayList<>();
 
 	private transient Set<CRegion> containingRegions = new LinkedHashSet<>();
 	private transient Set<CRegion> priorContainingRegions = new LinkedHashSet<>();
@@ -2479,16 +2483,16 @@ public class CUnit extends CWidget {
 			final float bonusDamage) {
 		boolean miss = false;
 		if (isAttack) {
-			for (final CUnitAttackEvasionListener listener : evasionListeners) {
+			for (final CUnitAttackEvasionListener listener : new ArrayList<>(evasionListeners)) {
 				miss = miss || listener.onAttack(simulation, source, this, isAttack, isRanged, damageType);
 			}
 		}
 		return miss;
 	}
 
-	public boolean checkForReaction(final CSimulation simulation, final CUnit source, final CProjectile projectile) {
+	public boolean checkForAttackProjReaction(final CSimulation simulation, final CUnit source, final CAttackProjectile projectile) {
 		boolean allow = true;
-		for (final CUnitEffectReactionListener listener : reactionListeners) {
+		for (final CUnitAttackProjReactionListener listener : new ArrayList<>(attackProjReactionListeners)) {
 			if (allow) {
 				allow = allow && listener.onHit(simulation, source, this, projectile);
 			}
@@ -2496,11 +2500,21 @@ public class CUnit extends CWidget {
 		return allow;
 	}
 
-	public boolean checkForReaction(final CSimulation simulation, final CUnit source, final CAttackProjectile projectile) {
+	public boolean checkForAbilityProjReaction(final CSimulation simulation, final CUnit source, final CProjectile projectile) {
 		boolean allow = true;
-		for (final CUnitEffectReactionListener listener : reactionListeners) {
+		for (final CUnitAbilityProjReactionListener listener : new ArrayList<>(abilityProjReactionListeners)) {
 			if (allow) {
 				allow = allow && listener.onHit(simulation, source, this, projectile);
+			}
+		}
+		return allow;
+	}
+
+	public boolean checkForAbilityEffectReaction(final CSimulation simulation, final CUnit source, final CAbility ability) {
+		boolean allow = true;
+		for (final CUnitAbilityEffectReactionListener listener : new ArrayList<>(abilityEffectReactionListeners)) {
+			if (allow) {
+				allow = allow && listener.onHit(simulation, source, this, ability);
 			}
 		}
 		return allow;
@@ -2610,7 +2624,7 @@ public class CUnit extends CWidget {
 		CUnitDeathReplacementStacking allowContinue = new CUnitDeathReplacementStacking();
 		for (final CUnitDeathReplacementEffectPriority priority : CUnitDeathReplacementEffectPriority.values()) {
 			if (allowContinue.isAllowStacking()) {
-				for (final CUnitDeathReplacementEffect effect : deathReplacementEffects.get(priority)) {
+				for (final CUnitDeathReplacementEffect effect : new ArrayList<>(deathReplacementEffects.get(priority))) {
 					if (allowContinue.isAllowSamePriorityStacking()) {
 						allowContinue = effect.onDeath(simulation, this, source, result);
 					}
@@ -4805,12 +4819,28 @@ public class CUnit extends CWidget {
 		evasionListeners.remove(listener);
 	}
 
-	public void addReactionListener(final CUnitEffectReactionListener listener) {
-		reactionListeners.add(0, listener);
+	public void addAttackProjReactionListener(final CUnitAttackProjReactionListener listener) {
+		this.attackProjReactionListeners.add(0, listener);
 	}
 
-	public void removeReactionListener(final CUnitEffectReactionListener listener) {
-		reactionListeners.remove(listener);
+	public void removeAttackProjReactionListener(final CUnitAttackProjReactionListener listener) {
+		this.attackProjReactionListeners.remove(listener);
+	}
+
+	public void addAbilityProjReactionListener(final CUnitAbilityProjReactionListener listener) {
+		this.abilityProjReactionListeners.add(0, listener);
+	}
+
+	public void removeAbilityProjReactionListener(final CUnitAbilityProjReactionListener listener) {
+		this.abilityProjReactionListeners.remove(listener);
+	}
+
+	public void addAbilityEffectReactionListener(final CUnitAbilityEffectReactionListener listener) {
+		this.abilityEffectReactionListeners.add(0, listener);
+	}
+
+	public void removeAbilityEffectReactionListener(final CUnitAbilityEffectReactionListener listener) {
+		this.abilityEffectReactionListeners.remove(listener);
 	}
 
 	public void beginCooldown(final CSimulation game, final War3ID abilityId, final float cooldownDuration) {

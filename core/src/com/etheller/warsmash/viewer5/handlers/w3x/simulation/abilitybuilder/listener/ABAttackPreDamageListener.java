@@ -22,16 +22,16 @@ public class ABAttackPreDamageListener implements CUnitAttackPreDamageListener {
 	
 	private int triggerId = 0;
 	
-	public ABAttackPreDamageListener(Map<String, Object> localStore, List<ABAction> actions) {
+	public ABAttackPreDamageListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
 		this.localStore = localStore;
 		this.actions = actions;
+		this.triggerId = castId;
 	}
 	
 	@Override
 	public CUnitAttackEffectListenerStacking onAttack(CSimulation simulation, CUnit attacker, AbilityTarget target,
 			CWeaponType weaponType, CAttackType attackType, CDamageType damageType,
 			CUnitAttackPreDamageListenerDamageModResult damageResult) {
-		this.triggerId++;
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
 		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
 		localStore.put(ABLocalStoreKeys.WEAPONTYPE+triggerId, weaponType);

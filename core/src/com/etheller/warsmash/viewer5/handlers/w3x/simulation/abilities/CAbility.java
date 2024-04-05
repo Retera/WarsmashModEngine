@@ -49,4 +49,6 @@ public interface CAbility extends CAbilityView {
 
 	void setItemAbility(CItem item, int slot);
 
+	CItem getItem();
+
 }

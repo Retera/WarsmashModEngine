@@ -25,8 +25,12 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		this.onBuffAdd(game, unit);
-		final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
-		expireTick = durationTicks;
+		if (this.duration == 0) {
+			expireTick = Integer.MAX_VALUE;
+		} else {
+			final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
+			expireTick = durationTicks;
+		}
 	}
 
 	protected abstract void onBuffAdd(CSimulation game, CUnit unit);

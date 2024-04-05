@@ -23,6 +23,7 @@ public class ABActionCreateTimedBuff implements ABAction {
 	private List<ABAction> onExpireActions;
 	private ABBooleanCallback showIcon;
 	private CEffectType artType;
+	private ABBooleanCallback hideArt;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
@@ -39,6 +40,9 @@ public class ABActionCreateTimedBuff implements ABAction {
 			if (artType != null) {
 				ability.setArtType(artType);
 			}
+			if (hideArt != null && hideArt.callback(game, caster, localStore, castId)) {
+				ability.setArtType(null);
+			}
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		} else {
 			ABTimedBuff ability = new ABTimedBuff(game.getHandleIdAllocator().createId(),
@@ -47,6 +51,9 @@ public class ABActionCreateTimedBuff implements ABAction {
 					onRemoveActions, onExpireActions, castId);
 			if (artType != null) {
 				ability.setArtType(artType);
+			}
+			if (hideArt != null && hideArt.callback(game, caster, localStore, castId)) {
+				ability.setArtType(null);
 			}
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		}

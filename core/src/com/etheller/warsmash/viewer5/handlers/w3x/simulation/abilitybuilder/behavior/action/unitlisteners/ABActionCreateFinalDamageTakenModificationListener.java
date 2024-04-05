@@ -15,7 +15,7 @@ public class ABActionCreateFinalDamageTakenModificationListener implements ABAct
 	private List<ABAction> actions;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		ABFinalDamageTakenModificationListener listener = new ABFinalDamageTakenModificationListener(localStore, actions);
+		ABFinalDamageTakenModificationListener listener = new ABFinalDamageTakenModificationListener(localStore, actions, castId);
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDFDTML, listener);
 	}

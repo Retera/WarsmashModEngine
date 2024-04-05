@@ -22,10 +22,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.inventory
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.inventory.CBehaviorGetItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.inventory.CBehaviorGiveItemToHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityInventory extends AbstractGenericNoIconAbility {
@@ -437,8 +440,27 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 							hero.add(simulation, abilityFromItem);
 							if (abilityFromItem instanceof SingleOrderAbility) {
 								final int baseOrderId = ((SingleOrderAbility) abilityFromItem).getBaseOrderId();
-								hero.order(simulation,
-										new COrderNoTarget(abilityFromItem.getHandleId(), baseOrderId, false), false);
+
+								final BooleanAbilityTargetCheckReceiver<CWidget> booleanUnitTargetReceiver = BooleanAbilityTargetCheckReceiver
+										.<CWidget>getInstance().reset();
+								abilityFromItem.checkCanTarget(simulation, hero, baseOrderId, hero, booleanUnitTargetReceiver);
+								if (booleanUnitTargetReceiver.isTargetable()) {
+									hero.order(simulation,
+											new COrderTargetWidget(abilityFromItem.getHandleId(), baseOrderId, hero.getHandleId(), false), false);
+									
+								} else {
+									final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+											.<AbilityPointTarget>getInstance().reset();
+									AbilityPointTarget tar = new AbilityPointTarget(hero.getX(), hero.getY());
+									abilityFromItem.checkCanTarget(simulation, hero, baseOrderId, tar, booleanTargetReceiver);
+									
+									if (booleanTargetReceiver.isTargetable()) {hero.order(simulation,
+										new COrderTargetPoint(abilityFromItem.getHandleId(), baseOrderId, tar, false), false);
+									} else {
+										hero.order(simulation,
+												new COrderNoTarget(abilityFromItem.getHandleId(), baseOrderId, false), false);
+									}
+								}
 							}
 							addedAbilities.add(abilityFromItem);
 						}

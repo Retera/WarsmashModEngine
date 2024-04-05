@@ -17,14 +17,14 @@ public class ABAttackPostDamageListener implements CUnitAttackPostDamageListener
 	
 	private int triggerId = 0;
 	
-	public ABAttackPostDamageListener(Map<String, Object> localStore, List<ABAction> actions) {
+	public ABAttackPostDamageListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
 		this.localStore = localStore;
 		this.actions = actions;
+		this.triggerId = castId;
 	}
 	
 	@Override
 	public void onHit(CSimulation simulation, CUnit attacker, AbilityTarget target, float damage) {
-		this.triggerId++;
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
 		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
 		localStore.put(ABLocalStoreKeys.TOTALDAMAGEDEALT+triggerId, damage);

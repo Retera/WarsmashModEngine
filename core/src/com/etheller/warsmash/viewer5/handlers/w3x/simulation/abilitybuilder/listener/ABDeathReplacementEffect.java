@@ -18,15 +18,15 @@ public class ABDeathReplacementEffect implements CUnitDeathReplacementEffect {
 	
 	private int triggerId = 0;
 	
-	public ABDeathReplacementEffect(Map<String, Object> localStore, List<ABAction> actions) {
+	public ABDeathReplacementEffect(Map<String, Object> localStore, List<ABAction> actions, int castId) {
 		this.localStore = localStore;
 		this.actions = actions;
+		this.triggerId = castId;
 	}
 
 	@Override
 	public CUnitDeathReplacementStacking onDeath(CSimulation simulation, CUnit unit, CUnit killer,
 			CUnitDeathReplacementResult result) {
-		this.triggerId++;
 		localStore.put(ABLocalStoreKeys.KILLINGUNIT+triggerId, killer);
 		localStore.put(ABLocalStoreKeys.DYINGUNIT+triggerId, unit);
 		localStore.put(ABLocalStoreKeys.DEATHRESULT+triggerId, result);

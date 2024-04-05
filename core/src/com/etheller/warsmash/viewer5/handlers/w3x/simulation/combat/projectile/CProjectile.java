@@ -4,20 +4,18 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 
 public abstract class CProjectile implements CEffect {
 	protected float x;
 	protected float y;
-	private final float initialTargetX;
-	private final float initialTargetY;
+	private float initialTargetX;
+	private float initialTargetY;
 	private final float speed;
-	private final AbilityTarget target;
+	private AbilityTarget target;
 	private boolean homingEnabled;
 	protected boolean done;
 	private final CUnit source;
+	private boolean reflected = false;
 
 	public CProjectile(final float x, final float y, final float speed, final AbilityTarget target, boolean homingEnabled,
 			final CUnit source) {
@@ -84,9 +82,19 @@ public abstract class CProjectile implements CEffect {
 	public final AbilityTarget getTarget() {
 		return this.target;
 	}
+	
+	public void setTarget(AbilityTarget target) {
+		this.target = target;
+		this.initialTargetX = target.getX();
+		this.initialTargetY = target.getY();
+	}
 
 	public final boolean isDone() {
 		return this.done;
+	}
+	
+	public void setDone(boolean done) {
+		this.done = done;
 	}
 
 	public final float getTargetX() {
@@ -105,5 +113,13 @@ public abstract class CProjectile implements CEffect {
 		else {
 			return this.initialTargetY;
 		}
+	}
+
+	public boolean isReflected() {
+		return reflected;
+	}
+
+	public void setReflected(boolean reflected) {
+		this.reflected = reflected;
 	}
 }

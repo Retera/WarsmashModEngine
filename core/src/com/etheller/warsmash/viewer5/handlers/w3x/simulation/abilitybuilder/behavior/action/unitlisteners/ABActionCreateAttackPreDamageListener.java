@@ -15,7 +15,7 @@ public class ABActionCreateAttackPreDamageListener implements ABAction {
 	private List<ABAction> actions;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		ABAttackPreDamageListener listener = new ABAttackPreDamageListener(localStore, actions);
+		ABAttackPreDamageListener listener = new ABAttackPreDamageListener(localStore, actions, castId);
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDAPrDL, listener);
 	}

@@ -17,15 +17,15 @@ public class ABAttackEvasionListener implements CUnitAttackEvasionListener {
 	
 	private int triggerId = 0;
 	
-	public ABAttackEvasionListener(Map<String, Object> localStore, List<ABCondition> conditions) {
+	public ABAttackEvasionListener(Map<String, Object> localStore, List<ABCondition> conditions, int castId) {
 		this.localStore = localStore;
 		this.conditions = conditions;
+		this.triggerId = castId;
 	}
 	
 	@Override
 	public boolean onAttack(CSimulation simulation, CUnit attacker, CUnit target, boolean isAttack, boolean isRanged,
 			CDamageType damageType) {
-		this.triggerId++;
 		boolean evade = false;
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
 		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);

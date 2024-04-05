@@ -15,7 +15,7 @@ public class ABActionCreateDamageTakenListener implements ABAction {
 	private List<ABAction> actions;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		ABDamageTakenListener listener = new ABDamageTakenListener(localStore, actions);
+		ABDamageTakenListener listener = new ABDamageTakenListener(localStore, actions, castId);
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDDTL, listener);
 	}

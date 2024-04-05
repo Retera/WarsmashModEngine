@@ -578,170 +578,176 @@
 				"type": "isFlexAbilityTargeted"
 			},
 			"thenActions": [{
-					"type": "createTimedTickingPausedBuff",
-					"buffId": {
-						"type": "getFirstBuffId"
-					},
-					"duration": {
-						"type": "getAbilityDuration",
+				"type": "checkAbilityEffectReaction",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"onHitActions": [{
+						"type": "createTimedTickingPausedBuff",
+						"buffId": {
+							"type": "getFirstBuffId"
+						},
+						"duration": {
+							"type": "getAbilityDuration",
+							"target": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"onAddActions": [{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "hpPerSec"
+								},
+								"valueToStore": {
+									"type": "f/",
+									"value1": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "A"
+									},
+									"value2": {
+										"type": "getAbilityDuration",
+										"target": {
+											"type": "getBuffedUnit"
+										}
+									}
+								}
+							},{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "mpPerSec"
+								},
+								"valueToStore": {
+									"type": "f/",
+									"value1": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "B"
+									},
+									"value2": {
+										"type": "getAbilityDuration",
+										"target": {
+											"type": "getBuffedUnit"
+										}
+									}
+								}
+						}],
+						"onTickActions": [{
+								"type": "periodicExecute",
+								"periodicActions": [{
+										"type": "heal",
+										"target": {
+											"type": "getBuffedUnit"
+										},
+										"amount": {
+											"type": "getStoredFloatByKey",
+											"key": {
+												"type": "rawString",
+												"value": "hpPerSec"
+											}
+										}
+									},{
+										"type": "addMp",
+										"target": {
+											"type": "getBuffedUnit"
+										},
+										"amount": {
+											"type": "getStoredFloatByKey",
+											"key": {
+												"type": "rawString",
+												"value": "mpPerSec"
+											}
+										}
+								}],
+								"delaySeconds": {
+									"type": "rawFloat",
+									"value": 1
+								},
+								"unique": {
+									"type": "getUnitHandleAsString",
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+								}
+						}],
+						"onRemoveActions": [{
+							"type": "cleanUpCastInstance"
+						}]
+					},{
+						"type": "addNonStackingDisplayBuff",
 						"target": {
 							"type": "getAbilityTargetedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						},
+						"key": {
+							"type": "getCodeAsString"
 						}
-					},
-					"onAddActions": [{
-							"type": "storeValueLocally",
-							"key": {
-								"type": "rawString",
-								"value": "hpPerSec"
-							},
-							"valueToStore": {
-								"type": "f/",
-								"value1": {
-									"type": "getAbilityDataAsFloat",
-									"dataField": "A"
-								},
-								"value2": {
-									"type": "getAbilityDuration",
-									"target": {
-										"type": "getBuffedUnit"
-									}
-								}
-							}
-						},{
-							"type": "storeValueLocally",
-							"key": {
-								"type": "rawString",
-								"value": "mpPerSec"
-							},
-							"valueToStore": {
-								"type": "f/",
-								"value1": {
-									"type": "getAbilityDataAsFloat",
-									"dataField": "B"
-								},
-								"value2": {
-									"type": "getAbilityDuration",
-									"target": {
-										"type": "getBuffedUnit"
-									}
-								}
-							}
-					}],
-					"onTickActions": [{
-							"type": "periodicExecute",
-							"periodicActions": [{
-									"type": "heal",
-									"target": {
-										"type": "getBuffedUnit"
-									},
-									"amount": {
-										"type": "getStoredFloatByKey",
-										"key": {
-											"type": "rawString",
-											"value": "hpPerSec"
-										}
-									}
-								},{
-									"type": "addMp",
-									"target": {
-										"type": "getBuffedUnit"
-									},
-									"amount": {
-										"type": "getStoredFloatByKey",
-										"key": {
-											"type": "rawString",
-											"value": "mpPerSec"
-										}
-									}
-							}],
-							"delaySeconds": {
-								"type": "rawFloat",
-								"value": 1
-							},
-							"unique": {
-								"type": "getUnitHandleAsString",
-								"unit": {
-									"type": "getBuffedUnit"
-								}
-							}
-					}],
-					"onRemoveActions": [{
-						"type": "cleanUpCastInstance"
-					}]
-				},{
-					"type": "addNonStackingDisplayBuff",
-					"target": {
-						"type": "getAbilityTargetedUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedBuff"
-					},
-					"key": {
-						"type": "getCodeAsString"
-					}
-				},{
-					"type": "storeValueLocally",
-					"key": {
-						"type": "rawString",
-						"value": "regenBuff"
-					},
-					"valueToStore": {
-						"type": "getLastCreatedBuff"
-					}
-				},{
-					"type": "if",
-					"condition": {
-						"type": "bool",
-						"bool": {
-							"type": "getAbilityDataAsBoolean",
-							"dataField": "E"
+					},{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "regenBuff"
+						},
+						"valueToStore": {
+							"type": "getLastCreatedBuff"
 						}
-					},
-					"thenActions": [{
-							"type": "createDamageTakenListener",
-							"actions": [{
-									"type": "removeDamageTakenListener",
-									"targetUnit": {
-										"type": "getListenerUnit"
-									},
-									"listener": {
-										"type": "getStoredDamageTakenListenerByKey",
-										"key": {
-											"type": "rawString",
-											"value": "breakHeal"
-										}
-									}
-								
-								},{
-									"type": "removeBuff",
-									"target": {
-										"type": "getListenerUnit"
-									},
-									"buff": {
-										"type": "getStoredBuffByKey",
-										"key": {
-											"type": "rawString",
-											"value": "regenBuff"
-										}
-									}
-							}]
-						},{
-							"type": "addDamageTakenListener",
-							"targetUnit": {
-								"type": "getAbilityTargetedUnit"
-							},
-							"listener": {
-								"type": "getLastCreatedDamageTakenListener"
+					},{
+						"type": "if",
+						"condition": {
+							"type": "bool",
+							"bool": {
+								"type": "getAbilityDataAsBoolean",
+								"dataField": "E"
 							}
-						},{
-							"type": "storeValueLocally",
-							"key": {
-								"type": "rawString",
-								"value": "breakHeal"
-							},
-							"valueToStore": {
-								"type": "getLastCreatedDamageTakenListener"
-							}
+						},
+						"thenActions": [{
+								"type": "createDamageTakenListener",
+								"actions": [{
+										"type": "removeDamageTakenListener",
+										"targetUnit": {
+											"type": "getListenerUnit"
+										},
+										"listener": {
+											"type": "getStoredDamageTakenListenerByKey",
+											"key": {
+												"type": "rawString",
+												"value": "breakHeal"
+											}
+										}
+									
+									},{
+										"type": "removeBuff",
+										"target": {
+											"type": "getListenerUnit"
+										},
+										"buff": {
+											"type": "getStoredBuffByKey",
+											"key": {
+												"type": "rawString",
+												"value": "regenBuff"
+											}
+										}
+								}]
+							},{
+								"type": "addDamageTakenListener",
+								"targetUnit": {
+									"type": "getAbilityTargetedUnit"
+								},
+								"listener": {
+									"type": "getLastCreatedDamageTakenListener"
+								}
+							},{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "breakHeal"
+								},
+								"valueToStore": {
+									"type": "getLastCreatedDamageTakenListener"
+								}
+						}]
 					}],
 					"elseActions": []
 			}],
@@ -1568,97 +1574,103 @@
 				}
 		}],
 		"onEndCasting": [{
-				"type": "createTimedBuff",
-				"buffId": {
-					"type": "getFirstBuffId"
-				},
-				"duration": {
-					"type": "getAbilityDuration",
-					"target": {
-						"type": "getAbilityTargetedUnit"
-					}
-				},
-				"onAddActions": [{
-						"type": "addNonStackingStatBuff",
-						"targetUnit": {
-							"type": "getBuffedUnit"
-						},
-						"buff": {
-							"type": "getStoredNonStackingStatBuffByKey",
-							"instanceValue": {
-								"type": "rawBoolean",
-								"value": "false"
-							},
-							"key": {
-								"type": "rawString",
-								"value": "defbuff"
-							}
+			"type": "checkAbilityEffectReaction",
+			"target": {
+				"type": "getAbilityTargetedUnit"
+			},
+			"onHitActions": [{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityDuration",
+						"target": {
+							"type": "getAbilityTargetedUnit"
 						}
-					},{
-						"type": "createUnitVisionModifier",
-						"unit": {
-							"type": "getBuffedUnit"
-						},
-						"player": {
-							"type": "getOwnerOfUnit",
+					},
+					"onAddActions": [{
+							"type": "addNonStackingStatBuff",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"buff": {
+								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
+								"key": {
+									"type": "rawString",
+									"value": "defbuff"
+								}
+							}
+						},{
+							"type": "createUnitVisionModifier",
 							"unit": {
-								"type": "getBuffCastingUnit"
-							}
-						},
-						"alwaysNightVision": {
-							"type": "rawBoolean",
-							"value": "true"
-						}
-					},{
-						"type": "storeValueLocally",
-						"key": {
-							"type": "rawString",
-							"value": "vision"
-						},
-						"valueToStore": {
-							"type": "getLastCreatedVisionModifier"
-						}
-				}],
-				"onRemoveActions": [{
-						"type": "removeNonStackingStatBuff",
-						"targetUnit": {
-							"type": "getBuffedUnit"
-						},
-						"buff": {
-							"type": "getStoredNonStackingStatBuffByKey",
-							"instanceValue": {
-								"type": "rawBoolean",
-								"value": "false"
+								"type": "getBuffedUnit"
 							},
-							"key": {
-								"type": "rawString",
-								"value": "defbuff"
+							"player": {
+								"type": "getOwnerOfUnit",
+								"unit": {
+									"type": "getBuffCastingUnit"
+								}
+							},
+							"alwaysNightVision": {
+								"type": "rawBoolean",
+								"value": "true"
 							}
-						}
-					},{
-						"type": "removeVisionModifier",
-						"modifier": {
-							"type": "getStoredVisionModifierByKey",
+						},{
+							"type": "storeValueLocally",
 							"key": {
 								"type": "rawString",
 								"value": "vision"
+							},
+							"valueToStore": {
+								"type": "getLastCreatedVisionModifier"
 							}
-						},
-						"player": {
-							"type": "getOwnerOfUnit",
-							"unit": {
-								"type": "getBuffCastingUnit"
+					}],
+					"onRemoveActions": [{
+							"type": "removeNonStackingStatBuff",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"buff": {
+								"type": "getStoredNonStackingStatBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
+								"key": {
+									"type": "rawString",
+									"value": "defbuff"
+								}
 							}
-						}
-				}]
-			},{
-				"type": "addBuff",
-				"target": {
-					"type": "getAbilityTargetedUnit"
-				},
-				"buff": {
-					"type": "getLastCreatedBuff"
-				}
+						},{
+							"type": "removeVisionModifier",
+							"modifier": {
+								"type": "getStoredVisionModifierByKey",
+								"key": {
+									"type": "rawString",
+									"value": "vision"
+								}
+							},
+							"player": {
+								"type": "getOwnerOfUnit",
+								"unit": {
+									"type": "getBuffCastingUnit"
+								}
+							}
+					}]
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+			}]
 		}],
 		"onLevelChange": [{
 			"type": "updateNonStackingStatBuff",

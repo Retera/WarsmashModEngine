@@ -95,8 +95,9 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	public CBehavior update(final CSimulation game, boolean withinFacingWindow) {
 		boolean wasChanneling = this.channeling;
 		if (this.castStartTick == 0) {
+			CBehavior prevBeh = this.unit.getCurrentBehavior();
 			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this.ability, this.target);
-			if (this.unit.getCurrentBehavior() != this) {
+			if (this.unit.getCurrentBehavior() != prevBeh) {
 				return this.unit.getCurrentBehavior();
 			} else if (this.unit.isPaused()) {
 				return this;
@@ -183,15 +184,16 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	private CBehavior tryDoEffect(CSimulation game, boolean wasChanneling) {
 		boolean wasEffectDone = this.doneEffect;
 		if (!wasEffectDone) {
+			CBehavior prevBeh = this.unit.getCurrentBehavior();
 			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, this.ability, this.target);
-			if (this.unit.getCurrentBehavior() != this) {
+			if (this.unit.getCurrentBehavior() != prevBeh) {
 				return this.unit.getCurrentBehavior();
 			} else if (this.unit.isPaused()) {
 				return this;
 			}
 			if (this.channeling) {
 				this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this.ability, this.target);
-				if (this.unit.getCurrentBehavior() != this) {
+				if (this.unit.getCurrentBehavior() != prevBeh) {
 					return this.unit.getCurrentBehavior();
 				} else if (this.unit.isPaused()) {
 					return this;

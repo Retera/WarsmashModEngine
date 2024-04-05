@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.projectile.ABCollisionProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
 public class ABActionCreateUnitTargetedCollisionProjectile implements ABAction {
 
@@ -103,8 +104,10 @@ public class ABActionCreateUnitTargetedCollisionProjectile implements ABAction {
 
 		ABCollisionProjectileListener listener = new ABCollisionProjectileListener(onLaunch, onPreHits, canHitTarget, onHit, caster, localStore, castId);
 
-		game.createCollisionProjectile(theSource, id.callback(game, caster, localStore, castId), sourceLocation.getX(),
+		CProjectile proj = game.createCollisionProjectile(theSource, id.callback(game, caster, localStore, castId), sourceLocation.getX(),
 				sourceLocation.getY(), (float) theSource.angleTo(theTarget), theSpeed, isHoming, theTarget, theMaxHits,
 				theHitsPerTarget, theStartingRadius, theEndingRadius, theCollisionInterval, listener, isProvideCounts);
+
+		localStore.put(ABLocalStoreKeys.LASTCREATEDPROJECTILE+castId, proj);
 	}
 }

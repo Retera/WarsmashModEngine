@@ -5,7 +5,6 @@ import java.util.Map;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.listener.ABDamageTakenModificationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.listener.ABFinalDamageTakenModificationListener;
 
 public abstract class ABFinalDamageTakenModificationListenerCallback implements ABCallback {

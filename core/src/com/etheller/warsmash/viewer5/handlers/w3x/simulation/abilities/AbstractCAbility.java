@@ -73,6 +73,12 @@ public abstract class AbstractCAbility implements CAbility {
 	}
 
 	@Override
+	public CItem getItem() {
+		//do nothing
+		return null;
+	}
+
+	@Override
 	public final void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		if (this.isDisabled()) {

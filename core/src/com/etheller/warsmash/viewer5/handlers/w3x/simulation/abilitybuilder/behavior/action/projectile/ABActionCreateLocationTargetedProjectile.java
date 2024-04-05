@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.projectile.ABProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
 public class ABActionCreateLocationTargetedProjectile implements ABAction {
 
@@ -59,7 +60,9 @@ public class ABActionCreateLocationTargetedProjectile implements ABAction {
 
 		CAbilityProjectileListener listener = new ABProjectileListener(onLaunch, onHit, caster, localStore, castId);
 
-		game.createProjectile(theSource, id.callback(game, caster, localStore, castId), sourceLocation.getX(),
+		CProjectile proj = game.createProjectile(theSource, id.callback(game, caster, localStore, castId), sourceLocation.getX(),
 				sourceLocation.getY(), (float) theSource.angleTo(theTarget), theSpeed, isHoming, theTarget, listener);
+		
+		localStore.put(ABLocalStoreKeys.LASTCREATEDPROJECTILE+castId, proj);
 	}
 }

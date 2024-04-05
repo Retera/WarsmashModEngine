@@ -3,15 +3,16 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.lis
 public enum CUnitAttackPreDamageListenerPriority {
 	WINDWALK(0),
 	ACCURACY(1),
-	CRITBASH(2),
-	MASKPLUS(3),
-	ORBSLOT1(4),
-	ORBSLOT2(5),
-	ORBSLOT3(6),
-	ORBSLOT4(7),
-	ORBSLOT5(8),
-	ORBSLOT6(9),
-	FEEDBACK(10);
+	STACKING(2),
+	CRITBASH(3),
+	MASKPLUS(4),
+	ORBSLOT1(5),
+	ORBSLOT2(6),
+	ORBSLOT3(7),
+	ORBSLOT4(8),
+	ORBSLOT5(9),
+	ORBSLOT6(10),
+	FEEDBACK(11);
 
 	private int priority;
 	

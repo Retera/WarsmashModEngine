@@ -19,16 +19,16 @@ public class ABDamageTakenModificationListener implements CUnitAttackDamageTaken
 	
 	private int triggerId = 0;
 	
-	public ABDamageTakenModificationListener(Map<String, Object> localStore, List<ABAction> actions) {
+	public ABDamageTakenModificationListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
 		this.localStore = localStore;
 		this.actions = actions;
+		this.triggerId = castId;
 	}
 	
 	@Override
 	public CUnitAttackDamageTakenModificationListenerDamageModResult onDamage(CSimulation simulation, CUnit attacker,
 			CUnit target, boolean isAttack, boolean isRanged, CAttackType attackType, CDamageType damageType,
 			CUnitAttackDamageTakenModificationListenerDamageModResult previousDamage) {
-		this.triggerId++;
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
 		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
 		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, isAttack);

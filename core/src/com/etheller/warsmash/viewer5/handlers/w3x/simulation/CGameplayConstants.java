@@ -42,6 +42,8 @@ public class CGameplayConstants {
 	private final boolean magicImmuneResistsLeech;
 	private final boolean magicImmuneResistsThorns;
 	private final boolean magicImmuneResistsUltimates;
+	
+	private final boolean defendDeflection;
 
 	private final int heroMaxReviveCostGold;
 	private final int heroMaxReviveCostLumber;
@@ -212,6 +214,8 @@ public class CGameplayConstants {
 		this.magicImmuneResistsLeech = miscData.getFieldValue("MagicImmunesResistLeech") != 0;
 		this.magicImmuneResistsThorns = miscData.getFieldValue("MagicImmunesResistThorns") != 0;
 		this.magicImmuneResistsUltimates = miscData.getFieldValue("MagicImmunesResistUltimates") != 0;
+		
+		this.defendDeflection = miscData.getFieldValue("DefendDeflection") != 0;
 
 		this.globalExperience = miscData.getFieldValue("GlobalExperience") != 0;
 		this.maxLevelHeroesDrainExp = miscData.getFieldValue("MaxLevelHeroesDrainExp") != 0;
@@ -414,6 +418,9 @@ public class CGameplayConstants {
 
 	public boolean isMagicImmuneResistsUltimates() {
 		return magicImmuneResistsUltimates;
+	}
+	public boolean isDefendDeflection() {
+		return defendDeflection;
 	}
 
 	public boolean isGlobalExperience() {

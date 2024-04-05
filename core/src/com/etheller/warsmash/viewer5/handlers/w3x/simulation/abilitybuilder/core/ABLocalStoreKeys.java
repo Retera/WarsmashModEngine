@@ -93,6 +93,7 @@ public class ABLocalStoreKeys {
 	
 	//Projectiles
 	public static final String LASTCREATEDPROJECTILE = "_lastCreatedProjectile";
+	public static final String THISPROJECTILE = "_thisProjectile#";
 	public static final String PROJECTILEUNITTARGETS = "_projUnitTargets#";
 	public static final String PROJECTILEDESTTARGETS = "_projDestTargets#";
 	public static final String PROJECTILECURRENTLOC = "_projCurrentLoc#";
@@ -148,6 +149,18 @@ public class ABLocalStoreKeys {
 	public static final String DYINGUNIT = "_dyingUnit#";
 	public static final String DEATHRESULT = "_deathResult#";
 	public static final String DEATHSTACKING = "_deathStacking#";
+	
+	// Reaction Names
+	public static final String LASTCREATEDAtkPRL = "_lastCreatedAtkPRL";
+	public static final String LASTCREATEDAbPRL = "_lastCreatedAbPRL";
+	public static final String LASTCREATEDAbERL = "_lastCreatedAbERL";
+	public static final String REACTIONALLOWHIT = "_reactionAllowHit#";
+	public static final String ATTACKPROJ = "_attackProj#";
+	public static final String ABILITYPROJ = "_abilityProj#";
+	public static final String REACTIONABILITY = "_reactionAbility#";
+	public static final String REACTIONABILITYCASTER = "_reactionAbilityCaster#";
+	public static final String REACTIONABILITYTARGET = "_reactionAbilityTarget#";
+	
 	
 	public static String combineKey(String key, int castId) {
 		return key + castId;

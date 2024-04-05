@@ -15,7 +15,7 @@ public class ABActionCreateDeathReplacementEffect implements ABAction {
 	private List<ABAction> actions;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		ABDeathReplacementEffect listener = new ABDeathReplacementEffect(localStore, actions);
+		ABDeathReplacementEffect listener = new ABDeathReplacementEffect(localStore, actions, castId);
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDDRE, listener);
 	}

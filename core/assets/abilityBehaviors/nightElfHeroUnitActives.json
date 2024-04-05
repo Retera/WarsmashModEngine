@@ -3,60 +3,33 @@
 		"ids": [{"id":"AEsh", "castId": "shadowstrike"}],
 		"type": "NORMAL_UNITTARGET",
 		"onEndCasting": [{
-			"type": "createUnitTargetedProjectile",
-			"source": {
-				"type": "getCastingUnit"
-			},
+			"type": "checkAbilityProjReaction",
 			"target": {
 				"type": "getAbilityTargetedUnit"
 			},
-			"id": {
-				"type": "getAlias"
-			},
-			"onHit": [{
-					"type": "createTimedTickingBuff",
-					"buffId": {
-						"type": "getFirstBuffId"
-					},
-					"duration": {
-						"type": "getAbilityDuration",
-						"target": {
-							"type": "getProjectileHitUnit"
-						}
-					},
-					"onAddActions": [{
-							"type": "damageTarget",
-							"source": {
-								"type": "getBuffCastingUnit"
-							},
+			"onHitActions": [{
+				"type": "createUnitTargetedProjectile",
+				"source": {
+					"type": "getCastingUnit"
+				},
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"onHit": [{
+						"type": "createTimedTickingBuff",
+						"buffId": {
+							"type": "getFirstBuffId"
+						},
+						"duration": {
+							"type": "getAbilityDuration",
 							"target": {
-								"type": "getBuffedUnit"
-							},
-							"damageType": {
-								"type": "getDamageTypeFromString",
-								"id": {
-									"type": "rawString",
-									"value": "SHADOW_STRIKE"
-								}
-							},
-							"damage": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "E"
+								"type": "getProjectileHitUnit"
 							}
-						},{
-							"type": "createNumericFloatingTextOnUnit",
-							"target": {
-								"type": "getBuffedUnit"
-							},
-							"textType": "SHADOW_STRIKE",
-							"amount": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "E"
-							}
-					}],
-					"onTickActions": [{
-						"type": "periodicExecute",
-						"periodicActions": [{
+						},
+						"onAddActions": [{
 								"type": "damageTarget",
 								"source": {
 									"type": "getBuffCastingUnit"
@@ -73,7 +46,7 @@
 								},
 								"damage": {
 									"type": "getAbilityDataAsFloat",
-									"dataField": "A"
+									"dataField": "E"
 								}
 							},{
 								"type": "createNumericFloatingTextOnUnit",
@@ -83,146 +56,148 @@
 								"textType": "SHADOW_STRIKE",
 								"amount": {
 									"type": "getAbilityDataAsFloat",
-									"dataField": "A"
+									"dataField": "E"
 								}
 						}],
-						"delaySeconds": {
-							"type": "getAbilityCastTime"
+						"onTickActions": [{
+							"type": "periodicExecute",
+							"periodicActions": [{
+									"type": "damageTarget",
+									"source": {
+										"type": "getBuffCastingUnit"
+									},
+									"target": {
+										"type": "getBuffedUnit"
+									},
+									"damageType": {
+										"type": "getDamageTypeFromString",
+										"id": {
+											"type": "rawString",
+											"value": "SHADOW_STRIKE"
+										}
+									},
+									"damage": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "A"
+									}
+								},{
+									"type": "createNumericFloatingTextOnUnit",
+									"target": {
+										"type": "getBuffedUnit"
+									},
+									"textType": "SHADOW_STRIKE",
+									"amount": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "A"
+									}
+							}],
+							"delaySeconds": {
+								"type": "getAbilityCastTime"
+							},
+							"unique": {
+								"type": "rawString",
+								"value": "damage"
+							}
+						}],
+						"onRemoveActions": [{
+							"type": "cleanUpCastInstance"
+						}]
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getProjectileHitUnit"
 						},
-						"unique": {
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+					},{
+						"type": "storeValueLocally",
+						"key": {
 							"type": "rawString",
-							"value": "damage"
+							"value": "atkSpdAmt"
+						},
+						"valueToStore": {
+							"type": "negativeFloat",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							}
 						}
-					}],
-					"onRemoveActions": [{
-						"type": "cleanUpCastInstance"
-					}]
-				},{
-					"type": "addBuff",
-					"target": {
-						"type": "getProjectileHitUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedBuff"
-					}
-				},{
-					"type": "storeValueLocally",
-					"key": {
-						"type": "rawString",
-						"value": "atkSpdAmt"
-					},
-					"valueToStore": {
-						"type": "negativeFloat",
-						"value": {
-							"type": "getAbilityDataAsFloat",
-							"dataField": "C"
-						}
-					}
-				},{
-					"type": "createNonStackingStatBuff",
-					"buffType": {
-						"type": "getNonStackingStatBuffTypeFromString",
-						"id": {
-							"type": "rawString",
-							"value": "ATKSPD"
-						}
-					},
-					"stackingKey": {
-						"type": "rawString",
-						"value": "shadowstrike"
-					},
-					"value": {
-						"type": "negativeFloat",
-						"value": {
-							"type": "getAbilityDataAsFloat",
-							"dataField": "C"
-						}
-					}
-				},{
-					"type": "storeValueLocally",
-					"key": {
-						"type": "rawString",
-						"value": "atkSpdBuff"
-					},
-					"valueToStore": {
-						"type": "getLastCreatedNonStackingStatBuff"
-					}
-				},{
-					"type": "storeValueLocally",
-					"key": {
-						"type": "rawString",
-						"value": "moveAmt"
-					},
-					"valueToStore": {
-						"type": "negativeFloat",
-						"value": {
-							"type": "getAbilityDataAsFloat",
-							"dataField": "B"
-						}
-					}
-				},{
-					"type": "createNonStackingStatBuff",
-					"buffType": {
-						"type": "getNonStackingStatBuffTypeFromString",
-						"id": {
-							"type": "rawString",
-							"value": "MVSPDPCT"
-						}
-					},
-					"stackingKey": {
-						"type": "rawString",
-						"value": "shadowstrike"
-					},
-					"value": {
-						"type": "negativeFloat",
-						"value": {
-							"type": "getAbilityDataAsFloat",
-							"dataField": "B"
-						}
-					}
-				},{
-					"type": "storeValueLocally",
-					"key": {
-						"type": "rawString",
-						"value": "moveBuff"
-					},
-					"valueToStore": {
-						"type": "getLastCreatedNonStackingStatBuff"
-					}
-				},{
-					"type": "if",
-					"condition": {
-						"type": "f=",
-						"value1": {
-							"type": "getAbilityDuration",
-							"target": {
-								"type": "getProjectileHitUnit"
+					},{
+						"type": "createNonStackingStatBuff",
+						"buffType": {
+							"type": "getNonStackingStatBuffTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "ATKSPD"
 							}
 						},
-						"value2": {
-							"type": "rawFloat",
-							"value": 0
+						"stackingKey": {
+							"type": "rawString",
+							"value": "shadowstrike"
+						},
+						"value": {
+							"type": "negativeFloat",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							}
 						}
-					},
-					"thenActions": [{
+					},{
 						"type": "storeValueLocally",
 						"key": {
 							"type": "rawString",
-							"value": "slowDur"
+							"value": "atkSpdBuff"
 						},
 						"valueToStore": {
-							"type": "rawFloat",
-							"value": 1
+							"type": "getLastCreatedNonStackingStatBuff"
 						}
-					}],
-					"elseActions": [{
+					},{
 						"type": "storeValueLocally",
 						"key": {
 							"type": "rawString",
-							"value": "slowDur"
+							"value": "moveAmt"
 						},
 						"valueToStore": {
-							"type": "fMin",
+							"type": "negativeFloat",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+						}
+					},{
+						"type": "createNonStackingStatBuff",
+						"buffType": {
+							"type": "getNonStackingStatBuffTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "MVSPDPCT"
+							}
+						},
+						"stackingKey": {
+							"type": "rawString",
+							"value": "shadowstrike"
+						},
+						"value": {
+							"type": "negativeFloat",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+						}
+					},{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "moveBuff"
+						},
+						"valueToStore": {
+							"type": "getLastCreatedNonStackingStatBuff"
+						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "f=",
 							"value1": {
 								"type": "getAbilityDuration",
 								"target": {
@@ -230,224 +205,241 @@
 								}
 							},
 							"value2": {
-								"type": "fMax",
+								"type": "rawFloat",
+								"value": 0
+							}
+						},
+						"thenActions": [{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "slowDur"
+							},
+							"valueToStore": {
+								"type": "rawFloat",
+								"value": 1
+							}
+						}],
+						"elseActions": [{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "slowDur"
+							},
+							"valueToStore": {
+								"type": "fMin",
 								"value1": {
-									"type": "f-",
+									"type": "getAbilityDuration",
+									"target": {
+										"type": "getProjectileHitUnit"
+									}
+								},
+								"value2": {
+									"type": "fMax",
 									"value1": {
-										"type": "getAbilityDuration",
-										"target": {
-											"type": "getProjectileHitUnit"
+										"type": "f-",
+										"value1": {
+											"type": "getAbilityDuration",
+											"target": {
+												"type": "getProjectileHitUnit"
+											}
+										},
+										"value2": {
+											"type": "rawFloat",
+											"value": 2
 										}
 									},
 									"value2": {
 										"type": "rawFloat",
-										"value": 2
+										"value": 1
 									}
+								}
+							}
+						}]
+					},{
+						"type": "createTimedTickingBuff",
+						"buffId": {
+							"type": "getFirstBuffId"
+						},
+						"duration": {
+							"type": "getStoredFloatByKey",
+							"key": {
+								"type": "rawString",
+								"value": "slowDur"
+							}
+						},
+						"showIcon": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"onAddActions": [{
+								"type": "addNonStackingStatBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
 								},
-								"value2": {
-									"type": "rawFloat",
-									"value": 1
-								}
-							}
-						}
-					}]
-				},{
-					"type": "createTimedTickingBuff",
-					"buffId": {
-						"type": "getFirstBuffId"
-					},
-					"duration": {
-						"type": "getStoredFloatByKey",
-						"key": {
-							"type": "rawString",
-							"value": "slowDur"
-						}
-					},
-					"showIcon": {
-						"type": "rawBoolean",
-						"value": "false"
-					},
-					"onAddActions": [{
-							"type": "addNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"key": {
-									"type": "rawString",
-									"value": "atkSpdBuff"
-								}
-							}
-						},{
-							"type": "addNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"key": {
-									"type": "rawString",
-									"value": "moveBuff"
-								}
-							}
-					}],
-					"onTickActions": [{
-							"type": "periodicExecute",
-							"periodicActions": [{
-									"type": "storeValueLocally",
+								"buff": {
+									"type": "getStoredNonStackingStatBuffByKey",
 									"key": {
 										"type": "rawString",
-										"value": "atkSpdAmt"
-									},
-									"valueToStore": {
-										"type": "f/",
-										"value1": {
+										"value": "atkSpdBuff"
+									}
+								}
+							},{
+								"type": "addNonStackingStatBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getStoredNonStackingStatBuffByKey",
+									"key": {
+										"type": "rawString",
+										"value": "moveBuff"
+									}
+								}
+						}],
+						"onTickActions": [{
+								"type": "periodicExecute",
+								"periodicActions": [{
+										"type": "storeValueLocally",
+										"key": {
+											"type": "rawString",
+											"value": "atkSpdAmt"
+										},
+										"valueToStore": {
+											"type": "f/",
+											"value1": {
+												"type": "getStoredFloatByKey",
+												"key": {
+													"type": "rawString",
+													"value": "atkSpdAmt"
+												}
+											},
+											"value2": {
+												"type": "rawFloat",
+												"value": 2
+											}
+										}
+									},{
+										"type": "updateNonStackingStatBuff",
+										"buff": {
+											"type": "getStoredNonStackingStatBuffByKey",
+											"key": {
+												"type": "rawString",
+												"value": "atkSpdBuff"
+											}
+										},
+										"value": {
 											"type": "getStoredFloatByKey",
 											"key": {
 												"type": "rawString",
 												"value": "atkSpdAmt"
 											}
+										}
+									},{
+										"type": "storeValueLocally",
+										"key": {
+											"type": "rawString",
+											"value": "moveAmt"
 										},
-										"value2": {
-											"type": "rawFloat",
-											"value": 2
+										"valueToStore": {
+											"type": "f/",
+											"value1": {
+												"type": "getStoredFloatByKey",
+												"key": {
+													"type": "rawString",
+													"value": "moveAmt"
+												}
+											},
+											"value2": {
+												"type": "rawFloat",
+												"value": 2
+											}
 										}
-									}
-								},{
-									"type": "updateNonStackingStatBuff",
-									"buff": {
-										"type": "getStoredNonStackingStatBuffByKey",
-										"key": {
-											"type": "rawString",
-											"value": "atkSpdBuff"
-										}
-									},
-									"value": {
-										"type": "getStoredFloatByKey",
-										"key": {
-											"type": "rawString",
-											"value": "atkSpdAmt"
-										}
-									}
-								},{
-									"type": "storeValueLocally",
-									"key": {
-										"type": "rawString",
-										"value": "moveAmt"
-									},
-									"valueToStore": {
-										"type": "f/",
-										"value1": {
+									},{
+										"type": "updateNonStackingStatBuff",
+										"buff": {
+											"type": "getStoredNonStackingStatBuffByKey",
+											"key": {
+												"type": "rawString",
+												"value": "moveBuff"
+											}
+										},
+										"value": {
 											"type": "getStoredFloatByKey",
 											"key": {
 												"type": "rawString",
 												"value": "moveAmt"
 											}
+										}
+									},{
+										"type": "recomputeStatBuffsOnUnit",
+										"targetUnit": {
+											"type": "getBuffedUnit"
 										},
-										"value2": {
-											"type": "rawFloat",
-											"value": 2
+										"buffType": {
+											"type": "getNonStackingStatBuffTypeFromString",
+											"id": {
+												"type": "rawString",
+												"value": "ATKSPD"
+											}
 										}
-									}
-								},{
-									"type": "updateNonStackingStatBuff",
-									"buff": {
-										"type": "getStoredNonStackingStatBuffByKey",
-										"key": {
-											"type": "rawString",
-											"value": "moveBuff"
+									},{
+										"type": "recomputeStatBuffsOnUnit",
+										"targetUnit": {
+											"type": "getBuffedUnit"
+										},
+										"buffType": {
+											"type": "getNonStackingStatBuffTypeFromString",
+											"id": {
+												"type": "rawString",
+												"value": "MVSPDPCT"
+											}
 										}
-									},
-									"value": {
-										"type": "getStoredFloatByKey",
-										"key": {
-											"type": "rawString",
-											"value": "moveAmt"
-										}
-									}
-								},{
-									"type": "recomputeStatBuffsOnUnit",
-									"targetUnit": {
-										"type": "getBuffedUnit"
-									},
-									"buffType": {
-										"type": "getNonStackingStatBuffTypeFromString",
-										"id": {
-											"type": "rawString",
-											"value": "ATKSPD"
-										}
-									}
-								},{
-									"type": "recomputeStatBuffsOnUnit",
-									"targetUnit": {
-										"type": "getBuffedUnit"
-									},
-									"buffType": {
-										"type": "getNonStackingStatBuffTypeFromString",
-										"id": {
-											"type": "rawString",
-											"value": "MVSPDPCT"
-										}
-									}
-							}],
-							"delaySeconds": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "D"
-							},
-							"unique": {
-								"type": "rawString",
-								"value": "slow"
-							}
-					}],
-					"onRemoveActions": [{
-							"type": "removeNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"key": {
+								}],
+								"delaySeconds": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "D"
+								},
+								"unique": {
 									"type": "rawString",
-									"value": "moveBuff"
+									"value": "slow"
 								}
-							}
-						},{
-							"type": "removeNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"key": {
-									"type": "rawString",
-									"value": "atkSpdBuff"
+						}],
+						"onRemoveActions": [{
+								"type": "removeNonStackingStatBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getStoredNonStackingStatBuffByKey",
+									"key": {
+										"type": "rawString",
+										"value": "moveBuff"
+									}
 								}
-							}
-					}]
-				},{
-					"type": "addBuff",
-					"target": {
-						"type": "getProjectileHitUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedBuff"
-					}
+							},{
+								"type": "removeNonStackingStatBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getStoredNonStackingStatBuffByKey",
+									"key": {
+										"type": "rawString",
+										"value": "atkSpdBuff"
+									}
+								}
+						}]
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getProjectileHitUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
 			}]
-		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		]
+		}]
 	}]
 }

@@ -32,10 +32,6 @@ public interface AbilityBuilderActiveAbility extends AbilityBuilderAbility, CAut
 	public void setCastRange(float castRange);
 
 	public int getOffOrderId();
-
-	public void startCooldown(CSimulation game, CUnit unit);
-
-	public void resetCooldown(CSimulation game, CUnit unit);
 	
 	public PrimaryTag getCastingPrimaryTag();
 	

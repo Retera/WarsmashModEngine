@@ -17,15 +17,15 @@ public class ABDamageTakenListener implements CUnitAttackDamageTakenListener {
 	
 	private int triggerId = 0;
 	
-	public ABDamageTakenListener(Map<String, Object> localStore, List<ABAction> actions) {
+	public ABDamageTakenListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
 		this.localStore = localStore;
 		this.actions = actions;
+		this.triggerId = castId;
 	}
 	
 	@Override
 	public void onDamage(CSimulation simulation, CUnit attacker, CUnit target, boolean isAttack, boolean isRanged,
 			CDamageType damageType, float damage, float bonusDamage, float trueDamage) {
-		this.triggerId++;
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
 		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
 		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, isAttack);

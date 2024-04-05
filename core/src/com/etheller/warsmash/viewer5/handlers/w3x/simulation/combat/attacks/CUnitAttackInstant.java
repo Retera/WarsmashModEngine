@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectileInstant;
 
 public class CUnitAttackInstant extends CUnitAttack {
 	private String projectileArt;
@@ -46,12 +47,27 @@ public class CUnitAttackInstant extends CUnitAttack {
 	public void launch(final CSimulation simulation, final CUnit unit, final AbilityTarget target, final float damage,
 			final CUnitAttackListener attackListener) {
 		attackListener.onLaunch();
-		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
+		CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			simulation.createInstantAttackEffect(unit, this, widget);
-			CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(simulation, unit, target, damage);
-			float damageDealt = widget.damage(simulation, unit, true, true, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
-			runPostDamageListeners(simulation, unit, target, damageDealt);
+			CAttackProjectileInstant proj = new CAttackProjectileInstant(widget.getX(), widget.getY(), widget, unit, damage, this, attackListener);
+			int i = 0;
+			while (!proj.update(simulation) && i < 100) {
+				i++;
+				widget = proj.getTarget().visit(AbilityTargetWidgetVisitor.INSTANCE);
+				simulation.createInstantAttackEffect(unit, this, widget);
+			}
+		}
+	}
+
+	public void doDamage(final CSimulation cSimulation, final CUnit source, final AbilityTarget target,
+			final float damage, final float x, final float y,
+			final CUnitAttackListener attackListener) {
+		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
+		if (widget != null) {
+			CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(cSimulation, source, target, damage);
+			float damageDealt = widget.damage(cSimulation, source, true, true, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
+			runPostDamageListeners(cSimulation, source, target, damageDealt);
 			attackListener.onHit(target, damage);
 		}
 	}

@@ -18,16 +18,16 @@ public class ABFinalDamageTakenModificationListener implements CUnitAttackFinalD
 	
 	private int triggerId = 0;
 	
-	public ABFinalDamageTakenModificationListener(Map<String, Object> localStore, List<ABAction> actions) {
+	public ABFinalDamageTakenModificationListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
 		this.localStore = localStore;
 		this.actions = actions;
+		this.triggerId = castId;
 	}
 	
 	@Override
 	public float onDamage(CSimulation simulation, CUnit attacker,
 			CUnit target, boolean isAttack, boolean isRanged, CAttackType attackType, CDamageType damageType,
 			float previousDamage) {
-		this.triggerId++;
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
 		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
 		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, isAttack);

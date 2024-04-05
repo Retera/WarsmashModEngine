@@ -16,7 +16,7 @@ public class ABActionCreateEvasionListener implements ABAction {
 	private List<ABCondition> conditions;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		ABAttackEvasionListener listener = new ABAttackEvasionListener(localStore, conditions);
+		ABAttackEvasionListener listener = new ABAttackEvasionListener(localStore, conditions, castId);
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDAEL, listener);
 	}

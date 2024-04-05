@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.projectile.ABCollisionProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public class ABActionCreateUnitTargetedPseudoProjectile implements ABAction {
@@ -120,8 +121,10 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABAction {
 
 		ABCollisionProjectileListener listener = new ABCollisionProjectileListener(onLaunch, onPreHits, canHitTarget, onHit, caster, localStore, castId);
 
-		game.createPseudoProjectile(theSource, id.callback(game, caster, localStore, castId), theEffectType, theEffectArtIndex, sourceLocation.getX(),
+		CProjectile proj = game.createPseudoProjectile(theSource, id.callback(game, caster, localStore, castId), theEffectType, theEffectArtIndex, sourceLocation.getX(),
 				sourceLocation.getY(), (float) theSource.angleTo(theTarget), theSpeed, theCollisionInterval, theArtSkip, isHoming, theTarget, theMaxHits,
 				theHitsPerTarget, theStartingRadius, theEndingRadius, listener, isProvideCounts);
+
+		localStore.put(ABLocalStoreKeys.LASTCREATEDPROJECTILE+castId, proj);
 	}
 }

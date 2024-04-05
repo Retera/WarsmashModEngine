@@ -777,50 +777,56 @@
 				}]
 			}],
 		"onEndCasting": [{
-				"type": "createTimedBuff",
-				"buffId": {
-					"type": "getFirstBuffId"
-				},
-				"duration": {
-					"type": "getAbilityDuration",
+			"type": "checkAbilityEffectReaction",
+			"target": {
+				"type": "getAbilityTargetedUnit"
+			},
+			"onHitActions": [{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityDuration",
+						"target": {
+							"type": "getAbilityTargetedUnit"
+						}
+					},
+					"onAddActions": [{
+						"type": "addAttackPreDamageListener",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"priority": {
+							"type": "rawPriority",
+							"priority": "ACCURACY"
+						},
+						"listener": {
+							"type": "getLastCreatedAttackPreDamageListener"
+						}
+					}],
+					"onRemoveActions": [{
+						"type": "removeAttackPreDamageListener",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"priority": {
+							"type": "rawPriority",
+							"priority": "ACCURACY"
+						},
+						"listener": {
+							"type": "getLastCreatedAttackPreDamageListener"
+						}
+					}]
+				},{
+					"type": "addBuff",
 					"target": {
 						"type": "getAbilityTargetedUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
 					}
-				},
-				"onAddActions": [{
-					"type": "addAttackPreDamageListener",
-					"targetUnit": {
-						"type": "getBuffedUnit"
-					},
-					"priority": {
-						"type": "rawPriority",
-						"priority": "ACCURACY"
-					},
-					"listener": {
-						"type": "getLastCreatedAttackPreDamageListener"
-					}
-				}],
-				"onRemoveActions": [{
-					"type": "removeAttackPreDamageListener",
-					"targetUnit": {
-						"type": "getBuffedUnit"
-					},
-					"priority": {
-						"type": "rawPriority",
-						"priority": "ACCURACY"
-					},
-					"listener": {
-						"type": "getLastCreatedAttackPreDamageListener"
-					}
-				}]
-			},{
-				"type": "addBuff",
-				"target": {
-					"type": "getAbilityTargetedUnit"
-				},
-				"buff": {
-					"type": "getLastCreatedBuff"
-				}
+			}]
 		}]
 	}]
 }

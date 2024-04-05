@@ -35,9 +35,11 @@ public class ABProjectileListener implements CAbilityProjectileListener {
 	@Override
 	public void onLaunch(CSimulation game, CProjectile projectile, AbilityTarget target) {
 		if (onLaunch != null) {
+			localStore.put(ABLocalStoreKeys.THISPROJECTILE+castId, projectile);
 			for (ABAction action : onLaunch) {
 				action.runAction(game, caster, localStore, castId);
 			}
+			localStore.remove(ABLocalStoreKeys.THISPROJECTILE+castId);
 		}
 	}
 
@@ -46,6 +48,7 @@ public class ABProjectileListener implements CAbilityProjectileListener {
 		if (onHit != null) {
 			CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 			CDestructable targetDest = target.visit(AbilityTargetVisitor.DESTRUCTABLE);
+			localStore.put(ABLocalStoreKeys.THISPROJECTILE+castId, projectile);
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITUNIT+castId, targetUnit);
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITDEST+castId, targetDest);
 			for (ABAction action : onHit) {
@@ -53,6 +56,7 @@ public class ABProjectileListener implements CAbilityProjectileListener {
 			}
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITUNIT+castId);
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITDEST+castId);
+			localStore.remove(ABLocalStoreKeys.THISPROJECTILE+castId);
 		}
 	}
 

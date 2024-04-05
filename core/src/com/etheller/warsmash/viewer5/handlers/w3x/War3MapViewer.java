@@ -129,6 +129,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectileMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -646,7 +647,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight()
 								+ projectileLaunchZ;
-						final CAttackProjectile simulationAttackProjectile = new CAttackProjectile(x, y,
+						final CAttackProjectile simulationAttackProjectile = new CAttackProjectileMissile(x, y,
 								projectileSpeed, target, source, damage, unitAttack, bounceIndex, attackListener);
 
 						final MdxModel model = loadModelMdx(missileArt);
@@ -1456,7 +1457,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public SimulationRenderComponent spawnAbilitySoundEffect(final CUnit caster, final War3ID alias) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
 						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
-						if (abilityUi.getEffectSound() == null) {
+						if (abilityUi == null || abilityUi.getEffectSound() == null) {
 							return SimulationRenderComponent.DO_NOTHING;
 						}
 						final long soundId = War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound()).play(
@@ -1478,7 +1479,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					public SimulationRenderComponent loopAbilitySoundEffect(final CUnit caster, final War3ID alias) {
 						final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
 						final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
-						if (abilityUi.getEffectSound() == null) {
+						if (abilityUi == null || abilityUi.getEffectSound() == null) {
 							return SimulationRenderComponent.DO_NOTHING;
 						}
 						final long soundId = War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped())

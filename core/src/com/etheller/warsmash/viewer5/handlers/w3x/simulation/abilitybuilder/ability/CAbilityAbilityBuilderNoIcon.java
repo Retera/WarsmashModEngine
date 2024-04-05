@@ -21,7 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility implements AbilityBuilderAbility {
+public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility implements AbilityBuilderPassiveAbility {
 
 	protected List<CAbilityTypeAbilityBuilderLevelData> levelData;
 	protected AbilityBuilderConfiguration config;
@@ -90,6 +90,15 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 	}
 
 	@Override
+	public float getCooldownRemainingTicks(CSimulation game, CUnit unit) {
+		War3ID cdID = getCooldownId();
+		if (cdID != War3ID.NONE) {
+			return unit.getCooldownRemainingTicks(game, cdID);
+		}
+		return unit.getCooldownRemainingTicks(game, this.getCode());
+	}
+
+	@Override
 	public void resetCooldown(CSimulation game, CUnit unit) {
 		War3ID cdID = getCooldownId();
 		if (cdID != War3ID.NONE) {
@@ -115,6 +124,11 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 		this.item = item;
 		this.localStore.put(ABLocalStoreKeys.ITEM, item);
 		this.localStore.put(ABLocalStoreKeys.ITEMSLOT, slot);
+	}
+
+	@Override
+	public CItem getItem() {
+		return this.item;
 	}
 
 	@Override

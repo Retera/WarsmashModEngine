@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision;
 import java.nio.ByteBuffer;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class CPlayerFogOfWar {
@@ -125,6 +126,51 @@ public class CPlayerFogOfWar {
 			detectionBuffer.put(writeIndex, (byte) (detectionBuffer.get(writeIndex) | detectLevels));
 		}
 	}
+
+	public void checkCardinalVision(final CSimulation game, final PathingGrid pathingGrid, final boolean flying,
+			final int dx, final int dy, final int dxp, final int dyp, final float dxf, final float dyf,
+			final float dxfp, final float dyfp, final int myZ) {
+		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
+				|| (!game.isTerrainRomp(dxf, dyf) && myZ == game.getTerrainHeight(dxf, dyf)))
+				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)) {
+			this.setVisible(dx, dy, CFogState.VISIBLE);
+		}
+	}
+
+	public void checkCardinalVision(final CSimulation game, final PathingGrid pathingGrid, final byte detections,
+			final boolean flying, final int dx, final int dy, final int dxp, final int dyp, final float dxf,
+			final float dyf, final float dxfp, final float dyfp, final int myZ) {
+		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
+				|| (!game.isTerrainRomp(dxf, dyf) && myZ == game.getTerrainHeight(dxf, dyf)))
+				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)) {
+			this.setDetecting(dx, dy, CFogState.VISIBLE, detections);
+		}
+	}
+
+	public void checkDiagonalVision(final CSimulation game, final PathingGrid pathingGrid, final boolean flying,
+			final int x, final int y, final int dx, final int dy, final int dxp, final int dyp, final float dxf,
+			final float dyf, final float dxfp, final float dyfp, final int myZ) {
+		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
+				|| (!game.isTerrainRomp(dxf, dyf) && myZ == game.getTerrainHeight(dxf, dyf)))
+				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)
+				&& (x == y || (x > y && this.isVisible(dxp, dy) && (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
+						|| (x < y && this.isVisible(dx, dyp) && (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
+			this.setVisible(dx, dy, CFogState.VISIBLE);
+		}
+	}
+
+	public void checkDiagonalVision(final CSimulation game, final PathingGrid pathingGrid, final byte detections,
+			final boolean flying, final int x, final int y, final int dx, final int dy, final int dxp, final int dyp,
+			final float dxf, final float dyf, final float dxfp, final float dyfp, final int myZ) {
+		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
+				|| (!game.isTerrainRomp(dxf, dyf) && myZ == game.getTerrainHeight(dxf, dyf)))
+				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)
+				&& (x == y || (x > y && this.isVisible(dxp, dy) && (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
+						|| (x < y && this.isVisible(dx, dyp) && (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
+			this.setDetecting(dx, dy, CFogState.VISIBLE, detections);
+		}
+	}
+
 
 	public void convertVisibleToFogged() {
 		for (int i = 0; i < fogOfWarBuffer.capacity(); i++) {

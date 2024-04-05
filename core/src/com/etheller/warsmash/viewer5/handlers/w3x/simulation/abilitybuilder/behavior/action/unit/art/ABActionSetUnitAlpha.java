@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABActionSetUnitAlpha implements ABAction {
 
 	private ABUnitCallback unit;
-	private ABFloatCallback alpha;
+	private ABFloatCallback value;
 
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
@@ -19,7 +19,7 @@ public class ABActionSetUnitAlpha implements ABAction {
 		float[] color = game.getUnitVertexColor(targetUnit);
 
 		game.changeUnitVertexColor(targetUnit, color[0], color[1], color[2],
-				alpha.callback(game, caster, localStore, castId));
+				value.callback(game, caster, localStore, castId));
 	}
 
 }

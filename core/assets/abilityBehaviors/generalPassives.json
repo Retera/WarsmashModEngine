@@ -900,14 +900,6 @@
 				"type": "createStateModBuff",
 				"buffType": "INVISIBLE"
 			},{
-				"type": "addStateModBuff",
-				"targetUnit": {
-					"type": "getCastingUnit"
-				},
-				"buff": {
-					"type": "getLastCreatedStateModBuff"
-				}
-			},{
 				"type": "storeValueLocally",
 				"key": {
 					"type": "rawString",
@@ -917,25 +909,8 @@
 					"type": "getLastCreatedStateModBuff"
 				}
 			},{
-				"type": "multiplyUnitAlpha",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"value": {
-					"type": "rawFloat",
-					"value": 0.5
-				}
-			},{
 				"type": "createStateModBuff",
 				"buffType": "DISABLE_AUTO_CAST"
-			},{
-				"type": "addStateModBuff",
-				"targetUnit": {
-					"type": "getCastingUnit"
-				},
-				"buff": {
-					"type": "getLastCreatedStateModBuff"
-				}
 			},{
 				"type": "storeValueLocally",
 				"key": {
@@ -958,111 +933,256 @@
 					"type": "getLastCreatedStateModBuff"
 				}
 			},{
-				"type": "if",
-				"condition": {
-					"type": "not",
-					"condition": {
-						"type": "bool",
-						"bool": {
-							"type": "getAbilityDataAsBoolean",
-							"dataField": "A"
-						}
-					}
+				"type": "createPassiveBuff",
+				"buffId": {
+					"type": "getAlias"
 				},
-				"thenActions": [{
-					"type": "addStateModBuff",
-					"targetUnit": {
-						"type": "getCastingUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedStateModBuff"
-					}
+				"showIcon": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"onAddActions": [{
+						"type": "setUnitAlpha",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"value": {
+							"type": "rawFloat",
+							"value": 0.5
+						}
+					},{
+						"type": "addStateModBuff",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"buff": {
+							"type": "getStoredStateModBuffByKey",
+							"key": {
+								"type": "rawString",
+								"value": "invisBuff"
+							}
+						}
+					},{
+						"type": "addStateModBuff",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"buff": {
+							"type": "getStoredStateModBuffByKey",
+							"key": {
+								"type": "rawString",
+								"value": "dcstBuff"
+							}
+						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "not",
+							"condition": {
+								"type": "bool",
+								"bool": {
+									"type": "getAbilityDataAsBoolean",
+									"dataField": "A"
+								}
+							}
+						},
+						"thenActions": [{
+							"type": "addStateModBuff",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"buff": {
+								"type": "getStoredStateModBuffByKey",
+								"key": {
+									"type": "rawString",
+									"value": "datkBuff"
+								}
+							}
+						}],
+						"elseActions": []
 				}],
-				"elseActions": []
-		}],
-		"onLevelChange": [{
-				"type": "removeStateModBuff",
-				"targetUnit": {
+				"onRemoveActions": [{
+						"type": "removeStateModBuff",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"buff": {
+							"type": "getStoredStateModBuffByKey",
+							"key": {
+								"type": "rawString",
+								"value": "invisBuff"
+							}
+						}
+					},{
+						"type": "setUnitAlpha",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"value": {
+							"type": "rawFloat",
+							"value": 1
+						}
+					},{
+						"type": "removeStateModBuff",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"buff": {
+							"type": "getStoredStateModBuffByKey",
+							"key": {
+								"type": "rawString",
+								"value": "dcstBuff"
+							}
+						}
+					},{
+						"type": "removeStateModBuff",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"buff": {
+							"type": "getStoredStateModBuffByKey",
+							"key": {
+								"type": "rawString",
+								"value": "datkBuff"
+							}
+						}
+				}]
+			},{
+				"type": "addBuff",
+				"target": {
 					"type": "getCastingUnit"
 				},
 				"buff": {
-					"type": "getStoredStateModBuffByKey",
-					"key": {
-						"type": "rawString",
-						"value": "datkBuff"
-					}
+					"type": "getLastCreatedBuff"
 				}
 			},{
-				"type": "if",
-				"condition": {
-					"type": "not",
-					"condition": {
-						"type": "bool",
-						"bool": {
-							"type": "getAbilityDataAsBoolean",
-							"dataField": "A"
-						}
-					}
+				"type": "createTimer",
+				"timeout": {
+					"type": "getAbilityDuration"
 				},
-				"thenActions": [{
-					"type": "addStateModBuff",
-					"targetUnit": {
+				"startTimer": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"actions": [{
+					"type": "addBuff",
+					"target": {
 						"type": "getCastingUnit"
 					},
 					"buff": {
-						"type": "getStoredStateModBuffByKey",
-						"key": {
-							"type": "rawString",
-							"value": "datkBuff"
-						}
+						"type": "getLastCreatedBuff"
 					}
-				}],
-				"elseActions": []
-		}],
-		"onRemoveAbility": [{
-				"type": "removeStateModBuff",
-				"targetUnit": {
-					"type": "getCastingUnit"
-				},
-				"buff": {
-					"type": "getStoredStateModBuffByKey",
-					"key": {
-						"type": "rawString",
-						"value": "invisBuff"
-					}
-				}
+				}]
 			},{
-				"type": "divideUnitAlpha",
+				"type": "createBehaviorChangeListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isNewBehaviorCategoryInList",
+						"list": ["ATTACK","SPELL"]
+					},
+					"thenActions": [{
+							"type": "removeBuff",
+							"target": {
+								"type": "getCastingUnit"
+							},
+							"buff": {
+								"type": "getLastCreatedBuff"
+							}
+						},{
+							"type": "startTimer",
+							"timer": {
+								"type": "getLastCreatedTimer"
+							}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addBehaviorChangeListener",
 				"unit": {
 					"type": "getCastingUnit"
 				},
-				"value": {
-					"type": "rawFloat",
-					"value": 0.5
+				"listener": {
+					"type": "getLastCreatedBehaviorChangeListener"
+				}
+		}],
+		"onLevelChange": [{
+				"type": "updateTimerTimeout",
+				"timer": {
+					"type": "getLastCreatedTimer"
+				},
+				"timeout": {
+					"type": "getAbilityDuration"
 				}
 			},{
-				"type": "removeStateModBuff",
-				"targetUnit": {
+				"type": "if",
+				"condition": {
+					"type": "isTimerActive",
+					"timer": {
+						"type": "getLastCreatedTimer"
+					}
+				},
+				"thenActions": [],
+				"elseActions": [{
+						"type": "removeStateModBuff",
+						"targetUnit": {
+							"type": "getCastingUnit"
+						},
+						"buff": {
+							"type": "getStoredStateModBuffByKey",
+							"key": {
+								"type": "rawString",
+								"value": "datkBuff"
+							}
+						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "not",
+							"condition": {
+								"type": "bool",
+								"bool": {
+									"type": "getAbilityDataAsBoolean",
+									"dataField": "A"
+								}
+							}
+						},
+						"thenActions": [{
+							"type": "addStateModBuff",
+							"targetUnit": {
+								"type": "getCastingUnit"
+							},
+							"buff": {
+								"type": "getStoredStateModBuffByKey",
+								"key": {
+									"type": "rawString",
+									"value": "datkBuff"
+								}
+							}
+						}],
+						"elseActions": []
+				}]
+		}],
+		"onRemoveAbility": [{
+				"type": "removeBuff",
+				"target": {
 					"type": "getCastingUnit"
 				},
 				"buff": {
-					"type": "getStoredStateModBuffByKey",
-					"key": {
-						"type": "rawString",
-						"value": "dcstBuff"
-					}
+					"type": "getLastCreatedBuff"
 				}
 			},{
-				"type": "removeStateModBuff",
-				"targetUnit": {
-					"type": "getCastingUnit"
+				"type": "removeBehaviorChangeListener",
+				"unit": {
+					"type": "getBuffedUnit"
 				},
-				"buff": {
-					"type": "getStoredStateModBuffByKey",
-					"key": {
-						"type": "rawString",
-						"value": "datkBuff"
-					}
+				"listener": {
+					"type": "getLastCreatedBehaviorChangeListener"
+				}
+			},{
+				"type": "removeTimer",
+				"timer": {
+					"type": "getLastCreatedTimer"
 				}
 		}]
 	},{

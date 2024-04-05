@@ -648,6 +648,7 @@ public abstract class AbilityBuilderGsonBuilder {
 
 				.registerSubtype(ABActionCreateTimer.class, "createTimer")
 				.registerSubtype(ABActionStartTimer.class, "startTimer")
+				.registerSubtype(ABActionUpdateTimerTimeout.class, "updateTimerTimeout")
 				.registerSubtype(ABActionRemoveTimer.class, "removeTimer")
 
 				.registerSubtype(ABActionAddBuff.class, "addBuff")

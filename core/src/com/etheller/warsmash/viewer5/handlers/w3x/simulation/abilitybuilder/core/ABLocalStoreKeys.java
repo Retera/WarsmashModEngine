@@ -84,7 +84,7 @@ public class ABLocalStoreKeys {
 	
 	//Timers
 	public static final String LASTCREATEDTIMER = "_lastCreatedTimer";
-	public static final String LASTSTARTEDTIMER = "_lastCreatedTimer";
+	public static final String LASTSTARTEDTIMER = "_lastStartedTimer";
 	public static final String FIRINGTIMER = "_firingTimer";
 	
 	//Events

@@ -244,6 +244,9 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	private void internalRegisterTimer(final CTimer timer) {
+		if(this.activeTimers.contains(timer)) {
+			this.activeTimers.remove(timer);
+		}
 		final ListIterator<CTimer> listIterator = this.activeTimers.listIterator();
 		while (listIterator.hasNext()) {
 			final CTimer nextTimer = listIterator.next();

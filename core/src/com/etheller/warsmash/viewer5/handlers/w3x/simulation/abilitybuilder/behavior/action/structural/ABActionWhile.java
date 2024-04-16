@@ -7,6 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 
 public class ABActionWhile implements ABAction {
 
@@ -17,6 +18,10 @@ public class ABActionWhile implements ABAction {
 		while(condition.evaluate(game, caster, localStore, castId)) {
 			for (ABAction periodicAction : loopActions) {
 				periodicAction.runAction(game, caster, localStore, castId);
+			}
+			Boolean brk = (Boolean) localStore.remove(ABLocalStoreKeys.BREAK);
+			if (brk != null && brk) {
+				break;
 			}
 		}
 	}

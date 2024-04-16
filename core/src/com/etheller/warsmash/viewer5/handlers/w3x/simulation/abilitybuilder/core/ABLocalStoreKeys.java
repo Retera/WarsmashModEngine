@@ -15,6 +15,7 @@ public class ABLocalStoreKeys {
 	public static final String ITEM = "_item";
 	public static final String ITEMSLOT = "_itemSlot";
 	public static final String ITERATORCOUNT = "_i";
+	public static final String BREAK = "_break";
 	public static final String BUFFCASTINGUNIT = "_buffCastingUnit";
 	
 	public static final String NEWBEHAVIOR = "_newBehavior";
@@ -169,6 +170,7 @@ public class ABLocalStoreKeys {
 	public static final String LASTCREATEDBCL = "_lastCreatedBCL";
 	public static final String PRECHANGEBEHAVIOR = "_preChangeBehavior#";
 	public static final String POSTCHANGEBEHAVIOR = "_postChangeBehaviorj#";
+	public static final String BEHAVIORONGOING = "_behaviorOngoing#";
 	
 	public static String combineKey(String key, int castId) {
 		return key + castId;
@@ -180,5 +182,13 @@ public class ABLocalStoreKeys {
 	
 	public static String combineUserInstanceKey(String key, int castId) {
 		return "__" + key + "#" + castId;
+	}
+	
+	public static String combineSubroutineKey(String key, int castId) {
+		return "_!" + key;
+	}
+	
+	public static String combineSubroutineInstanceKey(String key, int castId) {
+		return "_!" + key + "#" + castId;
 	}
 }

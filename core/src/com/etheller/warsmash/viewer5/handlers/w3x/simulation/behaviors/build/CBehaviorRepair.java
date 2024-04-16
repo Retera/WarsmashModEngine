@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build;
 
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
@@ -17,6 +18,8 @@ public class CBehaviorRepair extends CAbstractRangedBehavior {
 	private final CAbilityRepair ability;
 	private final AbilityTargetStillAliveAndTargetableVisitor stillAliveVisitor;
 
+	private int nextChargeTick = 0;
+
 	public CBehaviorRepair(final CUnit unit, final CAbilityRepair ability) {
 		super(unit);
 		this.ability = ability;
@@ -24,6 +27,7 @@ public class CBehaviorRepair extends CAbstractRangedBehavior {
 	}
 
 	public CBehavior reset(CSimulation game, final CWidget target) {
+		this.nextChargeTick = 0;
 		return innerReset(game, target, false);
 	}
 
@@ -45,6 +49,22 @@ public class CBehaviorRepair extends CAbstractRangedBehavior {
 				1.0f, true);
 		if (this.target instanceof CWidget) {
 			final CWidget targetWidget = (CWidget) this.target;
+			if (this.target instanceof CUnit) {
+				final CUnit taru = (CUnit) this.target;
+				if (this.nextChargeTick == 0 || simulation.getGameTurnTick() >= this.nextChargeTick) {
+					int goldCost = 0;
+					int lumberCost = 0;
+					if (!simulation.getPlayer(this.unit.getPlayerIndex()).charge(goldCost, lumberCost)) {
+						return this.unit.pollNextOrderBehavior(simulation);
+					}
+					if (this.nextChargeTick == 0) {
+						this.nextChargeTick = (int) (simulation.getGameTurnTick()
+								+ this.ability.getRepairTimeRatio() / WarsmashConstants.SIMULATION_STEP_TIME);
+					} else {
+						this.unit.fireBehaviorChangeEvent(simulation, this, true);
+					}
+				}
+			}
 			float newLifeValue = targetWidget.getLife() + 1;
 			final boolean done = newLifeValue > targetWidget.getMaxLife();
 			if (done) {

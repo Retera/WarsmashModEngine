@@ -303,9 +303,7 @@ public class CUnit extends CWidget {
 				this.currentBehavior.end(game, false);
 			}
 			
-			for (CUnitBehaviorChangeListener listener : new ArrayList<>(this.behaviorChangeListeners)) {
-				listener.onChange(game, this, this.currentBehavior, behavior);
-			}
+			fireBehaviorChangeEvent(game, behavior, false);
 			
 			this.currentBehavior = behavior;
 			
@@ -320,11 +318,15 @@ public class CUnit extends CWidget {
 	}
 	
 	public CBehavior finishMoveBehavior(final CSimulation game, final CBehavior behavior) {
-		for (CUnitBehaviorChangeListener listener : new ArrayList<>(this.behaviorChangeListeners)) {
-			listener.onChange(game, this, this.currentBehavior, behavior);
-		}
+		fireBehaviorChangeEvent(game, behavior, false);
 		
 		return behavior.update(game);
+	}
+	
+	public void fireBehaviorChangeEvent(final CSimulation game, final CBehavior behavior, final boolean ongoing) {
+		for (CUnitBehaviorChangeListener listener : new ArrayList<>(this.behaviorChangeListeners)) {
+			listener.onChange(game, this, this.currentBehavior, behavior, ongoing);
+		}
 	}
 
 	public void performDefaultBehavior(final CSimulation game) {

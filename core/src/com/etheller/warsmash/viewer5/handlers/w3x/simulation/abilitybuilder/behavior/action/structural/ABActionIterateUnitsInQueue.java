@@ -24,6 +24,10 @@ public class ABActionIterateUnitsInQueue implements ABAction {
 			for (ABAction iterationAction : iterationActions) {
 				iterationAction.runAction(game, caster, localStore, castId);
 			}
+			Boolean brk = (Boolean) localStore.remove(ABLocalStoreKeys.BREAK);
+			if (brk != null && brk) {
+				break;
+			}
 		}
 		localStore.remove(ABLocalStoreKeys.ENUMUNIT+castId);
 	}

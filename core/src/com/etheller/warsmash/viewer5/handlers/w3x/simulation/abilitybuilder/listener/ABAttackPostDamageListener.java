@@ -16,11 +16,15 @@ public class ABAttackPostDamageListener implements CUnitAttackPostDamageListener
 	private List<ABAction> actions;
 	
 	private int triggerId = 0;
+	private boolean useCastId;
 	
-	public ABAttackPostDamageListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
+	public ABAttackPostDamageListener(Map<String, Object> localStore, List<ABAction> actions, int castId, boolean useCastId) {
 		this.localStore = localStore;
 		this.actions = actions;
-		this.triggerId = castId;
+		this.useCastId = useCastId;
+		if (useCastId) {
+			this.triggerId = castId;
+		}
 	}
 	
 	@Override
@@ -36,6 +40,9 @@ public class ABAttackPostDamageListener implements CUnitAttackPostDamageListener
 		localStore.remove(ABLocalStoreKeys.ATTACKINGUNIT+triggerId);
 		localStore.remove(ABLocalStoreKeys.ATTACKEDUNIT+triggerId);
 		localStore.remove(ABLocalStoreKeys.TOTALDAMAGEDEALT+triggerId);
+		if (!this.useCastId) {
+			this.triggerId++;
+		}
 	}
 
 }

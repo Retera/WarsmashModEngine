@@ -19,22 +19,30 @@ public class ABActionCreatePassiveBuff implements ABAction {
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 	private CEffectType artType;
+	
+	private ABBooleanCallback showFx;
+	private ABBooleanCallback playSfx;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+		ABPermanentPassiveBuff ability = null;
 		if (showIcon != null) {
-			ABPermanentPassiveBuff ability = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(),
+			ability = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId), localStore, onAddActions, onRemoveActions, showIcon.callback(game, caster, localStore, castId), castId);
-			if (artType != null) {
-				ability.setArtType(artType);
-			}
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		} else {
-			ABPermanentPassiveBuff ability = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(),
+			ability = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId), localStore, onAddActions, onRemoveActions, true, castId);
-			if (artType != null) {
-				ability.setArtType(artType);
-			}
+			
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
+		}
+		if (artType != null) {
+			ability.setArtType(artType);
+		}
+		if (showFx != null) {
+			ability.setShowFx(showFx.callback(game, caster, localStore, castId));
+		}
+		if (playSfx != null) {
+			ability.setPlaySfx(playSfx.callback(game, caster, localStore, castId));
 		}
 		if (!localStore.containsKey(ABLocalStoreKeys.BUFFCASTINGUNIT)) {
 			localStore.put(ABLocalStoreKeys.BUFFCASTINGUNIT, caster);

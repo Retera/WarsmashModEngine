@@ -897,6 +897,15 @@
 		"ids": [{"id":"Apiv"}],
 		"type": "HIDDEN",
 		"onAddAbility": [{
+				"type": "createSpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "TARGET"
+			},{
 				"type": "createStateModBuff",
 				"buffType": "INVISIBLE"
 			},{
@@ -938,6 +947,10 @@
 					"type": "getAlias"
 				},
 				"showIcon": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"showFx": {
 					"type": "rawBoolean",
 					"value": "false"
 				},
@@ -1164,6 +1177,11 @@
 				}]
 		}],
 		"onRemoveAbility": [{
+				"type": "removeSpellEffect",
+				"effectToRemove": {
+					"type": "getLastCreatedSpellEffect"
+				}
+			},{
 				"type": "removeBuff",
 				"target": {
 					"type": "getCastingUnit"
@@ -1782,6 +1800,483 @@
 			"buff": {
 				"type": "getLastCreatedStateModBuff"
 			}
+		}]
+	},{
+		"ids": [{"id":"Asph"}],
+		"type": "HIDDEN",
+		"onAddAbility": [{
+				"type": "for",
+				"times": {
+					"type": "getAbilityTargetAttachmentPoints"
+				},
+				"actions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "catStrings",
+							"stringList": [{
+									"type": "rawString",
+									"value": "sph"
+								},{
+									"type": "i2s",
+									"value": {
+										"type": "iterator"
+									}
+							}]
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"valueToStore": {
+							"type": "rawBoolean",
+							"value": "true"
+						}
+					},{
+						"type": "createSpellEffectOnUnit",
+						"target": {
+							"type": "getCastingUnit"
+						},
+						"id": {
+							"type": "getAlias"
+						},
+						"effectType": "TARGET",
+						"index": {
+							"type": "iterator"
+						}
+					},{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "catStrings",
+							"stringList": [{
+									"type": "rawString",
+									"value": "sphart"
+								},{
+									"type": "i2s",
+									"value": {
+										"type": "iterator"
+									}
+							}]
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"valueToStore": {
+							"type": "getLastCreatedSpellEffect"
+						}
+				}]
+			},{
+				"type": "createSubroutine",
+				"key": {
+					"type": "rawString",
+					"value": "removeOrb"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"actions": [{
+						"type": "for",
+						"times": {
+							"type": "getAbilityTargetAttachmentPoints"
+						},
+						"actions": [{
+							"type": "if",
+							"condition": {
+								"type": "bool",
+								"bool": {
+									"type": "getStoredBooleanByKey",
+									"key": {
+										"type": "catStrings",
+										"stringList": [{
+												"type": "rawString",
+												"value": "sph"
+											},{
+												"type": "i2s",
+												"value": {
+													"type": "iterator"
+												}
+										}]
+									},
+									"instanceValue": {
+										"type": "rawBoolean",
+										"value": "false"
+									}
+								}
+							},
+							"thenActions": [{
+									"type": "storeValueLocally",
+									"key": {
+										"type": "catStrings",
+										"stringList": [{
+												"type": "rawString",
+												"value": "sph"
+											},{
+												"type": "i2s",
+												"value": {
+													"type": "iterator"
+												}
+										}]
+									},
+									"instanceValue": {
+										"type": "rawBoolean",
+										"value": "false"
+									},
+									"valueToStore": {
+										"type": "rawBoolean",
+										"value": "false"
+									}
+								},{
+									"type": "removeSpellEffect",
+									"effectToRemove": {
+										"type": "getStoredFXByKey",
+										"key": {
+											"type": "catStrings",
+											"stringList": [{
+													"type": "rawString",
+													"value": "sphart"
+												},{
+													"type": "i2s",
+													"value": {
+														"type": "iterator"
+													}
+											}]
+										},
+										"instanceValue": {
+											"type": "rawBoolean",
+											"value": "false"
+										}
+									}
+								},{
+									"type": "break"
+							}],
+							"elseActions": []
+						}]
+					},{
+						"type": "if",
+						"condition": {
+							"type": "isTimerActive",
+							"timer": {
+								"type": "getStoredTimerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "orbTimer"
+								},
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							}
+						},
+						"thenActions": [],
+						"elseActions": [{
+							"type": "startTimer",
+							"timer": {
+								"type": "getStoredTimerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "orbTimer"
+								},
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							}
+						}]
+				}]
+			},{
+				"type": "createTimer",
+				"timeout": {
+					"type": "getAbilityCooldown"
+				},
+				"repeats": {
+					"type": "rawBoolean",
+					"value": "true"
+				},
+				"startTimer": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"actions": [{
+						"type": "for",
+						"times": {
+							"type": "getAbilityTargetAttachmentPoints"
+						},
+						"actions": [{
+							"type": "if",
+							"condition": {
+								"type": "not",
+								"condition": {
+									"type": "bool",
+									"bool": {
+										"type": "getStoredBooleanByKey",
+										"key": {
+											"type": "catStrings",
+											"stringList": [{
+													"type": "rawString",
+													"value": "sph"
+												},{
+													"type": "i2s",
+													"value": {
+														"type": "iterator"
+													}
+											}]
+										},
+										"instanceValue": {
+											"type": "rawBoolean",
+											"value": "false"
+										}
+									}
+								}
+							},
+							"thenActions": [{
+									"type": "storeValueLocally",
+									"key": {
+										"type": "catStrings",
+										"stringList": [{
+												"type": "rawString",
+												"value": "sph"
+											},{
+												"type": "i2s",
+												"value": {
+													"type": "iterator"
+												}
+										}]
+									},
+									"instanceValue": {
+										"type": "rawBoolean",
+										"value": "false"
+									},
+									"valueToStore": {
+										"type": "rawBoolean",
+										"value": "true"
+									}
+								},{
+									"type": "createSpellEffectOnUnit",
+									"target": {
+										"type": "getCastingUnit"
+									},
+									"id": {
+										"type": "getAlias"
+									},
+									"effectType": "TARGET",
+									"index": {
+										"type": "iterator"
+									}
+								},{
+									"type": "storeValueLocally",
+									"key": {
+										"type": "catStrings",
+										"stringList": [{
+												"type": "rawString",
+												"value": "sphart"
+											},{
+												"type": "i2s",
+												"value": {
+													"type": "iterator"
+												}
+										}]
+									},
+									"instanceValue": {
+										"type": "rawBoolean",
+										"value": "false"
+									},
+									"valueToStore": {
+										"type": "getLastCreatedSpellEffect"
+									}
+								},{
+									"type": "break"
+							}],
+							"elseActions": []
+						}]
+					},{
+						"type": "if",
+						"condition": {
+							"type": "i=",
+							"value1": {
+								"type": "iterator"
+							},
+							"value2": {
+								"type": "getAbilityTargetAttachmentPoints"
+							}
+						},
+						"thenActions": [{
+							"type": "removeTimer",
+							"timer": {
+								"type": "getStoredTimerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "orbTimer"
+								},
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							}
+						}],
+						"elseActions": []
+				}]
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "orbTimer"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedTimer"
+				}
+			},{
+				"type": "createBehaviorChangeListener",
+				"useCastId": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"actions": [{
+						"type": "if",
+						"condition": {
+							"type": "isNewBehaviorCategoryInList",
+							"list": ["ATTACK"]
+						},
+						"thenActions": [{
+							"type": "runSubroutine",
+							"key": {
+								"type": "rawString",
+								"value": "removeOrb"
+							},
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
+						}],
+						"elseActions": []
+					},{
+						"type": "if",
+						"condition": {
+							"type": "isNewBehaviorCategoryInList",
+							"list": ["SPELL"]
+						},
+						"thenActions": [{
+								"type": "runSubroutine",
+								"key": {
+									"type": "rawString",
+									"value": "removeOrb"
+								},
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "target"
+								},
+								"valueToStore": {
+									"type": "getNewBehaviorTarget"
+								}
+							},{
+								"type": "createTimer",
+								"timeout": {
+									"type": "getAbilityHeroDuration"
+								},
+								"actions": [{
+									"type": "if",
+									"condition": {
+										"type": "notNull",
+										"value": {
+											"type": "getStoredTargetByKey",
+											"key": {
+												"type": "rawString",
+												"value": "target"
+											}
+										}
+									},
+									"thenActions": [{
+										"type": "createLocationTargetedProjectile",
+										"source": {
+											"type": "getCastingUnit"
+										},
+										"target": {
+											"type": "createLocationFromTarget",
+											"target": {
+												"type": "getStoredTargetByKey",
+												"key": {
+													"type": "rawString",
+													"value": "target"
+												}
+											}
+										},
+										"id": {
+											"type": "getAlias"
+										},
+										"speed": {
+											"type": "f/",
+											"value1": {
+												"type": "getDistanceBetweenLocations",
+												"origin": {
+													"type": "getUnitLocation",
+													"unit": {
+														"type": "getCastingUnit"
+													}
+												},
+												"target": {
+													"type": "createLocationFromTarget",
+													"target": {
+														"type": "getStoredTargetByKey",
+														"key": {
+															"type": "rawString",
+															"value": "target"
+														}
+													}
+												}
+											},
+											"value2": {
+												"type": "getUnitCastPoint",
+												"unit": {
+													"type": "getCastingUnit"
+												}
+											}
+										}
+									}],
+									"elseActions": []
+								}]
+						}],
+						"elseActions": []
+				}]
+			},{
+				"type": "addBehaviorChangeListener",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedBehaviorChangeListener"
+				}
+		}],
+		"onRemoveAbility": [{
+				"type": "removeTimer",
+				"timer": {
+					"type": "getStoredTimerByKey",
+					"key": {
+						"type": "rawString",
+						"value": "orbTimer"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}
+			},{
+				"type": "removeBehaviorChangeListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBehaviorChangeListener"
+				}
 		}]
 	}]
 }

@@ -16,15 +16,22 @@ public class ABAbilityEffectReactionListener implements CUnitAbilityEffectReacti
 	private List<ABAction> actions;
 	
 	private int triggerId = 0;
+	private boolean useCastId;
 	
-	public ABAbilityEffectReactionListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
+	public ABAbilityEffectReactionListener(Map<String, Object> localStore, List<ABAction> actions, int castId, boolean useCastId) {
 		this.localStore = localStore;
 		this.actions = actions;
-		this.triggerId = castId;
+		this.useCastId = useCastId;
+		if (useCastId) {
+			this.triggerId = castId;
+		}
 	}
 	
 	@Override
 	public boolean onHit(final CSimulation simulation, CUnit source, CUnit target, CAbility ability) {
+		if (!this.useCastId) {
+			this.triggerId++;
+		}
 		localStore.put(ABLocalStoreKeys.REACTIONALLOWHIT+triggerId, true);
 		localStore.put(ABLocalStoreKeys.REACTIONABILITYCASTER+triggerId, source);
 		localStore.put(ABLocalStoreKeys.REACTIONABILITYTARGET+triggerId, target);

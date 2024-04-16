@@ -16,14 +16,22 @@ public class ABAttackProjReactionListener implements CUnitAttackProjReactionList
 	private List<ABAction> actions;
 	
 	private int triggerId = 0;
+	private boolean useCastId;
 	
-	public ABAttackProjReactionListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
+	public ABAttackProjReactionListener(Map<String, Object> localStore, List<ABAction> actions, int castId, boolean useCastId) {
 		this.localStore = localStore;
 		this.actions = actions;
+		this.useCastId = useCastId;
+		if (useCastId) {
+			this.triggerId = castId;
+		}
 	}
 	
 	@Override
 	public boolean onHit(final CSimulation simulation, CUnit source, CUnit target, CAttackProjectile projectile) {
+		if (!this.useCastId) {
+			this.triggerId++;
+		}
 		localStore.put(ABLocalStoreKeys.REACTIONALLOWHIT+triggerId, true);
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, source);
 		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);

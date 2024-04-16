@@ -17,11 +17,15 @@ public class ABFinalDamageTakenModificationListener implements CUnitAttackFinalD
 	private List<ABAction> actions;
 	
 	private int triggerId = 0;
+	private boolean useCastId;
 	
-	public ABFinalDamageTakenModificationListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
+	public ABFinalDamageTakenModificationListener(Map<String, Object> localStore, List<ABAction> actions, int castId, boolean useCastId) {
 		this.localStore = localStore;
 		this.actions = actions;
-		this.triggerId = castId;
+		this.useCastId = useCastId;
+		if (useCastId) {
+			this.triggerId = castId;
+		}
 	}
 	
 	@Override
@@ -50,6 +54,9 @@ public class ABFinalDamageTakenModificationListener implements CUnitAttackFinalD
 		localStore.remove(ABLocalStoreKeys.DAMAGETYPE+triggerId);
 		localStore.remove(ABLocalStoreKeys.TOTALDAMAGEDEALT+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGEMODRESULT+triggerId);
+		if (!this.useCastId) {
+			this.triggerId++;
+		}
 		return finalDamage;
 	}
 

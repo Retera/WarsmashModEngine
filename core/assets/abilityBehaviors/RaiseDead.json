@@ -71,12 +71,12 @@
 					"value": "false"
 				}
 			},{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "A"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "createUnit",
 						"id": {
 							"type": "getAbilityDataAsID",
@@ -116,12 +116,12 @@
 						}
 				}]
 			},{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "B"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "createUnit",
 						"id": {
 							"type": "getAbilityDataAsID",
@@ -265,12 +265,12 @@
 				}
 		}],
 		"onEndCasting": [{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "A"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "if",
 						"condition": {
 							"type": "f!=0",
@@ -398,12 +398,12 @@
 						}
 				}]
 			},{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "B"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "if",
 						"condition": {
 							"type": "f!=0",
@@ -687,12 +687,12 @@
 				}
 		}],
 		"onEndCasting": [{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "A"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "if",
 						"condition": {
 							"type": "f!=0",
@@ -848,12 +848,12 @@
 						}
 				}]
 			},{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "B"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "if",
 						"condition": {
 							"type": "f!=0",

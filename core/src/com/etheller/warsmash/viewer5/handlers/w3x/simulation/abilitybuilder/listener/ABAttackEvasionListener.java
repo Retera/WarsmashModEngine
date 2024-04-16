@@ -16,11 +16,15 @@ public class ABAttackEvasionListener implements CUnitAttackEvasionListener {
 	private List<ABCondition> conditions;
 	
 	private int triggerId = 0;
+	private boolean useCastId;
 	
-	public ABAttackEvasionListener(Map<String, Object> localStore, List<ABCondition> conditions, int castId) {
+	public ABAttackEvasionListener(Map<String, Object> localStore, List<ABCondition> conditions, int castId, boolean useCastId) {
 		this.localStore = localStore;
 		this.conditions = conditions;
-		this.triggerId = castId;
+		this.useCastId = useCastId;
+		if (useCastId) {
+			this.triggerId = castId;
+		}
 	}
 	
 	@Override
@@ -42,6 +46,9 @@ public class ABAttackEvasionListener implements CUnitAttackEvasionListener {
 		localStore.remove(ABLocalStoreKeys.DAMAGEISATTACK+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGEISRANGED+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGETYPE+triggerId);
+		if (!this.useCastId) {
+			this.triggerId++;
+		}
 		return evade;
 	}
 

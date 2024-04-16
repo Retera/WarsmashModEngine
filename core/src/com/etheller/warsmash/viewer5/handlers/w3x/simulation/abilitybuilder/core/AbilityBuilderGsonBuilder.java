@@ -46,6 +46,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statbuffcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.targetcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.timercallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitgroupcallbacks.*;
@@ -219,11 +220,13 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetLocationY.class, "getLocationY")
 				.registerSubtype(ABCallbackGetUnitFacing.class, "getUnitFacing")
 				.registerSubtype(ABCallbackGetUnitAcquisitionRange.class, "getUnitAcquisitionRange")
+				.registerSubtype(ABCallbackGetUnitCastPoint.class, "getUnitCastPoint")
 				.registerSubtype(ABCallbackGetUnitCurrentMana.class, "getUnitCurrentMana")
 				.registerSubtype(ABCallbackGetUnitInitialMana.class, "getUnitInitialMana")
 				.registerSubtype(ABCallbackGetUnitCurrentHp.class, "getUnitCurrentHp")
 
 				.registerSubtype(ABCallbackGetAngleBetweenLocations.class, "getAngleBetweenLocations")
+				.registerSubtype(ABCallbackGetDistanceBetweenLocations.class, "getDistanceBetweenLocations")
 				.registerSubtype(ABCallbackTicksForDuration.class, "ticksForDuration")
 
 				.registerSubtype(ABCallbackGetTotalDamageDealt.class, "getTotalDamageDealt")
@@ -277,9 +280,13 @@ public abstract class AbilityBuilderGsonBuilder {
 	private static void registerIntegerCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackRawInteger.class, "rawInteger")
 				.registerSubtype(ABCallbackGetStoredIntegerByKey.class, "getStoredIntegerByKey")
+				.registerSubtype(ABCallbackIterator.class, "iterator")
+				
 				.registerSubtype(ABCallbackGetAbilityDataAsInteger.class, "getAbilityDataAsInteger")
 				.registerSubtype(ABCallbackGetAbilityManaCost.class, "getAbilityManaCost")
 				.registerSubtype(ABCallbackGetAbilityCastTimeAsInteger.class, "getAbilityCastTimeAsInteger")
+				.registerSubtype(ABCallbackGetAbilityTargetAttachmentPoints.class, "getAbilityTargetAttachmentPoints")
+				
 				.registerSubtype(ABCallbackCountUnitsInRangeOfUnit.class, "countUnitsInRangeOfUnit")
 				.registerSubtype(ABCallbackCountUnitsInRangeOfLocation.class, "countUnitsInRangeOfLocation")
 				.registerSubtype(ABCallbackGetSpellLevel.class, "getSpellLevel")
@@ -321,6 +328,7 @@ public abstract class AbilityBuilderGsonBuilder {
 		.registerSubtype(ABCallbackCreateLocationFromOffset.class, "createLocationFromOffset")
 				.registerSubtype(ABCallbackGetStoredLocationByKey.class, "getStoredLocationByKey")
 				.registerSubtype(ABCallbackGetTargetedLocation.class, "getTargetedLocation")
+				.registerSubtype(ABCallbackCreateLocationFromTarget.class, "createLocationFromTarget")
 				.registerSubtype(ABCallbackGetProjectileCurrentLocation.class, "getProjectileCurrentLocation")
 				.registerSubtype(ABCallbackGetUnitLocation.class, "getUnitLocation");
 	}
@@ -395,6 +403,13 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackIntegerToString.class, "i2s")
 				.registerSubtype(ABCallbackLongToString.class, "l2s")
 				;
+	}
+
+	private static void registerTargetCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
+		callbackTypeFactory
+				.registerSubtype(ABCallbackGetAbilityTarget.class, "getAbilityTarget")
+				.registerSubtype(ABCallbackGetNewBehaviorTarget.class, "getNewBehaviorTarget")
+				.registerSubtype(ABCallbackGetStoredTargetByKey.class, "getStoredTargetByKey");
 	}
 
 	private static void registerTimeOfDayEventCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
@@ -537,13 +552,14 @@ public abstract class AbilityBuilderGsonBuilder {
 	private static void registerActions(RuntimeTypeAdapterFactory<ABAction> factory) {
 		factory.registerSubtype(ABActionIf.class, "if")
 				.registerSubtype(ABActionWhile.class, "while")
+				.registerSubtype(ABActionFor.class, "for")
+				.registerSubtype(ABActionBreak.class, "break")
 				.registerSubtype(ABActionIterateUnitsInRangeOfUnit.class, "iterateUnitsInRangeOfUnit")
 				.registerSubtype(ABActionIterateUnitsInRangeOfUnitMatchingCondition.class, "iterateUnitsInRangeOfUnitMatchingCondition")
 				.registerSubtype(ABActionIterateUnitsInRangeOfLocation.class, "iterateUnitsInRangeOfLocation")
 				.registerSubtype(ABActionIterateUnitsInRangeOfLocationMatchingCondition.class, "iterateUnitsInRangeOfLocationMatchingCondition")
 				.registerSubtype(ABActionIterateUnitsInRect.class, "iterateUnitsInRect")
 				.registerSubtype(ABActionPeriodicExecute.class, "periodicExecute")
-				.registerSubtype(ABActionIterateActions.class, "iterateActions")
 				.registerSubtype(ABActionCleanUpCastInstance.class, "cleanUpCastInstance")
 
 				.registerSubtype(ABActionCheckAbilityEffectReaction.class, "checkAbilityEffectReaction")
@@ -763,7 +779,9 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionUnregisterTimeOfDayEvent.class, "unregisterTimeOfDayEvent")
 				
 				
-				
+
+				.registerSubtype(ABActionCreateSubroutine.class, "createSubroutine")
+				.registerSubtype(ABActionRunSubroutine.class, "runSubroutine")
 
 				.registerSubtype(ABActionSetFalseTimeOfDay.class, "setFalseTimeOfDay")
 				;
@@ -809,6 +827,7 @@ public abstract class AbilityBuilderGsonBuilder {
 		registerStatBuffCallbacks(callbackTypeFactory);
 		registerStateModBuffCallbacks(callbackTypeFactory);
 		registerStringCallbacks(callbackTypeFactory);
+		registerTargetCallbacks(callbackTypeFactory);
 		registerTimeOfDayEventCallbacks(callbackTypeFactory);
 		registerTimerCallbacks(callbackTypeFactory);
 		registerUnitCallbacks(callbackTypeFactory);
@@ -964,6 +983,11 @@ public abstract class AbilityBuilderGsonBuilder {
 				.of(ABStringCallback.class, "type");
 		registerStringCallbacks(stringCallbackTypeFactory);
 		gsonBuilder.registerTypeAdapterFactory(stringCallbackTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABTargetCallback> targetCallbackTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABTargetCallback.class, "type");
+		registerTargetCallbacks(targetCallbackTypeFactory);
+		gsonBuilder.registerTypeAdapterFactory(targetCallbackTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABTimeOfDayEventCallback> timeOfDayEventCallbackTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABTimeOfDayEventCallback.class, "type");

@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.abi
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -60,6 +61,12 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 						0);
 			}
 		}
+	}
+	
+	@Override
+	public int getAbilityIntField(String field) {
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		return editorData.getFieldValue(field);
 	}
 
 	@Override

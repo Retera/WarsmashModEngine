@@ -70,6 +70,9 @@ public class CUnitType {
 	private final int foodUsed;
 	private final int foodMade;
 	private final int buildTime;
+	private final int goldRepairCost;
+	private final int lumberRepairCost;
+	private final int repairTime;
 	private final EnumSet<CBuildingPathingType> preventedPathingTypes;
 	private final EnumSet<CBuildingPathingType> requiredPathingTypes;
 	private final float propWindow;
@@ -121,8 +124,8 @@ public class CUnitType {
 			final List<War3ID> researchesAvailable, final List<War3ID> upgradesUsed,
 			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType, final List<War3ID> upgradesTo,
 			final List<War3ID> itemsSold, final List<War3ID> itemsMade, final CUnitRace unitRace, final int goldCost,
-			final int lumberCost, final int foodUsed, final int foodMade, final int buildTime,
-			final EnumSet<CBuildingPathingType> preventedPathingTypes,
+			final int lumberCost, final int foodUsed, final int foodMade, final int buildTime, final int goldRepairCost,
+			final int lumberRepairCost, final int repairTime, final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes, final float propWindow, final float turnRate,
 			final List<CUnitTypeRequirement> requirements, final List<List<CUnitTypeRequirement>> requirementTiers,
 			final int level, final boolean hero, final int strength, final float strengthPerLevel, final int agility,
@@ -179,6 +182,9 @@ public class CUnitType {
 		this.foodUsed = foodUsed;
 		this.foodMade = foodMade;
 		this.buildTime = buildTime;
+		this.goldRepairCost = goldRepairCost;
+		this.lumberRepairCost = lumberRepairCost;
+		this.repairTime = repairTime;
 		this.preventedPathingTypes = preventedPathingTypes;
 		this.requiredPathingTypes = requiredPathingTypes;
 		this.propWindow = propWindow;
@@ -397,6 +403,18 @@ public class CUnitType {
 		return this.buildTime;
 	}
 
+	public int getGoldRepairCost() {
+		return this.goldRepairCost;
+	}
+
+	public int getLumberRepairCost() {
+		return this.lumberRepairCost;
+	}
+
+	public int getRepairTime() {
+		return this.repairTime;
+	}
+
 	public EnumSet<CBuildingPathingType> getPreventedPathingTypes() {
 		return this.preventedPathingTypes;
 	}
@@ -421,8 +439,7 @@ public class CUnitType {
 		final int index = tier - 1;
 		if ((index >= 0) && (index < this.requirementTiers.size())) {
 			return this.requirementTiers.get(index);
-		}
-		else {
+		} else {
 			return Collections.emptyList();
 		}
 	}

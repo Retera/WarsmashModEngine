@@ -16,17 +16,22 @@ public class ABBehaviorChangeListener implements CUnitBehaviorChangeListener {
 	private List<ABAction> actions;
 	
 	private int triggerId = 0;
+	private boolean useCastId;
 	
-	public ABBehaviorChangeListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
+	public ABBehaviorChangeListener(Map<String, Object> localStore, List<ABAction> actions, int castId, boolean useCastId) {
 		this.localStore = localStore;
 		this.actions = actions;
-		this.triggerId = castId;
+		this.useCastId = useCastId;
+		if (useCastId) {
+			this.triggerId = castId;
+		}
 	}
 	
 	@Override
-	public void onChange(CSimulation game, CUnit unit, CBehavior previousBehavior, CBehavior newBehavior) {
+	public void onChange(CSimulation game, CUnit unit, CBehavior previousBehavior, CBehavior newBehavior, boolean ongoing) {
 		localStore.put(ABLocalStoreKeys.PRECHANGEBEHAVIOR+triggerId, previousBehavior);
 		localStore.put(ABLocalStoreKeys.POSTCHANGEBEHAVIOR+triggerId, newBehavior);
+		localStore.put(ABLocalStoreKeys.BEHAVIORONGOING+triggerId, ongoing);
 		if (actions != null) {
 			for (ABAction action : actions) {
 				action.runAction(game, unit, localStore, triggerId);
@@ -34,6 +39,10 @@ public class ABBehaviorChangeListener implements CUnitBehaviorChangeListener {
 		}
 		localStore.remove(ABLocalStoreKeys.PRECHANGEBEHAVIOR+triggerId);
 		localStore.remove(ABLocalStoreKeys.POSTCHANGEBEHAVIOR+triggerId);
+		localStore.remove(ABLocalStoreKeys.BEHAVIORONGOING+triggerId);
+		if (!this.useCastId) {
+			this.triggerId++;
+		}
 	}
 
 }

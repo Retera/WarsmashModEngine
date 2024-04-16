@@ -31,5 +31,7 @@ public interface AbilityBuilderAbility extends CLevelingAbility, Aliased {
 	public float getCooldownRemainingTicks(CSimulation game, CUnit unit);
 	
 	War3ID getOnTooltipOverride();
+	
+	public int getAbilityIntField(String field);
 
 }

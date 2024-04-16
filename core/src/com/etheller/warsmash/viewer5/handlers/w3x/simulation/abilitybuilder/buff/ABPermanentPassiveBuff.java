@@ -17,6 +17,9 @@ public class ABPermanentPassiveBuff extends ABGenericPermanentBuff {
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 	
+	private boolean showFx = true;
+	private boolean playSfx = false;
+	
 	private CEffectType artType = CEffectType.TARGET;
 	private NonStackingFx fx;
 	private SimulationRenderComponent sfx;
@@ -42,6 +45,14 @@ public class ABPermanentPassiveBuff extends ABGenericPermanentBuff {
 	public void setArtType(CEffectType artType) {
 		this.artType = artType;
 	}
+	
+	public void setShowFx(boolean showFx) {
+		this.showFx = showFx;
+	}
+	
+	public void setPlaySfx(boolean playSfx) {
+		this.playSfx = playSfx;
+	}
 
 	@Override
 	protected void onBuffAdd(CSimulation game, CUnit unit) {
@@ -49,9 +60,13 @@ public class ABPermanentPassiveBuff extends ABGenericPermanentBuff {
 			unit.removeNonStackingFx(game, this.fx);
 		}
 		if (this.getAlias() != null) {
-			this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), artType);
-			this.sfx = game.unitSoundEffectEvent(unit, getAlias());
-			this.lsfx = game.unitLoopSoundEffectEvent(unit, getAlias());
+			if (showFx) {
+				this.fx = unit.addNonStackingFx(game, getAlias().asStringValue(), getAlias(), artType);
+			}
+			if (playSfx) {
+				this.sfx = game.unitSoundEffectEvent(unit, getAlias());
+				this.lsfx = game.unitLoopSoundEffectEvent(unit, getAlias());
+			}
 		}
 		if (onAddActions != null) {
 			for (ABAction action : onAddActions) {

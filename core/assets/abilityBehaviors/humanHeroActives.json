@@ -76,12 +76,12 @@
 					"value": 0
 				},
 				"actions": [{
-						"type": "iterateActions",
+						"type": "for",
 						"times": {
 							"type": "rawInteger",
 							"value": 10
 						},
-						"iterationActions": [{
+						"actions": [{
 									"type": "storeValueLocally",
 									"key": {
 										"type": "rawString",

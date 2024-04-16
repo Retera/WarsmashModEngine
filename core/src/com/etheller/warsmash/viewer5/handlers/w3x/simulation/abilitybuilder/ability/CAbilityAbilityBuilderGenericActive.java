@@ -119,6 +119,12 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			this.castingSecondaryTags = SequenceUtils.SPELL;
 		}
 	}
+	
+	@Override
+	public int getAbilityIntField(String field) {
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		return editorData.getFieldValue(field);
+	}
 
 	@Override
 	public void setLevel(CSimulation game, CUnit unit, int level) {

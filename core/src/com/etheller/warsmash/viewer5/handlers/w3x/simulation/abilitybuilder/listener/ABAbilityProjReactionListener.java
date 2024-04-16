@@ -16,15 +16,22 @@ public class ABAbilityProjReactionListener implements CUnitAbilityProjReactionLi
 	private List<ABAction> actions;
 	
 	private int triggerId = 0;
+	private boolean useCastId;
 	
-	public ABAbilityProjReactionListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
+	public ABAbilityProjReactionListener(Map<String, Object> localStore, List<ABAction> actions, int castId, boolean useCastId) {
 		this.localStore = localStore;
 		this.actions = actions;
-		this.triggerId = castId;
+		this.useCastId = useCastId;
+		if (useCastId) {
+			this.triggerId = castId;
+		}
 	}
 	
 	@Override
 	public boolean onHit(final CSimulation simulation, CUnit source, CUnit target, CProjectile projectile) {
+		if (!this.useCastId) {
+			this.triggerId++;
+		}
 		localStore.put(ABLocalStoreKeys.REACTIONALLOWHIT+triggerId, true);
 		localStore.put(ABLocalStoreKeys.REACTIONABILITYCASTER+triggerId, source);
 		localStore.put(ABLocalStoreKeys.REACTIONABILITYTARGET+triggerId, target);

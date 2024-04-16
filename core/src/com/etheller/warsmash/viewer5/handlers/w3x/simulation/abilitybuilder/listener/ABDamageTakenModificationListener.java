@@ -18,11 +18,15 @@ public class ABDamageTakenModificationListener implements CUnitAttackDamageTaken
 	private List<ABAction> actions;
 	
 	private int triggerId = 0;
+	private boolean useCastId;
 	
-	public ABDamageTakenModificationListener(Map<String, Object> localStore, List<ABAction> actions, int castId) {
+	public ABDamageTakenModificationListener(Map<String, Object> localStore, List<ABAction> actions, int castId, boolean useCastId) {
 		this.localStore = localStore;
 		this.actions = actions;
-		this.triggerId = castId;
+		this.useCastId = useCastId;
+		if (useCastId) {
+			this.triggerId = castId;
+		}
 	}
 	
 	@Override
@@ -52,6 +56,9 @@ public class ABDamageTakenModificationListener implements CUnitAttackDamageTaken
 		localStore.remove(ABLocalStoreKeys.BASEDAMAGEDEALT+triggerId);
 		localStore.remove(ABLocalStoreKeys.BONUSDAMAGEDEALT+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGEMODRESULT+triggerId);
+		if (!this.useCastId) {
+			this.triggerId++;
+		}
 		return previousDamage;
 	}
 

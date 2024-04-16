@@ -23,6 +23,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	private ABAbilityTargetStillTargetableVisitor preCastTargetableVisitor;
 	
 	private int castStartTick = 0;
+	private int castBehaviorNotifyTick = 0;
 	private boolean doneEffect = false;
 	private boolean channeling = false;
 	private boolean preventReInterrupt = false;
@@ -107,6 +108,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 			}
 			
 			this.castStartTick = game.getGameTurnTick();
+			this.castBehaviorNotifyTick = (int) (this.castStartTick + 0.5/WarsmashConstants.SIMULATION_STEP_TIME);
 			
 			if (!this.target.visit(this.preCastTargetableVisitor.reset(game, this.unit, ability, false, orderId))) {
 				return this.unit.pollNextOrderBehavior(game);
@@ -276,7 +278,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 
 	@Override
 	protected boolean checkTargetStillValid(CSimulation simulation) {
-		return this.target.visit(this.preCastTargetableVisitor.reset(simulation, this.unit, this.ability, this.channeling, orderId));
+		return this.doneEffect || this.target.visit(this.preCastTargetableVisitor.reset(simulation, this.unit, this.ability, this.channeling, orderId));
 	}
 
 	@Override

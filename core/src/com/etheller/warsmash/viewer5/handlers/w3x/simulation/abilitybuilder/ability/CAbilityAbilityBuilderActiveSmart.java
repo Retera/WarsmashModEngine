@@ -348,4 +348,10 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 		return 0;
 	}
 
+	@Override
+	public int getAbilityIntField(String field) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

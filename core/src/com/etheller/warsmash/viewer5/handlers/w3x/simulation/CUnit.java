@@ -219,7 +219,9 @@ public class CUnit extends CWidget {
 	private CBehavior interruptedDefaultBehavior;
 	private CBehavior interruptedBehavior;
 	private COrder lastStartedOrder = null;
-	private CUnit workerInside;
+	private CUnit worker;
+	private boolean workerInside;
+	private int powerWorkers;
 	private final War3ID[] buildQueue = new War3ID[WarsmashConstants.BUILD_QUEUE_SIZE];
 	private final QueueItemType[] buildQueueTypes = new QueueItemType[WarsmashConstants.BUILD_QUEUE_SIZE];
 	private boolean queuedUnitFoodPaid = false;
@@ -1906,9 +1908,9 @@ public class CUnit extends CWidget {
 						this.constructingPaused = false;
 						this.constructionProgress = 0;
 						if (this.constructionConsumesWorker) {
-							if (this.workerInside != null) {
-								game.removeUnit(this.workerInside);
-								this.workerInside = null;
+							if (this.worker != null) {
+								game.removeUnit(this.worker);
+								this.worker = null;
 							}
 						}
 						else {
@@ -2029,7 +2031,7 @@ public class CUnit extends CWidget {
 								final CUnit trainedUnit = game.createUnit(queuedRawcode, this.playerIndex, getX(),
 										getY(), game.getGameplayConstants().getBuildingAngle());
 
-								game.removeUnit(getWorkerInside());
+								game.removeUnit(getWorker());
 
 								// dont add food cost to player 2x
 								trainedUnit.setFoodUsed(trainedUnitType.getFoodUsed());
@@ -2261,17 +2263,17 @@ public class CUnit extends CWidget {
 	}
 
 	private void popoutWorker(final CSimulation game) {
-		if (this.workerInside != null) {
-			this.workerInside.setInvulnerable(false);
-			this.workerInside.setHidden(false);
-			this.workerInside.setPaused(false);
-			this.workerInside.nudgeAround(game, this);
+		if (this.worker != null && this.workerInside) {
+			this.worker.setInvulnerable(false);
+			this.worker.setHidden(false);
+			this.worker.setPaused(false);
+			this.worker.nudgeAround(game, this);
 			if (this.constructionConsumesWorker) {
-				game.getPlayer(this.workerInside.getPlayerIndex()).setUnitFoodUsed(this.workerInside,
-						this.workerInside.getUnitType().getFoodUsed());
+				game.getPlayer(this.worker.getPlayerIndex()).setUnitFoodUsed(this.worker,
+						this.worker.getUnitType().getFoodUsed());
 			}
-			this.workerInside = null;
 		}
+		this.worker = null;
 	}
 
 	public boolean autoAcquireTargets(final CSimulation game, final boolean disableMove) {
@@ -3746,12 +3748,25 @@ public class CUnit extends CWidget {
 		return this.invulnerable;
 	}
 
-	public void setWorkerInside(final CUnit unit) {
-		this.workerInside = unit;
+	public void setWorker(final CUnit unit, final boolean inside) {
+		this.worker = unit;
+		this.workerInside = inside;
 	}
 
-	public CUnit getWorkerInside() {
-		return this.workerInside;
+	public CUnit getWorker() {
+		return this.worker;
+	}
+	
+	public void addPowerWorker() {
+		this.powerWorkers++;
+	}
+	
+	public void removePowerWorker() {
+		this.powerWorkers--;
+	}
+	
+	public int getPowerWorkers() {
+		return this.powerWorkers;
 	}
 
 	private void nudgeAround(final CSimulation simulation, final CUnit structure) {
@@ -3868,7 +3883,7 @@ public class CUnit extends CWidget {
 					player.refundFor(unitType);
 					player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
 
-					getWorkerInside().setHidden(false);
+					getWorker().setHidden(false);
 					break;
 				}
 				case HERO_REVIVE: {
@@ -3952,7 +3967,7 @@ public class CUnit extends CWidget {
 	public void queueSacrificingUnit(final CSimulation game, final War3ID rawcode, final CUnit sacrifice) {
 		if (queue(game, rawcode, QueueItemType.SACRIFICE)) {
 			sacrifice.setHidden(true);
-			setWorkerInside(sacrifice);
+			setWorker(sacrifice, true);
 
 			final CPlayer player = game.getPlayer(this.playerIndex);
 			final CUnitType unitType = game.getUnitData().getUnitType(rawcode);
@@ -4761,7 +4776,7 @@ public class CUnit extends CWidget {
 	}
 
 	public void fireConstructFinishEvents(final CSimulation game) {
-		final CUnit constructingUnit = this.workerInside; // TODO incorrect for human/undead/ancient, etc, needs work
+		final CUnit constructingUnit = this.worker;
 		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_CONSTRUCT_FINISH);
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {

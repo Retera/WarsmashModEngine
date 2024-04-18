@@ -1,7 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build;
 
 import java.awt.image.BufferedImage;
-import java.util.EnumSet;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -17,7 +16,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.BuildOnBuildingIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
@@ -94,7 +92,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 					}
 				}
 				constructedStructure.setConstructing(true);
-				constructedStructure.setWorkerInside(this.unit);
+				constructedStructure.setWorker(this.unit, true);
 				final CAbilityBuildInProgress abilityBuildInProgress =
 						new CAbilityBuildInProgress(simulation.getHandleIdAllocator().createId());
 				constructedStructure.setLife(simulation,

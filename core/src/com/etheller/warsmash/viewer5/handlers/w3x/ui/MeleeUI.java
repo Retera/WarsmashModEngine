@@ -3182,10 +3182,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.queueIconFrames[0].setTexture(constructingUnitUI.getIcon());
 					this.queueIconFrames[0].setToolTip(constructingUnitUI.getToolTip());
 					this.queueIconFrames[0].setUberTip(constructingUnitUI.getUberTip());
-					if ((simulationUnit.getWorkerInside() != null) && !simulationUnit.isConstructionConsumesWorker()) {
+					if ((simulationUnit.getWorker() != null) && !simulationUnit.isConstructionConsumesWorker() && !simulationUnit.isConstructingPaused()) {
 						this.selectWorkerInsideFrame.setVisible(true);
 						this.selectWorkerInsideFrame.setTexture(this.war3MapViewer.getAbilityDataUI()
-								.getUnitUI(simulationUnit.getWorkerInside().getTypeId()).getIcon());
+								.getUnitUI(simulationUnit.getWorker().getTypeId()).getIcon());
 					}
 					else {
 						this.selectWorkerInsideFrame.setVisible(false);
@@ -4472,7 +4472,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				break;
 			case 1:
 				final List<RenderWidget> unitList = Arrays.asList(
-						this.war3MapViewer.getRenderPeer(this.selectedUnit.getSimulationUnit().getWorkerInside()));
+						this.war3MapViewer.getRenderPeer(this.selectedUnit.getSimulationUnit().getWorker()));
 				this.war3MapViewer.doSelectUnit(unitList);
 				selectWidgets(unitList);
 				break;

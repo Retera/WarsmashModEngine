@@ -16,10 +16,12 @@ public class CAbilityTypeDefinitionHumanRepair extends AbstractCAbilityTypeDefin
 	protected CAbilityTypeHumanRepairLevelData createLevelData(final GameObject abilityEditorData, final int level) {
 		final float costRatio = abilityEditorData.getFieldAsFloat(DATA_A + level, 0);
 		final float timeRatio = abilityEditorData.getFieldAsFloat(DATA_B + level, 0);
+		final float powerBuildCostRatio = abilityEditorData.getFieldAsFloat(DATA_C + level, 0);
+		final float powerBuildTimeRatio = abilityEditorData.getFieldAsFloat(DATA_D + level, 0);
 		final float navalRangeBonus = abilityEditorData.getFieldAsFloat(DATA_E + level, 0);
 		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE + level, 0);
 		return new CAbilityTypeHumanRepairLevelData(getTargetsAllowed(abilityEditorData, level), navalRangeBonus,
-				costRatio, timeRatio, castRange);
+				powerBuildCostRatio, powerBuildTimeRatio, costRatio, timeRatio, castRange);
 	}
 
 	@Override

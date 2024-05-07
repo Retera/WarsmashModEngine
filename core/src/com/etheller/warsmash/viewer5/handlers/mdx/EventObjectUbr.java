@@ -3,7 +3,6 @@ package com.etheller.warsmash.viewer5.handlers.mdx;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.EmittedObject;
-import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class EventObjectUbr
 		extends EmittedObject<MdxComplexInstance, EventObjectEmitter<EventObjectEmitterObject, EventObjectUbr>> {
@@ -25,7 +24,6 @@ public class EventObjectUbr
 		final MdxNode node = instance.nodes[emitterObject.index];
 		final Matrix4 worldMatrix = node.worldMatrix;
 		final Vector3 pivot = node.pivot;
-		final War3MapViewer viewer = (War3MapViewer) instance.model.viewer;
 
 		this.health = emitterObject.lifeSpan;
 

@@ -904,8 +904,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// RenderUnit class:
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -917,8 +916,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -936,8 +934,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -949,8 +946,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -2317,8 +2313,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments = EnumSet.noneOf(SecondaryTag.class);
 			final String requiredAnimationNamesForAttachmentsString = row
 					.getFieldAsString(RenderUnit.ATTACHMENT_ANIM_PROPS, 0);
-			TokenLoop:
-			for (final String animationName : requiredAnimationNamesForAttachmentsString.split(",")) {
+			TokenLoop: for (final String animationName : requiredAnimationNamesForAttachmentsString.split(",")) {
 				final String upperCaseToken = animationName.toUpperCase();
 				for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 					if (upperCaseToken.equals(secondaryTag.name())) {
@@ -3322,6 +3317,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					{
 						final MdxModel model = (MdxModel) renderUnit.instance.model;
 						int index = -1;
+						int bestFitAttachmentNameLength = Integer.MAX_VALUE;
 						for (int i = 0; i < model.attachments.size(); i++) {
 							final Attachment attachment = model.attachments.get(i);
 							boolean match = true;
@@ -3330,9 +3326,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									match = false;
 								}
 							}
-							if (match) {
+							final int attachmentNameLength = attachment.getName().length();
+							if (match && (attachmentNameLength < bestFitAttachmentNameLength)) {
 								index = i;
-								break;
+								bestFitAttachmentNameLength = attachmentNameLength;
 							}
 						}
 						if (index != -1) {

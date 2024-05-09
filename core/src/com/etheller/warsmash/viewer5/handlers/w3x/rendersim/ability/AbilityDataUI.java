@@ -173,8 +173,7 @@ public class AbilityDataUI {
 			}
 
 			final List<EffectAttachmentUI> casterArt = new ArrayList<>();
-			final List<String> casterArtPaths = Arrays
-					.asList(abilityTypeData.getFieldAsString(CASTER_ART, 0).split(","));
+			final List<String> casterArtPaths = abilityTypeData.getFieldAsList(CASTER_ART);
 			final int casterAttachmentCount = abilityTypeData.getFieldAsInteger(CASTER_ART_ATTACHMENT_COUNT, 0);
 			final int casterAttachmentIndexMax = Math.min(casterAttachmentCount - 1, casterArtPaths.size() - 1);
 			final int casterIteratorCount = Math.max(casterAttachmentCount, casterArtPaths.size());
@@ -185,8 +184,7 @@ public class AbilityDataUI {
 				casterArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
 			}
 			final List<EffectAttachmentUI> targetArt = new ArrayList<>();
-			final List<String> targetArtPaths = Arrays
-					.asList(abilityTypeData.getFieldAsString(TARGET_ART, 0).split(","));
+			final List<String> targetArtPaths = abilityTypeData.getFieldAsList(TARGET_ART);
 			final int targetAttachmentCount = abilityTypeData.getFieldAsInteger(TARGET_ART_ATTACHMENT_COUNT, 0);
 			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
 			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
@@ -238,7 +236,7 @@ public class AbilityDataUI {
 			final List<War3ID> LightningEffects = new ArrayList<>();
 
 			for (final String lightning : LightningEffectList) {
-				if (lightning != null && !lightning.isBlank()) {
+				if ((lightning != null) && !lightning.isBlank()) {
 					LightningEffects.add(War3ID.fromString(lightning));
 				}
 			}
@@ -246,11 +244,12 @@ public class AbilityDataUI {
 			final String effectSound = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND, 0);
 			final String effectSoundLooped = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND_LOOPED, 0);
 
-			this.rawcodeToUI.put(War3ID.fromString(alias), new AbilityUI(
-					new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY, iconResearchTip,
-							iconResearchUberTip, iconResearchHotkey),
-					normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
-					missileArt, LightningEffects, effectSound, effectSoundLooped));
+			this.rawcodeToUI.put(War3ID.fromString(alias),
+					new AbilityUI(
+							new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY,
+									iconResearchTip, iconResearchUberTip, iconResearchHotkey),
+							normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
+							missileArt, LightningEffects, effectSound, effectSoundLooped));
 		}
 		for (final String alias : buffData.keySet()) {
 			// TODO pretty sure that in WC3 the buffs and abilities are stored in the same
@@ -270,7 +269,8 @@ public class AbilityDataUI {
 			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
 			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
 			for (int i = 0; i < targetIteratorCount; i++) {
-				final String modelPath = targetArtPaths.isEmpty() ? "" : targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
+				final String modelPath = targetArtPaths.isEmpty() ? ""
+						: targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
 				final String attachmentPointKey = tryGet(BUFF_TARGET_ART_ATTACHMENT_POINT, i);
 				final List<String> attachmentPoints = abilityTypeData.getFieldAsList(attachmentPointKey);
 				targetArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));

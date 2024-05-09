@@ -1545,12 +1545,12 @@ public class Terrain {
 	}
 
 	public SplatMover addUberSplat(final String path, final float x, final float y, final float z, final float scale,
-			final boolean unshaded, final boolean noDepthTest, final boolean highPriority) {
+			final boolean unshaded, final boolean noDepthTest, final boolean highPriority, final boolean aboveWater) {
 		SplatModel splatModel = this.uberSplatModels.get(path);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null),
 					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest, highPriority,
-					false);
+					aboveWater);
 			addSplatBatchModel(path, splatModel);
 		}
 		return splatModel.add(x - scale, y - scale, x + scale, y + scale, z, this.centerOffset);

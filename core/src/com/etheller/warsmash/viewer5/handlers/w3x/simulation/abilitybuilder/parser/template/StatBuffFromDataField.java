@@ -86,11 +86,19 @@ public class StatBuffFromDataField {
 			percentage = this.isPercentageOverride();
 		} else {
 			if (this.getPercentageBooleanField() != null) {
-				percentage = Integer.parseInt(abilityData.getData()
-						.get(this.getPercentageBooleanField().getIndex())) == 1;
+				try {
+					percentage = Integer.parseInt(abilityData.getData()
+							.get(this.getPercentageBooleanField().getIndex())) == 1;
+				} catch (NumberFormatException exc) {
+					percentage = false;
+				}
 			} else if (this.getFlatBooleanField() != null) {
-				percentage = !(Integer.parseInt(
-						abilityData.getData().get(this.getFlatBooleanField().getIndex())) == 1);
+				try {
+					percentage = !(Integer.parseInt(
+							abilityData.getData().get(this.getFlatBooleanField().getIndex())) == 1);
+				} catch (NumberFormatException exc) {
+					percentage = true;
+				}
 			}
 		}
 		if (this.getType() == StatBuffType.ATK) {

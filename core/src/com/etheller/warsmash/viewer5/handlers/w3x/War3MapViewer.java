@@ -2239,7 +2239,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final float s) {
 		SplatMover buildingUberSplatDynamicIngame;
 		buildingUberSplatDynamicIngame = this.terrain.addUberSplat(texturePath, unitX, unitY, 1, s, false, false,
-				false);
+				false, false);
 		return buildingUberSplatDynamicIngame;
 	}
 

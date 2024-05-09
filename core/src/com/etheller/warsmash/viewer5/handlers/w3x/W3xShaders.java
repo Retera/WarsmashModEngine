@@ -52,13 +52,13 @@ public class W3xShaders {
 					"        if (u_aboveWater) {\r\n" + //
 					"          height = max(height, (texture2D(u_waterHeightsMap, base * u_pixel + halfPixel).r + u_waterHeightOffset) * 128.0);\r\n"
 					+ //
-					"          hL = max(hL, (texture2D(u_heightMap, vec2(base - vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					"          hL = max(hL, (texture2D(u_waterHeightsMap, vec2(base - vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
 					+ //
-					"          hR = max(hR, (texture2D(u_heightMap, vec2(base + vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					"          hR = max(hR, (texture2D(u_waterHeightsMap, vec2(base + vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
 					+ //
-					"          hD = max(hD, (texture2D(u_heightMap, vec2(base - vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					"          hD = max(hD, (texture2D(u_waterHeightsMap, vec2(base - vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
 					+ //
-					"          hU = max(hU, (texture2D(u_heightMap, vec2(base + vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					"          hU = max(hU, (texture2D(u_waterHeightsMap, vec2(base + vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
 					+ //
 					"        }\r\n" + //
 					"      } else {\r\n" + //

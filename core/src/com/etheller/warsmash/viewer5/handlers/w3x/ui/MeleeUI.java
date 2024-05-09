@@ -2416,7 +2416,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (MeleeUI.this.placementCursor == null) {
 				MeleeUI.this.placementCursor = viewer.terrain.addUberSplat(
 						MeleeUI.this.rootFrame.getSkinField("PlacementCursor"), clickLocationTemp.x,
-						clickLocationTemp.y, 10, radius, true, true, true);
+						clickLocationTemp.y, 10, radius, true, true, true, true);
 			}
 			MeleeUI.this.placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
 					viewer.terrain.centerOffset);

@@ -584,6 +584,7 @@ public class Jass2 {
 			final HandleJassType ubersplatType = globals.registerHandleType("ubersplat");
 			final HandleJassType hashtableType = globals.registerHandleType("hashtable");
 			final HandleJassType frameHandleType = globals.registerHandleType("framehandle");
+			final HandleJassType minimapiconType = globals.registerHandleType("minimapicon");
 
 			// Warsmash Ability API
 			final HandleJassType abilitytypeType = globals.registerHandleType("abilitytype");
@@ -1912,16 +1913,6 @@ public class Jass2 {
 						unit.setAcquisitionRange((float) range);
 						return null;
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("GetClickedButton",
-					(arguments, globalScope, triggerScope) -> {
-						return new HandleJassValue(buttonType,
-								((CommonTriggerExecutionScope) triggerScope).getClickedButton());
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("GetClickedDialog",
-					(arguments, globalScope, triggerScope) -> {
-						return new HandleJassValue(dialogType,
-								((CommonTriggerExecutionScope) triggerScope).getClickedDialog());
-					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterDialogEvent",
 					(arguments, globalScope, triggerScope) -> {
 						final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -2008,11 +1999,13 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetClickedButton",
 					(arguments, globalScope, triggerScope) -> {
-						throw new UnsupportedOperationException("GetClickedButton not yet implemented ???");
+						return new HandleJassValue(buttonType,
+								((CommonTriggerExecutionScope) triggerScope).getClickedButton());
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetClickedDialog",
 					(arguments, globalScope, triggerScope) -> {
-						throw new UnsupportedOperationException("GetClickedDialog not yet implemented ???");
+						return new HandleJassValue(dialogType,
+								((CommonTriggerExecutionScope) triggerScope).getClickedDialog());
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetTournamentFinishSoonTimeRemaining",
 					(arguments, globalScope, triggerScope) -> {
@@ -3711,6 +3704,9 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetSpellAbilityUnit",
 					(arguments, globalScope, triggerScope) -> {
+						if (!(triggerScope instanceof CommonTriggerExecutionScope)) {
+							return unitType.getNullValue();
+						}
 						return new HandleJassValue(unitType,
 								((CommonTriggerExecutionScope) triggerScope).getSpellAbilityUnit());
 					});
@@ -4637,6 +4633,7 @@ public class Jass2 {
 			final HandleJassType ubersplatType = globals.registerHandleType("ubersplat");
 			final HandleJassType hashtableType = globals.registerHandleType("hashtable");
 			final HandleJassType frameHandleType = globals.registerHandleType("framehandle");
+			final HandleJassType minimapiconType = globals.registerHandleType("minimapicon");
 
 			// Warsmash Ability API
 			final HandleJassType abilitytypeType = globals.registerHandleType("abilitytype");
@@ -4960,11 +4957,14 @@ public class Jass2 {
 		@Override
 		public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 				final TriggerExecutionScope triggerScope) {
-			final CHashtable table = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+			final CHashtable table = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 			final Integer parentKey = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 			final Integer childKey = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
 			table.save(parentKey, childKey, arguments.get(3));
-			return null;
+			if (table == null) {
+				return BooleanJassValue.FALSE;
+			}
+			return BooleanJassValue.TRUE;
 		}
 	}
 

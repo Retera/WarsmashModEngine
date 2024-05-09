@@ -258,8 +258,13 @@ public class DataTable implements ObjectData {
 						if (flipMode && input.contains("Y") && (input == kInput)) {
 							eIndex = Math.min(subYIndex, eIndex);
 						}
-						final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
-						fieldId = Integer.parseInt(input.substring(subXIndex + 1, fieldIdEndIndex));
+						String afterX = input.substring(subXIndex + 1);
+						int afterXSemicolon = afterX.indexOf(';');
+						if (afterXSemicolon == -1) {
+							afterXSemicolon = input.length();
+						}
+						fieldId = Integer.parseInt(afterX.substring(0, afterXSemicolon));
+//						final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
 					}
 
 					final int quotationIndex = kInput.indexOf("\"");
@@ -294,7 +299,9 @@ public class DataTable implements ObjectData {
 				if (flipMode && kInput.contains("Y")) {
 					eIndex = Math.min(kInput.indexOf("Y"), eIndex);
 				}
-				final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
+				int nIndex = kInput.indexOf("N");
+				int eIndexCutoff = (nIndex != -1 && nIndex < eIndex) ? nIndex : eIndex;
+				final int fieldIdEndIndex = kInput != input ? input.length() : eIndexCutoff - 1;
 				final int fieldId = (subXIndex == -1) || (subXIndex > fieldIdEndIndex) ? 1
 						: Integer.parseInt(input.substring(subXIndex + 1, fieldIdEndIndex));
 				String fieldValue = kInput.substring(eIndex + 1);

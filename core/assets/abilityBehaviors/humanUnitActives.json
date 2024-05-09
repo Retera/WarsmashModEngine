@@ -1455,7 +1455,7 @@
 									}
 								},{
 									"type": "removeBehaviorChangeListener",
-									"targetUnit": {
+									"unit": {
 										"type": "getBuffedUnit"
 									},
 									"listener": {
@@ -1518,7 +1518,7 @@
 						}]
 					},{
 						"type": "addBehaviorChangeListener",
-						"targetUnit": {
+						"unit": {
 							"type": "getAbilityTargetedUnit"
 						},
 						"listener": {

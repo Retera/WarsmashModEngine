@@ -1887,36 +1887,6 @@
 				}
 		}],
 		"onBeginCasting": [{
-				"type": "if",
-				"condition": {
-					"type": "isTimeOfDayInRange",
-					"startTime": {
-						"type": "rawFloat",
-						"value": 6
-					},
-					"endTime": {
-						"type": "rawFloat",
-						"value": 18
-					}
-				},
-				"thenActions": [{
-					"type": "setAbilityEnabledForPlayer",
-					"player": {
-						"type": "getOwnerOfUnit",
-						"unit": {
-							"type": "getCastingUnit"
-						}
-					},
-					"abilityId": {
-						"type": "getAlias"
-					},
-					"enabled": {
-						"type": "rawBoolean",
-						"value": "false"
-					}
-				}],
-				"elseActions": []
-			},{
 			"type": "beginChanneling"
 		}]
 	}]

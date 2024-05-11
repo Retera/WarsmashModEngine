@@ -335,7 +335,6 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 			// settings instead of what it should be
 			this.hasPlayedStandHack = false;
 		}
-		System.out.println("Setting fog settings: " + fogSettings);
 		if (fogSettings != null) {
 			this.scene.fogSettings.style = fogSettings.style;
 			this.scene.fogSettings.color = fogSettings.color;

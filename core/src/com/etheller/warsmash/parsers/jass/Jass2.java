@@ -71,6 +71,7 @@ import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.FogStyle;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
@@ -2106,6 +2107,23 @@ public class Jass2 {
 						war3MapViewer.setDayNightModels(terrainDNCFile, unitDNCFile);
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetTerrainFogEx",
+					(arguments, globalScope, triggerScope) -> {
+						final Integer fogStyle = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final Double start = arguments.get(1).visit(RealJassValueVisitor.getInstance());
+						final Double end = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+						final Double density = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+						final Double r = arguments.get(4).visit(RealJassValueVisitor.getInstance());
+						final Double g = arguments.get(5).visit(RealJassValueVisitor.getInstance());
+						final Double b = arguments.get(6).visit(RealJassValueVisitor.getInstance());
+						war3MapViewer.worldScene.fogSettings.color = new Color(r.floatValue(), g.floatValue(),
+								b.floatValue(), 1.0f);
+						war3MapViewer.worldScene.fogSettings.density = density.floatValue();
+						war3MapViewer.worldScene.fogSettings.start = start.floatValue();
+						war3MapViewer.worldScene.fogSettings.end = end.floatValue();
+						war3MapViewer.worldScene.fogSettings.setStyleByIndex(fogStyle + 1);
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("NewSoundEnvironment",
 					(arguments, globalScope, triggerScope) -> {
 						final String environmentName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
@@ -2382,12 +2400,13 @@ public class Jass2 {
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("AddResourceAmount",
-				(final List<JassValue> arguments, final GlobalScope globalScope, final TriggerExecutionScope triggerScope) -> {
-				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-				final int resourceAmount = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-				whichUnit.setGold(whichUnit.getGold() + resourceAmount);
-				return null;
-			});
+					(final List<JassValue> arguments, final GlobalScope globalScope,
+							final TriggerExecutionScope triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int resourceAmount = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						whichUnit.setGold(whichUnit.getGold() + resourceAmount);
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetResourceAmount",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -2419,7 +2438,8 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("AddHeroXP",
 					(arguments, globalScope, triggerScope) -> {
-						// Todo add showEyeCandy boolean and update addXp fn and upstream fns to make hero level up fx suppressable
+						// Todo add showEyeCandy boolean and update addXp fn and upstream fns to make
+						// hero level up fx suppressable
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final int xp = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final CAbilityHero heroData = whichUnit.getHeroData();
@@ -2430,7 +2450,8 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetHeroXP",
 					(arguments, globalScope, triggerScope) -> {
-						// Todo add showEyeCandy boolean and update addXp fn and upstream fns to make hero level up fx suppressable
+						// Todo add showEyeCandy boolean and update addXp fn and upstream fns to make
+						// hero level up fx suppressable
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final int xp = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final CAbilityHero heroData = whichUnit.getHeroData();
@@ -2438,7 +2459,7 @@ public class Jass2 {
 							heroData.setXp(CommonEnvironment.this.simulation, whichUnit, xp);
 						}
 						return null;
-					});      
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetHeroLevel",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -2524,110 +2545,127 @@ public class Jass2 {
 						return new IntegerJassValue(
 								player.getPlayerState(CommonEnvironment.this.simulation, whichPlayerState));
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("GetUnitFoodUsed", (arguments, globalScope, triggerScope) -> {
-				final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-				return new IntegerJassValue(whichUnit != null ? whichUnit.getFoodUsed() : 0);
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetUnitFoodMade", (arguments, globalScope, triggerScope) -> {
-				final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-				return new IntegerJassValue(whichUnit != null ? whichUnit.getFoodMade() : 0);
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetFoodMade", (arguments, globalScope, triggerScope) -> {
-				final Integer id = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-				final War3ID war3id = new War3ID(id);
-				final CUnitType t = CommonEnvironment.this.simulation.getUnitData().getUnitType(war3id);
-				return new IntegerJassValue(t != null ? t.getFoodMade() : 0);
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetFoodUsed", (arguments, globalScope, triggerScope) -> {
-				final Integer id = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-				final War3ID war3id = new War3ID(id);
-				final CUnitType t = CommonEnvironment.this.simulation.getUnitData().getUnitType(war3id);
-				return new IntegerJassValue(t != null ? t.getFoodUsed() : 0);
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetUnitFacing", (arguments, globalScope, triggerScope) -> {
-				final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-				return new RealJassValue(whichUnit != null ? whichUnit.getFacing() : 0.0);
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("GetUnitMoveSpeed", (arguments, globalScope, triggerScope) -> {
-				final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-				return new RealJassValue(whichUnit != null ? whichUnit.getSpeed() : 0.0);
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("IsUnitRace", (arguments, globalScope, triggerScope) -> {
-				final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-				final CRace whichRace = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitFoodUsed",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new IntegerJassValue(whichUnit != null ? whichUnit.getFoodUsed() : 0);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitFoodMade",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new IntegerJassValue(whichUnit != null ? whichUnit.getFoodMade() : 0);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetFoodMade",
+					(arguments, globalScope, triggerScope) -> {
+						final Integer id = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final War3ID war3id = new War3ID(id);
+						final CUnitType t = CommonEnvironment.this.simulation.getUnitData().getUnitType(war3id);
+						return new IntegerJassValue(t != null ? t.getFoodMade() : 0);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetFoodUsed",
+					(arguments, globalScope, triggerScope) -> {
+						final Integer id = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final War3ID war3id = new War3ID(id);
+						final CUnitType t = CommonEnvironment.this.simulation.getUnitData().getUnitType(war3id);
+						return new IntegerJassValue(t != null ? t.getFoodUsed() : 0);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitFacing",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new RealJassValue(whichUnit != null ? whichUnit.getFacing() : 0.0);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitMoveSpeed",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new RealJassValue(whichUnit != null ? whichUnit.getSpeed() : 0.0);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("IsUnitRace",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CRace whichRace = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 
-				if (whichUnit != null) {
-					final CUnitType t = whichUnit.getUnitType();
+						if (whichUnit != null) {
+							final CUnitType t = whichUnit.getUnitType();
 
-					return new BooleanJassValue(t.getRace().equals(whichRace));
-				}
+							return new BooleanJassValue(t.getRace().equals(whichRace));
+						}
 
-				return JassType.BOOLEAN.getNullValue();
-			});
+						return JassType.BOOLEAN.getNullValue();
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnit", (arguments, globalScope, triggerScope) -> {
 				final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 				final CUnit whichSpecifiedUnit = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 
-				if (whichUnit != null && whichSpecifiedUnit != null) {
+				if ((whichUnit != null) && (whichSpecifiedUnit != null)) {
 					return new BooleanJassValue(whichUnit.getHandleId() == whichSpecifiedUnit.getHandleId());
 				}
 
 				return JassType.BOOLEAN.getNullValue();
 			});
-			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRange", (arguments, globalScope, triggerScope) -> {
-				final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-				final CUnit otherUnit = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
-				final Double distance = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRange",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CUnit otherUnit = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final Double distance = arguments.get(2).visit(RealJassValueVisitor.getInstance());
 
-				if (whichUnit != null && otherUnit != null && distance != null && whichUnit.distance(otherUnit.getX(), otherUnit.getY()) <= distance) {
-					return new BooleanJassValue(true);
-				}
+						if ((whichUnit != null) && (otherUnit != null) && (distance != null)
+								&& (whichUnit.distance(otherUnit.getX(), otherUnit.getY()) <= distance)) {
+							return new BooleanJassValue(true);
+						}
 
-				return JassType.BOOLEAN.getNullValue();
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRangeXY", (arguments, globalScope, triggerScope) -> {
-				final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-				final Double x = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-				final Double y = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
-				final Double distance = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+						return JassType.BOOLEAN.getNullValue();
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRangeXY",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final Double x = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final Double y = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final Double distance = arguments.get(3).visit(RealJassValueVisitor.getInstance());
 
-				if (whichUnit != null && x != null && y != null && distance != null && whichUnit.distance(x, y) <= distance) {
-					return new BooleanJassValue(true);
-				}
+						if ((whichUnit != null) && (x != null) && (y != null) && (distance != null)
+								&& (whichUnit.distance(x, y) <= distance)) {
+							return new BooleanJassValue(true);
+						}
 
-				return JassType.BOOLEAN.getNullValue();
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRangeLoc", (arguments, globalScope, triggerScope) -> {
-				final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-				final Point2D.Double whichLocation = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
-				final Double distance = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+						return JassType.BOOLEAN.getNullValue();
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRangeLoc",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final Point2D.Double whichLocation = nullable(arguments, 1,
+								ObjectJassValueVisitor.getInstance());
+						final Double distance = arguments.get(2).visit(RealJassValueVisitor.getInstance());
 
-				if (whichUnit != null && whichLocation != null && distance != null && whichUnit.distance(whichLocation.x, whichLocation.y) <= distance) {
-					return new BooleanJassValue(true);
-				}
+						if ((whichUnit != null) && (whichLocation != null) && (distance != null)
+								&& (whichUnit.distance(whichLocation.x, whichLocation.y) <= distance)) {
+							return new BooleanJassValue(true);
+						}
 
-				return JassType.BOOLEAN.getNullValue();
-			});
+						return JassType.BOOLEAN.getNullValue();
+					});
 
 			// Bit Operations
-			jassProgramVisitor.getJassNativeManager().createNative("BlzBitOr", (arguments, globalScope, triggerScope) -> {
-				final Integer x = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-				final Integer y = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+			jassProgramVisitor.getJassNativeManager().createNative("BlzBitOr",
+					(arguments, globalScope, triggerScope) -> {
+						final Integer x = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final Integer y = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 
-				return new IntegerJassValue(x | y);
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("BlzBitAnd", (arguments, globalScope, triggerScope) -> {
-				final Integer x = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-				final Integer y = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						return new IntegerJassValue(x | y);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("BlzBitAnd",
+					(arguments, globalScope, triggerScope) -> {
+						final Integer x = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final Integer y = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 
-				return new IntegerJassValue(x & y);
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("BlzBitXor", (arguments, globalScope, triggerScope) -> {
-				final Integer x = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-				final Integer y = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						return new IntegerJassValue(x & y);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("BlzBitXor",
+					(arguments, globalScope, triggerScope) -> {
+						final Integer x = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final Integer y = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 
-				return new IntegerJassValue(x ^ y);
-			});
+						return new IntegerJassValue(x ^ y);
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerTechResearched",
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

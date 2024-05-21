@@ -1,8 +1,5 @@
 package com.etheller.warsmash.viewer5;
 
-import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
-import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
-
 public class Shaders {
 	public static final String boneTexture = ""//
 			+ "    uniform sampler2D u_boneMap;\r\n" + //
@@ -163,15 +160,7 @@ public class Shaders {
 				"            lightFactor += lightFactorContribution + (lightAmbColor.a/(pow(dist, 2.0))) * lightAmbColor.rgb;\r\n"
 				+ //
 				"          }\r\n" + //
-				"        }\r\n" + //
-				(MdxHandler.CURRENT_SHADER_TYPE == ShaderEnvironmentType.MENU
-						? "        vec4 sRGB = vec4(lightFactor, 1.0);" + //
-								"        bvec4 cutoff = lessThan(sRGB, vec4(0.04045));" + //
-								"        vec4 higher = pow((sRGB + vec4(0.055))/vec4(1.055), vec4(2.4));" + //
-								"        vec4 lower = sRGB/vec4(12.92);" + //
-								"" + //
-								"        lightFactor = (higher * (vec4(1.0) - vec4(cutoff)) + lower * vec4(cutoff)).xyz;"
-						: "");
+				"        }\r\n";
 	}
 
 	public static String fogSystem(final boolean supportsUnfoggedMaterial,
